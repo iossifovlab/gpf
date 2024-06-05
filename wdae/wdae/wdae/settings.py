@@ -7,6 +7,8 @@ import os
 from gpf_instance.gpf_instance import get_wgpf_instance_path
 from .default_settings import *
 
+from dae.pheno.pheno_data import get_pheno_browser_images_dir
+
 DEBUG = True
 
 ALLOWED_HOSTS += ["localhost"]
@@ -23,6 +25,16 @@ CORS_ORIGIN_WHITELIST = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
 ]
+
+PHENO_BROWSER_CACHE = get_pheno_browser_images_dir()
+
+# Additional locations of static files
+STATICFILES_DIRS = (
+    # Put strings here, like "/home/html/static" or "C:/www/django/static".
+    # Always use forward slashes, even on Windows.
+    # Don't forget to use absolute paths, not relative paths.
+    ("images", PHENO_BROWSER_CACHE),
+)
 
 CORS_ALLOW_CREDENTIALS = True
 
