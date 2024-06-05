@@ -95,7 +95,7 @@ export class PhenoMeasure {
   }
 
   public static addBasePath(measure: PhenoMeasure, basePath: string): PhenoMeasure {
-    basePath = `${environment.basePath}/${basePath}`;
+    basePath = `${environment.basePath}${basePath}`;
     const newMeasure: PhenoMeasure = new PhenoMeasure(
       measure.index,
       measure.instrumentName,
@@ -141,7 +141,7 @@ export class PhenoMeasures {
     if (measure.baseUrl) {
       basePath = measure.baseUrl + this.baseImageUrl;
     } else {
-      basePath = environment.basePath + '/' + this.baseImageUrl;
+      basePath = environment.basePath + this.baseImageUrl;
     }
 
     measure.regressions.addBasePath(basePath);
