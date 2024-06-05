@@ -346,36 +346,67 @@ class ReferenceGenomeImplementation(
 
             <h3>Genome statistics:</h3>
             {% if data["global_statistic"] %}
-                <h4>Length: {{ data["global_statistic"]["length"] }}</h4>
+                <h4>
+                    Length: {{ '{:,}'.format(data["global_statistic"]["length"]) }}
+                </h4>
 
                 <h4>Nucleotide distribution:</h4>
                 {%
                     for nucleotide, prc in
                     data["global_statistic"]["nuc_distribution"].items()
                 %}
-                    <p>{{ nucleotide }}: {{ "%0.2f%%" % prc }}</p>
+                    <div>{{ nucleotide }}: {{ "%0.2f%%" % prc }}</div>
                 {% endfor %}
 
                 <h4>Bi-Nucleotide distribution:</h4>
-                {%
-                    for nucleotide_pair, prc in
-                    data["global_statistic"]["bi_nuc_distribution"].items()
-                %}
-                    <p>{{ nucleotide_pair }}: {{ "%0.2f%%" % prc }}</p>
-                {% endfor %}
+                <table border="1">
+                    <tr>
+                        <th>{{ nucleotide }}</th>
+                        {% for nucleotide in
+                            data["global_statistic"]["nuc_distribution"].keys() %}
+                            <th>{{ nucleotide }}</th>
+                        {% endfor %}
+                    </tr>
+                    {% for first_nucleotide in
+                        data["global_statistic"]["nuc_distribution"].keys() %}
+                        <tr>
+                            <td>{{ first_nucleotide }}</td>
+                            {% for second_nucleotide in
+                            data["global_statistic"]["nuc_distribution"].keys() %}
+                                <td>{{ "%0.2f%%" %  data["global_statistic"]["bi_nuc_distribution"].get(first_nucleotide + second_nucleotide) }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </table>
             {% endif %}
 
-            <h3>Chromosomes:</h3>
-            <table>
-            <tr><td>Chrom</td><td>Length</td></tr>
-            {%- for chrom, length in data["chromosomes"] -%}
-            <tr>
-            <td>{{ chrom }}</td>
-            <td>{{ length }}</td>
-            </tr>
-            {%- endfor -%}
-            </table>
-
+            <h3>{{ "Chromosomes ({0}):".format(data["chromosomes"]|length) }}</h3>
+            <div style="max-height: 50%; overflow-y: auto; width: fit-content">
+                <table border="1" >
+                    <tr>
+                        <th>Chrom</th>
+                        <th>Length</th>
+                        {% for nucleotide in
+                            data["global_statistic"]["nuc_distribution"].keys() %}
+                            <th>{{ nucleotide }}</th>
+                        {% endfor %}
+                    </tr>
+                    {%- for chrom, length in data["chromosomes"] -%}
+                        <tr>
+                            <td>{{ chrom }}</td>
+                            <td>{{ '{:,}'.format(length) }}</td>
+                            {% for nucleotide in
+                                data["global_statistic"]["nuc_distribution"].keys() %}
+                                {% if data["chrom_statistics"].get(chrom) %}
+                                    <td>{{ "%0.2f%%" % data["chrom_statistics"].get(chrom).nucleotide_distribution.get(nucleotide) }}</td>
+                                {% else %}
+                                    <td></td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                    {%- endfor -%}
+                </table>
+            </div>
             {% endblock %}
         """))
 
@@ -383,12 +414,13 @@ class ReferenceGenomeImplementation(
         info = copy.deepcopy(self.config)
         info["chromosomes"] = self.reference_genome.get_all_chrom_lengths()
         info["global_statistic"] = {}
-
+        info["chrom_statistics"] = {}
         statistics = self.get_statistics()
         if statistics is None:
             info["global_statistic"]["length"] = None
             info["global_statistic"]["nuc_distribution"] = None
             info["global_statistic"]["bi_nuc_distribution"] = None
+            info["global_statistic"]["chromosome_statistics"] = None
         else:
             global_statistic = statistics.global_statistic
 
@@ -397,6 +429,7 @@ class ReferenceGenomeImplementation(
                 global_statistic.nucleotide_distribution
             info["global_statistic"]["bi_nuc_distribution"] = \
                 global_statistic.bi_nucleotide_distribution
+            info["chrom_statistics"] = statistics.chrom_statistics
 
         return info
 
