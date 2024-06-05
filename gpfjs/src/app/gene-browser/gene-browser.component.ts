@@ -146,6 +146,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public selectGeneSymbol(geneSymbol: string): void {
+    (this.searchBox.nativeElement as HTMLElement).blur();
     this.geneSymbol = geneSymbol;
   }
 

@@ -572,10 +572,17 @@ mat-option.mat-mdc-option-active {
   text-overflow: ellipsis !important;
   overflow: hidden !important;
   padding-right: 10px !important;
+  padding-top: 5px !important;
 }
 
 .mat-mdc-option {
   min-height: 35px !important;
   padding-left: 10px !important;
   padding-right: 5px !important;
+}
+
+/* stylelint-disable-next-line selector-class-pattern */
+.mdc-menu-surface--open {
+  transform: none !important;
+  transition: none !important;
 }

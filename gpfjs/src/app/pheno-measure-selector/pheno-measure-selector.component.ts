@@ -1,4 +1,4 @@
-import { Component, OnChanges, Input, ViewChild, Output, EventEmitter, 
+import { Component, OnChanges, Input, ViewChild, Output, EventEmitter,
   ElementRef } from '@angular/core';
 
 import { MeasuresService } from '../measures/measures.service';
@@ -41,6 +41,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   }
 
   public selectMeasure(measure: ContinuousMeasure, sendEvent: boolean = true): void {
+    (this.searchBox.nativeElement as HTMLElement).blur();
     this.selectedMeasure = measure;
     this.searchString = measure ? measure.name : '';
     if (sendEvent) {
