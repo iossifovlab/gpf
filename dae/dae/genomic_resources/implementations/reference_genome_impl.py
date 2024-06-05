@@ -397,7 +397,11 @@ class ReferenceGenomeImplementation(
                             <td>{{ '{:,}'.format(length) }}</td>
                             {% for nucleotide in
                                 data["global_statistic"]["nuc_distribution"].keys() %}
-                                
+                                {% if data["chrom_statistics"].get(chrom) %}
+                                    <td>{{ "%0.2f%%" % data["chrom_statistics"].get(chrom).nucleotide_distribution.get(nucleotide) }}</td>
+                                {% else %}
+                                    <td></td>
+                                {% endif %}
                             {% endfor %}
                         </tr>
                     {%- endfor -%}
@@ -410,6 +414,7 @@ class ReferenceGenomeImplementation(
         info = copy.deepcopy(self.config)
         info["chromosomes"] = self.reference_genome.get_all_chrom_lengths()
         info["global_statistic"] = {}
+        info["chrom_statistics"] = {}
         statistics = self.get_statistics()
         if statistics is None:
             info["global_statistic"]["length"] = None
@@ -424,8 +429,7 @@ class ReferenceGenomeImplementation(
                 global_statistic.nucleotide_distribution
             info["global_statistic"]["bi_nuc_distribution"] = \
                 global_statistic.bi_nucleotide_distribution
-            info["global_statistic"]["chromosome_statistics"] = \
-                global_statistic.chromosome_statistics
+            info["chrom_statistics"] = statistics.chrom_statistics
 
         return info
 
