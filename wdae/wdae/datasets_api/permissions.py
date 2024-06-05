@@ -1,3 +1,4 @@
+import hashlib
 import logging
 from typing import Any, List, Optional, Union, cast
 
@@ -6,13 +7,23 @@ from django.contrib.auth.models import Group, User
 from django.db import connection
 from django.http import HttpRequest
 from django.utils.encoding import force_str
-from gpf_instance.gpf_instance import get_wgpf_instance
+from gpf_instance.gpf_instance import get_instance_timestamp, \
+    get_permission_timestamp, get_wgpf_instance
 from rest_framework import permissions
 from utils.datasets import find_dataset_id_in_request
 
 from .models import Dataset, DatasetHierarchy
 
 logger = logging.getLogger(__name__)
+
+
+def get_permissions_etag(request, **_kwargs) -> str:
+    etag = (
+        f"{get_instance_timestamp()}"
+        f"{get_permission_timestamp()}"
+        f"{request.user.id}"
+    )
+    return hashlib.md5(etag.encode()).hexdigest()
 
 
 class IsDatasetAllowed(permissions.BasePermission):
