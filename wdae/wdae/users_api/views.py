@@ -21,6 +21,7 @@ from django.http.response import (
 )
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
+from gpf_instance.gpf_instance import permission_update
 from oauth2_provider.models import get_application_model
 from rest_framework import filters, permissions, status, views, viewsets
 from rest_framework.decorators import action, api_view, authentication_classes
@@ -99,6 +100,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         return super().list(request)
 
     @request_logging(logger)
+    @permission_update
     def create(
         self, request: Request,
         *args: Any, **kwargs: Any,
@@ -116,6 +118,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         return super().retrieve(request, pk=pk)
 
     @request_logging(logger)
+    @permission_update
     def update(
         self, request: Request,
         *args: Any, pk: Optional[int] = None, **kwargs: Any,
@@ -131,6 +134,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         return super().update(request, pk=pk, *args, **kwargs)
 
     @request_logging(logger)
+    @permission_update
     def partial_update(
         self, request: Request,
         *args: Any, pk: Optional[int] = None, **kwargs: Any,
@@ -146,6 +150,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
         return super().partial_update(request, pk=pk)
 
     @request_logging(logger)
+    @permission_update
     def destroy(
         self, request: Request,
         *args: Any, pk: Optional[int] = None, **kwargs: Any,

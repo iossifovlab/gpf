@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db.models import Count, Q
 from django.db.models.query import QuerySet
+from gpf_instance.gpf_instance import permission_update
 from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.request import Request
@@ -65,6 +66,7 @@ class GroupsViewSet(
 @api_view(["POST"])
 @authentication_classes(
     (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF))
+@permission_update
 def add_group_to_dataset(request: Request) -> Response:
     """Add group to dataset."""
     if not request.user.is_authenticated:
@@ -83,6 +85,7 @@ def add_group_to_dataset(request: Request) -> Response:
 @api_view(["POST"])
 @authentication_classes(
     (GPFOAuth2Authentication, SessionAuthenticationWithoutCSRF))
+@permission_update
 def remove_group_from_dataset(request: Request) -> Response:
     """Remove group from dataset."""
     if not request.user.is_authenticated:
@@ -101,6 +104,7 @@ def remove_group_from_dataset(request: Request) -> Response:
 
 
 @api_view(["POST"])
+@permission_update
 def add_user_to_group(request: Request) -> Response:
     """Add user to group."""
     if not request.user.is_authenticated:
@@ -126,6 +130,7 @@ def add_user_to_group(request: Request) -> Response:
 
 
 @api_view(["POST"])
+@permission_update
 def remove_user_from_group(request: Request) -> Response:
     """Remove user from group."""
     if not request.user.is_authenticated:

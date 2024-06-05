@@ -12,10 +12,15 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from studies.study_wrapper import StudyWrapper, StudyWrapperBase
 
+from datasets_api.permissions import get_permissions_etag, \
+    get_wdae_parents, user_has_permission
 from dae.studies.study import GenotypeData
-from datasets_api.permissions import get_wdae_parents, user_has_permission
 
 from .models import Dataset, DatasetHierarchy
+
+from django.views.decorators.http import etag
+from django.utils.decorators import method_decorator
+
 
 logger = logging.getLogger(__name__)
 
@@ -144,6 +149,8 @@ class DatasetView(QueryBaseView):
 
         return res
 
+
+    @method_decorator(etag(get_permissions_etag))
     def get(
         self, request: Request, dataset_id: Optional[str] = None,
     ) -> Response:
@@ -202,7 +209,6 @@ class DatasetView(QueryBaseView):
                     "\nThis dataset includes:\n"
                     f"{descriptions}"
                 )
-
         return Response({"data": res})
 
 
@@ -266,8 +272,7 @@ class PermissionDeniedPromptView(QueryBaseView):
                 with open(prompt_filepath, "r") as infile:
                     self.permission_denied_prompt = infile.read()
 
-    def get(self, request: Request) -> Response:
-        # pylint: disable=unused-argument
+    def get(self, _request: Request) -> Response:
         return Response({"data": self.permission_denied_prompt})
 
 
