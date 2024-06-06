@@ -32,6 +32,10 @@ pipeline {
     always {
       script {
         try {
+          archiveArtifacts artifacts: 'build-env/*.svg',
+                   allowEmptyArchive: true,
+                   fingerprint: true
+
           archive 'results/gpf-*-html.tar.gz'
         } finally {
           zulipNotification(
