@@ -9,7 +9,7 @@ import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
 import { GeneProfilesState } from 'app/gene-profiles-table/gene-profiles-table.state';
-import { DatasetNodeState } from 'app/dataset-node/dataset-node.state';
+import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
 
 @Component({
   selector: 'gpf-datasets',
@@ -62,6 +62,8 @@ export class DatasetsComponent implements OnInit, OnDestroy {
           .filter(d => !d.parents.length)
           .map(d => this.datasetTrees.push(new DatasetNode(d, datasets)));
 
+        this.saveFirstDatasetToState();
+
         if (this.router.url === '/datasets' && this.datasetTrees.length > 0) {
           this.router.navigate(['/', 'datasets', this.datasetTrees[0].dataset.id]);
         }
@@ -76,6 +78,15 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         this.permissionDeniedPrompt = aprompt;
       }),
     );
+  }
+
+  private saveFirstDatasetToState(): void {
+    this.store.selectOnce(
+      (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
+      .subscribe(state => {
+        state.expandedDatasets.add(this.datasetTrees[0].allDatasets[0].id);
+        this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
+      });
   }
 
   public ngOnDestroy(): void {

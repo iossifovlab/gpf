@@ -34,10 +34,7 @@ export class DatasetNodeComponent extends StatefulComponent implements OnInit, A
   public ngOnInit(): void {
     this.selectedDataset$ = this.datasetsService.getSelectedDatasetObservable();
     this.selectedDataset$.subscribe(dataset => {
-      if (dataset.id === 'ALL_genotypes' && this.datasetNode.dataset.id === 'ALL_genotypes') {
-        this.isExpanded = true;
-        this.addToState('ALL_genotypes');
-      } else if (this.datasetNode.dataset.id === dataset.id) {
+      if (this.datasetNode.dataset.id === dataset.id) {
         this.setExpandability();
       }
     });
