@@ -45,6 +45,15 @@ function main() {
 
   defer_ret build_run_ctx_reset_all_persistent
 
+
+  build_stage "Draw dependencies"
+  {
+    build_deps_graph_write_image 'build-env/dependency-graph.svg'
+  }
+
+  local gpf_release_version
+  gpf_release_version="$(e "gpf_release_gpf_release_version")"
+
   # cleanup
   build_stage "Cleanup"
   {
@@ -60,35 +69,62 @@ function main() {
 
   build_stage "Get GPF source"
   {
-    local gpf_package_image
-    gpf_package_image=$(e docker_data_img_gpf_package)
+    local image_ref
+    image_ref="$(e docker_img_iossifovlab_mamba_base)"
+    build_run_ctx_init "container" "$image_ref"
+    defer_ret build_run_ctx_reset
 
-    # copy gpf package
-    build_run_local mkdir -p ./iossifovlab-gpf/gpf
-    build_docker_image_cp_from "$gpf_package_image" ./gpf/ /gpf
-    build_docker_image_cp_from "$gpf_package_image" ./userdocs/gpf/ /gpf
+
+    build_run bash -c 'mkdir -p /root/.ssh'
+
+    build_run_container_cp_to "/root/.gitconfig" "${HOME}/.gitconfig"
+    build_run_container_cp_to "/root/.ssh/id_rsa" "${HOME}/.ssh/jenkins_rsa"
+    build_run bash -c 'chown 400 /root/.ssh/id_rsa'
+    build_run bash -c 'cat > /root/.ssh/config << EOT
+Host github.com
+    StrictHostKeyChecking no
+
+EOT
+'
+    build_run mkdir -p projects
+
+
+    # the quotes around 'EOF' are signifcant - it forces bash to treat the string as literal string until EOF
+    build_run bash -e -x <<'EOF'
+    if ! [ -d "projects/gpf.repo" ]; then
+        git clone "ssh://git@github.com/iossifovlab/gpf" "projects/gpf.repo"
+    fi
+EOF
+
+    # the quotes around 'EOF' are signifcant - it forces bash to treat the string as literal string until EOF
+    build_run env gpf_release_version="${gpf_release_version}" bash -e -x << 'EOF'
+
+        cd "projects/gpf.repo"
+        git checkout master
+        git pull --ff-only
+        git checkout "${gpf_release_version}"
+        cd -
+EOF
   }
 
   # prepare gpf data
-  build_stage "Get GPF data instance"
+  build_stage "Prepare GPF data instance"
   {
     build_run_ctx_init "local"
     defer_ret build_run_ctx_reset
 
-    # find image
-    local data_hg19_startup_image_ref
-    data_hg19_startup_image_ref="$(e docker_data_img_data_hg19_startup)"
+    # create GPF instance
+    build_run_local mkdir -p ./data/data-hg38-hello
+        build_run_local bash -c 'cat > ./data/data-hg38-hello/gpf_instance.yaml << EOT
+instance_id: "hg38_hello"
 
-    # copy data
-    build_run_local mkdir -p ./data/data-hg19-startup
-    build_docker_image_cp_from "$data_hg19_startup_image_ref" ./data/data-hg19-startup /
+reference_genome:
+    resource_id: "hg38/genomes/GRCh38-hg38"
 
-    # reset instance conf
-    build_run_local bash -c 'sed -i \
-      -e s/"^      - localhost.*$/      - impala"/g \
-      -e s/"^      host: localhost.*$/      host: impala"/g \
-      ./data/data-hg19-startup/gpf_instance.yaml
-    '
+gene_models:
+    resource_id: "hg38/gene_models/refSeq_v20200330"
+EOT
+'
 
     build_run_local bash -c "mkdir -p ./cache"
     build_run_local bash -c "touch ./cache/grr_definition.yaml"
@@ -99,48 +135,10 @@ url: "https://grr.seqpipe.org/"
 cache_dir: "/wd/cache/grrCache"
 EOT
 '
-    build_run_ctx_init "container" "ubuntu:20.04"
+    build_run_ctx_init "container" "ubuntu:22.04"
     defer_ret build_run_ctx_reset
 
-    # cleanup
-    build_run_container rm -rvf \
-      ./data/data-hg19-startup/studies/* \
-      ./data/data-hg19-startup/pheno/* \
-      ./data/data-hg19-startup/wdae/wdae.sql
-
-    build_run_ctx_init "local"
-    defer_ret build_run_ctx_reset
-
-    # setup directory structure
-    build_run_local mkdir -p \
-      ./data/data-hg19-startup/genomic-scores-hg19 \
-      ./data/data-hg19-startup/genomic-scores-hg38 \
-      ./data/data-hg19-startup/wdae
   }
-
-#   # run impala
-#   build_stage "Run impala"
-#   {
-#     # create network
-#     {
-#       local -A ctx_network
-#       build_run_ctx_init ctx:ctx_network "persistent" "network"
-#       build_run_ctx_persist ctx:ctx_network
-#     }
-#     # setup impala
-#     {
-#       local -A ctx_impala
-#       build_run_ctx_init ctx:ctx_impala "persistent" "container" "seqpipe/seqpipe-docker-impala:latest" \
-#           "cmd-from-image" "no-def-mounts" \
-#           ports:21050,8020,25000,25010,25020 --hostname impala --network "${ctx_network["network_id"]}"
-
-#       defer_ret build_run_ctx_reset ctx:ctx_impala
-
-#       build_run_container ctx:ctx_impala /wait-for-it.sh -h localhost -p 21050 -t 300
-
-#       build_run_ctx_persist ctx:ctx_impala
-#     }
-#   }
 
   build_stage "Build documentation"
   {
@@ -149,27 +147,26 @@ EOT
     gpf_dev_image_ref=$(e docker_img_gpf_dev)
 
     build_run_ctx_init "container" "${gpf_dev_image_ref}" \
-      --env DAE_DB_DIR="/wd/data/data-hg19-startup/" \
+      --env gpf_release_version="${gpf_release_version}" \
+      --env DAE_DB_DIR="/wd/data/data-hg38-hello/" \
       --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml"
 
     defer_ret build_run_ctx_reset
 
-    build_run_attach
-
     local d
-    for d in /wd/gpf/dae /wd/gpf/wdae; do
+    for d in /wd/projects/gpf.repo/dae /wd/projects/gpf.repo/wdae; do
       build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf pip install .'
     done
 
-    build_run_container cd /wd/gpf/dae/dae/docs 
+    build_run_container cd /wd/projects/gpf.repo/dae/dae/docs 
     build_run_container bash -c "
         /opt/conda/bin/conda run --no-capture-output -n gpf \
         sphinx-build -b html -d _build/doctrees   . _build/html"
     build_run_container tar zcvf /wd/results/gpf-dae-html.tar.gz -C _build/ html/
 
-    build_run_container cd /wd/gpf/wdae/wdae/docs 
+    build_run_container cd /wd/projects/gpf.repo/wdae/wdae/docs 
     build_run_container bash -c "
-        /opt/conda/bin/conda run --no-capture-output -n gpf /wd/gpf/wdae/wdae/docs/api_docs_generator.py --root_dir /wd/gpf/wdae/wdae --output_dir /wd/gpf/wdae/wdae/docs/routes"
+        /opt/conda/bin/conda run --no-capture-output -n gpf /wd/projects/gpf.repo/wdae/wdae/docs/api_docs_generator.py --root_dir /wd/projects/gpf.repo/wdae/wdae --output_dir /wd/projects/gpf.repo/wdae/wdae/docs/routes"
     build_run_container bash -c "
         /opt/conda/bin/conda run --no-capture-output -n gpf \
         sphinx-build -b html -d _build/doctrees   . _build/html"
