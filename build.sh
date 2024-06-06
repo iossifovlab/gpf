@@ -36,7 +36,7 @@ function main() {
   libmain_init_build_env \
     clobber:"$clobber" preset:"$preset" build_no:"$build_no" \
     generate_jenkins_init:"$generate_jenkins_init" expose_ports:"$expose_ports" \
-    iossifovlab.gpf iossifovlab.data-hg19-startup
+    iossifovlab.gpf-release
 
   libmain_save_build_env_on_exit
   libbuild_init stage:"$stage" registry.seqpipe.org
@@ -48,7 +48,7 @@ function main() {
   # cleanup
   build_stage "Cleanup"
   {
-    build_run_ctx_init "container" "ubuntu:20.04"
+    build_run_ctx_init "container" "ubuntu:22.04"
     defer_ret build_run_ctx_reset
 
     build_run rm -rf ./data/ ./results ./gpf
