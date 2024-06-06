@@ -12,6 +12,7 @@ import { Observable, of } from 'rxjs';
 import { NgxsModule } from '@ngxs/store';
 import { FormsModule } from '@angular/forms';
 import { PhenoMeasure } from 'app/pheno-browser/pheno-browser';
+import { MatAutocompleteOrigin, MatAutocomplete } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'gpf-searchable-select',
@@ -68,6 +69,8 @@ describe('MultiContinuousFilterComponent', () => {
         MultiContinuousFilterComponent,
         PhenoMeasureSelectorComponent,
         SearchableSelectMockComponent,
+        MatAutocompleteOrigin,
+        MatAutocomplete
       ],
       providers: [
         MultiContinuousFilterComponent,
@@ -75,7 +78,7 @@ describe('MultiContinuousFilterComponent', () => {
         HttpClientTestingModule,
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
-        UsersService
+        UsersService,
       ],
       imports: [
         RouterTestingModule,

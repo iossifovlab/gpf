@@ -10,6 +10,12 @@ import { APP_BASE_HREF } from '@angular/common';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { Observable, of, throwError } from 'rxjs';
 import { GeneService } from 'app/gene-browser/gene.service';
+import {
+  MatAutocompleteOrigin,
+  MatAutocomplete,
+  MatAutocompleteTrigger,
+  MAT_AUTOCOMPLETE_SCROLL_STRATEGY } from '@angular/material/autocomplete';
+import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 
 class MockGeneService {
   public getGene(): Observable<Record<string, unknown>> {
@@ -31,7 +37,7 @@ describe('HomeComponent', () => {
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
-      declarations: [HomeComponent],
+      declarations: [HomeComponent, MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger],
       providers: [
         HttpClient,
         HttpHandler,
@@ -40,7 +46,8 @@ describe('HomeComponent', () => {
         UsersService,
         { provide: APP_BASE_HREF, useValue: '' },
         { provide: GeneService, useValue: mockGeneService },
-        DatasetsTreeService
+        { provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''},
+        DatasetsTreeService,
       ],
       imports: [NgxsModule.forRoot([])]
     }).compileComponents();
@@ -55,34 +62,35 @@ describe('HomeComponent', () => {
   });
 
   it('should open sinle view', () => {
-    const closeDropdownSpy = jest.spyOn(component, 'closeDropdown');
+    component.loadingFinished = true;
+    component.content = {};
+    component.geneProfilesConfig = new GeneProfilesSingleViewConfig();
+    fixture.detectChanges();
 
     let geneSymbols = 'CHD8';
     component.openSingleView(geneSymbols);
-    expect(closeDropdownSpy).toHaveBeenCalledWith();
     expect(component.geneSymbol).toBe('CHD8');
 
     geneSymbols = '  CHD8 ';
     component.openSingleView(geneSymbols);
-    expect(closeDropdownSpy).toHaveBeenCalledWith();
     expect(component.geneSymbol).toBe('CHD8');
 
     geneSymbols = 'chd8';
     component.openSingleView(geneSymbols);
-    expect(closeDropdownSpy).toHaveBeenCalledWith();
     expect(component.geneSymbol).toBe('CHD8');
   });
 
   it('should show error message when searching gene', () => {
-    const closeDropdownSpy = jest.spyOn(component, 'closeDropdown');
-
     component.showError = true;
-    expect(closeDropdownSpy).not.toHaveBeenCalledWith();
+
+    component.loadingFinished = true;
+    component.content = {};
+    component.geneProfilesConfig = new GeneProfilesSingleViewConfig();
+    fixture.detectChanges();
 
     let geneSymbols = '   ';
     component.openSingleView(geneSymbols);
     expect(component.geneSymbol).toBe('');
-    expect(closeDropdownSpy).not.toHaveBeenCalledWith();
 
     jest.spyOn(mockGeneService, 'getGene').mockImplementation(() => throwError(() => new Error()));
 

@@ -21,6 +21,11 @@ import { GenotypePreviewTableComponent } from 'app/genotype-preview-table/genoty
 import { APP_BASE_HREF } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
+import {
+  MAT_AUTOCOMPLETE_SCROLL_STRATEGY,
+  MatAutocomplete,
+  MatAutocompleteOrigin,
+  MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 jest.mock('../utils/svg-drawing');
 
@@ -93,7 +98,8 @@ describe('GeneBrowserComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [
         GeneBrowserComponent, GenePlotComponent,
-        GenotypePreviewTableComponent, SearchableSelectComponent
+        GenotypePreviewTableComponent, SearchableSelectComponent,
+        MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger
       ],
       providers: [
         ConfigService, UsersService, DatasetsTreeService, FullscreenLoadingService,
@@ -101,7 +107,8 @@ describe('GeneBrowserComponent', () => {
         {provide: ActivatedRoute, useValue: new MockActivatedRoute()},
         {provide: GeneService, useValue: new MockGeneService()},
         {provide: DatasetsService, useValue: mockDatasetsService},
-        { provide: APP_BASE_HREF, useValue: '' }
+        {provide: APP_BASE_HREF, useValue: ''},
+        {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
       ],
       imports: [
         HttpClientTestingModule, RouterTestingModule,
@@ -244,25 +251,38 @@ describe('GeneBrowserComponent', () => {
 
   it('should get family variants count when count is less than 1000', () => {
     component.familyVariantsLoaded = false;
-    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(5);
+
+    const summaryVariantsArrayFilteredMock = new SummaryAllelesArray([], []);
+    component.summaryVariantsArrayFiltered = summaryVariantsArrayFilteredMock;
+    jest.spyOn(component.summaryVariantsArrayFiltered, 'totalFamilyVariantsCount', 'get').mockReturnValue(5);
+
     expect(component.displayVariantsCount()).toBe('~5');
   });
 
   it('should get family variants count when count is more than 1000', () => {
     component.familyVariantsLoaded = false;
-    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(9635);
+
+    const summaryVariantsArrayFilteredMock = new SummaryAllelesArray([], []);
+    component.summaryVariantsArrayFiltered = summaryVariantsArrayFilteredMock;
+    jest.spyOn(component.summaryVariantsArrayFiltered, 'totalFamilyVariantsCount', 'get').mockReturnValue(9635);
     expect(component.displayVariantsCount()).toBe('9635');
   });
 
   it('should get family variants count when count is 0', () => {
     component.familyVariantsLoaded = false;
-    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(0);
+
+    const summaryVariantsArrayFilteredMock = new SummaryAllelesArray([], []);
+    component.summaryVariantsArrayFiltered = summaryVariantsArrayFilteredMock;
+    jest.spyOn(component.summaryVariantsArrayFiltered, 'totalFamilyVariantsCount', 'get').mockReturnValue(0);
     expect(component.displayVariantsCount()).toBe('0');
   });
 
   it('should get family variants count after loading variants is finished', () => {
     component.familyVariantsLoaded = false;
-    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(35);
+
+    const summaryVariantsArrayFilteredMock = new SummaryAllelesArray([], []);
+    component.summaryVariantsArrayFiltered = summaryVariantsArrayFilteredMock;
+    jest.spyOn(component.summaryVariantsArrayFiltered, 'totalFamilyVariantsCount', 'get').mockReturnValue(35);
     expect(component.displayVariantsCount()).toBe('~35');
 
     component.familyVariantsLoaded = true;
@@ -272,7 +292,10 @@ describe('GeneBrowserComponent', () => {
 
   it('should get family variants count when loaded count is 0', () => {
     component.familyVariantsLoaded = false;
-    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(7412);
+
+    const summaryVariantsArrayFilteredMock = new SummaryAllelesArray([], []);
+    component.summaryVariantsArrayFiltered = summaryVariantsArrayFilteredMock;
+    jest.spyOn(component.summaryVariantsArrayFiltered, 'totalFamilyVariantsCount', 'get').mockReturnValue(7412);
     expect(component.displayVariantsCount()).toBe('7412');
 
     component.familyVariantsLoaded = true;
@@ -282,7 +305,10 @@ describe('GeneBrowserComponent', () => {
 
   it('should get family variants count when loaded count is more than 1000', () => {
     component.familyVariantsLoaded = false;
-    jest.spyOn(SummaryAllelesArray.prototype, 'totalFamilyVariantsCount', 'get').mockReturnValue(7412);
+
+    const summaryVariantsArrayFilteredMock = new SummaryAllelesArray([], []);
+    component.summaryVariantsArrayFiltered = summaryVariantsArrayFilteredMock;
+    jest.spyOn(component.summaryVariantsArrayFiltered, 'totalFamilyVariantsCount', 'get').mockReturnValue(7412);
     expect(component.displayVariantsCount()).toBe('7412');
 
     component.familyVariantsLoaded = true;

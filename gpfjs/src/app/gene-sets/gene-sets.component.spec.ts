@@ -15,6 +15,11 @@ import { Observable } from 'rxjs/internal/Observable';
 import { of } from 'rxjs';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { GeneSetsState } from './gene-sets.state';
+import {
+  MatAutocompleteOrigin,
+  MatAutocomplete,
+  MatAutocompleteTrigger,
+  MAT_AUTOCOMPLETE_SCROLL_STRATEGY } from '@angular/material/autocomplete';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -77,7 +82,7 @@ describe('GeneSetsComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [GeneSetsComponent],
+      declarations: [GeneSetsComponent, MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger],
       imports: [
         NgxsModule.forRoot([], {developmentMode: true}),
         HttpClientTestingModule, RouterTestingModule,
@@ -88,6 +93,7 @@ describe('GeneSetsComponent', () => {
       providers: [
         ConfigService, GeneSetsService, { provide: DatasetsService, useValue: datasetsServiceMock }, UsersService,
         { provide: APP_BASE_HREF, useValue: '' },
+        {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
       ], schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
@@ -164,7 +170,18 @@ describe('GeneSetsComponent', () => {
   });
 
   it('should set onSelect', () => {
+    const geneSetsCollectionMock1 = new GeneSetsCollection('name1', 'desc2', [
+      new GeneSetType('datasetId3', 'datasetName4', 'personSetCollectionId5', 'personSetCollectionName6',
+        ['personSetCollectionLegend7', 'personSetCollectionLegend8']),
+      new GeneSetType('datasetId9', 'datasetName10', 'personSetCollectionId11', 'personSetCollectionName12',
+        ['personSetCollectionLegend13', 'personSetCollectionLegend14'])
+    ]);
+
+    component.selectedGeneSetsCollection = geneSetsCollectionMock1;
     const spy = jest.spyOn(component, 'onSearch');
+
+    fixture.detectChanges();
+
     component.onSelect(new GeneSet('name1', 2, 'desc3', 'download4'));
     expect(component.selectedGeneSet).toStrictEqual(new GeneSet('name1', 2, 'desc3', 'download4'));
     expect(spy).not.toHaveBeenCalledWith();
@@ -187,7 +204,8 @@ describe('GeneSetsComponent', () => {
       new GeneSet('name13', 14, 'desc15', 'download16'),
       new GeneSet('name17', 18, 'desc19', 'download20')
     ];
-    component.onSearch('name15');
+    component.searchQuery = 'name15';
+    component.onSearch();
     expect(component.searchQuery).toBe('name15');
     expect(component.geneSets).toStrictEqual([]);
 
@@ -196,7 +214,8 @@ describe('GeneSetsComponent', () => {
       new GeneSet('name17', 18, 'desc19', 'download20'),
       new GeneSet('name17', 21, 'desc20', 'download21')
     ];
-    component.onSearch('name17');
+    component.searchQuery = 'name17';
+    component.onSearch();
     expect(component.geneSets).toStrictEqual([
       new GeneSet('name17', 18, 'desc19', 'download20'),
       new GeneSet('name17', 21, 'desc20', 'download21')]);
@@ -212,7 +231,7 @@ describe('GeneSetsComponent MockedGeneSetsService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [GeneSetsComponent],
+      declarations: [GeneSetsComponent, MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger],
       imports: [
         NgxsModule.forRoot([GeneSetsState], {developmentMode: true}),
         HttpClientTestingModule, RouterTestingModule,
@@ -223,7 +242,8 @@ describe('GeneSetsComponent MockedGeneSetsService', () => {
       providers: [
         ConfigService, {
           provide: GeneSetsService, useValue: mockGeneSetsService
-        }, { provide: DatasetsService, useValue: datasetsServiceMock }, UsersService
+        }, { provide: DatasetsService, useValue: datasetsServiceMock }, UsersService,
+        { provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
       ], schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
