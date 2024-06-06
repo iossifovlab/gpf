@@ -14,7 +14,7 @@
     spellcheck="false"
     [(ngModel)]="searchString"
     (keyup)="loadDropdownData()"
-    (click)="clear()"
+    (mousedown)="clear()"
     style="width: 100%" />
 
   <mat-autocomplete #measuresDropdown="matAutocomplete" class="measures-dropdown">
@@ -31,10 +31,11 @@
       class="dropdown-item"
       type="button"
       (click)="selectMeasure(measure)"
+      (mousedown)="isSelected = true"
       (onSelectionChange)="selectMeasure(measure)"
       [value]="measure.name"
       [title]="measure.name">
-      <span [innerHTML]="measure.name | boldMatching : searchString"></span>
+      <span [innerHTML]="isSelected ? measure.name : (measure.name | boldMatching : searchString)"></span>
     </mat-option>
   </mat-autocomplete>
 

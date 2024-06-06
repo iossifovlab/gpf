@@ -23,6 +23,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   public selectedMeasure: ContinuousMeasure;
   public loadingMeasures = false;
   public loadingDropdown = false;
+  public isSelected = false;
 
   public constructor(
     private measuresService: MeasuresService,
@@ -41,9 +42,12 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   }
 
   public selectMeasure(measure: ContinuousMeasure, sendEvent: boolean = true): void {
-    (this.searchBox.nativeElement as HTMLElement).blur();
     this.selectedMeasure = measure;
     this.searchString = measure ? measure.name : '';
+    if (measure) {
+      (this.searchBox.nativeElement as HTMLElement).blur();
+    }
+
     if (sendEvent) {
       this.selectedMeasureChange.emit(measure);
     }
@@ -51,6 +55,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
 
   public clear(): void {
     this.selectMeasure(null);
+    this.isSelected = false;
     this.loadDropdownData();
   }
 
