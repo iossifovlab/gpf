@@ -71,7 +71,7 @@ def produce_description_hierarchy(
                     indent_level + 1
                 )
                 res.append(
-                    f"{indent}- **[{child.name}]({child.study_id})** "
+                    f"{indent}- **[{child.name}](datasets/{child.study_id})** "
                     f"{get_first_paragraph(child.description)}\n"
                     f"{child_descriptions}"
                 )

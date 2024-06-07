@@ -71,8 +71,8 @@ def test_datasets_api_get_dataset_with_hierarchy_description(
     data = response.data  # type: ignore
     assert data["data"]["children_description"] == (
         "\nThis dataset includes:\n"
-        "- **[Study1](Study1)** some new description\n\n"
-        "- **[Study3](Study3)** \n"
+        "- **[Study1](datasets/Study1)** some new description\n\n"
+        "- **[Study3](datasets/Study3)** \n"
     )
 
 
