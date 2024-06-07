@@ -19,9 +19,10 @@ Release Notes
     * Fix in handling studies without variants in GCP Schema2 genotype
       storage
     * Fix in family tags counter
-    * Collapsable dataset dropdown selector
+    * Collapsable dropdown dataset selector
     * Fix phenotype tool legend
-    * Fix histogram descriptions text layout in scores descriptions
+    * Fix the layout of histogram description in scores descriptions
+
 * 2024.5.3
     * Fix hanlding of genomic resources varsions in GRR home page
     * Support for multiple regression measures in phenotype databases
