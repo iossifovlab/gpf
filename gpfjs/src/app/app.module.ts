@@ -178,8 +178,6 @@ import { FederationCredentialsComponent } from './federation-credentials/federat
 import { StudyFiltersTreeComponent } from './treelist-checkbox/treelist-checkbox.component';
 import { LoginComponent } from './login/login.component';
 import { DatasetsTreeService } from './datasets/datasets-tree.service';
-import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
-import { SearchableSelectTemplateDirective } from './searchable-select/searchable-select-template.directive';
 import { HelperModalComponent } from './helper-modal/helper-modal.component';
 import { HomeComponent } from './home/home.component';
 import { AboutComponent } from './about/about.component';
@@ -407,8 +405,6 @@ const appRoutes: Routes = [
     FederationCredentialsComponent,
     StudyFiltersTreeComponent,
     LoginComponent,
-    SearchableSelectComponent,
-    SearchableSelectTemplateDirective,
     HelperModalComponent,
     HomeComponent,
     AboutComponent,

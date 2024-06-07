@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CommonReportsRowComponent } from './common-reports-row.component';
-import { SearchableSelectComponent } from 'app/searchable-select/searchable-select.component';
 
 describe('CommonReportsRowComponent', () => {
   let component: CommonReportsRowComponent;
@@ -8,7 +7,7 @@ describe('CommonReportsRowComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [CommonReportsRowComponent, SearchableSelectComponent]
+      declarations: [CommonReportsRowComponent]
     }).compileComponents();
 
     fixture = TestBed.createComponent(CommonReportsRowComponent);

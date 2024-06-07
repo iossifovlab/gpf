@@ -7,21 +7,11 @@ import { MeasuresService } from 'app/measures/measures.service';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
 import { UsersService } from 'app/users/users.service';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter.component';
-import { Component, Input } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { NgxsModule } from '@ngxs/store';
 import { FormsModule } from '@angular/forms';
 import { PhenoMeasure } from 'app/pheno-browser/pheno-browser';
 import { MatAutocompleteOrigin, MatAutocomplete } from '@angular/material/autocomplete';
-
-@Component({
-  selector: 'gpf-searchable-select',
-  template: ''
-})
-class SearchableSelectMockComponent {
-  @Input() public data;
-  @Input() public caption;
-}
 
 const SelectionMock = {
   isEmpty: (): boolean => true,
@@ -68,7 +58,6 @@ describe('MultiContinuousFilterComponent', () => {
       declarations: [
         MultiContinuousFilterComponent,
         PhenoMeasureSelectorComponent,
-        SearchableSelectMockComponent,
         MatAutocompleteOrigin,
         MatAutocomplete
       ],

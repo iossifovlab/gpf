@@ -12,7 +12,6 @@ import { QueryService } from 'app/query/query.service';
 import { UsersService } from 'app/users/users.service';
 import { GeneService } from './gene.service';
 import { GeneBrowserComponent } from './gene-browser.component';
-import { SearchableSelectComponent } from '../searchable-select/searchable-select.component';
 import { FormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { SummaryAllelesArray, SummaryAllelesFilter } from './summary-variants';
@@ -98,7 +97,7 @@ describe('GeneBrowserComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [
         GeneBrowserComponent, GenePlotComponent,
-        GenotypePreviewTableComponent, SearchableSelectComponent,
+        GenotypePreviewTableComponent,
         MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger
       ],
       providers: [

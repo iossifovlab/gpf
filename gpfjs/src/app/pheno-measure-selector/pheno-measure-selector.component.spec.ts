@@ -9,7 +9,6 @@ import { MeasuresService } from 'app/measures/measures.service';
 import { UsersService } from 'app/users/users.service';
 
 import { PhenoMeasureSelectorComponent } from './pheno-measure-selector.component';
-import { SearchableSelectComponent } from 'app/searchable-select/searchable-select.component';
 import { MatAutocomplete, MatAutocompleteOrigin } from '@angular/material/autocomplete';
 
 class MockDatasetsService {
@@ -31,7 +30,6 @@ describe('PhenoMeasureSelectorComponent', () => {
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
         UsersService,
-        SearchableSelectComponent
       ],
       imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
       schemas: [NO_ERRORS_SCHEMA]
