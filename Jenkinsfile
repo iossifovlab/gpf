@@ -36,7 +36,7 @@ pipeline {
                    allowEmptyArchive: true,
                    fingerprint: true
 
-          archive 'results/gpf-*-html.tar.gz'
+          archive 'results/gpf-html.tar.gz'
         } finally {
           zulipNotification(
             topic: "${env.JOB_NAME}"

@@ -3,8 +3,8 @@
   hosts: all
   tasks:
 
-  - name: copy gpf-user-html.tar.gz
-    copy: src=results/gpf-user-html.tar.gz dest="{{ base_path }}/gpf-user-html.tar.gz"
+  - name: copy gpf-html.tar.gz
+    copy: src=results/gpf-html.tar.gz dest="{{ base_path }}/gpf-html.tar.gz"
 
   - name: clean user docs directory
     file: path={{ base_path }}/gpf_user_docs state=absent
@@ -12,13 +12,13 @@
   - name: ensure user docs directory exists
     file: path={{ base_path }}/gpf_user_docs state=directory
 
-  - name: unarchive gpf-user-html.tar.gz
+  - name: unarchive gpf-html.tar.gz
     unarchive: |
-      src={{ base_path }}/gpf-user-html.tar.gz dest={{ base_path }}/gpf_user_docs
+      src={{ base_path }}/gpf-html.tar.gz dest={{ base_path }}/gpf_user_docs
       remote_src=yes
 
-  - name: clean gpf-user-html.tar.gz
-    file: path={{ base_path }}/gpf-user-html.tar.gz state=absent
+  - name: clean gpf-html.tar.gz
+    file: path={{ base_path }}/gpf-html.tar.gz state=absent
 
 
 # - name: deploy gpf api docs
