@@ -62,7 +62,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
           .filter(d => !d.parents.length)
           .map(d => this.datasetTrees.push(new DatasetNode(d, datasets)));
 
-        this.saveFirstDatasetToState();
+        this.saveTopLevelDatasetsToState();
 
         if (this.router.url === '/datasets' && this.datasetTrees.length > 0) {
           this.router.navigate(['/', 'datasets', this.datasetTrees[0].dataset.id]);
@@ -80,11 +80,13 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     );
   }
 
-  private saveFirstDatasetToState(): void {
+  private saveTopLevelDatasetsToState(): void {
     this.store.selectOnce(
       (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
       .subscribe(state => {
-        state.expandedDatasets.add(this.datasetTrees[0].allDatasets[0].id);
+        this.datasetTrees.forEach(node => {
+          state.expandedDatasets.add(node.dataset.id);
+        });
         this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
       });
   }
