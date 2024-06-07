@@ -21,45 +21,45 @@
     file: path={{ base_path }}/gpf-user-html.tar.gz state=absent
 
 
-- name: deploy gpf api docs
-  hosts: all
-  tasks:
+# - name: deploy gpf api docs
+#   hosts: all
+#   tasks:
 
-  - name: copy gpf-dae-html.tar.gz
-    copy: src=results/gpf-dae-html.tar.gz dest="{{ base_path }}/gpf-dae-html.tar.gz"
+#   - name: copy gpf-dae-html.tar.gz
+#     copy: src=results/gpf-dae-html.tar.gz dest="{{ base_path }}/gpf-dae-html.tar.gz"
 
-  - name: clean API docs directory
-    file: path={{ base_path }}/gpf_api_docs state=absent
+#   - name: clean API docs directory
+#     file: path={{ base_path }}/gpf_api_docs state=absent
 
-  - name: ensure API docs directory exists
-    file: path={{ base_path }}/gpf_api_docs state=directory
+#   - name: ensure API docs directory exists
+#     file: path={{ base_path }}/gpf_api_docs state=directory
 
-  - name: unarchive gpf-dae-html.tar.gz
-    unarchive: |
-      src={{ base_path }}/gpf-dae-html.tar.gz dest={{ base_path }}/gpf_api_docs
-      remote_src=yes
+#   - name: unarchive gpf-dae-html.tar.gz
+#     unarchive: |
+#       src={{ base_path }}/gpf-dae-html.tar.gz dest={{ base_path }}/gpf_api_docs
+#       remote_src=yes
 
-  - name: clean gpf-dae-html.tar.gz
-    file: path={{ base_path }}/gpf-dae-html.tar.gz state=absent
+#   - name: clean gpf-dae-html.tar.gz
+#     file: path={{ base_path }}/gpf-dae-html.tar.gz state=absent
 
 
-- name: deploy gpf wdae docs
-  hosts: all
-  tasks:
+# - name: deploy gpf wdae docs
+#   hosts: all
+#   tasks:
 
-  - name: copy gpf-wdae-html.tar.gz
-    copy: src=results/gpf-wdae-html.tar.gz dest="{{ base_path }}/gpf-wdae-html.tar.gz"
+#   - name: copy gpf-wdae-html.tar.gz
+#     copy: src=results/gpf-wdae-html.tar.gz dest="{{ base_path }}/gpf-wdae-html.tar.gz"
 
-  - name: clean API docs directory
-    file: path={{ base_path }}/gpf_wdae_docs state=absent
+#   - name: clean API docs directory
+#     file: path={{ base_path }}/gpf_wdae_docs state=absent
 
-  - name: ensure API docs directory exists
-    file: path={{ base_path }}/gpf_wdae_docs state=directory
+#   - name: ensure API docs directory exists
+#     file: path={{ base_path }}/gpf_wdae_docs state=directory
 
-  - name: unarchive gpf-wdae-html.tar.gz
-    unarchive: |
-      src={{ base_path }}/gpf-wdae-html.tar.gz dest={{ base_path }}/gpf_wdae_docs
-      remote_src=yes
+#   - name: unarchive gpf-wdae-html.tar.gz
+#     unarchive: |
+#       src={{ base_path }}/gpf-wdae-html.tar.gz dest={{ base_path }}/gpf_wdae_docs
+#       remote_src=yes
 
-  - name: clean gpf-wdae-html.tar.gz
-    file: path={{ base_path }}/gpf-wdae-html.tar.gz state=absent
+#   - name: clean gpf-wdae-html.tar.gz
+#     file: path={{ base_path }}/gpf-wdae-html.tar.gz state=absent
