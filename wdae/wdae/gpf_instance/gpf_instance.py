@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import logging
 import os
-import time
 import pathlib
+import time
 from functools import cached_property
 from threading import Lock
 from typing import Any, Dict, Optional, Union, cast
@@ -36,22 +36,27 @@ _GPF_RECREATED_DATASET_PERM = False
 _INSTANCE_TIMESTAMP: float = 0
 _PERMISSION_CHANGED_TIMESTAMP: float = 0
 
+
 def set_instance_timestamp() -> None:
     global _INSTANCE_TIMESTAMP
     _INSTANCE_TIMESTAMP = time.time()
 
+
 def get_instance_timestamp() -> float:
     global _INSTANCE_TIMESTAMP
     return _INSTANCE_TIMESTAMP
+
 
 def set_permission_timestamp() -> None:
     global _PERMISSION_CHANGED_TIMESTAMP
     print(time.time())
     _PERMISSION_CHANGED_TIMESTAMP = time.time()
 
+
 def get_permission_timestamp() -> float:
     global _PERMISSION_CHANGED_TIMESTAMP
     return _PERMISSION_CHANGED_TIMESTAMP
+
 
 def permission_update(request_function):
     def decorated(*args, **kwargs):
