@@ -17,6 +17,11 @@ from .models import Dataset, DatasetHierarchy
 logger = logging.getLogger(__name__)
 
 
+def get_instance_timestamp_etag(_request, **_kwargs) -> str:
+    etag = f"{get_instance_timestamp()}"
+    return hashlib.md5(etag.encode()).hexdigest()
+
+
 def get_permissions_etag(request, **_kwargs) -> str:
     etag = (
         f"{get_instance_timestamp()}"

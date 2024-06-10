@@ -1,4 +1,5 @@
 
+from datasets_api.permissions import get_instance_timestamp_etag
 import numpy as np
 from django.http.response import StreamingHttpResponse
 from query_base.query_base import QueryBaseView
@@ -6,10 +7,14 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from django.views.decorators.http import etag
+from django.utils.decorators import method_decorator
+
 
 class GeneScoresListView(QueryBaseView):
     """Provides list of all gene scores."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         """Build list of gene scores and return it."""
         ids = request.query_params.get("ids")
