@@ -107,6 +107,15 @@ class Annotator(abc.ABC):
     ) -> dict[str, Any]:
         """Produce annotation attributes for an annotatable."""
 
+    def batch_annotate(
+        self, annotatables: list[Optional[Annotatable]],
+        contexts: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        return [
+            self.annotate(annotatable, context)
+            for annotatable, context in zip(annotatables, contexts)
+        ]
+
     def close(self) -> None:
         self._is_open = False
 
@@ -203,6 +212,24 @@ class AnnotationPipeline:
             context.update(attributes)
 
         return context
+
+    def batch_annotate(
+        self, annotatables: list[Annotatable],
+        contexts: Optional[list[dict]] = None
+    ) -> list[dict]:
+        if not self._is_open:
+            self.open()
+
+        if contexts is None:
+            contexts = [{} for _ in annotatables]
+
+        for annotator in self.annotators:
+            attributes_list = annotator.batch_annotate(annotatables, contexts)
+            print(attributes_list)
+            for context, attributes in zip(contexts, attributes_list):
+                context.update(attributes)
+
+        return contexts
 
     def open(self) -> AnnotationPipeline:
         """Open all annotators in the pipeline and mark it as open."""
