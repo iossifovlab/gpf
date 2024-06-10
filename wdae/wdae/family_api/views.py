@@ -1,7 +1,11 @@
+from datasets_api.permissions import get_instance_timestamp_etag
 from query_base.query_base import QueryDatasetView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
+
+from django.views.decorators.http import etag
+from django.utils.decorators import method_decorator
 
 from dae.pedigrees.family_tag_builder import FamilyTag, check_tag
 
@@ -80,6 +84,7 @@ class FamilyDetailsView(QueryDatasetView):
 
 class TagsView(QueryDatasetView):
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         # pylint: disable=unused-argument
         return Response(

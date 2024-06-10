@@ -1,8 +1,12 @@
 import logging
 
+from datasets_api.permissions import get_instance_timestamp_etag
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.response import Response
+
+from django.views.decorators.http import etag
+from django.utils.decorators import method_decorator
 
 LOGGER = logging.getLogger(__name__)
 
@@ -17,6 +21,7 @@ class TableConfigurationView(QueryBaseView):
 
 
 class TableRowsView(QueryBaseView):
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request):
         data = request.query_params
         page = int(data.get("page", 1))

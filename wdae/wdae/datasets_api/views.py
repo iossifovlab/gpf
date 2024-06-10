@@ -12,7 +12,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from studies.study_wrapper import StudyWrapper, StudyWrapperBase
 
-from datasets_api.permissions import get_permissions_etag, \
+from datasets_api.permissions import get_instance_timestamp_etag, get_permissions_etag, \
     get_wdae_parents, user_has_permission
 from dae.studies.study import GenotypeData
 
@@ -272,6 +272,7 @@ class PermissionDeniedPromptView(QueryBaseView):
                 with open(prompt_filepath, "r") as infile:
                     self.permission_denied_prompt = infile.read()
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, _request: Request) -> Response:
         return Response({"data": self.permission_denied_prompt})
 

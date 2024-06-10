@@ -1,9 +1,13 @@
 from typing import Optional
 
+from datasets_api.permissions import get_instance_timestamp_etag
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
+
+from django.views.decorators.http import etag
+from django.utils.decorators import method_decorator
 
 from dae.genomic_resources.histogram import NumberHistogram
 
@@ -11,6 +15,7 @@ from dae.genomic_resources.histogram import NumberHistogram
 class GenomicScoresView(QueryBaseView):
     """View for genomic scores database for the instance."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, _request: Request) -> Response:
         """List all genomic scores used by the GPF instance."""
         res = []
