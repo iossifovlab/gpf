@@ -5,6 +5,8 @@ from typing import Any, Optional, Union, cast
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from groups_api.serializers import GroupSerializer
 from query_base.query_base import QueryBaseView
 from rest_framework import status
@@ -12,15 +14,15 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from studies.study_wrapper import StudyWrapper, StudyWrapperBase
 
-from datasets_api.permissions import get_instance_timestamp_etag, get_permissions_etag, \
-    get_wdae_parents, user_has_permission
 from dae.studies.study import GenotypeData
+from datasets_api.permissions import (
+    get_instance_timestamp_etag,
+    get_permissions_etag,
+    get_wdae_parents,
+    user_has_permission,
+)
 
 from .models import Dataset, DatasetHierarchy
-
-from django.views.decorators.http import etag
-from django.utils.decorators import method_decorator
-
 
 logger = logging.getLogger(__name__)
 
