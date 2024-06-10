@@ -523,7 +523,7 @@ class RawFamilyVariants(abc.ABC):
                     return None
 
                 if not cls.filter_family_variant(v, **kwargs):
-                    logger.error(
+                    logger.info(
                         "family variants selected but not requested %s", v)
                     return None
 
@@ -538,7 +538,7 @@ class RawFamilyVariants(abc.ABC):
                 if alleles_matched:
                     v.set_matched_alleles(alleles_matched)
                     return v
-                logger.warning("no matched alleles for family variant: %s", v)
+                logger.info("no matched alleles for family variant: %s", v)
             except Exception as ex:  # pylint: disable=broad-except
                 logger.warning("unexpected error: %s", ex, exc_info=True)
                 return None

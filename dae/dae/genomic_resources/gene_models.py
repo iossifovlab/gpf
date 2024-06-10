@@ -1526,7 +1526,11 @@ def create_regions_from_genes(
     gene_regions_heuristic_cutoff: int = 20,
     gene_regions_heuristic_extend: int = 20000,
 ) -> Optional[list[Region]]:
-    """Produce a list of regions from given gene symbols."""
+    """Produce a list of regions from given gene symbols.
+
+    If given a list of regions, will merge the newly-created regions
+    from the genes with the provided ones.
+    """
     assert genes is not None
     assert gene_models is not None
 
