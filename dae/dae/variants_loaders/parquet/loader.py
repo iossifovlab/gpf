@@ -130,7 +130,7 @@ class ParquetLoader:
 
     SUMMARY_COLUMNS = [  # noqa: RUF012
         "bucket_index", "summary_index", "allele_index",
-        "summary_variant_data", "chromosome", "position",
+        "summary_variant_data", "chromosome", "position", "end_position",
     ]
 
     FAMILY_COLUMNS = [  # noqa: RUF012
@@ -272,7 +272,7 @@ class ParquetLoader:
             region_obj = Region.from_str(region)
             region_filter = (
                 (pc.field("chromosome") == region_obj.chrom)
-                & (pc.field("position") >= region_obj.start)
+                & (pc.field("end_position") >= region_obj.start)
                 & (pc.field("position") <= region_obj.stop)
             )
 
@@ -315,9 +315,9 @@ class ParquetLoader:
         for alleles in summary_reader:
             rec = alleles[0]
             if region_obj is not None \
-                and not region_obj.contains(Region(rec["chromosome"],
-                                                   rec["position"],
-                                                   rec["position"])):
+                and not region_obj.intersects(Region(rec["chromosome"],
+                                                     rec["position"],
+                                                     rec["end_position"])):
                 continue
 
             sv_idx = (rec["bucket_index"], rec["summary_index"])
