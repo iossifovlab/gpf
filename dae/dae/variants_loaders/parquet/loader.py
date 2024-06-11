@@ -34,11 +34,14 @@ class Reader:
     This class assumes variants are ordered by their bucket and summary index!
     """
 
+    BATCH_SIZE = 5000
+
     def __init__(self, path: str, columns: Iterable[str]):
         if "summary_index" not in columns or "bucket_index" not in columns:
             raise ValueError
         self.pq_file = pq.ParquetFile(path)
-        self.iterator = self.pq_file.iter_batches(columns=columns)
+        self.iterator = self.pq_file.iter_batches(
+            columns=columns, batch_size=Reader.BATCH_SIZE)
         self.batch: list[dict] = []
         self.exhausted = False
 
