@@ -130,6 +130,11 @@ class AnnotationTool:
         return pipeline
 
     def _get_pipeline_config(self) -> str:
+        if self.args.pipeline == "context":
+            return pathlib.Path(
+                self.gpf_instance.dae_dir,
+                self.gpf_instance.dae_config.annotation.conf_file,
+            ).read_text()
         if (pipeline_path := pathlib.Path(self.args.pipeline)).exists():
             return pipeline_path.read_text()
         if (pipeline_res := self.grr.find_resource(self.args.pipeline)):
