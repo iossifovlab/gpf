@@ -228,7 +228,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
   public errorModalBack(): void {
     this.errorModal = false;
 
-    let tabs = null as Set<string>;
+    let tabs = [] as string[];
 
     this.store.selectOnce(
       (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
@@ -236,7 +236,8 @@ export class GeneProfileSingleViewComponent implements OnInit {
         tabs = state.openedTabs;
       });
 
-    tabs.delete(this.geneSymbol);
+    const index = tabs.indexOf(this.geneSymbol, 0);
+    tabs.splice(index, 1);
 
     this.store.dispatch(new SetGeneProfilesTabs(tabs));
     this.router.navigate(['/gene-profiles']);

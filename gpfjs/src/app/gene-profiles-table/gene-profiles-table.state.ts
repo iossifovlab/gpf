@@ -4,7 +4,7 @@ import { State, Action, StateContext } from '@ngxs/store';
 export class SetGeneProfilesTabs {
   public static readonly type = '[Genotype] Set gene profiles tabs';
   public constructor(
-    public openedTabs: Set<string>
+    public openedTabs: string[]
   ) {}
 }
 export class SetGeneProfilesSearchValue {
@@ -16,7 +16,7 @@ export class SetGeneProfilesSearchValue {
 export class SetGeneProfilesHighlightedRows {
   public static readonly type = '[Genotype] Set gene profiles highlighted table rows';
   public constructor(
-    public highlightedRows: Set<string>
+    public highlightedRows: string[]
   ) {}
 }
 
@@ -42,9 +42,9 @@ export class SetGeneProfilesHeader {
 }
 
 export interface GeneProfilesModel {
-    openedTabs: Set<string>;
+    openedTabs: string[];
     searchValue: string;
-    highlightedRows: Set<string>;
+    highlightedRows: string[];
     sortBy: string;
     orderBy: string;
     headerLeaves: string[];
@@ -53,9 +53,9 @@ export interface GeneProfilesModel {
 @State<GeneProfilesModel>({
   name: 'geneProfilesState',
   defaults: {
-    openedTabs: new Set<string>(),
+    openedTabs: [],
     searchValue: '',
-    highlightedRows: new Set<string>(),
+    highlightedRows: [],
     sortBy: '',
     orderBy: 'desc',
     headerLeaves: []
