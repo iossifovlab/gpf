@@ -4,7 +4,6 @@ import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule, Store } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { UsersService } from 'app/users/users.service';
 import { PhenoToolComponent } from './pheno-tool.component';
@@ -20,6 +19,8 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 import { PhenoToolResults } from './pheno-tool-results';
+import { Dataset } from 'app/datasets/datasets';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 class PhenoToolServiceMock {
   public getPhenoToolResults(): Observable<PhenoToolResults> {
@@ -29,9 +30,6 @@ class PhenoToolServiceMock {
   public downloadPhenoToolResults(): Observable<HttpResponse<Blob>> {
     return of([] as any);
   }
-}
-class MockDatasetsService {
-  public getSelectedDataset = (): object => ({accessRights: true, id: 'testDatasetId'});
 }
 
 describe('PhenoToolComponent', () => {
@@ -51,7 +49,6 @@ describe('PhenoToolComponent', () => {
       ],
       providers: [
         {provide: ActivatedRoute, useValue: new ActivatedRoute()},
-        {provide: DatasetsService, useValue: new MockDatasetsService()},
         {provide: ConfigService, useValue: configMock},
         {provide: PhenoToolService, useValue: phenoToolMockService},
         UsersService,
@@ -67,9 +64,17 @@ describe('PhenoToolComponent', () => {
       schemas: [NO_ERRORS_SCHEMA]
     })
       .compileComponents();
-    store = TestBed.inject(Store);
     fixture = TestBed.createComponent(PhenoToolComponent);
     component = fixture.componentInstance;
+
+    // eslint-disable-next-line max-len
+    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null);
+    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+
+    component['store'] = {
+      selectOnce: () => of(selectedDatasetMockModel)
+    } as never;
+
     fixture.detectChanges();
   }));
 

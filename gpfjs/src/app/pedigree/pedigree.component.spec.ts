@@ -1,10 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { Observable, of } from 'rxjs';
 import { PedigreeComponent } from './pedigree.component';
+import { NgxsModule } from '@ngxs/store';
+import { Dataset } from 'app/datasets/datasets';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 class MockVariantReportsService {
   public getFamilies(): Observable<string[]> {
@@ -12,17 +14,11 @@ class MockVariantReportsService {
   }
 }
 
-class MockDatasetsService {
-  public getSelectedDataset(): object {
-    return { id: 'testDataset' };
-  }
-}
 
 describe('PedigreeComponent', () => {
   let component: PedigreeComponent;
   let fixture: ComponentFixture<PedigreeComponent>;
   let modalService: NgbModal;
-  const mockDatasetsService = new MockDatasetsService();
   const mockVariantReportsService = new MockVariantReportsService();
 
   beforeEach(async() => {
@@ -31,13 +27,22 @@ describe('PedigreeComponent', () => {
       providers: [
         {provide: VariantReportsService, useValue: mockVariantReportsService},
         ConfigService,
-        {provide: DatasetsService, useValue: mockDatasetsService},
-      ]
+      ],
+      imports: [NgxsModule.forRoot([], {developmentMode: true})]
     }).compileComponents();
 
     modalService = TestBed.inject(NgbModal);
     fixture = TestBed.createComponent(PedigreeComponent);
     component = fixture.componentInstance;
+
+    // eslint-disable-next-line max-len
+    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null);
+    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+
+    component['store'] = {
+      selectOnce: () => of(selectedDatasetMockModel)
+    } as never;
+
     fixture.detectChanges();
   });
 

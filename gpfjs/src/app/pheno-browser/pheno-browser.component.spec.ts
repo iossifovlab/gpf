@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { PhenoBrowserComponent } from './pheno-browser.component';
-import { DatasetsService } from '../datasets/datasets.service';
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure, PhenoRegressions } from './pheno-browser';
 import { fakeJsonMeasureOneRegression } from './pheno-browser.spec';
@@ -31,6 +30,9 @@ import { RegressionComparePipe } from 'app/utils/regression-compare.pipe';
 import { GetRegressionIdsPipe } from 'app/utils/get-regression-ids.pipe';
 import { BackgroundColorPipe } from 'app/utils/background-color.pipe';
 import { HttpClient, HttpHandler } from '@angular/common/http';
+import { NgxsModule } from '@ngxs/store';
+import { Dataset } from 'app/datasets/datasets';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 const fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression)) as object;
 fakeJsonMeasurei1['instrument_name'] = 'i1';
@@ -68,11 +70,6 @@ class MockPhenoBrowserService {
   public getDownloadMeasuresLink(): string {
     return '';
   }
-}
-
-class MockDatasetsService {
-  public getSelectedDataset = (): object => ({accessRights: true, id: 'testDatasetId'});
-  public getDatasetsLoadedObservable = (): Observable<void> => of();
 }
 
 class MockActivatedRoute {
@@ -113,7 +110,6 @@ describe('PhenoBrowserComponent', () => {
   let location: Location;
   const activatedRoute = new MockActivatedRoute();
   const phenoBrowserServiceMock = new MockPhenoBrowserService();
-  const datasetServiceMock = new MockDatasetsService();
 
   let locationSpy;
   const resizeSpy = {
@@ -126,7 +122,7 @@ describe('PhenoBrowserComponent', () => {
     };
 
     TestBed.configureTestingModule({
-      imports: [FormsModule, NgbModule],
+      imports: [FormsModule, NgbModule, NgxsModule.forRoot([], {developmentMode: true})],
       declarations: [GpfTableHeaderComponent, GpfTableHeaderCellComponent,
         GpfTableComponent, GpfTableCellComponent,
         GpfTableEmptyCellComponent, PhenoBrowserTableComponent,
@@ -139,7 +135,6 @@ describe('PhenoBrowserComponent', () => {
         PhenoBrowserComponent,
         HttpClient,
         HttpHandler,
-        { provide: DatasetsService, useValue: datasetServiceMock },
         { provide: PhenoBrowserService, useValue: phenoBrowserServiceMock },
         { provide: ActivatedRoute, useValue: activatedRoute },
         { provide: Router, useClass: MockRouter },
@@ -155,6 +150,14 @@ describe('PhenoBrowserComponent', () => {
 
     fixture = TestBed.createComponent(PhenoBrowserComponent);
     component = fixture.componentInstance;
+
+    // eslint-disable-next-line max-len
+    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null);
+    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+
+    component['store'] = {
+      selectOnce: () => of(selectedDatasetMockModel)
+    } as never;
 
     component.ngOnInit();
     fixture.detectChanges();
