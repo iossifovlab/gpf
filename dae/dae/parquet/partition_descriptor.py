@@ -15,6 +15,7 @@ import yaml
 
 from dae.effect_annotation.effect import expand_effect_types
 from dae.utils import fs_utils
+from dae.utils.regions import Region
 from dae.variants.attributes import TransmissionType
 from dae.variants.family_variant import FamilyAllele
 from dae.variants.variant import SummaryAllele
@@ -211,6 +212,19 @@ class PartitionDescriptor:
             return f"{chrom}_{pos_bin}"
 
         return f"other_{pos_bin}"
+
+    def region_to_bins(
+        self, region: Region, chrom_lens: dict[str, int],
+    ) -> list[tuple[str, str]]:
+        """Provide a list of bins the given region intersects."""
+        start = region.start or 0
+        stop = min(region.stop or start, chrom_lens[region.chrom])
+        if start == stop:
+            return [("region_bin", self.make_region_bin(region.chrom, start))]
+        return [
+            ("region_bin", self.make_region_bin(region.chrom, i))
+            for i in range(start, stop, self.region_length)
+        ]
 
     def make_family_bin(self, family_id: str) -> int:
         """Produce family bin for given family ID."""
