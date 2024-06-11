@@ -34,7 +34,7 @@ class Dataset(models.Model):
             dataset_object.groups.add(group)
 
     @classmethod
-    def set_broken(cls, dataset_id: str, broken: bool) -> None:
+    def set_broken(cls, dataset_id: str, *, broken: bool) -> None:
         """
         Set a Dataset object's broken status to the given value.
 

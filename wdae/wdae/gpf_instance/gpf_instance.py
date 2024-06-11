@@ -38,22 +38,20 @@ _PERMISSION_CHANGED_TIMESTAMP: float = 0
 
 
 def set_instance_timestamp() -> None:
-    global _INSTANCE_TIMESTAMP
+    global _INSTANCE_TIMESTAMP  # pylint: disable=global-statement
     _INSTANCE_TIMESTAMP = time.time()
 
 
 def get_instance_timestamp() -> float:
-    global _INSTANCE_TIMESTAMP
     return _INSTANCE_TIMESTAMP
 
 
 def set_permission_timestamp() -> None:
-    global _PERMISSION_CHANGED_TIMESTAMP
+    global _PERMISSION_CHANGED_TIMESTAMP  # pylint: disable=global-statement
     _PERMISSION_CHANGED_TIMESTAMP = time.time()
 
 
 def get_permission_timestamp() -> float:
-    global _PERMISSION_CHANGED_TIMESTAMP
     return _PERMISSION_CHANGED_TIMESTAMP
 
 
@@ -97,7 +95,8 @@ class WGPFInstance(GPFInstance):
         config_filename: Optional[Union[str, pathlib.Path]] = None,
         **kwargs: Any,
     ) -> WGPFInstance:
-        dae_config, dae_dir = GPFInstance._build_gpf_config(config_filename)
+        dae_config, dae_dir = GPFInstance._build_gpf_config(  # noqa: SLF001
+            config_filename)
         return WGPFInstance(dae_config, dae_dir, **kwargs)
 
     def load_remotes(self) -> None:
@@ -122,9 +121,8 @@ class WGPFInstance(GPFInstance):
                     )
                     self._clients[client.remote_id] = client
 
-                except ConnectionError as err:
-                    logger.error(err)
-                    logger.error("Failed to create remote %s", remote["id"])
+                except ConnectionError:
+                    logger.exception("Failed to create remote %s", remote["id"])
 
         self._remote_study_db = RemoteStudyDB(self._clients)
 
@@ -171,8 +169,7 @@ class WGPFInstance(GPFInstance):
     def genomic_scores(self) -> RemoteGenomicScoresRegistry:
         self.load_remotes()
         genomic_scores = super().genomic_scores
-        registry = RemoteGenomicScoresRegistry(self._clients, genomic_scores)
-        return registry
+        return RemoteGenomicScoresRegistry(self._clients, genomic_scores)
 
     def register_genotype_data(
         self, genotype_data: GenotypeData,
@@ -217,7 +214,7 @@ class WGPFInstance(GPFInstance):
 
         return wrapper
 
-    def get_genotype_data_ids(self, local_only: bool = False) -> list[str]:
+    def get_genotype_data_ids(self, *, local_only: bool = False) -> list[str]:
         result = list(super().get_genotype_data_ids())
         if not local_only:
             result.extend(self.remote_studies)
@@ -243,9 +240,8 @@ class WGPFInstance(GPFInstance):
         if genotype_data is not None:
             return genotype_data
         assert self._remote_study_db is not None
-        genotype_data = self._remote_study_db\
+        return self._remote_study_db\
             .get_genotype_data(genotype_data_id)
-        return genotype_data
 
     def get_genotype_data_config(self, genotype_data_id: str) -> Box:
         genotype_data_config = \
@@ -526,6 +522,7 @@ class WGPFInstance(GPFInstance):
 def column(
     col_id: str,
     display_name: str,
+    *,
     visible: bool = True,
     clickable: Optional[str] = None,
     display_vertical: bool = False,
@@ -606,12 +603,12 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
     from datasets_api.models import Dataset, DatasetHierarchy
     for genotype_data_id in gpf_instance.get_genotype_data_ids():
         Dataset.recreate_dataset_perm(genotype_data_id)
-        Dataset.set_broken(genotype_data_id, True)
+        Dataset.set_broken(genotype_data_id, broken=True)
 
         genotype_data = gpf_instance.get_genotype_data(genotype_data_id)
         if genotype_data is None:
             continue
-        Dataset.set_broken(genotype_data_id, False)
+        Dataset.set_broken(genotype_data_id, broken=False)
         Dataset.update_name(genotype_data_id, genotype_data.name)
         if not genotype_data.studies:
             continue

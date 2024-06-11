@@ -17,16 +17,16 @@ from dae.common_reports.common_report import CommonReport
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.gene_profile import gene_profiles_config
+from dae.gene_profile.db import GeneProfileDB
+from dae.gene_profile.statistic import GPStatistic
+from dae.gene_scores.gene_scores import GeneScore
+from dae.gene_scores.gene_scores import ScoreDesc as GeneScoreDesc
 from dae.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.gene_sets.gene_sets_db import (
     GeneSet,
     GeneSetsDb,
     build_gene_set_collection_from_resource,
 )
-from dae.gene_profile.db import GeneProfileDB
-from dae.gene_profile.statistic import GPStatistic
-from dae.gene_scores.gene_scores import GeneScore
-from dae.gene_scores.gene_scores import ScoreDesc as GeneScoreDesc
 from dae.genomic_resources.gene_models import GeneModels, TranscriptModel
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -322,7 +322,7 @@ class GPFInstance:
     def denovo_gene_sets_db(self) -> DenovoGeneSetsDb:
         return DenovoGeneSetsDb(self)
 
-    def get_genotype_data_ids(self, local_only: bool = False) -> list[str]:
+    def get_genotype_data_ids(self, *, local_only: bool = True) -> list[str]:
         # pylint: disable=unused-argument
         return cast(list[str], (
             self._variants_db.get_all_genotype_study_ids()
@@ -420,7 +420,7 @@ class GPFInstance:
     def get_all_common_report_configs(self) -> list[Box]:
         """Return all common report configuration."""
         configs = []
-        local_ids = self.get_genotype_data_ids(True)
+        local_ids = self.get_genotype_data_ids()
         for gd_id in local_ids:
             config = self.get_genotype_data_config(gd_id)
             if config is not None and config.common_report is not None:
