@@ -7,7 +7,7 @@ import pathlib
 import time
 from functools import cached_property
 from threading import Lock
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Callable, Optional, Union, cast
 
 from box import Box
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
@@ -49,7 +49,6 @@ def get_instance_timestamp() -> float:
 
 def set_permission_timestamp() -> None:
     global _PERMISSION_CHANGED_TIMESTAMP
-    print(time.time())
     _PERMISSION_CHANGED_TIMESTAMP = time.time()
 
 
@@ -58,12 +57,13 @@ def get_permission_timestamp() -> float:
     return _PERMISSION_CHANGED_TIMESTAMP
 
 
-def permission_update(request_function):
-    def decorated(*args, **kwargs):
+def permission_update(request_function: Callable) -> Callable:
+    def decorated(*args: Any, **kwargs: Any) -> Any:
         response = request_function(*args, **kwargs)
         set_permission_timestamp()
         return response
     return decorated
+
 
 class WGPFInstance(GPFInstance):
     """GPF instance class for use in wdae."""
@@ -74,8 +74,8 @@ class WGPFInstance(GPFInstance):
         **kwargs: dict[str, Any],
     ) -> None:
         self._remote_study_db: Optional[RemoteStudyDB] = None
-        self._clients: Dict[str, RESTClient] = {}
-        self._study_wrappers: Dict[
+        self._clients: dict[str, RESTClient] = {}
+        self._study_wrappers: dict[
             str, Union[StudyWrapper, RemoteStudyWrapper],
         ] = {}
         self._gp_configuration: Optional[dict[str, Any]] = None
@@ -138,13 +138,13 @@ class WGPFInstance(GPFInstance):
         return self._clients.get(remote_id)
 
     @property
-    def remote_study_clients(self) -> Dict[str, RESTClient]:
+    def remote_study_clients(self) -> dict[str, RESTClient]:
         if self._remote_study_db is None:
             raise ValueError("remote study db not initialized.")
         return self._remote_study_db.remote_study_clients
 
     @property
-    def remote_study_ids(self) -> Dict[str, str]:
+    def remote_study_ids(self) -> dict[str, str]:
         """Return remote studies IDs.
 
         Returns a dictionary mapping local prefixed remote study ids
