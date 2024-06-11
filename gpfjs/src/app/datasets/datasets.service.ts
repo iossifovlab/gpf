@@ -93,47 +93,47 @@ export class DatasetsService {
     );
   }
 
-  public setSelectedDatasetById(datasetId: string, force = false): void {
-    if (!force && this.selectedDataset$.getValue()?.id === datasetId) {
-      return;
-    }
-    this.getDatasetSubscription.unsubscribe();
-    this.getDatasetSubscription = this.getDataset(datasetId).pipe(
-      take(1),
-      tap(dataset => {
-        DatasetsService.genomeVersion = dataset.genome;
-      }),
-      catchError(() => of(undefined)) //marks dataset as invalid
-    ).subscribe((dataset) => {
-      this.selectedDataset$.next(dataset);
-      this.datasetLoaded$.next();
-    });
-  }
+  // public setSelectedDatasetById(datasetId: string, force = false): void {
+  //   if (!force && this.selectedDataset$.getValue()?.id === datasetId) {
+  //     return;
+  //   }
+  //   this.getDatasetSubscription.unsubscribe();
+  //   this.getDatasetSubscription = this.getDataset(datasetId).pipe(
+  //     take(1),
+  //     tap(dataset => {
+  //       DatasetsService.genomeVersion = dataset.genome;
+  //     }),
+  //     catchError(() => of(undefined)) //marks dataset as invalid
+  //   ).subscribe((dataset) => {
+  //     this.selectedDataset$.next(dataset);
+  //     this.datasetLoaded$.next();
+  //   });
+  // }
 
-  public reloadSelectedDataset(force = false): void {
-    if (this.selectedDataset$.getValue()) {
-      if (force) {
-        this.setSelectedDatasetById(this.getSelectedDataset().id, true);
-      }
-      this.datasetLoaded$.next();
-    }
-  }
+  // public reloadSelectedDataset(force = false): void {
+  //   if (this.selectedDataset$.getValue()) {
+  //     if (force) {
+  //       this.setSelectedDatasetById(this.getSelectedDataset().id, true);
+  //     }
+  //     this.datasetLoaded$.next();
+  //   }
+  // }
 
-  public getSelectedDatasetObservable(): Observable<Dataset> {
-    return this.selectedDataset$.asObservable();
-  }
+  // public getSelectedDatasetObservable(): Observable<Dataset> {
+  //   return this.selectedDataset$.asObservable();
+  // }
 
-  public getSelectedDataset(): Dataset {
-    return this.selectedDataset$.getValue();
-  }
+  // public getSelectedDataset(): Dataset {
+  //   return this.selectedDataset$.getValue();
+  // }
 
   public getDatasetsObservable(): Observable<Dataset[]> {
     return this.datasets$.asObservable();
   }
 
-  public getDatasetsLoadedObservable(): Subject<void> {
-    return this.datasetLoaded$;
-  }
+  // public getDatasetsLoadedObservable(): Subject<void> {
+  //   return this.datasetLoaded$;
+  // }
 
   private reloadAllDatasets(): void {
     this.getDatasets().pipe(take(1)).subscribe(() => null);

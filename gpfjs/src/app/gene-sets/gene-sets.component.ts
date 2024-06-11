@@ -3,7 +3,6 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
 import { GeneSetsCollection, GeneSet, GeneSetType } from './gene-sets';
 import { Subject, Observable, combineLatest, of } from 'rxjs';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { ValidateNested } from 'class-validator';
 import { Store } from '@ngxs/store';
 import { SetGeneSetsValues, GeneSetsState } from './gene-sets.state';
@@ -12,6 +11,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
 import { environment } from 'environments/environment';
 import { PersonSet } from 'app/datasets/datasets';
 import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -46,7 +46,6 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   public constructor(
     protected store: Store,
     private geneSetsService: GeneSetsService,
-    private datasetService: DatasetsService,
   ) {
     super(store, GeneSetsState, 'geneSets');
   }
@@ -55,7 +54,9 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     this.geneSetsLoaded = null;
     super.ngOnInit();
 
-    this.selectedDatasetId = this.datasetService.getSelectedDataset().id;
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
+      this.selectedDatasetId = state.selectedDataset.id;
+    });
 
     this.geneSetsService.getGeneSetsCollections().pipe(
       switchMap(geneSetsCollections => combineLatest(

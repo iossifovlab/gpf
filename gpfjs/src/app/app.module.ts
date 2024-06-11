@@ -188,6 +188,7 @@ import { GeneProfilesState } from './gene-profiles-table/gene-profiles-table.sta
 import { DatasetNodeState } from './dataset-node/dataset-node.state';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
+import { DatasetState } from './datasets/datasets.state';
 
 const appRoutes: Routes = [
   {
@@ -431,7 +432,7 @@ const appRoutes: Routes = [
       GeneSymbolsState, FamilyIdsState, FamilyTagsState, RegionsFilterState, StudyTypesState, GeneSetsState,
       GeneScoresState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
       StudyFiltersState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
-      UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState, DatasetNodeState
+      UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState, DatasetNodeState, DatasetState
     ], {compatibility: { strictContentSecurityPolicy: true }}
     ),
     NgxsResetPluginModule.forRoot(),

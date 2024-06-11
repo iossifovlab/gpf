@@ -3,7 +3,6 @@ import { Component, OnInit, ElementRef, QueryList, ViewChildren, ViewChild } fro
 import { combineLatest, ReplaySubject } from 'rxjs';
 import { ContinuousMeasure } from '../measures/measures';
 import { MeasuresService } from '../measures/measures.service';
-import { DatasetsService } from '../datasets/datasets.service';
 import { IsNotEmpty } from 'class-validator';
 import { Store } from '@ngxs/store';
 import { SetPhenoToolMeasure, PhenoToolMeasureState, PhenoToolMeasureModel } from './pheno-tool-measure.state';
@@ -11,6 +10,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
 import { take } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 interface Regression {
   display_name: string;
@@ -41,7 +41,6 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
   public constructor(
     protected store: Store,
     private measuresService: MeasuresService,
-    private datasetsService: DatasetsService,
   ) {
     super(store, PhenoToolMeasureState, 'phenoToolMeasure');
   }
@@ -49,16 +48,19 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
   public ngOnInit(): void {
     super.ngOnInit();
 
-    this.dataset = this.datasetsService.getSelectedDataset();
-    if (this.dataset?.phenotypeData) {
-      this.measuresService.getRegressions(this.dataset.id).pipe(take(1)).subscribe(res => {
-        this.regressions = res;
-        this.regressionNames = Object.getOwnPropertyNames(this.regressions);
-      }, () => {
-        // no regressions found in backend
-        // empty error handling block to prevent 404 error showing up in the pheno tool
-      });
-    }
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
+      this.dataset = state.selectedDataset;
+
+      if (this.dataset?.phenotypeData) {
+        this.measuresService.getRegressions(this.dataset.id).pipe(take(1)).subscribe(res => {
+          this.regressions = res;
+          this.regressionNames = Object.getOwnPropertyNames(this.regressions);
+        }, () => {
+          // no regressions found in backend
+          // empty error handling block to prevent 404 error showing up in the pheno tool
+        });
+      }
+    });
 
     combineLatest([this.store.selectOnce(PhenoToolMeasureState), this.measuresLoaded$]).pipe(take(1))
       .subscribe(async([state, measures]: [PhenoToolMeasureModel, ContinuousMeasure[]]) => {

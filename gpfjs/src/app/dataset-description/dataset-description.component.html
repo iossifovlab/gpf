@@ -1,4 +1,4 @@
-<ng-container *ngIf="dataset$ | async as dataset">
+<ng-container *ngIf="dataset">
   <gpf-markdown-editor
     [initialMarkdown]="dataset.description"
     [editable]="dataset.descriptionEditable"

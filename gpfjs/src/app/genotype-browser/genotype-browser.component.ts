@@ -3,10 +3,9 @@ import { Observable, Subscription } from 'rxjs';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
-import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset, PersonSet } from '../datasets/datasets';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
-import { Select, Selector } from '@ngxs/store';
+import { Select, Selector, Store } from '@ngxs/store';
 import { GenotypeBlockComponent } from '../genotype-block/genotype-block.component';
 import { GenesBlockComponent } from '../genes-block/genes-block.component';
 import { RegionsFilterState } from 'app/regions-filter/regions-filter.state';
@@ -19,6 +18,7 @@ import { filter, take } from 'rxjs/operators';
 import { StudyFiltersState } from 'app/study-filters/study-filters.state';
 import { clone } from 'lodash';
 import { NavigationStart, Router } from '@angular/router';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -83,8 +83,8 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     private queryService: QueryService,
     public readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
-    private datasetsService: DatasetsService,
-    private router: Router
+    private router: Router,
+    private store: Store
   ) {
     this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationStart)
@@ -97,7 +97,9 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public ngOnInit(): void {
     this.genotypeBrowserState = {};
 
-    this.selectedDataset = this.datasetsService.getSelectedDataset();
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
+      this.selectedDataset = state.selectedDataset;
+    });
 
     this.state$.subscribe(state => {
       this.genotypeBrowserState = {...state};

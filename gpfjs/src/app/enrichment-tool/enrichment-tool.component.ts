@@ -6,11 +6,11 @@ import { EnrichmentResults } from '../enrichment-query/enrichment-result';
 import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { Dataset } from 'app/datasets/datasets';
-import { DatasetsService } from 'app/datasets/datasets.service';
-import { Select, Selector } from '@ngxs/store';
+import { Select, Selector, Store } from '@ngxs/store';
 import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
 import { EnrichmentModelsState } from 'app/enrichment-models/enrichment-models.state';
 import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-enrichment-tool',
@@ -30,11 +30,14 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
   public constructor(
     private enrichmentQueryService: EnrichmentQueryService,
     private loadingService: FullscreenLoadingService,
-    private datasetsService: DatasetsService,
+    private store: Store
   ) { }
 
   public ngOnInit(): void {
-    this.selectedDataset = this.datasetsService.getSelectedDataset();
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
+      this.selectedDataset = state.selectedDataset;
+    });
+
     this.state$.subscribe(state => {
       this.enrichmentToolState = {
         datasetId: this.selectedDataset.id,

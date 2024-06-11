@@ -4,9 +4,9 @@ import { QueryService } from '../query/query.service';
 import { NgbDropdown, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { UsersService } from '../users/users.service';
 import { Store } from '@ngxs/store';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { share, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-save-query',
@@ -35,7 +35,6 @@ export class SaveQueryComponent implements OnInit {
     private store: Store,
     private queryService: QueryService,
     private usersService: UsersService,
-    private datasetsService: DatasetsService,
     private changeDetectorRef: ChangeDetectorRef
   ) { }
 
@@ -46,7 +45,11 @@ export class SaveQueryComponent implements OnInit {
   public saveUserQuery(name: string, description: string): void {
     this.nameInputRef.nativeElement.value = '';
     this.descInputRef.nativeElement.value = '';
-    const datasetId = this.datasetsService.getSelectedDataset().id;
+
+    let datasetId = '';
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
+      datasetId = state.selectedDataset.id;
+    });
 
     this.store.selectOnce(state => state).subscribe(state => {
       state['datasetId'] = datasetId;
@@ -78,7 +81,11 @@ export class SaveQueryComponent implements OnInit {
       return;
     }
 
-    const datasetId = this.datasetsService.getSelectedDataset().id;
+    let datasetId = '';
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
+      datasetId = state.selectedDataset.id;
+    });
+
     this.store.selectOnce(state => state).subscribe(state => {
       state['datasetId'] = datasetId;
 
