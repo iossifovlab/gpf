@@ -4,18 +4,18 @@ import { State, Action, StateContext } from '@ngxs/store';
 export class SetExpandedDatasets {
   public static readonly type = '[Genotype] Set expanded datasets';
   public constructor(
-    public expandedDatasets: Set<string>
+    public expandedDatasets: string[]
   ) {}
 }
 
 export interface DatasetNodeModel {
-    expandedDatasets: Set<string>;
+    expandedDatasets: string[];
 }
 
 @State<DatasetNodeModel>({
   name: 'datasetNodeState',
   defaults: {
-    expandedDatasets: new Set<string>()
+    expandedDatasets: []
   },
 })
 @Injectable()
