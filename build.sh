@@ -100,6 +100,9 @@ EOF
     build_run env gpf_release_version="${gpf_release_version}" bash -e -x << 'EOF'
 
         cd "projects/gpf.repo"
+        rm -rf dae/dae/docs/modules
+        rm -rf wdae/wdae/docs/modules
+
         git checkout master
         git pull --ff-only
         git checkout "${gpf_release_version}"
