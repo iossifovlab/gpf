@@ -1,31 +1,44 @@
-<div ngbDropdown class="input-group" style="display: inline-flex; flex-wrap: nowrap">
+<div
+  matAutocompleteOrigin
+  #phenoMeasureSearch="matAutocompleteOrigin"
+  class="input-group"
+  style="display: inline-flex; flex-wrap: nowrap">
   <input
-    ngbDropdownAnchor
-    #searchBox
+    matInput
+    [matAutocomplete]="measuresDropdown"
+    [matAutocompleteConnectedTo]="phenoMeasureSearch"
+    #triggeMeasuresDropdown="matAutocompleteTrigger"
+    #measuresSearchBox
     id="search-box"
     placeholder="Select or start typing to search"
     autocomplete="off"
     spellcheck="false"
     [(ngModel)]="searchString"
-    (keyup)="openDropdown(); loadDropdownData()"
-    (click)="clear(); openDropdown(); loadDropdownData()"
-    (keydown.escape)="closeDropdown()"
+    (keyup)="loadDropdownData()"
+    (mousedown)="clear()"
     style="width: 100%" />
-  <div ngbDropdownMenu style="z-index: 3; width: 100%; max-height: 300px; overflow-y: scroll">
-    <ng-container *ngIf="filteredMeasures.length === 0">
-      <div id="loading-dropdown-text" *ngIf="loadingMeasures || loadingDropdown">Loading...</div>
-      <div id="loading-dropdown-text" *ngIf="!loadingDropdown">Nothing found</div>
-    </ng-container>
 
-    <button
+  <mat-autocomplete autoActiveFirstOption #measuresDropdown="matAutocomplete" class="measures-dropdown">
+    <ng-container *ngIf="filteredMeasures.length === 0">
+      <mat-option [disabled]="true" class="status-info" *ngIf="loadingMeasures || loadingDropdown"
+        >Loading...</mat-option
+      >
+      <mat-option [disabled]="true" class="status-info" *ngIf="!(loadingMeasures || loadingDropdown)"
+        >Nothing found</mat-option
+      >
+    </ng-container>
+    <mat-option
       *ngFor="let measure of filteredMeasures"
       class="dropdown-item"
       type="button"
       (click)="selectMeasure(measure)"
-      (keydown.enter)="selectMeasure(measure)">
-      <span innerHtml="{{ measure.name | boldMatching : searchString }}"></span>
-    </button>
-  </div>
+      (onSelectionChange)="selectMeasure(measure)"
+      [value]="measure.name"
+      [title]="measure.name">
+      <span [innerHTML]="isSelected ? measure.name : (measure.name | boldMatching : searchString)"></span>
+    </mat-option>
+  </mat-autocomplete>
+
   <div class="input-group-append">
     <button (click)="clear()" class="btn btn-secondary clear-button" id="clear-measure-button"
       ><span id="clear-pheno-measure-icon" class="material-symbols-outlined sm">close</span></button

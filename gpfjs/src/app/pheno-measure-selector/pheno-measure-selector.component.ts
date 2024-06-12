@@ -1,10 +1,10 @@
-import { Component, OnChanges, Input, ViewChild, Output, EventEmitter, 
+import { Component, OnChanges, Input, ViewChild, Output, EventEmitter,
   ElementRef } from '@angular/core';
 
 import { MeasuresService } from '../measures/measures.service';
 import { ContinuousMeasure } from '../measures/measures';
 import { first } from 'rxjs/operators';
-import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
+import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'gpf-pheno-measure-selector',
@@ -16,8 +16,8 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   @Output() public selectedMeasureChange = new EventEmitter(true);
   @Output() public measuresChange = new EventEmitter(true);
 
-  @ViewChild('searchBox') private searchBox: ElementRef;
-  @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
+  @ViewChild('measuresSearchBox') private searchBox: ElementRef;
+  @ViewChild('triggeMeasuresDropdown') private dropdownTrigger: MatAutocompleteTrigger;
 
   public measures: Array<ContinuousMeasure> = [];
   public filteredMeasures: Array<ContinuousMeasure> = [];
@@ -25,6 +25,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   public selectedMeasure: ContinuousMeasure;
   public loadingMeasures = false;
   public loadingDropdown = false;
+  public isSelected = false;
 
   public constructor(
     private measuresService: MeasuresService,
@@ -35,6 +36,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
       this.loadingMeasures = true;
       this.measuresService.getContinuousMeasures(this.datasetId).pipe(first()).subscribe(measures => {
         this.measures = measures;
+        this.filterData();
         this.measuresChange.emit(this.measures);
         this.loadingMeasures = false;
       });
@@ -44,26 +46,19 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   public selectMeasure(measure: ContinuousMeasure, sendEvent: boolean = true): void {
     this.selectedMeasure = measure;
     this.searchString = measure ? measure.name : '';
+    if (measure) {
+      this.dropdownTrigger.closePanel();
+      (this.searchBox.nativeElement as HTMLInputElement).blur();
+    }
+
     if (sendEvent) {
       this.selectedMeasureChange.emit(measure);
     }
   }
 
-  public openDropdown(): void {
-    if (this.dropdown && !this.dropdown.isOpen()) {
-      this.dropdown.open();
-    }
-  }
-
-  public closeDropdown(): void {
-    if (this.dropdown && this.dropdown.isOpen()) {
-      this.dropdown.close();
-      (this.searchBox.nativeElement as HTMLInputElement).blur();
-    }
-  }
-
   public clear(): void {
     this.selectMeasure(null);
+    this.isSelected = false;
     this.loadDropdownData();
   }
 
@@ -85,7 +80,6 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
 
   private filterData(): void {
     this.filteredMeasures = this.measures;
-
     if (this.searchString.length) {
       this.filteredMeasures = this.filteredMeasures.filter(measure =>
         measure.name.toLowerCase().indexOf(this.searchString.toLowerCase()) !== -1

@@ -18,30 +18,35 @@
           <h4>Single gene</h4>
         </div>
 
-        <div ngbDropdown style="padding: 15px; align-items: baseline">
+        <div style="padding: 15px; align-items: baseline">
           <input
-            ngbDropdownAnchor
+            matAutocompleteOrigin
+            #geneSearchHome="matAutocompleteOrigin"
+            #trigger="matAutocompleteTrigger"
+            matInput
+            [matAutocomplete]="geneDropdownHome"
+            [matAutocompleteConnectedTo]="geneSearchHome"
             #searchBox
             id="search-box"
             placeholder="Search gene"
             autocomplete="off"
             spellcheck="false"
             [(ngModel)]="geneSymbol"
-            (keyup)="openDropdown(); searchBoxInput$.next(geneSymbol)"
-            (focus)="geneSymbol = ''; showError = false"
-            (keydown.enter)="openSingleView(geneSymbol); closeDropdown()"
-            (keydown.escape)="closeDropdown()" />
+            (keyup)="searchBoxInput$.next(geneSymbol)"
+            (focus)="reset()"
+            (onSelectionChange)="openSingleView(geneSymbol)" />
 
-          <div ngbDropdownMenu id="genes-dropdown">
-            <button
+          <mat-autocomplete autoActiveFirstOption #geneDropdownHome="matAutocomplete" class="genes-dropdown">
+            <mat-option
               *ngFor="let suggestion of geneSymbolSuggestions"
               class="dropdown-item"
               type="button"
               (click)="openSingleView(suggestion)"
-              (keydown.enter)="openSingleView(suggestion); closeDropdown()">
+              (onSelectionChange)="openSingleView(suggestion)"
+              [value]="suggestion">
               <span>{{ suggestion }}</span>
-            </button>
-          </div>
+            </mat-option>
+          </mat-autocomplete>
         </div>
         <div id="no-gene-found" [hidden]="!showError" class="alert alert-danger" role="alert">
           <span>No such gene found!</span>

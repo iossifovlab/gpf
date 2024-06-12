@@ -79,7 +79,7 @@ import { PhenoBrowserService } from './pheno-browser/pheno-browser.service';
 import { PhenoBrowserModalContentComponent } from './pheno-browser-modal-content/pheno-browser-modal-content.component';
 import { PhenoBrowserTableComponent } from './pheno-browser-table/pheno-browser-table.component';
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { BrowserAnimationsModule, NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { PeopleCounterRowPipe, VariantReportsComponent } from './variant-reports/variant-reports.component';
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
@@ -178,8 +178,6 @@ import { FederationCredentialsComponent } from './federation-credentials/federat
 import { StudyFiltersTreeComponent } from './treelist-checkbox/treelist-checkbox.component';
 import { LoginComponent } from './login/login.component';
 import { DatasetsTreeService } from './datasets/datasets-tree.service';
-import { SearchableSelectComponent } from './searchable-select/searchable-select.component';
-import { SearchableSelectTemplateDirective } from './searchable-select/searchable-select-template.directive';
 import { HelperModalComponent } from './helper-modal/helper-modal.component';
 import { HomeComponent } from './home/home.component';
 import { AboutComponent } from './about/about.component';
@@ -188,6 +186,8 @@ import { FamilyTagsComponent } from './family-tags/family-tags.component';
 import { FamilyTagsState } from './family-tags/family-tags.state';
 import { GeneProfilesState } from './gene-profiles-table/gene-profiles-table.state';
 import { DatasetNodeState } from './dataset-node/dataset-node.state';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatInputModule } from '@angular/material/input';
 
 const appRoutes: Routes = [
   {
@@ -405,8 +405,6 @@ const appRoutes: Routes = [
     FederationCredentialsComponent,
     StudyFiltersTreeComponent,
     LoginComponent,
-    SearchableSelectComponent,
-    SearchableSelectTemplateDirective,
     HelperModalComponent,
     HomeComponent,
     AboutComponent,
@@ -439,7 +437,10 @@ const appRoutes: Routes = [
     NgxsResetPluginModule.forRoot(),
     DragDropModule,
     ClipboardModule,
-    AngularMarkdownEditorModule.forRoot()
+    AngularMarkdownEditorModule.forRoot(),
+    MatAutocompleteModule,
+    MatInputModule,
+    NoopAnimationsModule
   ],
   providers: [
     CookieService,

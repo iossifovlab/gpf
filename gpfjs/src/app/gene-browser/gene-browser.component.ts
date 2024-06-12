@@ -14,9 +14,9 @@ import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-load
 import { ConfigService } from 'app/config/config.service';
 import * as d3 from 'd3';
 import * as draw from 'app/utils/svg-drawing';
-import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
+import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -24,8 +24,8 @@ import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
   styleUrls: ['./gene-browser.component.css'],
 })
 export class GeneBrowserComponent implements OnInit, OnDestroy {
-  @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
   @ViewChild('searchBox') private searchBox: ElementRef;
+  @ViewChild('geneBrowserSearchTrigger') private geneBrowserSearchTrigger: MatAutocompleteTrigger;
   @ViewChild('filters', { static: false }) public set filters(element: HTMLElement) {
     this.drawDenovoIcons();
     this.drawTransmittedIcons();
@@ -146,28 +146,19 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public selectGeneSymbol(geneSymbol: string): void {
+    (this.searchBox.nativeElement as HTMLElement).blur();
     this.geneSymbol = geneSymbol;
   }
 
   public reset(): void {
+    this.geneSymbol = '';
     this.showResults = false;
+    this.geneSymbolSuggestions = [];
     this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser`);
   }
 
-  public openDropdown(): void {
-    if (this.dropdown && !this.dropdown.isOpen()) {
-      this.dropdown.open();
-    }
-  }
-
-  public closeDropdown(): void {
-    if (this.dropdown && this.dropdown.isOpen()) {
-      this.dropdown.close();
-      (this.searchBox.nativeElement as HTMLElement).blur();
-    }
-  }
-
   public async submitGeneRequest(geneSymbol?: string): Promise<void> {
+    (this.searchBox.nativeElement as HTMLElement).blur();
     if (this.showError) {
       return;
     }
@@ -178,7 +169,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     if (!this.geneSymbol) {
       return;
     }
-    this.closeDropdown();
     try {
       this.selectedGene = await this.geneService.getGene(
         this.geneSymbol.trim()
@@ -187,6 +177,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error(error);
       this.showError = true;
+      this.geneBrowserSearchTrigger.closePanel();
       return;
     }
 

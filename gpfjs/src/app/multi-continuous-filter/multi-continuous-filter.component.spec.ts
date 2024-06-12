@@ -7,20 +7,11 @@ import { MeasuresService } from 'app/measures/measures.service';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
 import { UsersService } from 'app/users/users.service';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter.component';
-import { Component, Input } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { NgxsModule } from '@ngxs/store';
 import { FormsModule } from '@angular/forms';
 import { PhenoMeasure } from 'app/pheno-browser/pheno-browser';
-
-@Component({
-  selector: 'gpf-searchable-select',
-  template: ''
-})
-class SearchableSelectMockComponent {
-  @Input() public data;
-  @Input() public caption;
-}
+import { MatAutocompleteOrigin, MatAutocomplete, MAT_AUTOCOMPLETE_SCROLL_STRATEGY, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 const SelectionMock = {
   isEmpty: (): boolean => true,
@@ -67,7 +58,9 @@ describe('MultiContinuousFilterComponent', () => {
       declarations: [
         MultiContinuousFilterComponent,
         PhenoMeasureSelectorComponent,
-        SearchableSelectMockComponent,
+        MatAutocompleteOrigin,
+        MatAutocomplete,
+        MatAutocompleteTrigger
       ],
       providers: [
         MultiContinuousFilterComponent,
@@ -75,7 +68,8 @@ describe('MultiContinuousFilterComponent', () => {
         HttpClientTestingModule,
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
-        UsersService
+        UsersService,
+        {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
       ],
       imports: [
         RouterTestingModule,
