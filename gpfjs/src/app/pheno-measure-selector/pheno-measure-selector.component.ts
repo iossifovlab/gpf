@@ -4,6 +4,7 @@ import { Component, OnChanges, Input, ViewChild, Output, EventEmitter,
 import { MeasuresService } from '../measures/measures.service';
 import { ContinuousMeasure } from '../measures/measures';
 import { first } from 'rxjs/operators';
+import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'gpf-pheno-measure-selector',
@@ -15,7 +16,8 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   @Output() public selectedMeasureChange = new EventEmitter(true);
   @Output() public measuresChange = new EventEmitter(true);
 
-  @ViewChild('searchBox') private searchBox: ElementRef;
+  @ViewChild('measuresSearchBox') private searchBox: ElementRef;
+  @ViewChild('triggeMeasuresDropdown') private dropdownTrigger: MatAutocompleteTrigger;
 
   public measures: Array<ContinuousMeasure> = [];
   public filteredMeasures: Array<ContinuousMeasure> = [];
@@ -45,7 +47,8 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
     this.selectedMeasure = measure;
     this.searchString = measure ? measure.name : '';
     if (measure) {
-      (this.searchBox.nativeElement as HTMLElement).blur();
+      this.dropdownTrigger.closePanel();
+      (this.searchBox.nativeElement as HTMLInputElement).blur();
     }
 
     if (sendEvent) {

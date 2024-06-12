@@ -11,7 +11,7 @@ import { Observable, of } from 'rxjs';
 import { NgxsModule } from '@ngxs/store';
 import { FormsModule } from '@angular/forms';
 import { PhenoMeasure } from 'app/pheno-browser/pheno-browser';
-import { MatAutocompleteOrigin, MatAutocomplete } from '@angular/material/autocomplete';
+import { MatAutocompleteOrigin, MatAutocomplete, MAT_AUTOCOMPLETE_SCROLL_STRATEGY, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 const SelectionMock = {
   isEmpty: (): boolean => true,
@@ -59,7 +59,8 @@ describe('MultiContinuousFilterComponent', () => {
         MultiContinuousFilterComponent,
         PhenoMeasureSelectorComponent,
         MatAutocompleteOrigin,
-        MatAutocomplete
+        MatAutocomplete,
+        MatAutocompleteTrigger
       ],
       providers: [
         MultiContinuousFilterComponent,
@@ -68,6 +69,7 @@ describe('MultiContinuousFilterComponent', () => {
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
         UsersService,
+        {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
       ],
       imports: [
         RouterTestingModule,

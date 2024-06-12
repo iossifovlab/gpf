@@ -7,7 +7,8 @@
     matInput
     [matAutocomplete]="measuresDropdown"
     [matAutocompleteConnectedTo]="phenoMeasureSearch"
-    #searchBox
+    #triggeMeasuresDropdown="matAutocompleteTrigger"
+    #measuresSearchBox
     id="search-box"
     placeholder="Select or start typing to search"
     autocomplete="off"
@@ -17,7 +18,7 @@
     (mousedown)="clear()"
     style="width: 100%" />
 
-  <mat-autocomplete #measuresDropdown="matAutocomplete" class="measures-dropdown">
+  <mat-autocomplete autoActiveFirstOption #measuresDropdown="matAutocomplete" class="measures-dropdown">
     <ng-container *ngIf="filteredMeasures.length === 0">
       <mat-option [disabled]="true" class="status-info" *ngIf="loadingMeasures || loadingDropdown"
         >Loading...</mat-option
@@ -31,7 +32,6 @@
       class="dropdown-item"
       type="button"
       (click)="selectMeasure(measure)"
-      (mousedown)="isSelected = true"
       (onSelectionChange)="selectMeasure(measure)"
       [value]="measure.name"
       [title]="measure.name">

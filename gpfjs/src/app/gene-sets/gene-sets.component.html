@@ -80,7 +80,7 @@
             placeholder="Select or start typing to search"
             (click)="reset()"
             spellcheck="false" />
-          <mat-autocomplete #geneSetsDropdown="matAutocomplete" class="sets-dropdown">
+          <mat-autocomplete autoActiveFirstOption #geneSetsDropdown="matAutocomplete" class="sets-dropdown">
             <mat-option [disabled]="true" class="status-info" *ngIf="isLoading && geneSets.length === 0"
               >Loading...</mat-option
             >

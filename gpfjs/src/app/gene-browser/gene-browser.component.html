@@ -20,9 +20,9 @@
           [(ngModel)]="geneSymbol"
           (keyup)="searchBoxInput$.next(geneSymbol)"
           (focus)="reset()"
-          (keydown.enter)="submitGeneRequest()" />
+          (keydown.enter)="submitGeneRequest(); geneBrowserSearchTrigger.closePanel()" />
 
-        <mat-autocomplete #geneDropdown="matAutocomplete" class="gene-suggestions-dropdown">
+        <mat-autocomplete autoActiveFirstOption #geneDropdown="matAutocomplete" class="gene-suggestions-dropdown">
           <mat-option
             *ngFor="let suggestion of geneSymbolSuggestions"
             class="dropdown-item"

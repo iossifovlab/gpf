@@ -79,7 +79,7 @@ import { PhenoBrowserService } from './pheno-browser/pheno-browser.service';
 import { PhenoBrowserModalContentComponent } from './pheno-browser-modal-content/pheno-browser-modal-content.component';
 import { PhenoBrowserTableComponent } from './pheno-browser-table/pheno-browser-table.component';
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { BrowserAnimationsModule, NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { PeopleCounterRowPipe, VariantReportsComponent } from './variant-reports/variant-reports.component';
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
@@ -439,7 +439,8 @@ const appRoutes: Routes = [
     ClipboardModule,
     AngularMarkdownEditorModule.forRoot(),
     MatAutocompleteModule,
-    MatInputModule
+    MatInputModule,
+    NoopAnimationsModule
   ],
   providers: [
     CookieService,

@@ -36,7 +36,7 @@
             (focus)="reset()"
             (onSelectionChange)="openSingleView(geneSymbol)" />
 
-          <mat-autocomplete #geneDropdownHome="matAutocomplete" class="genes-dropdown">
+          <mat-autocomplete autoActiveFirstOption #geneDropdownHome="matAutocomplete" class="genes-dropdown">
             <mat-option
               *ngFor="let suggestion of geneSymbolSuggestions"
               class="dropdown-item"
