@@ -85,7 +85,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
       (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
       .subscribe(state => {
         this.datasetTrees.forEach(node => {
-          state.expandedDatasets.add(node.dataset.id);
+          state.expandedDatasets.push(node.dataset.id);
         });
         this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
       });

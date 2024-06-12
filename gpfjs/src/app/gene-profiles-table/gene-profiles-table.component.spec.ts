@@ -271,9 +271,9 @@ describe('GeneProfilesTableComponent', () => {
     component.config = configMock;
     store = TestBed.inject(Store);
     jest.spyOn(store, 'selectOnce').mockReturnValue(of({
-      openedTabs: new Set<string>(),
+      openedTabs: [],
       searchValue: '',
-      highlightedRows: new Set<string>(),
+      highlightedRows: [],
       sortBy: 'column1',
       orderBy: 'desc',
       headerLeaves: []

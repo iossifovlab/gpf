@@ -42,7 +42,7 @@ export class DatasetNodeComponent extends StatefulComponent implements OnInit, A
     this.store.selectOnce(
       (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
       .subscribe(state => {
-        if (state.expandedDatasets.has(this.datasetNode.dataset.id)) {
+        if (state.expandedDatasets.includes(this.datasetNode.dataset.id)) {
           this.isExpanded = true;
         }
       });
@@ -85,8 +85,10 @@ export class DatasetNodeComponent extends StatefulComponent implements OnInit, A
     this.store.selectOnce(
       (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
       .subscribe(state => {
-        state.expandedDatasets.add(nodeId);
-        this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
+        if (!state.expandedDatasets.includes(nodeId)) {
+          state.expandedDatasets.push(nodeId);
+          this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
+        }
       });
   }
 
@@ -94,8 +96,11 @@ export class DatasetNodeComponent extends StatefulComponent implements OnInit, A
     this.store.selectOnce(
       (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
       .subscribe(state => {
-        state.expandedDatasets.delete(nodeId);
-        this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
+        if (state.expandedDatasets.includes(nodeId)) {
+          const index = state.expandedDatasets.indexOf(nodeId, 0);
+          state.expandedDatasets.splice(index, 1);
+          this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
+        }
       });
   }
 
@@ -103,10 +108,11 @@ export class DatasetNodeComponent extends StatefulComponent implements OnInit, A
     this.store.selectOnce(
       (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
       .subscribe(state => {
-        if (state.expandedDatasets.has(nodeId)) {
-          state.expandedDatasets.delete(nodeId);
+        if (state.expandedDatasets.includes(nodeId)) {
+          const index = state.expandedDatasets.indexOf(nodeId, 0);
+          state.expandedDatasets.splice(index, 1);
         } else {
-          state.expandedDatasets.add(nodeId);
+          state.expandedDatasets.push(nodeId);
         }
         this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
       });
