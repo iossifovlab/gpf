@@ -5,6 +5,7 @@ import
 package-lock.json
 results
 /build-env/*
+/build-scripts-tmp/*
 Jenkinsfile.generated-stages.all
 .build-scripts-tmp-sessions
 ts-lint-report.xml
