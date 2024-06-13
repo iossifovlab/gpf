@@ -218,12 +218,14 @@ class PartitionDescriptor:
     ) -> list[tuple[str, str]]:
         """Provide a list of bins the given region intersects."""
         start = region.start or 0
-        stop = min(region.stop or start, chrom_lens[region.chrom])
+        stop = min(region.stop or start, chrom_lens[region.chrom] - 1)
         if start == stop:
             return [("region_bin", self.make_region_bin(region.chrom, start))]
         return [
-            ("region_bin", self.make_region_bin(region.chrom, i))
-            for i in range(start, stop, self.region_length)
+            ("region_bin", self.make_region_bin(region.chrom,
+                                                i * self.region_length))
+            for i in range(int(start / self.region_length),
+                           int(stop / self.region_length) + 1)
         ]
 
     def make_family_bin(self, family_id: str) -> int:

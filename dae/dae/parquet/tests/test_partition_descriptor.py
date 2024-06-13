@@ -368,14 +368,14 @@ def test_region_to_bins() -> None:
         region_length = 8
     """)
     chrom_lens = {"foo": 24}
-    assert pd.region_to_bins(Region("foo", 0, 8), chrom_lens) == [
+    assert pd.region_to_bins(Region("foo", 0, 7), chrom_lens) == [
         ("region_bin", "foo_0")]
-    assert pd.region_to_bins(Region("foo", 0, 16), chrom_lens) == [
+    assert pd.region_to_bins(Region("foo", 0, 8), chrom_lens) == [
         ("region_bin", "foo_0"),
         ("region_bin", "foo_1")]
     assert pd.region_to_bins(Region("foo", 0), chrom_lens) == [
         ("region_bin", "foo_0")]
-    assert pd.region_to_bins(Region("foo", stop=16), chrom_lens) == [
+    assert pd.region_to_bins(Region("foo", stop=15), chrom_lens) == [
         ("region_bin", "foo_0"),
         ("region_bin", "foo_1")]
     assert pd.region_to_bins(Region("foo"), chrom_lens) == [
