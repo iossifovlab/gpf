@@ -387,7 +387,7 @@ class ReferenceGenomeImplementation(
                         <th>Chrom</th>
                         <th>Length</th>
                         {% for nucleotide in
-                            data["global_statistic"]["nuc_distribution"].keys() %}
+                            data["global_statistic"]["nuc_distribution"].keys()|sort %}
                             <th>{{ nucleotide }}</th>
                         {% endfor %}
                     </tr>
@@ -396,7 +396,7 @@ class ReferenceGenomeImplementation(
                             <td>{{ chrom }}</td>
                             <td>{{ '{:,}'.format(length) }}</td>
                             {% for nucleotide in
-                                data["global_statistic"]["nuc_distribution"].keys() %}
+                                data["global_statistic"]["nuc_distribution"].keys()|sort %}
                                 {% if data["chrom_statistics"].get(chrom) %}
                                     <td>{{ "%0.2f%%" % data["chrom_statistics"].get(chrom).nucleotide_distribution.get(nucleotide) }}</td>
                                 {% else %}

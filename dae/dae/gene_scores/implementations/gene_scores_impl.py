@@ -141,6 +141,50 @@ GENE_SCORES_TEMPLATE = """
 {% extends base %}
 {% block content %}
 
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        padding-top: 100px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        justify-content: center;
+    }
+    .modal-content {
+        margin: auto;
+        display: block;
+        width: 80%;
+        max-width: 700px;
+    }
+    .close {
+        float: right;
+        font-size: 40px;
+        font-weight: bold;
+    }
+    .close:hover,
+    .close:focus {
+         color: #bbb;
+         text-decoration: none;
+         cursor: pointer;
+    }
+</style>
+{% block javascript %}
+    <script type="text/javascript">
+        function openModal(scoreId) {
+            var modal = document.getElementById("modal-" + scoreId);
+            modal.style.display = "flex";
+        }
+        function closeModal(scoreId) {
+            var modal = document.getElementById("modal-" + scoreId);
+            modal.style.display = "none";
+        }
+    </script>
+{% endblock %}
+
 {% set score = data.gene_score %}
 
 <h1>Scores</h1>
@@ -178,9 +222,11 @@ GENE_SCORES_TEMPLATE = """
                 {% if hist %}
                     <div class="histogram">
                         <img src="{{score.get_histogram_image_filename(score_id)}}"
-                        width="200px"
-                        alt={{ score_id }}
-                        title={{ score_id }}>
+                            width="200px"
+                            alt={{ score_id }}
+                            title={{ score_id | replace(" ", "_")}}
+                            style="cursor: pointer"
+                            onclick="openModal(title)">>
                     </div>
                 {% endif %}
                 </td>
@@ -194,6 +240,18 @@ GENE_SCORES_TEMPLATE = """
                 </td>
             </tr>
         {% endfor %}
+        {%- for score_id in score.score_definitions.keys() -%}
+            <div id="modal-{{score_id | replace(" ", "_")}}" class="modal">
+                <div style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+                    <span title={{score_id | replace(" ", "_")}} class="close" onclick="closeModal(title)">&times;</span>
+                    <img class="modal-content" id="histogram-{{score_id}}"
+                        src="{{ score.get_histogram_image_filename(score_id) }}"
+                        alt="{{ "HISTOGRAM FOR " + score_id }}"
+                        title={{ score_id | replace(" ", "_")}}
+                        width="200">
+                </div>
+            </div>
+        {%- endfor %}
     </table>
 {% endblock %}
 """  # noqa: E501
