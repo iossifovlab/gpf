@@ -1,6 +1,7 @@
 import glob
 import json
 import os
+import pathlib
 from collections.abc import Generator, Iterable
 from typing import Optional
 
@@ -164,9 +165,36 @@ class ParquetLoader:
             self.meta.get("partition_description", "").strip(),
         )
 
-        self.contigs = []
-        if "contigs" in self.meta:
-            self.contigs = self.meta["contigs"].split(",")
+        self.files_per_region = self._scan_region_bins()
+
+        self.contigs: dict[str, int] = {}
+        if self.meta.get("contigs"):
+            self.contigs = {
+                contig[0]: int(contig[1])
+                for contig in [r.split("=") for r in
+                               self.meta["contigs"].split(",")]
+            }
+
+    def _scan_region_bins(self) -> dict[tuple[str, str], list[str]]:
+        if not self.layout.summary:
+            return {}
+
+        if not self.partitioned \
+           or not self.partition_descriptor.has_region_bins():
+            return {}
+
+        result: dict[tuple[str, str], list[str]] = {}
+        for path in ds.dataset(f"{self.layout.summary}").files:
+            summary = str(pathlib.Path(path).relative_to(self.layout.summary))
+            partitions = self.partition_descriptor.path_to_partitions(summary)
+            region_partition = None
+            for partition in partitions:
+                if partition[0] == "region_bin":
+                    region_partition = partition
+            if region_partition is None:
+                raise ValueError
+            result.setdefault(region_partition, []).append(path)
+        return result
 
     @staticmethod
     def _extract_region_bin(path: str) -> tuple[str, int]:
@@ -208,27 +236,34 @@ class ParquetLoader:
 
     def get_summary_pq_filepaths(
         self, region: Optional[Region] = None,
-    ) -> tuple[str, ...]:
+    ) -> Generator[list[str], None, None]:
         """
-        Produce a list of paths to available Parquet files.
+        Produce paths to available Parquet files grouped by region.
 
-        May filter by region (if region bins are configured).
+        Can filter by region if region bins are configured.
         """
         if not self.layout.summary:
-            return ()
+            return
 
-        summary_files = ds.dataset(f"{self.layout.summary}").files
-        if region is not None \
-           and self.partitioned \
-           and self.partition_descriptor.has_region_bins():
-            summary_files = [path for path in summary_files
-                             if self._pq_file_in_region(path, region)]
-        return tuple(summary_files)
+        if not self.partitioned \
+           or not self.partition_descriptor.has_region_bins():
+            yield list(ds.dataset(f"{self.layout.summary}").files)
+            return
 
-    def get_family_pq_filepaths(self, summary_path: str) -> tuple[str, ...]:
+        region_bins = self.partition_descriptor.region_to_bins(
+            region, self.contigs,
+        ) if region is not None else self.files_per_region.keys()
+
+        for r_bin in region_bins:
+            if r_bin in self.files_per_region:
+                # check with if since some region bins may not exist
+                # if no variants were written there
+                yield self.files_per_region[r_bin]
+
+    def get_family_pq_filepaths(self, summary_path: str) -> list[str]:
         """Get all family parquet files for given summary parquet file."""
         if not self.layout.summary or not self.layout.family:
-            return ()
+            return []
 
         if not os.path.exists(summary_path):
             raise ParquetLoaderException(
@@ -242,7 +277,7 @@ class ParquetLoader:
         glob_dir = os.path.join(
             self.layout.family, bins, "**", "*.parquet",
         )
-        return tuple(glob.glob(glob_dir, recursive=True))
+        return glob.glob(glob_dir, recursive=True)
 
     def _deserialize_summary_variant(self, record: str) -> SummaryVariant:
         return SummaryVariantFactory.summary_variant_from_records(
@@ -279,22 +314,20 @@ class ParquetLoader:
                 & (pc.field("position") <= region_obj.stop)
             )
 
-        summary_paths = self.get_summary_pq_filepaths(region_obj)
-        if not summary_paths:
-            return
-
-        seen = set()
-
-        for s_path in summary_paths:
-            table = pq.read_table(
-                s_path, columns=self.SUMMARY_COLUMNS, filters=region_filter)
-            for rec in table.to_pylist():
-                v_id = (rec["bucket_index"], rec["summary_index"])
-                if v_id not in seen:
-                    seen.add(v_id)
-                    yield self._deserialize_summary_variant(
-                        rec["summary_variant_data"],
-                    )
+        for summary_paths in self.get_summary_pq_filepaths(region_obj):
+            if not summary_paths:
+                continue
+            seen = set()
+            for s_path in summary_paths:
+                table = pq.read_table(
+                    s_path, columns=self.SUMMARY_COLUMNS, filters=region_filter)
+                for rec in table.to_pylist():
+                    v_id = (rec["bucket_index"], rec["summary_index"])
+                    if v_id not in seen:
+                        seen.add(v_id)
+                        yield self._deserialize_summary_variant(
+                            rec["summary_variant_data"],
+                        )
 
     def fetch_variants(
         self, region: Optional[str] = None,
@@ -304,49 +337,48 @@ class ParquetLoader:
         if region is not None:
             region_obj = Region.from_str(region)
 
-        summary_paths = self.get_summary_pq_filepaths(region_obj)
-        if not summary_paths:
-            return
-
-        family_paths: list[str] = []
-        for path in summary_paths:
-            family_paths.extend(self.get_family_pq_filepaths(path))
-
-        summary_reader = MultiReader(summary_paths, self.SUMMARY_COLUMNS)
-        family_reader = MultiReader(family_paths, self.FAMILY_COLUMNS)
-
-        for alleles in summary_reader:
-            rec = alleles[0]
-            if region_obj is not None \
-                and not region_obj.intersects(Region(rec["chromosome"],
-                                                     rec["position"],
-                                                     rec["end_position"])):
+        for summary_paths in self.get_summary_pq_filepaths(region_obj):
+            if not summary_paths:
                 continue
+            family_paths: list[str] = []
+            for path in summary_paths:
+                family_paths.extend(self.get_family_pq_filepaths(path))
 
-            sv_idx = (rec["bucket_index"], rec["summary_index"])
-            sv = self._deserialize_summary_variant(
-                rec["summary_variant_data"])
+            summary_reader = MultiReader(summary_paths, self.SUMMARY_COLUMNS)
+            family_reader = MultiReader(family_paths, self.FAMILY_COLUMNS)
 
-            fvs: list[dict] = []
-            try:
-                while sv_idx > family_reader.current_idx:
-                    next(family_reader)
-                fvs = next(family_reader)
-            except StopIteration:
-                pass
+            for alleles in summary_reader:
+                rec = alleles[0]
+                if region_obj is not None \
+                    and not region_obj.intersects(Region(rec["chromosome"],
+                                                         rec["position"],
+                                                         rec["end_position"])):
+                    continue
 
-            seen = set()
-            to_yield = []
-            for fv in fvs:
-                fv_id = (fv["summary_index"], fv["family_id"])
-                if fv_id not in seen:
-                    seen.add(fv_id)
-                    to_yield.append(self._deserialize_family_variant(
-                        fv["family_variant_data"], sv))
-            yield (sv, to_yield)
+                sv_idx = (rec["bucket_index"], rec["summary_index"])
+                sv = self._deserialize_summary_variant(
+                    rec["summary_variant_data"])
 
-        summary_reader.close()
-        family_reader.close()
+                fvs: list[dict] = []
+                try:
+                    while sv_idx > family_reader.current_idx:
+                        next(family_reader)
+                    fvs = next(family_reader)
+                except StopIteration:
+                    pass
+
+                seen = set()
+                to_yield = []
+                for fv in fvs:
+                    fv_id = (fv["summary_index"], fv["family_id"])
+                    if fv_id not in seen:
+                        seen.add(fv_id)
+                        to_yield.append(self._deserialize_family_variant(
+                            fv["family_variant_data"], sv))
+                yield (sv, to_yield)
+
+            summary_reader.close()
+            family_reader.close()
 
     def fetch_family_variants(
         self, region: Optional[str] = None,
