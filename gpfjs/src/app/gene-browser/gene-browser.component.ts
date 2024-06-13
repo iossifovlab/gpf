@@ -158,7 +158,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public async submitGeneRequest(geneSymbol?: string): Promise<void> {
-    (this.searchBox.nativeElement as HTMLElement).blur();
+    (this.searchBox?.nativeElement as HTMLElement)?.blur();
     if (this.showError) {
       return;
     }
