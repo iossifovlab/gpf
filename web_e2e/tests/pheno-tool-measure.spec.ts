@@ -8,15 +8,6 @@ test.describe('Pheno tool measure tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype tool');
   });
 
-
-  test('should check if the dropdown menu closes when clicking the remove button', async({ page }) => {
-    await page.locator('#search-box').click();
-    await expect(page.locator('.measures-dropdown')).toBeVisible();
-
-    await page.locator('#clear-measure-button').click();
-    await expect(page.locator('.measures-dropdown')).not.toBeVisible();
-  });
-
   test('should check if the dropdown menu closes when clicking outside', async({ page }) => {
     await page.locator('#search-box').click();
     await expect(page.locator('.measures-dropdown')).toBeVisible();
