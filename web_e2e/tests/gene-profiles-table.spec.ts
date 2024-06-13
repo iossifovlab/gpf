@@ -478,9 +478,9 @@ test.describe('Gene profiles table functionality tests', () => {
 
     // check highlighted rows
     await expect(page.locator('.table-body-row').filter({hasText: 'RAPGEF4'}))
-      .toHaveClass('table-row table-body-row row-highlight');
+      .toHaveClass('table-row table-body-row row-highlight ng-star-inserted');
     await expect(page.locator('.table-body-row').filter({hasText: 'RAPGEF2'}))
-      .toHaveClass('table-row table-body-row row-highlight');
+      .toHaveClass('table-row table-body-row row-highlight ng-star-inserted');
 
     // check column visibility - TODO
     // await expect(page.locator('.header-cell')).toHaveCount(20);

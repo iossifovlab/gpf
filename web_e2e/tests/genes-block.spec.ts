@@ -88,7 +88,7 @@ test.describe('Genes block gene sets names and count tests', () => {
             );
             await page.waitForLoadState('load');
 
-            await page.locator('gpf-gene-sets .dropdown-menu').first().click();
+            await page.locator('.sets-dropdown mat-option').first().click();
 
             await expect(page.locator('span#selected-value')).toContainText(expectedSetName);
 
@@ -153,7 +153,7 @@ test.beforeEach(async({ page }) => {
   );
 
     await page.waitForLoadState('load');
-    await page.locator('gpf-gene-sets .dropdown-menu').first().click();
+    await page.locator('.sets-dropdown mat-option').first().click();
 
     const downloadPromise = page.waitForEvent('download');
     await page.locator('a.download-link').click();
@@ -195,7 +195,7 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
           (resp) => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
         );
 
-        await page.locator('button.dropdown-item span')
+        await page.locator('.sets-dropdown mat-option')
           .getByText('Missense')
           .first()
           .click();
@@ -241,7 +241,7 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
             (resp) => resp.url().includes('/api/v3/gene_sets/gene_sets') && resp.status() === 200
           );
 
-          await page.locator('button.dropdown-item span')
+          await page.locator('.sets-dropdown mat-option')
             .getByText('LGDs')
             .first()
             .click();

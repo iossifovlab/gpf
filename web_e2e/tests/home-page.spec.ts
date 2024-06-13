@@ -68,7 +68,7 @@ test.describe('Home page tests', () => {
   test('should search genes by selecting gene', async({ page }) => {
     await page.locator('#search-box').focus();
     await page.keyboard.type('chd');
-    await page.getByRole('button', {name: 'CHD8'}).click();
+    await page.getByRole('option', {name: 'CHD8'}).click();
 
     await expect(page.locator('a:text("Gene Profiles")')).toHaveClass('highlighted-route');
     await expect(page.locator('gpf-home')).not.toBeVisible();
@@ -79,6 +79,7 @@ test.describe('Home page tests', () => {
   test('should search genes by typing gene', async({ page }) => {
     await page.locator('#search-box').focus();
     await page.keyboard.type('chd8');
+    await expect(page.getByRole('option', {name: 'CHD8'})).toBeVisible();
     await page.keyboard.press('Enter');
 
     await expect(page.locator('a:text("Gene Profiles")')).toHaveClass('highlighted-route');
@@ -90,6 +91,9 @@ test.describe('Home page tests', () => {
   test('should show error message when searching invalid gene', async({ page }) => {
     await page.locator('#search-box').focus();
     await page.keyboard.type('chd88');
+    await page.waitForResponse(
+      resp => resp.url().includes('api/v3/gene_profiles/table/rows') && resp.status() === 200
+    );
     await page.keyboard.press('Enter');
 
     await expect(page.getByText('No such gene found!')).toBeVisible();
