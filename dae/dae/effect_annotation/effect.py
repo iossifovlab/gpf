@@ -437,7 +437,7 @@ class EffectGene:
         return self.symbol == other.symbol and self.effect == other.effect
 
     def __hash__(self) -> int:
-        return hash(tuple([self.symbol, self.effect]))
+        return hash((self.symbol, self.effect))
 
     @classmethod
     def from_gene_effects(

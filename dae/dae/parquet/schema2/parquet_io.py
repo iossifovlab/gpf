@@ -84,9 +84,6 @@ class ContinuousParquetFileWriter:
 
     def size(self) -> int:
         assert self._data is not None
-        # min_len = min(len(val) for val in self._data.values())
-        # max_len = max(len(val) for val in self._data.values())
-        # assert min_len == max_len
         return len(self._data["bucket_index"])
 
     def build_table(self) -> pa.Table:
@@ -94,8 +91,7 @@ class ContinuousParquetFileWriter:
             "writing %s rows to parquet %s",
             sum(len(b) for b in self._batches),
             self.filepath)
-        table = pa.Table.from_batches(self._batches, self.schema)
-        return table
+        return pa.Table.from_batches(self._batches, self.schema)
 
     def build_batch(self) -> pa.RecordBatch:
         return pa.RecordBatch.from_pydict(self._data, self.schema)
@@ -174,6 +170,7 @@ class VariantsParquetWriter:
         partition_descriptor: PartitionDescriptor,
         bucket_index: int = 1,
         row_group_size: int = 50_000,
+        *,
         include_reference: bool = True,
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
     ) -> None:
@@ -193,7 +190,7 @@ class VariantsParquetWriter:
         self.annotation_schema = annotation_schema
 
     def _build_family_filename(
-        self, allele: FamilyAllele,
+        self, allele: FamilyAllele, *,
         seen_as_denovo: bool,
     ) -> str:
         partition = self.partition_descriptor.family_partition(
@@ -205,7 +202,7 @@ class VariantsParquetWriter:
         return fs_utils.join(partition_directory, partition_filename)
 
     def _build_summary_filename(
-        self, allele: SummaryAllele,
+        self, allele: SummaryAllele, *,
         seen_as_denovo: bool,
     ) -> str:
         partition = self.partition_descriptor.summary_partition(
@@ -217,10 +214,11 @@ class VariantsParquetWriter:
         return fs_utils.join(partition_directory, partition_filename)
 
     def _get_bin_writer_family(
-        self, allele: FamilyAllele,
+        self, allele: FamilyAllele, *,
         seen_as_denovo: bool,
     ) -> ContinuousParquetFileWriter:
-        filename = self._build_family_filename(allele, seen_as_denovo)
+        filename = self._build_family_filename(
+            allele, seen_as_denovo=seen_as_denovo)
 
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
@@ -235,10 +233,11 @@ class VariantsParquetWriter:
         return self.data_writers[filename]
 
     def _get_bin_writer_summary(
-        self, allele: SummaryAllele,
+        self, allele: SummaryAllele, *,
         seen_as_denovo: bool,
     ) -> ContinuousParquetFileWriter:
-        filename = self._build_summary_filename(allele, seen_as_denovo)
+        filename = self._build_summary_filename(
+            allele, seen_as_denovo=seen_as_denovo)
 
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
@@ -254,16 +253,14 @@ class VariantsParquetWriter:
 
     def _calc_sj_index(self, summary_index: int, allele_index: int) -> int:
         assert allele_index < 10_000, "too many alleles"
-        sj_index = (
+        return (
             self.bucket_index * 1_000_000_000
             + summary_index) * 10_000 + allele_index
-        return sj_index
 
     def _calc_sj_base_index(self, summary_index: int) -> int:
-        sj_index = (
+        return (
             self.bucket_index * 1_000_000_000
             + summary_index) * 10_000
-        return sj_index
 
     def write_dataset(
         self,
@@ -312,7 +309,8 @@ class VariantsParquetWriter:
                 family_variant_data_json = json.dumps(fv.to_record(),
                                                       sort_keys=True)
                 family_alleles = []
-                if is_unknown_genotype(fv.gt) or is_all_reference_genotype(fv.gt):
+                if is_unknown_genotype(fv.gt) or \
+                        is_all_reference_genotype(fv.gt):
                     assert fv.ref_allele.allele_index == 0
                     family_alleles.append(fv.ref_allele)
                     num_fam_alleles_written += 1
@@ -341,7 +339,8 @@ class VariantsParquetWriter:
                     seen_as_denovo[fa.allele_index] = \
                         sad or seen_as_denovo[fa.allele_index]
 
-                    family_bin_writer = self._get_bin_writer_family(fa, sad)
+                    family_bin_writer = self._get_bin_writer_family(
+                        fa, seen_as_denovo=sad)
                     family_bin_writer.append_family_allele(
                         fa, family_variant_data_json,
                     )
@@ -417,6 +416,6 @@ class VariantsParquetWriter:
         for summary_allele in stored_alleles:
             seen_as_denovo = summary_allele.get_attribute("seen_as_denovo")
             summary_writer = self._get_bin_writer_summary(
-                summary_allele, seen_as_denovo)
+                summary_allele, seen_as_denovo=seen_as_denovo)
             summary_writer.append_summary_allele(
                 summary_allele, summary_blobs_json)

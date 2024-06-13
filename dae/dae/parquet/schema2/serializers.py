@@ -2,7 +2,7 @@ import functools
 import logging
 import operator
 from itertools import starmap
-from typing import Any, List, Optional, Union
+from typing import Any, ClassVar, Optional, Union
 
 import pyarrow as pa
 
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class AlleleParquetSerializer:
     """Serialize a bunch of alleles."""
 
-    SUMMARY_ALLELE_BASE_SCHEMA = {
+    SUMMARY_ALLELE_BASE_SCHEMA: ClassVar[dict[str, Any]] = {
         "bucket_index": pa.int32(),
         "summary_index": pa.int32(),
         "allele_index": pa.int32(),
@@ -51,7 +51,7 @@ class AlleleParquetSerializer:
         "family_alleles_count": pa.int32(),
     }
 
-    FAMILY_ALLELE_BASE_SCHEMA = {
+    FAMILY_ALLELE_BASE_SCHEMA: ClassVar[dict[str, Any]] = {
         "bucket_index": pa.int32(),
         "summary_index": pa.int32(),
         "allele_index": pa.int32(),
@@ -66,7 +66,7 @@ class AlleleParquetSerializer:
         "allele_in_members": pa.list_(pa.string()),
     }
 
-    ENUM_PROPERTIES = {
+    ENUM_PROPERTIES: ClassVar[dict[str, Any]] = {
         "variant_type": Allele.Type,
         "transmission_type": TransmissionType,
         "allele_in_sexes": Sex,
@@ -76,8 +76,8 @@ class AlleleParquetSerializer:
     }
 
     def __init__(
-        self, annotation_schema: List[AttributeInfo],
-        extra_attributes: Optional[List[str]] = None,
+        self, annotation_schema: list[AttributeInfo],
+        extra_attributes: Optional[list[str]] = None,
     ) -> None:
         self.annotation_schema = annotation_schema
         self._schema_summary = None

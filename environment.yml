@@ -50,3 +50,4 @@ dependencies:
   - polars=0.20
   - sentry-sdk=2.3
   - pybigwig=0.3.22
+  - pyzstd=0.16
