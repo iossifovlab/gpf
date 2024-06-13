@@ -53,7 +53,7 @@ def test_schema2_import_metadata(import_data: Schema2DatasetLayout) -> None:
     meta_file.close()
 
     assert "contigs" in meta
-    assert meta["contigs"].split(",") == ["chr1", "chr2", "chr3"]
+    assert meta["contigs"].split(",") == ["chr1=100", "chr2=100", "chr3=100"]
     assert "reference_genome" in meta
     assert meta["reference_genome"] == "genome"
     assert "gene_models" in meta

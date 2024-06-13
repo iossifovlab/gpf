@@ -214,6 +214,14 @@ class ImportProject:
             if chrom in chromosomes
         ]
 
+    def get_variant_loader_chrom_lens(
+            self, loader_type: Optional[str] = None) -> dict[str, int]:
+        """Collect all chromosomes and their length available in input files."""
+        all_chrom_lens = dict(
+            self.get_gpf_instance().reference_genome.get_all_chrom_lengths())
+        return {chrom: all_chrom_lens[chrom] for chrom in
+                self.get_variant_loader_chromosomes(loader_type)}
+
     def get_import_variants_buckets(self) -> list[Bucket]:
         """Split variant files into buckets enabling parallel processing."""
         buckets: list[Bucket] = []
