@@ -384,3 +384,17 @@ def test_region_to_bins() -> None:
         ("region_bin", "foo_0"),
         ("region_bin", "foo_1"),
         ("region_bin", "foo_2")]
+
+
+def test_path_to_partitions() -> None:
+    res = PartitionDescriptor.path_to_partitions(
+        "region_bin=foo_0/frequency_bin=1/coding_bin=0",
+    )
+    assert res == [("region_bin", "foo_0"), ("frequency_bin", "1"),
+                   ("coding_bin", "0")]
+
+    res = PartitionDescriptor.path_to_partitions(
+        "region_bin=foo_1/frequency_bin=2/coding_bin=1/variants.parquet",
+    )
+    assert res == [("region_bin", "foo_1"), ("frequency_bin", "2"),
+                   ("coding_bin", "1")]

@@ -466,6 +466,23 @@ class PartitionDescriptor:
         result += ".parquet"
         return result
 
+    @staticmethod
+    def path_to_partitions(raw_path: str) -> list[tuple[str, str]]:
+        """Convert a path into the partitions it is composed of."""
+        path = pathlib.Path(raw_path)
+        parts = list(path.parts)
+        if parts[-1].endswith(".parquet"):
+            parts.pop(-1)
+
+        if not all("=" in part for part in parts):
+            raise ValueError("Path contains non-partition directories!")
+
+        result = []
+        for part in parts:
+            partition = part.split("=", maxsplit=2)
+            result.append((partition[0], partition[1]))
+        return result
+
     def to_dict(self) -> dict[str, Any]:
         """Convert the partition descriptor to a dict."""
         result: dict[str, Any] = {}
