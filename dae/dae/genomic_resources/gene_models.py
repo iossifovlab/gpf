@@ -1197,7 +1197,7 @@ class GeneModels(
         )
         result = {}
         for attr in attributes:
-            key, value = attr.split(" ")
+            key, value = attr.split(" ", maxsplit=1)
             result[key.strip()] = value.strip('"').strip()
         return result
 
