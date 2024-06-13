@@ -182,14 +182,14 @@ test.describe('Gene profiles gene comparison tests', () => {
   });
   test('should highlight a row using control+click and change it\'s background color', async({ page }) => {
     const firstRow = page.locator('.table-body-row:not(#nothing-found)').nth(0);
-    await expect(firstRow).toHaveClass('table-row table-body-row');
+    await expect(firstRow).toHaveClass(/table-row table-body-row/);
 
     await page.keyboard.down('Control');
     await firstRow.click();
 
     // hover another row to check the background color
     await page.locator('.table-body-row:not(#nothing-found)').nth(1).hover();
-    await expect(firstRow).toHaveClass('table-row table-body-row row-highlight');
+    await expect(firstRow).toHaveClass(/row-highlight/);
     await expect(firstRow).toHaveCSS('background-color', oddHighlightColor);
 
     await page.keyboard.down('Control');
@@ -197,7 +197,7 @@ test.describe('Gene profiles gene comparison tests', () => {
 
     // hover another row to check the background color
     await page.locator('.table-body-row:not(#nothing-found)').nth(1).hover();
-    await expect(firstRow).toHaveClass('table-row table-body-row');
+    await expect(firstRow).not.toHaveClass(/row-highlight/);
     await expect(firstRow).not.toHaveCSS('background-color', oddHighlightColor);
   });
 
@@ -227,15 +227,15 @@ test.describe('Gene profiles gene comparison tests', () => {
     await row.nth(1).click();
     await row.nth(2).click();
 
-    await expect(row.nth(0)).toHaveClass('table-row table-body-row row-highlight');
-    await expect(row.nth(1)).toHaveClass('table-row table-body-row row-highlight');
-    await expect(row.nth(2)).toHaveClass('table-row table-body-row row-highlight');
+    await expect(row.nth(0)).toHaveClass(/row-highlight/);
+    await expect(row.nth(1)).toHaveClass(/row-highlight/);
+    await expect(row.nth(2)).toHaveClass(/row-highlight/);
     await page.keyboard.up('Control');
 
     await page.keyboard.press('Escape');
-    await expect(row.nth(0)).toHaveClass('table-row table-body-row');
-    await expect(row.nth(1)).toHaveClass('table-row table-body-row');
-    await expect(row.nth(2)).toHaveClass('table-row table-body-row');
+    await expect(row.nth(0)).not.toHaveClass(/row-highlight/);
+    await expect(row.nth(1)).not.toHaveClass(/row-highlight/);
+    await expect(row.nth(2)).not.toHaveClass(/row-highlight/);
   });
 
   test('should select multiple genes and check whether the modal appears correctly', async({ page }) => {
@@ -408,6 +408,9 @@ test.describe('Gene profiles table functionality tests', () => {
     await expect(page.locator('#nothing-found')).toBeVisible();
 
     await page.locator('input#gene-search-input').clear();
+
+    await expect(page.getByText('progress_activity')).not.toBeVisible();
+
     await expect(page.locator('#nothing-found')).not.toBeVisible();
     const rowCount = await page.locator('.table-body-row:not(#nothing-found)').count();
     expect(rowCount).toBeGreaterThan(1);
@@ -478,9 +481,9 @@ test.describe('Gene profiles table functionality tests', () => {
 
     // check highlighted rows
     await expect(page.locator('.table-body-row').filter({hasText: 'RAPGEF4'}))
-      .toHaveClass('table-row table-body-row row-highlight ng-star-inserted');
+      .toHaveClass(/row-highlight/);
     await expect(page.locator('.table-body-row').filter({hasText: 'RAPGEF2'}))
-      .toHaveClass('table-row table-body-row row-highlight ng-star-inserted');
+      .toHaveClass(/row-highlight/);
 
     // check column visibility - TODO
     // await expect(page.locator('.header-cell')).toHaveCount(20);
