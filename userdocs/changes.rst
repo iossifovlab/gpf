@@ -1,12 +1,17 @@
 Release Notes
 =============
 
+* 2024.6.5
+    * Fix for GTF gene models parser
+* 2024.6.4
+    * Initial support for batch mode in annotation pipeline and
+      annotate columns tool
+    * Fix for gene profiles state handling in GPFjs
+    * Clean up and improvements in searchable dropdowns in GPFjs
 * 2024.6.3
     * Fix gene scores missing description in GRR info pages
     * DuckDb version bumpted to 1.0.0
     * Initial implementation of request caching in WDAE
-    * Initial support for batch mode in annotation pipeline and
-      annotate columns tool
     * Fix a minor issue in collapsable dropdown dataset selector
 * 2024.6.2
     * Initial support for BigWig genomic resources
