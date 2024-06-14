@@ -97,14 +97,14 @@ export class HomeComponent implements OnInit, OnDestroy {
         if (!searchTerm) {
           return of(null);
         }
-        return this.geneProfilesTableService.getGenes(1, searchTerm);
+        return this.geneProfilesTableService.getGeneSymbols(1, searchTerm);
       })
-    ).subscribe((response: {geneSymbol: string}[]) => {
+    ).subscribe((response: string[]) => {
       if (!response) {
         this.geneSymbolSuggestions = [];
         return;
       }
-      this.geneSymbolSuggestions = response.map(gene => gene.geneSymbol);
+      this.geneSymbolSuggestions = response;
     });
   }
 

@@ -10,6 +10,7 @@ import { map } from 'rxjs/operators';
 })
 export class GeneProfilesTableService {
   private readonly genesUrl = 'gene_profiles/table/rows';
+  private readonly geneSymbolsUrl = 'gene_profiles/table/gene_symbols/';
 
   public constructor(
     private http: HttpClient,
@@ -36,6 +37,21 @@ export class GeneProfilesTableService {
 
     return this.http.get(url).pipe(
       map(res => (res as Array<any>))
+    );
+  }
+
+  public getGeneSymbols(page: number, searchString?: string): Observable<string[]> {
+    let url = this.config.baseUrl + this.geneSymbolsUrl;
+    let params = new HttpParams().set('page', page.toString());
+
+    if (searchString) {
+      params = params.append('symbol', searchString);
+    }
+
+    url += `?${ params.toString() }`;
+
+    return this.http.get(url).pipe(
+      map(res => (res as Array<string>))
     );
   }
 }
