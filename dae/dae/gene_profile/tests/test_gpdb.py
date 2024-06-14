@@ -120,3 +120,26 @@ def test_gpdb_sort(
     stats_sorted = gp_gpf_instance.query_gp_statistics(
         1, sort_by="main_CHD8 target genes", order="desc",
     )
+
+
+def test_gpdb_symbol_search(
+        gp_gpf_instance: GPFInstance,
+        sample_gp: GPStatistic) -> None:
+    sample_gp.gene_symbol = "CHD7"
+    gp_gpf_instance._gene_profile_db.insert_gp(sample_gp)
+    sample_gp.gene_symbol = "TESTCHD"
+    gp_gpf_instance._gene_profile_db.insert_gp(sample_gp)
+
+    all_symbols = gp_gpf_instance._gene_profile_db.list_symbols(1)
+    assert len(all_symbols) == 3
+    assert all_symbols[0] == "CHD7"
+    assert all_symbols[-1] == "TESTCHD"
+
+    all_symbols = gp_gpf_instance._gene_profile_db.list_symbols(1, "CHD")
+    assert len(all_symbols) == 2
+    assert all_symbols[0] == "CHD7"
+    assert all_symbols[-1] == "CHD8"
+
+    all_symbols = gp_gpf_instance._gene_profile_db.list_symbols(1, "TEST")
+    assert len(all_symbols) == 1
+    assert all_symbols[0] == "TESTCHD"
