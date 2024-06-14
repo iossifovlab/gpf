@@ -189,9 +189,9 @@ test.describe('Gene profiles navigation to single view tests', () => {
 
     await expect(page.getByTitle('Relevant Gene Sets')).not.toBeVisible();
     await expect(page.locator('.table-body-row').filter({ hasText: 'SHANK2' }))
-      .toHaveClass('table-row table-body-row row-highlight');
+      .toHaveClass(/row-highlight/);
     await expect(page.locator('.table-body-row').filter({ hasText: 'CHD8' }))
-      .toHaveClass('table-row table-body-row row-highlight');
+      .toHaveClass(/row-highlight/);
   });
 
   test('should open single view for the same genes when comparing', async({ page }) => {
