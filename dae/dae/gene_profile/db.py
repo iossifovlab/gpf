@@ -13,7 +13,7 @@ from sqlalchemy import (  # type: ignore
     inspect,
     nullslast,
 )
-from sqlalchemy.sql import asc, desc, insert
+from sqlalchemy.sql import asc, desc, insert, select
 
 from dae.gene_profile.statistic import GPStatistic
 
@@ -30,7 +30,7 @@ class GeneProfileDB:
     the SQLite DB.
     """
 
-    PAGE_SIZE = 20
+    PAGE_SIZE = 50
 
     def __init__(self, configuration, dbfile, clear=False):
         self.dbfile = dbfile
@@ -246,6 +246,32 @@ class GeneProfileDB:
             )
         with self.engine.begin() as connection:
             return connection.execute(query).fetchall()
+
+    def list_symbols(
+        self, page: int, symbol_like: Optional[str] = None,
+    ) -> list[str]:
+        """
+        Perform paginated query and return list of gene symbols.
+
+        Parameters:
+            page - Which page to fetch.
+            symbol_like - Which gene symbol to search for, supports
+            incomplete search
+        """
+        table = self.gp_table
+
+        query = select(table.c.symbol_name)
+        if symbol_like:
+            query = query.where(table.c.symbol_name.like(f"{symbol_like}%"))
+
+        query = query.order_by(table.c.symbol_name.asc())
+
+        if page is not None:
+            query = query.limit(self.PAGE_SIZE).offset(
+                self.PAGE_SIZE * (page - 1),
+            )
+        with self.engine.begin() as connection:
+            return [row[0] for row in connection.execute(query).fetchall()]
 
     def drop_gp_table(self):
         with self.engine.begin() as connection:

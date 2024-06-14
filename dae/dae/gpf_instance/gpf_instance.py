@@ -507,6 +507,16 @@ class GPFInstance:
         ))
         return cast(list[GPStatistic], statistics)
 
+    def list_gp_gene_symbols(
+        self,
+        page: int,
+        symbol_like: Optional[str] = None,
+    ) -> list[str]:
+        """Query AGR statistics and return results."""
+        return self._gene_profile_db.list_symbols(
+            page, symbol_like,
+        )
+
     def _construct_import_effect_annotator_config(
         self,
     ) -> dict[str, Any]:
