@@ -182,7 +182,7 @@ test.describe('Gene profiles gene comparison tests', () => {
   });
   test('should highlight a row using control+click and change it\'s background color', async({ page }) => {
     const firstRow = page.locator('.table-body-row:not(#nothing-found)').nth(0);
-    await expect(firstRow).toHaveClass(/table-row table-body-row/);
+    await expect(firstRow).not.toHaveClass(/row-highlight/);
 
     await page.keyboard.down('Control');
     await firstRow.click();
@@ -264,15 +264,15 @@ test.describe('Gene profiles gene comparison tests', () => {
     await row.nth(2).click();
 
     await page.locator('.compare-genes-close').nth(0).click();
-    await expect(row.nth(0)).toHaveClass('table-row table-body-row');
+    await expect(row.nth(0)).not.toHaveClass(/row-highlight/);
     await expect(page.locator('.compare-gene-item')).toHaveCount(2);
 
     await page.locator('.compare-genes-close').nth(0).click();
-    await expect(row.nth(1)).toHaveClass('table-row table-body-row');
+    await expect(row.nth(1)).not.toHaveClass(/row-highlight/);
     await expect(page.locator('.compare-gene-item')).toHaveCount(1);
 
     await page.locator('.compare-genes-close').nth(0).click();
-    await expect(row.nth(2)).toHaveClass('table-row table-body-row');
+    await expect(row.nth(2)).not.toHaveClass(/row-highlight/);
     await expect(page.locator('.compare-genes-close')).not.toBeVisible();
   });
 });
