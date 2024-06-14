@@ -38,7 +38,6 @@ setuptools.setup(
         "dae/tools/draw_pedigree.py",
         "dae/tools/vcfinfo_extractor.py",
         "dae/tools/to_gpf_gene_models_format.py",
-        "dae/tools/draw_resource_histogram.py",
     ],
     entry_points="""
     [dae.genomic_resources.plugins]
@@ -109,7 +108,7 @@ setuptools.setup(
 
     ped2ped=dae.tools.ped2ped:main
     draw_pedigree=dae.tools.draw_pedigree:main
-    draw_resource_histogram=dae.tools.draw_resource_histogram:main
+    draw_resource_histogram=dae.genomic_resources.draw_resource_histogram:main
 
     generate_vcf_score_histogram.py=dae.tools.generate_vcf_score_histogram:main
     gpf_validation_runner=dae.tools.gpf_validation_runner:main
