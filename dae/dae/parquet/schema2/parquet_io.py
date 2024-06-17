@@ -194,7 +194,7 @@ class VariantsParquetWriter:
         seen_as_denovo: bool,
     ) -> str:
         partition = self.partition_descriptor.family_partition(
-            allele, seen_as_denovo)
+            allele, seen_as_denovo=seen_as_denovo)
         partition_directory = self.partition_descriptor.partition_directory(
             fs_utils.join(self.out_dir, "family"), partition)
         partition_filename = self.partition_descriptor.partition_filename(
@@ -206,7 +206,7 @@ class VariantsParquetWriter:
         seen_as_denovo: bool,
     ) -> str:
         partition = self.partition_descriptor.summary_partition(
-            allele, seen_as_denovo)
+            allele, seen_as_denovo=seen_as_denovo)
         partition_directory = self.partition_descriptor.partition_directory(
             fs_utils.join(self.out_dir, "summary"), partition)
         partition_filename = self.partition_descriptor.partition_filename(

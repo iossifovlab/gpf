@@ -15,7 +15,7 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.utils import fs_utils
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def pedigree_parquet_schema() -> pa.schema:
@@ -46,7 +46,7 @@ def add_missing_parquet_fields(
 
     if "family_bin" in missing_fields:
         pps = pps.append(pa.field("family_bin", pa.int8()))
-        missing_fields = missing_fields - set(["family_bin"])
+        missing_fields = missing_fields - {"family_bin"}
 
     rename = {}
     for column in missing_fields:
@@ -55,7 +55,7 @@ def add_missing_parquet_fields(
         rename[column] = name
 
     ped_df = ped_df.rename(columns=rename)
-    missing_fields = set(rename[col] for col in missing_fields)
+    missing_fields = {rename[col] for col in missing_fields}
 
     for column in missing_fields:
         ped_df[column] = ped_df[column].apply(str)

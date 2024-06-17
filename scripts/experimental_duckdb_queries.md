@@ -2734,3 +2734,42 @@ FROM summary AS sa
 JOIN family AS fa
 USING (sj_index);
 ```
+
+
+```sql
+EXPLAIN
+EXPLAIN ANALYZE 
+WITH
+summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+),
+family AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+),
+variant AS (
+  SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.sj_index
+  FROM summary AS sa
+  JOIN family AS fa
+  USING (sj_index)
+  LIMIT 2
+)
+SELECT
+  v.bucket_index,
+  v.summary_index,
+  v.family_index,
+  v.allele_index,
+  v.sj_index,
+  sa.summary_variant_data
+FROM variant AS v
+JOIN summary AS sa
+USING (sj_index);
+```
