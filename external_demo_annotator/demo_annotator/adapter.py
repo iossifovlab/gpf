@@ -1,11 +1,10 @@
 from __future__ import annotations
-import os
+
 import csv
+import select
 import subprocess
 import tempfile
 from typing import Any, Optional, TextIO
-import io
-import select
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_factory import AnnotationConfigParser
@@ -16,7 +15,7 @@ from dae.annotation.annotation_pipeline import (
 )
 from dae.annotation.annotator_base import AnnotatorBase
 
-
+# ruff: noqa: S607
 
 
 class DemoAnnotatorAdapter(AnnotatorBase):
@@ -64,8 +63,9 @@ class DemoAnnotatorAdapter(AnnotatorBase):
     def read_output(
         self, file: TextIO, contexts: list[dict[str, Any]],
     ) -> None:
+        """Read and return subprocess output contents."""
         reader = csv.reader(
-            file, delimiter="\t"
+            file, delimiter="\t",
         )
         for idx, row in enumerate(reader):
             contexts[idx]["annotatable_length"] = int(row[-1])
@@ -75,14 +75,14 @@ class DemoAnnotatorAdapter(AnnotatorBase):
         contexts: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         with tempfile.NamedTemporaryFile("w+t", delete=False) as input_file, \
-                tempfile.NamedTemporaryFile("w+t", delete=False) as output_file:
+                tempfile.NamedTemporaryFile("w+t", delete=False) as out_file:
             self.prepare_input(input_file, annotatables)
             subprocess.run(
-                ["annotate_length", input_file.name, output_file.name],
+                ["annotate_length", input_file.name, out_file.name],
                 check=True,
             )
-            output_file.flush()
-            self.read_output(output_file, contexts)
+            out_file.flush()
+            self.read_output(out_file, contexts)
         return contexts
 
 
@@ -93,52 +93,51 @@ class DemoAnnotatorStreamAdapter(DemoAnnotatorAdapter):
         self, annotatables: list[Optional[Annotatable]],
         contexts: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        proc = subprocess.Popen(
+        with subprocess.Popen(
             ["annotate_length"],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             text=True,
-        )
+        ) as proc:
+            writer = csv.writer(proc.stdin, delimiter="\t")
+            reader = csv.reader(
+                proc.stdout, delimiter="\t",
+            )
+            poll = select.poll()
+            poll.register(proc.stdin, select.POLLOUT)
+            poll.register(proc.stdout, select.POLLIN | select.POLLPRI)
+            annotatable_idx = 0
+            read_idx = 0
+            done = False
 
-        writer = csv.writer(proc.stdin, delimiter="\t")
-        reader = csv.reader(
-            proc.stdout, delimiter="\t",
-        )
-        poll = select.poll()
-        poll.register(proc.stdin, select.POLLOUT)
-        poll.register(proc.stdout, select.POLLIN | select.POLLPRI)
-        annotatable_idx = 0
-        read_idx = 0
-        done = False
+            while True:
+                if done:
+                    break
+                fd_states = poll.poll(500)
+                for _fd, state in fd_states:
+                    if state & select.POLLOUT:
+                        annotatable = annotatables[annotatable_idx]
+                        writer.writerow([repr(annotatable)])
+                        annotatable_idx += 1
+                        if annotatable_idx == len(annotatables):
+                            poll.unregister(proc.stdin)
+                            proc.stdin.close()
 
-        while True:
-            if done:
-                break
-            fd_states = poll.poll(500)
-            for _fd, state in fd_states:
-                if state & select.POLLOUT:
-                    annotatable = annotatables[annotatable_idx]
-                    writer.writerow([repr(annotatable)])
-                    annotatable_idx += 1
-                    if annotatable_idx == len(annotatables):
-                        poll.unregister(proc.stdin)
-                        proc.stdin.close()
-
-                elif state & select.POLLIN or state & select.POLLPRI:
-                    row = next(reader)
-                    contexts[read_idx]["annotatable_length"] = int(row[-1])
-                    read_idx += 1
-                    if read_idx == len(annotatables):
-                        poll.unregister(proc.stdout)
-                        done = True
-                elif state & select.POLLHUP:
-                    for row in reader:
+                    elif state & select.POLLIN or state & select.POLLPRI:
+                        row = next(reader)
                         contexts[read_idx]["annotatable_length"] = int(row[-1])
                         read_idx += 1
-                    poll.unregister(proc.stdout)
-                    done = True
-                    
-        proc.wait()
+                        if read_idx == len(annotatables):
+                            poll.unregister(proc.stdout)
+                            done = True
+                    elif state & select.POLLHUP:
+                        for row in reader:
+                            contexts[read_idx]["annotatable_length"] = \
+                                int(row[-1])
+                            read_idx += 1
+                        poll.unregister(proc.stdout)
+                        done = True
+            proc.wait()
 
         return contexts
 

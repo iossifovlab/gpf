@@ -24,6 +24,7 @@ def annotate_length_cli(raw_args: Optional[list[str]] = None):
 
     args = parser.parse_args(raw_args)
 
+    # pylint: disable=consider-using-with
     infile = sys.stdin if args.input == "-" else \
         Path(args.input).open("r")  # noqa: SIM115
     outfile = sys.stdout if args.output == "-" else \
@@ -32,7 +33,7 @@ def annotate_length_cli(raw_args: Optional[list[str]] = None):
     with infile, outfile:
         reader = csv.reader(infile, delimiter="\t")
         writer = csv.writer(outfile, delimiter="\t")
-        for idx, row in enumerate(reader):
+        for row in reader:
             if len(row) == 0:
                 continue
             annotatable = Annotatable.from_string(row[0])
