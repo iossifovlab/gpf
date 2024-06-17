@@ -85,7 +85,9 @@ def test_parsimonious_vcf_allele(  # type: ignore
     ],
 )
 def test_annotatable_from_string_position(value, expected):  # type: ignore
-    assert Annotatable.from_string(value) == expected
+    from_string = Annotatable.from_string(value)
+    assert from_string == expected
+    assert Annotatable.from_string(repr(from_string)) == expected
 
 
 @pytest.mark.parametrize(
@@ -95,7 +97,9 @@ def test_annotatable_from_string_position(value, expected):  # type: ignore
     ],
 )
 def test_annotatable_from_string_region(value, expected):  # type: ignore
-    assert Annotatable.from_string(value) == expected
+    from_string = Annotatable.from_string(value)
+    assert from_string == expected
+    assert Annotatable.from_string(repr(from_string)) == expected
 
 
 @pytest.mark.parametrize(
@@ -108,7 +112,23 @@ def test_annotatable_from_string_region(value, expected):  # type: ignore
     ],
 )
 def test_annotatable_from_string_vcf(value, expected):  # type: ignore
-    assert Annotatable.from_string(value) == expected
+    from_string = Annotatable.from_string(value)
+    assert from_string == expected
+    assert Annotatable.from_string(repr(from_string)) == expected
+
+@pytest.mark.parametrize(
+    "value,expected", [
+        ("VCFAllele(chr1, 123, A, G)", VCFAllele("chr1", 123, "A", "G")),
+        ("SUBSTITUTION(chr1, 123, A, G)", VCFAllele("chr1", 123, "A", "G")),
+        ("COMPLEX(chr1, 123, AC, GT)", VCFAllele("chr1", 123, "AC", "GT")),
+        ("SMALL_DELETION(X, 1, AAA, A)", VCFAllele("X", 1, "AAA", "A")),
+        ("SMALL_INSERTION(X, 1, A, AAA)", VCFAllele("X", 1, "A", "AAA")),
+    ],
+)
+def test_annotatable_from_string_vcf(value, expected):  # type: ignore
+    from_string = Annotatable.from_string(value)
+    assert from_string == expected
+    assert Annotatable.from_string(repr(from_string)) == expected
 
 
 @pytest.mark.parametrize(
