@@ -107,7 +107,7 @@ class SqlSchema2Variants(QueryVariantsBase):
 
     # pylint: disable=too-many-arguments
     def build_summary_variants_query_runner(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -118,7 +118,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> QueryRunner:
         """Build a query selecting the appropriate summary variants."""
         assert self.summary_allele_table is not None
@@ -175,7 +175,7 @@ class SqlSchema2Variants(QueryVariantsBase):
 
     # pylint: disable=too-many-arguments,too-many-locals
     def build_family_variants_query_runner(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -191,9 +191,9 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        study_filters: Optional[list[str]] = None,
+        study_filters: Optional[list[str]] = None,  # noqa: ARG002
         pedigree_fields: Optional[tuple] = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> QueryRunner:
         """Build a query selecting the appropriate family variants."""
         do_join_pedigree = bool(pedigree_fields)
@@ -267,7 +267,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         return runner
 
     def query_summary_variants(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -278,7 +278,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> Generator[SummaryVariant, None, None]:
         """Query summary variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -286,7 +286,7 @@ class SqlSchema2Variants(QueryVariantsBase):
             limit = -1
             request_limit = None
         else:
-            request_limit = 10 * limit  # TODO why?
+            request_limit = 10 * limit
 
         runner = self.build_summary_variants_query_runner(
             regions=regions,
@@ -317,7 +317,7 @@ class SqlSchema2Variants(QueryVariantsBase):
                 seen.add(v.svuid)
 
     def query_variants(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -334,7 +334,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
         pedigree_fields: Optional[tuple] = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> Generator[FamilyVariant, None, None]:
         """Query family variants."""
         # pylint: disable=too-many-arguments,too-many-locals

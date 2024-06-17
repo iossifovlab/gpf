@@ -83,7 +83,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         )
         writer = VariantsParquetWriter(
             output_dir, pipeline.get_attributes(),
-            loader.partition_descriptor, bucket_idx,
+            loader.partition_descriptor,
+            bucket_index=bucket_idx,
         )
 
         if isinstance(pipeline, ReannotationPipeline):

@@ -15,8 +15,13 @@ from dae.parquet.parquet_writer import (
     save_ped_df_to_parquet,
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema2.parquet_io import VariantsParquetWriter
+from dae.parquet.schema2.parquet_io import (
+    VariantsParquetWriter,
+)
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
+from dae.parquet.schema2.variant_serializers import (
+    VariantsDataSerializer,
+)
 from dae.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
     create_schema2_dataset_layout,
@@ -164,10 +169,12 @@ class Schema2ImportStorage(ImportStorage):
         row_group_size = project.get_row_group_size()
         logger.debug("argv.rows: %s", row_group_size)
         annotation_pipeline = project.build_annotation_pipeline()
+        serializer = VariantsDataSerializer.build_serializer()
         variants_writer = VariantsParquetWriter(
             out_dir=layout.study,
             annotation_schema=annotation_pipeline.get_attributes(),
             partition_descriptor=cls._get_partition_description(project),
+            serializer=serializer,
             bucket_index=bucket.index,
             row_group_size=row_group_size,
             include_reference=project.include_reference,

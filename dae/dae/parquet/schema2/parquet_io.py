@@ -1,5 +1,4 @@
 import functools
-import json
 import logging
 import os
 import time
@@ -14,6 +13,7 @@ from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
+from dae.parquet.schema2.variant_serializers import VariantsDataSerializer
 from dae.utils import fs_utils
 from dae.utils.variant_utils import (
     is_all_reference_genotype,
@@ -21,7 +21,10 @@ from dae.utils.variant_utils import (
 )
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
-from dae.variants.variant import SummaryAllele, SummaryVariant
+from dae.variants.variant import (
+    SummaryAllele,
+    SummaryVariant,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -114,7 +117,7 @@ class ContinuousParquetFileWriter:
         self._batches = []
 
     def append_summary_allele(
-            self, allele: SummaryAllele, json_data: str) -> None:
+            self, allele: SummaryAllele, json_data: bytes) -> None:
         """Append the data for an entire variant to the correct file."""
         assert self._data is not None
 
@@ -132,7 +135,7 @@ class ContinuousParquetFileWriter:
             self._write_batch()
 
     def append_family_allele(
-            self, allele: FamilyAllele, json_data: str) -> None:
+            self, allele: FamilyAllele, json_data: bytes) -> None:
         """Append the data for an entire variant to the correct file."""
         assert self._data is not None
 
@@ -168,13 +171,18 @@ class VariantsParquetWriter:
         out_dir: str,
         annotation_schema: list[AttributeInfo],
         partition_descriptor: PartitionDescriptor,
+        *,
+        serializer: Optional[VariantsDataSerializer] = None,
         bucket_index: int = 1,
         row_group_size: int = 50_000,
-        *,
         include_reference: bool = True,
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
     ) -> None:
         self.out_dir = out_dir
+        if serializer is None:
+            serializer = VariantsDataSerializer.build_serializer()
+        self.serializer = serializer
+
         self.bucket_index = bucket_index
         assert self.bucket_index < 1_000_000, "bad bucket index"
 
@@ -306,8 +314,8 @@ class VariantsParquetWriter:
                     }
                     fa.update_attributes(extra_atts)
 
-                family_variant_data_json = json.dumps(fv.to_record(),
-                                                      sort_keys=True)
+                family_variant_data_json = self.serializer.serialize_family(fv)
+
                 family_alleles = []
                 if is_unknown_genotype(fv.gt) or \
                         is_all_reference_genotype(fv.gt):
@@ -405,9 +413,7 @@ class VariantsParquetWriter:
                     "sj_index": sj_index,
                 }
                 summary_allele.update_attributes(extra_atts)
-        summary_blobs_json = json.dumps(
-            summary_variant.to_record(), sort_keys=True,
-        )
+        summary_blobs_json = self.serializer.serialize_summary(summary_variant)
         if self.include_reference:
             stored_alleles = summary_variant.alleles
         else:

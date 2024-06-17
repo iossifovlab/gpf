@@ -1,4 +1,3 @@
-import json
 import logging
 import time
 from collections.abc import Generator
@@ -13,6 +12,7 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.schema2.variant_serializers import VariantsDataSerializer
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import PersonSetCollection
@@ -72,9 +72,9 @@ class DuckDbRunner(QueryRunner):
                         break
 
         except Exception as ex:  # pylint: disable=broad-except
-            logger.error(
-                "exception in runner (%s) run: %s",
-                self.query, type(ex), exc_info=True)
+            logger.exception(
+                "exception in runner (%s)",
+                self.query)
             self._put_value_in_result_queue(ex)
         finally:
             logger.debug(
@@ -123,12 +123,13 @@ class DuckDb2Variants(QueryVariantsBase):
             self.gene_models,
             self.reference_genome,
         )
+        self.serializer = VariantsDataSerializer.build_serializer()
 
     def _fetch_meta_property(self, key: str) -> str:
         query = f"""SELECT value FROM {self.layout.meta}
                WHERE key = '{key}'
                LIMIT 1
-            """
+            """  # noqa: S608
         with self.connection.cursor() as cursor:
             content = ""
             result = cursor.execute(query).fetchall()
@@ -142,26 +143,23 @@ class DuckDb2Variants(QueryVariantsBase):
 
     def _fetch_summary_schema(self) -> dict[str, str]:
         schema_content = self._fetch_meta_property("summary_schema")
-        summary_schema = dict(
+        return dict(
             line.split("|") for line in schema_content.split("\n"))
-        return summary_schema
 
     def _fetch_family_schema(self) -> dict[str, str]:
         schema_content = self._fetch_meta_property("family_schema")
-        family_schema = dict(
+        return dict(
             line.split("|") for line in schema_content.split("\n"))
-        return family_schema
 
     def _fetch_pedigree_schema(self) -> dict[str, str]:
         schema_content = self._fetch_meta_property("pedigree_schema")
         if not schema_content:
             return {}
-        pedigree_schema = dict(
+        return dict(
             line.split("|") for line in schema_content.split("\n"))
-        return pedigree_schema
 
     def _fetch_pedigree(self) -> pd.DataFrame:
-        query = f"SELECT * FROM {self.layout.pedigree}"
+        query = f"SELECT * FROM {self.layout.pedigree}"  # noqa: S608
         with self.connection.cursor() as cursor:
 
             ped_df = cursor.execute(query).df()
@@ -192,15 +190,19 @@ class DuckDb2Variants(QueryVariantsBase):
         ped_df = self._fetch_pedigree()
         return FamiliesLoader.build_families_data_from_pedigree(ped_df)
 
-    def _deserialize_summary_variant(self, record: str) -> SummaryVariant:
-        sv_record = json.loads(record[3])
+    def _deserialize_summary_variant(
+        self, record: list[bytes],
+    ) -> SummaryVariant:
+        sv_record = self.serializer.deserialize_summary_record(record[3])
         return SummaryVariantFactory.summary_variant_from_records(
             sv_record,
         )
 
-    def _deserialize_family_variant(self, record: list[str]) -> FamilyVariant:
-        sv_record = json.loads(record[4])
-        fv_record = json.loads(record[5])
+    def _deserialize_family_variant(
+        self, record: list[bytes],
+    ) -> FamilyVariant:
+        sv_record = self.serializer.deserialize_summary_record(record[4])
+        fv_record = self.serializer.deserialize_family_record(record[5])
         inheritance_in_members = {
             int(k): [Inheritance.from_value(inh) for inh in v]
             for k, v in fv_record["inheritance_in_members"].items()
@@ -216,7 +218,7 @@ class DuckDb2Variants(QueryVariantsBase):
         )
 
     def build_summary_variants_query_runner(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -227,7 +229,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> QueryRunner:
         """Create query runner for searching summary variants."""
         if limit is None or limit < 0:
@@ -273,7 +275,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return runner
 
     def query_summary_variants(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -284,7 +286,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> Generator[SummaryVariant, None, None]:
         """Execute the summary variants query and yields summary variants."""
         if limit is None or limit < 0:
@@ -319,7 +321,7 @@ class DuckDb2Variants(QueryVariantsBase):
                     break
 
     def build_family_variants_query_runner(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -335,9 +337,9 @@ class DuckDb2Variants(QueryVariantsBase):
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        study_filters: Optional[list[str]] = None,
+        study_filters: Optional[list[str]] = None,  # noqa: ARG002
         pedigree_fields: Optional[tuple] = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> QueryRunner:
         # pylint: disable=too-many-arguments
         """Create a query runner for searching family variants."""
@@ -396,7 +398,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return runner
 
     def query_variants(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -413,7 +415,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
         pedigree_fields: Optional[tuple] = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
         """Execute the family variants query and yields family variants."""
@@ -460,41 +462,3 @@ class DuckDb2Variants(QueryVariantsBase):
     ) -> Optional[Union[tuple, tuple[list[str], list[str]]]]:
         """No idea what it does. If you know please edit."""
         return None
-        # collection_id, selected_person_sets = person_set_collection_query
-        # assert collection_id == person_set_collection.id
-        # selected_person_sets = set(selected_person_sets)
-        # assert isinstance(selected_person_sets, set)
-
-        # if not person_set_collection.is_pedigree_only():
-        #     return None
-
-        # available_person_sets = set(person_set_collection.person_sets.keys())
-        # if (available_person_sets & selected_person_sets) == \
-        #         available_person_sets:
-        #     return ()
-
-        # def pedigree_columns(
-        #     selected_person_sets: Iterable[str]
-        # ) -> list[dict[str, str]]:
-        #     result = []
-        #     for person_set_id in sorted(selected_person_sets):
-        #         if person_set_id not in person_set_collection.person_sets:
-        #             continue
-        #         person_set = person_set_collection.person_sets[person_set_id]
-        #         assert len(person_set.values) == \
-        #             len(person_set_collection.sources)
-        #         person_set_query = {}
-        #         for source, value in zip(
-        #                 person_set_collection.sources, person_set.values):
-        #             person_set_query[source.ssource] = value
-        #         result.append(person_set_query)
-        #     return result
-
-        # if person_set_collection.default.id not in selected_person_sets:
-        #     return (list(pedigree_columns(selected_person_sets)), [])
-        # return (
-        #     [],
-        #     list(
-        #         pedigree_columns(
-        #             available_person_sets - selected_person_sets))
-        # )

@@ -20,7 +20,7 @@ class QueryVariantsBase(abc.ABC):
 
     @abc.abstractmethod
     def build_summary_variants_query_runner(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -37,7 +37,7 @@ class QueryVariantsBase(abc.ABC):
 
     @abc.abstractmethod
     def query_summary_variants(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -54,7 +54,7 @@ class QueryVariantsBase(abc.ABC):
 
     @abc.abstractmethod
     def build_family_variants_query_runner(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -79,7 +79,7 @@ class QueryVariantsBase(abc.ABC):
 
     @abc.abstractmethod
     def query_variants(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,

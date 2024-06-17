@@ -159,7 +159,7 @@ class AlleleParquetSerializer:
 
     def build_family_allele_batch_dict(
         self, allele: FamilyAllele,
-        family_variant_data: str,
+        family_variant_data: bytes,
     ) -> dict[str, list[Any]]:
         """Build a batch of family allele data in the form of a dict."""
         family_header = []
@@ -186,7 +186,7 @@ class AlleleParquetSerializer:
 
     def build_summary_allele_batch_dict(
         self, allele: SummaryAllele,
-        summary_variant_data: str,
+        summary_variant_data: bytes,
     ) -> dict[str, Any]:
         """Build a batch of summary allele data in the form of a dict."""
         allele_data = {"summary_variant_data": summary_variant_data}
