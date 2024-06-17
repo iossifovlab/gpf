@@ -196,7 +196,7 @@ class VCFAllele(Annotatable):
 
     def __repr__(self) -> str:
         return (
-            f"VCFAllele({self.chrom},{self.pos},{self.pos_end}"
+            f"VCFAllele({self.chrom},{self.pos}"
             f",{self.ref},{self.alt})"
         )
 
