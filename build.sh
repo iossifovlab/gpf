@@ -293,7 +293,7 @@ EOT
 
   build_stage "Tests"
   {
-    # run dae, wdae, dae integration, wdae integration tests asynchronously
+    # run dae, wdae, dae integration, wdae integration, demo annotator tests asynchronously
     {
       # dae
       {
@@ -388,6 +388,35 @@ EOT
               . || true'
 
       }
+      # demo_annotator
+      {
+        local -A ctx_demo
+        build_run_ctx_init ctx:ctx_demo "container" "${gpf_dev_image_ref}" \
+          --network "${ctx_network["network_id"]}" \
+          --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
+          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env TEST_REMOTE_HOST="gpfremote" \
+          --env LOCALSTACK_HOST="localstack" \
+          --env WDAE_EMAIL_HOST="mailhog"
+
+        defer_ret build_run_ctx_reset ctx:ctx_demo
+
+        for d in /wd/dae /wd/wdae /wd/dae_conftests /wd/external_demo_annotator; do
+          build_run_container ctx:ctx_demo bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+            pip install -e .'
+        done
+
+        build_run_detached ctx:ctx_demo bash -c '
+            cd /wd/external_demo_annotator;
+            export PYTHONHASHSEED=0;
+            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+              -n 5 \
+              --durations 20 \
+              --cov-config /wd/coveragerc \
+              --junitxml=/wd/results/demo-annotator-junit.xml \
+              --cov demo_annotator \
+              demo_annotator/ || true'
+      }
     }
 
     # wait for the asynchronously ran tests to finish and copy their results
@@ -405,6 +434,11 @@ EOT
       {
         build_run_container ctx:ctx_wdae_integ wait
         build_run_container ctx:ctx_wdae_integ cp ./results/wdae-tests-junit.xml ./test-results/
+      }
+
+      {
+        build_run_container ctx:ctx_demo wait
+        build_run_container ctx:ctx_demo cp ./results/demo-annotator-junit.xml ./test-results/
       }
 
       # wdae
