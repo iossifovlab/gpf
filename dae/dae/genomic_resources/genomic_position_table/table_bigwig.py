@@ -10,6 +10,8 @@ from dae.genomic_resources.repository import GenomicResource
 class BigWigTable(GenomicPositionTable):
     """bigWig format implementation of the genomic position table."""
 
+    BATCH_SIZE = 2000
+
     def __init__(
         self,
         genomic_resource: GenomicResource,
@@ -32,11 +34,19 @@ class BigWigTable(GenomicPositionTable):
             self.bw_file.close()
         self.bw_file = None
 
-    def get_all_records(self) -> Generator[LineBase, None, None]:
+    def _intervals(
+        self, chrom: str, pos_begin: int, pos_end: int,
+    ) -> Generator[list[tuple[str, int, int, float]], None, None]:
         assert self.bw_file is not None
-        for chrom in self.bw_file.chroms().keys():
-            for interval in self.bw_file.intervals(chrom):
-                yield Line((chrom, *interval))
+        limit = self.bw_file.chroms()[chrom]
+        pos_begin = max(0, pos_begin - 1)
+        pos_end = min(pos_end, limit)
+        for start in range(pos_begin, pos_end, self.BATCH_SIZE):
+            stop = min(start + self.BATCH_SIZE, pos_end)
+            intervals = self.bw_file.intervals(chrom, start, stop)
+            if not intervals:
+                continue
+            yield from intervals
 
     def get_records_in_region(
         self,
@@ -53,8 +63,13 @@ class BigWigTable(GenomicPositionTable):
         if pos_end is None:
             pos_end = self.bw_file.chroms()[chrom]
 
-        for interval in self.bw_file.intervals(chrom, pos_begin, pos_end):
-            yield Line((chrom, *interval))
+        yield from [Line((chrom, *interval)) for interval in
+                    self._intervals(chrom, pos_begin, pos_end)]
+
+    def get_all_records(self) -> Generator[LineBase, None, None]:
+        assert self.bw_file is not None
+        for chrom in self.bw_file.chroms():
+            yield from self.get_records_in_region(chrom)
 
     def get_chromosome_length(
         self, chrom: str, _step: int = 100_000_000,
