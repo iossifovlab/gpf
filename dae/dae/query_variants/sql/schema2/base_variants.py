@@ -9,6 +9,7 @@ import pandas as pd
 from dae.genomic_resources.gene_models import GeneModels
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.schema2.variant_serializers import VariantsDataSerializer
 from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import PersonSetCollection
 from dae.query_variants.base_query_variants import QueryVariantsBase
@@ -68,6 +69,8 @@ class SqlSchema2Variants(QueryVariantsBase):
 
             self.partition_descriptor = PartitionDescriptor.parse_string(
                 self._fetch_tblproperties())
+
+        self.serializer = VariantsDataSerializer.build_serializer()
 
     def _fetch_summary_schema(self) -> dict[str, str]:
         assert self.summary_allele_table is not None

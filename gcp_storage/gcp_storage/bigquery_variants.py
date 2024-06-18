@@ -1,4 +1,3 @@
-import json
 import logging
 import time
 from typing import Any, Optional, cast
@@ -127,7 +126,8 @@ class BigQueryVariants(SqlSchema2Variants):
     def _deserialize_summary_variant(
         self, record: Any,
     ) -> SummaryVariant:
-        sv_record = json.loads(record.summary_variant_data)
+        sv_record = self.serializer.deserialize_summary_record(
+            record.summary_variant_data)
         return SummaryVariantFactory.summary_variant_from_records(
             sv_record,
         )
@@ -135,8 +135,10 @@ class BigQueryVariants(SqlSchema2Variants):
     def _deserialize_family_variant(
         self, record: Any,
     ) -> FamilyVariant:
-        sv_record = json.loads(record.summary_variant_data)
-        fv_record = json.loads(record.family_variant_data)
+        sv_record = self.serializer.deserialize_summary_record(
+            record.summary_variant_data)
+        fv_record = self.serializer.deserialize_family_record(
+            record.family_variant_data)
         inheritance_in_members = {
             int(k): [Inheritance.from_value(inh) for inh in v]
             for k, v in fv_record["inheritance_in_members"].items()
