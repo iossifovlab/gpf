@@ -296,6 +296,27 @@ Genomic Resource types
 position_score
 ##############
 
+Two formats are accepted in GPF
+
+Format A
+.. code-block::
+  chr1   pos    score1 score2
+  # pos is assumed to be 1-based
+
+  # how do we index with tabix!!!!
+  Tabix -s 1 -b 2 -e 2
+
+Format B
+.. code-block::
+  chr1 beg end score1 score2
+  # all positions in [beg, end] are assigned the same scores
+  # beg and end are  assumed to be 1-based
+  # end is included (the interval is closed on both end)
+  tabix -s 1 -b 2 -e 3
+
+NOTE: We should never use tabix -p bed!!
+
+
 np_score
 ########
 
