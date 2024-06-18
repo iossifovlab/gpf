@@ -9,7 +9,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.testing import build_inmemory_test_resource
 
 
-def test_the_simplest_position_score():
+def test_the_simplest_position_score() -> None:
     res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: position_score
@@ -46,7 +46,7 @@ def test_the_simplest_position_score():
         == [0.03]
 
 
-def test_region_score():
+def test_region_score() -> None:
     res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: position_score
@@ -98,7 +98,7 @@ def test_region_score():
         [0 / 2]
 
 
-def test_phastcons100way():
+def test_phastcons100way() -> None:
     res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: position_score
@@ -142,7 +142,7 @@ def test_phastcons100way():
         [0.000625]
 
 
-def test_position_score_fetch_region():
+def test_position_score_fetch_region() -> None:
     res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: position_score
@@ -195,7 +195,7 @@ def test_position_score_fetch_region():
          {"phastCons5way": 3, "phastCons100way": 0.01}]
 
 
-def test_position_score_chrom_prefix():
+def test_position_score_chrom_prefix() -> None:
     res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: position_score
@@ -221,4 +221,4 @@ def test_position_score_chrom_prefix():
     score.open()
 
     assert score.table is not None
-    assert set(score.table.get_chromosomes()) == set(["chr1", "chr2"])
+    assert set(score.table.get_chromosomes()) == {"chr1", "chr2"}
