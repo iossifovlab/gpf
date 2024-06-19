@@ -98,6 +98,32 @@ class GeneModelsImpl(
     def get_template(self) -> Template:
         return Template(textwrap.dedent("""
             {% extends base %}
+            {% block extra_styles %}
+            #chromosomes-table {
+                border-collapse: separate;
+                border-spacing: 0;
+            }
+            #chromosomes-table th {
+                border-top: 1px solid;
+                border-bottom: 1px solid;
+                border-right: 1px solid;
+            }
+            #chromosomes-table td {
+                border-bottom: 1px solid;
+                border-right: 1px solid;
+            }
+            #chromosomes-table th:first-child,
+            #chromosomes-table td:first-child {
+                border-left: 1px solid;
+            }
+            #chromosomes-table thead tr:nth-of-type(2) th {
+                border-top: none;
+            }
+            #chromosomes-table thead {
+                position: sticky; top: 0; background-color: white;
+            }
+            {% endblock %}
+
             {% block content %}
             <h1>Configuration</h1>
                 Gene models file:
@@ -107,36 +133,28 @@ class GeneModelsImpl(
 
                 <p>Format: {{ data.config.format }}</p>
             <h1>Statistics</h1>
-                <div style="width: fit-content">
-                    <h2>Global statistics</h2>
-                    <table border="1">
-                        <tr>
-                            <th>Transcript number</th>
-                            <th>Protein coding transcript number</th>
-                            <th>Gene number</th>
-                            <th>Protein coding gene number</th>
-                        </tr>
-                        <tr>
-                            <td>{{ '{:,}'.format(data.stats.global_statistic.transcript_number)}}</td>
-                            <td>{{ '{:,}'.format(data.stats.global_statistic.protein_coding_transcript_number)}}</td>
-                            <td>{{ '{:,}'.format(data.stats.global_statistic.gene_number)}}</td>
-                            <td>{{ '{:,}'.format(data.stats.global_statistic.protein_coding_gene_number)}}</td>
-                        </tr>
-                    </table>
-                </div>
+                <h2>Chromosome statistics</h2>
                 <div style="max-height: 50%; overflow-y: auto; width: fit-content">
-                    <h2>Per chromosome statistics</h2>
-                    <table border="1">
-                        <tr>
-                            <th></th>
-                            <th>Transcript number</th>
-                            <th>Protein coding transcript number</th>
-                            <th>Gene number</th>
-                            <th>Protein coding gene number</th>
-                        </tr>
+                    <table id="chromosomes-table">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Transcript number</th>
+                                <th>Protein coding transcript number</th>
+                                <th>Gene number</th>
+                                <th>Protein coding gene number</th>
+                            </tr>
+                            <tr>
+                                <th>Global</th>
+                                <td>{{ '{:,}'.format(data.stats.global_statistic.transcript_number)}}</td>
+                                <td>{{ '{:,}'.format(data.stats.global_statistic.protein_coding_transcript_number)}}</td>
+                                <td>{{ '{:,}'.format(data.stats.global_statistic.gene_number)}}</td>
+                                <td>{{ '{:,}'.format(data.stats.global_statistic.protein_coding_gene_number)}}</td>
+                            </tr>
+                        </thead>
                         {% for chrom, stat in data.stats.chrom_statistics.items() %}
                             <tr>
-                                <th>{{ chrom }}</th>
+                                <td>{{ chrom }}</td>
                                 <td>{{ '{:,}'.format(stat.transcript_number)}}</td>
                                 <td>{{ '{:,}'.format(stat.protein_coding_transcript_number)}}</td>
                                 <td>{{ '{:,}'.format(stat.gene_number)}}</td>

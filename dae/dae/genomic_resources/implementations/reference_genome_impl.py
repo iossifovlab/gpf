@@ -317,6 +317,32 @@ class ReferenceGenomeImplementation(
     def get_template(self) -> Template:
         return Template(textwrap.dedent("""
             {% extends base %}
+            {% block extra_styles %}
+            #chromosomes-table {
+                border-collapse: separate;
+                border-spacing: 0;
+            }
+            #chromosomes-table th {
+                border-top: 1px solid;
+                border-bottom: 1px solid;
+                border-right: 1px solid;
+            }
+            #chromosomes-table td {
+                border-bottom: 1px solid;
+                border-right: 1px solid;
+            }
+            #chromosomes-table th:first-child,
+            #chromosomes-table td:first-child {
+                border-left: 1px solid;
+            }
+            #chromosomes-table thead tr:nth-of-type(2) th {
+                border-top: none;
+            }
+            #chromosomes-table thead {
+                position: sticky; top: 0; background-color: white;
+            }
+            {% endblock %}
+
             {% block content %}
 
             {% if data["chrom_prefix"] %}
@@ -345,58 +371,30 @@ class ReferenceGenomeImplementation(
             {% endif %}
 
             <h3>Genome statistics:</h3>
-            {% if data["global_statistic"] %}
-                <h4>
-                    Length: {{ '{:,}'.format(data["global_statistic"]["length"]) }}
-                </h4>
-
-                <h4>Nucleotide distribution:</h4>
-                {%
-                    for nucleotide, prc in
-                    data["global_statistic"]["nuc_distribution"].items()
-                %}
-                    <div>{{ nucleotide }}: {{ "%0.2f%%" % prc }}</div>
-                {% endfor %}
-
-                <h4>Bi-Nucleotide distribution:</h4>
-                <table border="1">
-                    <tr>
-                        <th>{{ nucleotide }}</th>
-                        {% for nucleotide in
-                            data["global_statistic"]["nuc_distribution"].keys() %}
-                            <th>{{ nucleotide }}</th>
-                        {% endfor %}
-                    </tr>
-                    {% for first_nucleotide in
-                        data["global_statistic"]["nuc_distribution"].keys() %}
+            <h3>{{ "Chromosomes ({0}):".format(data["chromosomes"]|length) }}</h3>
+            <div style="max-height: 50%; overflow-y: auto; width: fit-content; margin-bottom: 14px;">
+                <table id="chromosomes-table">
+                    <thead>
                         <tr>
-                            <td>{{ first_nucleotide }}</td>
-                            {% for second_nucleotide in
-                            data["global_statistic"]["nuc_distribution"].keys() %}
-                                <td>{{ "%0.2f%%" %  data["global_statistic"]["bi_nuc_distribution"].get(first_nucleotide + second_nucleotide) }}</td>
+                            <th>Chrom</th>
+                            <th>Length</th>
+                            {% for nucleotide in ["A", "T", "C", "G", "N"] %}
+                                <th>{{ nucleotide }}</th>
                             {% endfor %}
                         </tr>
-                    {% endfor %}
-                </table>
-            {% endif %}
-
-            <h3>{{ "Chromosomes ({0}):".format(data["chromosomes"]|length) }}</h3>
-            <div style="max-height: 50%; overflow-y: auto; width: fit-content">
-                <table border="1" >
-                    <tr>
-                        <th>Chrom</th>
-                        <th>Length</th>
-                        {% for nucleotide in
-                            data["global_statistic"]["nuc_distribution"].keys()|sort %}
-                            <th>{{ nucleotide }}</th>
-                        {% endfor %}
-                    </tr>
+                        <tr>
+                            <th>Global</th>
+                            <td>{{ '{:,}'.format(data["global_statistic"]["length"]) }}</td>
+                            {% for nucleotide in ["A", "T", "C", "G", "N"] %}
+                                <td>{{ "%0.2f%%" % data["global_statistic"]["nuc_distribution"][nucleotide] }}</td>
+                            {% endfor %}
+                        </tr>
+                    </thead>
                     {%- for chrom, length in data["chromosomes"] -%}
                         <tr>
                             <td>{{ chrom }}</td>
                             <td>{{ '{:,}'.format(length) }}</td>
-                            {% for nucleotide in
-                                data["global_statistic"]["nuc_distribution"].keys()|sort %}
+                            {% for nucleotide in ["A", "T", "C", "G", "N"] %}
                                 {% if data["chrom_statistics"].get(chrom) %}
                                     <td>{{ "%0.2f%%" % data["chrom_statistics"].get(chrom).nucleotide_distribution.get(nucleotide) }}</td>
                                 {% else %}
@@ -407,6 +405,25 @@ class ReferenceGenomeImplementation(
                     {%- endfor -%}
                 </table>
             </div>
+            {% if data["global_statistic"] %}
+                <h4>Bi-Nucleotide distribution:</h4>
+                <table border="1">
+                    <tr>
+                        <th>{{ nucleotide }}</th>
+                        {% for nucleotide in ["A", "T", "C", "G", "N"] %}
+                            <th>{{ nucleotide }}</th>
+                        {% endfor %}
+                    </tr>
+                    {% for first_nucleotide in ["A", "T", "C", "G", "N"] %}
+                        <tr>
+                            <th>{{ first_nucleotide }}</th>
+                            {% for second_nucleotide in ["A", "T", "C", "G", "N"] %}
+                                <td>{{ "%0.2f%%" %  data["global_statistic"]["bi_nuc_distribution"].get(first_nucleotide + second_nucleotide) }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
             {% endblock %}
         """))  # noqa: E501
 
