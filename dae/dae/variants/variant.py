@@ -926,7 +926,7 @@ class SummaryVariantFactory:
     @staticmethod
     def summary_variant_from_vcf(
             vcf_variant: pysam.VariantRecord,
-            summary_variant_index: int,
+            summary_index: int,
             transmission_type: TransmissionType) -> SummaryVariant:
         """Build sumamry variant from a pysam VCF record."""
         records = []
@@ -940,7 +940,7 @@ class SummaryVariantFactory:
                 "position": vcf_variant.pos,
                 "reference": vcf_variant.ref,
                 "alternative": None,
-                "summary_index": summary_variant_index,
+                "summary_index": summary_index,
                 "allele_index": 0,
                 "allele_count": allele_count,
             },
@@ -953,7 +953,7 @@ class SummaryVariantFactory:
                     "position": vcf_variant.pos,
                     "reference": vcf_variant.ref,
                     "alternative": alt,
-                    "summary_index": summary_variant_index,
+                    "summary_index": summary_index,
                     "allele_index": allele_index + 1,
                     "allele_count": allele_count,
                 },

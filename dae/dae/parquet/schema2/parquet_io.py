@@ -277,30 +277,30 @@ class VariantsParquetWriter:
     ) -> list[str]:
         """Write variant to partitioned parquet dataset."""
         # pylint: disable=too-many-locals,too-many-branches
-        family_variant_index = 0
-        summary_variant_index = 0
-        for summary_variant_index, (
+        family_index = 0
+        summary_index = 0
+        for summary_index, (
             summary_variant,
             family_variants,
         ) in enumerate(full_variants_iterator):
-            assert summary_variant_index < 1_000_000_000, \
+            assert summary_index < 1_000_000_000, \
                 "too many summary variants"
             num_fam_alleles_written = 0
             seen_in_status = summary_variant.allele_count * [0]
             seen_as_denovo = summary_variant.allele_count * [False]
             family_variants_count = summary_variant.allele_count * [0]
-            sj_base_index = self._calc_sj_base_index(summary_variant_index)
+            sj_base_index = self._calc_sj_base_index(summary_index)
 
             for fv in family_variants:
-                family_variant_index += 1
+                family_index += 1
                 assert fv.gt is not None
 
                 if is_all_reference_genotype(fv.gt) and \
                         not self.include_reference:
                     continue
 
-                fv.summary_index = summary_variant_index
-                fv.family_index = family_variant_index
+                fv.summary_index = summary_index
+                fv.family_index = family_index
 
                 allele_indexes = set()
                 for fa in fv.alleles:
@@ -309,7 +309,7 @@ class VariantsParquetWriter:
 
                     extra_atts = {
                         "bucket_index": self.bucket_index,
-                        "family_index": family_variant_index,
+                        "family_index": family_index,
                         "sj_index": sj_base_index + fa.allele_index,
                     }
                     fa.update_attributes(extra_atts)
@@ -358,7 +358,7 @@ class VariantsParquetWriter:
 
             # don't store summary alleles withouth family ones
             if num_fam_alleles_written > 0:
-                summary_variant.summary_index = summary_variant_index
+                summary_variant.summary_index = summary_index
                 summary_variant.ref_allele.update_attributes(
                     {"bucket_index": self.bucket_index})
                 summary_variant.update_attributes({
@@ -372,14 +372,14 @@ class VariantsParquetWriter:
                     summary_variant, sj_base_index=sj_base_index,
                 )
 
-            if summary_variant_index % 1000 == 0 and summary_variant_index > 0:
+            if summary_index % 1000 == 0 and summary_index > 0:
                 elapsed = time.time() - self.start
                 logger.info(
                     "progress bucked %s; "
                     "summary variants: %s; family variants: %s; "
                     "elapsed time: %0.2f sec",
                     self.bucket_index,
-                    summary_variant_index, family_variant_index,
+                    summary_index, family_index,
                     elapsed)
 
         filenames = list(self.data_writers.keys())
@@ -390,7 +390,7 @@ class VariantsParquetWriter:
         logger.info(
             "finished bucked %s; summary variants: %s; family variants: %s; "
             "elapsed time: %0.2f sec",
-            self.bucket_index, summary_variant_index, family_variant_index,
+            self.bucket_index, summary_index, family_index,
             elapsed)
         return filenames
 
