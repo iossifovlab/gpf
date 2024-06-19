@@ -46,6 +46,9 @@ class Reader:
         self.batch: list[dict] = []
         self.exhausted = False
 
+    def __del__(self) -> None:
+        self.close()
+
     def __iter__(self) -> "Reader":
         return self
 
@@ -98,6 +101,9 @@ class MultiReader:
     """
     def __init__(self, dirs: Iterable[str], columns: Iterable[str]):
         self.readers = tuple(Reader(path, columns) for path in dirs)
+
+    def __del__(self) -> None:
+        self.close()
 
     def __iter__(self) -> "MultiReader":
         return self
