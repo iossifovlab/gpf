@@ -23,30 +23,25 @@ def test_enrichment_tool(
 
     assert result.all.events is not None
     assert result.all.events == 2
-    # assert result.all.events == [["SAMD11"], ["SAMD11"]]
     assert result.all.expected == 2.0
     assert result.all.pvalue == 1.0
 
     assert result.rec.events is not None
     assert result.rec.events == 1
-    # assert result.rec.events == [["SAMD11"]]
     assert result.rec.expected == 1.0
     assert result.rec.pvalue == 1.0
 
     assert result.male.events is not None
     assert result.male.events == 1
-    # assert result.male.events == [["SAMD11"]]
     assert result.male.expected == 1.0
     assert result.male.pvalue == 1.0
 
     assert result.female.events is not None
     assert result.female.events == 1
-    # assert result.female.events == [["SAMD11"]]
     assert result.female.expected == 1.0
     assert result.female.pvalue == 1.0
 
     assert result.unspecified.events is not None
     assert result.unspecified.events == 0
-    # assert result.unspecified.events == []
     assert result.unspecified.expected == 0
     assert result.unspecified.pvalue == 1.0

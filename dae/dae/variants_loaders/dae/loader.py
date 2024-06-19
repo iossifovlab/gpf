@@ -200,7 +200,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                     "reference": reference,
                     "alternative": alt,
                     "position": position,
-                    "summary_variant_index": num_idx,
+                    "summary_index": num_idx,
                     "allele_index": alt_index + 1,
                     "af_parents_called_count": None,
                     "af_parents_called_percent": None,
@@ -929,7 +929,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         rec["all.nAltAlls"] = int(rec["all.nAltAlls"])
         rec["all.prcntParCalled"] = float(rec["all.prcntParCalled"])
         rec["all.altFreq"] = float(rec["all.altFreq"])
-        rec["summary_variant_index"] = summary_index
+        rec["summary_index"] = summary_index
 
         parents_called = int(rec.get("all.nParCalled", 0))
         ref_allele_count = 2 * int(rec.get("all.nParCalled", 0)) - int(
@@ -947,7 +947,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             "variant_type": None,
             "cshl_position": rec["cshl_position"],
             "cshl_variant": rec["cshl_variant"],
-            "summary_variant_index": rec["summary_variant_index"],
+            "summary_index": rec["summary_index"],
             "allele_index": 0,
             "af_parents_called_count": parents_called,
             "af_parents_called_percent": float(
@@ -967,7 +967,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             "variant_type": allele_type_from_cshl_variant(rec["cshl_variant"]),
             "cshl_position": rec["cshl_position"],
             "cshl_variant": rec["cshl_variant"],
-            "summary_variant_index": rec["summary_variant_index"],
+            "summary_index": rec["summary_index"],
             "allele_index": 1,
             "af_parents_called_count": int(rec.get("all.nParCalled", 0)),
             "af_parents_called_percent": float(

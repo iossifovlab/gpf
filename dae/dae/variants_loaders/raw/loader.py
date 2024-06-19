@@ -454,7 +454,7 @@ class AnnotationDecorator(VariantsLoaderDecorator):
             "reference",
             "alternative",
             "bucket_index",
-            "summary_variant_index",
+            "summary_index",
             "allele_index",
             "allele_count",
         ]
@@ -679,6 +679,7 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         variant_iterator = self.variants_loader.full_variants_iterator()
         start = time.time()
         annot_df = self._load_annotation_file(self.annotation_filename)
+
         elapsed = time.time() - start
         logger.info(
             "Storred annotation file (%s) loaded in in %.2f sec",
@@ -698,7 +699,9 @@ class StoredAnnotationDecorator(AnnotationDecorator):
             variant_records = []
 
             current_record = records[index]
-            while current_record["summary_variant_index"] == \
+            assert "summary_index" in current_record, list(current_record.keys())
+
+            while current_record["summary_index"] == \
                     sumary_variant.summary_index:
                 variant_records.append(current_record)
                 index += 1

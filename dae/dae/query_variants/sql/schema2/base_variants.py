@@ -70,7 +70,9 @@ class SqlSchema2Variants(QueryVariantsBase):
             self.partition_descriptor = PartitionDescriptor.parse_string(
                 self._fetch_tblproperties())
 
-        self.serializer = VariantsDataSerializer.build_serializer()
+        variants_data_schema = self._fetch_variants_data_schema()
+        self.serializer = VariantsDataSerializer.build_serializer(
+            variants_data_schema)
 
     def _fetch_summary_schema(self) -> dict[str, str]:
         assert self.summary_allele_table is not None

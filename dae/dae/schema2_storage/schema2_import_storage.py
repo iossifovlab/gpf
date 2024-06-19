@@ -21,6 +21,7 @@ from dae.parquet.schema2.parquet_io import (
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.schema2.variant_serializers import (
     VariantsDataSerializer,
+    ZstdIndexedVariantsDataSerializer,
 )
 from dae.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
@@ -59,6 +60,14 @@ class Schema2ImportStorage(ImportStorage):
             os.makedirs(dirname, exist_ok=True)
         save_ped_df_to_parquet(
             families.ped_df, layout.pedigree)
+
+    @classmethod
+    def _serialize_variants_data_schema(cls, project: ImportProject) -> str:
+        annotation_pipeline = project.build_annotation_pipeline()
+
+        return yaml.dump(
+            ZstdIndexedVariantsDataSerializer.build_serialization_schema(
+                annotation_pipeline.get_attributes()))
 
     @classmethod
     def _serialize_summary_schema(cls, project: ImportProject) -> str:
@@ -136,6 +145,8 @@ class Schema2ImportStorage(ImportStorage):
                 "annotation_pipeline",
                 "study",
                 "contigs",
+
+                "variants_data_schema",
             ],
             [
                 cls._get_partition_description(project).serialize(),
@@ -148,6 +159,8 @@ class Schema2ImportStorage(ImportStorage):
                 annotation_pipeline,
                 study,
                 contigs,
+
+                cls._serialize_variants_data_schema(project),
             ])
 
     @classmethod

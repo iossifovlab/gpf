@@ -370,7 +370,7 @@ class CNVLoader(VariantsGenotypesLoader):
                 "alternative": None,
                 "position": position,
                 "end_position": end_position,
-                "summary_variant_index": num_idx,
+                "summary_index": num_idx,
                 "variant_type": variant_type,
                 "allele_index": 0,
             }

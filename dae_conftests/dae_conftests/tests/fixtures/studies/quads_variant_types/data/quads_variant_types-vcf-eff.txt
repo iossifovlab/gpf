@@ -1,4 +1,4 @@
-chrom	position	reference	alternative	summary_variant_index	allele_index	allele_count	af_parents_called_count	af_parents_called_percent	af_allele_count	af_allele_freq	CSHL:location	CSHL:chr	CSHL:position	CSHL:variant	VCF:chr	VCF:position	VCF:ref	VCF:alt	effect_type	effect_gene_genes	effect_gene_types	effect_genes	effect_details_transcript_ids	effect_details_details	effect_details	Unnamed: 26	
+chrom	position	reference	alternative	summary_index	allele_index	allele_count	af_parents_called_count	af_parents_called_percent	af_allele_count	af_allele_freq	CSHL:location	CSHL:chr	CSHL:position	CSHL:variant	VCF:chr	VCF:position	VCF:ref	VCF:alt	effect_type	effect_gene_genes	effect_gene_types	effect_genes	effect_details_transcript_ids	effect_details_details	effect_details	Unnamed: 26	
 1	11601	T		0	0	2	2	100	2	50																	
 1	11601	T	TAC	0	1	2	2	100	2	50	1:11602	1	11602.0	ins(AC)	1	11601.0	T	TAC	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	intergenic	['intergenic:intergenic:intergenic']	['intergenic']	['intergenic']
 1	11602	T		1	0	2	2	100	2	50																	

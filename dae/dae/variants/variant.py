@@ -566,11 +566,10 @@ class SummaryAllele(core.Allele):
             "position": allele.attributes.get("position"),
             "end_position": allele.attributes.get("position"),
             "reference": allele.attributes.get("reference"),
-            "summary_variant_index": allele.attributes.get(
-                "summary_variant_index"),
+            "summary_index": allele.attributes.get(
+                "summary_index"),
             "allele_count": allele.attributes.get("allele_count"),
             "allele_index": 0,
-            "summary_index": allele.attributes.get("summary_index"),
             "bucket_index": allele.attributes.get("bucket_index"),
             "sj_index": sj_index,
         }
@@ -864,12 +863,9 @@ class SummaryVariantFactory:
                 if k not in attr_filter
             }
 
-        if "summary_variant_index" in record:
-            summary_index = record["summary_variant_index"]
-            attributes["summary_index"] = summary_index
-        else:
-            summary_index = record.get("summary_index")
+        assert "summary_index" in record
 
+        summary_index = record.get("summary_index")
         allele_index = record["allele_index"]
 
         chrom = record["chrom"]
@@ -944,7 +940,7 @@ class SummaryVariantFactory:
                 "position": vcf_variant.pos,
                 "reference": vcf_variant.ref,
                 "alternative": None,
-                "summary_variant_index": summary_variant_index,
+                "summary_index": summary_variant_index,
                 "allele_index": 0,
                 "allele_count": allele_count,
             },
@@ -957,7 +953,7 @@ class SummaryVariantFactory:
                     "position": vcf_variant.pos,
                     "reference": vcf_variant.ref,
                     "alternative": alt,
-                    "summary_variant_index": summary_variant_index,
+                    "summary_index": summary_variant_index,
                     "allele_index": allele_index + 1,
                     "allele_count": allele_count,
                 },

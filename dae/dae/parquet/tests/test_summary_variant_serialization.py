@@ -188,7 +188,6 @@ SV1 = [
         "sj_index": 2000420000763910001,
         "ssc_freq": 4.71,
         "summary_index": 76391,
-        "summary_variant_index": 76391,
         "transmission_type": 1,
         "variant_type": 4,
     },
@@ -245,7 +244,7 @@ def test_json_serialization_deserialization(sv: SummaryVariant) -> None:
     sv2 = SummaryVariantFactory.summary_variant_from_records(record2)
     assert sv == sv2
 
-    assert len(data) == 4107  # initially: 5909
+    assert len(data) == 4075  # 4107, initially: 5909
 
 
 def test_json_with_schema_serialization_deserialization(
@@ -273,7 +272,7 @@ def test_json_with_schema_serialization_deserialization(
     assert sv == sv2
     assert sv.effects == sv2.effects
 
-    assert len(data) == 3033
+    assert len(data) == 2999  # 3033
 
 
 def test_json_zstd_serialization_deserialization(sv: SummaryVariant) -> None:
@@ -284,7 +283,7 @@ def test_json_zstd_serialization_deserialization(sv: SummaryVariant) -> None:
     sv2 = SummaryVariantFactory.summary_variant_from_records(record2)
     assert sv == sv2
 
-    assert len(data) == 985
+    assert len(data) == 980  # 985
 
 
 def test_json_zstd_with_schema_serialization_deserialization(
@@ -312,4 +311,4 @@ def test_json_zstd_with_schema_serialization_deserialization(
     ])
     assert sv == sv2
 
-    assert len(data) == 794
+    assert len(data) == 773  # 794
