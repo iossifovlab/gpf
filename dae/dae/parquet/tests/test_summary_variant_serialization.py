@@ -4,6 +4,9 @@ import json
 import pytest
 import pyzstd
 
+from dae.parquet.schema2.variant_serializers import (
+    ZstdIndexedVariantsDataSerializer,
+)
 from dae.variants.variant import SummaryVariant, SummaryVariantFactory
 
 SUMMARY_SCHEMA = {
@@ -11,7 +14,7 @@ SUMMARY_SCHEMA = {
     "summary_index": "int32",
     "allele_index": "int32",
     "sj_index": "int64",
-    "chromosome": "string",
+    "chrom": "string",
     "position": "int32",
     "end_position": "int32",
     "effect_gene": "list<item: struct<effect_gene_symbols: string, effect_types: string>>",  # noqa: E501
@@ -187,7 +190,7 @@ SV1 = [
         "seen_in_status": 3,
         "sj_index": 2000420000763910001,
         "ssc_freq": 4.71,
-        "summary_index": 76391,
+        "summary_index": 12,
         "transmission_type": 1,
         "variant_type": 4,
     },
@@ -196,7 +199,7 @@ SV1 = [
 
 def test_summary_variant_from_record() -> None:
     sv = SummaryVariantFactory.summary_variant_from_records(SV1)
-    assert sv.summary_index == 76391
+    assert sv.summary_index == 12
     assert sv.chromosome == "chr1"
     assert sv.position == 213094429
     assert sv.end_position == 213094434
@@ -244,7 +247,7 @@ def test_json_serialization_deserialization(sv: SummaryVariant) -> None:
     sv2 = SummaryVariantFactory.summary_variant_from_records(record2)
     assert sv == sv2
 
-    assert len(data) == 4075  # 4107, initially: 5909
+    assert len(data) == 4072  # 4075  # 4107, initially: 5909
 
 
 def test_json_with_schema_serialization_deserialization(
@@ -272,7 +275,7 @@ def test_json_with_schema_serialization_deserialization(
     assert sv == sv2
     assert sv.effects == sv2.effects
 
-    assert len(data) == 2999  # 3033
+    assert len(data) == 2990  # 2993  # 2999  # 3033
 
 
 def test_json_zstd_serialization_deserialization(sv: SummaryVariant) -> None:
@@ -283,7 +286,7 @@ def test_json_zstd_serialization_deserialization(sv: SummaryVariant) -> None:
     sv2 = SummaryVariantFactory.summary_variant_from_records(record2)
     assert sv == sv2
 
-    assert len(data) == 980  # 985
+    assert len(data) == 979  # 980  # 985
 
 
 def test_json_zstd_with_schema_serialization_deserialization(
@@ -311,4 +314,95 @@ def test_json_zstd_with_schema_serialization_deserialization(
     ])
     assert sv == sv2
 
-    assert len(data) == 773  # 794
+    assert len(data) == 769  # 773  # 794
+
+
+ANNOTATION_FIELDS = [
+    "phylop100way",
+    "phylop30way",
+    "phylop20way",
+    "phylop7way",
+    "phastcons100way",
+    "phastcons30way",
+    "phastcons20way",
+    "phastcons7way",
+    "cadd_raw",
+    "cadd_phred",
+    "fitcons_i6_merged",
+    "linsight",
+    "fitcons2_e067",
+    "fitcons2_e068",
+    "fitcons2_e069",
+    "fitcons2_e070",
+    "fitcons2_e071",
+    "fitcons2_e072",
+    "fitcons2_e073",
+    "fitcons2_e074",
+    "fitcons2_e081",
+    "fitcons2_e082",
+    "mpc",
+    "ssc_freq",
+    "exome_gnomad_v2_1_1_af_percent",
+    "exome_gnomad_v2_1_1_ac",
+    "exome_gnomad_v2_1_1_af",
+    "exome_gnomad_v2_1_1_an",
+    "exome_gnomad_v2_1_1_controls_ac",
+    "exome_gnomad_v2_1_1_controls_an",
+    "exome_gnomad_v2_1_1_non_neuro_ac",
+    "exome_gnomad_v2_1_1_non_neuro_an",
+    "exome_gnomad_v2_1_1_controls_af_percent",
+    "exome_gnomad_v2_1_1_non_neuro_af_percent",
+    "genome_gnomad_v2_1_1_af_percent",
+    "genome_gnomad_v2_1_1_ac",
+    "genome_gnomad_v2_1_1_af",
+    "genome_gnomad_v2_1_1_an",
+    "genome_gnomad_v2_1_1_controls_ac",
+    "genome_gnomad_v2_1_1_controls_an",
+    "genome_gnomad_v2_1_1_non_neuro_ac",
+    "genome_gnomad_v2_1_1_non_neuro_an",
+    "genome_gnomad_v2_1_1_controls_af_percent",
+    "genome_gnomad_v2_1_1_non_neuro_af_percent",
+    "genome_gnomad_v3_af_percent",
+    "genome_gnomad_v3_ac",
+    "genome_gnomad_v3_an",
+]
+
+
+def test_zstd_indexed_serialization(sv: SummaryVariant) -> None:
+    meta = ZstdIndexedVariantsDataSerializer.build_serialization_meta(
+        ANNOTATION_FIELDS,
+    )
+    serializer = ZstdIndexedVariantsDataSerializer(meta)
+    assert serializer is not None
+
+    data = serializer.serialize_summary(sv)
+
+    record = serializer.deserialize_summary_record(data)
+    sv2 = SummaryVariantFactory.summary_variant_from_records(record)
+    assert sv2 is not None
+
+    assert sv2 == sv
+
+    assert sv2.summary_index == 12
+    assert sv2.chromosome == "chr1"
+    assert sv2.position == 213094429
+    assert sv2.end_position == 213094434
+
+    assert sv2.allele_count == 2
+    assert len(sv2.alt_alleles) == 1
+
+    sa = sv2.alt_alleles[0]
+    assert sa.alternative == "T"
+    assert sa.reference == "TTAATC"
+    assert sa.get_attribute("af_allele_count") == 137
+    assert sa.get_attribute("af_allele_freq") == 4.07
+    assert sa.get_attribute("af_parents_called_count") == 1684
+    assert sa.get_attribute("af_parents_called_percent") == 98.02
+    assert sa.get_attribute("seen_as_denovo") is False
+    assert sa.get_attribute("seen_in_status") == 3
+    assert sa.get_attribute("family_variants_count") == 134
+
+    assert {str(eg) for eg in sa.effect_genes} == {
+        "RPS6KC1:intron", "RPS6KC1:5'UTR-intron",
+        "RPS6KC1:non-coding-intron",
+    }

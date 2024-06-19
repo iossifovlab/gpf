@@ -865,7 +865,7 @@ class SummaryVariantFactory:
 
         assert "summary_index" in record
 
-        summary_index = record.get("summary_index")
+        summary_index = record.get("summary_index", -1)
         allele_index = record["allele_index"]
 
         chrom = record["chrom"]

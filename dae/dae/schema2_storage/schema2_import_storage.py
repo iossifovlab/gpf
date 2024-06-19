@@ -64,10 +64,14 @@ class Schema2ImportStorage(ImportStorage):
     @classmethod
     def _serialize_variants_data_schema(cls, project: ImportProject) -> str:
         annotation_pipeline = project.build_annotation_pipeline()
-
+        annotation_fields = [
+            attr.name
+            for attr in annotation_pipeline.get_attributes()
+            if not attr.internal
+        ]
         return yaml.dump(
-            ZstdIndexedVariantsDataSerializer.build_serialization_schema(
-                annotation_pipeline.get_attributes()))
+            ZstdIndexedVariantsDataSerializer.build_serialization_meta(
+                annotation_fields))
 
     @classmethod
     def _serialize_summary_schema(cls, project: ImportProject) -> str:

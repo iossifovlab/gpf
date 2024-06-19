@@ -5,7 +5,8 @@ import json
 import logging
 from typing import Any, Optional, cast
 
-from dae.annotation.annotation_pipeline import AttributeInfo
+import pyzstd
+
 from dae.variants.family_variant import (
     FamilyVariant,
 )
@@ -91,71 +92,110 @@ class ZstdIndexedVariantsDataSerializer(VariantsDataSerializer):
             raise ValueError(
                 "Bad schema version for ZstdIndexedVariantsDataSerializer")
 
-        self.summary_f = {
-            name: index
-            for index, name in enumerate(self.metadata["summary_schema"])
-        }
+        self.summary_f = dict(self.metadata["summary_fields"])
         self.summary_b = {
             index: name
             for name, index in self.summary_f.items()
         }
 
+        self.family_f = dict(self.metadata["family_fields"])
+        self.family_b = {
+            index: name
+            for name, index in self.family_f.items()
+        }
+
     def serialize_family(
         self, variant: FamilyVariant,
     ) -> bytes:
-        return b""
-
-    def serialize_summary(
-        self, variant: SummaryVariant,
-    ) -> bytes:
-        return b""
+        record = [
+            [self.family_f[key], val]
+            for key, val in variant.to_record().items()
+        ]
+        return pyzstd.compress(json.dumps(record, sort_keys=True).encode())
 
     def deserialize_family_record(
         self, data: bytes,
     ) -> dict[str, Any]:
-        return cast(dict[str, Any], data)
+        return {
+            self.family_b[key]: val
+            for key, val in json.loads(pyzstd.decompress(data))
+        }
+
+    def serialize_summary(
+        self, variant: SummaryVariant,
+    ) -> bytes:
+        record = [
+            [
+                [self.summary_f[key], val]
+                for key, val in rec.items()
+            ]
+            for rec in variant.to_record()
+        ]
+        return pyzstd.compress(json.dumps(record, sort_keys=True).encode())
 
     def deserialize_summary_record(
         self, data: bytes,
     ) -> list[dict[str, Any]]:
-        return cast(list[dict[str, Any]], data)
+        return [
+            {
+                self.summary_b[key]: val
+                for key, val in rec
+            }
+            for rec in json.loads(pyzstd.decompress(data))
+        ]
 
     @classmethod
-    def build_serialization_schema(
-        cls, annotation_schema: list[AttributeInfo]
+    def build_serialization_meta(
+        cls, annotation_fields: list[str],
     ) -> dict[str, Any]:
         """Build the serialization schema."""
-        fields = [
-            "bucket_index",
-            "summary_index",
-            "allele_index",
-            "sj_index",
-            "chromosome",
-            "position",
-            "end_position",
-            "variant_type",
-            "transmission_type",
-            "reference",
-            "alternative",
-            "cshl_position",
-            "cshl_variant",
-            "effects",
-            "af_allele_count",
-            "af_allele_freq",
-            "af_parents_called_count",
-            "af_parents_called_percent",
-            "seen_as_denovo",
-            "seen_in_status",
-            "family_variants_count",
-            "family_alleles_count",
+        summary_fields = [
+            ("bucket_index", 0),
+            ("summary_index", 1),
+            ("allele_index", 2),
+            ("allele_count", 3),
+            ("sj_index", 4),
+            ("chrom", 5),
+            ("position", 6),
+            ("end_position", 7),
+            ("variant_type", 8),
+            ("transmission_type", 9),
+            ("reference", 10),
+            ("alternative", 11),
+            ("cshl_position", 12),
+            ("cshl_variant", 13),
+            ("effects", 14),
+            ("af_allele_count", 15),
+            ("af_allele_freq", 16),
+            ("af_parents_called_count", 17),
+            ("af_parents_called_percent", 18),
+            ("hw", 19),
+            ("seen_as_denovo", 20),
+            ("seen_in_status", 21),
+            ("family_variants_count", 22),
+            ("family_alleles_count", 23),
         ]
-        fields.extend([
-            attr.name
-            for attr in annotation_schema
-            if not attr.internal
+        summary_fields.extend([
+            (name, index)
+            for index, name in enumerate(annotation_fields, 1000)
         ])
 
+        seen = set()
+        for name, _index in summary_fields:
+            if name in seen:
+                raise ValueError(f"duplicate field name: {name}")
+            seen.add(name)
+
+        family_fields = [
+            ("summary_index", 0),
+            ("family_index", 1),
+            ("family_id", 2),
+            ("genotype", 3),
+            ("best_state", 4),
+            ("inheritance_in_members", 5),
+        ]
         return {
             "version": "compression2.4",
-            "summary_schema": fields,
+            "summary_fields": summary_fields,
+            "family_fields": family_fields,
         }
