@@ -81,6 +81,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             grr_definition,
             allow_repeated_attributes=allow_repeated_attributes,
         )
+
         writer = VariantsParquetWriter(
             output_dir, pipeline.get_attributes(),
             loader.partition_descriptor,

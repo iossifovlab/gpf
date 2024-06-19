@@ -7,6 +7,7 @@ from typing import Any, Optional, Union
 import duckdb
 import numpy as np
 import pandas as pd
+import yaml
 
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -123,7 +124,10 @@ class DuckDb2Variants(QueryVariantsBase):
             self.gene_models,
             self.reference_genome,
         )
-        self.serializer = VariantsDataSerializer.build_serializer()
+        variants_data_schema = self._fetch_variants_data_schema()
+        self.serializer = VariantsDataSerializer.build_serializer(
+            variants_data_schema
+        )
 
     def _fetch_meta_property(self, key: str) -> str:
         query = f"""SELECT value FROM {self.layout.meta}
@@ -157,6 +161,12 @@ class DuckDb2Variants(QueryVariantsBase):
             return {}
         return dict(
             line.split("|") for line in schema_content.split("\n"))
+
+    def _fetch_variants_data_schema(self) -> Optional[dict[str, Any]]:
+        content = self._fetch_meta_property("variants_data_schema")
+        if not content:
+            return None
+        return yaml.safe_load(content)
 
     def _fetch_pedigree(self) -> pd.DataFrame:
         query = f"SELECT * FROM {self.layout.pedigree}"  # noqa: S608

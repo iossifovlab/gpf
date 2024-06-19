@@ -52,7 +52,11 @@ class VariantsDataSerializer(abc.ABC):
         metadata: Optional[dict[str, Any]] = None,
     ) -> VariantsDataSerializer:
         """Build a serializer based on the metadata."""
-        return JsonVariantsDataSerializer(metadata)
+        if metadata is None:
+            return JsonVariantsDataSerializer(metadata)
+        if metadata["version"] == "compression2.4":
+            return ZstdIndexedVariantsDataSerializer(metadata)
+        raise ValueError(f"Unknown metadata version: {metadata['version']}")
 
 
 class JsonVariantsDataSerializer(VariantsDataSerializer):
@@ -150,33 +154,35 @@ class ZstdIndexedVariantsDataSerializer(VariantsDataSerializer):
     ) -> dict[str, Any]:
         """Build the serialization schema."""
         summary_fields = [
-            ("bucket_index", 0),
-            ("summary_index", 1),
-            ("allele_index", 2),
-            ("allele_count", 3),
-            ("sj_index", 4),
-            ("chrom", 5),
-            ("position", 6),
-            ("end_position", 7),
-            ("variant_type", 8),
-            ("transmission_type", 9),
-            ("reference", 10),
-            ("alternative", 11),
-            ("cshl_position", 12),
-            ("cshl_variant", 13),
-            ("effects", 14),
-            ("af_allele_count", 15),
-            ("af_allele_freq", 16),
-            ("af_parents_called_count", 17),
-            ("af_parents_called_percent", 18),
-            ("hw", 19),
-            ("seen_as_denovo", 20),
-            ("seen_in_status", 21),
-            ("family_variants_count", 22),
-            ("family_alleles_count", 23),
+            ["bucket_index", 0],
+            ["summary_index", 1],
+            ["allele_index", 2],
+            ["allele_count", 3],
+            ["sj_index", 4],
+            ["chrom", 5],
+            ["position", 6],
+            ["end_position", 7],
+            ["variant_type", 8],
+            ["transmission_type", 9],
+            ["reference", 10],
+            ["alternative", 11],
+            ["cshl_position", 12],
+            ["cshl_variant", 13],
+            ["effects", 14],
+            ["af_allele_count", 15],
+            ["af_allele_freq", 16],
+            ["af_ref_allele_count", 160],
+            ["af_ref_allele_freq", 161],
+            ["af_parents_called_count", 17],
+            ["af_parents_called_percent", 18],
+            ["hw", 19],
+            ["seen_as_denovo", 20],
+            ["seen_in_status", 21],
+            ["family_variants_count", 22],
+            ["family_alleles_count", 23],
         ]
         summary_fields.extend([
-            (name, index)
+            [name, index]
             for index, name in enumerate(annotation_fields, 1000)
         ])
 
@@ -187,12 +193,12 @@ class ZstdIndexedVariantsDataSerializer(VariantsDataSerializer):
             seen.add(name)
 
         family_fields = [
-            ("summary_index", 0),
-            ("family_index", 1),
-            ("family_id", 2),
-            ("genotype", 3),
-            ("best_state", 4),
-            ("inheritance_in_members", 5),
+            ["summary_index", 0],
+            ["family_index", 1],
+            ["family_id", 2],
+            ["genotype", 3],
+            ["best_state", 4],
+            ["inheritance_in_members", 5],
         ]
         return {
             "version": "compression2.4",

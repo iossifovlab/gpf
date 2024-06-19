@@ -87,6 +87,10 @@ class SqlSchema2Variants(QueryVariantsBase):
         """Fetch schema of a table and return it as a Dict."""
 
     @abc.abstractmethod
+    def _fetch_variants_data_schema(self) -> Optional[dict[str, Any]]:
+        """Fetch variants data schema from metadata table."""
+
+    @abc.abstractmethod
     def _fetch_pedigree(self) -> pd.DataFrame:
         """Fetch the pedigree and return it as a data frame."""
 

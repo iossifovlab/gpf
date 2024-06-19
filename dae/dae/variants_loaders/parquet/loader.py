@@ -1,5 +1,4 @@
 import glob
-import json
 import os
 import pathlib
 from collections.abc import Generator, Iterable
@@ -12,6 +11,7 @@ from pyarrow import dataset as ds
 from pyarrow import parquet as pq
 
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.schema2.variant_serializers import VariantsDataSerializer
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.schema2_storage.schema2_layout import (
@@ -170,6 +170,14 @@ class ParquetLoader:
         self.partition_descriptor = PartitionDescriptor.parse_string(
             self.meta.get("partition_description", "").strip(),
         )
+        variants_data_meta = None
+        if "variants_data_schema" in self.meta:
+            variants_data_meta = yaml.safe_load(
+                self.meta["variants_data_schema"])
+
+        self.serializer = VariantsDataSerializer.build_serializer(
+            variants_data_meta,
+        )
 
         self.files_per_region = self._scan_region_bins()
 
@@ -285,15 +293,15 @@ class ParquetLoader:
         )
         return glob.glob(glob_dir, recursive=True)
 
-    def _deserialize_summary_variant(self, record: str) -> SummaryVariant:
+    def _deserialize_summary_variant(self, record: bytes) -> SummaryVariant:
         return SummaryVariantFactory.summary_variant_from_records(
-            json.loads(record),
+            self.serializer.deserialize_summary_record(record),
         )
 
     def _deserialize_family_variant(
-        self, record: str, summary_variant: SummaryVariant,
+        self, record: bytes, summary_variant: SummaryVariant,
     ) -> FamilyVariant:
-        fv_record = json.loads(record)
+        fv_record = self.serializer.deserialize_family_record(record)
         inheritance_in_members = {
             int(k): [Inheritance.from_value(inh) for inh in v]
             for k, v in fv_record["inheritance_in_members"].items()

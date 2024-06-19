@@ -6,6 +6,7 @@ from typing import Any, Optional, cast
 import duckdb
 import numpy as np
 import pandas as pd
+import yaml
 
 from dae.genomic_resources.gene_models import GeneModels
 from dae.query_variants.query_runners import QueryRunner
@@ -149,6 +150,18 @@ class DuckDbVariants(SqlSchema2Variants):
     def _get_connection_factory(self) -> Any:
         return self.connection.cursor()
 
+    def _fetch_variants_data_schema(self) -> Optional[dict[str, Any]]:
+        query = f"""SELECT value FROM {self.meta_table}
+               WHERE key = 'variants_data_schema'
+               LIMIT 1
+            """
+
+        with self._get_connection_factory() as connection:
+            result = connection.execute(query).fetchall()
+            for row in result:
+                return cast(dict[str, Any], yaml.safe_load(row[0]))
+            return None
+
     def _fetch_tblproperties(self) -> str:
         query = f"""SELECT value FROM {self.meta_table}
                WHERE key = 'partition_description'
@@ -219,14 +232,14 @@ class DuckDbVariants(SqlSchema2Variants):
             return ped_df
 
     def _deserialize_summary_variant(self, record: str) -> SummaryVariant:
-        sv_record = json.loads(record[2])
+        sv_record = self.serializer.deserialize_summary_record(record[2])
         return SummaryVariantFactory.summary_variant_from_records(
             sv_record,
         )
 
     def _deserialize_family_variant(self, record: list[str]) -> FamilyVariant:
-        sv_record = json.loads(record[4])
-        fv_record = json.loads(record[5])
+        sv_record = self.serializer.deserialize_summary_record(record[4])
+        fv_record = self.serializer.deserialize_family_record(record[5])
         inheritance_in_members = {
             int(k): [Inheritance.from_value(inh) for inh in v]
             for k, v in fv_record["inheritance_in_members"].items()

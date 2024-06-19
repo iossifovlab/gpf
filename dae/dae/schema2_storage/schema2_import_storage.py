@@ -186,7 +186,11 @@ class Schema2ImportStorage(ImportStorage):
         row_group_size = project.get_row_group_size()
         logger.debug("argv.rows: %s", row_group_size)
         annotation_pipeline = project.build_annotation_pipeline()
-        serializer = VariantsDataSerializer.build_serializer()
+
+        meta = ZstdIndexedVariantsDataSerializer.build_serialization_meta(
+            [attr.name for attr in annotation_pipeline.get_attributes()])
+        serializer = ZstdIndexedVariantsDataSerializer(meta)
+
         variants_writer = VariantsParquetWriter(
             out_dir=layout.study,
             annotation_schema=annotation_pipeline.get_attributes(),

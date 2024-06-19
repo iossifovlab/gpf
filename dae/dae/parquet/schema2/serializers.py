@@ -103,7 +103,7 @@ class AlleleParquetSerializer:
     ) -> pa.Schema:
         """Build the schema for the summary alleles."""
         fields = list(starmap(pa.field, cls.SUMMARY_ALLELE_BASE_SCHEMA.items()))
-        fields.append(pa.field("summary_variant_data", pa.string()))
+        fields.append(pa.field("summary_variant_data", pa.binary()))
 
         annotation_type_to_pa_type = {
             "float": pa.float32(),
@@ -135,7 +135,7 @@ class AlleleParquetSerializer:
     def build_family_schema(cls) -> pa.Schema:
         """Build the schema for the family alleles."""
         fields = list(starmap(pa.field, cls.FAMILY_ALLELE_BASE_SCHEMA.items()))
-        fields.append(pa.field("family_variant_data", pa.string()))
+        fields.append(pa.field("family_variant_data", pa.binary()))
         return pa.schema(fields)
 
     def _get_searchable_prop_value(
