@@ -8,6 +8,7 @@ import sys
 from collections.abc import Generator, Iterable
 from contextlib import closing
 from typing import Any, Callable, Optional
+from pathlib import Path
 
 from pysam import TabixFile, tabix_index
 
@@ -187,6 +188,7 @@ class AnnotateColumnsTool(AnnotationTool):
         pipeline = AnnotateColumnsTool._produce_annotation_pipeline(
             pipeline_config, pipeline_config_old, grr_definition,
             allow_repeated_attributes=args.allow_repeated_attributes,
+            work_dir=Path(args.work_dir),
         )
         grr = pipeline.repository
         ref_genome = None

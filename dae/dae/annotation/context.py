@@ -46,7 +46,8 @@ class CLIAnnotationContext(CLIGenomicContext):
             pipeline = build_annotation_pipeline(
                 pipeline_config_str=raw_pipeline,
                 grr_repository=grr,
-                allow_repeated_attributes=args.allow_repeated_attributes)
+                allow_repeated_attributes=args.allow_repeated_attributes,
+                work_dir=pathlib.Path(args.work_dir))
             context_objects["annotation_pipeline"] = pipeline
 
         return CLIAnnotationContext(
