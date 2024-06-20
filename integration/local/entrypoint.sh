@@ -34,7 +34,7 @@ cd /wd/integration/fixtures/hg19/micro_iossifov2014
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     simple_study_import.py --id iossifov_2014 \
-    -o /wd/temp-local \
+    -o /wd/data/temp-local \
     --denovo-file iossifov2014.txt \
     iossifov2014_families.ped
 

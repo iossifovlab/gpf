@@ -47,7 +47,7 @@ class ContinuousParquetFileWriter:
         filepath: str,
         annotation_schema: list[AttributeInfo],
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
-        row_group_size: int = 50_000,
+        row_group_size: int = 10_000,
         schema: str = "schema",
     ) -> None:
 
@@ -171,7 +171,7 @@ class VariantsParquetWriter:
         *,
         serializer: Optional[VariantsDataSerializer] = None,
         bucket_index: int = 1,
-        row_group_size: int = 50_000,
+        row_group_size: int = 10_000,
         include_reference: bool = True,
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
     ) -> None:

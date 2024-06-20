@@ -8,10 +8,16 @@ import fsspec
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
+import yaml
 
+from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.parquet import helpers as parquet_helpers
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.schema2.serializers import AlleleParquetSerializer
+from dae.parquet.schema2.variant_serializers import (
+    ZstdIndexedVariantsDataSerializer,
+)
 from dae.pedigrees.families_data import FamiliesData
 from dae.utils import fs_utils
 
@@ -82,7 +88,7 @@ def fill_family_bins(
                 family.family_id)
             for person in family.persons.values():
                 person.set_attr("family_bin", family_bin)
-        families._ped_df = None  # pylint: disable=protected-access
+        families._ped_df = None  # noqa: SLF001 pylint: disable=protected-access
 
 
 def save_ped_df_to_parquet(
@@ -119,7 +125,7 @@ def merge_variants_parquets(
     partition_descriptor: PartitionDescriptor,
     variants_dir: str,
     partitions: list[tuple[str, str]],
-    row_group_size: int = 50_000,
+    row_group_size: int = 25_000,
     parquet_version: Optional[str] = None,
 ) -> None:
     """Merge parquet files in variants_dir."""
@@ -169,6 +175,7 @@ def append_meta_to_parquet(
         },
         schema=pa.schema({"key": pa.string(), "value": pa.string()}),
     )
+
     if not os.path.isfile(meta_filename):
         pq.write_table(append_table, meta_filename)
         return
@@ -176,3 +183,35 @@ def append_meta_to_parquet(
     meta_table = pq.read_table(meta_filename)
     meta_table = pa.concat_tables([meta_table, append_table])
     pq.write_table(meta_table, meta_filename)
+
+
+def serialize_summary_schema(
+    annotation_attributes: list[AttributeInfo],
+    partition_descriptor: PartitionDescriptor,
+) -> str:
+    """Serialize the summary schema."""
+    summary_schema = AlleleParquetSerializer.build_summary_schema(
+        annotation_attributes,
+    )
+    schema = [
+        (f.name, f.type) for f in summary_schema
+    ]
+    schema.extend(
+        list(partition_descriptor.dataset_summary_partition()))
+    return "\n".join([
+        f"{n}|{t}" for n, t in schema
+    ])
+
+
+def serialize_variants_data_schema(
+    annotation_attributes: list[AttributeInfo],
+) -> str:
+    """Serialize the variants data schema."""
+    annotation_fields = [
+        attr.name
+        for attr in annotation_attributes
+        if not attr.internal
+    ]
+    return yaml.dump(
+        ZstdIndexedVariantsDataSerializer.build_serialization_meta(
+            annotation_fields))

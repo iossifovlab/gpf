@@ -140,12 +140,13 @@ class ZstdIndexedVariantsDataSerializer(VariantsDataSerializer):
     def deserialize_summary_record(
         self, data: bytes,
     ) -> list[dict[str, Any]]:
+        record = json.loads(pyzstd.decompress(data))
         return [
             {
                 self.summary_b[key]: val
                 for key, val in rec
             }
-            for rec in json.loads(pyzstd.decompress(data))
+            for rec in record
         ]
 
     @classmethod

@@ -13,6 +13,8 @@ from dae.parquet.parquet_writer import (
     fill_family_bins,
     merge_variants_parquets,
     save_ped_df_to_parquet,
+    serialize_summary_schema,
+    serialize_variants_data_schema,
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.parquet_io import (
@@ -20,7 +22,6 @@ from dae.parquet.schema2.parquet_io import (
 )
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.schema2.variant_serializers import (
-    VariantsDataSerializer,
     ZstdIndexedVariantsDataSerializer,
 )
 from dae.schema2_storage.schema2_layout import (
@@ -64,30 +65,17 @@ class Schema2ImportStorage(ImportStorage):
     @classmethod
     def _serialize_variants_data_schema(cls, project: ImportProject) -> str:
         annotation_pipeline = project.build_annotation_pipeline()
-        annotation_fields = [
-            attr.name
-            for attr in annotation_pipeline.get_attributes()
-            if not attr.internal
-        ]
-        return yaml.dump(
-            ZstdIndexedVariantsDataSerializer.build_serialization_meta(
-                annotation_fields))
+        return serialize_variants_data_schema(
+            annotation_pipeline.get_attributes(),
+        )
 
     @classmethod
     def _serialize_summary_schema(cls, project: ImportProject) -> str:
         annotation_pipeline = project.build_annotation_pipeline()
-        summary_schema = AlleleParquetSerializer.build_summary_schema(
+        return serialize_summary_schema(
             annotation_pipeline.get_attributes(),
+            project.get_partition_descriptor(),
         )
-        schema = [
-            (f.name, f.type) for f in summary_schema
-        ]
-        partition_descriptor = cls._get_partition_description(project)
-        schema.extend(
-            list(partition_descriptor.dataset_summary_partition()))
-        return "\n".join([
-            f"{n}|{t}" for n, t in schema
-        ])
 
     @classmethod
     def _serialize_family_schema(cls, project: ImportProject) -> str:
@@ -188,7 +176,11 @@ class Schema2ImportStorage(ImportStorage):
         annotation_pipeline = project.build_annotation_pipeline()
 
         meta = ZstdIndexedVariantsDataSerializer.build_serialization_meta(
-            [attr.name for attr in annotation_pipeline.get_attributes()])
+            [
+                attr.name
+                for attr in annotation_pipeline.get_attributes()
+                if not attr.internal
+            ])
         serializer = ZstdIndexedVariantsDataSerializer(meta)
 
         variants_writer = VariantsParquetWriter(

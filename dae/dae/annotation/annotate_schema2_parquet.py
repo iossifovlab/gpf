@@ -1,11 +1,13 @@
 import argparse
 import os
-import sys
 from glob import glob
 from typing import Optional
 
 from dae.annotation.annotate_utils import AnnotationTool
-from dae.annotation.annotation_pipeline import ReannotationPipeline
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    ReannotationPipeline,
+)
 from dae.annotation.context import CLIAnnotationContext
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -14,10 +16,13 @@ from dae.parquet.helpers import merge_parquets
 from dae.parquet.parquet_writer import (
     append_meta_to_parquet,
     merge_variants_parquets,
+    serialize_summary_schema,
+    serialize_variants_data_schema,
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 from dae.schema2_storage.schema2_import_storage import (
+    Schema2DatasetLayout,
     create_schema2_dataset_layout,
 )
 from dae.task_graph.cli_tools import TaskGraphCli
@@ -118,6 +123,39 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
         writer.close()
 
+    @staticmethod
+    def _write_meta(
+        layout: Schema2DatasetLayout,
+        loader: ParquetLoader,
+        pipeline_raw_config: str,
+        pipeline: AnnotationPipeline,
+    ) -> None:
+        """Write metadata to the output Parquet dataset."""
+
+        # Write metadata
+        meta_keys = [
+            "annotation_pipeline",
+            "summary_schema",
+            "variants_data_schema",
+        ]
+        meta_values = [
+            pipeline_raw_config,
+            serialize_summary_schema(
+                pipeline.get_attributes(),
+                loader.partition_descriptor),
+            serialize_variants_data_schema(
+                pipeline.get_attributes()),
+        ]
+        for k, v in loader.meta.items():
+            if k in {
+                    "annotation_pipeline",
+                    "summary_schema",
+                    "variants_data_schema"}:
+                continue  # ignore old annotation
+            meta_keys.append(k)
+            meta_values.append(str(v))
+        append_meta_to_parquet(layout.meta, meta_keys, meta_values)
+
     def work(self) -> None:
         input_dir = os.path.abspath(self.args.input)
         output_dir = os.path.abspath(self.args.output)
@@ -137,17 +175,20 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         if layout.family is None:
             raise ValueError("Invalid family dir in output layout!")
 
-        raw_annotation = self._get_pipeline_config()
+        pipeline_raw_config = self._get_pipeline_config()
+        pipeline = AnnotateSchema2ParquetTool._produce_annotation_pipeline(
+            pipeline_raw_config,
+            (loader.meta["annotation_pipeline"]
+             if loader.has_annotation else None),
+            self.grr.definition,
+            allow_repeated_attributes=self.args.allow_repeated_attributes,
+        )
 
-        # Write metadata
-        meta_keys = ["annotation_pipeline"]
-        meta_values = [raw_annotation]
-        for k, v in loader.meta.items():
-            if k == "annotation_pipeline":
-                continue  # ignore old annotation
-            meta_keys.append(k)
-            meta_values.append(str(v))
-        append_meta_to_parquet(layout.meta, meta_keys, meta_values)
+        self._write_meta(
+            layout, loader,
+            pipeline_raw_config,
+            pipeline,
+        )
 
         # Symlink pedigree and family variants directories
         os.symlink(
@@ -167,7 +208,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             self.grr.get_resource(loader.meta["reference_genome"]))
 
         contig_lens = {}
-        contigs = loader.contigs if loader.contigs else genome.chromosomes
+        contigs = loader.contigs or genome.chromosomes
         for contig in contigs:
             contig_lens[contig] = genome.get_chrom_length(contig)
 
@@ -183,7 +224,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                 f"part_{region}",
                 AnnotateSchema2ParquetTool.annotate,
                 [input_dir, output_dir,
-                 raw_annotation, region, self.grr.definition,
+                 pipeline_raw_config, region, self.grr.definition,
                  idx, self.args.allow_repeated_attributes],
                 [],
             ))
@@ -236,7 +277,3 @@ def cli(
 ) -> None:
     tool = AnnotateSchema2ParquetTool(raw_args, gpf_instance)
     tool.run()
-
-
-if __name__ == "__main__":
-    cli(sys.argv[1:])
