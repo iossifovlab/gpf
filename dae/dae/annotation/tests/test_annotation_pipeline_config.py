@@ -5,7 +5,7 @@ import textwrap
 
 import pytest
 
-from dae.annotation.annotation_factory import (
+from dae.annotation.annotation_config import (
     AnnotationConfigParser,
 )
 from dae.annotation.annotation_pipeline import (

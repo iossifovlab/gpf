@@ -5,8 +5,10 @@ import textwrap
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotation_factory import (
+from dae.annotation.annotation_config import (
     AnnotationConfigParser,
+)
+from dae.annotation.annotation_factory import (
     build_annotation_pipeline,
 )
 from dae.annotation.normalize_allele_annotator import (
