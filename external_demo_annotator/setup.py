@@ -21,13 +21,13 @@ setuptools.setup(
     entry_points="""
     [console_scripts]
     annotate_length=demo_annotator.annotate_length:annotate_length_cli
-    annotate_genes=demo_annotator.annotate_genes:annotate_genes_cli
-    annotate_reference_genome=demo_annotator.annotate_reference_genome:annotate_genome_cli
+    demo_annotate_gm_res=demo_annotator.demo_annotate_gm_res:annotate_genes_cli
+    demo_annotate_ref_res=demo_annotator.demo_annotate_ref_res:annotate_genome_cli
     [dae.annotation.annotators]
     external_demo_annotator=demo_annotator.adapter:build_demo_external_annotator_adapter
     external_demo_stream_annotator=demo_annotator.adapter:build_demo_external_annotator_stream_adapter
-    external_demo_gene_annotator=demo_annotator.gene_models_adapter:build_demo_external_gene_annotator_adapter
-    external_demo_genome_annotator=demo_annotator.reference_genome_adapter:build_demo_external_genome_annotator_adapter
+    external_demo_gene_annotator=demo_annotator.demo_annotate_gm_res_adapter:build_demo_external_gene_annotator_adapter
+    external_demo_genome_annotator=demo_annotator.demo_annotate_ref_res_adapter:build_demo_external_genome_annotator_adapter
     """,
     classifiers=[
         "Development Status :: 4 - Beta",

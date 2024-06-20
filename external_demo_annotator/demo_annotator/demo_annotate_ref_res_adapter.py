@@ -20,7 +20,7 @@ from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 # ruff: noqa: S607
 
 
-class GeneAnnotatorAdapter(AnnotatorBase):
+class DemoAnnotateGenomeAdapter(AnnotatorBase):
     """Annotation pipeline adapter for dummy_annotate using tempfiles."""
 
     def __init__(
@@ -29,24 +29,22 @@ class GeneAnnotatorAdapter(AnnotatorBase):
     ):
         if not info.attributes:
             info.attributes = AnnotationConfigParser.parse_raw_attributes([
-                "gene_symbols",
+                "ref_sequence",
             ])
         self.work_dir: Path = info.parameters.get("work_dir")
         self.cache_repo = GenomicResourceCachedRepo(
             pipeline.repository, self.work_dir / "grr_cache",
         )
-        gene_models_id = info.parameters.get("gene_models")
-        self.gene_models_resource = self.cache_repo.get_resource(gene_models_id)
+        genome_id = info.parameters.get("reference_genome")
+        self.genome_resource = self.cache_repo.get_resource(genome_id)
 
-        self.gene_model_filename = \
-            self.gene_models_resource.get_config()["filename"]
-        self.gene_model_format = \
-            self.gene_models_resource.get_config()["format"]
+        self.genome_filename = \
+            self.genome_resource.get_config()["filename"]
 
         super().__init__(
             pipeline, info, {
-                "gene_symbols": ("object", "Gene symbols overlapping"
-                                           "with the annotatable"),
+                "ref_sequence": ("object", "Sequence in the reference"
+                                           "genome"),
             },
         )
 
@@ -82,38 +80,32 @@ class GeneAnnotatorAdapter(AnnotatorBase):
             file, delimiter="\t",
         )
         for idx, row in enumerate(reader):
-            contexts[idx]["gene_symbols"] = row[-1]
+            contexts[idx]["ref_sequence"] = row[-1]
 
     def batch_annotate(
         self, annotatables: list[Optional[Annotatable]],
         contexts: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        print("Getting filepath")
-        print(self.gene_model_filename)
-        print(self.gene_models_resource.get_file_url(self.gene_model_filename))
-        gene_model_filepath = fsspec.url_to_fs(
-            self.gene_models_resource.get_file_url(self.gene_model_filename),
+        genome_filepath = fsspec.url_to_fs(
+            self.genome_resource.get_file_url(self.genome_filename),
         )[1]
-        print(f"Done - {gene_model_filepath}")
+        self.genome_resource.get_file_url(f"{self.genome_filename}.fai")
 
         with (self.work_dir / "input.tsv").open("w+t") as input_file, \
                 (self.work_dir / "output.tsv").open("w+t") as out_file:
             self.prepare_input(input_file, annotatables)
             args = [
-                "annotate_genes", input_file.name,
-                gene_model_filepath, out_file.name,
+                "demo_annotate_ref_res", input_file.name,
+                genome_filepath, out_file.name,
             ]
-            if self.gene_model_format:
-                args += ["--format", self.gene_model_format]
-            print(args)
             subprocess.run(args, check=True)
             out_file.flush()
             self.read_output(out_file, contexts)
         return contexts
 
 
-def build_demo_external_gene_annotator_adapter(
+def build_demo_external_genome_annotator_adapter(
     pipeline: AnnotationPipeline,
     info: AnnotatorInfo,
 ) -> Annotator:
-    return GeneAnnotatorAdapter(pipeline, info)
+    return DemoAnnotateGenomeAdapter(pipeline, info)
