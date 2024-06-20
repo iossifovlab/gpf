@@ -12,6 +12,9 @@ from jinja2 import Template
 from dae.genomic_resources.genomic_position_table import (
     TabixGenomicPositionTable,
 )
+from dae.genomic_resources.genomic_position_table.table_bigwig import (
+    BigWigTable,
+)
 from dae.genomic_resources.genomic_position_table.table_inmemory import (
     InmemoryGenomicPositionTable,
 )
@@ -181,6 +184,11 @@ class GenomicScoreImplementation(
                         max(line.pos_end
                             for line in
                             self.score.table.get_records_in_region(chrom))
+                elif isinstance(self.score.table, BigWigTable):
+                    fchrom = self.score.table.unmap_chromosome(chrom)
+                    if fchrom is not None:
+                        chrom_length = self.score.table.get_chromosome_length(
+                            fchrom)
                 else:
                     assert isinstance(self.score.table,
                                       TabixGenomicPositionTable)

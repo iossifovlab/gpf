@@ -3,8 +3,12 @@ import textwrap
 
 import pytest
 
-from dae.genomic_resources.genomic_position_table.table_bigwig import BigWigTable
-from dae.genomic_resources.genomic_position_table.utils import build_genomic_position_table
+from dae.genomic_resources.genomic_position_table.table_bigwig import (
+    BigWigTable,
+)
+from dae.genomic_resources.genomic_position_table.utils import (
+    build_genomic_position_table,
+)
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
@@ -38,7 +42,7 @@ def test_grr(tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
         },
     )
     data = textwrap.dedent("""
-        chr1   1          10       0.01
+        chr1   0          10       0.01
         chr1   10         20       0.02
         chr1   20         30       0.03
         chr2   30         40       0.04
@@ -90,7 +94,7 @@ def test_get_all_records(bigwig_table: BigWigTable) -> None:
         assert len(vs) == 9
         line = vs[0]
         assert line.chrom == "chr1"
-        assert line.pos_begin == 1
+        assert line.pos_begin == 0
         assert line.pos_end == 10
         assert line.get(3) == pytest.approx(0.01)
 
@@ -103,13 +107,21 @@ def test_get_records_in_region(bigwig_table: BigWigTable) -> None:
 
 def test_get_records_in_region_with_position(bigwig_table: BigWigTable) -> None:
     with bigwig_table:
-        vs = list(bigwig_table.get_records_in_region("chr1", 1, 10))
+        vs = list(bigwig_table.get_records_in_region("chr1", 1, 9))
+        assert len(vs) == 1
+
+
+def test_get_records_in_region_with_position_single(
+    bigwig_table: BigWigTable,
+) -> None:
+    with bigwig_table:
+        vs = list(bigwig_table.get_records_in_region("chr1", 5, 5))
         assert len(vs) == 1
 
 
 def test_get_records_in_region_left_only(bigwig_table: BigWigTable) -> None:
     with bigwig_table:
-        vs = list(bigwig_table.get_records_in_region("chr1", pos_begin=20))
+        vs = list(bigwig_table.get_records_in_region("chr1", pos_begin=21))
         assert len(vs) == 1
 
 
