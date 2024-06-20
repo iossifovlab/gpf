@@ -225,7 +225,6 @@ class AnnotationPipeline:
 
         for annotator in self.annotators:
             attributes_list = annotator.batch_annotate(annotatables, contexts)
-            print(attributes_list)
             for context, attributes in zip(contexts, attributes_list):
                 context.update(attributes)
 

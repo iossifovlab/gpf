@@ -48,6 +48,8 @@ ignore = [
     "UP007",  # for Python 3.9 support, remove when we drop it
     "T201", "S101", "PTH",  # for separate tasks, fix issues and then enable these rules
     "PT006",  # for separate task - currently we use 'csv', but maybe change to 'tuple' or 'list'?
+    "S603",
+    "S404",
 ]
 fixable = ["ALL"]
 preview = true
