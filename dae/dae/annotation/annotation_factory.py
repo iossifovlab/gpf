@@ -116,32 +116,6 @@ class AnnotationConfigParser:
     """Parser for annotation configuration."""
 
     @staticmethod
-    def normalize(pipeline_config: list[Any]) -> list[dict]:
-        """Return a normalized annotation pipeline configuration."""
-        result = []
-
-        for config in pipeline_config:
-            if isinstance(config, str):
-                config = {
-                    config: {},
-                }
-
-            assert isinstance(config, dict)
-            assert len(config) == 1
-            annotator_type, config = next(iter(config.items()))
-            if not isinstance(config, dict):
-                assert isinstance(config, str)
-                # handle score annotators short form
-                config = {"resource_id": config}
-
-            assert isinstance(config, dict)
-
-            config["annotator_type"] = annotator_type
-            result.append(config)
-
-        return result
-
-    @staticmethod
     def match_labels_query(
         query: dict[str, str], resource_labels: dict[str, str],
     ) -> bool:
