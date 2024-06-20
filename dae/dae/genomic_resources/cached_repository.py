@@ -110,6 +110,16 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
                 self.local_protocol.update_resource_file(
                     remote_resource, resource, filename)
 
+    def get_resource_url(self, resource: GenomicResource) -> str:
+        """Return url of the specified resources."""
+        return self.local_protocol.get_resource_url(resource)
+
+    def get_resource_file_url(
+            self, resource: GenomicResource, filename: str) -> str:
+        """Return url of a file in the resource."""
+        self.refresh_cached_resource_file(resource, filename)
+        return self.local_protocol.get_resource_file_url(resource, filename)
+
     def open_raw_file(
             self, resource: GenomicResource, filename: str,
             mode: str = "rt", **kwargs: Union[str, bool, None]) -> IO:

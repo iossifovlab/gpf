@@ -24,6 +24,7 @@ import copy
 import enum
 import hashlib
 import logging
+import os
 import re
 from collections.abc import Generator, Iterator
 from dataclasses import asdict, dataclass
@@ -376,6 +377,9 @@ class GenomicResource:
             self._manifest = self.proto.get_manifest(self)
         return self._manifest
 
+    def get_file_url(self, filename: str):
+        return self.proto.get_resource_file_url(self, filename)
+
     def get_file_content(
         self, filename: str,
         *,
@@ -502,6 +506,18 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
                 resource, filename, mode=f"r{mode}",
                 uncompress=uncompress) as infile:
             return infile.read()
+
+    def get_resource_url(self, resource: GenomicResource) -> str:
+        """Return url of the specified resources."""
+        return os.path.join(
+            self.url,
+            resource.get_genomic_resource_id_version())
+
+    def get_resource_file_url(
+            self, resource: GenomicResource, filename: str) -> str:
+        """Return url of a file in the resource."""
+        return os.path.join(
+            self.get_resource_url(resource), filename)
 
     @abc.abstractmethod
     def load_manifest(self, resource: GenomicResource) -> Manifest:
