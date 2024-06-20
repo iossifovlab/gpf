@@ -4,6 +4,7 @@ from typing import Any, Optional, cast
 
 import numpy as np
 import pandas as pd
+import yaml
 from google.cloud import bigquery
 
 from dae.genomic_resources.gene_models import GeneModels
@@ -94,6 +95,16 @@ class BigQueryVariants(SqlSchema2Variants):
 
         records = df[["column_name", "data_type"]].to_records()
         return {col_name: col_type for (_, col_name, col_type) in records}
+
+    def _fetch_variants_data_schema(self) -> Optional[dict[str, Any]]:
+        query = f"""SELECT value FROM {self.db}.{self.meta_table}
+               WHERE key = 'variants_data_schema'
+               LIMIT 1
+            """  # noqa: S608
+
+        for row in self.client.query(query).result():
+            return cast(dict[str, Any], yaml.safe_load(row[0]))
+        return None
 
     def _fetch_pedigree(self) -> pd.DataFrame:
         query = f"SELECT * FROM {self.db}.{self.pedigree_table}"  # noqa: S608
