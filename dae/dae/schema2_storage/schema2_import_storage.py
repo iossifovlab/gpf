@@ -105,7 +105,10 @@ class Schema2ImportStorage(ImportStorage):
         annotation_pipeline_config = project.get_annotation_pipeline_config()
         annotation_pipeline = yaml.dump(annotation_pipeline_config)
         variants_types = project.get_variant_loader_types()
-        contigs = ",".join(project.get_variant_loader_chromosomes())
+        contigs = ",".join(
+            [f"{k}={v}" for k, v
+             in project.get_variant_loader_chrom_lens().items()],
+        )
         study_config = {
             "conf_dir": ".",
             "has_denovo": project.has_denovo_variants(),

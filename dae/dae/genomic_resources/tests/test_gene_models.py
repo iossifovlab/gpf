@@ -1,19 +1,23 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import gzip
 import os
+import pathlib
 import textwrap
 from typing import Callable, Optional
 
 import pytest
 
 from dae.genomic_resources.gene_models import (
+    GeneModels,
     build_gene_models_from_file,
     build_gene_models_from_resource,
+    create_regions_from_genes,
 )
 from dae.genomic_resources.testing import (
     build_inmemory_test_resource,
     convert_to_tab_separated,
 )
+from dae.testing.t4c8_import import t4c8_genes
 
 
 @pytest.fixture()
@@ -25,6 +29,11 @@ def fixture_dirname() -> Callable:
             filename)
 
     return _fixture_dirname
+
+
+@pytest.fixture()
+def t4c8_gene_models(tmp_path: pathlib.Path) -> GeneModels:
+    return t4c8_genes(tmp_path / "gene_models")
 
 
 def test_gene_models_from_gtf(fixture_dirname: Callable) -> None:
@@ -434,3 +443,26 @@ def test_ensembl_example() -> None:
     assert tm.tx == (5422111, 5423206)
     assert len(tm.exons) == 1
     assert tm.strand == "+"
+
+
+@pytest.mark.parametrize(
+    "gene,expected", [
+        ("t4", "chr1:5-85"),
+        ("c8", "chr1:100-205"),
+    ],
+)
+def test_create_regions_from_genes(
+    t4c8_gene_models: GeneModels,
+    gene: str,
+    expected: str,
+) -> None:
+    genes = [gene]
+    regions = None
+    result = create_regions_from_genes(
+        t4c8_gene_models, genes, regions,
+        gene_regions_heuristic_extend=0,
+    )
+    assert result is not None
+    assert len(result) == 1
+    reg = result[0]
+    assert str(reg) == expected

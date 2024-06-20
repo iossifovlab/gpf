@@ -7,7 +7,10 @@ from cerberus import Validator
 
 from dae.configuration.utils import validate_path
 from dae.duckdb_storage.duckdb_import_storage import DuckDbImportStorage
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models import (
+    GeneModels,
+    create_regions_from_genes,
+)
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.import_tools.import_tools import ImportProject
@@ -35,8 +38,15 @@ from dae.variants_loaders.parquet.loader import ParquetLoader
 class ParquetLoaderVariants:
     """Variants class that utilizes ParquetLoader to fetch variants."""
 
-    def __init__(self, data_dir: str) -> None:
+    def __init__(
+        self,
+        data_dir: str,
+        reference_genome: Optional[ReferenceGenome] = None,
+        gene_models: Optional[GeneModels] = None,
+    ) -> None:
         self.loader = ParquetLoader(data_dir)
+        self.reference_genome = reference_genome
+        self.gene_models = gene_models
 
     @property
     def families(self) -> FamiliesData:
@@ -71,20 +81,21 @@ class ParquetLoaderVariants:
                 return_unknown=return_unknown,
                 **kwargs,
             )
-        regions = kwargs.get("regions")
+
+        if genes is not None:
+            assert self.gene_models is not None
+            regions = create_regions_from_genes(
+                self.gene_models, genes, regions,
+            )
 
         summary_variants_iterator: Iterable
         if regions:
-            summary_variants_iterator = itertools.chain(
-                self.loader.fetch_summary_variants(region)
+            summary_variants_iterator = itertools.chain.from_iterable(
+                self.loader.fetch_summary_variants(repr(region))
                 for region in regions
             )
         else:
             summary_variants_iterator = self.loader.fetch_summary_variants()
-
-        if limit is not None:
-            summary_variants_iterator = itertools.islice(
-                summary_variants_iterator, limit)
 
         return RawVariantsQueryRunner(
             variants_iterator=summary_variants_iterator,
@@ -107,7 +118,7 @@ class ParquetLoaderVariants:
         return_reference: Optional[bool] = None,
         return_unknown: Optional[bool] = None,
         limit: Optional[int] = None,
-        **kwargs: Any,
+        **_kwargs: Any,
     ) -> RawVariantsQueryRunner:
         """Return a query runner for the family variants."""
 
@@ -126,21 +137,23 @@ class ParquetLoaderVariants:
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-        )
-        regions = kwargs.get("regions")
+            limit=limit,
+            seen=set())
+
+        if genes is not None:
+            assert self.gene_models is not None
+            regions = create_regions_from_genes(
+                self.gene_models, genes, regions,
+            )
 
         family_variants_iterator: Iterable
         if regions:
-            family_variants_iterator = itertools.chain(
-                self.loader.fetch_family_variants(region)
+            family_variants_iterator = itertools.chain.from_iterable(
+                self.loader.fetch_family_variants(repr(region))
                 for region in regions
             )
         else:
             family_variants_iterator = self.loader.fetch_family_variants()
-
-        if limit is not None:
-            family_variants_iterator = itertools.islice(
-                family_variants_iterator, limit)
 
         return RawVariantsQueryRunner(
             variants_iterator=family_variants_iterator,
@@ -199,16 +212,18 @@ class ParquetGenotypeStorage(GenotypeStorage):
     def build_backend(
         self,
         study_config: dict[str, Any],
-        _genome: ReferenceGenome,
-        _gene_models: Optional[GeneModels],
+        genome: ReferenceGenome,
+        gene_models: Optional[GeneModels],
     ) -> ParquetLoaderVariants:
         study_id = study_config["id"]
         if self.data_dir is not None:
             study_path = pathlib.Path(self.data_dir, study_id)
             if study_path.exists():
-                return ParquetLoaderVariants(str(study_path))
-        table_path = study_config["genotype_storage"]["tables"]["summary"]
-        return ParquetLoaderVariants(str(pathlib.Path(table_path).parent))
+                path = study_path
+        else:
+            table_path = study_config["genotype_storage"]["tables"]["summary"]
+            path = pathlib.Path(table_path).parent
+        return ParquetLoaderVariants(str(path), genome, gene_models)
 
     def import_dataset(
         self, study_id: str, layout: Schema2DatasetLayout,

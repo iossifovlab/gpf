@@ -5,6 +5,7 @@ import textwrap
 
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.testing import setup_directories
+from dae.utils.regions import Region
 
 
 def test_parse_toml_partition_description(tmp_path: pathlib.Path) -> None:
@@ -358,3 +359,42 @@ def test_partition_descriptor_varint_dirs_full() -> None:
         sum_part = sum_parts[i // family_bin_size]
         assert fam_part[:-1] == sum_part
         assert fam_part[-1] == ("family_bin", str(i % family_bin_size))
+
+
+def test_region_to_bins() -> None:
+    pd = PartitionDescriptor.parse_string("""
+        [region_bin]
+        chromosomes = foo
+        region_length = 8
+    """)
+    chrom_lens = {"foo": 24}
+    assert pd.region_to_bins(Region("foo", 0, 7), chrom_lens) == [
+        ("region_bin", "foo_0")]
+    assert pd.region_to_bins(Region("foo", 0, 8), chrom_lens) == [
+        ("region_bin", "foo_0"),
+        ("region_bin", "foo_1")]
+    assert pd.region_to_bins(Region("foo", 0), chrom_lens) == [
+        ("region_bin", "foo_0")]
+    assert pd.region_to_bins(Region("foo", stop=15), chrom_lens) == [
+        ("region_bin", "foo_0"),
+        ("region_bin", "foo_1")]
+    assert pd.region_to_bins(Region("foo"), chrom_lens) == [
+        ("region_bin", "foo_0")]
+    assert pd.region_to_bins(Region("foo", 0, 9999999), chrom_lens) == [
+        ("region_bin", "foo_0"),
+        ("region_bin", "foo_1"),
+        ("region_bin", "foo_2")]
+
+
+def test_path_to_partitions() -> None:
+    res = PartitionDescriptor.path_to_partitions(
+        "region_bin=foo_0/frequency_bin=1/coding_bin=0",
+    )
+    assert res == [("region_bin", "foo_0"), ("frequency_bin", "1"),
+                   ("coding_bin", "0")]
+
+    res = PartitionDescriptor.path_to_partitions(
+        "region_bin=foo_1/frequency_bin=2/coding_bin=1/variants.parquet",
+    )
+    assert res == [("region_bin", "foo_1"), ("frequency_bin", "2"),
+                   ("coding_bin", "1")]

@@ -53,6 +53,13 @@ def test_import_project_chromosomes_simple(
     assert project_fixture.get_variant_loader_chromosomes() == ["chr1", "chr2"]
 
 
+def test_import_project_chromosome_lengths(
+    project_fixture: ImportProject,
+) -> None:
+    assert project_fixture.get_variant_loader_chrom_lens() == {
+        "chr1": 100, "chr2": 100}
+
+
 def test_import_project_variant_loader_types(
     project_fixture: ImportProject,
 ) -> None:

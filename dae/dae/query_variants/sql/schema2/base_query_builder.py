@@ -3,8 +3,10 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from typing import Any, Optional, Union, cast
 
-import dae.utils.regions
-from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.gene_models import (
+    GeneModels,
+    create_regions_from_genes,
+)
 from dae.pedigrees.families_data import FamiliesData
 from dae.query_variants.attributes_query import (
     LeafNode,
@@ -592,41 +594,12 @@ class BaseQueryBuilder(ABC):
     def _build_gene_regions_heuristic(
         self, genes: list[str], regions: Optional[list[Region]],
     ) -> Optional[list[Region]]:
-        assert genes is not None
         assert self.gene_models is not None
-
-        if len(genes) == 0 or len(genes) > self.GENE_REGIONS_HEURISTIC_CUTOFF:
-            return regions
-
-        gene_regions = []
-        for gene_name in genes:
-            gene_model = self.gene_models.gene_models_by_gene_name(gene_name)
-            if gene_model is None:
-                logger.warning("gene model for %s not found", gene_name)
-                continue
-            for gm in gene_model:
-                gene_regions.append(
-                    Region(
-                        gm.chrom,
-                        max(1, gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND),
-                        gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND,
-                    ),
-                )
-        gene_regions = dae.utils.regions.collapse(gene_regions)
-        if not regions:
-            regions = gene_regions
-        else:
-            result = []
-            for gene_region in gene_regions:
-                for region in regions:
-                    intersection = gene_region.intersection(region)
-                    if intersection:
-                        result.append(intersection)
-            result = dae.utils.regions.collapse(result)
-            logger.info("original regions: %s; result: %s", regions, result)
-            regions = result
-
-        return regions
+        return create_regions_from_genes(
+            self.gene_models, genes, regions,
+            self.GENE_REGIONS_HEURISTIC_CUTOFF,
+            self.GENE_REGIONS_HEURISTIC_EXTEND,
+        )
 
     def _build_partition_bin_heuristic_where(
         self, bin_column: str, bins: Union[list[str], set[str]],

@@ -15,7 +15,7 @@ from dae.genomic_resources.resource_implementation import (
     ResourceConfigValidationMixin,
     get_base_resource_schema,
 )
-from dae.utils.regions import BedRegion
+from dae.utils.regions import BedRegion, Region, collapse
 
 logger = logging.getLogger(__name__)
 
@@ -1517,3 +1517,53 @@ def build_gene_models_from_resource(
         raise ValueError(f"wrong resource type: {resource.resource_id}")
 
     return GeneModels(resource)
+
+
+def create_regions_from_genes(
+    gene_models: GeneModels,
+    genes: list[str],
+    regions: Optional[list[Region]],
+    gene_regions_heuristic_cutoff: int = 20,
+    gene_regions_heuristic_extend: int = 20000,
+) -> Optional[list[Region]]:
+    """Produce a list of regions from given gene symbols.
+
+    If given a list of regions, will merge the newly-created regions
+    from the genes with the provided ones.
+    """
+    assert genes is not None
+    assert gene_models is not None
+
+    if len(genes) == 0 or len(genes) > gene_regions_heuristic_cutoff:
+        return regions
+
+    gene_regions = []
+    for gene_name in genes:
+        gene_model = gene_models.gene_models_by_gene_name(gene_name)
+        if gene_model is None:
+            logger.warning("gene model for %s not found", gene_name)
+            continue
+        for gm in gene_model:
+            gene_regions.append(  # noqa: PERF401
+                Region(
+                    gm.chrom,
+                    max(1, gm.tx[0] - 1 - gene_regions_heuristic_extend),
+                    gm.tx[1] + 1 + gene_regions_heuristic_extend,
+                ),
+            )
+
+    gene_regions = collapse(gene_regions)
+    if not regions:
+        regions = gene_regions
+    else:
+        result = []
+        for gene_region in gene_regions:
+            for region in regions:
+                intersection = gene_region.intersection(region)
+                if intersection:
+                    result.append(intersection)
+        result = collapse(result)
+        logger.info("original regions: %s; result: %s", regions, result)
+        regions = result
+
+    return regions
