@@ -6,6 +6,7 @@ import logging
 from collections import Counter
 from textwrap import dedent
 from typing import Any, Callable, Optional, TypedDict, Union
+from pathlib import Path
 
 import yaml
 
@@ -429,6 +430,7 @@ def build_annotation_pipeline(
         grr_repository_definition: Optional[dict] = None,
         *,
         allow_repeated_attributes: bool = False,
+        work_dir: Optional[Path] = None,
 ) -> AnnotationPipeline:
     """Build an annotation pipeline."""
     if not grr_repository:
@@ -461,7 +463,11 @@ def build_annotation_pipeline(
     pipeline.preambule = preambule
 
     try:
-        for annotator_config in pipeline_config:
+        for idx, annotator_config in enumerate(pipeline_config):
+            if work_dir is not None:
+                annotator_config.parameters._data["work_dir"] = work_dir / \
+                    f"A{idx}_{annotator_config.type}"
+                annotator_config.parameters._used_keys.add("work_dir")
             builder = get_annotator_factory(annotator_config.type)
             annotator = builder(pipeline, annotator_config)
             annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)

@@ -186,18 +186,6 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
         yield from self._all_resources
 
-    def get_resource_url(self, resource: GenomicResource) -> str:
-        """Return url of the specified resources."""
-        return os.path.join(
-            self.url,
-            resource.get_genomic_resource_id_version())
-
-    def get_resource_file_url(
-            self, resource: GenomicResource, filename: str) -> str:
-        """Return url of a file in the resource."""
-        return os.path.join(
-            self.get_resource_url(resource), filename)
-
     def file_exists(
             self, resource: GenomicResource, filename: str) -> bool:
         filepath = self.get_resource_file_url(resource, filename)

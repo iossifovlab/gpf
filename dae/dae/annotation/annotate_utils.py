@@ -1,6 +1,6 @@
 import argparse
 import os
-import pathlib
+from pathlib import Path
 import sys
 from abc import abstractmethod
 from typing import Optional
@@ -114,12 +114,14 @@ class AnnotationTool:
         grr_definition: Optional[dict],
         *,
         allow_repeated_attributes: bool,
+        work_dir: Optional[Path] = None,
     ) -> AnnotationPipeline:
         grr = build_genomic_resource_repository(definition=grr_definition)
         pipeline = build_annotation_pipeline(
             pipeline_config_str=pipeline_config,
             grr_repository=grr,
             allow_repeated_attributes=allow_repeated_attributes,
+            work_dir=work_dir,
         )
         if pipeline_config_old is not None:
             pipeline_old = build_annotation_pipeline(
@@ -131,11 +133,11 @@ class AnnotationTool:
 
     def _get_pipeline_config(self) -> str:
         if self.args.pipeline == "context":
-            return pathlib.Path(
+            return Path(
                 self.gpf_instance.dae_dir,
                 self.gpf_instance.dae_config.annotation.conf_file,
             ).read_text()
-        if (pipeline_path := pathlib.Path(self.args.pipeline)).exists():
+        if (pipeline_path := Path(self.args.pipeline)).exists():
             return pipeline_path.read_text()
         if (pipeline_res := self.grr.find_resource(self.args.pipeline)):
             return AnnotationPipelineImplementation(pipeline_res).raw
