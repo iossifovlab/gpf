@@ -464,9 +464,10 @@ def build_annotation_pipeline(
 
     try:
         for idx, annotator_config in enumerate(pipeline_config):
-            annotator_config.parameters._data["work_dir"] = work_dir / \
-                f"A{idx}_{annotator_config.type}"
-            annotator_config.parameters._used_keys.add("work_dir")
+            if work_dir is not None:
+                annotator_config.parameters._data["work_dir"] = work_dir / \
+                    f"A{idx}_{annotator_config.type}"
+                annotator_config.parameters._used_keys.add("work_dir")
             builder = get_annotator_factory(annotator_config.type)
             annotator = builder(pipeline, annotator_config)
             annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)

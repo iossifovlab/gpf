@@ -114,7 +114,7 @@ class AnnotationTool:
         grr_definition: Optional[dict],
         *,
         allow_repeated_attributes: bool,
-        work_dir: Optional[Path],
+        work_dir: Optional[Path] = None,
     ) -> AnnotationPipeline:
         grr = build_genomic_resource_repository(definition=grr_definition)
         pipeline = build_annotation_pipeline(
