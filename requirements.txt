@@ -14,9 +14,9 @@ matplotlib-base==3.8
 seaborn==0.13
 pandas==2.1
 pyarrow==16.1
-fsspec==2024.5
-s3fs==2024.5
-dask==2024.5
+fsspec==2024.6
+s3fs==2024.6
+dask==2024.6
 python-box==7.1
 setuptools==67
 sqlalchemy==2.0.21
@@ -38,3 +38,9 @@ sqlglot==24.1
 polars==0.20
 sentry-sdk==2.3
 pybigwig==0.3.22
+snakemake-minimal==7.32
+openjdk==8.0.312
+hadoop==3.1.2
+impyla==0.19
+thriftpy2==0.5
+thrift==0.16
