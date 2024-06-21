@@ -299,7 +299,9 @@ position_score
 Two formats are accepted in GPF
 
 Format A
+
 .. code-block::
+
   chr1   pos    score1 score2
   # pos is assumed to be 1-based
 
@@ -307,7 +309,9 @@ Format A
   Tabix -s 1 -b 2 -e 2
 
 Format B
+
 .. code-block::
+
   chr1 beg end score1 score2
   # all positions in [beg, end] are assigned the same scores
   # beg and end are  assumed to be 1-based
@@ -316,6 +320,19 @@ Format B
 
 NOTE: We should never use tabix -p bed!!
 
+
+Aggregators
+***********
+
+- mean
+- median
+- max
+- min
+- mode
+- join (i.e., join(;))
+- list
+- dict
+- concatenate
 
 np_score
 ########
