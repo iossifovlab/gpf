@@ -1,6 +1,6 @@
 import { Page, expect } from '@playwright/test';
 
-// For local replace with http://172.xx.x.x/gpf
+// For local replace with http://localhost:8080/gpf
 export const instanceUrl = process.env.GPF_STAGING_INSTANCE_URL ?
   process.env.GPF_STAGING_INSTANCE_URL : 'http://gpf:8080/gpf';
 // Replace with http://localhost:8025 if testing local
