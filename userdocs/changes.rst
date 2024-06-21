@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+* 2024.6.6
+    * Update for GRR info pages for genomic scores, gene scores, gene models
+      and reference genome
+    * Demo annotators for external tools using batch mode annotation
+    * Demo annotators for external tools using using GRR resources and 
+      batch mode annotation
+    * Fixes and optimization for genotype variants query over schema2
+      parquet loader
+    * Fix handling of bigWig resources in GRR
+    * Fix home page search for a gene profile
+    * Fix handling of gene browser input
+
 * 2024.6.5
     * Fix for GTF gene models parser
 * 2024.6.4
