@@ -7,6 +7,7 @@ import sys
 from contextlib import closing
 from typing import Optional, Union
 
+from dae.genomic_resources.repository_factory import build_genomic_resource_repository
 from pysam import (
     TabixFile,
     VariantFile,
@@ -19,10 +20,10 @@ from dae.annotation.annotate_utils import (
     produce_partfile_paths,
     produce_regions,
 )
+from dae.annotation.annotation_config import RawAnnotatorsConfig
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
-    AnnotatorInfo,
     ReannotationPipeline,
 )
 from dae.annotation.context import CLIAnnotationContext
@@ -76,15 +77,14 @@ def update_header(
 
 def combine(
     input_file_path: str,
-    pipeline_config: Optional[list[AnnotatorInfo]],
+    pipeline_config: RawAnnotatorsConfig,
     grr_definition: Optional[dict],
     partfile_paths: list[str],
     output_file_path: str,
 ) -> None:
     """Combine annotated region parts into a single VCF file."""
-    pipeline = build_annotation_pipeline(
-        pipeline_config=pipeline_config,
-        grr_repository_definition=grr_definition)
+    grr = build_genomic_resource_repository(definition=grr_definition)
+    pipeline = build_annotation_pipeline(pipeline_config, grr)
 
     with closing(VariantFile(input_file_path)) as input_file:
         update_header(input_file, pipeline)

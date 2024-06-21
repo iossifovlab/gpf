@@ -5,7 +5,7 @@ import textwrap
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotatorInfo
 from dae.annotation.gene_set_annotator import GeneSetAnnotator
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -123,7 +123,7 @@ def test_gene_set_annotator_in_pipeline(
     alt: str,
     expected: bool,
 ) -> None:
-    pipeline = build_annotation_pipeline(pipeline_config_str=textwrap.dedent(
+    pipeline = load_pipeline_from_yaml(textwrap.dedent(
         f"""
         - effect_annotator:
             genome: foobar_genome
@@ -133,7 +133,7 @@ def test_gene_set_annotator_in_pipeline(
             gene_set_id: {set_id}
             input_gene_list: gene_list
         """),
-        grr_repository=test_grr)
+        test_grr)
 
     allele = VCFAllele(chrom, pos, ref, alt)
     result = pipeline.annotate(allele)

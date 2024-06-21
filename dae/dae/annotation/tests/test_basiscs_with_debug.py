@@ -1,18 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 from dae.annotation.annotatable import Position
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
 def test_default_attributes() -> None:
     empty_grr = build_inmemory_test_repository({})
-    annotation_cofiguration = """
+    config = """
     - debug_annotator
     """
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=annotation_cofiguration,
-        grr_repository=empty_grr)
+    pipeline = load_pipeline_from_yaml(config, empty_grr)
 
     info = pipeline.get_info()
     assert len(info) == 1
@@ -28,7 +26,7 @@ def test_default_attributes() -> None:
 
 def test_default_remapping() -> None:
     empty_grr = build_inmemory_test_repository({})
-    annotation_cofiguration = """
+    config = """
     - debug_annotator:
         attributes:
           - hi
@@ -37,9 +35,7 @@ def test_default_remapping() -> None:
           - name: hi3
             source: hi
     """
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=annotation_cofiguration,
-        grr_repository=empty_grr)
+    pipeline = load_pipeline_from_yaml(config, empty_grr)
 
     info = pipeline.get_info()
     assert len(info) == 1
@@ -57,7 +53,7 @@ def test_default_remapping() -> None:
 
 def test_str_value_trasform() -> None:
     empty_grr = build_inmemory_test_repository({})
-    annotation_cofiguration = """
+    config = """
     - debug_annotator:
         attributes:
           - hi
@@ -68,9 +64,7 @@ def test_str_value_trasform() -> None:
             source: hi
             value_transform: len(value)
     """
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=annotation_cofiguration,
-        grr_repository=empty_grr)
+    pipeline = load_pipeline_from_yaml(config, empty_grr)
 
     info = pipeline.get_info()
     assert len(info) == 1

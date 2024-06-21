@@ -7,7 +7,7 @@ import sys
 import time
 from typing import Optional
 
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_file
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.genomic_resources.cached_repository import cache_resources
@@ -97,9 +97,7 @@ def extract_resource_ids_from_annotation(
         annotation: str, repository: GenomicResourceRepo) -> set[str]:
     """Collect resources and resource files used by annotation."""
     resources: set[str] = set()
-    with build_annotation_pipeline(
-            pipeline_config_file=annotation,
-            grr_repository=repository) as pipeline:
+    with load_pipeline_from_file(annotation, repository) as pipeline:
         for annotator in pipeline.annotators:
             resources = resources | {resource.get_id()
                                      for resource in annotator.resources}

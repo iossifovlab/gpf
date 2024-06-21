@@ -251,22 +251,6 @@ class AnnotationConfigParser:
         return AnnotationConfigParser.parse_raw(pipeline_raw_config, grr=grr)
 
     @staticmethod
-    def parse_config_file(
-        filename: str, grr: Optional[GenomicResourceRepo],
-    ) -> tuple[Optional[AnnotationPreambule], list[AnnotatorInfo]]:
-        """Parse annotation pipeline configuration file."""
-        logger.info("loading annotation pipeline configuration: %s", filename)
-        try:
-            with open(filename, "rt", encoding="utf8") as infile:
-                content = infile.read()
-        except OSError as error:
-            raise AnnotationConfigurationError(
-                f"Problem reading the contents of the {filename} file.",
-                error) from error
-
-        return AnnotationConfigParser.parse_str(content, grr=grr)
-
-    @staticmethod
     def parse_raw_attribute_config(
             raw_attribute_config: dict[str, Any]) -> AttributeInfo:
         """Parse annotation attribute raw configuration."""

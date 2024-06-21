@@ -2,7 +2,7 @@
 
 import pytest
 
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import build_inmemory_test_repository
 
@@ -85,8 +85,7 @@ def genomic_resources_repo() -> GenomicResourceRepo:
 
 def test_annotation_pipeline_schema_basics(
         genomic_resources_repo: GenomicResourceRepo) -> None:
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str="""
+    pipeline = load_pipeline_from_yaml("""
         - np_score:
             resource_id: np_score1
             attributes:
@@ -94,7 +93,7 @@ def test_annotation_pipeline_schema_basics(
               name: test
         - position_score:
             resource_id: position_score1
-        """, grr_repository=genomic_resources_repo)
+        """, genomic_resources_repo)
 
     assert len(pipeline.annotators) == 2
     assert len(pipeline.get_attributes()) == 4
@@ -104,8 +103,7 @@ def test_annotation_pipeline_schema_basics(
 def test_annotation_pipeline_schema_with_internal(
         genomic_resources_repo: GenomicResourceRepo) -> None:
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str="""
+    pipeline = load_pipeline_from_yaml("""
         - np_score:
             resource_id: np_score1
             attributes:
@@ -117,7 +115,7 @@ def test_annotation_pipeline_schema_with_internal(
             - test100way
             - name: t1
               internal: True
-        """, grr_repository=genomic_resources_repo)
+        """, genomic_resources_repo)
 
     assert len(pipeline.annotators) == 2
 

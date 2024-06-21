@@ -2,45 +2,45 @@ import pytest
 
 from dae.annotation.annotation_factory import (
     AnnotationConfigurationError,
-    build_annotation_pipeline,
+    load_pipeline_from_yaml,
 )
 from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
 def test_pipeline_not_a_list() -> None:
     with pytest.raises(AnnotationConfigurationError):
-        build_annotation_pipeline(pipeline_config_str="""
+        load_pipeline_from_yaml("""
             debug_annotator
-            """, grr_repository=build_inmemory_test_repository({}))
+            """, build_inmemory_test_repository({}))
 
 
 def test_pipeline_repeated_annotator_attribute() -> None:
     with pytest.raises(AnnotationConfigurationError, match="attributes: hi"):
-        build_annotation_pipeline(pipeline_config_str="""
+        load_pipeline_from_yaml("""
             - debug_annotator:
                 attributes:
                 - hi
                 - hi
-            """, grr_repository=build_inmemory_test_repository({}))
+            """, build_inmemory_test_repository({}))
 
 
 def test_pipeline_repeated_attribute() -> None:
     with pytest.raises(AnnotationConfigurationError, match="hi"):
-        build_annotation_pipeline(pipeline_config_str="""
+        load_pipeline_from_yaml("""
             - debug_annotator:
                 attributes:
                 - hi
             - debug_annotator:
                 attributes:
                 - hi
-            """, grr_repository=build_inmemory_test_repository({}))
+            """, build_inmemory_test_repository({}))
 
 
 def test_pipeline_annoing_identation_error() -> None:
     with pytest.raises(AnnotationConfigurationError,
                        match="Incorrect annotator configuation form"):
-        build_annotation_pipeline(pipeline_config_str="""
+        load_pipeline_from_yaml("""
             - debug_annotator:
               attributes:
                 - hi
-            """, grr_repository=build_inmemory_test_repository({}))
+            """, build_inmemory_test_repository({}))

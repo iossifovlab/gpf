@@ -10,6 +10,7 @@ from types import TracebackType
 from typing import Any, Callable, Optional
 
 from dae.annotation.annotatable import Annotatable
+from dae.annotation.annotation_config import RawAnnotatorsConfig
 from dae.genomic_resources.repository import (
     GenomicResource,
     GenomicResourceRepo,
@@ -165,6 +166,7 @@ class AnnotationPipeline:
         self.repository: GenomicResourceRepo = repository
         self.annotators: list[Annotator] = []
         self.preambule: Optional[AnnotationPreambule] = None
+        self.raw: RawAnnotatorsConfig = []
         self._is_open = False
 
     def get_info(self) -> list[AnnotatorInfo]:

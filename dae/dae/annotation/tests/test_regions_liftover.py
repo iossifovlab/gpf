@@ -6,7 +6,7 @@ from typing import Optional
 import pytest
 
 from dae.annotation.annotatable import Annotatable, CNVAllele, Position, Region
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.liftover_chain import (
     build_liftover_chain_from_resource,
 )
@@ -121,9 +121,7 @@ def test_liftover_annotator(
               internal: false
     """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=fixture_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, fixture_repo)
 
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)

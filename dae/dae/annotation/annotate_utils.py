@@ -5,6 +5,7 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import Optional
 
+from dae.annotation.annotation_config import RawAnnotatorsConfig
 from pysam import TabixFile
 
 from dae.annotation.annotation_factory import build_annotation_pipeline
@@ -96,8 +97,8 @@ class AnnotationTool:
 
     @staticmethod
     def _produce_annotation_pipeline(
-        pipeline_config: str,
-        pipeline_config_old: Optional[str],
+        pipeline_config: RawAnnotatorsConfig,
+        pipeline_config_old: RawAnnotatorsConfig,
         grr_definition: Optional[dict],
         *,
         allow_repeated_attributes: bool,
@@ -105,16 +106,12 @@ class AnnotationTool:
     ) -> AnnotationPipeline:
         grr = build_genomic_resource_repository(definition=grr_definition)
         pipeline = build_annotation_pipeline(
-            pipeline_config_str=pipeline_config,
-            grr_repository=grr,
+            pipeline_config, grr,
             allow_repeated_attributes=allow_repeated_attributes,
             work_dir=work_dir,
         )
         if pipeline_config_old is not None:
-            pipeline_old = build_annotation_pipeline(
-                pipeline_config_str=pipeline_config_old,
-                grr_repository=grr,
-            )
+            pipeline_old = build_annotation_pipeline(pipeline_config_old, grr)
             pipeline = ReannotationPipeline(pipeline, pipeline_old)
         return pipeline
 

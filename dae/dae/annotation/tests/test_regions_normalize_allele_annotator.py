@@ -4,8 +4,9 @@ import textwrap
 
 import pytest
 
-from dae.annotation.annotatable import CNVAllele, Position, Region
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotatable import Annotatable, CNVAllele, Position, Region
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
     setup_directories,
@@ -14,7 +15,9 @@ from dae.genomic_resources.testing import (
 
 
 @pytest.fixture()
-def fixture_repo(tmp_path_factory):
+def fixture_repo(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> GenomicResourceRepo:
     root_path = tmp_path_factory.mktemp("regions_effect_annotation")
     setup_directories(root_path, {
         "genome": {
@@ -43,8 +46,10 @@ def fixture_repo(tmp_path_factory):
      CNVAllele("chr1", 1, 10, CNVAllele.Type.LARGE_DELETION)),
 ])
 def test_normalize_allele_annotator(
-        annotatable, expected, fixture_repo):
-
+    annotatable: Annotatable,
+    expected: Annotatable,
+    fixture_repo: GenomicResourceRepo,
+) -> None:
     pipeline_config = textwrap.dedent("""
         - normalize_allele_annotator:
             genome: genome
@@ -54,9 +59,7 @@ def test_normalize_allele_annotator(
               internal: False
     """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=fixture_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, fixture_repo)
 
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)

@@ -7,7 +7,7 @@ import pytest
 from dae.annotation.annotatable import Annotatable, Position, Region
 
 # VCFAllele
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import (
     build_inmemory_test_repository,
@@ -60,11 +60,11 @@ def grr() -> GenomicResourceRepo:
 def test_basic(
         annotatable: Annotatable,
         cnv_count: int, grr: GenomicResourceRepo) -> None:
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=textwrap.dedent("""
+    pipeline = load_pipeline_from_yaml(
+        textwrap.dedent("""
             - cnv_collection: cnvs
             """),
-        grr_repository=grr)
+        grr)
 
     atts = pipeline.annotate(annotatable)
     assert atts["count"] == cnv_count
@@ -78,8 +78,8 @@ def test_basic(
 def test_cnv_filter(
         annotatable: Annotatable, cnv_count: int,
         grr: GenomicResourceRepo) -> None:
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=textwrap.dedent("""
+    pipeline = load_pipeline_from_yaml(
+        textwrap.dedent("""
             - cnv_collection:
                 resource_id: cnvs
                 cnv_filter: >
@@ -87,7 +87,7 @@ def test_cnv_filter(
                   cnv.attributes["collection"] == "SSC") and
                   cnv.size > 2
             """),
-        grr_repository=grr)
+        grr)
 
     atts = pipeline.annotate(annotatable)
     assert atts["count"] == cnv_count
@@ -105,8 +105,8 @@ def test_cnv_filter_and_attribute(
     status: str, status2: str, collection: str,
     grr: GenomicResourceRepo,
 ) -> None:
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=textwrap.dedent("""
+    pipeline = load_pipeline_from_yaml(
+        textwrap.dedent("""
             - cnv_collection:
                 resource_id: cnvs
                 cnv_filter: >
@@ -121,7 +121,7 @@ def test_cnv_filter_and_attribute(
                   aggregator: max
                 - source: "attribute.collection"
             """),
-        grr_repository=grr)
+        grr)
 
     atts = pipeline.annotate(annotatable)
     assert "status" in atts

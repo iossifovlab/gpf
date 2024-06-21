@@ -5,7 +5,7 @@ from typing import Optional, Union
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.repository import GenomicResourceProtocolRepo
 from dae.testing import setup_directories, setup_vcf
@@ -54,10 +54,7 @@ def test_vcf_info_annotator_all_attributes(
     score1_repo: GenomicResourceProtocolRepo,
 ) -> None:
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str="""
-            - allele_score: score1
-        """, grr_repository=score1_repo)
+    pipeline = load_pipeline_from_yaml("- allele_score: score1", score1_repo)
 
     expected_name_scr_type_desc = [
         ("A", "A", "int", "Score A"),
@@ -76,14 +73,13 @@ def test_vcf_info_config_annotation(
     score1_repo: GenomicResourceProtocolRepo,
 ) -> None:
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str="""
-            - allele_score:
+    pipeline = load_pipeline_from_yaml(
+        """- allele_score:
                 resource_id: score1
                 attributes:
                 - source: C
                   name: score1_c
-        """, grr_repository=score1_repo)
+        """, score1_repo)
 
     assert len(pipeline.get_attributes()) == 1
     att = pipeline.get_attributes()[0]
@@ -133,9 +129,7 @@ def test_vcf_info_annotator(
               name: score1_d
         """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=score1_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, score1_repo)
 
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(vcf_allele)

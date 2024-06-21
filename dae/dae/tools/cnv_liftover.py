@@ -7,7 +7,7 @@ import textwrap
 from typing import Optional, cast
 
 from dae.annotation.annotatable import CNVAllele
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )
@@ -106,9 +106,7 @@ def main(
         """,
     )
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=gpf_instance.grr)
+    pipeline = load_pipeline_from_yaml(pipeline_config, gpf_instance.grr)
     pipeline.open()
 
     stats: StatsCollection = StatsCollection()

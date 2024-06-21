@@ -4,7 +4,7 @@ import textwrap
 import pytest
 
 from dae.annotation.annotatable import Annotatable, Position, Region, VCFAllele
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.repository import (
     GenomicResourceProtocolRepo,
     GenomicResourceRepo,
@@ -50,12 +50,12 @@ def test_basic(
     genes: str,
     grr: GenomicResourceRepo,
 ) -> None:
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=textwrap.dedent("""
+    pipeline = load_pipeline_from_yaml(
+        textwrap.dedent("""
             - simple_effect_annotator:
                 gene_models: gene_models
             """),
-        grr_repository=grr)
+        grr)
 
     atts = pipeline.annotate(annotatable)
     assert atts["effect"] == effect

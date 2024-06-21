@@ -5,7 +5,7 @@ from typing import Optional, cast
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.gpf_instance import GPFInstance
 from dae.variants.core import Allele
@@ -15,8 +15,7 @@ def test_pipeline_liftover(
         annotation_config: str,
         grr_fixture: GenomicResourceRepo) -> None:
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_file=annotation_config, grr_repository=grr_fixture)
+    pipeline = load_pipeline_from_yaml(annotation_config, grr_fixture)
     with pipeline.open() as work_pipeline:
         allele = Allele.build_vcf_allele("chr1", 69094, "G", "A")
         attributes = work_pipeline.annotate(allele.get_annotatable())
@@ -42,9 +41,7 @@ def test_liftover_annotator_denovo_db_examples(
             target_genome: hg38/genomes/GRCh38-hg38
         """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=gpf_instance_2013.grr)
+    pipeline = load_pipeline_from_yaml(pipeline_config, gpf_instance_2013.grr)
 
     allele = VCFAllele(chrom, pos, ref, alt)
 
@@ -64,9 +61,7 @@ def test_liftover_annotator_resources(
           target_genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
       """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=grr_fixture)
+    pipeline = load_pipeline_from_yaml(pipeline_config, grr_fixture)
 
     assert pipeline.get_resource_ids() == {
         "hg38/hg38tohg19",
