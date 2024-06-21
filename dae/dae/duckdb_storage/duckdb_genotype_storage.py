@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from contextlib import closing
-from typing import Any, Optional, Union, cast
+from typing import Any, ClassVar, Optional, Union, cast
 
 import duckdb
 from cerberus import Validator
@@ -27,14 +27,16 @@ def _duckdb_global_connect() -> duckdb.DuckDBPyConnection:
 
 
 def _duckdb_db_connect(
-    db_name: str, read_only: bool = True,
+    db_name: str, *,
+    read_only: bool = True,
 ) -> duckdb.DuckDBPyConnection:
     logger.debug("duckdb internal connection to %s", db_name)
     return duckdb.connect(db_name, read_only=read_only)
 
 
 def duckdb_connect(
-    db_name: Optional[str] = None, read_only: bool = True,
+    db_name: Optional[str] = None, *,
+    read_only: bool = True,
 ) -> duckdb.DuckDBPyConnection:
     if db_name is not None:
         return _duckdb_db_connect(db_name=db_name, read_only=read_only)
@@ -44,7 +46,7 @@ def duckdb_connect(
 class DuckDbGenotypeStorage(GenotypeStorage):
     """Defines DuckDb genotype storage."""
 
-    VALIDATION_SCHEMA = {
+    VALIDATION_SCHEMA: ClassVar[dict[str, Any]] = {
         "storage_type": {"type": "string", "allowed": ["duckdb", "duckdb2"]},
         "id": {
             "type": "string", "required": True,
@@ -58,7 +60,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         },
         "memory_limit": {
             "type": "string",
-            "default": "32GB",
+            "default": "16GB",
         },
         "studies_dir": {
             "type": "string",
@@ -85,11 +87,10 @@ class DuckDbGenotypeStorage(GenotypeStorage):
                 f"{validator.errors}")
         result = cast(dict, validator.document)
         base_dir = result.get("base_dir")
-        if base_dir:
-            if not os.path.isabs(base_dir):
-                raise ValueError(
-                    f"DuckDb genotype storage base dir should be an "
-                    f"absolute path; <{base_dir}> passed instead.")
+        if base_dir and not os.path.isabs(base_dir):
+            raise ValueError(
+                f"DuckDb genotype storage base dir should be an "
+                f"absolute path; <{base_dir}> passed instead.")
         return result
 
     @classmethod
@@ -128,7 +129,6 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
     def close(self) -> None:
         pass
-        # self.shutdown()
 
     def get_base_dir(self) -> Optional[str]:
         return self.storage_config.get("base_dir")
@@ -204,8 +204,10 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             query = f"DROP TABLE IF EXISTS {table_name}"
             connection.sql(query)
 
-            query = f"CREATE TABLE {table_name} AS " \
-                f"SELECT * FROM parquet_scan('{parquet_path}')"
+            query = f"""
+                CREATE TABLE {table_name} AS
+                SELECT * FROM parquet_scan('{parquet_path}')
+            """  # noqa: S608
             connection.sql(query)
 
     def _create_table_partitioned(
@@ -226,9 +228,11 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             logger.debug("query: %s", query)
             connection.sql(query)
 
-            query = f"CREATE TABLE {table_name} AS " \
-                f"SELECT * FROM " \
-                f"parquet_scan('{dataset_path}', hive_partitioning = 1)"
+            query = f"""
+                CREATE TABLE {table_name} AS
+                SELECT * FROM
+                parquet_scan('{dataset_path}', hive_partitioning = 1)
+            """
             logger.info("query: %s", query)
             connection.sql(query)
 
@@ -243,8 +247,10 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
             with closing(self.start()) as storage:
                 # pylint: disable=protected-access
-                storage._create_table(layout.meta, tables_layout.meta)
-                storage._create_table(layout.pedigree, tables_layout.pedigree)
+                storage._create_table(  # noqa: SLF001
+                    layout.meta, tables_layout.meta)
+                storage._create_table(  # noqa: SLF001
+                    layout.pedigree, tables_layout.pedigree)
                 if layout.summary is None:
                     assert layout.family is None
                     tables_layout = Schema2DatasetLayout(
@@ -258,10 +264,10 @@ class DuckDbGenotypeStorage(GenotypeStorage):
                     assert tables_layout.family is not None
                     assert layout.summary is not None
                     assert layout.family is not None
-                    storage._create_table_partitioned(
+                    storage._create_table_partitioned(  # noqa: SLF001
                         layout.summary, tables_layout.summary,
                         partition_descriptor.dataset_summary_partition())
-                    storage._create_table_partitioned(
+                    storage._create_table_partitioned(  # noqa: SLF001
                         layout.family, tables_layout.family,
                         partition_descriptor.dataset_family_partition())
             return tables_layout
