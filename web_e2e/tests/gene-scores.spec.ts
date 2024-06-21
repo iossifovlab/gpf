@@ -54,7 +54,7 @@ test.describe('Gene scores tests', () => {
   test('should have working from/to step up/down buttons in RVIS rank', async({ page }) => {
     await page.locator('#gene-scores').click();
     await page.locator('gpf-gene-scores select')
-    .selectOption('RVIS rank - The rank of the gene after sorting based of RVIS score.');
+      .selectOption('RVIS rank - Gene rank after sorting by RVIS intolerance score');
 
     await expect(page.locator('input#from-input-field')).toHaveValue('1');
     await expect(page.locator('input#to-input-field')).toHaveValue('16640');
@@ -80,7 +80,7 @@ test.describe('Gene scores tests', () => {
   test('should have working from/to step up/down buttons in ExAC pLI', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
     await page.locator('#gene-scores').click();
-    await page.locator('gpf-gene-scores select').selectOption('pLI - ExAC pLI');
+    await page.locator('gpf-gene-scores select').selectOption('pLI - Probability of Loss-of-Function Intolerance');
 
     await expect(page.locator('input#from-input-field')).toHaveValue('0');
     await expect(page.locator('input#to-input-field')).toHaveValue('1');
@@ -125,7 +125,7 @@ test.describe('Gene scores tests', () => {
     await page.click('#gene-scores');
 
     await page.locator('gpf-gene-scores select')
-    .selectOption('RVIS score - The score reflects the intolerance of a gene to genetic variants (RVIS)');
+    .selectOption('RVIS score - Intolerance of a gene to genetic variants');
     const downloadPromise = page.waitForEvent('download');
     await page.click('gpf-gene-scores .download-link');
     const downloadedFile = await downloadPromise;
