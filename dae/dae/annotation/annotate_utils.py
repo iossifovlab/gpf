@@ -18,7 +18,6 @@ from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.implementations.annotation_pipeline_impl import (
     AnnotationPipelineImplementation,
 )
-from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
@@ -120,8 +119,8 @@ class AnnotationTool:
         return pipeline
 
     def _get_pipeline_config(self) -> str:
-        assert self.gpf_instance is not None
         if self.args.pipeline == "context":
+            assert self.gpf_instance is not None
             return Path(
                 self.gpf_instance.dae_dir,
                 self.gpf_instance.dae_config.annotation.conf_file,
