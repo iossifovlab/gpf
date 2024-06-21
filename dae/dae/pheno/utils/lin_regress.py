@@ -12,8 +12,8 @@ from sklearn.linear_model import LinearRegression as LinearRegressionSK
 class LinearRegression(LinearRegressionSK):
     """Class to build linear regression models."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
 
         self._pvalues: Optional[np.ndarray] = None
         self._tvalues: Optional[np.ndarray] = None
