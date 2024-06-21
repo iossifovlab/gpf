@@ -3,7 +3,10 @@ import os
 from glob import glob
 from typing import Optional
 
+import yaml
+
 from dae.annotation.annotate_utils import AnnotationTool
+from dae.annotation.annotation_config import RawAnnotatorsConfig
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     ReannotationPipeline,
@@ -71,7 +74,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
     def annotate(
         input_dir: str,
         output_dir: str,
-        pipeline_config: str,
+        pipeline_config: RawAnnotatorsConfig,
         region: str,
         grr_definition: dict,
         bucket_idx: int,
@@ -127,7 +130,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
     def _write_meta(
         layout: Schema2DatasetLayout,
         loader: ParquetLoader,
-        pipeline_raw_config: str,
+        pipeline_raw_config: RawAnnotatorsConfig,
         pipeline: AnnotationPipeline,
     ) -> None:
         """Write metadata to the output Parquet dataset."""
@@ -139,7 +142,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             "variants_data_schema",
         ]
         meta_values = [
-            pipeline_raw_config,
+            yaml.dump(pipeline_raw_config),
             serialize_summary_schema(
                 pipeline.get_attributes(),
                 loader.partition_descriptor),
@@ -175,9 +178,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         if layout.family is None:
             raise ValueError("Invalid family dir in output layout!")
 
-        pipeline_raw_config = self._get_pipeline_config()
         pipeline = AnnotateSchema2ParquetTool._produce_annotation_pipeline(
-            pipeline_raw_config,
+            self.pipeline.raw,
             (loader.meta["annotation_pipeline"]
              if loader.has_annotation else None),
             self.grr.definition,
@@ -186,7 +188,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
         self._write_meta(
             layout, loader,
-            pipeline_raw_config,
+            self.pipeline.raw,
             pipeline,
         )
 
@@ -224,7 +226,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                 f"part_{region}",
                 AnnotateSchema2ParquetTool.annotate,
                 [input_dir, output_dir,
-                 pipeline_raw_config, region, self.grr.definition,
+                 self.pipeline.raw, region, self.grr.definition,
                  idx, self.args.allow_repeated_attributes],
                 [],
             ))

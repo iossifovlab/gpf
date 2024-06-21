@@ -5,10 +5,11 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import Optional
 
-from dae.annotation.annotation_config import RawAnnotatorsConfig
+import yaml
 from pysam import TabixFile
 
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_config import RawAnnotatorsConfig
+from dae.annotation.annotation_factory import build_annotation_pipeline, load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     ReannotationPipeline,
@@ -98,7 +99,7 @@ class AnnotationTool:
     @staticmethod
     def _produce_annotation_pipeline(
         pipeline_config: RawAnnotatorsConfig,
-        pipeline_config_old: RawAnnotatorsConfig,
+        pipeline_config_old: str | None,
         grr_definition: Optional[dict],
         *,
         allow_repeated_attributes: bool,
@@ -111,22 +112,9 @@ class AnnotationTool:
             work_dir=work_dir,
         )
         if pipeline_config_old is not None:
-            pipeline_old = build_annotation_pipeline(pipeline_config_old, grr)
+            pipeline_old = load_pipeline_from_yaml(pipeline_config_old, grr)
             pipeline = ReannotationPipeline(pipeline, pipeline_old)
         return pipeline
-
-    def _get_pipeline_config(self) -> str:
-        if self.args.pipeline == "context":
-            assert self.gpf_instance is not None
-            return Path(
-                self.gpf_instance.dae_dir,
-                self.gpf_instance.dae_config.annotation.conf_file,
-            ).read_text()
-        if (pipeline_path := Path(self.args.pipeline)).exists():
-            return pipeline_path.read_text()
-        if (pipeline_res := self.grr.find_resource(self.args.pipeline)):
-            return AnnotationPipelineImplementation(pipeline_res).raw
-        raise ValueError
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:

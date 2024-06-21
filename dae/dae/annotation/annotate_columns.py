@@ -10,6 +10,7 @@ from contextlib import closing
 from pathlib import Path
 from typing import Any, Optional
 
+from dae.annotation.annotation_config import RawAnnotatorsConfig
 from pysam import TabixFile, tabix_index
 
 from dae.annotation.annotatable import Annotatable
@@ -169,7 +170,7 @@ class AnnotateColumnsTool(AnnotationTool):
     @staticmethod
     def annotate(
         args: argparse.Namespace,
-        pipeline_config: str,
+        pipeline_config: RawAnnotatorsConfig,
         grr_definition: Optional[dict],
         ref_genome_id: Optional[str],
         out_file_path: str,
@@ -350,7 +351,7 @@ class AnnotateColumnsTool(AnnotationTool):
         ref_genome_id = ref_genome.resource_id \
             if ref_genome is not None else None
 
-        raw_pipeline_config = self._get_pipeline_config()
+        raw_pipeline_config = self.pipeline.raw
 
         if tabix_index_filename(self.args.input):
             with closing(TabixFile(self.args.input)) as pysam_file:

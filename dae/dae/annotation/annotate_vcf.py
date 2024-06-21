@@ -7,7 +7,6 @@ import sys
 from contextlib import closing
 from typing import Optional, Union
 
-from dae.genomic_resources.repository_factory import build_genomic_resource_repository
 from pysam import (
     TabixFile,
     VariantFile,
@@ -27,6 +26,9 @@ from dae.annotation.annotation_pipeline import (
     ReannotationPipeline,
 )
 from dae.annotation.context import CLIAnnotationContext
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -136,11 +138,11 @@ class AnnotateVCFTool(AnnotationTool):
     def annotate(  # pylint: disable=too-many-locals,too-many-branches
         input_file: str,
         region: Optional[tuple[str, int, int]],
-        pipeline_config: str,
+        pipeline_config: RawAnnotatorsConfig,
         grr_definition: Optional[dict],
         out_file_path: str,
         allow_repeated_attributes: bool = False,
-        pipeline_config_old: Optional[str] = None,
+        pipeline_config_old: str | None = None,
     ) -> None:
         # flake8: noqa: C901
         """Annotate a region from a given input VCF file using a pipeline."""
@@ -226,7 +228,7 @@ class AnnotateVCFTool(AnnotationTool):
         else:
             output = os.path.basename(self.args.input).split(".")[0] + "_annotated.vcf"
 
-        raw_pipeline_config = self._get_pipeline_config()
+        raw_pipeline_config = self.pipeline.raw
 
         pipeline_config_old = None
         if self.args.reannotate:
