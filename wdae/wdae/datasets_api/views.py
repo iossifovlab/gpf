@@ -151,7 +151,6 @@ class DatasetView(QueryBaseView):
 
         return res
 
-
     @method_decorator(etag(get_permissions_etag))
     def get(
         self, request: Request, dataset_id: Optional[str] = None,
@@ -242,6 +241,7 @@ class StudiesView(QueryBaseView):
         res = [augment_with_parents(self.instance_id, ds) for ds in res]
         return res
 
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
         user = request.user
 
@@ -282,6 +282,7 @@ class PermissionDeniedPromptView(QueryBaseView):
 class DatasetDetailsView(QueryBaseView):
     """Provide miscellaneous details for a given dataset."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request, dataset_id: str) -> Response:
         # pylint: disable=unused-argument
         """Return response for a specific dataset configuration details."""
@@ -306,6 +307,7 @@ class DatasetDetailsView(QueryBaseView):
 class DatasetPedigreeView(QueryBaseView):
     """Provide pedigree data for a given dataset."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request, dataset_id: str, column: str) -> Response:
         # pylint: disable=unused-argument
         """Return response for a pedigree get request for pedigree column."""
@@ -335,6 +337,7 @@ class DatasetPedigreeView(QueryBaseView):
 class DatasetConfigView(DatasetView):
     """Provide a dataset's configuration. Used for remote instances."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(
         self, request: Request, dataset_id: Optional[str] = None,
     ) -> Response:
@@ -355,6 +358,7 @@ class DatasetConfigView(DatasetView):
 class DatasetDescriptionView(QueryBaseView):
     """Provide fetching and editing a dataset's description."""
 
+    # @method_decorator(etag())
     def get(
         self, request: Request, dataset_id: str,
     ) -> Response:
@@ -443,6 +447,7 @@ class DatasetPermissionsView(BaseDatasetPermissionsView):
 
     page_size = settings.REST_FRAMEWORK["PAGE_SIZE"]
 
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
         """Return dataset permissions details."""
         dataset_search = request.GET.get("search")
@@ -530,6 +535,7 @@ class DatasetHierarchyView(QueryBaseView):
             "access_rights": has_rights,
         }
 
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
         """Return the hierarchy of configured datasets in the instance."""
         user = request.user
@@ -554,6 +560,7 @@ class DatasetHierarchyView(QueryBaseView):
 class VisibleDatasetsView(QueryBaseView):
     """Provide a list of which datasets to show in the frontend."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         """Return the list of visible datasets."""
         # pylint: disable=unused-argument

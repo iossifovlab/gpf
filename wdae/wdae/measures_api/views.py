@@ -2,6 +2,9 @@ import logging
 from typing import Any, cast
 
 import numpy as np
+from datasets_api.permissions import get_instance_timestamp_etag
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from query_base.query_base import QueryDatasetView
 from rest_framework import status
 from rest_framework.request import Request
@@ -15,6 +18,7 @@ logger = logging.getLogger(__name__)
 class PhenoMeasuresView(QueryDatasetView):
     """View for phenotype measures."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request, measure_type: str) -> Response:
         """Get phenotype measures."""
         data = request.query_params
@@ -147,6 +151,7 @@ class PhenoMeasurePartitionsView(QueryDatasetView):
 class PhenoMeasureRegressionsView(QueryDatasetView):
     """View for phenotype measure regressions."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         """Get phenotype measure regressions."""
         data = request.query_params

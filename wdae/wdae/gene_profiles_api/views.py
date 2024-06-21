@@ -2,13 +2,12 @@ import logging
 import os
 
 from datasets_api.permissions import get_instance_timestamp_etag
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-
-from django.views.decorators.http import etag
-from django.utils.decorators import method_decorator
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +24,7 @@ class ConfigurationView(QueryBaseView):
 class ProfileView(QueryBaseView):
     """Gene profiles single gene view."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, _request: Request, gene_symbol: str) -> Response:
         """Get gene statistic and links to other information about the gene."""
         gp = self.gpf_instance.get_gp_statistic(gene_symbol)

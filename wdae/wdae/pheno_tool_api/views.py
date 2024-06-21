@@ -4,8 +4,13 @@ from collections.abc import Generator
 from io import StringIO
 from typing import Any, Dict, List, Optional, Union, cast
 
-from datasets_api.permissions import user_has_permission
+from datasets_api.permissions import (
+    get_permissions_etag,
+    user_has_permission,
+)
 from django.http.response import StreamingHttpResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from query_base.query_base import QueryDatasetView
 from rest_framework import status
 from rest_framework.request import Request
@@ -238,6 +243,7 @@ class PhenoToolPeopleValues(QueryDatasetView):
 
 class PhenoToolMeasure(QueryDatasetView):
 
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
         params = request.GET
         dataset_id = params.get("datasetId", None)
@@ -263,6 +269,7 @@ class PhenoToolMeasure(QueryDatasetView):
 
 class PhenoToolMeasures(QueryDatasetView):
 
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
         params = request.GET
         dataset_id = params.get("datasetId", None)
@@ -308,6 +315,7 @@ class PhenoToolInstruments(QueryDatasetView):
                 else measure.max_value,
         }
 
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
         params = request.GET
         dataset_id = params.get("datasetId", None)

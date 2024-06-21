@@ -1,14 +1,13 @@
 
-from datasets_api.permissions import get_instance_timestamp_etag
 import numpy as np
+from datasets_api.permissions import get_instance_timestamp_etag
 from django.http.response import StreamingHttpResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-
-from django.views.decorators.http import etag
-from django.utils.decorators import method_decorator
 
 
 class GeneScoresListView(QueryBaseView):
@@ -67,6 +66,7 @@ class GeneScoresDownloadView(QueryBaseView):
 class GeneScoresGetGenesView(QueryBaseView):
     """Serves request for list of gene in a gene score range."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def prepare_data(self, data: dict[str, str]) -> set[str]:
         """Prepare list of genes that have a gene score in a range."""
         if "score" not in data:

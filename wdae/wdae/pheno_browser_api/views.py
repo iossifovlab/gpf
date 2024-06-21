@@ -4,6 +4,10 @@ from collections.abc import Generator
 from io import StringIO
 from typing import Union
 
+from datasets_api.permissions import (
+    get_instance_timestamp_etag,
+    get_permissions_etag,
+)
 from django.http.response import HttpResponse, StreamingHttpResponse
 from query_base.query_base import QueryDatasetView
 from rest_framework import status
@@ -14,6 +18,9 @@ from utils.streaming_response_util import iterator_to_json
 
 logger = logging.getLogger(__name__)
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
+
 
 class PhenoBrowserBaseView(QueryDatasetView):
     pass
@@ -22,6 +29,7 @@ class PhenoBrowserBaseView(QueryDatasetView):
 class PhenoConfigView(PhenoBrowserBaseView):
     """Phenotype data configuration view."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         """Get the phenotype data configuration."""
         if "db_name" not in request.query_params:
@@ -39,6 +47,7 @@ class PhenoConfigView(PhenoBrowserBaseView):
 class PhenoInstrumentsView(QueryDatasetView):
     """Phenotype instruments view."""
 
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
         """Get phenotype instruments."""
         if "dataset_id" not in request.query_params:
@@ -60,6 +69,7 @@ class PhenoInstrumentsView(QueryDatasetView):
 class PhenoMeasuresInfoView(PhenoBrowserBaseView):
     """Phenotype measures info view."""
 
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
         """Get pheno measures info."""
         if "dataset_id" not in request.query_params:
@@ -78,6 +88,7 @@ class PhenoMeasuresInfoView(PhenoBrowserBaseView):
 class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
     """Phenotype measures description view."""
 
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
         """Get pheno measures description."""
         if "dataset_id" not in request.query_params:
@@ -304,6 +315,7 @@ class PhenoMeasureValues(QueryDatasetView):
 class PhenoRemoteImages(QueryDatasetView):
     """Remote pheno images view."""
 
+    @method_decorator(etag(get_permissions_etag))
     def get(
         self, _request: Request, remote_id: str, image_path: str,
     ) -> Union[Response, HttpResponse]:

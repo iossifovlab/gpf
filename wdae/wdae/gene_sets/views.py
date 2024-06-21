@@ -8,8 +8,11 @@ from collections.abc import Sequence
 from copy import deepcopy
 from typing import Any, Union
 
+from datasets_api.permissions import get_instance_timestamp_etag
 from django.http.response import StreamingHttpResponse
+from django.utils.decorators import method_decorator
 from django.utils.http import urlencode
+from django.views.decorators.http import etag
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
@@ -23,6 +26,7 @@ logger = logging.getLogger(__name__)
 class GeneSetsCollectionsView(QueryBaseView):
     """Class to handle gene sets collections view."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         """Build response to a get request."""
         permitted_datasets = self.get_permitted_datasets(request.user)
@@ -200,6 +204,7 @@ class GeneSetDownloadView(QueryBaseView):
 
 class GeneSetsHasDenovoView(QueryBaseView):
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, _request):
         if self.gpf_instance.has_denovo_gene_sets():
             return Response(status=status.HTTP_204_NO_CONTENT)
