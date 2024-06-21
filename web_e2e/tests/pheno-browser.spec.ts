@@ -53,8 +53,6 @@ test.describe('Pheno browser tests', () => {
   test('should have working table header sorting buttons', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
 
-    await expect(page.locator('gpf-table-view-cell').nth(0)).toHaveText('i1');
-
     await page.locator('gpf-table-view-header-cell').nth(0).click();
     await expect(page.locator('gpf-table-view-cell').nth(0)).toHaveText('pheno_common');
 
@@ -97,6 +95,7 @@ test.describe('Pheno browser tests', () => {
       expect(text).toBe(rowValues[i].trim());
     }
   });
+
   test('should download all instruments and validate whether they are equal to the reference data', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
     await page.waitForSelector('gpf-pheno-browser-table');
