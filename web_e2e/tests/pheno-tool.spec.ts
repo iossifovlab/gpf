@@ -334,13 +334,13 @@ test.describe('Pheno tool download tests', () => {
   [
     {
       id: '16', measure: 'i1.age',
-      geneScore: 'LGD rank - The rank of the gene after sorting based of the LGD vulnerability score.',
+      geneScore: 'LGD rank - Gene rank after sorting by LGD vulnerability score',
       geneScoresHistogramFromTo: ['2944', '14716']
     },
     {
       id: '17',
       measure: 'i1.m1',
-      geneScore: 'pRec - ExAC pRec',
+      geneScore: 'pRec - Probability of biallelic loss-of-function intolerance',
       geneScoresHistogramFromTo: ['0.000012', '0.832']
     }
   ].forEach(data => {

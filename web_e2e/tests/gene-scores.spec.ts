@@ -5,17 +5,17 @@ import * as path from 'path';
 
 const geneScoresData = [
   {
-    desc: 'SFARI gene score - 1-high confidence, 2-strong candidate, 3-suggestive evidence',
+    desc: 'SFARI gene score - Evidence strength supporting a gene\'s association with autism',
     inputField: false,
     allVariants: '30'
   },
   {
-    desc: 'RVIS rank - The rank of the gene after sorting based of RVIS score.',
+    desc: 'RVIS rank - Gene rank after sorting by RVIS intolerance score',
     inputField: true,
     allVariants: '0'
   },
   {
-    desc: 'pLI - ExAC pLI',
+    desc: 'pLI - Probability of Loss-of-Function Intolerance',
     inputField: true,
     allVariants: '30'
   }
