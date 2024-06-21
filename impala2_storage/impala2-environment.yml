@@ -10,9 +10,8 @@ channels:
   - bioconda
   - iossifovlab
 dependencies:
-  - snakemake-minimal=7.32
   - openjdk=8.0.312
   - hadoop=3.1.2
-  - impyla=0.17.0
-  - thriftpy2=0.4.14
-  - thrift=0.16.0
+  - impyla=0.19
+  - thriftpy2=0.5
+  - thrift=0.16
