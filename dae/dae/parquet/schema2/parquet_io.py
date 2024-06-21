@@ -49,6 +49,7 @@ class ContinuousParquetFileWriter:
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
         row_group_size: int = 10_000,
         schema: str = "schema",
+        blob_column: Optional[str] = None,
     ) -> None:
 
         self.filepath = filepath
@@ -66,6 +67,11 @@ class ContinuousParquetFileWriter:
 
         filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
         compression: Union[str, dict[str, str]] = self.DEFAULT_COMPRESSION
+        if blob_column is not None:
+            compression = {}
+            for name in self.schema.names:
+                compression[name] = self.DEFAULT_COMPRESSION
+            compression[blob_column] = "ZSTD"
 
         self._writer = pq.ParquetWriter(
             filepath, self.schema,
@@ -239,6 +245,7 @@ class VariantsParquetWriter:
                 filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_family",
+                blob_column="family_variant_data",
             )
 
         return self.data_writers[filename]
@@ -257,6 +264,7 @@ class VariantsParquetWriter:
                 filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_summary",
+                blob_column="summary_variant_data",
             )
 
         return self.data_writers[filename]
