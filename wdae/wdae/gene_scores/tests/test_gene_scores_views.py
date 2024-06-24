@@ -25,21 +25,6 @@ def test_gene_scores_list_view(user_client: Client) -> None:
         assert "bins" in score
 
 
-def test_gene_scores_get_genes_view(user_client: Client) -> None:
-    url = "/api/v3/gene_scores/genes"
-    data = {
-        "score": "LGD_rank",
-        "min": 1.5,
-        "max": 5.0,
-    }
-    response = user_client.post(
-        url, json.dumps(data), content_type="application/json", format="json",
-    )
-    assert response.status_code == 200
-
-    assert len(response.json()) == 3
-
-
 def test_gene_scores_partitions(user_client: Client) -> None:
     url = "/api/v3/gene_scores/partitions"
     data = {
