@@ -12,7 +12,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_file
 from dae.configuration.gpf_config_parser import (
     DefaultBox,
     FrozenBox,
@@ -323,15 +323,13 @@ IMPORT_ANNOTATION_CONFIG = \
 
 @pytest.fixture(scope="session")
 def annotation_pipeline_config():
-    filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
-    return filename
+    return relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
 
 
 @pytest.fixture(scope="session")
 def annotation_pipeline_no_effects_config():
-    filename = relative_to_this_test_folder(
+    return relative_to_this_test_folder(
         "fixtures/annotation_pipeline/import_annotation_no_effects.yaml")
-    return filename
 
 
 @pytest.fixture(scope="session")
@@ -341,23 +339,19 @@ def annotation_pipeline_default_config(default_dae_config):
 
 @pytest.fixture(scope="session")
 def annotation_scores_dirname():
-    filename = relative_to_this_test_folder("fixtures/annotation_pipeline/")
-    return filename
+    return relative_to_this_test_folder("fixtures/annotation_pipeline/")
 
 
 @pytest.fixture()
 def annotation_pipeline_vcf(gpf_instance_2013):
     filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
-    pipeline = build_annotation_pipeline(
-        pipeline_config_file=filename, grr_repository=gpf_instance_2013.grr)
-    return pipeline
+    return load_pipeline_from_file(filename, gpf_instance_2013.grr)
 
 
 @pytest.fixture()
 def annotation_pipeline_internal(gpf_instance_2013):
     filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
-    pipeline = build_annotation_pipeline(
-        pipeline_config_file=filename, grr_repository=gpf_instance_2013.grr)
+    pipeline = load_pipeline_from_file(filename, gpf_instance_2013.grr)
     pipeline.open()
     return pipeline
 
