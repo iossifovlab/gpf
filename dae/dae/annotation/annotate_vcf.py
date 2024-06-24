@@ -268,7 +268,7 @@ class AnnotateVCFTool(AnnotationTool):
             self.task_graph.create_task(
                 "combine",
                 combine,
-                [self.args.input, self.pipeline.get_info(),
+                [self.args.input, self.pipeline.raw,
                 self.grr.definition, file_paths, output],
                 region_tasks,
             )

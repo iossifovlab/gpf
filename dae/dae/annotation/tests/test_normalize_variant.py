@@ -82,7 +82,7 @@ def test_normalize_tandem_repeats(
         npos: int, nref: str, nalt: str) -> None:
     config = textwrap.dedent("""
         - normalize_allele_annotator:
-            genome: hg38/genomes/GRCh38-hg38
+            genome: hg38/GRCh38-hg38/genome
             attributes:
             - source: normalized_allele
               name: normalized_allele

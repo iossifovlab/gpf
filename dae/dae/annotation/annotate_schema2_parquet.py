@@ -142,7 +142,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             "variants_data_schema",
         ]
         meta_values = [
-            yaml.dump(pipeline_raw_config),
+            yaml.dump(pipeline_raw_config, sort_keys=False),
             serialize_summary_schema(
                 pipeline.get_attributes(),
                 loader.partition_descriptor),

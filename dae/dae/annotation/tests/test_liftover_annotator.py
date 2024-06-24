@@ -5,7 +5,10 @@ from typing import Optional, cast
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotation_factory import load_pipeline_from_yaml
+from dae.annotation.annotation_factory import (
+    load_pipeline_from_file,
+    load_pipeline_from_yaml,
+)
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.gpf_instance import GPFInstance
 from dae.variants.core import Allele
@@ -15,7 +18,7 @@ def test_pipeline_liftover(
         annotation_config: str,
         grr_fixture: GenomicResourceRepo) -> None:
 
-    pipeline = load_pipeline_from_yaml(annotation_config, grr_fixture)
+    pipeline = load_pipeline_from_file(annotation_config, grr_fixture)
     with pipeline.open() as work_pipeline:
         allele = Allele.build_vcf_allele("chr1", 69094, "G", "A")
         attributes = work_pipeline.annotate(allele.get_annotatable())

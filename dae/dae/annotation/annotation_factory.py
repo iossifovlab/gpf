@@ -134,6 +134,7 @@ def build_annotation_pipeline(
     )
     pipeline = AnnotationPipeline(grr)
     pipeline.preambule = preambule
+    pipeline.raw = config
     try:
         for idx, annotator_config in enumerate(pipeline_config):
             if work_dir is not None:
