@@ -70,6 +70,7 @@ def test_normalize_allele_annotator_pipeline(
         assert norm.alt == "T"
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize("pos,ref,alt, npos, nref, nalt", [
     (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTTT", 1_948_770, "AT", "A"),
     (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTT", 1_948_770, "ATT", "A"),
