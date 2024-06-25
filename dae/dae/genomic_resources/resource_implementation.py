@@ -234,20 +234,33 @@ td {
             </tr>
             <tr>
                 <td><b>Summary:</b></td>
-                <td>{%- set summary = resource.get_summary() -%}{{
-                    markdown(summary, extras=["tables"]) if summary else "N/A"
-                }}</td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open">
+                            {%- set summary = resource.get_summary() -%}
+                            {{
+                                markdown(summary, extras=["tables"]) if summary else "N/A"
+                            }}
+                        </template>
+                     </div>
+                </td>
             </tr>
             <tr>
                 <td>
                     <b>Description:</b>
                 </td>
                 <td>
-                {%- set description = resource.get_description() -%}
-                {{
-                    markdown(description, extras=["tables"]) if description else "N/A"
-                }}</td>
+                    <div>
+                        <template shadowrootmode="open">
+                            {%- set description = resource.get_description() -%}
+                            {{
+                                markdown(description, extras=["tables"]) if description else "N/A"
+                            }}
+                        </template>
+                     </div>
+                </td>
             </tr>
+
             <tr>
                 <td>
                     <b>Labels:</b>
