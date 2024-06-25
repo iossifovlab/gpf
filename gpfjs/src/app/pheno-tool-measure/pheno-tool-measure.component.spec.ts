@@ -42,7 +42,8 @@ describe('PhenoToolMeasureComponent', () => {
     const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
 
     component['store'] = {
-      selectOnce: () => of(selectedDatasetMockModel)
+      selectOnce: () => of(selectedDatasetMockModel),
+      dispatch: () => null
     } as never;
 
     fixture.detectChanges();

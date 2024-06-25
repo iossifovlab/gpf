@@ -310,10 +310,10 @@ describe('GenotypeBrowser', () => {
         new PersonFilter('familyFilter3', 'string3', 'source3', 'sourceType3', 'filterType3', 'role3'),
         new PersonFilter('familyFilter4', 'string4', 'source4', 'sourceType4', 'filterType4', 'role4')
       ],
-      new Set(['inheritance', 'string1']),
-      new Set(['selectedInheritance', 'string2']),
-      new Set(['variant', 'string3']),
-      new Set(['selectedVariant', 'string1']),
+      ['inheritance', 'string1'],
+      ['selectedInheritance', 'string2'],
+      ['variant', 'string3'],
+      ['selectedVariant', 'string1'],
       5,
     );
 
@@ -454,10 +454,10 @@ describe('GenotypeBrowser', () => {
         new PersonFilter('familyFilter3', 'string3', 'source3', 'sourceType3', 'filterType3', 'role3'),
         new PersonFilter('familyFilter4', 'string4', 'source4', 'sourceType4', 'filterType4', 'role4')
       ],
-      new Set(['inheritance', 'string1']),
-      new Set(['selectedInheritance', 'string2']),
-      new Set(['variant', 'string3']),
-      new Set(['selectedVariant', 'string1']),
+      ['inheritance', 'string1'],
+      ['selectedInheritance', 'string2'],
+      ['variant', 'string3'],
+      ['selectedVariant', 'string1'],
       5,
     );
 
@@ -526,10 +526,10 @@ describe('Dataset', () => {
         new PersonFilter('familyFilter3', 'string3', 'source3', 'sourceType3', 'filterType3', 'role3'),
         new PersonFilter('familyFilter4', 'string4', 'source4', 'sourceType4', 'filterType4', 'role4')
       ],
-      new Set(['inheritance', 'string1']),
-      new Set(['selectedInheritance', 'string2']),
-      new Set(['variant', 'string3']),
-      new Set(['selectedVariant', 'string1']),
+      ['inheritance', 'string1'],
+      ['selectedInheritance', 'string2'],
+      ['variant', 'string3'],
+      ['selectedVariant', 'string1'],
       5
     ),
     new PersonSetCollections(
@@ -608,10 +608,10 @@ describe('Dataset', () => {
         new PersonFilter('familyFilter6', 'string6', 'source6', 'sourceType6', 'filterType5', 'role3'),
         new PersonFilter('familyFilter5', 'string5', 'source5', 'sourceType2', 'filterType1', 'role0')
       ],
-      new Set(['inheritance1', 'string2']),
-      new Set(['selectedInheritance3', 'string5']),
-      new Set(['variant2', 'string5']),
-      new Set(['selectedVariant1', 'string3']),
+      ['inheritance1', 'string2'],
+      ['selectedInheritance3', 'string5'],
+      ['variant2', 'string5'],
+      ['selectedVariant1', 'string3'],
       6
     ),
     new PersonSetCollections([
