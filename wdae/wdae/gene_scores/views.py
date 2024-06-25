@@ -1,14 +1,13 @@
 
-from datasets_api.permissions import get_instance_timestamp_etag
 import numpy as np
+from datasets_api.permissions import get_instance_timestamp_etag
 from django.http.response import StreamingHttpResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-
-from django.views.decorators.http import etag
-from django.utils.decorators import method_decorator
 
 
 class GeneScoresListView(QueryBaseView):
@@ -62,38 +61,6 @@ class GeneScoresDownloadView(QueryBaseView):
         response["Content-Disposition"] = "attachment; filename=scores.csv"
         response["Expires"] = "0"
         return response
-
-
-class GeneScoresGetGenesView(QueryBaseView):
-    """Serves request for list of gene in a gene score range."""
-
-    def prepare_data(self, data: dict[str, str]) -> set[str]:
-        """Prepare list of genes that have a gene score in a range."""
-        if "score" not in data:
-            raise ValueError("score key not found")
-        score_name = data["score"]
-        if not self.gpf_instance.has_gene_score(score_name):
-            raise ValueError(f"unknown gene score {score_name}")
-
-        score_min = None
-        score_max = None
-
-        if "min" in data:
-            score_min = float(data["min"])
-        if "max" in data:
-            score_max = float(data["max"])
-
-        score_desc = self.gpf_instance.get_gene_score_desc(score_name)
-        gene_score_id = score_desc.resource_id
-
-        return self.gpf_instance.get_gene_score(gene_score_id).get_genes(
-            score_name, score_min=score_min, score_max=score_max,
-        )
-
-    def post(self, request: Request) -> Response:
-        data = request.data
-        genes = self.prepare_data(data)
-        return Response(genes)
 
 
 class GeneScoresPartitionsView(QueryBaseView):

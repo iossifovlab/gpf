@@ -2,9 +2,14 @@ import logging
 from collections.abc import Generator
 from typing import cast
 
-from datasets_api.permissions import handle_partial_permissions
+from datasets_api.permissions import (
+    get_permissions_etag,
+    handle_partial_permissions,
+)
 from django.contrib.auth.models import User
 from django.http.response import FileResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from query_base.query_base import QueryDatasetView
 from rest_framework import status
 from rest_framework.request import Request
@@ -18,7 +23,9 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ConfigView(QueryDatasetView):
+
     @request_logging(LOGGER)
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request):
         data = expand_gene_set(request.query_params, request.user)
         dataset_id = data["datasetId"]
@@ -37,7 +44,9 @@ class ConfigView(QueryDatasetView):
 
 
 class QueryVariantsView(QueryDatasetView):
+
     @request_logging(LOGGER)
+    @method_decorator(etag(get_permissions_etag))
     def post(self, request):
         data = expand_gene_set(request.data, request.user)
         dataset_id = data.pop("datasetId", None)

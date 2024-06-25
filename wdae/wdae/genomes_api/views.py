@@ -1,6 +1,9 @@
 from itertools import islice
 from typing import Any
 
+from datasets_api.permissions import get_instance_timestamp_etag
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
@@ -11,6 +14,8 @@ from dae.utils.regions import Region
 
 
 class DefaultGeneModelsId(QueryBaseView):
+
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, _request: Request) -> Response:
         default_gene_models_id = \
             self.gpf_instance.dae_config.gene_models.resource_id
@@ -20,6 +25,7 @@ class DefaultGeneModelsId(QueryBaseView):
 class GeneModels(QueryBaseView):
     """Process gene model response."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, _request: Request, gene_symbol: str) -> Response:
         """Return gene mode corresponding to a gene symbol."""
         gene_symbol, transcript_models = \
@@ -88,6 +94,7 @@ class GeneSymbolsSearch(QueryBaseView):
 
     RESPONSE_LIMIT = 20
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, _request: Request, search_term: str) -> Response:
         """Return list of gene symbols matching the search."""
         search_term = search_term.lower()

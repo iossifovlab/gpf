@@ -1,11 +1,13 @@
-from datasets_api.permissions import get_instance_timestamp_etag
+from datasets_api.permissions import (
+    get_instance_timestamp_etag,
+    get_permissions_etag,
+)
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from query_base.query_base import QueryDatasetView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-
-from django.views.decorators.http import etag
-from django.utils.decorators import method_decorator
 
 from dae.pedigrees.family_tag_builder import FamilyTag, check_tag
 
@@ -13,6 +15,7 @@ from dae.pedigrees.family_tag_builder import FamilyTag, check_tag
 class ListFamiliesView(QueryDatasetView):
     """List dataåset families."""
 
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request, dataset_id: str) -> Response:
         """Response to get request for a dataset families."""
         if dataset_id is None:
@@ -53,6 +56,7 @@ class ListFamiliesView(QueryDatasetView):
 class FamilyDetailsView(QueryDatasetView):
     """Get a family details view."""
 
+    @method_decorator(etag(get_permissions_etag))
     def get(
         self, request: Request, dataset_id: str, family_id: str,
     ) -> Response:
@@ -96,6 +100,7 @@ class TagsView(QueryDatasetView):
 class ListMembersView(QueryDatasetView):
     """List family members view."""
 
+    @method_decorator(etag(get_permissions_etag))
     def get(
         self, request: Request, dataset_id: str, family_id: str,
     ) -> Response:
@@ -128,6 +133,7 @@ class ListMembersView(QueryDatasetView):
 class MemberDetailsView(QueryDatasetView):
     """Details view of a person."""
 
+    @method_decorator(etag(get_permissions_etag))
     def get(
         self, request: Request, dataset_id: str,
         family_id: str, member_id: str,
@@ -169,6 +175,7 @@ class MemberDetailsView(QueryDatasetView):
 class AllMemberDetailsView(QueryDatasetView):
     """Details of all members of a family."""
 
+    @method_decorator(etag(get_permissions_etag))
     def get(
         self, request: Request, dataset_id: str, family_id: str,
     ) -> Response:
@@ -206,6 +213,7 @@ class AllMemberDetailsView(QueryDatasetView):
 class ListAllDetailsView(QueryDatasetView):
     """List of all family details."""
 
+    @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request, dataset_id: str) -> Response:
         # pylint: disable=unused-argument
         """Response to get request for all families details in a dataset."""

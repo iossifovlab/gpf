@@ -1,5 +1,7 @@
 from typing import Optional
 
+from datasets_api.permissions import get_instance_timestamp_etag
+from django.views.decorators.http import etag
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -10,6 +12,7 @@ from dae import __version__ as VERSION  # type: ignore
 
 
 @api_view(["GET"])
+@etag(get_instance_timestamp_etag)
 def version(_request: Request) -> Response:
     """Get GPF version."""
     return Response(

@@ -2,7 +2,9 @@ import logging
 from collections.abc import Iterable
 from typing import Any, Optional, Union, cast
 
-# from silk.profiling.profiler import silk_profile
+from datasets_api.permissions import get_instance_timestamp_etag
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from query_base.query_base import QueryDatasetView
 from rest_framework import status
 from rest_framework.request import Request
@@ -46,6 +48,7 @@ class EnrichmentModelsView(QueryDatasetView):
                 })
         return result
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(
         self, request: Request,  # pylint: disable=unused-argument
         dataset_id: str,

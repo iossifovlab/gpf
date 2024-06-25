@@ -1,6 +1,9 @@
 from typing import Any, Optional
 
+from datasets_api.permissions import get_permissions_etag
 from django.http.response import StreamingHttpResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from query_base.query_base import QueryDatasetView
 from rest_framework import status
 from rest_framework.request import Request
@@ -16,6 +19,7 @@ from dae.pedigrees.loader import FamiliesLoader
 class VariantReportsView(QueryDatasetView):
     """Variant reports view class."""
 
+    @method_decorator(etag(get_permissions_etag))
     def get(self, _request: Request, common_report_id: str) -> Response:
         """Return a variant report when requested."""
         assert common_report_id
@@ -35,6 +39,7 @@ class VariantReportsView(QueryDatasetView):
 class VariantReportsFullView(QueryDatasetView):
     """Variants report full view class."""
 
+    @method_decorator(etag(get_permissions_etag))
     def get(self, _request: Request, common_report_id: str) -> Response:
         """Return full variant report when requested."""
         assert common_report_id

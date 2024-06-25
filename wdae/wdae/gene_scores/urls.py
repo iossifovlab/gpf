@@ -10,11 +10,6 @@ urlpatterns = [
         name="gene_scores_download",
     ),
     re_path(
-        r"^/genes/?$",
-        views.GeneScoresGetGenesView.as_view(),
-        name="gene_scores_get_genes",
-    ),
-    re_path(
         r"^/partitions/?$",
         views.GeneScoresPartitionsView.as_view(),
         name="gene_scores_partitions",

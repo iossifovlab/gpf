@@ -1,18 +1,18 @@
 import logging
 
 from datasets_api.permissions import get_instance_timestamp_etag
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.request import Request
 
-from django.views.decorators.http import etag
-from django.utils.decorators import method_decorator
-
 LOGGER = logging.getLogger(__name__)
 
 
 class TableConfigurationView(QueryBaseView):
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, _request):
         configuration = self.gpf_instance.get_wdae_gp_table_configuration()
         if configuration is None:
