@@ -12,6 +12,55 @@ Setup a fresh one:
 ./build_setup.sh
 ```
 
+After completion, the instance can be browsed at:
+
+```
+http://localhost:8080/gpf
+```
+
+## Run GPF e2e tests
+
+```
+sudo rm -rf node_modules
+sudo rm -rf reports_new
+
+npm install
+```
+
+To run tests in terminal:
+
+```
+npx playwright test
+```
+
+To run tests using playwright's UI:
+
+```
+npx playwright test --ui
+```
+
+To run a specific spec:
+
+```
+npx playwright test -g <spec name>
+```
+
+## Run GPF e2e instance on live GPFJS ng serve
+
+Change `gpfjs/src/environments/environment.ts` line:
+
+```
+const basePath = 'http://localhost:8000';
+```
+
+to:
+
+```
+const basePath = 'http://<instance ip>:9001;
+```
+
+To get <instance ip>:
+
 Inspect the IP address on which GPF system is accessible. To this end run
 
 ```
@@ -36,54 +85,4 @@ Run following command to inspect IP address of this container:
 docker inspect \
     --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
     0352bc66baa5
-```
-
-This command shoud return an IP address. In our case it is `172.31.0.5`. You can browse
-the GPF system setup by the scripts using following URL:
-
-```
-http://172.31.0.5/gpf/
-```
-
-## Run GPF e2e tests
-
-```
-sudo rm -rf node_modules
-sudo rm -rf reports_new
-
-npm install .
-```
-
-`<instance ip>` is the IP address reported from the `docker inspect` command.
-
-To run the tests in the terminal:
-
-```
-npx playwright test
-```
-
-To run the tests using the playwright UI:
-
-```
-npx playwright test --ui
-```
-
-To run a specific spec:
-
-```
-npx playwright test --ui <path to the spec>
-```
-
-## Run GPF e2e instance on live GPFJS ng serve
-
-Change `gpfjs/src/environments/environment.ts` line:
-
-```
-const basePath = 'http://localhost:8000';
-```
-
-to:
-
-```
-const basePath = 'http://<instance ip>:9001;
 ```
