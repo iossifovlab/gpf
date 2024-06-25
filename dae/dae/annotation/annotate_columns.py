@@ -7,8 +7,8 @@ import os
 import sys
 from collections.abc import Generator, Iterable
 from contextlib import closing
-from typing import Any, Callable, Optional
 from pathlib import Path
+from typing import Any, Optional
 
 from pysam import TabixFile, tabix_index
 
@@ -24,6 +24,7 @@ from dae.annotation.annotation_pipeline import (
 )
 from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.record_to_annotatable import (
+    RecordToAnnotable,
     RecordToCNVAllele,
     RecordToPosition,
     RecordToRegion,
@@ -44,7 +45,7 @@ logger = logging.getLogger("annotate_columns")
 
 
 def read_input(
-    args: Any, region: tuple = tuple(),
+    args: Any, region: tuple = (),
 ) -> tuple[Any, Any, list[str]]:
     """Return a file object, line iterator and list of header columns.
 
@@ -80,7 +81,7 @@ def produce_tabix_index(
                                             RecordToPosition)):
         end_col = 1
     else:
-        raise ValueError(
+        raise TypeError(
             "Could not generate tabix index: record"
             f" {type(record_to_annotatable)} is of unsupported type.")
     tabix_index(filepath,
@@ -156,7 +157,7 @@ class AnnotateColumnsTool(AnnotationTool):
             help="Old pipeline config to reannotate over")
         parser.add_argument(
             "--batch-mode", default=False,
-            action="store_true"
+            action="store_true",
         )
 
         CLIAnnotationContext.add_context_arguments(parser)
@@ -172,7 +173,7 @@ class AnnotateColumnsTool(AnnotationTool):
         grr_definition: Optional[dict],
         ref_genome_id: Optional[str],
         out_file_path: str,
-        region: tuple = tuple(),
+        region: tuple = (),
         compress_output: bool = False,
     ) -> None:
         """Annotate a variants file with a given pipeline configuration."""
@@ -182,8 +183,7 @@ class AnnotateColumnsTool(AnnotationTool):
 
         pipeline_config_old = None
         if args.reannotate:
-            with open(args.reannotate, "r") as infile:
-                pipeline_config_old = infile.read()
+            pipeline_config_old = Path(args.reannotate).read_text()
 
         pipeline = AnnotateColumnsTool._produce_annotation_pipeline(
             pipeline_config, pipeline_config_old, grr_definition,
@@ -231,13 +231,13 @@ class AnnotateColumnsTool(AnnotationTool):
                 values = AnnotateColumnsTool.batch_annotate(
                     args, pipeline, line_iterator,
                     header_columns,
-                    record_to_annotatable
+                    record_to_annotatable,
                 )
             else:
                 values = AnnotateColumnsTool.single_annotate(
                     args, pipeline, line_iterator,
                     header_columns,
-                    record_to_annotatable
+                    record_to_annotatable,
                 )
             for val in values:
                 out_file.write(args.output_separator.join(val) + "\n")
@@ -248,7 +248,7 @@ class AnnotateColumnsTool(AnnotationTool):
         pipeline: AnnotationPipeline,
         line_iterator: Iterable,
         header_columns: list[str],
-        record_to_annotatable: Callable[[dict], Annotatable],
+        record_to_annotatable: RecordToAnnotable,
     ) -> Generator[list[str], None, None]:
         """Annotate given lines as a batch."""
         errors = []
@@ -257,7 +257,7 @@ class AnnotateColumnsTool(AnnotationTool):
             if not attr.internal]
 
         records = []
-        annotatables = []
+        annotatables: list[Annotatable | None] = []
         for lnum, line in enumerate(line_iterator):
             try:
                 columns = line.strip("\n\r").split(args.input_separator)
@@ -296,7 +296,7 @@ class AnnotateColumnsTool(AnnotationTool):
         pipeline: AnnotationPipeline,
         line_iterator: Iterable,
         header_columns: list[str],
-        record_to_annotatable: Callable[[dict], Annotatable],
+        record_to_annotatable: RecordToAnnotable,
     ) -> Generator[list[str], None, None]:
         """Annotate given lines one by one."""
         errors = []
@@ -379,7 +379,7 @@ class AnnotateColumnsTool(AnnotationTool):
                 AnnotateColumnsTool.annotate,
                 [self.args, raw_pipeline_config, self.grr.definition,
                  ref_genome_id, output,
-                 tuple(), output.endswith(".gz")],
+                 (), output.endswith(".gz")],
                 [])
 
 

@@ -9,7 +9,7 @@ import textwrap
 from typing import Any, Callable, Optional, cast
 
 from dae.annotation.annotatable import Annotatable, VCFAllele
-from dae.annotation.annotation_factory import AnnotationConfigParser
+from dae.annotation.annotation_config import AnnotationConfigParser
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,

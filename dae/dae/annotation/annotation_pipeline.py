@@ -214,9 +214,10 @@ class AnnotationPipeline:
         return context
 
     def batch_annotate(
-        self, annotatables: list[Annotatable],
-        contexts: Optional[list[dict]] = None
+        self, annotatables: list[Annotatable | None],
+        contexts: Optional[list[dict]] = None,
     ) -> list[dict]:
+        """Apply all annotators to a list of annotatables."""
         if not self._is_open:
             self.open()
 

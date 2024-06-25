@@ -17,8 +17,10 @@ from typing import Any, Callable, Optional, Union, cast
 import yaml
 from box import Box
 
-from dae.annotation.annotation_factory import (
+from dae.annotation.annotation_config import (
     AnnotationConfigParser,
+)
+from dae.annotation.annotation_factory import (
     AnnotationPipeline,
     build_annotation_pipeline,
 )

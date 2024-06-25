@@ -3,7 +3,7 @@ import textwrap
 from typing import Any
 
 from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
-from dae.annotation.annotation_factory import AnnotationConfigParser
+from dae.annotation.annotation_config import AnnotationConfigParser
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,

@@ -1,8 +1,8 @@
 import argparse
 import os
-from pathlib import Path
 import sys
 from abc import abstractmethod
+from pathlib import Path
 from typing import Optional
 
 from pysam import TabixFile
@@ -18,7 +18,6 @@ from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.implementations.annotation_pipeline_impl import (
     AnnotationPipelineImplementation,
 )
-from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
@@ -61,18 +60,6 @@ def produce_partfile_paths(
             chrom=region[0], pos_beg=pos_beg, pos_end=pos_end,
         )))
     return filenames
-
-
-def cache_pipeline(
-    grr: GenomicResourceRepo, pipeline: AnnotationPipeline,
-) -> None:
-    """Cache the resources used by the pipeline."""
-    resource_ids: set[str] = {
-        res.resource_id
-        for annotator in pipeline.annotators
-        for res in annotator.resources
-    }
-    cache_resources(grr, resource_ids)
 
 
 class AnnotationTool:
@@ -133,6 +120,7 @@ class AnnotationTool:
 
     def _get_pipeline_config(self) -> str:
         if self.args.pipeline == "context":
+            assert self.gpf_instance is not None
             return Path(
                 self.gpf_instance.dae_dir,
                 self.gpf_instance.dae_config.annotation.conf_file,
@@ -156,7 +144,12 @@ class AnnotationTool:
         # FIXME Is this too eager? What if a reannotation pipeline is created
         # inside work() and the only caching that must be done is far smaller
         # than the entire new annotation config suggests?
-        cache_pipeline(self.grr, self.pipeline)
+        resource_ids: set[str] = {
+            res.resource_id
+            for annotator in self.pipeline.annotators
+            for res in annotator.resources
+        }
+        cache_resources(self.grr, resource_ids)
 
         self.task_graph.input_files.append(self.args.input)
         self.task_graph.input_files.append(self.args.pipeline)

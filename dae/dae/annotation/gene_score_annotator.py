@@ -4,7 +4,7 @@ import logging
 from typing import Any, Optional
 
 from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotation_factory import AnnotationConfigParser
+from dae.annotation.annotation_config import AnnotationConfigParser
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
