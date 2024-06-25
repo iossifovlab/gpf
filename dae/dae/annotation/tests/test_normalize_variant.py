@@ -13,6 +13,9 @@ from dae.annotation.normalize_allele_annotator import (
     NormalizeAlleleAnnotator,
 )
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 
 
 def test_normalize_allele_annotator_config() -> None:
@@ -70,7 +73,6 @@ def test_normalize_allele_annotator_pipeline(
         assert norm.alt == "T"
 
 
-@pytest.mark.skip()
 @pytest.mark.parametrize("pos,ref,alt, npos, nref, nalt", [
     (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTTT", 1_948_770, "AT", "A"),
     (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTT", 1_948_770, "ATT", "A"),
@@ -78,19 +80,20 @@ def test_normalize_allele_annotator_pipeline(
     (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTTTTTT", 1_948_770, "A", "ATT"),
 ])
 def test_normalize_tandem_repeats(
-        grr_fixture: GenomicResourceRepo,
         pos: int, ref: str, alt: str,
         npos: int, nref: str, nalt: str) -> None:
     config = textwrap.dedent("""
         - normalize_allele_annotator:
-            genome: hg38/GRCh38-hg38/genome
+            genome: hg38/genomes/GRCh38-hg38
             attributes:
             - source: normalized_allele
               name: normalized_allele
               internal: False
         """)
 
-    annotation_pipeline = load_pipeline_from_yaml(config, grr_fixture)
+    grr = build_genomic_resource_repository()
+
+    annotation_pipeline = load_pipeline_from_yaml(config, grr)
 
     with annotation_pipeline.open() as pipeline:
         assert pipeline is not None
