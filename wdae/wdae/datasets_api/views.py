@@ -358,7 +358,6 @@ class DatasetConfigView(DatasetView):
 class DatasetDescriptionView(QueryBaseView):
     """Provide fetching and editing a dataset's description."""
 
-    # @method_decorator(etag())
     def get(
         self, request: Request, dataset_id: str,
     ) -> Response:

@@ -2,7 +2,6 @@ import logging
 from collections.abc import Iterable
 from typing import Any, Optional, Union, cast
 
-# from silk.profiling.profiler import silk_profile
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
