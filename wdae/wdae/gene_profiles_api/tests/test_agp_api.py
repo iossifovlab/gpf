@@ -131,3 +131,17 @@ def test_get_statistics(admin_client: Client) -> None:
     response = admin_client.get(f"{ROUTE_PREFIX}/table/rows")
     assert response.status_code == 200
     print(response.data)  # type: ignore
+
+
+def test_get_gene_symbols(admin_client: Client) -> None:
+    response = admin_client.get(f"{ROUTE_PREFIX}/table/gene_symbols")
+    assert response.status_code == 200
+    assert response.data == ["CHD8"]  # type: ignore
+
+
+def test_get_nonexisting_gene_symbols(admin_client: Client) -> None:
+    response = admin_client.get(
+        f"{ROUTE_PREFIX}/table/gene_symbols?symbol=DIABLO",
+    )
+    assert response.status_code == 200
+    assert response.data == []  # type: ignore
