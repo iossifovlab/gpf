@@ -26,6 +26,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
   @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
 
   public selectedDataset: Dataset;
+  public variantTypesSet: Set<string>;
 
   public phenoToolResults: PhenoToolResults;
   public phenoToolState: object;
@@ -61,6 +62,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
   public ngOnInit(): void {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
       this.selectedDataset = state.selectedDataset;
+      this.variantTypesSet = new Set(this.selectedDataset.genotypeBrowserConfig.variantTypes);
     });
 
     this.state$.subscribe(state => {
