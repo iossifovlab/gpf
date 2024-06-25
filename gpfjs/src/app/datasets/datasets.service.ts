@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable, ReplaySubject, BehaviorSubject, zip, Subject, of, Subscription } from 'rxjs';
+import { Observable, ReplaySubject, zip, of } from 'rxjs';
 
 import { Dataset } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '../config/config.service';
-import { catchError, distinctUntilChanged, map, share, take, tap } from 'rxjs/operators';
+import { distinctUntilChanged, map, share, take } from 'rxjs/operators';
 import { DatasetPermissions } from 'app/datasets-table/datasets-table';
 
 @Injectable()
@@ -20,9 +20,6 @@ export class DatasetsService {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
-  private selectedDataset$ = new BehaviorSubject<Dataset>(null);
-  private getDatasetSubscription = new Subscription();
-  private datasetLoaded$ = new Subject<void>();
   public datasetsLoading = false;
 
   public static genomeVersion = '';
@@ -93,47 +90,9 @@ export class DatasetsService {
     );
   }
 
-  // public setSelectedDatasetById(datasetId: string, force = false): void {
-  //   if (!force && this.selectedDataset$.getValue()?.id === datasetId) {
-  //     return;
-  //   }
-  //   this.getDatasetSubscription.unsubscribe();
-  //   this.getDatasetSubscription = this.getDataset(datasetId).pipe(
-  //     take(1),
-  //     tap(dataset => {
-  //       DatasetsService.genomeVersion = dataset.genome;
-  //     }),
-  //     catchError(() => of(undefined)) //marks dataset as invalid
-  //   ).subscribe((dataset) => {
-  //     this.selectedDataset$.next(dataset);
-  //     this.datasetLoaded$.next();
-  //   });
-  // }
-
-  // public reloadSelectedDataset(force = false): void {
-  //   if (this.selectedDataset$.getValue()) {
-  //     if (force) {
-  //       this.setSelectedDatasetById(this.getSelectedDataset().id, true);
-  //     }
-  //     this.datasetLoaded$.next();
-  //   }
-  // }
-
-  // public getSelectedDatasetObservable(): Observable<Dataset> {
-  //   return this.selectedDataset$.asObservable();
-  // }
-
-  // public getSelectedDataset(): Dataset {
-  //   return this.selectedDataset$.getValue();
-  // }
-
   public getDatasetsObservable(): Observable<Dataset[]> {
     return this.datasets$.asObservable();
   }
-
-  // public getDatasetsLoadedObservable(): Subject<void> {
-  //   return this.datasetLoaded$;
-  // }
 
   private reloadAllDatasets(): void {
     this.getDatasets().pipe(take(1)).subscribe(() => null);
