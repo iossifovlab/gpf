@@ -74,10 +74,10 @@ environment:
 .. code-block:: bash
 
     mamba install \
-        -c defaults \
         -c conda-forge \
         -c bioconda \
         -c iossifovlab \
+        -c defaults \
         gpf_wdae
 
 This command is going to install GPF and all of its dependencies.
