@@ -5,11 +5,13 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import Optional
 
-import yaml
 from pysam import TabixFile
 
 from dae.annotation.annotation_config import RawAnnotatorsConfig
-from dae.annotation.annotation_factory import build_annotation_pipeline, load_pipeline_from_yaml
+from dae.annotation.annotation_factory import (
+    build_annotation_pipeline,
+    load_pipeline_from_yaml,
+)
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     ReannotationPipeline,
@@ -17,9 +19,6 @@ from dae.annotation.annotation_pipeline import (
 from dae.annotation.context import CLIAnnotationContext
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.genomic_context import get_genomic_context
-from dae.genomic_resources.implementations.annotation_pipeline_impl import (
-    AnnotationPipelineImplementation,
-)
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )

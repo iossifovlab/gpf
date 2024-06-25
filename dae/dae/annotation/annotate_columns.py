@@ -10,7 +10,6 @@ from contextlib import closing
 from pathlib import Path
 from typing import Any, Optional
 
-from dae.annotation.annotation_config import RawAnnotatorsConfig
 from pysam import TabixFile, tabix_index
 
 from dae.annotation.annotatable import Annotatable
@@ -19,6 +18,7 @@ from dae.annotation.annotate_utils import (
     produce_partfile_paths,
     produce_regions,
 )
+from dae.annotation.annotation_config import RawAnnotatorsConfig
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     ReannotationPipeline,
