@@ -36,7 +36,7 @@ class BigWigTable(GenomicPositionTable):
 
     def _intervals(
         self, chrom: str, pos_begin: int, pos_end: int,
-    ) -> Generator[list[tuple[str, int, int, float]], None, None]:
+    ) -> Generator[tuple[int, int, float], None, None]:
         assert self.bw_file is not None
         limit = self.bw_file.chroms()[chrom]
         pos_begin = max(0, pos_begin - 1)
@@ -46,7 +46,8 @@ class BigWigTable(GenomicPositionTable):
             intervals = self.bw_file.intervals(chrom, start, stop)
             if not intervals:
                 continue
-            yield from intervals
+            for interval in intervals:
+                yield (interval[0] + 1, interval[1], interval[2])
 
     def get_records_in_region(
         self,
