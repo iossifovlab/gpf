@@ -245,7 +245,6 @@ class VariantsParquetWriter:
                 filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_family",
-                blob_column="family_variant_data",
             )
 
         return self.data_writers[filename]
@@ -264,7 +263,6 @@ class VariantsParquetWriter:
                 filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_summary",
-                blob_column="summary_variant_data",
             )
 
         return self.data_writers[filename]
