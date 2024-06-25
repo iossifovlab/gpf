@@ -29,7 +29,7 @@ def pedigree_schema_simple() -> dict[str, str]:
 
 @pytest.fixture()
 def summary_schema_simple() -> dict[str, str]:
-    schema = {
+    return {
         "bucket_index": "int32",
         "summary_index": "int32",
         "allele_index": "int32",
@@ -52,12 +52,11 @@ def summary_schema_simple() -> dict[str, str]:
         "family_alleles_count": "int32",
         "summary_variant_data": "string",
     }
-    return schema
 
 
 @pytest.fixture()
 def family_schema_simple() -> dict[str, str]:
-    schema = {
+    return {
         "bucket_index": "int32",
         "summary_index": "int32",
         "allele_index": "int32",
@@ -71,12 +70,11 @@ def family_schema_simple() -> dict[str, str]:
         "allele_in_members": "list<item: string>",
         "family_variant_data": "string",
     }
-    return schema
 
 
 @pytest.fixture()
 def db_layout_simple() -> Db2Layout:
-    db_layout = Db2Layout(
+    return Db2Layout(
         db="test_db",
         study="test_vcf",
         pedigree="test_vcf_pedigree",
@@ -84,7 +82,6 @@ def db_layout_simple() -> Db2Layout:
         family="test_vcf_family",
         meta="test_vcf_meta",
     )
-    return db_layout
 
 
 @pytest.fixture()
@@ -97,8 +94,7 @@ def families_simple(tmp_path: pathlib.Path) -> FamiliesData:
         f1       d1       0      0      1   1      dad
         f1       p1       d1     m1     2   2      prb
         """)
-    families = FamiliesLoader(ped_path).load()
-    return families
+    return FamiliesLoader(ped_path).load()
 
 
 @pytest.fixture()
@@ -115,7 +111,7 @@ def sql_query_builder_simple(
     families_simple: FamiliesData,
     t4c8_gene_models: GeneModels,
 ) -> SqlQueryBuilder:
-    sql_query_builder = SqlQueryBuilder(
+    return SqlQueryBuilder(
         db_layout_simple,
         pedigree_schema_simple,
         summary_schema_simple,
@@ -124,7 +120,6 @@ def sql_query_builder_simple(
         families_simple,
         t4c8_gene_models,
     )
-    return sql_query_builder
 
 
 def test_summary_query_builder_simple(
@@ -185,7 +180,7 @@ def test_build_regions_where(
         ],
     }
     where = sql_query_builder_simple._build_regions_where(regions)
-    query = f"SELECT * FROM summary_allele sa WHERE {where}"
+    query = f"SELECT * FROM summary_allele sa WHERE {where}"  # noqa: S608
 
     result = execute(
         query,
@@ -210,7 +205,7 @@ def test_build_regions_where(
 def test_build_real_attr_where(
     sql_query_builder_simple: SqlQueryBuilder,
     real_attr_filter: RealAttrFilterType,
-    is_frequency: bool,
+    is_frequency: bool,  # noqa: FBT001
     expected: int,
 ) -> None:
     tables = {
@@ -222,13 +217,13 @@ def test_build_real_attr_where(
         ],
     }
     where = sql_query_builder_simple._build_real_attr_where(
-        real_attr_filter, is_frequency,
+        real_attr_filter, is_frequency=is_frequency,
     )
     if not is_frequency:
         assert where
 
     if where:
-        query = f"SELECT * FROM summary_allele sa WHERE {where}"
+        query = f"SELECT * FROM summary_allele sa WHERE {where}"  # noqa: S608
     else:
         query = "SELECT * FROM summary_allele sa"
 
@@ -251,7 +246,7 @@ def test_build_ultra_rare_where(
         ],
     }
     where = sql_query_builder_simple._build_ultra_rare_where()
-    query = f"SELECT * FROM summary_allele sa WHERE {where}"
+    query = f"SELECT * FROM summary_allele sa WHERE {where}"  # noqa: S608
 
     result = execute(
         query,
@@ -338,12 +333,12 @@ def test_sql_query_builder_effect_types(
 )
 def test_sql_query_builder_real_attr_where(
     real_attr_filter: RealAttrFilterType,
-    is_frequency: bool,
+    is_frequency: bool,  # noqa: FBT001
     expected: str,
     sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
     result = sql_query_builder_simple._build_real_attr_where(
-        real_attr_filter, is_frequency)  # type: ignore
+        real_attr_filter, is_frequency=is_frequency)  # type: ignore
     assert result == expected
 
 
@@ -525,7 +520,7 @@ def test_inheritance_query_denovo_only(
 def test_variant_types_query_duckdb(
     variant_types_query: str,
     value: int,
-    expected: bool,
+    expected: bool,  # noqa: FBT001
     sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
     res = sql_query_builder_simple._check_variant_types_value(

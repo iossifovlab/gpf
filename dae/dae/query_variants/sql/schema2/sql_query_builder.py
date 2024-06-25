@@ -67,9 +67,12 @@ class SqlQueryBuilder:
         family_schema: dict[str, str],
         partition_descriptor: Optional[PartitionDescriptor],
         families: FamiliesData,
-        gene_models: Optional[GeneModels] = None,
+        gene_models: GeneModels,
         reference_genome: Optional[ReferenceGenome] = None,
     ):
+        if gene_models is None:
+            raise ValueError("gene_models are required")
+
         self.db_layout = db_layout
         self.pedigree_schema = pedigree_schema
         self.summary_schema = summary_schema
@@ -81,7 +84,7 @@ class SqlQueryBuilder:
         self.reference_genome = reference_genome
 
     def build_summary_variants_query(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -142,14 +145,18 @@ class SqlQueryBuilder:
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
     ) -> str:
+        assert self.gene_models is not None
+
         eg_subclause = ""
         if genes is not None or effect_types is not None:
             where_parts: list[str] = []
             if genes is not None:
-                genes = [g for g in genes if g]
+                genes = [g for g in genes if g in self.gene_models.gene_models]
                 where_parts.append(self._build_gene_where(genes))
             if effect_types is not None:
-                effect_types = [et for et in effect_types if et]
+                effect_types = [
+                    et for et in effect_types
+                    if et in EffectTypesMixin.EFFECT_TYPES]
                 if set(effect_types) != set(EffectTypesMixin.EFFECT_TYPES):
                     where_parts.append(
                         self._build_effect_type_where(effect_types))
@@ -167,11 +174,11 @@ class SqlQueryBuilder:
                     WHERE
                         {eg_where}
                 )
-            """)
+            """)  # noqa: S608
         return eg_subclause
 
     def _build_summary_subclause(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         variant_type: Optional[str] = None,
@@ -228,7 +235,7 @@ class SqlQueryBuilder:
             summary_where = textwrap.dedent(f"""WHERE
                 {where}
             """)
-        query = textwrap.dedent(f"""
+        return textwrap.dedent(f"""
             summary AS (
                 SELECT
                     *
@@ -237,7 +244,6 @@ class SqlQueryBuilder:
                 {summary_where}
             )
             """)
-        return query
 
     def _build_gene_regions_heuristic(
         self, genes: list[str], regions: Optional[list[Region]],
@@ -285,7 +291,7 @@ class SqlQueryBuilder:
         return " OR ".join(where)
 
     def _build_real_attr_where(
-        self, real_attr_filter: RealAttrFilterType,
+        self, real_attr_filter: RealAttrFilterType, *,
         is_frequency: bool = False,
     ) -> str:
 
@@ -338,16 +344,14 @@ class SqlQueryBuilder:
         if len(genes) == 0:
             return "eg.effect_gene_symbols IS NULL"
         gene_set = ",".join(f"'{g}'" for g in genes)
-        where = f"eg.effect_gene_symbols in ({gene_set})"
-        return where
+        return f"eg.effect_gene_symbols in ({gene_set})"
 
     def _build_effect_type_where(self, effect_types: list[str]) -> str:
         effect_types = [et.replace("'", "''") for et in effect_types]
         if len(effect_types) == 0:
             return "eg.effect_types IS NULL"
         effect_set = ",".join(f"'{g}'" for g in effect_types)
-        where = f"eg.effect_types in ({effect_set})"
-        return where
+        return f"eg.effect_types in ({effect_set})"
 
     def _calc_coding_bins(
         self,
@@ -385,10 +389,7 @@ class SqlQueryBuilder:
         region_length = self.partition_descriptor.region_length
         region_bins: set[str] = set()
         for region in regions:
-            if region.chrom in chroms:
-                chrom_bin = region.chrom
-            else:
-                chrom_bin = "other"
+            chrom_bin = region.chrom if region.chrom in chroms else "other"
             stop = region.stop
             if stop is None:
                 if self.reference_genome is None:
@@ -401,7 +402,9 @@ class SqlQueryBuilder:
 
             start = start // region_length
             stop = stop // region_length
-            region_bins.update(f"'{chrom_bin}_{position_bin}'" for position_bin in range(start, stop + 1))
+            region_bins.update(
+                f"'{chrom_bin}_{position_bin}'"
+                for position_bin in range(start, stop + 1))
         if len(region_bins) == 0:
             return []
         if len(region_bins) > self.REGION_BINS_HEURISTIC_CUTOFF:
@@ -462,7 +465,7 @@ class SqlQueryBuilder:
         """
 
     def build_family_variants_query(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -577,7 +580,7 @@ class SqlQueryBuilder:
         return tr_query[0]
 
     def _build_family_subclause(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         family_ids: Optional[Sequence[str]] = None,
@@ -600,7 +603,6 @@ class SqlQueryBuilder:
         from_clause = f"{self.db_layout.family} AS fa"
         if heuristics:
             for heuristic, bins in heuristics.items():
-                # bins = [f"'{b}'" for b in bins]
                 if len(bins) == 1:
                     where_parts.append(f"fa.{heuristic} = {bins[0]}")
                 else:
@@ -670,7 +672,8 @@ class SqlQueryBuilder:
 
     def _build_roles_query(self, roles_query: str, attr: str) -> str:
         parsed = role_query.transform_query_string_to_tree(roles_query)
-        transformer = QueryTreeToSQLBitwiseTransformer(attr, False)
+        transformer = QueryTreeToSQLBitwiseTransformer(
+            attr, use_bit_and_function=False)
         return cast(str, transformer.transform(parsed))
 
     def _check_roles_query_value(self, roles_query: str, value: int) -> bool:
@@ -689,7 +692,8 @@ class SqlQueryBuilder:
 
     def _build_sexes_query(self, sexes_query: str, attr: str) -> str:
         parsed = sex_query.transform_query_string_to_tree(sexes_query)
-        transformer = QueryTreeToSQLBitwiseTransformer(attr, False)
+        transformer = QueryTreeToSQLBitwiseTransformer(
+            attr, use_bit_and_function=False)
         return cast(str, transformer.transform(parsed))
 
     def _check_sexes_query_value(self, sexes_query: str, value: int) -> bool:
@@ -711,7 +715,8 @@ class SqlQueryBuilder:
     ) -> str:
         parsed = VARIANT_TYPE_PARSER.transform_query_string_to_tree(
             variant_types_query)
-        transformer = QueryTreeToSQLBitwiseTransformer(attr, False)
+        transformer = QueryTreeToSQLBitwiseTransformer(
+            attr, use_bit_and_function=False)
         return cast(str, transformer.transform(parsed))
 
     def _check_variant_types_value(
@@ -790,7 +795,7 @@ class SqlQueryBuilder:
                 Inheritance.missing.value)
 
     def _calc_frequency_bins(
-        self,
+        self, *,
         inheritance: Optional[Sequence[str]] = None,
         roles: Optional[str] = None,
         ultra_rare: Optional[bool] = None,
@@ -811,7 +816,7 @@ class SqlQueryBuilder:
         if not ultra_rare and frequency_filter is None:
             return []
 
-        frequency_bins: set[int] = set([0])  # always search de Novo variants
+        frequency_bins: set[int] = {0}  # always search de Novo variants
         if ultra_rare is not None and ultra_rare:
             frequency_bins.add(1)
         if frequency_filter is not None:
@@ -834,7 +839,7 @@ class SqlQueryBuilder:
         return result
 
     def _calc_heuristic_bins(
-        self,
+        self, *,
         regions: Optional[list[Region]] = None,
         genes: Optional[list[str]] = None,
         effect_types: Optional[list[str]] = None,
@@ -887,7 +892,9 @@ class SqlQueryBuilder:
         family_ids = set(family_ids)
 
         family_bins: set[str] = set()
-        family_bins.update(str(self.partition_descriptor.make_family_bin(family_id)) for family_id in family_ids)
+        family_bins.update(
+            str(self.partition_descriptor.make_family_bin(family_id))
+            for family_id in family_ids)
         if len(family_bins) >= self.partition_descriptor.family_bin_size // 2:
             return []
         return list(family_bins)

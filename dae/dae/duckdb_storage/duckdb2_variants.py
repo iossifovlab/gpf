@@ -2,7 +2,7 @@ import logging
 import time
 from collections.abc import Generator
 from contextlib import closing
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, cast
 
 import duckdb
 import numpy as np
@@ -126,7 +126,7 @@ class DuckDb2Variants(QueryVariantsBase):
         )
         variants_data_schema = self._fetch_variants_data_schema()
         self.serializer = VariantsDataSerializer.build_serializer(
-            variants_data_schema
+            variants_data_schema,
         )
 
     def _fetch_meta_property(self, key: str) -> str:
@@ -166,7 +166,7 @@ class DuckDb2Variants(QueryVariantsBase):
         content = self._fetch_meta_property("variants_data_schema")
         if not content:
             return None
-        return yaml.safe_load(content)
+        return cast(dict[str, Any], yaml.safe_load(content))
 
     def _fetch_pedigree(self) -> pd.DataFrame:
         query = f"SELECT * FROM {self.layout.pedigree}"  # noqa: S608
