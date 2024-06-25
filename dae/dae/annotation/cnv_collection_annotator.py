@@ -1,11 +1,10 @@
 from typing import Any, Optional
 
 from dae.annotation.annotatable import Annotatable
+from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-    AnnotatorInfo,
-    AttributeInfo,
 )
 from dae.genomic_resources.aggregators import build_aggregator
 from dae.genomic_resources.cnv_collection import CnvCollection

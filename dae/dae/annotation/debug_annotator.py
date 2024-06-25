@@ -1,12 +1,11 @@
 
 from typing import Any, Optional
 
-from .annotatable import Annotatable
-from .annotation_pipeline import (
+from dae.annotation.annotatable import Annotatable
+from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
+from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-    AnnotatorInfo,
-    AttributeInfo,
 )
 
 

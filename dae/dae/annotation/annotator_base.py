@@ -4,8 +4,9 @@ from __future__ import annotations
 import abc
 from typing import Any, Optional
 
-from .annotatable import Annotatable
-from .annotation_pipeline import AnnotationPipeline, Annotator, AnnotatorInfo
+from dae.annotation.annotatable import Annotatable
+from dae.annotation.annotation_config import AnnotatorInfo
+from dae.annotation.annotation_pipeline import AnnotationPipeline, Annotator
 
 
 class AnnotatorBase(Annotator):

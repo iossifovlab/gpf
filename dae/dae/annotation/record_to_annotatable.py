@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 import argparse
-from typing import Dict, Optional, Type
+from typing import Optional
 
 from dae.annotation.annotatable import (
     Annotatable,
@@ -94,13 +94,13 @@ class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
     """Transform a CSHL variant record into a VCF allele annotatable."""
 
     def __init__(self, columns: tuple, ref_genome: Optional[ReferenceGenome]):
-        super().__init__(columns, ref_genome)
-        self.location_col, self.variant_col = columns
-        self.reference_genome = ref_genome
-        if self.reference_genome is None:
+        if ref_genome is None:
             raise ValueError(
                 "unable to instantiate CSHLAlleleRecordToVcfAllele "
                 "without a referrence genome")
+        super().__init__(columns, ref_genome)
+        self.location_col, self.variant_col = columns
+        self.reference_genome = ref_genome
 
     def build(self, record: dict[str, str]) -> Annotatable:
         variant = record[self.variant_col]
@@ -119,7 +119,7 @@ class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
             self.reference_genome))
 
 
-RECORD_TO_ANNOTATABLE_CONFIGURATION: Dict[tuple, Type[RecordToAnnotable]] = {
+RECORD_TO_ANNOTATABLE_CONFIGURATION: dict[tuple, type[RecordToAnnotable]] = {
     ("chrom", "pos_beg", "pos_end", "cnv_type"): RecordToCNVAllele,
     ("chrom", "pos_beg", "pos_end"): RecordToRegion,
     ("chrom", "pos", "ref", "alt"): RecordToVcfAllele,

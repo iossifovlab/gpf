@@ -5,15 +5,17 @@ from collections import Counter
 from pathlib import Path
 from typing import Callable, Optional
 
+import yaml
+
 from dae.annotation.annotation_config import (
     AnnotationConfigParser,
     AnnotationConfigurationError,
+    AnnotatorInfo,
     RawPipelineConfig,
 )
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-    AnnotatorInfo,
     InputAnnotableAnnotatorDecorator,
     ReannotationPipeline,
     ValueTransformAnnotatorDecorator,
@@ -21,7 +23,6 @@ from dae.annotation.annotation_pipeline import (
 from dae.genomic_resources.repository import (
     GenomicResourceRepo,
 )
-import yaml
 
 logger = logging.getLogger(__name__)
 

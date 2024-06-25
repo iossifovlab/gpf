@@ -4,11 +4,13 @@ import logging
 from typing import Any, Optional
 
 from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotation_config import AnnotationConfigParser
+from dae.annotation.annotation_config import (
+    AnnotationConfigParser,
+    AnnotatorInfo,
+)
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-    AnnotatorInfo,
 )
 from dae.gene_scores.gene_scores import build_gene_score_from_resource
 from dae.genomic_resources import GenomicResource

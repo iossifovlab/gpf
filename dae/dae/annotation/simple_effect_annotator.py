@@ -1,12 +1,14 @@
 import logging
-from typing import Any, Optional, Set, Tuple
+from typing import Any, Optional
 
 from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotation_config import AnnotationConfigParser
+from dae.annotation.annotation_config import (
+    AnnotationConfigParser,
+    AnnotatorInfo,
+)
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-    AnnotatorInfo,
 )
 from dae.annotation.annotator_base import AnnotatorBase
 from dae.genomic_resources.gene_models import (
@@ -134,7 +136,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
         self, chrom: str, beg: int, end: int,
         transcripts: list[TranscriptModel],
         func_name: str, classification: str,
-    ) -> Optional[Tuple[str, Set[str]]]:
+    ) -> Optional[tuple[str, set[str]]]:
         """Call a region with a specific classification."""
         genes = set()
         for transcript in transcripts:
@@ -158,7 +160,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
 
     def run_annotate(
         self, chrom: str, beg: int, end: int,
-    ) -> Tuple[str, Set[str]]:
+    ) -> tuple[str, set[str]]:
         """Return classification with a set of affected genes."""
         assert self.gene_models.utr_models is not None
         assert self.gene_models.utr_models[chrom] is not None
