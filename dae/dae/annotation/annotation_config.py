@@ -146,13 +146,13 @@ class AnnotationConfigParser:
             raise AnnotationConfigurationError
 
         if not isinstance(raw.get("summary", ""), str):
-            raise TypeError
+            raise TypeError("Preambule summary must be a string!")
         if not isinstance(raw.get("description", ""), str):
-            raise TypeError
+            raise TypeError("Preambule description must be a string!")
         if not isinstance(raw.get("input_reference_genome", ""), str):
-            raise TypeError
+            raise TypeError("Preambule reference genome id must be a string!")
         if not isinstance(raw.get("metadata", {}), dict):
-            raise TypeError
+            raise TypeError("Preambule metadata must be a dictionary!")
 
         genome_id = raw.get("input_reference_genome", "")
         genome = None
