@@ -33,9 +33,10 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public disableQueryButtons = false;
   private routerSubscription: Subscription;
 
-  @Input()
   public selectedDatasetId: string;
   public selectedDataset: Dataset;
+
+  @Input()
   public genotypeBrowserState: object;
   public loadingFinished: boolean;
 
