@@ -22,6 +22,21 @@ class CLIAnnotationContext(CLIGenomicContext):
     """Defines annotation pipeline genomics context."""
 
     @staticmethod
+    def add_context_arguments(parser: argparse.ArgumentParser) -> None:
+        """Add command line arguments to the argument parser."""
+        parser.add_argument(
+            "pipeline", default="context", nargs="?",
+            help="The pipeline definition file. By default, or if "
+            "the value is gpf_instance, the annotation pipeline "
+            "from the configured gpf instance will be used.")
+        parser.add_argument(
+            "-ar", "--allow-repeated-attributes", default=False,
+            action="store_true",
+            help="Rename repeated attributes instead of raising"
+            " an error.")
+        CLIGenomicContext.add_context_arguments(parser)
+
+    @staticmethod
     def context_builder(args: argparse.Namespace) -> CLIAnnotationContext:
         """Build a CLI genomic context."""
         context = CLIGenomicContext.context_builder(args)

@@ -244,11 +244,6 @@ class CLIGenomicContext(SimpleGenomicContext):
             help="The resource is of the gene models resource. If the argument"
                  " is absent the gene models from the current genomic "
                  "context will be used.")
-        parser.add_argument(
-            "-ar", "--allow-repeated-attributes", default=False,
-            action="store_true",
-            help="Rename repeated attributes instead of raising"
-            " an error.")
 
     @staticmethod
     def register(args: argparse.Namespace) -> None:

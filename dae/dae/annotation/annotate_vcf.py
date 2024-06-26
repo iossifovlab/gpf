@@ -114,14 +114,10 @@ class AnnotateVCFTool(AnnotationTool):
         )
         parser.add_argument("input", default="-", nargs="?",
                             help="the input vcf file")
-        parser.add_argument("pipeline", default="context", nargs="?",
-                            help="The pipeline definition file. By default, or if "
-                            "the value is gpf_instance, the annotation pipeline "
-                            "from the configured gpf instance will be used.")
         parser.add_argument("-r", "--region-size", default=300_000_000,
                             type=int, help="region size to parallelize by")
         parser.add_argument("-w", "--work-dir",
-                            help="Directory to store intermediate output files in",
+                            help="Directory to store intermediate output files",
                             default="annotate_vcf_output")
         parser.add_argument("-o", "--output",
                             help="Filename of the output VCF result",

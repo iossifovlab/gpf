@@ -147,11 +147,6 @@ class AnnotateColumnsTool(AnnotationTool):
             "input", default="-", nargs="?",
             help="the input column file")
         parser.add_argument(
-            "pipeline", default="context", nargs="?",
-            help="The pipeline definition file. By default, or if "
-            "the value is gpf_instance, the annotation pipeline "
-            "from the configured gpf instance will be used.")
-        parser.add_argument(
             "-r", "--region-size", default=300_000_000,
             type=int, help="region size to parallelize by")
         parser.add_argument(
