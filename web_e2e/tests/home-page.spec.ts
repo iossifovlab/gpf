@@ -92,7 +92,7 @@ test.describe('Home page tests', () => {
     await page.locator('#search-box').focus();
     await page.keyboard.type('chd88');
     await page.waitForResponse(
-      resp => resp.url().includes('api/v3/gene_profiles/table/rows') && resp.status() === 200
+      resp => resp.url().includes('api/v3/gene_profiles/table/gene_symbols') && resp.status() === 200
     );
     await page.keyboard.press('Enter');
 
