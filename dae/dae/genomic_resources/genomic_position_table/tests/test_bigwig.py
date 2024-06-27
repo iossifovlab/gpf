@@ -94,7 +94,7 @@ def test_get_all_records(bigwig_table: BigWigTable) -> None:
         assert len(vs) == 9
         line = vs[0]
         assert line.chrom == "chr1"
-        assert line.pos_begin == 0
+        assert line.pos_begin == 1
         assert line.pos_end == 10
         assert line.get(3) == pytest.approx(0.01)
 
