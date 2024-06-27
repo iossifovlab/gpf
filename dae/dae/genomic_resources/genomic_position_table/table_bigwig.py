@@ -3,7 +3,9 @@ from collections.abc import Generator
 from typing import Optional
 
 from dae.genomic_resources.genomic_position_table.line import Line, LineBase
-from dae.genomic_resources.genomic_position_table.table import GenomicPositionTable
+from dae.genomic_resources.genomic_position_table.table import (
+    GenomicPositionTable,
+)
 from dae.genomic_resources.repository import GenomicResource
 
 
@@ -64,8 +66,8 @@ class BigWigTable(GenomicPositionTable):
         if pos_end is None:
             pos_end = self.bw_file.chroms()[chrom]
 
-        yield from [Line((chrom, *interval)) for interval in
-                    self._intervals(chrom, pos_begin, pos_end)]
+        for interval in self._intervals(chrom, pos_begin, pos_end):
+            yield Line((chrom, *interval))
 
     def get_all_records(self) -> Generator[LineBase, None, None]:
         assert self.bw_file is not None
