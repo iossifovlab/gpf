@@ -48,10 +48,10 @@ const mockDataset1 = new Dataset(
     [
       new PersonFilter('familyFilter3', 'string3', 'source3', 'sourceType3', 'filterType3', 'role3')
     ],
-    new Set(['inheritance', 'string1']),
-    new Set(['selectedInheritance', 'string2']),
-    new Set(['variant', 'string3']),
-    new Set(['selectedVariant', 'string1']),
+    ['inheritance', 'string1'],
+    ['selectedInheritance', 'string2'],
+    ['variant', 'string3'],
+    ['selectedVariant', 'string1'],
     5
   ),
   new PersonSetCollections(

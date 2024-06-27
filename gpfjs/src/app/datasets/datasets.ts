@@ -172,10 +172,10 @@ export class GenotypeBrowser {
       GenotypeBrowser.tableColumnsFromJson(json['table_columns'] as object[]),
       PersonFilter.fromJson(json['person_filters'] as object),
       PersonFilter.fromJson(json['family_filters'] as object),
-      new Set(json['inheritance_type_filter'] as string[]),
-      new Set(json['selected_inheritance_type_filter_values'] as string[]),
-      new Set(json['variant_types'] as string[]),
-      new Set(json['selected_variant_types'] as string[]),
+      json['inheritance_type_filter'] as string[],
+      json['selected_inheritance_type_filter_values'] as string[],
+      json['variant_types'] as string[],
+      json['selected_variant_types'] as string[],
       json['max_variants_count'] as number,
     );
   }
@@ -193,10 +193,10 @@ export class GenotypeBrowser {
     public readonly tableColumns: Array<object>,
     public readonly personFilters: Array<PersonFilter>,
     public readonly familyFilters: Array<PersonFilter>,
-    public readonly inheritanceTypeFilter: Set<string>,
-    public readonly selectedInheritanceTypeFilterValues: Set<string>,
-    public readonly variantTypes: Set<string>,
-    public readonly selectedVariantTypes: Set<string>,
+    public readonly inheritanceTypeFilter: string[],
+    public readonly selectedInheritanceTypeFilterValues: string[],
+    public readonly variantTypes: string[],
+    public readonly selectedVariantTypes: string[],
     public readonly maxVariantsCount: number,
   ) { }
 

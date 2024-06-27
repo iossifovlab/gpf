@@ -98,7 +98,6 @@ import { UsersGroupsService } from './users-groups/users-groups.service';
 import { ConfirmationPopoverModule } from 'angular-confirmation-popover';
 import { UserGroupsSelectorComponent } from './user-groups-selector/user-groups-selector.component';
 import { DatasetsTableComponent } from './datasets-table/datasets-table.component';
-import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-view/genotype-browser-single-view.component';
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
 import { LoadQueryComponent } from './load-query/load-query.component';
@@ -188,6 +187,7 @@ import { GeneProfilesState } from './gene-profiles-table/gene-profiles-table.sta
 import { DatasetNodeState } from './dataset-node/dataset-node.state';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
+import { DatasetState } from './datasets/datasets.state';
 
 const appRoutes: Routes = [
   {
@@ -209,7 +209,7 @@ const appRoutes: Routes = [
     children: [
       {
         path: toolPageLinks.genotypeBrowser,
-        component: GenotypeBrowserSingleViewComponent
+        component: GenotypeBrowserComponent
       },
       {
         path: toolPageLinks.enrichmentTool,
@@ -350,7 +350,6 @@ const appRoutes: Routes = [
     ManagementComponent,
     UserGroupsSelectorComponent,
     DatasetsTableComponent,
-    GenotypeBrowserSingleViewComponent,
     GenotypePreviewFieldComponent,
     ErrorsAlertComponent,
     LoadQueryComponent,
@@ -431,7 +430,7 @@ const appRoutes: Routes = [
       GeneSymbolsState, FamilyIdsState, FamilyTagsState, RegionsFilterState, StudyTypesState, GeneSetsState,
       GeneScoresState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
       StudyFiltersState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
-      UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState, DatasetNodeState
+      UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState, DatasetNodeState, DatasetState
     ], {compatibility: { strictContentSecurityPolicy: true }}
     ),
     NgxsResetPluginModule.forRoot(),

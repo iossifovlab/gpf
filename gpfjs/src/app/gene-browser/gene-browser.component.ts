@@ -9,7 +9,6 @@ import { QueryService } from 'app/query/query.service';
 import { first, debounceTime, distinctUntilChanged, take, takeUntil, filter } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
 import { Dataset, GeneBrowser, PersonSet } from 'app/datasets/datasets';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from 'app/config/config.service';
 import * as d3 from 'd3';
@@ -17,6 +16,8 @@ import * as draw from 'app/utils/svg-drawing';
 import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { Store } from '@ngxs/store';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -67,10 +68,10 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     private location: Location,
     private queryService: QueryService,
     private geneService: GeneService,
-    private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
     private router: Router,
-    private datasetsTreeService: DatasetsTreeService
+    private datasetsTreeService: DatasetsTreeService,
+    private store: Store
   ) {
   }
 
@@ -78,13 +79,17 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public variantsCount: number;
 
   public async ngOnInit(): Promise<void> {
-    this.selectedDataset = this.datasetsService.getSelectedDataset();
-    this.legend = this.selectedDataset.personSetCollections.getLegend(this.selectedDataset.defaultPersonSetCollection);
-    this.geneBrowserConfig = this.selectedDataset.geneBrowser;
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
+      this.selectedDataset = state.selectedDataset;
+      this.selectedDatasetId = state.selectedDataset.id;
+      this.legend = this.selectedDataset.personSetCollections
+        .getLegend(this.selectedDataset.defaultPersonSetCollection);
+      this.geneBrowserConfig = this.selectedDataset.geneBrowser;
+    });
+
     if (this.route.snapshot.params.gene && typeof this.route.snapshot.params.gene === 'string') {
       void this.submitGeneRequest(this.route.snapshot.params.gene);
     }
-
 
     this.route.queryParams.subscribe(params => {
       if (params['coding_only'] !== undefined && params['coding_only'] !== null) {
@@ -100,9 +105,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.queryService.streamingFinishedSubject.subscribe(() => {
         this.familyVariantsLoaded = true;
         this.displayVariantsCount();
-      }),
-      this.route.parent.params.subscribe((params: Params) => {
-        this.selectedDatasetId = params['dataset'] as string;
       }),
       this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => this.updateShownTablePreviewVariantsArray()),
       this.searchBoxInput$.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {

@@ -1,4 +1,4 @@
-<div class="container" style="margin-bottom: 20px">
+<div *ngIf="selectedDataset" class="container" style="margin-bottom: 20px">
   <gpf-genes-block [showAllTab]="false"></gpf-genes-block>
   <gpf-enrichment-models-block [selectedDatasetId]="selectedDataset.id"></gpf-enrichment-models-block>
 

@@ -13,7 +13,7 @@
     </div>
 
     <div class="col-lg-6 panel-row">
-      <gpf-effect-types [variantTypes]="dataset.genotypeBrowserConfig.variantTypes"></gpf-effect-types>
+      <gpf-effect-types [variantTypes]="variantTypesSet"></gpf-effect-types>
     </div>
 
     <div class="col-lg-3 panel-row">
@@ -21,9 +21,7 @@
     </div>
 
     <div class="col-lg-3 panel-row">
-      <gpf-variant-types
-        [variantTypes]="dataset.genotypeBrowserConfig.variantTypes"
-        [selectedVariantTypes]="dataset.genotypeBrowserConfig.selectedVariantTypes">
+      <gpf-variant-types [variantTypes]="variantTypesSet" [selectedVariantTypes]="selectedVariantTypesSet">
       </gpf-variant-types>
     </div>
 
@@ -33,9 +31,9 @@
 
     <div class="col-lg-3 panel-row">
       <gpf-inheritancetypes
-        *ngIf="dataset.genotypeBrowserConfig.inheritanceTypeFilter.size"
-        [inheritanceTypes]="dataset.genotypeBrowserConfig.inheritanceTypeFilter"
-        [selectedValues]="dataset.genotypeBrowserConfig.selectedInheritanceTypeFilterValues">
+        *ngIf="dataset.genotypeBrowserConfig.inheritanceTypeFilter?.length"
+        [inheritanceTypes]="inheritanceTypeFilterSet"
+        [selectedValues]="selectedInheritanceTypeFilterValuesSet">
       </gpf-inheritancetypes>
     </div>
   </div>

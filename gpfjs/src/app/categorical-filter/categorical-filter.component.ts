@@ -3,8 +3,10 @@ import { CategoricalFilterState, CategoricalSelection } from '../person-filters/
 import { PersonFilter } from '../datasets/datasets';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { Observable } from 'rxjs';
+import { Observable, switchMap } from 'rxjs';
 import { environment } from 'environments/environment';
+import { Store } from '@ngxs/store';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-categorical-filter',
@@ -22,19 +24,26 @@ export class CategoricalFilterComponent implements OnInit {
   public constructor(
     private datasetsService: DatasetsService,
     private phenoBrowserService: PhenoBrowserService,
+    private store: Store
   ) {}
 
   public ngOnInit(): void {
-    if (this.categoricalFilter.from === 'phenodb') {
-      this.sourceDescription$ = this.phenoBrowserService.getMeasureDescription(
-        this.datasetsService.getSelectedDataset().id, this.categoricalFilter.source
-      );
-    } else if (this.categoricalFilter.from === 'pedigree') {
-      this.sourceDescription$ = this.datasetsService.getDatasetPedigreeColumnDetails(
-        this.datasetsService.getSelectedDataset().id, this.categoricalFilter.source
-      );
-    }
-    this.sourceDescription$.subscribe(res => {
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
+      switchMap((state: DatasetModel) => {
+        const selectedDataset = state.selectedDataset;
+
+        if (this.categoricalFilter.from === 'phenodb') {
+          this.sourceDescription$ = this.phenoBrowserService.getMeasureDescription(
+            selectedDataset.id, this.categoricalFilter.source
+          );
+        } else if (this.categoricalFilter.from === 'pedigree') {
+          this.sourceDescription$ = this.datasetsService.getDatasetPedigreeColumnDetails(
+            selectedDataset.id, this.categoricalFilter.source
+          );
+        }
+        return this.sourceDescription$;
+      })
+    ).subscribe(res => {
       this.valuesDomain = res['values_domain'];
     });
   }

@@ -5,6 +5,7 @@ import { Validate, IsDefined } from 'class-validator';
 import { StatefulComponent } from '../common/stateful-component';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-unique-family-variants-filter',
@@ -35,10 +36,14 @@ export class UniqueFamilyVariantsFilterComponent extends StatefulComponent imple
     this.store.selectOnce(UniqueFamilyVariantsFilterState).subscribe(state => {
       this.filterValue = state.uniqueFamilyVariants;
     });
-    const childLeaves = await this.datasetsTreeService.getUniqueLeafNodes(this.datasetService.getSelectedDataset().id);
-    if (childLeaves.size > 1) {
-      this.isVisible = true;
-    }
+
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(async state => {
+      const selectedDatasetId = state.selectedDataset.id;
+      const childLeaves = await this.datasetsTreeService.getUniqueLeafNodes(selectedDatasetId);
+      if (childLeaves.size > 1) {
+        this.isVisible = true;
+      }
+    });
   }
 
   public get filterValue(): boolean {

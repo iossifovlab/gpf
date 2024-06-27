@@ -1,9 +1,11 @@
 import { Component, Input, ViewChild } from '@angular/core';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { Store } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
-import { DatasetsService } from 'app/datasets/datasets.service';
+import { DatasetModel } from 'app/datasets/datasets.state';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
+import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'gpf-pedigree',
@@ -26,8 +28,8 @@ export class PedigreeComponent {
   public constructor(
     public modalService: NgbModal,
     private variantReportsService: VariantReportsService,
-    private datasetsService: DatasetsService,
     public configService: ConfigService,
+    private store: Store
   ) { }
 
   public loadFamilyListData(): void {
@@ -35,11 +37,15 @@ export class PedigreeComponent {
       return;
     }
 
-    this.variantReportsService.getFamilies(
-      this.datasetsService.getSelectedDataset().id,
-      this.groupName,
-      this.counterId
-    ).subscribe(list => {
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
+      switchMap((state: DatasetModel) => {
+        const selectedDatasetId = state.selectedDataset.id;
+        return this.variantReportsService.getFamilies(
+          selectedDatasetId,
+          this.groupName,
+          this.counterId
+        );
+      })).subscribe(list => {
       this.familyIdsList = list;
     });
   }
@@ -66,12 +72,15 @@ export class PedigreeComponent {
   }
 
   public onSubmit(event): void {
-    const args = {
-      study_id: this.datasetsService.getSelectedDataset().id,
-      group_name: this.groupName,
-      counter_id: this.counterId
-    };
-    event.target.queryData.value = JSON.stringify(args);
-    event.target.submit();
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
+      const selectedDatasetId = state.selectedDataset.id;
+      const args = {
+        study_id: selectedDatasetId,
+        group_name: this.groupName,
+        counter_id: this.counterId
+      };
+      event.target.queryData.value = JSON.stringify(args);
+      event.target.submit();
+    });
   }
 }

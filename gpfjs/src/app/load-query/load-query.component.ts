@@ -50,7 +50,7 @@ export class LoadQueryComponent implements OnInit {
 
   private restoreQuery(state: object, page: string): void {
     if (page in PAGE_TYPE_TO_NAVIGATE) {
-      const navigationParams: string[] = PAGE_TYPE_TO_NAVIGATE[page](state['datasetId']);
+      const navigationParams: string[] = PAGE_TYPE_TO_NAVIGATE[page](state['datasetState'].selectedDataset.id);
       this.store.reset(state);
       this.store.dispatch(new StateReset(ErrorsState));
       this.router.navigate(navigationParams);

@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Params } from '@angular/router';
-import { Observable } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
-import { filter, map, switchMap, take } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
+import { Store } from '@ngxs/store';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-dataset-description',
@@ -11,23 +12,19 @@ import { filter, map, switchMap, take } from 'rxjs/operators';
   styleUrls: ['./dataset-description.component.css']
 })
 export class DatasetDescriptionComponent implements OnInit {
-  public dataset$: Observable<Dataset>;
+  public dataset: Dataset;
   public datasetId: string;
 
   public constructor(
     private route: ActivatedRoute,
-    private datasetsService: DatasetsService
+    private datasetsService: DatasetsService,
+    private store: Store
   ) { }
 
   public ngOnInit(): void {
-    this.dataset$ = this.route.parent.params.pipe(
-      map((params: Params) => params['dataset'] as string),
-      filter(datasetId => Boolean(datasetId)),
-      switchMap(datasetId => this.datasetsService.getDataset(datasetId))
-    );
-
-    this.dataset$.pipe(take(1)).subscribe(dataset => {
-      this.datasetId = dataset.id;
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
+      this.dataset = state.selectedDataset;
+      this.datasetId = state.selectedDataset.id;
     });
   }
 

@@ -1,5 +1,4 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { PhenoToolService } from './pheno-tool.service';
@@ -10,11 +9,12 @@ import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
 import { PhenoToolGenotypeBlockComponent } from 'app/pheno-tool-genotype-block/pheno-tool-genotype-block.component';
 import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
 import { PhenoToolMeasureState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
-import { Select, Selector } from '@ngxs/store';
+import { Select, Selector, Store } from '@ngxs/store';
 import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
 import {
   PHENO_TOOL_CNV, PHENO_TOOL_LGDS, PHENO_TOOL_OTHERS
 } from 'app/pheno-tool-effect-types/pheno-tool-effect-types';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -26,6 +26,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
   @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
 
   public selectedDataset: Dataset;
+  public variantTypesSet: Set<string>;
 
   public phenoToolResults: PhenoToolResults;
   public phenoToolState: object;
@@ -35,10 +36,10 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
   private phenoToolSubscription: Subscription = null;
 
   public constructor(
-    private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
     private phenoToolService: PhenoToolService,
     public readonly configService: ConfigService,
+    private store: Store
   ) { }
 
   @Selector([
@@ -59,7 +60,10 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
   }
 
   public ngOnInit(): void {
-    this.selectedDataset = this.datasetsService.getSelectedDataset();
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
+      this.selectedDataset = state.selectedDataset;
+      this.variantTypesSet = new Set(this.selectedDataset.genotypeBrowserConfig.variantTypes);
+    });
 
     this.state$.subscribe(state => {
       this.phenoToolState = state;

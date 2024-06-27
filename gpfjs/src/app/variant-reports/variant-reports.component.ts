@@ -4,8 +4,7 @@ import {
   VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
 } from './variant-reports';
 import { Dataset } from 'app/datasets/datasets';
-import { DatasetsService } from 'app/datasets/datasets.service';
-import { take } from 'rxjs/operators';
+import { switchMap, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
@@ -13,7 +12,8 @@ import { ConfigService } from 'app/config/config.service';
 import { Store } from '@ngxs/store';
 import { SetFamilyTags } from 'app/family-tags/family-tags.state';
 import { Router } from '@angular/router';
-import { couldStartTrivia } from 'typescript';
+import { DatasetModel } from 'app/datasets/datasets.state';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -64,9 +64,9 @@ export class VariantReportsComponent implements OnInit {
     public modalService: NgbModal,
     public config: ConfigService,
     private variantReportsService: VariantReportsService,
-    private datasetsService: DatasetsService,
     protected store: Store,
-    private router: Router
+    private router: Router,
+    private datasetsService: DatasetsService,
   ) {
     router.events.subscribe(() => {
       this.store.dispatch(new SetFamilyTags([], [], true));
@@ -79,8 +79,13 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public ngOnInit(): void {
-    this.selectedDataset = this.datasetsService.getSelectedDataset();
-    this.variantReportsService.getVariantReport(this.selectedDataset.id).pipe(take(1)).subscribe(params => {
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
+      switchMap((state: DatasetModel) => {
+        this.selectedDataset = state.selectedDataset;
+        return this.variantReportsService.getVariantReport(this.selectedDataset.id);
+      }),
+      take(1)
+    ).subscribe(params => {
       this.variantReport = params;
       this.familiesCounters = this.variantReport.familyReport.familiesCounters;
       this.pedigreeTables = this.familiesCounters.map(
@@ -100,6 +105,8 @@ export class VariantReportsComponent implements OnInit {
       this.totalFamiliesCount = this.calculateFamilies();
       this.filteredFamiliesCount = this.totalFamiliesCount;
     });
+
+
     if (this.variantReportsService.getTags() !== undefined) {
       this.variantReportsService.getTags().subscribe(data => {
         Object.values(data).forEach((tag: string) => {

@@ -3,15 +3,15 @@ import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
 import { GeneSetsCollection, GeneSet, GeneSetType } from './gene-sets';
 import { Subject, Observable, combineLatest, of } from 'rxjs';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { ValidateNested } from 'class-validator';
 import { Store } from '@ngxs/store';
-import { SetGeneSetsValues, GeneSetsState } from './gene-sets.state';
+import { SetGeneSetsValues, GeneSetsState, GeneSetsModel } from './gene-sets.state';
 import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { environment } from 'environments/environment';
 import { PersonSet } from 'app/datasets/datasets';
 import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -46,7 +46,6 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
   public constructor(
     protected store: Store,
     private geneSetsService: GeneSetsService,
-    private datasetService: DatasetsService,
   ) {
     super(store, GeneSetsState, 'geneSets');
   }
@@ -55,17 +54,19 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     this.geneSetsLoaded = null;
     super.ngOnInit();
 
-    this.selectedDatasetId = this.datasetService.getSelectedDataset().id;
-
     this.geneSetsService.getGeneSetsCollections().pipe(
       switchMap(geneSetsCollections => combineLatest(
         of(geneSetsCollections),
-        this.store.selectOnce(state => state.geneSetsState),
+        this.store.selectOnce((state: { geneSetsState: GeneSetsModel}) => state.geneSetsState),
+        this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState),
       ))
-    ).subscribe(([geneSetsCollections, state]) => {
+    ).subscribe(([geneSetsCollections, geneSetsState, datasetState]) => {
+      this.selectedDatasetId = datasetState.selectedDataset.id;
+
       const denovoGeneSetTypes = geneSetsCollections.filter(
         geneSetCollection => geneSetCollection.name === 'denovo'
       )[0].types;
+
 
       if (!denovoGeneSetTypes.length) {
         geneSetsCollections = geneSetsCollections.filter(
@@ -83,9 +84,10 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
             '-' + selectedStudyTypes.personSetCollectionId + '-denovo-geneset');
         }
       }
+
       this.geneSetsCollections = geneSetsCollections;
       this.selectedGeneSetsCollection = geneSetsCollections[0];
-      this.restoreState(state);
+      this.restoreState(geneSetsState);
       this.geneSetsLoaded = geneSetsCollections.length;
     });
 

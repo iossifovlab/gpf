@@ -10,13 +10,15 @@ import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
 import { GeneProfilesState } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
+import { DatasetModel, DatasetState, SetDataset } from './datasets.state';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
   selector: 'gpf-datasets',
   templateUrl: './datasets.component.html',
   styleUrls: ['./datasets.component.css'],
 })
-export class DatasetsComponent implements OnInit, OnDestroy {
+export class DatasetsComponent extends StatefulComponent implements OnInit, OnDestroy {
   private static previousUrl = '';
   public registerAlertVisible = false;
   public datasetTrees: DatasetNode[];
@@ -33,8 +35,10 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
     private router: Router,
-    private store: Store,
-  ) { }
+    protected store: Store,
+  ) {
+    super(store, DatasetState, 'dataset');
+  }
 
   public ngOnInit(): void {
     this.datasetTrees = new Array<DatasetNode>();
@@ -45,7 +49,11 @@ export class DatasetsComponent implements OnInit, OnDestroy {
         }
         // Clear out previous loaded dataset - signifies loading and triggers change detection
         this.selectedDataset = null;
-        this.datasetsService.setSelectedDatasetById(params['dataset'] as string);
+
+        this.datasetsService.getDataset(params['dataset'] as string).subscribe(dataset => {
+          this.store.dispatch(new SetDataset(dataset));
+          this.setupSelectedDataset();
+        });
       }),
       // Create dataset hierarchy
       combineLatest({
@@ -68,11 +76,8 @@ export class DatasetsComponent implements OnInit, OnDestroy {
           this.router.navigate(['/', 'datasets', this.datasetTrees[0].dataset.id]);
         }
       }),
-      this.datasetsService.getDatasetsLoadedObservable().subscribe(() => {
-        this.setupSelectedDataset();
-      }),
       this.usersService.getUserInfoObservable().subscribe(() => {
-        this.datasetsService.reloadSelectedDataset(true);
+        this.setupSelectedDataset();
       }),
       this.datasetsService.getPermissionDeniedPrompt().subscribe(aprompt => {
         this.permissionDeniedPrompt = aprompt;
@@ -100,10 +105,14 @@ export class DatasetsComponent implements OnInit, OnDestroy {
   }
 
   private setupSelectedDataset(): void {
-    this.selectedDataset = this.datasetsService.getSelectedDataset();
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
+      this.selectedDataset = state.selectedDataset;
+    });
+
     if (!this.selectedDataset) {
       return;
     }
+
 
     const firstTool = this.findFirstTool(this.selectedDataset);
 
@@ -194,7 +203,7 @@ export class DatasetsComponent implements OnInit, OnDestroy {
     /* In order to have state separation between the dataset tools,
     we clear the state if the previous url is from a different dataset tool */
     if (DatasetsComponent.previousUrl !== url && DatasetsComponent.previousUrl.startsWith('/datasets')) {
-      this.store.dispatch(new StateResetAll(GeneProfilesState, DatasetNodeState));
+      this.store.dispatch(new StateResetAll(GeneProfilesState, DatasetNodeState, DatasetState));
     }
 
     this.selectedTool = url.split('/').pop();

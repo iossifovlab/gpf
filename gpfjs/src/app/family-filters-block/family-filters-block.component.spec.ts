@@ -13,6 +13,7 @@ import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 import { Dataset, GenotypeBrowser } from 'app/datasets/datasets';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 class VariantReportsServiceMock {
   private variantsUrl = 'common_reports/studies/';
@@ -236,15 +237,10 @@ class VariantReportsServiceMock {
   }
 }
 
-class MockDatasetsService {
-  public getSelectedDataset = (): object => ({accessRights: true, id: 'testDatasetId'});
-  public getDatasetsLoadedObservable = (): Observable<void> => of();
-}
 describe('FamilyFiltersBlockComponent', () => {
   let component: FamilyFiltersBlockComponent;
   let fixture: ComponentFixture<FamilyFiltersBlockComponent>;
   const variantReportsServiceMock = new VariantReportsServiceMock();
-  const datasetServiceMock = new MockDatasetsService();
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -254,7 +250,6 @@ describe('FamilyFiltersBlockComponent', () => {
         DatasetsService,
         ConfigService,
         UsersService,
-        { provide: DatasetsService, useValue: datasetServiceMock },
         { provide: VariantReportsService, useValue: variantReportsServiceMock },
         { provide: APP_BASE_HREF, useValue: '' }]
     }).compileComponents();
@@ -268,8 +263,12 @@ describe('FamilyFiltersBlockComponent', () => {
     const datasetMock = new Dataset('datasetId', '', '', 'dataset', [], true, [], [], [], '', true, true, true, true, {enabled: true}, genotypeBrowserMock, null, null, null, true, null, false);
     component.dataset = datasetMock;
 
+    // eslint-disable-next-line max-len
+    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null);
+    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+
     component['store'] = {
-      selectOnce: () => of()
+      selectOnce: () => of(selectedDatasetMockModel)
     } as never;
 
     fixture.detectChanges();

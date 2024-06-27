@@ -1,15 +1,16 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
-import { ActivatedRoute, Router, Params } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { Observable, BehaviorSubject, ReplaySubject, combineLatest, of, zip } from 'rxjs';
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { Dataset } from 'app/datasets/datasets';
-import { DatasetsService } from '../datasets/datasets.service';
 import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { ConfigService } from 'app/config/config.service';
 import { HttpClient } from '@angular/common/http';
+import { Store } from '@ngxs/store';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-pheno-browser',
@@ -25,7 +26,6 @@ export class PhenoBrowserComponent implements OnInit {
 
   public instruments: Observable<PhenoInstruments>;
 
-  public selectedDatasetId: string;
   public selectedDataset: Dataset;
 
   public input$ = new ReplaySubject<string>(1);
@@ -40,18 +40,17 @@ export class PhenoBrowserComponent implements OnInit {
     private router: Router,
     private phenoBrowserService: PhenoBrowserService,
     private location: Location,
-    private datasetsService: DatasetsService,
     public configService: ConfigService,
+    private store: Store
   ) { }
 
   public ngOnInit(): void {
-    this.route.parent.params.subscribe((params: Params) => {
-      this.selectedDatasetId = params['dataset'] as string;
-    });
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
+      this.selectedDataset = state.selectedDataset;
 
-    this.selectedDataset = this.datasetsService.getSelectedDataset();
-    this.initInstruments(this.selectedDataset.id);
-    this.initMeasuresToShow(this.selectedDataset.id);
+      this.initInstruments(this.selectedDataset.id);
+      this.initMeasuresToShow(this.selectedDataset.id);
+    });
 
     this.focusSearchBox();
   }
@@ -134,7 +133,7 @@ export class PhenoBrowserComponent implements OnInit {
         switchMap(([searchTerm, instrument]) => {
           /* eslint-disable @typescript-eslint/naming-convention */
           const data = {
-            dataset_id: this.selectedDatasetId,
+            dataset_id: this.selectedDataset.id,
             instrument: instrument,
             search_term: searchTerm
           };

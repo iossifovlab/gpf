@@ -4,8 +4,9 @@ import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
 import { VariantReport } from './variant-reports';
 import { environment } from '../../environments/environment';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { map } from 'rxjs/operators';
+import { Store } from '@ngxs/store';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Injectable()
 export class VariantReportsService {
@@ -17,7 +18,7 @@ export class VariantReportsService {
   public constructor(
     private http: HttpClient,
     private config: ConfigService,
-    private datasetsService: DatasetsService,
+    private store: Store
   ) { }
 
   public getVariantReport(datasetId: string): Observable<VariantReport> {
@@ -27,7 +28,10 @@ export class VariantReportsService {
   }
 
   public getDownloadLink(): string {
-    const selectedDatasetId = this.datasetsService.getSelectedDataset().id;
+    let selectedDatasetId = '';
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
+      selectedDatasetId = state.selectedDataset.id;
+    });
     return `${environment.apiPath}${this.downloadUrl}${selectedDatasetId}`;
   }
 

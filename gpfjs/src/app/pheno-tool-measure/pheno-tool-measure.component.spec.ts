@@ -4,12 +4,14 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { MeasuresService } from 'app/measures/measures.service';
 import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 
 import { PhenoToolMeasureComponent } from './pheno-tool-measure.component';
+import { Dataset } from 'app/datasets/datasets';
+import { DatasetModel } from 'app/datasets/datasets.state';
+import { of } from 'rxjs';
 
 describe('PhenoToolMeasureComponent', () => {
   let component: PhenoToolMeasureComponent;
@@ -25,7 +27,6 @@ describe('PhenoToolMeasureComponent', () => {
         HttpClient,
         HttpHandler,
         ConfigService,
-        DatasetsService,
         UsersService,
         { provide: APP_BASE_HREF, useValue: '' }
       ],
@@ -35,6 +36,16 @@ describe('PhenoToolMeasureComponent', () => {
 
     fixture = TestBed.createComponent(PhenoToolMeasureComponent);
     component = fixture.componentInstance;
+
+    // eslint-disable-next-line max-len
+    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null);
+    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+
+    component['store'] = {
+      selectOnce: () => of(selectedDatasetMockModel),
+      dispatch: () => null
+    } as never;
+
     fixture.detectChanges();
   }));
 

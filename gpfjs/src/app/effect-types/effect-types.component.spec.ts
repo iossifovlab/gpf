@@ -24,12 +24,12 @@ describe('EffectTypesComponent', () => {
 
     fixture = TestBed.createComponent(EffectTypesComponent);
     component = fixture.componentInstance;
+
     component['store'] = {
-      selectOnce(_: any) {
-        return of({effectTypes: ['value1', 'value2', 'value3']});
-      },
-      dispatch(_: any) {}
-    } as any;
+      selectOnce: () => of({effectTypes: ['value1', 'value2', 'value3']}),
+      dispatch: () => null
+    } as never;
+
     fixture.detectChanges();
   }));
 
@@ -50,11 +50,10 @@ describe('EffectTypesComponent', () => {
     expect(selectInitialValuesSpy).not.toHaveBeenCalled();
 
     component['store'] = {
-      selectOnce(_: any) {
-        return of({effectTypes: []});
-      },
-      dispatch(_: any) {}
-    } as any;
+      selectOnce: () => of({effectTypes: []}),
+      dispatch: () => null
+    } as never;
+
     component.ngOnInit();
     expect(onEffectTypeChangeSpy).toHaveBeenCalledTimes(3);
     expect(selectInitialValuesSpy).toHaveBeenCalledTimes(1);
@@ -76,7 +75,7 @@ describe('EffectTypesComponent', () => {
 
   it('should update variant types', () => {
     component.effectTypes.selected = undefined;
-    component['store'] = { dispatch(_: any) {} } as any;
+    component['store'] = { dispatch: () => null } as never;
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 

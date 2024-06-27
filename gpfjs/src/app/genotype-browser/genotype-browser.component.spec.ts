@@ -36,6 +36,9 @@ import { HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs/internal/Observable';
 import { NavigationStart, Router, RouterEvent } from '@angular/router';
 import { Subject } from 'rxjs/internal/Subject';
+import { Dataset, GenotypeBrowser } from 'app/datasets/datasets';
+import { DatasetModel } from 'app/datasets/datasets.state';
+import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 
 
 const genotypeBrowserConfigMock = {
@@ -60,6 +63,73 @@ class MockQueryService {
     return null;
   }
 }
+
+/* eslint-disable */
+const genotypeMock = GenotypeBrowser.fromJson({
+  has_pedigree_selector: false,
+  has_present_in_child: true,
+  has_present_in_parent: false,
+  has_present_in_role: false,
+  has_family_filters: true,
+  has_family_structure_filter: false,
+  has_person_filters: true,
+  has_study_filters: false,
+  has_study_types: false,
+  table_columns: [
+    {
+      name: 'name1',
+      source: 'source1',
+      format: 'format1'
+    },
+    {
+      name: 'name2',
+      source: 'source2',
+      format: 'format2'
+    }
+  ],
+  person_filters: [
+    {
+      name: 'personFilter1',
+      from: 'string1',
+      source: 'source1',
+      source_type: 'sourceType1',
+      filter_type: 'filterType1',
+      role: 'role1',
+    },
+    {
+      name: 'personFilter2',
+      from: 'string2',
+      source: 'source2',
+      source_type: 'sourceType2',
+      filter_type: 'filterType2',
+      role: 'role2',
+    }
+  ],
+  family_filters: [
+    {
+      name: 'familyFilter3',
+      from: 'string3',
+      source: 'source3',
+      source_type: 'sourceType3',
+      filter_type: 'filterType3',
+      role: 'role3',
+    },
+    {
+      name: 'familyFilter4',
+      from: 'string4',
+      source: 'source4',
+      source_type: 'sourceType4',
+      filter_type: 'filterType4',
+      role: 'role4',
+    }
+  ],
+  inheritance_type_filter: ['inheritance', 'string1'],
+  selected_inheritance_type_filter_values: ['selectedInheritance', 'string2'],
+  variant_types: ['variant', 'string3'],
+  selected_variant_types: ['selectedVariant', 'string1'],
+  max_variants_count: 5,
+});
+/* eslint-enable */
 
 describe('GenotypeBrowserComponent', () => {
   let component: GenotypeBrowserComponent;
@@ -88,6 +158,7 @@ describe('GenotypeBrowserComponent', () => {
         ConfigService,
         FullscreenLoadingService,
         UsersService,
+        VariantReportsService,
         GenomicScoresBlockService,
         { provide: DatasetsService, useValue: new MockDatasetsService() },
         UniqueFamilyVariantsFilterComponent,
@@ -107,6 +178,15 @@ describe('GenotypeBrowserComponent', () => {
     fixture = TestBed.createComponent(GenotypeBrowserComponent);
     component = fixture.componentInstance;
     loadingService = TestBed.inject(FullscreenLoadingService);
+
+    // eslint-disable-next-line max-len
+    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, genotypeMock, null, [], null, null, '', null);
+    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+
+    component['store'] = {
+      selectOnce: () => of(selectedDatasetMockModel)
+    } as never;
+
     fixture.detectChanges();
   });
 

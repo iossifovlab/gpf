@@ -10,22 +10,15 @@ import { UsersService } from 'app/users/users.service';
 import { CategoricalFilterComponent } from './categorical-filter.component';
 import { APP_BASE_HREF } from '@angular/common';
 
-class MockDatasetsService {
-  public getSelectedDataset(): object {
-    return { id: 'testDataset' };
-  }
-}
-
 describe('CategoricalFilterComponent', () => {
   let component: CategoricalFilterComponent;
   let fixture: ComponentFixture<CategoricalFilterComponent>;
-  const datasetsServiceMock = new MockDatasetsService();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [CategoricalFilterComponent],
       providers: [
-        { provide: DatasetsService, useValue: datasetsServiceMock },
+        DatasetsService,
         PhenoBrowserService,
         ConfigService,
         UsersService,

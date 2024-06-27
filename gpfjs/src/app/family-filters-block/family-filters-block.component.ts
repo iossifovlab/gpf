@@ -8,9 +8,9 @@ import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { FamilyTagsModel, FamilyTagsState, SetFamilyTags } from 'app/family-tags/family-tags.state';
 import { FamilyCounter, PedigreeCounter, VariantReport } from 'app/variant-reports/variant-reports';
-import { take } from 'rxjs';
-import { DatasetsService } from 'app/datasets/datasets.service';
+import { switchMap, take } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -38,7 +38,6 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   public constructor(
     private store: Store,
     private variantReportsService: VariantReportsService,
-    private datasetsService: DatasetsService
   ) { }
 
   public ngOnInit(): void {
@@ -58,22 +57,25 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
       });
     }
 
-    const selectedDataset = this.datasetsService.getSelectedDataset();
-    this.variantReportsService.getVariantReport(selectedDataset.id)
-      .pipe(take(1))
-      .subscribe({
-        next: (variantReport: VariantReport) => {
-          this.familiesCounters = variantReport.familyReport.familiesCounters;
-          this.setFamiliesCount();
-        },
-        error: (err: HttpErrorResponse) => {
-          if (err.status === 404) {
-            this.showSelectedFamilies = false;
-          } else {
-            throw err;
-          }
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
+      switchMap((state: DatasetModel) => {
+        const selectedDataset = state.selectedDataset;
+        return this.variantReportsService.getVariantReport(selectedDataset.id);
+      }),
+      take(1)
+    ).subscribe({
+      next: (variantReport: VariantReport) => {
+        this.familiesCounters = variantReport.familyReport.familiesCounters;
+        this.setFamiliesCount();
+      },
+      error: (err: HttpErrorResponse) => {
+        if (err.status === 404) {
+          this.showSelectedFamilies = false;
+        } else {
+          throw err;
         }
-      });
+      }
+    });
   }
 
   @HostListener('window:resize')

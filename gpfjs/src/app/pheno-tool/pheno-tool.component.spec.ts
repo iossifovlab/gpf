@@ -4,7 +4,6 @@ import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgxsModule, Store } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { UsersService } from 'app/users/users.service';
 import { PhenoToolComponent } from './pheno-tool.component';
@@ -20,6 +19,8 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 import { PhenoToolResults } from './pheno-tool-results';
+import { Dataset, GenotypeBrowser, PersonFilter } from 'app/datasets/datasets';
+import { DatasetModel, DatasetState } from 'app/datasets/datasets.state';
 
 class PhenoToolServiceMock {
   public getPhenoToolResults(): Observable<PhenoToolResults> {
@@ -29,9 +30,6 @@ class PhenoToolServiceMock {
   public downloadPhenoToolResults(): Observable<HttpResponse<Blob>> {
     return of([] as any);
   }
-}
-class MockDatasetsService {
-  public getSelectedDataset = (): object => ({accessRights: true, id: 'testDatasetId'});
 }
 
 describe('PhenoToolComponent', () => {
@@ -51,7 +49,6 @@ describe('PhenoToolComponent', () => {
       ],
       providers: [
         {provide: ActivatedRoute, useValue: new ActivatedRoute()},
-        {provide: DatasetsService, useValue: new MockDatasetsService()},
         {provide: ConfigService, useValue: configMock},
         {provide: PhenoToolService, useValue: phenoToolMockService},
         UsersService,
@@ -61,16 +58,25 @@ describe('PhenoToolComponent', () => {
       imports: [
         HttpClientTestingModule,
         RouterTestingModule,
-        NgxsModule.forRoot([ErrorsState, GeneSymbolsState], {developmentMode: true}),
+        NgxsModule.forRoot([ErrorsState, GeneSymbolsState, DatasetState], {developmentMode: true}),
         NgbNavModule
       ],
       schemas: [NO_ERRORS_SCHEMA]
-    })
-      .compileComponents();
-    store = TestBed.inject(Store);
+    }).compileComponents();
+
     fixture = TestBed.createComponent(PhenoToolComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+
+    // eslint-disable-next-line max-len
+    const genotypeBrowserConfigMock = new GenotypeBrowser(true, true, true, true, true, true, true, true, true, new Array<object>(), new Array<PersonFilter>(), new Array<PersonFilter>(), [], [], [], [], 0);
+    // eslint-disable-next-line max-len
+    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], 'phenotypeData', true, false, true, true, null, genotypeBrowserConfigMock, null, [], null, null, '', null);
+    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'selectOnce').mockReturnValue(of(selectedDatasetMockModel));
+
+    component.ngOnInit();
   }));
 
   it('should create', () => {
@@ -107,13 +113,13 @@ describe('PhenoToolComponent', () => {
   });
 
   it('should test submit query', () => {
-    fixture.detectChanges();
+    component.ngOnInit();
     component.submitQuery();
     expect(component.phenoToolResults).toStrictEqual(new PhenoToolResults('asdf', []));
   });
 
   it('should hide results on a state change', () => {
-    fixture.detectChanges();
+    component.ngOnInit();
     component.submitQuery();
     expect(component.phenoToolResults).toStrictEqual(new PhenoToolResults('asdf', []));
     store.dispatch(new SetGeneSymbols(['POGZ']));
