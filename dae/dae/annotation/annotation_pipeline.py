@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import abc
 import logging
-from collections.abc import Iterator, Mapping
-from dataclasses import dataclass, field
 from types import TracebackType
 from typing import Any, Callable, Optional
 
 from dae.annotation.annotatable import Annotatable
+from dae.annotation.annotation_config import (
+    AnnotationPreambule,
+    AnnotatorInfo,
+    AttributeInfo,
+    RawPipelineConfig,
+)
 from dae.genomic_resources.repository import (
     GenomicResource,
     GenomicResourceRepo,
@@ -17,76 +21,6 @@ from dae.genomic_resources.repository import (
 from dae.variants.variant import SummaryAllele
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(init=False, eq=True, unsafe_hash=True)
-class AttributeInfo:
-    """Defines annotation attribute configuration."""
-
-    def __init__(self, name: str, source: str, internal: bool,
-                 parameters: ParamsUsageMonitor | dict[str, Any],
-                 _type: str = "str", description: str = "",
-                 documentation: Optional[str] = None):
-        self.name = name
-        self.source = source
-        self.internal = internal
-        if isinstance(parameters, ParamsUsageMonitor):
-            self.parameters = parameters
-        else:
-            self.parameters = ParamsUsageMonitor(parameters)
-        self.type = _type
-        self.description = description
-        self._documentation = documentation
-
-    name: str
-    source: str
-    internal: bool
-    parameters: ParamsUsageMonitor
-    type: str = "str"           # str, int, float, annotatable, or object
-    description: str = ""       # interpreted as md
-    _documentation: Optional[str] = None
-
-    @property
-    def documentation(self) -> str:
-        if self._documentation is None:
-            return self.description
-        return self._documentation
-
-
-@dataclass(init=False)
-class AnnotatorInfo:
-    """Defines annotator configuration."""
-
-    def __init__(self, _type: str, attributes: list[AttributeInfo],
-                 parameters: ParamsUsageMonitor | dict[str, Any],
-                 documentation: str = "",
-                 resources: Optional[list[GenomicResource]] = None,
-                 annotator_id: str = "N/A"):
-        self.type = _type
-        self.annotator_id = f"{annotator_id}"
-        self.attributes = attributes
-        self.documentation = documentation
-        if isinstance(parameters, ParamsUsageMonitor):
-            self.parameters = parameters
-        else:
-            self.parameters = ParamsUsageMonitor(parameters)
-        if resources is None:
-            self.resources = []
-        else:
-            self.resources = resources
-
-    annotator_id: str = field(compare=False, hash=None)
-    type: str
-    attributes: list[AttributeInfo]
-    parameters: ParamsUsageMonitor
-    documentation: str = ""
-    resources: list[GenomicResource] = field(default_factory=list)
-
-    def __hash__(self) -> int:
-        attrs_hash = "".join(str(hash(attr)) for attr in self.attributes)
-        resources_hash = "".join(str(hash(res)) for res in self.resources)
-        params_hash = "".join(str(hash(self.parameters)))
-        return hash(f"{self.type}{attrs_hash}{resources_hash}{params_hash}")
 
 
 class Annotator(abc.ABC):
@@ -147,15 +81,6 @@ class Annotator(abc.ABC):
                 for attribute_info in self._info.attributes}
 
 
-@dataclass
-class AnnotationPreambule:
-    summary: str
-    description: str
-    input_reference_genome: str
-    input_reference_genome_res: Optional[GenomicResource]
-    metadata: dict[str, Any]
-
-
 class AnnotationPipeline:
     """Provides annotation pipeline abstraction."""
 
@@ -165,6 +90,7 @@ class AnnotationPipeline:
         self.repository: GenomicResourceRepo = repository
         self.annotators: list[Annotator] = []
         self.preambule: Optional[AnnotationPreambule] = None
+        self.raw: RawPipelineConfig = []
         self._is_open = False
 
     def get_info(self) -> list[AnnotatorInfo]:
@@ -517,38 +443,3 @@ class ValueTransformAnnotatorDecorator(AnnotatorDecorator):
         return {k: (self.value_transformers[k](v)
                     if k in self.value_transformers else v)
                 for k, v in result.items()}
-
-
-class ParamsUsageMonitor(Mapping):
-    """Class to monitor usage of annotator parameters."""
-
-    def __init__(self, data: dict[str, Any]):
-        self._data = dict(data)
-        self._used_keys: set[str] = set()
-
-    def __hash__(self) -> int:
-        return hash(tuple(sorted(self._data.items())))
-
-    def __getitem__(self, key: str) -> Any:
-        self._used_keys.add(key)
-        return self._data[key]
-
-    def __len__(self) -> int:
-        return len(self._data)
-
-    def __iter__(self) -> Iterator:
-        raise ValueError("Should not iterate a parameter dictionary.")
-
-    def __repr__(self) -> str:
-        return self._data.__repr__()
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, ParamsUsageMonitor):
-            return False
-        return self._data == other._data
-
-    def get_used_keys(self) -> set[str]:
-        return self._used_keys
-
-    def get_unused_keys(self) -> set[str]:
-        return set(self._data.keys()) - self._used_keys

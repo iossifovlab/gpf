@@ -5,21 +5,21 @@ from collections import Counter
 from pathlib import Path
 from typing import Callable, Optional
 
+import yaml
+
 from dae.annotation.annotation_config import (
     AnnotationConfigParser,
     AnnotationConfigurationError,
+    AnnotatorInfo,
     RawPipelineConfig,
 )
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-    AnnotatorInfo,
-    AttributeInfo,
     InputAnnotableAnnotatorDecorator,
     ReannotationPipeline,
     ValueTransformAnnotatorDecorator,
 )
-from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import (
     GenomicResourceRepo,
 )
@@ -92,48 +92,50 @@ def register_annotator_factory(
     _ANNOTATOR_FACTORY_REGISTRY[annotator_type] = factory
 
 
+def load_pipeline_from_file(
+    raw_path: str, grr: GenomicResourceRepo, *,
+    allow_repeated_attributes: bool = False,
+    work_dir: Optional[Path] = None,
+) -> AnnotationPipeline:
+    """Load an annotation pipeline from a configuration file."""
+    path = Path(raw_path)
+    if not path.exists():
+        raise OSError(f"{raw_path} does not exist!")
+    if path.suffix == ".yaml":
+        return load_pipeline_from_yaml(
+            path.read_text(), grr,
+            allow_repeated_attributes=allow_repeated_attributes,
+            work_dir=work_dir,
+        )
+    raise ValueError(f"Unsupported annotation config format {path.suffix}")
+
+
+def load_pipeline_from_yaml(
+    raw: str, grr: GenomicResourceRepo, *,
+    allow_repeated_attributes: bool = False,
+    work_dir: Optional[Path] = None,
+) -> AnnotationPipeline:
+    """Load an annotation pipeline from a YAML-formatted string."""
+    config = yaml.safe_load(raw)
+    return build_annotation_pipeline(
+        config, grr,
+        allow_repeated_attributes=allow_repeated_attributes,
+        work_dir=work_dir,
+    )
+
+
 def build_annotation_pipeline(
-        pipeline_config: Optional[list[AnnotatorInfo]] = None,
-        pipeline_config_raw: Optional[RawPipelineConfig] = None,
-        pipeline_config_file: Optional[str] = None,
-        pipeline_config_str: Optional[str] = None,
-        grr_repository: Optional[GenomicResourceRepo] = None,
-        grr_repository_file: Optional[str] = None,
-        grr_repository_definition: Optional[dict] = None,
-        *,
-        allow_repeated_attributes: bool = False,
-        work_dir: Optional[Path] = None,
+    config: RawPipelineConfig, grr: GenomicResourceRepo, *,
+    allow_repeated_attributes: bool = False,
+    work_dir: Optional[Path] = None,
 ) -> AnnotationPipeline:
     """Build an annotation pipeline."""
-    if not grr_repository:
-        grr_repository = build_genomic_resource_repository(
-            definition=grr_repository_definition,
-            file_name=grr_repository_file)
-    else:
-        assert grr_repository_file is None
-        assert grr_repository_definition is None
-
-    preambule = None
-    if pipeline_config_file is not None:
-        assert pipeline_config is None
-        assert pipeline_config_raw is None
-        assert pipeline_config_str is None
-        preambule, pipeline_config = AnnotationConfigParser.parse_config_file(
-            pipeline_config_file, grr=grr_repository)
-    elif pipeline_config_str is not None:
-        assert pipeline_config_raw is None
-        assert pipeline_config is None
-        preambule, pipeline_config = AnnotationConfigParser.parse_str(
-            pipeline_config_str, grr=grr_repository)
-    elif pipeline_config_raw is not None:
-        assert pipeline_config is None
-        preambule, pipeline_config = AnnotationConfigParser.parse_raw(
-            pipeline_config_raw, grr=grr_repository)
-    assert pipeline_config is not None
-
-    pipeline = AnnotationPipeline(grr_repository)
+    preambule, pipeline_config = AnnotationConfigParser.parse_raw(
+        config, grr=grr,
+    )
+    pipeline = AnnotationPipeline(grr)
     pipeline.preambule = preambule
-
+    pipeline.raw = config
     try:
         for idx, annotator_config in enumerate(pipeline_config):
             if work_dir is not None:
@@ -164,32 +166,7 @@ def copy_annotation_pipeline(
     pipeline: AnnotationPipeline,
 ) -> AnnotationPipeline:
     """Copy an annotation pipeline instance."""
-    infos = []
-    for annotator in pipeline.annotators:
-        src = annotator.get_info()
-        attributes = [
-            AttributeInfo(
-                src_attr.name,
-                src_attr.source,
-                src_attr.internal,
-                src_attr.parameters._data,  # noqa pylint: disable=W0212
-                src_attr.type,
-                src_attr.description,
-                src_attr.documentation,
-            ) for src_attr in src.attributes
-        ]
-        infos.append(AnnotatorInfo(
-            src.type,
-            attributes,
-            src.parameters._data,  # noqa pylint: disable=W0212
-            "",
-            None,
-            src.annotator_id,
-        ))
-    return build_annotation_pipeline(
-        pipeline_config=infos,
-        grr_repository=pipeline.repository,
-    )
+    return build_annotation_pipeline(pipeline.raw, pipeline.repository)
 
 
 def copy_reannotation_pipeline(

@@ -5,7 +5,7 @@ from typing import Any, Optional
 from jinja2 import Environment, PackageLoader, Template
 from markdown2 import markdown
 
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.repository import GenomicResource
 from dae.genomic_resources.resource_implementation import (
@@ -39,10 +39,7 @@ class AnnotationPipelineImplementation(
 
     def get_info(self, **kwargs: Any) -> str:
         grr = kwargs["repo"]
-        self.pipeline = build_annotation_pipeline(
-            pipeline_config_str=self.raw,
-            grr_repository=grr,
-        )
+        self.pipeline = load_pipeline_from_yaml(self.raw, grr)
         return InfoImplementationMixin.get_info(self)
 
     def get_template(self) -> Template:

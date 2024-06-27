@@ -4,6 +4,7 @@ import os
 import pathlib
 import textwrap
 
+from dae.genomic_resources.testing import setup_genome
 import pysam
 import pytest
 
@@ -162,6 +163,12 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
                         filename: annotation.yaml
                     """,
                 },
+                "test_genome": {
+                    "genomic_resource.yaml": """
+                        type: genome
+                        filename: genome.fa
+                    """,
+                },
             },
         },
     )
@@ -201,6 +208,15 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     setup_denovo(root_path / "grr" / "two" / "data.txt", two_content)
     setup_denovo(root_path / "grr" / "three" / "data.txt", three_content)
     setup_denovo(root_path / "grr" / "four" / "data.txt", four_content)
+    setup_genome(root_path / "grr" / "test_genome" / "genome.fa",
+                 textwrap.dedent(f"""
+                     >chr1
+                     {25 * 'ACGT'}
+                     >chr2
+                     {25 * 'ACGT'}
+                     >chr3
+                     {25 * 'ACGT'}
+                 """))
     return root_path
 
 
@@ -419,7 +435,7 @@ def test_annotate_columns_multiple_chrom(
     cli_columns([
         str(a) for a in [
             in_file_gz, annotation_file, "-w", workdir, "--grr", grr_file,
-            "-o", out_file, "-j", 1,
+            "-o", out_file, "-j", 1, "-R", "test_genome",
         ]
     ])
 

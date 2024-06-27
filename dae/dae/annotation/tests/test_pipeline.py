@@ -9,7 +9,8 @@ import dae.annotation.annotation_factory
 from dae.annotation.annotatable import Position
 from dae.annotation.annotation_factory import (
     AnnotationConfigurationError,
-    build_annotation_pipeline,
+    load_pipeline_from_file,
+    load_pipeline_from_yaml,
     copy_annotation_pipeline,
     copy_reannotation_pipeline,
 )
@@ -86,9 +87,7 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
 def test_build_pipeline(
     annotation_config: str, grr_fixture: GenomicResourceRepo,
 ) -> None:
-    pipeline = build_annotation_pipeline(
-        pipeline_config_file=annotation_config,
-        grr_repository=grr_fixture)
+    pipeline = load_pipeline_from_file(annotation_config, grr_fixture)
 
     assert len(pipeline.annotators) == 5
 
@@ -96,9 +95,7 @@ def test_build_pipeline(
 def test_build_pipeline_schema(
     annotation_config: str, grr_fixture: GenomicResourceRepo,
 ) -> None:
-    pipeline = build_annotation_pipeline(
-        pipeline_config_file=annotation_config,
-        grr_repository=grr_fixture)
+    pipeline = load_pipeline_from_file(annotation_config, grr_fixture)
 
     attribute = pipeline.get_attribute_info("gene_effects")
     assert attribute is not None
@@ -113,9 +110,7 @@ def test_pipeline_with_wildcards(test_grr: GenomicResourceRepo) -> None:
     pipeline_config = """
         - position_score: score_*
     """
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=test_grr)
+    pipeline = load_pipeline_from_yaml(pipeline_config, test_grr)
     result = pipeline.annotate(Position("foo", 1))
     assert len(pipeline.annotators) == 2
     assert result == {"s1": 0.1, "s2": 0.2}
@@ -128,10 +123,7 @@ def test_pipeline_repeated_attributes_forbidden(
         - position_score: "*score_one"
     """
     with pytest.raises(AnnotationConfigurationError) as error:
-        build_annotation_pipeline(
-            pipeline_config_str=pipeline_config,
-            grr_repository=test_grr,
-        )
+        load_pipeline_from_yaml(pipeline_config, test_grr)
     assert str(error.value) == (
         "Repeated attributes in pipeline were found -"
         " {'s1': ['A0_score_one', 'A0_dup_score_one']}"
@@ -144,9 +136,8 @@ def test_pipeline_repeated_attributes_allowed(
     pipeline_config = """
         - position_score: "*score_one"
     """
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=test_grr,
+    pipeline = load_pipeline_from_yaml(
+        pipeline_config, test_grr,
         allow_repeated_attributes=True,
     )
     result = pipeline.annotate(Position("foo", 1))
@@ -159,9 +150,7 @@ def test_copy_pipeline(test_grr: GenomicResourceRepo) -> None:
         - position_score: score_one
         - position_score: score_two
     """
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=test_grr)
+    pipeline = load_pipeline_from_yaml(pipeline_config, test_grr)
     copied_pipeline = copy_annotation_pipeline(pipeline)
 
     assert len(pipeline.annotators) == 2
@@ -186,12 +175,8 @@ def test_copy_reannotation_pipeline(
         - position_score: score_one
         - position_score: score_two
     """
-    pipeline_a = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config_a,
-        grr_repository=test_grr)
-    pipeline_b = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config_b,
-        grr_repository=test_grr)
+    pipeline_a = load_pipeline_from_yaml(pipeline_config_a, test_grr)
+    pipeline_b = load_pipeline_from_yaml(pipeline_config_b, test_grr)
 
     reannotation = ReannotationPipeline(
         pipeline_a, pipeline_b)

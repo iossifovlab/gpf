@@ -4,7 +4,7 @@ import argparse
 import logging
 import pathlib
 
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.genomic_resources.genomic_context import (
     CLIGenomicContext,
@@ -22,6 +22,21 @@ class CLIAnnotationContext(CLIGenomicContext):
     """Defines annotation pipeline genomics context."""
 
     @staticmethod
+    def add_context_arguments(parser: argparse.ArgumentParser) -> None:
+        """Add command line arguments to the argument parser."""
+        parser.add_argument(
+            "pipeline", default="context", nargs="?",
+            help="The pipeline definition file. By default, or if "
+            "the value is gpf_instance, the annotation pipeline "
+            "from the configured gpf instance will be used.")
+        parser.add_argument(
+            "-ar", "--allow-repeated-attributes", default=False,
+            action="store_true",
+            help="Rename repeated attributes instead of raising"
+            " an error.")
+        CLIGenomicContext.add_context_arguments(parser)
+
+    @staticmethod
     def context_builder(args: argparse.Namespace) -> CLIAnnotationContext:
         """Build a CLI genomic context."""
         context = CLIGenomicContext.context_builder(args)
@@ -34,12 +49,11 @@ class CLIAnnotationContext(CLIGenomicContext):
                 "Using the annotation pipeline from the file %s.",
                 args.pipeline)
             grr = context.get_genomic_resources_repository()
+            assert grr is not None
 
             if (pipeline_path := pathlib.Path(args.pipeline)).exists():
                 raw_pipeline = pipeline_path.read_text()
             else:
-                if grr is None:
-                    raise ValueError
                 raw_pipeline = AnnotationPipelineImplementation(
                     grr.get_resource(args.pipeline)).raw
 
@@ -47,9 +61,8 @@ class CLIAnnotationContext(CLIGenomicContext):
             if hasattr(args, "work_dir"):
                 work_dir = pathlib.Path(args.work_dir)
 
-            pipeline = build_annotation_pipeline(
-                pipeline_config_str=raw_pipeline,
-                grr_repository=grr,
+            pipeline = load_pipeline_from_yaml(
+                raw_pipeline, grr,
                 allow_repeated_attributes=args.allow_repeated_attributes,
                 work_dir=work_dir)
             context_objects["annotation_pipeline"] = pipeline

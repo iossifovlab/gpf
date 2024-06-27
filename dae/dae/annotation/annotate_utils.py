@@ -7,7 +7,11 @@ from typing import Optional
 
 from pysam import TabixFile
 
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_config import RawAnnotatorsConfig
+from dae.annotation.annotation_factory import (
+    build_annotation_pipeline,
+    load_pipeline_from_yaml,
+)
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     ReannotationPipeline,
@@ -15,9 +19,6 @@ from dae.annotation.annotation_pipeline import (
 from dae.annotation.context import CLIAnnotationContext
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.genomic_context import get_genomic_context
-from dae.genomic_resources.implementations.annotation_pipeline_impl import (
-    AnnotationPipelineImplementation,
-)
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
@@ -96,8 +97,8 @@ class AnnotationTool:
 
     @staticmethod
     def _produce_annotation_pipeline(
-        pipeline_config: str,
-        pipeline_config_old: Optional[str],
+        pipeline_config: RawAnnotatorsConfig,
+        pipeline_config_old: str | None,
         grr_definition: Optional[dict],
         *,
         allow_repeated_attributes: bool,
@@ -105,31 +106,14 @@ class AnnotationTool:
     ) -> AnnotationPipeline:
         grr = build_genomic_resource_repository(definition=grr_definition)
         pipeline = build_annotation_pipeline(
-            pipeline_config_str=pipeline_config,
-            grr_repository=grr,
+            pipeline_config, grr,
             allow_repeated_attributes=allow_repeated_attributes,
             work_dir=work_dir,
         )
         if pipeline_config_old is not None:
-            pipeline_old = build_annotation_pipeline(
-                pipeline_config_str=pipeline_config_old,
-                grr_repository=grr,
-            )
+            pipeline_old = load_pipeline_from_yaml(pipeline_config_old, grr)
             pipeline = ReannotationPipeline(pipeline, pipeline_old)
         return pipeline
-
-    def _get_pipeline_config(self) -> str:
-        if self.args.pipeline == "context":
-            assert self.gpf_instance is not None
-            return Path(
-                self.gpf_instance.dae_dir,
-                self.gpf_instance.dae_config.annotation.conf_file,
-            ).read_text()
-        if (pipeline_path := Path(self.args.pipeline)).exists():
-            return pipeline_path.read_text()
-        if (pipeline_res := self.grr.find_resource(self.args.pipeline)):
-            return AnnotationPipelineImplementation(pipeline_res).raw
-        raise ValueError
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:

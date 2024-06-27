@@ -5,7 +5,7 @@ import textwrap
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotationPipeline, AnnotatorInfo
 from dae.annotation.score_annotator import AlleleScoreAnnotator
 from dae.genomic_resources import build_genomic_resource_repository
@@ -101,9 +101,7 @@ def test_allele_score_with_default_score_annotation(
         - allele_score:
             resource_id: allele_score
     """)
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=annotation_configuration,
-        grr_repository=local_repo)
+    pipeline = load_pipeline_from_yaml(annotation_configuration, local_repo)
 
     annotatable = VCFAllele(*variant)
     result = pipeline.annotate(annotatable)
@@ -158,9 +156,7 @@ def test_allele_annotator_add_chrom_prefix_vcf_table(
                 - source: test100way
             """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, repo)
     with pipeline.open() as work_pipeline:
         annotatable = VCFAllele(*allele)
         result = work_pipeline.annotate(annotatable)

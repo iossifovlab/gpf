@@ -22,10 +22,6 @@ def configure_argument_parser() -> argparse.ArgumentParser:
         description="Annotate columns",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument("pipeline", default="context", nargs="?",
-                        help="The pipeline definition file. By default, or if "
-                        "the value is gpf_instance, the annotation pipeline "
-                        "from the configured gpf instance will be used.")
     parser.add_argument("-o", "--output",
                         help="Filename of the output VCF result",
                         default=None)

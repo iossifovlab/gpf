@@ -5,7 +5,7 @@ import textwrap
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.genomic_scores import PositionScore
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import (
@@ -18,7 +18,7 @@ from dae.genomic_resources.testing import (
 
 @pytest.fixture()
 def position_score_repo() -> GenomicResourceRepo:
-    repo = build_inmemory_test_repository({
+    return build_inmemory_test_repository({
         "position_score1": {
             "genomic_resource.yaml":
             """\
@@ -58,8 +58,6 @@ def position_score_repo() -> GenomicResourceRepo:
         },
     })
 
-    return repo
-
 
 def test_position_resource_default_annotation(
         position_score_repo: GenomicResourceRepo) -> None:
@@ -85,9 +83,7 @@ def test_position_score_annotator_all_attributes(
                   position_aggregator: max
             """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=position_score_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, position_score_repo)
 
     annotator = pipeline.annotators[0]
     assert len(annotator.attributes) == 1
@@ -143,15 +139,8 @@ def test_position_score_annotator(
                   position_aggregator: {pos_aggregator}
             """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=position_score_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, position_score_repo)
 
-    # annoation_runner = BasicAnnotatorRunner()
-    # annotator = ThreadAnnotatorRunner()
-    # annotator = AsynioAnnotatorRunner()
-
-    # result = annotation_runner.run(pipeline, annotatable)
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)
 
@@ -169,9 +158,7 @@ def test_position_annotator_info(
                   name: test100
             """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=position_score_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, position_score_repo)
 
     pipeline_info = pipeline.get_info()
     assert len(pipeline_info) == 1
@@ -198,9 +185,7 @@ def test_position_default_annotator_schema(
                 resource_id: position_score1
             """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=position_score_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, position_score_repo)
 
     attributes = pipeline.get_attributes()
     assert [att.name for att in attributes] == ["test100", "t1", "t2"]
@@ -219,9 +204,7 @@ def test_position_annotator_schema_one_source_two_dest_schema(
                   position_aggregator: max
             """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=position_score_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, position_score_repo)
 
     assert len(pipeline.get_info()) == 1
     annotator_info = pipeline.get_info()[0]
@@ -254,9 +237,7 @@ def test_position_annotator_join_aggregation(
             """)
     print(pipeline_config)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=position_score_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, position_score_repo)
 
     with pipeline.open() as work_pipeline:
         allele = ("1", 14970, "CC", "C")
@@ -280,9 +261,7 @@ def test_position_annotator_schema_one_source_two_dest_annotate(
                   position_aggregator: max
             """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=position_score_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, position_score_repo)
 
     with pipeline.open() as work_pipeline:
         allele = VCFAllele("1", 14971, "C", "CAA")
@@ -299,7 +278,7 @@ def test_position_annotator_schema_one_source_two_dest_annotate(
 def test_position_score_annotator_attributes_with_aggr_fails(
         position_score_repo: GenomicResourceRepo) -> None:
     with pytest.raises(ValueError) as error:
-        build_annotation_pipeline(pipeline_config_str="""
+        load_pipeline_from_yaml("""
             - position_score:
                 resource_id: position_score1
                 attributes:
@@ -307,21 +286,21 @@ def test_position_score_annotator_attributes_with_aggr_fails(
                   name: test100min
                   position_aggregator: min
                   nucleotide_aggregator: mean
-        """, grr_repository=position_score_repo)
+        """, position_score_repo)
     assert "nucleotide_aggregator" in str(error)
 
 
 def test_position_score_annotator_invalid_aggregator(
         position_score_repo: GenomicResourceRepo) -> None:
     with pytest.raises(ValueError) as error:
-        build_annotation_pipeline(pipeline_config_str="""
+        load_pipeline_from_yaml("""
             - position_score:
                 resource_id: position_score1
                 attributes:
                 - source: test100way
                   name: test100min
                   position_aggregator: minn
-        """, grr_repository=position_score_repo)
+        """, position_score_repo)
     assert "minn" in str(error)
 
 
@@ -341,9 +320,7 @@ def test_position_annotator_documentation(
                   name: test100default
             """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=position_score_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, position_score_repo)
 
     att1 = pipeline.get_attribute_info("test100min")
     assert att1 is not None
@@ -404,9 +381,7 @@ def test_position_annotator_add_chrom_prefix_tabix_table(
                   position_aggregator: min
             """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, repo)
     with pipeline.open() as work_pipeline:
         annotatable = VCFAllele(*allele)
         result = work_pipeline.annotate(annotatable)
@@ -456,9 +431,7 @@ def test_position_annotator_add_chrom_prefix_inmemory_table(
                   position_aggregator: min
             """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, repo)
     with pipeline.open() as work_pipeline:
         annotatable = VCFAllele(*allele)
         result = work_pipeline.annotate(annotatable)

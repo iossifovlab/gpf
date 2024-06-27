@@ -8,13 +8,14 @@ from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_config import (
     AnnotationConfigParser,
 )
-from dae.annotation.annotation_factory import (
-    build_annotation_pipeline,
-)
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.normalize_allele_annotator import (
     NormalizeAlleleAnnotator,
 )
 from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 
 
 def test_normalize_allele_annotator_config() -> None:
@@ -50,8 +51,7 @@ def test_normalize_allele_annotator_pipeline(
               internal: False
         """)
 
-    annotation_pipeline = build_annotation_pipeline(
-        pipeline_config_str=config, grr_repository=grr_fixture)
+    annotation_pipeline = load_pipeline_from_yaml(config, grr_fixture)
 
     with annotation_pipeline.open() as pipeline:
         assert len(pipeline.annotators) == 1
@@ -91,8 +91,9 @@ def test_normalize_tandem_repeats(
               internal: False
         """)
 
-    annotation_pipeline = build_annotation_pipeline(
-        pipeline_config_str=config)
+    grr = build_genomic_resource_repository()
+
+    annotation_pipeline = load_pipeline_from_yaml(config, grr)
 
     with annotation_pipeline.open() as pipeline:
         assert pipeline is not None
@@ -123,10 +124,9 @@ def test_normalize_allele_annotator_pipeline_schema(
             genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
         """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=config, grr_repository=grr_fixture)
+    annotation_pipeline = load_pipeline_from_yaml(config, grr_fixture)
 
-    attributes = pipeline.get_attributes()
+    attributes = annotation_pipeline.get_attributes()
     assert len(attributes) == 1
     assert attributes[0].name == "normalized_allele"
     assert attributes[0].internal
@@ -143,8 +143,7 @@ def test_normalize_allele_annotator_resources(
               internal: False
         """)
 
-    annotation_pipeline = build_annotation_pipeline(
-        pipeline_config_str=config, grr_repository=grr_fixture)
+    annotation_pipeline = load_pipeline_from_yaml(config, grr_fixture)
 
     with annotation_pipeline.open() as pipeline:
         annotator = pipeline.annotators[0]

@@ -292,18 +292,19 @@ def test_reannotate_parquet_metadata(
 
     loader_result = ParquetLoader(output_dir)
 
-    # check annotation pipeline meta is correctly updated
-    expected_meta = textwrap.dedent("""
-        - position_score:
-            resource_id: three
-            attributes:
-            - source: score_three
-              name: score_A
-            - source: score_three
-              name: score_A_internal
-              internal: true
+    result_pipeline = dict(loader_result.meta).pop("annotation_pipeline")
+
+    expected_pipeline = textwrap.dedent(
+    """- position_score:
+    resource_id: three
+    attributes:
+    - source: score_three
+      name: score_A
+    - source: score_three
+      name: score_A_internal
+      internal: true
     """)
-    assert loader_result.meta["annotation_pipeline"] == expected_meta
+    assert result_pipeline == expected_pipeline
 
 
 @pytest.mark.parametrize("study", [("t4c8_study_nonpartitioned"),

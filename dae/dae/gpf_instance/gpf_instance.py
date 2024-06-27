@@ -562,9 +562,7 @@ class GPFInstance:
         """Return the annotation pipeline configured in the GPF instance."""
         if self._annotation_pipeline is None:
             pipeline_config = self.get_annotation_pipeline_config()
-            pipeline = build_annotation_pipeline(
-                pipeline_config_raw=pipeline_config,
-                grr_repository=self.grr)
+            pipeline = build_annotation_pipeline(pipeline_config, self.grr)
 
             self._annotation_pipeline = pipeline
 

@@ -7,7 +7,7 @@ import pytest
 
 from dae.annotation.annotate_columns import cli as cli_columns
 from dae.annotation.annotate_vcf import cli as cli_vcf
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import ReannotationPipeline
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import GenomicResourceRepo
@@ -204,10 +204,7 @@ def simple_pipeline_config() -> str:
 def test_annotators_used_context_attributes(
     simple_pipeline_config: str, reannotation_grr: GenomicResourceRepo,
 ) -> None:
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=simple_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
+    pipeline = load_pipeline_from_yaml(simple_pipeline_config, reannotation_grr)
     # default behaviour
     assert pipeline.annotators[0].used_context_attributes == ()
 
@@ -223,10 +220,7 @@ def test_annotators_used_context_attributes(
 def test_dependency_graph_correctness(
     simple_pipeline_config: str, reannotation_grr: GenomicResourceRepo,
 ) -> None:
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=simple_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
+    pipeline = load_pipeline_from_yaml(simple_pipeline_config, reannotation_grr)
     dependency_graph = ReannotationPipeline.build_dependency_graph(pipeline)
 
     liftover_annotator = pipeline.annotators[0].get_info()
@@ -265,14 +259,10 @@ def test_new_annotators_detection(
         - name: hgX_annotatable
           source: liftover_annotatable
     """
-    old_pipeline = build_annotation_pipeline(
-        pipeline_config_str=old_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
-    new_pipeline = build_annotation_pipeline(
-        pipeline_config_str=new_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
+    old_pipeline = load_pipeline_from_yaml(
+        old_pipeline_config, reannotation_grr)
+    new_pipeline = load_pipeline_from_yaml(
+        new_pipeline_config, reannotation_grr)
     reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
 
     assert len(reannotation.annotators_new) == 1
@@ -300,14 +290,10 @@ def test_deleted_attributes(reannotation_grr: GenomicResourceRepo) -> None:
         target_genome: foobar_genome
     - position_score: one
     """
-    old_pipeline = build_annotation_pipeline(
-        pipeline_config_str=old_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
-    new_pipeline = build_annotation_pipeline(
-        pipeline_config_str=new_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
+    old_pipeline = load_pipeline_from_yaml(
+        old_pipeline_config, reannotation_grr)
+    new_pipeline = load_pipeline_from_yaml(
+        new_pipeline_config, reannotation_grr)
     reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
 
     assert len(reannotation.annotators_new) == 0
@@ -342,14 +328,10 @@ def test_reused_attributes(
         gene_models: foobar_genes
         input_annotatable: hgX_annotatable
     """
-    old_pipeline = build_annotation_pipeline(
-        pipeline_config_str=old_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
-    new_pipeline = build_annotation_pipeline(
-        pipeline_config_str=new_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
+    old_pipeline = load_pipeline_from_yaml(
+        old_pipeline_config, reannotation_grr)
+    new_pipeline = load_pipeline_from_yaml(
+        new_pipeline_config, reannotation_grr)
     reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
 
     assert "hgX_annotatable" in reannotation.attributes_reused
@@ -404,14 +386,10 @@ def test_reused_attributes_indirect(
         resource_id: gene_score2
         input_gene_list: my_genes
     """
-    old_pipeline = build_annotation_pipeline(
-        pipeline_config_str=old_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
-    new_pipeline = build_annotation_pipeline(
-        pipeline_config_str=new_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
+    old_pipeline = load_pipeline_from_yaml(
+        old_pipeline_config, reannotation_grr)
+    new_pipeline = load_pipeline_from_yaml(
+        new_pipeline_config, reannotation_grr)
     reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
 
     assert "hgX_annotatable" in reannotation.attributes_reused
@@ -465,14 +443,10 @@ def test_annotators_rerun_detection_upstream(
         resource_id: gene_score2
         input_gene_list: my_genes
     """
-    old_pipeline = build_annotation_pipeline(
-        pipeline_config_str=old_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
-    new_pipeline = build_annotation_pipeline(
-        pipeline_config_str=new_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
+    old_pipeline = load_pipeline_from_yaml(
+        old_pipeline_config, reannotation_grr)
+    new_pipeline = load_pipeline_from_yaml(
+        new_pipeline_config, reannotation_grr)
     reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
 
     assert len(reannotation.annotators_new) == 1
@@ -521,14 +495,10 @@ def test_annotators_rerun_detection_downstream(
         resource_id: gene_score1
         input_gene_list: my_genes
     """
-    old_pipeline = build_annotation_pipeline(
-        pipeline_config_str=old_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
-    new_pipeline = build_annotation_pipeline(
-        pipeline_config_str=new_pipeline_config,
-        grr_repository=reannotation_grr,
-    )
+    old_pipeline = load_pipeline_from_yaml(
+        old_pipeline_config, reannotation_grr)
+    new_pipeline = load_pipeline_from_yaml(
+        new_pipeline_config, reannotation_grr)
     reannotation = ReannotationPipeline(new_pipeline, old_pipeline)
 
     assert len(reannotation.annotators_new) == 1

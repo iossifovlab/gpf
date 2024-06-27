@@ -3,11 +3,13 @@ import textwrap
 from typing import Any
 
 from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
-from dae.annotation.annotation_config import AnnotationConfigParser
+from dae.annotation.annotation_config import (
+    AnnotationConfigParser,
+    AnnotatorInfo,
+)
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-    AnnotatorInfo,
 )
 from dae.annotation.annotator_base import AnnotatorBase
 from dae.effect_annotation.annotator import EffectAnnotator

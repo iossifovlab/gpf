@@ -4,11 +4,10 @@ import logging
 import textwrap
 from typing import Any, Callable, Optional
 
+from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-    AnnotatorInfo,
-    AttributeInfo,
 )
 from dae.genomic_resources.liftover_chain import (
     LiftoverChain,

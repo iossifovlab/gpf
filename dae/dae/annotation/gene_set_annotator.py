@@ -3,10 +3,10 @@ import logging
 from typing import Any, Optional
 
 from dae.annotation.annotatable import Annotatable
+from dae.annotation.annotation_config import AnnotatorInfo
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-    AnnotatorInfo,
 )
 from dae.gene_sets.gene_sets_db import build_gene_set_collection_from_resource
 from dae.genomic_resources import GenomicResource
@@ -66,9 +66,10 @@ class GeneSetAnnotator(Annotator):
         self.gene_set_collection = build_gene_set_collection_from_resource(
             self.gene_set_resource)
 
-        self.gene_set = self.gene_set_collection.get_gene_set(gene_set_id)
-        if self.gene_set is None:
+        gs = self.gene_set_collection.get_gene_set(gene_set_id)
+        if gs is None:
             raise ValueError(f"The {gene_set_id} is not in the collection")
+        self.gene_set = gs
 
         info.resources += [gene_set_resource]
 
@@ -91,6 +92,4 @@ class GeneSetAnnotator(Annotator):
         if len(set(genes).intersection(set(self.gene_set.syms))) != 0:
             is_in = True
 
-        attributes = {self.gene_set.name: is_in}
-
-        return attributes
+        return {self.gene_set.name: is_in}

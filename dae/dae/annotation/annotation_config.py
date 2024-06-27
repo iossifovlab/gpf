@@ -1,16 +1,13 @@
 import copy
 import fnmatch
 import logging
+from collections.abc import Iterator, Mapping
+from dataclasses import dataclass, field
 from textwrap import dedent
 from typing import Any, Optional, TypedDict, Union
 
 import yaml
 
-from dae.annotation.annotation_pipeline import (
-    AnnotationPreambule,
-    AnnotatorInfo,
-    AttributeInfo,
-)
 from dae.genomic_resources.repository import (
     GenomicResource,
     GenomicResourceRepo,
@@ -39,6 +36,120 @@ RawPipelineConfig = Union[RawAnnotatorsConfig, RawFullConfig]
 
 class AnnotationConfigurationError(ValueError):
     pass
+
+
+class ParamsUsageMonitor(Mapping):
+    """Class to monitor usage of annotator parameters."""
+
+    def __init__(self, data: dict[str, Any]):
+        self._data = dict(data)
+        self._used_keys: set[str] = set()
+
+    def __hash__(self) -> int:
+        return hash(tuple(sorted(self._data.items())))
+
+    def __getitem__(self, key: str) -> Any:
+        self._used_keys.add(key)
+        return self._data[key]
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __iter__(self) -> Iterator:
+        raise ValueError("Should not iterate a parameter dictionary.")
+
+    def __repr__(self) -> str:
+        return self._data.__repr__()
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, ParamsUsageMonitor):
+            return False
+        return self._data == other._data
+
+    def get_used_keys(self) -> set[str]:
+        return self._used_keys
+
+    def get_unused_keys(self) -> set[str]:
+        return set(self._data.keys()) - self._used_keys
+
+
+@dataclass(init=False, eq=True, unsafe_hash=True)
+class AttributeInfo:
+    """Defines annotation attribute configuration."""
+
+    def __init__(self, name: str, source: str, internal: bool,
+                 parameters: ParamsUsageMonitor | dict[str, Any],
+                 _type: str = "str", description: str = "",
+                 documentation: Optional[str] = None):
+        self.name = name
+        self.source = source
+        self.internal = internal
+        if isinstance(parameters, ParamsUsageMonitor):
+            self.parameters = parameters
+        else:
+            self.parameters = ParamsUsageMonitor(parameters)
+        self.type = _type
+        self.description = description
+        self._documentation = documentation
+
+    name: str
+    source: str
+    internal: bool
+    parameters: ParamsUsageMonitor
+    type: str = "str"           # str, int, float, annotatable, or object
+    description: str = ""       # interpreted as md
+    _documentation: Optional[str] = None
+
+    @property
+    def documentation(self) -> str:
+        if self._documentation is None:
+            return self.description
+        return self._documentation
+
+
+@dataclass(init=False)
+class AnnotatorInfo:
+    """Defines annotator configuration."""
+
+    def __init__(self, _type: str, attributes: list[AttributeInfo],
+                 parameters: ParamsUsageMonitor | dict[str, Any],
+                 documentation: str = "",
+                 resources: Optional[list[GenomicResource]] = None,
+                 annotator_id: str = "N/A"):
+        self.type = _type
+        self.annotator_id = f"{annotator_id}"
+        self.attributes = attributes
+        self.documentation = documentation
+        if isinstance(parameters, ParamsUsageMonitor):
+            self.parameters = parameters
+        else:
+            self.parameters = ParamsUsageMonitor(parameters)
+        if resources is None:
+            self.resources = []
+        else:
+            self.resources = resources
+
+    annotator_id: str = field(compare=False, hash=None)
+    type: str
+    attributes: list[AttributeInfo]
+    parameters: ParamsUsageMonitor
+    documentation: str = ""
+    resources: list[GenomicResource] = field(default_factory=list)
+
+    def __hash__(self) -> int:
+        attrs_hash = "".join(str(hash(attr)) for attr in self.attributes)
+        resources_hash = "".join(str(hash(res)) for res in self.resources)
+        params_hash = "".join(str(hash(self.parameters)))
+        return hash(f"{self.type}{attrs_hash}{resources_hash}{params_hash}")
+
+
+@dataclass
+class AnnotationPreambule:
+    summary: str
+    description: str
+    input_reference_genome: str
+    input_reference_genome_res: Optional[GenomicResource]
+    metadata: dict[str, Any]
 
 
 class AnnotationConfigParser:
@@ -249,22 +360,6 @@ class AnnotationConfigParser:
                 "an invalid yaml file.", error) from error
 
         return AnnotationConfigParser.parse_raw(pipeline_raw_config, grr=grr)
-
-    @staticmethod
-    def parse_config_file(
-        filename: str, grr: Optional[GenomicResourceRepo],
-    ) -> tuple[Optional[AnnotationPreambule], list[AnnotatorInfo]]:
-        """Parse annotation pipeline configuration file."""
-        logger.info("loading annotation pipeline configuration: %s", filename)
-        try:
-            with open(filename, "rt", encoding="utf8") as infile:
-                content = infile.read()
-        except OSError as error:
-            raise AnnotationConfigurationError(
-                f"Problem reading the contents of the {filename} file.",
-                error) from error
-
-        return AnnotationConfigParser.parse_str(content, grr=grr)
 
     @staticmethod
     def parse_raw_attribute_config(

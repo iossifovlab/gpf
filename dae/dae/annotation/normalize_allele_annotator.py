@@ -3,11 +3,10 @@ import logging
 from typing import Any
 
 from dae.annotation.annotatable import Annotatable, VCFAllele
+from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-    AnnotatorInfo,
-    AttributeInfo,
 )
 from dae.annotation.annotator_base import AnnotatorBase
 from dae.genomic_resources.genomic_context import get_genomic_context

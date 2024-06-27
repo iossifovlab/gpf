@@ -5,7 +5,7 @@ import textwrap
 import pytest
 
 from dae.annotation.annotatable import VCFAllele
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
@@ -80,8 +80,7 @@ def test_np_score_annotator(
               nucleotide_aggregator: {nuc_aggregator}
         """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config, grr_repository=repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, repo)
 
     # pipeline.get_schema -> ["attribute", "type", "resource", "scores"]
     # pipeline.annotate_allele(sa) -> {("a1": v1), "a2": v2}}

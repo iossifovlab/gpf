@@ -9,12 +9,14 @@ import textwrap
 from typing import Any, Callable, Optional, cast
 
 from dae.annotation.annotatable import Annotatable, VCFAllele
-from dae.annotation.annotation_config import AnnotationConfigParser
+from dae.annotation.annotation_config import (
+    AnnotationConfigParser,
+    AnnotatorInfo,
+    AttributeInfo,
+)
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-    AnnotatorInfo,
-    AttributeInfo,
 )
 from dae.genomic_resources.aggregators import validate_aggregator
 from dae.genomic_resources.genomic_scores import (

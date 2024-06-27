@@ -17,9 +17,6 @@ from typing import Any, Callable, Optional, Union, cast
 import yaml
 from box import Box
 
-from dae.annotation.annotation_config import (
-    AnnotationConfigParser,
-)
 from dae.annotation.annotation_factory import (
     AnnotationPipeline,
     build_annotation_pipeline,
@@ -619,10 +616,7 @@ class ImportProject:
     def build_annotation_pipeline(self) -> AnnotationPipeline:
         config = self.get_annotation_pipeline_config()
         gpf_instance = self.get_gpf_instance()
-        _, annotation_config = AnnotationConfigParser.parse_raw(config)
-        return build_annotation_pipeline(
-            pipeline_config=annotation_config, grr_repository=gpf_instance.grr,
-        )
+        return build_annotation_pipeline(config, gpf_instance.grr)
 
     def __str__(self) -> str:
         return f"Project({self.study_id})"
@@ -869,8 +863,7 @@ def construct_import_annotation_pipeline(
     pipeline_config = construct_import_annotation_pipeline_config(
         gpf_instance, annotation_configfile)
     grr = gpf_instance.grr
-    return build_annotation_pipeline(
-        pipeline_config_raw=pipeline_config, grr_repository=grr)
+    return build_annotation_pipeline(pipeline_config, grr)
 
 
 class MakefilePartitionHelper:

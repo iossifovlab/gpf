@@ -19,13 +19,16 @@ from dae.annotation.annotate_utils import (
     produce_partfile_paths,
     produce_regions,
 )
+from dae.annotation.annotation_config import RawAnnotatorsConfig
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
-    AnnotatorInfo,
     ReannotationPipeline,
 )
 from dae.annotation.context import CLIAnnotationContext
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -76,15 +79,14 @@ def update_header(
 
 def combine(
     input_file_path: str,
-    pipeline_config: Optional[list[AnnotatorInfo]],
+    pipeline_config: RawAnnotatorsConfig,
     grr_definition: Optional[dict],
     partfile_paths: list[str],
     output_file_path: str,
 ) -> None:
     """Combine annotated region parts into a single VCF file."""
-    pipeline = build_annotation_pipeline(
-        pipeline_config=pipeline_config,
-        grr_repository_definition=grr_definition)
+    grr = build_genomic_resource_repository(definition=grr_definition)
+    pipeline = build_annotation_pipeline(pipeline_config, grr)
 
     with closing(VariantFile(input_file_path)) as input_file:
         update_header(input_file, pipeline)
@@ -112,14 +114,10 @@ class AnnotateVCFTool(AnnotationTool):
         )
         parser.add_argument("input", default="-", nargs="?",
                             help="the input vcf file")
-        parser.add_argument("pipeline", default="context", nargs="?",
-                            help="The pipeline definition file. By default, or if "
-                            "the value is gpf_instance, the annotation pipeline "
-                            "from the configured gpf instance will be used.")
         parser.add_argument("-r", "--region-size", default=300_000_000,
                             type=int, help="region size to parallelize by")
         parser.add_argument("-w", "--work-dir",
-                            help="Directory to store intermediate output files in",
+                            help="Directory to store intermediate output files",
                             default="annotate_vcf_output")
         parser.add_argument("-o", "--output",
                             help="Filename of the output VCF result",
@@ -136,11 +134,11 @@ class AnnotateVCFTool(AnnotationTool):
     def annotate(  # pylint: disable=too-many-locals,too-many-branches
         input_file: str,
         region: Optional[tuple[str, int, int]],
-        pipeline_config: str,
+        pipeline_config: RawAnnotatorsConfig,
         grr_definition: Optional[dict],
         out_file_path: str,
         allow_repeated_attributes: bool = False,
-        pipeline_config_old: Optional[str] = None,
+        pipeline_config_old: str | None = None,
     ) -> None:
         # flake8: noqa: C901
         """Annotate a region from a given input VCF file using a pipeline."""
@@ -226,7 +224,7 @@ class AnnotateVCFTool(AnnotationTool):
         else:
             output = os.path.basename(self.args.input).split(".")[0] + "_annotated.vcf"
 
-        raw_pipeline_config = self._get_pipeline_config()
+        raw_pipeline_config = self.pipeline.raw
 
         pipeline_config_old = None
         if self.args.reannotate:
@@ -266,7 +264,7 @@ class AnnotateVCFTool(AnnotationTool):
             self.task_graph.create_task(
                 "combine",
                 combine,
-                [self.args.input, self.pipeline.get_info(),
+                [self.args.input, self.pipeline.raw,
                 self.grr.definition, file_paths, output],
                 region_tasks,
             )

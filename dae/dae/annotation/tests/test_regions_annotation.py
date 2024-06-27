@@ -5,7 +5,7 @@ import textwrap
 import pytest
 
 from dae.annotation.annotatable import Region
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import build_inmemory_test_repository
 
@@ -125,9 +125,7 @@ def test_position_score_annotator(
                   position_aggregator: {pos_aggregator}
             """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config,
-        grr_repository=fixture_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, fixture_repo)
 
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)
@@ -158,8 +156,7 @@ def test_np_score_annotator(
               nucleotide_aggregator: {nuc_aggregator}
         """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config, grr_repository=fixture_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, fixture_repo)
 
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)
@@ -191,8 +188,7 @@ def test_np_score_annotator_region_length_cutoff(
               nucleotide_aggregator: {nuc_aggregator}
         """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config, grr_repository=fixture_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, fixture_repo)
 
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)
@@ -223,8 +219,7 @@ def test_allele_score_annotator(
               allele_aggregator: {allele_aggregator}
         """)
 
-    pipeline = build_annotation_pipeline(
-        pipeline_config_str=pipeline_config, grr_repository=fixture_repo)
+    pipeline = load_pipeline_from_yaml(pipeline_config, fixture_repo)
 
     with pipeline.open() as work_pipeline:
         result = work_pipeline.annotate(annotatable)

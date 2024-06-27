@@ -18,6 +18,11 @@ from dae.annotation.annotate_utils import (
     produce_partfile_paths,
     produce_regions,
 )
+from dae.annotation.annotation_config import (
+    RawAnnotatorsConfig,
+    RawPipelineConfig,
+)
+from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     ReannotationPipeline,
@@ -33,10 +38,12 @@ from dae.annotation.record_to_annotatable import (
     build_record_to_annotatable,
 )
 from dae.genomic_resources.cli import VerbosityConfiguration
-from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
 )
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
@@ -92,11 +99,21 @@ def produce_tabix_index(
                 force=True)
 
 
-def combine(args: Any, partfile_paths: list[str], out_file_path: str) -> None:
+def combine(
+    args: Any,
+    pipeline_config: RawPipelineConfig,
+    grr_definition: Optional[dict],
+    ref_genome_id: str | None,
+    partfile_paths: list[str], out_file_path: str,
+) -> None:
     """Combine annotated region parts into a single VCF file."""
-    CLIAnnotationContext.register(args)
-    context = get_genomic_context()
-    pipeline = CLIAnnotationContext.get_pipeline(context)
+    grr = build_genomic_resource_repository(definition=grr_definition)
+    pipeline = build_annotation_pipeline(pipeline_config, grr)
+    if ref_genome_id is not None:
+        genome = build_reference_genome_from_resource(
+            grr.get_resource(ref_genome_id))
+    else:
+        genome = None
     annotation_attributes = [
         attr.name for attr in pipeline.get_attributes()
         if not attr.internal
@@ -114,8 +131,7 @@ def combine(args: Any, partfile_paths: list[str], out_file_path: str) -> None:
                 out_file.write(partfile.read())
     for partfile_path in partfile_paths:
         os.remove(partfile_path)
-    produce_tabix_index(
-        out_file_path, args, hcs, context.get_reference_genome())
+    produce_tabix_index(out_file_path, args, hcs, genome)
 
 
 class AnnotateColumnsTool(AnnotationTool):
@@ -130,11 +146,6 @@ class AnnotateColumnsTool(AnnotationTool):
         parser.add_argument(
             "input", default="-", nargs="?",
             help="the input column file")
-        parser.add_argument(
-            "pipeline", default="context", nargs="?",
-            help="The pipeline definition file. By default, or if "
-            "the value is gpf_instance, the annotation pipeline "
-            "from the configured gpf instance will be used.")
         parser.add_argument(
             "-r", "--region-size", default=300_000_000,
             type=int, help="region size to parallelize by")
@@ -169,7 +180,7 @@ class AnnotateColumnsTool(AnnotationTool):
     @staticmethod
     def annotate(
         args: argparse.Namespace,
-        pipeline_config: str,
+        pipeline_config: RawAnnotatorsConfig,
         grr_definition: Optional[dict],
         ref_genome_id: Optional[str],
         out_file_path: str,
@@ -350,8 +361,6 @@ class AnnotateColumnsTool(AnnotationTool):
         ref_genome_id = ref_genome.resource_id \
             if ref_genome is not None else None
 
-        raw_pipeline_config = self._get_pipeline_config()
-
         if tabix_index_filename(self.args.input):
             with closing(TabixFile(self.args.input)) as pysam_file:
                 regions = produce_regions(pysam_file, self.args.region_size)
@@ -363,7 +372,7 @@ class AnnotateColumnsTool(AnnotationTool):
                 region_tasks.append(self.task_graph.create_task(
                     f"part-{index}",
                     AnnotateColumnsTool.annotate,
-                    [self.args, raw_pipeline_config,
+                    [self.args, self.pipeline.raw,
                      self.grr.definition,
                      ref_genome_id, path, region, True],
                     []))
@@ -371,13 +380,14 @@ class AnnotateColumnsTool(AnnotationTool):
             self.task_graph.create_task(
                 "combine",
                 combine,
-                [self.args, file_paths, output],
+                [self.args, self.pipeline.raw, self.grr.definition,
+                 ref_genome_id, file_paths, output],
                 region_tasks)
         else:
             self.task_graph.create_task(
                 "annotate_all",
                 AnnotateColumnsTool.annotate,
-                [self.args, raw_pipeline_config, self.grr.definition,
+                [self.args, self.pipeline.raw, self.grr.definition,
                  ref_genome_id, output,
                  (), output.endswith(".gz")],
                 [])
