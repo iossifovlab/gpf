@@ -43,6 +43,7 @@ def url_to_pyarrow_fs(
 
 def merge_parquets(
     in_files: list[str], out_file: str,
+    *,
     delete_in_files: bool = True,
     row_group_size: int = 50_000,
     parquet_version: Optional[str] = None,
@@ -50,8 +51,10 @@ def merge_parquets(
     """Merge `in_files` into one large file called `out_file`."""
     try:
         _try_merge_parquets(
-            in_files, out_file, delete_in_files,
-            row_group_size, parquet_version)
+            in_files, out_file,
+            delete_in_files=delete_in_files,
+            row_group_size=row_group_size,
+            parqet_version=parquet_version)
     except Exception:  # pylint: disable=broad-except
         # unsuccessfull conversion. Remove the partially generated file.
         fs, path = url_to_fs(out_file)
@@ -101,7 +104,9 @@ def _collect_in_files_compression(
 
 
 def _try_merge_parquets(
-    in_files: list[str], out_file: str, delete_in_files: bool,
+    in_files: list[str], out_file: str,
+    *,
+    delete_in_files: bool,
     row_group_size: int = 50_000,
     parqet_version: Optional[str] = None,
 ) -> None:
@@ -136,8 +141,8 @@ def _try_merge_parquets(
                         batches_row_count = 0
 
         except pa.ArrowInvalid:
-            logger.error(
-                "invalid chunk parquet file: %s", in_file, exc_info=True)
+            logger.exception(
+                "invalid chunk parquet file: %s", in_file)
             raise
         except FileNotFoundError:
             logger.warning(
@@ -154,5 +159,5 @@ def _try_merge_parquets(
             try:
                 fs, path = url_to_fs(in_file)
                 fs.rm_file(path)
-            except FileNotFoundError:
+            except FileNotFoundError:  # noqa: PERF203
                 logger.warning("missing chunk parquet file: %s", in_file)

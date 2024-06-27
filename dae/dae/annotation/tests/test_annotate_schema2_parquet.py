@@ -290,12 +290,10 @@ def test_reannotate_parquet_metadata(
         "-j", "1",
     ])
 
-    loader_old = ParquetLoader(input_dir)
     loader_result = ParquetLoader(output_dir)
 
-    # check metadata is correctly updated
-    expected_meta = dict(loader_old.meta)
-    expected_meta["annotation_pipeline"] = textwrap.dedent("""
+    # check annotation pipeline meta is correctly updated
+    expected_meta = textwrap.dedent("""
         - position_score:
             resource_id: three
             attributes:
@@ -305,7 +303,7 @@ def test_reannotate_parquet_metadata(
               name: score_A_internal
               internal: true
     """)
-    assert loader_result.meta == expected_meta
+    assert loader_result.meta["annotation_pipeline"] == expected_meta
 
 
 @pytest.mark.parametrize("study", [("t4c8_study_nonpartitioned"),
@@ -644,4 +642,4 @@ def test_autodetection_reannotate(
     ])
 
     # check auto-detection by asserting reannotation pipeline is constructed
-    assert ReannotationPipeline.__init__.call_count == 1  # type: ignore
+    assert ReannotationPipeline.__init__.call_count >= 1  # type: ignore

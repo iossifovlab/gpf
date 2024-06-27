@@ -314,6 +314,13 @@ class ReferenceGenomeImplementation(
         super().__init__(resource)
         self.reference_genome = build_reference_genome_from_resource(resource)
 
+    @property
+    def files(self) -> set[str]:
+        config = self.resource.get_config()
+        file_name = config["filename"]
+        index_file_name = config.get("index_file", f"{file_name}.fai")
+        return {file_name, index_file_name}
+
     def get_template(self) -> Template:
         return Template(textwrap.dedent("""
             {% extends base %}

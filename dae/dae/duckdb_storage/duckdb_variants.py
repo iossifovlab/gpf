@@ -1,4 +1,3 @@
-import json
 import logging
 import time
 from typing import Any, Optional, cast
@@ -6,6 +5,7 @@ from typing import Any, Optional, cast
 import duckdb
 import numpy as np
 import pandas as pd
+import yaml
 
 from dae.genomic_resources.gene_models import GeneModels
 from dae.query_variants.query_runners import QueryRunner
@@ -58,9 +58,9 @@ class DuckDbRunner(QueryRunner):
                         break
 
         except Exception as ex:  # pylint: disable=broad-except
-            logger.error(
-                "exception in runner (%s) run: %s",
-                self.query, type(ex), exc_info=True)
+            logger.exception(
+                "exception in runner (%s) run",
+                self.query)
             self._put_value_in_result_queue(ex)
         finally:
             logger.debug(
@@ -109,12 +109,17 @@ class DuckDbQueryDialect(Dialect):
     def escape_quote_char() -> str:
         return "'"
 
-    def build_table_name(self, table: str, db: Optional[str]) -> str:
+    def build_table_name(
+        self, table: str,
+        db: Optional[str],  # noqa: ARG002
+    ) -> str:
         return table
 
     def build_array_join(self, column: str, allias: str) -> str:
-        return f"\n    CROSS JOIN\n        " \
+        return (
+            f"\n    CROSS JOIN\n        "
             f"(SELECT UNNEST({column}) AS {allias})"
+        )
 
 
 class DuckDbVariants(SqlSchema2Variants):
@@ -149,11 +154,23 @@ class DuckDbVariants(SqlSchema2Variants):
     def _get_connection_factory(self) -> Any:
         return self.connection.cursor()
 
+    def _fetch_variants_data_schema(self) -> Optional[dict[str, Any]]:
+        query = f"""SELECT value FROM {self.meta_table}
+               WHERE key = 'variants_data_schema'
+               LIMIT 1
+            """  # noqa: S608
+
+        with self._get_connection_factory() as connection:
+            result = connection.execute(query).fetchall()
+            for row in result:
+                return cast(dict[str, Any], yaml.safe_load(row[0]))
+            return None
+
     def _fetch_tblproperties(self) -> str:
         query = f"""SELECT value FROM {self.meta_table}
                WHERE key = 'partition_description'
                LIMIT 1
-            """
+            """  # noqa: S608
 
         with self._get_connection_factory() as connection:
             result = connection.execute(query).fetchall()
@@ -165,7 +182,7 @@ class DuckDbVariants(SqlSchema2Variants):
         query = f"""SELECT value FROM {self.meta_table}
                WHERE key = 'summary_schema'
                LIMIT 1
-            """
+            """  # noqa: S608
 
         schema_content = ""
         with self._get_connection_factory() as connection:
@@ -178,7 +195,7 @@ class DuckDbVariants(SqlSchema2Variants):
         query = f"""SELECT value FROM {self.meta_table}
                WHERE key = 'family_schema'
                LIMIT 1
-            """
+            """  # noqa: S608
 
         schema_content = ""
         with self._get_connection_factory() as connection:
@@ -191,7 +208,7 @@ class DuckDbVariants(SqlSchema2Variants):
         return {}
 
     def _fetch_pedigree(self) -> pd.DataFrame:
-        query = f"SELECT * FROM {self.pedigree_table}"
+        query = f"SELECT * FROM {self.pedigree_table}"  # noqa: S608
         with self._get_connection_factory() as connection:
 
             ped_df = cast(pd.DataFrame, connection.execute(query).df())
@@ -218,15 +235,18 @@ class DuckDbVariants(SqlSchema2Variants):
 
             return ped_df
 
-    def _deserialize_summary_variant(self, record: str) -> SummaryVariant:
-        sv_record = json.loads(record[2])
+    def _deserialize_summary_variant(self, record: list[str]) -> SummaryVariant:
+        sv_record = self.serializer.deserialize_summary_record(
+            cast(bytes, record[2]))
         return SummaryVariantFactory.summary_variant_from_records(
             sv_record,
         )
 
     def _deserialize_family_variant(self, record: list[str]) -> FamilyVariant:
-        sv_record = json.loads(record[4])
-        fv_record = json.loads(record[5])
+        sv_record = self.serializer.deserialize_summary_record(
+            cast(bytes, record[4]))
+        fv_record = self.serializer.deserialize_family_record(
+            cast(bytes, record[5]))
         inheritance_in_members = {
             int(k): [Inheritance.from_value(inh) for inh in v]
             for k, v in fv_record["inheritance_in_members"].items()

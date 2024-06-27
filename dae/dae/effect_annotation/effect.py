@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import itertools
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any, ClassVar, Optional, Union
 
 from dae.effect_annotation.annotation_request import AnnotationRequest
 from dae.genomic_resources.gene_models import TranscriptModel
@@ -13,7 +13,7 @@ from dae.genomic_resources.gene_models import TranscriptModel
 class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
     """Class to represent variant effect."""
 
-    SEVERITY: dict[str, int] = {
+    SEVERITY: ClassVar[dict[str, int]] = {
         "CNV+": 35,
         "CNV-": 35,
         "tRNA:ANTICODON": 30,
@@ -67,12 +67,13 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
         self.dist_from_5utr = None
 
     def __repr__(self) -> str:
-        return \
-            f"Effect gene:{self.gene} trID:{self.transcript_id} " \
-            f"strand:{self.strand} effect:{self.effect} " \
-            f"protein pos:{self.prot_pos}/{self.prot_length} " \
-            f"aa: {self.aa_change} " \
+        return (
+            f"Effect gene:{self.gene} trID:{self.transcript_id} "
+            f"strand:{self.strand} effect:{self.effect} "
+            f"protein pos:{self.prot_pos}/{self.prot_length} "
+            f"aa: {self.aa_change} "
             f"len: {self.length}"
+        )
 
     def create_effect_details(self) -> str:
         """Build effect details."""
@@ -158,9 +159,8 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
     @classmethod
     def sort_effects(
             cls, effects: list[AnnotationEffect]) -> list[AnnotationEffect]:
-        sorted_effects = sorted(
+        return sorted(
             effects, key=lambda v: - cls.effect_severity(v))
-        return sorted_effects
 
     @classmethod
     def worst_effect(cls, effects: list[AnnotationEffect]) -> str:
@@ -199,7 +199,6 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
 
         Consider deprecating this.
         """
-        # effects = cls.sort_effects(effects)
         worst_effect = cls.worst_effect(effects)
         if worst_effect == "intergenic":
             return (
@@ -260,12 +259,11 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
     ) -> list[list[str]]:
         """Filter and return a mapping of gene to effects by the LGD group."""
         gene_effects = zip(*cls.gene_effects(effects))
-        result = []
-        for gene_effect in gene_effects:
-            for lgd_effect in EffectTypesMixin.EFFECT_GROUPS["LGDs"]:
-                if gene_effect[1] == lgd_effect:
-                    result.append(gene_effect)
-
+        result = [
+            gene_effect
+            for gene_effect in gene_effects
+            if gene_effect[1] in EffectTypesMixin.EFFECT_GROUPS["LGDs"]
+        ]
         return [[str(r[0]) for r in result], [str(r[1]) for r in result]]
 
     @classmethod
@@ -344,7 +342,6 @@ class EffectFactory:
     ) -> AnnotationEffect:
         """Create effect with amino acid change."""
         effect = cls.create_effect_with_prot_pos(effect_name, request)
-        # ef.prot_pos, _ = request.get_protein_position()
 
         ref_aa, alt_aa = request.get_amino_acids()
         assert ref_aa is not None
@@ -437,7 +434,7 @@ class EffectGene:
         return self.symbol == other.symbol and self.effect == other.effect
 
     def __hash__(self) -> int:
-        return hash(tuple([self.symbol, self.effect]))
+        return hash((self.symbol, self.effect))
 
     @classmethod
     def from_gene_effects(
@@ -480,10 +477,6 @@ class EffectTranscript:
         if len(parts) == 4:
             return EffectTranscript(
                 parts[0], gene=parts[1], effect=parts[2], details=parts[3])
-        # if len(parts) == 3:
-        #     return EffectTranscript(parts[0], gene=parts[1], details=data)
-        # if len(parts) == 2:
-        #     return EffectTranscript(parts[0], gene=None, details=data)
         raise ValueError(
             f"unexpected effect details format: {data}")
 
@@ -628,7 +621,7 @@ class AlleleEffects:
 class EffectTypesMixin:
     """Helper function to work with variant effects."""
 
-    EFFECT_TYPES = [
+    EFFECT_TYPES: ClassVar[list[str]] = [
         "3'UTR",
         "3'UTR-intron",
         "5'UTR",
@@ -654,7 +647,7 @@ class EffectTypesMixin:
         # "nonsynonymous"
     ]
 
-    EFFECT_TYPES_MAPPING = {
+    EFFECT_TYPES_MAPPING: ClassVar[dict[str, list[str]]] = {
         "Nonsense": ["nonsense"],
         "Frame-shift": ["frame-shift"],
         "Splice-site": ["splice-site"],
@@ -675,7 +668,7 @@ class EffectTypesMixin:
         "Nonsynonymous": ["nonsynonymous"],
     }
 
-    EFFECT_TYPES_UI_NAMING = {
+    EFFECT_TYPES_UI_NAMING: ClassVar[dict[str, str]] = {
         "nonsense": "Nonsense",
         "frame-shift": "Frame-shift",
         "splice-site": "Splice-site",
@@ -687,7 +680,7 @@ class EffectTypesMixin:
         "intron": "Intron",
         "non-coding-intron": "Intron",
     }
-    EFFECT_GROUPS = {
+    EFFECT_GROUPS: ClassVar[dict[str, list[str]]] = {
         "coding": [
             "nonsense",
             "frame-shift",
@@ -735,9 +728,7 @@ class EffectTypesMixin:
     def build_effect_types_groups(cls, effect_types: list[str]) -> list[str]:
         """Expand effect groups into effect types."""
         etl = [
-            cls.EFFECT_GROUPS[et]
-            if et in cls.EFFECT_GROUPS
-            else [et]
+            cls.EFFECT_GROUPS.get(et, [et])
             for et in effect_types
         ]
         return list(itertools.chain.from_iterable(etl))
@@ -746,16 +737,14 @@ class EffectTypesMixin:
     def build_effect_types_list(cls, effect_types: list[str]) -> list[str]:
         """Fix naming of effect types coming from the UI."""
         etl = [
-            cls.EFFECT_TYPES_MAPPING[et]
-            if et in cls.EFFECT_TYPES_MAPPING
-            else [et]
+            cls.EFFECT_TYPES_MAPPING.get(et, [et])
             for et in effect_types
         ]
         return list(itertools.chain.from_iterable(etl))
 
     @classmethod
     def build_effect_types(
-        cls, effect_types: Union[str, Iterable[str]],
+        cls, effect_types: Union[str, Iterable[str]], *,
         safe: bool = True,
     ) -> list[str]:
         """Build list of effect types."""
@@ -772,7 +761,7 @@ class EffectTypesMixin:
 
     @classmethod
     def build_effect_types_naming(
-        cls, effect_types: Union[str, Iterable[str]],
+        cls, effect_types: Union[str, Iterable[str]], *,
         safe: bool = True,
     ) -> list[str]:
         """Build list of effect types appropriate for the UI."""
@@ -789,14 +778,14 @@ class EffectTypesMixin:
 
     @classmethod
     def get_effect_types(
-        cls, safe: bool = True, **kwargs: Any,
+        cls, *, safe: bool = True, **kwargs: Any,
     ) -> Optional[list[str]]:
         """Process effect types from kwargs."""
         effect_types = kwargs.get("effectTypes", None)
         if effect_types is None:
             return None
 
-        return cls.build_effect_types(effect_types, safe)
+        return cls.build_effect_types(effect_types, safe=safe)
 
 
 def expand_effect_types(
@@ -852,12 +841,11 @@ def gene_effect_get_genes_worst(
     """Return comma separted list of genes."""
     if gene_effects is None:
         return ""
-    genes_set: set[str] = set(
+    genes_set: set[str] = {
         x.symbol for x in gene_effects.genes
         if x.symbol is not None and x.effect == gene_effects.worst
-    )
-    genes = sorted(list(genes_set))
-
+    }
+    genes = sorted(genes_set)
     return ";".join(genes)
 
 
@@ -867,8 +855,9 @@ def gene_effect_get_genes(
     """Return comma separted list of genes."""
     if gene_effects is None:
         return ""
-    genes_set: set[str] = set(
-        x.symbol for x in gene_effects.genes if x.symbol is not None)
-    genes = sorted(list(genes_set))
+    genes_set: set[str] = {
+        x.symbol for x in gene_effects.genes if x.symbol is not None
+    }
+    genes = sorted(genes_set)
 
     return ";".join(genes)

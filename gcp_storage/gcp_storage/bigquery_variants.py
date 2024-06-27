@@ -1,10 +1,10 @@
-import json
 import logging
 import time
 from typing import Any, Optional, cast
 
 import numpy as np
 import pandas as pd
+import yaml
 from google.cloud import bigquery
 
 from dae.genomic_resources.gene_models import GeneModels
@@ -96,6 +96,16 @@ class BigQueryVariants(SqlSchema2Variants):
         records = df[["column_name", "data_type"]].to_records()
         return {col_name: col_type for (_, col_name, col_type) in records}
 
+    def _fetch_variants_data_schema(self) -> Optional[dict[str, Any]]:
+        query = f"""SELECT value FROM {self.db}.{self.meta_table}
+               WHERE key = 'variants_data_schema'
+               LIMIT 1
+            """  # noqa: S608
+
+        for row in self.client.query(query).result():
+            return cast(dict[str, Any], yaml.safe_load(row[0]))
+        return None
+
     def _fetch_pedigree(self) -> pd.DataFrame:
         query = f"SELECT * FROM {self.db}.{self.pedigree_table}"  # noqa: S608
         ped_df = self.client.query(query).result().to_dataframe()
@@ -127,7 +137,8 @@ class BigQueryVariants(SqlSchema2Variants):
     def _deserialize_summary_variant(
         self, record: Any,
     ) -> SummaryVariant:
-        sv_record = json.loads(record.summary_variant_data)
+        sv_record = self.serializer.deserialize_summary_record(
+            record.summary_variant_data)
         return SummaryVariantFactory.summary_variant_from_records(
             sv_record,
         )
@@ -135,8 +146,10 @@ class BigQueryVariants(SqlSchema2Variants):
     def _deserialize_family_variant(
         self, record: Any,
     ) -> FamilyVariant:
-        sv_record = json.loads(record.summary_variant_data)
-        fv_record = json.loads(record.family_variant_data)
+        sv_record = self.serializer.deserialize_summary_record(
+            record.summary_variant_data)
+        fv_record = self.serializer.deserialize_family_record(
+            record.family_variant_data)
         inheritance_in_members = {
             int(k): [Inheritance.from_value(inh) for inh in v]
             for k, v in fv_record["inheritance_in_members"].items()

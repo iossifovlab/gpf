@@ -49,4 +49,7 @@ dependencies:
   - sqlglot=24.1
   - polars=0.20
   - sentry-sdk=2.3
-  - pybigwig=0.3.22
+  - pybigwig=0.3
+  - pyzstd=0.16
+  - gunicorn=22.0
+  - mysqlclient=2.2

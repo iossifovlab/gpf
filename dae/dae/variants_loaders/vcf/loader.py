@@ -538,10 +538,10 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             allele.update_attributes(freq)
 
     def _full_variants_iterator_impl(
-        self, initial_summary_variant_index: int = 0,
+        self, initial_summary_index: int = 0,
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
 
-        summary_variant_index = initial_summary_variant_index
+        summary_index = initial_summary_index
         for region in self.regions:
             vcf_iterators = self._build_vcf_iterators(region)
             vcf_variants = [next(it, None) for it in vcf_iterators]
@@ -556,7 +556,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 assert current_vcf_variant is not None
                 current_summary_variant = \
                     SummaryVariantFactory.summary_variant_from_vcf(
-                        current_vcf_variant, summary_variant_index,
+                        current_vcf_variant, summary_index,
                         transmission_type=self.transmission_type)
 
                 vcf_iterator_idexes_to_advance = []
@@ -613,7 +613,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
                 for idx in vcf_iterator_idexes_to_advance:
                     vcf_variants[idx] = next(vcf_iterators[idx], None)
-                summary_variant_index += 1
+                summary_index += 1
 
 
 class VcfLoader(VariantsGenotypesLoader):

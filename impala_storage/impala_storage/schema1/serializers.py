@@ -8,7 +8,7 @@ import operator
 import struct
 from collections import namedtuple
 from collections.abc import Iterable
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, ClassVar, Optional, Union, cast
 
 import numpy as np
 import pyarrow as pa
@@ -33,7 +33,6 @@ from dae.variants.variant import (
 logger = logging.getLogger(__name__)
 
 
-# TODO: Optimize list methods to avoid redundancy
 def write_int8(stream: io.BytesIO, num: int) -> None:
     stream.write(num.to_bytes(1, "big", signed=False))
 
@@ -44,10 +43,6 @@ def write_int8_signed(stream: io.BytesIO, num: int) -> None:
 
 def write_int32(stream: io.BytesIO, num: int) -> None:
     stream.write(num.to_bytes(4, "big", signed=False))
-
-
-# def write_np_int64(stream, num):
-#     stream.write(num.tobytes())
 
 
 def write_float(stream: io.BytesIO, num: float) -> None:
@@ -136,7 +131,7 @@ def write_big_enum(stream: io.BytesIO, enum: Union[Role, Inheritance]) -> None:
     write_int32(stream, enum.value)
 
 
-def write_enum_list(stream: io.BytesIO, the_list: List[Optional[Sex]]) -> None:
+def write_enum_list(stream: io.BytesIO, the_list: list[Optional[Sex]]) -> None:
     """Write a list of enums to the stream."""
     length = len(the_list)
     write_int32(stream, length)
@@ -150,7 +145,7 @@ def write_enum_list(stream: io.BytesIO, the_list: List[Optional[Sex]]) -> None:
 
 def write_big_enum_list(
     stream: io.BytesIO,
-    the_list: List[Optional[Union[Inheritance, Role]]],
+    the_list: list[Optional[Union[Inheritance, Role]]],
 ) -> None:
     """Write a list of big enums (more than 128 states) to the stream."""
     length = len(the_list)
@@ -175,10 +170,6 @@ def read_int32(stream: io.BytesIO) -> int:
     return int.from_bytes(stream.read(4), "big", signed=False)
 
 
-# def read_np_int64(stream):
-#     return np.frombuffer(stream.read(8), dtype=np.int64)[0]
-
-
 def read_float(stream: io.BytesIO) -> float:
     return cast(float, struct.unpack("f", stream.read(4))[0])
 
@@ -201,17 +192,6 @@ def read_string_list(stream: io.BytesIO) -> list[Optional[str]]:
     return out
 
 
-# def read_effects(stream):
-#     assert False
-#     res = [{"effects": None}]
-#     data = read_string_list(stream)
-#     if not data:
-#         return res
-#     res.extend([{"effects": e} for e in data.split("#")])
-
-#     return res
-
-
 def read_genotype(stream: io.BytesIO) -> np.ndarray:
     """Read a genotype from the stream."""
     length = read_int32(stream)
@@ -220,8 +200,7 @@ def read_genotype(stream: io.BytesIO) -> np.ndarray:
     assert len(genotype) % 2 == 0
 
     size = len(genotype) // 2
-    genotype = genotype.reshape([2, size], order="F")
-    return genotype
+    return genotype.reshape([2, size], order="F")
 
 
 def read_best_state(stream: io.BytesIO) -> np.ndarray:
@@ -233,8 +212,7 @@ def read_best_state(stream: io.BytesIO) -> np.ndarray:
     assert len(best_state) % col_count == 0
 
     size = len(best_state) // col_count
-    best_state = best_state.reshape([size, col_count], order="F")
-    return best_state
+    return best_state.reshape([size, col_count], order="F")
 
 
 def read_variant_type(stream: io.BytesIO) -> Allele.Type:
@@ -262,7 +240,7 @@ def read_in_sexes(stream: io.BytesIO) -> list[Optional[Sex]]:
     return out
 
 
-def read_in_roles(stream: io.BytesIO) -> List[Optional[Role]]:
+def read_in_roles(stream: io.BytesIO) -> list[Optional[Role]]:
     """Read a list of Roles from the stream."""
     length = int.from_bytes(stream.read(4), "big", signed=False)
     out: list[Optional[Role]] = []
@@ -294,7 +272,6 @@ IntSerializer = Serializer(write_int32, read_int32, "int32")
 Int8Serializer = Serializer(write_int8, read_int8, "int8")
 SignedInt8Serializer = Serializer(
     write_int8_signed, read_int8_signed, "int8 signed")
-# NpInt64Serializer = Serializer(write_np_int64, read_np_int64, "numpy_int64")
 FloatSerializer = Serializer(write_float, read_float, "float")
 VariantTypeSerializer = Serializer(
     write_enum, read_variant_type, "variant type")
@@ -320,7 +297,7 @@ InheritanceSerializer = Serializer(
 class AlleleParquetSerializer:
     """Serialize a bunch of alleles."""
 
-    BASE_SCHEMA_FIELDS = [
+    BASE_SCHEMA_FIELDS: ClassVar[list] = [
         pa.field("bucket_index", pa.int32()),
         pa.field("summary_variant_index", pa.int64()),
         pa.field("allele_index", pa.int8()),
@@ -331,7 +308,6 @@ class AlleleParquetSerializer:
         pa.field("alternative", pa.string()),
         pa.field("variant_type", pa.int8()),
         pa.field("transmission_type", pa.int8()),
-        # pa.field("worst_effect", pa.string()),
         pa.field("alternatives_data", pa.string()),
         pa.field("effect_type", pa.string()),
         pa.field("effect_gene", pa.string()),
@@ -359,7 +335,7 @@ class AlleleParquetSerializer:
     def produce_base_schema(cls) -> pa.Schema:
         return pa.schema(cls.BASE_SCHEMA_FIELDS)
 
-    SUMMARY_SEARCHABLE_PROPERTIES_TYPES = {
+    SUMMARY_SEARCHABLE_PROPERTIES_TYPES: ClassVar[dict[str, Any]] = {
         "bucket_index": pa.int32(),
         "chromosome": pa.string(),
         "position": pa.int32(),
@@ -373,7 +349,7 @@ class AlleleParquetSerializer:
         "reference": pa.string(),
     }
 
-    FAMILY_SEARCHABLE_PROPERTIES_TYPES = {
+    FAMILY_SEARCHABLE_PROPERTIES_TYPES: ClassVar[dict[str, Any]] = {
         "family_index": pa.int32(),
         "family_id": pa.string(),
         "is_denovo": pa.int8(),
@@ -383,11 +359,11 @@ class AlleleParquetSerializer:
         "variant_in_members": pa.string(),
     }
 
-    PRODUCT_PROPERTIES_LIST = [
+    PRODUCT_PROPERTIES_LIST: ClassVar[list[str]] = [
         "effect_types", "effect_gene_symbols", "variant_in_members",
     ]
 
-    BASE_SEARCHABLE_PROPERTIES_TYPES = {
+    BASE_SEARCHABLE_PROPERTIES_TYPES: ClassVar[dict[str, Any]] = {
         "bucket_index": pa.int32(),
         "chromosome": pa.string(),
         "position": pa.int32(),
@@ -408,12 +384,12 @@ class AlleleParquetSerializer:
         "variant_in_members": pa.string(),
     }
 
-    LIST_TO_ROW_PROPERTIES_LISTS = [
+    LIST_TO_ROW_PROPERTIES_LISTS: ClassVar[list[list]] = [
         ["effect_types", "effect_gene_symbols"],
         ["variant_in_members"],
     ]
 
-    ENUM_PROPERTIES = {
+    ENUM_PROPERTIES: ClassVar[dict[str, Any]] = {
         "variant_type": Allele.Type,
         "transmission_type": TransmissionType,
         "variant_in_sexes": Sex,
@@ -421,7 +397,7 @@ class AlleleParquetSerializer:
         "inheritance_in_members": Inheritance,
     }
 
-    ALLELE_CREATION_PROPERTIES = [
+    ALLELE_CREATION_PROPERTIES: ClassVar[list[str]] = [
         "chromosome",
         "position",
         "end_position",
@@ -441,7 +417,7 @@ class AlleleParquetSerializer:
         "variant_in_members",
     ]
 
-    GENOMIC_SCORES_CLEAN_UP = [
+    GENOMIC_SCORES_CLEAN_UP: ClassVar[list[str]] = [
         "worst_effect",
         "family_bin",
         "rare",
@@ -484,7 +460,7 @@ class AlleleParquetSerializer:
     def __init__(
         self,
         annotation_schema: Optional[list[AttributeInfo]],
-        extra_attributes: Optional[List[str]] = None,
+        extra_attributes: Optional[list[str]] = None,
     ) -> None:
         logger.debug("serializer annotation schema: %s", annotation_schema)
         if annotation_schema is None:
@@ -602,26 +578,12 @@ class AlleleParquetSerializer:
             for spr in self.searchable_properties:
                 field = pa.field(spr, self.searchable_properties_types[spr])
                 fields.append(field)
-            fields.append(pa.field("variant_data", pa.binary()))
-            fields.append(pa.field("extra_attributes", pa.binary()))
+            fields.extend([
+                pa.field("variant_data", pa.binary()),
+                pa.field("extra_attributes", pa.binary()),
+            ])
             self._schema = pa.schema(fields)
         return self._schema
-
-    # @property
-    # def summary_properties(self):
-    #     return self.summary_properties_serializers.keys()
-
-    # @property
-    # def annotation_properties(self):
-    #     return self.annotation_properties_serializers.keys()
-
-    # @property
-    # def family_properties(self):
-    #     return self.family_properties_serializers.keys()
-
-    # @property
-    # def member_properties(self):
-    #     return self.member_properties_serializers.keys()
 
     @property
     def searchable_properties_summary(self) -> Iterable[str]:
@@ -647,9 +609,9 @@ class AlleleParquetSerializer:
                 self.write_property(stream, value, serializer)
 
     def serialize_family_variant(
-        self, variant_alleles: List[FamilyAllele],
-        summary_blobs: List[bytes],
-        scores_blobs: List[bytes],
+        self, variant_alleles: list[FamilyAllele],
+        summary_blobs: list[bytes],
+        scores_blobs: list[bytes],
     ) -> bytes:
         """Serialize a family variant."""
         stream = io.BytesIO()
@@ -664,7 +626,7 @@ class AlleleParquetSerializer:
         stream.close()
         return output
 
-    ALLELE_PROP_GETTERS = {
+    ALLELE_PROP_GETTERS: ClassVar[dict[str, Any]] = {
         "effect_type": lambda a: a.worst_effect,
         "effect_gene_genes": lambda a: a.effect_gene_symbols,
         "effect_gene_types": lambda a: a.effect_types,
@@ -699,8 +661,8 @@ class AlleleParquetSerializer:
                 self.write_property(stream, value, serializer)
 
     def serialize_summary_data(
-        self, alleles: List[Union[FamilyAllele, SummaryAllele]],
-    ) -> List[bytes]:
+        self, alleles: list[Union[FamilyAllele, SummaryAllele]],
+    ) -> list[bytes]:
         """Serialize summary data and return a list of blobs."""
         output = []
         for allele in alleles:
@@ -725,8 +687,8 @@ class AlleleParquetSerializer:
             self.write_property(stream, value, serializer)
 
     def serialize_scores_data(
-        self, alleles: List[Union[FamilyAllele, SummaryAllele]],
-    ) -> List[bytes]:
+        self, alleles: list[Union[FamilyAllele, SummaryAllele]],
+    ) -> list[bytes]:
         """Serialize scores data."""
         scores_blobs = []
         for allele in alleles:
@@ -749,7 +711,7 @@ class AlleleParquetSerializer:
                 try:
                     write_string(stream, prop)
                     write_string(stream, variant.get_attribute(prop)[0])
-                except Exception:  # pylint: disable=broad-except
+                except Exception:  # noqa: PERF203 pylint: disable=broad-except
                     logger.exception(
                         "cant serialize property %s value for variant: %s; %s",
                         prop, variant, variant.get_attribute(prop)[0])
@@ -776,7 +738,7 @@ class AlleleParquetSerializer:
             write_int8(stream, 1)
             serializer.serialize(stream, value)
 
-    def deserialize_allele(self, stream: io.BytesIO) -> Dict[str, Any]:
+    def deserialize_allele(self, stream: io.BytesIO) -> dict[str, Any]:
         """Read an allele from the input stream."""
         allele_data = {}
         for property_serializers in self.property_serializers_list:
@@ -925,7 +887,7 @@ class AlleleParquetSerializer:
         return prop_value
 
     @property
-    def allele_batch_header(self) -> List[str]:
+    def allele_batch_header(self) -> list[str]:
         """Return the names of the properties in an allele batch."""
         if self._allele_batch_header is None:
             header = []
@@ -1001,7 +963,7 @@ class AlleleParquetSerializer:
                 extra_attributes_data, len(new_vectors)))  # type: ignore
         return allele_data
 
-    def describe_blob_schema(self) -> Dict[str, str]:
+    def describe_blob_schema(self) -> dict[str, str]:
         schema_description = {}
         for property_serializers in self.property_serializers_list:
             for prop, serializer in property_serializers.items():

@@ -8,7 +8,7 @@ import os
 import sys
 import time
 from copy import copy
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Optional, Union
 from urllib.parse import urlparse
 
 import fsspec
@@ -71,6 +71,7 @@ class AbstractVariantsParquetWriter(abc.ABC):
         partition_descriptor: PartitionDescriptor,
         bucket_index: int = 1,
         rows: int = 100_000,
+        *,
         include_reference: bool = True,
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
     ) -> AbstractVariantsParquetWriter:
@@ -93,6 +94,7 @@ class ParquetWriterBuilder(Protocol):
         partition_descriptor: PartitionDescriptor,
         bucket_index: int = 1,
         rows: int = 100_000,
+        *,
         include_reference: bool = True,
         filesystem: Optional[fsspec.AbstractFileSystem] = None,
     ) -> AbstractVariantsParquetWriter:
@@ -131,6 +133,7 @@ class ParquetWriter:
         parquet_writer_builder: ParquetWriterBuilder,
         bucket_index: int = 1,
         rows: int = 100_000,
+        *,
         include_reference: bool = False,
     ) -> None:
         """Read variants from variant_loader and store them in parquet."""
@@ -254,8 +257,7 @@ class ContinuousParquetFileWriter:
         return len(self._data["chromosome"])
 
     def build_table(self) -> pa.Table:
-        table = pa.Table.from_pydict(self._data, self.schema)
-        return table
+        return pa.Table.from_pydict(self._data, self.schema)
 
     def _write_table(self) -> None:
         self._writer.write_table(self.build_table())
@@ -302,6 +304,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         partition_descriptor: PartitionDescriptor,
         bucket_index: Optional[int] = None,
         rows: int = 100_000,
+        *,
         include_reference: bool = True,
     ) -> None:
         self.out_dir = out_dir
@@ -330,8 +333,9 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         partition_descriptor: PartitionDescriptor,
         bucket_index: int = 1,
         rows: int = 100_000,
+        *,
         include_reference: bool = True,
-        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+        filesystem: Optional[fsspec.AbstractFileSystem] = None,  # noqa: ARG004
     ) -> AbstractVariantsParquetWriter:
         return VariantsParquetWriter(
             out_dir=out_dir,
@@ -361,9 +365,9 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         )
 
         ref_summary_allele = summary_variant.ref_allele
-        reference_allele = FamilyAllele(ref_summary_allele, family, genotype,
-                                        best_state)
-        return reference_allele
+        return FamilyAllele(
+            ref_summary_allele, family, genotype,
+            best_state)
 
     @staticmethod
     def _setup_all_unknown_allele(
@@ -376,7 +380,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         )
 
         ref_allele = summary_variant.ref_allele
-        unknown_allele = FamilyAllele(
+        return FamilyAllele(
             SummaryAllele(
                 ref_allele.chromosome,
                 ref_allele.position,
@@ -391,7 +395,6 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             genotype,
             best_state,
         )
-        return unknown_allele
 
     def _setup_all_unknown_variant(
         self, summary_variant: SummaryVariant,
@@ -438,7 +441,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             )
         return self.data_writers[filename]
 
-    def _write_internal(self) -> List[Union[str, Any]]:
+    def _write_internal(self) -> list[Union[str, Any]]:
         # pylint: disable=too-many-locals
         family_variant_index = 0
         report = False
@@ -552,7 +555,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
 
     def write_schema(self) -> None:
         """Write the schema to a separate file."""
-        config: Dict[str, Any] = {}
+        config: dict[str, Any] = {}
 
         schema = self.serializer.schema
         config["variants_schema"] = {}
@@ -584,15 +587,13 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         with fsspec.open(filename, "w") as configfile:
             configfile.write(self.partition_descriptor.serialize())
 
-    def write_dataset(self) -> List[Union[str, Any]]:
+    def write_dataset(self) -> list[Union[str, Any]]:
         """Write the variants, parittion description and schema."""
         filenames = self._write_internal()
         self.variants_loader.close()
         return filenames
 
     def write_meta(self) -> None:
-        # TODO: This should be move to a different place so that these are
-        # not written with every bucket.
         self.write_partition()
         self.write_schema()
 

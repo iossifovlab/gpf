@@ -57,16 +57,16 @@ class PartitionDescriptor:
             path_name = pathlib.Path(path_name)
         if path_name.suffix in {"", ".conf"}:
             # parse configparser content
-            with open(path_name, "r", encoding="utf8") as infile:
-                return PartitionDescriptor.parse_string(infile.read(), "conf")
-        elif path_name.suffix == ".yaml":
+            return PartitionDescriptor.parse_string(
+                pathlib.Path(path_name).read_text(encoding="utf8"), "conf")
+        if path_name.suffix == ".yaml":
             # parse YAML content
-            with open(path_name, "r", encoding="utf8") as infile:
-                return PartitionDescriptor.parse_string(infile.read(), "yaml")
-        else:
-            raise ValueError(
-                f"unsupported partition description format "
-                f"<{path_name.suffix}>")
+            return PartitionDescriptor.parse_string(
+                pathlib.Path(path_name).read_text(encoding="utf8"), "yaml")
+
+        raise ValueError(
+            f"unsupported partition description format "
+            f"<{path_name.suffix}>")
 
     @staticmethod
     def parse_string(
@@ -157,9 +157,10 @@ class PartitionDescriptor:
             coding_effect_types = \
                 config_dict["coding_bin"]["coding_effect_types"]
             if isinstance(coding_effect_types, str):
-                result = set(
+                result = {
                     s.strip()
-                    for s in coding_effect_types.split(","))
+                    for s in coding_effect_types.split(",")
+                }
             else:
                 assert isinstance(coding_effect_types, list)
                 result = set(coding_effect_types)
@@ -251,7 +252,7 @@ class PartitionDescriptor:
         return 1
 
     def make_frequency_bin(
-            self, allele_count: int, allele_freq: float,
+            self, allele_count: int, allele_freq: float, *,
             is_denovo: bool = False) -> str:
         """Produce frequency bin from allele count, frequency and de Novo flag.
 
@@ -293,7 +294,7 @@ class PartitionDescriptor:
         return result
 
     def summary_partition(
-        self, allele: SummaryAllele,
+        self, allele: SummaryAllele, *,
         seen_as_denovo: bool,
     ) -> list[tuple[str, str]]:
         """Produce summary partition for an allele.
@@ -334,7 +335,7 @@ class PartitionDescriptor:
         return result
 
     def family_partition(
-        self, allele: FamilyAllele,
+        self, allele: FamilyAllele, *,
         seen_as_denovo: bool,
     ) -> list[tuple[str, str]]:
         """Produce family partition for an allele.
@@ -350,7 +351,8 @@ class PartitionDescriptor:
             ("family_bin", "1)
         ]
         """
-        partition = self.summary_partition(allele, seen_as_denovo)
+        partition = self.summary_partition(
+            allele, seen_as_denovo=seen_as_denovo)
         if self.has_family_bins():
             partition.append((
                 "family_bin",
@@ -375,7 +377,7 @@ class PartitionDescriptor:
         ]
         """
         is_denovo = allele.transmission_type == TransmissionType.denovo
-        partition = self.summary_partition(allele, is_denovo)
+        partition = self.summary_partition(allele, seen_as_denovo=is_denovo)
         if self.has_family_bins():
             partition.append((
                 "family_bin",
@@ -394,13 +396,17 @@ class PartitionDescriptor:
                     other_max_len = max(other_max_len, chrom_len)
                     continue
                 num_buckets = math.ceil(chrom_len / self.region_length)
-                for bin_i in range(num_buckets):
-                    summary_parts.append([("region_bin", f"{chrom}_{bin_i}")])
+                summary_parts.extend([
+                    [("region_bin", f"{chrom}_{bin_i}")]
+                    for bin_i in range(num_buckets)
+                ])
 
             if other_max_len > 0:
                 num_buckets = math.ceil(other_max_len / self.region_length)
-                for bin_i in range(num_buckets):
-                    summary_parts.append([("region_bin", f"other_{bin_i}")])
+                summary_parts.extend([
+                    [("region_bin", f"other_{bin_i}")]
+                    for bin_i in range(num_buckets)
+                ])
         if self.has_frequency_bins():
             summary_parts = self._add_product(
                 summary_parts, [("frequency_bin", str(i)) for i in range(4)],
@@ -424,16 +430,14 @@ class PartitionDescriptor:
     def _add_product(
             names: list[list[tuple[str, str]]],
             to_add: list[tuple[str, str]]) -> list[list[tuple[str, str]]]:
-        res = []
         if len(names) == 0:
-            for name_to_add in to_add:
-                res.append([name_to_add])
-            return res
+            return [[name] for name in to_add]
 
-        for name in names:
-            for name_to_add in to_add:
-                res.append([*name, name_to_add])
-        return res
+        return [
+            [*name, name_to_add]
+            for name in names
+            for name_to_add in to_add
+        ]
 
     @staticmethod
     def partition_directory(

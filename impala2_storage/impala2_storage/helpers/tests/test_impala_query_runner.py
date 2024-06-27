@@ -89,8 +89,8 @@ def test_impala_runner_result_experimental_1(
 ) -> None:
     query = "SELECT COUNT(" \
         "DISTINCT bucket_index, " \
-        "summary_variant_index, " \
-        "family_variant_index) " \
+        "summary_index, " \
+        "family_index) " \
         "FROM gpf_variant_db.test_study_impala_01_variants"
 
     runner = create_runner(impala_helpers, query)
@@ -114,8 +114,8 @@ def test_impala_runner_result_experimental_2(
 ) -> None:
     query = "SELECT COUNT(" \
         "DISTINCT bucket_index, " \
-        "summary_variant_index, " \
-        "family_variant_index) " \
+        "summary_index, " \
+        "family_index) " \
         "FROM gpf_variant_db.test_study_impala_01_variants"
 
     runner = create_runner(impala_helpers, query)
@@ -139,8 +139,8 @@ def test_impala_runner_result_experimental(
 ) -> None:
     query = "SELECT COUNT(" \
         "DISTINCT bucket_index, " \
-        "summary_variant_index, " \
-        "family_variant_index) " \
+        "summary_index, " \
+        "family_index) " \
         "FROM gpf_variant_db.test_study_impala_01_variants"
 
     runner = create_runner(impala_helpers, query)

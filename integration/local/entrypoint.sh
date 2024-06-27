@@ -20,6 +20,7 @@ cd /wd/integration/fixtures/pheno/comp-data
     pheno_import --force -p comp_pheno.ped \
     -o $DAE_DB_DIR/pheno/comp_pheno \
     --force \
+    -j 1 \
     -i instruments/ --data-dictionary comp_pheno_data_dictionary.tsv --pheno-id comp_pheno \
     --regression comp_pheno_regressions.conf \
     --person-column personId
@@ -33,7 +34,7 @@ cd /wd/integration/fixtures/hg19/micro_iossifov2014
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     simple_study_import.py --id iossifov_2014 \
-    -o /wd/temp-local \
+    -o /wd/data/temp-local \
     --denovo-file iossifov2014.txt \
     iossifov2014_families.ped
 

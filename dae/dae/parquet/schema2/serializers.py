@@ -2,7 +2,7 @@ import functools
 import logging
 import operator
 from itertools import starmap
-from typing import Any, List, Optional, Union
+from typing import Any, ClassVar, Optional, Union
 
 import pyarrow as pa
 
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class AlleleParquetSerializer:
     """Serialize a bunch of alleles."""
 
-    SUMMARY_ALLELE_BASE_SCHEMA = {
+    SUMMARY_ALLELE_BASE_SCHEMA: ClassVar[dict[str, Any]] = {
         "bucket_index": pa.int32(),
         "summary_index": pa.int32(),
         "allele_index": pa.int32(),
@@ -51,7 +51,7 @@ class AlleleParquetSerializer:
         "family_alleles_count": pa.int32(),
     }
 
-    FAMILY_ALLELE_BASE_SCHEMA = {
+    FAMILY_ALLELE_BASE_SCHEMA: ClassVar[dict[str, Any]] = {
         "bucket_index": pa.int32(),
         "summary_index": pa.int32(),
         "allele_index": pa.int32(),
@@ -66,7 +66,7 @@ class AlleleParquetSerializer:
         "allele_in_members": pa.list_(pa.string()),
     }
 
-    ENUM_PROPERTIES = {
+    ENUM_PROPERTIES: ClassVar[dict[str, Any]] = {
         "variant_type": Allele.Type,
         "transmission_type": TransmissionType,
         "allele_in_sexes": Sex,
@@ -76,8 +76,8 @@ class AlleleParquetSerializer:
     }
 
     def __init__(
-        self, annotation_schema: List[AttributeInfo],
-        extra_attributes: Optional[List[str]] = None,
+        self, annotation_schema: list[AttributeInfo],
+        extra_attributes: Optional[list[str]] = None,
     ) -> None:
         self.annotation_schema = annotation_schema
         self._schema_summary = None
@@ -103,7 +103,7 @@ class AlleleParquetSerializer:
     ) -> pa.Schema:
         """Build the schema for the summary alleles."""
         fields = list(starmap(pa.field, cls.SUMMARY_ALLELE_BASE_SCHEMA.items()))
-        fields.append(pa.field("summary_variant_data", pa.string()))
+        fields.append(pa.field("summary_variant_data", pa.binary()))
 
         annotation_type_to_pa_type = {
             "float": pa.float32(),
@@ -135,7 +135,7 @@ class AlleleParquetSerializer:
     def build_family_schema(cls) -> pa.Schema:
         """Build the schema for the family alleles."""
         fields = list(starmap(pa.field, cls.FAMILY_ALLELE_BASE_SCHEMA.items()))
-        fields.append(pa.field("family_variant_data", pa.string()))
+        fields.append(pa.field("family_variant_data", pa.binary()))
         return pa.schema(fields)
 
     def _get_searchable_prop_value(
@@ -159,7 +159,7 @@ class AlleleParquetSerializer:
 
     def build_family_allele_batch_dict(
         self, allele: FamilyAllele,
-        family_variant_data: str,
+        family_variant_data: bytes,
     ) -> dict[str, list[Any]]:
         """Build a batch of family allele data in the form of a dict."""
         family_header = []
@@ -186,7 +186,7 @@ class AlleleParquetSerializer:
 
     def build_summary_allele_batch_dict(
         self, allele: SummaryAllele,
-        summary_variant_data: str,
+        summary_variant_data: bytes,
     ) -> dict[str, Any]:
         """Build a batch of summary allele data in the form of a dict."""
         allele_data = {"summary_variant_data": summary_variant_data}

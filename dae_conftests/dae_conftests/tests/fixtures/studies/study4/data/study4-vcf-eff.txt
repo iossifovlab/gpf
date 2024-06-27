@@ -1,4 +1,4 @@
-chrom	position	reference	alternative	summary_variant_index	allele_index	allele_count	af_parents_called_count	af_parents_called_percent	af_allele_count	af_allele_freq	CSHL:location	CSHL:chr	CSHL:position	CSHL:variant	VCF:chr	VCF:position	VCF:ref	VCF:alt	effect_type	effect_gene_genes	effect_gene_types	effect_genes	effect_details_transcript_ids	effect_details_details	effect_details	
+chrom	position	reference	alternative	summary_index	allele_index	allele_count	af_parents_called_count	af_parents_called_percent	af_allele_count	af_allele_freq	CSHL:location	CSHL:chr	CSHL:position	CSHL:variant	VCF:chr	VCF:position	VCF:ref	VCF:alt	effect_type	effect_gene_genes	effect_gene_types	effect_genes	effect_details_transcript_ids	effect_details_details	effect_details	
 1	865624	G		0	0	2	6	100	12	100																
 1	865624	G	A	0	1	2	6	100	0	0	1:865624	1	865624.0	sub(G->A)	1	865624.0	G	A	synonymous	SAMD11	synonymous	['SAMD11:synonymous']	NM_152486_1	54/681	['NM_152486_1:SAMD11:54/681']	['SAMD11']
 1	905956	CGGCTCGGAAGG		1	0	2	6	100	12	100																

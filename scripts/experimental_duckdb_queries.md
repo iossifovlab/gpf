@@ -2734,3 +2734,166 @@ FROM summary AS sa
 JOIN family AS fa
 USING (sj_index);
 ```
+
+
+```sql
+EXPLAIN ANALYZE 
+EXPLAIN
+WITH
+summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+),
+family AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+),
+variant AS (
+  SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.sj_index
+  FROM summary AS sa
+  JOIN family AS fa
+  USING (sj_index)
+  LIMIT 2
+)
+SELECT
+  v.bucket_index,
+  v.summary_index,
+  v.family_index,
+  v.allele_index,
+  v.sj_index,
+  sa.summary_variant_data
+FROM variant AS v
+JOIN summary AS sa
+USING (sj_index);
+```
+
+
+```sql
+EXPLAIN WITH summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+), family AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data
+FROM summary AS sa
+JOIN family AS fa
+USING (sj_index)
+LIMIT 100;
+```
+
+
+```sql
+WITH
+summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+),
+family AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+),
+variant AS (
+  SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.sj_index
+  FROM summary AS sa
+  JOIN family AS fa
+  USING (sj_index)
+  LIMIT 1001
+)
+SELECT
+  v.bucket_index,
+  v.summary_index,
+  v.family_index,
+  v.allele_index,
+  v.sj_index,
+  sa.summary_variant_data
+FROM variant AS v
+JOIN summary AS sa
+USING (sj_index);
+```
+
+
+```sql
+WITH
+summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+),
+family AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+)
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.sj_index,
+    sa.summary_variant_data
+FROM summary AS sa
+JOIN family AS fa
+USING (sj_index)
+WHERE sa.region_bin = 'chr1_0' AND fa.region_bin = 'chr1_0'
+LIMIT 2
+```
+
+
+
+```sql
+drop table if exists t1;
+
+create temp table t1 as
+WITH
+summary AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_summary AS sa
+),
+family AS (
+  SELECT
+    *
+  FROM AGRE_WG38_CSHL_859_SCHEMA2_family AS fa
+)
+SELECT
+    sa.sj_index
+FROM summary AS sa
+JOIN family AS fa
+USING (sj_index)
+LIMIT 10001;
+
+select
+    t1.*, sa.summary_variant_data, fa.family_variant_data
+from t1
+inner join
+AGRE_WG38_CSHL_859_SCHEMA2_summary sa 
+on t1.sj_index = sa.sj_index
+inner join
+AGRE_WG38_CSHL_859_SCHEMA2_family fa 
+on t1.sj_index = fa.sj_index
+LIMIT 10001;
+```
+

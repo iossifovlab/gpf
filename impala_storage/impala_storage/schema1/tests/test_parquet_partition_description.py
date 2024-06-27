@@ -147,7 +147,8 @@ def test_parquet_frequency_bin(
         is_denovo = fa.transmission_type == TransmissionType.denovo
 
         assert part_desc.make_frequency_bin(
-            allele_count, allele_freq, is_denovo) == expected
+            allele_count, allele_freq,
+            is_denovo=is_denovo) == expected
         partition = part_desc.schema1_partition(cast(FamilyAllele, fa))
         assert partition == [
             ("region_bin", "1_11"), ("frequency_bin", expected)]

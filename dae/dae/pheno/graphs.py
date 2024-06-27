@@ -142,7 +142,6 @@ def draw_linregres(df, col1, col2, jitter: Optional[int] = None, ax=None):
         jfemale2 = np.random.uniform(-jitter, jitter, len(dfemale[col2]))
 
     color_male, color_female = gender_palette_light()
-    # import pdb; pdb.set_trace()
     ax.plot(
         dmale[col1].values + jmale1,
         dmale[col2].values + jmale2,

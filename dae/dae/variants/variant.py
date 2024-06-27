@@ -4,7 +4,7 @@ from __future__ import annotations
 import enum
 import itertools
 import logging
-from typing import Any, Callable, Dict, List, Optional, Set, cast
+from typing import Any, Callable, Optional, cast
 
 import pysam
 
@@ -253,9 +253,11 @@ class VariantDetails:
 
         self.cshl_position = self.variant_desc.position
         if core.Allele.Type.cnv & self.variant_desc.variant_type:
-            self.cshl_location = f"{self.chrom}:" \
-                f"{self.variant_desc.position}-" \
+            self.cshl_location = (
+                f"{self.chrom}:"
+                f"{self.variant_desc.position}-"
                 f"{self.variant_desc.end_position}"
+            )
         else:
             self.cshl_location = f"{self.chrom}:{self.cshl_position}"
         self.cshl_variant = str(variant_desc)
@@ -274,10 +276,11 @@ class VariantDetails:
     def from_cnv(variant: SummaryAllele) -> VariantDetails:
         """Build variant details from a CNV variant."""
         # pylint: disable=protected-access
-        assert core.Allele.Type.is_cnv(variant._allele_type)
+        assert core.Allele.Type.is_cnv(
+            variant._allele_type)  # noqa: SLF001
 
         variant_desc = VariantDesc(
-            variant_type=variant._allele_type,
+            variant_type=variant._allele_type,  # noqa: SLF001
             position=variant.position,
             end_position=variant.end_position)
         return VariantDetails(
@@ -315,7 +318,7 @@ class SummaryAllele(core.Allele):
 
         self._effects = AlleleEffects.from_string(effect) if effect else None
         self.matched_gene_effects: list[EffectGene] = []
-        self._attributes: Dict[str, Any] = {
+        self._attributes: dict[str, Any] = {
             "allele_index": allele_index,
             "transmission_type": transmission_type,
         }
@@ -346,7 +349,9 @@ class SummaryAllele(core.Allele):
         def encode_attributes(attributes: dict[str, Any]) -> dict[str, Any]:
             filtered_attr = {}
             for key, val in attributes.items():
-                if key is not None:
+                if key is not None \
+                        and key not in {
+                            "worst_effect", "effect_details", "gene_effects"}:
                     filtered_attr[key] = enum_to_value(val)
 
             return filtered_attr
@@ -376,7 +381,7 @@ class SummaryAllele(core.Allele):
         return self._transmission_type
 
     @property
-    def attributes(self) -> Dict[str, Any]:
+    def attributes(self) -> dict[str, Any]:
         return self._attributes
 
     @property
@@ -443,19 +448,19 @@ class SummaryAllele(core.Allele):
         return None
 
     @property
-    def effect_types(self) -> List[str]:
+    def effect_types(self) -> list[str]:
         if self.effects:
             return self.effects.types
         return []
 
     @property
-    def effect_genes(self) -> List[EffectGene]:
+    def effect_genes(self) -> list[EffectGene]:
         if self.effects:
             return self.effects.genes
         return []
 
     @property
-    def effect_gene_symbols(self) -> List[str]:
+    def effect_gene_symbols(self) -> list[str]:
         return [eg.symbol for eg in self.effect_genes if eg.symbol]
 
     @property
@@ -543,8 +548,10 @@ class SummaryAllele(core.Allele):
             return f"{self.chromosome}:{self.position}-{self.end_position}"
         if not self.alternative:
             return f"{self.chrom}:{self.position} {self.reference} (ref)"
-        return f"{self.chrom}:{self.position}" \
+        return (
+            f"{self.chrom}:{self.position}"
             f" {self.reference}->{self.alternative}"
+        )
 
     @staticmethod
     def create_reference_allele(allele: SummaryAllele) -> SummaryAllele:
@@ -559,19 +566,12 @@ class SummaryAllele(core.Allele):
             "position": allele.attributes.get("position"),
             "end_position": allele.attributes.get("position"),
             "reference": allele.attributes.get("reference"),
-            "summary_variant_index": allele.attributes.get(
-                "summary_variant_index"),
+            "summary_index": allele.attributes.get(
+                "summary_index"),
             "allele_count": allele.attributes.get("allele_count"),
             "allele_index": 0,
-            "summary_index": allele.attributes.get("summary_index"),
             "bucket_index": allele.attributes.get("bucket_index"),
             "sj_index": sj_index,
-
-            # FIXME uncomment when ref allele count/freq computation is fixed
-            # for schema1. At the moment all ref allles will have a freq of
-            # None. To emulate that behavior following lines are commented out.
-            # "af_allele_count": allele.attributes.get("af_ref_allele_count"),
-            # "af_allele_freq": allele.attributes.get("af_ref_allele_freq"),
         }
 
         return SummaryAllele(
@@ -593,7 +593,7 @@ class SummaryVariant:
     def __init__(self, alleles: list[SummaryAllele]):
 
         assert len(alleles) >= 1
-        assert len(set(sa.position for sa in alleles)) == 1
+        assert len({sa.position for sa in alleles}) == 1
 
         assert alleles[0].is_reference_allele
         self._alleles: list[SummaryAllele] = alleles
@@ -610,7 +610,7 @@ class SummaryVariant:
 
         for allele_index, allele in enumerate(alleles):
             if allele.allele_index == 0:
-                allele._allele_index = allele_index
+                allele._allele_index = allele_index  # noqa: SLF001
 
         self._svuid: Optional[str] = None
 
@@ -655,9 +655,10 @@ class SummaryVariant:
     def svuid(self) -> str:
         """Build and return summary variant 'unique' ID."""
         if self._svuid is None:
-            self._svuid = \
-                f"{self.location}.{self.reference}.{self.alternative}." \
+            self._svuid = (
+                f"{self.location}.{self.reference}.{self.alternative}."
                 f"{self.transmission_type.value}"
+            )
 
         return self._svuid
 
@@ -667,7 +668,7 @@ class SummaryVariant:
             return None
         return ",".join(
             [
-                aa.alternative if aa.alternative else ""
+                aa.alternative or ""
                 for aa in self.alt_alleles
             ],
         )
@@ -692,75 +693,75 @@ class SummaryVariant:
         return self.alleles[1:]
 
     @property
-    def details(self) -> List[VariantDetails]:
+    def details(self) -> list[VariantDetails]:
         """Return list of 'VariantDetails' for each allele."""
         if not self.alt_alleles:
             return []
         return [sa.details for sa in self.alt_alleles]
 
     @property
-    def cshl_variant(self) -> List[Optional[str]]:
+    def cshl_variant(self) -> list[Optional[str]]:
         if not self.alt_alleles:
             return []
         return [aa.cshl_variant for aa in self.alt_alleles]
 
     @property
-    def cshl_variant_full(self) -> List[Optional[str]]:
+    def cshl_variant_full(self) -> list[Optional[str]]:
         if not self.alt_alleles:
             return []
         return [aa.cshl_variant_full for aa in self.alt_alleles]
 
     @property
-    def cshl_location(self) -> List[str]:
+    def cshl_location(self) -> list[str]:
         if not self.alt_alleles:
             return []
         return [aa.cshl_location for aa in self.alt_alleles]
 
     @property
-    def effects(self) -> List[AlleleEffects]:
+    def effects(self) -> list[AlleleEffects]:
         """Return list of allele effects."""
         if not self.alt_alleles:
             return []
         return [sa.effects for sa in self.alt_alleles if sa.effects]
 
     @property
-    def effect_types(self) -> List[str]:
+    def effect_types(self) -> list[str]:
         ets: set = set()
         for allele in self.alt_alleles:
             ets = ets.union(allele.effect_types)
         return list(ets)
 
     @property
-    def effect_gene_symbols(self) -> List[str]:
-        egs: Set[str] = set()
+    def effect_gene_symbols(self) -> list[str]:
+        egs: set[str] = set()
         for allele in self.alt_alleles:
             egs = egs.union(allele.effect_gene_symbols)
         return list(egs)
 
     @property
-    def frequencies(self) -> List[Optional[float]]:
+    def frequencies(self) -> list[Optional[float]]:
         """Return list of allele frequencies."""
         return [sa.frequency for sa in self.alleles]
 
     @property
-    def variant_types(self) -> Set[Any]:
+    def variant_types(self) -> set[Any]:
         """Return set of allele types."""
-        return set(aa.allele_type for aa in self.alt_alleles)
+        return {aa.allele_type for aa in self.alt_alleles}
 
     def get_attribute(
-            self, item: Any, default: Optional[Any] = None) -> List[Any]:
+            self, item: Any, default: Optional[Any] = None) -> list[Any]:
         return [sa.get_attribute(item, default) for sa in self.alt_alleles]
 
     def has_attribute(self, item: Any) -> bool:
         return any(sa.has_attribute(item) for sa in self.alt_alleles)
 
-    def __getitem__(self, item: Any) -> List[Any]:
+    def __getitem__(self, item: Any) -> list[Any]:
         return self.get_attribute(item)
 
     def __contains__(self, item: Any) -> bool:
         return self.has_attribute(item)
 
-    def update_attributes(self, atts: Dict[str, Any]) -> None:
+    def update_attributes(self, atts: dict[str, Any]) -> None:
         for key, values in list(atts.items()):
             if not values:
                 continue
@@ -811,7 +812,7 @@ class SummaryVariant:
             and self.position > other.position
         )
 
-    def set_matched_alleles(self, alleles_indexes: List[int]) -> None:
+    def set_matched_alleles(self, alleles_indexes: list[int]) -> None:
         # pylint: disable=protected-access
         self._matched_alleles = sorted(alleles_indexes)
 
@@ -862,12 +863,9 @@ class SummaryVariantFactory:
                 if k not in attr_filter
             }
 
-        if "summary_variant_index" in record:
-            summary_index = record["summary_variant_index"]
-            attributes["summary_index"] = summary_index
-        else:
-            summary_index = record.get("summary_index")
+        assert "summary_index" in record
 
+        summary_index = record.get("summary_index", -1)
         allele_index = record["allele_index"]
 
         chrom = record["chrom"]
@@ -928,7 +926,7 @@ class SummaryVariantFactory:
     @staticmethod
     def summary_variant_from_vcf(
             vcf_variant: pysam.VariantRecord,
-            summary_variant_index: int,
+            summary_index: int,
             transmission_type: TransmissionType) -> SummaryVariant:
         """Build sumamry variant from a pysam VCF record."""
         records = []
@@ -942,7 +940,7 @@ class SummaryVariantFactory:
                 "position": vcf_variant.pos,
                 "reference": vcf_variant.ref,
                 "alternative": None,
-                "summary_variant_index": summary_variant_index,
+                "summary_index": summary_index,
                 "allele_index": 0,
                 "allele_count": allele_count,
             },
@@ -955,7 +953,7 @@ class SummaryVariantFactory:
                     "position": vcf_variant.pos,
                     "reference": vcf_variant.ref,
                     "alternative": alt,
-                    "summary_variant_index": summary_variant_index,
+                    "summary_index": summary_index,
                     "allele_index": allele_index + 1,
                     "allele_count": allele_count,
                 },

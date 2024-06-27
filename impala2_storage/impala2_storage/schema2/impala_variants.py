@@ -1,10 +1,10 @@
-import json
 import logging
 from contextlib import closing
 from typing import Any, Optional, cast
 
 import numpy as np
 import pandas as pd
+import yaml
 from impala.util import as_pandas
 from sqlalchemy import pool
 
@@ -70,31 +70,46 @@ class ImpalaVariants(SqlSchema2Variants):
                 cursor.execute(query)
                 df = as_pandas(cursor)
             records = df[["name", "type"]].to_records()
-            schema = {
+            return {
                 col_name: col_type for (_, col_name, col_type) in records
             }
-            return schema
 
     def _fetch_tblproperties(self) -> str:
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                query = f"""SELECT value FROM {self.db}.{self.meta_table}
-                            WHERE key = 'partition_description'
-                            LIMIT 1
-                """
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            query = f"""SELECT value FROM {self.db}.{self.meta_table}
+                        WHERE key = 'partition_description'
+                        LIMIT 1
+            """  # noqa: S608
 
-                cursor.execute(query)
-                row = cursor.fetchone()
-                if row:
-                    return str(row[0])
+            cursor.execute(query)
+            row = cursor.fetchone()
+            if row:
+                return str(row[0])
         return ""
 
+    def _fetch_variants_data_schema(self) -> Optional[dict[str, Any]]:
+        query = f"""SELECT value FROM {self.db}.{self.meta_table}
+               WHERE key = 'variants_data_schema'
+               LIMIT 1
+            """  # noqa: S608
+
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            cursor.execute(query)
+            result = cursor.fetchall()
+            for row in result:
+                return cast(dict[str, Any], yaml.safe_load(row[0]))
+            return None
+
     def _fetch_pedigree(self) -> pd.DataFrame:
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                query = f"""SELECT * FROM {self.db}.{self.pedigree_table}"""
-                cursor.execute(query)
-                ped_df = cast(pd.DataFrame, as_pandas(cursor))
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            query = f"""
+                SELECT * FROM {self.db}.{self.pedigree_table}
+            """  # noqa: S608
+            cursor.execute(query)
+            ped_df = cast(pd.DataFrame, as_pandas(cursor))
 
         ped_df.role = ped_df.role.apply(Role)  # type: ignore
         ped_df.sex = ped_df.sex.apply(Sex)  # type: ignore
@@ -104,15 +119,15 @@ class ImpalaVariants(SqlSchema2Variants):
 
     def _get_connection_factory(self) -> Any:
         # pylint: disable=protected-access
-        return self._impala_helpers._connection_pool
+        return self._impala_helpers._connection_pool  # noqa: SLF001
 
     def _deserialize_summary_variant(self, record: tuple) -> SummaryVariant:
-        sv_record = json.loads(record[-1])
+        sv_record = self.serializer.deserialize_summary_record(record[-1])
         return SummaryVariantFactory.summary_variant_from_records(sv_record)
 
     def _deserialize_family_variant(self, record: tuple) -> FamilyVariant:
-        sv_record = json.loads(record[-2])
-        fv_record = json.loads(record[-1])
+        sv_record = self.serializer.deserialize_summary_record(record[-2])
+        fv_record = self.serializer.deserialize_family_record(record[-1])
         inheritance_in_members = {
             int(k): [Inheritance.from_value(inh) for inh in v]
             for k, v in fv_record["inheritance_in_members"].items()

@@ -1,4 +1,4 @@
-chrom	position	reference	alternative	bucket_index	summary_variant_index	allele_index	allele_count	effects
+chrom	position	reference	alternative	bucket_index	summary_index	allele_index	allele_count	effects
 1	865583	G	None		0	0	2	
 1	865583	G	A		0	1	2	synonymous!SAMD11:synonymous!NM_152486_1:SAMD11:synonymous:41/681
 1	865624	G	None		1	0	2	
