@@ -19,3 +19,4 @@ wdae-api.log
 /playwright-report/
 /playwright/test-results/
 /playwright/.cache/
+logs
