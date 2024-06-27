@@ -26,7 +26,6 @@ export class PhenoBrowserComponent implements OnInit {
 
   public instruments: Observable<PhenoInstruments>;
 
-  public selectedDatasetId: string;
   public selectedDataset: Dataset;
 
   public input$ = new ReplaySubject<string>(1);
@@ -47,7 +46,6 @@ export class PhenoBrowserComponent implements OnInit {
 
   public ngOnInit(): void {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      this.selectedDatasetId = state.selectedDataset.id;
       this.selectedDataset = state.selectedDataset;
 
       this.initInstruments(this.selectedDataset.id);
@@ -135,7 +133,7 @@ export class PhenoBrowserComponent implements OnInit {
         switchMap(([searchTerm, instrument]) => {
           /* eslint-disable @typescript-eslint/naming-convention */
           const data = {
-            dataset_id: this.selectedDatasetId,
+            dataset_id: this.selectedDataset.id,
             instrument: instrument,
             search_term: searchTerm
           };

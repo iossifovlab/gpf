@@ -5,6 +5,7 @@ import { ConfigService } from 'app/config/config.service';
 import { DatasetModel } from 'app/datasets/datasets.state';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
+import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'gpf-pedigree',
@@ -36,15 +37,16 @@ export class PedigreeComponent {
       return;
     }
 
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      const selectedDatasetId = state.selectedDataset.id;
-      this.variantReportsService.getFamilies(
-        selectedDatasetId,
-        this.groupName,
-        this.counterId
-      ).subscribe(list => {
-        this.familyIdsList = list;
-      });
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
+      switchMap((state: DatasetModel) => {
+        const selectedDatasetId = state.selectedDataset.id;
+        return this.variantReportsService.getFamilies(
+          selectedDatasetId,
+          this.groupName,
+          this.counterId
+        );
+      })).subscribe(list => {
+      this.familyIdsList = list;
     });
   }
 

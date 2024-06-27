@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 
-import { Observable, Subscription } from 'rxjs';
+import { Observable, of, Subscription, switchMap, zip } from 'rxjs';
 
 import { EnrichmentResults } from '../enrichment-query/enrichment-result';
 import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.service';
@@ -34,14 +34,16 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
   ) { }
 
   public ngOnInit(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      this.selectedDataset = state.selectedDataset;
-    });
-
-    this.state$.subscribe(state => {
+    this.state$.pipe(
+      switchMap(enrichmentState => {
+        const datasetState$ = this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState);
+        return zip(of(enrichmentState), datasetState$);
+      })
+    ).subscribe(([enrichmentState, datasetState]) => {
+      this.selectedDataset = datasetState.selectedDataset;
       this.enrichmentToolState = {
         datasetId: this.selectedDataset.id,
-        ...state
+        ...enrichmentState
       };
       this.enrichmentResults = null;
     });

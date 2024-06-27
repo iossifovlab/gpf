@@ -20,12 +20,9 @@ import {
   MatAutocomplete,
   MatAutocompleteTrigger,
   MAT_AUTOCOMPLETE_SCROLL_STRATEGY } from '@angular/material/autocomplete';
+import { Dataset } from 'app/datasets/datasets';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
-class MockDatasetsService {
-  public getSelectedDataset(): object {
-    return { id: 'testDataset' };
-  }
-}
 class MockGeneSetsService {
   public provide = true;
 
@@ -78,7 +75,6 @@ class MockGeneSetsService {
 describe('GeneSetsComponent', () => {
   let component: GeneSetsComponent;
   let fixture: ComponentFixture<GeneSetsComponent>;
-  const datasetsServiceMock = new MockDatasetsService();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -91,7 +87,7 @@ describe('GeneSetsComponent', () => {
         BrowserModule
       ],
       providers: [
-        ConfigService, GeneSetsService, { provide: DatasetsService, useValue: datasetsServiceMock }, UsersService,
+        ConfigService, GeneSetsService, UsersService,
         { provide: APP_BASE_HREF, useValue: '' },
         {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
       ], schemas: [NO_ERRORS_SCHEMA]
@@ -226,7 +222,6 @@ describe('GeneSetsComponent', () => {
 describe('GeneSetsComponent MockedGeneSetsService', () => {
   let component: GeneSetsComponent;
   let fixture: ComponentFixture<GeneSetsComponent>;
-  const datasetsServiceMock = new MockDatasetsService();
   const mockGeneSetsService = new MockGeneSetsService();
 
   beforeEach(() => {
@@ -242,13 +237,23 @@ describe('GeneSetsComponent MockedGeneSetsService', () => {
       providers: [
         ConfigService, {
           provide: GeneSetsService, useValue: mockGeneSetsService
-        }, { provide: DatasetsService, useValue: datasetsServiceMock }, UsersService,
+        }, UsersService,
         { provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
       ], schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GeneSetsComponent);
     component = fixture.componentInstance;
+
+    // eslint-disable-next-line max-len
+    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null);
+    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+
+    component['store'] = {
+      selectOnce: () => of(selectedDatasetMockModel),
+      dispatch: () => null
+    } as never;
+
     fixture.detectChanges();
   });
 

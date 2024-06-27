@@ -6,7 +6,6 @@ import { UsersService } from '../users/users.service';
 import { Store } from '@ngxs/store';
 import { share, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
-import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-save-query',
@@ -46,13 +45,7 @@ export class SaveQueryComponent implements OnInit {
     this.nameInputRef.nativeElement.value = '';
     this.descInputRef.nativeElement.value = '';
 
-    let datasetId = '';
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      datasetId = state.selectedDataset.id;
-    });
-
     this.store.selectOnce(state => state).subscribe(state => {
-      state['datasetId'] = datasetId;
       this.queryService.saveQuery(state, this.queryType).pipe(take(1)).subscribe(response => {
         this.queryService.saveUserQuery(response['uuid'], name, description)
           .pipe(take(1))
@@ -81,14 +74,7 @@ export class SaveQueryComponent implements OnInit {
       return;
     }
 
-    let datasetId = '';
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      datasetId = state.selectedDataset.id;
-    });
-
     this.store.selectOnce(state => state).subscribe(state => {
-      state['datasetId'] = datasetId;
-
       this.queryService.saveQuery(state, this.queryType)
         .pipe(take(1))
         .subscribe(response => {

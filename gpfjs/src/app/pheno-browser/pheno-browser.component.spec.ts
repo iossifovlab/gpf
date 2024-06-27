@@ -225,7 +225,8 @@ describe('PhenoBrowserComponent', () => {
       search_term: 'search'
       /* eslint-enable */
     };
-    component.selectedDatasetId = data.dataset_id;
+    // eslint-disable-next-line max-len
+    component.selectedDataset = new Dataset(data.dataset_id, '', '', '', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, true, '', null);
     component.selectedInstrument$ = new BehaviorSubject(data.instrument);
     component.searchTermObs$ = of(data.search_term);
 

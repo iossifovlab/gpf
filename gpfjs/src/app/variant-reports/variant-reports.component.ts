@@ -4,7 +4,7 @@ import {
   VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
 } from './variant-reports';
 import { Dataset } from 'app/datasets/datasets';
-import { take } from 'rxjs/operators';
+import { switchMap, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
@@ -79,30 +79,34 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public ngOnInit(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      this.selectedDataset = state.selectedDataset;
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
+      switchMap((state: DatasetModel) => {
+        this.selectedDataset = state.selectedDataset;
+        return this.variantReportsService.getVariantReport(this.selectedDataset.id);
+      }),
+      take(1)
+    ).subscribe(params => {
+      this.variantReport = params;
+      this.familiesCounters = this.variantReport.familyReport.familiesCounters;
+      this.pedigreeTables = this.familiesCounters.map(
+        familiesCounters => new PedigreeTable(
+          this.chunkPedigrees(familiesCounters.pedigreeCounters),
+          familiesCounters.phenotypes, familiesCounters.groupName,
+          familiesCounters.legend
+        )
+      );
+      this.currentPeopleCounter = this.variantReport.peopleReport.peopleCounters[0];
+      this.currentPedigreeTable = this.pedigreeTables[0];
+      if (this.variantReport.denovoReport !== null) {
+        this.currentDenovoReport = this.variantReport.denovoReport.tables[0];
+        this.calculateDenovoVariantsTableWidth();
+      }
 
-      this.variantReportsService.getVariantReport(this.selectedDataset.id).pipe(take(1)).subscribe(params => {
-        this.variantReport = params;
-        this.familiesCounters = this.variantReport.familyReport.familiesCounters;
-        this.pedigreeTables = this.familiesCounters.map(
-          familiesCounters => new PedigreeTable(
-            this.chunkPedigrees(familiesCounters.pedigreeCounters),
-            familiesCounters.phenotypes, familiesCounters.groupName,
-            familiesCounters.legend
-          )
-        );
-        this.currentPeopleCounter = this.variantReport.peopleReport.peopleCounters[0];
-        this.currentPedigreeTable = this.pedigreeTables[0];
-        if (this.variantReport.denovoReport !== null) {
-          this.currentDenovoReport = this.variantReport.denovoReport.tables[0];
-          this.calculateDenovoVariantsTableWidth();
-        }
-
-        this.totalFamiliesCount = this.calculateFamilies();
-        this.filteredFamiliesCount = this.totalFamiliesCount;
-      });
+      this.totalFamiliesCount = this.calculateFamilies();
+      this.filteredFamiliesCount = this.totalFamiliesCount;
     });
+
+
     if (this.variantReportsService.getTags() !== undefined) {
       this.variantReportsService.getTags().subscribe(data => {
         Object.values(data).forEach((tag: string) => {

@@ -105,7 +105,6 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
   }
 
   private setupSelectedDataset(): void {
-    // this.selectedDataset = this.datasetsService.getSelectedDataset();
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
       this.selectedDataset = state.selectedDataset;
     });
