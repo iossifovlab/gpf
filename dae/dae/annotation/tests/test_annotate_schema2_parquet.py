@@ -294,15 +294,15 @@ def test_reannotate_parquet_metadata(
 
     result_pipeline = dict(loader_result.meta).pop("annotation_pipeline")
 
-    expected_pipeline = textwrap.dedent("""
-        - position_score:
-            resource_id: three
-            attributes:
-            - source: score_three
-              name: score_A
-            - source: score_three
-              name: score_A_internal
-              internal: true
+    expected_pipeline = textwrap.dedent(
+    """- position_score:
+    resource_id: three
+    attributes:
+    - source: score_three
+      name: score_A
+    - source: score_three
+      name: score_A_internal
+      internal: true
     """)
     assert result_pipeline == expected_pipeline
 
