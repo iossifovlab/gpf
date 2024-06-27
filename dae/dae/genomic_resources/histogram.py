@@ -338,14 +338,22 @@ class NumberHistogram(Statistic):
     def serialize(self) -> str:
         return yaml.dump(self.to_dict())
 
-    def plot(self, outfile: IO, score_id: str) -> None:
+    def plot(
+        self,
+        outfile: IO,
+        score_id: str,
+        small_values_description: Optional[str] = None,
+        large_values_description: Optional[str] = None,
+    ) -> None:
         """Plot histogram and save it into outfile."""
         # pylint: disable=import-outside-toplevel
         import matplotlib
         matplotlib.use("agg")
         import matplotlib.pyplot as plt
         width = self.bins[1:] - self.bins[:-1]
-        plt.bar(
+
+        _, ax = plt.subplots()
+        ax.bar(
             x=self.bins[:-1], height=self.bars,
             log=self.config.y_log_scale,
             width=width,
@@ -354,11 +362,29 @@ class NumberHistogram(Statistic):
         if self.config.x_log_scale:
             plt.xscale("log")
 
-        plt.xlabel(score_id)
+        if small_values_description is not None and \
+            large_values_description is not None:
+
+            sec = ax.secondary_xaxis(location=0)
+            sec.set_ticks(
+                [
+                    self.bins[0],
+                    self.bins[-1],
+                ],
+                labels=[
+                    f"\n{small_values_description}",
+                    f"\n{large_values_description}",
+                ],
+                wrap=True,
+            )
+
+        plt.title(score_id)
         plt.ylabel("count")
 
         plt.grid(axis="y")
         plt.grid(axis="x")
+
+        plt.tight_layout()
 
         plt.savefig(outfile)
         plt.clf()
@@ -546,7 +572,13 @@ class CategoricalHistogram(Statistic):
         data = yaml.safe_load(content)
         return CategoricalHistogram.from_dict(data)
 
-    def plot(self, outfile: IO, score_id: str) -> None:
+    def plot(
+        self,
+        outfile: IO,
+        score_id: str,
+        small_values_description: Optional[str] = None,
+        large_values_description: Optional[str] = None,
+    ) -> None:
         """Plot histogram and save it into outfile."""
         # pylint: disable=import-outside-toplevel
         import matplotlib
@@ -555,9 +587,28 @@ class CategoricalHistogram(Statistic):
         values = list(self.bars.keys())
         counts = list(self.bars.values())
         plt.figure(figsize=(15, 10), tight_layout=True)
-        plt.bar(values, counts)
 
-        plt.xlabel(score_id)
+        _, ax = plt.subplots()
+        ax.bar(values, counts)
+
+        if small_values_description is not None and \
+            large_values_description is not None:
+
+            sec = ax.secondary_xaxis(location=0)
+            values_list = list(values)
+            sec.set_ticks(
+                [
+                    values_list[0],
+                    values_list[-1],
+                ],
+                labels=[
+                    f"\n{small_values_description}",
+                    f"\n{large_values_description}",
+                ],
+                wrap=True,
+            )
+
+        plt.title(score_id)
         plt.ylabel("count")
 
         plt.tick_params(axis="x", labelrotation=90)
