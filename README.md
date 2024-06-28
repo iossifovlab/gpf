@@ -12,9 +12,10 @@ Information on how to use GPF can be found in the
 [GPF documentation](https://iossifovlab.com/gpfuserdocs/).
 
 ## Development
-We recommend using 
-[Anaconda environment](https://www.anaconda.com/)](https://www.anaconda.com/) 
+We recommend using [Anaconda environment](https://www.anaconda.com/)
 for creation of GPF development environment.
+In the steps below, we use the
+[mamba](https://mamba.readthedocs.io/en/latest/index.html) package manager.
 
 ### Install GPF dependencies
 
@@ -33,7 +34,7 @@ To use this environment, you need to activate it using the following command:
 conda activate gpf
 ```
 
-The following commands are going to install GPF `dae`` and `wdae`` packages for
+The following commands are going to install GPF `dae` and `wdae` packages for
 development usage. (You need to install GPF packages in the development `gpf`
 conda environment.)
 
