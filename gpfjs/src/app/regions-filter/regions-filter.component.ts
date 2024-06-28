@@ -10,7 +10,7 @@ import { StatefulComponent } from 'app/common/stateful-component';
   templateUrl: './regions-filter.component.html',
 })
 export class RegionsFilterComponent extends StatefulComponent implements OnInit {
-  @ValidateNested() public regionsFilter = new RegionsFilter();
+  @ValidateNested() public regionsFilter = new RegionsFilter(this.store);
   @ViewChild('textArea') private textArea: ElementRef;
 
   public constructor(protected store: Store) {

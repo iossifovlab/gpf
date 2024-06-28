@@ -22,8 +22,6 @@ export class DatasetsService {
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
   public datasetsLoading = false;
 
-  public static genomeVersion = '';
-
   public static descriptionCache = [];
 
   public constructor(
@@ -61,7 +59,7 @@ export class DatasetsService {
     const details$ = this.http.get(`${this.config.baseUrl}${this.datasetsDetailsUrl}/${datasetId}`, options);
 
     return zip(dataset$, details$).pipe(map(
-      (datasetPack: [any, any]) => Dataset.fromDatasetAndDetailsJson(datasetPack[0]['data'], datasetPack[1]))
+      (datasetPack: [object, object]) => Dataset.fromDatasetAndDetailsJson(datasetPack[0]['data'], datasetPack[1]))
     );
   }
 
