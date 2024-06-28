@@ -24,6 +24,7 @@ export class PedigreeComponent {
   public modal: NgbModalRef;
   public familyIdsList: string[];
   public pedigreeScale = 2.5;
+  public selectedDatasetId = '';
 
   public constructor(
     public modalService: NgbModal,
@@ -39,9 +40,9 @@ export class PedigreeComponent {
 
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
       switchMap((state: DatasetModel) => {
-        const selectedDatasetId = state.selectedDataset.id;
+        this.selectedDatasetId = state.selectedDataset.id;
         return this.variantReportsService.getFamilies(
-          selectedDatasetId,
+          this.selectedDatasetId,
           this.groupName,
           this.counterId
         );
@@ -68,7 +69,7 @@ export class PedigreeComponent {
   }
 
   public getDownloadLink(): string {
-    return this.variantReportsService.getDownloadLink();
+    return this.variantReportsService.getDownloadLink() + this.selectedDatasetId;
   }
 
   public onSubmit(event): void {

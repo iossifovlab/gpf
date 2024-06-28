@@ -6,7 +6,6 @@ import { VariantReport } from './variant-reports';
 import { environment } from '../../environments/environment';
 import { map } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
-import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Injectable()
 export class VariantReportsService {
@@ -28,11 +27,7 @@ export class VariantReportsService {
   }
 
   public getDownloadLink(): string {
-    let selectedDatasetId = '';
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      selectedDatasetId = state.selectedDataset.id;
-    });
-    return `${environment.apiPath}${this.downloadUrl}${selectedDatasetId}`;
+    return `${environment.apiPath}${this.downloadUrl}`;
   }
 
   public getFamilies(datasetId: string, groupName: string, counterId: number): Observable<string[]> {
