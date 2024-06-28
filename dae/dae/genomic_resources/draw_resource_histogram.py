@@ -35,7 +35,8 @@ def parse_cli_arguments() -> argparse.ArgumentParser:
 
     VerbosityConfiguration.set_arguments(parser)
 
-    # parser.add_argument("-o", "--output-prefix", help="output filename prefix")
+    parser.add_argument("-r", "--resource-id", help="optional resource id")
+
 
     return parser
 
@@ -61,32 +62,6 @@ def main(
     repo_url = str(repo_path)
     print(f"working with repository: {repo_url}")
 
-    # extra_definition_path = args.grr
-    # if extra_definition_path:
-    #     if not os.path.exists(extra_definition_path):
-    #         raise FileNotFoundError(
-    #             f"Definition {extra_definition_path} not found!",
-    #         )
-    #     extra_definition = load_definition_file(extra_definition_path)
-    # else:
-
-    extra_definition = get_default_grr_definition()
-    grr_definition = {
-        "id": "cli_grr",
-        "type": "group",
-        "children": [
-            {
-                "id": "local",
-                "type": "dir",
-                "directory": repo_url,
-            },
-            extra_definition,
-        ],
-    }
-
-    repo = build_genomic_resource_repository(definition=grr_definition)
-
-    # proto = _create_proto(repo_url, args.extra_args)
     proto = _create_proto(repo_url)
 
     if not isinstance(proto, ReadWriteRepositoryProtocol):
@@ -94,14 +69,7 @@ def main(
             f"resource management works with RW protocols; "
             f"{proto.proto_id} ({proto.scheme}) is read only")
 
-    status = _run_resource_stats_command(
-        repo, proto, repo_url, **vars(args))
-
-    # dry_run = cast(bool, **vars(args).get("dry_run", False))
-    # if dry_run:
-    #     print(status)
-
-    res = _find_resource(proto, repo_url, **vars(args))
+    res = _find_resource(proto, repo_url, resource=args.resource_id)
     if res is None:
         print("Resource not found...")
         sys.exit(1)

@@ -9,6 +9,7 @@ from jinja2 import Template
 
 from dae.gene_scores.gene_scores import (
     GeneScore,
+    GeneScoresDb,
     build_gene_score_from_resource,
 )
 from dae.genomic_resources import GenomicResource
@@ -107,7 +108,17 @@ class GeneScoreImplementation(
             gene_score.get_histogram_image_filename(score_id),
             mode="wb",
         ) as outfile:
-            histogram.plot(outfile, score_id)
+            scores_db = GeneScoresDb([gene_score])
+            score_desc = scores_db.get_score_desc(score_id)
+            if score_desc is not None:
+                small_values_desc = score_desc.small_values_desc
+                large_values_desc = score_desc.large_values_desc
+            histogram.plot(
+                outfile,
+                score_id,
+                small_values_desc,
+                large_values_desc,
+            )
         return histogram
 
     def calc_info_hash(self) -> bytes:

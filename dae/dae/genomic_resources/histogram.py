@@ -378,7 +378,7 @@ class NumberHistogram(Statistic):
                 wrap=True,
             )
 
-        plt.title(score_id)
+        plt.xlabel(f"\n{score_id}")
         plt.ylabel("count")
 
         plt.grid(axis="y")
@@ -608,7 +608,7 @@ class CategoricalHistogram(Statistic):
                 wrap=True,
             )
 
-        plt.title(score_id)
+        plt.xlabel(f"\n{score_id}")
         plt.ylabel("count")
 
         plt.tick_params(axis="x", labelrotation=90)
