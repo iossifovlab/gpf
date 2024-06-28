@@ -210,7 +210,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
     ]);
 
     store.selectOnce(state => state).subscribe(state => {
-      state['datasetId'] = datasetId;
+      state['temporaryDatasetId'] = datasetId;
       queryService.saveQuery(state, 'genotype')
         .pipe(take(1))
         .subscribe(urlObject => {
