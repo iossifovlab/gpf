@@ -31,6 +31,8 @@ pipeline {
     always {
       script {
         try {
+          discoverReferenceBuild()
+
           resultBeforeTests = currentBuild.currentResult
           junit 'test-results/wdae-junit.xml, test-results/dae-junit.xml, test-results/dae-tests-junit.xml, test-results/wdae-tests-junit.xml'
           sh "test ${resultBeforeTests} == ${currentBuild.currentResult}"
@@ -51,7 +53,8 @@ pipeline {
               pyLint(pattern: 'test-results/pylint_gpf_report', reportEncoding: 'UTF-8')
             ],
             qualityGates: [[threshold: 1, type: 'DELTA', unstable: true]]
-
+            //, ignoreQualityGate: true
+            //, ignoreFailedBuilds: true
           )
 
           publishHTML (target : [allowMissing: true,
