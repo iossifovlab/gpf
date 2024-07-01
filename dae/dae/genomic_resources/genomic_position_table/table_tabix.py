@@ -122,16 +122,13 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return self.chrom_map[chrom]
         return chrom
 
-    def _map_result_chrom(self, chrom: str) -> str:
+    def _map_result_chrom(self, chrom: str) -> Optional[str]:
         """Transfroms chromosome from score file to the genome chromosomes."""
-        if self.rev_chrom_map:
-            return self.rev_chrom_map[chrom]
-        return chrom
+        if self.rev_chrom_map is None:
+            return chrom
+        return self.rev_chrom_map.get(chrom)
 
     def _make_line(self, data: tuple) -> Optional[Line]:
-        assert self.chrom_key is not None
-        assert self.pos_begin_key is not None
-        assert self.pos_end_key is not None
         if self.definition.get("zero_based") is True:
             data = zero_based_adjust(
                 data, self.pos_begin_key,
@@ -139,17 +136,16 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             )
         line: Line = Line(
             data,
-            self.chrom_key,
-            self.pos_begin_key, self.pos_end_key,
-            self.ref_key, self.alt_key,
-            self.header,
+            chrom_key=self.chrom_key,
+            pos_begin_key=self.pos_begin_key,
+            pos_end_key=self.pos_end_key,
+            ref_key=self.ref_key,
+            alt_key=self.alt_key,
+            header=self.header,
         )
         if not self.rev_chrom_map:
             return line
-        if line.fchrom in self.rev_chrom_map:
-            self._transform_result(line)
-            return line
-        return None
+        return self._transform_result(line)
 
     def _transform_result(self, line: Line) -> Optional[Line]:
         rchrom = self._map_result_chrom(line.fchrom)

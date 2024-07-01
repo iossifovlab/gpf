@@ -6,10 +6,10 @@ import pysam
 from dae.genomic_resources.repository import GenomicResource
 
 from .table import GenomicPositionTable
+from .table_bigwig import BigWigTable
 from .table_inmemory import InmemoryGenomicPositionTable
 from .table_tabix import TabixGenomicPositionTable
 from .table_vcf import VCFGenomicPositionTable
-from .table_bigwig import BigWigTable
 
 
 def build_genomic_position_table(

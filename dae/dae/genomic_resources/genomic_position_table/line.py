@@ -39,11 +39,11 @@ class Line(LineBase):
     def __init__(
         self,
         raw_line: tuple,
-        chrom_key: Key = 0,
-        pos_begin_key: Key = 1,
-        pos_end_key: Key = 2,
-        ref_key: Optional[Key] = None,
-        alt_key: Optional[Key] = None,
+        chrom_key: int = 0,
+        pos_begin_key: int = 1,
+        pos_end_key: int = 2,
+        ref_key: Optional[int] = None,
+        alt_key: Optional[int] = None,
         header: Optional[tuple[str, ...]] = None,
     ):
         super().__init__()
@@ -51,14 +51,14 @@ class Line(LineBase):
         self._data: tuple[str, ...] = raw_line
         self._header: Optional[tuple[str, ...]] = header
 
-        self.chrom: str = self.get(chrom_key)
-        self.fchrom: str = self.get(chrom_key)
-        self.pos_begin: int = int(self.get(pos_begin_key))
-        self.pos_end: int = int(self.get(pos_end_key))
+        self.chrom: str = self._data[chrom_key]
+        self.fchrom: str = self._data[chrom_key]
+        self.pos_begin: int = int(self._data[pos_begin_key])
+        self.pos_end: int = int(self._data[pos_end_key])
         self.ref: Optional[str] = \
-            self.get(ref_key) if ref_key is not None else None
+            self._data[ref_key] if ref_key is not None else None
         self.alt: Optional[str] = \
-            self.get(alt_key) if alt_key is not None else None
+            self._data[alt_key] if alt_key is not None else None
 
     def get(self, key: Key) -> str:
         if isinstance(key, int):

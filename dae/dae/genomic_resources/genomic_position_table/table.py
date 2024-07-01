@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from collections.abc import Generator
 from types import TracebackType
-from typing import Callable, Optional, Union, cast
+from typing import Optional, cast
 
 from box import Box
 
@@ -30,11 +30,11 @@ class GenomicPositionTable(abc.ABC):
         self.chrom_order: Optional[list[str]] = None
         self.rev_chrom_map: Optional[dict[str, str]] = None
 
-        self.chrom_key: Optional[Union[int, str]] = None
-        self.pos_begin_key: Optional[Union[int, str]] = None
-        self.pos_end_key: Optional[Union[int, str]] = None
-        self.ref_key: Optional[Union[int, str]] = None
-        self.alt_key: Optional[Union[int, str]] = None
+        self.chrom_key: int
+        self.pos_begin_key: int
+        self.pos_end_key: int
+        self.ref_key: Optional[int] = None
+        self.alt_key: Optional[int] = None
 
         self.header: Optional[tuple] = None
 
@@ -101,28 +101,31 @@ class GenomicPositionTable(abc.ABC):
             self.rev_chrom_map = {
                 fch: ch for ch, fch in self.chrom_map.items()}
 
-    def _get_column_key(self, col: str) -> Optional[Union[int, str]]:
+    def _get_column_key(self, col: str) -> Optional[int]:
         if col not in self.definition:
             return None
-        if "name" in self.definition[col]:
-            return cast(str, self.definition[col].name)
         if "index" in self.definition[col]:
             return cast(int, self.definition[col].index)
+        if "name" in self.definition[col]:
+            assert self.header is not None
+            col_index = self.header.index(self.definition[col].name)
+            self.definition[col]["index"] = col_index
+            return col_index
         return None
 
     def _set_core_column_keys(self) -> None:
-        self.chrom_key = self._get_column_key(self.CHROM)
-        if self.chrom_key is None:
-            self.chrom_key = self.CHROM
+        # chrom is the first column by default (index 0)
+        self.chrom_key = self._get_column_key(self.CHROM) or 0
 
-        self.pos_begin_key = self._get_column_key(self.POS_BEGIN)
-        if self.pos_begin_key is None:
-            self.pos_begin_key = self.POS_BEGIN
+        # pos_begin is the second column by default (index 1)
+        self.pos_begin_key = self._get_column_key(self.POS_BEGIN) or 1
 
-        self.pos_end_key = self._get_column_key(self.POS_END)
-        if self.pos_end_key is None:
+        key = self._get_column_key(self.POS_END)
+        if key is not None:
+            self.pos_end_key = key
+        else:
             if self.header and self.POS_END in self.header:
-                self.pos_end_key = self.POS_END
+                self.pos_end_key = 2
             else:
                 self.pos_end_key = self.pos_begin_key
 
