@@ -143,7 +143,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             url: str,
             filesystem: fsspec.AbstractFileSystem):
 
-        super().__init__(proto_id)
+        super().__init__(proto_id, url)
 
         parsed = urlparse(url)
         self.scheme = parsed.scheme
@@ -249,7 +249,8 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         index_url = self._get_file_url(resource, index_filename)
 
         return pysam.TabixFile(  # pylint: disable=no-member
-            file_url, index=index_url, encoding="utf-8")
+            file_url, index=index_url, encoding="utf-8",
+            parser=pysam.asTuple())
 
     def open_vcf_file(
             self, resource: GenomicResource,

@@ -1,133 +1,137 @@
-# pylint: disable=invalid-name
-
+import pathlib
 from collections import defaultdict
+from typing import IO, Any, Callable, Optional
 
 
-def dd():
+def dd() -> dict[str, int]:
     return defaultdict(int)
 
 
 class GeneTerms:
     """Class representing gene terms."""
 
-    def __init__(self):
-        self.g2T = defaultdict(dd)
-        self.t2G = defaultdict(dd)
-        self.tDesc = {}
-        self.geneNS = None
+    def __init__(self) -> None:
+        self.g2t: dict[str, Any] = defaultdict(dd)
+        self.t2g: dict[str, Any] = defaultdict(dd)
+        self.t_desc: dict[str, Any] = {}
+        self.gene_ns: Optional[str] = None
 
-    def filterGenes(self, filterF):
-        """Filter the genese."""
-        keepGs = filterF(list(self.g2T.keys()))
-        self.g2T = {g: ts for g, ts in list(self.g2T.items()) if g in keepGs}
-        self.t2G = defaultdict(dd)
-        for g, ts in list(self.g2T.items()):
+    def filter_genes(
+        self, filter_fun: Callable[[list[str]], list[str]],
+    ) -> None:
+        """Filter the genes."""
+        keep_gs = filter_fun(list(self.g2t.keys()))
+        self.g2t = {g: ts for g, ts in list(self.g2t.items()) if g in keep_gs}
+        self.t2g = defaultdict(dd)
+        for g, ts in list(self.g2t.items()):
             for t, n in list(ts.items()):
-                self.t2G[t][g] = n
-        for t in set(self.tDesc) - set(self.t2G):
-            del self.tDesc[t]
+                self.t2g[t][g] = n
+        for t in set(self.t_desc) - set(self.t2g):
+            del self.t_desc[t]
 
-    def renameGenes(self, geneNS, renameF):
+    def rename_genes(
+        self, gene_ns: Optional[str],
+        rename_fun: Callable[[str], str],
+    ) -> None:
         """Rename genese."""
-        g2T = self.g2T
-        self.g2T = defaultdict(dd)
-        self.t2G = defaultdict(dd)
-        for g, ts in list(g2T.items()):
-            ng = renameF(g)
+        g2t = self.g2t
+        self.g2t = defaultdict(dd)
+        self.t2g = defaultdict(dd)
+        for g, ts in list(g2t.items()):
+            ng = rename_fun(g)
             if ng:
-                self.g2T[ng] = ts
-        for g, ts in list(self.g2T.items()):
+                self.g2t[ng] = ts
+        for g, ts in list(self.g2t.items()):
             for t, n in list(ts.items()):
-                self.t2G[t][g] = n
-        for t in set(self.tDesc) - set(self.t2G):
-            del self.tDesc[t]
-        self.geneNS = geneNS
+                self.t2g[t][g] = n
+        for t in set(self.t_desc) - set(self.t2g):
+            del self.t_desc[t]
+        self.gene_ns = gene_ns
 
-    def save(self, fn):
+    def save(self, fname: str) -> None:
         """Save to `fn`."""
-        if fn.endswith("-map.txt"):
-            mapFn = fn
-            dscFn = fn[:-4] + "names.txt"
+        if fname.endswith("-map.txt"):
+            map_fname = fname
+            dsc_fname = fname[:-4] + "names.txt"
         else:
-            mapFn = fn + "-map.txt"
-            dscFn = fn + "-mapnames.txt"
+            map_fname = fname + "-map.txt"
+            dsc_fname = fname + "-mapnames.txt"
 
-        with open(mapFn, "w") as mapF:
-            mapF.write("#geneNS\t" + self.geneNS + "\n")
-            for g in sorted(self.g2T):
+        with open(map_fname, "wt") as outfile:
+            outfile.write("#geneNS\t" + str(self.gene_ns) + "\n")
+            for g in sorted(self.g2t):
                 ts = []
-                for t, tn in sorted(self.g2T[g].items()):
+                for t, tn in sorted(self.g2t[g].items()):
                     ts += [t] * tn
-                mapF.write(g + "\t" + " ".join(ts) + "\n")
+                outfile.write(g + "\t" + " ".join(ts) + "\n")
 
-        with open(dscFn, "w") as dscFn:
-            dscFn.write(
+        pathlib.Path(dsc_fname).write_text(
                 "\n".join(
-                    [t + "\t" + dsc for t, dsc in sorted(self.tDesc.items())],
+                    [t + "\t" + dsc for t, dsc in sorted(self.t_desc.items())],
                 )
                 + "\n",
-            )
+        )
 
 
-def read_ewa_set_file(set_files):
+def read_ewa_set_file(set_files: list[IO]) -> GeneTerms:
     """Read a set of ewa files."""
     r = GeneTerms()
-    r.geneNS = "sym"
+    r.gene_ns = "sym"
     for f in set_files:
         setname = ""
         while setname == "":
             setname = f.readline().strip()
         line = f.readline()
-        r.tDesc[setname] = line.strip()
+        r.t_desc[setname] = line.strip()
         for line in f:
             gene_sym = line.strip()
-            r.t2G[setname][gene_sym] += 1
-            r.g2T[gene_sym][setname] += 1
+            r.t2g[setname][gene_sym] += 1
+            r.g2t[gene_sym][setname] += 1
         f.close()
     return r
 
 
-def read_gmt_file(input_file):
+def read_gmt_file(input_file: IO) -> GeneTerms:
     """Read a gmt file."""
     r = GeneTerms()
-    r.geneNS = "sym"
+    r.gene_ns = "sym"
 
     for ln in input_file:
         line = ln.strip().split()
 
         t = line[0]
-        r.tDesc[t] = line[1]
+        r.t_desc[t] = line[1]
         for gs in line[2:]:
-            r.t2G[t][gs] += 1
-            r.g2T[gs][t] += 1
+            r.t2g[t][gs] += 1
+            r.g2t[gs][t] += 1
     input_file.close()
     return r
 
 
-def read_mapping_file(input_file, names_file):
+def read_mapping_file(input_file: IO, names_file: Optional[IO]) -> GeneTerms:
     """Read a mapping file."""
     r = GeneTerms()
-    r.geneNS = "id"
+    r.gene_ns = "id"
     for ln in input_file:
         line = ln.strip().split()
         if line[0] == "#geneNS":
-            r.geneNS = line[1]
+            r.gene_ns = line[1]
             continue
-        geneId = line[0]
+        gene_id = line[0]
         del line[0]
         for t in line:
-            r.t2G[t][geneId] += 1
-            r.g2T[geneId][t] += 1
+            r.t2g[t][gene_id] += 1
+            r.g2t[gene_id][t] += 1
     input_file.close()
     if names_file is not None:
         try:
             for line in names_file:
                 (t, desc) = line.strip().split("\t", 1)
-                if t in r.t2G:
-                    r.tDesc[t] = desc
+                if t in r.t2g:
+                    r.t_desc[t] = desc
         except OSError:
             pass
         names_file.close()
-    for t in set(r.t2G) - set(r.tDesc):
-        r.tDesc[t] = ""
+    for t in set(r.t2g) - set(r.t_desc):
+        r.t_desc[t] = ""
     return r

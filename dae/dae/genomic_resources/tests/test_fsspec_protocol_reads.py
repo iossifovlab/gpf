@@ -186,9 +186,7 @@ def test_open_tabix_file_fetch_all(
     # When
     lines = []
     with proto.open_tabix_file(res, "test.txt.gz") as tabix:
-
-        for line in tabix.fetch():
-            lines.append(line)
+        lines = list(tabix.fetch())
 
     # Then
     assert len(lines) == 5
@@ -204,12 +202,11 @@ def test_open_tabix_file_fetch_region(
     # When
     lines = []
     with proto.open_tabix_file(res, "test.txt.gz") as tabix:
-
-        for line in tabix.fetch("3"):
-            lines.append(line)
+        lines = list(tabix.fetch("3"))
 
     # Then
-    assert lines == ["3\t1\t10\t3.0", "3\t11\t20\t3.5"]
+    assert [tuple(r) for r in lines] == [
+        ("3", "1", "10", "3.0"), ("3", "11", "20", "3.5")]
 
 
 @pytest.mark.grr_tabix()
@@ -236,9 +233,7 @@ def test_open_vcf_file_fetch_all(
     # When
     lines = []
     with proto.open_vcf_file(res, "in.vcf.gz") as vcf:
-
-        for line in vcf.fetch():
-            lines.append(line)
+        lines = list(vcf.fetch())
 
     # Then
     assert len(lines) == 4
@@ -254,9 +249,7 @@ def test_open_vcf_file_fetch_region(
     # When
     lines = []
     with proto.open_vcf_file(res, "in.vcf.gz") as vcf:
-
-        for line in vcf.fetch("foo"):
-            lines.append(line)
+        lines = list(vcf.fetch("foo"))
 
     # Then
     assert len(lines) == 2

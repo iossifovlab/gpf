@@ -119,8 +119,7 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
                 for line in self.records_by_chr[fchrom]:
                     yield self._transform_result(line, chrom)
             else:
-                for line in self.records_by_chr[chrom]:
-                    yield line
+                yield from self.records_by_chr[chrom]
 
     def get_records_in_region(
         self,
@@ -131,6 +130,9 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         fch = self.chrom_map[chrom] if self.chrom_map else chrom
         if pos_begin is not None and self.definition.get("zero_based") is True:
             pos_begin -= 1
+        if fch not in self.records_by_chr:
+            raise ValueError(
+                f"The chromosome {chrom} is not present in the table")
 
         for line in self.records_by_chr[fch]:
             if pos_begin and pos_begin > line.pos_end:

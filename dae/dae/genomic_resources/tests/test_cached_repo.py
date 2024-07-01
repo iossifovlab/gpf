@@ -5,7 +5,8 @@ import os
 import pathlib
 import threading
 from collections.abc import Generator
-from typing import Any, Callable, ContextManager, cast
+from contextlib import AbstractContextManager
+from typing import Any, Callable, cast
 
 import pytest
 from pytest_mock import MockerFixture
@@ -46,7 +47,7 @@ def test_create_definition_with_cache(tmp_path: pathlib.Path) -> None:
 
 
 CacheRepositoryBuilder = Callable[
-    [dict[str, Any]], ContextManager[GenomicResourceCachedRepo]]
+    [dict[str, Any]], AbstractContextManager[GenomicResourceCachedRepo]]
 
 
 # @pytest.fixture(params=["file", "s3"])
@@ -453,7 +454,8 @@ def test_cached_repo_nested_list_cli(
         out, err = capsys.readouterr()
         print(out)
         assert err == ""
-        assert out == \
-            "Basic                0        1/ 2 7.0 B        test_grr one\n" \
-            "gene_models          0        1/ 2 41.0 B       test_grr " \
+        assert out == (
+            "Basic                0        1/ 2 7.0 B        test_grr one\n"
+            "gene_models          0        1/ 2 41.0 B       test_grr "
             "sub/two\n"
+        )

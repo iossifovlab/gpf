@@ -297,18 +297,13 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             if self._should_use_sequential_seek_forward(fchrom, pos_begin):
                 self._sequential_seek_forward(fchrom, pos_begin)
 
-                for row in self._gen_from_buffer_and_tabix(
-                        fchrom, pos_begin, pos_end):
-                    yield row
-
-                self.buffer.prune(fchrom, pos_begin)
-                return
+                yield from self._gen_from_buffer_and_tabix(
+                        fchrom, pos_begin, pos_end)
 
         # without using buffer
         self.line_iterator = self.get_line_iterator(fchrom, pos_begin - 1)
 
-        for row in self._gen_from_tabix(fchrom, pos_end, buffering=buffering):
-            yield row
+        yield from self._gen_from_tabix(fchrom, pos_end, buffering=buffering)
 
         self.buffer.prune(fchrom, pos_begin)
 

@@ -43,10 +43,9 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
             self,
             remote_protocol: ReadOnlyRepositoryProtocol,
             local_protocol: FsspecReadWriteProtocol):
-
-        super().__init__(local_protocol.proto_id)
         self.remote_protocol = remote_protocol
         self.local_protocol = local_protocol
+        super().__init__(local_protocol.proto_id, local_protocol.get_url())
         self._all_resources: Optional[list[CacheResource]] = None
 
     def get_url(self) -> str:
@@ -272,7 +271,7 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
         cache_proto = self._get_or_create_cache_proto(
             resource.proto)
         cached_files = set()
-        for filename in map(lambda entry: entry.name, resource.get_manifest()):
+        for filename in [entry.name for entry in resource.get_manifest()]:
             if filename == GR_CONF_FILE_NAME:
                 continue
             if cache_proto.local_protocol.file_exists(resource, filename):
@@ -340,12 +339,10 @@ def cache_resources(
 
     total_files = len(futures)
     logger.info("caching %s files", total_files)
-    count = 0
-    for future in as_completed(futures):
+    for count, future in enumerate(as_completed(futures)):
         filename: str
 
         resource_id, filename = future.result()  # type: ignore
-        count += 1
         logger.info(
             "finished %s/%s (%s: %s)", count, total_files,
             resource_id, filename)
