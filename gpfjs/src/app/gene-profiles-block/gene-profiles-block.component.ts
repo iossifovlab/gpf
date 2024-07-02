@@ -12,6 +12,7 @@ import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-t
 import {
   GeneProfileSingleViewComponent
 } from 'app/gene-profiles-single-view/gene-profiles-single-view.component';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-gene-profiles-block',
@@ -24,6 +25,7 @@ export class GeneProfilesBlockComponent implements OnInit {
   public constructor(
     private geneProfilesService: GeneProfilesService,
     private queryService: QueryService,
+    private datasetsService: DatasetsService,
     private store: Store
   ) { }
 
@@ -174,7 +176,7 @@ export class GeneProfilesBlockComponent implements OnInit {
       .find(ps => ps.id === tokens[1]);
     const statistic = personSet.statistics.find(st => st.id === tokens[2]);
     GeneProfileSingleViewComponent.goToQuery(
-      this.store, this.queryService, $event.geneSymbol, personSet, datasetId, statistic, $event.newTab
+      this.store, this.queryService, this.datasetsService, $event.geneSymbol, personSet, datasetId, statistic, $event.newTab
     );
   }
 }

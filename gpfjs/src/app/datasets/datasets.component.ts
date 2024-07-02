@@ -111,11 +111,11 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
 
   private setupSelectedDataset(): void {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      this.selectedDataset = state.selectedDataset;
-
-      if (!this.selectedDataset) {
+      if (!state.selectedDataset) {
         return;
       }
+
+      this.selectedDataset = state.selectedDataset;
 
       const firstTool = this.findFirstTool(this.selectedDataset);
 

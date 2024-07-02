@@ -21,8 +21,10 @@ import { SetPresentInChildValues } from 'app/present-in-child/present-in-child.s
 import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
 import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { SetVariantTypes } from 'app/variant-types/variant-types.state';
-import { EffectTypes } from 'app/effect-types/effect-types';
+import { LGDS } from 'app/effect-types/effect-types';
 import { GeneProfilesModel, SetGeneProfilesTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
+import { DatasetsService } from 'app/datasets/datasets.service';
+import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -65,7 +67,8 @@ export class GeneProfileSingleViewComponent implements OnInit {
     private geneScoresService: GeneScoresService,
     private router: Router,
     private queryService: QueryService,
-    private store: Store
+    private store: Store,
+    private datasetsService: DatasetsService
   ) { }
 
   public errorModal = false;
@@ -164,16 +167,23 @@ export class GeneProfileSingleViewComponent implements OnInit {
     statistic: GeneProfilesDatasetStatistic
   ): void {
     GeneProfileSingleViewComponent.goToQuery(
-      this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
+      this.store, this.queryService, this.datasetsService, geneSymbol, personSet, datasetId, statistic
     );
   }
 
   public static goToQuery(
-    store: Store, queryService: QueryService, geneSymbol: string, personSet: GeneProfilesDatasetPersonSet,
-    datasetId: string, statistic: GeneProfilesDatasetStatistic, newTab: boolean = true
+    store: Store,
+    queryService:
+    QueryService,
+    datasetsService: DatasetsService,
+    geneSymbol: string,
+    personSet: GeneProfilesDatasetPersonSet,
+    datasetId: string,
+    statistic: GeneProfilesDatasetStatistic,
+    newTab: boolean = true
   ): void {
     const effectTypes = {
-      lgds: EffectTypes['LGDS'],
+      lgds: LGDS,
       intron: ['intron'],
       missense: ['missense'],
       synonymous: ['synonymous'],
@@ -209,8 +219,14 @@ export class GeneProfileSingleViewComponent implements OnInit {
       new SetPedigreeSelector(personSet.collectionId, new Set([personSet.id])),
     ]);
 
-    store.selectOnce(state => state).subscribe(state => {
-      state['temporaryDatasetId'] = datasetId;
+
+    store.selectOnce((state: object) => state).pipe(
+      switchMap((state: object) => {
+        const dataset$ = datasetsService.getDataset(datasetId);
+        return zip(of(state), dataset$);
+      })
+    ).subscribe(([state, dataset]) => {
+      (state['datasetState'] as DatasetModel).selectedDataset = dataset;
       queryService.saveQuery(state, 'genotype')
         .pipe(take(1))
         .subscribe(urlObject => {
