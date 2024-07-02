@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+* 2024.7.0
+    * Bump Python version to 3.11
+    * Fix in gene profiles search for genes
+    * Support for browser caching of GPF wdae requests
+    * Support for style tag in GRR info pages resource description
+    * Support for ZSTD compression of variants data blobs in schema2 parquet
+    * Fixes in annotation pipeline construction
+    * Fixes in support for bigWig format in genomic scores
+    * Fixes in handling of selected dataset in GPFjs
+    * Fixes of visual flickering of dataset selector dropdown in GPFjs
+    * Fixes in handling of internal state in GPFjs
+
 * 2024.6.6
     * Update for GRR info pages for genomic scores, gene scores, gene models
       and reference genome
