@@ -44,12 +44,10 @@ class Line(LineBase):
         pos_end_key: int = 2,
         ref_key: Optional[int] = None,
         alt_key: Optional[int] = None,
-        header: Optional[tuple[str, ...]] = None,
     ):
         super().__init__()
 
         self._data: tuple[str, ...] = raw_line
-        self._header: Optional[tuple[str, ...]] = header
 
         self.chrom: str = self._data[chrom_key]
         self.fchrom: str = self._data[chrom_key]
@@ -61,12 +59,7 @@ class Line(LineBase):
             self._data[alt_key] if alt_key is not None else None
 
     def get(self, key: Key) -> str:
-        if isinstance(key, int):
-            return self._data[key]
-
-        assert self._header is not None
-        idx = self._header.index(key)
-        return self._data[idx]
+        return self._data[key]  # type: ignore
 
     def row(self) -> tuple:
         return self._data

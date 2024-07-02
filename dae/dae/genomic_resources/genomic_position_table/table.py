@@ -101,26 +101,28 @@ class GenomicPositionTable(abc.ABC):
             self.rev_chrom_map = {
                 fch: ch for ch, fch in self.chrom_map.items()}
 
-    def _get_column_key(self, col: str) -> Optional[int]:
-        if col not in self.definition:
-            return None
-        if "index" in self.definition[col]:
-            return cast(int, self.definition[col].index)
-        if "name" in self.definition[col]:
-            assert self.header is not None
-            col_index = self.header.index(self.definition[col].name)
-            self.definition[col]["index"] = col_index
-            return col_index
+    def get_column_key(self, col: str) -> Optional[int]:
+        """Find the index of a column in the table."""
+        if col in self.definition:
+            if "index" in self.definition[col]:
+                return cast(int, self.definition[col].index)
+            if "name" in self.definition[col]:
+                assert self.header is not None
+                col_index = self.header.index(self.definition[col].name)
+                self.definition[col]["index"] = col_index
+                return col_index
+        if self.header is not None and col in self.header:
+            return self.header.index(col)
         return None
 
     def _set_core_column_keys(self) -> None:
         # chrom is the first column by default (index 0)
-        self.chrom_key = self._get_column_key(self.CHROM) or 0
+        self.chrom_key = self.get_column_key(self.CHROM) or 0
 
         # pos_begin is the second column by default (index 1)
-        self.pos_begin_key = self._get_column_key(self.POS_BEGIN) or 1
+        self.pos_begin_key = self.get_column_key(self.POS_BEGIN) or 1
 
-        key = self._get_column_key(self.POS_END)
+        key = self.get_column_key(self.POS_END)
         if key is not None:
             self.pos_end_key = key
         else:
@@ -129,8 +131,8 @@ class GenomicPositionTable(abc.ABC):
             else:
                 self.pos_end_key = self.pos_begin_key
 
-        self.ref_key = self._get_column_key(self.REF)
-        self.alt_key = self._get_column_key(self.ALT)
+        self.ref_key = self.get_column_key(self.REF)
+        self.alt_key = self.get_column_key(self.ALT)
 
     def __enter__(self) -> GenomicPositionTable:
         self.open()

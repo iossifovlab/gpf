@@ -30,15 +30,11 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         super().__init__(genomic_resource, table_definition)
 
     def _make_line(self, data: tuple) -> Line:
-        assert self.chrom_key is not None
-        assert self.pos_begin_key is not None
-        assert self.pos_end_key is not None
         return Line(
             data,
             self.chrom_key,
             self.pos_begin_key, self.pos_end_key,
             self.ref_key, self.alt_key,
-            self.header,
         )
 
     def open(self) -> "InmemoryGenomicPositionTable":

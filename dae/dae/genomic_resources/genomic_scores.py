@@ -181,6 +181,7 @@ class ScoreLine:
         """Get and parse configured score from line."""
         key = self.score_defs[score_id].score_index
         assert key is not None
+
         value: Optional[str] = self.line.get(key)
         if score_id in self.score_defs:
             col_def = self.score_defs[score_id]
@@ -395,7 +396,9 @@ class GenomicScore(ResourceConfigValidationMixin):
         }
 
     @staticmethod
-    def _parse_scoredef_config(config: dict[str, Any]) -> dict[str, _ScoreDef]:
+    def _parse_scoredef_config(
+        config: dict[str, Any],
+    ) -> dict[str, _ScoreDef]:
         """Parse ScoreDef configuration."""
         scores = {}
 
@@ -427,8 +430,8 @@ class GenomicScore(ResourceConfigValidationMixin):
             scores[score_conf["id"]] = score_def
         return scores
 
-    @staticmethod
     def _parse_vcf_scoredefs(
+        self,
         vcf_header_info: Optional[dict[str, Any]],
         config_scoredefs: Optional[dict[str, _ScoreDef]],
     ) -> dict[str, _ScoreDef]:
@@ -501,10 +504,10 @@ class GenomicScore(ResourceConfigValidationMixin):
     def _build_scoredefs(self) -> dict[str, _ScoreDef]:
         config_scoredefs = None
         if "scores" in self.config:
-            config_scoredefs = GenomicScore._parse_scoredef_config(self.config)
+            config_scoredefs = self._parse_scoredef_config(self.config)
 
         if isinstance(self.table, VCFGenomicPositionTable):
-            return GenomicScore._parse_vcf_scoredefs(
+            return self._parse_vcf_scoredefs(
                 cast(dict[str, Any], self.table.header), config_scoredefs)
 
         if config_scoredefs is None:

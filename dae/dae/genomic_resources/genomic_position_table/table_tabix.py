@@ -141,7 +141,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             pos_end_key=self.pos_end_key,
             ref_key=self.ref_key,
             alt_key=self.alt_key,
-            header=self.header,
         )
         if not self.rev_chrom_map:
             return line
