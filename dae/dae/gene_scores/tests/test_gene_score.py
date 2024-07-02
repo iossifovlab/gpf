@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pathlib
 import textwrap
 
 import numpy as np
@@ -18,8 +17,8 @@ from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
 @pytest.fixture()
-def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
-    scores_repo = build_inmemory_test_repository({
+def scores_repo() -> GenomicResourceRepo:
+    return build_inmemory_test_repository({
         "LinearHist": {
             GR_CONF_FILE_NAME: """
                 type: gene_score
@@ -194,7 +193,6 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
             """),
         },
     })
-    return scores_repo
 
 
 def test_load_linear_gene_scores_from_resource(
@@ -253,7 +251,7 @@ def test_load_gene_score_without_histogram(
         scores_repo: GenomicResourceRepo) -> None:
     res = scores_repo.get_resource("OopsHist")
     with pytest.raises(
-        ValueError,
+        TypeError,
         match="Missing histogram config for linear in OopsHist",
     ):
         build_gene_score_from_resource(res)

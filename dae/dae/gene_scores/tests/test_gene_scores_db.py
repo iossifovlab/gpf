@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,W0104
 
-import pathlib
 import textwrap
 
 import pytest
@@ -17,8 +16,8 @@ from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
 @pytest.fixture()
-def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
-    scores_repo = build_inmemory_test_repository({
+def scores_repo() -> GenomicResourceRepo:
+    return build_inmemory_test_repository({
         "RVIS_rank": {
             GR_CONF_FILE_NAME: """
                 type: gene_score
@@ -78,7 +77,6 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceRepo:
             """),
         },
     })
-    return scores_repo
 
 
 @pytest.fixture()
@@ -87,9 +85,9 @@ def gene_scores_db(scores_repo: GenomicResourceRepo) -> GeneScoresDb:
         scores_repo.get_resource("LGD_rank"),
         scores_repo.get_resource("RVIS_rank"),
     ]
-    gene_scores = []
-    for resource in resources:
-        gene_scores.append(build_gene_score_from_resource(resource))
+    gene_scores = [
+        build_gene_score_from_resource(resource) for resource in resources
+    ]
     return GeneScoresDb(gene_scores)
 
 

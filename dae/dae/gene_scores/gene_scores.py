@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import itertools
 import logging
 from dataclasses import dataclass
 from functools import lru_cache
+from io import StringIO
 from typing import Any, Optional, cast
 from urllib.parse import quote
 
@@ -23,7 +23,6 @@ from dae.genomic_resources.resource_implementation import (
     get_base_resource_schema,
 )
 from dae.genomic_scores.scores import SCORE_HISTOGRAM
-from dae.utils.dae_utils import join_line
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +82,7 @@ class GeneScore(
             hist_conf = build_histogram_config(score_conf)
 
             if not isinstance(hist_conf, NumberHistogramConfig):
-                raise ValueError(
+                raise TypeError(
                     f"Missing histogram config for {score_id} in "
                     f"{self.resource.resource_id}")
 
@@ -160,8 +159,8 @@ class GeneScore(
             score_max = float("inf")
 
         index = np.logical_and(
-            df.values >= score_min, df.values < score_max)  # type: ignore
-        index = np.logical_and(index, df.notnull())
+            df.to_numpy() >= score_min, df.to_numpy() < score_max)  # type: ignore
+        index = np.logical_and(index, df.notna())
         genes = score_value_df[index].gene
         return set(genes.values)
 
@@ -185,22 +184,16 @@ class GeneScore(
         symbol_values = self._to_dict(score_id)
         return symbol_values.get(gene_symbol)
 
-    def _to_list(self, df: Optional[pd.DataFrame] = None) -> list[str]:
-        if df is None:
-            df = self.df
-        columns = df.applymap(str).columns.tolist()
-        values = df.applymap(str).values.tolist()
-
-        return cast(
-            list[str],
-            list(itertools.chain([columns], values)))
-
     def to_tsv(self, score_id: Optional[str] = None) -> list[str]:
         """Return a TSV version of the gene score data."""
         df = None
         if score_id is not None:
             df = self.get_score_df(score_id)
-        return list(map(join_line, self._to_list(df)))  # type: ignore
+        assert df is not None
+
+        outbuf = StringIO()
+        df.to_csv(outbuf, sep="\t", index=False)
+        return outbuf.getvalue().splitlines(keepends=True)
 
     def get_score_df(self, score_id: str) -> pd.DataFrame:
         return self.df[["gene", score_id]].dropna()
@@ -308,8 +301,10 @@ class GeneScore(
         return f"statistics/histogram_{score_id}.png"
 
     def get_histogram_image_url(self, score_id: str) -> Optional[str]:
-        return f"{self.resource.get_url()}/" \
+        return (
+            f"{self.resource.get_url()}/"
             f"{quote(self.get_histogram_image_filename(score_id))}"
+        )
 
 
 @dataclass
@@ -408,11 +403,11 @@ class GeneScoresDb:
 
     def get_score_ids(self) -> list[str]:
         """Return a list of the IDs of all the gene scores contained."""
-        return sorted(list(self.score_descs.keys()))
+        return sorted(self.score_descs.keys())
 
     def get_gene_score_ids(self) -> list[str]:
         """Return a list of the IDs of all the gene scores contained."""
-        return sorted(list(self.gene_scores.keys()))
+        return sorted(self.gene_scores.keys())
 
     def get_gene_scores(self) -> list[GeneScore]:
         """Return a list of all the gene scores contained in the DB."""
@@ -437,8 +432,7 @@ class GeneScoresDb:
         if score_id not in self.score_descs:
             raise ValueError(f"score {score_id} not found")
 
-        res = self.score_descs[score_id]
-        return res
+        return self.score_descs[score_id]
 
     def __contains__(self, score_id: str) -> bool:
         return score_id in self.score_descs
