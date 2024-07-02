@@ -5,7 +5,7 @@ from typing import IO, ClassVar, Optional
 from dae.genomic_resources.repository import GenomicResource
 
 from .line import Line, LineBase
-from .table import GenomicPositionTable
+from .table import GenomicPositionTable, get_idx, zero_based_adjust
 
 
 class InmemoryGenomicPositionTable(GenomicPositionTable):
@@ -80,6 +80,14 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
             if space_replacement:
                 columns = tuple("" if v == "EMPTY" else v for v in columns)
 
+            if self.definition.get("zero_based") is True:
+                assert self.pos_begin_key is not None
+                assert self.pos_end_key is not None
+                assert self.header is not None
+                columns = zero_based_adjust(
+                    columns, self.pos_begin_key,
+                    self.pos_end_key, self.header,
+                )
             line = self._make_line(columns)
             records_by_chr[line.chrom].append(line)
 
@@ -95,12 +103,10 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         return sorted(self.records_by_chr.keys())
 
     def _transform_result(self, line: Line, chrom: str) -> Line:
+        assert self.chrom_key is not None
+        assert self.header is not None
         new_data = list(line._data)  # pylint: disable=protected-access  # noqa: SLF001
-        if isinstance(self.chrom_key, int):
-            chrom_idx = self.chrom_key
-        else:
-            assert self.header is not None
-            chrom_idx = self.header.index(self.chrom_key)
+        chrom_idx = get_idx(self.chrom_key, self.header)
         new_data[chrom_idx] = chrom
         return self._make_line(tuple(new_data))
 
@@ -123,6 +129,9 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         pos_end: Optional[int] = None,
     ) -> Generator[LineBase, None, None]:
         fch = self.chrom_map[chrom] if self.chrom_map else chrom
+        if pos_begin is not None and self.definition.get("zero_based") is True:
+            pos_begin -= 1
+
         for line in self.records_by_chr[fch]:
             if pos_begin and pos_begin > line.pos_end:
                 continue

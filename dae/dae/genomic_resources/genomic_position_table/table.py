@@ -3,13 +3,13 @@ from __future__ import annotations
 import abc
 from collections.abc import Generator
 from types import TracebackType
-from typing import Optional, Union, cast
+from typing import Callable, Optional, Union, cast
 
 from box import Box
 
 from dae.genomic_resources.repository import GenomicResource
 
-from .line import LineBase
+from .line import Key, Line, LineBase
 
 
 class GenomicPositionTable(abc.ABC):
@@ -207,3 +207,28 @@ class GenomicPositionTable(abc.ABC):
         This is to be overwritten by the subclass. It should return a list of
         the chromosomes in the file in the order determinted by the file.
         """
+
+
+def get_idx(key: Key, header: tuple) -> int:
+    if isinstance(key, int):
+        return key
+    assert header is not None
+    return header.index(key)
+
+
+def zero_based_adjust(
+    raw: tuple,
+    pos_begin_key: Key,
+    pos_end_key: Key,
+    header: tuple,
+) -> tuple:
+    """Adjust a zero-based record."""
+    rec = list(raw)
+    pos_begin_key = get_idx(pos_begin_key, header)
+    pos_end_key = get_idx(pos_end_key, header)
+
+    rec[pos_begin_key] = int(rec[pos_begin_key]) + 1
+    rec[pos_end_key] = int(rec[pos_end_key])
+    if rec[pos_end_key] < rec[pos_begin_key]:
+        rec[pos_end_key] += 1
+    return tuple(map(str, rec))

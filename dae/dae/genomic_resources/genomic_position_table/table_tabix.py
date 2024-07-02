@@ -11,7 +11,7 @@ from dae.genomic_resources.repository import GenomicResource
 from dae.utils.regions import get_chromosome_length_tabix
 
 from .line import Line, LineBase, LineBuffer
-from .table import GenomicPositionTable
+from .table import GenomicPositionTable, zero_based_adjust
 
 PysamFile = Union[pysam.TabixFile, pysam.VariantFile]
 logger = logging.getLogger(__name__)
@@ -132,6 +132,11 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         assert self.chrom_key is not None
         assert self.pos_begin_key is not None
         assert self.pos_end_key is not None
+        if self.definition.get("zero_based") is True:
+            data = zero_based_adjust(
+                data, self.pos_begin_key,
+                self.pos_end_key, self.header,
+            )
         line: Line = Line(
             data,
             self.chrom_key,
