@@ -8,7 +8,7 @@ import copy
 import logging
 from collections import Counter
 from dataclasses import dataclass
-from typing import IO, Any, Optional, Union, cast
+from typing import IO, Any, Optional, Union
 
 import numpy as np
 import yaml
@@ -188,6 +188,9 @@ class NumberHistogram(Statistic):
 
         self.min_value: float = np.nan
         self.max_value: float = np.nan
+        self.choose_bin_index = self.choose_bin_lin
+        if self.config.x_log_scale:
+            self.choose_bin_index = self.choose_bin_log
 
         if self.config.x_log_scale and self.config.x_min_log is None:
             raise ValueError(
@@ -249,9 +252,10 @@ class NumberHistogram(Statistic):
     def merge(self, other: Statistic) -> None:
         """Merge two histograms."""
         assert isinstance(other, NumberHistogram)
-        # assert self.config == other.config, (self.config, other.config)
-        assert self.bins is not None and self.bars is not None
-        assert other.bins is not None and other.bars is not None
+        assert self.bins is not None
+        assert self.bars is not None
+        assert other.bins is not None
+        assert other.bars is not None
 
         assert np.allclose(self.bins, other.bins, rtol=1e-5), \
             (self.bins, other.bins)
@@ -289,10 +293,7 @@ class NumberHistogram(Statistic):
         self.min_value = min(value, self.min_value)
         self.max_value = max(value, self.max_value)
 
-        if self.config.x_log_scale:
-            index = self.choose_bin_log(value)
-        else:
-            index = self.choose_bin_lin(value)
+        index = self.choose_bin_index(value)
         if index < 0:
             logger.warning(
                 "out of range %s value %s", self.view_range, value)
@@ -340,7 +341,7 @@ class NumberHistogram(Statistic):
         }
 
     def serialize(self) -> str:
-        return cast(str, yaml.dump(self.to_dict()))
+        return yaml.dump(self.to_dict())
 
     def plot(self, outfile: IO, score_id: str) -> None:
         """Plot histogram and save it into outfile."""
@@ -385,7 +386,7 @@ class NumberHistogram(Statistic):
 
     @staticmethod
     def deserialize(content: str) -> NumberHistogram:
-        data = yaml.load(content, yaml.Loader)
+        data = yaml.safe_load(content)
         return NumberHistogram.from_dict(data)
 
 
@@ -414,10 +415,10 @@ class NullHistogram(Statistic):
             config = NullHistogramConfig.default_config()
         self.reason = config.reason
 
-    def add_value(self, value: Any) -> None:
+    def add_value(self, _value: Any) -> None:
         return
 
-    def merge(self, other: Any) -> None:
+    def merge(self, _other: Any) -> None:
         return
 
     def to_dict(self) -> dict[str, Any]:
@@ -432,13 +433,11 @@ class NullHistogram(Statistic):
         return "NO DOMAIN"
 
     # pylint: disable=unused-argument
-    def plot(self, outfile: IO, score_id: str) -> None:
+    def plot(self, _outfile: IO, _score_id: str) -> None:
         return
 
     def serialize(self) -> str:
-        return cast(str, yaml.dump(
-            self.to_dict(),
-        ))
+        return yaml.dump(self.to_dict())
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> NullHistogram:
@@ -454,7 +453,7 @@ class NullHistogram(Statistic):
 
     @staticmethod
     def deserialize(content: str) -> NullHistogram:
-        data = yaml.load(content, yaml.Loader)
+        data = yaml.safe_load(content)
         return NullHistogram.from_dict(data)
 
 
@@ -510,7 +509,8 @@ class CategoricalHistogram(Statistic):
         assert isinstance(other, CategoricalHistogram)
         assert self.config == other.config
         self._bars = None
-        self._values += other._values  # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        self._values += other._values  # noqa: SLF001
         if len(self._values) > CategoricalHistogram.VALUES_LIMIT:
             raise HistogramError(
                 "Can not merge categorical histograms; too many unique values")
@@ -539,7 +539,7 @@ class CategoricalHistogram(Statistic):
         }
 
     def serialize(self) -> str:
-        return cast(str, yaml.dump(self.to_dict()))
+        return yaml.dump(self.to_dict())
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> CategoricalHistogram:
@@ -548,7 +548,7 @@ class CategoricalHistogram(Statistic):
 
     @staticmethod
     def deserialize(content: str) -> CategoricalHistogram:
-        data = yaml.load(content, yaml.Loader)
+        data = yaml.safe_load(content)
         return CategoricalHistogram.from_dict(data)
 
     def plot(self, outfile: IO, score_id: str) -> None:
@@ -557,8 +557,8 @@ class CategoricalHistogram(Statistic):
         import matplotlib
         matplotlib.use("agg")
         import matplotlib.pyplot as plt
-        values = self.bars.keys()
-        counts = self.bars.values()
+        values = list(self.bars.keys())
+        counts = list(self.bars.values())
         plt.figure(figsize=(15, 10), tight_layout=True)
         plt.bar(values, counts)
 
@@ -625,6 +625,7 @@ def build_empty_histogram(
     config: HistogramConfig,
 ) -> Union[NumberHistogram, CategoricalHistogram, NullHistogram]:
     """Create an empty histogram from a deserialize histogram dictionary."""
+    # pylint: disable=broad-except
     try:
         if isinstance(config, NumberHistogramConfig):
             return NumberHistogram(config)
@@ -635,7 +636,7 @@ def build_empty_histogram(
         return NullHistogram(NullHistogramConfig(
             "Could not match histogram config type",
         ))
-    except BaseException as err:  # pylint: disable=broad-except
+    except BaseException as err:  # noqa: BLE001
         logger.warning(
             "Failed to create empty histogram from config", exc_info=True)
         return NullHistogram(NullHistogramConfig(
@@ -653,13 +654,13 @@ def load_histogram(
         with resource.open_raw_file(filename) as infile:
             content = infile.read()
     except FileNotFoundError:
-        logger.error(
+        logger.exception(
             "unable to load histogram file: %s; file not found", filename)
         return NullHistogram(NullHistogramConfig(
             "Histogram file not found.",
         ))
 
-    hist_data = yaml.load(content, yaml.Loader)
+    hist_data = yaml.safe_load(content)
     config = hist_data["config"]
     hist_type = config["type"]
     try:
