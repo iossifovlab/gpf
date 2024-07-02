@@ -7,43 +7,108 @@ h3,h4 {
     margin-top:0.5em;
     margin-bottom:0.5em;
 }
+table {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+}
+th {
+    font-size: 20px;
+}
+td {
+    font-size: 18px;
+}
 
+#chromosomes-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+#chromosomes-table th {
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#chromosomes-table td {
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#chromosomes-table th:first-child,
+#chromosomes-table td:first-child {
+    border-left: 1px solid;
+}
+#chromosomes-table thead tr:nth-of-type(2) th {
+    border-top: none;
+}
+#chromosomes-table thead {
+    position: sticky; top: 0; background-color: white;
+}
 
 
 </style>
 </head>
-<body>
+    <body>
 
-<h1>Resource</h1>
-<div>
-<table border="1">
-<tr><td><b>Id:</b></td><td>hg38/GRCh38-hg38/gene_models/refSeq_20200330</td></tr>
-<tr><td><b>Type:</b></td><td>gene_models</td></tr>
-<tr>
-<td><b>Summary:</b></td>
-<td>## refSeq gene models for HG38 from 2020-03
-
-Default gene models used by GPF for HG38.
-</td>
-</tr>
-<tr>
-<td><b>Description:</b></td>
-<td><h2>refSeq gene models for HG38 from 2020-03</h2>
+    <h1>Resource</h1>
+    <div>
+        <table border="1">
+            <tr>
+                <td>
+                    <b>Id:</b>
+                </td>
+                <td>hg38/GRCh38-hg38/gene_models/refSeq_20200330</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Type:</b>
+                </td>
+                <td>gene_models</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Version:</b>
+                </td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td><b>Summary:</b></td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open"><h2>refSeq gene models for HG38 from 2020-03</h2>
 
 <p>Default gene models used by GPF for HG38.</p>
-</td>
-</tr>
-<tr>
-<td><b>Labels:</b></td>
-<td>
 
-</td>
-</tr>
-</table>
-</div>
+                        </template>
+                     </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Description:</b>
+                </td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open"><h2>refSeq gene models for HG38 from 2020-03</h2>
 
+<p>Default gene models used by GPF for HG38.</p>
 
+                        </template>
+                     </div>
+                </td>
+            </tr>
 
+            <tr>
+                <td>
+                    <b>Labels:</b>
+                </td>
+                <td>
+                
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    
 <h1>Configuration</h1>
     Gene models file:
     <p><a href="refSeq_20200330.txt">
@@ -52,60 +117,79 @@ Default gene models used by GPF for HG38.
 
     <p>Format: refseq</p>
 <h1>Statistics</h1>
+    <h2>Chromosome statistics</h2>
+    <div style="max-height: 50%; overflow-y: auto; width: fit-content">
+        <table id="chromosomes-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Transcript number</th>
+                    <th>Protein coding transcript number</th>
+                    <th>Gene number</th>
+                    <th>Protein coding gene number</th>
+                </tr>
+                <tr>
+                    <th>Global</th>
+                    <td>151</td>
+                    <td>84</td>
+                    <td>80</td>
+                    <td>37</td>
+                </tr>
+            </thead>
+            
+                <tr>
+                    <td>chr1</td>
+                    <td>122</td>
+                    <td>71</td>
+                    <td>67</td>
+                    <td>31</td>
+                </tr>
+            
+                <tr>
+                    <td>chr2</td>
+                    <td>29</td>
+                    <td>13</td>
+                    <td>13</td>
+                    <td>6</td>
+                </tr>
+            
+        </table>
+    </div>
+
+
+    <h1>Files</h1>
     <table>
-    
-        <tr><td> transcript number </td><td> 151 </td></tr>
-    
-        <tr><td> protein coding transcript number </td><td> 84 </td></tr>
-    
-        <tr><td> gene number </td><td> 80 </td></tr>
-    
-        <tr><td> protein coding gene number </td><td> 37 </td></tr>
-    
-        <tr><td> chromosome number </td><td> 2 </td></tr>
-    
-        <tr><td> chr1 transcript numbers </td><td> 122 </td></tr>
-    
-        <tr><td> chr2 transcript numbers </td><td> 29 </td></tr>
-    
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>md5</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="nowrap">
+                <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
+            </td>
+            <td class="nowrap">200.0 B</td>
+            <td class="nowrap">81951889cca5c55bb9a63b8d8aff00a3</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='refSeq_20200330.txt'>refSeq_20200330.txt</a>
+            </td>
+            <td class="nowrap">29.84 KB</td>
+            <td class="nowrap">05d8bbd9616407e862d82593d5fd1756</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='statistics/'>statistics/</a>
+            </td>
+            <td class="nowrap"></td>
+            <td class="nowrap"></td>
+        </tr>
+    </tbody>
     </table>
 
-
-
-<h1>Files</h1>
-<table>
-<thead>
-    <tr>
-        <th>Filename</th>
-        <th>Size</th>
-        <th>md5</th>
-    </tr>
-</thead>
-<tbody>
-    <tr>
-        <td class="nowrap">
-            <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
-        </td>
-        <td class="nowrap">200.0 B</td>
-        <td class="nowrap">81951889cca5c55bb9a63b8d8aff00a3</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='refSeq_20200330.txt'>refSeq_20200330.txt</a>
-        </td>
-        <td class="nowrap">29.84 KB</td>
-        <td class="nowrap">05d8bbd9616407e862d82593d5fd1756</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='statistics/'>statistics/</a>
-        </td>
-        <td class="nowrap"></td>
-        <td class="nowrap"></td>
-    </tr>
-</tbody>
-</table>
-
-
-</body>
+    </body>
 </html>

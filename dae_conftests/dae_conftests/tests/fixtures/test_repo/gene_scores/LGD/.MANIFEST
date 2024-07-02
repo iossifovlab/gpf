@@ -4,21 +4,21 @@
 - md5: 558068485b8e3fe4911db03dad2dd6f3
   name: genomic_resource.yaml
   size: 336
-- md5: c6c74ddcc72d72589b975e9be0b82d6f
+- md5: 321486c0074821e59fa0031adf2d9f3a
   name: index.html
-  size: 1822
-- md5: 73984602e0b7763a928f07d5e1bcc3d8
+  size: 6337
+- md5: 893503f1e1bdafaa82191346896c97b8
   name: statistics/histogram_LGD_rank.png
   size: 14066
-- md5: 8efcee07e171f747a0db84304422c2fc
+- md5: 3b3a206d962605f50291c24efa8a3e44
   name: statistics/histogram_LGD_rank.yaml
-  size: 4044
-- md5: b84f124ad6497287316613ff94c33dad
+  size: 3729
+- md5: 0ee4123b56218c55c4ac0e7062b8f9db
   name: statistics/histogram_LGD_score.png
   size: 11872
-- md5: 4cb2174ad9265e2dce1a19350895867b
+- md5: 7a892ebccd47128588b1b0a4d3de685f
   name: statistics/histogram_LGD_score.yaml
-  size: 4254
-- md5: 789656e681ae6f3d5cf29c3f504e286b
+  size: 3939
+- md5: 6afbc2ae7adff413efd3feab2bb0d2d5
   name: statistics/stats_hash
-  size: 381
+  size: 580

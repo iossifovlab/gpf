@@ -10,18 +10,18 @@
 - md5: d632c45a63e5868979f86cbe58d914dc
   name: index.html
   size: 2171
-- md5: a20bb25abfcdff63f22fbb2087f540d2
+- md5: 69ce8e06e522f489dc46d1e7be31f730
   name: statistics/histogram_altFreq.png
   size: 10546
 - md5: e642f11ea6bafabb05bdbaee45f2c8f7
   name: statistics/histogram_altFreq.yaml
   size: 2129
-- md5: 99a701ae7ae9134111deee6c9ffbbff1
+- md5: 14201488aa8dced7cd30f6473d12dc1a
   name: statistics/histogram_altFreq2.png
   size: 10898
 - md5: 6a5f32217b4b4877ed5f1249a9fef731
   name: statistics/histogram_altFreq2.yaml
   size: 2078
-- md5: 524f1829ff855ae7d8a4bd920cb07b82
+- md5: d8dc74534b10a1e751a2f7a335c3e128
   name: statistics/stats_hash
-  size: 9374
+  size: 881

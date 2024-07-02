@@ -1,8 +1,23 @@
-transcript number: 19
-protein coding transcript number: 10
-gene number: 13
-protein coding gene number: 7
-chromosome number: 3
-1 transcript numbers: 6
-2 transcript numbers: 8
-X transcript numbers: 5
+resource_id: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309
+chromosome_count: 3
+global:
+  transcript_number: 19
+  protein_coding_transcript_number: 10
+  gene_number: 13
+  protein_coding_gene_number: 7
+chromosomes:
+  '1':
+    transcript_number: 6
+    protein_coding_transcript_number: 1
+    gene_number: 6
+    protein_coding_gene_number: 1
+  '2':
+    transcript_number: 8
+    protein_coding_transcript_number: 7
+    gene_number: 4
+    protein_coding_gene_number: 4
+  X:
+    transcript_number: 5
+    protein_coding_transcript_number: 2
+    gene_number: 3
+    protein_coding_gene_number: 2

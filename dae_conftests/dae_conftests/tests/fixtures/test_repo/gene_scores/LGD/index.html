@@ -7,119 +7,248 @@ h3,h4 {
     margin-top:0.5em;
     margin-bottom:0.5em;
 }
-
+table {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+}
+th {
+    font-size: 20px;
+}
+td {
+    font-size: 18px;
+}
 
 
 </style>
 </head>
-<body>
+    <body>
 
-<h1>Resource</h1>
-<div>
-<table border="1">
-<tr><td><b>Id:</b></td><td>gene_scores/LGD</td></tr>
-<tr><td><b>Type:</b></td><td>gene_score</td></tr>
-<tr>
-<td><b>Summary:</b></td>
-<td>N/A</td>
-</tr>
-<tr>
-<td><b>Description:</b></td>
-<td>N/A</td>
-</tr>
-<tr>
-<td><b>Labels:</b></td>
-<td>
+    <h1>Resource</h1>
+    <div>
+        <table border="1">
+            <tr>
+                <td>
+                    <b>Id:</b>
+                </td>
+                <td>gene_scores/LGD</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Type:</b>
+                </td>
+                <td>gene_score</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Version:</b>
+                </td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td><b>Summary:</b></td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open">N/A
+                        </template>
+                     </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Description:</b>
+                </td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open">N/A
+                        </template>
+                     </div>
+                </td>
+            </tr>
 
-</td>
-</tr>
-</table>
-</div>
+            <tr>
+                <td>
+                    <b>Labels:</b>
+                </td>
+                <td>
+                
+                </td>
+            </tr>
+        </table>
+    </div>
 
+    
 
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        padding-top: 100px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        justify-content: center;
+    }
+    .modal-content {
+        margin: auto;
+        display: block;
+        width: 80%;
+        max-width: 700px;
+    }
+    .close {
+        float: right;
+        font-size: 40px;
+        font-weight: bold;
+    }
+    .close:hover,
+    .close:focus {
+         color: #bbb;
+         text-decoration: none;
+         cursor: pointer;
+    }
+</style>
 
-
-<hr>
-<h3>Gene scores file:</h3>
-<a href="LGD.csv">
-LGD.csv
-</a>
-
-<h3>Gene score definitions:</h2>
-
-<div class="score-definition">
-<p>Gene score ID: LGD_rank</p>
-<p>Description: LGD rank
-</div>
-
-<div class="score-definition">
-<p>Gene score ID: LGD_score</p>
-<p>Description: LGD score
-</div>
-
-<h3>Histograms:</h2>
-
-
-
-
-<div class="histogram">
-<h4>LGD_rank</h1>
-<img src="statistics/histogram_LGD_rank.png"
-width="200px"
-alt=LGD_rank
-title=LGD_rank>
-</div>
-
-
-
-
-
-<div class="histogram">
-<h4>LGD_score</h1>
-<img src="statistics/histogram_LGD_score.png"
-width="200px"
-alt=LGD_score
-title=LGD_score>
-</div>
-
-
-
-
-
-<h1>Files</h1>
-<table>
-<thead>
-    <tr>
-        <th>Filename</th>
-        <th>Size</th>
-        <th>md5</th>
-    </tr>
-</thead>
-<tbody>
-    <tr>
-        <td class="nowrap">
-            <a href='LGD.csv'>LGD.csv</a>
-        </td>
-        <td class="nowrap">497.77 KB</td>
-        <td class="nowrap">4e9f0967f510d53285a51dfc33b4d06c</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
-        </td>
-        <td class="nowrap">336.0 B</td>
-        <td class="nowrap">558068485b8e3fe4911db03dad2dd6f3</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='statistics/'>statistics/</a>
-        </td>
-        <td class="nowrap"></td>
-        <td class="nowrap"></td>
-    </tr>
-</tbody>
-</table>
+    <script type="text/javascript">
+        function openModal(scoreId) {
+            var modal = document.getElementById("modal-" + scoreId);
+            modal.style.display = "flex";
+        }
+        function closeModal(scoreId) {
+            var modal = document.getElementById("modal-" + scoreId);
+            modal.style.display = "none";
+        }
+    </script>
 
 
-</body>
+
+
+<h1>Scores</h1>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Histograms</th>
+            <th>Range</th>
+        </tr>
+
+        
+            <tr>
+                <td>LGD_rank</td>
+
+                <td></td>
+
+                <td>
+                    <div>LGD rank</div>
+                    
+                    
+                </td>
+
+                
+                <td>
+                
+                    <div class="histogram">
+                        <img src="statistics/histogram_LGD_rank.png"
+                            width="200px"
+                            alt=LGD_rank
+                            title=LGD_rank
+                            style="cursor: pointer"
+                            onclick="openModal(title)">>
+                    </div>
+                
+                </td>
+
+                <td>
+                    [1.000, 18394.500]</td>
+            </tr>
+        
+            <tr>
+                <td>LGD_score</td>
+
+                <td></td>
+
+                <td>
+                    <div>LGD score</div>
+                    
+                    
+                </td>
+
+                
+                <td>
+                
+                    <div class="histogram">
+                        <img src="statistics/histogram_LGD_score.png"
+                            width="200px"
+                            alt=LGD_score
+                            title=LGD_score
+                            style="cursor: pointer"
+                            onclick="openModal(title)">>
+                    </div>
+                
+                </td>
+
+                <td>
+                    [0.000, 1.000]</td>
+            </tr>
+        <div id="modal-LGD_rank" class="modal">
+                <div style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+                    <span title=LGD_rank class="close" onclick="closeModal(title)">&times;</span>
+                    <img class="modal-content" id="histogram-LGD_rank"
+                        src="statistics/histogram_LGD_rank.png"
+                        alt="HISTOGRAM FOR LGD_rank"
+                        title=LGD_rank
+                        width="200">
+                </div>
+            </div><div id="modal-LGD_score" class="modal">
+                <div style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+                    <span title=LGD_score class="close" onclick="closeModal(title)">&times;</span>
+                    <img class="modal-content" id="histogram-LGD_score"
+                        src="statistics/histogram_LGD_score.png"
+                        alt="HISTOGRAM FOR LGD_score"
+                        title=LGD_score
+                        width="200">
+                </div>
+            </div>
+    </table>
+
+
+    <h1>Files</h1>
+    <table>
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>md5</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="nowrap">
+                <a href='LGD.csv'>LGD.csv</a>
+            </td>
+            <td class="nowrap">497.77 KB</td>
+            <td class="nowrap">4e9f0967f510d53285a51dfc33b4d06c</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
+            </td>
+            <td class="nowrap">336.0 B</td>
+            <td class="nowrap">558068485b8e3fe4911db03dad2dd6f3</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='statistics/'>statistics/</a>
+            </td>
+            <td class="nowrap"></td>
+            <td class="nowrap"></td>
+        </tr>
+    </tbody>
+    </table>
+
+    </body>
 </html>

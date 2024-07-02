@@ -10,9 +10,9 @@
 - md5: af9a0254eb08c354abbd419a050fa2e3
   name: genomic_resource.yaml
   size: 118
-- md5: 97d2b04a91b05f726ac1414bfa07e7df
+- md5: 8d10d14fd660e4b308ee13c4124dcdec
   name: index.html
-  size: 1944
+  size: 3235
 - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
   name: statistics/stats_hash
   size: 11

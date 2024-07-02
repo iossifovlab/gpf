@@ -7,36 +7,126 @@ h3,h4 {
     margin-top:0.5em;
     margin-bottom:0.5em;
 }
-
+table {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+}
+th {
+    font-size: 20px;
+}
+td {
+    font-size: 18px;
+}
 
 
 </style>
 </head>
-<body>
+    <body>
 
-<h1>Resource</h1>
-<div>
-<table border="1">
-<tr><td><b>Id:</b></td><td>hg38/TESTphastCons100way</td></tr>
-<tr><td><b>Type:</b></td><td>position_score</td></tr>
-<tr>
-<td><b>Summary:</b></td>
-<td>N/A</td>
-</tr>
-<tr>
-<td><b>Description:</b></td>
-<td>N/A</td>
-</tr>
-<tr>
-<td><b>Labels:</b></td>
-<td>
+    <h1>Resource</h1>
+    <div>
+        <table border="1">
+            <tr>
+                <td>
+                    <b>Id:</b>
+                </td>
+                <td>hg38/TESTphastCons100way</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Type:</b>
+                </td>
+                <td>position_score</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Version:</b>
+                </td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td><b>Summary:</b></td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open">N/A
+                        </template>
+                     </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Description:</b>
+                </td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open">N/A
+                        </template>
+                     </div>
+                </td>
+            </tr>
 
-</td>
-</tr>
-</table>
-</div>
+            <tr>
+                <td>
+                    <b>Labels:</b>
+                </td>
+                <td>
+                
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    
+
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        padding-top: 100px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        justify-content: center;
+    }
+
+    .modal-content {
+        margin: auto;
+        display: block;
+        width: 80%;
+        max-width: 700px;
+    }
+
+    .close {
+        float: right;
+        font-size: 40px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+         color: #bbb;
+         text-decoration: none;
+         cursor: pointer;
+    }
+</style>
 
 
+    <script type="text/javascript">
+        function openModal(scoreId) {
+            var modal = document.getElementById("modal-" + scoreId);
+            modal.style.display = "flex";
+        }
+
+        function closeModal(scoreId) {
+            var modal = document.getElementById("modal-" + scoreId);
+            modal.style.display = "none";
+        }
+    </script>
 
 
 
@@ -45,113 +135,125 @@ h3,h4 {
 <h1>Scores</h1>
 
 <table border="1">
-<tr>
-<th>id</th>
-<th>type</th>
-<th>default annotation</th>
-<th>description</th>
-<th>histogram</th>
-<th>range</th>
-</tr><tr class="score-definition">
+    <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Default annotation</th>
+        <th>Description</th>
+        <th>Histogram</th>
+        <th>Range</th>
+    </tr><tr class="score-definition">
 
-<td>phastCons100way</td>
+            <td>phastCons100way</td>
 
-<td>float</td>
+            <td>float</td>
 
+            
+            <td>
+                <p>phastCons100way</p>
+            </td>
 
-<td>
-    <p>phastCons100way</p>
-</td>
+            <td>
+                <div>phastCons100way</div>
+                
+                
+            </td>
 
-<td>phastCons100way</td>
+            <td>
+                
+                
+                <img src="statistics/histogram_phastCons100way.png"
+                    alt="HISTOGRAM FOR phastCons100way"
+                    title=phastCons100way
+                    width="200"
+                    style="cursor: pointer"
+                    onclick="openModal(title)"></td>
 
-<td>
+            <td>
+                [0.000, 0.253]</td>
 
-
-<img src="statistics/histogram_phastCons100way.png"
-    alt="HISTOGRAM FOR phastCons100way"
-    title=phastCons100way
-    width="200"></td>
-
-<td>
-[0.000, 0.253]</td>
-
-</tr>
-
+        </tr><div id="modal-phastCons100way" class="modal">
+            <div style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+                <span title=phastCons100way class="close" onclick="closeModal(title)">&times;</span>
+                <img class="modal-content" id="histogram-phastCons100way"
+                    src="statistics/histogram_phastCons100way.png"
+                    alt="HISTOGRAM FOR phastCons100way"
+                    title=phastCons100way
+                    width="200">
+            </div>
+        </div>
 </table>
 
 
 
+    <h1>Files</h1>
+    <table>
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>md5</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="nowrap">
+                <a href='TESTphastCons100way.bedGraph.gz'>TESTphastCons100way.bedGraph.gz</a>
+            </td>
+            <td class="nowrap">261.0 B</td>
+            <td class="nowrap">e793fd5e2153ae2b35ecaa8efb595ab0</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='TESTphastCons100way.bedGraph.gz.tbi'>TESTphastCons100way.bedGraph.gz.tbi</a>
+            </td>
+            <td class="nowrap">169.0 B</td>
+            <td class="nowrap">0cae8c2951f4c60954b94c0a0cb2e431</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
+            </td>
+            <td class="nowrap">666.0 B</td>
+            <td class="nowrap">7e3752d55d184032d556bceb3242ddca</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='histograms/phastCons100way.csv'>histograms/phastCons100way.csv</a>
+            </td>
+            <td class="nowrap">143.0 B</td>
+            <td class="nowrap">d616082ad56b26177b0aa40c08d27f3f</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='histograms/phastCons100way.metadata.yaml'>histograms/phastCons100way.metadata.yaml</a>
+            </td>
+            <td class="nowrap">181.0 B</td>
+            <td class="nowrap">80bcd5f88e69a7014e2263d034fe4cef</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='histograms/phastCons100way.png'>histograms/phastCons100way.png</a>
+            </td>
+            <td class="nowrap">7.99 KB</td>
+            <td class="nowrap">6173d0d671742284f909423144c4f07a</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='scores/phastCons100way.yaml'>scores/phastCons100way.yaml</a>
+            </td>
+            <td class="nowrap">583.0 B</td>
+            <td class="nowrap">56feb878ed78769d5200702392b8e4b7</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='statistics/'>statistics/</a>
+            </td>
+            <td class="nowrap"></td>
+            <td class="nowrap"></td>
+        </tr>
+    </tbody>
+    </table>
 
-<h1>Files</h1>
-<table>
-<thead>
-    <tr>
-        <th>Filename</th>
-        <th>Size</th>
-        <th>md5</th>
-    </tr>
-</thead>
-<tbody>
-    <tr>
-        <td class="nowrap">
-            <a href='TESTphastCons100way.bedGraph.gz'>TESTphastCons100way.bedGraph.gz</a>
-        </td>
-        <td class="nowrap">261.0 B</td>
-        <td class="nowrap">e793fd5e2153ae2b35ecaa8efb595ab0</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='TESTphastCons100way.bedGraph.gz.tbi'>TESTphastCons100way.bedGraph.gz.tbi</a>
-        </td>
-        <td class="nowrap">169.0 B</td>
-        <td class="nowrap">0cae8c2951f4c60954b94c0a0cb2e431</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
-        </td>
-        <td class="nowrap">666.0 B</td>
-        <td class="nowrap">7e3752d55d184032d556bceb3242ddca</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='histograms/phastCons100way.csv'>histograms/phastCons100way.csv</a>
-        </td>
-        <td class="nowrap">143.0 B</td>
-        <td class="nowrap">d616082ad56b26177b0aa40c08d27f3f</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='histograms/phastCons100way.metadata.yaml'>histograms/phastCons100way.metadata.yaml</a>
-        </td>
-        <td class="nowrap">181.0 B</td>
-        <td class="nowrap">80bcd5f88e69a7014e2263d034fe4cef</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='histograms/phastCons100way.png'>histograms/phastCons100way.png</a>
-        </td>
-        <td class="nowrap">7.99 KB</td>
-        <td class="nowrap">6173d0d671742284f909423144c4f07a</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='scores/phastCons100way.yaml'>scores/phastCons100way.yaml</a>
-        </td>
-        <td class="nowrap">583.0 B</td>
-        <td class="nowrap">56feb878ed78769d5200702392b8e4b7</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='statistics/'>statistics/</a>
-        </td>
-        <td class="nowrap"></td>
-        <td class="nowrap"></td>
-    </tr>
-</tbody>
-</table>
-
-
-</body>
+    </body>
 </html>

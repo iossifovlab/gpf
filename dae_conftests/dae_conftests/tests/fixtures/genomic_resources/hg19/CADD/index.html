@@ -7,36 +7,126 @@ h3,h4 {
     margin-top:0.5em;
     margin-bottom:0.5em;
 }
-
+table {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+}
+th {
+    font-size: 20px;
+}
+td {
+    font-size: 18px;
+}
 
 
 </style>
 </head>
-<body>
+    <body>
 
-<h1>Resource</h1>
-<div>
-<table border="1">
-<tr><td><b>Id:</b></td><td>hg19/CADD</td></tr>
-<tr><td><b>Type:</b></td><td>np_score</td></tr>
-<tr>
-<td><b>Summary:</b></td>
-<td>N/A</td>
-</tr>
-<tr>
-<td><b>Description:</b></td>
-<td>N/A</td>
-</tr>
-<tr>
-<td><b>Labels:</b></td>
-<td>
+    <h1>Resource</h1>
+    <div>
+        <table border="1">
+            <tr>
+                <td>
+                    <b>Id:</b>
+                </td>
+                <td>hg19/CADD</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Type:</b>
+                </td>
+                <td>np_score</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Version:</b>
+                </td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td><b>Summary:</b></td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open">N/A
+                        </template>
+                     </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Description:</b>
+                </td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open">N/A
+                        </template>
+                     </div>
+                </td>
+            </tr>
 
-</td>
-</tr>
-</table>
-</div>
+            <tr>
+                <td>
+                    <b>Labels:</b>
+                </td>
+                <td>
+                
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    
+
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        padding-top: 100px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        justify-content: center;
+    }
+
+    .modal-content {
+        margin: auto;
+        display: block;
+        width: 80%;
+        max-width: 700px;
+    }
+
+    .close {
+        float: right;
+        font-size: 40px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+         color: #bbb;
+         text-decoration: none;
+         cursor: pointer;
+    }
+</style>
 
 
+    <script type="text/javascript">
+        function openModal(scoreId) {
+            var modal = document.getElementById("modal-" + scoreId);
+            modal.style.display = "flex";
+        }
+
+        function closeModal(scoreId) {
+            var modal = document.getElementById("modal-" + scoreId);
+            modal.style.display = "none";
+        }
+    </script>
 
 
 
@@ -45,109 +135,136 @@ h3,h4 {
 <h1>Scores</h1>
 
 <table border="1">
-<tr>
-<th>id</th>
-<th>type</th>
-<th>default annotation</th>
-<th>description</th>
-<th>histogram</th>
-<th>range</th>
-</tr><tr class="score-definition">
+    <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Default annotation</th>
+        <th>Description</th>
+        <th>Histogram</th>
+        <th>Range</th>
+    </tr><tr class="score-definition">
 
-<td>cadd_raw</td>
+            <td>cadd_raw</td>
 
-<td>float</td>
+            <td>float</td>
 
+            
+            <td>
+                <p>cadd_raw</p>
+            </td>
 
-<td>
-    <p>cadd_raw</p>
-</td>
+            <td>
+                <div></div>
+                
+                
+            </td>
 
-<td></td>
+            <td>
+                
+                
+                <img src="statistics/histogram_cadd_raw.png"
+                    alt="HISTOGRAM FOR cadd_raw"
+                    title=cadd_raw
+                    width="200"
+                    style="cursor: pointer"
+                    onclick="openModal(title)"></td>
 
-<td>
+            <td>
+                [-3.669, 15.616]</td>
 
+        </tr><tr class="score-definition">
 
-<img src="statistics/histogram_cadd_raw.png"
-    alt="HISTOGRAM FOR cadd_raw"
-    title=cadd_raw
-    width="200"></td>
+            <td>cadd_phred</td>
 
-<td>
-[-3.669, 15.616]</td>
+            <td>float</td>
 
-</tr><tr class="score-definition">
+            
+            <td>
+                <p>cadd_phred</p>
+            </td>
 
-<td>cadd_phred</td>
+            <td>
+                <div></div>
+                
+                
+            </td>
 
-<td>float</td>
+            <td>
+                
+                
+                <img src="statistics/histogram_cadd_phred.png"
+                    alt="HISTOGRAM FOR cadd_phred"
+                    title=cadd_phred
+                    width="200"
+                    style="cursor: pointer"
+                    onclick="openModal(title)"></td>
 
+            <td>
+                [0.001, 52.000]</td>
 
-<td>
-    <p>cadd_phred</p>
-</td>
-
-<td></td>
-
-<td>
-
-
-<img src="statistics/histogram_cadd_phred.png"
-    alt="HISTOGRAM FOR cadd_phred"
-    title=cadd_phred
-    width="200"></td>
-
-<td>
-[0.001, 52.000]</td>
-
-</tr>
-
+        </tr><div id="modal-cadd_raw" class="modal">
+            <div style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+                <span title=cadd_raw class="close" onclick="closeModal(title)">&times;</span>
+                <img class="modal-content" id="histogram-cadd_raw"
+                    src="statistics/histogram_cadd_raw.png"
+                    alt="HISTOGRAM FOR cadd_raw"
+                    title=cadd_raw
+                    width="200">
+            </div>
+        </div><div id="modal-cadd_phred" class="modal">
+            <div style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+                <span title=cadd_phred class="close" onclick="closeModal(title)">&times;</span>
+                <img class="modal-content" id="histogram-cadd_phred"
+                    src="statistics/histogram_cadd_phred.png"
+                    alt="HISTOGRAM FOR cadd_phred"
+                    title=cadd_phred
+                    width="200">
+            </div>
+        </div>
 </table>
 
 
 
+    <h1>Files</h1>
+    <table>
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>md5</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="nowrap">
+                <a href='CADD.bedgraph.gz'>CADD.bedgraph.gz</a>
+            </td>
+            <td class="nowrap">17.6 MB</td>
+            <td class="nowrap">9499e8511a30d7445ec973cae9726920</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='CADD.bedgraph.gz.tbi'>CADD.bedgraph.gz.tbi</a>
+            </td>
+            <td class="nowrap">670.0 B</td>
+            <td class="nowrap">5d95f08840be7f0f6fef13a5157d7f47</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
+            </td>
+            <td class="nowrap">592.0 B</td>
+            <td class="nowrap">981f7738a0642ac053aba0d35e8b7b02</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='statistics/'>statistics/</a>
+            </td>
+            <td class="nowrap"></td>
+            <td class="nowrap"></td>
+        </tr>
+    </tbody>
+    </table>
 
-<h1>Files</h1>
-<table>
-<thead>
-    <tr>
-        <th>Filename</th>
-        <th>Size</th>
-        <th>md5</th>
-    </tr>
-</thead>
-<tbody>
-    <tr>
-        <td class="nowrap">
-            <a href='CADD.bedgraph.gz'>CADD.bedgraph.gz</a>
-        </td>
-        <td class="nowrap">17.6 MB</td>
-        <td class="nowrap">9499e8511a30d7445ec973cae9726920</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='CADD.bedgraph.gz.tbi'>CADD.bedgraph.gz.tbi</a>
-        </td>
-        <td class="nowrap">670.0 B</td>
-        <td class="nowrap">5d95f08840be7f0f6fef13a5157d7f47</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
-        </td>
-        <td class="nowrap">592.0 B</td>
-        <td class="nowrap">981f7738a0642ac053aba0d35e8b7b02</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='statistics/'>statistics/</a>
-        </td>
-        <td class="nowrap"></td>
-        <td class="nowrap"></td>
-    </tr>
-</tbody>
-</table>
-
-
-</body>
+    </body>
 </html>

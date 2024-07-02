@@ -7,9 +7,9 @@
 - md5: a42701941f92c7b999a4f8f26e4a3a47
   name: refGene201309.txt
   size: 3761
-- md5: 90afd7bdd4ca41745aafa92369763180
+- md5: 3db4974ae5244ba34db2aa8ce4d40ca5
   name: statistics/stats.yaml
-  size: 198
+  size: 615
 - md5: 9e80b34285fd49637b6ccf862fbcbf38
   name: statistics/stats_hash
   size: 127

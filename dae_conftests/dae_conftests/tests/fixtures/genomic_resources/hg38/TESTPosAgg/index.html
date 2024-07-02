@@ -7,36 +7,126 @@ h3,h4 {
     margin-top:0.5em;
     margin-bottom:0.5em;
 }
-
+table {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+}
+th {
+    font-size: 20px;
+}
+td {
+    font-size: 18px;
+}
 
 
 </style>
 </head>
-<body>
+    <body>
 
-<h1>Resource</h1>
-<div>
-<table border="1">
-<tr><td><b>Id:</b></td><td>hg38/TESTPosAgg</td></tr>
-<tr><td><b>Type:</b></td><td>position_score</td></tr>
-<tr>
-<td><b>Summary:</b></td>
-<td>N/A</td>
-</tr>
-<tr>
-<td><b>Description:</b></td>
-<td>N/A</td>
-</tr>
-<tr>
-<td><b>Labels:</b></td>
-<td>
+    <h1>Resource</h1>
+    <div>
+        <table border="1">
+            <tr>
+                <td>
+                    <b>Id:</b>
+                </td>
+                <td>hg38/TESTPosAgg</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Type:</b>
+                </td>
+                <td>position_score</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Version:</b>
+                </td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td><b>Summary:</b></td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open">N/A
+                        </template>
+                     </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Description:</b>
+                </td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open">N/A
+                        </template>
+                     </div>
+                </td>
+            </tr>
 
-</td>
-</tr>
-</table>
-</div>
+            <tr>
+                <td>
+                    <b>Labels:</b>
+                </td>
+                <td>
+                
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    
+
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        padding-top: 100px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        justify-content: center;
+    }
+
+    .modal-content {
+        margin: auto;
+        display: block;
+        width: 80%;
+        max-width: 700px;
+    }
+
+    .close {
+        float: right;
+        font-size: 40px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+         color: #bbb;
+         text-decoration: none;
+         cursor: pointer;
+    }
+</style>
 
 
+    <script type="text/javascript">
+        function openModal(scoreId) {
+            var modal = document.getElementById("modal-" + scoreId);
+            modal.style.display = "flex";
+        }
+
+        function closeModal(scoreId) {
+            var modal = document.getElementById("modal-" + scoreId);
+            modal.style.display = "none";
+        }
+    </script>
 
 
 
@@ -45,85 +135,97 @@ h3,h4 {
 <h1>Scores</h1>
 
 <table border="1">
-<tr>
-<th>id</th>
-<th>type</th>
-<th>default annotation</th>
-<th>description</th>
-<th>histogram</th>
-<th>range</th>
-</tr><tr class="score-definition">
+    <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Default annotation</th>
+        <th>Description</th>
+        <th>Histogram</th>
+        <th>Range</th>
+    </tr><tr class="score-definition">
 
-<td>test_score</td>
+            <td>test_score</td>
 
-<td>float</td>
+            <td>float</td>
 
+            
+            <td>
+                <p>test_score</p>
+            </td>
 
-<td>
-    <p>test_score</p>
-</td>
+            <td>
+                <div></div>
+                
+                
+            </td>
 
-<td></td>
+            <td>
+                
+                
+                <img src="statistics/histogram_test_score.png"
+                    alt="HISTOGRAM FOR test_score"
+                    title=test_score
+                    width="200"
+                    style="cursor: pointer"
+                    onclick="openModal(title)"></td>
 
-<td>
+            <td>
+                [0.000, 0.010]</td>
 
-
-<img src="statistics/histogram_test_score.png"
-    alt="HISTOGRAM FOR test_score"
-    title=test_score
-    width="200"></td>
-
-<td>
-[0.000, 0.010]</td>
-
-</tr>
-
+        </tr><div id="modal-test_score" class="modal">
+            <div style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+                <span title=test_score class="close" onclick="closeModal(title)">&times;</span>
+                <img class="modal-content" id="histogram-test_score"
+                    src="statistics/histogram_test_score.png"
+                    alt="HISTOGRAM FOR test_score"
+                    title=test_score
+                    width="200">
+            </div>
+        </div>
 </table>
 
 
 
+    <h1>Files</h1>
+    <table>
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>md5</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="nowrap">
+                <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
+            </td>
+            <td class="nowrap">408.0 B</td>
+            <td class="nowrap">5f713bab1350bd5f41059b61deb56b40</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='scores.tsv.gz'>scores.tsv.gz</a>
+            </td>
+            <td class="nowrap">107.0 B</td>
+            <td class="nowrap">590e48aff9382edfa3330a072c98c6c5</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='scores.tsv.gz.tbi'>scores.tsv.gz.tbi</a>
+            </td>
+            <td class="nowrap">99.0 B</td>
+            <td class="nowrap">313f112e74853fa39dc6af0fa526b692</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='statistics/'>statistics/</a>
+            </td>
+            <td class="nowrap"></td>
+            <td class="nowrap"></td>
+        </tr>
+    </tbody>
+    </table>
 
-<h1>Files</h1>
-<table>
-<thead>
-    <tr>
-        <th>Filename</th>
-        <th>Size</th>
-        <th>md5</th>
-    </tr>
-</thead>
-<tbody>
-    <tr>
-        <td class="nowrap">
-            <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
-        </td>
-        <td class="nowrap">408.0 B</td>
-        <td class="nowrap">5f713bab1350bd5f41059b61deb56b40</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='scores.tsv.gz'>scores.tsv.gz</a>
-        </td>
-        <td class="nowrap">107.0 B</td>
-        <td class="nowrap">590e48aff9382edfa3330a072c98c6c5</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='scores.tsv.gz.tbi'>scores.tsv.gz.tbi</a>
-        </td>
-        <td class="nowrap">99.0 B</td>
-        <td class="nowrap">313f112e74853fa39dc6af0fa526b692</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='statistics/'>statistics/</a>
-        </td>
-        <td class="nowrap"></td>
-        <td class="nowrap"></td>
-    </tr>
-</tbody>
-</table>
-
-
-</body>
+    </body>
 </html>

@@ -24,24 +24,24 @@
   - md5: 558068485b8e3fe4911db03dad2dd6f3
     name: genomic_resource.yaml
     size: 336
-  - md5: c6c74ddcc72d72589b975e9be0b82d6f
+  - md5: 321486c0074821e59fa0031adf2d9f3a
     name: index.html
-    size: 1822
-  - md5: d41d8cd98f00b204e9800998ecf8427e
+    size: 6337
+  - md5: 893503f1e1bdafaa82191346896c97b8
     name: statistics/histogram_LGD_rank.png
-    size: 0
-  - md5: 8efcee07e171f747a0db84304422c2fc
+    size: 14066
+  - md5: 3b3a206d962605f50291c24efa8a3e44
     name: statistics/histogram_LGD_rank.yaml
-    size: 4044
-  - md5: d41d8cd98f00b204e9800998ecf8427e
+    size: 3729
+  - md5: 0ee4123b56218c55c4ac0e7062b8f9db
     name: statistics/histogram_LGD_score.png
-    size: 0
-  - md5: 4cb2174ad9265e2dce1a19350895867b
+    size: 11872
+  - md5: 7a892ebccd47128588b1b0a4d3de685f
     name: statistics/histogram_LGD_score.yaml
-    size: 4254
-  - md5: 789656e681ae6f3d5cf29c3f504e286b
+    size: 3939
+  - md5: 6afbc2ae7adff413efd3feab2bb0d2d5
     name: statistics/stats_hash
-    size: 381
+    size: 580
   version: '0'
 - config:
     filename: RVIS.csv
@@ -69,24 +69,24 @@
   - md5: 23c9655d86de1c4285bb449f2127eeb0
     name: genomic_resource.yaml
     size: 329
-  - md5: f459e8ac59de2cf8f14ae14c4d8c1285
+  - md5: d6779367728301bff8dd830db8de8848
     name: index.html
-    size: 1801
-  - md5: d41d8cd98f00b204e9800998ecf8427e
+    size: 6293
+  - md5: af1ae8ba391858e72691f783ace92907
     name: statistics/histogram_RVIS.png
-    size: 0
-  - md5: 0c828b30bc33c3c109a8726d79dbe196
+    size: 12476
+  - md5: 32cb1745f552cc20f37fd71a0b8144cd
     name: statistics/histogram_RVIS.yaml
-    size: 2979
-  - md5: d41d8cd98f00b204e9800998ecf8427e
+    size: 2663
+  - md5: 0227f669e73b667f8a98564ee9041e76
     name: statistics/histogram_RVIS_rank.png
-    size: 0
-  - md5: 1c18c2ea33d04fa5db5961e9a1eb8e8e
+    size: 11564
+  - md5: 65af8f9cfd5c04067159a00e81a7256e
     name: statistics/histogram_RVIS_rank.yaml
-    size: 3595
-  - md5: 925e12b883b809d53185fe5025f2bc91
+    size: 3277
+  - md5: defd5b11b96eb4fefa327498d68ae353
     name: statistics/stats_hash
-    size: 365
+    size: 572
   version: '0'
 - config:
     filename: SFARI.csv
@@ -107,18 +107,18 @@
   - md5: 3892185823463e11633de27c9fd51bab
     name: genomic_resource.yaml
     size: 205
-  - md5: dd845683c73bf2abbf4deb451d41478c
+  - md5: 9354feba28aa505034db5e5190b4ccfa
     name: index.html
-    size: 1646
-  - md5: d41d8cd98f00b204e9800998ecf8427e
+    size: 5104
+  - md5: a94d3f944981943e51d259e5e347fdc1
     name: statistics/histogram_SFARI_gene_score.png
-    size: 0
-  - md5: 02fb7630a4198d04444b82ed5d565578
+    size: 13245
+  - md5: cb2bcc758067527c68f739eef8f03498
     name: statistics/histogram_SFARI_gene_score.yaml
-    size: 639
-  - md5: af43d14e299dcdd53719baae1f279083
+    size: 320
+  - md5: 741f09828ae2f5711e94a504c7b87241
     name: statistics/stats_hash
-    size: 238
+    size: 331
   version: '0'
 - config:
     directory: GeneSets
@@ -141,9 +141,9 @@
   - md5: af9a0254eb08c354abbd419a050fa2e3
     name: genomic_resource.yaml
     size: 118
-  - md5: 97d2b04a91b05f726ac1414bfa07e7df
+  - md5: 8d10d14fd660e4b308ee13c4124dcdec
     name: index.html
-    size: 1944
+    size: 3235
   - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
     name: statistics/stats_hash
     size: 11
@@ -160,9 +160,9 @@
   - md5: 108e781ddcbbefa72cd70d58fae46ccd
     name: genomic_resource.yaml
     size: 116
-  - md5: f472240da6b5aef37aac6bce45c1820c
+  - md5: b955761369a3f2ade97984b95857c73d
     name: index.html
-    size: 1417
+    size: 2652
   - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
     name: statistics/stats_hash
     size: 11
@@ -182,9 +182,9 @@
   - md5: a2c6e1efdf34070d9b890eca85260b57
     name: genomic_resource.yaml
     size: 124
-  - md5: bb6d065d8c063f885170bfa3973c78a9
+  - md5: abf5307048d501f55f83f8f1e08c15b5
     name: index.html
-    size: 1655
+    size: 2918
   - md5: 6a99c575ab87f8c7d1ed1e52e7e349ce
     name: statistics/stats_hash
     size: 11
@@ -197,13 +197,12 @@
   version: '0'
 - config:
     default_annotation:
-      attributes:
-      - name: score_raw_rankscore
-        source: score_raw_rankscore
-      - name: score_raw
-        source: score_raw
-      - name: score_phred
-        source: score_phred
+    - name: score_raw_rankscore
+      source: score_raw_rankscore
+    - name: score_raw
+      source: score_raw
+    - name: score_phred
+      source: score_phred
     scores:
     - desc: SCORE raw rankscore
       histogram:
@@ -246,9 +245,9 @@
     type: position_score
   id: genomic_scores/test_scores
   manifest:
-  - md5: 28dee83ddd51112a3721f94c7be54eca
+  - md5: 1fb791cb6f17a5db2d43cbb1dec8d8fa
     name: genomic_resource.yaml
-    size: 977
+    size: 963
   - md5: 94608545a04c4b723ef0f33e24b50328
     name: histograms/score_phred.csv
     size: 1299
@@ -258,30 +257,30 @@
   - md5: e8905f626e885999e612e1f120461db4
     name: histograms/score_raw_rankscore.csv
     size: 1249
-  - md5: bac987f706083289930360f39939fdf4
+  - md5: d41d8cd98f00b204e9800998ecf8427e
     name: index.html
-    size: 3075
-  - md5: 36fc9e01882649a95519c3ea1be5f6f0
+    size: 0
+  - md5: 7e174dd431c46bf4cb2d06a0f4794a4d
     name: statistics/histogram_score_phred.png
     size: 9858
   - md5: 7687d9e3ac906c077d08baa4ceaf744c
     name: statistics/histogram_score_phred.yaml
     size: 2759
-  - md5: 0d7eb0c8ae70fac92d62ee9d9b8b08d7
+  - md5: 42bf6d34f14552ec5c84ce35ff1610e3
     name: statistics/histogram_score_raw.png
     size: 9606
   - md5: 7687d9e3ac906c077d08baa4ceaf744c
     name: statistics/histogram_score_raw.yaml
     size: 2759
-  - md5: d41d8cd98f00b204e9800998ecf8427e
+  - md5: 350b20387ecedde39aa29a2897039e82
     name: statistics/histogram_score_raw_rankscore.png
-    size: 0
+    size: 11012
   - md5: 7687d9e3ac906c077d08baa4ceaf744c
     name: statistics/histogram_score_raw_rankscore.yaml
     size: 2759
-  - md5: ba047c88be9df2fff3a738b1ef866bf3
+  - md5: 09eeac597a0f1f32582dc7e63486084d
     name: statistics/stats_hash
-    size: 16158
+    size: 1256
   - md5: 0de608bb0038128685f7bd88a91b70f1
     name: table.txt
     size: 45

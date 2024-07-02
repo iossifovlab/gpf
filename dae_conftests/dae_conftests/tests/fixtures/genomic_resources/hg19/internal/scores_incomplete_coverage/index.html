@@ -7,36 +7,126 @@ h3,h4 {
     margin-top:0.5em;
     margin-bottom:0.5em;
 }
-
+table {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+}
+th {
+    font-size: 20px;
+}
+td {
+    font-size: 18px;
+}
 
 
 </style>
 </head>
-<body>
+    <body>
 
-<h1>Resource</h1>
-<div>
-<table border="1">
-<tr><td><b>Id:</b></td><td>hg19/internal/scores_incomplete_coverage</td></tr>
-<tr><td><b>Type:</b></td><td>position_score</td></tr>
-<tr>
-<td><b>Summary:</b></td>
-<td>N/A</td>
-</tr>
-<tr>
-<td><b>Description:</b></td>
-<td>N/A</td>
-</tr>
-<tr>
-<td><b>Labels:</b></td>
-<td>
+    <h1>Resource</h1>
+    <div>
+        <table border="1">
+            <tr>
+                <td>
+                    <b>Id:</b>
+                </td>
+                <td>hg19/internal/scores_incomplete_coverage</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Type:</b>
+                </td>
+                <td>position_score</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Version:</b>
+                </td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td><b>Summary:</b></td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open">N/A
+                        </template>
+                     </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Description:</b>
+                </td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open">N/A
+                        </template>
+                     </div>
+                </td>
+            </tr>
 
-</td>
-</tr>
-</table>
-</div>
+            <tr>
+                <td>
+                    <b>Labels:</b>
+                </td>
+                <td>
+                
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    
+
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        padding-top: 100px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        justify-content: center;
+    }
+
+    .modal-content {
+        margin: auto;
+        display: block;
+        width: 80%;
+        max-width: 700px;
+    }
+
+    .close {
+        float: right;
+        font-size: 40px;
+        font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+         color: #bbb;
+         text-decoration: none;
+         cursor: pointer;
+    }
+</style>
 
 
+    <script type="text/javascript">
+        function openModal(scoreId) {
+            var modal = document.getElementById("modal-" + scoreId);
+            modal.style.display = "flex";
+        }
+
+        function closeModal(scoreId) {
+            var modal = document.getElementById("modal-" + scoreId);
+            modal.style.display = "none";
+        }
+    </script>
 
 
 
@@ -45,92 +135,104 @@ h3,h4 {
 <h1>Scores</h1>
 
 <table border="1">
-<tr>
-<th>id</th>
-<th>type</th>
-<th>default annotation</th>
-<th>description</th>
-<th>histogram</th>
-<th>range</th>
-</tr><tr class="score-definition">
+    <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Default annotation</th>
+        <th>Description</th>
+        <th>Histogram</th>
+        <th>Range</th>
+    </tr><tr class="score-definition">
 
-<td>score0_incomplete_cov</td>
+            <td>score0_incomplete_cov</td>
 
-<td>float</td>
+            <td>float</td>
 
+            
+            <td>
+                <p>score0_incomplete_cov</p>
+            </td>
 
-<td>
-    <p>score0_incomplete_cov</p>
-</td>
+            <td>
+                <div></div>
+                
+                
+            </td>
 
-<td></td>
+            <td>
+                
+                
+                <img src="statistics/histogram_score0_incomplete_cov.png"
+                    alt="HISTOGRAM FOR score0_incomplete_cov"
+                    title=score0_incomplete_cov
+                    width="200"
+                    style="cursor: pointer"
+                    onclick="openModal(title)"></td>
 
-<td>
+            <td>
+                [31776803.000, 140391002.000]</td>
 
-
-<img src="statistics/histogram_score0_incomplete_cov.png"
-    alt="HISTOGRAM FOR score0_incomplete_cov"
-    title=score0_incomplete_cov
-    width="200"></td>
-
-<td>
-[31776803.000, 140391002.000]</td>
-
-</tr>
-
+        </tr><div id="modal-score0_incomplete_cov" class="modal">
+            <div style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+                <span title=score0_incomplete_cov class="close" onclick="closeModal(title)">&times;</span>
+                <img class="modal-content" id="histogram-score0_incomplete_cov"
+                    src="statistics/histogram_score0_incomplete_cov.png"
+                    alt="HISTOGRAM FOR score0_incomplete_cov"
+                    title=score0_incomplete_cov
+                    width="200">
+            </div>
+        </div>
 </table>
 
 
 
+    <h1>Files</h1>
+    <table>
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>md5</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="nowrap">
+                <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
+            </td>
+            <td class="nowrap">405.0 B</td>
+            <td class="nowrap">172f04900d00d664ea30eb92777b44b0</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='scores_incomplete_coverage.tsv.gz'>scores_incomplete_coverage.tsv.gz</a>
+            </td>
+            <td class="nowrap">176.0 B</td>
+            <td class="nowrap">28ee47e15cc15c1b8881cd453cdefc7d</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='scores_incomplete_coverage.tsv.gz.conf'>scores_incomplete_coverage.tsv.gz.conf</a>
+            </td>
+            <td class="nowrap">292.0 B</td>
+            <td class="nowrap">0430149f831b429fbf64235468576191</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='scores_incomplete_coverage.tsv.gz.tbi'>scores_incomplete_coverage.tsv.gz.tbi</a>
+            </td>
+            <td class="nowrap">987.0 B</td>
+            <td class="nowrap">f77946424457cdc1e16ae23ba2062b1d</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='statistics/'>statistics/</a>
+            </td>
+            <td class="nowrap"></td>
+            <td class="nowrap"></td>
+        </tr>
+    </tbody>
+    </table>
 
-<h1>Files</h1>
-<table>
-<thead>
-    <tr>
-        <th>Filename</th>
-        <th>Size</th>
-        <th>md5</th>
-    </tr>
-</thead>
-<tbody>
-    <tr>
-        <td class="nowrap">
-            <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
-        </td>
-        <td class="nowrap">405.0 B</td>
-        <td class="nowrap">172f04900d00d664ea30eb92777b44b0</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='scores_incomplete_coverage.tsv.gz'>scores_incomplete_coverage.tsv.gz</a>
-        </td>
-        <td class="nowrap">176.0 B</td>
-        <td class="nowrap">28ee47e15cc15c1b8881cd453cdefc7d</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='scores_incomplete_coverage.tsv.gz.conf'>scores_incomplete_coverage.tsv.gz.conf</a>
-        </td>
-        <td class="nowrap">292.0 B</td>
-        <td class="nowrap">0430149f831b429fbf64235468576191</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='scores_incomplete_coverage.tsv.gz.tbi'>scores_incomplete_coverage.tsv.gz.tbi</a>
-        </td>
-        <td class="nowrap">987.0 B</td>
-        <td class="nowrap">f77946424457cdc1e16ae23ba2062b1d</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='statistics/'>statistics/</a>
-        </td>
-        <td class="nowrap"></td>
-        <td class="nowrap"></td>
-    </tr>
-</tbody>
-</table>
-
-
-</body>
+    </body>
 </html>

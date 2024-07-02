@@ -197,7 +197,9 @@ class NumberHistogram(Statistic):
                 "Invalid histogram configuration, missing x_min_log",
             )
         if self.config.view_range[0] is None or \
-                self.config.view_range[1] is None:
+                self.config.view_range[1] is None or \
+                np.isnan(self.config.view_range[0]) or \
+                np.isnan(self.config.view_range[1]):
             logger.error(
                 "unexpected min/max value: [%s, %s]",
                 self.config.view_range[0], self.config.view_range[1])
@@ -205,6 +207,9 @@ class NumberHistogram(Statistic):
                 "unexpected min/max value:"
                 f"[{self.config.view_range[0]}, "
                 f"{self.config.view_range[1]}]")
+
+        self.view_range: tuple[float, float] = (
+            self.config.view_range[0], self.config.view_range[1])
 
         if bins is not None and bars is not None:
             self.bins = bins
@@ -238,16 +243,10 @@ class NumberHistogram(Statistic):
             )
 
     def view_min(self) -> float:
-        if self.config.view_range[0] is None \
-                or np.isnan(self.config.view_range[0]):
-            raise ValueError("view range min value not set")
-        return self.config.view_range[0]
+        return self.view_range[0]
 
     def view_max(self) -> float:
-        if self.config.view_range[1] is None \
-                or np.isnan(self.config.view_range[1]):
-            raise ValueError("view range max value not set")
-        return self.config.view_range[1]
+        return self.view_range[1]
 
     def merge(self, other: Statistic) -> None:
         """Merge two histograms."""
@@ -271,10 +270,6 @@ class NumberHistogram(Statistic):
             self.max_value = max(other.max_value, self.max_value)
         else:
             self.max_value = max(self.max_value, other.max_value)
-
-    @property
-    def view_range(self) -> tuple[Optional[float], Optional[float]]:
-        return self.config.view_range
 
     def values_domain(self) -> str:
         return f"[{self.min_value:0.3f}, {self.max_value:0.3f}]"

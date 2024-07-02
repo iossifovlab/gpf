@@ -1,17 +1,18 @@
 {
   "score_config": [
-    [
-      "SFARI_gene_score",
-      "SFARI gene score",
-      0.0,
-      7.0,
-      [
-        0.0,
-        7.0
-      ],
-      "linear",
-      "linear"
-    ]
+    {
+      "hist_conf": {
+        "number_of_bins": 8,
+        "view_range": [
+          0.0,
+          7.0
+        ],
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": false
+      },
+      "id": "SFARI_gene_score"
+    }
   ],
   "score_file": "ad0c332093f78227a14b9d2ce7e4991d"
 }
