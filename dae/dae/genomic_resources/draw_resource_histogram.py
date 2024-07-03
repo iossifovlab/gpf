@@ -10,7 +10,6 @@ from dae.gene_scores.gene_scores import (
 from dae.genomic_resources.cli import (
     _create_proto,
     _find_resource,
-    _run_resource_stats_command,
 )
 from dae.genomic_resources.genomic_scores import build_score_from_resource
 from dae.genomic_resources.histogram import (
@@ -19,10 +18,6 @@ from dae.genomic_resources.histogram import (
 from dae.genomic_resources.repository import (
     GR_CONTENTS_FILE_NAME,
     ReadWriteRepositoryProtocol,
-)
-from dae.genomic_resources.repository_factory import (
-    build_genomic_resource_repository,
-    get_default_grr_definition,
 )
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -35,8 +30,16 @@ def parse_cli_arguments() -> argparse.ArgumentParser:
 
     VerbosityConfiguration.set_arguments(parser)
 
-    parser.add_argument("-r", "--resource-id", help="optional resource id")
-
+    parser.add_argument(
+        "-R",
+        "--repository",
+        help="Optional URL to the genomic resources repository.",
+    )
+    parser.add_argument(
+        "-r",
+        "--resource",
+        help="Optional URL to the resource.",
+    )
 
     return parser
 
@@ -54,9 +57,15 @@ def main(
 
     VerbosityConfiguration.set(args)
 
-    repo_path = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
+    repo_path = find_directory_with_a_file(
+        GR_CONTENTS_FILE_NAME,
+        args.repository
+    )
     if repo_path is None:
-        print("Can't find repository starting from: %s", os.getcwd())
+        current_path = args.repository
+        if current_path is None:
+            current_path = os.getcwd()
+        print("Can't find repository starting from: %s", current_path)
         sys.exit(1)
 
     repo_url = str(repo_path)
@@ -69,7 +78,7 @@ def main(
             f"resource management works with RW protocols; "
             f"{proto.proto_id} ({proto.scheme}) is read only")
 
-    res = _find_resource(proto, repo_url, resource=args.resource_id)
+    res = _find_resource(proto, repo_url, resource=args.resource)
     if res is None:
         print("Resource not found...")
         sys.exit(1)
@@ -109,6 +118,3 @@ def main(
                         genomic_score.score_definitions[score_id].small_values_desc,
                         genomic_score.score_definitions[score_id].large_values_desc,
                     )
-
-
-main()
