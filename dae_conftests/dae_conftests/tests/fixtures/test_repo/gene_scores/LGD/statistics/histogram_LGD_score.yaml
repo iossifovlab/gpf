@@ -310,27 +310,8 @@ config:
   x_log_scale: false
   x_min_log: null
   y_log_scale: true
-max_value: !!python/object/apply:numpy.core.multiarray.scalar
-- &id001 !!python/object/apply:numpy.dtype
-  args:
-  - f8
-  - false
-  - true
-  state: !!python/tuple
-  - 3
-  - <
-  - null
-  - null
-  - null
-  - -1
-  - -1
-  - 0
-- !!binary |
-  AAAAAAAA8D8=
-min_value: !!python/object/apply:numpy.core.multiarray.scalar
-- *id001
-- !!binary |
-  t18+WTFc7T4=
+max_value: 1.0
+min_value: 1.4e-05
 out_of_range_bins:
 - 0
 - 0

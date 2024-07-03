@@ -44,21 +44,21 @@
   - md5: a23388082a0fa5369309f5bf96d8894e
     name: index.html
     size: 2182
-  - md5: 79ab6b898617b641b4a86dc1f138fbb5
+  - md5: 87ccbd501bf64e37ce042a397788c489
     name: statistics/histogram_cadd_phred.png
     size: 18985
   - md5: 1d58f89f7ddafd24257a121991cc41e9
     name: statistics/histogram_cadd_phred.yaml
     size: 2438
-  - md5: e1af790e58efc438f4621220b2b4a033
+  - md5: 231662831f12feee6e6f66845a4d6cea
     name: statistics/histogram_cadd_raw.png
     size: 19533
   - md5: c4dfbbfa8419a8974e4a2cb6c54ae3a5
     name: statistics/histogram_cadd_raw.yaml
     size: 2646
-  - md5: 48773b27d483f2dda8f132535d320f31
+  - md5: db8b1ed3a3902de4aa910f4f7948b93f
     name: statistics/stats_hash
-    size: 10226
+    size: 876
   version: '0'
 - config:
     filename: refGene201309.txt
@@ -83,9 +83,9 @@
   - md5: a42701941f92c7b999a4f8f26e4a3a47
     name: refGene201309.txt
     size: 3761
-  - md5: 90afd7bdd4ca41745aafa92369763180
+  - md5: 3db4974ae5244ba34db2aa8ce4d40ca5
     name: statistics/stats.yaml
-    size: 198
+    size: 615
   - md5: 9e80b34285fd49637b6ccf862fbcbf38
     name: statistics/stats_hash
     size: 127
@@ -192,15 +192,15 @@
   - md5: c559c7612e8019f98f04ef793bab6376
     name: index.html
     size: 2714
-  - md5: c5bccdbfe3dc20fc06699476cfd3e5ca
+  - md5: d8c9ca050dd58e0f3e35ab7132500511
     name: statistics/histogram_MPC.png
     size: 10251
   - md5: 9448bfc27262aeebe9ced0cc07a28ec2
     name: statistics/histogram_MPC.yaml
     size: 1907
-  - md5: 6a66d8328eea3542b302d0b403a9569e
+  - md5: 46b6ba97f29186273fa7eee3451ca6d2
     name: statistics/stats_hash
-    size: 5071
+    size: 1011
   version: '0'
 - config:
     default_annotation:
@@ -250,27 +250,27 @@
   - md5: 26aa9750f0a1ad0458bcc99fe7d71ac2
     name: scores1.tsv.gz.tbi
     size: 1350
-  - md5: 141a292e722188d15dd0433620edf930
+  - md5: 84ad8e6ef23239a2c4f938ad84c18e59
     name: statistics/histogram_score0.png
     size: 10808
   - md5: 57d35c090ec0844fb824fb78cfa90b12
     name: statistics/histogram_score0.yaml
     size: 2048
-  - md5: 328478e8566f1c9e12bd16e566b97e6c
+  - md5: 837ad0f874c6148f63c94baba837d552
     name: statistics/histogram_score2.png
     size: 10741
   - md5: 6606c9e0ed42caf89b36bc13cbee1e12
     name: statistics/histogram_score2.yaml
     size: 2305
-  - md5: fa41bbd14d8c1c143c32c77175e6312e
+  - md5: b0497e19fe5d48ce92ee42d882a4f93c
     name: statistics/histogram_score4.png
     size: 10880
   - md5: 34cf6144b0ca9ac192234765eccb09d6
     name: statistics/histogram_score4.yaml
     size: 2360
-  - md5: 217663ee6e702b9798fc35eb82bf048e
+  - md5: c6467e80ff5bdad646bb001fbf984415
     name: statistics/stats_hash
-    size: 13994
+    size: 946
   version: '0'
 - config:
     default_annotation:
@@ -308,15 +308,15 @@
   - md5: f77946424457cdc1e16ae23ba2062b1d
     name: scores_incomplete_coverage.tsv.gz.tbi
     size: 987
-  - md5: c37eb1c557ec79e8be894d86a9211f7d
+  - md5: d2c4205214430cf691304aba6dbe2f51
     name: statistics/histogram_score0_incomplete_cov.png
     size: 17129
   - md5: 021f3bdf01911638b8a29764a470a307
     name: statistics/histogram_score0_incomplete_cov.yaml
     size: 2155
-  - md5: 55f1f5036cd3efe906ba053fa1758f6c
+  - md5: 64581a11e801b0f4dafcc8be04092c97
     name: statistics/stats_hash
-    size: 5023
+    size: 724
   version: '0'
 - config:
     default_annotation:
@@ -359,15 +359,15 @@
   - md5: c2c4b109900b9f5ea940563bab3a8ad7
     name: phastCons100.bedGraph.gz.tbi
     size: 622
-  - md5: efcdd4628dbf6987139798f1c30e21e3
+  - md5: 3c9ab9be979eb4b43ebf07b1aad713e0
     name: statistics/histogram_phastCons100.png
     size: 14406
   - md5: 286cd0a9c0d64cc61f8cac80f57efc9f
     name: statistics/histogram_phastCons100.yaml
     size: 401
-  - md5: 23baccc6c8276450e478ca40cc927b5f
+  - md5: 53f2bc315744f46ab2ae111f28b24ec6
     name: statistics/stats_hash
-    size: 1822
+    size: 902
   version: '0'
 - config:
     filename: refSeq_20200330.txt
@@ -392,9 +392,9 @@
   - md5: 05d8bbd9616407e862d82593d5fd1756
     name: refSeq_20200330.txt
     size: 30558
-  - md5: 088f8feb9e5264dc7579fe0556a891c7
+  - md5: 501c1fc12f4c8d03425c52e6e7db5ed9
     name: statistics/stats.yaml
-    size: 185
+    size: 474
   - md5: fca08b9d5b481f89f0f04ea303d5bea7
     name: statistics/stats_hash
     size: 128
@@ -486,21 +486,21 @@
   - md5: a2e6a3fbf4fea75f8623e81acac78067
     name: index.html
     size: 2178
-  - md5: 23329d335421d56e3eead7b1c6cbd900
+  - md5: 163b2029a6ca94d95c562bf983bf4efb
     name: statistics/histogram_cadd_phred.png
     size: 14459
   - md5: c2109db906033275c0072492f5ba168d
     name: statistics/histogram_cadd_phred.yaml
     size: 2035
-  - md5: 61c0f45f4a8354e1a9f368222591ba90
+  - md5: 251b835239a6d5e8e2475cc6a315dbd2
     name: statistics/histogram_cadd_raw.png
     size: 14290
   - md5: 18f45d8afd87d6e61886a3b95630887d
     name: statistics/histogram_cadd_raw.yaml
     size: 2136
-  - md5: 19faf59341a0a703e08ed188b8d9c3dc
+  - md5: 51d838d5ad53d1d8d4d7c657a097d5c2
     name: statistics/stats_hash
-    size: 9321
+    size: 871
   version: '0'
 - config:
     default_annotation:
@@ -543,21 +543,21 @@
   - md5: d632c45a63e5868979f86cbe58d914dc
     name: index.html
     size: 2171
-  - md5: a20bb25abfcdff63f22fbb2087f540d2
+  - md5: 69ce8e06e522f489dc46d1e7be31f730
     name: statistics/histogram_altFreq.png
     size: 10546
   - md5: e642f11ea6bafabb05bdbaee45f2c8f7
     name: statistics/histogram_altFreq.yaml
     size: 2129
-  - md5: 99a701ae7ae9134111deee6c9ffbbff1
+  - md5: 14201488aa8dced7cd30f6473d12dc1a
     name: statistics/histogram_altFreq2.png
     size: 10898
   - md5: 6a5f32217b4b4877ed5f1249a9fef731
     name: statistics/histogram_altFreq2.yaml
     size: 2078
-  - md5: 524f1829ff855ae7d8a4bd920cb07b82
+  - md5: d8dc74534b10a1e751a2f7a335c3e128
     name: statistics/stats_hash
-    size: 9374
+    size: 881
   version: '0'
 - config:
     default_annotation:
@@ -595,15 +595,15 @@
   - md5: 313f112e74853fa39dc6af0fa526b692
     name: scores.tsv.gz.tbi
     size: 99
-  - md5: 305f3f4472bd42d08a1c26e493505048
+  - md5: f029658f1be0cb0b4cdbc49092d6fb90
     name: statistics/histogram_test_score.png
     size: 12257
   - md5: c74dd0ec861a188bc0a392fe373c48d7
     name: statistics/histogram_test_score.yaml
     size: 1996
-  - md5: a22e27e624c6db39bca6dfad56c6efc6
+  - md5: 119af567e2047dbf690811abce5551b7
     name: statistics/stats_hash
-    size: 4848
+    size: 666
   version: '0'
 - config:
     default_annotation:
@@ -659,15 +659,15 @@
   - md5: 56feb878ed78769d5200702392b8e4b7
     name: scores/phastCons100way.yaml
     size: 583
-  - md5: 7253f59314b3cdec0fe36f4d19a79410
+  - md5: 31c1b2ec189cbc57ce3dd0e46855911f
     name: statistics/histogram_phastCons100way.png
     size: 11865
   - md5: c73ad2e03b5fa160efbaf5088fbc7ce9
     name: statistics/histogram_phastCons100way.yaml
     size: 369
-  - md5: ec6ef0fc4f0adf2cc3de739359f984cf
+  - md5: ea8f397df81de4e4107f4215fb09a8a4
     name: statistics/stats_hash
-    size: 1858
+    size: 926
   version: '0'
 - config:
     chrom_prefix:

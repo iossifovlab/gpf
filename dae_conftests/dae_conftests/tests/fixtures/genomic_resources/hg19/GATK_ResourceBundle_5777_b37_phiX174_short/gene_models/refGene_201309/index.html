@@ -7,43 +7,108 @@ h3,h4 {
     margin-top:0.5em;
     margin-bottom:0.5em;
 }
+table {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+}
+th {
+    font-size: 20px;
+}
+td {
+    font-size: 18px;
+}
 
+#chromosomes-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+#chromosomes-table th {
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#chromosomes-table td {
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#chromosomes-table th:first-child,
+#chromosomes-table td:first-child {
+    border-left: 1px solid;
+}
+#chromosomes-table thead tr:nth-of-type(2) th {
+    border-top: none;
+}
+#chromosomes-table thead {
+    position: sticky; top: 0; background-color: white;
+}
 
 
 </style>
 </head>
-<body>
+    <body>
 
-<h1>Resource</h1>
-<div>
-<table border="1">
-<tr><td><b>Id:</b></td><td>hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309</td></tr>
-<tr><td><b>Type:</b></td><td>gene_models</td></tr>
-<tr>
-<td><b>Summary:</b></td>
-<td>## refGene gene models from 2013-09
-
-Old gene models used by GPF up to 2019-02.
-</td>
-</tr>
-<tr>
-<td><b>Description:</b></td>
-<td><h2>refGene gene models from 2013-09</h2>
+    <h1>Resource</h1>
+    <div>
+        <table border="1">
+            <tr>
+                <td>
+                    <b>Id:</b>
+                </td>
+                <td>hg19/GATK_ResourceBundle_5777_b37_phiX174_short/gene_models/refGene_201309</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Type:</b>
+                </td>
+                <td>gene_models</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Version:</b>
+                </td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td><b>Summary:</b></td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open"><h2>refGene gene models from 2013-09</h2>
 
 <p>Old gene models used by GPF up to 2019-02.</p>
-</td>
-</tr>
-<tr>
-<td><b>Labels:</b></td>
-<td>
 
-</td>
-</tr>
-</table>
-</div>
+                        </template>
+                     </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Description:</b>
+                </td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open"><h2>refGene gene models from 2013-09</h2>
 
+<p>Old gene models used by GPF up to 2019-02.</p>
 
+                        </template>
+                     </div>
+                </td>
+            </tr>
 
+            <tr>
+                <td>
+                    <b>Labels:</b>
+                </td>
+                <td>
+                
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    
 <h1>Configuration</h1>
     Gene models file:
     <p><a href="refGene201309.txt">
@@ -52,62 +117,87 @@ Old gene models used by GPF up to 2019-02.
 
     <p>Format: default</p>
 <h1>Statistics</h1>
+    <h2>Chromosome statistics</h2>
+    <div style="max-height: 50%; overflow-y: auto; width: fit-content">
+        <table id="chromosomes-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Transcript number</th>
+                    <th>Protein coding transcript number</th>
+                    <th>Gene number</th>
+                    <th>Protein coding gene number</th>
+                </tr>
+                <tr>
+                    <th>Global</th>
+                    <td>19</td>
+                    <td>10</td>
+                    <td>13</td>
+                    <td>7</td>
+                </tr>
+            </thead>
+            
+                <tr>
+                    <td>1</td>
+                    <td>6</td>
+                    <td>1</td>
+                    <td>6</td>
+                    <td>1</td>
+                </tr>
+            
+                <tr>
+                    <td>2</td>
+                    <td>8</td>
+                    <td>7</td>
+                    <td>4</td>
+                    <td>4</td>
+                </tr>
+            
+                <tr>
+                    <td>X</td>
+                    <td>5</td>
+                    <td>2</td>
+                    <td>3</td>
+                    <td>2</td>
+                </tr>
+            
+        </table>
+    </div>
+
+
+    <h1>Files</h1>
     <table>
-    
-        <tr><td> transcript number </td><td> 19 </td></tr>
-    
-        <tr><td> protein coding transcript number </td><td> 10 </td></tr>
-    
-        <tr><td> gene number </td><td> 13 </td></tr>
-    
-        <tr><td> protein coding gene number </td><td> 7 </td></tr>
-    
-        <tr><td> chromosome number </td><td> 3 </td></tr>
-    
-        <tr><td> 1 transcript numbers </td><td> 6 </td></tr>
-    
-        <tr><td> 2 transcript numbers </td><td> 8 </td></tr>
-    
-        <tr><td> X transcript numbers </td><td> 5 </td></tr>
-    
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>md5</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="nowrap">
+                <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
+            </td>
+            <td class="nowrap">192.0 B</td>
+            <td class="nowrap">ed67a675e3f2d06a4f0736ca535a00f9</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='refGene201309.txt'>refGene201309.txt</a>
+            </td>
+            <td class="nowrap">3.67 KB</td>
+            <td class="nowrap">a42701941f92c7b999a4f8f26e4a3a47</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='statistics/'>statistics/</a>
+            </td>
+            <td class="nowrap"></td>
+            <td class="nowrap"></td>
+        </tr>
+    </tbody>
     </table>
 
-
-
-<h1>Files</h1>
-<table>
-<thead>
-    <tr>
-        <th>Filename</th>
-        <th>Size</th>
-        <th>md5</th>
-    </tr>
-</thead>
-<tbody>
-    <tr>
-        <td class="nowrap">
-            <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
-        </td>
-        <td class="nowrap">192.0 B</td>
-        <td class="nowrap">ed67a675e3f2d06a4f0736ca535a00f9</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='refGene201309.txt'>refGene201309.txt</a>
-        </td>
-        <td class="nowrap">3.67 KB</td>
-        <td class="nowrap">a42701941f92c7b999a4f8f26e4a3a47</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='statistics/'>statistics/</a>
-        </td>
-        <td class="nowrap"></td>
-        <td class="nowrap"></td>
-    </tr>
-</tbody>
-</table>
-
-
-</body>
+    </body>
 </html>

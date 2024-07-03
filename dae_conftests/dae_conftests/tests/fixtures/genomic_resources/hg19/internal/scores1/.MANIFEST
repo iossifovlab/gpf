@@ -13,24 +13,24 @@
 - md5: 26aa9750f0a1ad0458bcc99fe7d71ac2
   name: scores1.tsv.gz.tbi
   size: 1350
-- md5: 141a292e722188d15dd0433620edf930
+- md5: 84ad8e6ef23239a2c4f938ad84c18e59
   name: statistics/histogram_score0.png
   size: 10808
 - md5: 57d35c090ec0844fb824fb78cfa90b12
   name: statistics/histogram_score0.yaml
   size: 2048
-- md5: 328478e8566f1c9e12bd16e566b97e6c
+- md5: 837ad0f874c6148f63c94baba837d552
   name: statistics/histogram_score2.png
   size: 10741
 - md5: 6606c9e0ed42caf89b36bc13cbee1e12
   name: statistics/histogram_score2.yaml
   size: 2305
-- md5: fa41bbd14d8c1c143c32c77175e6312e
+- md5: b0497e19fe5d48ce92ee42d882a4f93c
   name: statistics/histogram_score4.png
   size: 10880
 - md5: 34cf6144b0ca9ac192234765eccb09d6
   name: statistics/histogram_score4.yaml
   size: 2360
-- md5: 217663ee6e702b9798fc35eb82bf048e
+- md5: c6467e80ff5bdad646bb001fbf984415
   name: statistics/stats_hash
-  size: 13994
+  size: 946

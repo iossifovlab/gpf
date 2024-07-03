@@ -1,15 +1,14 @@
 import os
-from typing import Optional
 
 import pysam
 
 from dae.genomic_resources.repository import GenomicResource
 
 from .table import GenomicPositionTable
+from .table_bigwig import BigWigTable
 from .table_inmemory import InmemoryGenomicPositionTable
 from .table_tabix import TabixGenomicPositionTable
 from .table_vcf import VCFGenomicPositionTable
-from .table_bigwig import BigWigTable
 
 
 def build_genomic_position_table(
@@ -60,9 +59,9 @@ def save_as_tabix_table(
     pysam.tabix_compress(tmp_file, full_file_path, force=True)
     os.remove(tmp_file)
 
-    chrom_key: Optional[int]
-    pos_begin_key: Optional[int]
-    pos_end_key: Optional[int]
+    chrom_key: int | None
+    pos_begin_key: int | None
+    pos_end_key: int | None
 
     if isinstance(table.chrom_key, str):
         assert table.header is not None

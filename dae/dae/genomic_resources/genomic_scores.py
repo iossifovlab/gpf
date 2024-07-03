@@ -11,7 +11,6 @@ from typing import (
     Any,
     Callable,
     Optional,
-    Type,
     Union,
     cast,
 )
@@ -182,16 +181,20 @@ class ScoreLine:
         """Get and parse configured score from line."""
         key = self.score_defs[score_id].score_index
         assert key is not None
+
         value: Optional[str] = self.line.get(key)
         if score_id in self.score_defs:
             col_def = self.score_defs[score_id]
             if value in col_def.na_values:
                 value = None
             elif col_def.value_parser is not None:
+                # pylint: disable=broad-except
                 try:  # Temporary workaround for GRR generation
                     value = col_def.value_parser(value)
-                except Exception as err:  # pylint: disable=broad-except
-                    logger.error(err)
+                except Exception:
+                    logger.exception(
+                        "unable to parse value %s for score %s",
+                        value, score_id)
                     value = None
         return value
 
@@ -393,7 +396,9 @@ class GenomicScore(ResourceConfigValidationMixin):
         }
 
     @staticmethod
-    def _parse_scoredef_config(config: dict[str, Any]) -> dict[str, _ScoreDef]:
+    def _parse_scoredef_config(
+        config: dict[str, Any],
+    ) -> dict[str, _ScoreDef]:
         """Parse ScoreDef configuration."""
         scores = {}
 
@@ -425,8 +430,8 @@ class GenomicScore(ResourceConfigValidationMixin):
             scores[score_conf["id"]] = score_def
         return scores
 
-    @staticmethod
     def _parse_vcf_scoredefs(
+        self,
         vcf_header_info: Optional[dict[str, Any]],
         config_scoredefs: Optional[dict[str, _ScoreDef]],
     ) -> dict[str, _ScoreDef]:
@@ -452,7 +457,7 @@ class GenomicScore(ResourceConfigValidationMixin):
                 desc=value.description or "",
                 value_type=VCF_TYPE_CONVERSION_MAP[value.type],
                 value_parser=value_parser,
-                na_values=tuple(),
+                na_values=(),
                 pos_aggregator=None,
                 nuc_aggregator=None,
                 allele_aggregator=None,
@@ -499,10 +504,10 @@ class GenomicScore(ResourceConfigValidationMixin):
     def _build_scoredefs(self) -> dict[str, _ScoreDef]:
         config_scoredefs = None
         if "scores" in self.config:
-            config_scoredefs = GenomicScore._parse_scoredef_config(self.config)
+            config_scoredefs = self._parse_scoredef_config(self.config)
 
         if isinstance(self.table, VCFGenomicPositionTable):
-            return GenomicScore._parse_vcf_scoredefs(
+            return self._parse_vcf_scoredefs(
                 cast(dict[str, Any], self.table.header), config_scoredefs)
 
         if config_scoredefs is None:
@@ -517,13 +522,15 @@ class GenomicScore(ResourceConfigValidationMixin):
         """Collect default annotation attributes."""
         default_annotation = self.get_config().get("default_annotation")
         if not default_annotation:
-            return list(
+            return [
                 {"source": attr, "name": attr}
-                for attr in self.score_definitions)
+                for attr in self.score_definitions
+            ]
 
         if not isinstance(default_annotation, list):
-            raise ValueError("The default_annotation in the "
-                             f"{self.resource_id} resource is not a list.")
+            raise TypeError(
+                "The default_annotation in the "
+                f"{self.resource_id} resource is not a list.")
         return default_annotation
 
     def get_default_annotation_attribute(self, score_id: str) -> Optional[str]:
@@ -588,7 +595,7 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
+        exc_type: Optional[type[BaseException]],
         exc_value: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:
@@ -646,17 +653,7 @@ class GenomicScore(ResourceConfigValidationMixin):
 
             val = {}
             for scr_id in scores:
-                try:
-                    val[scr_id] = line.get_score(scr_id)
-                except (KeyError, IndexError):
-                    logger.exception(
-                        "Failed to fetch score %s in region %s:%s-%s",
-                        scr_id,
-                        chrom,
-                        line_pos_begin,
-                        line_pos_end,
-                    )
-                    val[scr_id] = None
+                val[scr_id] = line.get_score(scr_id)
 
             if pos_begin is not None:
                 left = max(pos_begin, line_pos_begin)
@@ -672,7 +669,8 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     @lru_cache(maxsize=64)
     def get_number_range(
-            self, score_id: str) -> Optional[tuple[float, float]]:
+        self, score_id: str,
+    ) -> Optional[tuple[float, float]]:
         """Return the value range for a number score."""
         if score_id not in self.get_all_scores():
             raise ValueError(
@@ -695,15 +693,16 @@ class GenomicScore(ResourceConfigValidationMixin):
                 f"{self.score_definitions.keys()}")
 
         hist_filename = self.get_histogram_filename(score_id)
-        hist = load_histogram(self.resource, hist_filename)
-        return hist
+        return load_histogram(self.resource, hist_filename)
 
     def get_histogram_image_filename(self, score_id: str) -> str:
         return f"statistics/histogram_{score_id}.png"
 
     def get_histogram_image_url(self, score_id: str) -> Optional[str]:
-        return f"{self.resource.get_url()}/" \
+        return (
+            f"{self.resource.get_url()}/"
             f"{quote(self.get_histogram_image_filename(score_id))}"
+        )
 
 
 class PositionScore(GenomicScore):
@@ -738,7 +737,7 @@ class PositionScore(GenomicScore):
                 f"{chrom}:{position}")
         line = lines[0]
 
-        requested_scores = scores if scores else self.get_all_scores()
+        requested_scores = scores or self.get_all_scores()
         return [line.get_score(scr) for scr in requested_scores]
 
     def _build_scores_agg(
@@ -855,7 +854,7 @@ class NPScore(GenomicScore):
 
         if not selected_line:
             return None
-        requested_scores = scores if scores else self.get_all_scores()
+        requested_scores = scores or self.get_all_scores()
         return [selected_line.get_score(sc) for sc in requested_scores]
 
     def _build_scores_agg(
@@ -887,7 +886,6 @@ class NPScore(GenomicScore):
     ) -> list[Aggregator]:
         """Fetch score values in a region and aggregates them."""
         # pylint: disable=too-many-locals
-        # FIXME:
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes for "
@@ -982,7 +980,7 @@ class AlleleScore(GenomicScore):
         if selected_line is None:
             return None
 
-        requested_scores = scores if scores else self.get_all_scores()
+        requested_scores = scores or self.get_all_scores()
         return [
             selected_line.get_score(sc)
             for sc in requested_scores]
@@ -1017,7 +1015,6 @@ class AlleleScore(GenomicScore):
     ) -> list[Aggregator]:
         """Fetch score values in a region and aggregates them."""
         # pylint: disable=too-many-locals
-        # FIXME:
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes for "

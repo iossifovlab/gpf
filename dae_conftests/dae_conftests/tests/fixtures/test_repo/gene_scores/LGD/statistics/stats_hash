@@ -1,29 +1,31 @@
 {
   "score_config": [
-    [
-      "LGD_rank",
-      "LGD rank",
-      1.0,
-      18394.5,
-      [
-        1.0,
-        18394.5
-      ],
-      "linear",
-      "linear"
-    ],
-    [
-      "LGD_score",
-      "LGD score",
-      1.4e-05,
-      1.0,
-      [
-        1.4e-05,
-        1.0
-      ],
-      "linear",
-      "log"
-    ]
+    {
+      "hist_conf": {
+        "number_of_bins": 150,
+        "view_range": [
+          1.0,
+          18394.5
+        ],
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": false
+      },
+      "id": "LGD_rank"
+    },
+    {
+      "hist_conf": {
+        "number_of_bins": 150,
+        "view_range": [
+          1.4e-05,
+          1.0
+        ],
+        "x_log_scale": false,
+        "x_min_log": null,
+        "y_log_scale": true
+      },
+      "id": "LGD_score"
+    }
   ],
   "score_file": "4e9f0967f510d53285a51dfc33b4d06c"
 }

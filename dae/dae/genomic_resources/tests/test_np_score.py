@@ -1,6 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pathlib
-
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.genomic_scores import NPScore, NPScoreQuery
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
@@ -8,7 +6,7 @@ from dae.genomic_resources.testing import build_inmemory_test_resource
 from dae.testing import convert_to_tab_separated
 
 
-def test_the_simplest_np_score(tmp_path: pathlib.Path) -> None:
+def test_the_simplest_np_score() -> None:
     res: GenomicResource = build_inmemory_test_resource({
         "genomic_resource.yaml": """
             type: np_score
@@ -84,9 +82,9 @@ def test_np_score_aggregation() -> None:
     score = NPScore(res)
     score.open()
 
-    assert score.table.chrom_key == "chrom"
-    assert score.table.pos_begin_key == "pos_begin"
-    assert score.table.pos_end_key == "pos_end"
+    assert score.table.chrom_key == 0  # "chrom"
+    assert score.table.pos_begin_key == 1  # "pos_begin"
+    assert score.table.pos_end_key == 2  # "pos_end"
 
     assert score.fetch_scores_agg(
         "1", 14, 18, [NPScoreQuery("cadd_raw")]) == \

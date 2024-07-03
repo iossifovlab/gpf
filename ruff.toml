@@ -49,6 +49,7 @@ ignore = [
     "PT006",  # for separate task - currently we use 'csv', but maybe change to 'tuple' or 'list'?
     "S603",
     "S404",
+    "B019",
 ]
 fixable = ["ALL"]
 preview = true

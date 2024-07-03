@@ -44,7 +44,6 @@ scores:
       y_log_scale: true
 
 default_annotation:
-  attributes:
     - source: score_raw_rankscore
       name: score_raw_rankscore
     - source: score_raw

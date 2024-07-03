@@ -10,12 +10,12 @@
 - md5: 313f112e74853fa39dc6af0fa526b692
   name: scores.tsv.gz.tbi
   size: 99
-- md5: 305f3f4472bd42d08a1c26e493505048
+- md5: f029658f1be0cb0b4cdbc49092d6fb90
   name: statistics/histogram_test_score.png
   size: 12257
 - md5: c74dd0ec861a188bc0a392fe373c48d7
   name: statistics/histogram_test_score.yaml
   size: 1996
-- md5: a22e27e624c6db39bca6dfad56c6efc6
+- md5: 119af567e2047dbf690811abce5551b7
   name: statistics/stats_hash
-  size: 4848
+  size: 666

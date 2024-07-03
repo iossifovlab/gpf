@@ -1,4 +1,5 @@
-# pylint: disable=I1101
+from __future__ import annotations
+
 from collections.abc import Generator
 from typing import Optional
 
@@ -22,7 +23,7 @@ class BigWigTable(GenomicPositionTable):
         super().__init__(genomic_resource, table_definition)
         self.bw_file = None
 
-    def open(self) -> "BigWigTable":
+    def open(self) -> BigWigTable:
         self.bw_file = self.genomic_resource.open_bigwig_file(
             self.definition.filename)
         if self.bw_file is None:
@@ -40,9 +41,9 @@ class BigWigTable(GenomicPositionTable):
         self, chrom: str, pos_begin: int, pos_end: int,
     ) -> Generator[tuple[int, int, float], None, None]:
         assert self.bw_file is not None
-        limit = self.bw_file.chroms()[chrom]
+        chrom_pos_end = self.bw_file.chroms()[chrom]
         pos_begin = max(0, pos_begin - 1)
-        pos_end = min(pos_end, limit)
+        pos_end = min(pos_end, chrom_pos_end)
         for start in range(pos_begin, pos_end, self.BATCH_SIZE):
             stop = min(start + self.BATCH_SIZE, pos_end)
             intervals = self.bw_file.intervals(chrom, start, stop)

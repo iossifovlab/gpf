@@ -10,18 +10,18 @@
 - md5: a23388082a0fa5369309f5bf96d8894e
   name: index.html
   size: 2182
-- md5: 79ab6b898617b641b4a86dc1f138fbb5
+- md5: 87ccbd501bf64e37ce042a397788c489
   name: statistics/histogram_cadd_phred.png
   size: 18985
 - md5: 1d58f89f7ddafd24257a121991cc41e9
   name: statistics/histogram_cadd_phred.yaml
   size: 2438
-- md5: e1af790e58efc438f4621220b2b4a033
+- md5: 231662831f12feee6e6f66845a4d6cea
   name: statistics/histogram_cadd_raw.png
   size: 19533
 - md5: c4dfbbfa8419a8974e4a2cb6c54ae3a5
   name: statistics/histogram_cadd_raw.yaml
   size: 2646
-- md5: 48773b27d483f2dda8f132535d320f31
+- md5: db8b1ed3a3902de4aa910f4f7948b93f
   name: statistics/stats_hash
-  size: 10226
+  size: 876

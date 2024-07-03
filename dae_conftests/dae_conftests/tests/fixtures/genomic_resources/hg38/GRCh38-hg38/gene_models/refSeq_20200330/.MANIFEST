@@ -7,9 +7,9 @@
 - md5: 05d8bbd9616407e862d82593d5fd1756
   name: refSeq_20200330.txt
   size: 30558
-- md5: 088f8feb9e5264dc7579fe0556a891c7
+- md5: 501c1fc12f4c8d03425c52e6e7db5ed9
   name: statistics/stats.yaml
-  size: 185
+  size: 474
 - md5: fca08b9d5b481f89f0f04ea303d5bea7
   name: statistics/stats_hash
   size: 128

@@ -22,12 +22,12 @@
 - md5: 56feb878ed78769d5200702392b8e4b7
   name: scores/phastCons100way.yaml
   size: 583
-- md5: 7253f59314b3cdec0fe36f4d19a79410
+- md5: 31c1b2ec189cbc57ce3dd0e46855911f
   name: statistics/histogram_phastCons100way.png
   size: 11865
 - md5: c73ad2e03b5fa160efbaf5088fbc7ce9
   name: statistics/histogram_phastCons100way.yaml
   size: 369
-- md5: ec6ef0fc4f0adf2cc3de739359f984cf
+- md5: ea8f397df81de4e4107f4215fb09a8a4
   name: statistics/stats_hash
-  size: 1858
+  size: 926

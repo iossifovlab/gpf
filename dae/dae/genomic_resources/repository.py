@@ -377,7 +377,7 @@ class GenomicResource:
             self._manifest = self.proto.get_manifest(self)
         return self._manifest
 
-    def get_file_url(self, filename: str):
+    def get_file_url(self, filename: str) -> str:
         return self.proto.get_resource_file_url(self, filename)
 
     def get_file_content(
@@ -426,8 +426,9 @@ class ReadOnlyRepositoryProtocol(abc.ABC):
 
     CHUNK_SIZE = 32768
 
-    def __init__(self, proto_id: str):
+    def __init__(self, proto_id: str, url: str):
         self.proto_id = proto_id
+        self.url = url
 
     def mode(self) -> Mode:
         """Return repository protocol mode - READONLY or READWRITE."""

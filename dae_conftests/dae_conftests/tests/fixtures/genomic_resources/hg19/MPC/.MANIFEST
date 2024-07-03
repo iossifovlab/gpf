@@ -19,12 +19,12 @@
 - md5: c559c7612e8019f98f04ef793bab6376
   name: index.html
   size: 2714
-- md5: c5bccdbfe3dc20fc06699476cfd3e5ca
+- md5: d8c9ca050dd58e0f3e35ab7132500511
   name: statistics/histogram_MPC.png
   size: 10251
 - md5: 9448bfc27262aeebe9ced0cc07a28ec2
   name: statistics/histogram_MPC.yaml
   size: 1907
-- md5: 6a66d8328eea3542b302d0b403a9569e
+- md5: 46b6ba97f29186273fa7eee3451ca6d2
   name: statistics/stats_hash
-  size: 5071
+  size: 1011

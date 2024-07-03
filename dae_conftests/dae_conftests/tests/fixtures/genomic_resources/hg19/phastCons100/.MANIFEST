@@ -10,12 +10,12 @@
 - md5: c2c4b109900b9f5ea940563bab3a8ad7
   name: phastCons100.bedGraph.gz.tbi
   size: 622
-- md5: efcdd4628dbf6987139798f1c30e21e3
+- md5: 3c9ab9be979eb4b43ebf07b1aad713e0
   name: statistics/histogram_phastCons100.png
   size: 14406
 - md5: 286cd0a9c0d64cc61f8cac80f57efc9f
   name: statistics/histogram_phastCons100.yaml
   size: 401
-- md5: 23baccc6c8276450e478ca40cc927b5f
+- md5: 53f2bc315744f46ab2ae111f28b24ec6
   name: statistics/stats_hash
-  size: 1822
+  size: 902

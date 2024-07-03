@@ -7,43 +7,108 @@ h3,h4 {
     margin-top:0.5em;
     margin-bottom:0.5em;
 }
+table {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+}
+th {
+    font-size: 20px;
+}
+td {
+    font-size: 18px;
+}
 
+#chromosomes-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+#chromosomes-table th {
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#chromosomes-table td {
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#chromosomes-table th:first-child,
+#chromosomes-table td:first-child {
+    border-left: 1px solid;
+}
+#chromosomes-table thead tr:nth-of-type(2) th {
+    border-top: none;
+}
+#chromosomes-table thead {
+    position: sticky; top: 0; background-color: white;
+}
 
 
 </style>
 </head>
-<body>
+    <body>
 
-<h1>Resource</h1>
-<div>
-<table border="1">
-<tr><td><b>Id:</b></td><td>hg38/GRCh38-hg38/genome</td></tr>
-<tr><td><b>Type:</b></td><td>genome</td></tr>
-<tr>
-<td><b>Summary:</b></td>
-<td>## HG38 Reference Genome 
-
-Default HG38 reference genome used by GPF
-</td>
-</tr>
-<tr>
-<td><b>Description:</b></td>
-<td><h2>HG38 Reference Genome</h2>
+    <h1>Resource</h1>
+    <div>
+        <table border="1">
+            <tr>
+                <td>
+                    <b>Id:</b>
+                </td>
+                <td>hg38/GRCh38-hg38/genome</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Type:</b>
+                </td>
+                <td>genome</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Version:</b>
+                </td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td><b>Summary:</b></td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open"><h2>HG38 Reference Genome</h2>
 
 <p>Default HG38 reference genome used by GPF</p>
-</td>
-</tr>
-<tr>
-<td><b>Labels:</b></td>
-<td>
 
-</td>
-</tr>
-</table>
-</div>
+                        </template>
+                     </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Description:</b>
+                </td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open"><h2>HG38 Reference Genome</h2>
 
+<p>Default HG38 reference genome used by GPF</p>
 
+                        </template>
+                     </div>
+                </td>
+            </tr>
 
+            <tr>
+                <td>
+                    <b>Labels:</b>
+                </td>
+                <td>
+                
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    
 
 
 
@@ -73,130 +138,227 @@ Default HG38 reference genome used by GPF
 
 
 <h3>Genome statistics:</h3>
-
-    <h4>Length: 2800000</h4>
-
-    <h4>Nucleotide distribution:</h4>
-    
-        <p>A: 25.24%</p>
-    
-        <p>C: 22.01%</p>
-    
-        <p>G: 22.18%</p>
-    
-        <p>N: 6.07%</p>
-    
-        <p>T: 24.49%</p>
-    
+<h3>Chromosomes (2):</h3>
+<div style="max-height: 50%; overflow-y: auto; width: fit-content; margin-bottom: 14px;">
+    <table id="chromosomes-table">
+        <thead>
+            <tr>
+                <th>Chrom</th>
+                <th>Length</th>
+                
+                    <th>A</th>
+                
+                    <th>T</th>
+                
+                    <th>C</th>
+                
+                    <th>G</th>
+                
+                    <th>N</th>
+                
+            </tr>
+            <tr>
+                <th>Global</th>
+                <td>2,800,000</td>
+                
+                    <td>25.24%</td>
+                
+                    <td>24.49%</td>
+                
+                    <td>22.01%</td>
+                
+                    <td>22.18%</td>
+                
+                    <td>6.07%</td>
+                
+            </tr>
+        </thead><tr>
+                <td>chr1</td>
+                <td>1,400,000</td>
+                
+                    
+                        <td>22.66%</td>
+                    
+                
+                    
+                        <td>21.01%</td>
+                    
+                
+                    
+                        <td>22.61%</td>
+                    
+                
+                    
+                        <td>22.29%</td>
+                    
+                
+                    
+                        <td>11.43%</td>
+                    
+                
+            </tr><tr>
+                <td>chr2</td>
+                <td>1,400,000</td>
+                
+                    
+                        <td>27.82%</td>
+                    
+                
+                    
+                        <td>27.98%</td>
+                    
+                
+                    
+                        <td>21.41%</td>
+                    
+                
+                    
+                        <td>22.08%</td>
+                    
+                
+                    
+                        <td>0.71%</td>
+                    
+                
+            </tr></table>
+</div>
 
     <h4>Bi-Nucleotide distribution:</h4>
-    
-        <p>AA: 7.65%</p>
-    
-        <p>AC: 4.97%</p>
-    
-        <p>AG: 6.76%</p>
-    
-        <p>AN: 0.00%</p>
-    
-        <p>AT: 5.87%</p>
-    
-        <p>CA: 7.23%</p>
-    
-        <p>CC: 6.36%</p>
-    
-        <p>CG: 1.82%</p>
-    
-        <p>CN: 0.00%</p>
-    
-        <p>CT: 6.60%</p>
-    
-        <p>GA: 5.67%</p>
-    
-        <p>GC: 5.16%</p>
-    
-        <p>GG: 6.51%</p>
-    
-        <p>GN: 0.00%</p>
-    
-        <p>GT: 4.84%</p>
-    
-        <p>NA: 0.00%</p>
-    
-        <p>NC: 0.00%</p>
-    
-        <p>NG: 0.00%</p>
-    
-        <p>NN: 6.07%</p>
-    
-        <p>NT: 0.00%</p>
-    
-        <p>TA: 4.68%</p>
-    
-        <p>TC: 5.52%</p>
-    
-        <p>TG: 7.10%</p>
-    
-        <p>TN: 0.00%</p>
-    
-        <p>TT: 7.19%</p>
-    
+    <table border="1">
+        <tr>
+            <th></th>
+            
+                <th>A</th>
+            
+                <th>T</th>
+            
+                <th>C</th>
+            
+                <th>G</th>
+            
+                <th>N</th>
+            
+        </tr>
+        
+            <tr>
+                <th>A</th>
+                
+                    <td>7.65%</td>
+                
+                    <td>5.87%</td>
+                
+                    <td>4.97%</td>
+                
+                    <td>6.76%</td>
+                
+                    <td>0.00%</td>
+                
+            </tr>
+        
+            <tr>
+                <th>T</th>
+                
+                    <td>4.68%</td>
+                
+                    <td>7.19%</td>
+                
+                    <td>5.52%</td>
+                
+                    <td>7.10%</td>
+                
+                    <td>0.00%</td>
+                
+            </tr>
+        
+            <tr>
+                <th>C</th>
+                
+                    <td>7.23%</td>
+                
+                    <td>6.60%</td>
+                
+                    <td>6.36%</td>
+                
+                    <td>1.82%</td>
+                
+                    <td>0.00%</td>
+                
+            </tr>
+        
+            <tr>
+                <th>G</th>
+                
+                    <td>5.67%</td>
+                
+                    <td>4.84%</td>
+                
+                    <td>5.16%</td>
+                
+                    <td>6.51%</td>
+                
+                    <td>0.00%</td>
+                
+            </tr>
+        
+            <tr>
+                <th>N</th>
+                
+                    <td>0.00%</td>
+                
+                    <td>0.00%</td>
+                
+                    <td>0.00%</td>
+                
+                    <td>0.00%</td>
+                
+                    <td>6.07%</td>
+                
+            </tr>
+        
+    </table>
 
 
-<h3>Chromosomes:</h3>
-<table>
-<tr><td>Chrom</td><td>Length</td></tr><tr>
-<td>chr1</td>
-<td>1400000</td>
-</tr><tr>
-<td>chr2</td>
-<td>1400000</td>
-</tr></table>
 
+    <h1>Files</h1>
+    <table>
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>md5</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="nowrap">
+                <a href='GRCh38_full_analysis_set_plus_decoy_hla.fa'>GRCh38_full_analysis_set_plus_decoy_hla.fa</a>
+            </td>
+            <td class="nowrap">2.71 MB</td>
+            <td class="nowrap">e00929f659f77c5d04d0a881cf6f3033</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='GRCh38_full_analysis_set_plus_decoy_hla.fa.fai'>GRCh38_full_analysis_set_plus_decoy_hla.fa.fai</a>
+            </td>
+            <td class="nowrap">50.0 B</td>
+            <td class="nowrap">2e3b716901f9da348a3ea6a424d54006</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
+            </td>
+            <td class="nowrap">339.0 B</td>
+            <td class="nowrap">b151ecdcef68d9014ab78823b5147711</td>
+        </tr>
+        <tr>
+            <td class="nowrap">
+                <a href='statistics/'>statistics/</a>
+            </td>
+            <td class="nowrap"></td>
+            <td class="nowrap"></td>
+        </tr>
+    </tbody>
+    </table>
 
-
-
-<h1>Files</h1>
-<table>
-<thead>
-    <tr>
-        <th>Filename</th>
-        <th>Size</th>
-        <th>md5</th>
-    </tr>
-</thead>
-<tbody>
-    <tr>
-        <td class="nowrap">
-            <a href='GRCh38_full_analysis_set_plus_decoy_hla.fa'>GRCh38_full_analysis_set_plus_decoy_hla.fa</a>
-        </td>
-        <td class="nowrap">2.71 MB</td>
-        <td class="nowrap">e00929f659f77c5d04d0a881cf6f3033</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='GRCh38_full_analysis_set_plus_decoy_hla.fa.fai'>GRCh38_full_analysis_set_plus_decoy_hla.fa.fai</a>
-        </td>
-        <td class="nowrap">50.0 B</td>
-        <td class="nowrap">2e3b716901f9da348a3ea6a424d54006</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
-        </td>
-        <td class="nowrap">339.0 B</td>
-        <td class="nowrap">b151ecdcef68d9014ab78823b5147711</td>
-    </tr>
-    <tr>
-        <td class="nowrap">
-            <a href='statistics/'>statistics/</a>
-        </td>
-        <td class="nowrap"></td>
-        <td class="nowrap"></td>
-    </tr>
-</tbody>
-</table>
-
-
-</body>
+    </body>
 </html>
