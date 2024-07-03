@@ -453,12 +453,16 @@ class TranscriptModel:
             write_record("UTR", utr.start, utr.stop)
             buffer.write(";\n")
 
-        start_codon = Region(self.chrom, self.cds[0], self.cds[0] + 2)
+        left = Region(self.chrom, self.cds[0], self.cds[0] + 2)
+        right = Region(self.chrom, self.cds[1] - 2, self.cds[1])
+
+        start_codon = left if self.strand == "+" else right
+        stop_codon = right if self.strand == "+" else left
+
         write_record("start_codon", start_codon.start, start_codon.stop)  # type: ignore
         buffer.write(f';exon_number "{get_exon_number_for(start_codon)}"')
         buffer.write(";\n")
 
-        stop_codon = Region(self.chrom, self.cds[1] - 2, self.cds[1])
         write_record("stop_codon", stop_codon.start, stop_codon.stop)  # type: ignore
         buffer.write(f';exon_number "{get_exon_number_for(stop_codon)}"')
         buffer.write(";\n")
