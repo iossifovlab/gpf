@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import gzip
 import logging
+import operator
 from collections import defaultdict
 from datetime import datetime
 from io import StringIO
@@ -434,13 +435,14 @@ class TranscriptModel:
             *,
             write_exon_number: bool = False,
         ) -> None:
-            line = f"{self.chrom}\t{src}\t{feature}\t{start}\t{stop}\t.\t{self.strand}\t.\t{str_attrs};"  # noqa: E501
+            line = (f"{self.chrom}\t{src}\t{feature}\t{start}"
+                    f"\t{stop}\t.\t{self.strand}\t.\t{str_attrs};")
             if write_exon_number:
                 line = f'{line}exon_number "{calc_exon_number(start, stop)}";'
             # the first tuple will be used for sorting
             # add stop as negative because we want it in descending order
-            record_buffer.append(
-                ((self.chrom, start, -stop, GTF_FEATURE_ORDER.index(feature)), line))  # noqa: E501
+            record_buffer.append(((self.chrom, start, -stop,
+                                   GTF_FEATURE_ORDER.index(feature)), line))
 
         write_record("transcript", self.tx[0], self.tx[1])
 
@@ -453,10 +455,13 @@ class TranscriptModel:
                 write_record("CDS", cds.start, cds.stop, write_exon_number=True)
             # handle last separately, because the GTF format
             # excludes the stop codon from the CDS regions
-            write_record("CDS",
-                cds_regions[-1].start,
-                max(cds_regions[-1].start, cds_regions[-1].stop - 2),
-                write_exon_number=True)
+            # also check if the adjustment we make leaves
+            # enough bases for it to have one codon at least
+            if ((cds_regions[-1].stop - 2) - cds_regions[-1].start) >= 2:
+                write_record("CDS",
+                    cds_regions[-1].start,
+                    cds_regions[-1].stop - 2,
+                    write_exon_number=True)
 
         for utr in self.utr3_regions() + self.utr5_regions():
             write_record("UTR", utr.start, utr.stop)
@@ -675,17 +680,19 @@ class GeneModels(
     def to_gtf(self) -> str:
         """Output a GTF format string representation."""
         if not self.gene_models:
+            logger.warning(
+                "Serializing empty (probably not loaded) gene models!")
             return ""
 
         record_buffer: list[tuple[tuple[str, int, int, int], str]] = []
         buffer = StringIO()
 
         buffer.write(
-f"""##description: auto-generated GTF-format dump for gene models "{self.resource.resource_id}"
-##provider: SEQPIPE
+f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
+##provider: GPF
 ##format: gtf
 ##date: {datetime.today().strftime('%Y-%m-%d')}
-""")  # noqa: E501
+""")
 
         for gene_name, transcripts in self.gene_models.items():
             t = transcripts[0]
@@ -712,7 +719,7 @@ f"""##description: auto-generated GTF-format dump for gene models "{self.resourc
             for transcript in transcripts:
                 record_buffer.extend(transcript.to_gtf())
 
-        record_buffer.sort(key=lambda r: r[0])
+        record_buffer.sort(key=operator.itemgetter(0))
         buffer.write("\n".join(rec[1] for rec in record_buffer))
 
         res = buffer.getvalue()
