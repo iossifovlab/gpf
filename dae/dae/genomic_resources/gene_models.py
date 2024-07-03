@@ -5,6 +5,8 @@ import copy
 import gzip
 import logging
 from collections import defaultdict
+from datetime import datetime
+from io import StringIO
 from typing import IO, Any, ClassVar, Optional, Protocol, cast
 
 import pandas as pd
@@ -403,6 +405,68 @@ class TranscriptModel:
                 return False
         return True
 
+    def to_gtf(self) -> str:
+        """Output a GTF format string representation."""
+        buffer = StringIO()
+
+        src = self.attributes.get("gene_source", ".")
+
+        attributes = dict(self.attributes)
+        if "gene_name" not in attributes:
+            attributes["gene_name"] = self.gene
+        if "gene_id" not in attributes:
+            attributes["gene_id"] = self.gene
+        str_attrs = ";".join(f'{k} "{v}"' for k, v in attributes.items())
+
+        def write_record(feature: str, start: int, stop: int) -> None:
+            buffer.write(f"{self.chrom}\t{src}\t")
+            buffer.write(f"{feature}\t{start}\t{stop}\t.\t{self.strand}\t.\t")
+            buffer.write(str_attrs)
+
+        write_record("transcript", self.tx[0], self.tx[1])
+        buffer.write(";\n")
+
+        def get_exon_number_for(region: Region) -> int:
+            for exon_number, exon in enumerate(self.exons, start=1):
+                exon_region = Region(self.chrom, exon.start, exon.stop)
+                if exon_region.contains(region):
+                    return exon_number
+            raise KeyError
+
+        for exon_number, exon in enumerate(self.exons, start=1):
+            write_record("exon", exon.start, exon.stop)
+            buffer.write(f';exon_number "{exon_number}"')
+            buffer.write(";\n")
+
+        cds_regions = self.cds_regions()
+        for cds in cds_regions[:-1]:  # all but last CDS region
+            write_record("CDS", cds.start, cds.stop)
+            buffer.write(f';exon_number "{get_exon_number_for(cds)}"')
+            buffer.write(";\n")
+        # handle last separately, because the GTF format
+        # excludes the stop codon from the CDS regions
+        write_record("CDS", cds_regions[-1].start, cds_regions[-1].stop - 2)
+        buffer.write(f';exon_number "{get_exon_number_for(cds_regions[-1])}"')
+        buffer.write(";\n")
+
+        for utr in self.utr3_regions() + self.utr5_regions():
+            write_record("UTR", utr.start, utr.stop)
+            buffer.write(";\n")
+
+        start_codon = Region(self.chrom, self.cds[0], self.cds[0] + 2)
+        write_record("start_codon", start_codon.start, start_codon.stop)  # type: ignore
+        buffer.write(f';exon_number "{get_exon_number_for(start_codon)}"')
+        buffer.write(";\n")
+
+        stop_codon = Region(self.chrom, self.cds[1] - 2, self.cds[1])
+        write_record("stop_codon", stop_codon.start, stop_codon.stop)  # type: ignore
+        buffer.write(f';exon_number "{get_exon_number_for(stop_codon)}"')
+        buffer.write(";\n")
+
+        res = buffer.getvalue()
+        buffer.close()
+        return res
+
 
 class GeneModelsParser(Protocol):
     """Gene models parser function type."""
@@ -598,6 +662,50 @@ class GeneModels(
             ]
             outfile.write("\t".join([str(x) if x else "" for x in columns]))
             outfile.write("\n")
+
+    def to_gtf(self) -> str:
+        """Output a GTF format string representation."""
+        if not self.gene_models:
+            return ""
+
+        buffer = StringIO()
+        tmpl = \
+            "gene\t{0}\t{1}\t.\t{2}\t.\t{3}"
+
+        buffer.write(f"""
+##description: auto-generated GTF-format dump for gene models "{self.resource.resource_id}"
+##provider: SEQPIPE
+##format: gtf
+##date: {datetime.today().strftime('%Y-%m-%d')}
+""")  # noqa: E501
+
+        for gene_name, transcripts in self.gene_models.items():
+            t = transcripts[0]
+
+            chrom = t.chrom
+            start = min(t.tx[0] for t in transcripts)
+            stop = max(t.tx[1] for t in transcripts)
+            strand = t.strand
+            gene_id = t.attributes.get("gene_id", gene_name)
+            version = t.attributes.get("gene_version", ".")
+            src = t.attributes.get("gene_source", ".")
+            biotype = t.attributes.get("gene_biotype", ".")
+            attrs = [f'gene_id "{gene_id}"',
+                     f'gene_version "{version}"',
+                     f'gene_name "{gene_name}"',
+                     f'gene_source "{src}"',
+                     f'gene_biotype "{biotype}"']
+
+            buffer.write(f"{chrom}\t{src}\t")
+            buffer.write(tmpl.format(start, stop, strand, ";".join(attrs)))
+            buffer.write(";\n")
+            for transcript in sorted(transcripts, key=lambda t: t.tx):
+                buffer.write(transcript.to_gtf())
+                buffer.write("\n")
+
+        res = buffer.getvalue()
+        buffer.close()
+        return res
 
     def save(self, output_filename: str, *, gzipped: bool = True) -> None:
         """Save gene models in a file in default file format."""
