@@ -425,7 +425,7 @@ class TranscriptModel:
                 if not (start > exon.stop or stop < exon.start):
                     return exon_number + 1 if self.strand == "+" \
                            else len(self.exons) - exon_number
-            raise KeyError
+            return 0
 
         def write_record(
             feature: str,
@@ -447,14 +447,15 @@ class TranscriptModel:
             write_record("exon", exon.start, exon.stop, write_exon_number=True)
 
         cds_regions = self.cds_regions()
-        for cds in cds_regions[:-1]:  # all but last CDS region
-            write_record("CDS", cds.start, cds.stop, write_exon_number=True)
-        # handle last separately, because the GTF format
-        # excludes the stop codon from the CDS regions
-        write_record("CDS",
-            cds_regions[-1].start,
-            cds_regions[-1].stop - 2,
-            write_exon_number=True)
+        if cds_regions:
+            for cds in cds_regions[:-1]:  # all but last CDS region
+                write_record("CDS", cds.start, cds.stop, write_exon_number=True)
+            # handle last separately, because the GTF format
+            # excludes the stop codon from the CDS regions
+            write_record("CDS",
+                cds_regions[-1].start,
+                cds_regions[-1].stop - 2,
+                write_exon_number=True)
 
         for utr in self.utr3_regions() + self.utr5_regions():
             write_record("UTR", utr.start, utr.stop)
@@ -680,8 +681,8 @@ class GeneModels(
         tmpl = \
             "gene\t{0}\t{1}\t.\t{2}\t.\t{3}"
 
-        buffer.write(f"""
-##description: auto-generated GTF-format dump for gene models "{self.resource.resource_id}"
+        buffer.write(
+f"""##description: auto-generated GTF-format dump for gene models "{self.resource.resource_id}"
 ##provider: SEQPIPE
 ##format: gtf
 ##date: {datetime.today().strftime('%Y-%m-%d')}
