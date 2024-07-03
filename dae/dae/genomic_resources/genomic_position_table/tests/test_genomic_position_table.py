@@ -2,8 +2,7 @@
 
 import pathlib
 import textwrap
-from collections.abc import Iterable
-from typing import Optional, cast
+from typing import cast
 
 import pysam
 import pytest
@@ -13,7 +12,7 @@ from dae.genomic_resources.genomic_position_table import (
     VCFGenomicPositionTable,
     build_genomic_position_table,
 )
-from dae.genomic_resources.genomic_position_table.line import LineBase, VCFLine
+from dae.genomic_resources.genomic_position_table.line import VCFLine
 from dae.genomic_resources.genomic_position_table.table import (
     GenomicPositionTable,
 )
@@ -26,17 +25,6 @@ from dae.genomic_resources.testing import (
     setup_tabix,
     setup_vcf,
 )
-
-
-def compare(
-    res: Iterable[Optional[LineBase]],
-    expected: list[tuple],
-) -> bool:
-    for idx, line in enumerate(res):
-        assert line is not None
-        if tuple(line.row()) != expected[idx]:
-            return False
-    return True
 
 
 @pytest.fixture()
@@ -136,22 +124,26 @@ def test_regions() -> None:
     assert res.config is not None
 
     with build_genomic_position_table(res, res.config["table"]) as mem_tab:
-        assert compare(mem_tab.get_all_records(), [
+        assert [r.row() for r in mem_tab.get_all_records()] == [
             ("1", "10", "12", "3.14"),
             ("1", "15", "20", "4.14"),
             ("1", "21", "30", "5.14"),
-        ])
+        ]
 
-        assert compare(mem_tab.get_records_in_region("1", 11, 11), [
+        assert [
+            r.row() for r in mem_tab.get_records_in_region("1", 11, 11)
+        ] == [
             ("1", "10", "12", "3.14"),
-        ])
+        ]
 
         assert not list(mem_tab.get_records_in_region("1", 13, 14))
 
-        assert compare(mem_tab.get_records_in_region("1", 18, 21), [
+        assert [
+            r.row() for r in mem_tab.get_records_in_region("1", 18, 21)
+        ] == [
             ("1", "15", "20", "4.14"),
             ("1", "21", "30", "5.14"),
-        ])
+        ]
 
 
 @pytest.mark.parametrize("jump_threshold", [
@@ -187,19 +179,19 @@ def test_regions_in_tabix(
     with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab
         cast(TabixGenomicPositionTable, tab).jump_threshold = jump_threshold
-        assert compare(tab.get_all_records(), [
+        assert [r.row() for r in tab.get_all_records()] == [
             ("1", "10", "12", "3.14"),
             ("1", "15", "20", "4.14"),
             ("1", "21", "30", "5.14"),
-        ])
-        assert compare(tab.get_records_in_region("1", 11, 11), [
+        ]
+        assert [r.row() for r in tab.get_records_in_region("1", 11, 11)] == [
             ("1", "10", "12", "3.14"),
-        ])
+        ]
         assert not list(tab.get_records_in_region("1", 13, 14))
-        assert compare(tab.get_records_in_region("1", 18, 21), [
+        assert [r.row() for r in tab.get_records_in_region("1", 18, 21)] == [
             ("1", "15", "20", "4.14"),
             ("1", "21", "30", "5.14"),
-        ])
+        ]
 
 
 def test_last_call_is_updated(tmp_path: pathlib.Path) -> None:
@@ -229,16 +221,20 @@ def test_last_call_is_updated(tmp_path: pathlib.Path) -> None:
         assert isinstance(tab_tab, TabixGenomicPositionTable)
         # pylint: disable=no-member
         assert tab_tab._last_call == ("", -1, -1)
-        assert compare(tab_tab.get_records_in_region("1", 11, 11), [
+        assert [
+            r.row() for r in tab_tab.get_records_in_region("1", 11, 11)
+        ] == [
             ("1", "10", "12", "3.14"),
-        ])
+        ]
         assert tab_tab._last_call == ("1", 11, 11)
         assert not list(tab_tab.get_records_in_region("1", 13, 14))
         assert tab_tab._last_call == ("1", 13, 14)
-        assert compare(tab_tab.get_records_in_region("1", 18, 21), [
+        assert [
+            r.row() for r in tab_tab.get_records_in_region("1", 18, 21)
+        ] == [
             ("1", "15", "20", "4.14"),
             ("1", "21", "30", "5.14"),
-        ])
+        ]
         assert tab_tab._last_call == ("1", 18, 21)
 
 
@@ -315,13 +311,15 @@ def test_chrom_mapping_file() -> None:
 
     with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.get_chromosomes() == ["gosho", "pesho"]
-        assert compare(tab.get_all_records(), [
+        assert [
+            r.row() for r in tab.get_all_records()
+        ] == [
             ("gosho", "10", "12", "3.14"),
             ("pesho", "11", "11", "4.14"),
-        ])
-        assert compare(tab.get_records_in_region("pesho"), [
+        ]
+        assert [r.row() for r in tab.get_records_in_region("pesho")] == [
             ("pesho", "11", "11", "4.14"),
-        ])
+        ]
 
 
 def test_chrom_mapping_file_with_tabix(tmp_path: pathlib.Path) -> None:
@@ -425,8 +423,9 @@ def test_column_with_name() -> None:
     assert res.config is not None
 
     with build_genomic_position_table(res, res.config["table"]) as tab:
-        assert compare(tab.get_records_in_region("1", 12, 12), [
-            ("1", "10", "12", "3.14")])
+        assert [r.row() for r in tab.get_records_in_region("1", 12, 12)] == [
+            ("1", "10", "12", "3.14"),
+        ]
 
 
 def test_column_with_index() -> None:
@@ -449,8 +448,9 @@ def test_column_with_index() -> None:
     assert res.config is not None
 
     with build_genomic_position_table(res, res.config["table"]) as tab:
-        assert compare(tab.get_records_in_region("1", 12, 12), [
-            ("1", "10", "12", "3.14")])
+        assert [r.row() for r in tab.get_records_in_region("1", 12, 12)] == [
+            ("1", "10", "12", "3.14"),
+        ]
 
 
 def test_no_header() -> None:
@@ -476,8 +476,9 @@ def test_no_header() -> None:
     assert res.config is not None
 
     with build_genomic_position_table(res, res.config["table"]) as tab:
-        assert compare(tab.get_records_in_region("1", 12, 12), [
-            ("1", "10", "12", "3.14")])
+        assert [r.row() for r in tab.get_records_in_region("1", 12, 12)] == [
+            ("1", "10", "12", "3.14"),
+        ]
 
 
 def test_header_in_config() -> None:
@@ -500,8 +501,9 @@ def test_header_in_config() -> None:
     assert res.config is not None
 
     with build_genomic_position_table(res, res.config["table"]) as tab:
-        assert compare(tab.get_records_in_region("1", 12, 12), [
-            ("1", "10", "12", "3.14")])
+        assert [r.row() for r in tab.get_records_in_region("1", 12, 12)] == [
+            ("1", "10", "12", "3.14"),
+        ]
 
 
 def test_space_in_mem_table() -> None:
@@ -521,8 +523,9 @@ def test_space_in_mem_table() -> None:
     assert res.config is not None
 
     with build_genomic_position_table(res, res.config["table"]) as tab:
-        assert compare(tab.get_records_in_region("1", 11, 11), [
-            ("1", "11", ".", "4.14")])
+        assert [r.row() for r in tab.get_records_in_region("1", 11, 11)] == [
+            ("1", "11", ".", "4.14"),
+        ]
 
 
 def test_text_table() -> None:
@@ -548,34 +551,36 @@ def test_text_table() -> None:
     assert res.config is not None
 
     with build_genomic_position_table(res, res.config["table"]) as table:
-        assert compare(table.get_all_records(), [
+        assert [r.row() for r in table.get_all_records()] == [
             ("1", "3", "3.14", "aa"),
             ("1", "4", "4.14", "bb"),
             ("1", "4", "5.14", "cc"),
             ("1", "5", "6.14", "dd"),
             ("1", "8", "7.14", "ee"),
             ("2", "3", "8.14", "ff"),
-        ])
-        assert compare(table.get_records_in_region("1", 4, 5), [
+        ]
+        assert [r.row() for r in table.get_records_in_region("1", 4, 5)] == [
             ("1", "4", "4.14", "bb"),
             ("1", "4", "5.14", "cc"),
             ("1", "5", "6.14", "dd"),
-        ])
-        assert compare(table.get_records_in_region("1", 4, None), [
+        ]
+        assert [r.row() for r in table.get_records_in_region("1", 4, None)] == [
             ("1", "4", "4.14", "bb"),
             ("1", "4", "5.14", "cc"),
             ("1", "5", "6.14", "dd"),
             ("1", "8", "7.14", "ee"),
-        ])
-        assert compare(table.get_records_in_region("1", None, 4), [
+        ]
+        assert [r.row() for r in table.get_records_in_region("1", None, 4)] == [
             ("1", "3", "3.14", "aa"),
             ("1", "4", "4.14", "bb"),
             ("1", "4", "5.14", "cc"),
-        ])
+        ]
         assert not list(table.get_records_in_region("1", 20, 25))
-        assert compare(table.get_records_in_region("2", None, None), [
+        assert [
+            r.row() for r in table.get_records_in_region("2", None, None)
+        ] == [
             ("2", "3", "8.14", "ff"),
-        ])
+        ]
         with pytest.raises(ValueError, match="The chromosome 3"):
             list(table.get_records_in_region("3"))
 
@@ -618,34 +623,36 @@ def test_tabix_table(tmp_path: pathlib.Path, jump_threshold: int) -> None:
 
     with build_genomic_position_table(res, res.config["table"]) as table:
         cast(TabixGenomicPositionTable, table).jump_threshold = jump_threshold
-        assert compare(table.get_all_records(), [
+        assert [r.row() for r in table.get_all_records()] == [
             ("1", "3", "3.14", "aa"),
             ("1", "4", "4.14", "bb"),
             ("1", "4", "5.14", "cc"),
             ("1", "5", "6.14", "dd"),
             ("1", "8", "7.14", "ee"),
             ("2", "3", "8.14", "ff"),
-        ])
-        assert compare(table.get_records_in_region("1", 4, 5), [
+        ]
+        assert [r.row() for r in table.get_records_in_region("1", 4, 5)] == [
             ("1", "4", "4.14", "bb"),
             ("1", "4", "5.14", "cc"),
             ("1", "5", "6.14", "dd"),
-        ])
-        assert compare(table.get_records_in_region("1", 4, None), [
+        ]
+        assert [r.row() for r in table.get_records_in_region("1", 4, None)] == [
             ("1", "4", "4.14", "bb"),
             ("1", "4", "5.14", "cc"),
             ("1", "5", "6.14", "dd"),
             ("1", "8", "7.14", "ee"),
-        ])
-        assert compare(table.get_records_in_region("1", None, 4), [
+        ]
+        assert [r.row() for r in table.get_records_in_region("1", None, 4)] == [
             ("1", "3", "3.14", "aa"),
             ("1", "4", "4.14", "bb"),
             ("1", "4", "5.14", "cc"),
-        ])
+        ]
         assert not list(table.get_records_in_region("1", 20, 25))
-        assert compare(table.get_records_in_region("2", None, None), [
+        assert [
+            r.row() for r in table.get_records_in_region("2", None, None)
+        ] == [
             ("2", "3", "8.14", "ff"),
-        ])
+        ]
         with pytest.raises(ValueError, match="The chromosome 3"):
             list(table.get_records_in_region("3"))
 
@@ -820,9 +827,9 @@ def test_tabix_table_multi_get_regions(
         pos_beg: int, pos_end: int, expected: list[tuple[str, ...]]) -> None:
     table = tabix_table_multiline
     assert not table._should_use_sequential_seek_forward("1", 1)
-    assert compare(
-        table.get_records_in_region("1", pos_beg, pos_end), expected,
-    )
+    assert [
+        r.row() for r in table.get_records_in_region("1", pos_beg, pos_end)
+    ] == expected
 
 
 def test_tabix_table_multi_get_regions_partial(
@@ -837,10 +844,11 @@ def test_tabix_table_multi_get_regions_partial(
         print(row)
         if index == 1:
             break
-    assert compare(
-        table.get_records_in_region("1", 3, 3),
-        [("1", "3", "4"), ("1", "3", "5")],
-    )
+    assert [
+        r.row() for r in table.get_records_in_region("1", 3, 3)
+    ] == [
+        ("1", "3", "4"), ("1", "3", "5"),
+    ]
 
 
 def test_tabix_middle_optimization(tmp_path: pathlib.Path) -> None:
@@ -975,20 +983,25 @@ def test_tabix_middle_optimization_regions_buggy_1(
     assert res.config is not None
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
-        assert compare(
-            table.get_records_in_region("chr1", 505637, 505637),
-            [("1", "505637", "505637", "0.009")],
-        )
+        assert [
+            r.row() for r in table.get_records_in_region("chr1", 505637, 505637)
+        ] == [
+            ("1", "505637", "505637", "0.009"),
+        ]
 
-        assert compare(
-            table.get_records_in_region("chr1", 505643, 505646),
-            [("1", "505643", "505643", "0.012"),
-             ("1", "505644", "505645", "0.006"),
-             ("1", "505646", "505646", "0.005")])
+        assert [
+            r.row() for r in table.get_records_in_region("chr1", 505643, 505646)
+        ] == [
+            ("1", "505643", "505643", "0.012"),
+            ("1", "505644", "505645", "0.006"),
+            ("1", "505646", "505646", "0.005"),
+        ]
 
-        assert compare(table.get_records_in_region("chr1", 505762, 505762), [
+        assert [
+            r.row() for r in table.get_records_in_region("chr1", 505762, 505762)
+        ] == [
             ("1", "505762", "505764", "0.002"),
-        ])
+        ]
 
 
 def test_buggy_fitcons_e67(tmp_path: pathlib.Path) -> None:
@@ -1016,15 +1029,15 @@ def test_buggy_fitcons_e67(tmp_path: pathlib.Path) -> None:
     assert res.config is not None
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
-        assert compare(
-            table.get_records_in_region("5", 180740299, 180740300),
-            [("5", "180739426", "180742735", "0.065122")],
-        )
+        assert [
+            r.row()
+            for r in table.get_records_in_region("5", 180740299, 180740300)
+        ] == [("5", "180739426", "180742735", "0.065122")]
 
-        assert compare(
-            table.get_records_in_region("5", 180740301, 180740301),
-            [("5", "180739426", "180742735", "0.065122")],
-        )
+        assert [
+            r.row()
+            for r in table.get_records_in_region("5", 180740301, 180740301)
+        ] == [("5", "180739426", "180742735", "0.065122")]
 
 
 @pytest.mark.parametrize("jump_threshold,expected", [
@@ -1061,14 +1074,14 @@ def test_tabix_jump_config(
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
         assert cast(TabixGenomicPositionTable, table).jump_threshold == \
             expected
-        assert compare(
-            table.get_records_in_region("5", 180740299, 180740300),
-            [("5", "180739426", "180742735", "0.065122")],
-        )
-        assert compare(
-            table.get_records_in_region("5", 180740301, 180740301),
-            [("5", "180739426", "180742735", "0.065122")],
-        )
+        assert [
+            r.row()
+            for r in table.get_records_in_region("5", 180740299, 180740300)
+        ] == [("5", "180739426", "180742735", "0.065122")]
+        assert [
+            r.row()
+            for r in table.get_records_in_region("5", 180740301, 180740301)
+        ] == [("5", "180739426", "180742735", "0.065122")]
 
 
 @pytest.mark.parametrize("buffer_maxsize,jump_threshold", [
@@ -1114,18 +1127,18 @@ def test_tabix_max_buffer(
         # pylint: disable=no-member
         assert buffer_maxsize == table.BUFFER_MAXSIZE
         assert table.jump_threshold == jump_threshold
-        assert compare(
-            table.get_records_in_region("5", 180740299, 180740300),
-            [("5", "180739426", "180742735", "0.065122")],
-        )
-        assert compare(
-            table.get_records_in_region("5", 180740301, 180740301),
-            [("5", "180739426", "180742735", "0.065122")],
-        )
-        assert compare(
-            table.get_records_in_region("5", 180740301, 180742735),
-            [("5", "180739426", "180742735", "0.065122")],
-        )
+        assert [
+            r.row()
+            for r in table.get_records_in_region("5", 180740299, 180740300)
+        ] == [("5", "180739426", "180742735", "0.065122")]
+        assert [
+            r.row()
+            for r in table.get_records_in_region("5", 180740301, 180740301)
+        ] == [("5", "180739426", "180742735", "0.065122")]
+        assert [
+            r.row()
+            for r in table.get_records_in_region("5", 180740301, 180742735)
+        ] == [("5", "180739426", "180742735", "0.065122")]
 
 
 def test_contig_length() -> None:
@@ -1255,7 +1268,7 @@ def test_vcf_get_info_fields(vcf_res: GenomicResource) -> None:
             {"A": 2, "B": 21, "C": ("c21",), "D": ("d21", "d22")},
             {"A": 3, "B": 31, "C": ("c21",), "D": ("d31", "d32")},
         ]
-        for expected, result in zip(expected_all, results):
+        for expected, result in zip(expected_all, results, strict=True):
             for score in "A", "B", "C", "D":
                 assert result.info is not None
                 assert result.info.get(score) == \
@@ -1688,22 +1701,33 @@ def test_tabix_table_zero_based(tmp_path: pathlib.Path) -> None:
     assert res.config is not None
 
     with build_genomic_position_table(res, res.config["table"]) as table:
-        assert compare(table.get_all_records(), [
-            ("1", "4", "3.14"),
-            ("1", "5", "4.14"),
-            ("1", "5", "5.14"),
-            ("1", "6", "6.14"),
-            ("1", "9", "7.14"),
-        ])
-        assert compare(table.get_records_in_region("1", 4, 5), [
-            ("1", "4", "3.14"),
-            ("1", "5", "4.14"),
-            ("1", "5", "5.14"),
-        ])
-        assert compare(table.get_records_in_region("1", 6, None), [
-            ("1", "6", "6.14"),
-            ("1", "9", "7.14"),
-        ])
-        assert compare(table.get_records_in_region("1", None, 4), [
-            ("1", "4", "3.14"),
-        ])
+        assert [
+            (r.chrom, r.pos_begin, r.pos_end, r.get(2))
+            for r in table.get_all_records()
+        ] == [
+            ("1", 4, 4, "3.14"),
+            ("1", 5, 5, "4.14"),
+            ("1", 5, 5, "5.14"),
+            ("1", 6, 6, "6.14"),
+            ("1", 9, 9, "7.14"),
+        ]
+        assert [
+            (r.chrom, r.pos_begin, r.pos_end, r.get(2))
+            for r in table.get_records_in_region("1", 4, 5)] == [
+            ("1", 4, 4, "3.14"),
+            ("1", 5, 5, "4.14"),
+            ("1", 5, 5, "5.14"),
+        ]
+        assert [
+            (r.chrom, r.pos_begin, r.pos_end, r.get(2))
+            for r in table.get_records_in_region("1", 6, None)
+        ] == [
+            ("1", 6, 6, "6.14"),
+            ("1", 9, 9, "7.14"),
+        ]
+        assert [
+            (r.chrom, r.pos_begin, r.pos_end, r.get(2))
+            for r in table.get_records_in_region("1", None, 4)
+        ] == [
+            ("1", 4, 4, "3.14"),
+        ]

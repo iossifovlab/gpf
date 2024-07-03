@@ -1,6 +1,6 @@
 import collections
 from collections.abc import Generator
-from typing import IO, ClassVar, Optional
+from typing import IO, ClassVar
 
 from dae.genomic_resources.repository import GenomicResource
 
@@ -25,8 +25,9 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         file_format: str,
     ):
         self.format = file_format
-        self.str_stream: Optional[IO] = None
+        self.str_stream: IO | None = None
         self.records_by_chr: dict[str, list[Line]] = {}
+        self.zero_based = table_definition.get("zero_based", False)
         super().__init__(genomic_resource, table_definition)
 
     def _make_line(self, data: tuple) -> Line:
@@ -76,9 +77,7 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
             if space_replacement:
                 columns = tuple("" if v == "EMPTY" else v for v in columns)
 
-            if self.definition.get("zero_based") is True:
-                assert self.pos_begin_key is not None
-                assert self.pos_end_key is not None
+            if self.zero_based:
                 assert self.header is not None
                 columns = zero_based_adjust(
                     columns, self.pos_begin_key,
@@ -120,8 +119,8 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
     def get_records_in_region(
         self,
         chrom: str,
-        pos_begin: Optional[int] = None,
-        pos_end: Optional[int] = None,
+        pos_begin: int | None = None,
+        pos_end: int | None = None,
     ) -> Generator[LineBase, None, None]:
         fch = self.chrom_map[chrom] if self.chrom_map else chrom
         if pos_begin is not None and self.definition.get("zero_based") is True:

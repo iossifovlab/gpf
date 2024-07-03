@@ -1,11 +1,11 @@
 import abc
 from collections import deque
 from collections.abc import Generator
-from typing import Any, Optional, Union
+from typing import Any
 
 import pysam
 
-Key = Union[str, int]
+Key = str | int
 
 
 class LineBase(abc.ABC):
@@ -17,8 +17,8 @@ class LineBase(abc.ABC):
         self.fchrom: str
         self.pos_begin: int
         self.pos_end: int
-        self.ref: Optional[str]
-        self.alt: Optional[str]
+        self.ref: str | None
+        self.alt: str | None
 
     @abc.abstractmethod
     def get(self, key: Key) -> Any:
@@ -42,8 +42,8 @@ class Line(LineBase):
         chrom_key: int = 0,
         pos_begin_key: int = 1,
         pos_end_key: int = 2,
-        ref_key: Optional[int] = None,
-        alt_key: Optional[int] = None,
+        ref_key: int | None = None,
+        alt_key: int | None = None,
     ):
         super().__init__()
 
@@ -53,16 +53,16 @@ class Line(LineBase):
         self.fchrom: str = self._data[chrom_key]
         self.pos_begin: int = int(self._data[pos_begin_key])
         self.pos_end: int = int(self._data[pos_end_key])
-        self.ref: Optional[str] = \
+        self.ref: str | None = \
             self._data[ref_key] if ref_key is not None else None
-        self.alt: Optional[str] = \
+        self.alt: str | None = \
             self._data[alt_key] if alt_key is not None else None
 
     def get(self, key: Key) -> str:
         return self._data[key]  # type: ignore
 
     def row(self) -> tuple:
-        return self._data
+        return tuple(self._data)
 
 
 class VCFLine(LineBase):
@@ -73,7 +73,7 @@ class VCFLine(LineBase):
     """
 
     def __init__(
-            self, raw_line: pysam.VariantRecord, allele_index: Optional[int]):
+            self, raw_line: pysam.VariantRecord, allele_index: int | None):
         super().__init__()
 
         self.chrom: str = raw_line.contig
@@ -83,11 +83,11 @@ class VCFLine(LineBase):
 
         assert raw_line.ref is not None
         self.ref: str = raw_line.ref
-        self.alt: Optional[str] = None
+        self.alt: str | None = None
         # Used to handle multiallelic variants in VCF files.
         # The allele index is None if the variant for this line
         # is missing its ALT, i.e. its value is '.'
-        self.allele_index: Optional[int] = allele_index
+        self.allele_index: int | None = allele_index
         if self.allele_index is not None:
             assert raw_line.alts is not None
             self.alt = raw_line.alts[self.allele_index]
@@ -140,7 +140,7 @@ class LineBuffer:
     def peek_last(self) -> LineBase:
         return self.deque[-1]
 
-    def region(self) -> tuple[Optional[str], Optional[int], Optional[int]]:
+    def region(self) -> tuple[str | None, int | None, int | None]:
         """Return region stored in the buffer."""
         if len(self.deque) == 0:
             return None, None, None

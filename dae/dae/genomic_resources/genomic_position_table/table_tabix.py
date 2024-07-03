@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from collections import Counter
 from collections.abc import Generator
-from typing import Any, Optional, Union
+from typing import Any
 
 import pysam
 
@@ -11,9 +11,9 @@ from dae.genomic_resources.repository import GenomicResource
 from dae.utils.regions import get_chromosome_length_tabix
 
 from .line import Line, LineBase, LineBuffer
-from .table import GenomicPositionTable, zero_based_adjust
+from .table import GenomicPositionTable, adjust_zero_based_line
 
-PysamFile = Union[pysam.TabixFile, pysam.VariantFile]
+PysamFile = pysam.TabixFile | pysam.VariantFile
 logger = logging.getLogger(__name__)
 
 
@@ -36,14 +36,14 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.jump_threshold = min(
             self.jump_threshold, self.BUFFER_MAXSIZE // 2)
 
-        self._last_call: tuple[str, int, Optional[int]] = "", -1, -1
+        self._last_call: tuple[str, int, int | None] = "", -1, -1
         self.buffer = LineBuffer()
         self.stats: Counter = Counter()
         # pylint: disable=no-member
-        self.pysam_file: Optional[PysamFile] = None
-        self.line_iterator: Optional[
-            Generator[Optional[LineBase], None, None]] = None
+        self.pysam_file: PysamFile | None = None
+        self.line_iterator: Generator[LineBase | None, None, None] | None = None
         self.header: Any
+        self.zero_based = self.definition.get("zero_based", False)
 
     def _load_header(self) -> tuple[str, ...]:
         header_lines = []
@@ -122,18 +122,13 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             return self.chrom_map[chrom]
         return chrom
 
-    def _map_result_chrom(self, chrom: str) -> Optional[str]:
+    def _map_result_chrom(self, chrom: str) -> str | None:
         """Transfroms chromosome from score file to the genome chromosomes."""
         if self.rev_chrom_map is None:
             return chrom
         return self.rev_chrom_map.get(chrom)
 
-    def _make_line(self, data: tuple) -> Optional[Line]:
-        if self.definition.get("zero_based") is True:
-            data = zero_based_adjust(
-                data, self.pos_begin_key,
-                self.pos_end_key, self.header,
-            )
+    def _make_line(self, data: tuple) -> Line | None:
         line: Line = Line(
             data,
             chrom_key=self.chrom_key,
@@ -142,11 +137,15 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             ref_key=self.ref_key,
             alt_key=self.alt_key,
         )
-        if not self.rev_chrom_map:
-            return line
         return self._transform_result(line)
 
-    def _transform_result(self, line: Line) -> Optional[Line]:
+    def _transform_result(self, line: Line) -> Line | None:
+        if self.zero_based:
+            line = adjust_zero_based_line(line)
+
+        if not self.rev_chrom_map:
+            return line
+
         rchrom = self._map_result_chrom(line.fchrom)
         if rchrom is None:
             return None
@@ -162,7 +161,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             yield line
 
     def _should_use_sequential_seek_forward(
-            self, chrom: Optional[str], pos: int) -> bool:
+            self, chrom: str | None, pos: int) -> bool:
         """Determine if sequentially seeking forward is appropriate.
 
         Determine whether to use sequential access or jump-ahead
@@ -201,7 +200,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         return bool(pos >= last.pos_end)
 
     def _gen_from_tabix(
-            self, chrom: str, pos: Optional[int], *_args: Any,
+            self, chrom: str, pos: int | None, *_args: Any,
             buffering: bool = True) -> Generator[LineBase, None, None]:
         try:
             assert self.line_iterator is not None
@@ -237,8 +236,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def get_records_in_region(
         self, chrom: str,
-        pos_begin: Optional[int] = None,
-        pos_end: Optional[int] = None,
+        pos_begin: int | None = None,
+        pos_end: int | None = None,
     ) -> Generator[LineBase, None, None]:
         self.stats["calls"] += 1
 
@@ -303,8 +302,9 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.buffer.prune(fchrom, pos_begin)
 
     def get_line_iterator(
-        self, chrom: Optional[str] = None, pos_begin: Optional[int] = None,
-    ) -> Generator[Optional[LineBase], None, None]:
+        self, chrom: str | None = None,
+        pos_begin: int | None = None,
+    ) -> Generator[LineBase | None, None, None]:
         """Extract raw lines and wrap them in our Line adapter."""
         assert isinstance(self.pysam_file, pysam.TabixFile)
 

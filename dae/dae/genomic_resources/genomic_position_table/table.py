@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from collections.abc import Generator
 from types import TracebackType
-from typing import Optional, cast
+from typing import cast
 
 from box import Box
 
@@ -26,17 +26,17 @@ class GenomicPositionTable(abc.ABC):
         self.genomic_resource = genomic_resource
 
         self.definition = Box(table_definition)
-        self.chrom_map: Optional[dict[str, str]] = None
-        self.chrom_order: Optional[list[str]] = None
-        self.rev_chrom_map: Optional[dict[str, str]] = None
+        self.chrom_map: dict[str, str] | None = None
+        self.chrom_order: list[str] | None = None
+        self.rev_chrom_map: dict[str, str] | None = None
 
         self.chrom_key: int
         self.pos_begin_key: int
         self.pos_end_key: int
-        self.ref_key: Optional[int] = None
-        self.alt_key: Optional[int] = None
+        self.ref_key: int | None = None
+        self.alt_key: int | None = None
 
-        self.header: Optional[tuple] = None
+        self.header: tuple | None = None
 
         self.header_mode = self.definition.get("header_mode", "file")
         if self.header_mode == "list":
@@ -96,12 +96,13 @@ class GenomicPositionTable(abc.ABC):
                     pref = mapping.add_prefix
                     new_chromosomes = [
                         f"{pref}{chrom}" for chrom in new_chromosomes]
-                self.chrom_map = dict(zip(new_chromosomes, chromosomes))
+                self.chrom_map = dict(
+                    zip(new_chromosomes, chromosomes, strict=True))
                 self.chrom_order = new_chromosomes
             self.rev_chrom_map = {
                 fch: ch for ch, fch in self.chrom_map.items()}
 
-    def get_column_key(self, col: str) -> Optional[int]:
+    def get_column_key(self, col: str) -> int | None:
         """Find the index of a column in the table."""
         if col in self.definition:
             if "index" in self.definition[col]:
@@ -141,7 +142,7 @@ class GenomicPositionTable(abc.ABC):
     def __exit__(
             self,
             exc_type: type[BaseException] | None,
-            exc_value: Optional[BaseException],
+            exc_value: BaseException | None,
             exc_tb: TracebackType | None) -> None:
         self.close()
 
@@ -160,8 +161,8 @@ class GenomicPositionTable(abc.ABC):
     @abc.abstractmethod
     def get_records_in_region(
         self, chrom: str,
-        pos_begin: Optional[int] = None,
-        pos_end: Optional[int] = None,
+        pos_begin: int | None = None,
+        pos_end: int | None = None,
     ) -> Generator[LineBase, None, None]:
         """Return an iterable over the records in the specified range.
 
@@ -178,7 +179,7 @@ class GenomicPositionTable(abc.ABC):
         assert self.chrom_order is not None
         return self.chrom_order
 
-    def map_chromosome(self, chromosome: str) -> Optional[str]:
+    def map_chromosome(self, chromosome: str) -> str | None:
         """Map a chromosome from reference genome to file chromosome."""
         if self.rev_chrom_map is not None:
             if chromosome in self.rev_chrom_map:
@@ -187,7 +188,7 @@ class GenomicPositionTable(abc.ABC):
 
         return chromosome
 
-    def unmap_chromosome(self, chromosome: str) -> Optional[str]:
+    def unmap_chromosome(self, chromosome: str) -> str | None:
         """Map a chromosome file contigs to reference genome chromosome."""
         if self.chrom_map is not None:
             if chromosome in self.chrom_map:
@@ -237,3 +238,12 @@ def zero_based_adjust(
     if rec[pos_end_key] < rec[pos_begin_key]:
         rec[pos_end_key] += 1
     return tuple(map(str, rec))
+
+
+def adjust_zero_based_line(line: Line) -> Line:
+    """Adjust a zero-based line."""
+    if line.pos_begin == line.pos_end:
+        line.pos_end += 1
+    line.pos_begin += 1
+
+    return line
