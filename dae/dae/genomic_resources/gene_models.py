@@ -407,7 +407,9 @@ class TranscriptModel:
 
     def to_gtf(self) -> str:
         """Output a GTF format string representation."""
-        buffer = StringIO()
+        feature_order = ("gene", "transcript", "exon", "CDS",
+                         "start_codon", "stop_codon", "UTR")
+        record_buffer: list[tuple[tuple[int, int, int], str]] = []
 
         src = self.attributes.get("gene_source", ".")
 
@@ -431,12 +433,13 @@ class TranscriptModel:
             *,
             write_exon_number: bool = False,
         ) -> None:
-            buffer.write(f"{self.chrom}\t{src}\t")
-            buffer.write(f"{feature}\t{start}\t{stop}\t.\t{self.strand}\t.\t")
-            buffer.write(str_attrs)
+            line = f"{self.chrom}\t{src}\t{feature}\t{start}\t{stop}\t.\t{self.strand}\t.\t{str_attrs};"  # noqa: E501
             if write_exon_number:
-                buffer.write(f';exon_number "{calc_exon_number(start, stop)}"')
-            buffer.write(";\n")
+                line = f'{line}exon_number "{calc_exon_number(start, stop)}";'
+            # the first tuple will be used for sorting
+            # add stop as negative because we want it in descending order
+            record_buffer.append(
+                ((start, -stop, feature_order.index(feature)), line))
 
         write_record("transcript", self.tx[0], self.tx[1])
 
@@ -469,9 +472,8 @@ class TranscriptModel:
                       stop_codon.start, stop_codon.stop,  # type: ignore
                       write_exon_number=True)
 
-        res = buffer.getvalue()
-        buffer.close()
-        return res
+        record_buffer.sort(key=lambda r: r[0])
+        return "\n".join(rec[1] for rec in record_buffer)
 
 
 class GeneModelsParser(Protocol):
