@@ -21,6 +21,9 @@ from dae.utils.regions import BedRegion, Region, collapse
 
 logger = logging.getLogger(__name__)
 
+GTF_FEATURE_ORDER = ("gene", "transcript", "exon", "CDS",
+                     "start_codon", "stop_codon", "UTR")
+
 
 class Exon:
     """Provides exon model."""
@@ -405,11 +408,9 @@ class TranscriptModel:
                 return False
         return True
 
-    def to_gtf(self) -> str:
+    def to_gtf(self) -> list[tuple[tuple[str, int, int, int], str]]:
         """Output a GTF format string representation."""
-        feature_order = ("gene", "transcript", "exon", "CDS",
-                         "start_codon", "stop_codon", "UTR")
-        record_buffer: list[tuple[tuple[int, int, int], str]] = []
+        record_buffer: list[tuple[tuple[str, int, int, int], str]] = []
 
         src = self.attributes.get("gene_source", ".")
 
@@ -439,7 +440,7 @@ class TranscriptModel:
             # the first tuple will be used for sorting
             # add stop as negative because we want it in descending order
             record_buffer.append(
-                ((start, -stop, feature_order.index(feature)), line))
+                ((self.chrom, start, -stop, GTF_FEATURE_ORDER.index(feature)), line))  # noqa: E501
 
         write_record("transcript", self.tx[0], self.tx[1])
 
@@ -454,7 +455,7 @@ class TranscriptModel:
             # excludes the stop codon from the CDS regions
             write_record("CDS",
                 cds_regions[-1].start,
-                cds_regions[-1].stop - 2,
+                max(cds_regions[-1].start, cds_regions[-1].stop - 2),
                 write_exon_number=True)
 
         for utr in self.utr3_regions() + self.utr5_regions():
@@ -473,8 +474,7 @@ class TranscriptModel:
                       stop_codon.start, stop_codon.stop,  # type: ignore
                       write_exon_number=True)
 
-        record_buffer.sort(key=lambda r: r[0])
-        return "\n".join(rec[1] for rec in record_buffer)
+        return record_buffer
 
 
 class GeneModelsParser(Protocol):
@@ -677,9 +677,8 @@ class GeneModels(
         if not self.gene_models:
             return ""
 
+        record_buffer: list[tuple[tuple[str, int, int, int], str]] = []
         buffer = StringIO()
-        tmpl = \
-            "gene\t{0}\t{1}\t.\t{2}\t.\t{3}"
 
         buffer.write(
 f"""##description: auto-generated GTF-format dump for gene models "{self.resource.resource_id}"
@@ -699,21 +698,26 @@ f"""##description: auto-generated GTF-format dump for gene models "{self.resourc
             version = t.attributes.get("gene_version", ".")
             src = t.attributes.get("gene_source", ".")
             biotype = t.attributes.get("gene_biotype", ".")
-            attrs = [f'gene_id "{gene_id}"',
-                     f'gene_version "{version}"',
-                     f'gene_name "{gene_name}"',
-                     f'gene_source "{src}"',
-                     f'gene_biotype "{biotype}"']
+            attrs = ";".join([
+                f'gene_id "{gene_id}"',
+                f'gene_version "{version}"',
+                f'gene_name "{gene_name}"',
+                f'gene_source "{src}"',
+                f'gene_biotype "{biotype}"',
+            ])
 
-            buffer.write(f"{chrom}\t{src}\t")
-            buffer.write(tmpl.format(start, stop, strand, ";".join(attrs)))
-            buffer.write(";\n")
+            gene_rec = f"{chrom}\t{src}\tgene\t{start}\t{stop}\t.\t{strand}\t.\t{attrs};"  # noqa: E501
+            record_buffer.append(
+                ((chrom, start, -stop, GTF_FEATURE_ORDER.index("gene")), gene_rec))  # noqa: E501
             for transcript in transcripts:
-                buffer.write(transcript.to_gtf())
-                buffer.write("\n")
+                record_buffer.extend(transcript.to_gtf())
+
+        record_buffer.sort(key=lambda r: r[0])
+        buffer.write("\n".join(rec[1] for rec in record_buffer))
 
         res = buffer.getvalue()
         buffer.close()
+
         return res
 
     def save(self, output_filename: str, *, gzipped: bool = True) -> None:
