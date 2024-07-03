@@ -418,40 +418,43 @@ class TranscriptModel:
             attributes["gene_id"] = self.gene
         str_attrs = ";".join(f'{k} "{v}"' for k, v in attributes.items())
 
-        def write_record(feature: str, start: int, stop: int) -> None:
+        def calc_exon_number(start: int, stop: int) -> int:
+            for exon_number, exon in enumerate(self.exons):
+                if not (start > exon.stop or stop < exon.start):
+                    return exon_number + 1 if self.strand == "+" \
+                           else len(self.exons) - exon_number
+            raise KeyError
+
+        def write_record(
+            feature: str,
+            start: int, stop: int,
+            *,
+            write_exon_number: bool = False,
+        ) -> None:
             buffer.write(f"{self.chrom}\t{src}\t")
             buffer.write(f"{feature}\t{start}\t{stop}\t.\t{self.strand}\t.\t")
             buffer.write(str_attrs)
+            if write_exon_number:
+                buffer.write(f';exon_number "{calc_exon_number(start, stop)}"')
+            buffer.write(";\n")
 
         write_record("transcript", self.tx[0], self.tx[1])
-        buffer.write(";\n")
 
-        def get_exon_number_for(region: Region) -> int:
-            for exon_number, exon in enumerate(self.exons, start=1):
-                exon_region = Region(self.chrom, exon.start, exon.stop)
-                if exon_region.contains(region):
-                    return exon_number
-            raise KeyError
-
-        for exon_number, exon in enumerate(self.exons, start=1):
-            write_record("exon", exon.start, exon.stop)
-            buffer.write(f';exon_number "{exon_number}"')
-            buffer.write(";\n")
+        for exon in self.exons:
+            write_record("exon", exon.start, exon.stop, write_exon_number=True)
 
         cds_regions = self.cds_regions()
         for cds in cds_regions[:-1]:  # all but last CDS region
-            write_record("CDS", cds.start, cds.stop)
-            buffer.write(f';exon_number "{get_exon_number_for(cds)}"')
-            buffer.write(";\n")
+            write_record("CDS", cds.start, cds.stop, write_exon_number=True)
         # handle last separately, because the GTF format
         # excludes the stop codon from the CDS regions
-        write_record("CDS", cds_regions[-1].start, cds_regions[-1].stop - 2)
-        buffer.write(f';exon_number "{get_exon_number_for(cds_regions[-1])}"')
-        buffer.write(";\n")
+        write_record("CDS",
+            cds_regions[-1].start,
+            cds_regions[-1].stop - 2,
+            write_exon_number=True)
 
         for utr in self.utr3_regions() + self.utr5_regions():
             write_record("UTR", utr.start, utr.stop)
-            buffer.write(";\n")
 
         left = Region(self.chrom, self.cds[0], self.cds[0] + 2)
         right = Region(self.chrom, self.cds[1] - 2, self.cds[1])
@@ -459,13 +462,12 @@ class TranscriptModel:
         start_codon = left if self.strand == "+" else right
         stop_codon = right if self.strand == "+" else left
 
-        write_record("start_codon", start_codon.start, start_codon.stop)  # type: ignore
-        buffer.write(f';exon_number "{get_exon_number_for(start_codon)}"')
-        buffer.write(";\n")
-
-        write_record("stop_codon", stop_codon.start, stop_codon.stop)  # type: ignore
-        buffer.write(f';exon_number "{get_exon_number_for(stop_codon)}"')
-        buffer.write(";\n")
+        write_record("start_codon",
+                     start_codon.start, start_codon.stop,  # type: ignore
+                     write_exon_number=True)
+        write_record("stop_codon",
+                      stop_codon.start, stop_codon.stop,  # type: ignore
+                      write_exon_number=True)
 
         res = buffer.getvalue()
         buffer.close()
@@ -703,7 +705,7 @@ class GeneModels(
             buffer.write(f"{chrom}\t{src}\t")
             buffer.write(tmpl.format(start, stop, strand, ";".join(attrs)))
             buffer.write(";\n")
-            for transcript in sorted(transcripts, key=lambda t: t.tx):
+            for transcript in transcripts:
                 buffer.write(transcript.to_gtf())
                 buffer.write("\n")
 

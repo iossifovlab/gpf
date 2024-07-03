@@ -527,6 +527,7 @@ def test_save_as_gtf_complex(ensembl_gtf_example_shh: GeneModels) -> None:
     reference = ensembl_gtf_example_shh
     reference.load()
     serialized = reference.to_gtf()
+    print(serialized)
 
     assert "start_codon\t155812120\t155812122" in serialized
     assert "stop_codon\t155802900\t155802902" in serialized
