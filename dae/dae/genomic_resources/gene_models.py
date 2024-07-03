@@ -4,7 +4,10 @@ from __future__ import annotations
 import copy
 import gzip
 import logging
+import operator
 from collections import defaultdict
+from datetime import datetime
+from io import StringIO
 from typing import IO, Any, ClassVar, Optional, Protocol, cast
 
 import pandas as pd
@@ -18,6 +21,9 @@ from dae.genomic_resources.resource_implementation import (
 from dae.utils.regions import BedRegion, Region, collapse
 
 logger = logging.getLogger(__name__)
+
+GTF_FEATURE_ORDER = ("gene", "transcript", "exon", "CDS",
+                     "start_codon", "stop_codon", "UTR")
 
 
 class Exon:
@@ -403,6 +409,78 @@ class TranscriptModel:
                 return False
         return True
 
+    def to_gtf(self) -> list[tuple[tuple[str, int, int, int], str]]:
+        """Output a GTF format string representation."""
+        record_buffer: list[tuple[tuple[str, int, int, int], str]] = []
+
+        src = self.attributes.get("gene_source", ".")
+
+        attributes = dict(self.attributes)
+        if "gene_name" not in attributes:
+            attributes["gene_name"] = self.gene
+        if "gene_id" not in attributes:
+            attributes["gene_id"] = self.gene
+        str_attrs = ";".join(f'{k} "{v}"' for k, v in attributes.items())
+
+        def calc_exon_number(start: int, stop: int) -> int:
+            for exon_number, exon in enumerate(self.exons):
+                if not (start > exon.stop or stop < exon.start):
+                    return exon_number + 1 if self.strand == "+" \
+                           else len(self.exons) - exon_number
+            return 0
+
+        def write_record(
+            feature: str,
+            start: int, stop: int,
+            *,
+            write_exon_number: bool = False,
+        ) -> None:
+            line = (f"{self.chrom}\t{src}\t{feature}\t{start}"
+                    f"\t{stop}\t.\t{self.strand}\t.\t{str_attrs};")
+            if write_exon_number:
+                line = f'{line}exon_number "{calc_exon_number(start, stop)}";'
+            # the first tuple will be used for sorting
+            # add stop as negative because we want it in descending order
+            record_buffer.append(((self.chrom, start, -stop,
+                                   GTF_FEATURE_ORDER.index(feature)), line))
+
+        write_record("transcript", self.tx[0], self.tx[1])
+
+        for exon in self.exons:
+            write_record("exon", exon.start, exon.stop, write_exon_number=True)
+
+        cds_regions = self.cds_regions()
+        if cds_regions:
+            for cds in cds_regions[:-1]:  # all but last CDS region
+                write_record("CDS", cds.start, cds.stop, write_exon_number=True)
+            # handle last separately, because the GTF format
+            # excludes the stop codon from the CDS regions
+            # also check if the adjustment we make leaves
+            # enough bases for it to have one codon at least
+            if ((cds_regions[-1].stop - 2) - cds_regions[-1].start) >= 2:
+                write_record("CDS",
+                    cds_regions[-1].start,
+                    cds_regions[-1].stop - 2,
+                    write_exon_number=True)
+
+        for utr in self.utr3_regions() + self.utr5_regions():
+            write_record("UTR", utr.start, utr.stop)
+
+        left = Region(self.chrom, self.cds[0], self.cds[0] + 2)
+        right = Region(self.chrom, self.cds[1] - 2, self.cds[1])
+
+        start_codon = left if self.strand == "+" else right
+        stop_codon = right if self.strand == "+" else left
+
+        write_record("start_codon",
+                     start_codon.start, start_codon.stop,  # type: ignore
+                     write_exon_number=True)
+        write_record("stop_codon",
+                      stop_codon.start, stop_codon.stop,  # type: ignore
+                      write_exon_number=True)
+
+        return record_buffer
+
 
 class GeneModelsParser(Protocol):
     """Gene models parser function type."""
@@ -598,6 +676,56 @@ class GeneModels(
             ]
             outfile.write("\t".join([str(x) if x else "" for x in columns]))
             outfile.write("\n")
+
+    def to_gtf(self) -> str:
+        """Output a GTF format string representation."""
+        if not self.gene_models:
+            logger.warning(
+                "Serializing empty (probably not loaded) gene models!")
+            return ""
+
+        record_buffer: list[tuple[tuple[str, int, int, int], str]] = []
+        buffer = StringIO()
+
+        buffer.write(
+f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
+##provider: GPF
+##format: gtf
+##date: {datetime.today().strftime('%Y-%m-%d')}
+""")
+
+        for gene_name, transcripts in self.gene_models.items():
+            t = transcripts[0]
+
+            chrom = t.chrom
+            start = min(t.tx[0] for t in transcripts)
+            stop = max(t.tx[1] for t in transcripts)
+            strand = t.strand
+            gene_id = t.attributes.get("gene_id", gene_name)
+            version = t.attributes.get("gene_version", ".")
+            src = t.attributes.get("gene_source", ".")
+            biotype = t.attributes.get("gene_biotype", ".")
+            attrs = ";".join([
+                f'gene_id "{gene_id}"',
+                f'gene_version "{version}"',
+                f'gene_name "{gene_name}"',
+                f'gene_source "{src}"',
+                f'gene_biotype "{biotype}"',
+            ])
+
+            gene_rec = f"{chrom}\t{src}\tgene\t{start}\t{stop}\t.\t{strand}\t.\t{attrs};"  # noqa: E501
+            record_buffer.append(
+                ((chrom, start, -stop, GTF_FEATURE_ORDER.index("gene")), gene_rec))  # noqa: E501
+            for transcript in transcripts:
+                record_buffer.extend(transcript.to_gtf())
+
+        record_buffer.sort(key=operator.itemgetter(0))
+        buffer.write("\n".join(rec[1] for rec in record_buffer))
+
+        res = buffer.getvalue()
+        buffer.close()
+
+        return res
 
     def save(self, output_filename: str, *, gzipped: bool = True) -> None:
         """Save gene models in a file in default file format."""
