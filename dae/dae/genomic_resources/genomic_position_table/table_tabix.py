@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections import Counter
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from typing import Any
 
 import pysam
@@ -45,6 +45,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         self.header: Any
         self.zero_based = self.definition.get("zero_based", False)
 
+        self._transform_result: Callable[[Line], Line | None]
+
     def _load_header(self) -> tuple[str, ...]:
         header_lines = []
         with self.genomic_resource.open_raw_file(
@@ -64,6 +66,15 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             self.header = self._load_header()
         self._set_core_column_keys()
         self._build_chrom_mapping()
+        if self.rev_chrom_map is not None and self.zero_based:
+            self._transform_result = \
+                self._transform_result_zero_based_and_chrom_mapping
+        elif self.rev_chrom_map is not None:
+            self._transform_result = self._transform_result_chrom_mapping
+        elif self.zero_based:
+            self._transform_result = self._transform_result_zero_based
+        else:
+            self._transform_result = self._transform_result_identity
         return self
 
     def close(self) -> None:
@@ -124,8 +135,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
     def _map_result_chrom(self, chrom: str) -> str | None:
         """Transfroms chromosome from score file to the genome chromosomes."""
-        if self.rev_chrom_map is None:
-            return chrom
+        assert self.rev_chrom_map is not None
         return self.rev_chrom_map.get(chrom)
 
     def _make_line(self, data: tuple) -> Line | None:
@@ -139,18 +149,24 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         )
         return self._transform_result(line)
 
-    def _transform_result(self, line: Line) -> Line | None:
-        if self.zero_based:
-            line = adjust_zero_based_line(line)
+    def _transform_result_zero_based(self, line: Line) -> Line:
+        return adjust_zero_based_line(line)
 
-        if not self.rev_chrom_map:
-            return line
-
+    def _transform_result_chrom_mapping(self, line: Line) -> Line | None:
         rchrom = self._map_result_chrom(line.fchrom)
         if rchrom is None:
             return None
 
         line.chrom = rchrom
+        return line
+
+    def _transform_result_zero_based_and_chrom_mapping(
+        self, line: Line,
+    ) -> Line | None:
+        return self._transform_result_chrom_mapping(
+            self._transform_result_zero_based(line))
+
+    def _transform_result_identity(self, line: Line) -> Line | None:
         return line
 
     def get_all_records(self) -> Generator[LineBase, None, None]:
