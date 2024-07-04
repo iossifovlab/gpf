@@ -25,7 +25,6 @@ import {
   MatAutocomplete,
   MatAutocompleteOrigin,
   MatAutocompleteTrigger } from '@angular/material/autocomplete';
-import { Dataset } from 'app/datasets/datasets';
 import { DatasetModel } from 'app/datasets/datasets.state';
 
 jest.mock('../utils/svg-drawing');
@@ -126,8 +125,7 @@ describe('GeneBrowserComponent', () => {
     jest.spyOn(component['queryService'], 'getSummaryVariants');
 
     // eslint-disable-next-line max-len
-    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null);
-    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
 
     component['store'] = {
       selectOnce: () => of(selectedDatasetMockModel)

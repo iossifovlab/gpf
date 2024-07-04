@@ -180,8 +180,7 @@ describe('GenotypeBrowserComponent', () => {
     loadingService = TestBed.inject(FullscreenLoadingService);
 
     // eslint-disable-next-line max-len
-    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, genotypeMock, null, [], null, null, '', null);
-    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
 
     component['store'] = {
       selectOnce: () => of(selectedDatasetMockModel)
@@ -204,6 +203,9 @@ describe('GenotypeBrowserComponent', () => {
         submit: jest.fn()
       }
     };
+    // eslint-disable-next-line max-len
+    component.selectedDataset = new Dataset('datasetId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, genotypeMock, null, [], null, null, '', null);
+
     component.onSubmit(mockEvent);
     expect(mockEvent.target.queryData.value).toStrictEqual(JSON.stringify({
       datasetId: component.selectedDataset.id,

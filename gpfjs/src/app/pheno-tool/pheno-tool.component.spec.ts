@@ -21,6 +21,7 @@ import { HttpResponse } from '@angular/common/http';
 import { PhenoToolResults } from './pheno-tool-results';
 import { Dataset, GenotypeBrowser, PersonFilter } from 'app/datasets/datasets';
 import { DatasetModel, DatasetState } from 'app/datasets/datasets.state';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 class PhenoToolServiceMock {
   public getPhenoToolResults(): Observable<PhenoToolResults> {
@@ -32,11 +33,21 @@ class PhenoToolServiceMock {
   }
 }
 
+class MockDatasetsService {
+  public getDataset(datasetId: string): Observable<Dataset> {
+    // eslint-disable-next-line max-len
+    const genotypeBrowserConfigMock = new GenotypeBrowser(true, true, true, true, true, true, true, true, true, new Array<object>(), new Array<PersonFilter>(), new Array<PersonFilter>(), [], [], [], [], 0);
+    // eslint-disable-next-line max-len
+    return of(new Dataset(datasetId, 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, genotypeBrowserConfigMock, null, [], null, null, '', null));
+  }
+}
+
 describe('PhenoToolComponent', () => {
   let component: PhenoToolComponent;
   let fixture: ComponentFixture<PhenoToolComponent>;
   let store: Store;
   const phenoToolMockService = new PhenoToolServiceMock();
+  const mockDatasetsService = new MockDatasetsService();
 
   beforeEach(waitForAsync(() => {
     const configMock = { baseUrl: 'testUrl/' };
@@ -51,6 +62,7 @@ describe('PhenoToolComponent', () => {
         {provide: ActivatedRoute, useValue: new ActivatedRoute()},
         {provide: ConfigService, useValue: configMock},
         {provide: PhenoToolService, useValue: phenoToolMockService},
+        { provide: DatasetsService, useValue: mockDatasetsService },
         UsersService,
         FullscreenLoadingService,
         MeasuresService,
@@ -63,15 +75,13 @@ describe('PhenoToolComponent', () => {
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-
+    
     fixture = TestBed.createComponent(PhenoToolComponent);
     component = fixture.componentInstance;
-
+    
     // eslint-disable-next-line max-len
-    const genotypeBrowserConfigMock = new GenotypeBrowser(true, true, true, true, true, true, true, true, true, new Array<object>(), new Array<PersonFilter>(), new Array<PersonFilter>(), [], [], [], [], 0);
     // eslint-disable-next-line max-len
-    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], 'phenotypeData', true, false, true, true, null, genotypeBrowserConfigMock, null, [], null, null, '', null);
-    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
 
     store = TestBed.inject(Store);
     jest.spyOn(store, 'selectOnce').mockReturnValue(of(selectedDatasetMockModel));
