@@ -110,6 +110,8 @@ class GeneScoreImplementation(
         ) as outfile:
             scores_db = GeneScoresDb([gene_score])
             score_desc = scores_db.get_score_desc(score_id)
+            small_values_desc = None
+            large_values_desc = None
             if score_desc is not None:
                 small_values_desc = score_desc.small_values_desc
                 large_values_desc = score_desc.large_values_desc
