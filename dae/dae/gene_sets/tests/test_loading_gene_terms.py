@@ -91,3 +91,27 @@ def test_load_gmt_file(fixture_filename: Callable[[str], str]) -> None:
             "DCXR",
           "UGT1A9",
         }
+
+
+def test_load_gene_sets_directory(
+    fixture_filename: Callable[[str], str],
+) -> None:
+
+    gene_terms = load_gene_terms(
+        fixture_filename("GeneSets"))
+    assert gene_terms is not None
+
+    assert len(gene_terms.t2g["Main Candidates"]) == 9
+    assert set(gene_terms.t2g["Main Candidates"].keys()) == {
+        "POGZ",
+        "CHD8",
+        "ANK2",
+        "FAT4",
+        "NBEA",
+        "CELSR1",
+        "USP7",
+        "GOLGA5",
+        "PCSK2",
+    }
+    assert gene_terms.t_desc["Main Candidates"] == \
+        "Description of gene set Main Candidates"
