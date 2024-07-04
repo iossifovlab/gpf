@@ -61,7 +61,7 @@ class SqlQueryBuilder:
 
     def __init__(
         self,
-        db_layout: Db2Layout,
+        db_layout: Db2Layout, *,
         pedigree_schema: dict[str, str],
         summary_schema: dict[str, str],
         family_schema: dict[str, str],

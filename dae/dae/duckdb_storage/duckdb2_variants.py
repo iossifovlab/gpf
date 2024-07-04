@@ -99,8 +99,8 @@ class DuckDb2Variants(QueryVariantsBase):
         self,
         connection: duckdb.DuckDBPyConnection,
         db2_layout: Db2Layout,
-        gene_models: GeneModels | None = None,
-        reference_genome: ReferenceGenome | None = None,
+        gene_models: GeneModels,
+        reference_genome: ReferenceGenome,
     ) -> None:
         self.connection = connection
         assert self.connection is not None
@@ -116,13 +116,13 @@ class DuckDb2Variants(QueryVariantsBase):
         self.families = self._fetch_families()
         self.query_builder = SqlQueryBuilder(
             self.layout,
-            pedigree_schema,
-            summary_schema,
-            family_schema,
-            partition_description,
-            self.families,
-            self.gene_models,
-            self.reference_genome,
+            pedigree_schema=pedigree_schema,
+            summary_schema=summary_schema,
+            family_schema=family_schema,
+            partition_descriptor=partition_description,
+            families=self.families,
+            gene_models=self.gene_models,
+            reference_genome=self.reference_genome,
         )
         variants_data_schema = self._fetch_variants_data_schema()
         self.serializer = VariantsDataSerializer.build_serializer(

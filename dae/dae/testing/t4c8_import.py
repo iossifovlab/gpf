@@ -12,7 +12,7 @@ from dae.testing import setup_gene_models, setup_genome, setup_gpf_instance
 
 
 def t4c8_genome(root_path: pathlib.Path) -> ReferenceGenome:
-    genome = setup_genome(
+    return setup_genome(
         root_path / "t4c8_genome" / "chrAll.fa",
         """
            >chr1
@@ -40,7 +40,6 @@ def t4c8_genome(root_path: pathlib.Path) -> ReferenceGenome:
         #  5 6  6  6  67             8            9       0    1
         #  8 0  3  6  90             3            6       4    0
     )
-    return genome
 
 
 # This content follows the 'refflat' gene model format
@@ -54,10 +53,9 @@ c8        tx1  chr1  -      100     204   112      169    3         100,145,195 
 
 
 def t4c8_genes(root_path: pathlib.Path) -> GeneModels:
-    genes = setup_gene_models(
+    return setup_gene_models(
         root_path / "t4c8_genes" / "genes.txt",
         GMM_CONTENT, fileformat="refflat")
-    return genes
 
 
 def t4c8_gpf(

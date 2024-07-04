@@ -7,6 +7,7 @@ from sqlglot.executor import execute
 from sqlglot.schema import ensure_schema
 
 from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.query_variants.sql.schema2.sql_query_builder import (
@@ -15,7 +16,7 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
     SqlQueryBuilder,
 )
 from dae.testing import setup_pedigree
-from dae.testing.t4c8_import import t4c8_genes
+from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance, Role, Sex
 from dae.variants.core import Allele
@@ -103,6 +104,11 @@ def t4c8_gene_models(tmp_path: pathlib.Path) -> GeneModels:
 
 
 @pytest.fixture()
+def t4c8_ref_genome(tmp_path: pathlib.Path) -> ReferenceGenome:
+    return t4c8_genome(tmp_path / "genome")
+
+
+@pytest.fixture()
 def sql_query_builder_simple(
     db_layout_simple: Db2Layout,
     pedigree_schema_simple: dict[str, str],
@@ -110,15 +116,17 @@ def sql_query_builder_simple(
     family_schema_simple: dict[str, str],
     families_simple: FamiliesData,
     t4c8_gene_models: GeneModels,
+    t4c8_ref_genome: ReferenceGenome,
 ) -> SqlQueryBuilder:
     return SqlQueryBuilder(
         db_layout_simple,
-        pedigree_schema_simple,
-        summary_schema_simple,
-        family_schema_simple,
-        None,
-        families_simple,
-        t4c8_gene_models,
+        pedigree_schema=pedigree_schema_simple,
+        summary_schema=summary_schema_simple,
+        family_schema=family_schema_simple,
+        partition_descriptor=None,
+        families=families_simple,
+        gene_models=t4c8_gene_models,
+        reference_genome=t4c8_ref_genome,
     )
 
 
