@@ -49,7 +49,7 @@ export class VariantReportsComponent implements OnInit {
   public familiesCounters: FamilyCounter[];
   public pedigreeTables: PedigreeTable[];
 
-  public selectedDataset: Dataset;
+  public selectedDatasetId: string;
 
   public imgPathPrefix = environment.imgPathPrefix;
   public orderedTagList = [];
@@ -81,8 +81,8 @@ export class VariantReportsComponent implements OnInit {
   public ngOnInit(): void {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
       switchMap((state: DatasetModel) => {
-        this.selectedDataset = state.selectedDataset;
-        return this.variantReportsService.getVariantReport(this.selectedDataset.id);
+        this.selectedDatasetId = state.selectedDatasetId;
+        return this.variantReportsService.getVariantReport(this.selectedDatasetId);
       }),
       take(1)
     ).subscribe(params => {
@@ -252,7 +252,7 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public getDownloadLink(): string {
-    return this.variantReportsService.getDownloadLink() + this.selectedDataset.id;
+    return this.variantReportsService.getDownloadLink() + this.selectedDatasetId;
   }
 
   public downloadTags(event): void {

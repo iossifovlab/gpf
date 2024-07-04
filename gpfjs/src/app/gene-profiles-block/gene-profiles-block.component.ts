@@ -176,7 +176,13 @@ export class GeneProfilesBlockComponent implements OnInit {
       .find(ps => ps.id === tokens[1]);
     const statistic = personSet.statistics.find(st => st.id === tokens[2]);
     GeneProfileSingleViewComponent.goToQuery(
-      this.store, this.queryService, this.datasetsService, $event.geneSymbol, personSet, datasetId, statistic, $event.newTab
+      this.store,
+      this.queryService,
+      $event.geneSymbol,
+      personSet,
+      datasetId,
+      statistic,
+      $event.newTab
     );
   }
 }

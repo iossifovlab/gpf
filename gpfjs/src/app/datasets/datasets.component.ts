@@ -2,7 +2,7 @@ import { UsersService } from '../users/users.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
-import { Subscription, combineLatest } from 'rxjs';
+import { Subscription, combineLatest, switchMap } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
@@ -52,7 +52,7 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
 
         this.datasetsService.getDataset(params['dataset'] as string).subscribe({
           next: dataset => {
-            this.store.dispatch(new SetDataset(dataset));
+            this.store.dispatch(new SetDataset(dataset.id));
             this.setupSelectedDataset();
           },
           error: () => {
@@ -110,12 +110,14 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
   }
 
   private setupSelectedDataset(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      if (!state.selectedDataset) {
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
+      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
+    ).subscribe(dataset => {
+      if (!dataset) {
         return;
       }
 
-      this.selectedDataset = state.selectedDataset;
+      this.selectedDataset = dataset;
 
       const firstTool = this.findFirstTool(this.selectedDataset);
 

@@ -6,7 +6,7 @@ import { Gene } from 'app/gene-browser/gene';
 import { SummaryAllelesArray, SummaryAllelesFilter } from 'app/gene-browser/summary-variants';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { QueryService } from 'app/query/query.service';
-import { first, debounceTime, distinctUntilChanged, take, takeUntil, filter } from 'rxjs/operators';
+import { first, debounceTime, distinctUntilChanged, take, takeUntil, filter, switchMap } from 'rxjs/operators';
 import { Subject, Subscription } from 'rxjs';
 import { Dataset, GeneBrowser, PersonSet } from 'app/datasets/datasets';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
@@ -18,6 +18,7 @@ import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { Store } from '@ngxs/store';
 import { DatasetModel } from 'app/datasets/datasets.state';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-gene-browser',
@@ -71,7 +72,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     private loadingService: FullscreenLoadingService,
     private router: Router,
     private datasetsTreeService: DatasetsTreeService,
-    private store: Store
+    private store: Store,
+    private datasetsService: DatasetsService
   ) {
   }
 
@@ -79,17 +81,19 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public variantsCount: number;
 
   public async ngOnInit(): Promise<void> {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      this.selectedDataset = state.selectedDataset;
-      this.selectedDatasetId = state.selectedDataset.id;
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
+      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
+    ).subscribe(dataset => {
+      this.selectedDataset = dataset;
+      this.selectedDatasetId = dataset.id;
       this.legend = this.selectedDataset.personSetCollections
         .getLegend(this.selectedDataset.defaultPersonSetCollection);
       this.geneBrowserConfig = this.selectedDataset.geneBrowser;
-    });
 
-    if (this.route.snapshot.params.gene && typeof this.route.snapshot.params.gene === 'string') {
-      this.geneSymbol = this.route.snapshot.params.gene;
-    }
+      if (this.route.snapshot.params.gene && typeof this.route.snapshot.params.gene === 'string') {
+        this.geneSymbol = this.route.snapshot.params.gene;
+      }
+    });
 
     this.route.queryParams.subscribe(params => {
       if (params['coding_only'] !== undefined && params['coding_only'] !== null) {

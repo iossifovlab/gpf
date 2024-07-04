@@ -40,7 +40,7 @@ export class PedigreeComponent {
 
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
       switchMap((state: DatasetModel) => {
-        this.selectedDatasetId = state.selectedDataset.id;
+        this.selectedDatasetId = state.selectedDatasetId;
         return this.variantReportsService.getFamilies(
           this.selectedDatasetId,
           this.groupName,
@@ -74,7 +74,7 @@ export class PedigreeComponent {
 
   public onSubmit(event): void {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      const selectedDatasetId = state.selectedDataset.id;
+      const selectedDatasetId = state.selectedDatasetId;
       const args = {
         study_id: selectedDatasetId,
         group_name: this.groupName,

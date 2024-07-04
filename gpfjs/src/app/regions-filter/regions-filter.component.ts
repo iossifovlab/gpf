@@ -4,16 +4,17 @@ import { Store } from '@ngxs/store';
 import { RegionsFilterState, SetRegionsFilter } from './regions-filter.state';
 import { ValidateNested } from 'class-validator';
 import { StatefulComponent } from 'app/common/stateful-component';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-regions-filter',
   templateUrl: './regions-filter.component.html',
 })
 export class RegionsFilterComponent extends StatefulComponent implements OnInit {
-  @ValidateNested() public regionsFilter = new RegionsFilter(this.store);
+  @ValidateNested() public regionsFilter = new RegionsFilter(this.store, this.datsetsService);
   @ViewChild('textArea') private textArea: ElementRef;
 
-  public constructor(protected store: Store) {
+  public constructor(protected store: Store, private datsetsService: DatasetsService) {
     super(store, RegionsFilterState, 'regionsFilter');
   }
 

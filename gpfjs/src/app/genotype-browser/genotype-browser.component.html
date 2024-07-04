@@ -1,4 +1,4 @@
-<div class="container">
+<div *ngIf="selectedDataset" class="container">
   <gpf-genes-block></gpf-genes-block>
   <gpf-regions-block></gpf-regions-block>
   <gpf-genotype-block [dataset]="selectedDataset"></gpf-genotype-block>

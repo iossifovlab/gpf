@@ -68,7 +68,6 @@ export class GeneProfileSingleViewComponent implements OnInit {
     private router: Router,
     private queryService: QueryService,
     private store: Store,
-    private datasetsService: DatasetsService
   ) { }
 
   public errorModal = false;
@@ -167,7 +166,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
     statistic: GeneProfilesDatasetStatistic
   ): void {
     GeneProfileSingleViewComponent.goToQuery(
-      this.store, this.queryService, this.datasetsService, geneSymbol, personSet, datasetId, statistic
+      this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
     );
   }
 
@@ -175,7 +174,6 @@ export class GeneProfileSingleViewComponent implements OnInit {
     store: Store,
     queryService:
     QueryService,
-    datasetsService: DatasetsService,
     geneSymbol: string,
     personSet: GeneProfilesDatasetPersonSet,
     datasetId: string,
@@ -220,13 +218,8 @@ export class GeneProfileSingleViewComponent implements OnInit {
     ]);
 
 
-    store.selectOnce((state: object) => state).pipe(
-      switchMap((state: object) => {
-        const dataset$ = datasetsService.getDataset(datasetId);
-        return zip(of(state), dataset$);
-      })
-    ).subscribe(([state, dataset]) => {
-      (state['datasetState'] as DatasetModel).selectedDataset = dataset;
+    store.selectOnce((state: object) => state).subscribe((state) => {
+      (state['datasetState'] as DatasetModel).selectedDatasetId = datasetId;
       queryService.saveQuery(state, 'genotype')
         .pipe(take(1))
         .subscribe(urlObject => {

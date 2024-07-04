@@ -19,7 +19,7 @@ import { DatasetModel } from 'app/datasets/datasets.state';
 })
 export class EnrichmentToolComponent implements OnInit, OnDestroy {
   public enrichmentResults: EnrichmentResults;
-  public selectedDataset: Dataset;
+  public selectedDatasetId: string;
   public disableQueryButtons = false;
 
   @Select(EnrichmentToolComponent.enrichmentToolStateSelector) public state$: Observable<object[]>;
@@ -40,9 +40,9 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
         return zip(of(enrichmentState), datasetState$);
       })
     ).subscribe(([enrichmentState, datasetState]) => {
-      this.selectedDataset = datasetState.selectedDataset;
+      this.selectedDatasetId = datasetState.selectedDatasetId;
       this.enrichmentToolState = {
-        datasetId: this.selectedDataset.id,
+        datasetId: this.selectedDatasetId,
         ...enrichmentState
       };
       this.enrichmentResults = null;

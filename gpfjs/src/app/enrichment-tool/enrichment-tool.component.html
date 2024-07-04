@@ -1,6 +1,6 @@
-<div *ngIf="selectedDataset" class="container" style="margin-bottom: 20px">
+<div *ngIf="selectedDatasetId" class="container" style="margin-bottom: 20px">
   <gpf-genes-block [showAllTab]="false"></gpf-genes-block>
-  <gpf-enrichment-models-block [selectedDatasetId]="selectedDataset.id"></gpf-enrichment-models-block>
+  <gpf-enrichment-models-block [selectedDatasetId]="selectedDatasetId"></gpf-enrichment-models-block>
 
   <div class="form-block button" style="display: inline-flex">
     <input
