@@ -386,6 +386,7 @@ class GeneScoresDb:
     def build_descs_from_score(
         gene_score: GeneScore,
     ) -> list[ScoreDesc]:
+        """Build score descriptions from score."""
         result = []
         for score_id, score_def in gene_score.score_definitions.items():
             help_doc = _build_gene_score_help(score_def, gene_score)
