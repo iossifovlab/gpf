@@ -5,7 +5,7 @@ from __future__ import annotations
 import enum
 import logging
 from collections.abc import Iterable
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 from dae.utils.helpers import isnan
 from dae.variants.attributes import Role, Sex, Status
@@ -197,7 +197,7 @@ class Person:
         self.person_id = self._attributes["person_id"]
         self.fpid: tuple[str, str] = (self.family_id, self.person_id)
 
-        self.family: Optional[Family] = None
+        self.family: Family | None = None
         self.sample_id = self._attributes.get("sample_id", None)
 
         self._sex = Sex.from_name(self._attributes["sex"])
@@ -220,8 +220,8 @@ class Person:
         if self.dad_id == "0":
             self.dad_id = None
             self._attributes["dad_id"] = None
-        self.mom: Optional[Person] = None
-        self.dad: Optional[Person] = None
+        self.mom: Person | None = None
+        self.dad: Person | None = None
         assert self.mom_id is None or isinstance(self.mom_id, str), \
             (self, self._attributes)
         assert self.dad_id is None or isinstance(self.dad_id, str), \
@@ -276,7 +276,7 @@ class Person:
         return int(self._attributes.get("member_index", -1))
 
     @property
-    def role(self) -> Optional[Role]:
+    def role(self) -> Role | None:
         return self._role
 
     @property
@@ -288,8 +288,8 @@ class Person:
         return self._status
 
     @property
-    def layout(self) -> Optional[str]:
-        return cast(Optional[str], self._attributes.get("layout", None))
+    def layout(self) -> str | None:
+        return cast(str | None, self._attributes.get("layout", None))
 
     @property
     def generated(self) -> bool:
@@ -307,12 +307,12 @@ class Person:
             or self._attributes.get("missing", False))
 
     @property
-    def family_bin(self) -> Optional[int]:
-        return cast(Optional[int], self._attributes.get("family_bin", None))
+    def family_bin(self) -> int | None:
+        return cast(int | None, self._attributes.get("family_bin", None))
 
     @property
-    def sample_index(self) -> Optional[int]:
-        return cast(Optional[int], self._attributes.get("sample_index", None))
+    def sample_index(self) -> int | None:
+        return cast(int | None, self._attributes.get("sample_index", None))
 
     def has_mom(self) -> bool:
         return self.mom is not None
@@ -446,9 +446,9 @@ class Family:
     def __init__(self, family_id: str):
         self.family_id = family_id
         self.persons: dict[str, Person] = {}
-        self._samples_index: Optional[tuple[Optional[int], ...]] = None
-        self._members_in_order: Optional[list[Person]] = None
-        self._trios: Optional[dict[str, tuple[str, str, str]]] = None
+        self._samples_index: tuple[int | None, ...] | None = None
+        self._members_in_order: list[Person] | None = None
+        self._trios: dict[str, tuple[str, str, str]] | None = None
         self._tags: set[FamilyTag] = set()
 
     def set_tag(self, tag: FamilyTag) -> None:
@@ -589,7 +589,7 @@ class Family:
         return self._trios
 
     @property
-    def samples_index(self) -> tuple[Optional[int], ...]:
+    def samples_index(self) -> tuple[int | None, ...]:
         if self._samples_index is None:
             self._samples_index = tuple(
                 m.sample_index for m in self.members_in_order)
@@ -640,11 +640,11 @@ class Family:
 
     def get_member(
         self, person_id: str,
-    ) -> Optional[Person]:
+    ) -> Person | None:
         return self.persons.get(person_id, None)
 
     def get_members_with_roles(
-        self, roles: list[Union[str, Role]],
+        self, roles: list[str | Role],
     ) -> list[Person]:
         if not isinstance(roles[0], Role):
             assert all(isinstance(role, str) for role in roles)

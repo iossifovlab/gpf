@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
-from typing import Optional
 
 import pytest
 
@@ -140,7 +139,7 @@ def test_coding_bin_for_vcf(
     ],
 )
 def test_vcf_import_coding_bin_queries(
-    effect_types: Optional[list[str]], count: int,
+    effect_types: list[str] | None, count: int,
     vcf_fixture: tuple[pathlib.Path, GenotypeData],
     genotype_storage: GenotypeStorage,
 ) -> None:
@@ -263,7 +262,7 @@ def test_denovo_coding_bin_for_denovo_import(
     ],
 )
 def test_denovo_import_coding_bin_queries(
-    effect_types: Optional[list[str]], count: int,
+    effect_types: list[str] | None, count: int,
     denovo_fixture: tuple[pathlib.Path, GenotypeData],
     genotype_storage: GenotypeStorage,
 ) -> None:

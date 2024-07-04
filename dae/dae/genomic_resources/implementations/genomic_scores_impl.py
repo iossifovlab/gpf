@@ -4,7 +4,7 @@ import json
 import logging
 from collections.abc import Iterable
 from dataclasses import asdict
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import numpy as np
 from jinja2 import Template
@@ -138,8 +138,8 @@ class GenomicScoreImplementation(
 
     @staticmethod
     def _get_reference_genome_cached(
-        grr: Optional[GenomicResourceRepo], genome_id: Optional[str],
-    ) -> Optional[ReferenceGenome]:
+        grr: GenomicResourceRepo | None, genome_id: str | None,
+    ) -> ReferenceGenome | None:
         if genome_id is None or grr is None:
             return None
         if genome_id in GenomicScoreImplementation._REF_GENOME_CACHE:
@@ -166,7 +166,7 @@ class GenomicScoreImplementation(
         return ref_genome
 
     def _get_chrom_regions(
-        self, region_size: int, grr: Optional[GenomicResourceRepo] = None,
+        self, region_size: int, grr: GenomicResourceRepo | None = None,
     ) -> list[Region]:
         regions = []
         ref_genome_id = cast(
@@ -174,7 +174,7 @@ class GenomicScoreImplementation(
             self.resource.get_labels().get("reference_genome"),
         )
         ref_genome = self._get_reference_genome_cached(grr, ref_genome_id)
-        chrom_length: Optional[int]
+        chrom_length: int | None
         for chrom in self.score.get_all_chromosomes():
             if ref_genome is not None and chrom in ref_genome.chromosomes:
                 chrom_length = ref_genome.get_chrom_length(chrom)
@@ -220,7 +220,7 @@ class GenomicScoreImplementation(
         graph: TaskGraph,
         score_ids: Iterable[str],
         region_size: int,
-        grr: Optional[GenomicResourceRepo] = None,
+        grr: GenomicResourceRepo | None = None,
     ) -> tuple[list[Task], Task]:
         """
         Add and return calculation, merging and saving tasks for min max.
@@ -270,7 +270,7 @@ class GenomicScoreImplementation(
         score_ids: Iterable[str],
         *calculate_tasks: dict[str, MinMaxValue],
     ) -> dict[str, Any]:
-        res: dict[str, Optional[MinMaxValue]] = dict.fromkeys(score_ids)
+        res: dict[str, MinMaxValue | None] = dict.fromkeys(score_ids)
         for score_id in score_ids:
             for min_max_region in calculate_tasks:
                 if res[score_id] is None:
@@ -284,7 +284,7 @@ class GenomicScoreImplementation(
     @staticmethod
     def _update_hist_confs(
         all_hist_confs: dict[str, HistogramConfig],
-        minmax_task: Optional[dict[str, MinMaxValue]],
+        minmax_task: dict[str, MinMaxValue] | None,
     ) -> dict[str, HistogramConfig]:
 
         if minmax_task is None:
@@ -307,8 +307,8 @@ class GenomicScoreImplementation(
 
     def _add_histogram_tasks(
         self, graph: TaskGraph, all_hist_confs: dict[str, HistogramConfig],
-        minmax_task: Optional[Task],
-        region_size: int, grr: Optional[GenomicResourceRepo] = None,
+        minmax_task: Task | None,
+        region_size: int, grr: GenomicResourceRepo | None = None,
     ) -> tuple[list[Task], Task, Task]:
         """
         Add histogram tasks for specific score id.

@@ -1,7 +1,6 @@
 import argparse
 import logging
 import sys
-from typing import Optional
 
 from dae import __version__  # type: ignore
 from dae.gpf_instance import GPFInstance
@@ -11,8 +10,8 @@ logger = logging.getLogger("gp_exporter")
 
 
 def cli_export(
-    argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None,
+    argv: list[str] | None = None,
+    gpf_instance: GPFInstance | None = None,
 ) -> None:
     """CLI for exporting GP data."""
     if argv is None:

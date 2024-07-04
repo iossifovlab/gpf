@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import List, Union
+from typing import List
 
 import numpy as np
 import pytest
@@ -15,7 +15,7 @@ from dae.utils.variant_utils import (
 )
 from dae.variants.attributes import Sex
 
-chroms: List[Union[int, str]] = list(range(1, 23))
+chroms: List[int | str] = list(range(1, 23))
 chroms.append("Y")
 
 test_data = [

@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
 
 import pytest
 
@@ -74,7 +73,7 @@ chrA   4   .  A   C   .    .      .    GT     0/0 0/1 1/1
 def test_variant_frequencies(
     imported_study: GenotypeData,
     position: int,
-    freqs: list[Optional[float]],
+    freqs: list[float | None],
 ) -> None:
     regions = [Region("chrA", position, position)]
     vs = list(imported_study.query_variants(regions=regions))

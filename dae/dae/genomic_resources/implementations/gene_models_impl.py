@@ -6,7 +6,7 @@ import textwrap
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from functools import lru_cache
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 from jinja2 import Template
@@ -240,7 +240,7 @@ class GeneModelsImpl(
         return gene_models_stats
 
     @lru_cache(maxsize=64)  # noqa: B019
-    def get_statistics(self) -> Optional[GeneModelsStatistics]:  # type: ignore
+    def get_statistics(self) -> GeneModelsStatistics | None:  # type: ignore
         try:
             with self.resource.proto.open_raw_file(
                     self.resource, "statistics/stats.yaml", "rt") as stats_file:

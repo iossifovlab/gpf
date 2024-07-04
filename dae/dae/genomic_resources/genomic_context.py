@@ -5,7 +5,7 @@ import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from functools import lru_cache
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 from dae.genomic_resources.gene_models import (
     GeneModels,
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 class GenomicContext(ABC):
     """Abstract base class for genomic context."""
 
-    def get_reference_genome(self) -> Optional[ReferenceGenome]:
+    def get_reference_genome(self) -> ReferenceGenome | None:
         """Return reference genome from context."""
         obj = self.get_context_object(GC_REFERENCE_GENOME_KEY)
         if obj is None:
@@ -44,7 +44,7 @@ class GenomicContext(ABC):
             f"The context returned a wrong type for a reference genome: "
             f"{type(obj)}")
 
-    def get_gene_models(self) -> Optional[GeneModels]:
+    def get_gene_models(self) -> GeneModels | None:
         """Return gene models from context."""
         obj = self.get_context_object(GC_GENE_MODELS_KEY)
         if obj is None:
@@ -56,7 +56,7 @@ class GenomicContext(ABC):
             f"{type(obj)}")
 
     def get_genomic_resources_repository(
-            self) -> Optional[GenomicResourceRepo]:
+            self) -> GenomicResourceRepo | None:
         """Return genomic resources repository from context."""
         obj = self.get_context_object(GC_GRR_KEY)
         if obj is None:
@@ -68,7 +68,7 @@ class GenomicContext(ABC):
             f"{type(obj)}")
 
     @abstractmethod
-    def get_context_object(self, key: str) -> Optional[Any]:
+    def get_context_object(self, key: str) -> Any | None:
         """Return a genomic context object corresponding to the passed key.
 
         If there is no such object returns None.
@@ -107,7 +107,7 @@ class SimpleGenomicContext(GenomicContext):
         self._context: dict[str, Any] = context_objects
         self._source = source
 
-    def get_context_object(self, key: str) -> Optional[Any]:
+    def get_context_object(self, key: str) -> Any | None:
         return self._context.get(key)
 
     def get_context_keys(self) -> set[str]:
@@ -125,13 +125,13 @@ class SimpleGenomicContextProvider(GenomicContextProvider):
 
     def __init__(
             self,
-            context_builder: Callable[[], Optional[GenomicContext]],
+            context_builder: Callable[[], GenomicContext | None],
             provider_type: str,
             priority: int):
         self._type: str = provider_type
         self._priority: int = priority
         self._context_builder = context_builder
-        self._contexts: Optional[Iterable[GenomicContext]] = None
+        self._contexts: Iterable[GenomicContext] | None = None
 
     def get_context_provider_priority(self) -> int:
         return self._priority
@@ -186,7 +186,7 @@ class PriorityGenomicContext(GenomicContext):
         else:
             logger.info("No genomic contexts are available.")
 
-    def get_context_object(self, key: str) -> Optional[Any]:
+    def get_context_object(self, key: str) -> Any | None:
         for context in self.contexts:
             obj = context.get_context_object(key)
             if obj:

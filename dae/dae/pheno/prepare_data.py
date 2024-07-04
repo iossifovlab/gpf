@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 import tempfile
-from typing import Any, Optional, Union
+from typing import Any
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -45,8 +45,8 @@ class PreparePhenoBrowserBase:
         pheno_name: str,
         phenotype_data: PhenotypeStudy,
         output_dir: str,
-        pheno_regressions: Optional[Box] = None,
-        images_dir: Optional[str] = None,
+        pheno_regressions: Box | None = None,
+        images_dir: str | None = None,
     ) -> None:
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
@@ -78,7 +78,7 @@ class PreparePhenoBrowserBase:
         phenotype_data: PhenotypeStudy,
         augment: Measure, augment_name: str,
         measure: Measure,
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame | None:
         assert augment is not None
         assert isinstance(augment, Measure)
 
@@ -149,7 +149,7 @@ class PreparePhenoBrowserBase:
     @classmethod
     def save_fig(
             cls, pheno_id: str, images_dir: str, measure: Measure, suffix: str,
-    ) -> tuple[Optional[str], Optional[str]]:
+    ) -> tuple[str | None, str | None]:
         """Save measure figures."""
         if "/" in measure.measure_id:
             return (None, None)
@@ -175,7 +175,7 @@ class PreparePhenoBrowserBase:
         dependent_measure: Measure,
         independent_measure: Measure,
         jitter: float,
-    ) -> dict[str, Union[str, float]]:
+    ) -> dict[str, str | float]:
         """Build measure regressiongs."""
         min_number_of_values = 5
         min_number_of_unique_values = 2
@@ -319,7 +319,7 @@ class PreparePhenoBrowserBase:
 
     def _get_measure_by_name(
         self, measure_name: str, instrument_name: str,
-    ) -> Optional[Measure]:
+    ) -> Measure | None:
         if instrument_name:
             measure_id = ".".join([instrument_name, measure_name])
             if self.phenotype_data.has_measure(measure_id):
@@ -328,7 +328,7 @@ class PreparePhenoBrowserBase:
 
     def _has_regression_measure(
         self, measure_name: str,
-        instrument_name: Optional[str],
+        instrument_name: str | None,
     ) -> bool:
         if self.pheno_regressions is None or \
                 self.pheno_regressions.regression is None:
@@ -434,7 +434,7 @@ class PreparePhenoBrowserBase:
         cls,
         pheno_id: str,
         dbfile: str,
-        db_config: Optional[Box],
+        db_config: Box | None,
         measure: Measure,
         images_dir: str,
         regression_measures: dict[str, tuple[Box, Measure]],

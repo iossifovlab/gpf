@@ -3,7 +3,6 @@ import logging
 import sys
 import tempfile
 from contextlib import closing
-from typing import Optional
 
 import pysam
 
@@ -104,8 +103,8 @@ def _construct_liftover_chain(
 
 
 def main(
-        argv: Optional[list[str]] = None,
-        grr: Optional[GenomicResourceRepo] = None,
+        argv: list[str] | None = None,
+        grr: GenomicResourceRepo | None = None,
 ) -> None:
     """Liftover dae variants tool main function."""
     # pylint: disable=too-many-locals,too-many-statements
@@ -203,7 +202,7 @@ def report_alleles(alleles: list[tuple[str, int, str, str]]) -> str:
     ])
 
 
-def report_variant(variant: Optional[tuple[str, int, str, list[str]]]) -> str:
+def report_variant(variant: tuple[str, int, str, list[str]] | None) -> str:
     """Report variant."""
     if not variant:
         return "(none)"

@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 from dae.genomic_resources.gene_models import (
     GeneModels,
@@ -26,13 +26,13 @@ from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance
 
 logger = logging.getLogger(__name__)
-RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
+RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 
 
 class Dialect(ABC):
     """Caries info about a SQL dialect."""
 
-    def __init__(self, namespace: Optional[str] = None):
+    def __init__(self, namespace: str | None = None):
         # namespace,
         self.namespace = namespace
 
@@ -64,7 +64,7 @@ class Dialect(ABC):
     def escape_quote_char() -> str:
         return "\\"
 
-    def build_table_name(self, table: str, db: Optional[str]) -> str:
+    def build_table_name(self, table: str, db: str | None) -> str:
         return f"`{self.namespace}`.{db}.{table}" if self.namespace else \
                f"{db}.{table}"
 
@@ -97,16 +97,16 @@ class BaseQueryBuilder(ABC):
     def __init__(
         self,
         dialect: Dialect,
-        db: Optional[str],
-        family_variant_table: Optional[str],
+        db: str | None,
+        family_variant_table: str | None,
         summary_allele_table: str,
         pedigree_table: str,
-        family_variant_schema: Optional[TableSchema],
+        family_variant_schema: TableSchema | None,
         summary_allele_schema: TableSchema,
-        partition_descriptor: Optional[dict],
+        partition_descriptor: dict | None,
         pedigree_schema: TableSchema,
         families: FamiliesData,
-        gene_models: Optional[GeneModels] = None,
+        gene_models: GeneModels | None = None,
     ):
         # pylint: disable=too-many-arguments
 
@@ -154,22 +154,22 @@ class BaseQueryBuilder(ABC):
 
     def build_query(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        inheritance: Optional[Union[str, list[str]]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
-        pedigree_fields: Optional[tuple] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: Iterable[str] | None = None,
+        person_ids: Iterable[str] | None = None,
+        inheritance: str | list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        pedigree_fields: tuple | None = None,
     ) -> str:
         # pylint: disable=too-many-arguments,too-many-locals,unused-argument
         """Build an SQL query in the correct order."""
@@ -211,35 +211,35 @@ class BaseQueryBuilder(ABC):
         pass
 
     def _build_join(
-        self, genes: Optional[list[str]],
-        effect_types: Optional[list[str]],
+        self, genes: list[str] | None,
+        effect_types: list[str] | None,
     ) -> None:
         pass
 
     def _build_where_pedigree_fields(
         self,
-        pedigree_fields: Optional[tuple],
+        pedigree_fields: tuple | None,
     ) -> str:
         # pylint: disable=unused-argument
         return ""
 
     def _build_where(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        inheritance: Optional[Union[str, list[str]]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        pedigree_fields: Optional[tuple] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: Iterable[str] | None = None,
+        person_ids: Iterable[str] | None = None,
+        inheritance: str | list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        pedigree_fields: tuple | None = None,
         **kwargs: Any,
     ) -> None:
         # pylint: disable=too-many-arguments,too-many-locals,unused-argument
@@ -264,21 +264,21 @@ class BaseQueryBuilder(ABC):
 
     def _build_where_string(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        inheritance: Optional[Union[str, list[str]]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        pedigree_fields: Optional[tuple] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: Iterable[str] | None = None,
+        person_ids: Iterable[str] | None = None,
+        inheritance: str | list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        pedigree_fields: tuple | None = None,
         **kwargs: Any,
     ) -> str:
         # pylint: disable=too-many-arguments,too-many-branches,unused-argument
@@ -393,7 +393,7 @@ class BaseQueryBuilder(ABC):
     def _build_group_by(self) -> None:
         pass
 
-    def _build_limit(self, limit: Optional[int]) -> None:
+    def _build_limit(self, limit: int | None) -> None:
         if limit is not None:
             self._add_to_product(f"LIMIT {limit}")
 
@@ -401,7 +401,7 @@ class BaseQueryBuilder(ABC):
     def _build_having(self, **kwargs: Any) -> None:
         pass
 
-    def _add_to_product(self, query_part: Optional[str]) -> None:
+    def _add_to_product(self, query_part: str | None) -> None:
         if query_part is None or query_part == "":
             return
         if self._product == "":
@@ -506,8 +506,8 @@ class BaseQueryBuilder(ABC):
         return " OR ".join(where)
 
     def _build_iterable_struct_string_attr_where(
-        self, key_names: Optional[Iterable[str]] = None,
-        query_values: Optional[Iterable[Iterable[str]]] = None,
+        self, key_names: Iterable[str] | None = None,
+        query_values: Iterable[Iterable[str]] | None = None,
     ) -> str:
         key_names = key_names if key_names else []
         query_values = query_values if query_values else []
@@ -551,7 +551,7 @@ class BaseQueryBuilder(ABC):
         query_value: str, query_transformer: QueryTransformerMatcher,
     ) -> str:
         assert query_value is not None
-        parsed: Union[str, LeafNode, TreeNode] = query_value
+        parsed: str | LeafNode | TreeNode = query_value
         if isinstance(query_value, str):
             parsed = query_transformer.transform_query_string_to_tree(
                 query_value,
@@ -564,7 +564,7 @@ class BaseQueryBuilder(ABC):
 
     @staticmethod
     def _build_inheritance_where(
-        column_name: str, query_value: Union[str, list[str]],
+        column_name: str, query_value: str | list[str],
         use_bit_and_function: bool,
     ) -> list[str]:
         trees = []
@@ -592,8 +592,8 @@ class BaseQueryBuilder(ABC):
         return result
 
     def _build_gene_regions_heuristic(
-        self, genes: list[str], regions: Optional[list[Region]],
-    ) -> Optional[list[Region]]:
+        self, genes: list[str], regions: list[Region] | None,
+    ) -> list[Region] | None:
         assert self.gene_models is not None
         return create_regions_from_genes(
             self.gene_models, genes, regions,
@@ -602,8 +602,8 @@ class BaseQueryBuilder(ABC):
         )
 
     def _build_partition_bin_heuristic_where(
-        self, bin_column: str, bins: Union[list[str], set[str]],
-        number_of_possible_bins: Optional[int] = None,
+        self, bin_column: str, bins: list[str] | set[str],
+        number_of_possible_bins: int | None = None,
         str_bins: bool = False,
     ) -> str:
         if len(bins) == 0:
@@ -624,9 +624,9 @@ class BaseQueryBuilder(ABC):
         return " AND ".join(parts)
 
     def _build_frequency_bin_heuristic_compute_bins(
-        self, inheritance: Optional[Union[str, list[str]]],
-        ultra_rare: Optional[bool],
-        frequency_filter: Optional[RealAttrFilterType],
+        self, inheritance: str | list[str] | None,
+        ultra_rare: bool | None,
+        frequency_filter: RealAttrFilterType | None,
         rare_boundary: float,
     ) -> set[str]:
         frequency_bins: set[str] = set([])
@@ -685,9 +685,9 @@ class BaseQueryBuilder(ABC):
         return frequency_bins
 
     def _build_frequency_bin_heuristic(
-        self, inheritance: Union[None, str, list[str]],
-        ultra_rare: Optional[bool],
-        frequency_filter: Optional[RealAttrFilterType],
+        self, inheritance: None | str | list[str],
+        ultra_rare: bool | None,
+        frequency_filter: RealAttrFilterType | None,
     ) -> str:
         # pylint: disable=too-many-branches
         assert self.partition_descriptor is not None
@@ -712,7 +712,7 @@ class BaseQueryBuilder(ABC):
         # return " AND ".join(parts)
 
     def _build_coding_heuristic(
-        self, effect_types: Union[None, set[str], list[str]],
+        self, effect_types: None | set[str] | list[str],
     ) -> str:
         assert self.partition_descriptor is not None
         if effect_types is None:
@@ -742,7 +742,7 @@ class BaseQueryBuilder(ABC):
             "coding_bin", coding_bins, 2)
 
     def _build_region_bin_heuristic(
-        self, regions: Optional[list[Region]],
+        self, regions: list[Region] | None,
     ) -> str:
         assert self.partition_descriptor is not None
         if not regions or self.partition_descriptor["region_length"] == 0:
@@ -779,8 +779,8 @@ class BaseQueryBuilder(ABC):
         # return f"{region_bin_col} IN ({bins_str})"
 
     def _build_family_bin_heuristic(
-        self, family_ids: Optional[Iterable[str]],
-        person_ids: Optional[Iterable[str]],
+        self, family_ids: Iterable[str] | None,
+        person_ids: Iterable[str] | None,
     ) -> str:
         assert self.partition_descriptor is not None
         if "family_bin" not in self.combined_columns:
@@ -813,8 +813,8 @@ class BaseQueryBuilder(ABC):
             self.partition_descriptor["family_bin_size"])
 
     def _build_return_reference_and_return_unknown(
-        self, return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
+        self, return_reference: bool | None = None,
+        return_unknown: bool | None = None,
     ) -> str:
         # pylint: disable=unused-argument
         allele_index_col = self.where_accessors["allele_index"]

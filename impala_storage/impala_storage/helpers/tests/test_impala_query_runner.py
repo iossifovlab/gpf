@@ -2,7 +2,7 @@
 import time
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import pytest
 
@@ -22,7 +22,7 @@ def impala_helpers(
 def create_runner(
     impala_helpers: ImpalaHelpers,
     query: str,
-    deserializer: Optional[Callable[[Any], Any]] = None,
+    deserializer: Callable[[Any], Any] | None = None,
 ) -> ImpalaQueryRunner:
 
     runner = ImpalaQueryRunner(

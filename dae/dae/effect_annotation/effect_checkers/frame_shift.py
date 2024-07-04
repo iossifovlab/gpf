@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from ..annotation_request import AnnotationRequest
 from ..effect import AnnotationEffect, EffectFactory
@@ -14,7 +13,7 @@ class FrameShiftEffectChecker(EffectChecker):
 
     def create_effect(
         self, request: AnnotationRequest, change_length: int,
-    ) -> Optional[AnnotationEffect]:
+    ) -> AnnotationEffect | None:
         """Create frame-shift annotation effect."""
         if change_length > 0:
             if change_length % 3 == 0:
@@ -46,7 +45,7 @@ class FrameShiftEffectChecker(EffectChecker):
 
     def check_stop_codon(
         self, request: AnnotationRequest,
-    ) -> Optional[AnnotationEffect]:
+    ) -> AnnotationEffect | None:
         """Check for stop codon."""
         try:
             ref_aa, alt_aa = request.get_amino_acids()
@@ -67,7 +66,7 @@ class FrameShiftEffectChecker(EffectChecker):
 
     def get_effect(
         self, request: AnnotationRequest,
-    ) -> Optional[AnnotationEffect]:
+    ) -> AnnotationEffect | None:
         coding_regions = request.cds_regions()
         assert request.variant.reference is not None
         assert request.variant.alternate is not None

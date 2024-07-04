@@ -14,8 +14,6 @@ from types import TracebackType
 from typing import (
     IO,
     Any,
-    Optional,
-    Union,
     cast,
 )
 from urllib.parse import urlparse
@@ -86,7 +84,7 @@ def _scan_for_resources(
 
 def _scan_for_resource_files(
     content_dict: dict[str, Any], parent_dirs: list[str],
-) -> Generator[tuple[str, Union[str, bytes]], None, None]:
+) -> Generator[tuple[str, str | bytes], None, None]:
 
     for path, content in content_dict.items():
         if isinstance(content, dict):
@@ -155,7 +153,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
         self.url = f"{self.scheme}://{self.netloc}{self.root_path}"
         self.filesystem = filesystem
 
-        self._all_resources: Optional[list[GenomicResource]] = None
+        self._all_resources: list[GenomicResource] | None = None
 
     def get_url(self) -> str:
         return self.url
@@ -198,7 +196,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
 
     def open_raw_file(
             self, resource: GenomicResource, filename: str,
-            mode: str = "rt", **kwargs: Union[str, bool, None]) -> IO:
+            mode: str = "rt", **kwargs: str | bool | None) -> IO:
 
         filepath = self.get_resource_file_url(resource, filename)
         if "w" in mode:
@@ -236,7 +234,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
     def open_tabix_file(
             self, resource: GenomicResource,
             filename: str,
-            index_filename: Optional[str] = None) -> pysam.TabixFile:
+            index_filename: str | None = None) -> pysam.TabixFile:
 
         if self.scheme not in {"file", "s3", "http", "https"}:
             raise OSError(
@@ -255,7 +253,7 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
     def open_vcf_file(
             self, resource: GenomicResource,
             filename: str,
-            index_filename: Optional[str] = None) -> pysam.VariantFile:
+            index_filename: str | None = None) -> pysam.VariantFile:
 
         if self.scheme not in {"file", "s3", "http", "https"}:
             raise OSError(
@@ -316,7 +314,7 @@ class FsspecReadWriteProtocol(
             def __exit__(
                     self,
                     exc_type: type[BaseException] | None,
-                    exc_value: Optional[BaseException],
+                    exc_value: BaseException | None,
                     exc_tb: TracebackType | None) -> None:
                 pass
 
@@ -414,7 +412,7 @@ class FsspecReadWriteProtocol(
                         res_fullpath, GR_CONF_FILE_NAME), "rt") as infile:
                 config = yaml.safe_load(infile)
 
-            manifest: Optional[Manifest] = None
+            manifest: Manifest | None = None
             manifest_filename = os.path.join(
                 res_fullpath, GR_MANIFEST_FILE_NAME)
 
@@ -478,7 +476,7 @@ class FsspecReadWriteProtocol(
 
     def load_resource_file_state(
             self, resource: GenomicResource,
-            filename: str) -> Optional[ResourceFileState]:
+            filename: str) -> ResourceFileState | None:
         """Load resource file state from internal GRR state.
 
         If the specified resource file has no internal state returns None.
@@ -510,7 +508,7 @@ class FsspecReadWriteProtocol(
             self,
             remote_resource: GenomicResource,
             dest_resource: GenomicResource,
-            filename: str) -> Optional[ResourceFileState]:
+            filename: str) -> ResourceFileState | None:
         """Copy a resource file into repository."""
         assert dest_resource.resource_id == remote_resource.resource_id
         logger.debug(
@@ -567,7 +565,7 @@ class FsspecReadWriteProtocol(
     def update_resource_file(
             self, remote_resource: GenomicResource,
             dest_resource: GenomicResource,
-            filename: str) -> Optional[ResourceFileState]:
+            filename: str) -> ResourceFileState | None:
         """Update a resource file into repository if needed."""
         assert dest_resource.resource_id == remote_resource.resource_id
 
@@ -652,12 +650,11 @@ def build_local_resource(
     return GenomicResource(".", (0, ), proto, config)
 
 
-FsspecRepositoryProtocol = Union[
-    FsspecReadOnlyProtocol, FsspecReadWriteProtocol]
+FsspecRepositoryProtocol = FsspecReadOnlyProtocol | FsspecReadWriteProtocol
 
 
 def build_fsspec_protocol(
-    proto_id: str, root_url: str, **kwargs: Union[str, None],
+    proto_id: str, root_url: str, **kwargs: str | None,
 ) -> FsspecRepositoryProtocol:
     """Create fsspec GRR protocol based on the root url."""
     url = urlparse(root_url)

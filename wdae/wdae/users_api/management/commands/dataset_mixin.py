@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from datasets_api.models import Dataset
 from django.contrib.auth.models import Group
@@ -13,7 +12,7 @@ logger = logging.getLogger(__name__)
 class DatasetBaseMixin(DatasetHelpers):
     """Mixin for dataset management."""
 
-    def get_dataset(self, dataset_id: str) -> Optional[Dataset]:
+    def get_dataset(self, dataset_id: str) -> Dataset | None:
         """Get dataset by id."""
         try:
             genotype_data = self.gpf_instance.get_genotype_data(dataset_id)

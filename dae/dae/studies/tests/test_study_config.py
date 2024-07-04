@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
-from typing import Optional, Union
 
 import pytest
 from box import Box
@@ -101,7 +100,7 @@ def test_study_config_genotype_storage(study_config: Box) -> None:
 )
 def test_study_config_attr_access(
     study_config: Box, option_name: str,
-    expected_value: Optional[Union[str, bool]],
+    expected_value: str | bool | None,
 ) -> None:
     assert getattr(study_config, option_name) == expected_value
 

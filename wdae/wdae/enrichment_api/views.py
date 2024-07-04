@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Iterable
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
@@ -201,11 +201,11 @@ class EnrichmentTestView(QueryDatasetView):
         return Response(enrichment)
 
     def _create_enrichment_builder(
-        self, study_wrapper: Union[StudyWrapper, RemoteStudyWrapper],
-        background_id: Optional[str],
-        counting_id: Optional[str],
+        self, study_wrapper: StudyWrapper | RemoteStudyWrapper,
+        background_id: str | None,
+        counting_id: str | None,
         gene_syms: Iterable[str],
-    ) -> Union[EnrichmentBuilder, RemoteEnrichmentBuilder]:
+    ) -> EnrichmentBuilder | RemoteEnrichmentBuilder:
 
         if not study_wrapper.is_remote:
             study = study_wrapper.genotype_data

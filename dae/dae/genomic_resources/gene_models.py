@@ -8,7 +8,7 @@ import operator
 from collections import defaultdict
 from datetime import datetime
 from io import StringIO
-from typing import IO, Any, ClassVar, Optional, Protocol, cast
+from typing import IO, Any, ClassVar, Protocol, cast
 
 import pandas as pd
 
@@ -33,7 +33,7 @@ class Exon:
         self,
         start: int,
         stop: int,
-        frame: Optional[int] = None,
+        frame: int | None = None,
     ):
         """Initialize exon model.
 
@@ -63,8 +63,8 @@ class TranscriptModel:
         strand: str,
         tx: tuple[int, int],  # pylint: disable=invalid-name
         cds: tuple[int, int],
-        exons: Optional[list[Exon]] = None,
-        attributes: Optional[dict[str, Any]] = None,
+        exons: list[Exon] | None = None,
+        attributes: dict[str, Any] | None = None,
     ):
         """Initialize transcript model.
 
@@ -487,8 +487,8 @@ class GeneModelsParser(Protocol):
 
     def __call__(
         self, infile: IO,
-        gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None,
+        gene_mapping: dict[str, str] | None = None,
+        nrows: int | None = None,
     ) -> bool:
         ...
 
@@ -554,12 +554,12 @@ class GeneModels(
 
     def gene_models_by_gene_name(
         self, name: str,
-    ) -> Optional[list[TranscriptModel]]:
+    ) -> list[TranscriptModel] | None:
         return self.gene_models.get(name, None)
 
     def gene_models_by_location(
         self, chrom: str, pos1: int,
-        pos2: Optional[int] = None,
+        pos2: int | None = None,
     ) -> list[TranscriptModel]:
         """Retrieve TranscriptModel objects based on genomic position(s).
 
@@ -592,8 +592,8 @@ class GeneModels(
         return result
 
     def relabel_chromosomes(
-        self, relabel: Optional[dict[str, str]] = None,
-        map_file: Optional[str] = None,
+        self, relabel: dict[str, str] | None = None,
+        map_file: str | None = None,
     ) -> None:
         """Relabel chromosomes in gene model."""
         assert relabel or map_file
@@ -741,8 +741,8 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
 
     def _parse_default_gene_models_format(
         self, infile: IO,
-        gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None,
+        gene_mapping: dict[str, str] | None = None,
+        nrows: int | None = None,
     ) -> bool:
         # pylint: disable=too-many-locals
         infile.seek(0)
@@ -827,8 +827,8 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
 
     def _parse_ref_flat_gene_models_format(
         self, infile: IO,
-        gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None,
+        gene_mapping: dict[str, str] | None = None,
+        nrows: int | None = None,
     ) -> bool:
         # pylint: disable=too-many-locals
         expected_columns = [
@@ -897,8 +897,8 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
 
     def _parse_ref_seq_gene_models_format(
         self, infile: IO,
-        gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None,
+        gene_mapping: dict[str, str] | None = None,
+        nrows: int | None = None,
     ) -> bool:
         # pylint: disable=too-many-locals
         expected_columns = [
@@ -986,7 +986,7 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
     @classmethod
     def _probe_header(
         cls, infile: IO, expected_columns: list[str],
-        comment: Optional[str] = None,
+        comment: str | None = None,
     ) -> bool:
         infile.seek(0)
         df = pd.read_csv(
@@ -996,7 +996,7 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
     @classmethod
     def _probe_columns(
         cls, infile: IO, expected_columns: list[str],
-        comment: Optional[str] = None) -> bool:
+        comment: str | None = None) -> bool:
         infile.seek(0)
         df = pd.read_csv(
             infile, sep="\t", nrows=1, header=None, comment=comment)
@@ -1006,8 +1006,8 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
     @classmethod
     def _parse_raw(
         cls, infile: IO, expected_columns: list[str],
-        nrows: Optional[int] = None, comment: Optional[str] = None,
-    ) -> Optional[pd.DataFrame]:
+        nrows: int | None = None, comment: str | None = None,
+    ) -> pd.DataFrame | None:
         if cls._probe_header(infile, expected_columns, comment=comment):
             infile.seek(0)
             df = pd.read_csv(infile, sep="\t", nrows=nrows, comment=comment)
@@ -1030,8 +1030,8 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
 
     def _parse_ccds_gene_models_format(
         self, infile: IO,
-        gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None,
+        gene_mapping: dict[str, str] | None = None,
+        nrows: int | None = None,
     ) -> bool:
         # pylint: disable=too-many-locals
         expected_columns = [
@@ -1119,8 +1119,8 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
 
     def _parse_known_gene_models_format(
         self, infile: IO,
-        gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None,
+        gene_mapping: dict[str, str] | None = None,
+        nrows: int | None = None,
     ) -> bool:
         # pylint: disable=too-many-locals
         expected_columns = [
@@ -1194,8 +1194,8 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
 
     def _parse_ucscgenepred_models_format(
         self, infile: IO,
-        gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None,
+        gene_mapping: dict[str, str] | None = None,
+        nrows: int | None = None,
     ) -> bool:
         """Parse UCSC gene prediction models file fomrat.
 
@@ -1331,8 +1331,8 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
 
     def _parse_gtf_gene_models_format(
         self, infile: IO,
-        gene_mapping: Optional[dict[str, str]] = None,
-        nrows: Optional[int] = None,
+        gene_mapping: dict[str, str] | None = None,
+        nrows: int | None = None,
     ) -> bool:
         # pylint: disable=too-many-locals,too-many-branches,too-many-statements
         expected_columns = [
@@ -1456,7 +1456,7 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
 
     def _get_parser(
         self, fileformat: str,
-    ) -> Optional[GeneModelsParser]:
+    ) -> GeneModelsParser | None:
         # pylint: disable=too-many-return-statements
         if fileformat == "default":
             return self._parse_default_gene_models_format
@@ -1476,7 +1476,7 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
 
     def _infer_gene_model_parser(
         self, infile: IO,
-        file_format: Optional[str] = None) -> Optional[str]:
+        file_format: str | None = None) -> str | None:
 
         if file_format is not None:
             parser = self._get_parser(file_format)
@@ -1515,7 +1515,7 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
     def is_loaded(self) -> bool:
         return len(self.transcript_models) > 0
 
-    def probe_file_format(self) -> Optional[str]:
+    def probe_file_format(self) -> str | None:
         """Probe gene models file format."""
         filename = self.resource.get_config()["filename"]
         logger.debug("checing gene models %s file format", filename)
@@ -1615,8 +1615,8 @@ def join_gene_models(*gene_models: GeneModels) -> GeneModels:
 
 def build_gene_models_from_file(
     file_name: str,
-    file_format: Optional[str] = None,
-    gene_mapping_file_name: Optional[str] = None,
+    file_format: str | None = None,
+    gene_mapping_file_name: str | None = None,
 ) -> GeneModels:
     """Load gene models from local filesystem."""
     config = {
@@ -1633,7 +1633,7 @@ def build_gene_models_from_file(
 
 
 def build_gene_models_from_resource(
-        resource: Optional[GenomicResource]) -> GeneModels:
+        resource: GenomicResource | None) -> GeneModels:
     """Load gene models from a genomic resource."""
     if resource is None:
         raise ValueError(f"missing resource {resource}")
@@ -1650,10 +1650,10 @@ def build_gene_models_from_resource(
 def create_regions_from_genes(
     gene_models: GeneModels,
     genes: list[str],
-    regions: Optional[list[Region]],
+    regions: list[Region] | None,
     gene_regions_heuristic_cutoff: int = 20,
     gene_regions_heuristic_extend: int = 20000,
-) -> Optional[list[Region]]:
+) -> list[Region] | None:
     """Produce a list of regions from given gene symbols.
 
     If given a list of regions, will merge the newly-created regions

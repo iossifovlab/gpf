@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Generator, Iterable
 from contextlib import closing
 from os.path import basename, exists
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 from box import Box
 
@@ -35,7 +35,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         self.config = config
         self.studies = studies
 
-        self._description: Optional[str] = None
+        self._description: str | None = None
 
         self._person_set_collections: dict[str, PersonSetCollection] = {}
         self._parents: set[str] = set()
@@ -58,7 +58,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return self.study_id
 
     @property
-    def description(self) -> Optional[str]:
+    def description(self) -> str | None:
         """Load and return description of a genotype data."""
         if self._description is None:
             if basename(self.config.description_file) != "description.md" and \
@@ -84,15 +84,15 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             outfile.write(input_text)
 
     @property
-    def year(self) -> Optional[str]:
+    def year(self) -> str | None:
         return cast(str, self.config.get("year"))
 
     @property
-    def pub_med(self) -> Optional[str]:
+    def pub_med(self) -> str | None:
         return cast(str, self.config.get("pub_med"))
 
     @property
-    def phenotype(self) -> Optional[str]:
+    def phenotype(self) -> str | None:
         return cast(str, self.config.get("phenotype"))
 
     @property
@@ -157,7 +157,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return result
 
     def _get_query_leaf_studies(
-        self, study_filters: Optional[Iterable[str]],
+        self, study_filters: Iterable[str] | None,
     ) -> list[GenotypeDataStudy]:
         leafs = []
         logger.debug("find leaf studies started...")
@@ -179,26 +179,26 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     # FIXME: Too many locals, too many arguments, complex. To refactor
     def query_result_variants(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        person_set_collection: Optional[tuple[str, list[str]]] = None,
-        inheritance: Optional[Union[str, list[str]]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[list[tuple]] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[list[tuple]] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
-        study_filters: Optional[Iterable[str]] = None,
-        pedigree_fields: Optional[list[str]] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: Iterable[str] | None = None,
+        person_ids: Iterable[str] | None = None,
+        person_set_collection: tuple[str, list[str]] | None = None,
+        inheritance: str | list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: list[tuple] | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: list[tuple] | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: Iterable[str] | None = None,
+        pedigree_fields: list[str] | None = None,
         **_kwargs: Any,
-    ) -> Optional[QueryResult]:
+    ) -> QueryResult | None:
         """Build a query result."""
         # flake8: noqa: C901
         # pylint: disable=too-many-locals,too-many-arguments
@@ -302,24 +302,24 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
     def query_variants(  # pylint: disable=too-many-locals,too-many-arguments
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        person_set_collection: Optional[tuple[str, list[str]]] = None,
-        inheritance: Optional[Union[str, list[str]]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[list[tuple]] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[list[tuple]] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
-        study_filters: Optional[Iterable[str]] = None,
-        pedigree_fields: Optional[list[str]] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: Iterable[str] | None = None,
+        person_ids: Iterable[str] | None = None,
+        person_set_collection: tuple[str, list[str]] | None = None,
+        inheritance: str | list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: list[tuple] | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: list[tuple] | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: Iterable[str] | None = None,
+        pedigree_fields: list[str] | None = None,
         unique_family_variants: bool = True,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
@@ -381,19 +381,19 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     # FIXME: Too many locals, too many arguments, To refactor
     def query_result_summary_variants(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[list[tuple]] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[list[tuple]] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
-        study_filters: Optional[list[str]] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: list[tuple] | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: list[tuple] | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: list[str] | None = None,
         **kwargs: Any,
-    ) -> Optional[QueryResult]:
+    ) -> QueryResult | None:
         # pylint: disable=too-many-locals,too-many-arguments,unused-argument
         """Build a query result for summary variants only."""
         logger.info("summary query - study_filters: %s", study_filters)
@@ -434,17 +434,17 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
     def query_summary_variants(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[list[tuple]] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[list[tuple]] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
-        study_filters: Optional[list[str]] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: list[tuple] | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: list[tuple] | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: list[str] | None = None,
         **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
         """Query and return generator containing summary variants."""
@@ -527,7 +527,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         pass
 
     def _build_person_set_collections(
-        self, pscs_config: Optional[dict[str, Any]],
+        self, pscs_config: dict[str, Any] | None,
         families: FamiliesData,
     ) -> dict[str, PersonSetCollection]:
         if pscs_config is None:
@@ -544,8 +544,8 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
     def _transform_person_set_collection_query(
         self, collection_query: tuple[str, list[str]],
-        person_ids: Optional[Iterable[str]],
-    ) -> Optional[set[str]]:
+        person_ids: Iterable[str] | None,
+    ) -> set[str] | None:
         assert collection_query is not None
 
         collection_id, selected_sets = collection_query
@@ -572,7 +572,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
     def get_person_set_collection(
         self, person_set_collection_id: str,
-    ) -> Optional[PersonSetCollection]:
+    ) -> PersonSetCollection | None:
         if person_set_collection_id is None:
             return None
         return self.person_set_collections[person_set_collection_id]
@@ -631,8 +631,8 @@ class GenotypeDataGroup(GenotypeData):
         return True
 
     def _load_cached_families_data(
-        self, cache_dir: Optional[str] = None,
-    ) -> Optional[FamiliesData]:
+        self, cache_dir: str | None = None,
+    ) -> FamiliesData | None:
         """Load families data cache if exists."""
         cache_dir = self._ensure_cache_dir(cache_dir)
         cache_path = os.path.join(
@@ -649,7 +649,7 @@ class GenotypeDataGroup(GenotypeData):
                 )
         return None
 
-    def _ensure_cache_dir(self, cache_dir: Optional[str] = None) -> str:
+    def _ensure_cache_dir(self, cache_dir: str | None = None) -> str:
         if cache_dir is None and "conf_dir" not in self.config:
             raise ValueError("genotype study group cache dir not specified")
 
@@ -663,7 +663,7 @@ class GenotypeDataGroup(GenotypeData):
         return cache_dir
 
     def _save_cached_families_data(
-        self, cache_dir: Optional[str] = None,
+        self, cache_dir: str | None = None,
     ) -> bool:
         """Store genotype data group families data into cache."""
         cache_dir = self._ensure_cache_dir(cache_dir)
@@ -680,7 +680,7 @@ class GenotypeDataGroup(GenotypeData):
             return False
 
     def _save_cached_person_sets(
-        self, cache_dir: Optional[str] = None,
+        self, cache_dir: str | None = None,
     ) -> bool:
         """Save cached person set collections defined for a genotype group."""
         cache_dir = self._ensure_cache_dir(cache_dir)
@@ -699,7 +699,7 @@ class GenotypeDataGroup(GenotypeData):
             )
             return False
 
-    def _has_cached_person_sets(self, cache_dir: Optional[str] = None) -> bool:
+    def _has_cached_person_sets(self, cache_dir: str | None = None) -> bool:
         """Save cached person set collections defined for a genotype group."""
         cache_dir = self._ensure_cache_dir(cache_dir)
         pscs_config = self.config.get("person_set_collections")
@@ -721,8 +721,8 @@ class GenotypeDataGroup(GenotypeData):
         return True
 
     def _load_cached_person_sets(
-        self, cache_dir: Optional[str] = None,
-    ) -> Optional[dict[str, PersonSetCollection]]:
+        self, cache_dir: str | None = None,
+    ) -> dict[str, PersonSetCollection] | None:
         """Save cached person set collections defined for a genotype group."""
         cache_dir = self._ensure_cache_dir(cache_dir)
 
@@ -777,7 +777,7 @@ class GenotypeDataGroup(GenotypeData):
         self._person_set_collections = pscs
         return True
 
-    def save_families_cache(self, cache_dir: Optional[str] = None) -> None:
+    def save_families_cache(self, cache_dir: str | None = None) -> None:
         """Load cached families and person set collections.
 
         If cached families or persons are missing, returns False.

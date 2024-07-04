@@ -4,7 +4,7 @@ import logging
 import textwrap
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from cerberus import Validator
 from jinja2 import Template
@@ -59,7 +59,7 @@ class GenomicResourceImplementation(ABC):
     def __init__(self, genomic_resource: GenomicResource):
         self.resource = genomic_resource
         self.config: dict = self.resource.get_config()
-        self._statistics: Optional[ResourceStatistics] = None
+        self._statistics: ResourceStatistics | None = None
 
     @property
     def resource_id(self) -> str:
@@ -99,11 +99,11 @@ class GenomicResourceImplementation(ABC):
         """Construct the contents of the implementation's HTML info page."""
         raise NotImplementedError
 
-    def get_statistics(self) -> Optional[ResourceStatistics]:
+    def get_statistics(self) -> ResourceStatistics | None:
         """Try and load resource statistics."""
         return None
 
-    def reload_statistics(self) -> Optional[ResourceStatistics]:
+    def reload_statistics(self) -> ResourceStatistics | None:
         self._statistics = None
         return self.get_statistics()
 
@@ -138,7 +138,7 @@ class InfoImplementationMixin:
 
             name: str
             size: str
-            md5: Optional[str]
+            md5: str | None
 
         template_data["resource_files"] = [
             FileEntry(entry.name, convert_size(entry.size), entry.md5)

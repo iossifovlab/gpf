@@ -4,7 +4,6 @@ import logging
 import os
 import sys
 import time
-from typing import Optional
 
 from dae.common_reports.common_report import CommonReport
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -14,8 +13,8 @@ logger = logging.getLogger("generate_common_reports")
 
 
 def main(
-    argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None,
+    argv: list[str] | None = None,
+    gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Command line tool to generate dataset statistics."""
     description = "Generate common reports tool"

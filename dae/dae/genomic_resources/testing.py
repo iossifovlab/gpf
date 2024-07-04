@@ -15,7 +15,7 @@ from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager
 from functools import partial
 from http.server import HTTPServer  # ThreadingHTTPServer
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 import pyBigWig  # type: ignore
 import pysam
@@ -59,7 +59,7 @@ def convert_to_tab_separated(content: str) -> str:
 
 def setup_directories(
         root_dir: pathlib.Path,
-        content: Union[str, dict[str, Any]]) -> None:
+        content: str | dict[str, Any]) -> None:
     """Set up directory and subdirectory structures using the content."""
     root_dir = pathlib.Path(root_dir)
     root_dir.parent.mkdir(parents=True, exist_ok=True)
@@ -89,7 +89,7 @@ def setup_denovo(denovo_path: pathlib.Path, content: str) -> pathlib.Path:
 
 def setup_tabix(
         tabix_path: pathlib.Path, tabix_content: str,
-        **kwargs: Union[bool, str, int]) -> tuple[str, str]:
+        **kwargs: bool | str | int) -> tuple[str, str]:
     """Set up a tabix file."""
     content = convert_to_tab_separated(tabix_content)
     out_path = tabix_path
@@ -255,7 +255,7 @@ def setup_genome(out_path: pathlib.Path, content: str) -> ReferenceGenome:
 
 def setup_gene_models(
         out_path: pathlib.Path,
-        content: str, fileformat: Optional[str] = None) -> GeneModels:
+        content: str, fileformat: str | None = None) -> GeneModels:
     """Set up gene models in refflat format using the passed content."""
     setup_directories(out_path, convert_to_tab_separated(content))
     setup_directories(out_path.parent, {
@@ -476,7 +476,7 @@ def s3_test_protocol() -> FsspecReadWriteProtocol:
 
 
 def build_s3_test_filesystem(
-        endpoint_url: Optional[str] = None) -> S3FileSystem:
+        endpoint_url: str | None = None) -> S3FileSystem:
     """Create an S3 fsspec filesystem connected to the S3 server."""
     if "AWS_SECRET_ACCESS_KEY" not in os.environ:
         os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"  # noqa: S105
@@ -491,7 +491,7 @@ def build_s3_test_filesystem(
     return s3filesystem
 
 
-def build_s3_test_bucket(s3filesystem: Optional[S3FileSystem] = None) -> str:
+def build_s3_test_bucket(s3filesystem: S3FileSystem | None = None) -> str:
     """Create an s3 test buckent."""
     with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
         if s3filesystem is None:
@@ -538,7 +538,7 @@ def copy_proto_genomic_resources(
 def proto_builder(
     scheme: str, content: dict,
 ) -> Generator[
-        Union[FsspecReadOnlyProtocol, FsspecReadWriteProtocol],
+        FsspecReadOnlyProtocol | FsspecReadWriteProtocol,
         None, None]:
     """Build a test genomic resource protocol with specified content."""
     with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:

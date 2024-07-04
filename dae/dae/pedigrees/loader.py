@@ -6,7 +6,7 @@ import pathlib
 import warnings
 from collections import defaultdict
 from functools import partial
-from typing import Any, Optional, TextIO, Union
+from typing import Any, TextIO
 
 import pandas as pd
 
@@ -35,7 +35,7 @@ PED_COLUMNS_REQUIRED = (
 )
 
 
-PedigreeIO = Union[str, pathlib.Path, TextIO]  # pylint: disable=invalid-name
+PedigreeIO = str | pathlib.Path | TextIO  # pylint: disable=invalid-name
 
 
 class FamiliesLoader(CLILoader):
@@ -50,7 +50,7 @@ class FamiliesLoader(CLILoader):
     @staticmethod
     def load_pedigree_file(
         pedigree_filename: PedigreeIO,
-        pedigree_params: Optional[dict[str, Any]] = None,
+        pedigree_params: dict[str, Any] | None = None,
     ) -> FamiliesData:
         """Load a pedigree files and return FamiliesData object."""
         if pedigree_params is None:
@@ -64,7 +64,7 @@ class FamiliesLoader(CLILoader):
     @staticmethod
     def build_families_data_from_pedigree(
         ped_df: pd.DataFrame,
-        pedigree_params: Optional[dict[str, Any]] = None,
+        pedigree_params: dict[str, Any] | None = None,
     ) -> FamiliesData:
         """Build a families data object from a pedigree data frame."""
         if pedigree_params is None:
@@ -348,18 +348,18 @@ class FamiliesLoader(CLILoader):
         ped_sep: str = "\t",
         ped_no_header: bool = False,
         ped_no_role: bool = False,
-        ped_family: Union[str, int] = "familyId",
-        ped_person: Union[str, int] = "personId",
-        ped_mom: Union[str, int] = "momId",
-        ped_dad: Union[str, int] = "dadId",
-        ped_sex: Union[str, int] = "sex",
-        ped_status: Union[str, int] = "status",
-        ped_role: Union[str, int] = "role",
-        ped_proband: Union[str, int] = "proband",
-        ped_layout: Union[str, int] = "layout",
-        ped_generated: Union[str, int] = "generated",
-        ped_not_sequenced: Union[str, int] = "not_sequenced",
-        ped_sample_id: Union[str, int] = "sample_id",
+        ped_family: str | int = "familyId",
+        ped_person: str | int = "personId",
+        ped_mom: str | int = "momId",
+        ped_dad: str | int = "dadId",
+        ped_sex: str | int = "sex",
+        ped_status: str | int = "status",
+        ped_role: str | int = "role",
+        ped_proband: str | int = "proband",
+        ped_layout: str | int = "layout",
+        ped_generated: str | int = "generated",
+        ped_not_sequenced: str | int = "not_sequenced",
+        ped_sample_id: str | int = "sample_id",
         enums_as_values: bool = False,
         **kwargs: Any,
     ) -> pd.DataFrame:

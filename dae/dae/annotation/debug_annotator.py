@@ -1,5 +1,5 @@
 
-from typing import Any, Optional
+from typing import Any
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
@@ -16,7 +16,7 @@ class HelloWorldAnnotator(Annotator):
         super().__init__(pipeline, info)
 
     def annotate(
-        self, _annotatable: Optional[Annotatable], _context: dict[str, Any],
+        self, _annotatable: Annotatable | None, _context: dict[str, Any],
     ) -> dict[str, Any]:
         result = {}
         for attribute_config in self._info.attributes:

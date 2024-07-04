@@ -1,7 +1,7 @@
 import argparse
 import logging
 import textwrap
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 from box import Box
@@ -28,7 +28,7 @@ class TaskGraphCli:
     def add_arguments(
         parser: argparse.ArgumentParser,
         force_mode: str = "optional",
-        default_task_status_dir: Optional[str] = ".",
+        default_task_status_dir: str | None = ".",
         *,
         use_commands: bool = True,
     ) -> None:
@@ -94,7 +94,7 @@ class TaskGraphCli:
 
     @staticmethod
     def create_executor(
-            task_cache: Optional[TaskCache] = None,
+            task_cache: TaskCache | None = None,
             **kwargs: Any) -> TaskGraphExecutor:
         """Create a task graph executor according to the args specified."""
         args = Box(kwargs)

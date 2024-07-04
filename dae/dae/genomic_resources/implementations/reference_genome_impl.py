@@ -6,7 +6,7 @@ import json
 import logging
 import os
 import textwrap
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 from jinja2 import Template
@@ -55,7 +55,7 @@ class ReferenceGenomeStatistics(
     @staticmethod
     def build_statistics(
         genomic_resource: GenomicResource,
-    ) -> Optional[ReferenceGenomeStatistics]:
+    ) -> ReferenceGenomeStatistics | None:
         """Load reference genome statistics."""
         chrom_statistics = {}
         try:
@@ -93,8 +93,8 @@ class ChromosomeStatistic(Statistic):
 
     def __init__(
         self, chromosome: str, length: int = 0,
-        nucleotide_counts: Optional[dict[str, int]] = None,
-        nucleotide_pair_counts: Optional[dict[str, int]] = None,
+        nucleotide_counts: dict[str, int] | None = None,
+        nucleotide_pair_counts: dict[str, int] | None = None,
     ):
         super().__init__(chromosome, "Reference genome chromosome stats")
         if nucleotide_counts is None:
@@ -136,7 +136,7 @@ class ChromosomeStatistic(Statistic):
         self.length += 1
 
     def _add_nucleotide_tuple(
-            self, nuc1: Optional[str], nuc2: str) -> None:
+            self, nuc1: str | None, nuc2: str) -> None:
         if nuc1 is None:
             return
 
@@ -148,7 +148,7 @@ class ChromosomeStatistic(Statistic):
             return
         self.nucleotide_pair_counts[pair] += 1
 
-    def add_value(self, value: tuple[Optional[str], str]) -> None:
+    def add_value(self, value: tuple[str | None, str]) -> None:
         prev, current = value
         self._add_nucleotide(current)
         self._add_nucleotide_tuple(prev, current)
@@ -217,10 +217,9 @@ class GenomeStatistic(Statistic):
 
     def __init__(
             self, chromosomes: list[str], length: int = 0,
-            nucleotide_distribution: Optional[dict[str, float]] = None,
-            bi_nucleotide_distribution: Optional[dict[str, float]] = None,
-            chromosome_statistics: Optional[
-                dict[str, ChromosomeStatistic]] = None,
+            nucleotide_distribution: dict[str, float] | None = None,
+            bi_nucleotide_distribution: dict[str, float] | None = None,
+            chromosome_statistics: dict[str, ChromosomeStatistic] | None = None,
     ):
         super().__init__("global", "")
         self.chromosomes = chromosomes
@@ -533,13 +532,13 @@ class ReferenceGenomeImplementation(
 
     @staticmethod
     def _do_chrom_statistic(
-        resource: GenomicResource, chrom: str, start: int, end: Optional[int],
+        resource: GenomicResource, chrom: str, start: int, end: int | None,
     ) -> ChromosomeStatistic:
         impl = build_reference_genome_from_resource(resource)
         statistic = ChromosomeStatistic(chrom)
         with impl.open():
             if start == 1:
-                prev: Optional[str] = None
+                prev: str | None = None
             else:
                 prev = impl.get_sequence(chrom, start - 1, start)
             for nuc in impl.fetch(chrom, start, end):
@@ -553,7 +552,7 @@ class ReferenceGenomeImplementation(
     def _merge_chrom_statistics(
         *chrom_tasks: ChromosomeStatistic,
     ) -> ChromosomeStatistic:
-        final_statistic: Optional[ChromosomeStatistic] = None
+        final_statistic: ChromosomeStatistic | None = None
         for chrom_task_result in chrom_tasks:
             if final_statistic is None:
                 final_statistic = chrom_task_result
@@ -602,5 +601,5 @@ class ReferenceGenomeImplementation(
             outfile.write(statistic.serialize())
         return statistic
 
-    def get_statistics(self) -> Optional[ReferenceGenomeStatistics]:
+    def get_statistics(self) -> ReferenceGenomeStatistics | None:
         return ReferenceGenomeStatistics.build_statistics(self.resource)

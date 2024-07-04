@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Iterable
-from typing import Any, Optional, Union
+from typing import Any
 
 from dae.genomic_resources.gene_models import GeneModels
 from dae.pedigrees.families_data import FamiliesData
@@ -12,7 +12,7 @@ from dae.query_variants.sql.schema2.base_query_builder import (
 from dae.utils.regions import Region
 
 logger = logging.getLogger(__name__)
-RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
+RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 
 
 class SummaryQueryBuilder(BaseQueryBuilder):
@@ -21,16 +21,16 @@ class SummaryQueryBuilder(BaseQueryBuilder):
     def __init__(
         self,
         dialect: Dialect,
-        db: Optional[str],
-        family_variant_table: Optional[str],
+        db: str | None,
+        family_variant_table: str | None,
         summary_allele_table: str,
         pedigree_table: str,
         family_variant_schema: TableSchema,
         summary_allele_schema: TableSchema,
-        table_properties: Optional[dict],
+        table_properties: dict | None,
         pedigree_schema: TableSchema,
         families: FamiliesData,
-        gene_models: Optional[GeneModels] = None,
+        gene_models: GeneModels | None = None,
     ):
         # pylint: disable=too-many-arguments
         super().__init__(
@@ -61,8 +61,8 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         self._add_to_product(from_clause)
 
     def _build_join(
-        self, genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
+        self, genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
     ) -> None:
         if genes is not None or effect_types is not None:
             self._add_to_product(
@@ -76,21 +76,21 @@ class SummaryQueryBuilder(BaseQueryBuilder):
 
     def _build_where(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        inheritance: Optional[Union[str, list[str]]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        pedigree_fields: Optional[tuple] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: Iterable[str] | None = None,
+        person_ids: Iterable[str] | None = None,
+        inheritance: str | list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        pedigree_fields: tuple | None = None,
         **kwargs: Any,
     ) -> None:
         # pylint: disable=too-many-arguments,too-many-locals,unused-argument

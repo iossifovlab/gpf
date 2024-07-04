@@ -2,7 +2,7 @@
 import abc
 import logging
 import textwrap
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import (
@@ -78,7 +78,7 @@ class AbstractLiftoverAnnotator(AnnotatorBase):
     """Liftovver annotator class."""
 
     def __init__(
-        self, pipeline: Optional[AnnotationPipeline],
+        self, pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
         chain: LiftoverChain,
         source_genome: ReferenceGenome,
@@ -140,7 +140,7 @@ Annotator to lift over a variant from one reference genome to another.
 
         return {"liftover_annotatable": value}
 
-    def liftover_allele(self, allele: VCFAllele) -> Optional[VCFAllele]:
+    def liftover_allele(self, allele: VCFAllele) -> VCFAllele | None:
         """Liftover an allele."""
         if not isinstance(allele, VCFAllele):
             return None
@@ -164,13 +164,13 @@ Annotator to lift over a variant from one reference genome to another.
     @abc.abstractmethod
     def _internal_liftover_allele(
         self, allele: VCFAllele,
-    ) -> Optional[tuple[str, int, str, str]]:
+    ) -> tuple[str, int, str, str] | None:
         """Liftover an allele."""
         raise NotImplementedError
 
     def liftover_position(
         self, position: Annotatable,
-    ) -> Optional[Annotatable]:
+    ) -> Annotatable | None:
         """Liftover position annotatable."""
         assert isinstance(position, Position)
         lo_coord = self.chain.convert_coordinate(
@@ -182,7 +182,7 @@ Annotator to lift over a variant from one reference genome to another.
 
     def _do_liftover_region(
         self, region: Annotatable,
-    ) -> Optional[Annotatable]:
+    ) -> Annotatable | None:
         """Liftover region annotatable."""
         assert isinstance(region, (Region, CNVAllele))
         lo_start = self.chain.convert_coordinate(
@@ -208,12 +208,12 @@ Annotator to lift over a variant from one reference genome to another.
             min(lo_start[1], lo_end[1]),
             max(lo_start[1], lo_end[1]))
 
-    def liftover_region(self, region: Annotatable) -> Optional[Annotatable]:
+    def liftover_region(self, region: Annotatable) -> Annotatable | None:
         """Liftover region annotatable."""
         assert isinstance(region, Region)
         return self._do_liftover_region(region)
 
-    def liftover_cnv(self, cnv_allele: Annotatable) -> Optional[Annotatable]:
+    def liftover_cnv(self, cnv_allele: Annotatable) -> Annotatable | None:
         """Liftover CNV allele annotatable."""
         assert isinstance(cnv_allele, CNVAllele)
         region = self._do_liftover_region(cnv_allele)
@@ -228,7 +228,7 @@ def _liftover_snp_simple(
     nref: str,
     nalt: str,
     target_genome: ReferenceGenome,
-) -> Optional[tuple[str, int, str, str]]:
+) -> tuple[str, int, str, str] | None:
     tchrom, tpos, tstrand, _ = lo_coordinates
     tseq = target_genome.get_sequence(tchrom, tpos, tpos)
     if tstrand == "-":
@@ -256,7 +256,7 @@ def _liftover_sequence(
     alt: str,
     liftover_chain: LiftoverChain,
     target_genome: ReferenceGenome,
-) -> Optional[tuple[str, int, str, str]]:
+) -> tuple[str, int, str, str] | None:
     slen = len(ref)
     anchor_5prime = pos
     anchor_3prime = pos + slen - 1
@@ -317,7 +317,7 @@ def bcf_liftover_allele(
     liftover_chain: LiftoverChain,
     source_genome: ReferenceGenome,
     target_genome: ReferenceGenome,
-) -> Optional[tuple[str, int, str, str]]:
+) -> tuple[str, int, str, str] | None:
     """Liftover a variant."""
     nchrom, npos, nref, nalts = normalize_variant(
         chrom, pos, ref, [alt], source_genome)
@@ -355,7 +355,7 @@ def basic_liftover_allele(
     liftover_chain: LiftoverChain,
     source_genome: ReferenceGenome,
     target_genome: ReferenceGenome,
-) -> Optional[tuple[str, int, str, str]]:
+) -> tuple[str, int, str, str] | None:
     """Basic liftover an allele."""
 
     nchrom, npos, nref, nalts = normalize_variant(
@@ -407,9 +407,9 @@ def _liftover_variant(
     target_genome: ReferenceGenome,
     liftover_allele_func: Callable[
         [str, int, str, str, LiftoverChain, ReferenceGenome, ReferenceGenome],
-        Optional[tuple[str, int, str, str]],
+        tuple[str, int, str, str] | None,
     ],
-) -> Optional[tuple[str, int, str, list[str]]]:
+) -> tuple[str, int, str, list[str]] | None:
     """Liftover a variant."""
     lo_alleles: list[tuple[str, int, str, str]] = []
     for alt in alts:
@@ -455,7 +455,7 @@ def bcf_liftover_variant(
     liftover_chain: LiftoverChain,
     source_genome: ReferenceGenome,
     target_genome: ReferenceGenome,
-) -> Optional[tuple[str, int, str, list[str]]]:
+) -> tuple[str, int, str, list[str]] | None:
     """BCF liftover variant utility function."""
     return _liftover_variant(
         chrom, pos, ref, alts, liftover_chain, source_genome, target_genome,
@@ -471,7 +471,7 @@ def basic_liftover_variant(
     liftover_chain: LiftoverChain,
     source_genome: ReferenceGenome,
     target_genome: ReferenceGenome,
-) -> Optional[tuple[str, int, str, list[str]]]:
+) -> tuple[str, int, str, list[str]] | None:
     """Basic liftover variant utility function."""
     return _liftover_variant(
         chrom, pos, ref, alts, liftover_chain, source_genome, target_genome,
@@ -484,7 +484,7 @@ class BasicLiftoverAnnotator(AbstractLiftoverAnnotator):
 
     def _internal_liftover_allele(
         self, allele: VCFAllele,
-    ) -> Optional[tuple[str, int, str, str]]:
+    ) -> tuple[str, int, str, str] | None:
         """Liftover an allele."""
         return basic_liftover_allele(
             allele.chrom, allele.position, allele.ref, allele.alt,
@@ -497,7 +497,7 @@ class BcfLiftoverAnnotator(AbstractLiftoverAnnotator):
 
     def _internal_liftover_allele(
         self, allele: VCFAllele,
-    ) -> Optional[tuple[str, int, str, str]]:
+    ) -> tuple[str, int, str, str] | None:
         """Liftover an allele."""
         return bcf_liftover_allele(
             allele.chrom, allele.position, allele.ref, allele.alt,

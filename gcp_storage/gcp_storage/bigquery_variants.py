@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class BigQueryDialect(Dialect):
     """Abstracts away details related to bigquery."""
 
-    def __init__(self, ns: Optional[str] = None) -> None:
+    def __init__(self, ns: str | None = None) -> None:
         super().__init__(namespace=ns)
 
     @staticmethod
@@ -54,11 +54,11 @@ class BigQueryVariants(SqlSchema2Variants):
         self,
         gcp_project_id: str,
         db: str,
-        summary_allele_table: Optional[str],
-        family_variant_table: Optional[str],
+        summary_allele_table: str | None,
+        family_variant_table: str | None,
         pedigree_table: str,
         meta_table: str,
-        gene_models: Optional[GeneModels] = None,
+        gene_models: GeneModels | None = None,
     ) -> None:
         self.client = bigquery.Client(project=gcp_project_id)
 
@@ -96,7 +96,7 @@ class BigQueryVariants(SqlSchema2Variants):
         records = df[["column_name", "data_type"]].to_records()
         return {col_name: col_type for (_, col_name, col_type) in records}
 
-    def _fetch_variants_data_schema(self) -> Optional[dict[str, Any]]:
+    def _fetch_variants_data_schema(self) -> dict[str, Any] | None:
         query = f"""SELECT value FROM {self.db}.{self.meta_table}
                WHERE key = 'variants_data_schema'
                LIMIT 1

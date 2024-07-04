@@ -1,7 +1,7 @@
 """Module containing the gene score annotator."""
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import (
@@ -53,7 +53,7 @@ class GeneScoreAnnotator(Annotator):
 
     DEFAULT_AGGREGATOR_TYPE = "dict"
 
-    def __init__(self, pipeline: Optional[AnnotationPipeline],
+    def __init__(self, pipeline: AnnotationPipeline | None,
                  info: AnnotatorInfo,
                  gene_score_resource: GenomicResource, input_gene_list: str):
 
@@ -97,7 +97,7 @@ class GeneScoreAnnotator(Annotator):
     def used_context_attributes(self) -> tuple[str, ...]:
         return (self.input_gene_list,)
 
-    def annotate(self, _: Optional[Annotatable],
+    def annotate(self, _: Annotatable | None,
                  context: dict[str, Any]) \
             -> dict[str, Any]:
 

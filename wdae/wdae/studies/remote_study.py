@@ -1,5 +1,5 @@
 from collections.abc import Generator, Iterable
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 from remote.rest_api_client import RESTClient
 
@@ -73,7 +73,7 @@ class RemoteGenotypeData(GenotypeData):
             self._build_person_set_collections(pscs_config, self._families)
 
     def _build_person_set_collections(
-        self, pscs_config: Optional[dict[str, Any]],
+        self, pscs_config: dict[str, Any] | None,
         families: FamiliesData,
     ) -> dict[str, PersonSetCollection]:
 
@@ -107,24 +107,24 @@ class RemoteGenotypeData(GenotypeData):
 
     def query_variants(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        person_set_collection: Optional[tuple[str, list[str]]] = None,
-        inheritance: Optional[Union[str, list[str]]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[list[tuple]] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[list[tuple]] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
-        study_filters: Optional[Iterable[str]] = None,
-        pedigree_fields: Optional[list[str]] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: Iterable[str] | None = None,
+        person_ids: Iterable[str] | None = None,
+        person_set_collection: tuple[str, list[str]] | None = None,
+        inheritance: str | list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: list[tuple] | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: list[tuple] | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: Iterable[str] | None = None,
+        pedigree_fields: list[str] | None = None,
         unique_family_variants: bool = True,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
@@ -133,24 +133,24 @@ class RemoteGenotypeData(GenotypeData):
 
     def query_summary_variants(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[list[tuple]] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[list[tuple]] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
-        study_filters: Optional[list[str]] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: list[tuple] | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: list[tuple] | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: list[str] | None = None,
         **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
         # pylint: disable=too-many-arguments
         raise NotImplementedError
 
     @property
-    def person_set_collection_configs(self) -> Optional[dict[str, Any]]:
+    def person_set_collection_configs(self) -> dict[str, Any] | None:
         return cast(
             dict[str, Any],
             self.rest_client.get_person_set_collection_configs(

@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from datasets_api.permissions import get_permissions_etag
 from django.http.response import StreamingHttpResponse
@@ -140,7 +140,7 @@ class FamiliesDataDownloadView(QueryDatasetView):
     def collect_families(
         cls,
         study_families: FamiliesData,
-        tags_query: Optional[dict[str, Any]],
+        tags_query: dict[str, Any] | None,
     ) -> FamiliesData:
         """Collect and filter families by tags."""
         if tags_query is None:

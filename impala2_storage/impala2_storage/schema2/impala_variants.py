@@ -1,6 +1,6 @@
 import logging
 from contextlib import closing
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -39,11 +39,11 @@ class ImpalaVariants(SqlSchema2Variants):
         self,
         impala_helpers: ImpalaHelpers,
         db: str,
-        family_variant_table: Optional[str],
-        summary_allele_table: Optional[str],
+        family_variant_table: str | None,
+        summary_allele_table: str | None,
         pedigree_table: str,
         meta_table: str,
-        gene_models: Optional[GeneModels] = None,
+        gene_models: GeneModels | None = None,
     ) -> None:
         self._impala_helpers = impala_helpers
         super().__init__(
@@ -88,7 +88,7 @@ class ImpalaVariants(SqlSchema2Variants):
                 return str(row[0])
         return ""
 
-    def _fetch_variants_data_schema(self) -> Optional[dict[str, Any]]:
+    def _fetch_variants_data_schema(self) -> dict[str, Any] | None:
         query = f"""SELECT value FROM {self.db}.{self.meta_table}
                WHERE key = 'variants_data_schema'
                LIMIT 1

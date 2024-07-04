@@ -1,6 +1,6 @@
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import AnnotatorInfo
@@ -56,7 +56,7 @@ class GeneSetAnnotator(Annotator):
 
     def __init__(
         self,
-        pipeline: Optional[AnnotationPipeline],
+        pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
         gene_set_resource: GenomicResource,
         gene_set_id: str,
@@ -80,7 +80,7 @@ class GeneSetAnnotator(Annotator):
     def used_context_attributes(self) -> tuple[str, ...]:
         return (self.input_gene_list,)
 
-    def annotate(self, _: Optional[Annotatable],
+    def annotate(self, _: Annotatable | None,
                  context: dict[str, Any]) \
             -> dict[str, Any]:
 

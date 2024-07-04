@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Union, cast
+from typing import cast
 from urllib.parse import urlparse
 
 import pyarrow as pa
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def url_to_pyarrow_fs(
         filename: str,
-        filesystem: Optional[AbstractFileSystem] = None) -> pa.fs.FileSystem:
+        filesystem: AbstractFileSystem | None = None) -> pa.fs.FileSystem:
     """Turn URL into pyarrow filesystem instance.
 
     Parameters
@@ -46,7 +46,7 @@ def merge_parquets(
     *,
     delete_in_files: bool = True,
     row_group_size: int = 50_000,
-    parquet_version: Optional[str] = None,
+    parquet_version: str | None = None,
 ) -> None:
     """Merge `in_files` into one large file called `out_file`."""
     try:
@@ -75,8 +75,8 @@ def _merge_flush_batches(
 
 def _collect_in_files_compression(
     in_files: list[str],
-) -> Union[str, dict[str, str]]:
-    compression: Union[str, dict[str, str]] = "SNAPPY"
+) -> str | dict[str, str]:
+    compression: str | dict[str, str] = "SNAPPY"
     if len(in_files) > 0:
         for in_file in in_files:
             fs, path = url_to_fs(in_file)
@@ -108,7 +108,7 @@ def _try_merge_parquets(
     *,
     delete_in_files: bool,
     row_group_size: int = 50_000,
-    parqet_version: Optional[str] = None,
+    parqet_version: str | None = None,
 ) -> None:
     assert len(in_files) > 0
     out_parquet = None

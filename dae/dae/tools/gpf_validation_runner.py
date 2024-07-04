@@ -7,7 +7,7 @@ import logging
 import os
 import sys
 from collections.abc import Iterator
-from typing import Any, Optional, cast
+from typing import Any, cast
 from xml.etree.ElementTree import Element, tostring
 
 import numpy as np
@@ -35,11 +35,11 @@ class TestResult:
 
     def __init__(
         self,
-        expectation: Optional[dict[str, Any]] = None,
-        case: Optional[dict[str, Any]] = None,
-        test_for: Optional[str] = None,
-        params: Optional[dict[str, Any]] = None,
-        result: Optional[str] = None,
+        expectation: dict[str, Any] | None = None,
+        case: dict[str, Any] | None = None,
+        test_for: str | None = None,
+        params: dict[str, Any] | None = None,
+        result: str | None = None,
     ) -> None:
 
         self.expectation = expectation
@@ -48,8 +48,8 @@ class TestResult:
         self.params = params
         self.status = TestStatus.NOTSET
         self.result = result
-        self.message: Optional[str] = None
-        self.time: Optional[float] = None
+        self.message: str | None = None
+        self.time: float | None = None
 
     def __str__(self) -> str:
         assert self.case is not None
@@ -260,7 +260,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
     def _build_case_expections_filename(
         self, case: dict[str, Any],
-        dirname: Optional[str] = None,
+        dirname: str | None = None,
     ) -> str:
         case_dirname, _ = os.path.splitext(self.expectations["file"])
         if dirname is not None:
@@ -462,7 +462,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
     def _variants_diff(
         self, variants_df: pd.DataFrame,
         expected_df: pd.DataFrame,
-    ) -> Optional[str]:
+    ) -> str | None:
         if len(variants_df) == 0 and len(expected_df) == 0:
             return None
         try:
@@ -576,7 +576,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
         self, case: dict[str, Any],
         params: dict[str, Any],
         variants: list[FamilyVariant],
-    ) -> Optional[TestResult]:
+    ) -> TestResult | None:
         variants_df = self._build_variants_df(variants)
         variants_filename = self._build_case_expections_filename(case)
         if not os.path.exists(variants_filename):
@@ -673,7 +673,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
     def _execute_test_case(
         self, case: dict[str, Any],
         study: GenotypeData,
-    ) -> tuple[TestResult, Optional[TestResult]]:
+    ) -> tuple[TestResult, TestResult | None]:
         try:
             study_id = self.expectations["study"]
             params = self._case_query_params(case)
@@ -885,7 +885,7 @@ class MainRunner:
         print(100 * "=")
 
 
-def main(argv: Optional[list[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     """Entry point for the runner script."""
     argv = argv or sys.argv[1:]
     parser = argparse.ArgumentParser()

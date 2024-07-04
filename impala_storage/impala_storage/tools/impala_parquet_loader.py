@@ -2,7 +2,6 @@
 import argparse
 import os
 import sys
-from typing import Optional
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
@@ -79,8 +78,8 @@ def parse_cli_arguments(
 
 
 def main(
-    argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None,
+    argv: list[str] | None = None,
+    gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Upload parquet dataset into Impala."""
     if gpf_instance is None:

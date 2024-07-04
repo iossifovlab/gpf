@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import time
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from dae.common_reports.denovo_report import DenovoReport
 from dae.common_reports.family_report import FamiliesReport
@@ -171,7 +171,7 @@ class CommonReport:
             json.dump(self.to_dict(full=True), crf)
 
     @staticmethod
-    def load(report_filename: str) -> Optional[CommonReport]:
+    def load(report_filename: str) -> CommonReport | None:
         """Load a common report from a file.
 
         If file does not exists returns None.
@@ -187,7 +187,7 @@ class CommonReport:
     def build_and_save(
         study: GenotypeData,
         force: bool = False,
-    ) -> Optional[CommonReport]:
+    ) -> CommonReport | None:
         """Build a common report for a study, saves it and returns the report.
 
         If the common reports are disabled for the study, the function skips

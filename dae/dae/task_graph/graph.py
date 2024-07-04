@@ -4,7 +4,7 @@ import logging
 from collections.abc import Iterable
 from copy import copy
 from dataclasses import dataclass
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class TaskGraph:
 
     def create_task(self, task_id: str, func: Callable[..., Any], args: list,
                     deps: list[Task],
-                    input_files: Optional[list[str]] = None) -> Task:
+                    input_files: list[str] | None = None) -> Task:
         """Create a new task and add it to the graph.
 
         :param name: Name of the task (used for debugging purposes)

@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
 
 import pytest
 
@@ -78,7 +77,7 @@ def test_f1_non_cannonical_omission(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
-    effects: Optional[list[str]],
+    effects: list[str] | None,
     count: int,
 ) -> None:
 
@@ -111,7 +110,7 @@ def test_f1_cannonical_omission(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
-    effects: Optional[list[str]],
+    effects: list[str] | None,
     count: int,
 ) -> None:
 

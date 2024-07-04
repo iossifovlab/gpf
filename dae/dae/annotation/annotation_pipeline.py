@@ -5,7 +5,7 @@ from __future__ import annotations
 import abc
 import logging
 from types import TracebackType
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import (
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class Annotator(abc.ABC):
     """Annotator provides a set of attrubutes for a given Annotatable."""
 
-    def __init__(self, pipeline: Optional[AnnotationPipeline],
+    def __init__(self, pipeline: AnnotationPipeline | None,
                  info: AnnotatorInfo):
         self.pipeline = pipeline
         self._info = info
@@ -37,12 +37,12 @@ class Annotator(abc.ABC):
 
     @abc.abstractmethod
     def annotate(
-        self, annotatable: Optional[Annotatable], context: dict[str, Any],
+        self, annotatable: Annotatable | None, context: dict[str, Any],
     ) -> dict[str, Any]:
         """Produce annotation attributes for an annotatable."""
 
     def batch_annotate(
-        self, annotatables: list[Optional[Annotatable]],
+        self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         return [
@@ -89,7 +89,7 @@ class AnnotationPipeline:
 
         self.repository: GenomicResourceRepo = repository
         self.annotators: list[Annotator] = []
-        self.preambule: Optional[AnnotationPreambule] = None
+        self.preambule: AnnotationPreambule | None = None
         self.raw: RawPipelineConfig = []
         self._is_open = False
 
@@ -101,7 +101,7 @@ class AnnotationPipeline:
                 attribute_info in annotator.attributes]
 
     def get_attribute_info(
-            self, attribute_name: str) -> Optional[AttributeInfo]:
+            self, attribute_name: str) -> AttributeInfo | None:
         for annotator in self.annotators:
             for attribute_info in annotator.get_info().attributes:
                 if attribute_info.name == attribute_name:
@@ -114,7 +114,7 @@ class AnnotationPipeline:
 
     def get_annotator_by_attribute_info(
         self, attribute_info: AttributeInfo,
-    ) -> Optional[Annotator]:
+    ) -> Annotator | None:
         for annotator in self.annotators:
             if attribute_info in annotator.attributes:
                 return annotator
@@ -125,7 +125,7 @@ class AnnotationPipeline:
         self.annotators.append(annotator)
 
     def annotate(self, annotatable: Annotatable,
-                 context: Optional[dict] = None) -> dict:
+                 context: dict | None = None) -> dict:
         """Apply all annotators to an annotatable."""
         if not self._is_open:
             self.open()
@@ -141,7 +141,7 @@ class AnnotationPipeline:
 
     def batch_annotate(
         self, annotatables: list[Annotatable | None],
-        contexts: Optional[list[dict]] = None,
+        contexts: list[dict] | None = None,
     ) -> list[dict]:
         """Apply all annotators to a list of annotatables."""
         if not self._is_open:
@@ -186,7 +186,7 @@ class AnnotationPipeline:
     def __exit__(
             self,
             exc_type: type[BaseException] | None,
-            exc_value: Optional[BaseException],
+            exc_value: BaseException | None,
             exc_tb: TracebackType | None) -> None:
         if exc_type is not None:
             logger.error(
@@ -391,7 +391,7 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
                 self.input_annotatable_name)
 
     def annotate(
-        self, _: Optional[Annotatable], context: dict[str, Any],
+        self, _: Annotatable | None, context: dict[str, Any],
     ) -> dict[str, Any]:
 
         input_annotatable = context[self.input_annotatable_name]
@@ -437,7 +437,7 @@ class ValueTransformAnnotatorDecorator(AnnotatorDecorator):
         self.value_transformers = value_transformers
 
     def annotate(
-        self, annotatable: Optional[Annotatable], context: dict[str, Any],
+        self, annotatable: Annotatable | None, context: dict[str, Any],
     ) -> dict[str, Any]:
         result = self.child.annotate(annotatable, context)
         return {k: (self.value_transformers[k](v)

@@ -1,5 +1,5 @@
 import logging
-from typing import Any, ClassVar, Optional, cast
+from typing import Any, ClassVar, cast
 
 import gcsfs
 import pyarrow.parquet as pq
@@ -47,7 +47,7 @@ class GcpGenotypeStorage(GenotypeStorage):
 
     def __init__(self, storage_config: dict[str, Any]) -> None:
         super().__init__(storage_config)
-        self.fs: Optional[gcsfs.GCSFileSystem] = None
+        self.fs: gcsfs.GCSFileSystem | None = None
 
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:

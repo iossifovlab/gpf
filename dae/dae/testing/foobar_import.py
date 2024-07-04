@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
 
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -46,7 +45,7 @@ def foobar_genome(root_path: pathlib.Path) -> ReferenceGenome:
 
 def foobar_gpf(
         root_path: pathlib.Path,
-        storage: Optional[GenotypeStorage] = None) -> GPFInstance:
+        storage: GenotypeStorage | None = None) -> GPFInstance:
     setup_genome(
         root_path / "foobar_genome" / "chrAll.fa",
         """

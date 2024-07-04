@@ -2,7 +2,6 @@ import argparse
 import logging
 import sys
 from collections import defaultdict
-from typing import Optional
 
 import pandas as pd
 
@@ -20,7 +19,7 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 logger = logging.getLogger(__name__)
 
 
-def cli(argv: Optional[list[str]] = None) -> None:
+def cli(argv: list[str] | None = None) -> None:
     """Command line tool to create coding length enrichment background."""
     if argv is None:
         argv = sys.argv[1:]

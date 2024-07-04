@@ -2,7 +2,6 @@
 
 import logging
 from collections import defaultdict
-from typing import Optional
 
 from dae.pedigrees.family import Family, Person
 from dae.variants.attributes import Role, Sex, Status
@@ -13,14 +12,14 @@ logger = logging.getLogger(__name__)
 class Mating:
     """Class to represent a mating unit."""
 
-    def __init__(self, mom_id: str, dad_id: Optional[str]) -> None:
+    def __init__(self, mom_id: str, dad_id: str | None) -> None:
         self.mom_id = mom_id
         self.dad_id = dad_id
         self.mating_id = Mating.build_id(mom_id, dad_id)
         self.children: set[str] = set()
 
     @staticmethod
-    def build_id(mom_id: Optional[str], dad_id: Optional[str]) -> str:
+    def build_id(mom_id: str | None, dad_id: str | None) -> str:
         return f"{mom_id},{dad_id}"
 
     @staticmethod
@@ -74,7 +73,7 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
                 person._role = role
                 person._attributes["role"] = role
 
-    def _get_family_proband(self) -> Optional[Person]:
+    def _get_family_proband(self) -> Person | None:
         probands = self.family.get_members_with_roles([Role.prb])
         if len(probands) > 0:
             return probands[0]

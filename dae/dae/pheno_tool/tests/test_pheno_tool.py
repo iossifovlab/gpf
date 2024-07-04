@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from collections import Counter
-from typing import List, Optional
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -163,7 +163,7 @@ def test_get_normalize_measure_id_same_measure(
 def test_get_normalize_measure_id_non_existent(
     fake_phenotype_data: PhenotypeStudy,
     measure_name: str,
-    instrument_name: Optional[str],
+    instrument_name: str | None,
 ) -> None:
     pheno_tool = PhenoTool(fake_phenotype_data, "i1.m1")
     measure_id = pheno_tool._get_normalize_measure_id(

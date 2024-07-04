@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
@@ -93,7 +93,7 @@ class CnvCollectionAnnotator(Annotator):
         super().close()
 
     def annotate(
-        self, annotatable: Optional[Annotatable], _: dict[str, Any],
+        self, annotatable: Annotatable | None, _: dict[str, Any],
     ) -> dict[str, Any]:
         if annotatable is None:
             return self._empty_result()

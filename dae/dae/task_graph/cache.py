@@ -9,7 +9,7 @@ from collections.abc import Generator, Iterator
 from copy import copy
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import fsspec
 
@@ -60,8 +60,8 @@ class TaskCache:
     @staticmethod
     def create(
         *,
-        force: Optional[bool] = None,
-        cache_dir: Optional[str] = None,
+        force: bool | None = None,
+        cache_dir: str | None = None,
     ) -> TaskCache:
         """Create the appropriate task cache."""
         if force is None:
@@ -95,7 +95,7 @@ class FileTaskCache(TaskCache):
     def __init__(self, cache_dir: str, *, force: bool = False):
         self.force = force
         self.cache_dir = cache_dir
-        self._global_dependancies: Optional[list[str]] = None
+        self._global_dependancies: list[str] | None = None
         self._mtime_cache: dict[str, datetime.datetime] = {}
 
     def load(
@@ -186,7 +186,7 @@ class FileTaskCache(TaskCache):
 
     def _get_last_mod_time(
         self, filenames: list[str],
-    ) -> Optional[datetime.datetime]:
+    ) -> datetime.datetime | None:
         mtimes = [self._safe_getmtime(path) for path in filenames]
         if any(p is None for p in mtimes):
             # cannot determine the mtime of a filename. Assume it needs recalc.
@@ -195,7 +195,7 @@ class FileTaskCache(TaskCache):
             return max(cast(list[datetime.datetime], mtimes))
         return None
 
-    def _safe_getmtime(self, path: str) -> Optional[datetime.datetime]:
+    def _safe_getmtime(self, path: str) -> datetime.datetime | None:
         assert self._mtime_cache is not None
         if path in self._mtime_cache:
             return self._mtime_cache[path]

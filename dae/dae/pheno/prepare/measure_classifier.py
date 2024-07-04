@@ -1,7 +1,7 @@
 import copy
 import enum
 from collections import Counter
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 import duckdb
 import numpy as np
@@ -18,21 +18,21 @@ class ClassifierReport:
     DISTRIBUTION_CUTOFF = 20
 
     def __init__(self) -> None:
-        self.instrument_name: Optional[str] = None
-        self.measure_name: Optional[str] = None
-        self.measure_type: Optional[str] = None
-        self.count_total: Optional[int] = None
-        self.count_with_values: Optional[int] = None
-        self.count_without_values: Optional[int] = None
-        self.count_with_numeric_values: Optional[int] = None
-        self.count_with_non_numeric_values: Optional[int] = None
-        self.count_unique_values: Optional[int] = None
-        self.count_unique_numeric_values: Optional[int] = None
+        self.instrument_name: str | None = None
+        self.measure_name: str | None = None
+        self.measure_type: str | None = None
+        self.count_total: int | None = None
+        self.count_with_values: int | None = None
+        self.count_without_values: int | None = None
+        self.count_with_numeric_values: int | None = None
+        self.count_with_non_numeric_values: int | None = None
+        self.count_unique_values: int | None = None
+        self.count_unique_numeric_values: int | None = None
 
-        self.value_max_len: Optional[int] = None
+        self.value_max_len: int | None = None
 
-        self.unique_values: Optional[list[Any]] = None
-        self.numeric_values: Union[list[int], np.ndarray, None] = None
+        self.unique_values: list[Any] | None = None
+        self.numeric_values: list[int] | np.ndarray | None = None
         self.distribution: Any = None
 
     def set_measure(self, measure: Box) -> "ClassifierReport":
@@ -90,8 +90,8 @@ class ClassifierReport:
         return "\t".join(attributes)
 
     def calc_distribution_report(
-        self, cursor: Optional[duckdb.DuckDBPyConnection] = None,
-        instrument_table_name: Optional[str] = None,
+        self, cursor: duckdb.DuckDBPyConnection | None = None,
+        instrument_table_name: str | None = None,
     ) -> list[Any]:
         """Construct measure distribution report."""
         if self.distribution:
@@ -174,14 +174,14 @@ def is_convertible_to_numeric(val: Any) -> Convertible:
     return Convertible.non_numeric
 
 
-def convert_to_numeric(val: Any) -> Union[float, np.float_]:
+def convert_to_numeric(val: Any) -> float | np.float_:
     """Convert passed value to float."""
     if is_convertible_to_numeric(val) == Convertible.numeric:
         return float(val)
     return np.nan
 
 
-def convert_to_string(val: Any) -> Optional[str]:
+def convert_to_string(val: Any) -> str | None:
     """Convert passed value to string."""
     if is_nan(val):
         return None
@@ -359,7 +359,7 @@ class MeasureClassifier:
     def meta_measures(
             cursor: duckdb.DuckDBPyConnection,
             table_name: str, measure_name: str,
-            report: Optional[ClassifierReport] = None,
+            report: ClassifierReport | None = None,
     ) -> ClassifierReport:
         """Build classifier meta report."""
         if report is None:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from copy import copy
-from typing import Any, List, Optional, Union, cast
+from typing import Any, List, cast
 
 from dae.pedigrees.family import Family
 from dae.utils.variant_utils import str2fgt, str2mat
@@ -54,7 +54,7 @@ class RemoteAllele(SummaryAllele):
         self,
         attributes_list: List,
         idx: int,
-        columns: Optional[List[str]] = None,
+        columns: List[str] | None = None,
     ):
         # columns is an ordered list of columns by their source name
         self.columns = columns if columns else SUMMARY_COLUMNS
@@ -87,7 +87,7 @@ class RemoteAllele(SummaryAllele):
 
     @staticmethod
     def create_reference_allele(
-        allele: Union[RemoteAllele, RemoteFamilyAllele],  # type: ignore
+        allele: RemoteAllele | RemoteFamilyAllele,  # type: ignore
     ) -> RemoteAllele:
         new_attributes = copy(allele.attributes_list)
         new_attributes[allele.columns.index("allele_index")][0] = 0
@@ -103,7 +103,7 @@ class RemoteFamilyAllele(FamilyAllele):
         attributes_list: List,
         idx: int,
         family: Family,
-        columns: Optional[List[str]] = None,
+        columns: List[str] | None = None,
     ):
         self.columns = columns if columns else SUMMARY_COLUMNS
         self.attributes_list = attributes_list
@@ -134,7 +134,7 @@ class RemoteVariant(SummaryVariant):
     def __init__(
         self,
         attributes_list: List,
-        columns: Optional[List[str]] = None,
+        columns: List[str] | None = None,
     ):
         # columns is an ordered list of columns by their source name
         self.columns = columns if columns else SUMMARY_COLUMNS
@@ -157,7 +157,7 @@ class RemoteFamilyVariant(FamilyVariant):
         self,
         attributes_list: List,
         family: Family,
-        columns: Optional[List[str]] = None,
+        columns: List[str] | None = None,
     ):
         self.columns = columns if columns else SUMMARY_COLUMNS
 

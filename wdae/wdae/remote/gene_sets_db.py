@@ -1,7 +1,7 @@
 """Classes for handling of remote gene sets."""
 
 import logging
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Set
 
 from dae.gene_sets.gene_sets_db import (
     BaseGeneSetCollection,
@@ -51,7 +51,7 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
 
         self._remote_gene_sets_loaded = True
 
-    def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
+    def get_gene_set(self, gene_set_id: str) -> GeneSet | None:
         self._load_remote_gene_sets()
         if gene_set_id not in self.remote_gene_sets_names:
             logger.warning(
@@ -154,7 +154,7 @@ class RemoteGeneSetsDb(GeneSetsDb):
         )
 
     def get_gene_set(
-            self, collection_id: str, gene_set_id: str) -> Optional[GeneSet]:
+            self, collection_id: str, gene_set_id: str) -> GeneSet | None:
         if self._local_gsdb.has_gene_set_collection(collection_id):
             return self._local_gsdb.get_gene_set(collection_id, gene_set_id)
         return self.gene_set_collections[

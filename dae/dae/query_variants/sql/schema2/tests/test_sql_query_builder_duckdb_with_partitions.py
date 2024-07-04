@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
-from typing import Any, Optional
+from typing import Any
 
 import duckdb
 import pytest
@@ -177,7 +177,7 @@ def query_builder(
 def test_coding_bin_heuristics_query(
     index: int,
     params: dict[str, Any],
-    coding_bin: Optional[int],
+    coding_bin: int | None,
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
@@ -200,7 +200,7 @@ def test_coding_bin_heuristics_query(
 def test_region_bin_heuristics_query(
     index: int,
     params: dict[str, Any],
-    region_bins: Optional[list[str]],
+    region_bins: list[str] | None,
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
@@ -226,7 +226,7 @@ def test_region_bin_heuristics_query(
 def test_frequency_bin_heuristics_query(
     index: int,
     params: dict[str, Any],
-    frequency_bins: Optional[str],
+    frequency_bins: str | None,
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
@@ -250,7 +250,7 @@ def test_frequency_bin_heuristics_query(
 def test_coding_bin_heuristics_family_query(
     index: int,
     params: dict[str, Any],
-    coding_bin: Optional[int],
+    coding_bin: int | None,
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
@@ -274,7 +274,7 @@ def test_coding_bin_heuristics_family_query(
 def test_region_bin_heuristics_family_query(
     index: int,
     params: dict[str, Any],
-    region_bins: Optional[list[str]],
+    region_bins: list[str] | None,
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
@@ -301,7 +301,7 @@ def test_region_bin_heuristics_family_query(
 def test_frequency_bin_heuristics_family_query(
     index: int,
     params: dict[str, Any],
-    frequency_bins: Optional[str],
+    frequency_bins: str | None,
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0

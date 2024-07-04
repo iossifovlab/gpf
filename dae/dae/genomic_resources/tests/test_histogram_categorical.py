@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Any, Optional
+from typing import Any
 
 import pytest
 
@@ -106,7 +106,7 @@ def test_build_categorical_histogram_config(conf: dict[str, Any]) -> None:
     (["2", "1"], {"2": 1, "1": 2}),
 ])
 def test_categorical_histogram_values_order(
-        value_order: Optional[list[str]],
+        value_order: list[str] | None,
         expected_bars: dict[str, int]) -> None:
     hist_conf = CategoricalHistogramConfig()
     hist = CategoricalHistogram(hist_conf)
@@ -123,7 +123,7 @@ def test_categorical_histogram_values_order(
     (["2", "1"], {"2": 1, "1": 2}),
 ])
 def test_categorical_histogram_merge_values_order(
-        value_order: Optional[list[str]],
+        value_order: list[str] | None,
         expected_bars: dict[str, int]) -> None:
     hist_conf = CategoricalHistogramConfig()
     hist = CategoricalHistogram(hist_conf)

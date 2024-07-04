@@ -3,7 +3,6 @@ import argparse
 import logging
 import os
 import sys
-from typing import Optional
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet.partition_descriptor import PartitionDescriptor
@@ -63,8 +62,8 @@ def parse_cli_arguments(
 
 
 def main(
-    argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None,
+    argv: list[str] | None = None,
+    gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Upload parquet dataset into HDFS storage."""
     if gpf_instance is None:

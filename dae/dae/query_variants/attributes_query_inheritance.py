@@ -1,7 +1,7 @@
 # pylint: disable=too-few-public-methods
 import functools
 import operator
-from typing import Any, Union
+from typing import Any
 
 from lark import Lark, Transformer
 
@@ -68,7 +68,7 @@ class NegPrimitive:
         self.value = value
 
 
-PrimitiveType = Union[Primitive, NegPrimitive]
+PrimitiveType = Primitive | NegPrimitive
 
 
 class Expression:

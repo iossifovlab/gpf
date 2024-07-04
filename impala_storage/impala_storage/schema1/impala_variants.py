@@ -5,10 +5,8 @@ from typing import (
     Any,
     Dict,
     List,
-    Optional,
     Set,
     Tuple,
-    Union,
     cast,
 )
 
@@ -42,7 +40,7 @@ from impala_storage.schema1.summary_variants_query_builder import (
 logger = logging.getLogger(__name__)
 
 
-RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
+RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 
 
 class ImpalaVariants:
@@ -55,7 +53,7 @@ class ImpalaVariants:
         db: str,
         variants_table: str,
         pedigree_table: str,
-        gene_models: Optional[GeneModels] = None,
+        gene_models: GeneModels | None = None,
     ) -> None:
         super().__init__()
         assert db, db
@@ -113,18 +111,18 @@ class ImpalaVariants:
     # pylint: disable=too-many-arguments,unused-argument
     def build_summary_variants_query_runner(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
         **kwargs: Any,
-    ) -> Optional[ImpalaQueryRunner]:
+    ) -> ImpalaQueryRunner | None:
         """Build a query selecting the appropriate summary variants."""
         # pylint: disable=too-many-arguments,too-many-locals
         if not self.variants_table:
@@ -189,7 +187,7 @@ class ImpalaVariants:
     def build_person_set_collection_query(
             person_set_collection: PersonSetCollection,
             person_set_collection_query: Tuple[str, Set[str]],
-    ) -> Optional[Union[tuple, tuple[list[str], list[str]]]]:
+    ) -> tuple | tuple[list[str], list[str]] | None:
         """No idea what it does. If you know please edit."""
         collection_id, selected_person_sets = person_set_collection_query
         assert collection_id == person_set_collection.id
@@ -228,23 +226,23 @@ class ImpalaVariants:
 
     def build_family_variants_query_runner(
         self,
-        regions: Optional[List[Region]] = None,
-        genes: Optional[List[str]] = None,
-        effect_types: Optional[List[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        inheritance: Optional[Union[List[str], str]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
-        pedigree_fields: Optional[tuple[list[str], list[str]]] = None,
-    ) -> Optional[ImpalaQueryRunner]:
+        regions: List[Region] | None = None,
+        genes: List[str] | None = None,
+        effect_types: List[str] | None = None,
+        family_ids: Iterable[str] | None = None,
+        person_ids: Iterable[str] | None = None,
+        inheritance: List[str] | str | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        pedigree_fields: tuple[list[str], list[str]] | None = None,
+    ) -> ImpalaQueryRunner | None:
         """Build a query selecting the appropriate family variants."""
         # pylint: disable=too-many-arguments,too-many-locals
         if not self.variants_table:
@@ -322,16 +320,16 @@ class ImpalaVariants:
     # pylint: disable=unused-argument
     def query_summary_variants(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
         **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
         """Query summary variants."""
@@ -381,23 +379,23 @@ class ImpalaVariants:
 
     def query_variants(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[list[str]] = None,
-        person_ids: Optional[list[str]] = None,
-        person_set_collection: Optional[tuple] = None,
-        inheritance: Optional[list[str]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
-        pedigree_fields: Optional[tuple[list[str], list[str]]] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        person_ids: list[str] | None = None,
+        person_set_collection: tuple | None = None,
+        inheritance: list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        pedigree_fields: tuple[list[str], list[str]] | None = None,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         """Query family variants."""
@@ -503,7 +501,7 @@ class ImpalaVariants:
         "string": ("bytes", pa.string()),
     }
 
-    def _fetch_variant_schema(self) -> Optional[list[AttributeInfo]]:
+    def _fetch_variant_schema(self) -> list[AttributeInfo] | None:
         if not self.variants_table:
             return None
         with closing(self.connection()) as conn:

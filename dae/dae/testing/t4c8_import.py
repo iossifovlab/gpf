@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
 
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -63,7 +62,7 @@ def t4c8_genes(root_path: pathlib.Path) -> GeneModels:
 
 def t4c8_gpf(
         root_path: pathlib.Path,
-        storage: Optional[GenotypeStorage] = None) -> GPFInstance:
+        storage: GenotypeStorage | None = None) -> GPFInstance:
     t4c8_genome(root_path)
     t4c8_genes(root_path)
 

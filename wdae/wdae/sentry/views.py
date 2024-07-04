@@ -2,7 +2,6 @@ import codecs
 import io
 import os
 import time
-from typing import Optional
 from urllib.parse import urlparse
 
 import requests
@@ -22,8 +21,8 @@ class PlainTextParser(BaseParser):
 
     def parse(
         self, stream: io.IOBase,
-        _media_type: Optional[str] = None,
-        parser_context: Optional[dict] = None,
+        _media_type: str | None = None,
+        parser_context: dict | None = None,
     ) -> str:
         parser_context = parser_context or {}
         encoding = parser_context.get("encoding", settings.DEFAULT_CHARSET)

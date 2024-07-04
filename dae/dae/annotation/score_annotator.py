@@ -6,7 +6,7 @@ and allele_score.
 import abc
 import logging
 import textwrap
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, cast
 
 from dae.annotation.annotatable import Annotatable, VCFAllele
 from dae.annotation.annotation_config import (
@@ -113,7 +113,7 @@ large_values {score_def.large_values_desc}
     def _build_score_aggregator_documentation(
         self, attribute_info: AttributeInfo,
         aggregator: str,
-        attribute_conf_agg: Optional[str],
+        attribute_conf_agg: str | None,
     ) -> str:
         """Collect score aggregator documentation."""
         default_aggregators = {
@@ -134,7 +134,7 @@ large_values {score_def.large_values_desc}
             },
         }
         aggregators_score_def_att: \
-            dict[str, Callable[[ScoreDef], Optional[str]]] = {
+            dict[str, Callable[[ScoreDef], str | None]] = {
                 "position_aggregator":
                 lambda sc: sc.pos_aggregator,
                 "nucleotide_aggregator":
@@ -159,7 +159,7 @@ large_values {score_def.large_values_desc}
     def add_score_aggregator_documentation(
             self, attribute_info: AttributeInfo,
             aggregator: str,
-            attribute_conf_agg: Optional[str]) -> None:
+            attribute_conf_agg: str | None) -> None:
         """Collect score aggregator documentation."""
         # pylint: disable=protected-access
         aggregator_doc = self._build_score_aggregator_documentation(
@@ -180,7 +180,7 @@ class PositionScoreAnnotatorBase(GenomicScoreAnnotatorBase):
 
     @abc.abstractmethod
     def _fetch_substitution_scores(self, allele: VCFAllele) \
-            -> Optional[list[Any]]:
+            -> list[Any] | None:
         pass
 
     @abc.abstractmethod
@@ -189,7 +189,7 @@ class PositionScoreAnnotatorBase(GenomicScoreAnnotatorBase):
         pass
 
     def annotate(
-        self, annotatable: Optional[Annotatable], _: dict[str, Any],
+        self, annotatable: Annotatable | None, _: dict[str, Any],
     ) -> dict[str, Any]:
 
         if annotatable is None:
@@ -272,7 +272,7 @@ phastCons, phyloP, FitCons2, etc.
         return [doc]
 
     def _fetch_substitution_scores(self, allele: VCFAllele) \
-            -> Optional[list[Any]]:
+            -> list[Any] | None:
         return self.position_score.fetch_scores(
             allele.chromosome, allele.position, self.simple_score_queries)
 
@@ -337,7 +337,7 @@ nucleotide change like CADD, MPC, etc.
         return [pos_doc, nuc_doc]
 
     def _fetch_substitution_scores(
-            self, allele: VCFAllele) -> Optional[list[Any]]:
+            self, allele: VCFAllele) -> list[Any] | None:
         return self.np_score.fetch_scores(allele.chromosome, allele.position,
                                           allele.reference, allele.alternative,
                                           self.simple_score_queries)
@@ -401,7 +401,7 @@ variant frequencies, etc.
         return [pos_doc, allele_doc]
 
     def _fetch_vcf_allele_score(self, allele: VCFAllele) \
-            -> Optional[list[Any]]:
+            -> list[Any] | None:
         return self.allele_score.fetch_scores(
             allele.chromosome, allele.position, allele.reference,
             allele.alternative, self.simple_score_queries)
@@ -413,7 +413,7 @@ variant frequencies, etc.
         return [sagg.get_final() for sagg in scores_agg]
 
     def annotate(
-        self, annotatable: Optional[Annotatable], _: dict[str, Any],
+        self, annotatable: Annotatable | None, _: dict[str, Any],
     ) -> dict[str, Any]:
 
         if annotatable is None:

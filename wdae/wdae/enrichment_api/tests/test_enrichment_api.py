@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-from typing import Dict, List, Optional, Union
+from typing import Dict, List
 
 import pytest
 from django.test.client import Client
@@ -28,7 +28,7 @@ def test_enrichment_api_permissions(
     anonymous_client: Client,
     url: str,
     method: str,
-    body: Optional[Dict[str, Union[str, List[str]]]],
+    body: Dict[str, str | List[str]] | None,
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)

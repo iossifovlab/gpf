@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-from typing import Optional, cast
+from typing import cast
 
 import pytest
 from datasets_api.models import Dataset
@@ -388,8 +388,8 @@ def test_cant_revoke_default_permissions(
 )
 def test_groups_pagination(
         admin_client: Client, hundred_groups: list[Group], page: int,
-        status_code: int, length: Optional[int],
-        first_name: Optional[str], last_name: Optional[str],
+        status_code: int, length: int | None,
+        first_name: str | None, last_name: str | None,
 ) -> None:
     url = f"/api/v3/groups?page={page}"
     response = admin_client.get(url)
@@ -432,7 +432,7 @@ def test_groups_search(
 def test_groups_search_pagination(
     admin_client: Client,
     hundred_groups: list[Group],
-    page: int, status_code: int, length: Optional[int],
+    page: int, status_code: int, length: int | None,
 ) -> None:
     url = f"/api/v3/groups?page={page}&search=Group"
     response = admin_client.get(url)

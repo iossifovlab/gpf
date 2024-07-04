@@ -3,7 +3,6 @@
 import argparse
 import logging
 import sys
-from typing import Optional
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from impala_storage.schema1.impala_dataset_helpers import ImpalaDatasetHelpers
@@ -11,7 +10,7 @@ from impala_storage.schema1.impala_dataset_helpers import ImpalaDatasetHelpers
 
 def main(
     argv: list[str],
-    gpf_instance: Optional[GPFInstance] = None,
+    gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Entry point for the genotype data tool."""
     parser = argparse.ArgumentParser()

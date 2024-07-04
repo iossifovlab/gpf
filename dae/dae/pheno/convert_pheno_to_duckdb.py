@@ -1,5 +1,5 @@
 from collections.abc import Iterator, Mapping
-from typing import Any, Dict, Optional, Union, cast
+from typing import Any, Dict, cast
 
 import duckdb
 import pandas as pd
@@ -35,7 +35,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
     STREAMING_CHUNK_SIZE = 25
 
     def __init__(
-        self, dbfile: str, browser_dbfile: Optional[str] = None,
+        self, dbfile: str, browser_dbfile: str | None = None,
     ) -> None:
         self.pheno_dbfile = dbfile
         self.pheno_metadata = MetaData()
@@ -62,9 +62,9 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
     def has_browser_dbfile(self) -> bool:
         return self.browser_dbfile is not None
 
-    def update_browser_dbfile(self, browser_dbfile: Optional[str]) -> None:
+    def update_browser_dbfile(self, browser_dbfile: str | None) -> None:
         self.browser_dbfile = browser_dbfile
-        self.browser_metadata: Optional[MetaData] = None
+        self.browser_metadata: MetaData | None = None
         self.browser_engine: Any = None
         if browser_dbfile is not None:
             self.browser_metadata = MetaData()
@@ -165,7 +165,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
                     result_row.measure_id,
                 )
                 if MeasureType.is_numeric(result_row.measure_type):
-                    column_type: Union[Float, String] = Float()
+                    column_type: Float | String = Float()
                 else:
                     column_type = String(127)
                 measure_columns[result_row.measure_id] = \
@@ -228,9 +228,9 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
     def _build_measures_subquery(
         self,
         measure_id_map: dict[str, str],
-        measure_type_map: Mapping[str, Union[str, MeasureType]],
+        measure_type_map: Mapping[str, str | MeasureType],
         measure_ids: list[str],
-        measure_column_names: Optional[dict[str, str]] = None,
+        measure_column_names: dict[str, str] | None = None,
     ) -> Select:
         select_columns = [
             self.person.c.person_id,
@@ -328,7 +328,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
         return instrument_col_names
 
     def get_measure_column_names(
-        self, measure_ids: Optional[list[str]] = None,
+        self, measure_ids: list[str] | None = None,
     ) -> dict[str, str]:
         """Return measure column names mapped to their measure IDs."""
         query = select(
@@ -347,7 +347,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
         return measure_column_names
 
     def get_measure_column_names_reverse(
-        self, measure_ids: Optional[list[str]] = None,
+        self, measure_ids: list[str] | None = None,
     ) -> dict[str, str]:
         """Return measure column names mapped to their measure IDs."""
         query = select(
@@ -619,7 +619,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
             PrimaryKeyConstraint("person_id", "measure_id"),
         )
 
-    def save(self, v: Dict[str, Optional[str]]) -> None:
+    def save(self, v: Dict[str, str | None]) -> None:
         """Save measure values into the database."""
         try:
             insert = self.variable_browser.insert().values(**v)
@@ -681,7 +681,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
                 connection.execute(update)
                 connection.commit()
 
-    def get_browser_measure(self, measure_id: str) -> Optional[dict]:
+    def get_browser_measure(self, measure_id: str) -> dict | None:
         """Get measrue description from phenotype browser database."""
         sel = select(self.variable_browser)
         sel = sel.where(self.variable_browser.c.measure_id == measure_id)
@@ -692,8 +692,8 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
             return None
 
     def search_measures(
-        self, instrument_name: Optional[str] = None,
-        keyword: Optional[str] = None,
+        self, instrument_name: str | None = None,
+        keyword: str | None = None,
     ) -> Iterator[dict[str, Any]]:
         """Find measert by keyword search."""
         query_params = []
@@ -745,8 +745,8 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
                 rows = cursor.fetchmany(self.STREAMING_CHUNK_SIZE)
 
     def search_measures_df(
-        self, instrument_name: Optional[str] = None,
-        keyword: Optional[str] = None,
+        self, instrument_name: str | None = None,
+        keyword: str | None = None,
     ) -> pd.DataFrame:
         """Find measures and return a dataframe with values."""
         query_params = []
@@ -855,7 +855,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
             )
 
     def get_value_table(
-        self, value_type: Union[str, MeasureType],
+        self, value_type: str | MeasureType,
     ) -> Table:
         """Return the appropriate table for values based on the value type."""
         if isinstance(value_type, str):
@@ -910,7 +910,7 @@ class LegacyPhenoDb:  # pylint: disable=too-many-instance-attributes
 
 
 def create_sqlite_phenodb(
-    dbfile: str, browser_dbfile: Optional[str] = None,
+    dbfile: str, browser_dbfile: str | None = None,
 ) -> LegacyPhenoDb:
     db = LegacyPhenoDb(dbfile, browser_dbfile)
     db.build()
@@ -948,7 +948,7 @@ def build_instrument_values_tables(
                 result_row.measure_id,
             )
             if MeasureType.is_numeric(result_row.measure_type):
-                column_type: Union[Float, String] = Float()
+                column_type: Float | String = Float()
             else:
                 column_type = String(127)
             measure_columns[result_row.measure_id] = \

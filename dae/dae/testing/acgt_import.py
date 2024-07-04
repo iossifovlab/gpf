@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
 
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
@@ -16,7 +15,7 @@ from dae.testing import (
 
 def acgt_gpf(
         root_path: pathlib.Path,
-        storage: Optional[GenotypeStorage] = None) -> GPFInstance:
+        storage: GenotypeStorage | None = None) -> GPFInstance:
     setup_genome(
         root_path / "acgt_gpf" / "genome" / "allChr.fa",
         f"""

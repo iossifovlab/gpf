@@ -1,7 +1,7 @@
 import logging
 import os
 import shutil
-from typing import Any, Optional
+from typing import Any
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.import_tools.import_tools import (
@@ -73,7 +73,7 @@ class InmemoryImportStorage(ImportStorage):
     @classmethod
     def _do_copy_variants(
             cls, project: ImportProject,
-            loader_type: Optional[str] = None) -> list[dict[str, Any]]:
+            loader_type: str | None = None) -> list[dict[str, Any]]:
         genotype_storage = project.get_genotype_storage()
         if genotype_storage.read_only:
             raise OSError(

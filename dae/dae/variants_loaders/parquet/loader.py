@@ -2,7 +2,6 @@ import glob
 import os
 import pathlib
 from collections.abc import Generator, Iterable
-from typing import Optional
 
 import numpy as np
 import yaml
@@ -77,7 +76,7 @@ class Reader:
         except StopIteration:
             self.exhausted = True
 
-    def _peek(self) -> Optional[dict]:
+    def _peek(self) -> dict | None:
         if not self.batch:
             self._advance()
         if self.exhausted:
@@ -249,7 +248,7 @@ class ParquetLoader:
         return bin_region.intersects(normalized_region)
 
     def get_summary_pq_filepaths(
-        self, region: Optional[Region] = None,
+        self, region: Region | None = None,
     ) -> Generator[list[str], None, None]:
         """
         Produce paths to available Parquet files grouped by region.
@@ -315,7 +314,7 @@ class ParquetLoader:
         )
 
     def fetch_summary_variants(
-        self, region: Optional[str] = None,
+        self, region: str | None = None,
     ) -> Generator[SummaryVariant, None, None]:
         """Iterate over summary variants."""
         region_obj = None
@@ -344,7 +343,7 @@ class ParquetLoader:
                         )
 
     def fetch_variants(
-        self, region: Optional[str] = None,
+        self, region: str | None = None,
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
         """Iterate over summary and family variants."""
         region_obj = None
@@ -395,7 +394,7 @@ class ParquetLoader:
             family_reader.close()
 
     def fetch_family_variants(
-        self, region: Optional[str] = None,
+        self, region: str | None = None,
     ) -> Generator[FamilyVariant, None, None]:
         """Iterate over family variants."""
         for _, fvs in self.fetch_variants(region):

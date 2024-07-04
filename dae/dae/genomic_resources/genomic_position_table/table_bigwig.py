@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from typing import Optional
 
 from dae.genomic_resources.genomic_position_table.line import Line, LineBase
 from dae.genomic_resources.genomic_position_table.table import (
@@ -55,8 +54,8 @@ class BigWigTable(GenomicPositionTable):
     def get_records_in_region(
         self,
         chrom: str,
-        pos_begin: Optional[int] = None,
-        pos_end: Optional[int] = None,
+        pos_begin: int | None = None,
+        pos_end: int | None = None,
     ) -> Generator[LineBase, None, None]:
         assert self.bw_file is not None
 

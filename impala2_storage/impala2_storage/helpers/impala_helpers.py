@@ -4,7 +4,7 @@ import os
 import re
 import time
 from contextlib import closing
-from typing import Any, Optional
+from typing import Any
 
 from impala import dbapi
 from impala.hiveserver2 import HiveServer2Connection
@@ -19,8 +19,8 @@ class ImpalaHelpers:
     """Helper methods for working with impala."""
 
     def __init__(
-        self, impala_hosts: Optional[list[str]],
-        impala_port: int = 21050, pool_size: Optional[int] = 1,
+        self, impala_hosts: list[str] | None,
+        impala_port: int = 21050, pool_size: int | None = 1,
     ):
 
         if os.environ.get("DAE_IMPALA_HOST", None) is not None:
@@ -59,7 +59,7 @@ class ImpalaHelpers:
         self._connection_pool.dispose()
 
     def connection(
-        self, timeout: Optional[int] = None,
+        self, timeout: int | None = None,
     ) -> pool.PoolProxiedConnection:
         """Create a new connection to the impala host."""
         logger.debug("getting impala connection from the pool; %s",
@@ -229,8 +229,8 @@ class ImpalaHelpers:
     def _build_import_variants_statement(
         self, db: str, variants_table: str, variants_hdfs_dir: str,
         partition_description: PartitionDescriptor,
-        variants_sample: Optional[str] = None,
-        variants_schema: Optional[dict[str, Any]] = None,
+        variants_sample: str | None = None,
+        variants_schema: dict[str, Any] | None = None,
     ) -> str:
 
         assert variants_sample is not None or variants_schema is not None
@@ -261,8 +261,8 @@ class ImpalaHelpers:
     def import_variants_into_db(
         self, db: str, variants_table: str, variants_hdfs_dir: str,
         partition_description: PartitionDescriptor,
-        variants_sample: Optional[str] = None,
-        variants_schema: Optional[dict[str, Any]] = None,
+        variants_sample: str | None = None,
+        variants_schema: dict[str, Any] | None = None,
     ) -> None:
         """Import variant parquet files in variants_hdfs_dir in impala."""
         assert variants_schema is not None or variants_sample is not None
@@ -295,7 +295,7 @@ class ImpalaHelpers:
                         cursor, db, variants_table, partition_description)
 
     def compute_table_stats(
-        self, db: str, table: str, region_bin: Optional[str] = None,
+        self, db: str, table: str, region_bin: str | None = None,
     ) -> None:
         """Compute impala table stats."""
         with closing(self.connection()) as connection:
@@ -327,7 +327,7 @@ class ImpalaHelpers:
 
     def get_table_create_statement(
         self, db: str, table: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Get the create statement for table."""
         with closing(self.connection()) as conn:
             with closing(conn.cursor()) as cursor:

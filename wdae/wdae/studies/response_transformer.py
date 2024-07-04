@@ -7,8 +7,6 @@ from functools import partial
 from typing import (
     Any,
     Callable,
-    Optional,
-    Union,
     cast,
 )
 
@@ -174,7 +172,7 @@ class ResponseTransformer:
 
         self.study_wrapper = cast(StudyWrapper, study_wrapper)
         self._pheno_columns = study_wrapper.config_columns.phenotype
-        self._pheno_values: Optional[dict[str, Any]] = None
+        self._pheno_values: dict[str, Any] | None = None
 
         self.gene_scores_dicts = {}
         if not study_wrapper.is_remote \
@@ -197,7 +195,7 @@ class ResponseTransformer:
 
     def _get_all_pheno_values(
         self,
-    ) -> Optional[dict]:
+    ) -> dict | None:
         if self._pheno_values is not None:
             return self._pheno_values
         if not self.study_wrapper.phenotype_data \
@@ -223,8 +221,8 @@ class ResponseTransformer:
     @staticmethod
     def _get_pheno_values_for_variant(
         variant: FamilyVariant,
-        pheno_column_values: Optional[dict],
-    ) -> Optional[dict[str, str]]:
+        pheno_column_values: dict | None,
+    ) -> dict[str, str] | None:
         if not pheno_column_values:
             return None
 
@@ -238,7 +236,7 @@ class ResponseTransformer:
         return pheno_values
 
     def _get_gene_scores_values(
-        self, allele: FamilyAllele, default: Optional[str] = None,
+        self, allele: FamilyAllele, default: str | None = None,
     ) -> dict[str, Any]:
         if not self.study_wrapper.gene_score_column_sources:
             return {}
@@ -265,7 +263,7 @@ class ResponseTransformer:
     def _get_wdae_member(
             member: Person,
             person_set_collection: PersonSetCollection,
-            best_st: Union[str, int]) -> list:
+            best_st: str | int) -> list:
         return [
             member.family_id,
             member.person_id,
@@ -335,8 +333,8 @@ class ResponseTransformer:
                 yield variant
 
     def build_variant_row(
-        self, v: Union[SummaryVariant, FamilyVariant],
-        column_descs: list[dict], **kwargs: Union[str],
+        self, v: SummaryVariant | FamilyVariant,
+        column_descs: list[dict], **kwargs: str,
     ) -> list:
         """Construct response row for a variant."""
         # pylint: disable=too-many-branches

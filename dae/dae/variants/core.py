@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from enum import Enum
-from typing import Optional
 
 from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
 from dae.utils.variant_utils import trim_parsimonious
@@ -82,14 +81,14 @@ class Allele:
                 return False
             return bool(vt & cls.tandem_repeat)
 
-    def __init__(self, chrom: str, pos: int, pos_end: Optional[int] = None,
-                 ref: Optional[str] = None, alt: Optional[str] = None,
-                 allele_type: Optional[Allele.Type] = None):
+    def __init__(self, chrom: str, pos: int, pos_end: int | None = None,
+                 ref: str | None = None, alt: str | None = None,
+                 allele_type: Allele.Type | None = None):
         self._chrom: str = chrom
         self._pos: int = pos
-        self._pos_end: Optional[int] = pos_end
-        self._ref: Optional[str] = ref
-        self._alt: Optional[str] = alt
+        self._pos_end: int | None = pos_end
+        self._ref: str | None = ref
+        self._alt: str | None = alt
         self._allele_type: Allele.Type
 
         assert isinstance(self._chrom, str)
@@ -172,15 +171,15 @@ class Allele:
         return self._pos
 
     @property
-    def end_position(self) -> Optional[int]:
+    def end_position(self) -> int | None:
         return self._pos_end
 
     @property
-    def reference(self) -> Optional[str]:
+    def reference(self) -> str | None:
         return self._ref
 
     @property
-    def alternative(self) -> Optional[str]:
+    def alternative(self) -> str | None:
         return self._alt
 
     @property

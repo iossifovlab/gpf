@@ -1,14 +1,14 @@
 import abc
 import logging
 from collections.abc import Generator
-from typing import Any, Optional
+from typing import Any
 
 from dae.query_variants.query_runners import QueryRunner
 from dae.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
 
-RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
+RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +21,16 @@ class QueryVariantsBase(abc.ABC):
     @abc.abstractmethod
     def build_summary_variants_query_runner(
         self, *,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
         **kwargs: Any,
     ) -> QueryRunner:
         """Create query runner for searching summary variants."""
@@ -38,16 +38,16 @@ class QueryVariantsBase(abc.ABC):
     @abc.abstractmethod
     def query_summary_variants(
         self, *,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
         **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
         """Execute the summary variants query and yields summary variants."""
@@ -55,23 +55,23 @@ class QueryVariantsBase(abc.ABC):
     @abc.abstractmethod
     def build_family_variants_query_runner(
         self, *,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[list[str]] = None,
-        person_ids: Optional[list[str]] = None,
-        inheritance: Optional[list[str]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
-        study_filters: Optional[list[str]] = None,
-        pedigree_fields: Optional[tuple] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        person_ids: list[str] | None = None,
+        inheritance: list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: list[str] | None = None,
+        pedigree_fields: tuple | None = None,
         **kwargs: Any,
     ) -> QueryRunner:
         # pylint: disable=too-many-arguments
@@ -80,22 +80,22 @@ class QueryVariantsBase(abc.ABC):
     @abc.abstractmethod
     def query_variants(
         self, *,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[list[str]] = None,
-        person_ids: Optional[list[str]] = None,
-        inheritance: Optional[list[str]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
-        pedigree_fields: Optional[tuple] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        person_ids: list[str] | None = None,
+        inheritance: list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        pedigree_fields: tuple | None = None,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments

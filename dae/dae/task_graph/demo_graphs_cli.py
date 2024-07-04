@@ -1,14 +1,13 @@
 import argparse
 import sys
 import time
-from typing import Optional
 
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 
-def _build_graph_a(graph_params: Optional[list[str]]) -> TaskGraph:
+def _build_graph_a(graph_params: list[str] | None) -> TaskGraph:
     task_graph = TaskGraph()
 
     num_of_parts, parts_sleep, summary_sleep = "10", "2", "2"
@@ -38,7 +37,7 @@ def _build_graph_a(graph_params: Optional[list[str]]) -> TaskGraph:
     return task_graph
 
 
-def _build_graph_d(graph_params: Optional[list[str]]) -> TaskGraph:
+def _build_graph_d(graph_params: list[str] | None) -> TaskGraph:
     task_graph = TaskGraph()
 
     num_of_clicks, num_of_parts, parts_sleep, summary_sleep = \
@@ -70,7 +69,7 @@ def _build_graph_d(graph_params: Optional[list[str]]) -> TaskGraph:
     return task_graph
 
 
-def _build_graph_b(graph_params: Optional[list[str]]) -> TaskGraph:
+def _build_graph_b(graph_params: list[str] | None) -> TaskGraph:
     task_graph = TaskGraph()
 
     num_of_parts, parts_sleep, summary_sleep = "2", "5", "10"
@@ -104,7 +103,7 @@ def _build_graph_b(graph_params: Optional[list[str]]) -> TaskGraph:
     return task_graph
 
 
-def _build_graph_c(graph_params: Optional[list[str]]) -> TaskGraph:
+def _build_graph_c(graph_params: list[str] | None) -> TaskGraph:
     task_graph = TaskGraph()
 
     num_of_parts, parts_sleep, summary_sleep = "2", "5", "10"
@@ -145,7 +144,7 @@ def _build_graph_c(graph_params: Optional[list[str]]) -> TaskGraph:
 
 
 def build_demo_graph(graph_type: str,
-                     graph_params: Optional[list[str]]) -> TaskGraph:
+                     graph_params: list[str] | None) -> TaskGraph:
     """Build a demo graph."""
     if graph_type == "A":
         return _build_graph_a(graph_params)
@@ -162,7 +161,7 @@ def build_demo_graph(graph_type: str,
     raise ValueError(f"Unknown graph <{graph_type}>")
 
 
-def main(argv: Optional[list[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     """Entry point for the demo script."""
     parser = argparse.ArgumentParser(description="test_basic")
 

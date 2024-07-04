@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Any, FrozenSet, Optional, cast
+from typing import Any, FrozenSet, cast
 
 from box import Box
 
@@ -58,10 +58,10 @@ class PersonSet:
         self.color: str = color
         assert all(not p.generated for p in persons.values())
         self.persons: dict[tuple[str, str], Person] = persons
-        self._children_by_sex: Optional[ChildrenBySex] = None
-        self._children_stats: Optional[ChildrenStats] = None
-        self._children: Optional[list[Person]] = None
-        self._children_count: Optional[int] = None
+        self._children_by_sex: ChildrenBySex | None = None
+        self._children_stats: ChildrenStats | None = None
+        self._children: list[Person] | None = None
+        self._children_count: int | None = None
 
     def __repr__(self) -> str:
         return f"PersonSet({self.id}: {self.name}, {len(self.persons)})"
@@ -268,7 +268,7 @@ class PersonSetCollection:
         return person_set_collection
 
     def collect_person_collection_attributes(
-        self, person: Person, pheno_db: Optional[PhenotypeData],
+        self, person: Person, pheno_db: PhenotypeData | None,
     ) -> FrozenSet[str]:
         """Collect all configured attributes for a Person."""
         values = []
@@ -304,7 +304,7 @@ class PersonSetCollection:
     def from_families(
         psc_config: dict[str, Any],
         families_data: FamiliesData,
-        pheno_db: Optional[PhenotypeData] = None,
+        pheno_db: PhenotypeData | None = None,
     ) -> PersonSetCollection:
         """Produce a PersonSetCollection from a config and pedigree."""
         collection = PersonSetCollection(
@@ -405,7 +405,7 @@ class PersonSetCollection:
 
     def get_person_set(
         self, person_id: tuple[str, str],
-    ) -> Optional[PersonSet]:
+    ) -> PersonSet | None:
         for person_set in self.person_sets.values():
             if person_id in person_set.persons:
                 return person_set
@@ -413,7 +413,7 @@ class PersonSetCollection:
 
     def get_person_set_of_person(
         self, fpid: tuple[str, str],
-    ) -> Optional[PersonSet]:
+    ) -> PersonSet | None:
         """Retrieve the PersonSet associated with the given person identifier.
 
         Args:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import itertools
 from collections.abc import Iterable
-from typing import Any, ClassVar, Optional, Union
+from typing import Any, ClassVar
 
 from dae.effect_annotation.annotation_request import AnnotationRequest
 from dae.genomic_resources.gene_models import TranscriptModel
@@ -45,25 +45,25 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
 
     def __init__(self, effect_name: str) -> None:
         self.effect: str = effect_name
-        self.gene: Optional[str] = None
-        self.transcript_id: Optional[str] = None
-        self.strand: Optional[str] = None
-        self.prot_pos: Optional[int] = None
-        self.non_coding_pos: Optional[int] = None
-        self.prot_length: Optional[int] = None
-        self.length: Optional[int] = None
-        self.which_intron: Optional[int] = None
-        self.how_many_introns: Optional[int] = None
-        self.dist_from_coding: Optional[int] = None
-        self.aa_change: Optional[str] = None
-        self.dist_from_acceptor: Optional[int] = None
-        self.dist_from_donor: Optional[int] = None
-        self.intron_length: Optional[int] = None
+        self.gene: str | None = None
+        self.transcript_id: str | None = None
+        self.strand: str | None = None
+        self.prot_pos: int | None = None
+        self.non_coding_pos: int | None = None
+        self.prot_length: int | None = None
+        self.length: int | None = None
+        self.which_intron: int | None = None
+        self.how_many_introns: int | None = None
+        self.dist_from_coding: int | None = None
+        self.aa_change: str | None = None
+        self.dist_from_acceptor: int | None = None
+        self.dist_from_donor: int | None = None
+        self.intron_length: int | None = None
         # pylint: disable=invalid-name
-        self.mRNA_length: Optional[int] = None
-        self.mRNA_position: Optional[int] = None
-        self.ref_aa: Optional[list[str]] = None
-        self.alt_aa: Optional[list[str]] = None
+        self.mRNA_length: int | None = None
+        self.mRNA_position: int | None = None
+        self.ref_aa: list[str] | None = None
+        self.alt_aa: list[str] | None = None
         self.dist_from_5utr = None
 
     def __repr__(self) -> str:
@@ -194,7 +194,7 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
     @classmethod
     def transcript_effects(
         cls, effects: list[AnnotationEffect],
-    ) -> tuple[list[str], list[Optional[str]], list[Optional[str]], list[str]]:
+    ) -> tuple[list[str], list[str | None], list[str | None], list[str]]:
         """Build parallel lists of transcripts, genes, effects and details.
 
         Consider deprecating this.
@@ -232,7 +232,7 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
     ) -> tuple[
         str,
         list[tuple[str, str]],
-        list[tuple[str, Optional[str], Optional[str], str]],
+        list[tuple[str, str | None, str | None, str]],
     ]:
         """Simplify effects.
 
@@ -397,14 +397,14 @@ class EffectGene:
     """Combine gene and effect and that gene."""
 
     def __init__(
-        self, symbol: Optional[str] = None,
-        effect: Optional[str] = None,
+        self, symbol: str | None = None,
+        effect: str | None = None,
     ) -> None:
         self.symbol = symbol
         self.effect = effect
 
     @staticmethod
-    def from_string(data: str) -> Optional[EffectGene]:
+    def from_string(data: str) -> EffectGene | None:
         """Deserialize effect gene."""
         if not data:
             return None
@@ -457,9 +457,9 @@ class EffectTranscript:
 
     def __init__(
         self, transcript_id: str,
-        gene: Optional[str] = None,
-        effect: Optional[str] = None,
-        details: Optional[str] = None,
+        gene: str | None = None,
+        effect: str | None = None,
+        details: str | None = None,
     ) -> None:
         self.transcript_id = transcript_id
         self.gene = gene
@@ -467,7 +467,7 @@ class EffectTranscript:
         self.details = details
 
     @staticmethod
-    def from_string(data: str) -> Optional[EffectTranscript]:
+    def from_string(data: str) -> EffectTranscript | None:
         """Deserialize effect transcript/details."""
         if not data:
             return None
@@ -496,7 +496,7 @@ class EffectTranscript:
 
     @classmethod
     def from_tuple(
-        cls, transcript_tuple: tuple[str, Optional[str], Optional[str], str],
+        cls, transcript_tuple: tuple[str, str | None, str | None, str],
     ) -> EffectTranscript:
         (transcript_id, gene, effect, details) = tuple(transcript_tuple)
         assert transcript_id is not None, transcript_tuple
@@ -535,8 +535,8 @@ class AlleleEffects:
         self.worst_effect = worst_effect
         self.genes = gene_effects
         self.transcripts = effect_transcripts
-        self._effect_types: Optional[list] = None
-        self.all_effects: Optional[list[AnnotationEffect]] = None
+        self._effect_types: list | None = None
+        self.all_effects: list[AnnotationEffect] | None = None
 
     @property
     def worst(self) -> str:
@@ -572,7 +572,7 @@ class AlleleEffects:
             cls, effect_type: str,
             effect_genes: list[tuple[str, str]],
             transcripts: list[tuple[str, str]],
-    ) -> Optional[AlleleEffects]:
+    ) -> AlleleEffects | None:
         """Build allele effects from simplified effects."""
         if effect_type is None:
             return None
@@ -582,7 +582,7 @@ class AlleleEffects:
         return AlleleEffects(effect_type, effect_genes_out, transcripts_out)
 
     @staticmethod
-    def from_string(data: Optional[str]) -> Optional[AlleleEffects]:
+    def from_string(data: str | None) -> AlleleEffects | None:
         """Build allele effect from string."""
         if data is None:
             return None
@@ -744,7 +744,7 @@ class EffectTypesMixin:
 
     @classmethod
     def build_effect_types(
-        cls, effect_types: Union[str, Iterable[str]], *,
+        cls, effect_types: str | Iterable[str], *,
         safe: bool = True,
     ) -> list[str]:
         """Build list of effect types."""
@@ -761,7 +761,7 @@ class EffectTypesMixin:
 
     @classmethod
     def build_effect_types_naming(
-        cls, effect_types: Union[str, Iterable[str]], *,
+        cls, effect_types: str | Iterable[str], *,
         safe: bool = True,
     ) -> list[str]:
         """Build list of effect types appropriate for the UI."""
@@ -779,7 +779,7 @@ class EffectTypesMixin:
     @classmethod
     def get_effect_types(
         cls, *, safe: bool = True, **kwargs: Any,
-    ) -> Optional[list[str]]:
+    ) -> list[str] | None:
         """Process effect types from kwargs."""
         effect_types = kwargs.get("effectTypes", None)
         if effect_types is None:
@@ -789,7 +789,7 @@ class EffectTypesMixin:
 
 
 def expand_effect_types(
-    effect_groups: Union[str, Iterable[str], Iterable[Iterable[str]]],
+    effect_groups: str | Iterable[str] | Iterable[Iterable[str]],
 ) -> list[str]:
     """Expand effect type groups into list of effect types."""
     if isinstance(effect_groups, str):
@@ -828,7 +828,7 @@ def gd2str(eff: AlleleEffects) -> str:
 
 
 def gene_effect_get_worst_effect(
-    gene_effects: Optional[AlleleEffects],
+    gene_effects: AlleleEffects | None,
 ) -> str:
     if gene_effects is None:
         return ""
@@ -836,7 +836,7 @@ def gene_effect_get_worst_effect(
 
 
 def gene_effect_get_genes_worst(
-    gene_effects: Optional[AlleleEffects],
+    gene_effects: AlleleEffects | None,
 ) -> str:
     """Return comma separted list of genes."""
     if gene_effects is None:
@@ -850,7 +850,7 @@ def gene_effect_get_genes_worst(
 
 
 def gene_effect_get_genes(
-    gene_effects: Optional[AlleleEffects],
+    gene_effects: AlleleEffects | None,
 ) -> str:
     """Return comma separted list of genes."""
     if gene_effects is None:

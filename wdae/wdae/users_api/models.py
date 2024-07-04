@@ -4,7 +4,7 @@ import logging
 import uuid
 from datetime import timedelta
 from functools import wraps
-from typing import Any, Callable, Optional, Type, Union, cast
+from typing import Any, Callable, Type, cast
 
 from datasets_api.permissions import get_directly_allowed_genotype_data
 from django.contrib.auth.models import (
@@ -29,7 +29,7 @@ class WdaeUserManager(BaseUserManager):
     """User manager for wdae users."""
 
     def _create_user(
-        self, email: str, password: Optional[str], **kwargs: Any,
+        self, email: str, password: str | None, **kwargs: Any,
     ) -> WdaeUser:
         """Create and save a User with the given email and password."""
         if not email:
@@ -57,7 +57,7 @@ class WdaeUserManager(BaseUserManager):
         return self.create_user(**kwargs)
 
     def create_user(
-        self, email: str, password: Optional[str] = None,
+        self, email: str, password: str | None = None,
         **kwargs: Any,
     ) -> WdaeUser:
         user = self._create_user(email, password, **kwargs)
@@ -108,7 +108,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
     def email_user(
         self, subject: str, message: str,
-        from_email: Optional[str] = None,
+        from_email: str | None = None,
     ) -> int:
         """Send an email to the user."""
         # pylint: disable=import-outside-toplevel
@@ -136,7 +136,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
         return mail
 
-    def set_password(self, raw_password: Optional[str]) -> None:
+    def set_password(self, raw_password: str | None) -> None:
         super().set_password(raw_password)
 
         has_password = bool(raw_password)
@@ -160,7 +160,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             if self.pk == session_data.get("_auth_user_id"):
                 session.delete()
 
-    def register_preexisting_user(self, name: Optional[str]) -> None:
+    def register_preexisting_user(self, name: str | None) -> None:
         """Register already existing user."""
         if self.is_active:
             send_already_existing_email(self)
@@ -176,7 +176,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
     @staticmethod
     def change_password(
-        verification_path: Union[SetPasswordCode, ResetPasswordCode],
+        verification_path: SetPasswordCode | ResetPasswordCode,
         new_password: str,
     ) -> WdaeUser:
         """Initiate password reset for the user."""
@@ -222,7 +222,7 @@ class BaseVerificationCode(models.Model):
     @classmethod
     def get_code(
         cls, user: WdaeUser,
-    ) -> Optional[BaseVerificationCode]:
+    ) -> BaseVerificationCode | None:
         """Get a verification code for a user."""
         try:
             # pylint: disable=no-member
@@ -294,7 +294,7 @@ class AuthenticationLog(models.Model):
         db_table = "authentication_log"
 
     @staticmethod
-    def get_last_login_for(email: str) -> Optional[AuthenticationLog]:
+    def get_last_login_for(email: str) -> AuthenticationLog | None:
         """Get the latest authentication attempt for a specified email."""
         query = AuthenticationLog.objects.filter(  # pylint: disable=no-member
             email__iexact=email,

@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import os
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -275,7 +275,7 @@ def test_build_regression_aug_df_is_none(
     fake_phenotype_data: PhenotypeStudy,
     output_dir: str,
 ) -> None:
-    def fake_augment_df(*_args: Any) -> Optional[pd.DataFrame]:
+    def fake_augment_df(*_args: Any) -> pd.DataFrame | None:
         return None
 
     mocker.patch(
@@ -320,7 +320,7 @@ def test_handle_regressions(
         side_effect=fake_build_regression,
     )
 
-    def fake_save_fig(*_args: Any) -> tuple[Optional[str], Optional[str]]:
+    def fake_save_fig(*_args: Any) -> tuple[str | None, str | None]:
         return ("test1", "test2")
     mocker.patch(
         "dae.pheno.prepare_data."
@@ -372,7 +372,7 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
     output_dir: str,
     fake_phenotype_data_config: str,
 ) -> None:
-    def fake_save_fig(*_args: Any) -> tuple[Optional[str], Optional[str]]:
+    def fake_save_fig(*_args: Any) -> tuple[str | None, str | None]:
         return ("test1", "test2")
     mocker.patch(
         "dae.pheno.prepare_data."
@@ -414,7 +414,7 @@ def test_handle_regressions_regressand_is_regressor(
     output_dir: str,
     fake_phenotype_data_config: str,
 ) -> None:
-    def fake_save_fig(*_args: Any) -> tuple[Optional[str], Optional[str]]:
+    def fake_save_fig(*_args: Any) -> tuple[str | None, str | None]:
         return ("test1", "test2")
     mocker.patch(
         "dae.pheno.prepare_data."
@@ -453,7 +453,7 @@ def test_handle_regressions_default_jitter(
         side_effect=fake_build_regression,
     )
 
-    def fake_save_fig(*_args: Any) -> tuple[Optional[str], Optional[str]]:
+    def fake_save_fig(*_args: Any) -> tuple[str | None, str | None]:
         return ("test1", "test2")
     mocker.patch(
         "dae.pheno.prepare_data."

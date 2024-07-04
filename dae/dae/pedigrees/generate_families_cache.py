@@ -2,7 +2,7 @@ import argparse
 import logging
 import sys
 import time
-from typing import Optional, cast
+from typing import cast
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeDataGroup
@@ -12,8 +12,8 @@ logger = logging.getLogger("generate_families_cache")
 
 
 def main(
-    argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None,
+    argv: list[str] | None = None,
+    gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Command line tool to create genotype groups families cache."""
     description = "Create genotype groups families cache"

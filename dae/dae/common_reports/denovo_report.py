@@ -4,7 +4,7 @@ import logging
 import time
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Dict, List, Union, cast
+from typing import Any, Dict, List, cast
 
 import numpy as np
 
@@ -55,13 +55,13 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
         return len(self.observed_people_with_event)
 
     @property
-    def observed_rate_per_child(self) -> Union[int, float]:
+    def observed_rate_per_child(self) -> int | float:
         if self.number_of_observed_events == 0:
             return 0
         return self.number_of_observed_events / len(self.person_set_children)
 
     @property
-    def percent_of_children_with_events(self) -> Union[int, float]:
+    def percent_of_children_with_events(self) -> int | float:
         if self.number_of_children_with_event == 0:
             return 0
         return self.number_of_children_with_event / len(
@@ -72,7 +72,7 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
     def column_name(self) -> str:
         return f"{self.person_set.name} ({len(self.person_set_children)})"
 
-    def to_dict(self) -> Dict[str, Union[int, float, str]]:
+    def to_dict(self) -> Dict[str, int | float | str]:
         return {
             "number_of_observed_events":
             self.number_of_observed_events,

@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Optional, cast
+from typing import cast
 
 from dae.person_sets import PersonSetCollection
 from dae.studies.study import GenotypeData
@@ -34,8 +34,8 @@ class GenotypeHelper:
     def __init__(
         self, genotype_data: GenotypeData,
         person_set_collection: PersonSetCollection,
-        effect_types: Optional[list[str]] = None,
-        genes: Optional[list[str]] = None,
+        effect_types: list[str] | None = None,
+        genes: list[str] | None = None,
     ):
 
         self.genotype_data = genotype_data

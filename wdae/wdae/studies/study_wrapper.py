@@ -4,7 +4,7 @@ import time
 from abc import abstractmethod
 from collections.abc import Generator, Iterable
 from contextlib import closing
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from box import Box
 from remote.remote_phenotype_data import RemotePhenotypeData
@@ -38,7 +38,7 @@ class StudyWrapperBase:
         return self.genotype_data.study_id
 
     @property
-    def description(self) -> Optional[str]:
+    def description(self) -> str | None:
         return self.genotype_data.description
 
     @staticmethod
@@ -93,8 +93,8 @@ class StudyWrapperBase:
     def build_genotype_data_description(
         gpf_instance: Any,
         config: Box,
-        description: Optional[str],
-        person_set_collection_configs: Optional[dict[str, Any]],
+        description: str | None,
+        person_set_collection_configs: dict[str, Any] | None,
     ) -> dict[str, Any]:
         """Build and return genotype data group description."""
         keys = [
@@ -222,7 +222,7 @@ class StudyWrapperBase:
         sources: list[dict[str, Any]],
         max_variants_count: int = 10000,
         max_variants_message: bool = False,
-    ) -> Generator[Optional[list], None, None]:
+    ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming."""
 
     @abstractmethod
@@ -316,8 +316,8 @@ class StudyWrapper(StudyWrapperBase):
         self.summary_download_columns = \
             genotype_browser_config.summary_download_columns
 
-    def _init_pheno(self, pheno_db: Optional[PhenoRegistry]) -> None:
-        self.phenotype_data: Optional[PhenotypeData] = None
+    def _init_pheno(self, pheno_db: PhenoRegistry | None) -> None:
+        self.phenotype_data: PhenotypeData | None = None
         if pheno_db is None:
             return
         if self.config.phenotype_data:
@@ -357,7 +357,7 @@ class StudyWrapper(StudyWrapperBase):
         sources: list[dict[str, Any]],
         max_variants_count: int = 10000,
         max_variants_message: bool = False,
-    ) -> Generator[Optional[list], None, None]:
+    ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming of variants."""
         # pylint: disable=too-many-locals,too-many-branches
         max_variants_count = kwargs.pop("maxVariantsCount", max_variants_count)
@@ -468,7 +468,7 @@ class StudyWrapper(StudyWrapperBase):
         variants_from_studies = itertools.islice(
             self.genotype_data_study.query_summary_variants(
                 **kwargs),
-            cast(Optional[int], limit),
+            cast(int | None, limit),
         )
         for v in variants_from_studies:
             for aa in self.response_transformer.\
@@ -624,7 +624,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
     def get_person_set_collection(
         self, person_set_collection_id: str,
-    ) -> Optional[PersonSetCollection]:
+    ) -> PersonSetCollection | None:
         return self.remote_genotype_data.get_person_set_collection(
             person_set_collection_id,
         )

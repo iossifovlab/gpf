@@ -1,7 +1,6 @@
 import logging
 import os
 from collections.abc import Generator
-from typing import Optional
 
 import yaml
 from pyarrow import parquet as pq
@@ -46,7 +45,7 @@ class Schema2ImportStorage(ImportStorage):
     @staticmethod
     def _get_partition_description(
             project: ImportProject,
-            out_dir: Optional[str] = None) -> PartitionDescriptor:
+            out_dir: str | None = None) -> PartitionDescriptor:
         out_dir = out_dir or project.work_dir
         return project.get_partition_descriptor()
 

@@ -3,7 +3,7 @@ import logging
 import sys
 import textwrap
 from collections import Counter, defaultdict
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
@@ -71,8 +71,8 @@ def parse_cli_arguments() -> argparse.ArgumentParser:
 
 
 def main(
-        argv: Optional[list[str]] = None,
-        gpf_instance: Optional[GPFInstance] = None) -> None:
+        argv: list[str] | None = None,
+        gpf_instance: GPFInstance | None = None) -> None:
     """Liftover dae variants tool main function."""
     # pylint: disable=too-many-locals,too-many-statements
     if argv is None:

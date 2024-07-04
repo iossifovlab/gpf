@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
-from typing import Any, Optional
+from typing import Any
 
 import pytest
 
@@ -76,7 +76,7 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
 
 
 GENOTYPE_STORAGE_REGISTRY = GenotypeStorageRegistry()
-GENOTYPE_STORAGES: Optional[dict[str, Any]] = None
+GENOTYPE_STORAGES: dict[str, Any] | None = None
 
 
 @pytest.fixture(scope="module", params=["duckdb", "inmemory"])

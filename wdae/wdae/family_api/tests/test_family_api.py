@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-from typing import Optional
 
 import pytest
 from django.test.client import Client
@@ -21,7 +20,7 @@ pytestmark = pytest.mark.usefixtures(
     ("/api/v3/families/Study1/all", "get", None),
 ])
 def test_family_api_permissions(
-    anonymous_client: Client, url: str, method: str, body: Optional[dict],
+    anonymous_client: Client, url: str, method: str, body: dict | None,
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)

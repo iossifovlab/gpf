@@ -6,7 +6,7 @@ import logging
 import os
 import textwrap
 from functools import cached_property
-from typing import Any, Optional
+from typing import Any
 
 from jinja2 import Template
 from markdown2 import markdown
@@ -63,7 +63,7 @@ class BaseGeneSetCollection(abc.ABC):
     """Base class for gene set collections."""
 
     @abc.abstractmethod
-    def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
+    def get_gene_set(self, gene_set_id: str) -> GeneSet | None:
         """Return the gene set if found; returns None if not found."""
         raise NotImplementedError
 
@@ -145,7 +145,7 @@ class GeneSetCollection(
             gene_sets[gene_set.name] = gene_set
         return gene_sets
 
-    def get_gene_set(self, gene_set_id: str) -> Optional[GeneSet]:
+    def get_gene_set(self, gene_set_id: str) -> GeneSet | None:
         """Return the gene set if found; returns None if not found."""
         gene_set = self.gene_sets.get(gene_set_id)
         if gene_set is None:
@@ -277,7 +277,7 @@ class GeneSetsDb:
     def get_gene_set(
         self, collection_id: str,
         gene_set_id: str,
-    ) -> Optional[GeneSet]:
+    ) -> GeneSet | None:
         """Find and return a gene set in a gene set collection."""
         gsc = self.gene_set_collections[collection_id]
         return gsc.get_gene_set(gene_set_id)
@@ -288,10 +288,10 @@ class GeneSetsDb:
 
 def build_gene_set_collection_from_file(
         filename: str,
-        collection_id: Optional[str] = None,
-        collection_format: Optional[str] = None,
-        web_label: Optional[str] = None,
-        web_format_str: Optional[str] = None,
+        collection_id: str | None = None,
+        collection_format: str | None = None,
+        web_label: str | None = None,
+        web_format_str: str | None = None,
 ) -> GeneSetCollection:
     """Return a Gene Set Collection by adapting a file to a local resource."""
     dirname = os.path.dirname(filename)

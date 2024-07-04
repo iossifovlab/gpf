@@ -1,6 +1,5 @@
 import re
 from collections.abc import Generator, Iterable
-from typing import Union
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
 
@@ -62,7 +61,7 @@ def split_iterable(
         yield result
 
 
-def join_line(line: list[Union[str, list[str]]], sep: str = "\t") -> str:
+def join_line(line: list[str | list[str]], sep: str = "\t") -> str:
     """Join an iterable representing a line into a string."""
     flattened_line = map(
         lambda v: "; ".join(v) if isinstance(v, list) else v,  # type: ignore

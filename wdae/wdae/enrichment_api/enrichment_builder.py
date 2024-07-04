@@ -1,6 +1,6 @@
 import abc
 from collections.abc import Iterable
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 from remote.rest_api_client import RESTClient
 from studies.remote_study import RemoteGenotypeData
@@ -27,8 +27,8 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         self, enrichment_helper: EnrichmentHelper,
         dataset: GenotypeData,
         gene_syms: Iterable[str],
-        background_id: Optional[str],
-        counting_id: Optional[str],
+        background_id: str | None,
+        counting_id: str | None,
     ):
         self.enrichment_helper = enrichment_helper
         self.dataset = dataset
@@ -104,10 +104,10 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
     """Builder for enrichment tool test for remote dataset."""
 
     def __init__(
-        self, dataset: Union[RemoteGenotypeData, RemoteStudyWrapper],
+        self, dataset: RemoteGenotypeData | RemoteStudyWrapper,
         client: RESTClient,
-        background_name: Optional[str],
-        counting_name: Optional[str],
+        background_name: str | None,
+        counting_name: str | None,
         gene_syms: Iterable[str],
     ):
         self.dataset = dataset

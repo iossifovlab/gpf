@@ -4,7 +4,7 @@ import logging.config
 import os
 import pathlib
 import sys
-from typing import Optional, Union, cast
+from typing import cast
 
 import django
 from django.conf import settings
@@ -80,7 +80,7 @@ def _check_is_initialized(wgpf_instance: WGPFInstance) -> bool:
 
 
 def _run_init_command(
-        wgpf_instance: WGPFInstance, **kwargs: Union[str, bool]) -> None:
+        wgpf_instance: WGPFInstance, **kwargs: str | bool) -> None:
     force = cast(bool, kwargs.pop("force", False))
     if _check_is_initialized(wgpf_instance) and not force:
         logger.error(
@@ -116,7 +116,7 @@ def _run_init_command(
 
 
 def _run_run_command(
-        wgpf_instance: WGPFInstance, **kwargs: Union[bool, str]) -> None:
+        wgpf_instance: WGPFInstance, **kwargs: bool | str) -> None:
     if not _check_is_initialized(wgpf_instance):
         logger.info(
             "GPF instance %s should be initialized first. "
@@ -137,7 +137,7 @@ def _run_run_command(
         pass
 
 
-def cli(argv: Optional[list[str]] = None) -> None:
+def cli(argv: list[str] | None = None) -> None:
     """Provide CLI for development GPF web server management."""
     if argv is None:
         argv = sys.argv[:]

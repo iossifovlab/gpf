@@ -1,5 +1,4 @@
 import pathlib
-from typing import Optional
 
 from dae.genomic_resources.gene_models import build_gene_models_from_resource
 from dae.genomic_resources.reference_genome import (
@@ -12,9 +11,9 @@ from dae.gpf_instance import GPFInstance
 
 def setup_gpf_instance(
         out_path: pathlib.Path,
-        reference_genome_id: Optional[str] = None,
-        gene_models_id: Optional[str] = None,
-        grr: Optional[GenomicResourceRepo] = None) -> GPFInstance:
+        reference_genome_id: str | None = None,
+        gene_models_id: str | None = None,
+        grr: GenomicResourceRepo | None = None) -> GPFInstance:
     """Set up a GPF instance using prebuild genome, gene models, etc."""
     # from dae.gpf_instance import GPFInstance
 

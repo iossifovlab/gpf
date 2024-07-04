@@ -14,10 +14,8 @@ from typing import (
     Any,
     Dict,
     List,
-    Optional,
     Tuple,
     Type,
-    Union,
     cast,
 )
 
@@ -57,13 +55,13 @@ class CLIArgument:
 
     def __init__(
         self, argument_name: str, has_value: bool = True,
-        default_value: Optional[Union[int, str, bool]] = None,
-        destination: Optional[str] = None,
-        help_text: Optional[str] = None,
-        action: Optional[str] = None,
-        value_type: Optional[Type[str]] = None,
-        metavar: Optional[str] = None,
-        nargs: Optional[str] = None,
+        default_value: int | str | bool | None = None,
+        destination: str | None = None,
+        help_text: str | None = None,
+        action: str | None = None,
+        value_type: Type[str] | None = None,
+        metavar: str | None = None,
+        nargs: str | None = None,
         raw: bool = False,
     ) -> None:
         self.argument_name = argument_name
@@ -84,7 +82,7 @@ class CLIArgument:
     def __repr__(self) -> str:
         return f"{self.argument_name} ({self.arg_type})"
 
-    def _default_destination(self) -> Optional[str]:
+    def _default_destination(self) -> str | None:
         if self.argument_name.startswith("--"):
             self.arg_type = ArgumentType.OPTION
         else:
@@ -116,7 +114,7 @@ class CLIArgument:
     def build_option(
         self, params: dict,
         use_defaults: bool = False,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Build an option."""
         if self.arg_type == ArgumentType.ARGUMENT:
             return None
@@ -161,7 +159,7 @@ class CLIArgument:
 
 
 FamilyGenotypeIterator = Generator[
-    tuple[Family, np.ndarray, Optional[np.ndarray]], None, None]
+    tuple[Family, np.ndarray, np.ndarray | None], None, None]
 
 
 class FamiliesGenotypes(ABC):
@@ -179,7 +177,7 @@ class CLILoader(ABC):
     """Base class for loader classes that require cli arguments."""
 
     def __init__(
-        self, params: Optional[dict[str, Any]] = None,
+        self, params: dict[str, Any] | None = None,
     ) -> None:
         self.arguments = self._arguments()
         self.params: Dict[str, Any] = params if params else {}
@@ -234,7 +232,7 @@ class CLILoader(ABC):
         logger.info("result CLI arguments: %s", result)
         return result
 
-    def build_arguments_dict(self) -> Dict[str, Union[str, bool]]:
+    def build_arguments_dict(self) -> Dict[str, str | bool]:
         """Build a dictionary with the argument destinations as keys."""
         result = {}
         for argument in self._arguments():
@@ -271,11 +269,11 @@ class VariantsLoader(CLILoader):
     def __init__(
         self,
         families: FamiliesData,
-        filenames: Union[str, list[str]],
+        filenames: str | list[str],
         genome: ReferenceGenome,
         transmission_type: TransmissionType = TransmissionType.transmitted,
-        params: Optional[Dict[str, Any]] = None,
-        attributes: Optional[Dict[str, Any]] = None,
+        params: Dict[str, Any] | None = None,
+        attributes: Dict[str, Any] | None = None,
     ) -> None:
         params = params if params else {}
         super().__init__(params=params)
@@ -304,11 +302,11 @@ class VariantsLoader(CLILoader):
     def set_attribute(self, key: str, value: Any) -> None:
         self._attributes[key] = value
 
-    def reset_regions(self, regions: Optional[Union[str, list[str]]]) -> None:
+    def reset_regions(self, regions: str | list[str] | None) -> None:
         pass
 
     @property
-    def annotation_schema(self) -> Optional[list[AttributeInfo]]:
+    def annotation_schema(self) -> list[AttributeInfo] | None:
         return None
 
     @classmethod
@@ -360,7 +358,7 @@ class VariantsLoaderDecorator(VariantsLoader):
         return getattr(self.variants_loader, attr, None)
 
     @property
-    def annotation_schema(self) -> Optional[list[AttributeInfo]]:
+    def annotation_schema(self) -> list[AttributeInfo] | None:
         return self.variants_loader.annotation_schema
 
     @classmethod
@@ -622,7 +620,7 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         )
 
     @classmethod
-    def _convert_array_of_strings(cls, token: str) -> Optional[list[str]]:
+    def _convert_array_of_strings(cls, token: str) -> list[str] | None:
         if not token:
             return None
         token = token.strip()
@@ -630,7 +628,7 @@ class StoredAnnotationDecorator(AnnotationDecorator):
         return words
 
     @staticmethod
-    def _convert_string(token: str) -> Optional[str]:
+    def _convert_string(token: str) -> str | None:
         if not token:
             return None
         return token
@@ -732,13 +730,13 @@ class VariantsGenotypesLoader(VariantsLoader):
     def __init__(
             self,
             families: FamiliesData,
-            filenames: Union[str, list[str]],
+            filenames: str | list[str],
             genome: ReferenceGenome,
             transmission_type: TransmissionType = TransmissionType.transmitted,
-            regions: Optional[List[str]] = None,
+            regions: List[str] | None = None,
             expect_genotype: bool = True,
             expect_best_state: bool = False,
-            params: Optional[Dict[str, Any]] = None) -> None:
+            params: Dict[str, Any] | None = None) -> None:
 
         params = params if params else {}
         super().__init__(
@@ -748,7 +746,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             genome=genome,
             params=params)
 
-        self.regions: Sequence[Optional[str]]
+        self.regions: Sequence[str | None]
         if regions is None or isinstance(regions, str):
             self.regions = [regions]
         else:
@@ -789,7 +787,7 @@ class VariantsGenotypesLoader(VariantsLoader):
     def _full_variants_iterator_impl(self) -> FullVariantsIterator:
         pass
 
-    def reset_regions(self, regions: Optional[Union[str, list[str]]]) -> None:
+    def reset_regions(self, regions: str | list[str] | None) -> None:
         if regions is None:
             self.regions = []
         elif isinstance(regions, str):
@@ -839,7 +837,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             cls,
             family_variant: FamilyVariant,
             genome: ReferenceGenome,
-            force: bool = True) -> Optional[np.ndarray]:
+            force: bool = True) -> np.ndarray | None:
         assert family_variant.gt is not None
 
         male_ploidy = get_locus_ploidy(

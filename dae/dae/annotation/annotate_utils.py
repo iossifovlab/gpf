@@ -3,7 +3,6 @@ import os
 import sys
 from abc import abstractmethod
 from pathlib import Path
-from typing import Optional
 
 from pysam import TabixFile
 
@@ -68,8 +67,8 @@ class AnnotationTool:
 
     def __init__(
         self,
-        raw_args: Optional[list[str]] = None,
-        gpf_instance: Optional[GPFInstance] = None,
+        raw_args: list[str] | None = None,
+        gpf_instance: GPFInstance | None = None,
     ) -> None:
         if not raw_args:
             raw_args = sys.argv[1:]
@@ -99,10 +98,10 @@ class AnnotationTool:
     def _produce_annotation_pipeline(
         pipeline_config: RawAnnotatorsConfig,
         pipeline_config_old: str | None,
-        grr_definition: Optional[dict],
+        grr_definition: dict | None,
         *,
         allow_repeated_attributes: bool,
-        work_dir: Optional[Path] = None,
+        work_dir: Path | None = None,
     ) -> AnnotationPipeline:
         grr = build_genomic_resource_repository(definition=grr_definition)
         pipeline = build_annotation_pipeline(

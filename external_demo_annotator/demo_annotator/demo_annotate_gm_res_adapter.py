@@ -3,7 +3,7 @@ from __future__ import annotations
 import csv
 import subprocess
 from pathlib import Path
-from typing import Any, Optional, TextIO
+from typing import Any, TextIO
 
 import fsspec
 
@@ -24,7 +24,7 @@ class DemoAnnotateGeneModelsAdapter(AnnotatorBase):
     """Annotation pipeline adapter for dummy_annotate using tempfiles."""
 
     def __init__(
-        self, pipeline: Optional[AnnotationPipeline],
+        self, pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
     ):
         if not info.attributes:
@@ -51,7 +51,7 @@ class DemoAnnotateGeneModelsAdapter(AnnotatorBase):
         )
 
     def _do_annotate(
-        self, _annotatable: Optional[Annotatable],
+        self, _annotatable: Annotatable | None,
         _context: dict[str, Any],
     ) -> dict[str, Any]:
         raise NotImplementedError(
@@ -59,7 +59,7 @@ class DemoAnnotateGeneModelsAdapter(AnnotatorBase):
         )
 
     def annotate(
-        self, _annotatable: Optional[Annotatable],
+        self, _annotatable: Annotatable | None,
         _context: dict[str, Any],
     ) -> dict[str, Any]:
         raise NotImplementedError(
@@ -67,7 +67,7 @@ class DemoAnnotateGeneModelsAdapter(AnnotatorBase):
         )
 
     def prepare_input(
-        self, file: TextIO, annotatables: list[Optional[Annotatable]],
+        self, file: TextIO, annotatables: list[Annotatable | None],
     ) -> None:
         writer = csv.writer(file, delimiter="\t")
         for annotatable in annotatables:
@@ -85,7 +85,7 @@ class DemoAnnotateGeneModelsAdapter(AnnotatorBase):
             contexts[idx]["gene_symbols"] = row[-1]
 
     def batch_annotate(
-        self, annotatables: list[Optional[Annotatable]],
+        self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         print("Getting filepath")

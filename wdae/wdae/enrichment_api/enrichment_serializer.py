@@ -1,4 +1,4 @@
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.enrichment_tool.event_counters import EnrichmentSingleResult
@@ -54,7 +54,7 @@ class EnrichmentSerializer(EffectTypesMixin):
         grouping_results: dict[str, dict[str, EnrichmentSingleResult]],
         effect_type: str,
         _result: EnrichmentSingleResult,
-        gender: Optional[list[str]] = None,
+        gender: list[str] | None = None,
     ) -> dict[str, Any]:
         """Serialize common filter."""
         if gender is None:
@@ -83,7 +83,7 @@ class EnrichmentSerializer(EffectTypesMixin):
         self, grouping_results: dict[str, Any],
         effect_type: str,
         result: EnrichmentSingleResult,
-        gender: Optional[list[str]] = None,
+        gender: list[str] | None = None,
     ) -> dict[str, Any]:
         """Serialize recurrent events filter."""
         if gender is None:
@@ -98,7 +98,7 @@ class EnrichmentSerializer(EffectTypesMixin):
         self, grouping_results: dict[str, Any],
         effect_type: str,
         result: EnrichmentSingleResult,
-        gender: Optional[list[str]] = None,
+        gender: list[str] | None = None,
         overlapped_genes: bool = False,
     ) -> dict[str, Any]:
         """Serialize overlapped events filter."""

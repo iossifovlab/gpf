@@ -1,6 +1,5 @@
 import logging
 import os
-from typing import Optional
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -14,7 +13,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
     """Helper class for work with studies in impala genotype storage."""
 
     def __init__(
-        self, gpf_instance: Optional[GPFInstance] = None,
+        self, gpf_instance: GPFInstance | None = None,
     ) -> None:
         super().__init__(gpf_instance=gpf_instance)
 
@@ -102,7 +101,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
 
     def check_dataset_rename_hdfs_directory(
         self, old_id: str, new_id: str,
-    ) -> tuple[Optional[str], Optional[str]]:
+    ) -> tuple[str | None, str | None]:
         """Check if it is OK to rename an HDFS directory for a dataset.
 
         Works for impala genotype storage.
@@ -172,7 +171,7 @@ class ImpalaDatasetHelpers(DatasetHelpers):
 
     def dataset_recreate_impala_tables(
         self, old_id: str, new_id: str, dry_run: bool = False,
-    ) -> tuple[str, Optional[str]]:
+    ) -> tuple[str, str | None]:
         """Recreate impala tables for a dataset."""
         genotype_storage = self.get_genotype_storage(old_id)
 

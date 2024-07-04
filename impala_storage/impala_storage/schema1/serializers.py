@@ -8,7 +8,7 @@ import operator
 import struct
 from collections import namedtuple
 from collections.abc import Iterable
-from typing import Any, ClassVar, Optional, Union, cast
+from typing import Any, ClassVar, cast
 
 import numpy as np
 import pyarrow as pa
@@ -58,7 +58,7 @@ def write_string(stream: io.BytesIO, string: str) -> None:
 
 def write_string_list(
     stream: io.BytesIO,
-    the_list: list[Optional[str]],
+    the_list: list[str | None],
 ) -> None:
     """Write a list of strings to the stream."""
     length = len(the_list)
@@ -122,16 +122,16 @@ def write_best_state(stream: io.BytesIO, best_state: np.ndarray) -> None:
 
 def write_enum(
     stream: io.BytesIO,
-    enum: Union[Sex, GeneticModel, Allele.Type, TransmissionType],
+    enum: Sex | GeneticModel | Allele.Type | TransmissionType,
 ) -> None:
     write_int8(stream, enum.value)
 
 
-def write_big_enum(stream: io.BytesIO, enum: Union[Role, Inheritance]) -> None:
+def write_big_enum(stream: io.BytesIO, enum: Role | Inheritance) -> None:
     write_int32(stream, enum.value)
 
 
-def write_enum_list(stream: io.BytesIO, the_list: list[Optional[Sex]]) -> None:
+def write_enum_list(stream: io.BytesIO, the_list: list[Sex | None]) -> None:
     """Write a list of enums to the stream."""
     length = len(the_list)
     write_int32(stream, length)
@@ -145,7 +145,7 @@ def write_enum_list(stream: io.BytesIO, the_list: list[Optional[Sex]]) -> None:
 
 def write_big_enum_list(
     stream: io.BytesIO,
-    the_list: list[Optional[Union[Inheritance, Role]]],
+    the_list: list[Inheritance | Role | None],
 ) -> None:
     """Write a list of big enums (more than 128 states) to the stream."""
     length = len(the_list)
@@ -179,10 +179,10 @@ def read_string(stream: io.BytesIO) -> str:
     return stream.read(length).decode("utf8")
 
 
-def read_string_list(stream: io.BytesIO) -> list[Optional[str]]:
+def read_string_list(stream: io.BytesIO) -> list[str | None]:
     """Read a list of strings from the stream."""
     length = int.from_bytes(stream.read(4), "big", signed=False)
-    out: list[Optional[str]] = []
+    out: list[str | None] = []
     for _i in range(length):
         is_not_none = read_int8(stream)
         if is_not_none:
@@ -227,10 +227,10 @@ def read_transmission_type(stream: io.BytesIO) -> TransmissionType:
     return TransmissionType(read_int8(stream))
 
 
-def read_in_sexes(stream: io.BytesIO) -> list[Optional[Sex]]:
+def read_in_sexes(stream: io.BytesIO) -> list[Sex | None]:
     """Read a list of sexes from the stream."""
     length = int.from_bytes(stream.read(4), "big", signed=False)
-    out: list[Optional[Sex]] = []
+    out: list[Sex | None] = []
     for _i in range(length):
         is_not_none = read_int8(stream)
         if is_not_none:
@@ -240,10 +240,10 @@ def read_in_sexes(stream: io.BytesIO) -> list[Optional[Sex]]:
     return out
 
 
-def read_in_roles(stream: io.BytesIO) -> list[Optional[Role]]:
+def read_in_roles(stream: io.BytesIO) -> list[Role | None]:
     """Read a list of Roles from the stream."""
     length = int.from_bytes(stream.read(4), "big", signed=False)
-    out: list[Optional[Role]] = []
+    out: list[Role | None] = []
     for _i in range(length):
         is_not_none = read_int8(stream)
         if is_not_none:
@@ -253,10 +253,10 @@ def read_in_roles(stream: io.BytesIO) -> list[Optional[Role]]:
     return out
 
 
-def read_inheritance(stream: io.BytesIO) -> list[Optional[Inheritance]]:
+def read_inheritance(stream: io.BytesIO) -> list[Inheritance | None]:
     """Read a list of Inheritances from the stream."""
     length = int.from_bytes(stream.read(4), "big", signed=False)
-    out: list[Optional[Inheritance]] = []
+    out: list[Inheritance | None] = []
     for _i in range(length):
         is_not_none = read_int8(stream)
         if is_not_none:
@@ -459,8 +459,8 @@ class AlleleParquetSerializer:
 
     def __init__(
         self,
-        annotation_schema: Optional[list[AttributeInfo]],
-        extra_attributes: Optional[list[str]] = None,
+        annotation_schema: list[AttributeInfo] | None,
+        extra_attributes: list[str] | None = None,
     ) -> None:
         logger.debug("serializer annotation schema: %s", annotation_schema)
         if annotation_schema is None:
@@ -639,12 +639,12 @@ class AlleleParquetSerializer:
     }
 
     def _serialize_summary_allele(
-        self, allele: Union[FamilyAllele, SummaryAllele],
+        self, allele: FamilyAllele | SummaryAllele,
         stream: io.BytesIO,
     ) -> None:
 
         def default_getter(
-            allele: Union[FamilyAllele, SummaryAllele],
+            allele: FamilyAllele | SummaryAllele,
             prop: str,
         ) -> Any:
             value = getattr(allele, prop, None)
@@ -661,7 +661,7 @@ class AlleleParquetSerializer:
                 self.write_property(stream, value, serializer)
 
     def serialize_summary_data(
-        self, alleles: list[Union[FamilyAllele, SummaryAllele]],
+        self, alleles: list[FamilyAllele | SummaryAllele],
     ) -> list[bytes]:
         """Serialize summary data and return a list of blobs."""
         output = []
@@ -676,7 +676,7 @@ class AlleleParquetSerializer:
         return output
 
     def _serialize_allele_scores(
-        self, allele: Union[FamilyAllele, SummaryAllele],
+        self, allele: FamilyAllele | SummaryAllele,
         stream: io.BytesIO,
     ) -> None:
         property_serializers = self.scores_serializers
@@ -687,7 +687,7 @@ class AlleleParquetSerializer:
             self.write_property(stream, value, serializer)
 
     def serialize_scores_data(
-        self, alleles: list[Union[FamilyAllele, SummaryAllele]],
+        self, alleles: list[FamilyAllele | SummaryAllele],
     ) -> list[bytes]:
         """Serialize scores data."""
         scores_blobs = []
@@ -702,7 +702,7 @@ class AlleleParquetSerializer:
 
     def serialize_extra_attributes(
         self, variant: FamilyVariant,
-    ) -> Optional[bytes]:
+    ) -> bytes | None:
         """Serialize a variant's extra attributes."""
         try:
             stream = io.BytesIO()
@@ -753,7 +753,7 @@ class AlleleParquetSerializer:
         return allele_data
 
     def deserialize_summary_variant(
-        self, main_blob: bytes, extra_blob: Optional[bytes] = None,
+        self, main_blob: bytes, extra_blob: bytes | None = None,
     ) -> SummaryVariant:
         """Read a summary variant from the input stream."""
         stream = io.BytesIO(main_blob)
@@ -783,7 +783,7 @@ class AlleleParquetSerializer:
 
     def deserialize_family_variant(
         self, main_blob: bytes, family: Family,
-        extra_blob: Optional[bytes] = None,
+        extra_blob: bytes | None = None,
     ) -> FamilyVariant:
         """Read a family variant from the input stream."""
         stream = io.BytesIO(main_blob)
@@ -822,7 +822,7 @@ class AlleleParquetSerializer:
         return fv
 
     def build_searchable_vectors_summary(
-        self, summary_variant: Union[FamilyVariant, SummaryVariant],
+        self, summary_variant: FamilyVariant | SummaryVariant,
     ) -> dict[int, Any]:
         """Build searchable vectors summary."""
         vectors: dict[int, Any] = {}
@@ -865,7 +865,7 @@ class AlleleParquetSerializer:
         }
 
     def _get_searchable_prop_value(
-        self, allele: Union[FamilyAllele, SummaryAllele],
+        self, allele: FamilyAllele | SummaryAllele,
         spr: str,
     ) -> Any:
         prop_value = getattr(allele, spr, None)

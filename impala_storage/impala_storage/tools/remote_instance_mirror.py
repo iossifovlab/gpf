@@ -7,7 +7,7 @@ import os
 import re
 import subprocess
 import sys
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import yaml
 
@@ -148,7 +148,7 @@ def update_mirror_config(
     return config_dict
 
 
-def get_active_conda_environment() -> Optional[str]:
+def get_active_conda_environment() -> str | None:
     """Detect activate conda environment."""
     try:
         result = subprocess.run(
@@ -231,7 +231,7 @@ def run_wdae_bootstrap(work_dir: str) -> None:
             logger.error(result.stderr)
 
 
-def main(argv: Optional[list[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     """Entry point for the remote instance mirroring tool."""
     if argv is None:
         argv = sys.argv[1:]

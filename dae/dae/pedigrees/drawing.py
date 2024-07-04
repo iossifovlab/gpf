@@ -2,7 +2,7 @@
 
 import math
 from copy import deepcopy
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Tuple
 
 import matplotlib as mpl
 import matplotlib.lines as mlines
@@ -26,14 +26,14 @@ class PDFLayoutDrawer:
 
     def __init__(self, filename: str) -> None:
         self._filename = filename
-        self.pdf: Optional[PdfPages] = None
+        self.pdf: PdfPages | None = None
 
     def __enter__(self) -> PdfPages:
         self.pdf = PdfPages(self._filename)
         return self.pdf
 
     def add_page(
-        self, figure: Figure, title: Optional[str] = None,
+        self, figure: Figure, title: str | None = None,
     ) -> None:
         """Add a new page to the PDF file."""
         assert self.pdf is not None
@@ -93,9 +93,9 @@ class OffsetLayoutDrawer:
                 line.y2 = highest_y - line.y2 + layout.positions[0][0].size
 
     def draw(
-        self, figure: Optional[Figure] = None,
-        title: Optional[str] = None,
-        tags: Optional[set[str]] = None,
+        self, figure: Figure | None = None,
+        title: str | None = None,
+        tags: set[str] | None = None,
     ) -> Figure:
         """Draw family pedigree."""
         if figure is None:

@@ -1,6 +1,6 @@
 """Module containing a custom OAuth2 authentication class."""
 
-from typing import Callable, Optional
+from typing import Callable
 
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
@@ -20,7 +20,7 @@ class SessionAuthenticationWithoutCSRF(SessionAuthentication):
 class SessionAuthenticationWithUnauthenticatedCSRF(SessionAuthentication):
     """Session authentication with unauthenticated CSRF."""
 
-    def authenticate(self, request: Request) -> Optional[tuple]:
+    def authenticate(self, request: Request) -> tuple | None:
         """Return the currently logged-in user or None otherwise."""
         # Get the session-based user from the underlying HttpRequest object
         # pylint: disable=protected-access
@@ -43,7 +43,7 @@ class GPFOAuth2Authentication(OAuth2Authentication):
     authentication headers.
     """
 
-    def authenticate(self, request: HttpRequest) -> Optional[tuple]:
+    def authenticate(self, request: HttpRequest) -> tuple | None:
         retval = super().authenticate(request)
         if retval is None and request.headers.get("Authorization"):
             raise exceptions.AuthenticationFailed(

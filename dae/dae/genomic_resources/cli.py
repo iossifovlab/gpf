@@ -5,7 +5,7 @@ import logging
 import os
 import pathlib
 import sys
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 import yaml
@@ -131,7 +131,7 @@ def _configure_list_subparser(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _run_list_command(
-        proto: Union[ReadOnlyRepositoryProtocol, GenomicResourceRepo],
+        proto: ReadOnlyRepositoryProtocol | GenomicResourceRepo,
         args: argparse.Namespace) -> None:
     repos: list = [proto]
     if isinstance(proto, GenomicResourceGroupRepo):
@@ -168,7 +168,7 @@ def _configure_repo_init_subparser(
 
 
 def _run_repo_init_command(**kwargs: str) -> None:
-    repository: Optional[str] = kwargs.get("repository")
+    repository: str | None = kwargs.get("repository")
     if repository is None:
         repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
     else:
@@ -380,7 +380,7 @@ def _do_resource_manifest_command(
 
 def _run_repo_manifest_command_internal(
         proto: ReadWriteRepositoryProtocol,
-        **kwargs: Union[bool, int, str]) -> dict[str, Any]:
+        **kwargs: bool | int | str) -> dict[str, Any]:
     dry_run = cast(bool, kwargs.get("dry_run", False))
     force = cast(bool, kwargs.get("force", False))
     use_dvc = cast(bool, kwargs.get("use_dvc", True))
@@ -402,7 +402,7 @@ def _run_repo_manifest_command_internal(
 
 def _run_repo_manifest_command(
     proto: ReadWriteRepositoryProtocol,
-    **kwargs: Union[bool, int, str],
+    **kwargs: bool | int | str,
 ) -> int:
     dry_run = cast(bool, kwargs.get("dry_run", False))
     force = cast(bool, kwargs.get("force", False))
@@ -418,7 +418,7 @@ def _run_repo_manifest_command(
 def _find_resource(
         proto: ReadOnlyRepositoryProtocol,
         repo_url: str,
-        **kwargs: Union[str, bool, int]) -> Optional[GenomicResource]:
+        **kwargs: str | bool | int) -> GenomicResource | None:
     resource_id = cast(str, kwargs.get("resource"))
     if resource_id is not None:
         res = proto.get_resource(resource_id)
@@ -446,7 +446,7 @@ def _find_resource(
 
 def _run_resource_manifest_command_internal(
         proto: ReadWriteRepositoryProtocol,
-        repo_url: str, **kwargs: Union[bool, int, str]) -> bool:
+        repo_url: str, **kwargs: bool | int | str) -> bool:
     dry_run = cast(bool, kwargs.get("dry_run", False))
     force = cast(bool, kwargs.get("force", False))
     use_dvc = cast(bool, kwargs.get("use_dvc", True))
@@ -464,7 +464,7 @@ def _run_resource_manifest_command_internal(
 
 def _run_resource_manifest_command(
     proto: ReadWriteRepositoryProtocol,
-    repo_url: str, **kwargs: Union[bool, int, str],
+    repo_url: str, **kwargs: bool | int | str,
 ) -> int:
     dry_run = cast(bool, kwargs.get("dry_run", False))
     force = cast(bool, kwargs.get("force", False))
@@ -482,7 +482,7 @@ def _run_resource_manifest_command(
 
 def _read_stats_hash(
         proto: ReadWriteRepositoryProtocol,
-        implementation: GenomicResourceImplementation) -> Optional[bytes]:
+        implementation: GenomicResourceImplementation) -> bytes | None:
     res = implementation.resource
     stats_dir = ResourceStatistics.get_statistics_folder()
     if not proto.file_exists(res, f"{stats_dir}/stats_hash"):
@@ -573,7 +573,7 @@ def _stats_need_rebuild(
 def _run_repo_stats_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
-        **kwargs: Union[bool, int, str]) -> int:
+        **kwargs: bool | int | str) -> int:
     dry_run = cast(bool, kwargs.get("dry_run", False))
     force = cast(bool, kwargs.get("force", False))
     use_dvc = cast(bool, kwargs.get("use_dvc", True))
@@ -631,7 +631,7 @@ def _run_resource_stats_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
         repo_url: str,
-        **kwargs: Union[bool, int, str]) -> int:
+        **kwargs: bool | int | str) -> int:
     needs_update = _run_resource_manifest_command_internal(
         proto, repo_url, **kwargs)
     dry_run = cast(bool, kwargs.get("dry_run", False))
@@ -691,7 +691,7 @@ def _run_resource_stats_command(
 def _run_repo_repair_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
-        **kwargs: Union[str, bool, int]) -> int:
+        **kwargs: str | bool | int) -> int:
     return _run_repo_info_command(repo, proto, **kwargs)
 
 
@@ -699,14 +699,14 @@ def _run_resource_repair_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
         repo_url: str,
-        **kwargs: Union[str, bool, int]) -> int:
+        **kwargs: str | bool | int) -> int:
     return _run_resource_info_command(repo, proto, repo_url, **kwargs)
 
 
 def _run_repo_info_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
-        **kwargs: Union[str, bool, int]) -> int:
+        **kwargs: str | bool | int) -> int:
     status = _run_repo_stats_command(repo, proto, **kwargs)
 
     dry_run = cast(bool, kwargs.get("dry_run", False))
@@ -750,7 +750,7 @@ def _run_resource_info_command(
         repo: GenomicResourceRepo,
         proto: ReadWriteRepositoryProtocol,
         repo_url: str,
-        **kwargs: Union[str, int, bool]) -> int:
+        **kwargs: str | int | bool) -> int:
     status = _run_resource_stats_command(
         repo, proto, repo_url, **kwargs)
 
@@ -767,7 +767,7 @@ def _run_resource_info_command(
     return 0
 
 
-def cli_manage(cli_args: Optional[list[str]] = None) -> None:
+def cli_manage(cli_args: list[str] | None = None) -> None:
     """Provide CLI for repository management."""
     # flake8: noqa: C901
     # pylint: disable=too-many-branches,too-many-statements
@@ -926,7 +926,7 @@ def _create_proto(
     return proto
 
 
-def cli_browse(cli_args: Optional[list[str]] = None) -> None:
+def cli_browse(cli_args: list[str] | None = None) -> None:
     """Provide CLI for repository browsing."""
     desc = "Genomic Resource Repository Browse Tool"
     parser = argparse.ArgumentParser(description=desc)

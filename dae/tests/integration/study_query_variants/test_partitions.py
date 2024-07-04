@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
-from typing import Optional, Set
+from typing import Set
 
 import pytest
 
@@ -131,7 +131,7 @@ def imported_study(
     ],
 )
 def test_query_family_id(
-    family_ids: Optional[Set[str]], count: int,
+    family_ids: Set[str] | None, count: int,
     imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(family_ids=family_ids))
@@ -152,7 +152,7 @@ def test_query_family_id(
     ],
 )
 def test_query_person_id(
-    person_ids: Optional[Set[str]], count: int, imported_study: GenotypeData,
+    person_ids: Set[str] | None, count: int, imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(person_ids=person_ids))
     assert len(vs) == count
@@ -192,7 +192,7 @@ def test_query_ultra_rare(imported_study: GenotypeData) -> None:
     ],
 )
 def test_query_effect(
-    effect: Optional[list[str]],
+    effect: list[str] | None,
     family_count: int, summary_count: int,
     imported_study: GenotypeData,
 ) -> None:

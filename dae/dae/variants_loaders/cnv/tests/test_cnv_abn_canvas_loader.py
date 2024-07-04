@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import io
 import textwrap
-from typing import Optional, TextIO, cast
+from typing import TextIO, cast
 
 import pytest
 
@@ -123,7 +123,7 @@ def test_cnv_loader_expected_variant_type(
 def test_cnv_loader_regions(
     abn_families: FamiliesData, canvas_cnv: TextIO,
     gpf_instance_2013: GPFInstance,
-    add_chrom_prefix: Optional[str],
+    add_chrom_prefix: str | None,
     region: str,
     expected: int,
 ) -> None:
@@ -164,7 +164,7 @@ def test_cnv_loader_constructor_regions(
     abn_families: FamiliesData,
     canvas_cnv: TextIO,
     gpf_instance_2013: GPFInstance,
-    add_chrom_prefix: Optional[str],
+    add_chrom_prefix: str | None,
     region: str, expected: int,
 ) -> None:
 

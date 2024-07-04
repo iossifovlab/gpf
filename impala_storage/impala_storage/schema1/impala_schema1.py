@@ -3,7 +3,7 @@ import os
 import pathlib
 import time
 from collections.abc import Iterator
-from typing import Optional, cast
+from typing import cast
 
 import toml
 
@@ -41,7 +41,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         return fs_utils.join(project.work_dir, f"{project.study_id}_variants")
 
     @staticmethod
-    def _parquet_dataset(project: ImportProject) -> tuple[str, Optional[str]]:
+    def _parquet_dataset(project: ImportProject) -> tuple[str, str | None]:
         pedigree_path = ImpalaSchema1ImportStorage._pedigree_filename(project)
         variants_path = ImpalaSchema1ImportStorage._variants_dir(project)
         if os.path.exists(variants_path):
@@ -51,7 +51,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
     @staticmethod
     def _get_partition_description(
         project: ImportProject,
-        out_dir: Optional[str] = None,
+        out_dir: str | None = None,
     ) -> PartitionDescriptor:
         out_dir = out_dir or project.work_dir
         return project.get_partition_descriptor()
@@ -177,7 +177,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             logger.error("missing or non-impala genotype storage")
             return
         impala_storage = cast(ImpalaGenotypeStorage, genotype_storage)
-        hdfs_variants_dir: Optional[str] = impala_storage \
+        hdfs_variants_dir: str | None = impala_storage \
             .default_variants_hdfs_dirname(project.study_id)
 
         hdfs_pedigree_file = impala_storage \

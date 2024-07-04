@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -39,7 +39,7 @@ def augment_accessibility(
 
 
 def augment_with_groups(
-    dataset: dict[str, Any], db_dataset: Optional[Dataset] = None,
+    dataset: dict[str, Any], db_dataset: Dataset | None = None,
 ) -> dict[str, Any]:
     """Add groups to response object."""
     # pylint: disable=no-member
@@ -88,7 +88,7 @@ def produce_description_hierarchy(
 
 
 def get_first_paragraph(
-    text: Union[str, None],
+    text: str | None,
 ) -> str:
     """Get first paragraph of text."""
     result = ""
@@ -153,7 +153,7 @@ class DatasetView(QueryBaseView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(
-        self, request: Request, dataset_id: Optional[str] = None,
+        self, request: Request, dataset_id: str | None = None,
     ) -> Response:
         """Return response to a get request for a dataset or all datasets."""
         user = request.user
@@ -339,7 +339,7 @@ class DatasetConfigView(DatasetView):
 
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(
-        self, request: Request, dataset_id: Optional[str] = None,
+        self, request: Request, dataset_id: str | None = None,
     ) -> Response:
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -397,7 +397,7 @@ class DatasetDescriptionView(QueryBaseView):
 class BaseDatasetPermissionsView(QueryBaseView):
     """Base dataset permission view."""
 
-    def _get_dataset_info(self, dataset: Dataset) -> Optional[dict[str, Any]]:
+    def _get_dataset_info(self, dataset: Dataset) -> dict[str, Any] | None:
         groups = dataset.groups.all()
         group_names = sorted([group.name for group in groups])
 
@@ -508,7 +508,7 @@ class DatasetHierarchyView(QueryBaseView):
     def produce_tree(
         instance_id: str, dataset: GenotypeData,
         user: User, selected: list[str],
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Recursively collect a dataset's id, children and access rights."""
         has_rights = user_has_permission(instance_id, user, dataset.study_id)
         dataset_obj = Dataset.objects.get(dataset_id=dataset.study_id)

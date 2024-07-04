@@ -2,7 +2,7 @@ import abc
 import logging
 from collections.abc import Generator, Iterable
 from contextlib import closing
-from typing import Any, Optional, Union
+from typing import Any
 
 import pandas as pd
 
@@ -23,7 +23,7 @@ from dae.variants.variant import SummaryVariant
 
 logger = logging.getLogger(__name__)
 
-RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
+RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 
 
 # pylint: disable=too-many-instance-attributes
@@ -35,12 +35,12 @@ class SqlSchema2Variants(QueryVariantsBase):
     def __init__(
         self,
         dialect: Dialect,
-        db: Optional[str],
-        family_variant_table: Optional[str],
-        summary_allele_table: Optional[str],
+        db: str | None,
+        family_variant_table: str | None,
+        summary_allele_table: str | None,
         pedigree_table: str,
         meta_table: str,
-        gene_models: Optional[GeneModels] = None,
+        gene_models: GeneModels | None = None,
     ):
         assert pedigree_table
 
@@ -87,7 +87,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         """Fetch schema of a table and return it as a Dict."""
 
     @abc.abstractmethod
-    def _fetch_variants_data_schema(self) -> Optional[dict[str, Any]]:
+    def _fetch_variants_data_schema(self) -> dict[str, Any] | None:
         """Fetch variants data schema from metadata table."""
 
     @abc.abstractmethod
@@ -117,16 +117,16 @@ class SqlSchema2Variants(QueryVariantsBase):
     # pylint: disable=too-many-arguments
     def build_summary_variants_query_runner(
         self, *,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> QueryRunner:
         """Build a query selecting the appropriate summary variants."""
@@ -185,23 +185,23 @@ class SqlSchema2Variants(QueryVariantsBase):
     # pylint: disable=too-many-arguments,too-many-locals
     def build_family_variants_query_runner(
         self, *,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[list[str]] = None,
-        person_ids: Optional[list[str]] = None,
-        inheritance: Optional[list[str]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
-        study_filters: Optional[list[str]] = None,  # noqa: ARG002
-        pedigree_fields: Optional[tuple] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        person_ids: list[str] | None = None,
+        inheritance: list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        study_filters: list[str] | None = None,  # noqa: ARG002
+        pedigree_fields: tuple | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> QueryRunner:
         """Build a query selecting the appropriate family variants."""
@@ -277,16 +277,16 @@ class SqlSchema2Variants(QueryVariantsBase):
 
     def query_summary_variants(
         self, *,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> Generator[SummaryVariant, None, None]:
         """Query summary variants."""
@@ -327,22 +327,22 @@ class SqlSchema2Variants(QueryVariantsBase):
 
     def query_variants(
         self, *,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[list[str]] = None,
-        person_ids: Optional[list[str]] = None,
-        inheritance: Optional[list[str]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
-        pedigree_fields: Optional[tuple] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        person_ids: list[str] | None = None,
+        inheritance: list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+        pedigree_fields: tuple | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> Generator[FamilyVariant, None, None]:
         """Query family variants."""
@@ -388,7 +388,7 @@ class SqlSchema2Variants(QueryVariantsBase):
     def build_person_set_collection_query(
             person_set_collection: PersonSetCollection,
             person_set_collection_query: tuple[str, set[str]],
-    ) -> Optional[Union[tuple, tuple[list[str], list[str]]]]:
+    ) -> tuple | tuple[list[str], list[str]] | None:
         """No idea what it does. If you know please edit."""
         collection_id, selected_person_sets = person_set_collection_query
         assert collection_id == person_set_collection.id

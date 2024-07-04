@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-from typing import Optional
 
 import pandas as pd
 import pytest
@@ -42,9 +41,9 @@ def test_pheno_group_families(fake_group: PhenotypeGroup) -> None:
 )
 def test_pheno_group_get_persons_df(
     fake_group: PhenotypeGroup,
-    roles: Optional[set[Role]],
-    family_ids: Optional[set[str]],
-    person_ids: Optional[set[str]],
+    roles: set[Role] | None,
+    family_ids: set[str] | None,
+    person_ids: set[str] | None,
 ) -> None:
     fake = fake_group.phenotype_data[0]
     ped_df = fake.get_persons_df(
@@ -74,9 +73,9 @@ def test_pheno_group_get_persons_df(
 )
 def test_pheno_group_get_persons(
     fake_group: PhenotypeGroup,
-    roles: Optional[set[Role]],
-    family_ids: Optional[set[str]],
-    person_ids: Optional[set[str]],
+    roles: set[Role] | None,
+    family_ids: set[str] | None,
+    person_ids: set[str] | None,
 ) -> None:
 
     persons = fake_group.get_persons(
@@ -122,9 +121,9 @@ def test_pheno_group_instruments_and_measures(
     ],
 )
 def test_pheno_group_get_people_measure_values_df(
-    fake_group: PhenotypeGroup, roles: Optional[list[str]],
-    family_ids: Optional[list[str]],
-    person_ids: Optional[list[str]],
+    fake_group: PhenotypeGroup, roles: list[str] | None,
+    family_ids: list[str] | None,
+    person_ids: list[str] | None,
 ) -> None:
     df = fake_group.get_people_measure_values_df(
         ["i1.iq"], person_ids=person_ids,
@@ -151,9 +150,9 @@ def test_pheno_group_get_people_measure_values_df(
 )
 def test_pheno_group_get_people_measure_values(
     fake_group: PhenotypeGroup,
-    roles: Optional[list[str]],
-    family_ids: Optional[list[str]],
-    person_ids: Optional[list[str]],
+    roles: list[str] | None,
+    family_ids: list[str] | None,
+    person_ids: list[str] | None,
 ) -> None:
     res = fake_group.get_people_measure_values(
         ["i1.iq"], person_ids=person_ids,
@@ -208,9 +207,9 @@ def test_pheno_group_get_measures(fake_group: PhenotypeGroup) -> None:
 )
 def test_pheno_group_i1_get_values_df(
     fake_group: PhenotypeGroup,
-    roles: Optional[set[Role]],
-    family_ids: Optional[set[str]],
-    person_ids: Optional[set[str]],
+    roles: set[Role] | None,
+    family_ids: set[str] | None,
+    person_ids: set[str] | None,
 ) -> None:
 
     df = fake_group.get_values_df(  # type: ignore
@@ -237,9 +236,9 @@ def test_pheno_group_i1_get_values_df(
 )
 def test_pheno_group_i2_get_values_df(
     fake_group: PhenotypeGroup,
-    roles: Optional[set[Role]],
-    family_ids: Optional[set[str]],
-    person_ids: Optional[set[str]],
+    roles: set[Role] | None,
+    family_ids: set[str] | None,
+    person_ids: set[str] | None,
 ) -> None:
 
     df = fake_group.get_values_df(  # type: ignore
@@ -266,9 +265,9 @@ def test_pheno_group_i2_get_values_df(
 )
 def test_pheno_group_i1_i2_get_values_df(
     fake_group: PhenotypeGroup,
-    roles: Optional[set[Role]],
-    family_ids: Optional[set[str]],
-    person_ids: Optional[set[str]],
+    roles: set[Role] | None,
+    family_ids: set[str] | None,
+    person_ids: set[str] | None,
 ) -> None:
 
     df = fake_group.get_values_df(  # type: ignore
@@ -296,9 +295,9 @@ def test_pheno_group_i1_i2_get_values_df(
 )
 def test_pheno_group_i1_i2_get_values(
     fake_group: PhenotypeGroup,
-    roles: Optional[set[Role]],
-    family_ids: Optional[set[str]],
-    person_ids: Optional[set[str]],
+    roles: set[Role] | None,
+    family_ids: set[str] | None,
+    person_ids: set[str] | None,
 ) -> None:
 
     res = fake_group.get_values(  # type: ignore

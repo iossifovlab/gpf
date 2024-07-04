@@ -1,7 +1,6 @@
 import argparse
 import os
 from glob import glob
-from typing import Optional
 
 import yaml
 
@@ -268,8 +267,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
 
 def cli(
-    raw_args: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None,
+    raw_args: list[str] | None = None,
+    gpf_instance: GPFInstance | None = None,
 ) -> None:
     tool = AnnotateSchema2ParquetTool(raw_args, gpf_instance)
     tool.run()

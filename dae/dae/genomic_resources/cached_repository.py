@@ -5,7 +5,7 @@ import logging
 import os
 from collections.abc import Generator, Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import IO, Any, Optional, Union
+from typing import IO, Any
 
 import pysam
 
@@ -46,7 +46,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
         self.remote_protocol = remote_protocol
         self.local_protocol = local_protocol
         super().__init__(local_protocol.proto_id, local_protocol.get_url())
-        self._all_resources: Optional[list[CacheResource]] = None
+        self._all_resources: list[CacheResource] | None = None
 
     def get_url(self) -> str:
         return self.remote_protocol.get_url()
@@ -121,7 +121,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 
     def open_raw_file(
             self, resource: GenomicResource, filename: str,
-            mode: str = "rt", **kwargs: Union[str, bool, None]) -> IO:
+            mode: str = "rt", **kwargs: str | bool | None) -> IO:
         if "w" in mode:
             raise OSError(
                 f"Read-Only caching protocol {self.get_id()} trying to open "
@@ -133,7 +133,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 
     def open_tabix_file(
             self, resource: GenomicResource, filename: str,
-            index_filename: Optional[str] = None) -> pysam.TabixFile:
+            index_filename: str | None = None) -> pysam.TabixFile:
         self.refresh_cached_resource_file(resource, filename)
         if index_filename is None:
             index_filename = f"{filename}.tbi"
@@ -144,7 +144,7 @@ class CachingProtocol(ReadOnlyRepositoryProtocol):
 
     def open_vcf_file(
             self, resource: GenomicResource, filename: str,
-            index_filename: Optional[str] = None) -> pysam.VariantFile:
+            index_filename: str | None = None) -> pysam.VariantFile:
         self.refresh_cached_resource_file(resource, filename)
         if index_filename is None:
             index_filename = f"{filename}.tbi"
@@ -173,13 +173,13 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
     def __init__(
             self, child: GenomicResourceRepo, cache_url: str,
-            **kwargs: Union[str, None]):
+            **kwargs: str | None):
         repo_id: str = f"{child.repo_id}.caching_repo"
         super().__init__(repo_id)
 
         logger.debug(
             "creating cached GRR with cache url: %s", cache_url)
-        self._all_resources: Optional[list[GenomicResource]] = None
+        self._all_resources: list[GenomicResource] | None = None
         self.child: GenomicResourceRepo = child
         self.cache_url = cache_url
         self.cache_protos: dict[str, CachingProtocol] = {}
@@ -228,9 +228,9 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
     def find_resource(
         self, resource_id: str,
-        version_constraint: Optional[str] = None,
-        repository_id: Optional[str] = None,
-    ) -> Optional[GenomicResource]:
+        version_constraint: str | None = None,
+        repository_id: str | None = None,
+    ) -> GenomicResource | None:
         """Return requested resource or None if not found."""
         matching_resources: list[GenomicResource] = []
         for res in self.get_all_resources():
@@ -254,8 +254,8 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
     def get_resource(
             self, resource_id: str,
-            version_constraint: Optional[str] = None,
-            repository_id: Optional[str] = None) -> GenomicResource:
+            version_constraint: str | None = None,
+            repository_id: str | None = None) -> GenomicResource:
 
         remote_resource = self.child.get_resource(
             resource_id, version_constraint, repository_id)
@@ -280,8 +280,8 @@ class GenomicResourceCachedRepo(GenomicResourceRepo):
 
 
 def cache_resources(
-        repository: GenomicResourceRepo, resource_ids: Optional[Iterable[str]],
-        workers: Optional[int] = None) -> None:
+        repository: GenomicResourceRepo, resource_ids: Iterable[str] | None,
+        workers: int | None = None) -> None:
     """Cache resources from a list of remote resource IDs."""
     # pylint: disable=import-outside-toplevel
     from dae.genomic_resources import get_resource_implementation_builder

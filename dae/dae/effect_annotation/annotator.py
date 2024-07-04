@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from dae.annotation.annotatable import Annotatable
 from dae.genomic_resources.gene_models import GeneModels, TranscriptModel
@@ -78,7 +77,7 @@ class EffectAnnotator:
 
     def get_effect_for_transcript(
         self, variant: Variant, transcript_model: TranscriptModel,
-    ) -> Optional[AnnotationEffect]:
+    ) -> AnnotationEffect | None:
         """Calculate effect for a given transcript."""
         request = AnnotationRequestFactory.create_annotation_request(
             self, variant, transcript_model,
@@ -175,15 +174,15 @@ class EffectAnnotator:
 
     def do_annotate_variant(
         self,
-        chrom: Optional[str] = None,
-        pos: Optional[int] = None,
-        location: Optional[str] = None,
-        variant: Optional[str] = None,
-        ref: Optional[str] = None,
-        alt: Optional[str] = None,
-        length: Optional[int] = None,
-        seq: Optional[str] = None,
-        variant_type: Optional[Annotatable.Type] = None,
+        chrom: str | None = None,
+        pos: int | None = None,
+        location: str | None = None,
+        variant: str | None = None,
+        ref: str | None = None,
+        alt: str | None = None,
+        length: int | None = None,
+        seq: str | None = None,
+        variant_type: Annotatable.Type | None = None,
     ) -> list[AnnotationEffect]:
         """Annotate effects for a variant."""
         if variant in {"CNV+", "CNV-"}:
@@ -217,9 +216,9 @@ class EffectAnnotator:
         pos: int,
         ref: str,
         alt: str,
-        length: Optional[int] = None,
-        seq: Optional[str] = None,
-        variant_type: Optional[str] = None,
+        length: int | None = None,
+        seq: str | None = None,
+        variant_type: str | None = None,
     ) -> list[AnnotationEffect]:
         """Annotate effects for a variant."""
         variant = Variant(
@@ -231,15 +230,15 @@ class EffectAnnotator:
     def annotate_variant(
         gm: GeneModels,
         reference_genome: ReferenceGenome,
-        chrom: Optional[str] = None,
-        position: Optional[int] = None,
-        location: Optional[str] = None,
-        variant: Optional[str] = None,
-        ref: Optional[str] = None,
-        alt: Optional[str] = None,
-        length: Optional[int] = None,
-        seq: Optional[str] = None,
-        variant_type: Optional[Annotatable.Type] = None,
+        chrom: str | None = None,
+        position: int | None = None,
+        location: str | None = None,
+        variant: str | None = None,
+        ref: str | None = None,
+        alt: str | None = None,
+        length: int | None = None,
+        seq: str | None = None,
+        variant_type: Annotatable.Type | None = None,
         promoter_len: int = 0,
     ) -> list[AnnotationEffect]:
         """Build effect annotator and annotate a variant."""

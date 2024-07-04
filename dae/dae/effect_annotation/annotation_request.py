@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import abc
 import logging
-from typing import Optional, Union
 
 from dae.effect_annotation.gene_codes import NuclearCode
 from dae.effect_annotation.variant import Variant
@@ -28,7 +27,7 @@ class BaseAnnotationRequest(abc.ABC):
         self.promoter_len = promoter_len
         self.variant = variant
         self.transcript_model = transcript_model
-        self.__cds_regions: Optional[list[BedRegion]] = None
+        self.__cds_regions: list[BedRegion] | None = None
 
     def _clamp_in_cds(self, position: int) -> int:
         if position < self.transcript_model.cds[0]:
@@ -88,7 +87,7 @@ class BaseAnnotationRequest(abc.ABC):
     def get_protein_position(self) -> tuple[int, int]:
         raise NotImplementedError
 
-    def get_protein_position_for_pos(self, position: int) -> Optional[int]:
+    def get_protein_position_for_pos(self, position: int) -> int | None:
         if position < self.transcript_model.cds[0]:
             return None
         if position > self.transcript_model.cds[1]:
@@ -111,7 +110,7 @@ class BaseAnnotationRequest(abc.ABC):
             self.__cds_regions = self.transcript_model.cds_regions()
         return self.__cds_regions
 
-    def get_coding_region_for_pos(self, pos: int) -> Optional[int]:
+    def get_coding_region_for_pos(self, pos: int) -> int | None:
         """Find conding region for a position."""
         close_match = None
         for i, reg in enumerate(self.transcript_model.exons):
@@ -250,8 +249,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         super().__init__(
             reference_genome, code, promoter_len,
             variant, transcript_model)
-        self.__amino_acids: Optional[
-            tuple[list[str], list[str]]] = None
+        self.__amino_acids: tuple[list[str], list[str]] | None = None
 
     def _get_coding_nucleotide_position(self, position: int) -> int:
         length = 0
@@ -376,8 +374,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         super().__init__(
             reference_genome, code, promoter_len,
             variant, transcript_model)
-        self.__amino_acids: Optional[
-            tuple[list[str], list[str]]] = None
+        self.__amino_acids: tuple[list[str], list[str]] | None = None
 
     def _get_coding_nucleotide_position(self, position: int) -> int:
         length = 0
@@ -563,5 +560,5 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         return BaseAnnotationRequest.has_utr3_region(self)
 
 
-AnnotationRequest = Union[
-    PositiveStrandAnnotationRequest, NegativeStrandAnnotationRequest]
+AnnotationRequest = \
+    PositiveStrandAnnotationRequest | NegativeStrandAnnotationRequest

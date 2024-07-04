@@ -3,7 +3,6 @@ import argparse
 import logging
 import os
 import sys
-from typing import Optional
 
 import toml
 
@@ -92,8 +91,8 @@ def parse_cli_arguments(
 
 
 def main(
-    argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None,
+    argv: list[str] | None = None,
+    gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Import parquet dataset into Impala genotype storage."""
     if gpf_instance is None:

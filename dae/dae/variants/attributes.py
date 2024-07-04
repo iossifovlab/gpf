@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import enum
 import logging
-from typing import Any, Optional, Union
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +117,7 @@ class Role(enum.Enum):
         return self.name
 
     @staticmethod
-    def from_name(name: Optional[Union[str, int]]) -> Role:
+    def from_name(name: str | int | None) -> Role:
         """Construct and return a Role from it's string representation."""
         if isinstance(name, Role):
             return name
@@ -134,7 +134,7 @@ class Role(enum.Enum):
         return Role.unknown
 
     @staticmethod
-    def to_value(name: Optional[Union[str, int]]) -> int:
+    def to_value(name: str | int | None) -> int:
         role = Role.from_name(name)
         return role.value
 
@@ -164,7 +164,7 @@ class Sex(enum.Enum):
     unspecified = U
 
     @staticmethod
-    def from_name(name: Optional[Union[int, str]]) -> Sex:
+    def from_name(name: int | str | None) -> Sex:
         """Construct and return person Sex from string."""
         if name is None:
             return Sex.U
@@ -183,7 +183,7 @@ class Sex(enum.Enum):
         raise ValueError(f"unexpected sex name: {name}")
 
     @staticmethod
-    def to_value(name: Optional[Union[int, str]]) -> int:
+    def to_value(name: int | str | None) -> int:
         sex = Sex.from_name(name)
         return sex.value
 
@@ -225,7 +225,7 @@ class Status(enum.Enum):
     unspecified = 0
 
     @staticmethod
-    def from_name(name: Optional[Union[int, str]]) -> Status:
+    def from_name(name: int | str | None) -> Status:
         """Construct and return person status from string."""
         if name is None:
             return Status.unspecified
@@ -244,7 +244,7 @@ class Status(enum.Enum):
         raise ValueError("unexpected status type: " + name)
 
     @staticmethod
-    def to_value(name: Optional[Union[int, str]]) -> int:
+    def to_value(name: int | str | None) -> int:
         status = Status.from_name(name)
         return status.value
 

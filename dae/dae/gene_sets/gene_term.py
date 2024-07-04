@@ -1,6 +1,6 @@
 import pathlib
 from collections import defaultdict
-from typing import IO, Any, Callable, Optional
+from typing import IO, Any, Callable
 
 
 def dd() -> dict[str, int]:
@@ -14,7 +14,7 @@ class GeneTerms:
         self.g2t: dict[str, Any] = defaultdict(dd)
         self.t2g: dict[str, Any] = defaultdict(dd)
         self.t_desc: dict[str, Any] = {}
-        self.gene_ns: Optional[str] = None
+        self.gene_ns: str | None = None
 
     def filter_genes(
         self, filter_fun: Callable[[list[str]], list[str]],
@@ -30,7 +30,7 @@ class GeneTerms:
             del self.t_desc[t]
 
     def rename_genes(
-        self, gene_ns: Optional[str],
+        self, gene_ns: str | None,
         rename_fun: Callable[[str], str],
     ) -> None:
         """Rename genese."""
@@ -108,7 +108,7 @@ def read_gmt_file(input_file: IO) -> GeneTerms:
     return r
 
 
-def read_mapping_file(input_file: IO, names_file: Optional[IO]) -> GeneTerms:
+def read_mapping_file(input_file: IO, names_file: IO | None) -> GeneTerms:
     """Read a mapping file."""
     r = GeneTerms()
     r.gene_ns = "id"

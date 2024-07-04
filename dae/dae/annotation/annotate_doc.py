@@ -4,7 +4,6 @@ import argparse
 import logging
 import os
 import sys
-from typing import Optional
 
 from jinja2 import Environment, PackageLoader
 from markdown2 import markdown
@@ -30,7 +29,7 @@ def configure_argument_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def cli(raw_args: Optional[list[str]] = None) -> None:
+def cli(raw_args: list[str] | None = None) -> None:
     """Run command line interface for annotate_vcf tool."""
     if not raw_args:
         raw_args = sys.argv[1:]

@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 from dae.utils import fs_utils
 
@@ -13,10 +12,10 @@ class Schema2DatasetLayout:
 
     study: str
     pedigree: str
-    summary: Optional[str]
-    family: Optional[str]
+    summary: str | None
+    family: str | None
     meta: str
-    base_dir: Optional[str] = None
+    base_dir: str | None = None
 
     def has_variants(self) -> bool:
         return self.summary is not None and self.family is not None
