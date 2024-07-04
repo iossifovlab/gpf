@@ -58,7 +58,7 @@ def main(
 
     repo_path = find_directory_with_a_file(
         GR_CONTENTS_FILE_NAME,
-        args.repository
+        args.repository,
     )
     if repo_path is None:
         current_path = args.repository
