@@ -14,10 +14,6 @@ genotype_storage:
     dir: "%(wd)s/studies"
     storage_type: inmemory
 
-phenotype_data:
-  dir: "dummy_pheno_dir"
-
-
 studies:
   dir: "studies"
 
@@ -26,6 +22,3 @@ datasets:
 
 default_study_config:
   conf_file: "defaultConfiguration.conf"
-
-gene_info_db:
-  conf_file: "gene_info.conf"
