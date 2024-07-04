@@ -1,8 +1,0 @@
-[f1_group]
-studies = f1_study
-
-[f2_group]
-studies = f2_recurrent
-
-[f3_group]
-studies = f3_triple
