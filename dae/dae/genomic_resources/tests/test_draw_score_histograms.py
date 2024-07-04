@@ -64,7 +64,7 @@ def test_draw_score_histograms(
     assert (path / "one/statistics/histogram_phastCons100way.png").exists()
 
     proto.filesystem.delete(
-      path / "one/statistics/histogram_phastCons100way.png"
+      path / "one/statistics/histogram_phastCons100way.png",
     )
     assert not (path / "one/statistics/histogram_phastCons100way.png").exists()
 

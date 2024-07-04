@@ -342,8 +342,8 @@ class NumberHistogram(Statistic):
         self,
         outfile: IO,
         score_id: str,
-        small_values_description: Optional[str] = None,
-        large_values_description: Optional[str] = None,
+        small_values_description: str | None = None,
+        large_values_description: str | None = None,
     ) -> None:
         """Plot histogram and save it into outfile."""
         # pylint: disable=import-outside-toplevel
@@ -576,8 +576,8 @@ class CategoricalHistogram(Statistic):
         self,
         outfile: IO,
         score_id: str,
-        small_values_description: Optional[str] = None,
-        large_values_description: Optional[str] = None,
+        small_values_description: str | None = None,
+        large_values_description: str | None = None,
     ) -> None:
         """Plot histogram and save it into outfile."""
         # pylint: disable=import-outside-toplevel
@@ -669,7 +669,7 @@ def build_default_histogram_conf(value_type: str, **kwargs: Any) -> Union[
 
 def build_empty_histogram(
     config: HistogramConfig,
-) -> Union[NumberHistogram, CategoricalHistogram, NullHistogram]:
+) -> NumberHistogram | CategoricalHistogram | NullHistogram:
     """Create an empty histogram from a deserialize histogram dictionary."""
     # pylint: disable=broad-except
     try:
