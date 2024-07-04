@@ -379,11 +379,11 @@ class GeneScoresDb:
         self.gene_scores = {}
         for gene_score in gene_scores:
             self.gene_scores[gene_score.resource.get_id()] = gene_score
-            for score_desc in GeneScoresDb._build_descs_from_score(gene_score):
+            for score_desc in GeneScoresDb.build_descs_from_score(gene_score):
                 self.score_descs[score_desc.score_id] = score_desc
 
     @staticmethod
-    def _build_descs_from_score(
+    def build_descs_from_score(
         gene_score: GeneScore,
     ) -> list[ScoreDesc]:
         result = []

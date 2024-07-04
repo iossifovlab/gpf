@@ -451,7 +451,12 @@ class GenomicScoreImplementation(
                     impl.score.get_histogram_image_filename(score_id),
                     mode="wb",
                 ) as outfile:
-                    score_histogram.plot(outfile, score_id)
+                    score_histogram.plot(
+                        outfile,
+                        score_id,
+                        impl.score.score_definitions[score_id].small_values_desc,
+                        impl.score.score_definitions[score_id].small_values_desc,
+                    )
         return merged_histograms
 
     def calc_info_hash(self) -> bytes:
