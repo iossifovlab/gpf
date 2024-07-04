@@ -4,7 +4,7 @@ from __future__ import annotations
 import enum
 from collections.abc import Iterable
 from functools import reduce
-from typing import Any, Callable, Optional, Union, cast
+from typing import Any, Callable, cast
 
 from lark import InlineTransformer, Lark
 from lark.reconstruct import Reconstructor
@@ -104,7 +104,7 @@ class BaseQueryTransformerMatcher:
 
     def __init__(
         self, parser: Lark = PARSER,
-        token_converter: Optional[Callable[[Any], Any]] = None,
+        token_converter: Callable[[Any], Any] | None = None,
     ):
         self.parser = parser
         self.transformer = StringQueryToTreeTransformer(
@@ -135,7 +135,7 @@ class StringQueryToTreeTransformer(InlineTransformer):
 
     def __init__(
         self, _parser: Lark = PARSER,
-        token_converter: Optional[Callable[[Any], Any]] = None,
+        token_converter: Callable[[Any], Any] | None = None,
     ):
         super().__init__()
 
@@ -203,7 +203,7 @@ class TreeNode:
         self.children = children
 
 
-QNode = Union[LeafNode, TreeNode]
+QNode = LeafNode | TreeNode
 
 
 class AndNode(TreeNode):
@@ -339,27 +339,27 @@ class QueryTreeToBitwiseLambdaTransformer(BaseTreeTransformer):
         return lambda x: any(child(x) for child in children)
 
 
-def roles_converter(arg: Union[str, Role]) -> Optional[Role]:
+def roles_converter(arg: str | Role) -> Role | None:
     if not isinstance(arg, Role):
         return Role.from_name(arg)
     return arg
 
 
-def sex_converter(arg: Union[str, Sex]) -> Optional[Sex]:
+def sex_converter(arg: str | Sex) -> Sex | None:
     if not isinstance(arg, Sex):
         return Sex.from_name(arg)
     return arg
 
 
 def inheritance_converter(
-    arg: Union[str, Inheritance],
-) -> Optional[Inheritance]:
+    arg: str | Inheritance,
+) -> Inheritance | None:
     if not isinstance(arg, Inheritance):
         return Inheritance.from_name(arg)
     return arg
 
 
-def variant_type_converter(arg: Union[str, Allele.Type]) -> Allele.Type:
+def variant_type_converter(arg: str | Allele.Type) -> Allele.Type:
     if not isinstance(arg, Allele.Type):
         return allele_type_from_name(arg)
     return arg
@@ -587,7 +587,7 @@ class QueryTransformerMatcher(BaseQueryTransformerMatcher):
 
     def __init__(
         self, parser: Lark = PARSER,
-        token_converter: Optional[Callable[[Any], Any]] = None,
+        token_converter: Callable[[Any], Any] | None = None,
         transformer2: BaseTreeTransformer = QueryTreeToLambdaTransformer(),
     ):
         super().__init__(parser, token_converter)

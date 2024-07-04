@@ -1,4 +1,3 @@
-from typing import Optional
 
 from dae.genomic_resources.gene_models import TranscriptModel
 
@@ -37,7 +36,7 @@ class PromoterEffectChecker(EffectChecker):
 
     def get_effect(
         self, request: AnnotationRequest,
-    ) -> Optional[AnnotationEffect]:
+    ) -> AnnotationEffect | None:
         if request.promoter_len == 0:
             return None
 

@@ -77,7 +77,7 @@ import logging
 from collections.abc import Generator
 from copy import copy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, TextIO, Tuple, Union
+from typing import Any, Dict, List, TextIO, Tuple
 
 import pandas as pd
 
@@ -99,19 +99,19 @@ logger = logging.getLogger(__name__)
 
 
 def _cnv_loader(
-        filepath_or_buffer: Union[str, Path, TextIO],
+        filepath_or_buffer: str | Path | TextIO,
         families: FamiliesData,
         genome: ReferenceGenome,
-        cnv_chrom: Optional[str] = None,
-        cnv_start: Optional[str] = None,
-        cnv_end: Optional[str] = None,
-        cnv_location: Optional[str] = None,
-        cnv_person_id: Optional[str] = None,
-        cnv_family_id: Optional[str] = None,
-        cnv_best_state: Optional[str] = None,
-        cnv_variant_type: Optional[str] = None,
-        cnv_plus_values: Optional[List[str]] = None,
-        cnv_minus_values: Optional[List[str]] = None,
+        cnv_chrom: str | None = None,
+        cnv_start: str | None = None,
+        cnv_end: str | None = None,
+        cnv_location: str | None = None,
+        cnv_person_id: str | None = None,
+        cnv_family_id: str | None = None,
+        cnv_best_state: str | None = None,
+        cnv_variant_type: str | None = None,
+        cnv_plus_values: List[str] | None = None,
+        cnv_minus_values: List[str] | None = None,
         cnv_sep: str = "\t",
         **kwargs: Any) -> pd.DataFrame:
     """Flexible load of CNV variants.
@@ -168,10 +168,10 @@ class CNVLoader(VariantsGenotypesLoader):
     def __init__(
             self,
             families: FamiliesData,
-            cnv_filenames: list[Union[str, Path, TextIO]],
+            cnv_filenames: list[str | Path | TextIO],
             genome: ReferenceGenome,
-            regions: Optional[list[str]] = None,
-            params: Optional[Dict[str, Any]] = None):
+            regions: list[str] | None = None,
+            params: Dict[str, Any] | None = None):
 
         if params is None:
             params = {}
@@ -326,7 +326,7 @@ class CNVLoader(VariantsGenotypesLoader):
         ))
         return arguments
 
-    def reset_regions(self, regions: Optional[Union[str, list[str]]]) -> None:
+    def reset_regions(self, regions: str | list[str] | None) -> None:
         super().reset_regions(regions)
 
         result = []

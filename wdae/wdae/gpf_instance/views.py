@@ -1,4 +1,3 @@
-from typing import Optional
 
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.views.decorators.http import etag
@@ -26,7 +25,7 @@ class MarkdownFileView(QueryBaseView):
 
     def __init__(self) -> None:
         super().__init__()
-        self.filepath: Optional[str] = None
+        self.filepath: str | None = None
 
     def get(self, _request: Request) -> Response:
         # pylint: disable=unused-argument

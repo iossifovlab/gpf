@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Optional
 
 import pytest
 
@@ -135,7 +134,7 @@ def test_allele_score_missing_alt() -> None:
 ])
 def test_allele_score_fetch_agg(
         region: tuple[str, int, int],
-        pos_aggregator: Optional[str], allele_aggregator: Optional[str],
+        pos_aggregator: str | None, allele_aggregator: str | None,
         expected: float) -> None:
     res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """

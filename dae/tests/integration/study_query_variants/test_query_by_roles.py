@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Optional
 
 import pytest
 
@@ -62,7 +61,7 @@ def imported_study(
     ],
 )
 def test_query_by_roles(
-    roles: Optional[str], count: int, imported_study: GenotypeData,
+    roles: str | None, count: int, imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(roles=roles))
     assert len(vs) == count
@@ -79,7 +78,7 @@ def test_query_by_roles(
     ],
 )
 def test_query_person_id(
-    person_ids: Optional[set[str]], count: int,
+    person_ids: set[str] | None, count: int,
     imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(person_ids=person_ids))
@@ -94,7 +93,7 @@ def test_query_person_id(
     ],
 )
 def test_query_family_id(
-    family_ids: Optional[set[str]], count: int,
+    family_ids: set[str] | None, count: int,
     imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(family_ids=family_ids))

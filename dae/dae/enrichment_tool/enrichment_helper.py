@@ -3,7 +3,7 @@ import logging
 import os
 from collections.abc import Iterable
 from dataclasses import asdict
-from typing import Optional, Union, cast
+from typing import cast
 
 from box import Box
 
@@ -43,9 +43,9 @@ class EnrichmentHelper:
     @staticmethod
     def get_enrichment_config(
         genotype_data: GenotypeData,
-    ) -> Optional[Box]:
+    ) -> Box | None:
         return cast(
-            Optional[Box],
+            Box | None,
             genotype_data.config.get("enrichment"),
         )
 
@@ -123,9 +123,9 @@ class EnrichmentHelper:
         study: GenotypeData,
         psc_id: str,
         gene_syms: Iterable[str],
-        effect_groups: Union[Iterable[str], Iterable[Iterable[str]]],
-        background_id: Optional[str] = None,
-        counter_id: Optional[str] = None,
+        effect_groups: Iterable[str] | Iterable[Iterable[str]],
+        background_id: str | None = None,
+        counter_id: str | None = None,
     ) -> dict[str, dict[str, EnrichmentResult]]:
         """Perform enrichment test for a genotype data."""
         if not self.has_enrichment_config(study):
@@ -145,8 +145,7 @@ class EnrichmentHelper:
         background = self.create_background(background_id)
         counter = self.create_counter(counter_id)
 
-        event_counters_cache: Optional[
-            dict[str, dict[str, dict[str, dict[str, int]]]]] = None
+        event_counters_cache: dict[str, dict[str, dict[str, dict[str, int]]]] | None = None
         if self._has_enrichment_cache(study):
             event_counters_cache = \
                 self._load_enrichment_event_counts_cache(study)
@@ -155,7 +154,7 @@ class EnrichmentHelper:
         assert psc is not None
 
         query_effect_types = expand_effect_types(effect_groups)
-        gene_syms_query: Optional[list[str]] = None
+        gene_syms_query: list[str] | None = None
         if event_counters_cache is not None:
             gene_syms_query = list(gene_syms)
         genotype_helper = GenotypeHelper(

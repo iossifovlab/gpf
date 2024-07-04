@@ -2,7 +2,6 @@ import argparse
 import logging
 import sys
 from collections import Counter
-from typing import Optional
 
 import pandas as pd
 
@@ -13,8 +12,8 @@ logger = logging.getLogger("build_ur_synonymous_enrichment_background")
 
 
 def cli(
-    argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None,
+    argv: list[str] | None = None,
+    gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Command line tool to create UR synonymous enrichment background."""
     if argv is None:

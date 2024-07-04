@@ -3,7 +3,7 @@ import logging
 import os
 import time
 from collections.abc import Iterator
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 import fsspec
 import pyarrow as pa
@@ -46,10 +46,10 @@ class ContinuousParquetFileWriter:
         self,
         filepath: str,
         annotation_schema: list[AttributeInfo],
-        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+        filesystem: fsspec.AbstractFileSystem | None = None,
         row_group_size: int = 10_000,
         schema: str = "schema",
-        blob_column: Optional[str] = None,
+        blob_column: str | None = None,
     ) -> None:
 
         self.filepath = filepath
@@ -66,7 +66,7 @@ class ContinuousParquetFileWriter:
         self.dirname = dirname
 
         filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
-        compression: Union[str, dict[str, str]] = self.DEFAULT_COMPRESSION
+        compression: str | dict[str, str] = self.DEFAULT_COMPRESSION
         if blob_column is not None:
             compression = {}
             for name in self.schema.names:
@@ -82,7 +82,7 @@ class ContinuousParquetFileWriter:
         )
         self.row_group_size = row_group_size
         self._batches: list[pa.RecordBatch] = []
-        self._data: Optional[dict[str, Any]] = None
+        self._data: dict[str, Any] | None = None
         self.data_reset()
 
     def data_reset(self) -> None:
@@ -175,11 +175,11 @@ class VariantsParquetWriter:
         annotation_schema: list[AttributeInfo],
         partition_descriptor: PartitionDescriptor,
         *,
-        serializer: Optional[VariantsDataSerializer] = None,
+        serializer: VariantsDataSerializer | None = None,
         bucket_index: int = 1,
         row_group_size: int = 10_000,
         include_reference: bool = True,
-        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+        filesystem: fsspec.AbstractFileSystem | None = None,
     ) -> None:
         self.out_dir = out_dir
 
@@ -408,8 +408,8 @@ class VariantsParquetWriter:
 
     def write_summary_variant(
         self, summary_variant: SummaryVariant,
-        attributes: Optional[dict[str, Any]] = None,
-        sj_base_index: Optional[int] = None,
+        attributes: dict[str, Any] | None = None,
+        sj_base_index: int | None = None,
     ) -> None:
         """Write a single summary variant to the correct parquet file."""
         if attributes is not None:

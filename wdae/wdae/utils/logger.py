@@ -1,6 +1,6 @@
 import logging
 from functools import wraps
-from typing import Any, Callable, Union
+from typing import Any, Callable
 
 from django.core.handlers.wsgi import WSGIRequest
 from rest_framework.request import Request
@@ -9,7 +9,7 @@ from rest_framework.request import Request
 
 
 def log_filter(
-    request: Union[Request, WSGIRequest],
+    request: Request | WSGIRequest,
     message: str, *args: Any,
 ) -> str:
     """Filter request info for logging."""

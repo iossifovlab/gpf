@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional, cast
+from typing import cast
 
 import pytest
 import pytest_mock
@@ -96,7 +96,7 @@ def imported_study(
     ],
 )
 def test_base_dir_join_parquet_scan(
-        base_dir: Optional[str], parquet_scan: str, expected: str,
+        base_dir: str | None, parquet_scan: str, expected: str,
         duckdb_storage_parquet: DuckDbGenotypeStorage,
         mocker: pytest_mock.MockerFixture) -> None:
 

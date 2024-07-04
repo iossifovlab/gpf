@@ -13,7 +13,6 @@ from collections.abc import (
 )
 from typing import (
     Any,
-    Optional,
 )
 
 import pandas as pd
@@ -118,13 +117,13 @@ class FamiliesData(Mapping[str, Family]):
     """Defines class for handling families in a study."""
 
     def __init__(self) -> None:
-        self._ped_df: Optional[pd.DataFrame] = None
+        self._ped_df: pd.DataFrame | None = None
         self._families: dict[str, Family] = {}
         self.persons_by_person_id: dict[str, list[Person]] = defaultdict(list)
         self.persons: dict[tuple[str, str], Person] = {}
         self._broken: dict[str, Family] = {}
         self._person_ids_with_parents = None
-        self._real_persons: Optional[dict[tuple[str, str], Person]] = None
+        self._real_persons: dict[tuple[str, str], Person] | None = None
         self._families_by_type: dict[FamilyType, set[str]] = {}
 
     def redefine(self) -> None:
@@ -309,8 +308,8 @@ class FamiliesData(Mapping[str, Family]):
 
     def get(  # type: ignore
         self, key: str,
-        default: Optional[Family] = None,
-    ) -> Optional[Family]:
+        default: Family | None = None,
+    ) -> Family | None:
         return self._families.get(key, default)
 
     # def families_query_by_person_ids(self, person_ids):
@@ -346,8 +345,8 @@ class FamiliesData(Mapping[str, Family]):
 
     def persons_with_roles(
         self,
-        roles: Optional[list[Role]] = None,
-        family_ids: Optional[Iterable[str]] = None,
+        roles: list[Role] | None = None,
+        family_ids: Iterable[str] | None = None,
     ) -> list[Person]:
         """Return list of persons matching the specified roles."""
         if family_ids is None:

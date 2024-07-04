@@ -4,7 +4,7 @@ import argparse
 import os.path
 import sys
 import time
-from typing import Any, Optional
+from typing import Any
 
 import pysam
 
@@ -75,7 +75,7 @@ def cli_genome_options(
 
 def parse_cli_genome_options(
     args: argparse.Namespace,
-) -> tuple[Optional[ReferenceGenome], Optional[GeneModels]]:
+) -> tuple[ReferenceGenome | None, GeneModels | None]:
     """Parse reference genome and gene models options."""
     genomic_sequence = None
     gene_models = None
@@ -178,7 +178,7 @@ def parse_cli_variants_options(args: argparse.Namespace) -> dict[str, Any]:
     return columns
 
 
-def cli(argv: Optional[list[str]] = None) -> None:
+def cli(argv: list[str] | None = None) -> None:
     """Annotate variants main function."""
     # pylint: disable=too-many-branches,too-many-statements
     if argv is None:
@@ -276,7 +276,7 @@ def cli(argv: Optional[list[str]] = None) -> None:
     print(80 * "=", file=sys.stderr)
 
 
-def cli_vcf(argv: Optional[list[str]] = None) -> None:
+def cli_vcf(argv: list[str] | None = None) -> None:
     """Annotate variants main function for annotating VCF file."""
     # pylint: disable=too-many-branches,too-many-statements,too-many-locals
     if argv is None:

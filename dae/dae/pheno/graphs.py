@@ -1,6 +1,5 @@
 import textwrap
 import traceback
-from typing import Optional
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -99,7 +98,7 @@ def male_female_legend(color_male, color_female, ax=None):
     ax.legend(handles=[male_patch, female_patch], title="Sex", loc="upper right")
 
 
-def draw_linregres(df, col1, col2, jitter: Optional[int] = None, ax=None):
+def draw_linregres(df, col1, col2, jitter: int | None = None, ax=None):
     """Draw a graph display linear regression between two columns."""
     if ax is None:
         ax = plt.gca()

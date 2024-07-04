@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from typing import Any, Optional
+from typing import Any
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -99,7 +99,7 @@ class UserSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
 
     @staticmethod
-    def _check_groups_exist(groups: Optional[str]) -> None:
+    def _check_groups_exist(groups: str | None) -> None:
         if groups:
             db_groups_count = Group.objects.filter(name__in=groups).count()
             assert db_groups_count == len(groups), "Not all groups exist."

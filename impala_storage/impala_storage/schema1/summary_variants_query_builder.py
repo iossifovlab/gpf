@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Iterable
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List
 
 from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.genomic_resources.gene_models import GeneModels
@@ -25,8 +25,8 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
         table_properties: dict[str, Any],
         pedigree_schema: dict[str, str],
         families: FamiliesData,
-        gene_models: Optional[GeneModels] = None,
-        summary_variants_table: Optional[str] = None,
+        gene_models: GeneModels | None = None,
+        summary_variants_table: str | None = None,
     ) -> None:
         self.summary_variants_table = summary_variants_table
         super().__init__(
@@ -95,20 +95,20 @@ class SummaryVariantsQueryBuilder(BaseQueryBuilder):
 
     def build_where(
         self,
-        regions: Optional[List[Region]] = None,
-        genes: Optional[List[str]] = None,
-        effect_types: Optional[List[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        inheritance: Optional[Union[List[str], str]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
+        regions: List[Region] | None = None,
+        genes: List[str] | None = None,
+        effect_types: List[str] | None = None,
+        family_ids: Iterable[str] | None = None,
+        person_ids: Iterable[str] | None = None,
+        inheritance: List[str] | str | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
         **_kwargs: Any,
     ) -> None:
         # FIXME too many arguments

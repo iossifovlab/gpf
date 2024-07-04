@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional, Iterable
+from typing import List, Iterable
 
 from django.contrib.auth.models import Group
 from django.db import models
@@ -107,7 +107,7 @@ class DatasetHierarchy(models.Model):
 
     @classmethod
     def get_parents(
-        cls, instance_id: str, dataset: Dataset, direct: Optional[bool] = None,
+        cls, instance_id: str, dataset: Dataset, direct: bool | None = None,
     ) -> List[Dataset]:
         """Return all parents of a given dataset."""
         if direct is True:
@@ -137,7 +137,7 @@ class DatasetHierarchy(models.Model):
 
     @classmethod
     def get_children(
-        cls, instance_id: str, dataset: Dataset, direct: Optional[bool] = None,
+        cls, instance_id: str, dataset: Dataset, direct: bool | None = None,
     ) -> List[Dataset]:
         """Return all children of a given dataset."""
         if direct is True:

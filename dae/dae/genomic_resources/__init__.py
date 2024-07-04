@@ -26,7 +26,7 @@ _PLUGINS_LOADED = False
 
 def get_resource_implementation_builder(
     resource_type: str,
-) -> Optional[Callable[[GenomicResource], GenomicResourceImplementation]]:
+) -> Callable[[GenomicResource], GenomicResourceImplementation] | None:
     """
     Return an implementation builder for a certain resource type.
 

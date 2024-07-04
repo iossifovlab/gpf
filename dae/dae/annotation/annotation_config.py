@@ -4,7 +4,7 @@ import logging
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from textwrap import dedent
-from typing import Any, Optional, TypedDict, Union
+from typing import Any, TypedDict
 
 import yaml
 
@@ -31,7 +31,7 @@ class RawFullConfig(TypedDict):
     annotators: RawAnnotatorsConfig
 
 
-RawPipelineConfig = Union[RawAnnotatorsConfig, RawFullConfig]
+RawPipelineConfig = RawAnnotatorsConfig | RawFullConfig
 
 
 class AnnotationConfigurationError(ValueError):
@@ -80,7 +80,7 @@ class AttributeInfo:
     def __init__(self, name: str, source: str, internal: bool,
                  parameters: ParamsUsageMonitor | dict[str, Any],
                  _type: str = "str", description: str = "",
-                 documentation: Optional[str] = None):
+                 documentation: str | None = None):
         self.name = name
         self.source = source
         self.internal = internal
@@ -98,7 +98,7 @@ class AttributeInfo:
     parameters: ParamsUsageMonitor
     type: str = "str"           # str, int, float, annotatable, or object
     description: str = ""       # interpreted as md
-    _documentation: Optional[str] = None
+    _documentation: str | None = None
 
     @property
     def documentation(self) -> str:
@@ -114,7 +114,7 @@ class AnnotatorInfo:
     def __init__(self, _type: str, attributes: list[AttributeInfo],
                  parameters: ParamsUsageMonitor | dict[str, Any],
                  documentation: str = "",
-                 resources: Optional[list[GenomicResource]] = None,
+                 resources: list[GenomicResource] | None = None,
                  annotator_id: str = "N/A"):
         self.type = _type
         self.annotator_id = f"{annotator_id}"
@@ -148,7 +148,7 @@ class AnnotationPreambule:
     summary: str
     description: str
     input_reference_genome: str
-    input_reference_genome_res: Optional[GenomicResource]
+    input_reference_genome_res: GenomicResource | None
     metadata: dict[str, Any]
 
 
@@ -207,7 +207,7 @@ class AnnotationConfigParser:
     @staticmethod
     def parse_short(
         raw: dict[str, Any], idx: int,
-        grr: Optional[GenomicResourceRepo] = None,
+        grr: GenomicResourceRepo | None = None,
     ) -> list[AnnotatorInfo]:
         """Parse a short-form annotation config."""
         ann_type, ann_details = next(iter(raw.items()))
@@ -248,8 +248,8 @@ class AnnotationConfigParser:
     @staticmethod
     def _parse_preambule(
         raw: RawPreambule,
-        grr: Optional[GenomicResourceRepo] = None,
-    ) -> Optional[AnnotationPreambule]:
+        grr: GenomicResourceRepo | None = None,
+    ) -> AnnotationPreambule | None:
         """Parse the preambule section of a pipeline config, if present."""
         if not set(raw.keys()) <= {
             "summary", "description", "input_reference_genome", "metadata",
@@ -280,9 +280,9 @@ class AnnotationConfigParser:
 
     @staticmethod
     def parse_raw(
-        pipeline_raw_config: Optional[RawPipelineConfig],
-        grr: Optional[GenomicResourceRepo] = None,
-    ) -> tuple[Optional[AnnotationPreambule], list[AnnotatorInfo]]:
+        pipeline_raw_config: RawPipelineConfig | None,
+        grr: GenomicResourceRepo | None = None,
+    ) -> tuple[AnnotationPreambule | None, list[AnnotatorInfo]]:
         """Parse raw dictionary annotation pipeline configuration."""
         if pipeline_raw_config is None:
             logger.warning("empty annotation pipeline configuration")
@@ -344,9 +344,9 @@ class AnnotationConfigParser:
 
     @staticmethod
     def parse_str(
-        content: str, source_file_name: Optional[str] = None,
-        grr: Optional[GenomicResourceRepo] = None,
-    ) -> tuple[Optional[AnnotationPreambule], list[AnnotatorInfo]]:
+        content: str, source_file_name: str | None = None,
+        grr: GenomicResourceRepo | None = None,
+    ) -> tuple[AnnotationPreambule | None, list[AnnotatorInfo]]:
         """Parse annotation pipeline configuration string."""
         try:
             pipeline_raw_config = yaml.safe_load(content)

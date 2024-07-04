@@ -2,7 +2,7 @@ import logging
 import math
 from collections.abc import Generator
 from io import StringIO
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, cast
 
 from datasets_api.permissions import (
     get_permissions_etag,
@@ -66,7 +66,7 @@ class PhenoToolView(QueryDatasetView):
 
     def prepare_pheno_tool_adapter(
         self, data: dict[str, Any],
-    ) -> Optional[PhenoToolAdapter]:
+    ) -> PhenoToolAdapter | None:
         """Construct pheno tool adapter."""
         study_wrapper = self.gpf_instance.get_wdae_wrapper(data["datasetId"])
         if not (
@@ -113,7 +113,7 @@ class PhenoToolView(QueryDatasetView):
     @staticmethod
     def _build_report_description(
         measure_id: str,
-        normalize_by: List[Union[str, Any]],
+        normalize_by: List[str | Any],
     ) -> str:
         if not normalize_by:
             return measure_id

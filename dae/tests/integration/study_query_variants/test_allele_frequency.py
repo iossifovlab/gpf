@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
 
 import pytest
 
@@ -104,7 +103,7 @@ def freq_study(
 ])
 def test_variant_frequency_queries(
         freq_study: GenotypeData, region: Region, count: int,
-        freqs: list[Optional[float]]) -> None:
+        freqs: list[float | None]) -> None:
 
     fvs = list(freq_study.query_variants(regions=[region]))
     assert len(fvs) == count

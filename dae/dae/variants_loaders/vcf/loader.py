@@ -6,7 +6,7 @@ import itertools
 import logging
 from collections import Counter
 from collections.abc import Callable, Generator, Iterator
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 import numpy as np
@@ -41,7 +41,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
 
     def __init__(
         self, loader: SingleVcfLoader,
-        vcf_variants: list[Optional[pysam.VariantRecord]],
+        vcf_variants: list[pysam.VariantRecord | None],
     ):
         super().__init__()
         self.loader = loader
@@ -89,7 +89,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
     def family_genotype_iterator(
         self,
     ) -> Generator[
-            tuple[Family, np.ndarray, Optional[np.ndarray]], None, None]:
+            tuple[Family, np.ndarray, np.ndarray | None], None, None]:
         self.known_independent_genotypes = []
         # pylint: disable=protected-access
         fill_value = self.loader._fill_missing_value
@@ -133,8 +133,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             vcf_files: list[str],
             genome: ReferenceGenome,
-            regions: Optional[list[str]] = None,
-            params: Optional[dict[str, Any]] = None,
+            regions: list[str] | None = None,
+            params: dict[str, Any] | None = None,
             **_kwargs: Any):
         params = params if params else {}
         super().__init__(
@@ -291,7 +291,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             )
 
     def _build_vcf_iterators(
-        self, region: Optional[str],
+        self, region: str | None,
     ) -> list[Iterator[pysam.VariantRecord]]:
         if region is None:
             return [
@@ -445,8 +445,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         self.samples_vcf_index = samples_index
 
     def _compare_vcf_variants_gt(
-        self, lhs: Optional[pysam.VariantRecord],
-        rhs: Optional[pysam.VariantRecord],
+        self, lhs: pysam.VariantRecord | None,
+        rhs: pysam.VariantRecord | None,
     ) -> bool:
         """Compare two VCF variant positions.
 
@@ -472,7 +472,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
     @staticmethod
     def _compare_vcf_variants_eq(
         lhs: pysam.VariantRecord,
-        rhs: Optional[pysam.VariantRecord],
+        rhs: pysam.VariantRecord | None,
     ) -> bool:
         """Compare two VCF variant positions.
 
@@ -485,8 +485,8 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         return lhs.chrom == rhs.chrom and lhs.pos == rhs.pos
 
     def _find_current_vcf_variant(
-        self, vcf_variants: list[Optional[pysam.VariantRecord]],
-    ) -> Optional[pysam.VariantRecord]:
+        self, vcf_variants: list[pysam.VariantRecord | None],
+    ) -> pysam.VariantRecord | None:
         assert len(vcf_variants)
         min_index = 0
         for index in range(1, len(vcf_variants)):
@@ -624,8 +624,8 @@ class VcfLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             vcf_files: list[str],
             genome: ReferenceGenome,
-            regions: Optional[list[str]] = None,
-            params: Optional[dict[str, Any]] = None,
+            regions: list[str] | None = None,
+            params: dict[str, Any] | None = None,
             **kwargs: Any):
         # pylint: disable=unused-argument
         params = params if params else {}
@@ -867,7 +867,7 @@ class VcfLoader(VariantsGenotypesLoader):
                     all_chromosomes.append(chrom)
         return all_chromosomes
 
-    def reset_regions(self, regions: Optional[Union[str, list[str]]]) -> None:
+    def reset_regions(self, regions: str | list[str] | None) -> None:
         for single_loader in self.vcf_loaders:
             single_loader.reset_regions(regions)
 

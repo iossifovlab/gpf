@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from ..effect import EffectFactory
 from .effect_checker import AnnotationEffect, AnnotationRequest, EffectChecker
@@ -42,7 +41,7 @@ class UTREffectChecker(EffectChecker):
 
     def create_effect(
         self, request: AnnotationRequest, strand: str,
-    ) -> Optional[AnnotationEffect]:
+    ) -> AnnotationEffect | None:
         """Create UTR effect."""
         coding_regions = request.transcript_model.exons
         last_position = request.variant.corrected_ref_position_last
@@ -68,7 +67,7 @@ class UTREffectChecker(EffectChecker):
 
     def check_stop_codon(
         self, request: AnnotationRequest,
-    ) -> Optional[AnnotationEffect]:
+    ) -> AnnotationEffect | None:
         """Check for stop codon."""
         if not request.has_utr3_region():
             return None
@@ -95,7 +94,7 @@ class UTREffectChecker(EffectChecker):
 
     def get_effect(
         self, request: AnnotationRequest,
-    ) -> Optional[AnnotationEffect]:
+    ) -> AnnotationEffect | None:
         if request.is_stop_codon_affected():
             return self.check_stop_codon(request)
 

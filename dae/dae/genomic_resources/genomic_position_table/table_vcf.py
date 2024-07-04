@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from functools import cache
-from typing import Optional
 
 import pysam
 
@@ -38,8 +37,8 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         line.chrom = rchrom
 
     def _make_vcf_line(
-        self, raw_line: pysam.VariantRecord, allele_index: Optional[int],
-    ) -> Optional[VCFLine]:
+        self, raw_line: pysam.VariantRecord, allele_index: int | None,
+    ) -> VCFLine | None:
         line: VCFLine = VCFLine(raw_line, allele_index)
         if not self.rev_chrom_map:
             return line
@@ -63,13 +62,13 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         return list(map(str, contigs))
 
     def get_line_iterator(
-        self, chrom: Optional[str] = None, pos_begin: Optional[int] = None,
-    ) -> Generator[Optional[VCFLine], None, None]:
+        self, chrom: str | None = None, pos_begin: int | None = None,
+    ) -> Generator[VCFLine | None, None, None]:
         assert isinstance(self.pysam_file, pysam.VariantFile)
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
         for raw_line in self.pysam_file.fetch(chrom, pos_begin):
-            allele_index: Optional[int]
+            allele_index: int | None
             for allele_index, alt in enumerate(raw_line.alts or [None]):
                 assert raw_line.ref is not None
                 allele_index = allele_index if alt is not None else None

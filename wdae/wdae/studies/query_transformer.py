@@ -1,7 +1,7 @@
 import logging
 import time
 from functools import reduce
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.pedigrees.family import ALL_FAMILY_TYPES, FamilyTag, FamilyType
@@ -34,7 +34,7 @@ class QueryTransformer:
 
     def _transform_genomic_scores(
         self, genomic_scores: list[dict],
-    ) -> list[tuple[str, tuple[Optional[int], Optional[int]]]]:
+    ) -> list[tuple[str, tuple[int | None, int | None]]]:
         genomic_scores_filter = [
             (score["metric"], (score["rangeStart"], score["rangeEnd"]))
             for score in genomic_scores
@@ -43,7 +43,7 @@ class QueryTransformer:
 
         return genomic_scores_filter
 
-    def _transform_gene_scores(self, gene_scores: dict) -> Optional[list[str]]:
+    def _transform_gene_scores(self, gene_scores: dict) -> list[str] | None:
         if not self.study_wrapper.gene_scores_db:
             return None
 
@@ -66,8 +66,8 @@ class QueryTransformer:
         return None
 
     def _transform_min_max_alt_frequency(
-        self, min_value: Optional[float], max_value: Optional[float],
-    ) -> Optional[tuple[str, tuple[float, float]]]:
+        self, min_value: float | None, max_value: float | None,
+    ) -> tuple[str, tuple[float, float]] | None:
         value_range = (min_value, max_value)
 
         if value_range == (None, None):
@@ -93,7 +93,7 @@ class QueryTransformer:
     @staticmethod
     def _transform_present_in_child_and_parent_roles(
         present_in_child: set[str], present_in_parent: set[str],
-    ) -> Optional[str]:
+    ) -> str | None:
         roles_query = []
         roles_query.append(
             QueryTransformer._present_in_child_to_roles(present_in_child))
@@ -139,8 +139,8 @@ class QueryTransformer:
         _present_in_child: set[str], _present_in_parent: set[str],
         rarity: dict,
         frequency_filter: list[
-            tuple[str, tuple[Optional[float], Optional[float]]]],
-    ) -> tuple[Optional[str], Any]:
+            tuple[str, tuple[float | None, float | None]]],
+    ) -> tuple[str | None, Any]:
 
         ultra_rare = rarity.get("ultraRare")
         ultra_rare = bool(ultra_rare)
@@ -160,7 +160,7 @@ class QueryTransformer:
     @staticmethod
     def _present_in_child_to_roles(
         present_in_child: set[str],
-    ) -> Optional[str]:
+    ) -> str | None:
         roles_query = []
 
         if "proband only" in present_in_child:
@@ -183,7 +183,7 @@ class QueryTransformer:
     @staticmethod
     def _present_in_parent_to_roles(
         present_in_parent: set[str],
-    ) -> Optional[str]:
+    ) -> str | None:
         roles_query = []
 
         if "mother only" in present_in_parent:
@@ -234,7 +234,7 @@ class QueryTransformer:
 
     @staticmethod
     def _add_roles_to_query(
-        query: Optional[str], kwargs: dict[str, Any],
+        query: str | None, kwargs: dict[str, Any],
     ) -> None:
         if not query:
             return

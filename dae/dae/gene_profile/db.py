@@ -1,6 +1,6 @@
 import logging
 from copy import copy
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from sqlalchemy import (  # type: ignore
     Column,
@@ -83,7 +83,7 @@ class GeneProfileDB:
 
         return copy(configuration)
 
-    def get_gp(self, gene_symbol) -> Optional[GPStatistic]:
+    def get_gp(self, gene_symbol) -> GPStatistic | None:
         """
         Query a GP by gene_symbol and return the row as statistic.
 
@@ -248,7 +248,7 @@ class GeneProfileDB:
             return connection.execute(query).fetchall()
 
     def list_symbols(
-        self, page: int, symbol_like: Optional[str] = None,
+        self, page: int, symbol_like: str | None = None,
     ) -> list[str]:
         """
         Perform paginated query and return list of gene symbols.

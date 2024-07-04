@@ -1,6 +1,6 @@
 
 import pathlib
-from typing import Any, Optional
+from typing import Any
 
 from gpf_instance.gpf_instance import WGPFInstance
 
@@ -18,11 +18,11 @@ from dae.testing import setup_directories
 
 def setup_wgpf_instance(
     out_path: pathlib.Path,
-    reference_genome: Optional[ReferenceGenome] = None,
-    reference_genome_id: Optional[str] = None,
-    gene_models: Optional[GeneModels] = None,
-    gene_models_id: Optional[str] = None,
-    grr: Optional[GenomicResourceRepo] = None,
+    reference_genome: ReferenceGenome | None = None,
+    reference_genome_id: str | None = None,
+    gene_models: GeneModels | None = None,
+    gene_models_id: str | None = None,
+    grr: GenomicResourceRepo | None = None,
 ) -> WGPFInstance:
     """Set up a GPF instance using prebuild genome, gene models, etc."""
     print(out_path)

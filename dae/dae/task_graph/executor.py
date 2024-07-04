@@ -9,7 +9,7 @@ from collections import deque
 from collections.abc import Generator, Iterator
 from copy import copy
 from types import TracebackType
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, cast
 
 from dask.distributed import Client, Future
 
@@ -47,9 +47,9 @@ class TaskGraphExecutor:
 
     def __exit__(
         self,
-        exc_type: Optional[type[BaseException]],
-        exc_value: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         self.close()
 
@@ -177,7 +177,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
     @staticmethod
     def _find_cycle(
         node: Task, visited: set[Task], stack: list[Task],
-    ) -> Optional[list[Task]]:
+    ) -> list[Task] | None:
         visited.add(node)
         stack.append(node)
 
@@ -378,7 +378,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
 def task_graph_status(
         task_graph: TaskGraph, task_cache: TaskCache,
-        verbose: Optional[int]) -> bool:
+        verbose: int | None) -> bool:
     """Show the status of each task from the task graph."""
     id_col_len = max(len(t.task_id) for t in task_graph.tasks)
     id_col_len = min(120, max(50, id_col_len))
@@ -404,7 +404,7 @@ def task_graph_status(
 
 def task_graph_run(
     task_graph: TaskGraph,
-    executor: Optional[TaskGraphExecutor] = None,
+    executor: TaskGraphExecutor | None = None,
     *,
     keep_going: bool = False,
 ) -> bool:

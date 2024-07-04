@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from dae.genotype_storage import get_genotype_storage_factory
 from dae.genotype_storage.genotype_storage import GenotypeStorage
@@ -25,7 +25,7 @@ class GenotypeStorageRegistry:
 
     def __init__(self) -> None:
         self._genotype_storages: Dict[str, GenotypeStorage] = {}
-        self._default_genotype_storage: Optional[GenotypeStorage] = None
+        self._default_genotype_storage: GenotypeStorage | None = None
 
     def register_storage_config(
             self, storage_config: dict[str, Any]) -> GenotypeStorage:

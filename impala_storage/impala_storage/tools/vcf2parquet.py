@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import logging
 import sys
-from typing import Optional
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.variants_loaders.vcf.loader import VcfLoader
@@ -18,8 +17,8 @@ class Vcf2ParquetTool(Variants2ParquetTool):
 
 
 def main(
-    argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None,
+    argv: list[str] | None = None,
+    gpf_instance: GPFInstance | None = None,
 ) -> None:
 
     Vcf2ParquetTool.main(

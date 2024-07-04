@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Optional
 
 import pytest
 
@@ -98,7 +97,7 @@ def test_query_limit_variants(
 def test_query_family_variants(
     iossifov_2014_wrappers: dict[str, StudyWrapperBase],
     wrapper_type: str,
-    family_ids: Optional[list[str]], count: int,
+    family_ids: list[str] | None, count: int,
 ) -> None:
     study_wrapper = iossifov_2014_wrappers[wrapper_type]
     query = {

@@ -5,7 +5,7 @@ import time
 from collections.abc import Iterator, Sequence
 from contextlib import closing
 from functools import reduce
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, cast
 
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
@@ -23,7 +23,7 @@ from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import SummaryAllele, SummaryVariant
 from dae.variants_loaders.raw.loader import VariantsLoader
 
-RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
+RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 logger = logging.getLogger(__name__)
 
 
@@ -32,7 +32,7 @@ class RawVariantsQueryRunner(QueryRunner):
 
     def __init__(
         self, variants_iterator: Iterator[Any],
-        deserializer: Optional[Callable] = None,
+        deserializer: Callable | None = None,
     ) -> None:
         super().__init__(deserializer=deserializer)
         self.variants_iterator = variants_iterator
@@ -187,8 +187,8 @@ class RawFamilyVariants(abc.ABC):
     @staticmethod
     def filter_gene_effects(
         v: SummaryAllele,
-        effect_types: Optional[Sequence[str]],
-        genes: Optional[Sequence[str]],
+        effect_types: Sequence[str] | None,
+        genes: Sequence[str] | None,
     ) -> bool:
         """Return True if variant's effects are in effect types and genes."""
         assert effect_types is not None or genes is not None
@@ -223,16 +223,16 @@ class RawFamilyVariants(abc.ABC):
     def filter_allele(  # noqa: C901
         cls,
         allele: FamilyAllele,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        person_ids: Optional[Sequence[str]] = None,
-        inheritance: Optional[Sequence[Matcher]] = None,
-        roles: Optional[Matcher] = None,
-        sexes: Optional[Matcher] = None,
-        variant_type: Optional[Matcher] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        person_ids: Sequence[str] | None = None,
+        inheritance: Sequence[Matcher] | None = None,
+        roles: Matcher | None = None,
+        sexes: Matcher | None = None,
+        variant_type: Matcher | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
         **kwargs: Any,
     ) -> bool:
         # pylint: disable=too-many-arguments,too-many-return-statements
@@ -284,12 +284,12 @@ class RawFamilyVariants(abc.ABC):
     def filter_summary_allele(
         cls,
         allele: SummaryAllele,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        variant_type: Optional[Matcher] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: Matcher | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
         **kwargs: Any,
     ) -> bool:
         # pylint: disable=too-many-return-statements,too-many-branches
@@ -350,7 +350,7 @@ class RawFamilyVariants(abc.ABC):
     @classmethod
     def summary_variant_filter_function(
         cls, **kwargs: Any,
-    ) -> Callable[[SummaryVariant], Optional[SummaryVariant]]:
+    ) -> Callable[[SummaryVariant], SummaryVariant | None]:
         """Return a filter function that checks the conditions in kwargs."""
         if kwargs.get("variant_type") is not None:
             parsed = kwargs["variant_type"]
@@ -365,7 +365,7 @@ class RawFamilyVariants(abc.ABC):
         return_reference = kwargs.get("return_reference", False)
         seen = kwargs.get("seen", set())
 
-        def filter_func(sv: SummaryVariant) -> Optional[SummaryVariant]:
+        def filter_func(sv: SummaryVariant) -> SummaryVariant | None:
             if sv is None:
                 return None
             if sv.svuid in seen:
@@ -392,11 +392,11 @@ class RawFamilyVariants(abc.ABC):
     @classmethod
     def summary_variant_filter_duplicate_function(
         cls, **kwargs: Any,
-    ) -> Callable[[SummaryVariant], Optional[SummaryVariant]]:
+    ) -> Callable[[SummaryVariant], SummaryVariant | None]:
         """Return a filter function that checks the conditions in kwargs."""
         seen = kwargs.get("seen", set())
 
-        def filter_func(sv: SummaryVariant) -> Optional[SummaryVariant]:
+        def filter_func(sv: SummaryVariant) -> SummaryVariant | None:
             if sv is None:
                 return None
             if sv.svuid in seen:
@@ -446,11 +446,11 @@ class RawFamilyVariants(abc.ABC):
     @classmethod
     def family_variant_filter_duplicate_function(
         cls, **kwargs: Any,
-    ) -> Callable[[FamilyVariant], Optional[FamilyVariant]]:
+    ) -> Callable[[FamilyVariant], FamilyVariant | None]:
         """Return a filter function that checks the conditions in kwargs."""
         seen = kwargs.get("seen", set())
 
-        def filter_func(fv: FamilyVariant) -> Optional[FamilyVariant]:
+        def filter_func(fv: FamilyVariant) -> FamilyVariant | None:
             if fv is None or fv.fvuid in seen:
                 return None
             seen.add(fv.fvuid)
@@ -461,7 +461,7 @@ class RawFamilyVariants(abc.ABC):
     @classmethod
     def family_variant_filter_function(
         cls, **kwargs: Any,
-    ) -> Callable[[FamilyVariant], Optional[FamilyVariant]]:
+    ) -> Callable[[FamilyVariant], FamilyVariant | None]:
         """Return a function that filters variants."""
         if kwargs.get("roles") is not None:
             parsed = kwargs["roles"]
@@ -511,7 +511,7 @@ class RawFamilyVariants(abc.ABC):
         return_unknown = kwargs.get("return_unknown", False)
         seen = kwargs.get("seen", set())
 
-        def filter_func(v: FamilyVariant) -> Optional[FamilyVariant]:
+        def filter_func(v: FamilyVariant) -> FamilyVariant | None:
             try:
                 if v is None or v.fvuid in seen:
                     return None
@@ -555,20 +555,20 @@ class RawFamilyVariants(abc.ABC):
 
     def build_family_variants_query_runner(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[Sequence[str]] = None,
-        person_ids: Optional[Sequence[str]] = None,
-        inheritance: Optional[Sequence[str]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: Sequence[str] | None = None,
+        person_ids: Sequence[str] | None = None,
+        inheritance: Sequence[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
         **kwargs: Any,
     ) -> RawVariantsQueryRunner:
         # pylint: disable=too-many-arguments,unused-argument
@@ -628,8 +628,7 @@ class RawMemoryVariants(RawFamilyVariants):
         super().__init__(families)
         self.variants_loaders = loaders
         if len(loaders) > 0:
-            self._full_variants: Optional[list[
-                tuple[SummaryVariant, list[FamilyVariant]]]] = None
+            self._full_variants: list[tuple[SummaryVariant, list[FamilyVariant]]] | None = None
         else:
             logger.debug("no variants to load")
             self._full_variants = []

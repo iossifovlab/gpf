@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from ..effect import EffectFactory
 from .effect_checker import AnnotationEffect, AnnotationRequest, EffectChecker
@@ -10,7 +9,7 @@ class CodingEffectChecker(EffectChecker):
 
     def get_effect(
         self, request: AnnotationRequest,
-    ) -> Optional[AnnotationEffect]:
+    ) -> AnnotationEffect | None:
         logger = logging.getLogger(__name__)
         logger.debug("is coding=%s", request.transcript_model.is_coding())
         if not request.transcript_model.is_coding():

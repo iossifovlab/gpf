@@ -6,7 +6,7 @@ import argparse
 import logging
 import os
 import sys
-from typing import Any, Dict, List, Optional, Type, cast
+from typing import Any, Dict, List, Type, cast
 from urllib.parse import urlparse
 
 import fsspec
@@ -372,17 +372,17 @@ class BatchImporter:
         assert self.gpf_instance is not None
 
         self.study_id = None
-        self.partition_helper: Optional[MakefilePartitionHelper] = None
+        self.partition_helper: MakefilePartitionHelper | None = None
 
-        self.families_loader: Optional[FamiliesLoader] = None
-        self._families: Optional[FamiliesData] = None
+        self.families_loader: FamiliesLoader | None = None
+        self._families: FamiliesData | None = None
 
         self.variants_loaders: dict[str, VariantsLoader] = {}
 
-        self.vcf_loader: Optional[VcfLoader] = None
-        self.denovo_loader: Optional[DenovoLoader] = None
-        self.cnv_loader: Optional[CNVLoader] = None
-        self.dae_loader: Optional[DaeTransmittedLoader] = None
+        self.vcf_loader: VcfLoader | None = None
+        self.denovo_loader: DenovoLoader | None = None
+        self.cnv_loader: CNVLoader | None = None
+        self.dae_loader: DaeTransmittedLoader | None = None
         self.genotype_storage_id = None
 
     @property
@@ -871,8 +871,8 @@ class BatchImporter:
 
     @staticmethod
     def main(
-        argv: Optional[list[str]] = None,
-        gpf_instance: Optional[GPFInstance] = None,
+        argv: list[str] | None = None,
+        gpf_instance: GPFInstance | None = None,
     ) -> None:
         """Construct and run the importer based on CLI arguments.
 
@@ -908,8 +908,8 @@ class BatchImporter:
 class Variants2ParquetTool:
     """Tool for importing variants into parquet dataset."""
 
-    VARIANTS_LOADER_CLASS: Optional[Type[VariantsLoader]] = None
-    VARIANTS_TOOL: Optional[str] = None
+    VARIANTS_LOADER_CLASS: Type[VariantsLoader] | None = None
+    VARIANTS_TOOL: str | None = None
     VARIANTS_FREQUENCIES: bool = False
 
     BUCKET_INDEX_DEFAULT = 1000
@@ -1023,8 +1023,8 @@ class Variants2ParquetTool:
 
     @classmethod
     def main(
-        cls, argv: Optional[List[str]] = None,
-        gpf_instance: Optional[GPFInstance] = None,
+        cls, argv: List[str] | None = None,
+        gpf_instance: GPFInstance | None = None,
     ) -> None:
         """Construct and run importer to transform variants into parquet.
 
@@ -1052,7 +1052,7 @@ class Variants2ParquetTool:
     @classmethod
     def run(
         cls, argv: argparse.Namespace,
-        gpf_instance: Optional[GPFInstance] = None,
+        gpf_instance: GPFInstance | None = None,
     ) -> None:
         """Run actual variants import into parquet dataset."""
         if gpf_instance is None:

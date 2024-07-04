@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0115,C0116,W0212,W0613
-from typing import Optional, cast
+from typing import cast
 
 from dae.genomic_resources.gene_models import Exon
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -12,7 +12,7 @@ class TranscriptModelMock:
         self, strand: str,
         cds_start: int, cds_end: int,
         exons: list[Exon],
-        coding: Optional[list[Exon]] = None,
+        coding: list[Exon] | None = None,
         is_coding: bool = True,
     ):
         self.strand = strand

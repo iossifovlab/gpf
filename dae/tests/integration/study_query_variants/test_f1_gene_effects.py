@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
 
 import pytest
 
@@ -106,8 +105,8 @@ bar    12  .  G   A,C,T .    .      .    GT     0/1 0/2 1/3 1/2
     ],
 )
 def test_query_varaints_gene_effects(
-    effects: Optional[list[str]],
-    genes: Optional[list[str]],
+    effects: list[str] | None,
+    genes: list[str] | None,
     count: int,
     imported_study: GenotypeData,
 ) -> None:
@@ -138,8 +137,8 @@ def test_query_varaints_gene_effects(
     ],
 )
 def test_query_summary_varaints_gene_effects(
-    effects: Optional[list[str]],
-    genes: Optional[list[str]],
+    effects: list[str] | None,
+    genes: list[str] | None,
     count: int,
     imported_study: GenotypeData,
 ) -> None:

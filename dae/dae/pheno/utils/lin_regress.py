@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -15,12 +15,12 @@ class LinearRegression(LinearRegressionSK):
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
 
-        self._pvalues: Optional[np.ndarray] = None
-        self._tvalues: Optional[np.ndarray] = None
+        self._pvalues: np.ndarray | None = None
+        self._tvalues: np.ndarray | None = None
 
     def fit(
-        self, X: np.ndarray, y: Union[pd.Series, np.ndarray],
-        sample_weight: Optional[float] = None,
+        self, X: np.ndarray, y: pd.Series | np.ndarray,
+        sample_weight: float | None = None,
     ) -> LinearRegression:
         super().fit(X, y, sample_weight)
         n = len(y)  # pylint: disable=invalid-name
@@ -49,9 +49,9 @@ class LinearRegression(LinearRegressionSK):
         return self
 
     @property
-    def tvalues(self) -> Optional[np.ndarray]:
+    def tvalues(self) -> np.ndarray | None:
         return self._tvalues
 
     @property
-    def pvalues(self) -> Optional[np.ndarray]:
+    def pvalues(self) -> np.ndarray | None:
         return self._pvalues

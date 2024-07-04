@@ -8,7 +8,7 @@ import os
 import sys
 import time
 from copy import copy
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable
 from urllib.parse import urlparse
 
 import fsspec
@@ -73,14 +73,14 @@ class AbstractVariantsParquetWriter(abc.ABC):
         rows: int = 100_000,
         *,
         include_reference: bool = True,
-        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+        filesystem: fsspec.AbstractFileSystem | None = None,
     ) -> AbstractVariantsParquetWriter:
         """Build a variants parquet writed."""
 
     @staticmethod
     @abc.abstractmethod
     def build_pedigree_writer() -> Callable[
-            [pd.DataFrame, str, Optional[fsspec.AbstractFileSystem]], None]:
+            [pd.DataFrame, str, fsspec.AbstractFileSystem | None], None]:
         """Build a variants parquet writer object."""
 
 
@@ -96,13 +96,13 @@ class ParquetWriterBuilder(Protocol):
         rows: int = 100_000,
         *,
         include_reference: bool = True,
-        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+        filesystem: fsspec.AbstractFileSystem | None = None,
     ) -> AbstractVariantsParquetWriter:
         """Build a variants parquet writer object."""
 
     @staticmethod
     def build_pedigree_writer() -> Callable[
-            [pd.DataFrame, str, Optional[fsspec.AbstractFileSystem]], None]:
+            [pd.DataFrame, str, fsspec.AbstractFileSystem | None], None]:
         """Build a variants parquet writer object."""
 
 
@@ -114,7 +114,7 @@ class ParquetWriter:
         families: FamiliesData,
         pedigree_filename: str,
         parquet_writer_builder: ParquetWriterBuilder,
-        partition_descriptor: Optional[PartitionDescriptor] = None,
+        partition_descriptor: PartitionDescriptor | None = None,
     ) -> None:
         """Save families data into a parquet file."""
         fill_family_bins(families, partition_descriptor)
@@ -215,7 +215,7 @@ class ContinuousParquetFileWriter:
     def __init__(
         self, filepath: str,
         variant_loader: VariantsLoader,
-        filesystem: Optional[fsspec.AbstractFileSystem] = None,
+        filesystem: fsspec.AbstractFileSystem | None = None,
         rows: int = 100_000,
     ) -> None:
 
@@ -246,7 +246,7 @@ class ContinuousParquetFileWriter:
             version="1.0",
         )
         self.rows = rows
-        self._data: Optional[dict[str, list]] = None
+        self._data: dict[str, list] | None = None
         self.data_reset()
 
     def data_reset(self) -> None:
@@ -302,7 +302,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         out_dir: str,
         variants_loader: VariantsLoader,
         partition_descriptor: PartitionDescriptor,
-        bucket_index: Optional[int] = None,
+        bucket_index: int | None = None,
         rows: int = 100_000,
         *,
         include_reference: bool = True,
@@ -335,7 +335,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         rows: int = 100_000,
         *,
         include_reference: bool = True,
-        filesystem: Optional[fsspec.AbstractFileSystem] = None,  # noqa: ARG004
+        filesystem: fsspec.AbstractFileSystem | None = None,  # noqa: ARG004
     ) -> AbstractVariantsParquetWriter:
         return VariantsParquetWriter(
             out_dir=out_dir,
@@ -348,7 +348,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
 
     @staticmethod
     def build_pedigree_writer() -> Callable[
-            [pd.DataFrame, str, Optional[fsspec.AbstractFileSystem]], None]:
+            [pd.DataFrame, str, fsspec.AbstractFileSystem | None], None]:
         """Build a variants parquet writer object."""
         return functools.partial(
             save_ped_df_to_parquet,
@@ -441,7 +441,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
             )
         return self.data_writers[filename]
 
-    def _write_internal(self) -> list[Union[str, Any]]:
+    def _write_internal(self) -> list[str | Any]:
         # pylint: disable=too-many-locals
         family_variant_index = 0
         report = False
@@ -587,7 +587,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         with fsspec.open(filename, "w") as configfile:
             configfile.write(self.partition_descriptor.serialize())
 
-    def write_dataset(self) -> list[Union[str, Any]]:
+    def write_dataset(self) -> list[str | Any]:
         """Write the variants, parittion description and schema."""
         filenames = self._write_internal()
         self.variants_loader.close()

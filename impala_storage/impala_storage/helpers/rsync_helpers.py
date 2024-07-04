@@ -1,7 +1,7 @@
 import logging
 import os
 import subprocess
-from typing import List, Optional, Union
+from typing import List
 from urllib.parse import urlparse, urlunparse
 
 logger = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ class RsyncHelpers:
 
     @staticmethod
     def _exclude_options(
-        exclude: Optional[Union[str, List[str]]] = None,
+        exclude: str | List[str] | None = None,
     ) -> List[str]:
         if exclude is None:
             return []
@@ -62,8 +62,8 @@ class RsyncHelpers:
         return result
 
     def _copy_to_remote_cmd(
-        self, local_path: str, remote_subdir: Optional[str] = None,
-        exclude: Optional[List[str]] = None,
+        self, local_path: str, remote_subdir: str | None = None,
+        exclude: List[str] | None = None,
         ignore_existing: bool = False,
         clear_remote: bool = True,
     ) -> List[List[str]]:
@@ -129,8 +129,8 @@ class RsyncHelpers:
 
     def _copy_to_local_cmd(
         self, local_path: str,
-        remote_subdir: Optional[str] = None,
-        exclude: Optional[list[str]] = None,
+        remote_subdir: str | None = None,
+        exclude: list[str] | None = None,
     ) -> list[list[str]]:
         exclude = exclude if exclude is not None else []
         os.makedirs(local_path, exist_ok=True)
@@ -209,8 +209,8 @@ class RsyncHelpers:
 
     def copy_to_remote(
         self, local_path: str,
-        remote_subdir: Optional[str] = None,
-        exclude: Optional[list[str]] = None,
+        remote_subdir: str | None = None,
+        exclude: list[str] | None = None,
         clear_remote: bool = True,
     ) -> None:
         """Copy from a local dir to a remote one."""
@@ -224,8 +224,8 @@ class RsyncHelpers:
 
     def copy_to_local(
         self, local_path: str,
-        remote_subdir: Optional[str] = None,
-        exclude: Optional[list[str]] = None,
+        remote_subdir: str | None = None,
+        exclude: list[str] | None = None,
     ) -> None:
         """Copy files from remote server to local machine.
 

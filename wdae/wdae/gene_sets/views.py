@@ -6,7 +6,7 @@ import json
 import logging
 from collections.abc import Sequence
 from copy import deepcopy
-from typing import Any, Union
+from typing import Any
 
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.http.response import StreamingHttpResponse
@@ -73,7 +73,7 @@ class GeneSetsView(QueryBaseView):
         gene_sets_collection_id = data["geneSetsCollection"]
         gene_sets_types = data.get("geneSetsTypes", {})
 
-        gene_sets: Sequence[Union[GeneSet, dict[str, Any]]] = []
+        gene_sets: Sequence[GeneSet | dict[str, Any]] = []
 
         if "denovo" in gene_sets_collection_id:
             if not self.gpf_instance.has_denovo_gene_sets():
@@ -152,7 +152,7 @@ class GeneSetDownloadView(QueryBaseView):
 
         permitted_datasets = self.get_permitted_datasets(user)
 
-        gene_set: Union[GeneSet, dict[str, Any], None] = None
+        gene_set: GeneSet | dict[str, Any] | None = None
 
         if "denovo" in gene_sets_collection_id:
             if not self.gpf_instance.has_denovo_gene_sets():

@@ -10,8 +10,6 @@ from types import TracebackType
 from typing import (
     Any,
     Callable,
-    Optional,
-    Union,
     cast,
 )
 from urllib.parse import quote
@@ -40,7 +38,7 @@ from .aggregators import AGGREGATOR_SCHEMA, Aggregator, build_aggregator
 
 logger = logging.getLogger(__name__)
 
-ScoreValue = Union[str, int, float, bool, None]
+ScoreValue = str | int | float | bool | None
 
 VCF_TYPE_CONVERSION_MAP = {
     "Integer": "int",
@@ -64,14 +62,14 @@ class ScoreDef:
     score_id: str
     desc: str  # string that will be interpretted as md
     value_type: str  # "str", "int", "float"
-    pos_aggregator: Optional[str]     # a valid aggregator type
-    nuc_aggregator: Optional[str]     # a valid aggregator type
-    allele_aggregator: Optional[str]  # a valid aggregator type
+    pos_aggregator: str | None     # a valid aggregator type
+    nuc_aggregator: str | None     # a valid aggregator type
+    allele_aggregator: str | None  # a valid aggregator type
 
-    small_values_desc: Optional[str]
-    large_values_desc: Optional[str]
+    small_values_desc: str | None
+    large_values_desc: str | None
 
-    hist_conf: Optional[HistogramConfig]
+    hist_conf: HistogramConfig | None
 
 
 @dataclass
@@ -82,21 +80,21 @@ class _ScoreDef:
     score_id: str
     desc: str  # string that will be interpretted as md
     value_type: str  # "str", "int", "float"
-    pos_aggregator: Optional[str]     # a valid aggregator type
-    nuc_aggregator: Optional[str]     # a valid aggregator type
-    allele_aggregator: Optional[str]  # a valid aggregator type
+    pos_aggregator: str | None     # a valid aggregator type
+    nuc_aggregator: str | None     # a valid aggregator type
+    allele_aggregator: str | None  # a valid aggregator type
 
-    small_values_desc: Optional[str]
-    large_values_desc: Optional[str]
+    small_values_desc: str | None
+    large_values_desc: str | None
 
-    hist_conf: Optional[HistogramConfig]
+    hist_conf: HistogramConfig | None
 
-    col_name: Optional[str]                       # internal
-    col_index: Optional[int]                      # internal
+    col_name: str | None                       # internal
+    col_index: int | None                      # internal
 
     value_parser: Any                             # internal
     na_values: Any                                # internal
-    score_index: Optional[int | str] = None       # internal
+    score_index: int | str | None = None       # internal
 
     def to_public(self) -> ScoreDef:
         return ScoreDef(
@@ -170,19 +168,19 @@ class ScoreLine:
         return self.line.pos_end
 
     @property
-    def ref(self) -> Optional[str]:
+    def ref(self) -> str | None:
         return self.line.ref
 
     @property
-    def alt(self) -> Optional[str]:
+    def alt(self) -> str | None:
         return self.line.alt
 
-    def get_score(self, score_id: str) -> Optional[Any]:
+    def get_score(self, score_id: str) -> Any | None:
         """Get and parse configured score from line."""
         key = self.score_defs[score_id].score_index
         assert key is not None
 
-        value: Optional[str] = self.line.get(key)
+        value: str | None = self.line.get(key)
         if score_id in self.score_defs:
             col_def = self.score_defs[score_id]
             if value in col_def.na_values:
@@ -205,21 +203,21 @@ class ScoreLine:
 @dataclass
 class PositionScoreQuery:
     score: str
-    position_aggregator: Optional[str] = None
+    position_aggregator: str | None = None
 
 
 @dataclass
 class NPScoreQuery:
     score: str
-    position_aggregator: Optional[str] = None
-    nucleotide_aggregator: Optional[str] = None
+    position_aggregator: str | None = None
+    nucleotide_aggregator: str | None = None
 
 
 @dataclass
 class AlleleScoreQuery:
     score: str
-    position_aggregator: Optional[str] = None
-    allele_aggregator: Optional[str] = None
+    position_aggregator: str | None = None
+    allele_aggregator: str | None = None
 
 
 @dataclass
@@ -242,7 +240,7 @@ class AlleleScoreAggr:
     allele_aggregator: Aggregator
 
 
-ScoreQuery = Union[PositionScoreQuery, NPScoreQuery, AlleleScoreQuery]
+ScoreQuery = PositionScoreQuery | NPScoreQuery | AlleleScoreQuery
 
 
 class GenomicScore(ResourceConfigValidationMixin):
@@ -432,8 +430,8 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     def _parse_vcf_scoredefs(
         self,
-        vcf_header_info: Optional[dict[str, Any]],
-        config_scoredefs: Optional[dict[str, _ScoreDef]],
+        vcf_header_info: dict[str, Any] | None,
+        config_scoredefs: dict[str, _ScoreDef] | None,
     ) -> dict[str, _ScoreDef]:
         def converter(val: Any) -> Any:
             try:
@@ -446,7 +444,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         assert vcf_header_info is not None
 
         for key, value in vcf_header_info.items():
-            value_parser: Optional[Callable[[str], Any]] = converter
+            value_parser: Callable[[str], Any] | None = converter
             if value.number in (1, "A", "R"):
                 value_parser = None
 
@@ -533,7 +531,7 @@ class GenomicScore(ResourceConfigValidationMixin):
                 f"{self.resource_id} resource is not a list.")
         return default_annotation
 
-    def get_default_annotation_attribute(self, score_id: str) -> Optional[str]:
+    def get_default_annotation_attribute(self, score_id: str) -> str | None:
         """Return default annotation attribute for a score.
 
         Returns None if the score is not included in the default annotation.
@@ -552,7 +550,7 @@ class GenomicScore(ResourceConfigValidationMixin):
             return ",".join(result)
         return None
 
-    def get_score_definition(self, score_id: str) -> Optional[_ScoreDef]:
+    def get_score_definition(self, score_id: str) -> _ScoreDef | None:
         return self.score_definitions.get(score_id)
 
     def close(self) -> None:
@@ -595,9 +593,9 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     def __exit__(
         self,
-        exc_type: Optional[type[BaseException]],
-        exc_value: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         if exc_type is not None:
             logger.error(
@@ -614,13 +612,13 @@ class GenomicScore(ResourceConfigValidationMixin):
                 f"begining {line.pos_end}.")
         return line.pos_begin, line.pos_end
 
-    def _get_header(self) -> Optional[tuple[Any, ...]]:
+    def _get_header(self) -> tuple[Any, ...] | None:
         assert self.table is not None
         return self.table.header
 
     def _fetch_lines(
         self, chrom: str,
-        pos_begin: Optional[int], pos_end: Optional[int],
+        pos_begin: int | None, pos_end: int | None,
     ) -> Iterator[ScoreLine]:
         for line in self.table.get_records_in_region(
             chrom, pos_begin, pos_end,
@@ -638,7 +636,7 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     def fetch_region(
         self, chrom: str,
-        pos_begin: Optional[int], pos_end: Optional[int], scores: Iterable[str],
+        pos_begin: int | None, pos_end: int | None, scores: Iterable[str],
     ) -> Iterator[dict[str, ScoreValue]]:
         """Return score values in a region."""
         if not self.is_open():
@@ -670,7 +668,7 @@ class GenomicScore(ResourceConfigValidationMixin):
     @lru_cache(maxsize=64)
     def get_number_range(
         self, score_id: str,
-    ) -> Optional[tuple[float, float]]:
+    ) -> tuple[float, float] | None:
         """Return the value range for a number score."""
         if score_id not in self.get_all_scores():
             raise ValueError(
@@ -698,7 +696,7 @@ class GenomicScore(ResourceConfigValidationMixin):
     def get_histogram_image_filename(self, score_id: str) -> str:
         return f"statistics/histogram_{score_id}.png"
 
-    def get_histogram_image_url(self, score_id: str) -> Optional[str]:
+    def get_histogram_image_url(self, score_id: str) -> str | None:
         return (
             f"{self.resource.get_url()}/"
             f"{quote(self.get_histogram_image_filename(score_id))}"
@@ -720,7 +718,7 @@ class PositionScore(GenomicScore):
 
     def fetch_scores(
             self, chrom: str, position: int,
-            scores: Optional[list[str]] = None) -> Optional[list[Any]]:
+            scores: list[str] | None = None) -> list[Any] | None:
         """Fetch score values at specific genomic position."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
@@ -744,7 +742,7 @@ class PositionScore(GenomicScore):
         self, scores: list[PositionScoreQuery],
     ) -> list[PositionScoreAggr]:
         score_aggs = []
-        aggregator_type: Optional[str]
+        aggregator_type: str | None
         for score in scores:
             if score.position_aggregator is not None:
                 aggregator_type = score.position_aggregator
@@ -761,7 +759,7 @@ class PositionScore(GenomicScore):
 
     def fetch_scores_agg(  # pylint: disable=too-many-arguments,too-many-locals
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: Optional[list[PositionScoreQuery]] = None,
+            scores: list[PositionScoreQuery] | None = None,
     ) -> list[Aggregator]:
         """Fetch score values in a region and aggregates them.
 
@@ -835,7 +833,7 @@ class NPScore(GenomicScore):
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
-            scores: Optional[list[str]] = None) -> Optional[list[Any]]:
+            scores: list[str] | None = None) -> list[Any] | None:
         """Fetch score values at specified genomic position and nucleotide."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
@@ -882,7 +880,7 @@ class NPScore(GenomicScore):
 
     def fetch_scores_agg(
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: Optional[list[NPScoreQuery]] = None,
+            scores: list[NPScoreQuery] | None = None,
     ) -> list[Aggregator]:
         """Fetch score values in a region and aggregates them."""
         # pylint: disable=too-many-locals
@@ -960,7 +958,7 @@ class AlleleScore(GenomicScore):
 
     def fetch_scores(
             self, chrom: str, position: int, reference: str, alternative: str,
-            scores: Optional[list[str]] = None) -> Optional[list[Any]]:
+            scores: list[str] | None = None) -> list[Any] | None:
         """Fetch scores values for specific allele."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
@@ -1011,7 +1009,7 @@ class AlleleScore(GenomicScore):
 
     def fetch_scores_agg(
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: Optional[list[AlleleScoreQuery]] = None,
+            scores: list[AlleleScoreQuery] | None = None,
     ) -> list[Aggregator]:
         """Fetch score values in a region and aggregates them."""
         # pylint: disable=too-many-locals

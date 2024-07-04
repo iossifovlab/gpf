@@ -1,7 +1,6 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
 
 import textwrap
-from typing import Optional
 
 import pytest
 
@@ -86,7 +85,7 @@ def fixture_repo(
 ])
 def test_liftover_chain_fixture(
         spos: tuple[str, int],
-        expected: Optional[tuple[str, int, str, int]],
+        expected: tuple[str, int, str, int] | None,
         fixture_repo: GenomicResourceRepo) -> None:
     res = fixture_repo.get_resource("liftover_chain")
     liftover_chain = build_liftover_chain_from_resource(res)
@@ -108,7 +107,7 @@ def test_liftover_chain_fixture(
 ])
 def test_liftover_annotator(
         annotatable: Annotatable,
-        expected: Optional[Annotatable],
+        expected: Annotatable | None,
         fixture_repo: GenomicResourceRepo) -> None:
 
     pipeline_config = textwrap.dedent("""

@@ -4,7 +4,7 @@ import logging
 import os
 import re
 from contextlib import closing
-from typing import Any, ClassVar, Optional, Union, cast
+from typing import Any, ClassVar, cast
 
 import duckdb
 from cerberus import Validator
@@ -35,7 +35,7 @@ def _duckdb_db_connect(
 
 
 def duckdb_connect(
-    db_name: Optional[str] = None, *,
+    db_name: str | None = None, *,
     read_only: bool = True,
 ) -> duckdb.DuckDBPyConnection:
     if db_name is not None:
@@ -72,7 +72,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
     def __init__(self, storage_config: dict[str, Any]):
         super().__init__(storage_config)
-        self.connection_factory: Optional[duckdb.DuckDBPyConnection] = None
+        self.connection_factory: duckdb.DuckDBPyConnection | None = None
 
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:
@@ -130,16 +130,16 @@ class DuckDbGenotypeStorage(GenotypeStorage):
     def close(self) -> None:
         pass
 
-    def get_base_dir(self) -> Optional[str]:
+    def get_base_dir(self) -> str | None:
         return self.storage_config.get("base_dir")
 
-    def get_db(self) -> Optional[str]:
+    def get_db(self) -> str | None:
         return self.storage_config.get("db")
 
     def get_memory_limit(self) -> str:
         return cast(str, self.storage_config.get("memory_limit", "32GB"))
 
-    def get_studies_dir(self) -> Optional[str]:
+    def get_studies_dir(self) -> str | None:
         return self.storage_config.get("studies_dir")
 
     @staticmethod
@@ -301,7 +301,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         return fs_utils.join(base_dir, dir_name)
 
     def _base_dir_join_parquet_scan_or_table(
-            self, parquet_scan: Optional[str]) -> Optional[str]:
+            self, parquet_scan: str | None) -> str | None:
         if parquet_scan is None:
             return None
         if self.get_base_dir() is None:
@@ -322,7 +322,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
     def build_backend(
             self, study_config: dict,
             genome: ReferenceGenome,
-            gene_models: GeneModels) -> Union[DuckDbVariants, DuckDb2Variants]:
+            gene_models: GeneModels) -> DuckDbVariants | DuckDb2Variants:
         tables = study_config["genotype_storage"]["tables"]
         pedigree = self._base_dir_join_parquet_scan_or_table(
             tables["pedigree"])

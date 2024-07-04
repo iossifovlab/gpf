@@ -1,7 +1,7 @@
 from collections.abc import Generator
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Callable, Optional, TextIO, Union
+from typing import Any, Callable, TextIO
 
 import numpy as np
 
@@ -59,10 +59,10 @@ def _cnv_vcf_to_vcf_trasformer() \
 def _configure_cnv_location(
         header: list[str],
         transformers: list[Callable[[dict[str, Any]], dict[str, Any]]],
-        cnv_chrom: Optional[str] = None,
-        cnv_start: Optional[str] = None,
-        cnv_end: Optional[str] = None,
-        cnv_location: Optional[str] = None) -> None:
+        cnv_chrom: str | None = None,
+        cnv_start: str | None = None,
+        cnv_end: str | None = None,
+        cnv_location: str | None = None) -> None:
     """Configure the header and position-handling transformers.
 
     This helper function will **configure** the header and transformers needed
@@ -193,9 +193,9 @@ def _configure_cnv_best_state(
         transformers: list[Callable[[dict[str, Any]], dict[str, Any]]],
         families: FamiliesData,
         genome: ReferenceGenome,
-        cnv_person_id: Optional[str] = None,
-        cnv_family_id: Optional[str] = None,
-        cnv_best_state: Optional[str] = None) -> None:
+        cnv_person_id: str | None = None,
+        cnv_family_id: str | None = None,
+        cnv_best_state: str | None = None) -> None:
     """Configure header and transformers that handle CNV family genotypes."""
     if cnv_person_id is not None:
         # if cnv_family_id is not None and cnv_best_state is not None:
@@ -228,8 +228,8 @@ def _configure_cnv_best_state(
 
 
 def _cnv_variant_to_variant_type(
-    cnv_plus_values: Optional[list[str]] = None,
-    cnv_minus_values: Optional[list[str]] = None,
+    cnv_plus_values: list[str] | None = None,
+    cnv_minus_values: list[str] | None = None,
 ) -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Transform variant type to canonical internal representation.
 
@@ -260,9 +260,9 @@ def _cnv_variant_to_variant_type(
 def _configure_cnv_variant_type(
     header: list[str],
     transformers: list[Callable[[dict[str, Any]], dict[str, Any]]],
-    cnv_variant_type: Optional[str] = None,
-    cnv_plus_values: Optional[Union[str, list[str]]] = None,
-    cnv_minus_values: Optional[Union[str, list[str]]] = None,
+    cnv_variant_type: str | None = None,
+    cnv_plus_values: str | list[str] | None = None,
+    cnv_minus_values: str | list[str] | None = None,
 ) -> None:
     """Configure header and transformer needed to handle CNV variant type."""
     if cnv_plus_values is None:
@@ -290,16 +290,16 @@ def _configure_loader(
         header: list[str],
         families: FamiliesData,
         genome: ReferenceGenome,
-        cnv_chrom: Optional[str] = None,
-        cnv_start: Optional[str] = None,
-        cnv_end: Optional[str] = None,
-        cnv_location: Optional[str] = None,
-        cnv_person_id: Optional[str] = None,
-        cnv_family_id: Optional[str] = None,
-        cnv_best_state: Optional[str] = None,
-        cnv_variant_type: Optional[str] = None,
-        cnv_plus_values: Optional[list[str]] = None,
-        cnv_minus_values: Optional[list[str]] = None) \
+        cnv_chrom: str | None = None,
+        cnv_start: str | None = None,
+        cnv_end: str | None = None,
+        cnv_location: str | None = None,
+        cnv_person_id: str | None = None,
+        cnv_family_id: str | None = None,
+        cnv_best_state: str | None = None,
+        cnv_variant_type: str | None = None,
+        cnv_plus_values: list[str] | None = None,
+        cnv_minus_values: list[str] | None = None) \
         -> tuple[
             list[str],
             list[Callable[[dict[str, Any]], dict[str, Any]]]]:
@@ -329,19 +329,19 @@ def _configure_loader(
 
 
 def flexible_cnv_loader(
-    filepath_or_buffer: Union[str, Path, TextIO],
+    filepath_or_buffer: str | Path | TextIO,
     families: FamiliesData,
     genome: ReferenceGenome,
-    cnv_chrom: Optional[str] = None,
-    cnv_start: Optional[str] = None,
-    cnv_end: Optional[str] = None,
-    cnv_location: Optional[str] = None,
-    cnv_person_id: Optional[str] = None,
-    cnv_family_id: Optional[str] = None,
-    cnv_best_state: Optional[str] = None,
-    cnv_variant_type: Optional[str] = None,
-    cnv_plus_values: Optional[list[str]] = None,
-    cnv_minus_values: Optional[list[str]] = None,
+    cnv_chrom: str | None = None,
+    cnv_start: str | None = None,
+    cnv_end: str | None = None,
+    cnv_location: str | None = None,
+    cnv_person_id: str | None = None,
+    cnv_family_id: str | None = None,
+    cnv_best_state: str | None = None,
+    cnv_variant_type: str | None = None,
+    cnv_plus_values: list[str] | None = None,
+    cnv_minus_values: list[str] | None = None,
     cnv_sep: str = "\t",
     **_kwargs: Any,
 ) -> Generator[dict[str, Any], None, None]:

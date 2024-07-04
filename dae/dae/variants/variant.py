@@ -4,7 +4,7 @@ from __future__ import annotations
 import enum
 import itertools
 import logging
-from typing import Any, Callable, Optional, cast
+from typing import Any, Callable, cast
 
 import pysam
 
@@ -67,13 +67,13 @@ class VariantDesc:
     # pylint: disable=too-many-arguments,too-many-instance-attributes
     def __init__(
             self, variant_type: core.Allele.Type, position: int,
-            end_position: Optional[int] = None,
-            ref: Optional[str] = None,
-            alt: Optional[str] = None,
-            length: Optional[int] = None,
-            tr_ref: Optional[int] = None,
-            tr_alt: Optional[int] = None,
-            tr_unit: Optional[str] = None):
+            end_position: int | None = None,
+            ref: str | None = None,
+            alt: str | None = None,
+            length: int | None = None,
+            tr_ref: int | None = None,
+            tr_alt: int | None = None,
+            tr_unit: str | None = None):
 
         self.variant_type = variant_type
         self.position = position
@@ -188,7 +188,7 @@ def cshl_format(
 
 def tandem_repeat(
     ref: str, alt: str, min_mono_reference: int = 8,
-) -> tuple[Optional[str], Optional[int], Optional[int]]:
+) -> tuple[str | None, int | None, int | None]:
     """Check if an allele is a tandem repeat and builds it."""
     for period in range(1, len(ref) // 2 + 1):
         if len(ref) % period != 0:
@@ -295,15 +295,15 @@ class SummaryAllele(core.Allele):
         self,
         chromosome: str,
         position: int,
-        reference: Optional[str],
-        alternative: Optional[str] = None,
-        end_position: Optional[int] = None,
+        reference: str | None,
+        alternative: str | None = None,
+        end_position: int | None = None,
         summary_index: int = -1,
         allele_index: int = 0,
         transmission_type: TransmissionType = TransmissionType.transmitted,
-        allele_type: Optional[core.Allele.Type] = None,
-        attributes: Optional[dict[str, Any]] = None,
-        effect: Optional[str] = None,
+        allele_type: core.Allele.Type | None = None,
+        attributes: dict[str, Any] | None = None,
+        effect: str | None = None,
     ):
         super().__init__(
             chrom=chromosome, pos=position, pos_end=end_position,
@@ -314,7 +314,7 @@ class SummaryAllele(core.Allele):
         self._allele_index: int = allele_index
         self._transmission_type: TransmissionType = transmission_type
 
-        self._details: Optional[VariantDetails] = None
+        self._details: VariantDetails | None = None
 
         self._effects = AlleleEffects.from_string(effect) if effect else None
         self.matched_gene_effects: list[EffectGene] = []
@@ -406,7 +406,7 @@ class SummaryAllele(core.Allele):
         return self._details
 
     @property
-    def effects(self) -> Optional[AlleleEffects]:
+    def effects(self) -> AlleleEffects | None:
         """Build and return allele effect."""
         if self._effects is None:
             record = self.attributes
@@ -442,7 +442,7 @@ class SummaryAllele(core.Allele):
         return self._effects
 
     @property
-    def worst_effect(self) -> Optional[str]:
+    def worst_effect(self) -> str | None:
         if self.effects:
             return self.effects.worst
         return None
@@ -464,11 +464,11 @@ class SummaryAllele(core.Allele):
         return [eg.symbol for eg in self.effect_genes if eg.symbol]
 
     @property
-    def frequency(self) -> Optional[float]:
-        return cast(Optional[float], self.get_attribute("af_allele_freq"))
+    def frequency(self) -> float | None:
+        return cast(float | None, self.get_attribute("af_allele_freq"))
 
     @property
-    def cshl_variant(self) -> Optional[str]:
+    def cshl_variant(self) -> str | None:
         if self.details is None:
             return None
         return self.details.cshl_variant
@@ -496,7 +496,7 @@ class SummaryAllele(core.Allele):
         return self.details.cshl_location
 
     @property
-    def cshl_position(self) -> Optional[int]:
+    def cshl_position(self) -> int | None:
         """Return CSHL position of an allele."""
         if self.alternative is None:
             return None
@@ -602,7 +602,7 @@ class SummaryVariant:
 
         self._chromosome: str = self.ref_allele.chromosome
         self._position: int = self.ref_allele.position
-        self._reference: Optional[str] = self.ref_allele.reference
+        self._reference: str | None = self.ref_allele.reference
         if len(alleles) > 1:
             self._end_position = alleles[1].end_position
         else:
@@ -612,7 +612,7 @@ class SummaryVariant:
             if allele.allele_index == 0:
                 allele._allele_index = allele_index  # noqa: SLF001
 
-        self._svuid: Optional[str] = None
+        self._svuid: str | None = None
 
     @property
     def chromosome(self) -> str:
@@ -627,11 +627,11 @@ class SummaryVariant:
         return self._position
 
     @property
-    def end_position(self) -> Optional[int]:
+    def end_position(self) -> int | None:
         return self._end_position
 
     @property
-    def reference(self) -> Optional[str]:
+    def reference(self) -> str | None:
         return self._reference
 
     @property
@@ -663,7 +663,7 @@ class SummaryVariant:
         return self._svuid
 
     @property
-    def alternative(self) -> Optional[str]:
+    def alternative(self) -> str | None:
         if not self.alt_alleles:
             return None
         return ",".join(
@@ -700,13 +700,13 @@ class SummaryVariant:
         return [sa.details for sa in self.alt_alleles]
 
     @property
-    def cshl_variant(self) -> list[Optional[str]]:
+    def cshl_variant(self) -> list[str | None]:
         if not self.alt_alleles:
             return []
         return [aa.cshl_variant for aa in self.alt_alleles]
 
     @property
-    def cshl_variant_full(self) -> list[Optional[str]]:
+    def cshl_variant_full(self) -> list[str | None]:
         if not self.alt_alleles:
             return []
         return [aa.cshl_variant_full for aa in self.alt_alleles]
@@ -739,7 +739,7 @@ class SummaryVariant:
         return list(egs)
 
     @property
-    def frequencies(self) -> list[Optional[float]]:
+    def frequencies(self) -> list[float | None]:
         """Return list of allele frequencies."""
         return [sa.frequency for sa in self.alleles]
 
@@ -749,7 +749,7 @@ class SummaryVariant:
         return {aa.allele_type for aa in self.alt_alleles}
 
     def get_attribute(
-            self, item: Any, default: Optional[Any] = None) -> list[Any]:
+            self, item: Any, default: Any | None = None) -> list[Any]:
         return [sa.get_attribute(item, default) for sa in self.alt_alleles]
 
     def has_attribute(self, item: Any) -> bool:
@@ -849,8 +849,8 @@ class SummaryVariantFactory:
     @staticmethod
     def summary_allele_from_record(
             record: dict[str, Any],
-            transmission_type: Optional[TransmissionType] = None,
-            attr_filter: Optional[set[str]] = None) -> SummaryAllele:
+            transmission_type: TransmissionType | None = None,
+            attr_filter: set[str] | None = None) -> SummaryAllele:
         """Build a summary allele from a dictionary (record)."""
         if transmission_type is not None:
             record["transmission_type"] = transmission_type
@@ -902,8 +902,8 @@ class SummaryVariantFactory:
     @staticmethod
     def summary_variant_from_records(
             records: list[dict[str, Any]],
-            transmission_type: Optional[TransmissionType] = None,
-            attr_filter: Optional[set[str]] = None) -> SummaryVariant:
+            transmission_type: TransmissionType | None = None,
+            attr_filter: set[str] | None = None) -> SummaryVariant:
         """Build summary variant from a list of dictionaries (records)."""
         assert len(records) > 0
         alleles = []

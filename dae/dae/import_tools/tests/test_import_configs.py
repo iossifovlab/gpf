@@ -3,7 +3,7 @@
 import os
 import pathlib
 from glob import glob
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import fsspec
 import pytest
@@ -117,7 +117,7 @@ def test_add_chrom_prefix_is_propagated_to_the_loader(
     ("10k", 10_000),
     (None, 50_000),
 ])
-def test_row_group_size(row_group_size: Optional[str], expected: int) -> None:
+def test_row_group_size(row_group_size: str | None, expected: int) -> None:
     import_config = {
         "input": {},
         "processing_config": {

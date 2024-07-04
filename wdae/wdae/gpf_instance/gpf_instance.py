@@ -7,7 +7,7 @@ import pathlib
 import time
 from functools import cached_property
 from threading import Lock
-from typing import Any, Callable, Optional, Union, cast
+from typing import Any, Callable, cast
 
 from box import Box
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 __all__ = ["get_wgpf_instance"]
 
 
-_GPF_INSTANCE: Optional[WGPFInstance] = None
+_GPF_INSTANCE: WGPFInstance | None = None
 _GPF_INSTANCE_LOCK = Lock()
 _GPF_RECREATED_DATASET_PERM = False
 
@@ -68,16 +68,16 @@ class WGPFInstance(GPFInstance):
 
     def __init__(
         self, dae_config: dict[str, Any],
-        dae_dir: Union[str, pathlib.Path],
+        dae_dir: str | pathlib.Path,
         **kwargs: dict[str, Any],
     ) -> None:
-        self._remote_study_db: Optional[RemoteStudyDB] = None
+        self._remote_study_db: RemoteStudyDB | None = None
         self._clients: dict[str, RESTClient] = {}
         self._study_wrappers: dict[
-            str, Union[StudyWrapper, RemoteStudyWrapper],
+            str, StudyWrapper | RemoteStudyWrapper,
         ] = {}
-        self._gp_configuration: Optional[dict[str, Any]] = None
-        self._gp_table_configuration: Optional[dict[str, Any]] = None
+        self._gp_configuration: dict[str, Any] | None = None
+        self._gp_table_configuration: dict[str, Any] | None = None
         super().__init__(cast(Box, dae_config), dae_dir, **kwargs)
         main_description = self.dae_config.gpfjs.main_description_file
         if not os.path.exists(main_description):
@@ -92,7 +92,7 @@ class WGPFInstance(GPFInstance):
 
     @staticmethod
     def build(
-        config_filename: Optional[Union[str, pathlib.Path]] = None,
+        config_filename: str | pathlib.Path | None = None,
         **kwargs: Any,
     ) -> WGPFInstance:
         dae_config, dae_dir = GPFInstance._build_gpf_config(  # noqa: SLF001
@@ -132,7 +132,7 @@ class WGPFInstance(GPFInstance):
     def get_about_description_path(self) -> str:
         return cast(str, self.dae_config.gpfjs.about_description_file)
 
-    def get_remote_client(self, remote_id: str) -> Optional[RESTClient]:
+    def get_remote_client(self, remote_id: str) -> RESTClient | None:
         return self._clients.get(remote_id)
 
     @property
@@ -188,7 +188,7 @@ class WGPFInstance(GPFInstance):
 
     def make_wdae_wrapper(
         self, dataset_id: str,
-    ) -> Optional[Union[StudyWrapper, RemoteStudyWrapper]]:
+    ) -> StudyWrapper | RemoteStudyWrapper | None:
         """Create and return wdae study wrapper."""
         genotype_data = self.get_genotype_data(dataset_id)
         if genotype_data is None:
@@ -202,9 +202,9 @@ class WGPFInstance(GPFInstance):
 
     def get_wdae_wrapper(
         self, dataset_id: str,
-    ) -> Optional[Union[StudyWrapper, RemoteStudyWrapper]]:
+    ) -> StudyWrapper | RemoteStudyWrapper | None:
         """Return wdae study wrapper."""
-        wrapper: Optional[Union[StudyWrapper, RemoteStudyWrapper]] = None
+        wrapper: StudyWrapper | RemoteStudyWrapper | None = None
         if dataset_id not in self._study_wrappers:
             wrapper = self.make_wdae_wrapper(dataset_id)
             if wrapper is not None:
@@ -235,7 +235,7 @@ class WGPFInstance(GPFInstance):
 
     def get_genotype_data(
         self, genotype_data_id: str,
-    ) -> Union[GenotypeData, RemoteGenotypeData]:
+    ) -> GenotypeData | RemoteGenotypeData:
         genotype_data = super().get_genotype_data(genotype_data_id)
         if genotype_data is not None:
             return genotype_data
@@ -254,7 +254,7 @@ class WGPFInstance(GPFInstance):
             self._remote_study_db.get_genotype_data_config(genotype_data_id),
         )
 
-    def get_common_report(self, study_id: str) -> Optional[CommonReport]:
+    def get_common_report(self, study_id: str) -> CommonReport | None:
         common_report = \
             super().get_common_report(study_id)
 
@@ -302,7 +302,7 @@ class WGPFInstance(GPFInstance):
             ),
         )
 
-    def get_visible_datasets(self) -> Optional[list[str]]:
+    def get_visible_datasets(self) -> list[str] | None:
         if self.dae_config.gpfjs is None:
             return None
         if not self.dae_config.gpfjs.visible_datasets:
@@ -316,7 +316,7 @@ class WGPFInstance(GPFInstance):
 
     def _gp_find_category_section(
         self, configuration: dict[str, Any], category: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         for gene_set in configuration["geneSets"]:
             if gene_set["category"] == category:
                 return "geneSets"
@@ -328,12 +328,12 @@ class WGPFInstance(GPFInstance):
                 return "datasets"
         return None
 
-    def get_wdae_gp_configuration(self) -> Optional[dict[str, Any]]:
+    def get_wdae_gp_configuration(self) -> dict[str, Any] | None:
         if self._gp_configuration is None:
             self.prepare_gp_configuration()
         return self._gp_configuration
 
-    def get_wdae_gp_table_configuration(self) -> Optional[dict[str, Any]]:
+    def get_wdae_gp_table_configuration(self) -> dict[str, Any] | None:
         if self._gp_table_configuration is None:
             self.prepare_gp_configuration()
         return self._gp_table_configuration
@@ -524,11 +524,11 @@ def column(
     display_name: str,
     *,
     visible: bool = True,
-    clickable: Optional[str] = None,
+    clickable: str | None = None,
     display_vertical: bool = False,
     sortable: bool = False,
-    columns: Optional[list[dict[str, Any]]] = None,
-    meta: Optional[str] = None,
+    columns: list[dict[str, Any]] | None = None,
+    meta: str | None = None,
 ) -> dict[str, Any]:
     """Build columns descriptions."""
     if columns is None:
@@ -546,12 +546,12 @@ def column(
 
 
 def get_wgpf_instance_path(
-    config_filename: Union[str, pathlib.Path, None] = None,
+    config_filename: str | pathlib.Path | None = None,
 ) -> pathlib.Path:
     """Return the path to the GPF instance in use."""
     if _GPF_INSTANCE is not None:
         return pathlib.Path(_GPF_INSTANCE.dae_dir)
-    dae_dir: Optional[pathlib.Path]
+    dae_dir: pathlib.Path | None
     if config_filename is not None:
         dae_dir = pathlib.Path(config_filename).parent
         return dae_dir
@@ -576,7 +576,7 @@ def get_wgpf_instance_path(
 
 
 def get_wgpf_instance(
-    config_filename: Union[str, pathlib.Path, None] = None,
+    config_filename: str | pathlib.Path | None = None,
     **kwargs: dict[str, Any],
 ) -> WGPFInstance:
     """Load and return a WGPFInstance."""

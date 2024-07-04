@@ -5,7 +5,7 @@ import os
 import pathlib
 from collections.abc import Iterator
 from datetime import timedelta
-from typing import Callable, Optional
+from typing import Callable
 
 import pytest
 from box import Box
@@ -224,10 +224,10 @@ def wgpf_instance(
     default_dae_config: Box,
     fixture_dirname: Callable,
     enrichment_grr: GenomicResourceRepo,
-) -> Callable[[Optional[str]], WGPFInstance]:
+) -> Callable[[str | None], WGPFInstance]:
 
     def build(
-        config_filename: Optional[str] = None,
+        config_filename: str | None = None,
     ) -> WGPFInstance:
         repositories = [
             build_genomic_resource_repository(
@@ -271,7 +271,7 @@ def wgpf_instance(
 
 @pytest.fixture(scope="session")
 def fixtures_wgpf_instance(
-    wgpf_instance: Callable[[Optional[str]], WGPFInstance],
+    wgpf_instance: Callable[[str | None], WGPFInstance],
     global_dae_fixtures_dir: str,
 ) -> WGPFInstance:
     return wgpf_instance(

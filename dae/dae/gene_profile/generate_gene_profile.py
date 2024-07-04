@@ -4,7 +4,7 @@ import logging
 import os
 import time
 from collections.abc import Iterable
-from typing import Any, Dict, Optional, Set, cast
+from typing import Any, Dict, Set, cast
 
 from box import Box
 
@@ -65,7 +65,7 @@ def add_variant_count(
     variant_counts: dict[str, Any],
     person_set: str,
     statistic_id: str,
-    effect_types: Optional[set[str]],
+    effect_types: set[str] | None,
 ) -> None:
     """Increment count for specific variant."""
     # pylint: disable=invalid-name
@@ -249,8 +249,8 @@ def collect_variant_counts(
 
 
 def main(
-    gpf_instance: Optional[GPFInstance] = None,
-    argv: Optional[list[str]] = None,
+    gpf_instance: GPFInstance | None = None,
+    argv: list[str] | None = None,
 ) -> None:
     """Entry point for the generate GP script."""
     # flake8: noqa: C901

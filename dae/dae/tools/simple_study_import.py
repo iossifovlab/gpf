@@ -5,7 +5,6 @@ import logging
 import os
 import sys
 import time
-from typing import Optional
 
 from box import Box
 
@@ -32,7 +31,7 @@ logger = logging.getLogger("simple_study_import")
 
 def cli_arguments(
     dae_config: Box,
-    argv: Optional[list[str]] = None,
+    argv: list[str] | None = None,
 ) -> argparse.Namespace:
     """Create and return CLI arguments parser."""
     default_genotype_storage_id = None
@@ -231,8 +230,8 @@ def build_import_project(
 
 
 def main(
-    argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None,
+    argv: list[str] | None = None,
+    gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Run the simple study import procedure."""
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements

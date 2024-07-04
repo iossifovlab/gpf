@@ -1,5 +1,4 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access,fixme
-from typing import Optional
 
 import pytest
 
@@ -52,7 +51,7 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 def test_liftover_chain_fixture(
         schrom: str,
         spos: int,
-        expected: Optional[tuple[str, int, str, int]],
+        expected: tuple[str, int, str, int] | None,
         liftover_grr_fixture: GenomicResourceRepo) -> None:
     res = liftover_grr_fixture.get_resource("liftover_chain")
     liftover_chain = build_liftover_chain_from_resource(res)

@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
 
 import pytest
 
@@ -85,7 +84,7 @@ def test_f1_matched_allele_indexes(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
-    effects: Optional[list[str]],
+    effects: list[str] | None,
     return_reference: bool,
     matched_alleles: list[int],
 ) -> None:
@@ -115,7 +114,7 @@ def test_f1_matched_gene_effects(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
-    effects: Optional[list[str]],
+    effects: list[str] | None,
     matched_effects: set[EffectGene],
 ) -> None:
     region = Region("bar", position, position)

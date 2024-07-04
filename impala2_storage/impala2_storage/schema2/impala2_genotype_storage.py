@@ -7,7 +7,7 @@ import pathlib
 from collections.abc import Iterator
 from copy import copy
 from dataclasses import dataclass
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -25,8 +25,8 @@ class HdfsStudyLayout:
     pedigree_file: str
     summary_variant_dir: str
     family_variant_dir: str
-    summary_sample: Optional[str]
-    family_sample: Optional[str]
+    summary_sample: str | None
+    family_sample: str | None
     meta_file: str
 
 
@@ -35,8 +35,8 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
     def __init__(self, storage_config: dict[str, Any]) -> None:
         super().__init__(storage_config)
-        self._hdfs_helpers: Optional[HdfsHelpers] = None
-        self._impala_helpers: Optional[ImpalaHelpers] = None
+        self._hdfs_helpers: HdfsHelpers | None = None
+        self._impala_helpers: ImpalaHelpers | None = None
 
     @classmethod
     def get_storage_types(cls) -> set[str]:
@@ -54,8 +54,8 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
     def build_backend(
         self, study_config: dict,
-        genome: Optional[ReferenceGenome],  # noqa: ARG002
-        gene_models: Optional[GeneModels],
+        genome: ReferenceGenome | None,  # noqa: ARG002
+        gene_models: GeneModels | None,
     ) -> ImpalaVariants:
         assert study_config is not None
 
@@ -74,7 +74,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
     def hdfs_upload_dataset(
         self, study_id: str,
-        variants_dir: Union[pathlib.Path, str],
+        variants_dir: pathlib.Path | str,
         pedigree_file: str,
         meta_file: str, *,
         has_variants: bool = True,
@@ -122,17 +122,17 @@ class Impala2GenotypeStorage(GenotypeStorage):
     @staticmethod
     def _study_tables(
         study_config: dict,
-    ) -> tuple[Optional[str], Optional[str], str, str]:
+    ) -> tuple[str | None, str | None, str, str]:
         study_id = study_config["id"]
         storage_config = study_config["genotype_storage"]
         has_tables = storage_config and storage_config.get("tables")
         tables = storage_config["tables"] if has_tables else None
 
-        family_table: Optional[str] = None
+        family_table: str | None = None
         if has_tables and tables.get("family"):
             family_table = tables["family"]
 
-        summary_table: Optional[str] = None
+        summary_table: str | None = None
         if has_tables and tables.get("summary"):
             summary_table = tables["summary"]
 
@@ -147,7 +147,7 @@ class Impala2GenotypeStorage(GenotypeStorage):
         return family_table, summary_table, pedigree_table, meta_table
 
     def _copy_variants(
-        self, variants_dir: Union[pathlib.Path, str],
+        self, variants_dir: pathlib.Path | str,
         study_path: str,
     ) -> tuple[str, str]:
         hdfs_summary_dir = os.path.join(study_path, "summary")
@@ -289,8 +289,8 @@ class Impala2GenotypeStorage(GenotypeStorage):
 
     def _generate_study_config(
         self, study_id: str, pedigree_table: str,
-        summary_table: Optional[str],
-        family_table: Optional[str],
+        summary_table: str | None,
+        family_table: str | None,
         meta_table: str,
     ) -> dict[str, Any]:
 

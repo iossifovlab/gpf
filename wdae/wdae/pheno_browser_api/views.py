@@ -2,7 +2,6 @@ import csv
 import logging
 from collections.abc import Generator
 from io import StringIO
-from typing import Union
 
 from datasets_api.permissions import (
     get_instance_timestamp_etag,
@@ -158,7 +157,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
 
     def csv_value_iterator(
         self,
-        dataset: Union[RemoteStudyWrapper, StudyWrapper],
+        dataset: RemoteStudyWrapper | StudyWrapper,
         measure_ids: list[str],
     ) -> Generator[str, None, None]:
         """Create CSV content for people measures data."""
@@ -318,7 +317,7 @@ class PhenoRemoteImages(QueryDatasetView):
     @method_decorator(etag(get_permissions_etag))
     def get(
         self, _request: Request, remote_id: str, image_path: str,
-    ) -> Union[Response, HttpResponse]:
+    ) -> Response | HttpResponse:
         """Return raw image data from a remote GPF instance."""
         if image_path == "":
             return Response(status=status.HTTP_400_BAD_REQUEST)

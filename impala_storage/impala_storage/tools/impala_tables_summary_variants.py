@@ -6,7 +6,7 @@ import math
 import sys
 import time
 from contextlib import closing
-from typing import Any, Optional
+from typing import Any
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -354,8 +354,8 @@ def insert_into_summary_table(
 
 
 def main(
-    argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None,
+    argv: list[str] | None = None,
+    gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Entry point for the script."""
     # flake8: noqa: C901

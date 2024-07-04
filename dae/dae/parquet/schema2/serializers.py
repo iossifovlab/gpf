@@ -2,7 +2,7 @@ import functools
 import logging
 import operator
 from itertools import starmap
-from typing import Any, ClassVar, Optional, Union
+from typing import Any, ClassVar
 
 import pyarrow as pa
 
@@ -77,7 +77,7 @@ class AlleleParquetSerializer:
 
     def __init__(
         self, annotation_schema: list[AttributeInfo],
-        extra_attributes: Optional[list[str]] = None,
+        extra_attributes: list[str] | None = None,
     ) -> None:
         self.annotation_schema = annotation_schema
         self._schema_summary = None
@@ -139,7 +139,7 @@ class AlleleParquetSerializer:
         return pa.schema(fields)
 
     def _get_searchable_prop_value(
-        self, allele: Union[SummaryAllele, FamilyAllele],
+        self, allele: SummaryAllele | FamilyAllele,
         spr: str,
     ) -> Any:
         prop_value = getattr(allele, spr, None)

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Optional
 
 import fsspec
 import pandas as pd
@@ -78,7 +77,7 @@ def collect_pedigree_parquet_schema(ped_df: pd.DataFrame) -> pa.Schema:
 
 def fill_family_bins(
     families: FamiliesData,
-    partition_descriptor: Optional[PartitionDescriptor] = None,
+    partition_descriptor: PartitionDescriptor | None = None,
 ) -> None:
     """Save families data into a parquet file."""
     if partition_descriptor is not None \
@@ -93,8 +92,8 @@ def fill_family_bins(
 
 def save_ped_df_to_parquet(
         ped_df: pd.DataFrame, filename: str,
-        filesystem: Optional[fsspec.AbstractFileSystem] = None,
-        parquet_version: Optional[str] = None) -> None:
+        filesystem: fsspec.AbstractFileSystem | None = None,
+        parquet_version: str | None = None) -> None:
     """Save ped_df as a parquet file named filename."""
     ped_df = ped_df.copy()
 
@@ -126,7 +125,7 @@ def merge_variants_parquets(
     variants_dir: str,
     partitions: list[tuple[str, str]],
     row_group_size: int = 25_000,
-    parquet_version: Optional[str] = None,
+    parquet_version: str | None = None,
 ) -> None:
     """Merge parquet files in variants_dir."""
     output_parquet_file = fs_utils.join(

@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
 
 import pytest
 
@@ -100,7 +99,7 @@ bar    16  .  C   A     .    .      .    GT     1/1  1/1  0/0
 )
 def test_single_alt_allele_effects(
     imported_study: GenotypeData,
-    effects: Optional[list[str]], genes: Optional[list[str]], count: int,
+    effects: list[str] | None, genes: list[str] | None, count: int,
 ) -> None:
 
     vs = list(imported_study.query_variants(genes=genes, effect_types=effects))

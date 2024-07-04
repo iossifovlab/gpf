@@ -7,7 +7,7 @@ import pathlib
 import sys
 import textwrap
 from collections.abc import Iterable
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 import jinja2
 import toml
@@ -27,10 +27,10 @@ class PartitionDescriptor:
     # pylint: disable=too-many-public-methods
     def __init__(
             self,
-            chromosomes: Optional[list[str]] = None,
+            chromosomes: list[str] | None = None,
             region_length: int = 0,
             family_bin_size: int = 0,
-            coding_effect_types: Optional[list[str]] = None,
+            coding_effect_types: list[str] | None = None,
             rare_boundary: float = 0):
         if chromosomes is None:
             self.chromosomes: list[str] = []
@@ -43,7 +43,7 @@ class PartitionDescriptor:
         self.rare_boundary = rare_boundary
 
     @staticmethod
-    def parse(path_name: Union[pathlib.Path, str]) -> PartitionDescriptor:
+    def parse(path_name: pathlib.Path | str) -> PartitionDescriptor:
         """Parse partition description from a file.
 
         When the file name has a `.conf` suffix or is without suffix the format
@@ -455,7 +455,7 @@ class PartitionDescriptor:
     @staticmethod
     def partition_filename(
             prefix: str, partition: list[tuple[str, str]],
-            bucket_index: Optional[int]) -> str:
+            bucket_index: int | None) -> str:
         """Construct a partition dataset base filename.
 
         Given a partition in the format returned by `summary_parition` or

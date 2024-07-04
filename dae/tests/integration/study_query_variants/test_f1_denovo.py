@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional, cast
+from typing import cast
 
 import pytest
 
@@ -90,7 +90,7 @@ bar    9   .  A   T,C,G .    .      .    GT     0/1 0/1 0/1 0/2
 def test_partially_known_denovo(
     imported_study: GenotypeData,
     position: int,
-    effects: Optional[list[str]],
+    effects: list[str] | None,
     inheritance: str,
     count: int,
 ) -> None:
@@ -128,7 +128,7 @@ def test_partially_known_denovo(
 def test_f1_canonical_denovo(
     imported_study: GenotypeData,
     position: int,
-    effects: Optional[list[str]],
+    effects: list[str] | None,
     inheritance: str,
     count: int,
 ) -> None:
@@ -158,7 +158,7 @@ def test_f1_canonical_denovo(
 def test_f1_simple(
     imported_study: GenotypeData,
     position: int,
-    effects: Optional[list[str]],
+    effects: list[str] | None,
     inheritance: str,
     count: int,
 ) -> None:

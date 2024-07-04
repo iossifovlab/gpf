@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Optional
 
 import pytest
 
@@ -59,7 +58,7 @@ def imported_study(
     ],
 )
 def test_query_by_sexes(
-    sexes: Optional[str], count: int,
+    sexes: str | None, count: int,
     imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(sexes=sexes))

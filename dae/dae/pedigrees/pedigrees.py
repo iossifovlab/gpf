@@ -7,7 +7,7 @@ import logging
 from collections import defaultdict, deque
 from collections.abc import Iterable, Iterator
 from functools import reduce
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 import networkx as nx
 
@@ -167,7 +167,7 @@ class FamilyConnections:
     def from_family(
         cls, family: Family,
         add_missing_members: bool = True,
-    ) -> Optional[FamilyConnections]:
+    ) -> FamilyConnections | None:
         """Build family connections object from a family."""
         assert isinstance(family, Family)
 
@@ -342,7 +342,7 @@ class FamilyConnections:
             self.id_to_individual.values(), 0,
         )
 
-    def get_individual(self, person_id: str) -> Optional[Individual]:
+    def get_individual(self, person_id: str) -> Individual | None:
         return self.id_to_individual.get(person_id)
 
     def get_individuals_with_rank(self, rank: int) -> set[Individual]:
@@ -381,7 +381,7 @@ class IndividualGroup(abc.ABC):
         )
 
     def __lt__(
-        self, other: Union[Individual, SibshipUnit, MatingUnit],
+        self, other: Individual | SibshipUnit | MatingUnit,
     ) -> bool:
         return repr(self) < repr(other)
 
@@ -395,9 +395,9 @@ class Individual(IndividualGroup):
     NO_RANK = -3673473456
 
     def __init__(
-        self, mating_units: Optional[list[MatingUnit]] = None,
-        member: Optional[Person] = None,
-        parents: Optional[MatingUnit] = None,
+        self, mating_units: list[MatingUnit] | None = None,
+        member: Person | None = None,
+        parents: MatingUnit | None = None,
         rank: int = NO_RANK,
     ) -> None:
 
@@ -459,7 +459,7 @@ class SibshipUnit(IndividualGroup):
     """Group of individuals connected as siblings."""
 
     def __init__(
-        self, individuals: Optional[Iterable[Individual]] = None,
+        self, individuals: Iterable[Individual] | None = None,
     ) -> None:
         if individuals is None:
             individuals = set()
@@ -479,7 +479,7 @@ class MatingUnit(IndividualGroup):
     def __init__(
         self, mother: Individual,
         father: Individual,
-        children: Optional[SibshipUnit] = None,
+        children: SibshipUnit | None = None,
     ) -> None:
         if children is None:
             children = SibshipUnit()
@@ -517,7 +517,7 @@ class Interval:
         self.left = left
         self.right = right
 
-    def intersection(self, other: IntervalForVertex) -> Optional[Interval]:
+    def intersection(self, other: IntervalForVertex) -> Interval | None:
         """Compute the intersection of this interval with another interval.
 
         Args:
@@ -578,15 +578,14 @@ class Realization:
         self,
         graph: nx.Graph,
         forbidden_graph: nx.Graph,
-        intervals: Optional[list[IntervalForVertex]] = None,
-        domain: Optional[list[IndividualGroup]] = None,
+        intervals: list[IntervalForVertex] | None = None,
+        domain: list[IndividualGroup] | None = None,
         max_width: int = 3,
-        _cached_active_vertices: Optional[set[IndividualGroup]] = None,
-        _cached_maximal_set: Optional[set[IndividualGroup]] = None,
-        _graph_neighbors_cache: Optional[
-            dict[IndividualGroup, set[IndividualGroup]]] = None,
-        _cached_dangling_set: Optional[set[IndividualGroup]] = None,
-        _cached_vertex_degree: Optional[dict[IndividualGroup, int]] = None,
+        _cached_active_vertices: set[IndividualGroup] | None = None,
+        _cached_maximal_set: set[IndividualGroup] | None = None,
+        _graph_neighbors_cache: dict[IndividualGroup, set[IndividualGroup]] | None = None,
+        _cached_dangling_set: set[IndividualGroup] | None = None,
+        _cached_vertex_degree: dict[IndividualGroup, int] | None = None,
     ) -> None:
         if domain is None:
             domain = []
@@ -599,7 +598,7 @@ class Realization:
         self.max_width = max_width
 
         self._domain_set = set(self.domain)
-        self._cached_active_vertices: Optional[set[IndividualGroup]] = \
+        self._cached_active_vertices: set[IndividualGroup] | None = \
             _cached_active_vertices
         self._cached_maximal_set = _cached_maximal_set
         self._cached_dangling_set = _cached_dangling_set
@@ -976,7 +975,7 @@ class SandwichSolver:
     @staticmethod
     def solve(
         sandwich_instance: SandwichInstance,
-    ) -> Optional[list[IntervalForVertex]]:
+    ) -> list[IntervalForVertex] | None:
         """Solve the sandwich instance.
 
         Args:
@@ -1026,7 +1025,7 @@ class SandwichSolver:
     @staticmethod
     def try_solve(
         sandwich_instance: SandwichInstance,
-    ) -> Optional[list[IntervalForVertex]]:
+    ) -> list[IntervalForVertex] | None:
         """Try to solve the sandwich instance by finding a realization.
 
         Searchs for realization that satisfies the given constraints.

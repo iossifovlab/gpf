@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass
 from functools import lru_cache
 from io import StringIO
-from typing import Any, Optional, cast
+from typing import Any, cast
 from urllib.parse import quote
 
 import numpy as np
@@ -35,9 +35,9 @@ class ScoreDef:
     name: str
     desc: str
 
-    hist_conf: Optional[NumberHistogramConfig]
-    small_values_desc: Optional[str]
-    large_values_desc: Optional[str]
+    hist_conf: NumberHistogramConfig | None
+    small_values_desc: str | None
+    large_values_desc: str | None
 
 
 class GeneScore(
@@ -112,7 +112,7 @@ class GeneScore(
         """Return a list of score values."""
         return cast(list[float], list(self.df[score_id].values))
 
-    def _get_hist_conf(self, score_id: str) -> Optional[NumberHistogramConfig]:
+    def _get_hist_conf(self, score_id: str) -> NumberHistogramConfig | None:
         if score_id not in self.score_definitions:
             logger.warning("Score %s does not exist!", score_id)
             raise ValueError(
@@ -128,7 +128,7 @@ class GeneScore(
             return None
         return hist_conf
 
-    def get_x_scale(self, score_id: str) -> Optional[str]:
+    def get_x_scale(self, score_id: str) -> str | None:
         """Return the scale type of the X axis."""
         hist_conf = self._get_hist_conf(score_id)
         if hist_conf is None:
@@ -137,7 +137,7 @@ class GeneScore(
             return "log"
         return "linear"
 
-    def get_y_scale(self, score_id: str) -> Optional[str]:
+    def get_y_scale(self, score_id: str) -> str | None:
         """Return the scale type of the Y axis."""
         hist_conf = self._get_hist_conf(score_id)
         if hist_conf is None:
@@ -148,8 +148,8 @@ class GeneScore(
 
     def get_genes(
             self, score_id: str,
-            score_min: Optional[float] = None,
-            score_max: Optional[float] = None) -> set[str]:
+            score_min: float | None = None,
+            score_max: float | None = None) -> set[str]:
         """Return set of genes for a score between a min and max value."""
         score_value_df = self.get_score_df(score_id)
         df = score_value_df[score_id]
@@ -179,12 +179,12 @@ class GeneScore(
                 score_id).set_index("gene")[score_id].to_dict())
 
     def get_gene_value(
-            self, score_id: str, gene_symbol: str) -> Optional[float]:
+            self, score_id: str, gene_symbol: str) -> float | None:
         """Return the value for a given gene symbol."""
         symbol_values = self._to_dict(score_id)
         return symbol_values.get(gene_symbol)
 
-    def to_tsv(self, score_id: Optional[str] = None) -> list[str]:
+    def to_tsv(self, score_id: str | None = None) -> list[str]:
         """Return a TSV version of the gene score data."""
         df = None
         if score_id is not None:
@@ -271,7 +271,7 @@ class GeneScore(
 
     @lru_cache(maxsize=64)
     def get_number_range(
-            self, score_id: str) -> Optional[tuple[float, float]]:
+            self, score_id: str) -> tuple[float, float] | None:
         """Return the value range for a number score."""
         if score_id not in self.get_all_scores():
             raise ValueError(
@@ -300,7 +300,7 @@ class GeneScore(
     def get_histogram_image_filename(self, score_id: str) -> str:
         return f"statistics/histogram_{score_id}.png"
 
-    def get_histogram_image_url(self, score_id: str) -> Optional[str]:
+    def get_histogram_image_url(self, score_id: str) -> str | None:
         return (
             f"{self.resource.get_url()}/"
             f"{quote(self.get_histogram_image_filename(score_id))}"
@@ -317,8 +317,8 @@ class ScoreDesc:
     hist: NumberHistogram
     description: str
     help: str
-    small_values_desc: Optional[str]
-    large_values_desc: Optional[str]
+    small_values_desc: str | None
+    large_values_desc: str | None
 
 
 GENE_SCORE_HELP = """
@@ -416,14 +416,14 @@ class GeneScoresDb:
     def get_scores(self) -> list[ScoreDesc]:
         return list(self.score_descs.values())
 
-    def get_gene_score(self, score_id: str) -> Optional[GeneScore]:
+    def get_gene_score(self, score_id: str) -> GeneScore | None:
         """Return a given gene score."""
         if score_id not in self.gene_scores:
             return None
         assert self.gene_scores[score_id].df is not None
         return self.gene_scores[score_id]
 
-    def get_score_desc(self, score_id: str) -> Optional[ScoreDesc]:
+    def get_score_desc(self, score_id: str) -> ScoreDesc | None:
         if score_id not in self.score_descs:
             return None
         return self.score_descs[score_id]

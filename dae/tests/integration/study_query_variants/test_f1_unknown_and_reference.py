@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional, cast
+from typing import cast
 
 import pytest
 
@@ -75,7 +75,7 @@ def test_all_unknown_variants(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
-    effects: Optional[list[str]],
+    effects: list[str] | None,
     count: int,
 ) -> None:
     region = Region("bar", position, position)
@@ -108,7 +108,7 @@ def test_unknown_and_reference(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
-    effects: Optional[list[str]],
+    effects: list[str] | None,
     count: int,
 ) -> None:
     region = Region("bar", position, position)

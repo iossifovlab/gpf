@@ -1,7 +1,7 @@
 import itertools
 import pathlib
 from collections.abc import Iterable
-from typing import Any, ClassVar, Optional, Union, cast
+from typing import Any, ClassVar, cast
 
 from cerberus import Validator
 
@@ -41,8 +41,8 @@ class ParquetLoaderVariants:
     def __init__(
         self,
         data_dir: str,
-        reference_genome: Optional[ReferenceGenome] = None,
-        gene_models: Optional[GeneModels] = None,
+        reference_genome: ReferenceGenome | None = None,
+        gene_models: GeneModels | None = None,
     ) -> None:
         self.loader = ParquetLoader(data_dir)
         self.reference_genome = reference_genome
@@ -54,16 +54,16 @@ class ParquetLoaderVariants:
 
     def build_summary_variants_query_runner(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
         **kwargs: Any,
     ) -> RawVariantsQueryRunner:
         """Return a query runner for the summary variants."""
@@ -103,21 +103,21 @@ class ParquetLoaderVariants:
 
     def build_family_variants_query_runner(
         self,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[list[str]] = None,
-        person_ids: Optional[list[str]] = None,
-        inheritance: Optional[list[str]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        person_ids: list[str] | None = None,
+        inheritance: list[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
         **_kwargs: Any,
     ) -> RawVariantsQueryRunner:
         """Return a query runner for the family variants."""
@@ -163,7 +163,7 @@ class ParquetLoaderVariants:
     def build_person_set_collection_query(
         _person_set_collection: PersonSetCollection,
         _person_set_collection_query: tuple[str, set[str]],
-    ) -> Optional[Union[tuple, tuple[list[str], list[str]]]]:
+    ) -> tuple | tuple[list[str], list[str]] | None:
         return None
 
 
@@ -186,7 +186,7 @@ class ParquetGenotypeStorage(GenotypeStorage):
 
     def __init__(self, storage_config: dict[str, Any]):
         super().__init__(storage_config)
-        self.data_dir: Optional[str] = self.storage_config.get("dir")
+        self.data_dir: str | None = self.storage_config.get("dir")
 
     @classmethod
     def get_storage_types(cls) -> set[str]:
@@ -213,7 +213,7 @@ class ParquetGenotypeStorage(GenotypeStorage):
         self,
         study_config: dict[str, Any],
         genome: ReferenceGenome,
-        gene_models: Optional[GeneModels],
+        gene_models: GeneModels | None,
     ) -> ParquetLoaderVariants:
         study_id = study_config["id"]
         if self.data_dir is not None:

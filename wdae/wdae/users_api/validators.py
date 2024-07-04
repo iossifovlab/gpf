@@ -1,4 +1,4 @@
-from typing import Any, List, Union
+from typing import Any, List
 
 from django.contrib.auth.models import Group
 from rest_framework import serializers
@@ -13,7 +13,7 @@ class SomeSuperuserLeftValidator:
         self.is_update = False
         self.user_instance = None
 
-    def __call__(self, value: List[Union[Any, Group]]) -> None:
+    def __call__(self, value: List[Any | Group]) -> None:
         if not self.is_update:
             return
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterable
 from functools import cached_property
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import pandas as pd
 from scipy import stats
@@ -36,8 +36,8 @@ class GeneWeightsEnrichmentBackground(BaseEnrichmentResourceBackground):
                 f"<{resource.resource_id}>")
         super().__init__(resource)
 
-        self._total: Optional[float] = None
-        self._gene_weights: Optional[dict[str, float]] = None
+        self._total: float | None = None
+        self._gene_weights: dict[str, float] | None = None
 
     def is_loaded(self) -> bool:
         return self._total is not None and self._gene_weights is not None
@@ -160,8 +160,8 @@ class GeneScoreEnrichmentBackground(BaseEnrichmentBackground):
                 f"gene score is expected to have one score included; "
                 f"found {len(self.gene_score.score_definitions)} scores")
 
-        self._total: Optional[float] = None
-        self._gene_weights: Optional[dict[str, float]] = None
+        self._total: float | None = None
+        self._gene_weights: dict[str, float] | None = None
 
     @property
     def filename(self) -> str:

@@ -1,4 +1,3 @@
-from typing import Optional
 
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
@@ -58,7 +57,7 @@ class GenomicScoreDescsView(QueryBaseView):
 
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(
-        self, _request: Request, score_id: Optional[str] = None,
+        self, _request: Request, score_id: str | None = None,
     ) -> Response:
         """Convert all genomic score descs into a JSON list."""
         registry = self.gpf_instance.genomic_scores

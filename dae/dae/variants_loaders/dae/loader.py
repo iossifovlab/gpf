@@ -7,7 +7,7 @@ import os
 import warnings
 from collections.abc import Generator
 from contextlib import closing
-from typing import Any, Optional, Union
+from typing import Any
 
 import fsspec
 import numpy as np
@@ -52,7 +52,7 @@ class DenovoFamiliesGenotypes(FamiliesGenotypes):
     """Tuple of family, genotype, and best_state"""
     def __init__(
             self, family: Family,
-            gt: np.ndarray, best_state: Optional[np.ndarray] = None) -> None:
+            gt: np.ndarray, best_state: np.ndarray | None = None) -> None:
         super().__init__()
         self.family = family
         self.genotype = gt
@@ -60,7 +60,7 @@ class DenovoFamiliesGenotypes(FamiliesGenotypes):
 
     def family_genotype_iterator(
         self,
-    ) -> Generator[tuple[Family, np.ndarray, Optional[np.ndarray]], None, None]:
+    ) -> Generator[tuple[Family, np.ndarray, np.ndarray | None], None, None]:
         yield self.family, self.genotype, self.best_state
 
 
@@ -72,8 +72,8 @@ class DenovoLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             denovo_filename: str,
             genome: ReferenceGenome,
-            regions: Optional[list[str]] = None,
-            params: Optional[dict[str, Any]] = None,
+            regions: list[str] | None = None,
+            params: dict[str, Any] | None = None,
             sort: bool = True) -> None:
         super().__init__(
             families=families,
@@ -125,10 +125,10 @@ class DenovoLoader(VariantsGenotypesLoader):
     def chromosomes(self) -> list[str]:
         return self._chromosomes
 
-    def reset_regions(self, regions: Optional[Union[str, list[str]]]) -> None:
+    def reset_regions(self, regions: str | list[str] | None) -> None:
         super().reset_regions(regions)
 
-        result: list[Optional[Region]] = []
+        result: list[Region | None] = []
         for reg in self.regions:
             if reg is None:
                 result.append(reg)
@@ -450,16 +450,16 @@ class DenovoLoader(VariantsGenotypesLoader):
             filepath: str,
             genome: ReferenceGenome,
             families: FamiliesData,
-            denovo_location: Optional[str] = None,
-            denovo_variant: Optional[str] = None,
-            denovo_chrom: Optional[str] = None,
-            denovo_pos: Optional[str] = None,
-            denovo_ref: Optional[str] = None,
-            denovo_alt: Optional[str] = None,
-            denovo_person_id: Optional[str] = None,
-            denovo_family_id: Optional[str] = None,
-            denovo_best_state: Optional[str] = None,
-            denovo_genotype: Optional[str] = None,
+            denovo_location: str | None = None,
+            denovo_variant: str | None = None,
+            denovo_chrom: str | None = None,
+            denovo_pos: str | None = None,
+            denovo_ref: str | None = None,
+            denovo_alt: str | None = None,
+            denovo_person_id: str | None = None,
+            denovo_family_id: str | None = None,
+            denovo_best_state: str | None = None,
+            denovo_genotype: str | None = None,
             denovo_sep: str = "\t",
             **_kwargs: Any) -> tuple[pd.DataFrame, Any]:
         # FIXME
@@ -682,16 +682,16 @@ class DenovoLoader(VariantsGenotypesLoader):
             filepath: str,
             genome: ReferenceGenome,
             families: FamiliesData,
-            denovo_location: Optional[str] = None,
-            denovo_variant: Optional[str] = None,
-            denovo_chrom: Optional[str] = None,
-            denovo_pos: Optional[str] = None,
-            denovo_ref: Optional[str] = None,
-            denovo_alt: Optional[str] = None,
-            denovo_person_id: Optional[str] = None,
-            denovo_family_id: Optional[str] = None,
-            denovo_best_state: Optional[str] = None,
-            denovo_genotype: Optional[str] = None,
+            denovo_location: str | None = None,
+            denovo_variant: str | None = None,
+            denovo_chrom: str | None = None,
+            denovo_pos: str | None = None,
+            denovo_ref: str | None = None,
+            denovo_alt: str | None = None,
+            denovo_person_id: str | None = None,
+            denovo_family_id: str | None = None,
+            denovo_best_state: str | None = None,
+            denovo_genotype: str | None = None,
             denovo_sep: str = "\t",
             **kwargs: Any) -> pd.DataFrame:
         """Load de Novo variants from a file.
@@ -778,7 +778,7 @@ class DaeTransmittedFamiliesGenotypes(FamiliesGenotypes):
         self.families = families
         self.family_data = family_data
 
-    def get_family_read_counts(self, family: Family) -> Optional[np.ndarray]:
+    def get_family_read_counts(self, family: Family) -> np.ndarray | None:
         fdata = self.family_data.get(family.family_id, None)
         if fdata is None:
             return None
@@ -805,7 +805,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         summary_filename: str,
         genome: ReferenceGenome,
         regions: None = None,
-        params: Optional[dict[str, Any]] = None,
+        params: dict[str, Any] | None = None,
         **_kwargs: Any,
     ) -> None:
         toomany_filename = DaeTransmittedLoader._build_toomany_filename(

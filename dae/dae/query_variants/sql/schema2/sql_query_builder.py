@@ -2,7 +2,7 @@ import logging
 import textwrap
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 import duckdb
 import sqlglot
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 # A type describing a schema as expected by the query builders
 TableSchema = dict[str, str]
-RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
+RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 
 
 # family_variant_table & summary_allele_table are mandatory
@@ -44,11 +44,11 @@ RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
 class Db2Layout:
     """Genotype data layout in the database."""
 
-    db: Optional[str]
+    db: str | None
     study: str
     pedigree: str
-    summary: Optional[str]
-    family: Optional[str]
+    summary: str | None
+    family: str | None
     meta: str
 
 
@@ -65,10 +65,10 @@ class SqlQueryBuilder:
         pedigree_schema: dict[str, str],
         summary_schema: dict[str, str],
         family_schema: dict[str, str],
-        partition_descriptor: Optional[PartitionDescriptor],
+        partition_descriptor: PartitionDescriptor | None,
         families: FamiliesData,
         gene_models: GeneModels,
-        reference_genome: Optional[ReferenceGenome] = None,
+        reference_genome: ReferenceGenome | None = None,
     ):
         if gene_models is None:
             raise ValueError("gene_models are required")
@@ -85,16 +85,16 @@ class SqlQueryBuilder:
 
     def build_summary_variants_query(
         self, *,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
     ) -> str:
         """Build a query for summary variants."""
         heuristics = self._calc_heuristic_bins(
@@ -142,8 +142,8 @@ class SqlQueryBuilder:
 
     def _build_gene_effect_clause(
         self,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
     ) -> str:
         assert self.gene_models is not None
 
@@ -179,15 +179,15 @@ class SqlQueryBuilder:
 
     def _build_summary_subclause(
         self, *,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        heuristics: Optional[dict[str, list[str]]] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        heuristics: dict[str, list[str]] | None = None,
         **_kwargs: Any,
     ) -> str:
         """Build a subclause for the summary table.
@@ -246,8 +246,8 @@ class SqlQueryBuilder:
             """)
 
     def _build_gene_regions_heuristic(
-        self, genes: list[str], regions: Optional[list[Region]],
-    ) -> Optional[list[Region]]:
+        self, genes: list[str], regions: list[Region] | None,
+    ) -> list[Region] | None:
         assert self.gene_models is not None
         return create_regions_from_genes(
             self.gene_models, genes, regions,
@@ -355,7 +355,7 @@ class SqlQueryBuilder:
 
     def _calc_coding_bins(
         self,
-        effect_types: Optional[Sequence[str]],
+        effect_types: Sequence[str] | None,
     ) -> list[str]:
         if self.partition_descriptor is None:
             return []
@@ -378,7 +378,7 @@ class SqlQueryBuilder:
         return coding_bins
 
     def _calc_region_bins(
-        self, regions: Optional[list[Region]],
+        self, regions: list[Region] | None,
     ) -> list[str]:
         if self.partition_descriptor is None:
             return []
@@ -413,9 +413,9 @@ class SqlQueryBuilder:
         return list(region_bins)
 
     def _adapt_family_and_person_ids(
-        self, family_ids: Optional[Sequence[str]],
-        person_ids: Optional[Sequence[str]],
-    ) -> tuple[Optional[Sequence[str]], Optional[Sequence[str]]]:
+        self, family_ids: Sequence[str] | None,
+        person_ids: Sequence[str] | None,
+    ) -> tuple[Sequence[str] | None, Sequence[str] | None]:
         if family_ids is None:
             return None, person_ids
         if person_ids is None:
@@ -436,7 +436,7 @@ class SqlQueryBuilder:
         return family_ids, list(person_ids_set)
 
     def _build_person_subclause(
-        self, person_ids: Optional[Sequence[str]],
+        self, person_ids: Sequence[str] | None,
     ) -> str:
         if person_ids is None:
             return ""
@@ -466,21 +466,21 @@ class SqlQueryBuilder:
 
     def build_family_variants_query(
         self, *,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        family_ids: Optional[Sequence[str]] = None,
-        person_ids: Optional[Sequence[str]] = None,
-        inheritance: Optional[Sequence[str]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        limit: Optional[int] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: Sequence[str] | None = None,
+        person_ids: Sequence[str] | None = None,
+        inheritance: Sequence[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
         **_kwargs: Any,
     ) -> str:
         """Build a query for family variants."""
@@ -581,16 +581,16 @@ class SqlQueryBuilder:
 
     def _build_family_subclause(
         self, *,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        family_ids: Optional[Sequence[str]] = None,
-        _person_ids: Optional[Sequence[str]] = None,
-        inheritance: Optional[Union[str, Sequence[str]]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        heuristics: Optional[dict[str, list[str]]] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        family_ids: Sequence[str] | None = None,
+        _person_ids: Sequence[str] | None = None,
+        inheritance: str | Sequence[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        heuristics: dict[str, list[str]] | None = None,
         **_kwargs: Any,
     ) -> str:
         """Build a subclause for the family table.
@@ -796,10 +796,10 @@ class SqlQueryBuilder:
 
     def _calc_frequency_bins(
         self, *,
-        inheritance: Optional[Sequence[str]] = None,
-        roles: Optional[str] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
+        inheritance: Sequence[str] | None = None,
+        roles: str | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
     ) -> list[str]:
         if self.partition_descriptor is None:
             return []
@@ -840,14 +840,14 @@ class SqlQueryBuilder:
 
     def _calc_heuristic_bins(
         self, *,
-        regions: Optional[list[Region]] = None,
-        genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
-        inheritance: Optional[Sequence[str]] = None,
-        roles: Optional[str] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        family_ids: Optional[Iterable[str]] = None,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        inheritance: Sequence[str] | None = None,
+        roles: str | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        family_ids: Iterable[str] | None = None,
     ) -> dict[str, list[str]]:
         heuristics = {}
         if genes is not None:
@@ -877,7 +877,7 @@ class SqlQueryBuilder:
 
     def _calc_family_bins(
         self,
-        family_ids: Optional[Iterable[str]],
+        family_ids: Iterable[str] | None,
     ) -> list[str]:
         if self.partition_descriptor is None:
             return []

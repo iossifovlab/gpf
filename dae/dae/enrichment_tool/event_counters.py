@@ -4,7 +4,6 @@ import abc
 import itertools
 from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Optional, Union
 
 from dae.enrichment_tool.genotype_helper import VariantEvent
 from dae.person_sets import ChildrenBySex
@@ -112,7 +111,7 @@ class EventCountersResult:
     male: int
     female: int
     unspecified: int
-    rec_genes: Optional[set[str]] = None
+    rec_genes: set[str] | None = None
 
     @staticmethod
     def from_events_result(events: EventsResult) -> EventCountersResult:
@@ -147,7 +146,7 @@ class EnrichmentSingleResult:
         overlapped: int,
         expected: float,
         pvalue: float,
-        overlapped_genes: Optional[set[str]] = None,
+        overlapped_genes: set[str] | None = None,
     ):
         self.name: str = name
         self.events = events
@@ -173,7 +172,7 @@ class EnrichmentResult:
     male: EnrichmentSingleResult
     female: EnrichmentSingleResult
     unspecified: EnrichmentSingleResult
-    rec_genes: Optional[set[str]] = None
+    rec_genes: set[str] | None = None
 
 
 def filter_overlapping_events(
@@ -374,7 +373,7 @@ class GeneEventsCounter(CounterBase):
         return result
 
 
-EVENT_COUNTERS: dict[str, Union[EventsCounter, GeneEventsCounter]] = {
+EVENT_COUNTERS: dict[str, EventsCounter | GeneEventsCounter] = {
     "enrichment_events_counting": EventsCounter(),
     "enrichment_gene_counting": GeneEventsCounter(),
 }

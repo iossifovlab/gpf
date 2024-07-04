@@ -7,7 +7,7 @@ import re
 from collections import defaultdict, namedtuple
 from dataclasses import dataclass
 from functools import reduce
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 from dae.pedigrees.family import Family
 from dae.pedigrees.pedigrees import (
@@ -31,13 +31,13 @@ class Point:
     y: float
 
 
-def layout_parser(layout: str) -> Optional[dict[str, Union[int, float]]]:
+def layout_parser(layout: str) -> dict[str, int | float] | None:
     """Parse layout string."""
     layout_groups = _LAYOUT_REGEX.search(layout)
 
     if layout_groups:
         parsed = layout_groups.groupdict()
-        result: dict[str, Union[int, float]] = {}
+        result: dict[str, int | float] = {}
         result["rank"] = int(parsed["rank"])
         result["x"] = float(parsed["x"])
         result["y"] = float(parsed["y"])
@@ -79,7 +79,7 @@ class Line:
     # pylint: disable=too-many-arguments
     def __init__(
         self, x1: float, y1: float, x2: float, y2: float,
-        curve_base_height: Optional[float] = None,
+        curve_base_height: float | None = None,
     ) -> None:
         self.x1 = x1
         self.y1 = y1
@@ -143,7 +143,7 @@ class Layout:
     """Represents a layout of a connected component of a family."""
 
     def __init__(
-        self, intervals: Optional[list[IntervalForVertex]] = None,
+        self, intervals: list[IntervalForVertex] | None = None,
     ) -> None:
         self._intervals = intervals
         self.lines: list[Line] = []
@@ -216,7 +216,7 @@ class Layout:
     @staticmethod
     def _build_family_layout(
         family: Family,
-        family_connections: Optional[FamilyConnections],
+        family_connections: FamilyConnections | None,
     ) -> Layout:
 
         if family_connections is None:
@@ -278,7 +278,7 @@ class Layout:
         return layouts
 
     @staticmethod
-    def from_family_layout(family: Family) -> Optional[Layout]:
+    def from_family_layout(family: Family) -> Layout | None:
         """Construct layout for each connected component using layout data."""
         if any(p.layout is None for p in family.full_members):
             logger.warning(
@@ -715,7 +715,7 @@ class Layout:
     def _move(
         self, individuals: list[IndividualWithCoordinates],
         offset: float,
-        already_moved: Optional[set[IndividualWithCoordinates]] = None,
+        already_moved: set[IndividualWithCoordinates] | None = None,
         min_gap: float = 8.0,
     ) -> int:
         assert len(individuals) > 0
@@ -813,7 +813,7 @@ class Layout:
     @staticmethod
     def _get_sibships_on_level(
         level: list[Individual],
-    ) -> list[Union[Any, list[Individual]]]:
+    ) -> list[Any | list[Individual]]:
         individuals_with_parents = [i for i in level if bool(i.parents)]
 
         def reducer(
@@ -833,7 +833,7 @@ class Layout:
 
     def _get_level_of_individual(
         self, individual: Individual,
-    ) -> Optional[list[Individual]]:
+    ) -> list[Individual] | None:
         for individuals_on_level in self._individuals_by_rank:
             if individual in individuals_on_level:
                 return individuals_on_level

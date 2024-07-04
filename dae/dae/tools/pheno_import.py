@@ -6,7 +6,7 @@ import sys
 import traceback
 from copy import copy
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 from box import Box
@@ -160,7 +160,7 @@ def parse_phenotype_data_config(args: argparse.Namespace) -> Box:
 
 
 def build_browser(
-    args: argparse.Namespace, regressions: Optional[Box],
+    args: argparse.Namespace, regressions: Box | None,
 ) -> None:
     """Perform browser data build step."""
     output_dir = args.output
@@ -189,7 +189,7 @@ def build_browser(
     Path(pheno_conf_path).write_text(config)
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     """Run phenotype import tool."""
     if argv is None:
         argv = sys.argv[1:]

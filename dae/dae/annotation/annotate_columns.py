@@ -8,7 +8,7 @@ import sys
 from collections.abc import Generator, Iterable
 from contextlib import closing
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from pysam import TabixFile, tabix_index
 
@@ -73,7 +73,7 @@ def read_input(
 
 def produce_tabix_index(
     filepath: str, args: Any, header: list[str],
-    ref_genome: Optional[ReferenceGenome],
+    ref_genome: ReferenceGenome | None,
 ) -> None:
     """Produce a tabix index file for the given variants file."""
     record_to_annotatable = build_record_to_annotatable(
@@ -102,7 +102,7 @@ def produce_tabix_index(
 def combine(
     args: Any,
     pipeline_config: RawPipelineConfig,
-    grr_definition: Optional[dict],
+    grr_definition: dict | None,
     ref_genome_id: str | None,
     partfile_paths: list[str], out_file_path: str,
 ) -> None:
@@ -181,8 +181,8 @@ class AnnotateColumnsTool(AnnotationTool):
     def annotate(
         args: argparse.Namespace,
         pipeline_config: RawAnnotatorsConfig,
-        grr_definition: Optional[dict],
-        ref_genome_id: Optional[str],
+        grr_definition: dict | None,
+        ref_genome_id: str | None,
         out_file_path: str,
         region: tuple = (),
         compress_output: bool = False,
@@ -393,7 +393,7 @@ class AnnotateColumnsTool(AnnotationTool):
                 [])
 
 
-def cli(raw_args: Optional[list[str]] = None) -> None:
+def cli(raw_args: list[str] | None = None) -> None:
     tool = AnnotateColumnsTool(raw_args)
     tool.run()
 

@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Iterable
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List
 
 from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.genomic_resources.gene_models import GeneModels
@@ -11,7 +11,7 @@ from impala_storage.schema1.base_query_builder import BaseQueryBuilder
 from impala_storage.schema1.serializers import AlleleParquetSerializer
 
 logger = logging.getLogger(__name__)
-RealAttrFilterType = list[tuple[str, tuple[Optional[float], Optional[float]]]]
+RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 
 
 class FamilyVariantsQueryBuilder(BaseQueryBuilder):
@@ -23,7 +23,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
         table_properties: dict[str, Any],
         pedigree_schema: dict[str, str],
         families: FamiliesData,
-        gene_models: Optional[GeneModels] = None,
+        gene_models: GeneModels | None = None,
         do_join: bool = False,
     ) -> None:
         self.do_join = do_join
@@ -139,21 +139,21 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
     # pylint: disable=arguments-differ,too-many-arguments
     def build_where(
         self,
-        regions: Optional[List[Region]] = None,
-        genes: Optional[List[str]] = None,
-        effect_types: Optional[List[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        person_ids: Optional[Iterable[str]] = None,
-        inheritance: Optional[Union[List[str], str]] = None,
-        roles: Optional[str] = None,
-        sexes: Optional[str] = None,
-        variant_type: Optional[str] = None,
-        real_attr_filter: Optional[RealAttrFilterType] = None,
-        ultra_rare: Optional[bool] = None,
-        frequency_filter: Optional[RealAttrFilterType] = None,
-        return_reference: Optional[bool] = None,
-        return_unknown: Optional[bool] = None,
-        pedigree_fields: Optional[tuple[list[str], list[str]]] = None,
+        regions: List[Region] | None = None,
+        genes: List[str] | None = None,
+        effect_types: List[str] | None = None,
+        family_ids: Iterable[str] | None = None,
+        person_ids: Iterable[str] | None = None,
+        inheritance: List[str] | str | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        pedigree_fields: tuple[list[str], list[str]] | None = None,
         **kwargs: Any,
     ) -> None:
         # pylint: disable=unused-argument
@@ -205,7 +205,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
     ) -> Callable:
         seen = set()
 
-        def deserialize_row(row: tuple) -> Optional[Any]:
+        def deserialize_row(row: tuple) -> Any | None:
             cols = {}
             for idx, col_name in enumerate(self.query_columns):
                 cols[col_name] = row[idx]

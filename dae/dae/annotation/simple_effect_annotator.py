@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import (
@@ -136,7 +136,7 @@ class SimpleEffectAnnotator(AnnotatorBase):
         self, chrom: str, beg: int, end: int,
         transcripts: list[TranscriptModel],
         func_name: str, classification: str,
-    ) -> Optional[tuple[str, set[str]]]:
+    ) -> tuple[str, set[str]] | None:
         """Call a region with a specific classification."""
         genes = set()
         for transcript in transcripts:

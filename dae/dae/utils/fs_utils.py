@@ -2,7 +2,7 @@ import datetime
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from fsspec.core import url_to_fs
@@ -29,7 +29,7 @@ def join(path: str, *paths: str) -> str:
 
 def find_directory_with_a_file(
         filename: str,
-        cwd: Optional[Union[str, Path]] = None) -> Optional[Path]:
+        cwd: str | Path | None = None) -> Path | None:
     """Find a directory containing a file.
 
     Starts from current working directory or from a directory passed.
@@ -57,7 +57,7 @@ def modified(filename: str) -> datetime.datetime:
     return cast(datetime.datetime, fs.modified(relative_path))
 
 
-def containing_path(path: Union[str, os.PathLike]) -> str:
+def containing_path(path: str | os.PathLike) -> str:
     """Return url to the resource that contains path.
 
     For file paths this is equivalent to the containing directory.
@@ -90,7 +90,7 @@ def copy(dest: str, src: str) -> None:
     shutil.copytree(src, dest, dirs_exist_ok=True)
 
 
-def tabix_index_filename(tabix_filename: str) -> Optional[str]:
+def tabix_index_filename(tabix_filename: str) -> str | None:
     """Given a Tabix/VCF filename returns a tabix index filename if exists."""
     if not exists(tabix_filename):
         raise OSError(f"tabix file '{tabix_filename}' not found")
@@ -118,7 +118,7 @@ def rm_file(path: str) -> None:
     fs.rm_file(relative_path)
 
 
-def _handle_env_variables(envdict: Optional[dict[str, Any]] = None) -> None:
+def _handle_env_variables(envdict: dict[str, Any] | None = None) -> None:
     """Handle filesystem-related environment variables.
 
     Passing certain settings as env variables is useful in certain scenarios

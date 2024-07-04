@@ -2,14 +2,13 @@
 
 import logging
 import sys
-from typing import Optional
 
 from impala_storage.schema1.import_commons import BatchImporter
 
 logger = logging.getLogger(__name__)
 
 
-def main(argv: Optional[list[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     if argv is None:
         argv = sys.argv[1:]
     BatchImporter.main(argv)

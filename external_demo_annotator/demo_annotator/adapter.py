@@ -4,7 +4,7 @@ import csv
 import select
 import subprocess
 import tempfile
-from typing import Any, Optional, TextIO
+from typing import Any, TextIO
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import AnnotationConfigParser
@@ -22,7 +22,7 @@ class DemoAnnotatorAdapter(AnnotatorBase):
     """Annotation pipeline adapter for dummy_annotate using tempfiles."""
 
     def __init__(
-        self, pipeline: Optional[AnnotationPipeline],
+        self, pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
     ):
         if not info.attributes:
@@ -37,7 +37,7 @@ class DemoAnnotatorAdapter(AnnotatorBase):
         )
 
     def _do_annotate(
-        self, _annotatable: Optional[Annotatable],
+        self, _annotatable: Annotatable | None,
         _context: dict[str, Any],
     ) -> dict[str, Any]:
         raise NotImplementedError(
@@ -45,7 +45,7 @@ class DemoAnnotatorAdapter(AnnotatorBase):
         )
 
     def annotate(
-        self, _annotatable: Optional[Annotatable],
+        self, _annotatable: Annotatable | None,
         _context: dict[str, Any],
     ) -> dict[str, Any]:
         raise NotImplementedError(
@@ -53,7 +53,7 @@ class DemoAnnotatorAdapter(AnnotatorBase):
         )
 
     def prepare_input(
-        self, file: TextIO, annotatables: list[Optional[Annotatable]],
+        self, file: TextIO, annotatables: list[Annotatable | None],
     ) -> None:
         writer = csv.writer(file, delimiter="\t")
         for annotatable in annotatables:
@@ -71,7 +71,7 @@ class DemoAnnotatorAdapter(AnnotatorBase):
             contexts[idx]["annotatable_length"] = int(row[-1])
 
     def batch_annotate(
-        self, annotatables: list[Optional[Annotatable]],
+        self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         with tempfile.NamedTemporaryFile("w+t", delete=False) as input_file, \
@@ -90,7 +90,7 @@ class DemoAnnotatorStreamAdapter(DemoAnnotatorAdapter):
     """Annotation pipeline adapter for annotate_length using streams."""
 
     def batch_annotate(
-        self, annotatables: list[Optional[Annotatable]],
+        self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         with subprocess.Popen(

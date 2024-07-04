@@ -1,11 +1,10 @@
 import logging
 from collections import OrderedDict
 from collections.abc import Generator, Iterable
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 import pandas as pd
 
-from dae.pedigrees.family import Person
 from dae.pheno.pheno_data import Instrument, Measure, PhenotypeData
 from dae.variants.attributes import Role
 from remote.rest_api_client import RESTClient
@@ -36,13 +35,13 @@ class RemotePhenotypeData(PhenotypeData):
     def get_persons_values_df(
         self,
         measure_ids: Iterable[str],
-        person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        roles: Optional[Iterable[Role]] = None,
+        person_ids: Iterable[str] | None = None,
+        family_ids: Iterable[str] | None = None,
+        roles: Iterable[Role] | None = None,
         default_filter: str = "apply",  # pylint: disable=unused-argument
     ) -> pd.DataFrame:
         """Get values for a list of measures for a list of persons."""
-        roles_los: Optional[Iterable[str]] = None
+        roles_los: Iterable[str] | None = None
         if roles:
             roles_los = [r.name for r in roles]
         persons = self.rest_client.post_measures_values(
@@ -76,8 +75,8 @@ class RemotePhenotypeData(PhenotypeData):
 
     def get_measures(
         self,
-        instrument_name: Optional[str] = None,
-        measure_type: Optional[str] = None,
+        instrument_name: str | None = None,
+        measure_type: str | None = None,
     ) -> dict[str, Measure]:
         measures = self.rest_client.get_measures(
             self.remote_dataset_id,
@@ -89,9 +88,9 @@ class RemotePhenotypeData(PhenotypeData):
     def get_people_measure_values(  # type: ignore
         self,
         measure_ids: Iterable[str],
-        person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        roles: Optional[Iterable[str]] = None,
+        person_ids: Iterable[str] | None = None,
+        family_ids: Iterable[str] | None = None,
+        roles: Iterable[str] | None = None,
     ) -> dict[str, Any]:
         if person_ids is not None:
             logger.warning("Unsupported argument used: person_ids")
@@ -149,7 +148,7 @@ class RemotePhenotypeData(PhenotypeData):
         return cast(dict[str, Any], output)
 
     def search_measures(
-        self, instrument: Optional[str], search_term: Optional[str],
+        self, instrument: str | None, search_term: str | None,
     ) -> Generator[dict[str, Any], None, None]:
         measures = self.rest_client.get_browser_measures(
             self.remote_dataset_id,

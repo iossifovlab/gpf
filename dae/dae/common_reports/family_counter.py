@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Family
@@ -58,7 +58,7 @@ class FamilyCounter:
         self.families = json["families"]
         self.pedigree = json["pedigree"]
         self.pedigrees_count = json["pedigrees_count"]
-        self.tags: Optional[list] = None
+        self.tags: list | None = None
 
         tags = json.get("tags")
         if tags is not None:
@@ -72,7 +72,7 @@ class FamilyCounter:
     @staticmethod
     def from_family(
         family: Family,
-        pedigree: list, label: Optional[int] = None,
+        pedigree: list, label: int | None = None,
     ) -> "FamilyCounter":
         return FamilyCounter({
             "families": [family.family_id],

@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-from typing import Optional, Union
 
 import pytest
 from django.test.client import Client
@@ -75,7 +74,7 @@ def test_gene_scores_partitions(user_client: Client) -> None:
     },
 ])
 def test_gene_scores_partitions_bad_request(
-    user_client: Client, data: dict[str, Optional[Union[str, float]]],
+    user_client: Client, data: dict[str, str | float | None],
 ) -> None:
     url = "/api/v3/gene_scores/partitions"
     response = user_client.post(

@@ -3,7 +3,7 @@ import os
 import time
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import pytest
 
@@ -145,7 +145,7 @@ def touch(filename: str) -> None:
     Path(filename).touch()
 
 
-def get_task_by_id(graph: TaskGraph, task_id: str) -> Optional[Task]:
+def get_task_by_id(graph: TaskGraph, task_id: str) -> Task | None:
     for task in graph.tasks:
         if task.task_id == task_id:
             return task

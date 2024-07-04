@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import argparse
 import logging
-from typing import Optional
 
 import yaml
 
@@ -22,8 +21,8 @@ def load_study_config(study_config_filename: str) -> dict:
 
 
 def main(
-    gpf_instance: Optional[GPFInstance] = None,
-    argv: Optional[list[str]] = None,
+    gpf_instance: GPFInstance | None = None,
+    argv: list[str] | None = None,
 ) -> None:
     """Convert GPF genotype data configuration to YAML."""
     description = "Tool to convert GPF genotype data configuration to YAML"

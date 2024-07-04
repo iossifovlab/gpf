@@ -1,7 +1,6 @@
 import logging
 import pathlib
 from threading import Lock
-from typing import Optional
 
 from box import Box
 
@@ -64,7 +63,7 @@ class PhenoRegistry:
         with self.CACHE_LOCK:
             return self._cache[data_id]
 
-    def get_phenotype_data_config(self, data_id: str) -> Optional[Box]:
+    def get_phenotype_data_config(self, data_id: str) -> Box | None:
         with self.CACHE_LOCK:
             return self._cache[data_id].config
 

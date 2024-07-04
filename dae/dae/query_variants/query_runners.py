@@ -6,7 +6,7 @@ import queue
 import threading
 import time
 from concurrent.futures import Executor, Future, ThreadPoolExecutor
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +23,8 @@ class QueryRunner(abc.ABC):
         self._done = False
         self.timestamp = time.time()
 
-        self._result_queue: Optional[queue.Queue] = None
-        self._future: Optional[Future] = None
+        self._result_queue: queue.Queue | None = None
+        self._future: Future | None = None
         self.study_id = None
 
         deserializer = kwargs.get("deserializer")
@@ -113,7 +113,7 @@ class QueryResult:
     The result of the queries is enqueued on result_queue
     """
 
-    def __init__(self, runners: list[QueryRunner], limit: Optional[int] = -1):
+    def __init__(self, runners: list[QueryRunner], limit: int | None = -1):
         self.result_queue: queue.Queue = queue.Queue(maxsize=1_000)
 
         if limit is None:

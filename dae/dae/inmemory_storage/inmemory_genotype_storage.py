@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, cast
 
 from box import Box
 from cerberus import Validator
@@ -77,7 +77,7 @@ class InmemoryGenotypeStorage(GenotypeStorage):
     def build_backend(
             self, study_config: dict[str, Any],
             genome: ReferenceGenome,
-            gene_models: Optional[GeneModels]) -> Any:
+            gene_models: GeneModels | None) -> Any:
         start = time.time()
         config = Box(study_config)
         ped_params = \

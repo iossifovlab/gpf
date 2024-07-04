@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
 
 import pytest
 
@@ -62,7 +61,7 @@ def multi_study(
 ])
 def test_trios_multi(
         multi_study: GenotypeData, region: Region, count: int,
-        best_state: Optional[str]) -> None:
+        best_state: str | None) -> None:
 
     variants = list(
         multi_study.query_variants(

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any
 
 from dae.person_sets import PersonSet, PersonSetCollection
 from dae.variants.attributes import Sex
@@ -9,7 +9,7 @@ from dae.variants.attributes import Sex
 class PeopleCounter:
     """Class representing a people counter JSON."""
 
-    def __init__(self, json: dict[str, Union[int, str]]) -> None:
+    def __init__(self, json: dict[str, int | str]) -> None:
         self.person_set_name = json["column"]
         self.people_male = json.get("people_male", 0)
         self.people_female = json.get("people_female", 0)
@@ -44,7 +44,7 @@ class PeopleCounter:
             "people_total": people_total,
         })
 
-    def to_dict(self, rows: list) -> dict[str, Union[int, str]]:
+    def to_dict(self, rows: list) -> dict[str, int | str]:
         people_counter_dict = {row: getattr(self, row) for row in rows}
         people_counter_dict["column"] = self.person_set_name
         return people_counter_dict

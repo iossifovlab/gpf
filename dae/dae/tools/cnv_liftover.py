@@ -4,7 +4,7 @@ import argparse
 import logging
 import sys
 import textwrap
-from typing import Optional, cast
+from typing import cast
 
 from dae.annotation.annotatable import CNVAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
@@ -57,8 +57,8 @@ def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
 
 
 def main(
-        argv: Optional[list[str]] = None,
-        gpf_instance: Optional[GPFInstance] = None) -> None:
+        argv: list[str] | None = None,
+        gpf_instance: GPFInstance | None = None) -> None:
     """Liftover de Novo variants tool main function."""
     # pylint: disable=too-many-locals
     if argv is None:

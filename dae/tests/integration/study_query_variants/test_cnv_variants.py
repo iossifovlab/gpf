@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
 
 import pytest
 
@@ -72,9 +71,9 @@ f2        chrA:81-100 CNV-     2||2||1
 )
 def test_query_cnv_variants(
         imported_study: GenotypeData,
-        pos_begin: Optional[int],
-        pos_end: Optional[int],
-        variant_type: Optional[str],
+        pos_begin: int | None,
+        pos_end: int | None,
+        variant_type: str | None,
         count: int) -> None:
     if pos_begin is not None and pos_end is not None:
         regions = [Region("chrA", pos_begin, pos_end)]

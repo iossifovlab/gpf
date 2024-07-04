@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import duckdb
 import numpy as np
@@ -25,7 +25,7 @@ class DuckDbRunner(QueryRunner):
             self,
             connection_factory: duckdb.DuckDBPyConnection,
             query: str,
-            deserializer: Optional[Any] = None):
+            deserializer: Any | None = None):
         super().__init__(deserializer=deserializer)
 
         self.connection = connection_factory
@@ -78,7 +78,7 @@ class DuckDbRunner(QueryRunner):
 class DuckDbQueryDialect(Dialect):
     """Abstracts away details related to bigquery."""
 
-    def __init__(self, ns: Optional[str] = None):
+    def __init__(self, ns: str | None = None):
         super().__init__(namespace=ns)
 
     @staticmethod
@@ -111,7 +111,7 @@ class DuckDbQueryDialect(Dialect):
 
     def build_table_name(
         self, table: str,
-        db: Optional[str],  # noqa: ARG002
+        db: str | None,  # noqa: ARG002
     ) -> str:
         return table
 
@@ -130,12 +130,12 @@ class DuckDbVariants(SqlSchema2Variants):
     def __init__(
         self,
         connection: duckdb.DuckDBPyConnection,
-        db: Optional[str],
-        family_variant_table: Optional[str],
-        summary_allele_table: Optional[str],
+        db: str | None,
+        family_variant_table: str | None,
+        summary_allele_table: str | None,
         pedigree_table: str,
         meta_table: str,
-        gene_models: Optional[GeneModels] = None,
+        gene_models: GeneModels | None = None,
     ) -> None:
         self.connection = connection
         assert self.connection is not None
@@ -154,7 +154,7 @@ class DuckDbVariants(SqlSchema2Variants):
     def _get_connection_factory(self) -> Any:
         return self.connection.cursor()
 
-    def _fetch_variants_data_schema(self) -> Optional[dict[str, Any]]:
+    def _fetch_variants_data_schema(self) -> dict[str, Any] | None:
         query = f"""SELECT value FROM {self.meta_table}
                WHERE key = 'variants_data_schema'
                LIMIT 1

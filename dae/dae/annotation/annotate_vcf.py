@@ -5,7 +5,6 @@ import logging
 import os
 import sys
 from contextlib import closing
-from typing import Optional, Union
 
 from pysam import (
     TabixFile,
@@ -38,7 +37,7 @@ logger = logging.getLogger("annotate_vcf")
 
 def update_header(
     variant_file: VariantFile,
-    pipeline: Union[AnnotationPipeline, ReannotationPipeline],
+    pipeline: AnnotationPipeline | ReannotationPipeline,
 ) -> None:
     """Update a variant file's header with annotation pipeline scores."""
     header = variant_file.header
@@ -80,7 +79,7 @@ def update_header(
 def combine(
     input_file_path: str,
     pipeline_config: RawAnnotatorsConfig,
-    grr_definition: Optional[dict],
+    grr_definition: dict | None,
     partfile_paths: list[str],
     output_file_path: str,
 ) -> None:
@@ -133,9 +132,9 @@ class AnnotateVCFTool(AnnotationTool):
     @staticmethod
     def annotate(  # pylint: disable=too-many-locals,too-many-branches
         input_file: str,
-        region: Optional[tuple[str, int, int]],
+        region: tuple[str, int, int] | None,
         pipeline_config: RawAnnotatorsConfig,
-        grr_definition: Optional[dict],
+        grr_definition: dict | None,
         out_file_path: str,
         allow_repeated_attributes: bool = False,
         pipeline_config_old: str | None = None,
@@ -270,7 +269,7 @@ class AnnotateVCFTool(AnnotationTool):
             )
 
 
-def cli(raw_args: Optional[list[str]] = None) -> None:
+def cli(raw_args: list[str] | None = None) -> None:
     tool = AnnotateVCFTool(raw_args)
     tool.run()
 

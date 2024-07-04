@@ -7,7 +7,7 @@ import logging
 import os
 import pathlib
 import tempfile
-from typing import Any, Optional, cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 import yaml
@@ -46,7 +46,7 @@ def load_definition_file(filename: str) -> Any:
 GRR_DEFINITION_FILE_ENV = "GRR_DEFINITION_FILE"
 
 
-def get_default_grr_definition_path() -> Optional[str]:
+def get_default_grr_definition_path() -> str | None:
     """Return a path to default genomic resources repository definition."""
     env_repo_definition_path = os.environ.get(GRR_DEFINITION_FILE_ENV)
     if env_repo_definition_path is not None:
@@ -173,8 +173,8 @@ def build_genomic_resource_group_repository(
 
 
 def build_genomic_resource_repository(
-        definition: Optional[dict] = None,
-        file_name: Optional[str] = None) -> GenomicResourceRepo:
+        definition: dict | None = None,
+        file_name: str | None = None) -> GenomicResourceRepo:
     """Build a GRR using a definition dict or yaml file."""
     if not definition:
         if file_name is not None:

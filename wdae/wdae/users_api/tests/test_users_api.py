@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 from pprint import pprint
-from typing import Optional
 
 import pytest
 from django.test.client import Client
@@ -118,8 +117,8 @@ def test_users_pagination(
     hundred_users: list[WdaeUser],
     page: int, status_code: int,
     length: int,
-    first_email: Optional[str],
-    last_email: Optional[str],
+    first_email: str | None,
+    last_email: str | None,
 ) -> None:
     url = f"/api/v3/users?page={page}"
     response = admin_client.get(url)
@@ -163,7 +162,7 @@ def test_users_search_pagination(
     hundred_users: list[WdaeUser],
     page: int,
     status_code: int,
-    length: Optional[int],
+    length: int | None,
 ) -> None:
     url = f"/api/v3/users?page={page}&search=user"
     response = admin_client.get(url)

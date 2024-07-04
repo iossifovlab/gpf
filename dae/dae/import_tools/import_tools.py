@@ -12,7 +12,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from functools import cache
 from math import ceil
-from typing import Any, Callable, Optional, Union, cast
+from typing import Any, Callable, cast
 
 import yaml
 from box import Box
@@ -75,10 +75,10 @@ class ImportProject:
     # pylint: disable=too-many-public-methods
     def __init__(
             self, import_config: dict[str, Any],
-            base_input_dir: Optional[str],
-            base_config_dir: Optional[str] = None,
-            gpf_instance: Optional[GPFInstance] = None,
-            config_filenames: Optional[list[str]] = None) -> None:
+            base_input_dir: str | None,
+            base_config_dir: str | None = None,
+            gpf_instance: GPFInstance | None = None,
+            config_filenames: list[str] | None = None) -> None:
         """Create a new project from the provided config.
 
         It is best not to call this ctor directly but to use one of the
@@ -104,7 +104,7 @@ class ImportProject:
     def build_from_config(
         import_config: dict[str, Any],
         base_input_dir: str = "",
-        gpf_instance: Optional[GPFInstance] = None,
+        gpf_instance: GPFInstance | None = None,
     ) -> ImportProject:
         """Create a new project from the provided config.
 
@@ -126,8 +126,8 @@ class ImportProject:
 
     @staticmethod
     def build_from_file(
-            import_filename: Union[str, os.PathLike],
-            gpf_instance: Optional[GPFInstance] = None) -> ImportProject:
+            import_filename: str | os.PathLike,
+            gpf_instance: GPFInstance | None = None) -> ImportProject:
         """Create a new project from the provided config filename.
 
         The file is first parsed, validated and normalized. The path to the
@@ -195,7 +195,7 @@ class ImportProject:
         return False
 
     def get_variant_loader_chromosomes(
-            self, loader_type: Optional[str] = None) -> list[str]:
+            self, loader_type: str | None = None) -> list[str]:
         """Collect all chromosomes available in input files."""
         if loader_type is None:
             loader_types = self.get_variant_loader_types()
@@ -214,7 +214,7 @@ class ImportProject:
         ]
 
     def get_variant_loader_chrom_lens(
-            self, loader_type: Optional[str] = None) -> dict[str, int]:
+            self, loader_type: str | None = None) -> dict[str, int]:
         """Collect all chromosomes and their length available in input files."""
         all_chrom_lens = dict(
             self.get_gpf_instance().reference_genome.get_all_chrom_lengths())
@@ -232,8 +232,8 @@ class ImportProject:
 
     def get_variant_loader(
         self,
-        bucket: Optional[Bucket] = None, loader_type: Optional[str] = None,
-        reference_genome: Optional[ReferenceGenome] = None,
+        bucket: Bucket | None = None, loader_type: str | None = None,
+        reference_genome: ReferenceGenome | None = None,
     ) -> VariantsLoader:
         """Get the appropriate variant loader for the specified bucket."""
         if bucket is None and loader_type is None:
@@ -256,7 +256,7 @@ class ImportProject:
 
     def get_variant_params(
         self, loader_type: str,
-    ) -> tuple[Union[str, list[str]], dict[str, Any]]:
+    ) -> tuple[str | list[str], dict[str, Any]]:
         """Return variant loader filenames and params."""
         assert loader_type in self.import_config["input"], \
             f"No input config for loader {loader_type}"
@@ -281,7 +281,7 @@ class ImportProject:
 
     def _get_variant_loader(
         self, loader_type: str,
-        reference_genome: Optional[ReferenceGenome] = None,
+        reference_genome: ReferenceGenome | None = None,
     ) -> VariantsLoader:
         assert loader_type in self.import_config["input"], \
             f"No input config for loader {loader_type}"
@@ -366,7 +366,7 @@ class ImportProject:
     def study_id(self) -> str:
         return cast(str, self.import_config["id"])
 
-    def get_processing_parquet_dataset_dir(self) -> Optional[str]:
+    def get_processing_parquet_dataset_dir(self) -> str | None:
         """Return processing parquet dataset dir if configured and exists."""
         processing_config = self.import_config.get("processing_config", {})
         parquet_dataset_dir = processing_config.get("parquet_dataset_dir")
@@ -539,19 +539,19 @@ class ImportProject:
             bucket_index = default_bucket_index + index
             yield Bucket(loader_type, region_bin, regions, bucket_index)
 
-    def _get_processing_region_length(self, loader_type: str) -> Optional[int]:
+    def _get_processing_region_length(self, loader_type: str) -> int | None:
         processing_config = self._get_loader_processing_config(loader_type)
         if isinstance(processing_config, str):
             return None
         return cast(int, processing_config.get("region_length", sys.maxsize))
 
     def _get_loader_target_chromosomes(
-            self, loader_type: str) -> Optional[list[str]]:
+            self, loader_type: str) -> list[str] | None:
         processing_config = self._get_loader_processing_config(loader_type)
         if isinstance(processing_config, str):
             return None
         return cast(
-            Optional[list[str]], processing_config.get("chromosomes", None))
+            list[str] | None, processing_config.get("chromosomes", None))
 
     def _get_loader_processing_config(
             self, loader_type: str) -> dict[str, Any]:
@@ -720,7 +720,7 @@ class ImportConfigNormalizer:
                 cls._map_for_key(val, key, func)
 
     @staticmethod
-    def _int_shorthand(obj: Union[str, int]) -> int:
+    def _int_shorthand(obj: str | int) -> int:
         if isinstance(obj, int):
             return obj
         assert isinstance(obj, str)
@@ -735,7 +735,7 @@ class ImportConfigNormalizer:
         return int(val[:-1]) * unit_suffixes[val[-1].upper()]
 
     @classmethod
-    def _normalize_chrom_list(cls, obj: Union[str, list[str]]) -> list[str]:
+    def _normalize_chrom_list(cls, obj: str | list[str]) -> list[str]:
         if isinstance(obj, list):
             return cls._expand_chromosomes(obj)
         assert isinstance(obj, str)
@@ -846,7 +846,7 @@ def save_study_config(
 
 def construct_import_annotation_pipeline_config(
     gpf_instance: GPFInstance,
-    annotation_configfile: Optional[str] = None,
+    annotation_configfile: str | None = None,
 ) -> list[dict]:
     """Construct annotation pipeline config for importing data."""
     if annotation_configfile is not None:
@@ -858,7 +858,7 @@ def construct_import_annotation_pipeline_config(
 
 def construct_import_annotation_pipeline(
         gpf_instance: GPFInstance,
-        annotation_configfile: Optional[str] = None) -> AnnotationPipeline:
+        annotation_configfile: str | None = None) -> AnnotationPipeline:
     """Construct annotation pipeline for importing data."""
     pipeline_config = construct_import_annotation_pipeline_config(
         gpf_instance, annotation_configfile)
@@ -928,7 +928,7 @@ class MakefilePartitionHelper:
 
     def generate_variants_targets(
             self, target_chromosomes: list[str],
-            mode: Optional[str] = None) -> dict[str, list]:
+            mode: str | None = None) -> dict[str, list]:
         """Produce variants targets."""
         if len(self.partition_descriptor.chromosomes) == 0:
             return {"none": [""]}

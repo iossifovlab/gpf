@@ -1,7 +1,7 @@
 """Provides class for handling of remote studies."""
 
 import logging
-from typing import Dict, Optional
+from typing import Dict
 
 from box import Box
 from remote.rest_api_client import RESTClient, RESTClientRequestError
@@ -42,10 +42,10 @@ class RemoteStudyDB:
             self.remote_study_clients[study_id] = rest_client
             self.remote_genotype_data[study_id] = rgd
 
-    def get_genotype_data(self, study_id: str) -> Optional[RemoteGenotypeData]:
+    def get_genotype_data(self, study_id: str) -> RemoteGenotypeData | None:
         return self.remote_genotype_data.get(study_id)
 
-    def get_genotype_data_config(self, study_id: str) -> Optional[Box]:
+    def get_genotype_data_config(self, study_id: str) -> Box | None:
         rgd = self.remote_genotype_data.get(study_id)
         if rgd is not None:
             return rgd.config

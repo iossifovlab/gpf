@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
 
 import pytest
 
@@ -96,7 +95,7 @@ def test_query_by_person_ids(
     imported_study: GenotypeData,
     begin: int,
     end: int,
-    person_ids: Optional[list[str]],
+    person_ids: list[str] | None,
     count: int,
 ) -> None:
     region = Region("chrA", begin, end)

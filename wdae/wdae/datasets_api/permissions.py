@@ -1,6 +1,6 @@
 import hashlib
 import logging
-from typing import Any, List, Optional, Union, cast
+from typing import Any, List, cast
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -70,7 +70,7 @@ class IsDatasetAllowed(permissions.BasePermission):
 
 def get_wdae_dataset(
     dataset: str,
-) -> Optional[Dataset]:
+) -> Dataset | None:
     """
     Return wdae dataset object.
 
@@ -193,7 +193,7 @@ def _user_has_permission_down(
 
 
 def check_permissions(
-    instance_id: str, dataset: Dataset, groups: Union[list[str], set[str]],
+    instance_id: str, dataset: Dataset, groups: list[str] | set[str],
 ) -> bool:
     """
     Check whether a set of groups has access to a dataset.
@@ -228,7 +228,7 @@ def check_permissions(
 
 
 def check_permissions_up(
-    instance_id: str, dataset: Dataset, groups: Union[list[str], set[str]],
+    instance_id: str, dataset: Dataset, groups: list[str] | set[str],
 ) -> bool:
     """
     Check whether a set of groups has access to a dataset only through parents.
@@ -330,7 +330,7 @@ def get_allowed_genotype_data(
     return set(allowed_genotype_data)
 
 
-def get_dataset_info(dataset_id: str) -> Optional[dict[str, Any]]:
+def get_dataset_info(dataset_id: str) -> dict[str, Any] | None:
     """Return a dictionary describing a Dataset object."""
     dataset = get_wdae_dataset(dataset_id)
     if dataset is None:
@@ -402,7 +402,7 @@ def get_user_groups(user: User) -> set[str]:
     return {g.name for g in user.groups.all()}
 
 
-def get_dataset_groups(dataset: Union[str, Dataset]) -> set[str]:
+def get_dataset_groups(dataset: str | Dataset) -> set[str]:
     # pylint: disable=no-member
     if not isinstance(dataset, Dataset):
         dataset = Dataset.objects.get(dataset_id=force_str(dataset))

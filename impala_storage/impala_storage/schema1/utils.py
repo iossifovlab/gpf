@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 from dae.parquet.partition_descriptor import PartitionDescriptor
 
@@ -16,7 +15,7 @@ def generate_file_access_glob(
 
 def variants_filename_basedir(
     partition_descriptor: PartitionDescriptor, filename: str,
-) -> Optional[str]:
+) -> str | None:
     """Extract the variants basedir from filename."""
     partition = partition_descriptor.dataset_family_partition()
     regex_parts = [

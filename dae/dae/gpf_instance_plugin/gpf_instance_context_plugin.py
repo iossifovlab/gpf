@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from dae.genomic_resources.genomic_context import (
     GC_GENE_MODELS_KEY,
@@ -25,7 +25,7 @@ class GPFInstanceGenomicContext(GenomicContext):
 
         self.gpf_instance = gpf_instance
 
-    def get_context_object(self, key: str) -> Optional[Any]:
+    def get_context_object(self, key: str) -> Any | None:
         if key == GC_GENE_MODELS_KEY:
             return self.gpf_instance.gene_models
         if key == GC_REFERENCE_GENOME_KEY:
@@ -54,7 +54,7 @@ class GPFInstanceGenomicContextProvider(SimpleGenomicContextProvider):
     """Defines GPFInstance genomic context provider."""
 
     @staticmethod
-    def context_builder() -> Optional[GenomicContext]:
+    def context_builder() -> GenomicContext | None:
         """Build GPF instance genomic context."""
         try:
             # pylint: disable=import-outside-toplevel
@@ -89,7 +89,7 @@ def init_test_gpf_instance_genomic_context_plugin(
         """Defines GPFInstance genomic context provider."""
 
         @staticmethod
-        def context_builder() -> Optional[GenomicContext]:
+        def context_builder() -> GenomicContext | None:
             """Build GPF instance genomic context."""
             try:
                 return GPFInstanceGenomicContext(gpf_instance)

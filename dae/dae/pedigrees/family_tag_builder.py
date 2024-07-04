@@ -1,26 +1,26 @@
 """Helper class for tagging families."""
 from collections.abc import Iterable
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 from dae.pedigrees.family import Family, FamilyTag, Person
 from dae.variants.attributes import Role, Sex, Status
 
 
-def _get_mom(family: Family) -> Optional[Person]:
+def _get_mom(family: Family) -> Person | None:
     for person in family.members_in_order:
         if person.role == Role.mom:
             return person
     return None
 
 
-def _get_dad(family: Family) -> Optional[Person]:
+def _get_dad(family: Family) -> Person | None:
     for person in family.members_in_order:
         if person.role == Role.dad:
             return person
     return None
 
 
-def _get_prb(family: Family) -> Optional[Person]:
+def _get_prb(family: Family) -> Person | None:
     for person in family.members_in_order:
         if person.role == Role.prb:
             return person

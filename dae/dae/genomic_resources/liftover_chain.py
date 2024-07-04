@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from pyliftover import LiftOver  # type: ignore
 
@@ -40,7 +40,7 @@ class LiftoverChain(ResourceConfigValidationMixin):
             self.chrom_target_coordinates = chrom_prefix.get(
                 "target_coordinates", None)
 
-        self.liftover: Optional[LiftOver] = None
+        self.liftover: LiftOver | None = None
 
     def close(self) -> None:
         del self.liftover
@@ -61,7 +61,7 @@ class LiftoverChain(ResourceConfigValidationMixin):
         return {self.resource.get_config()["filename"]}
 
     @staticmethod
-    def map_chromosome(chrom: str, mapping: Optional[dict[str, str]]) -> str:
+    def map_chromosome(chrom: str, mapping: dict[str, str] | None) -> str:
         """Map a chromosome (contig) name according to configuration."""
         if not mapping:
             return chrom
@@ -77,7 +77,7 @@ class LiftoverChain(ResourceConfigValidationMixin):
     def convert_coordinate(
         self, chrom: str,
         pos: int,
-    ) -> Optional[tuple[str, int, str, int]]:
+    ) -> tuple[str, int, str, int] | None:
         """Lift over a genomic coordinate."""
         chrom = self.map_chromosome(chrom, self.chrom_variant_coordinates)
         assert self.liftover is not None

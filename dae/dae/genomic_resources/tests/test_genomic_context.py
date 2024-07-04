@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import argparse
 import os
-from typing import Callable, Optional
+from typing import Callable
 
 import pytest
 import pytest_mock
@@ -57,7 +57,7 @@ def test_get_reference_genome_ok(
 ) -> None:
     # Given
     res = grr_fixture.get_resource("hg38/GRCh38-hg38/genome")
-    genome: Optional[ReferenceGenome] = \
+    genome: ReferenceGenome | None = \
         build_reference_genome_from_resource(res)
 
     context = SimpleGenomicContext(
@@ -106,7 +106,7 @@ def test_get_reference_genome_bad() -> None:
 def test_get_gene_models_ok(grr_fixture: GenomicResourceProtocolRepo) -> None:
     res = grr_fixture.get_resource(
         "hg38/GRCh38-hg38/gene_models/refSeq_20200330")
-    gene_models: Optional[GeneModels] = \
+    gene_models: GeneModels | None = \
         build_gene_models_from_resource(res).load()
 
     context = SimpleGenomicContext(

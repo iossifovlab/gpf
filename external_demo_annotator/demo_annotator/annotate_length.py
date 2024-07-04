@@ -2,12 +2,11 @@ import argparse
 import csv
 import sys
 from pathlib import Path
-from typing import Optional
 
 from dae.annotation.annotatable import Annotatable
 
 
-def annotate_length_cli(raw_args: Optional[list[str]] = None):
+def annotate_length_cli(raw_args: list[str] | None = None):
     """Dummy tool which outputs annotatable length."""
     if raw_args is None:
         raw_args = sys.argv[1:]

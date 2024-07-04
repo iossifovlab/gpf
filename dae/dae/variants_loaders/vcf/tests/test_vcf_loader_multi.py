@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from typing import Union
 
 import numpy as np
 import pytest
@@ -228,8 +227,8 @@ def multivcf_missing2(tmp_path_factory: pytest.TempPathFactory) -> str:
     "fill_mode, fill_value", [["reference", 0], ["unknown", -1]],
 )
 def test_multivcf_loader_fill_missing(
-    fill_mode: list[Union[str, int]],
-    fill_value: list[Union[str, int]],
+    fill_mode: list[str | int],
+    fill_value: list[str | int],
     multivcf_ped: str,
     multivcf_missing1: str,
     multivcf_missing2: str,

@@ -1,6 +1,6 @@
 import logging
 from collections import Counter
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -82,8 +82,8 @@ class PhenoToolHelper:
         return res
 
     def genotype_data_persons(
-        self, family_ids: Optional[list[str]] = None,
-        roles: Optional[list[Role]] = None,
+        self, family_ids: list[str] | None = None,
+        roles: list[Role] | None = None,
     ) -> set[str]:
         """Collect person ids from genotype data."""
         if family_ids is None:
@@ -166,9 +166,9 @@ class PhenoTool:
     def __init__(
         self, phenotype_data: PhenotypeData,
         measure_id: str,
-        person_ids: Optional[list[str]] = None,
-        family_ids: Optional[list[str]] = None,
-        normalize_by: Optional[list[dict[str, str]]] = None,
+        person_ids: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        normalize_by: list[dict[str, str]] | None = None,
     ) -> None:
         if normalize_by is None:
             normalize_by = []
@@ -219,7 +219,7 @@ class PhenoTool:
 
     def _get_normalize_measure_id(
         self, normalize_measure: dict[str, str],
-    ) -> Optional[str]:
+    ) -> str | None:
         assert isinstance(normalize_measure, dict)
         assert "measure_name" in normalize_measure
         assert "instrument_name" in normalize_measure
@@ -262,7 +262,7 @@ class PhenoTool:
     @staticmethod
     def _normalize_df(
         df: pd.DataFrame, measure_id: str,
-        normalize_by: Optional[list[str]] = None,
+        normalize_by: list[str] | None = None,
     ) -> pd.DataFrame:
         if normalize_by is None:
             normalize_by = []
@@ -310,7 +310,7 @@ class PhenoTool:
 
     @classmethod
     def _calc_stats(
-        cls, data: pd.DataFrame, sex: Optional[Sex],
+        cls, data: pd.DataFrame, sex: Sex | None,
     ) -> PhenoResult:
         if len(data) == 0:
             result = PhenoResult()
@@ -357,7 +357,7 @@ class PhenoTool:
     def calc(
         self, variants: Counter,
         sex_split: bool = False,
-    ) -> Union[dict[str, PhenoResult], PhenoResult]:
+    ) -> dict[str, PhenoResult] | PhenoResult:
         """Perform calculation.
 
         `variants` -- an instance of Counter, matching personIds to

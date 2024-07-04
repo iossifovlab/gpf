@@ -3,7 +3,7 @@ import logging
 import sys
 from argparse import ArgumentParser
 from collections.abc import Iterator
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AnnotationEffect
@@ -86,7 +86,7 @@ class EffectAnnotatorBuilder:
 
     def __init__(self, args):
         self.args = args
-        self._gc: Optional[GenomicContext] = None
+        self._gc: GenomicContext | None = None
 
     def get_genomic_context(self) -> GenomicContext:
         if not self._gc:
@@ -94,7 +94,7 @@ class EffectAnnotatorBuilder:
         return self._gc
 
     def get_grr(self) -> GenomicResourceRepo:
-        grr: Optional[GenomicResourceRepo] = None
+        grr: GenomicResourceRepo | None = None
 
         if self.args.genomic_repository_config_filename:
             grr = build_genomic_resource_repository(

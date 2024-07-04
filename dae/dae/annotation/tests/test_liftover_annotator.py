@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
-from typing import Optional, cast
+from typing import cast
 
 import pytest
 
@@ -34,7 +34,7 @@ def test_pipeline_liftover(
 def test_liftover_annotator_denovo_db_examples(
     gpf_instance_2013: GPFInstance,
     chrom: str, pos: int, ref: str, alt: str,
-    expected: Optional[VCFAllele],
+    expected: VCFAllele | None,
 ) -> None:
 
     pipeline_config = textwrap.dedent("""

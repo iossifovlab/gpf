@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, cast
+from typing import cast
 
 import numpy as np
 import yaml
@@ -19,7 +19,7 @@ class MinMaxValue(Statistic):
         self.min = min_value
         self.max = max_value
 
-    def add_value(self, value: Optional[float]) -> None:
+    def add_value(self, value: float | None) -> None:
         if value is None:
             return
         self.min = min(value, self.min)

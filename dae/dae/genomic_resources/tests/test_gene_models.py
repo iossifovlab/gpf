@@ -3,7 +3,7 @@ import gzip
 import os
 import pathlib
 import textwrap
-from typing import Callable, Optional
+from typing import Callable
 
 import pytest
 
@@ -267,7 +267,7 @@ def test_load_gene_models_from_file(
 def test_infer_gene_models(
     fixture_dirname: Callable,
     filename: str,
-    file_format: Optional[str],
+    file_format: str | None,
     expected: str,
 ) -> None:
 

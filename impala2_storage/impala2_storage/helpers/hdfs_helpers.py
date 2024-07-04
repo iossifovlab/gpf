@@ -1,7 +1,7 @@
 import logging
 import os
 import tempfile
-from typing import Optional, cast
+from typing import cast
 
 from fsspec.implementations.arrow import ArrowFSWrapper
 from pyarrow import fs
@@ -15,7 +15,7 @@ class HdfsHelpers:
     def __init__(
         self, hdfs_host: str,
         hdfs_port: int,
-        replication: Optional[int] = None,
+        replication: int | None = None,
     ) -> None:
         assert hdfs_host
         assert hdfs_port

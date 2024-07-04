@@ -4,7 +4,7 @@ import logging
 import pathlib
 import sys
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from typing import Optional, cast
+from typing import cast
 
 import pandas as pd
 from sqlalchemy.sql import insert, not_, select
@@ -50,7 +50,7 @@ def measures_cli_parser() -> ArgumentParser:
 
 
 def main(  # pylint: disable=too-many-locals
-    argv: Optional[list[str]] = None,
+    argv: list[str] | None = None,
 ) -> None:
     """Run the pheno measure tables creation procedure."""
     if argv is None:

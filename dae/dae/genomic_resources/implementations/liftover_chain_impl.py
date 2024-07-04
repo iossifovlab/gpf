@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import logging
 import textwrap
-from typing import Any, Union
+from typing import Any
 
 from jinja2 import Template
 from markdown2 import markdown
@@ -102,5 +102,5 @@ class LiftoverChainImplementation(
 
     def add_statistics_build_tasks(
             self, task_graph: TaskGraph,
-            **kwargs: Union[str, None]) -> list[Task]:
+            **kwargs: str | None) -> list[Task]:
         return []

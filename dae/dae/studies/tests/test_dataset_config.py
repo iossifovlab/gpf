@@ -1,5 +1,4 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
-from typing import Optional, Union
 
 import pytest
 from box import Box
@@ -28,7 +27,7 @@ def test_genotype_data_group_configs_simple(
 def test_genotype_data_group_quads_composite_dict(
     quads_composite_genotype_data_group_config: Box,
     option_name: str,
-    expected_value: Optional[Union[list[str], str]],
+    expected_value: list[str] | str | None,
 ) -> None:
 
     assert quads_composite_genotype_data_group_config is not None
@@ -52,7 +51,7 @@ def test_genotype_data_group_quads_composite_dict(
 def test_genotype_data_group_quads_composite_attr(
     quads_composite_genotype_data_group_config: Box,
     option_name: str,
-    expected_value: Optional[Union[list[str], str, bool]],
+    expected_value: list[str] | str | bool | None,
 ) -> None:
 
     assert quads_composite_genotype_data_group_config is not None

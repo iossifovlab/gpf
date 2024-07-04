@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from dae.genomic_resources.gene_models import GeneModels
 from dae.pedigrees.families_data import FamiliesData
@@ -25,10 +25,10 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         pedigree_table: str,
         family_variant_schema: TableSchema,
         summary_allele_schema: TableSchema,
-        table_properties: Optional[dict],
+        table_properties: dict | None,
         pedigree_schema: TableSchema,
         families: FamiliesData,
-        gene_models: Optional[GeneModels] = None,
+        gene_models: GeneModels | None = None,
         do_join_pedigree: bool = False,
         do_join_allele_in_members: bool = False,
     ):
@@ -67,8 +67,8 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         return columns
 
     def _build_join(
-        self, genes: Optional[list[str]] = None,
-        effect_types: Optional[list[str]] = None,
+        self, genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
     ) -> None:
 
         if self.do_join_allele_in_members or self.do_join_pedigree:
@@ -101,8 +101,7 @@ class FamilyQueryBuilder(BaseQueryBuilder):
 
     def _build_where_pedigree_fields(
         self,
-        pedigree_fields: Optional[  # type: ignore
-            tuple[list[dict[str, str]], list[dict[str, str]]]],
+        pedigree_fields: tuple[list[dict[str, str]], list[dict[str, str]]] | None,
     ) -> str:
         if not pedigree_fields:
             return ""

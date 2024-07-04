@@ -4,7 +4,7 @@ import logging
 import os
 from collections.abc import Generator
 from types import TracebackType
-from typing import IO, Any, Optional, cast
+from typing import IO, Any, cast
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.fsspec_protocol import build_local_resource
@@ -29,7 +29,7 @@ class ReferenceGenome(
                 f"wrong type of resource passed: {resource.get_type()}")
         self._index: dict[str, Any] = {}
         self._chromosomes: list[str] = []
-        self._sequence: Optional[IO] = None
+        self._sequence: IO | None = None
 
         self.pars: dict = self._parse_pars(resource.get_config())
 
@@ -125,9 +125,9 @@ class ReferenceGenome(
 
     def __exit__(
         self,
-        exc_type: Optional[type[BaseException]],
-        exc_value: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_tb: TracebackType | None,
     ) -> None:
         if exc_type is not None:
             logger.error(
@@ -159,7 +159,7 @@ class ReferenceGenome(
             for key, value in self._index.items()]
 
     def split_into_regions(
-        self, region_size: int, chromosome: Optional[str] = None,
+        self, region_size: int, chromosome: str | None = None,
     ) -> Generator[Region, None, None]:
         """
         Split the reference genome into regions and yield them.
@@ -184,7 +184,7 @@ class ReferenceGenome(
             yield Region(chrom, i, None)
 
     def fetch(
-        self, chrom: str, start: int, stop: Optional[int],
+        self, chrom: str, start: int, stop: int | None,
         buffer_size: int = 512,
     ) -> Generator[str, None, None]:
         """

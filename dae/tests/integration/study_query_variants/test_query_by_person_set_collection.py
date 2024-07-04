@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Optional
 
 import pytest
 
@@ -117,7 +116,7 @@ chrA   3   .  A   C     .    .      .    GT     0/0  0/1  0/0 1/1 0/1  0/0 0/0
 )
 def test_query_by_person_ids(
     imported_study: GenotypeData,
-    person_ids: Optional[list[str]],
+    person_ids: list[str] | None,
     count: int,
 ) -> None:
     vs = list(imported_study.query_variants(
@@ -160,7 +159,7 @@ def test_study_build_person_set_collection(
 )
 def test_query_by_person_set_coolection(
     imported_study: GenotypeData,
-    person_set_collection: Optional[tuple[str, list[str]]],
+    person_set_collection: tuple[str, list[str]] | None,
     count: int,
 ) -> None:
     vs = list(imported_study.query_variants(

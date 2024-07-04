@@ -6,7 +6,7 @@ import logging
 import os
 from functools import cached_property
 from pathlib import Path
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 import yaml
 from box import Box
@@ -46,9 +46,9 @@ class GPFInstance:
     # pylint: disable=too-many-public-methods
     @staticmethod
     def _build_gpf_config(
-        config_filename: Optional[Union[str, Path]] = None,
+        config_filename: str | Path | None = None,
     ) -> tuple[Box, Path]:
-        dae_dir: Optional[Path]
+        dae_dir: Path | None
         if config_filename is not None:
             config_filename = Path(config_filename)
             dae_dir = config_filename.parent
@@ -71,7 +71,7 @@ class GPFInstance:
 
     @staticmethod
     def build(
-            config_filename: Optional[Union[str, Path]] = None,
+            config_filename: str | Path | None = None,
             **kwargs: Any) -> GPFInstance:
         """Construct and return a GPF instance.
 
@@ -88,7 +88,7 @@ class GPFInstance:
     def __init__(
             self,
             dae_config: Box,
-            dae_dir: Union[str, Path],
+            dae_dir: str | Path,
             **kwargs: dict[str, Any]):
         assert dae_dir is not None
 
@@ -107,7 +107,7 @@ class GPFInstance:
             GeneModels,
             kwargs.get("gene_models"),
         )
-        self._annotation_pipeline: Optional[AnnotationPipeline] = None
+        self._annotation_pipeline: AnnotationPipeline | None = None
 
     def load(self) -> GPFInstance:
         """Load all GPF instance attributes."""
@@ -175,7 +175,7 @@ class GPFInstance:
 
     def get_transcript_models(
         self, gene_symbol: str,
-    ) -> tuple[Optional[str], Optional[list[TranscriptModel]]]:
+    ) -> tuple[str | None, list[TranscriptModel] | None]:
         """Get gene model by gene symbol."""
         gene_symbol = gene_symbol.lower()
         gene_models = self.gene_models.gene_models
@@ -277,7 +277,7 @@ class GPFInstance:
         self.denovo_gene_sets_db.reload()
 
     @cached_property
-    def _gene_profile_config(self) -> Optional[Box]:
+    def _gene_profile_config(self) -> Box | None:
         gp_config = self.dae_config.gene_profiles_config
         config_filename = None
 
@@ -346,7 +346,7 @@ class GPFInstance:
             list[GenotypeData], genotype_studies + genotype_data_groups,
         )
 
-    def get_genotype_data_config(self, genotype_data_id: str) -> Optional[Box]:
+    def get_genotype_data_config(self, genotype_data_id: str) -> Box | None:
         config = self._variants_db.get_genotype_study_config(genotype_data_id)
         if config is not None:
             return config
@@ -379,7 +379,7 @@ class GPFInstance:
 
     def get_phenotype_data_config(
         self, phenotype_data_id: str,
-    ) -> Optional[Box]:
+    ) -> Box | None:
         return self._pheno_registry.get_phenotype_data_config(
             phenotype_data_id)
 
@@ -404,7 +404,7 @@ class GPFInstance:
         return cast(list[GeneScoreDesc], self.gene_scores_db.get_scores())
 
     # Common reports
-    def get_common_report(self, study_id: str) -> Optional[CommonReport]:
+    def get_common_report(self, study_id: str) -> CommonReport | None:
         """Load and return common report (dataset statistics) for a study."""
         study = self.get_genotype_data(study_id)
         if study is None or study.is_remote:
@@ -493,9 +493,9 @@ class GPFInstance:
     def query_gp_statistics(
         self,
         page: int,
-        symbol_like: Optional[str] = None,
-        sort_by: Optional[str] = None,
-        order: Optional[str] = None,
+        symbol_like: str | None = None,
+        sort_by: str | None = None,
+        order: str | None = None,
     ) -> list[GPStatistic]:
         """Query AGR statistics and return results."""
         rows = self._gene_profile_db.query_gps(
@@ -510,7 +510,7 @@ class GPFInstance:
     def list_gp_gene_symbols(
         self,
         page: int,
-        symbol_like: Optional[str] = None,
+        symbol_like: str | None = None,
     ) -> list[str]:
         """Query AGR statistics and return results."""
         return self._gene_profile_db.list_symbols(

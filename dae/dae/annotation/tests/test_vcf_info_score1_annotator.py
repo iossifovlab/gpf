@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
-from typing import Optional, Union
 
 import pytest
 
@@ -111,7 +110,7 @@ def test_vcf_info_config_annotation(
 ])
 def test_vcf_info_annotator(
     vcf_allele: VCFAllele,
-    expected: dict[str, Optional[Union[int, str]]],
+    expected: dict[str, int | str | None],
     score1_repo: GenomicResourceProtocolRepo,
 ) -> None:
 

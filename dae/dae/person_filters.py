@@ -1,5 +1,5 @@
 from collections.abc import Collection
-from typing import List, Optional, Set
+from typing import List, Set
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,7 @@ class PersonFilter:
         raise NotImplementedError
 
     def apply(
-        self, families: FamiliesData, roles: Optional[List[str]] = None,
+        self, families: FamiliesData, roles: List[str] | None = None,
     ) -> Set[str]:
         raise NotImplementedError
 
@@ -29,7 +29,7 @@ class CriteriaFilter(PersonFilter):  # pylint: disable=abstract-method
         self.values: Collection = values
 
     def apply(
-        self, families: FamiliesData, roles: Optional[List[str]] = None,
+        self, families: FamiliesData, roles: List[str] | None = None,
     ) -> Set[str]:
         """Return a set of person ids for individuals matching the filter."""
         ped_df = families.ped_df.copy()
@@ -88,7 +88,7 @@ class PhenoFilter(CriteriaFilter):  # pylint: disable=abstract-method
         )
 
     def apply(
-        self, families: FamiliesData, roles: Optional[List[str]] = None,
+        self, families: FamiliesData, roles: List[str] | None = None,
     ) -> Set[str]:
         ids = set()
         for person_id in self.measure_df["person_id"]:

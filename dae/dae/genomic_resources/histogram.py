@@ -8,7 +8,7 @@ import copy
 import logging
 from collections import Counter
 from dataclasses import dataclass
-from typing import IO, Any, Optional, Union
+from typing import IO, Any
 
 import numpy as np
 import yaml
@@ -32,11 +32,11 @@ class HistogramError(BaseException):
 class NumberHistogramConfig:
     """Configuration class for number histograms."""
 
-    view_range: tuple[Optional[float], Optional[float]]
+    view_range: tuple[float | None, float | None]
     number_of_bins: int = 30
     x_log_scale: bool = False
     y_log_scale: bool = False
-    x_min_log: Optional[float] = None
+    x_min_log: float | None = None
 
     def has_view_range(self) -> bool:
         return self.view_range[0] is not None and \
@@ -85,11 +85,11 @@ class NumberHistogramConfig:
 
     @staticmethod
     def default_config(
-        min_max: Optional[MinMaxValue],
+        min_max: MinMaxValue | None,
     ) -> NumberHistogramConfig:
         """Build a number histogram config from a parsed yaml file."""
         if min_max is None:
-            view_range: tuple[Optional[float], Optional[float]] = (None, None)
+            view_range: tuple[float | None, float | None] = (None, None)
         elif min_max.min == min_max.max:
             view_range = (min_max.min, min_max.min + 1.0)
         else:
@@ -105,7 +105,7 @@ class NumberHistogramConfig:
 class CategoricalHistogramConfig:
     """Configuration class for categorical histograms."""
 
-    value_order: Optional[list[str]] = None
+    value_order: list[str] | None = None
     y_log_scale: bool = False
 
     def to_dict(self) -> dict[str, Any]:
@@ -176,8 +176,8 @@ class NumberHistogram(Statistic):
 
     def __init__(
             self, config: NumberHistogramConfig,
-            bins: Optional[np.ndarray] = None,
-            bars: Optional[np.ndarray] = None):
+            bins: np.ndarray | None = None,
+            bars: np.ndarray | None = None):
         super().__init__("histogram", "Collects values for histogram.")
         logger.debug("number histogram config: %s", config)
 
@@ -274,7 +274,7 @@ class NumberHistogram(Statistic):
     def values_domain(self) -> str:
         return f"[{self.min_value:0.3f}, {self.max_value:0.3f}]"
 
-    def add_value(self, value: Optional[float]) -> None:
+    def add_value(self, value: float | None) -> None:
         """Add value to the histogram."""
         if value is None or np.isnan(value):
             return
@@ -428,7 +428,7 @@ class NullHistogram(Statistic):
 
     type = "null_histogram"
 
-    def __init__(self, config: Optional[NullHistogramConfig]) -> None:
+    def __init__(self, config: NullHistogramConfig | None) -> None:
         super().__init__(
             "null_histogram", "Used for invalid/annulled histograms",
         )
@@ -489,7 +489,7 @@ class CategoricalHistogram(Statistic):
     def __init__(
         self,
         config: CategoricalHistogramConfig,
-        values: Optional[dict[str, int]] = None,
+        values: dict[str, int] | None = None,
     ):
         super().__init__(
             "categorical_histogram",
@@ -502,9 +502,9 @@ class CategoricalHistogram(Statistic):
             self._values = Counter()
 
         self.y_log_scale = config.y_log_scale
-        self._bars: Optional[dict[str, int]] = None
+        self._bars: dict[str, int] | None = None
 
-    def add_value(self, value: Optional[str]) -> None:
+    def add_value(self, value: str | None) -> None:
         """Add a value to the categorical histogram.
 
         Returns true if successfully added and false if failed.
@@ -618,7 +618,7 @@ class CategoricalHistogram(Statistic):
 
 
 def build_histogram_config(
-        config: Optional[dict[str, Any]]) -> Optional[HistogramConfig]:
+        config: dict[str, Any] | None) -> HistogramConfig | None:
     """Create histogram config form configuration dict."""
     if config is None:
         return None
@@ -650,9 +650,7 @@ def build_histogram_config(
     return NullHistogramConfig(f"Invalid histogram configuration {config}")
 
 
-def build_default_histogram_conf(value_type: str, **kwargs: Any) -> Union[
-    NumberHistogramConfig, CategoricalHistogramConfig, NullHistogramConfig,
-]:
+def build_default_histogram_conf(value_type: str, **kwargs: Any) -> NumberHistogramConfig | CategoricalHistogramConfig | NullHistogramConfig:
     """Build default histogram config for given value type."""
     if value_type in ["int", "float"]:
         min_max = kwargs.get("min_max")
@@ -728,6 +726,6 @@ def load_histogram(
         ))
 
 
-HistogramConfig = Union[
-    NullHistogramConfig, CategoricalHistogramConfig, NumberHistogramConfig]
-Histogram = Union[NullHistogram, CategoricalHistogram, NumberHistogram]
+HistogramConfig = \
+    NullHistogramConfig | CategoricalHistogramConfig | NumberHistogramConfig
+Histogram = NullHistogram | CategoricalHistogram | NumberHistogram

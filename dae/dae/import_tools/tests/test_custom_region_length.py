@@ -4,7 +4,6 @@ import os
 import pathlib
 from copy import deepcopy
 from os.path import join
-from typing import Optional
 
 import pyarrow.parquet as pq
 import pytest
@@ -262,7 +261,7 @@ _denovo_multi_chrom_config = {
 
 @pytest.mark.parametrize("add_chrom_prefix", [None, "chr"])
 def test_single_bucket_generation(
-    add_chrom_prefix: Optional[str],
+    add_chrom_prefix: str | None,
     gpf_fixture: GPFInstance,
 ) -> None:
     import_config = deepcopy(_denovo_multi_chrom_config)

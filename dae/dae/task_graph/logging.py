@@ -1,7 +1,7 @@
 import logging
 import re
 import uuid
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from dae.utils import fs_utils
 
@@ -51,7 +51,7 @@ def ensure_log_dir(**kwargs: Any) -> str:
 
 
 def configure_task_logging(
-    log_dir: Optional[str], task_id: str, verbosity: int,
+    log_dir: str | None, task_id: str, verbosity: int,
 ) -> logging.Handler:
     """Configure and return task logging hadnler."""
     if log_dir is None:

@@ -1,6 +1,5 @@
 import argparse
 import logging
-from typing import Optional
 
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.gpf_instance import GPFInstance
@@ -10,8 +9,8 @@ logger = logging.getLogger("enrichment_cache_builder")
 
 
 def cli(
-    argv: Optional[list[str]] = None,
-    gpf_instance: Optional[GPFInstance] = None,
+    argv: list[str] | None = None,
+    gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Generate enrichment tool cache."""
     description = "Generate enrichment tool cache"

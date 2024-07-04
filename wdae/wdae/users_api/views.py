@@ -4,7 +4,7 @@ import base64
 import json
 import logging
 from collections.abc import Generator, Iterator
-from typing import Any, Optional, Tuple, Type, Union, cast
+from typing import Any, Tuple, Type, cast
 
 import django.contrib.auth
 from django import forms
@@ -111,7 +111,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     @request_logging(logger)
     def retrieve(
         self, request: Request,
-        *args: Any, pk: Optional[int] = None, **kwargs: Any,
+        *args: Any, pk: int | None = None, **kwargs: Any,
     ) -> Response:
         if pk is not None:
             pk = int(pk)
@@ -121,7 +121,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     @permission_update
     def update(
         self, request: Request,
-        *args: Any, pk: Optional[int] = None, **kwargs: Any,
+        *args: Any, pk: int | None = None, **kwargs: Any,
     ) -> Response:
         if pk is not None:
             pk = int(pk)
@@ -137,7 +137,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     @permission_update
     def partial_update(
         self, request: Request,
-        *args: Any, pk: Optional[int] = None, **kwargs: Any,
+        *args: Any, pk: int | None = None, **kwargs: Any,
     ) -> Response:
         if pk is not None:
             pk = int(pk)
@@ -153,7 +153,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
     @permission_update
     def destroy(
         self, request: Request,
-        *args: Any, pk: Optional[int] = None, **kwargs: Any,
+        *args: Any, pk: int | None = None, **kwargs: Any,
     ) -> Response:
         if pk is not None:
             pk = int(pk)
@@ -163,7 +163,7 @@ class UserViewSet(viewsets.ModelViewSet):  # pylint: disable=too-many-ancestors
 
     def get_serializer_class(
         self,
-    ) -> Union[Type[UserWithoutEmailSerializer], Type[UserSerializer]]:
+    ) -> Type[UserWithoutEmailSerializer] | Type[UserSerializer]:
         serializer_class = self.serializer_class
 
         if self.action in {"update", "partial_update"}:
@@ -270,14 +270,14 @@ class ForgotPassword(views.APIView):
 class BasePasswordView(views.APIView):
     """Base class for set/reset password views."""
 
-    verification_code_model: Optional[models.Model] = None
-    template: Optional[str] = None
-    form: Optional[forms.Form] = None
-    code_type: Optional[str] = None
+    verification_code_model: models.Model | None = None
+    template: str | None = None
+    form: forms.Form | None = None
+    code_type: str | None = None
 
     def _check_request_verification_path(
         self, request: Request,
-    ) -> Tuple[Union[ResetPasswordCode, None, SetPasswordCode], Optional[str]]:
+    ) -> Tuple[ResetPasswordCode | None | SetPasswordCode, str | None]:
         """
         Check, validate and return a verification path from a request.
 
@@ -441,7 +441,7 @@ class WdaeLoginView(views.APIView):
         )
 
     @request_logging(logger)
-    def post(self, request: Request) -> Union[Response, HttpResponse]:
+    def post(self, request: Request) -> Response | HttpResponse:
         """Handle the login form."""
         data = request.data
         next_uri = data.get("next")

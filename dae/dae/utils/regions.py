@@ -4,7 +4,7 @@ import copy
 import logging
 from collections import defaultdict
 from collections.abc import Iterator, Sequence
-from typing import Any, Optional, Union
+from typing import Any
 
 import networkx as nx
 import pysam
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 MAX_POSITION = 3_000_000_000
 
 
-def coalesce(v1: Optional[int], v2: int) -> int:
+def coalesce(v1: int | None, v2: int) -> int:
     """Return first non-None value."""
     if v1 is not None:
         return v1
@@ -60,9 +60,9 @@ def split_into_regions(
 
 
 def get_chromosome_length_tabix(
-    tabix_file: Union[pysam.TabixFile, pysam.VariantFile], chrom: str,
+    tabix_file: pysam.TabixFile | pysam.VariantFile, chrom: str,
     step: int = 100_000_000, precision: int = 5_000_000,
-) -> Optional[int]:
+) -> int | None:
     """
     Return the length of a chromosome (or contig).
 
@@ -112,7 +112,7 @@ class Region:
 
     def __init__(
         self, chrom: str,
-        start: Optional[int] = None, stop: Optional[int] = None,
+        start: int | None = None, stop: int | None = None,
     ):
         if start is not None and not isinstance(start, int):
             raise TypeError(f"Invalid type for start position - {type(start)}")
@@ -126,19 +126,19 @@ class Region:
         self._stop = stop
 
     @property
-    def start(self) -> Optional[int]:
+    def start(self) -> int | None:
         return self._start
 
     @property
-    def stop(self) -> Optional[int]:
+    def stop(self) -> int | None:
         return self._stop
 
     @property
-    def begin(self) -> Optional[int]:
+    def begin(self) -> int | None:
         return self.start
 
     @property
-    def end(self) -> Optional[int]:
+    def end(self) -> int | None:
         return self.stop
 
     def __repr__(self) -> str:
@@ -175,7 +175,7 @@ class Region:
         return True
 
     @staticmethod
-    def _min(a: Optional[int], b: Optional[int]) -> Optional[int]:
+    def _min(a: int | None, b: int | None) -> int | None:
         if a is None:
             return b
         if b is None:
@@ -183,7 +183,7 @@ class Region:
         return min(a, b)
 
     @staticmethod
-    def _max(a: Optional[int], b: Optional[int]) -> Optional[int]:
+    def _max(a: int | None, b: int | None) -> int | None:
         if a is None:
             return b
         if b is None:
@@ -192,8 +192,8 @@ class Region:
 
     @staticmethod
     def _make_region(
-        chrom: str, start: Optional[int], stop: Optional[int],
-    ) -> Optional[Region]:
+        chrom: str, start: int | None, stop: int | None,
+    ) -> Region | None:
         if chrom is None:
             return None
         if start is not None and stop is not None:
@@ -201,7 +201,7 @@ class Region:
                 return None
         return Region(chrom, start, stop)
 
-    def intersection(self, other: Region) -> Optional[Region]:
+    def intersection(self, other: Region) -> Region | None:
         """Return intersection of the region with other region."""
         if self.chrom != other.chrom:
             return None

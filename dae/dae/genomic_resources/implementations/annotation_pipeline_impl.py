@@ -1,6 +1,6 @@
 import logging
 import textwrap
-from typing import Any, Optional
+from typing import Any
 
 from jinja2 import Environment, PackageLoader, Template
 from markdown2 import markdown
@@ -35,7 +35,7 @@ class AnnotationPipelineImplementation(
 
         self.raw: str = self.resource.get_file_content(
             self.resource.get_config()["filename"])
-        self.pipeline: Optional[AnnotationPipeline] = None
+        self.pipeline: AnnotationPipeline | None = None
 
     def get_info(self, **kwargs: Any) -> str:
         grr = kwargs["repo"]

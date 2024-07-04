@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from jinja2 import Template
 
@@ -32,8 +32,8 @@ class ScoreDesc:
     hist: Histogram
     description: str
     help: str
-    small_values_desc: Optional[str]
-    large_values_desc: Optional[str]
+    small_values_desc: str | None
+    large_values_desc: str | None
 
     def to_json(self) -> dict[str, Any]:
         hist_data = self.hist.to_dict()

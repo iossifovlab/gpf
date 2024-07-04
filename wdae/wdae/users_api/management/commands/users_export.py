@@ -1,7 +1,7 @@
 import csv
 import io
 import sys
-from typing import Any, TextIO, Union
+from typing import Any, TextIO
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandParser
@@ -40,7 +40,7 @@ class Command(BaseCommand, ExportUsersBase):
     def handle(self, *args: Any, **options: Any) -> None:
         users = get_user_model().objects.all()
 
-        csvfile: Union[TextIO, io.TextIOWrapper]
+        csvfile: TextIO | io.TextIOWrapper
         if options["file"]:
             # pylint: disable=consider-using-with
             csvfile = open(options["file"], "w")

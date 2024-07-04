@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Union, cast
+from typing import cast
 
 import pytest
 
@@ -86,7 +86,7 @@ chrA   15  .  A   G     .    .      .    GT     1/.  1/1  1/0
 )
 def test_inheritance_query_trio(
         trio_study: GenotypeData,
-        inheritance: Union[str, list[str]],
+        inheritance: str | list[str],
         count: int) -> None:
 
     vs = list(

@@ -5,7 +5,6 @@ import logging
 import os
 import sys
 import time
-from typing import Optional
 
 from dae.annotation.annotation_factory import load_pipeline_from_file
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -22,7 +21,7 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 logger = logging.getLogger("grr_cache_repo")
 
 
-def cli_cache_repo(argv: Optional[list[str]] = None) -> None:
+def cli_cache_repo(argv: list[str] | None = None) -> None:
     """CLI for caching genomic resources."""
     if not argv:
         argv = sys.argv[1:]

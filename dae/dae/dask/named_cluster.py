@@ -1,7 +1,7 @@
 import copy
 import logging
 import os
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 
 import dask
 from distributed.client import Client
@@ -75,7 +75,7 @@ _CLUSTER_TYPES["kubernetes"] = set_up_kubernetes_cluster
 
 
 def setup_client_from_config(cluster_config,
-                             number_of_threads_param: Optional[int] = None) \
+                             number_of_threads_param: int | None = None) \
         -> Tuple[Client, Dict[str, Any]]:
     """Create a dask client from the provided config."""
     logger.info("CLUSTER CONFIG: %s", cluster_config)
@@ -98,8 +98,8 @@ def setup_client_from_config(cluster_config,
     return client, cluster_config
 
 
-def setup_client(cluster_name: Optional[str] = None,
-                 number_of_threads: Optional[int] = None) \
+def setup_client(cluster_name: str | None = None,
+                 number_of_threads: int | None = None) \
         -> Tuple[Client, Dict[str, Any]]:
     """Create a dask client from the provided cluster name."""
     if cluster_name is None:

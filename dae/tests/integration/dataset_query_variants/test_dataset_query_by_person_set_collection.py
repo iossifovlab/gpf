@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
-from typing import Optional
 
 import pytest
 
@@ -220,7 +219,7 @@ def test_dataset_build_person_set_collection(
 )
 def test_query_by_person_ids(
     dataset: GenotypeDataGroup,
-    person_ids: Optional[list[str]],
+    person_ids: list[str] | None,
     count: int,
 ) -> None:
     vs = list(dataset.query_variants(
@@ -246,7 +245,7 @@ def test_query_by_person_ids(
 )
 def test_query_by_person_set_coolection(
     dataset: GenotypeDataGroup,
-    person_set_collection: Optional[tuple[str, list[str]]],
+    person_set_collection: tuple[str, list[str]] | None,
     count: int,
 ) -> None:
     vs = list(dataset.query_variants(

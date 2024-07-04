@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Generator, Iterable
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, Dict, List, Tuple, cast
 
 import ijson
 import requests
@@ -23,10 +23,10 @@ class RESTClient:
 
     def __init__(
             self, remote_id: str, host: str, credentials: str,
-            base_url: Optional[str] = None,
-            port: Optional[int] = None,
-            protocol: Optional[str] = None,
-            gpf_prefix: Optional[str] = None):
+            base_url: str | None = None,
+            port: int | None = None,
+            protocol: str | None = None,
+            gpf_prefix: str | None = None):
         self.host = host
         self.remote_id = remote_id
         self.credentials = credentials
@@ -82,7 +82,7 @@ class RESTClient:
         return f"{host_url}/static/images/{url}"
 
     def _build_url(
-        self, url: str, query_values: Optional[dict] = None,
+        self, url: str, query_values: dict | None = None,
     ) -> str:
         query_url = url
         if query_values:
@@ -99,7 +99,7 @@ class RESTClient:
 
     def _get(
         self, url: str,
-        query_values: Optional[dict] = None,
+        query_values: dict | None = None,
         stream: bool = False,
     ) -> requests.Response:
         url = self._build_url(url, query_values)
@@ -118,7 +118,7 @@ class RESTClient:
 
     def _post(
         self, url: str,
-        data: Optional[dict] = None,
+        data: dict | None = None,
         stream: bool = False,
     ) -> requests.Response:
         url = self._build_url(url)
@@ -134,10 +134,10 @@ class RESTClient:
             response = make_request()
         return response
 
-    def _put(self, url: str, data: Optional[dict] = None) -> None:
+    def _put(self, url: str, data: dict | None = None) -> None:
         pass
 
-    def _delete(self, url: str, data: Optional[dict] = None) -> None:
+    def _delete(self, url: str, data: dict | None = None) -> None:
         pass
 
     @staticmethod
@@ -164,19 +164,19 @@ class RESTClient:
     def prefix_remote_name(self, value: Any) -> str:
         return f"({self.remote_id}) {value}"
 
-    def get_datasets(self) -> Optional[dict]:
+    def get_datasets(self) -> dict | None:
         response = self._get("datasets")
         if response.status_code == 200:
             return cast(dict, response.json())
         return None
 
-    def get_studies(self) -> Optional[dict]:
+    def get_studies(self) -> dict | None:
         response = self._get("datasets/studies")
         if response.status_code == 200:
             return cast(dict, response.json())
         return None
 
-    def get_dataset_config(self, study_id: str) -> Optional[dict]:
+    def get_dataset_config(self, study_id: str) -> dict | None:
         response = self._get(f"datasets/config/{study_id}")
         if response.status_code == 200:
             return cast(dict, response.json())
@@ -334,8 +334,8 @@ class RESTClient:
         return response.json()
 
     def get_browser_measures(
-        self, dataset_id: str, instrument: Optional[str],
-        search_term: Optional[str],
+        self, dataset_id: str, instrument: str | None,
+        search_term: str | None,
     ) -> Any:
         """Get pheno measures that correspond to a search."""
         response = self._get(
@@ -359,8 +359,8 @@ class RESTClient:
 
     def get_measures_download(
             self, dataset_id: str,
-            search_term: Optional[str] = None,
-            instrument: Optional[str] = None,
+            search_term: str | None = None,
+            instrument: str | None = None,
     ) -> Any:
         """Post download request for pheno measures."""
         response = self._get(
@@ -421,8 +421,8 @@ class RESTClient:
 
     def get_measures(
         self, dataset_id: str,
-        instrument_name: Optional[str],
-        measure_type: Optional[str],
+        instrument_name: str | None,
+        measure_type: str | None,
     ) -> Any:
         """Get measures for a dataset."""
         response = self._get(
@@ -456,9 +456,9 @@ class RESTClient:
     def post_measures_values(
         self, dataset_id: str,
         measure_ids: Iterable[str],
-        person_ids: Optional[Iterable[str]] = None,
-        family_ids: Optional[Iterable[str]] = None,
-        roles: Optional[Iterable[str]] = None,
+        person_ids: Iterable[str] | None = None,
+        family_ids: Iterable[str] | None = None,
+        roles: Iterable[str] | None = None,
     ) -> Any:
         """Post pheno measure values request."""
         data = {
@@ -478,9 +478,9 @@ class RESTClient:
     def post_measure_values(
         self, dataset_id: str,
         measure_id: str,
-        person_ids: Optional[Iterable[str]],
-        family_ids: Optional[Iterable[str]],
-        roles: Optional[Iterable[str]],
+        person_ids: Iterable[str] | None,
+        family_ids: Iterable[str] | None,
+        roles: Iterable[str] | None,
     ) -> Any:
         """Post pheno measure values request."""
         return self.post_measures_values(
@@ -515,7 +515,7 @@ class RESTClient:
 
     def get_gene_sets(
         self, collection_id: str,
-    ) -> Optional[list[dict[str, Any]]]:
+    ) -> list[dict[str, Any]] | None:
         """Get a gene set from a gene set collection."""
         response = self._post(
             "gene_sets/gene_sets",
@@ -586,13 +586,13 @@ class RESTClient:
 
         return response.content.decode()
 
-    def get_genomic_scores(self) -> Optional[list[dict[str, Any]]]:
+    def get_genomic_scores(self) -> list[dict[str, Any]] | None:
         response = self._get("genomic_scores/score_descs")
         if response.status_code != 200:
             return None
         return cast(list[dict[str, Any]], response.json())
 
-    def get_genomic_score(self, score_id: str) -> Optional[dict[str, Any]]:
+    def get_genomic_score(self, score_id: str) -> dict[str, Any] | None:
         response = self._get(f"genomic_scores/score_descs/{score_id}")
         if response.status_code != 200:
             return None
@@ -600,7 +600,7 @@ class RESTClient:
 
     def get_pheno_image(
         self, image_path: str,
-    ) -> Tuple[Optional[bytes], Optional[str]]:
+    ) -> Tuple[bytes | None, str | None]:
         """
         Return tuple of image bytes and image type from remote.
 

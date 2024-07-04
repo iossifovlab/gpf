@@ -8,7 +8,7 @@ import os
 import sys
 from collections.abc import Iterable
 from types import TracebackType
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import toml
 import yaml
@@ -49,7 +49,7 @@ class AdjustmentsCommand(abc.ABC):
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
-        exc_value: Optional[BaseException],
+        exc_value: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
         self.close()
@@ -331,7 +331,7 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
         return dataset_config
 
 
-def cli(argv: Optional[list[str]] = None) -> None:
+def cli(argv: list[str] | None = None) -> None:
     """Handle cli invocation."""
     argv = argv or sys.argv[1:]
     parser = argparse.ArgumentParser(

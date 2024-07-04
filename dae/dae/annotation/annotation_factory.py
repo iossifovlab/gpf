@@ -3,7 +3,7 @@
 import logging
 from collections import Counter
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable
 
 import yaml
 
@@ -95,7 +95,7 @@ def register_annotator_factory(
 def load_pipeline_from_file(
     raw_path: str, grr: GenomicResourceRepo, *,
     allow_repeated_attributes: bool = False,
-    work_dir: Optional[Path] = None,
+    work_dir: Path | None = None,
 ) -> AnnotationPipeline:
     """Load an annotation pipeline from a configuration file."""
     path = Path(raw_path)
@@ -113,7 +113,7 @@ def load_pipeline_from_file(
 def load_pipeline_from_yaml(
     raw: str, grr: GenomicResourceRepo, *,
     allow_repeated_attributes: bool = False,
-    work_dir: Optional[Path] = None,
+    work_dir: Path | None = None,
 ) -> AnnotationPipeline:
     """Load an annotation pipeline from a YAML-formatted string."""
     config = yaml.safe_load(raw)
@@ -127,7 +127,7 @@ def load_pipeline_from_yaml(
 def build_annotation_pipeline(
     config: RawPipelineConfig, grr: GenomicResourceRepo, *,
     allow_repeated_attributes: bool = False,
-    work_dir: Optional[Path] = None,
+    work_dir: Path | None = None,
 ) -> AnnotationPipeline:
     """Build an annotation pipeline."""
     preambule, pipeline_config = AnnotationConfigParser.parse_raw(

@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 import json
 import logging
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import pyzstd
 
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class VariantsDataSerializer(abc.ABC):
     """Interface for serializing family and summary alleles."""
 
-    def __init__(self, metadata: Optional[dict[str, Any]] = None) -> None:
+    def __init__(self, metadata: dict[str, Any] | None = None) -> None:
         self.metadata = metadata
 
     @abc.abstractmethod
@@ -49,7 +49,7 @@ class VariantsDataSerializer(abc.ABC):
 
     @staticmethod
     def build_serializer(
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> VariantsDataSerializer:
         """Build a serializer based on the metadata."""
         if metadata is None:
@@ -86,7 +86,7 @@ class JsonVariantsDataSerializer(VariantsDataSerializer):
 class ZstdIndexedVariantsDataSerializer(VariantsDataSerializer):
     """Serialize family and summary alleles to zstd."""
 
-    def __init__(self, metadata: Optional[dict[str, Any]] = None) -> None:
+    def __init__(self, metadata: dict[str, Any] | None = None) -> None:
         super().__init__(metadata)
         if self.metadata is None:
             raise ValueError(

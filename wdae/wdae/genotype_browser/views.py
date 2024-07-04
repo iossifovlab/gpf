@@ -1,7 +1,6 @@
 """Genotype browser routes for browsing and listing variants in studies."""
 import itertools
 import logging
-from typing import Union
 
 from datasets_api.permissions import (
     handle_partial_permissions,
@@ -162,7 +161,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
 
         handle_partial_permissions(self.instance_id, user, dataset_id, data)
 
-        response: Union[FileResponse, StreamingHttpResponse, None] = None
+        response: FileResponse | StreamingHttpResponse | None = None
         if is_download:
             result = dataset.query_variants_wdae(
                 data, sources,

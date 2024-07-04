@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import pandas as pd
 from scipy import stats
@@ -52,7 +52,7 @@ class SamochaEnrichmentBackground(BaseEnrichmentResourceBackground):
                 f"<{resource.resource_id}>")
         super().__init__(resource)
 
-        self._df: Optional[pd.DataFrame] = None
+        self._df: pd.DataFrame | None = None
 
     @property
     def name(self) -> str:

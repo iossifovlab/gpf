@@ -4,7 +4,7 @@ import glob
 import logging
 import os
 from copy import deepcopy
-from typing import Any, Callable, Dict, List, Optional, Union, cast
+from typing import Any, Callable, Dict, List, cast
 
 import fsspec
 import toml
@@ -107,14 +107,14 @@ class GPFConfigParser:
         return config_files
 
     @classmethod
-    def _get_file_contents(cls, filename: Union[str, os.PathLike]) -> str:
+    def _get_file_contents(cls, filename: str | os.PathLike) -> str:
         with fsspec.open(filename, "r") as infile:
             return cast(str, infile.read())
 
     @staticmethod
     def parse_and_interpolate(
             content: str, parser: Callable[[str], dict] = yaml.safe_load,
-            conf_dir: Optional[str] = None) -> dict:
+            conf_dir: str | None = None) -> dict:
         """Parse text content and perform variable interpolation on result."""
         parsed_content = parser(content) or {}
         interpol_vars = parsed_content.get("vars", {})
@@ -142,8 +142,8 @@ class GPFConfigParser:
 
     @classmethod
     def parse_and_interpolate_file(
-        cls, filename: Union[str, os.PathLike],
-        conf_dir: Optional[str] = None,
+        cls, filename: str | os.PathLike,
+        conf_dir: str | None = None,
     ) -> dict:
         """Open a file and interpolate it's contents."""
         try:
@@ -166,7 +166,7 @@ class GPFConfigParser:
     @staticmethod
     def merge_config(
             config: Dict[str, Any],
-            default_config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+            default_config: Dict[str, Any] | None = None) -> Dict[str, Any]:
         if default_config is not None:
             config = recursive_dict_update(default_config, config)
         return config
@@ -175,7 +175,7 @@ class GPFConfigParser:
     def validate_config(
         config: Dict[str, Any],
         schema: dict,
-        conf_dir: Optional[str] = None,
+        conf_dir: str | None = None,
     ) -> dict:
         """Perform validation on a parsed config."""
         if conf_dir is not None and "conf_dir" in schema:
@@ -200,8 +200,8 @@ class GPFConfigParser:
     def process_config(
         config: Dict[str, Any],
         schema: dict,
-        default_config: Optional[Dict[str, Any]] = None,
-        conf_dir: Optional[str] = None,
+        default_config: Dict[str, Any] | None = None,
+        conf_dir: str | None = None,
     ) -> Box:
         """
         Pass an interpolated config to validation and prepare it for use.
@@ -226,8 +226,8 @@ class GPFConfigParser:
         cls,
         filename: str,
         schema: dict,
-        default_config_filename: Optional[str] = None,
-        default_config: Optional[dict] = None,
+        default_config_filename: str | None = None,
+        default_config: dict | None = None,
     ) -> Box:
         """Load a file and return a processed configuration."""
         if not os.path.exists(filename):
@@ -256,8 +256,8 @@ class GPFConfigParser:
     @classmethod
     def load_directory_configs(
             cls, dirname: str, schema: dict,
-            default_config_filename: Optional[str] = None,
-            default_config: Optional[dict] = None) -> List[Box]:
+            default_config_filename: str | None = None,
+            default_config: dict | None = None) -> List[Box]:
         """Find and load all configs in a given root directory."""
         result = []
         for config_path in cls.collect_directory_configs(dirname):

@@ -5,7 +5,6 @@ import argparse
 import logging
 import os
 import sys
-from typing import Optional
 
 from dae.genomic_resources.genomic_context import (
     CLIGenomicContext,
@@ -62,7 +61,7 @@ def _handle_vcf_files(
     return families
 
 
-def main(argv: Optional[list[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     """Transform a pedigree file into cannonical GPF pedigree.
 
     It should be called from the command line.

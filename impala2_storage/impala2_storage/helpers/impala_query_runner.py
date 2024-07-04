@@ -1,7 +1,7 @@
 import logging
 import time
 from contextlib import closing
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import impala
 from impala.hiveserver2 import HiveServer2Connection
@@ -20,7 +20,7 @@ class ImpalaQueryRunner(QueryRunner):
     def __init__(
         self, connection_factory: QueuePool,
         query: str,
-        deserializer: Optional[Callable[[Any], Any]] = None,
+        deserializer: Callable[[Any], Any] | None = None,
     ):
         super().__init__(deserializer=deserializer)
 
@@ -28,7 +28,7 @@ class ImpalaQueryRunner(QueryRunner):
         self.query = query
         self._counter = 0
 
-    def connect(self) -> Optional[HiveServer2Connection]:
+    def connect(self) -> HiveServer2Connection | None:
         """Connect to the connection pool and return the connection."""
         started = time.time()
         logger.debug("(%s) going to conect", self.study_id)

@@ -6,7 +6,7 @@ import re
 from collections import defaultdict
 from multiprocessing import Pool
 from multiprocessing.pool import AsyncResult
-from typing import Any, Callable, Dict, Optional, Tuple, Union, cast
+from typing import Any, Callable, Dict, Tuple, cast
 
 import duckdb
 import numpy as np
@@ -48,7 +48,7 @@ class PrepareBase(PrepareCommon):
         self.connection = duckdb.connect(self.dbfile)
         self.parquet_dir = os.path.join(self.config.output, "parquet")
 
-    def get_persons(self, force: bool = False) -> Optional[dict[str, Any]]:
+    def get_persons(self, force: bool = False) -> dict[str, Any] | None:
         """Return dictionary of all people in the pheno DB."""
         if not self.persons or len(self.persons) == 0 or force:
             self.persons = {}
@@ -71,7 +71,7 @@ class PreparePersons(PrepareBase):
 
     def __init__(self, config: Box) -> None:
         super().__init__(config)
-        self.pedigree_df: Optional[pd.DataFrame] = None
+        self.pedigree_df: pd.DataFrame | None = None
 
     def _save_families(self, ped_df: pd.DataFrame) -> None:
         # pylint: disable=unused-argument
@@ -85,7 +85,7 @@ class PreparePersons(PrepareBase):
         )
 
     @staticmethod
-    def _build_sample_id(sample_id: Union[str, float, None]) -> Optional[str]:
+    def _build_sample_id(sample_id: str | float | None) -> str | None:
         if (isinstance(sample_id, float) and np.isnan(sample_id)) \
                 or sample_id is None:
             return None
@@ -151,8 +151,8 @@ class ClassifyMeasureTask(Task):
             instrument_name, measure_name, measure_desc,
         )
         self.instrument_table_name = instrument_table_name
-        self.rank: Optional[int] = None
-        self.classifier_report: Optional[ClassifierReport] = None
+        self.rank: int | None = None
+        self.classifier_report: ClassifierReport | None = None
         self.dbfile = dbfile
 
     @staticmethod
@@ -245,7 +245,7 @@ class MeasureValuesTask(Task):
     def __init__(self, measure: Box, mdf: pd.DataFrame) -> None:
         self.measure = measure
         self.mdf = mdf
-        self.values: Optional[dict[tuple[int, int], Any]] = None
+        self.values: dict[tuple[int, int], Any] | None = None
 
     def run(self) -> MeasureValuesTask:
         measure_id = self.measure.db_id
@@ -322,7 +322,7 @@ class PrepareVariables(PreparePersons):
 
     @staticmethod
     def _check_for_rejects(
-        connection: Optional[duckdb.DuckDBPyConnection] = None,
+        connection: duckdb.DuckDBPyConnection | None = None,
     ) -> bool:
         if connection is None:
             connection = duckdb.cursor()
@@ -557,7 +557,7 @@ class PrepareVariables(PreparePersons):
 
     def build_instrument(
         self, instrument_name: str,
-        descriptions: Optional[Callable] = None,
+        descriptions: Callable | None = None,
     ) -> None:
         """Build and store all measures in an instrument."""
         classify_queue = TaskQueue()
@@ -728,8 +728,8 @@ class PrepareVariables(PreparePersons):
 
     @staticmethod
     def load_descriptions(
-        description_path: Optional[str],
-    ) -> Optional[Callable]:
+        description_path: str | None,
+    ) -> Callable | None:
         """Load measure descriptions."""
         if not description_path:
             return None
@@ -754,7 +754,7 @@ class PrepareVariables(PreparePersons):
                     ]
                 ), list(desc_df)
 
-            def __call__(self, iname: str, mname: str) -> Optional[str]:
+            def __call__(self, iname: str, mname: str) -> str | None:
                 if (
                     f"{iname}.{mname}"
                     not in self.desc_df["measureId"].values

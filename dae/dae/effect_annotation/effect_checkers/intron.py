@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from ..effect import EffectFactory
 from .effect_checker import AnnotationEffect, AnnotationRequest, EffectChecker
@@ -15,7 +14,7 @@ class IntronicEffectChecker(EffectChecker):
 
     def get_effect(
         self, request: AnnotationRequest,
-    ) -> Optional[AnnotationEffect]:
+    ) -> AnnotationEffect | None:
 
         coding_regions = request.cds_regions()
         prev = coding_regions[0].stop

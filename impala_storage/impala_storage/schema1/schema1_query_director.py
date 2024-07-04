@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from typing import List, Optional, Union
+from typing import List
 
 from dae.utils.regions import Region
 from impala_storage.schema1.family_variants_query_builder import (
@@ -16,29 +16,28 @@ class ImpalaQueryDirector:
 
     def __init__(
         self,
-        query_builder: Union[
-            FamilyVariantsQueryBuilder, SummaryVariantsQueryBuilder],
+        query_builder: FamilyVariantsQueryBuilder | SummaryVariantsQueryBuilder,
     ) -> None:
         self.query_builder = query_builder
 
     def build_query(
             self,
-            regions: Optional[List[Region]] = None,
-            genes: Optional[List[str]] = None,
-            effect_types: Optional[List[str]] = None,
-            family_ids: Optional[Iterable[str]] = None,
-            person_ids: Optional[Iterable[str]] = None,
-            inheritance: Optional[Union[List[str], str]] = None,
-            roles: Optional[str] = None,
-            sexes: Optional[str] = None,
-            variant_type: Optional[str] = None,
-            real_attr_filter: Optional[RealAttrFilterType] = None,
-            ultra_rare: Optional[bool] = None,
-            frequency_filter: Optional[RealAttrFilterType] = None,
-            return_reference: Optional[bool] = None,
-            return_unknown: Optional[bool] = None,
-            limit: Optional[int] = None,
-            pedigree_fields: Optional[tuple[list[str], list[str]]] = None,
+            regions: List[Region] | None = None,
+            genes: List[str] | None = None,
+            effect_types: List[str] | None = None,
+            family_ids: Iterable[str] | None = None,
+            person_ids: Iterable[str] | None = None,
+            inheritance: List[str] | str | None = None,
+            roles: str | None = None,
+            sexes: str | None = None,
+            variant_type: str | None = None,
+            real_attr_filter: RealAttrFilterType | None = None,
+            ultra_rare: bool | None = None,
+            frequency_filter: RealAttrFilterType | None = None,
+            return_reference: bool | None = None,
+            return_unknown: bool | None = None,
+            limit: int | None = None,
+            pedigree_fields: tuple[list[str], list[str]] | None = None,
     ) -> None:
         # pylint: disable=too-many-arguments
         """Build a query in the right order."""

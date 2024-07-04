@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import argparse
-from typing import Optional
 
 import pytest
 
@@ -14,7 +13,7 @@ from dae.task_graph import TaskGraphCli
     (["--jobs", "1"], 1),
     (["--jobs", "100"], 100),
 ])
-def test_cli_args_jobs(argv: list[str], jobs: Optional[int]) -> None:
+def test_cli_args_jobs(argv: list[str], jobs: int | None) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args(argv)
@@ -43,7 +42,7 @@ def test_cli_args_command(argv: list[str], command: str) -> None:
     (["--dask-cluster-name", "abc"], "abc"),
 ])
 def test_cli_args_dask_cluster_name(
-        argv: list[str], name: Optional[str]) -> None:
+        argv: list[str], name: str | None) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args(argv)
@@ -58,7 +57,7 @@ def test_cli_args_dask_cluster_name(
     (["--dask-cluster-config-file", "abc.yaml"], "abc.yaml"),
 ])
 def test_cli_args_dask_cluster_config_file(
-        argv: list[str], filename: Optional[str]) -> None:
+        argv: list[str], filename: str | None) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args(argv)
@@ -76,7 +75,7 @@ def test_cli_args_dask_cluster_config_file(
     (["-t", "a", "b", "c"], ["a", "b", "c"]),
 ])
 def test_cli_args_task_ids(
-        argv: list[str], task_ids: Optional[list[str]]) -> None:
+        argv: list[str], task_ids: list[str] | None) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser)
     args = parser.parse_args(argv)
@@ -102,7 +101,7 @@ def test_cli_args_keep_going(argv: list[str], keep_going: bool) -> None:
     ("always", [], None),
 ])
 def test_cli_args_force(
-        force_mode: str, argv: list[str], force: Optional[bool]) -> None:
+        force_mode: str, argv: list[str], force: bool | None) -> None:
     parser = argparse.ArgumentParser(description="test_basic")
     TaskGraphCli.add_arguments(parser, force_mode=force_mode)
     args = vars(parser.parse_args(argv))
