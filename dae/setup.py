@@ -108,7 +108,7 @@ setuptools.setup(
 
     ped2ped=dae.tools.ped2ped:main
     draw_pedigree=dae.tools.draw_pedigree:main
-    draw_resource_histogram=dae.genomic_resources.draw_resource_histogram:main
+    draw_score_histograms=dae.genomic_resources.draw_score_histograms:main
 
     generate_vcf_score_histogram.py=dae.tools.generate_vcf_score_histogram:main
     gpf_validation_runner=dae.tools.gpf_validation_runner:main

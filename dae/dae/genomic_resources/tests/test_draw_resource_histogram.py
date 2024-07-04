@@ -5,7 +5,7 @@ import textwrap
 import pytest
 
 from dae.genomic_resources.cli import cli_manage
-from dae.genomic_resources.draw_resource_histogram import main
+from dae.genomic_resources.draw_score_histograms import main
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
@@ -53,7 +53,7 @@ def proto_fixture(
     return path, proto
 
 
-def test_draw_resource_histogram(
+def test_draw_score_histograms(
     proto_fixture: tuple[pathlib.Path, FsspecReadWriteProtocol],
 ) -> None:
     path, proto = proto_fixture

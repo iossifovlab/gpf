@@ -1,7 +1,6 @@
 import argparse
 import os
 import sys
-from typing import Optional
 
 from dae.gene_scores.gene_scores import (
     GeneScoresDb,
@@ -45,7 +44,7 @@ def parse_cli_arguments() -> argparse.ArgumentParser:
 
 
 def main(
-        argv: Optional[list[str]] = None,
+        argv: list[str] | None = None,
 ) -> None:
     """Liftover dae variants tool main function."""
     # pylint: disable=too-many-locals,too-many-statements
