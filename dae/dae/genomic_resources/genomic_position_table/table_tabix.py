@@ -309,6 +309,8 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
                 yield from self._gen_from_buffer_and_tabix(
                         fchrom, pos_begin, pos_end)
+                self.buffer.prune(fchrom, pos_begin)
+                return
 
         # without using buffer
         self.line_iterator = self.get_line_iterator(fchrom, pos_begin - 1)
