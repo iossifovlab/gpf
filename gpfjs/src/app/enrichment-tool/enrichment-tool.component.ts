@@ -5,7 +5,6 @@ import { Observable, of, Subscription, switchMap, zip } from 'rxjs';
 import { EnrichmentResults } from '../enrichment-query/enrichment-result';
 import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
-import { Dataset } from 'app/datasets/datasets';
 import { Select, Selector, Store } from '@ngxs/store';
 import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
 import { EnrichmentModelsState } from 'app/enrichment-models/enrichment-models.state';
