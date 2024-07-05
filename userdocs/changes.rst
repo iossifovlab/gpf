@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+* 2024.7.1
+    * Improvements in genomic position table performance
+    * Initial support for 0-based genomic scores in genomic position table
+    * Initial support for serialization of gene models in GTF format
+    * Fix in handling of saved queries in GPFjs
+
 * 2024.7.0
     * Bump Python version to 3.11
     * Fix in gene profiles search for genes
