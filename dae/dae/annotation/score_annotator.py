@@ -6,7 +6,8 @@ and allele_score.
 import abc
 import logging
 import textwrap
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 from dae.annotation.annotatable import Annotatable, VCFAllele
 from dae.annotation.annotation_config import (
@@ -69,9 +70,10 @@ class GenomicScoreAnnotatorBase(Annotator):
         for attribute_info in info.attributes:
             score_def = score.get_score_definition(attribute_info.source)
             if score_def is None:
-                message = f"The score '{attribute_info.source}' is " + \
-                          f"unknown in '{score.resource.get_id()}' " + \
-                          "resource!"
+                message = (
+                    f"The score '{attribute_info.source}' is "
+                    f"unknown in '{score.resource.get_id()}' "
+                    "resource!")
                 raise ValueError(message)
             attribute_info.type = score_def.value_type
             attribute_info.description = score_def.desc
@@ -108,7 +110,7 @@ class GenomicScoreAnnotatorBase(Annotator):
 
 small values: {score_def.small_values_desc}\n
 large_values {score_def.large_values_desc}
-        """
+        """  # noqa: SLF001
 
     def _build_score_aggregator_documentation(
         self, attribute_info: AttributeInfo,
@@ -166,7 +168,7 @@ large_values {score_def.large_values_desc}
             attribute_info, aggregator, attribute_conf_agg)
 
         attribute_info._documentation = \
-            f"{attribute_info.documentation}\n\n{aggregator_doc}"
+            f"{attribute_info.documentation}\n\n{aggregator_doc}"  # noqa: SLF001
 
     @abc.abstractmethod
     def build_score_aggregator_documentation(
@@ -211,7 +213,9 @@ class PositionScoreAnnotatorBase(GenomicScoreAnnotatorBase):
         if not scores:
             return self._empty_result()
 
-        return dict(zip([att.name for att in self.attributes], scores))
+        return dict(zip(
+                [att.name for att in self.attributes],
+                scores, strict=True))
 
 
 def build_position_score_annotator(pipeline: AnnotationPipeline,
@@ -433,4 +437,6 @@ variant frequencies, etc.
         if scores is None:
             return self._empty_result()
 
-        return dict(zip([att.name for att in self.attributes], scores))
+        return dict(zip(
+            [att.name for att in self.attributes],
+            scores, strict=True))

@@ -3,13 +3,12 @@ from __future__ import annotations
 
 import copy
 import logging
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from functools import lru_cache
 from types import TracebackType
 from typing import (
     Any,
-    Callable,
     cast,
 )
 from urllib.parse import quote
