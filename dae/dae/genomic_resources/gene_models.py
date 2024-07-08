@@ -449,35 +449,37 @@ class TranscriptModel:
         for exon in self.exons:
             write_record("exon", exon.start, exon.stop, write_exon_number=True)
 
-        cds_regions = self.cds_regions()
-        if cds_regions:
-            for cds in cds_regions[:-1]:  # all but last CDS region
-                write_record("CDS", cds.start, cds.stop, write_exon_number=True)
-            # handle last separately, because the GTF format
-            # excludes the stop codon from the CDS regions
-            # also check if the adjustment we make leaves
-            # enough bases for it to have one codon at least
-            if ((cds_regions[-1].stop - 2) - cds_regions[-1].start) >= 2:
-                write_record("CDS",
-                    cds_regions[-1].start,
-                    cds_regions[-1].stop - 2,
-                    write_exon_number=True)
+        if self.is_coding():
+            cds_regions = self.cds_regions()
+            if cds_regions:
+                for cds in cds_regions[:-1]:  # all but last CDS region
+                    write_record("CDS", cds.start, cds.stop,
+                                 write_exon_number=True)
+                # handle last separately, because the GTF format
+                # excludes the stop codon from the CDS regions
+                # also check if the adjustment we make leaves
+                # enough bases for it to have one codon at least
+                if ((cds_regions[-1].stop - 2) - cds_regions[-1].start) >= 2:
+                    write_record("CDS",
+                        cds_regions[-1].start,
+                        cds_regions[-1].stop - 2,
+                        write_exon_number=True)
 
-        for utr in self.utr3_regions() + self.utr5_regions():
-            write_record("UTR", utr.start, utr.stop)
+            for utr in self.utr3_regions() + self.utr5_regions():
+                write_record("UTR", utr.start, utr.stop)
 
-        left = Region(self.chrom, self.cds[0], self.cds[0] + 2)
-        right = Region(self.chrom, self.cds[1] - 2, self.cds[1])
+            left = Region(self.chrom, self.cds[0], self.cds[0] + 2)
+            right = Region(self.chrom, self.cds[1] - 2, self.cds[1])
 
-        start_codon = left if self.strand == "+" else right
-        stop_codon = right if self.strand == "+" else left
+            start_codon = left if self.strand == "+" else right
+            stop_codon = right if self.strand == "+" else left
 
-        write_record("start_codon",
-                     start_codon.start, start_codon.stop,  # type: ignore
-                     write_exon_number=True)
-        write_record("stop_codon",
-                      stop_codon.start, stop_codon.stop,  # type: ignore
-                      write_exon_number=True)
+            write_record("start_codon",
+                        start_codon.start, start_codon.stop,  # type: ignore
+                        write_exon_number=True)
+            write_record("stop_codon",
+                        stop_codon.start, stop_codon.stop,  # type: ignore
+                        write_exon_number=True)
 
         return record_buffer
 

@@ -112,6 +112,23 @@ chr1        HAVANA      UTR         1917191     1917296     .           +       
     return build_gene_models_from_resource(res)
 
 
+@pytest.fixture()
+def ensembl_gtf_example_noncoding() -> GeneModels:
+    res = build_inmemory_test_resource(
+        content={
+            "genomic_resource.yaml":
+                "{type: gene_models, filename: gencode.txt, format: gtf}",
+            "gencode.txt": convert_to_tab_separated(textwrap.dedent("""
+chr1    HAVANA    gene    89295    133566    .    -    .    gene_id||"ENSG00000238009.7";||gene_type||"lncRNA";||gene_name||"ENSG00000238009";||level||2;||tag||"overlapping_locus";||havana_gene||"OTTHUMG00000001096.2";
+chr1    HAVANA    transcript    89295    120932    .    -    .    gene_id||"ENSG00000238009.7";||transcript_id||"ENST00000466430.5";||gene_type||"lncRNA";||gene_name||"ENSG00000238009";||transcript_type||"lncRNA";||transcript_name||"ENST00000466430";||level||2;||transcript_support_level||"5";||tag||"not_best_in_genome_evidence";||tag||"basic";||havana_gene||"OTTHUMG00000001096.2";||havana_transcript||"OTTHUMT00000003225.1";
+chr1    HAVANA    exon    120775    120932    .    -    .    gene_id||"ENSG00000238009.7";||transcript_id||"ENST00000466430.5";||gene_type||"lncRNA";||gene_name||"ENSG00000238009";||transcript_type||"lncRNA";||transcript_name||"ENST00000466430";||exon_number||1;||exon_id||"ENSE00001606755.2";||level||2;||transcript_support_level||"5";||tag||"not_best_in_genome_evidence";||tag||"basic";||havana_gene||"OTTHUMG00000001096.2";||havana_transcript||"OTTHUMT00000003225.1";
+chr1    HAVANA    exon    112700    112804    .    -    .    gene_id||"ENSG00000238009.7";||transcript_id||"ENST00000466430.5";||gene_type||"lncRNA";||gene_name||"ENSG00000238009";||transcript_type||"lncRNA";||transcript_name||"ENST00000466430";||exon_number||2;||exon_id||"ENSE00001957285.1";||level||2;||transcript_support_level||"5";||tag||"not_best_in_genome_evidence";||tag||"basic";||havana_gene||"OTTHUMG00000001096.2";||havana_transcript||"OTTHUMT00000003225.1";
+chr1    HAVANA    exon    92091    92240    .    -    .    gene_id||"ENSG00000238009.7";||transcript_id||"ENST00000466430.5";||gene_type||"lncRNA";||gene_name||"ENSG00000238009";||transcript_type||"lncRNA";||transcript_name||"ENST00000466430";||exon_number||3;||exon_id||"ENSE00001944529.1";||level||2;||transcript_support_level||"5";||tag||"not_best_in_genome_evidence";||tag||"basic";||havana_gene||"OTTHUMG00000001096.2";||havana_transcript||"OTTHUMT00000003225.1";
+chr1    HAVANA    exon    89295    91629    .    -    .    gene_id||"ENSG00000238009.7";||transcript_id||"ENST00000466430.5";||gene_type||"lncRNA";||gene_name||"ENSG00000238009";||transcript_type||"lncRNA";||transcript_name||"ENST00000466430";||exon_number||4;||exon_id||"ENSE00001846804.1";||level||2;||transcript_support_level||"5";||tag||"not_best_in_genome_evidence";||tag||"basic";||havana_gene||"OTTHUMG00000001096.2";||havana_transcript||"OTTHUMT00000003225.1";
+"""))})  # noqa: E501
+    return build_gene_models_from_resource(res)
+
+
 def test_gene_models_from_gtf(fixture_dirname: Callable) -> None:
     gtf_filename = fixture_dirname("gene_models/test_ref_gene.gtf")
     print(gtf_filename)
@@ -590,4 +607,31 @@ def test_calml6(gencode_46_calml_example: GeneModels) -> None:
 
     tx = example_models.transcript_models["ENST00000307786.8"]
     exonframes = [(exon, exon.frame) for exon in tx.exons]
-    import pdb; pdb.set_trace()
+
+
+def test_save_as_gtf_noncoding(
+    ensembl_gtf_example_noncoding: GeneModels,
+) -> None:
+    example_models = ensembl_gtf_example_noncoding
+    example_models.load()
+    serialized = example_models.to_gtf()
+
+    gene_models = build_gene_models_from_resource(build_inmemory_test_resource(
+        content={
+            "genomic_resource.yaml":
+                "{type: gene_models, filename: gencode.txt, format: gtf}",
+            "gencode.txt": serialized,
+    }))
+    gene_models.load()
+    assert len(gene_models.gene_models) == 1
+    assert len(gene_models.transcript_models) == 1
+    assert "ENSG00000238009" in gene_models.gene_models
+    assert "ENST00000466430.5" in gene_models.transcript_models
+    tm = gene_models.transcript_models["ENST00000466430.5"]
+
+    assert tm.tr_id == "ENST00000466430.5"
+    assert tm.cds == (120932, 89295)
+    assert tm.tx == (89295, 120932)
+    assert tm.is_coding() is False
+    assert len(tm.exons) == 4
+    assert tm.strand == "-"
