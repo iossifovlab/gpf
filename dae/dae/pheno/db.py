@@ -494,6 +494,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             query = query.where(
                 self.variable_browser.c.instrument_name == instrument_name,
             )
+        query = query.order_by(self.variable_browser.c.instrument_name)
 
         with self.engine.connect() as connection:
             cursor = connection.execution_options(stream_results=True)\
