@@ -8,10 +8,11 @@ import pandas as pd
 from box import Box
 from sqlalchemy import (
     Column,
-    Float,
     Double,
+    Float,
     Integer,
     MetaData,
+    Select,
     String,
     Table,
     create_engine,
@@ -461,10 +462,10 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 return Box(cast(dict, vs[0]._asdict()))
             return None
 
-    def search_measures(
+    def build_measures_query(
         self, instrument_name: str | None = None,
         keyword: str | None = None,
-    ) -> Iterator[dict[str, Any]]:
+    ) -> Select[Any]:
         """Find measures by keyword search."""
         query_params = []
 
@@ -477,14 +478,10 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                         keyword, escape="/",
                     ),
                 )
-            query_params.append(
-                self.variable_browser.c.measure_id.ilike(keyword, escape="/"),
-            )
-            query_params.append(
+            query_params.extend(
+                (self.variable_browser.c.measure_id.ilike(keyword, escape="/"),
                 self.variable_browser.c.measure_name.ilike(keyword, escape="/"),
-            )
-            query_params.append(
-                self.variable_browser.c.description.ilike(keyword, escape="/"),
+                self.variable_browser.c.description.ilike(keyword, escape="/")),
             )
             query = self.variable_browser.select().where(or_(*query_params))
         else:
@@ -494,7 +491,14 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             query = query.where(
                 self.variable_browser.c.instrument_name == instrument_name,
             )
-        query = query.order_by(self.variable_browser.c.instrument_name)
+        return query.order_by(self.variable_browser.c.instrument_name)
+
+    def search_measures(
+        self, instrument_name: str | None = None,
+        keyword: str | None = None,
+    ) -> Iterator[dict[str, Any]]:
+        """Find measures by keyword search."""
+        query = self.build_measures_query(instrument_name, keyword)
 
         with self.engine.connect() as connection:
             cursor = connection.execution_options(stream_results=True)\
@@ -519,34 +523,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         keyword: str | None = None,
     ) -> pd.DataFrame:
         """Find measures and return a dataframe with values."""
-        query_params = []
-
-        if keyword:
-            keyword = keyword.replace("%", r"/%").replace("_", r"/_")
-            keyword = f"%{keyword}%"
-            if not instrument_name:
-                query_params.append(
-                    self.variable_browser.c.instrument_name.like(
-                        keyword, escape="/",
-                    ),
-                )
-            query_params.append(
-                self.variable_browser.c.measure_id.like(keyword, escape="/"),
-            )
-            query_params.append(
-                self.variable_browser.c.measure_name.like(keyword, escape="/"),
-            )
-            query_params.append(
-                self.variable_browser.c.description.like(keyword, escape="/"),
-            )
-            query = self.variable_browser.select().where(or_(*query_params))
-        else:
-            query = self.variable_browser.select()
-
-        if instrument_name:
-            query = query.where(
-                self.variable_browser.c.instrument_name == instrument_name,
-            )
+        query = self.build_measures_query(instrument_name, keyword)
 
         df = pd.read_sql(query, self.engine)
         return df
