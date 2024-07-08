@@ -46,6 +46,7 @@ class Annotator(abc.ABC):
     def batch_annotate(
         self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
+        batch_work_dir: str | None = None,  # noqa: ARG002
     ) -> list[dict[str, Any]]:
         return itertools.starmap(
             self.annotate, zip(annotatables, contexts, strict=True),

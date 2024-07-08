@@ -189,8 +189,7 @@ class AnnotateColumnsTool(AnnotationTool):
         ref_genome_id: str | None,
         out_file_path: str,
         region: tuple = (),
-        *,
-        compress_output: bool = False,
+        compress_output: bool = False,  # noqa: FBT001 FBT002
     ) -> None:
         """Annotate a variants file with a given pipeline configuration."""
         # pylint: disable=too-many-locals,too-many-branches
