@@ -407,7 +407,7 @@ EOT
         done
 
         build_run_detached ctx:ctx_demo bash -c '
-            cd /wd/external_demo_annotator;
+            cd /wd/external_vep_annotator;
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
               -n 5 \
