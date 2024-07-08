@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import os
 import subprocess
 from pathlib import Path
 from typing import Any, TextIO
@@ -82,17 +83,24 @@ class DemoAnnotateGenomeAdapter(AnnotatorBase):
         for idx, row in enumerate(reader):
             contexts[idx]["ref_sequence"] = row[-1]
 
-    def batch_annotate(
+    def _do_batch_annotate(
         self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
+        batch_work_dir: str | None = None,
     ) -> list[dict[str, Any]]:
+        if batch_work_dir is None:
+            work_dir = self.work_dir
+        else:
+            work_dir = self.work_dir / batch_work_dir
+        os.makedirs(work_dir, exist_ok=True)
+
         genome_filepath = fsspec.url_to_fs(
             self.genome_resource.get_file_url(self.genome_filename),
         )[1]
         self.genome_resource.get_file_url(f"{self.genome_filename}.fai")
 
-        with (self.work_dir / "input.tsv").open("w+t") as input_file, \
-                (self.work_dir / "output.tsv").open("w+t") as out_file:
+        with (work_dir / "input.tsv").open("w+t") as input_file, \
+                (work_dir / "output.tsv").open("w+t") as out_file:
             self.prepare_input(input_file, annotatables)
             args = [
                 "demo_annotate_ref_res", input_file.name,

@@ -2,8 +2,8 @@
 
 import logging
 from collections import Counter
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import yaml
 
@@ -138,10 +138,14 @@ def build_annotation_pipeline(
     pipeline.raw = config
     try:
         for idx, annotator_config in enumerate(pipeline_config):
+            params = annotator_config.parameters
             if work_dir is not None:
-                annotator_config.parameters._data["work_dir"] = work_dir / \
-                    f"A{idx}_{annotator_config.type}"
-                annotator_config.parameters._used_keys.add("work_dir")
+                params._data["work_dir"] = (  # noqa: SLF001
+                    work_dir / f"A{idx}_{annotator_config.type}"
+                )
+            else:
+                params._data["work_dir"] = Path("./work")  # noqa: SLF001
+            params._used_keys.add("work_dir")  # noqa: SLF001
             builder = get_annotator_factory(annotator_config.type)
             annotator = builder(pipeline, annotator_config)
             annotator = InputAnnotableAnnotatorDecorator.decorate(annotator)

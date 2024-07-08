@@ -45,7 +45,7 @@ def annotate_genes_cli(raw_args: list[str] | None = None):
         raise ValueError("Gene models cannot be streamed!")
 
     gene_models = build_gene_models_from_file(
-        args.gene_models, file_format = args.format,
+        args.gene_models, file_format=args.format,
     )
     gene_models.load()
 

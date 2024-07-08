@@ -4,7 +4,6 @@ import os
 import pathlib
 import textwrap
 
-from dae.genomic_resources.testing import setup_genome
 import pysam
 import pytest
 
@@ -13,6 +12,7 @@ from dae.annotation.annotate_columns import build_record_to_annotatable
 from dae.annotation.annotate_columns import cli as cli_columns
 from dae.annotation.annotate_vcf import cli as cli_vcf
 from dae.annotation.annotate_vcf import produce_partfile_paths
+from dae.genomic_resources.testing import setup_genome
 from dae.testing import setup_denovo, setup_directories, setup_vcf
 
 
@@ -56,11 +56,11 @@ def test_renamed_columns(
 def test_build_record_to_annotable_failures() -> None:
     with pytest.raises(
             ValueError, match="no record to annotatable could be found"):
-        build_record_to_annotatable({}, set([]))
+        build_record_to_annotatable({}, set())
 
     with pytest.raises(
             ValueError, match="no record to annotatable could be found"):
-        build_record_to_annotatable({"gosho": "pesho"}, set([]))
+        build_record_to_annotatable({"gosho": "pesho"}, set())
 
 
 def get_file_content_as_string(file: str) -> str:
@@ -75,6 +75,10 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
         root_path,
         {
             "annotation.yaml": """
+                - position_score: one
+            """,
+            "annotation_duplicate.yaml": """
+                - position_score: one
                 - position_score: one
             """,
             "annotation_multiallelic.yaml": """
@@ -282,11 +286,9 @@ def test_basic_vcf(
         ]
     ])
 
-    result = []
     # pylint: disable=no-member
     with pysam.VariantFile(str(out_file)) as vcf_file:
-        for vcf in vcf_file.fetch():
-            result.append(vcf.info["score"][0])
+        result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
     assert result == ["0.1", "0.2"]
 
 
@@ -322,8 +324,7 @@ def test_multiallelic_vcf(
     result = []
     # pylint: disable=no-member
     with pysam.VariantFile(str(out_file)) as vcf_file:
-        for vcf in vcf_file.fetch():
-            result.append(vcf.info["score"])
+        result = [vcf.info["score"] for vcf in vcf_file.fetch()]
     assert result == [("0.1", "0.2"), ("0.3", "0.4")]
 
 
@@ -367,8 +368,7 @@ def test_vcf_multiple_chroms(
     result = []
     # pylint: disable=no-member
     with pysam.VariantFile(str(out_file)) as vcf_file:
-        for vcf in vcf_file.fetch():
-            result.append(vcf.info["score"][0])
+        result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
     assert result == ["0.1", "0.2",
                       "0.3", "0.4",
                       "0.5", "0.6"]
@@ -450,6 +450,60 @@ def test_annotate_columns_multiple_chrom(
     }
 
 
+def test_annotate_columns_multiple_chrom_repeated_attr(
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+        chr2    33
+        chr2    34
+        chr3    43
+        chr3    44
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore_A0\tscore_A1\n"
+        "chr1\t23\t0.1\t0.1\n"
+        "chr1\t24\t0.2\t0.2\n"
+        "chr2\t33\t0.3\t0.3\n"
+        "chr2\t34\t0.4\t0.4\n"
+        "chr3\t43\t0.5\t0.5\n"
+        "chr3\t44\t0.6\t0.6\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    in_file_gz = in_file.with_suffix(".txt.gz")
+    out_file = root_path / "out.txt"
+    out_file_tbi = root_path / "out.txt.gz.tbi"
+    workdir = root_path / "output"
+    annotation_file = root_path / "annotation_duplicate.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+    pysam.tabix_compress(str(in_file), str(in_file_gz), force=True)
+    pysam.tabix_index(str(in_file_gz), force=True, line_skip=1, seq_col=0,
+                      start_col=1, end_col=1)
+
+    cli_columns([
+        str(a) for a in [
+            in_file_gz, annotation_file, "-w", workdir, "--grr", grr_file,
+            "-o", out_file, "-j", 1, "-R", "test_genome",
+            "--allow-repeated-attributes",
+        ]
+    ])
+
+    with gzip.open(out_file.with_suffix(".txt.gz"), "rt") as out:
+        out_file_content = out.read()
+    assert out_file_content == out_expected_content
+    assert os.path.exists(out_file_tbi)
+    assert set(os.listdir(workdir)) == {
+        ".task-log",     # default task logs dir
+        ".task-status",  # default task status dir
+        # part files must be cleaned up
+    }
+
+
 def test_annotate_vcf_forbidden_symbol_replacement(
     annotate_directory_fixture: pathlib.Path,
 ) -> None:
@@ -481,11 +535,9 @@ def test_annotate_vcf_forbidden_symbol_replacement(
         ]
     ])
 
-    result = []
     # pylint: disable=no-member
     with pysam.VariantFile(str(out_file)) as vcf_file:
-        for vcf in vcf_file.fetch():
-            result.append(vcf.info["score"][0])
+        result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
     assert result == ["a|b", "c|d", "e_f"]
 
 
@@ -638,8 +690,10 @@ def test_annotate_vcf_repeated_attributes(
     # pylint: disable=no-member
     with pysam.VariantFile(str(out_file)) as vcf_file:
         for vcf in vcf_file.fetch():
-            result.append(vcf.info["score_A0"][0])
-            result.append(vcf.info["score_A1"][0])
+            result.extend([
+                vcf.info["score_A0"][0],
+                vcf.info["score_A1"][0],
+            ])
     assert result == ["0.1", "0.101", "0.2", "0.201"]
 
 

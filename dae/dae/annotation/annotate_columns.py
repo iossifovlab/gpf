@@ -66,7 +66,7 @@ def read_input(
                 .split(args.input_separator)
         return closing(tabix_file), tabix_file.fetch(*region), header
     # pylint: disable=consider-using-with
-    text_file = open(args.input, "rt")
+    text_file = open(args.input, "rt")  # noqa: SIM115
     header = text_file.readline().strip("\r\n").split(args.input_separator)
     return text_file, text_file, header
 
@@ -108,7 +108,11 @@ def combine(
 ) -> None:
     """Combine annotated region parts into a single VCF file."""
     grr = build_genomic_resource_repository(definition=grr_definition)
-    pipeline = build_annotation_pipeline(pipeline_config, grr)
+    pipeline = build_annotation_pipeline(
+        pipeline_config, grr,
+        allow_repeated_attributes=args.allow_repeated_attributes,
+        work_dir=Path(args.work_dir),
+    )
     if ref_genome_id is not None:
         genome = build_reference_genome_from_resource(
             grr.get_resource(ref_genome_id))
@@ -185,6 +189,7 @@ class AnnotateColumnsTool(AnnotationTool):
         ref_genome_id: str | None,
         out_file_path: str,
         region: tuple = (),
+        *,
         compress_output: bool = False,
     ) -> None:
         """Annotate a variants file with a given pipeline configuration."""
@@ -219,7 +224,15 @@ class AnnotateColumnsTool(AnnotationTool):
         if compress_output:
             out_file = gzip.open(out_file_path, "wt")
         else:
-            out_file = open(out_file_path, "wt")
+            out_file = open(out_file_path, "wt")  # noqa: SIM115
+
+        if region is None or len(region) == 0:
+            batch_work_dir = None
+        else:
+            chrom = region[0]
+            pos_beg = region[1] if len(region) > 1 else "_"
+            pos_end = region[2] if len(region) > 2 else "_"
+            batch_work_dir = f"{chrom}_{pos_beg}_{pos_end}"
 
         pipeline.open()
         with pipeline, in_file, out_file:
@@ -243,6 +256,7 @@ class AnnotateColumnsTool(AnnotationTool):
                     args, pipeline, line_iterator,
                     header_columns,
                     record_to_annotatable,
+                    batch_work_dir=batch_work_dir,
                 )
             else:
                 values = AnnotateColumnsTool.single_annotate(
@@ -260,6 +274,7 @@ class AnnotateColumnsTool(AnnotationTool):
         line_iterator: Iterable,
         header_columns: list[str],
         record_to_annotatable: RecordToAnnotable,
+        batch_work_dir: str | None = None,
     ) -> Generator[list[str], None, None]:
         """Annotate given lines as a batch."""
         errors = []
@@ -272,25 +287,31 @@ class AnnotateColumnsTool(AnnotationTool):
         for lnum, line in enumerate(line_iterator):
             try:
                 columns = line.strip("\n\r").split(args.input_separator)
-                record = dict(zip(header_columns, columns))
+                record = dict(zip(header_columns, columns, strict=True))
                 records.append(record)
 
                 annotatables.append(record_to_annotatable.build(record))
             except Exception as ex:  # pylint: disable=broad-except
-                logger.warning(
+                logger.exception(
                     "unexpected input data format at line %s: %s",
-                    lnum, line, exc_info=True)
+                    lnum, line)
                 errors.append((lnum, line, str(ex)))
         try:
             if isinstance(pipeline, ReannotationPipeline):
-                annotations = pipeline.batch_annotate(annotatables, records)
+                annotations = pipeline.batch_annotate(
+                    annotatables, records,
+                    batch_work_dir=batch_work_dir,
+                )
             else:
-                annotations = pipeline.batch_annotate(annotatables)
+                annotations = pipeline.batch_annotate(
+                    annotatables,
+                    batch_work_dir=batch_work_dir,
+                )
         except Exception as ex:  # pylint: disable=broad-except
             logger.exception("Error during batch annotation")
             errors.append((-1, -1, str(ex)))
 
-        for record, annotation in zip(records, annotations):
+        for record, annotation in zip(records, annotations, strict=True):
             for col in annotation_columns:
                 record[col] = annotation[col]
             yield list(map(str, record.values()))
@@ -318,7 +339,7 @@ class AnnotateColumnsTool(AnnotationTool):
         for lnum, line in enumerate(line_iterator):
             try:
                 columns = line.strip("\n\r").split(args.input_separator)
-                record = dict(zip(header_columns, columns))
+                record = dict(zip(header_columns, columns, strict=True))
                 if isinstance(pipeline, ReannotationPipeline):
                     for col in pipeline.attributes_deleted:
                         del record[col]
@@ -335,9 +356,9 @@ class AnnotateColumnsTool(AnnotationTool):
                 result = list(map(str, record.values()))
                 yield result
             except Exception as ex:  # pylint: disable=broad-except
-                logger.warning(
+                logger.exception(
                     "unexpected input data format at line %s: %s",
-                    lnum, line, exc_info=True)
+                    lnum, line)
                 errors.append((lnum, line, str(ex)))
 
         if len(errors) > 0:
@@ -368,7 +389,9 @@ class AnnotateColumnsTool(AnnotationTool):
                 self.args.input, regions, self.args.work_dir)
 
             region_tasks = []
-            for index, (region, path) in enumerate(zip(regions, file_paths)):
+            for index, (region, path) in enumerate(
+                zip(regions, file_paths, strict=True),
+            ):
                 region_tasks.append(self.task_graph.create_task(
                     f"part-{index}",
                     AnnotateColumnsTool.annotate,

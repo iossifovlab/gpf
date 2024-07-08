@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import abc
+import itertools
 import logging
+from collections.abc import Callable
 from types import TracebackType
-from typing import Any, Callable
+from typing import Any
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import (
@@ -45,10 +47,9 @@ class Annotator(abc.ABC):
         self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        return [
-            self.annotate(annotatable, context)
-            for annotatable, context in zip(annotatables, contexts)
-        ]
+        return itertools.starmap(
+            self.annotate, zip(annotatables, contexts, strict=True),
+        )
 
     def close(self) -> None:
         self._is_open = False
@@ -142,6 +143,7 @@ class AnnotationPipeline:
     def batch_annotate(
         self, annotatables: list[Annotatable | None],
         contexts: list[dict] | None = None,
+        batch_work_dir: str | None = None,
     ) -> list[dict]:
         """Apply all annotators to a list of annotatables."""
         if not self._is_open:
@@ -151,8 +153,13 @@ class AnnotationPipeline:
             contexts = [{} for _ in annotatables]
 
         for annotator in self.annotators:
-            attributes_list = annotator.batch_annotate(annotatables, contexts)
-            for context, attributes in zip(contexts, attributes_list):
+            attributes_list = annotator.batch_annotate(
+                annotatables, contexts,
+                batch_work_dir=batch_work_dir,
+            )
+            for context, attributes in zip(
+                contexts, attributes_list, strict=True,
+            ):
                 context.update(attributes)
 
         return contexts
@@ -175,9 +182,9 @@ class AnnotationPipeline:
             try:
                 annotator.close()
             except Exception:  # pylint: disable=broad-except
-                logger.error(
+                logger.exception(
                     "exception while closing annotator %s",
-                    annotator.get_info(), exc_info=True)
+                    annotator.get_info())
         self._is_open = False
 
     def __enter__(self) -> AnnotationPipeline:
@@ -382,8 +389,9 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
         if att_info.type != "annotatable":
             raise ValueError(f"The attribute '{self.input_annotatable_name}' "
                              "is expected to be of type annotatable.")
-        self.child._info.documentation += \
+        self.child._info.documentation += (  # noqa: SLF001
             f"\n* **input_annotatable**: `{self.input_annotatable_name}`"
+        )
 
     @property
     def used_context_attributes(self) -> tuple[str, ...]:
@@ -417,16 +425,19 @@ class ValueTransformAnnotatorDecorator(AnnotatorDecorator):
                 transform_str = attribute_info.parameters["value_transform"]
                 try:
                     # pylint: disable=eval-used
-                    transform = eval(f"lambda value: { transform_str }")
+                    transform = eval(  # noqa: S307
+                        f"lambda value: { transform_str }",
+                    )
                 except Exception as error:
                     raise ValueError(
                         f"The value trasform |{transform_str}| is "
                         f"sytactically invalid.", error) from error
                 value_transformers[attribute_info.name] = transform
                 # pylint: disable=protected-access
-                attribute_info._documentation = \
-                    f"{attribute_info.documentation}\n\n" \
+                attribute_info._documentation = (  # noqa: SLF001
+                    f"{attribute_info.documentation}\n\n"
                     f"**value_transform:** {transform_str}"
+                )
         if value_transformers:
             return ValueTransformAnnotatorDecorator(child, value_transformers)
         return child

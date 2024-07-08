@@ -2,6 +2,7 @@
 import textwrap
 
 import pytest
+import yaml
 
 from dae.annotation.annotate_utils import AnnotationTool
 from demo_annotator.adapter import DemoAnnotatorAdapter
@@ -77,12 +78,12 @@ def annotation_configs(
         ("config_3"),
         ("config_4"),
         ("config_5"),
-    ]
+    ],
 )
 def test_demo_annotator_initialization(annotation_configs, config_key):
-    config = annotation_configs[config_key]
+    config = yaml.safe_load(annotation_configs[config_key])
     pipeline = AnnotationTool._produce_annotation_pipeline(
-        config, None, None, allow_repeated_attributes=True
+        config, None, None, allow_repeated_attributes=True,
     )
     annotators = pipeline.annotators
     assert len(annotators) == 1
