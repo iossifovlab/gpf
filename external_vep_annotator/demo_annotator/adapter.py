@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import csv
+import os
 import select
 import subprocess
-import tempfile
+from pathlib import Path
 from typing import Any, TextIO
 
 from dae.annotation.annotatable import Annotatable
@@ -35,6 +36,7 @@ class DemoAnnotatorAdapter(AnnotatorBase):
                                               "of the annotatable"),
             },
         )
+        self.work_dir: Path = info.parameters.get("work_dir")
 
     def _do_annotate(
         self, _annotatable: Annotatable | None,
@@ -70,12 +72,19 @@ class DemoAnnotatorAdapter(AnnotatorBase):
         for idx, row in enumerate(reader):
             contexts[idx]["annotatable_length"] = int(row[-1])
 
-    def batch_annotate(
+    def _do_batch_annotate(
         self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
+        batch_work_dir: str | None = None,
     ) -> list[dict[str, Any]]:
-        with tempfile.NamedTemporaryFile("w+t", delete=False) as input_file, \
-                tempfile.NamedTemporaryFile("w+t", delete=False) as out_file:
+        if batch_work_dir is None:
+            work_dir = self.work_dir
+        else:
+            work_dir = self.work_dir / batch_work_dir
+        os.makedirs(work_dir, exist_ok=True)
+
+        with (work_dir / "input.tsv").open("w+t") as input_file, \
+                (work_dir / "output.tsv").open("w+t") as out_file:
             self.prepare_input(input_file, annotatables)
             subprocess.run(
                 ["annotate_length", input_file.name, out_file.name],
@@ -89,9 +98,10 @@ class DemoAnnotatorAdapter(AnnotatorBase):
 class DemoAnnotatorStreamAdapter(DemoAnnotatorAdapter):
     """Annotation pipeline adapter for annotate_length using streams."""
 
-    def batch_annotate(
+    def _do_batch_annotate(
         self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
+        batch_work_dir: str | None = None,  # noqa: ARG002
     ) -> list[dict[str, Any]]:
         with subprocess.Popen(
             ["annotate_length"],

@@ -2,6 +2,7 @@
 import textwrap
 
 import pytest
+import yaml
 
 from dae.annotation.annotate_utils import AnnotationTool
 from demo_annotator.adapter import DemoAnnotatorAdapter
@@ -10,21 +11,21 @@ from demo_annotator.adapter import DemoAnnotatorAdapter
 @pytest.fixture()
 def config_1() -> str:
     return textwrap.dedent("""
-        - external_demo_stream_annotator
+        - external_demo_annotator
     """)
 
 
 @pytest.fixture()
 def config_2() -> str:
     return textwrap.dedent("""
-        - external_demo_stream_annotator: {}
+        - external_demo_annotator: {}
     """)
 
 
 @pytest.fixture()
 def config_3() -> str:
     return textwrap.dedent("""
-        - external_demo_stream_annotator:
+        - external_demo_annotator:
             attributes:
             - name: annotatable_length
     """)
@@ -33,7 +34,7 @@ def config_3() -> str:
 @pytest.fixture()
 def config_4() -> str:
     return textwrap.dedent("""
-        - external_demo_stream_annotator:
+        - external_demo_annotator:
             attributes:
             - name: pesho
               source: annotatable_length
@@ -43,7 +44,7 @@ def config_4() -> str:
 @pytest.fixture()
 def config_5() -> str:
     return textwrap.dedent("""
-        - external_demo_stream_annotator:
+        - external_demo_annotator:
             attributes:
             - name: pesho
               source: annotatable_length
@@ -77,12 +78,12 @@ def annotation_configs(
         ("config_3"),
         ("config_4"),
         ("config_5"),
-    ]
+    ],
 )
 def test_demo_annotator_initialization(annotation_configs, config_key):
-    config = annotation_configs[config_key]
+    config = yaml.safe_load(annotation_configs[config_key])
     pipeline = AnnotationTool._produce_annotation_pipeline(
-        config, None, None, allow_repeated_attributes=True
+        config, None, None, allow_repeated_attributes=True,
     )
     annotators = pipeline.annotators
     assert len(annotators) == 1

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import os
 import subprocess
 from pathlib import Path
 from typing import Any, TextIO
@@ -36,7 +37,9 @@ class DemoAnnotateGeneModelsAdapter(AnnotatorBase):
             pipeline.repository, self.work_dir / "grr_cache",
         )
         gene_models_id = info.parameters.get("gene_models")
-        self.gene_models_resource = self.cache_repo.get_resource(gene_models_id)
+        self.gene_models_resource = self.cache_repo.get_resource(
+            gene_models_id,
+        )
 
         self.gene_model_filename = \
             self.gene_models_resource.get_config()["filename"]
@@ -84,20 +87,23 @@ class DemoAnnotateGeneModelsAdapter(AnnotatorBase):
         for idx, row in enumerate(reader):
             contexts[idx]["gene_symbols"] = row[-1]
 
-    def batch_annotate(
+    def _do_batch_annotate(
         self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
+        batch_work_dir: str | None = None,
     ) -> list[dict[str, Any]]:
-        print("Getting filepath")
-        print(self.gene_model_filename)
-        print(self.gene_models_resource.get_file_url(self.gene_model_filename))
+        if batch_work_dir is None:
+            work_dir = self.work_dir
+        else:
+            work_dir = self.work_dir / batch_work_dir
+        os.makedirs(work_dir, exist_ok=True)
+
         gene_model_filepath = fsspec.url_to_fs(
             self.gene_models_resource.get_file_url(self.gene_model_filename),
         )[1]
-        print(f"Done - {gene_model_filepath}")
 
-        with (self.work_dir / "input.tsv").open("w+t") as input_file, \
-                (self.work_dir / "output.tsv").open("w+t") as out_file:
+        with (work_dir / "input.tsv").open("w+t") as input_file, \
+                (work_dir / "output.tsv").open("w+t") as out_file:
             self.prepare_input(input_file, annotatables)
             args = [
                 "demo_annotate_gm_res", input_file.name,
@@ -105,7 +111,6 @@ class DemoAnnotateGeneModelsAdapter(AnnotatorBase):
             ]
             if self.gene_model_format:
                 args += ["--format", self.gene_model_format]
-            print(args)
             subprocess.run(args, check=True)
             out_file.flush()
             self.read_output(out_file, contexts)

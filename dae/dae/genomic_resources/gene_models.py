@@ -1396,7 +1396,7 @@ f"""##description: GTF format dump for gene models "{self.resource.resource_id}"
                 if tr_id not in self.transcript_models:
                     raise ValueError(
                         f"exon or CDS transcript {tr_id} not found "
-                        f"in transctipt models",
+                        f"in transcript models",
                     )
                 transcript_model = self.transcript_models[tr_id]
                 if feature == "exon":

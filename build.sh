@@ -401,13 +401,13 @@ EOT
 
         defer_ret build_run_ctx_reset ctx:ctx_demo
 
-        for d in /wd/dae /wd/wdae /wd/dae_conftests /wd/external_demo_annotator; do
+        for d in /wd/dae /wd/wdae /wd/dae_conftests /wd/external_vep_annotator; do
           build_run_container ctx:ctx_demo bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
             pip install -e .'
         done
 
         build_run_detached ctx:ctx_demo bash -c '
-            cd /wd/external_demo_annotator;
+            cd /wd/external_vep_annotator;
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
               -n 5 \
