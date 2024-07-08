@@ -82,6 +82,36 @@ chr7    HAVANA  UTR     155799980       155802902       .       -       .       
     return build_gene_models_from_resource(res)
 
 
+@pytest.fixture()
+def gencode_46_calml_example() -> GeneModels:
+    # CALML6
+    res = build_inmemory_test_resource(
+        content={
+            "genomic_resource.yaml":
+                "{type: gene_models, filename: gencode.txt, format: gtf}",
+            "gencode.txt": convert_to_tab_separated(textwrap.dedent("""
+chr1        HAVANA      gene        1915108     1917296     .           +           .           gene_id||"ENSG00000169885.10";||gene_type||"protein_coding";||gene_name||"CALML6";||level||1;||hgnc_id||"HGNC:24193";||havana_gene||"OTTHUMG00000000943.3";
+chr1        HAVANA      transcript  1915260     1917296     .           +           .           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      exon        1915260     1915307     .           +           .           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      CDS         1915281     1915307     .           +           0           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      start_codon 1915281     1915283     .           +           0           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      exon        1915685     1915735     .           +           .           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      CDS         1915685     1915735     .           +           0           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      exon        1916441     1916615     .           +           .           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      CDS         1916441     1916615     .           +           0           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      exon        1916752     1916896     .           +           .           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      CDS         1916752     1916896     .           +           2           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      exon        1916974     1917074     .           +           .           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      CDS         1916974     1917074     .           +           1           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      exon        1917147     1917296     .           +           .           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      CDS         1917147     1917190     .           +           2           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      stop_codon  1917191     1917193     .           +           0           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      UTR         1915260     1915280     .           +           .           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+chr1        HAVANA      UTR         1917191     1917296     .           +           .           gene_id||"ENSG00000169885.10";||transcript_id||"ENST00000307786.8";||gene_type||"protein_coding";||gene_name||"CALML6";||transcript_type||"protein_coding";
+"""))})  # noqa: E501
+    return build_gene_models_from_resource(res)
+
+
 def test_gene_models_from_gtf(fixture_dirname: Callable) -> None:
     gtf_filename = fixture_dirname("gene_models/test_ref_gene.gtf")
     print(gtf_filename)
@@ -551,3 +581,13 @@ def test_save_as_gtf_complex(ensembl_gtf_example_shh: GeneModels) -> None:
     assert tm.tx == (155799980, 155812463)
     assert len(tm.exons) == 3
     assert tm.strand == "-"
+
+
+def test_calml6(gencode_46_calml_example: GeneModels) -> None:
+    example_models = gencode_46_calml_example
+    example_models.load()
+    serialized = example_models.to_gtf()
+
+    tx = example_models.transcript_models["ENST00000307786.8"]
+    exonframes = [(exon, exon.frame) for exon in tx.exons]
+    import pdb; pdb.set_trace()
