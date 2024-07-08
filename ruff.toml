@@ -47,9 +47,11 @@ ignore = [
     "TRY003",
     "T201", "S101", "PTH",  # for separate tasks, fix issues and then enable these rules
     "PT006",  # for separate task - currently we use 'csv', but maybe change to 'tuple' or 'list'?
+    "PERF203", # Python 3.11 introduces zero cost exception handling
     "S603",
     "S404",
     "B019",
+    "FURB192",
 ]
 fixable = ["ALL"]
 preview = true
