@@ -129,6 +129,19 @@ chr1    HAVANA    exon    89295    91629    .    -    .    gene_id||"ENSG0000023
     return build_gene_models_from_resource(res)
 
 
+@pytest.fixture()
+def gtf_example_no_exons() -> GeneModels:
+    res = build_inmemory_test_resource(
+        content={
+            "genomic_resource.yaml":
+                "{type: gene_models, filename: gencode.txt, format: gtf}",
+            "gencode.txt": convert_to_tab_separated(textwrap.dedent("""
+chr1    HAVANA    gene    89295    133566    .    -    .    gene_id||"ENSG00000238009.7";||gene_type||"lncRNA";||gene_name||"ENSG00000238009";||level||2;||tag||"overlapping_locus";||havana_gene||"OTTHUMG00000001096.2";
+chr1    HAVANA    transcript    89295    120932    .    -    .    gene_id||"ENSG00000238009.7";||transcript_id||"ENST00000466430.5";||gene_type||"lncRNA";||gene_name||"ENSG00000238009";||transcript_type||"lncRNA";||transcript_name||"ENST00000466430";||level||2;||transcript_support_level||"5";||tag||"not_best_in_genome_evidence";||tag||"basic";||havana_gene||"OTTHUMG00000001096.2";||havana_transcript||"OTTHUMT00000003225.1";
+"""))})  # noqa: E501
+    return build_gene_models_from_resource(res)
+
+
 def test_gene_models_from_gtf(fixture_dirname: Callable) -> None:
     gtf_filename = fixture_dirname("gene_models/test_ref_gene.gtf")
     print(gtf_filename)
@@ -634,4 +647,32 @@ def test_save_as_gtf_noncoding(
     assert tm.tx == (89295, 120932)
     assert tm.is_coding() is False
     assert len(tm.exons) == 4
+    assert tm.strand == "-"
+
+
+def test_save_as_gtf_no_exons(
+    gtf_example_no_exons: GeneModels,
+) -> None:
+    example_models = gtf_example_no_exons
+    example_models.load()
+    serialized = example_models.to_gtf()
+
+    gene_models = build_gene_models_from_resource(build_inmemory_test_resource(
+        content={
+            "genomic_resource.yaml":
+                "{type: gene_models, filename: gencode.txt, format: gtf}",
+            "gencode.txt": serialized,
+    }))
+    gene_models.load()
+    assert len(gene_models.gene_models) == 1
+    assert len(gene_models.transcript_models) == 1
+    assert "ENSG00000238009" in gene_models.gene_models
+    assert "ENST00000466430.5" in gene_models.transcript_models
+    tm = gene_models.transcript_models["ENST00000466430.5"]
+
+    assert tm.tr_id == "ENST00000466430.5"
+    assert tm.cds == (120932, 89295)
+    assert tm.tx == (89295, 120932)
+    assert tm.is_coding() is False
+    assert len(tm.exons) == 0
     assert tm.strand == "-"
