@@ -255,7 +255,7 @@ class VEPAnnotatorBase(AnnotatorBase):
             )[0]]
 
 
-class DemoVEPCacheAnnotator(VEPAnnotatorBase):
+class VEPCacheAnnotator(VEPAnnotatorBase):
     """Annotation pipeline adapter for dummy_annotate using tempfiles."""
 
     def __init__(
@@ -299,7 +299,7 @@ class DemoVEPCacheAnnotator(VEPAnnotatorBase):
         return contexts
 
 
-class DemoVEPGTFAnnotator(VEPAnnotatorBase):
+class VEPEffectAnnotator(VEPAnnotatorBase):
     """Annotation pipeline adapter for dummy_annotate using tempfiles."""
 
     def __init__(
@@ -384,15 +384,15 @@ class DemoVEPGTFAnnotator(VEPAnnotatorBase):
         return contexts
 
 
-def build_demo_vep_annotator(
+def build_vep_cache_annotator(
     pipeline: AnnotationPipeline,
     info: AnnotatorInfo,
 ) -> Annotator:
-    return DemoVEPCacheAnnotator(pipeline, info)
+    return VEPCacheAnnotator(pipeline, info)
 
 
-def build_demo_vep_gtf_annotator(
+def build_vep_effect_annotator(
     pipeline: AnnotationPipeline,
     info: AnnotatorInfo,
 ) -> Annotator:
-    return DemoVEPGTFAnnotator(pipeline, info)
+    return VEPEffectAnnotator(pipeline, info)
