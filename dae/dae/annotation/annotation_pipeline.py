@@ -5,7 +5,7 @@ from __future__ import annotations
 import abc
 import itertools
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from types import TracebackType
 from typing import Any
 
@@ -47,7 +47,7 @@ class Annotator(abc.ABC):
         self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,  # noqa: ARG002
-    ) -> list[dict[str, Any]]:
+    ) -> Iterable[dict[str, Any]]:
         return itertools.starmap(
             self.annotate, zip(annotatables, contexts, strict=True),
         )

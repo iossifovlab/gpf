@@ -5,7 +5,7 @@ import abc
 import os
 from itertools import starmap
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import AnnotatorInfo
@@ -27,7 +27,7 @@ class AnnotatorBase(Annotator):
             attribute_config.type = att_type
             attribute_config.description = att_desc
 
-        self.work_dir: Path = info.parameters.get("work_dir")
+        self.work_dir: Path = cast(Path, info.parameters.get("work_dir"))
         if self.work_dir is not None:
             os.makedirs(self.work_dir, exist_ok=True)
 
@@ -77,21 +77,3 @@ class AnnotatorBase(Annotator):
             attr.name: result[attr.source]
             for attr in self._info.attributes
         } for result in inner_output]
-
-    def get_batch_work_dir(
-        self, region: tuple[str, int, int] | None,
-    ) -> Path | None:
-        """Get and create separate batch working directory for region."""
-        if self.work_dir is None:
-            return None
-
-        if region is None:
-            return self.work_dir
-
-        chrom = region[0]
-        pos_beg = region[1] if len(region) > 1 else "_"
-        pos_end = region[2] if len(region) > 2 else "_"
-        region_dir = f"{chrom}_{pos_beg}_{pos_end}"
-        os.makedirs(self.work_dir / region_dir, exist_ok=True)
-
-        return region_dir
