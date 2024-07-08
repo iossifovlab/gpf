@@ -61,7 +61,7 @@ chr7    HAVANA  UTR     155799980       155802902       .       -       .       
 
 
 @pytest.fixture()
-def gencode_46_calml_example() -> GeneModels:
+def gencode_46_calml6_example() -> GeneModels:
     # CALML6
     res = build_inmemory_test_resource(
         content={

@@ -7,7 +7,6 @@ import logging
 import operator
 from collections import defaultdict
 from datetime import datetime
-from io import StringIO
 from typing import IO, Any, ClassVar, Protocol, cast
 
 import pandas as pd
@@ -401,12 +400,12 @@ class TranscriptModel:
     def update_frames(self) -> None:
         """Update codon frames."""
         frames = self.calc_frames()
-        for exon, frame in zip(self.exons, frames):
+        for exon, frame in zip(self.exons, frames, strict=True):
             exon.frame = frame
 
     def test_frames(self) -> bool:
         frames = self.calc_frames()
-        for exon, frame in zip(self.exons, frames):
+        for exon, frame in zip(self.exons, frames, strict=True):
             if exon.frame != frame:
                 return False
         return True
@@ -682,7 +681,8 @@ class GeneModels(
             assert len(exon_starts) == len(exon_ends) == len(exon_frames)
 
             exons = []
-            for start, end, frame in zip(exon_starts, exon_ends, exon_frames):
+            for start, end, frame in zip(exon_starts, exon_ends, exon_frames,
+                                         strict=True):
                 exons.append(Exon(start=start, stop=end, frame=frame))
             attributes: dict = {}
             atts = line.get("atts")
@@ -761,7 +761,7 @@ class GeneModels(
 
             exons = [
                 Exon(start + 1, end)
-                for start, end in zip(exon_starts, exon_ends)
+                for start, end in zip(exon_starts, exon_ends, strict=True)
             ]
 
             transcript_ids_counter[tr_name] += 1
@@ -837,7 +837,7 @@ class GeneModels(
 
             exons = [
                 Exon(start + 1, end)
-                for start, end in zip(exon_starts, exon_ends)
+                for start, end in zip(exon_starts, exon_ends, strict=True)
             ]
 
             transcript_ids_counter[tr_name] += 1
@@ -971,7 +971,7 @@ class GeneModels(
 
             exons = [
                 Exon(start + 1, end)
-                for start, end in zip(exon_starts, exon_ends)
+                for start, end in zip(exon_starts, exon_ends, strict=True)
             ]
 
             transcript_ids_counter[tr_name] += 1
@@ -1056,7 +1056,7 @@ class GeneModels(
 
             exons = [
                 Exon(start + 1, end)
-                for start, end in zip(exon_starts, exon_ends)
+                for start, end in zip(exon_starts, exon_ends, strict=True)
             ]
 
             transcript_ids_counter[tr_name] += 1
@@ -1179,7 +1179,7 @@ class GeneModels(
 
             exons = [
                 Exon(start + 1, end)
-                for start, end in zip(exon_starts, exon_ends)
+                for start, end in zip(exon_starts, exon_ends, strict=True)
             ]
 
             transcript_ids_counter[tr_name] += 1
