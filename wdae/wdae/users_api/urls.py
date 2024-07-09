@@ -11,6 +11,7 @@ urlpatterns = [
     re_path(r"^users/login/?$", views.RESTLoginView.as_view()),
     re_path(r"^users/logout/?$", views.logout),
     re_path(r"^users/get_user_info/?$", views.get_user_info),
+    re_path(r"^users/user_gp_state/?$", views.UserGpStateView.as_view()),
     re_path(
         r"^users/forgotten_password/?$",
         views.ForgotPassword.as_view(),
