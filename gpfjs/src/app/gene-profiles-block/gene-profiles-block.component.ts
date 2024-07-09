@@ -13,6 +13,14 @@ import {
   GeneProfileSingleViewComponent
 } from 'app/gene-profiles-single-view/gene-profiles-single-view.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import {
+  SetGeneProfilesHeader,
+  SetGeneProfilesHighlightedRows,
+  SetGeneProfilesOrderBy,
+  SetGeneProfilesSearchValue,
+  SetGeneProfilesSortBy,
+  SetGeneProfilesTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
+import { UsersService } from 'app/users/users.service';
 
 @Component({
   selector: 'gpf-gene-profiles-block',
@@ -26,7 +34,8 @@ export class GeneProfilesBlockComponent implements OnInit {
     private geneProfilesService: GeneProfilesService,
     private queryService: QueryService,
     private datasetsService: DatasetsService,
-    private store: Store
+    private store: Store,
+    private usersService: UsersService
   ) { }
 
   public ngOnInit(): void {
@@ -38,6 +47,22 @@ export class GeneProfilesBlockComponent implements OnInit {
 
     this.geneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.geneProfilesSingleViewConfig = config;
+    });
+
+    // todo get user's gene profiles state
+    this.usersService.getUserInfo().subscribe(user => {
+      if (user.loggedIn) {
+        this.geneProfilesService.getUserGeneProfilesState().subscribe(state => {
+          if (state) {
+            this.store.dispatch(new SetGeneProfilesTabs(state.openedTabs));
+            this.store.dispatch(new SetGeneProfilesSearchValue(state.searchValue));
+            this.store.dispatch(new SetGeneProfilesHighlightedRows(state.highlightedRows));
+            this.store.dispatch(new SetGeneProfilesSortBy(state.sortBy));
+            this.store.dispatch(new SetGeneProfilesOrderBy(state.orderBy));
+            this.store.dispatch(new SetGeneProfilesHeader(state.headerLeaves));
+          }
+        });
+      }
     });
   }
 
