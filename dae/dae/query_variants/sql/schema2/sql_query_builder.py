@@ -123,7 +123,7 @@ class SqlQueryBuilder:
             limit_clause = f"LIMIT {limit}"
         summary_source = "summary"
         if eg_summary_clause:
-            summary_source = "effect_gene_summary"
+            summary_source = "effect_gene"
         query = textwrap.dedent(f"""
             WITH
             {summary_subclause}
@@ -164,13 +164,13 @@ class SqlQueryBuilder:
             if not eg_where:
                 return ""
             eg_subclause = textwrap.dedent(f""",
-                effect_gene AS (
+                effect_gene_all AS (
                     SELECT *, UNNEST(effect_gene) as eg
                     FROM summary
                 ),
-                effect_gene_summary AS (
+                effect_gene AS (
                     SELECT *
-                    FROM effect_gene
+                    FROM effect_gene_all
                     WHERE
                         {eg_where}
                 )
@@ -532,7 +532,7 @@ class SqlQueryBuilder:
             genes, effect_types)
         summary_from = "summary"
         if effect_gene_subclause:
-            summary_from = "effect_gene_summary"
+            summary_from = "effect_gene"
 
         person_subclause = self._build_person_subclause(person_ids=person_ids)
         family_from = "family"
@@ -838,6 +838,30 @@ class SqlQueryBuilder:
 
         return result
 
+    def _calc_family_bins(
+        self,
+        family_ids: Iterable[str] | None,
+    ) -> list[str]:
+        if self.partition_descriptor is None:
+            return []
+        if not self.partition_descriptor.has_family_bins():
+            return []
+        if "family_bin" not in self.family_schema:
+            return []
+        if family_ids is None:
+            return []
+
+        assert family_ids is not None
+        family_ids = set(family_ids)
+
+        family_bins: set[str] = set()
+        family_bins.update(
+            str(self.partition_descriptor.make_family_bin(family_id))
+            for family_id in family_ids)
+        if len(family_bins) >= self.partition_descriptor.family_bin_size // 2:
+            return []
+        return list(family_bins)
+
     def _calc_heuristic_bins(
         self, *,
         regions: list[Region] | None = None,
@@ -874,27 +898,3 @@ class SqlQueryBuilder:
             heuristics["family_bin"] = family_bins
 
         return heuristics
-
-    def _calc_family_bins(
-        self,
-        family_ids: Iterable[str] | None,
-    ) -> list[str]:
-        if self.partition_descriptor is None:
-            return []
-        if not self.partition_descriptor.has_family_bins():
-            return []
-        if "family_bin" not in self.family_schema:
-            return []
-        if family_ids is None:
-            return []
-
-        assert family_ids is not None
-        family_ids = set(family_ids)
-
-        family_bins: set[str] = set()
-        family_bins.update(
-            str(self.partition_descriptor.make_family_bin(family_id))
-            for family_id in family_ids)
-        if len(family_bins) >= self.partition_descriptor.family_bin_size // 2:
-            return []
-        return list(family_bins)
