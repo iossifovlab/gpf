@@ -721,11 +721,18 @@ class UserGpStateView(views.APIView):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
-        gp_state = GpUserState.objects.get(user=request.user)
+        try:
+            gp_state = GpUserState.objects.get(user=request.user)
+            res = Response(
+                json.loads(gp_state.data),
+                status=status.HTTP_200_OK,
+            )
+        except GpUserState.DoesNotExist:
+            res = Response(
+                status=status.HTTP_204_NO_CONTENT,
+            )
 
-        return Response(json.loads(gp_state.data),
-            status=status.HTTP_200_OK,
-        )
+        return res
 
     @request_logging(logger)
     def post(self, request: Request) -> Response:
@@ -737,7 +744,7 @@ class UserGpStateView(views.APIView):
             user=request.user,
         )
 
-        new_state = json.dumps(request.data["gpState"])
+        new_state = json.dumps(request.data)
 
         state.data = new_state
         state.save()
