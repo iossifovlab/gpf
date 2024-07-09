@@ -10,7 +10,7 @@ import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
 import { GeneProfilesState } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
-import { DatasetModel, DatasetState, SetDataset } from './datasets.state';
+import { DatasetModel, DatasetState, SetDatasetId } from './datasets.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
@@ -52,7 +52,7 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
 
         this.datasetsService.getDataset(params['dataset'] as string).subscribe({
           next: dataset => {
-            this.store.dispatch(new SetDataset(dataset.id));
+            this.store.dispatch(new SetDatasetId(dataset.id));
             this.setupSelectedDataset();
           },
           error: () => {
