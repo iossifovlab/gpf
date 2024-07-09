@@ -106,7 +106,25 @@ def test_search_measures_get_all(
     )
     assert db is not None
     db.build()
-    assert len(list(db.search_measures())) == 15
+    measures = list(db.search_measures())
+    assert len(measures) == 15
+    assert [measure.get("instrument_name") for measure in measures] == [
+        "i1",
+        "i1",
+        "i1",
+        "i1",
+        "i1",
+        "i1",
+        "i1",
+        "i1",
+        "i1",
+        "i1",
+        "i1",
+        "i1",
+        "i2",
+        "i2",
+        "i2",
+    ]
 
 
 def test_search_measures_get_by_instrument(
