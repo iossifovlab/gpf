@@ -7,6 +7,7 @@ import {
 } from './effect-types.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { PHENO_TOOL_CNV } from 'app/pheno-tool-effect-types/pheno-tool-effect-types';
+import * as lodash from 'lodash';
 
 @Component({
   selector: 'gpf-effect-types',
@@ -57,7 +58,7 @@ export class EffectTypesComponent extends StatefulComponent implements OnInit {
   }
 
   public selectButtonGroup(groupId: string): void {
-    const effectTypes: Set<string> = this.effectTypesButtons.get(groupId);
+    const effectTypes: Set<string> = lodash.cloneDeep(this.effectTypesButtons.get(groupId));
     if (groupId === 'PHENO_TOOL_ALL' && !this.variantTypes.has('CNV')) {
       for (const effectType of PHENO_TOOL_CNV) {
         effectTypes.delete(effectType);
