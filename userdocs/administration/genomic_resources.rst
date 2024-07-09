@@ -292,7 +292,6 @@ where ``grr-bucket-test`` is the bucket where you store the repository and
 Genomic Resource types
 **********************
 
-
 position_score
 ##############
 
@@ -319,20 +318,6 @@ Format B
   tabix -s 1 -b 2 -e 3
 
 NOTE: We should never use tabix -p bed!!
-
-
-Aggregators
-***********
-
-- mean
-- median
-- max
-- min
-- mode
-- join (i.e., join(;))
-- list
-- dict
-- concatenate
 
 np_score
 ########
@@ -368,5 +353,98 @@ liftover
 ########
 
 
+Aggregators
+***********
+
+- mean
+- median
+- max
+- min
+- mode
+- join (i.e., join(;))
+- list
+- dict
+- concatenate
 
 
+Genomic position table
+**********************
+
+Example table configuration for a genomic score resource.
+This configuration is embedded in the score's ``genomic_resource.yaml`` config.
+
+.. code:: yaml
+
+    table:
+      filename: whole_genome_SNVs.tsv.gz
+      format: tabix
+      chrom_mapping:
+        add_prefix: chr
+
+      # defined by score_type
+      chrom:
+        name: Chrom
+      pos_begin:
+        name: Pos
+      reference:
+        name: Ref
+      alternative:
+        name: Alt
+
+    # score values
+    scores:
+        - id: cadd_raw
+          type: float
+          name: RawScore
+          desc: "CADD raw score; higher values are more deleterious"
+        
+        - id: cadd_phred
+          type: float
+          name: PHRED
+          desc: "CADD phred-like score; higher values are more deleterious"
+
+    histograms:
+      - score: cadd_raw
+        bins: 220
+        min: -8.0
+        max: 36.0
+        y_scale: "log"
+
+      - score: cadd_phred
+        bins: 100
+        min: 0.0
+        max: 99.0
+        y_scale: "log"
+
+    default_annotation:
+      attributes:
+        - source: cadd_raw
+          destination: cadd_raw
+
+        - source: cadd_phred
+          destination: cadd_phred
+
+    meta:
+      description: "Sample description"
+      labels:
+        reference_genome: hg38/genomes/GRCh38-hg38
+
+
+Zero-based / BED format scores
+##############################
+
+.. code:: yaml
+
+    table:
+      filename: data.txt.gz
+      format: tabix
+      zero_based: True
+    scores:
+    - id: score_1
+      name: score 1
+      type: float
+
+The ``zero_based`` argument controls how the score file will be read.
+
+| Setting it to true will read the score as a BED-style format - with 0-based, half-open intervals.
+| By default it is set to false, which will read the score in GPF's internal format - with 1-based, closed intervals.
