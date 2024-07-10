@@ -717,7 +717,7 @@ class UserGpStateView(views.APIView):
 
     @request_logging(logger)
     def get(self, request: Request) -> Response:
-        """Get user's gp state."""
+        """Get user's ggene profiles state."""
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
@@ -736,7 +736,7 @@ class UserGpStateView(views.APIView):
 
     @request_logging(logger)
     def post(self, request: Request) -> Response:
-        """Save user's gp state"""
+        """Save user's gene profiles state."""
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 

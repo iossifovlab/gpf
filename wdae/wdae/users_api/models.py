@@ -253,7 +253,7 @@ class BaseVerificationCode(models.Model):
 
 
 class GpUserState(models.Model):
-    """Class representing a user's gp"""
+    """Class representing a user's gene profiles state."""
     user: models.OneToOneField = models.OneToOneField(
         get_user_model(), on_delete=models.CASCADE)
     data: models.TextField = models.TextField(
