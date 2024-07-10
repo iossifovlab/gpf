@@ -378,6 +378,7 @@ This configuration is embedded in the score's ``genomic_resource.yaml`` config.
     table:
       filename: whole_genome_SNVs.tsv.gz
       format: tabix
+
       chrom_mapping:
         add_prefix: chr
 
@@ -393,41 +394,57 @@ This configuration is embedded in the score's ``genomic_resource.yaml`` config.
 
     # score values
     scores:
-        - id: cadd_raw
-          type: float
-          name: RawScore
-          desc: "CADD raw score; higher values are more deleterious"
-        
-        - id: cadd_phred
-          type: float
-          name: PHRED
-          desc: "CADD phred-like score; higher values are more deleterious"
+      - id: cadd_raw
+        type: float
+        name: RawScore
+        desc: |
+          CADD raw score for functional prediction of a SNP. The larger the score
+          the more likely the SNP has damaging effect
+        large_values_desc: "more damaging"
+        small_values_desc: "less damaging"
+        histogram:
+          type: number
+          number_of_bins: 100
+          view_range:
+            min: -8.0
+            max: 36.0
+          y_log_scale: True
 
-    histograms:
-      - score: cadd_raw
-        bins: 220
-        min: -8.0
-        max: 36.0
-        y_scale: "log"
-
-      - score: cadd_phred
-        bins: 100
-        min: 0.0
-        max: 99.0
-        y_scale: "log"
+      - id: cadd_phred
+        type: float
+        name: PHRED
+        desc: |
+          CADD phred-like score. This is phred-like rank score based on whole
+          genome CADD raw scores. The larger the score the more likely the SNP
+          has damaging effect.
+        large_values_desc: "more damaging"
+        small_values_desc: "less damaging"
+        histogram:
+          type: number
+          number_of_bins: 100
+          view_range:
+            min: 0.0
+            max: 99.0
+          y_log_scale: True
 
     default_annotation:
-      attributes:
-        - source: cadd_raw
-          destination: cadd_raw
+      - source: cadd_raw
+        name: cadd_raw
 
-        - source: cadd_phred
-          destination: cadd_phred
+      - source: cadd_phred
+        name: cadd_phred
 
     meta:
-      description: "Sample description"
-      labels:
-        reference_genome: hg38/genomes/GRCh38-hg38
+      summary: |
+
+        CADD (Combined Annotation Dependent Depletion score) predicts the potential impact of a SNP
+
+      description: |
+        ## CADD GRCh38-v1.4
+
+        CADD score for functional prediction of a SNP. Please refer to Kircher
+
+
 
 
 Zero-based / BED format scores
