@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
 
+from dae.utils.regions import BedRegion
 import pytest
 
 from dae.genomic_resources.gene_models import (
@@ -120,6 +121,37 @@ chr1    HAVANA    transcript    89295    120932    .    -    .    gene_id||"ENSG
     return build_gene_models_from_resource(res)
 
 
+@pytest.fixture()
+def gtf_example_split_start_stop_codons() -> GeneModels:
+    res = build_inmemory_test_resource(
+        content={
+            "genomic_resource.yaml":
+                "{type: gene_models, filename: gencode.txt, format: gtf}",
+            "gencode.txt": convert_to_tab_separated(textwrap.dedent("""
+chr1    TEST    gene          1    100    .    +    .    gene_id||"GENE";||gene_name||"GENE";
+chr1    TEST    transcript    1    100    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    exon          21    21    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    CDS           21    21    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    exon          24    24    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    CDS           24    24    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    exon          27    40    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    CDS           27    40    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    start_codon   21    21    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    start_codon   24    24    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    start_codon   27    27    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    exon          50    73    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    CDS           50    73    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    exon          74    74    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    exon          78   100    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    stop_codon    74    74    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    stop_codon    78    79    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    UTR           1     20    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    UTR           74    74    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+chr1    TEST    UTR           78   100    .    +    .    gene_id||"GENE";||transcript_id||"TRANSCRIPT";||gene_name||"GENE";
+"""))})  # noqa: E501
+    return build_gene_models_from_resource(res)
+
+
 def test_save_as_gtf_simple(ensembl_gtf_example: GeneModels) -> None:
     reference = ensembl_gtf_example
     reference.load()
@@ -231,3 +263,41 @@ def test_save_as_gtf_no_exons(
     assert tm.is_coding() is False
     assert len(tm.exons) == 0
     assert tm.strand == "-"
+
+
+def test_save_as_gtf_split_start_stop_codons(
+    gtf_example_split_start_stop_codons: GeneModels,
+) -> None:
+    example_models = gtf_example_split_start_stop_codons
+    example_models.load()
+    serialized = models_to_gtf(example_models)
+
+    gene_models = build_gene_models_from_resource(build_inmemory_test_resource(
+        content={
+            "genomic_resource.yaml":
+                "{type: gene_models, filename: gencode.txt, format: gtf}",
+            "gencode.txt": serialized,
+    }))
+    gene_models.load()
+
+    assert "start_codon\t21\t21" in serialized
+    assert "start_codon\t24\t24" in serialized
+    assert "start_codon\t27\t27" in serialized
+
+    assert "stop_codon\t74\t74" in serialized
+    assert "stop_codon\t78\t79" in serialized
+
+    tm = gene_models.transcript_models["TRANSCRIPT"]
+    assert tm.cds == (21, 79)
+    assert tm.tx == (1, 100)
+    assert tm.is_coding() is True
+    assert len(tm.exons) == 6
+    assert tm.strand == "+"
+    assert tm.cds_regions() == [
+        BedRegion("chr1", 21, 21),
+        BedRegion("chr1", 24, 24),
+        BedRegion("chr1", 27, 40),
+        BedRegion("chr1", 50, 73),
+        BedRegion("chr1", 74, 74),
+        BedRegion("chr1", 78, 79),
+    ]

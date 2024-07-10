@@ -1636,7 +1636,7 @@ def build_gtf_record(
     attrs: str,
 ) -> GTFRecord:
     """Build an indexed GTF format record for a feature."""
-    src = transcript.attributes.get("gene_source", "?")
+    src = transcript.attributes.get("gene_source", ".")
     line = (f"{transcript.chrom}\t{src}\t{feature}\t{start}"
             f"\t{stop}\t.\t{transcript.strand}\t.\t{attrs};")
     if feature in ("exon", "CDS", "start_codon", "stop_codon"):
@@ -1646,6 +1646,62 @@ def build_gtf_record(
     index = \
         (transcript.chrom, start, -stop, GTF_FEATURE_ORDER.index(feature))
     return (index, line)
+
+
+def identify_cds_regions(
+    transcript: TranscriptModel,
+) -> tuple[list[BedRegion], list[BedRegion], list[BedRegion]]:
+    """
+    Returns a tuple of start codon regions, normal coding regions
+    and stop codon regions for a given transcript.
+    """
+    if not transcript.is_coding():
+        return ([], [], [])
+    reverse = transcript.strand == "-"
+    start_codons: list[BedRegion] = []
+    cds_regions: list[BedRegion] = transcript.cds_regions()
+    stop_codons: list[BedRegion] = []
+
+    start_bases_remaining, stop_bases_remaining = 3, 3
+
+    while start_bases_remaining > 0:
+        cds = cds_regions.pop(0 if not reverse else -1)
+        cds_len = cds.stop - cds.start + 1
+        bases_to_write = min(start_bases_remaining, cds_len)
+
+        codon_start = cds.start if not reverse \
+                      else cds.stop - (bases_to_write - 1)
+        codon_stop = codon_start + (bases_to_write - 1) if not reverse \
+                     else cds.stop
+        start_codons.append(BedRegion(cds.chrom, codon_start, codon_stop))
+
+        if cds_len - bases_to_write > 0:
+            cds_regions.insert(0 if not reverse else -1, cds)
+
+        start_bases_remaining -= bases_to_write
+
+    while stop_bases_remaining > 0:
+        cds = cds_regions.pop(-1 if not reverse else 0)
+        cds_len = cds.stop - cds.start + 1
+        bases_to_write = min(stop_bases_remaining, cds_len)
+
+        codon_start = cds.stop - (bases_to_write - 1) if not reverse \
+                      else cds.start
+        codon_stop = cds.stop if not reverse \
+                     else codon_start + (bases_to_write - 1)
+        stop_codons.append(BedRegion(cds.chrom, codon_start, codon_stop))
+
+        if cds_len - bases_to_write > 0:
+            remainder = BedRegion(
+                cds.chrom,
+                cds.start if not reverse else codon_stop,
+                codon_start if not reverse else cds.stop,
+            )
+            cds_regions.insert(-1 if not reverse else 0, remainder)
+
+        stop_bases_remaining -= bases_to_write
+
+    return start_codons, cds_regions, stop_codons
 
 
 def transcript_to_gtf(transcript: TranscriptModel) -> list[GTFRecord]:
@@ -1669,28 +1725,19 @@ def transcript_to_gtf(transcript: TranscriptModel) -> list[GTFRecord]:
         write_record("exon", exon.start, exon.stop)
 
     if transcript.is_coding():
-        cds_regions = transcript.cds_regions()
-        if cds_regions:
-            for cds in cds_regions[:-1]:  # all but last CDS region
-                write_record("CDS", cds.start, cds.stop)
-            # handle last separately, because the GTF format
-            # excludes the stop codon from the CDS regions
-            # also check if the adjustment we make leaves
-            # enough bases for it to have one codon at least
-            if ((cds_regions[-1].stop - 2) - cds_regions[-1].start) >= 2:
-                write_record("CDS", cds_regions[-1].start,
-                             cds_regions[-1].stop - 2)
+        start_codons, cds_regions, stop_codons = \
+            identify_cds_regions(transcript)
+
+        for codon in start_codons:
+            write_record("start_codon", codon.start, codon.stop)
+
+        for cds in cds_regions:
+            write_record("CDS", cds.start, cds.stop)
+
+        for codon in stop_codons:
+            write_record("stop_codon", codon.start, codon.stop)
 
         for utr in transcript.utr3_regions() + transcript.utr5_regions():
             write_record("UTR", utr.start, utr.stop)
-
-        left = Region(transcript.chrom, transcript.cds[0], transcript.cds[0] + 2)
-        right = Region(transcript.chrom, transcript.cds[1] - 2, transcript.cds[1])
-
-        start_codon = left if transcript.strand == "+" else right
-        stop_codon = right if transcript.strand == "+" else left
-
-        write_record("start_codon", start_codon.start, start_codon.stop)  # type: ignore
-        write_record("stop_codon", stop_codon.start, stop_codon.stop)  # type: ignore
 
     return record_buffer
