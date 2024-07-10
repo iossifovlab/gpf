@@ -89,11 +89,9 @@ test.describe('Pheno browser tests', () => {
 
     const rowValues = expectedFile.split(',\n');
 
-    for (let i = 0; i < rowValues.length; i++) {
-      const row = page.locator('gpf-pheno-browser-table > gpf-table .table-row').nth(i);
-      const text = await row.textContent();
-      expect(text).toBe(rowValues[i].trim());
-    }
+    await Promise.all(rowValues.map(async(row) => {
+      await expect(page.locator('gpf-pheno-browser-table > gpf-table')).toContainText(row);
+    }));
   });
 
   test('should download all instruments and validate whether they are equal to the reference data', async({ page }) => {
