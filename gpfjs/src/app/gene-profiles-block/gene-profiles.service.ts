@@ -8,7 +8,6 @@ import { ConfigService } from 'app/config/config.service';
 import { plainToClass } from 'class-transformer';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { GeneProfilesModel } from 'app/gene-profiles-table/gene-profiles-table.state';
 
 @Injectable({
   providedIn: 'root'
@@ -16,26 +15,11 @@ import { GeneProfilesModel } from 'app/gene-profiles-table/gene-profiles-table.s
 export class GeneProfilesService {
   private readonly configUrl = 'gene_profiles/single-view/configuration';
   private readonly genesUrl = 'gene_profiles/single-view/gene/';
-  private readonly usersUrl = 'users/user_gp_state';
 
   public constructor(
     private http: HttpClient,
     private config: ConfigService
   ) {}
-
-  // todo get gene profiles saved state
-  public getUserGeneProfilesState(): Observable<GeneProfilesModel> {
-    // const mockGeneProfiles: GeneProfilesModel = {
-    //   openedTabs: ['POGZ'],
-    //   searchValue: 'chd',
-    //   highlightedRows: ['CHD3'],
-    //   sortBy: '',
-    //   orderBy: '',
-    //   headerLeaves: []
-    // };
-    // return of(mockGeneProfiles);
-    return this.http.get<GeneProfilesModel>(this.config.baseUrl + this.usersUrl, { withCredentials: true });
-  }
 
   public getConfig(): Observable<GeneProfilesSingleViewConfig> {
     return this.http
