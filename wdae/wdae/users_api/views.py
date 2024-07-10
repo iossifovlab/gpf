@@ -48,6 +48,7 @@ from .forms import (
 )
 from .models import (
     AuthenticationLog,
+    GpUserState,
     ResetPasswordCode,
     SetPasswordCode,
     WdaeUser,
@@ -709,3 +710,43 @@ class FederationCredentials(views.APIView):
             {"new_name": app.name},
             status=status.HTTP_200_OK,
         )
+
+
+class UserGpStateView(views.APIView):
+    """User's gene profiles state view."""
+
+    @request_logging(logger)
+    def get(self, request: Request) -> Response:
+        """Get user's ggene profiles state."""
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            gp_state = GpUserState.objects.get(user=request.user)
+            res = Response(
+                json.loads(gp_state.data),
+                status=status.HTTP_200_OK,
+            )
+        except GpUserState.DoesNotExist:
+            res = Response(
+                status=status.HTTP_204_NO_CONTENT,
+            )
+
+        return res
+
+    @request_logging(logger)
+    def post(self, request: Request) -> Response:
+        """Save user's gene profiles state."""
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        state, _ = GpUserState.objects.get_or_create(
+            user=request.user,
+        )
+
+        new_state = json.dumps(request.data)
+
+        state.data = new_state
+        state.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)

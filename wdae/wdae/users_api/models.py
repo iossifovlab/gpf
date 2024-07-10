@@ -7,6 +7,7 @@ from functools import wraps
 from typing import Any, Callable, Type, cast
 
 from datasets_api.permissions import get_directly_allowed_genotype_data
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -249,6 +250,14 @@ class BaseVerificationCode(models.Model):
             return cls.create(user)
 
         return cast(BaseVerificationCode, verif_code)
+
+
+class GpUserState(models.Model):
+    """Class representing a user's gene profiles state."""
+    user: models.OneToOneField = models.OneToOneField(
+        get_user_model(), on_delete=models.CASCADE)
+    data: models.TextField = models.TextField(
+        null=False, blank=False)
 
 
 class SetPasswordCode(BaseVerificationCode):
