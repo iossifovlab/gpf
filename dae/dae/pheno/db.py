@@ -491,7 +491,10 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             query = query.where(
                 self.variable_browser.c.instrument_name == instrument_name,
             )
-        return query.order_by(self.variable_browser.c.instrument_name)
+        return query.order_by(
+            self.variable_browser.c.instrument_name,
+            self.variable_browser.c.measure_id,
+        )
 
     def search_measures(
         self, instrument_name: str | None = None,
