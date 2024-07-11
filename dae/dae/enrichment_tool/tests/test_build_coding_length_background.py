@@ -44,4 +44,4 @@ def test_build_coding_length_background(
     df = pl.read_csv(str(output), separator="\t")
     assert df.shape == (2, 2)
     assert df["gene"].to_list() == ["T4", "C8"]
-    assert df["gene_weight"].to_list() == [41, 43]
+    assert df["gene_weight"].to_list() == [44, 45]

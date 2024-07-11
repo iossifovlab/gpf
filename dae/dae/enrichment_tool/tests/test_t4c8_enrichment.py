@@ -15,7 +15,7 @@ from dae.testing import denovo_study, setup_denovo, setup_pedigree
 
 @pytest.fixture()
 def ped_1(tmp_path: pathlib.Path) -> pathlib.Path:
-    ped_path = setup_pedigree(
+    return setup_pedigree(
         tmp_path / "input" / "ped_1" / "in.ped",
         """
 familyId personId dadId momId sex status role
@@ -26,12 +26,11 @@ f1.3     mom3     0     0     2   1      mom
 f1.3     dad3     0     0     1   1      dad
 f1.3     ch3      dad3  mom3  2   2      prb
         """)
-    return ped_path
 
 
 @pytest.fixture()
 def denovo_1(tmp_path: pathlib.Path) -> pathlib.Path:
-    denovo_path = setup_denovo(
+    return setup_denovo(
         tmp_path / "input" / "denovo_1" / "denovo.tsv",
         """
 familyId  location  variant    bestState
@@ -45,7 +44,6 @@ f1.1      chr1:195  sub(C->T)  2||2||1/0||0||1
 f1.3      chr1:145  sub(C->T)  2||2||1/0||0||1
         """,
     )
-    return denovo_path
 
 
 @pytest.fixture()
@@ -55,7 +53,7 @@ def study_1(
     ped_1: pathlib.Path,
     denovo_1: pathlib.Path,
 ) -> GenotypeData:
-    result = denovo_study(
+    return denovo_study(
         tmp_path, "study_1", ped_1, [denovo_1],
         t4c8_fixture,
         study_config_update={
@@ -90,7 +88,6 @@ def study_1(
                 ],
             },
         })
-    return result
 
 
 def test_t4c8_setup(t4c8_fixture: GPFInstance) -> None:
@@ -108,16 +105,16 @@ def test_t4c8_coding_len_background(t4c8_fixture: GPFInstance) -> None:
     assert background is not None
     background.load()
 
-    assert background.genes_weight(["t4"]) == 41
-    assert background.genes_weight(["c8"]) == 43
+    assert background.genes_weight(["t4"]) == 44
+    assert background.genes_weight(["c8"]) == 45
     assert background.genes_weight(["t1"]) == 0
-    assert background._total == 84
+    assert background._total == 89
 
-    assert background.genes_weight(["T4"]) == 41
-    assert background.genes_weight(["C8"]) == 43
+    assert background.genes_weight(["T4"]) == 44
+    assert background.genes_weight(["C8"]) == 45
 
-    assert background.genes_weight(["T4", "C8"]) == 84
-    assert background.genes_weight(["T4", "C8", "T1"]) == 84
+    assert background.genes_weight(["T4", "C8"]) == 89
+    assert background.genes_weight(["T4", "C8", "T1"]) == 89
 
 
 def test_study_1(study_1: GenotypeData) -> None:
@@ -157,17 +154,17 @@ def test_study_1_enrichment(
     res = affected["LGDs"]
     assert res.all.events == 2
     assert res.all.overlapped == 0
-    assert res.all.expected == pytest.approx(0.976, 0.001)
+    assert res.all.expected == pytest.approx(0.988, 0.001)
 
     res = affected["missense"]
     assert res.all.events == 2
     assert res.all.overlapped == 2
-    assert res.all.expected == pytest.approx(0.976, 0.001)
+    assert res.all.expected == pytest.approx(0.988, 0.001)
 
     res = affected["synonymous"]
     assert res.all.events == 3
     assert res.all.overlapped == 2
-    assert res.all.expected == pytest.approx(1.464, 0.001)
+    assert res.all.expected == pytest.approx(1.483, 0.001)
 
 
 def test_study_1_enrichment_with_caching(
@@ -197,17 +194,17 @@ def test_study_1_enrichment_with_caching(
     res = affected["LGDs"]
     assert res.all.events == 2
     assert res.all.overlapped == 0
-    assert res.all.expected == pytest.approx(0.976, 0.001)
+    assert res.all.expected == pytest.approx(0.988, 0.001)
 
     res = affected["missense"]
     assert res.all.events == 2
     assert res.all.overlapped == 2
-    assert res.all.expected == pytest.approx(0.976, 0.001)
+    assert res.all.expected == pytest.approx(0.988, 0.001)
 
     res = affected["synonymous"]
     assert res.all.events == 3
     assert res.all.overlapped == 2
-    assert res.all.expected == pytest.approx(1.464, 0.001)
+    assert res.all.expected == pytest.approx(1.483, 0.001)
 
 
 def test_build_study_1_enrichment_cache(

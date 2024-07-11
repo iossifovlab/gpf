@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import IO, Any, ClassVar, Protocol, cast
 
 import pandas as pd
+from deprecation import deprecated
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.fsspec_protocol import build_local_resource
@@ -17,7 +18,13 @@ from dae.genomic_resources.resource_implementation import (
     ResourceConfigValidationMixin,
     get_base_resource_schema,
 )
-from dae.utils.regions import BedRegion, Region, collapse
+from dae.utils.regions import (
+    BedRegion,
+    Region,
+    collapse,
+    difference,
+    total_length,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +57,10 @@ class Exon:
 
     def __repr__(self) -> str:
         return f"Exon(start={self.start}; stop={self.stop})"
+
+    def contains(self, region: tuple[int, int]) -> bool:
+        start, stop = region
+        return self.start <= start and self.stop >= stop
 
 
 class TranscriptModel:
@@ -1584,7 +1595,7 @@ def create_regions_from_genes(
     return regions
 
 
-def models_to_gtf(gene_models: GeneModels) -> str:
+def gene_models_to_gtf(gene_models: GeneModels) -> str:
     """Output a GTF format string representation."""
     if not gene_models.gene_models:
         logger.warning("Serializing empty (probably not loaded) gene models!")
@@ -1638,17 +1649,14 @@ def build_gtf_record(
     """Build an indexed GTF format record for a feature."""
     src = transcript.attributes.get("gene_source", ".")
     phase = "."
+    exon_number = -1
     if feature in ("exon", "CDS", "start_codon", "stop_codon"):
         exon_number = transcript.get_exon_number_for(start, stop)
 
     if feature in ("CDS", "start_codon", "stop_codon"):
-        exon = transcript.exons[exon_number - 1]
-        if exon.frame is None:
-            raise ValueError
-        if transcript.strand == "+":
-            phase = str((3 - (exon.frame + (abs(start - exon.start) % 3))) % 3)
-        else:
-            phase = str((3 - (exon.frame + (abs(stop - exon.stop) % 3))) % 3)
+        frame = calc_frame_for_gtf_cds_feature(
+            transcript, BedRegion(transcript.chrom, start, stop))
+        phase = str((3 - frame) % 3)
 
     line = (f"{transcript.chrom}\t{src}\t{feature}\t{start}"
             f"\t{stop}\t.\t{transcript.strand}\t{phase}\t{attrs};")
@@ -1661,7 +1669,8 @@ def build_gtf_record(
     return (index, line)
 
 
-def identify_cds_regions(
+@deprecated("This function was split into multiple specialized functions.")
+def collect_cds_regions(
     transcript: TranscriptModel,
 ) -> tuple[list[BedRegion], list[BedRegion], list[BedRegion]]:
     """
@@ -1717,6 +1726,149 @@ def identify_cds_regions(
     return start_codons, cds_regions, stop_codons
 
 
+def collect_gtf_start_codon_regions(
+    strand: str,
+    cds_regions: list[BedRegion],
+) -> list[BedRegion]:
+    """Returns list of all regions that represent the start codon."""
+    if strand == "+":
+        region = cds_regions[0]
+        if len(region) >= 3:
+            return [
+                BedRegion(
+                    region.chrom,
+                    region.start,
+                    region.start + 2,
+                ),
+            ]
+        result = [region]
+        for region in cds_regions[1:]:
+            total = total_length(result)
+            if total + len(region) >= 3:
+                result.append(BedRegion(
+                    region.chrom,
+                    region.start,
+                    region.start + (2 - total),
+                ))
+                return result
+            result.append(region)
+
+    elif strand == "-":
+        region = cds_regions[-1]
+        if len(region) >= 3:
+            return [
+                BedRegion(
+                    region.chrom,
+                    region.stop - 2,
+                    region.stop,
+                ),
+            ]
+        result = [region]
+        for region in reversed(cds_regions[:-1]):
+            total = total_length(result)
+            if total + len(region) >= 3:
+                result.append(BedRegion(
+                    region.chrom,
+                    region.stop - (2 - total),
+                    region.stop,
+                ))
+                return list(reversed(result))
+            result.append(region)
+    else:
+        raise ValueError("Invalid strand")
+    return []
+
+
+def collect_gtf_stop_codon_regions(
+    strand: str,
+    cds_regions: list[BedRegion],
+) -> list[BedRegion]:
+    """Returns list of all regions that represent the stop codon."""
+    if strand == "+":
+        region = cds_regions[-1]
+        if len(region) >= 3:
+            return [
+                BedRegion(
+                    region.chrom,
+                    region.stop - 2,
+                    region.stop,
+                ),
+            ]
+        result = [region]
+        for region in reversed(cds_regions[:-1]):
+            total = total_length(result)
+            if total + len(region) >= 3:
+                result.append(BedRegion(
+                    region.chrom,
+                    region.stop - (2 - total),
+                    region.stop,
+                ))
+                return list(reversed(result))
+            result.append(region)
+
+    elif strand == "-":
+        region = cds_regions[0]
+        if len(region) >= 3:
+            return [
+                BedRegion(
+                    region.chrom,
+                    region.start,
+                    region.start + 2,
+                ),
+            ]
+        result = [region]
+        for region in cds_regions[1:]:
+            total = total_length(result)
+            if total + len(region) >= 3:
+                result.append(BedRegion(
+                    region.chrom,
+                    region.start,
+                    region.start + (2 - total),
+                ))
+                return result
+            result.append(region)
+    else:
+        raise ValueError("Invalid strand")
+    return []
+
+
+def collect_gtf_cds_regions(
+    strand: str,
+    cds_regions: list[BedRegion],
+) -> list[BedRegion]:
+    """Returns list of all regions that represent the CDS."""
+    stop_codon_regions = collect_gtf_stop_codon_regions(strand, cds_regions)
+
+    return difference(cds_regions, stop_codon_regions)  # type: ignore
+
+
+def find_exon_cds_region_for_gtf_cds_feature(
+    transcript: TranscriptModel,
+    region: BedRegion,
+) -> tuple[Exon, BedRegion]:
+    """Find exon and CDS region that contains the given feature."""
+    for exon in transcript.exons:
+        if exon.contains((region.start, region.stop)):
+            for cds_region in transcript.cds_regions():
+                if exon.contains((cds_region.start, cds_region.stop)):
+                    return exon, cds_region
+    raise ValueError(f"exon for region {region} not found")
+
+
+def calc_frame_for_gtf_cds_feature(
+    transcript: TranscriptModel,
+    region: BedRegion,
+) -> int:
+    """Calculate frame for the given feature."""
+    exon, cds_region = find_exon_cds_region_for_gtf_cds_feature(
+        transcript, region)
+    if exon.frame is None:
+        raise ValueError(f"frame not found for exon {exon}")
+    if transcript.strand == "+":
+        return (exon.frame + (abs(cds_region.start - region.start) % 3)) % 3
+    return (exon.frame + (abs(cds_region.stop - region.stop) % 3)) % 3
+
+
 def transcript_to_gtf(transcript: TranscriptModel) -> list[GTFRecord]:
     """Output an indexed list of GTF-formatted features of a transcript."""
     record_buffer: list[GTFRecord] = []
@@ -1738,16 +1890,17 @@ def transcript_to_gtf(transcript: TranscriptModel) -> list[GTFRecord]:
         write_record("exon", exon.start, exon.stop)
 
     if transcript.is_coding():
-        start_codons, cds_regions, stop_codons = \
-            identify_cds_regions(transcript)
-
-        for codon in start_codons:
+        cds_regions = transcript.cds_regions()
+        for codon in collect_gtf_start_codon_regions(
+                transcript.strand, cds_regions):
             write_record("start_codon", codon.start, codon.stop)
 
-        for cds in cds_regions:
+        for cds in collect_gtf_cds_regions(
+                transcript.strand, cds_regions):
             write_record("CDS", cds.start, cds.stop)
 
-        for codon in stop_codons:
+        for codon in collect_gtf_stop_codon_regions(
+                transcript.strand, cds_regions):
             write_record("stop_codon", codon.start, codon.stop)
 
         for utr in transcript.utr3_regions() + transcript.utr5_regions():

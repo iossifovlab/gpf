@@ -1,12 +1,20 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+from collections.abc import Callable
 
 import pytest
 
 from dae.genomic_resources.gene_models import (
+    Exon,
     GeneModels,
+    TranscriptModel,
     build_gene_models_from_resource,
-    models_to_gtf,
+    calc_frame_for_gtf_cds_feature,
+    collect_gtf_cds_regions,
+    collect_gtf_start_codon_regions,
+    collect_gtf_stop_codon_regions,
+    find_exon_cds_region_for_gtf_cds_feature,
+    gene_models_to_gtf,
 )
 from dae.genomic_resources.testing import (
     build_inmemory_test_resource,
@@ -45,18 +53,18 @@ def ensembl_gtf_example_shh() -> GeneModels:
             "genomic_resource.yaml":
                 "{type: gene_models, filename: gencode.txt, format: gtf}",
             "gencode.txt": convert_to_tab_separated(textwrap.dedent("""
-chr7    HAVANA  gene    155799980       155812463       .       -       .       gene_id||"ENSG00000164690.8";||gene_type||"protein_coding";||gene_name||"SHH";||level||2;||hgnc_id||"HGNC:10848";||havana_gene||"OTTHUMG00000151349.3";
-chr7    HAVANA  transcript      155799980       155812463       .       -       .       gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
-chr7    HAVANA  exon    155811823       155812463       .       -       .       gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||1;||exon_id||"ENSE00001086614.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
-chr7    HAVANA  CDS     155811823       155812122       .       -       0       gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||1;||exon_id||"ENSE00001086614.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
-chr7    HAVANA  start_codon     155812120       155812122       .       -       0       gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||1;||exon_id||"ENSE00001086614.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
-chr7    HAVANA  exon    155806296       155806557       .       -       .       gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||2;||exon_id||"ENSE00001086617.1";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
-chr7    HAVANA  CDS     155806296       155806557       .       -       0       gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||2;||exon_id||"ENSE00001086617.1";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
-chr7    HAVANA  exon    155799980       155803726       .       -       .       gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||3;||exon_id||"ENSE00001149618.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
-chr7    HAVANA  CDS     155802903       155803726       .       -       2       gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||3;||exon_id||"ENSE00001149618.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
-chr7    HAVANA  stop_codon      155802900       155802902       .       -       0       gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||3;||exon_id||"ENSE00001149618.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
-chr7    HAVANA  UTR     155812123       155812463       .       -       .       gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||1;||exon_id||"ENSE00001086614.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
-chr7    HAVANA  UTR     155799980       155802902       .       -       .       gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||3;||exon_id||"ENSE00001149618.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
+chr7  HAVANA  gene         155799980  155812463  .  -  .  gene_id||"ENSG00000164690.8";||gene_type||"protein_coding";||gene_name||"SHH";||level||2;||hgnc_id||"HGNC:10848";||havana_gene||"OTTHUMG00000151349.3";
+chr7  HAVANA  transcript   155799980  155812463  .  -  .  gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
+chr7  HAVANA  exon         155811823  155812463  .  -  .  gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||1;||exon_id||"ENSE00001086614.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
+chr7  HAVANA  CDS          155811823  155812122  .  -  0  gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||1;||exon_id||"ENSE00001086614.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
+chr7  HAVANA  start_codon  155812120  155812122  .  -  0  gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||1;||exon_id||"ENSE00001086614.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
+chr7  HAVANA  exon         155806296  155806557  .  -  .  gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||2;||exon_id||"ENSE00001086617.1";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
+chr7  HAVANA  CDS          155806296  155806557  .  -  0  gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||2;||exon_id||"ENSE00001086617.1";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
+chr7  HAVANA  exon         155799980  155803726  .  -  .  gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||3;||exon_id||"ENSE00001149618.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
+chr7  HAVANA  CDS          155802903  155803726  .  -  2  gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||3;||exon_id||"ENSE00001149618.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
+chr7  HAVANA  stop_codon   155802900  155802902  .  -  0  gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||3;||exon_id||"ENSE00001149618.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
+chr7  HAVANA  UTR          155812123  155812463  .  -  .  gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||1;||exon_id||"ENSE00001086614.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
+chr7  HAVANA  UTR          155799980  155802902  .  -  .  gene_id||"ENSG00000164690.8";||transcript_id||"ENST00000297261.7";||gene_type||"protein_coding";||gene_name||"SHH";||transcript_type||"protein_coding";||transcript_name||"SHH-201";||exon_number||3;||exon_id||"ENSE00001149618.3";||level||2;||protein_id||"ENSP00000297261.2";||transcript_support_level||"1";||hgnc_id||"HGNC:10848";||tag||"basic";||tag||"Ensembl_canonical";||tag||"GENCODE_Primary";||tag||"MANE_Select";||tag||"appris_principal_1";||tag||"CCDS";||ccdsid||"CCDS5942.1";||havana_gene||"OTTHUMG00000151349.3";||havana_transcript||"OTTHUMT00000322327.2";
 """))})  # noqa: E501
     return build_gene_models_from_resource(res)
 
@@ -155,7 +163,7 @@ chr1    TEST    UTR           78   100    .    +    .    gene_id||"GENE";||trans
 def test_save_as_gtf_simple(ensembl_gtf_example: GeneModels) -> None:
     reference = ensembl_gtf_example
     reference.load()
-    serialized = models_to_gtf(reference)
+    serialized = gene_models_to_gtf(reference)
 
     gene_models = build_gene_models_from_resource(build_inmemory_test_resource(
         content={
@@ -182,7 +190,7 @@ def test_save_as_gtf_simple(ensembl_gtf_example: GeneModels) -> None:
 def test_save_as_gtf_complex(ensembl_gtf_example_shh: GeneModels) -> None:
     example_models = ensembl_gtf_example_shh
     example_models.load()
-    serialized = models_to_gtf(example_models)
+    serialized = gene_models_to_gtf(example_models)
 
     assert "start_codon\t155812120\t155812122" in serialized
     assert "stop_codon\t155802900\t155802902" in serialized
@@ -214,7 +222,7 @@ def test_save_as_gtf_noncoding(
 ) -> None:
     example_models = ensembl_gtf_example_noncoding
     example_models.load()
-    serialized = models_to_gtf(example_models)
+    serialized = gene_models_to_gtf(example_models)
 
     gene_models = build_gene_models_from_resource(build_inmemory_test_resource(
         content={
@@ -242,7 +250,7 @@ def test_save_as_gtf_no_exons(
 ) -> None:
     example_models = gtf_example_no_exons
     example_models.load()
-    serialized = models_to_gtf(example_models)
+    serialized = gene_models_to_gtf(example_models)
 
     gene_models = build_gene_models_from_resource(build_inmemory_test_resource(
         content={
@@ -270,7 +278,7 @@ def test_save_as_gtf_split_start_stop_codons(
 ) -> None:
     example_models = gtf_example_split_start_stop_codons
     example_models.load()
-    serialized = models_to_gtf(example_models)
+    serialized = gene_models_to_gtf(example_models)
 
     gene_models = build_gene_models_from_resource(build_inmemory_test_resource(
         content={
@@ -302,26 +310,22 @@ def test_save_as_gtf_split_start_stop_codons(
         BedRegion("chr1", 78, 79),
     ]
 
-# FIXME write negative strand unit test for start/stop codon calculation
 
 @pytest.mark.parametrize(
-    "strand,expected", [
-        ("+", [".", ".", ".", ".", "0", "0", ".", "0", ".",
-               "0", ".", "2", ".", "1", ".", "2", "0", "."]),
-        ("-", [".", ".", ".", ".", "0", "0", ".", "0", ".", "2",
-               "0", "."]),
+    "expected", [
+        [
+            ".", ".", ".", ".", "0", "0", ".", "0", ".",
+            "0", ".", "2", ".", "1", ".", "2", "0", ".",
+        ],
     ],
 )
-def test_phase_field_serialization(
+def test_phase_field_serialization_positive_strand(
     gencode_46_calml6_example: GeneModels,
-    ensembl_gtf_example_shh: GeneModels,
-    strand: str,
     expected: list[str],
 ) -> None:
-    example_models = gencode_46_calml6_example if strand == "+" \
-                     else ensembl_gtf_example_shh
+    example_models = gencode_46_calml6_example
     example_models.load()
-    serialized = models_to_gtf(example_models)
+    serialized = gene_models_to_gtf(example_models)
 
     # [4:] skips auto-generated comment lines
     line_phases = [
@@ -333,3 +337,597 @@ def test_phase_field_serialization(
         print(line, expected[idx])
         phase = line[7]
         assert phase == expected[idx]
+
+
+@pytest.mark.parametrize(
+    "expected", [
+        [
+            ("stop_codon", "0"),
+            ("CDS", "2"),
+            ("CDS", "0"),
+            ("CDS", "0"),
+            ("start_codon", "0"),
+        ],
+    ],
+)
+def test_phase_field_serialization_negative_strand(
+    ensembl_gtf_example_shh: GeneModels,
+    expected: list[tuple[str, str]],
+) -> None:
+    example_models = ensembl_gtf_example_shh
+    example_models.load()
+    serialized = gene_models_to_gtf(example_models)
+
+    line_phases = [
+        line.split("\t")[:8]
+        for line in serialized.strip().split("\n")[4:]
+    ]
+    line_phases = [
+        ln for ln in line_phases
+        if ln[2] in {"CDS", "start_codon", "stop_codon"}
+    ]
+
+    assert expected == [(ln[2], ln[7]) for ln in line_phases]
+
+
+@pytest.mark.parametrize(
+    "strand,regions,expected", [
+        (
+            "+",
+            [(1, 5)],
+            [(1, 3)],
+        ),
+        (
+            "+",
+            [(1, 2), (10, 15)],
+            [(1, 2), (10, 10)],
+        ),
+        (
+            "+",
+            [(1, 1), (10, 10), (20, 25)],
+            [(1, 1), (10, 10), (20, 20)],
+        ),
+        (
+            "-",
+            [(1, 5)],
+            [(3, 5)],
+        ),
+        (
+            "-",
+            [(1, 5), (10, 10)],
+            [(4, 5), (10, 10)],
+        ),
+        (
+            "-",
+            [(1, 5), (10, 11)],
+            [(5, 5), (10, 11)],
+        ),
+        (
+            "-",
+            [(1, 5), (10, 10), (20, 20)],
+            [(5, 5), (10, 10), (20, 20)],
+        ),
+    ],
+)
+def test_collect_gtf_start_codon_regions(
+    strand: str,
+    regions: list[tuple[int, int]],
+    expected: list[tuple[int, int]],
+) -> None:
+    cds_regions = [
+        BedRegion("chr1", start, end)
+        for start, end in regions
+    ]
+    start_codons = collect_gtf_start_codon_regions(strand, cds_regions)
+    assert len(start_codons) == len(expected)
+    assert [(sc.start, sc.end) for sc in start_codons] == expected
+
+
+@pytest.mark.parametrize(
+    "strand,regions,expected", [
+        (
+            "+",
+            [(1, 5)],
+            [(3, 5)],
+        ),
+        (
+            "+",
+            [(1, 5), (10, 10)],
+            [(4, 5), (10, 10)],
+        ),
+        (
+            "+",
+            [(1, 5), (10, 10), (20, 20)],
+            [(5, 5), (10, 10), (20, 20)],
+        ),
+        (
+            "-",
+            [(1, 5)],
+            [(1, 3)],
+        ),
+        (
+            "-",
+            [(1, 1), (10, 15)],
+            [(1, 1), (10, 11)],
+        ),
+        (
+            "-",
+            [(1, 1), (10, 10), (20, 25)],
+            [(1, 1), (10, 10), (20, 20)],
+        ),
+    ],
+)
+def test_collect_gtf_stop_codon_regions(
+    strand: str,
+    regions: list[tuple[int, int]],
+    expected: list[tuple[int, int]],
+) -> None:
+    cds_regions = [
+        BedRegion("chr1", start, end)
+        for start, end in regions
+    ]
+    start_codons = collect_gtf_stop_codon_regions(strand, cds_regions)
+    assert len(start_codons) == len(expected)
+    assert [(sc.start, sc.end) for sc in start_codons] == expected
+
+
+@pytest.mark.parametrize(
+    "strand,regions,expected", [
+        (
+            "+",
+            [(1, 5)],
+            [(1, 2)],
+        ),
+        (
+            "+",
+            [(1, 5), (10, 10)],
+            [(1, 3)],
+        ),
+        (
+            "+",
+            [(1, 5), (10, 10), (20, 20)],
+            [(1, 4)],
+        ),
+        (
+            "-",
+            [(1, 5)],
+            [(4, 5)],
+        ),
+        (
+            "-",
+            [(1, 1), (10, 15)],
+            [(12, 15)],
+        ),
+        (
+            "-",
+            [(1, 1), (10, 10), (20, 25)],
+            [(21, 25)],
+        ),
+    ],
+)
+def test_collect_gtf_cds_regions(
+    strand: str,
+    regions: list[tuple[int, int]],
+    expected: list[tuple[int, int]],
+) -> None:
+    cds_regions = [
+        BedRegion("chr1", start, end)
+        for start, end in regions
+    ]
+    start_codons = collect_gtf_cds_regions(strand, cds_regions)
+    assert len(start_codons) == len(expected)
+    assert [(sc.start, sc.end) for sc in start_codons] == expected
+
+
+def test_find_exon_for_gtf_cds_feature(
+    gencode_46_calml6_example: GeneModels,
+) -> None:
+    example_models = gencode_46_calml6_example
+    example_models.load()
+    transcript = example_models.transcript_models["ENST00000307786.8"]
+    assert transcript is not None
+
+    cds_regions = transcript.cds_regions()
+
+    start_codons = collect_gtf_start_codon_regions(
+        transcript.strand, cds_regions)
+    assert len(start_codons) == 1
+    start_codon = start_codons[0]
+    exon, _ = find_exon_cds_region_for_gtf_cds_feature(transcript, start_codon)
+    assert exon is not None
+    assert exon.frame == 0
+
+    stop_codons = collect_gtf_stop_codon_regions(
+        transcript.strand, cds_regions)
+    assert stop_codons
+    assert len(stop_codons) == 1
+    stop_codon = stop_codons[0]
+    exon, _ = find_exon_cds_region_for_gtf_cds_feature(transcript, stop_codon)
+    assert exon is not None
+    assert exon.frame == 1
+
+    cds = collect_gtf_cds_regions(
+        transcript.strand, cds_regions)
+    assert cds
+
+
+@pytest.fixture()
+def transcript_builder() -> Callable[
+    [list[tuple[int, int]], tuple[int, int], str],
+    TranscriptModel,
+]:
+    def _builder(
+        regions: list[tuple[int, int]],
+        cds: tuple[int, int],
+        strand: str,
+    ) -> TranscriptModel:
+        exons = [Exon(start, stop) for start, stop in regions]  # noqa: FURB140
+        tx = (exons[0].start, exons[-1].stop)
+
+        transcript = TranscriptModel(
+            "test_gene_1",
+            "test_transcript_1",
+            "test_transcript_1",
+            "chr1",
+            strand,
+            tx,
+            cds,
+            exons,
+        )
+        transcript.update_frames()
+        return transcript
+
+    return _builder
+
+
+@pytest.mark.parametrize(
+    "tr_data,expected_exons,expected_exon_frames", [
+        (
+            ("+", [(10, 39)], (10, 39)),
+            [(10, 39)],
+            [0],
+        ),
+        (
+            ("+", [(10, 50)], (10, 39)),
+            [(10, 50)],
+            [0],
+        ),
+        (
+            ("+", [(10, 11), (20, 49)], (10, 49)),
+            [(10, 11), (20, 49)],
+            [0, 2],
+        ),
+        (
+            ("+", [(10, 10), (21, 21), (32, 59)], (10, 59)),
+            [(10, 10), (21, 21), (32, 59)],
+            [0, 1, 2],
+        ),
+        (
+            ("-", [(10, 39)], (10, 39)),
+            [(10, 39)],
+            [0],
+        ),
+        (
+            ("-", [(10, 38), (40, 40)], (10, 40)),
+            [(10, 38), (40, 40)],
+            [1, 0],
+        ),
+        (
+            ("-", [(10, 37), (41, 41), (50, 50)], (10, 50)),
+            [(10, 37), (41, 41), (50, 50)],
+            [2, 1, 0],
+        ),
+    ],
+)
+def test_find_exon_for_gtf_start_codons(
+    transcript_builder: Callable[
+        [list[tuple[int, int]], tuple[int, int], str],
+        TranscriptModel,
+    ],
+    tr_data: tuple[str, list[tuple[int, int]], tuple[int, int]],
+    expected_exons: list[tuple[int, int]],
+    expected_exon_frames: list[int],
+) -> None:
+    strand, exons, cds = tr_data
+    transcript = transcript_builder(exons, cds, strand)
+    start_codons = collect_gtf_start_codon_regions(
+        transcript.strand, transcript.cds_regions())
+    assert len(start_codons) == len(expected_exons)
+    sc_exons = []
+    sc_frames = []
+    for start_codon in start_codons:
+        exon, _ = find_exon_cds_region_for_gtf_cds_feature(
+            transcript, start_codon)
+        assert exon is not None
+        sc_exons.append((exon.start, exon.stop))
+        sc_frames.append(exon.frame)
+
+    assert len(sc_exons) == len(expected_exons)
+    assert sc_exons == expected_exons
+
+    assert len(sc_frames) == len(expected_exon_frames)
+    assert sc_frames == expected_exon_frames
+
+
+@pytest.mark.parametrize(
+    "tr_data,expected_gtf_features,expected_gtf_frames", [
+        (
+            ("+", [(10, 39)], (10, 39)),
+            [(10, 12)],
+            [0],
+        ),
+        (
+            ("+", [(10, 10), (21, 49)], (10, 49)),
+            [(10, 10), (21, 22)],
+            [0, 1],
+        ),
+        (
+            ("+", [(10, 10), (21, 21), (32, 59)], (10, 59)),
+            [(10, 10), (21, 21), (32, 32)],
+            [0, 1, 2],
+        ),
+
+        (
+            ("-", [(10, 39)], (10, 39)),
+            [(37, 39)],
+            [0],
+        ),
+        (
+            ("-", [(10, 38), (49, 49)], (10, 49)),
+            [(37, 38), (49, 49)],
+            [1, 0],
+        ),
+        (
+            ("-", [(10, 37), (48, 48), (59, 59)], (10, 59)),
+            [(37, 37), (48, 48), (59, 59)],
+            [2, 1, 0],
+        ),
+    ],
+)
+def test_calc_gtf_frame_for_start_codons(
+    transcript_builder: Callable[
+        [list[tuple[int, int]], tuple[int, int], str],
+        TranscriptModel,
+    ],
+    tr_data: tuple[str, list[tuple[int, int]], tuple[int, int]],
+    expected_gtf_features: list[tuple[int, int]],
+    expected_gtf_frames: list[int],
+) -> None:
+    strand, exons, cds = tr_data
+    transcript = transcript_builder(exons, cds, strand)
+    start_codons = collect_gtf_start_codon_regions(
+        transcript.strand, transcript.cds_regions())
+    assert len(start_codons) == len(expected_gtf_features)
+    assert [(sc.start, sc.stop) for sc in start_codons] == expected_gtf_features
+
+    sc_frames = []
+    for start_codon in start_codons:
+        frame = calc_frame_for_gtf_cds_feature(transcript, start_codon)
+        sc_frames.append(frame)
+
+    assert len(sc_frames) == len(expected_gtf_frames)
+    assert sc_frames == expected_gtf_frames
+
+
+@pytest.mark.parametrize(
+    "tr_data,expected_gtf_features,expected_gtf_frames", [
+        (
+            ("+", [(10, 39)], (10, 39)),
+            [(37, 39)],
+            [0],
+        ),
+        (
+            ("+", [(10, 37), (48, 49)], (10, 49)),
+            [(37, 37), (48, 49)],
+            [0, 1],
+        ),
+        (
+            ("+", [(10, 37), (48, 48), (59, 59)], (10, 59)),
+            [(37, 37), (48, 48), (59, 59)],
+            [0, 1, 2],
+        ),
+
+        (
+            ("-", [(10, 39)], (10, 39)),
+            [(10, 12)],
+            [0],
+        ),
+        (
+            ("-", [(10, 11), (22, 49)], (10, 49)),
+            [(10, 11), (22, 22)],
+            [1, 0],
+        ),
+        (
+            ("-", [(10, 10), (21, 21), (32, 59)], (10, 59)),
+            [(10, 10), (21, 21), (32, 32)],
+            [2, 1, 0],
+        ),
+    ],
+)
+def test_calc_gtf_frame_for_stop_codons(
+    transcript_builder: Callable[
+        [list[tuple[int, int]], tuple[int, int], str],
+        TranscriptModel,
+    ],
+    tr_data: tuple[str, list[tuple[int, int]], tuple[int, int]],
+    expected_gtf_features: list[tuple[int, int]],
+    expected_gtf_frames: list[int],
+) -> None:
+    strand, exons, cds = tr_data
+    transcript = transcript_builder(exons, cds, strand)
+
+    stop_codons = collect_gtf_stop_codon_regions(
+        transcript.strand, transcript.cds_regions())
+    assert len(stop_codons) == len(expected_gtf_features)
+    assert [(sc.start, sc.stop) for sc in stop_codons] == expected_gtf_features
+
+    sc_frames = []
+    for start_codon in stop_codons:
+        frame = calc_frame_for_gtf_cds_feature(transcript, start_codon)
+        sc_frames.append(frame)
+
+    assert len(sc_frames) == len(expected_gtf_frames)
+    assert sc_frames == expected_gtf_frames
+
+
+@pytest.mark.parametrize(
+    "tr_data,expected_gtf_features,expected_gtf_frames", [
+        (
+            ("+", [(10, 39)], (10, 39)),
+            [(10, 36)],
+            [0],
+        ),
+        (
+            ("+", [(10, 10), (21, 49)], (10, 49)),
+            [(10, 10), (21, 46)],
+            [0, 1],
+        ),
+        (
+            ("+", [(10, 10), (21, 21), (32, 59)], (10, 59)),
+            [(10, 10), (21, 21), (32, 56)],
+            [0, 1, 2],
+        ),
+
+        (
+            ("+", [(10, 13), (24, 49)], (10, 49)),
+            [(10, 13), (24, 46)],
+            [0, 1],
+        ),
+        (
+            ("+", [(10, 12), (23, 49)], (10, 49)),
+            [(10, 12), (23, 46)],
+            [0, 0],
+        ),
+
+        (
+            ("+", [(10, 12), (23, 26), (37, 59)], (10, 59)),
+            [(10, 12), (23, 26), (37, 56)],
+            [0, 0, 1],
+        ),
+        (
+            ("+", [(10, 12), (23, 26), (37, 40), (51, 69)], (10, 69)),
+            [(10, 12), (23, 26), (37, 40), (51, 66)],
+            [0, 0, 1, 2],
+        ),
+
+        (
+            ("-", [(10, 39)], (10, 39)),
+            [(13, 39)],
+            [0],
+        ),
+        (
+            ("-", [(10, 38), (49, 49)], (10, 49)),
+            [(13, 38), (49, 49)],
+            [1, 0],
+        ),
+        (
+            ("-", [(10, 36), (47, 49)], (10, 49)),
+            [(13, 36), (47, 49)],
+            [0, 0],
+        ),
+        (
+            ("-", [(10, 35), (46, 49)], (10, 49)),
+            [(13, 35), (46, 49)],
+            [1, 0],
+        ),
+        (
+            ("-", [(10, 34), (45, 49)], (10, 49)),
+            [(13, 34), (45, 49)],
+            [2, 0],
+        ),
+
+        (  # SHH gene
+            (
+                "-",
+                [
+                    (155799980, 155803726),
+                    (155806296, 155806557),
+                    (155811823, 155812463),
+                ],
+                (155802900, 155812122),
+            ),
+            [
+                (155802903, 155803726),
+                (155806296, 155806557),
+                (155811823, 155812122),
+            ],
+            [1, 0, 0],
+        ),
+    ],
+)
+def test_calc_gtf_frame_for_cds(
+    transcript_builder: Callable[
+        [list[tuple[int, int]], tuple[int, int], str],
+        TranscriptModel,
+    ],
+    tr_data: tuple[str, list[tuple[int, int]], tuple[int, int]],
+    expected_gtf_features: list[tuple[int, int]],
+    expected_gtf_frames: list[int],
+) -> None:
+    strand, exons, cds = tr_data
+    transcript = transcript_builder(exons, cds, strand)
+
+    regions = collect_gtf_cds_regions(
+        transcript.strand, transcript.cds_regions())
+    assert len(regions) == len(expected_gtf_features)
+    assert [(r.start, r.stop) for r in regions] == expected_gtf_features
+
+    frames = []
+    for reg in regions:
+        frame = calc_frame_for_gtf_cds_feature(transcript, reg)
+        frames.append(frame)
+
+    assert len(frames) == len(expected_gtf_frames)
+    assert frames == expected_gtf_frames
+
+
+def test_explore_shh_gene(
+    ensembl_gtf_example_shh: GeneModels,
+) -> None:
+    gene_models = ensembl_gtf_example_shh
+    gene_models.load()
+
+    transcript = ensembl_gtf_example_shh.transcript_models["ENST00000297261.7"]
+    assert transcript is not None
+
+    assert transcript.strand == "-"
+    assert transcript.cds == (155802900, 155812122)
+
+    assert len(transcript.exons) == 3
+    assert [
+        (ex.start, ex.stop) for ex in transcript.exons
+    ] == [
+        (155799980, 155803726),
+        (155806296, 155806557),
+        (155811823, 155812463),
+    ]
+
+    cds_regions = transcript.cds_regions()
+    assert len(cds_regions) == 3
+
+    start_codons = collect_gtf_start_codon_regions(
+        transcript.strand, cds_regions)
+    assert len(start_codons) == 1
+
+    assert [(sc.start, sc.stop) for sc in start_codons] == [
+        (155812120, 155812122),
+    ]
+
+    stop_codons = collect_gtf_stop_codon_regions(
+        transcript.strand, cds_regions)
+    assert len(stop_codons) == 1
+    assert [(sc.start, sc.stop) for sc in stop_codons] == [
+        (155802900, 155802902),
+    ]
+
+    gtf_cds_regions = collect_gtf_cds_regions(transcript.strand, cds_regions)
+    assert len(gtf_cds_regions) == 3
+
+    assert [(r.start, r.stop) for r in gtf_cds_regions] == [
+        (155802903, 155803726),
+        (155806296, 155806557),
+        (155811823, 155812122),
+    ]
+
+    frame = calc_frame_for_gtf_cds_feature(transcript, start_codons[0])
+    assert frame == 0

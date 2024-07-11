@@ -99,7 +99,7 @@ def get_chromosome_length_tabix(
                 left = pos
             else:
                 right = pos
-        return right
+        return right  # noqa: TRY300
 
     except ValueError as ex:
         logger.warning(
@@ -170,9 +170,7 @@ class Region:
 
         if self.start and pos < self.start:
             return False
-        if self.stop and pos > self.stop:
-            return False
-        return True
+        return not (self.stop and pos > self.stop)
 
     @staticmethod
     def _min(a: int | None, b: int | None) -> int | None:
@@ -196,9 +194,8 @@ class Region:
     ) -> Region | None:
         if chrom is None:
             return None
-        if start is not None and stop is not None:
-            if start > stop:
-                return None
+        if start is not None and stop is not None and start > stop:
+            return None
         return Region(chrom, start, stop)
 
     def intersection(self, other: Region) -> Region | None:
@@ -218,7 +215,8 @@ class Region:
             return self._make_region(
                 self.chrom, self._max(self.start, other.start), other.stop)
 
-        assert self.start is not None and self.stop is not None
+        assert self.start is not None
+        assert self.stop is not None
         return self._make_region(
             self.chrom,
             self._max(self.start, other.start),
@@ -243,7 +241,8 @@ class Region:
                 return other.start >= self.start
             return False
 
-        assert self.start is not None and self.stop is not None
+        assert self.start is not None
+        assert self.stop is not None
         if other.stop is None or other.start is None:
             return False
         return self.start <= other.start \
@@ -316,7 +315,7 @@ class BedRegion(Region):
         return self.stop
 
     def __len__(self) -> int:
-        return self.stop - self.start
+        return self.stop - self.start + 1
 
 
 def all_regions_from_chrom(regions: list[Region], chrom: str) -> list[Region]:
@@ -341,7 +340,7 @@ def connected_component(regions: list[BedRegion]) -> Any:
     for reg in regions:
         regions_by_chrom[reg.chrom].append(reg)
 
-    for _chrom, nds in regions_by_chrom.items():
+    for nds in regions_by_chrom.values():
         nds.sort(key=lambda x: x.stop)
         for k in range(1, len(nds)):
             for j in range(k - 1, -1, -1):
@@ -353,7 +352,7 @@ def connected_component(regions: list[BedRegion]) -> Any:
 
 
 def collapse(
-    source: Sequence[Region],
+    source: Sequence[Region], *,
     is_sorted: bool = False,
 ) -> list[Region]:
     """Collapse list of regions."""
@@ -392,7 +391,7 @@ def collapse(
 
 
 def collapse_no_chrom(
-    source: list[BedRegion],
+    source: list[BedRegion], *,
     is_sorted: bool = False,
 ) -> list[BedRegion]:
     """Collapse by ignoring the chromosome.
@@ -424,7 +423,7 @@ def collapse_no_chrom(
 
 
 def total_length(regions: list[BedRegion]) -> int:
-    return sum(len(regions) for x in regions)
+    return sum(len(x) for x in regions)
 
 
 def intersection(
@@ -480,7 +479,7 @@ def intersection(
 
 def union(*r: list[Region]) -> list[Region]:
     """Collapse many lists of regions."""
-    r_sum = [el for list in r for el in list]
+    r_sum = [el for rlist in r for el in rlist]
     return collapse(r_sum)
 
 
@@ -522,7 +521,8 @@ def _diff(
 
 
 def difference(
-    regions1: list[Region], regions2: list[Region],
+    regions1: list[Region],
+    regions2: list[Region], *,
     symmetric: bool = False,
 ) -> list[Region]:
     """Compute difference between two list of regions."""
