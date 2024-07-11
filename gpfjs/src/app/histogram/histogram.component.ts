@@ -82,17 +82,8 @@ export class HistogramComponent implements OnInit, OnChanges {
                      | d3.ScaleLogarithmic<number, number, never>;
 
   public ngOnInit(): void {
-    this.rangeStartSubject
-      .pipe(debounceTime(100))
-      .subscribe((start) => {
-        this.rangeStartChange.emit(start);
-      });
-
-    this.rangeEndSubject
-      .pipe(debounceTime(100))
-      .subscribe((end) => {
-        this.rangeEndChange.emit(end);
-      });
+    this.rangeStartSubject.subscribe((start) => this.rangeStartChange.emit(start));
+    this.rangeEndSubject.subscribe((end) => this.rangeEndChange.emit(end));
     this.rangeStartSubject.next(this.rangeStart !== null ? this.rangeStart : this.minValue);
     this.rangeEndSubject.next(this.rangeEnd !== null ? this.rangeEnd : this.maxValue);
 
