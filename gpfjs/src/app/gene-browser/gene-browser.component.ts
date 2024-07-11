@@ -88,7 +88,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     });
 
     if (this.route.snapshot.params.gene && typeof this.route.snapshot.params.gene === 'string') {
-      void this.submitGeneRequest(this.route.snapshot.params.gene);
+      this.geneSymbol = this.route.snapshot.params.gene;
     }
 
     this.route.queryParams.subscribe(params => {
