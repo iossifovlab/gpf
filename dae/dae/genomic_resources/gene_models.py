@@ -1637,10 +1637,23 @@ def build_gtf_record(
 ) -> GTFRecord:
     """Build an indexed GTF format record for a feature."""
     src = transcript.attributes.get("gene_source", ".")
-    line = (f"{transcript.chrom}\t{src}\t{feature}\t{start}"
-            f"\t{stop}\t.\t{transcript.strand}\t.\t{attrs};")
+    phase = "."
     if feature in ("exon", "CDS", "start_codon", "stop_codon"):
         exon_number = transcript.get_exon_number_for(start, stop)
+
+    if feature in ("CDS", "start_codon", "stop_codon"):
+        exon = transcript.exons[exon_number - 1]
+        if exon.frame is None:
+            raise ValueError
+        if transcript.strand == "+":
+            phase = str((3 - (exon.frame + (abs(start - exon.start) % 3))) % 3)
+        else:
+            phase = str((3 - (exon.frame + (abs(stop - exon.stop) % 3))) % 3)
+
+    line = (f"{transcript.chrom}\t{src}\t{feature}\t{start}"
+            f"\t{stop}\t.\t{transcript.strand}\t{phase}\t{attrs};")
+
+    if feature in ("exon", "CDS", "start_codon", "stop_codon"):
         line = f'{line}exon_number "{exon_number}";'
     # add stop as negative to sort it in descending order
     index = \
@@ -1694,8 +1707,8 @@ def identify_cds_regions(
         if cds_len - bases_to_write > 0:
             remainder = BedRegion(
                 cds.chrom,
-                cds.start if not reverse else codon_stop,
-                codon_start if not reverse else cds.stop,
+                cds.start if not reverse else codon_stop + 1,
+                codon_start - 1 if not reverse else cds.stop,
             )
             cds_regions.insert(-1 if not reverse else 0, remainder)
 

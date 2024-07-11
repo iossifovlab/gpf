@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
 
-from dae.utils.regions import BedRegion
 import pytest
 
 from dae.genomic_resources.gene_models import (
@@ -13,6 +12,7 @@ from dae.genomic_resources.testing import (
     build_inmemory_test_resource,
     convert_to_tab_separated,
 )
+from dae.utils.regions import BedRegion
 
 
 @pytest.fixture()
@@ -301,3 +301,35 @@ def test_save_as_gtf_split_start_stop_codons(
         BedRegion("chr1", 74, 74),
         BedRegion("chr1", 78, 79),
     ]
+
+# FIXME write negative strand unit test for start/stop codon calculation
+
+@pytest.mark.parametrize(
+    "strand,expected", [
+        ("+", [".", ".", ".", ".", "0", "0", ".", "0", ".",
+               "0", ".", "2", ".", "1", ".", "2", "0", "."]),
+        ("-", [".", ".", ".", ".", "0", "0", ".", "0", ".", "2",
+               "0", "."]),
+    ],
+)
+def test_phase_field_serialization(
+    gencode_46_calml6_example: GeneModels,
+    ensembl_gtf_example_shh: GeneModels,
+    strand: str,
+    expected: list[str],
+) -> None:
+    example_models = gencode_46_calml6_example if strand == "+" \
+                     else ensembl_gtf_example_shh
+    example_models.load()
+    serialized = models_to_gtf(example_models)
+
+    # [4:] skips auto-generated comment lines
+    line_phases = [
+        line.split("\t")[:8]
+        for line in serialized.strip().split("\n")[4:]
+    ]
+
+    for idx, line in enumerate(line_phases):
+        print(line, expected[idx])
+        phase = line[7]
+        assert phase == expected[idx]
