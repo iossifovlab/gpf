@@ -1491,6 +1491,11 @@ class GeneModels(
             "gene_mapping": {"type": "string"},
         }
 
+    @deprecated("Switch to using 'gene_models_to_gtf' function")
+    def to_gtf(self) -> str:
+        """Output gene models in GTF format."""
+        return gene_models_to_gtf(self)
+
 
 def join_gene_models(*gene_models: GeneModels) -> GeneModels:
     """Join muliple gene models into a single gene models object."""
