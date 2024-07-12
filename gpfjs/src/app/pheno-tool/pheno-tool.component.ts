@@ -65,6 +65,9 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
       switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
     ).subscribe(dataset => {
+      if (!dataset) {
+        return;
+      }
       this.selectedDataset = dataset;
       this.variantTypesSet = new Set(this.selectedDataset.genotypeBrowserConfig.variantTypes);
     });

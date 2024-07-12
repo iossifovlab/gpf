@@ -50,6 +50,9 @@ export class PhenoBrowserComponent implements OnInit {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
       switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
     ).subscribe(dataset => {
+      if (!dataset) {
+        return;
+      }
       this.selectedDataset = dataset;
 
       this.initInstruments(this.selectedDataset.id);

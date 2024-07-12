@@ -22,8 +22,11 @@ export class DatasetDescriptionComponent implements OnInit {
 
   public ngOnInit(): void {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId)))
+      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId as string)))
       .subscribe(dataset => {
+        if (!dataset) {
+          return;
+        }
         this.dataset = dataset;
       });
   }

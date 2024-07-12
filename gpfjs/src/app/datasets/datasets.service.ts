@@ -52,6 +52,9 @@ export class DatasetsService {
   }
 
   public getDataset(datasetId: string): Observable<Dataset> {
+    if (!datasetId) {
+      return of();
+    }
     const url = `${this.datasetUrl}/${datasetId}`;
     const options = { headers: this.headers, withCredentials: true };
 

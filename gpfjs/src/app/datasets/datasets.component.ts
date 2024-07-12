@@ -52,8 +52,10 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
 
         this.datasetsService.getDataset(params['dataset'] as string).subscribe({
           next: dataset => {
-            this.store.dispatch(new SetDatasetId(dataset.id));
-            this.setupSelectedDataset();
+            if (dataset) {
+              this.store.dispatch(new SetDatasetId(dataset.id));
+              this.setupSelectedDataset();
+            }
           },
           error: () => {
             this.selectedDataset = undefined;

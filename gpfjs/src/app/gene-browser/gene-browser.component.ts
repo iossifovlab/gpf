@@ -84,6 +84,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
       switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
     ).subscribe(dataset => {
+      if (!dataset) {
+        return;
+      }
       this.selectedDataset = dataset;
       this.selectedDatasetId = dataset.id;
       this.legend = this.selectedDataset.personSetCollections

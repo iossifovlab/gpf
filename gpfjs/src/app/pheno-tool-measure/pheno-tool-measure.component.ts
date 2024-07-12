@@ -53,6 +53,9 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
       switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId)),
       switchMap(dataset => {
+        if (!dataset) {
+          return;
+        }
         this.dataset = dataset;
         if (this.dataset?.phenotypeData) {
           return this.measuresService.getRegressions(this.dataset.id).pipe(take(1));
