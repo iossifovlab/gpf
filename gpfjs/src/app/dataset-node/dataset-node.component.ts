@@ -1,12 +1,13 @@
 import { AfterContentChecked, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
 import { Dataset } from 'app/datasets/datasets';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { Observable, Subject, Subscription, switchMap } from 'rxjs';
 import { DatasetNode } from './dataset-node';
 import { Store } from '@ngxs/store';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from './dataset-node.state';
 import { DatasetModel } from 'app/datasets/datasets.state';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-dataset-node',
@@ -16,7 +17,7 @@ import { DatasetModel } from 'app/datasets/datasets.state';
 export class DatasetNodeComponent extends StatefulComponent implements OnInit, AfterContentChecked {
   @Input() public datasetNode: DatasetNode;
   @Output() public setExpandabilityEvent = new EventEmitter<boolean>();
-  public selectedDataset: Dataset;
+  public selectedDatasetId: string;
   public isExpanded = false;
   public closeChildrenSubject: Subject<void> = new Subject<void>();
   @Input() public closeObservable: Observable<void> = new Observable<void>();
@@ -25,15 +26,16 @@ export class DatasetNodeComponent extends StatefulComponent implements OnInit, A
   public constructor(
     private router: Router,
     private changeDetector: ChangeDetectorRef,
-    protected store: Store
+    protected store: Store,
+    private datasetService: DatasetsService
   ) {
     super(store, DatasetNodeState, 'datasetNode');
   }
 
   public ngOnInit(): void {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      this.selectedDataset = state.selectedDataset;
-      if (this.datasetNode.dataset.id === this.selectedDataset.id) {
+      this.selectedDatasetId = state.selectedDatasetId;
+      if (this.datasetNode.dataset.id === this.selectedDatasetId) {
         this.setExpandability();
       }
     });

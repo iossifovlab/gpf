@@ -1,6 +1,6 @@
-<div class="container">
+<div *ngIf="selectedDataset" class="container">
   <gpf-genes-block></gpf-genes-block>
-  <gpf-regions-block></gpf-regions-block>
+  <gpf-regions-block [genome]="selectedDataset.genome"></gpf-regions-block>
   <gpf-genotype-block [dataset]="selectedDataset"></gpf-genotype-block>
   <gpf-study-filters-block *ngIf="selectedDataset?.genotypeBrowserConfig?.hasStudyFilters" [dataset]="selectedDataset">
   </gpf-study-filters-block>

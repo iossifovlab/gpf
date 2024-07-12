@@ -14,11 +14,12 @@ import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-fil
 import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-filters-block.component';
 import { UniqueFamilyVariantsFilterState } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
 import { ErrorsState, ErrorsModel } from '../common/errors.state';
-import { filter, take } from 'rxjs/operators';
+import { filter, switchMap, take } from 'rxjs/operators';
 import { StudyFiltersState } from 'app/study-filters/study-filters.state';
 import { clone } from 'lodash';
 import { NavigationStart, Router } from '@angular/router';
 import { DatasetModel } from 'app/datasets/datasets.state';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -85,7 +86,8 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     public readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private router: Router,
-    private store: Store
+    private store: Store,
+    private datasetsService: DatasetsService
   ) {
     this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationStart)
@@ -98,8 +100,13 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public ngOnInit(): void {
     this.genotypeBrowserState = {};
 
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      this.selectedDataset = state.selectedDataset;
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
+      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
+    ).subscribe(dataset => {
+      if (!dataset) {
+        return;
+      }
+      this.selectedDataset = dataset;
     });
 
     this.state$.subscribe(state => {

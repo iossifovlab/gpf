@@ -33,6 +33,7 @@ import { HttpClient, HttpHandler } from '@angular/common/http';
 import { NgxsModule } from '@ngxs/store';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetModel } from 'app/datasets/datasets.state';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 const fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression)) as object;
 fakeJsonMeasurei1['instrument_name'] = 'i1';
@@ -69,6 +70,12 @@ class MockPhenoBrowserService {
 
   public getDownloadMeasuresLink(): string {
     return '';
+  }
+}
+class MockDatasetsService {
+  public getDataset(datasetId: string): Observable<Dataset> {
+    // eslint-disable-next-line max-len
+    return of(new Dataset(datasetId, 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null));
   }
 }
 
@@ -110,6 +117,7 @@ describe('PhenoBrowserComponent', () => {
   let location: Location;
   const activatedRoute = new MockActivatedRoute();
   const phenoBrowserServiceMock = new MockPhenoBrowserService();
+  const mockDatasetsService = new MockDatasetsService();
 
   let locationSpy;
   const resizeSpy = {
@@ -136,6 +144,7 @@ describe('PhenoBrowserComponent', () => {
         HttpClient,
         HttpHandler,
         { provide: PhenoBrowserService, useValue: phenoBrowserServiceMock },
+        { provide: DatasetsService, useValue: mockDatasetsService },
         { provide: ActivatedRoute, useValue: activatedRoute },
         { provide: Router, useClass: MockRouter },
         { provide: Location, useValue: locationSpy as object},
@@ -151,9 +160,7 @@ describe('PhenoBrowserComponent', () => {
     fixture = TestBed.createComponent(PhenoBrowserComponent);
     component = fixture.componentInstance;
 
-    // eslint-disable-next-line max-len
-    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null);
-    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
 
     component['store'] = {
       selectOnce: () => of(selectedDatasetMockModel)

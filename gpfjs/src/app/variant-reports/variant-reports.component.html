@@ -97,7 +97,7 @@
         <form
           id="dl-form"
           (ngSubmit)="downloadTags($event)"
-          action="{{ config.baseUrl }}common_reports/families_data/{{ selectedDataset.id }}"
+          action="{{ config.baseUrl }}common_reports/families_data/{{ selectedDatasetId }}"
           method="post"
           style="display: flex; align-items: center">
           <span>Selected families: </span><span id="families-sum">{{ filteredFamiliesCount + ' / ' + totalFamiliesCount }}</span>

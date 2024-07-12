@@ -1,7 +1,7 @@
 import { RegionsFilter } from './regions-filter';
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { Store } from '@ngxs/store';
-import { RegionsFilterState, SetRegionsFilter } from './regions-filter.state';
+import { RegionsFilterModel, RegionsFilterState, SetRegionsFilter } from './regions-filter.state';
 import { ValidateNested } from 'class-validator';
 import { StatefulComponent } from 'app/common/stateful-component';
 
@@ -10,7 +10,8 @@ import { StatefulComponent } from 'app/common/stateful-component';
   templateUrl: './regions-filter.component.html',
 })
 export class RegionsFilterComponent extends StatefulComponent implements OnInit {
-  @ValidateNested() public regionsFilter = new RegionsFilter(this.store);
+  @Input() public genome = '';
+  @ValidateNested() public regionsFilter = new RegionsFilter();
   @ViewChild('textArea') private textArea: ElementRef;
 
   public constructor(protected store: Store) {
@@ -20,9 +21,11 @@ export class RegionsFilterComponent extends StatefulComponent implements OnInit 
   public ngOnInit(): void {
     super.ngOnInit();
     this.focusTextInputArea();
-    this.store.selectOnce(state => state.regionsFiltersState).subscribe(state => {
-      this.setRegionsFilter(state.regionsFilters.join('\n'));
-    });
+    this.regionsFilter.genome = this.genome;
+    this.store.selectOnce((state: { regionsFiltersState: RegionsFilterModel}) => state.regionsFiltersState)
+      .subscribe(state => {
+        this.setRegionsFilter(state.regionsFilters.join('\n'));
+      });
   }
 
   public setRegionsFilter(regionsFilter: string): void {

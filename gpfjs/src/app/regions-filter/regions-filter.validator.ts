@@ -3,6 +3,7 @@ import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface 
 @ValidatorConstraint({ name: 'customText', async: false })
 export class RegionsFilterValidator implements ValidatorConstraintInterface {
   public validate(text: string, args: ValidationArguments): boolean {
+    const genome = args.object['genome'] as string;
     if (!text) {
       return null;
     }
@@ -19,9 +20,8 @@ export class RegionsFilterValidator implements ValidatorConstraintInterface {
     }
 
     for (const region of regions) {
-      valid = valid && this.isRegionValid(region, args.object['genome'] as string);
+      valid = valid && this.isRegionValid(region, genome);
     }
-
     return valid;
   }
 
@@ -32,7 +32,6 @@ export class RegionsFilterValidator implements ValidatorConstraintInterface {
       chromRegex = 'chr' + chromRegex;
     }
     const lineRegex = `${chromRegex}:([0-9]+)(?:-([0-9]+))?|${chromRegex}`;
-
     const match = region.match(new RegExp(lineRegex, 'i'));
     if (match === null || match[0] !== region) {
       return false;

@@ -59,8 +59,8 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
 
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
       switchMap((state: DatasetModel) => {
-        const selectedDataset = state.selectedDataset;
-        return this.variantReportsService.getVariantReport(selectedDataset.id);
+        const selectedDatasetId = state.selectedDatasetId;
+        return this.variantReportsService.getVariantReport(selectedDatasetId);
       }),
       take(1)
     ).subscribe({

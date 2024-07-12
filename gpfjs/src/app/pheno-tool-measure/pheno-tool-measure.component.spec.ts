@@ -9,9 +9,9 @@ import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 
 import { PhenoToolMeasureComponent } from './pheno-tool-measure.component';
-import { Dataset } from 'app/datasets/datasets';
 import { DatasetModel } from 'app/datasets/datasets.state';
 import { of } from 'rxjs';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 describe('PhenoToolMeasureComponent', () => {
   let component: PhenoToolMeasureComponent;
@@ -28,6 +28,7 @@ describe('PhenoToolMeasureComponent', () => {
         HttpHandler,
         ConfigService,
         UsersService,
+        DatasetsService,
         { provide: APP_BASE_HREF, useValue: '' }
       ],
       imports: [RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
@@ -38,8 +39,7 @@ describe('PhenoToolMeasureComponent', () => {
     component = fixture.componentInstance;
 
     // eslint-disable-next-line max-len
-    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null);
-    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
 
     component['store'] = {
       selectOnce: () => of(selectedDatasetMockModel),

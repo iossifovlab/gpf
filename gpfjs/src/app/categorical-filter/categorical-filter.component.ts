@@ -30,15 +30,15 @@ export class CategoricalFilterComponent implements OnInit {
   public ngOnInit(): void {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
       switchMap((state: DatasetModel) => {
-        const selectedDataset = state.selectedDataset;
+        const selectedDatasetId = state.selectedDatasetId;
 
         if (this.categoricalFilter.from === 'phenodb') {
           this.sourceDescription$ = this.phenoBrowserService.getMeasureDescription(
-            selectedDataset.id, this.categoricalFilter.source
+            selectedDatasetId, this.categoricalFilter.source
           );
         } else if (this.categoricalFilter.from === 'pedigree') {
           this.sourceDescription$ = this.datasetsService.getDatasetPedigreeColumnDetails(
-            selectedDataset.id, this.categoricalFilter.source
+            selectedDatasetId, this.categoricalFilter.source
           );
         }
         return this.sourceDescription$;

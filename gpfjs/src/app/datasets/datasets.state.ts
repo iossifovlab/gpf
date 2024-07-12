@@ -1,33 +1,32 @@
 import { Injectable } from '@angular/core';
 import { State, Action, StateContext } from '@ngxs/store';
-import { Dataset } from './datasets';
 
-export class SetDataset {
+export class SetDatasetId {
   public static readonly type = '[Genotype] Set current dataset';
   public constructor(
-    public selectedDataset: Dataset
+    public selectedDatasetId: string
   ) {}
 }
 
 export interface DatasetModel {
-    selectedDataset: Dataset;
+    selectedDatasetId: string;
 }
 
 @State<DatasetModel>({
   name: 'datasetState',
   defaults: {
-    selectedDataset: null
+    selectedDatasetId: ''
   },
 })
 @Injectable()
 export class DatasetState {
-  @Action(SetDataset)
+  @Action(SetDatasetId)
   public setDataset(
     ctx: StateContext<DatasetModel>,
-    action: SetDataset
+    action: SetDatasetId
   ): void {
     ctx.patchState({
-      selectedDataset: action.selectedDataset
+      selectedDatasetId: action.selectedDatasetId
     });
   }
 }

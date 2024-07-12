@@ -11,6 +11,7 @@ import { ConfigService } from 'app/config/config.service';
 import { HttpClient } from '@angular/common/http';
 import { Store } from '@ngxs/store';
 import { DatasetModel } from 'app/datasets/datasets.state';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-pheno-browser',
@@ -41,12 +42,18 @@ export class PhenoBrowserComponent implements OnInit {
     private phenoBrowserService: PhenoBrowserService,
     private location: Location,
     public configService: ConfigService,
-    private store: Store
+    private store: Store,
+    private datasetsService: DatasetsService
   ) { }
 
   public ngOnInit(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      this.selectedDataset = state.selectedDataset;
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
+      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
+    ).subscribe(dataset => {
+      if (!dataset) {
+        return;
+      }
+      this.selectedDataset = dataset;
 
       this.initInstruments(this.selectedDataset.id);
       this.initMeasuresToShow(this.selectedDataset.id);

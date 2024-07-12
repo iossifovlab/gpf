@@ -9,8 +9,8 @@
     >expand_more</span
   ><a
     class="dataset-dropdown-item dropdown-item"
-    *ngIf="selectedDataset"
-    [class.active]="selectedDataset.id === datasetNode.dataset.id"
+    *ngIf="selectedDatasetId"
+    [class.active]="selectedDatasetId === datasetNode.dataset.id"
     [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3"
     [ngStyle]="{ 'padding-left': datasetNode.children.length ? 0 : 24 }"
     (click)="select()"

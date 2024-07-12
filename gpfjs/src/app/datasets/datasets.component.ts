@@ -2,7 +2,7 @@ import { UsersService } from '../users/users.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
-import { Subscription, combineLatest } from 'rxjs';
+import { Subscription, combineLatest, switchMap } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
@@ -10,7 +10,7 @@ import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
 import { GeneProfilesState } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
-import { DatasetModel, DatasetState, SetDataset } from './datasets.state';
+import { DatasetModel, DatasetState, SetDatasetId } from './datasets.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
@@ -52,8 +52,10 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
 
         this.datasetsService.getDataset(params['dataset'] as string).subscribe({
           next: dataset => {
-            this.store.dispatch(new SetDataset(dataset));
-            this.setupSelectedDataset();
+            if (dataset) {
+              this.store.dispatch(new SetDatasetId(dataset.id));
+              this.setupSelectedDataset();
+            }
           },
           error: () => {
             this.selectedDataset = undefined;
@@ -110,12 +112,14 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
   }
 
   private setupSelectedDataset(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      if (!state.selectedDataset) {
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
+      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
+    ).subscribe(dataset => {
+      if (!dataset) {
         return;
       }
 
-      this.selectedDataset = state.selectedDataset;
+      this.selectedDataset = dataset;
 
       const firstTool = this.findFirstTool(this.selectedDataset);
 

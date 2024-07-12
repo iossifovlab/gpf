@@ -4,7 +4,7 @@ import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loadi
 import { PhenoToolService } from './pheno-tool.service';
 import { PhenoToolResults } from './pheno-tool-results';
 import { ConfigService } from '../config/config.service';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, switchMap } from 'rxjs';
 import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
 import { PhenoToolGenotypeBlockComponent } from 'app/pheno-tool-genotype-block/pheno-tool-genotype-block.component';
 import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
@@ -15,6 +15,7 @@ import {
   PHENO_TOOL_CNV, PHENO_TOOL_LGDS, PHENO_TOOL_OTHERS
 } from 'app/pheno-tool-effect-types/pheno-tool-effect-types';
 import { DatasetModel } from 'app/datasets/datasets.state';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -39,7 +40,8 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
     private loadingService: FullscreenLoadingService,
     private phenoToolService: PhenoToolService,
     public readonly configService: ConfigService,
-    private store: Store
+    private store: Store,
+    private datasetsService: DatasetsService
   ) { }
 
   @Selector([
@@ -60,8 +62,13 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
   }
 
   public ngOnInit(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      this.selectedDataset = state.selectedDataset;
+    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
+      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
+    ).subscribe(dataset => {
+      if (!dataset) {
+        return;
+      }
+      this.selectedDataset = dataset;
       this.variantTypesSet = new Set(this.selectedDataset.genotypeBrowserConfig.variantTypes);
     });
 

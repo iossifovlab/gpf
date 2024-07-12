@@ -264,8 +264,7 @@ describe('FamilyFiltersBlockComponent', () => {
     component.dataset = datasetMock;
 
     // eslint-disable-next-line max-len
-    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null);
-    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
 
     component['store'] = {
       selectOnce: () => of(selectedDatasetMockModel)

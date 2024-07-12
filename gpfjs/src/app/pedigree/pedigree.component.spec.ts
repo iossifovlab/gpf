@@ -5,7 +5,6 @@ import { VariantReportsService } from 'app/variant-reports/variant-reports.servi
 import { Observable, of } from 'rxjs';
 import { PedigreeComponent } from './pedigree.component';
 import { NgxsModule } from '@ngxs/store';
-import { Dataset } from 'app/datasets/datasets';
 import { DatasetModel } from 'app/datasets/datasets.state';
 
 class MockVariantReportsService {
@@ -35,9 +34,7 @@ describe('PedigreeComponent', () => {
     fixture = TestBed.createComponent(PedigreeComponent);
     component = fixture.componentInstance;
 
-    // eslint-disable-next-line max-len
-    const selectedDatasetMock = new Dataset('testId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null);
-    const selectedDatasetMockModel: DatasetModel = {selectedDataset: selectedDatasetMock};
+    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
 
     component['store'] = {
       selectOnce: () => of(selectedDatasetMockModel)

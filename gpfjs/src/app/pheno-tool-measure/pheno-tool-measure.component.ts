@@ -11,6 +11,7 @@ import { switchMap, take } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
 import { DatasetModel } from 'app/datasets/datasets.state';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 interface Regression {
   display_name: string;
@@ -41,6 +42,7 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
   public constructor(
     protected store: Store,
     private measuresService: MeasuresService,
+    private datasetsService: DatasetsService
   ) {
     super(store, PhenoToolMeasureState, 'phenoToolMeasure');
   }
@@ -49,8 +51,12 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
     super.ngOnInit();
 
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => {
-        this.dataset = state.selectedDataset;
+      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId)),
+      switchMap(dataset => {
+        if (!dataset) {
+          return;
+        }
+        this.dataset = dataset;
         if (this.dataset?.phenotypeData) {
           return this.measuresService.getRegressions(this.dataset.id).pipe(take(1));
         } else {

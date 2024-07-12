@@ -61,7 +61,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
         this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState),
       ))
     ).subscribe(([geneSetsCollections, geneSetsState, datasetState]) => {
-      this.selectedDatasetId = datasetState.selectedDataset.id;
+      this.selectedDatasetId = datasetState.selectedDatasetId;
 
       const denovoGeneSetTypes = geneSetsCollections.filter(
         geneSetCollection => geneSetCollection.name === 'denovo'
