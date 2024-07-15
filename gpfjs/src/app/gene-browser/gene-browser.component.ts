@@ -166,6 +166,12 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser`);
   }
 
+  public toggleCodingOnly($event): void {
+    $event.preventDefault();
+    this.showResults = false;
+    this.summaryVariantsFilter.codingOnly = !this.summaryVariantsFilter.codingOnly;
+  }
+
   public async submitGeneRequest(geneSymbol?: string): Promise<void> {
     (this.searchBox?.nativeElement as HTMLElement)?.blur();
 

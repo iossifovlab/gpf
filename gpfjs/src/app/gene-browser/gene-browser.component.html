@@ -35,10 +35,9 @@
         </mat-autocomplete>
 
         <div style="padding-left: 16px">
-          <label>
+          <label onmousedown="event.preventDefault()" (click)="toggleCodingOnly($event)">
             <input
-              (change)="reset()"
-              style="margin-right: 6px"
+              style="margin-right: 6px; pointer-events: none"
               type="checkbox"
               id="coding-only-checkbox"
               [(ngModel)]="summaryVariantsFilter.codingOnly" />Coding only</label
