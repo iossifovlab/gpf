@@ -1,0 +1,5 @@
+phenotype_data:
+  dbfile: '%(wd)s/fake2.db'
+  name: fake2
+vars:
+  wd: .
