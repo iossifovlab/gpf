@@ -18,7 +18,7 @@ from dae.annotation.annotation_pipeline import (
 from dae.annotation.annotator_base import AnnotatorBase
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources.gene_models import build_gene_models_from_resource
-
+from dae.genomic_resources.gene_models_serialization import gene_models_to_gtf
 # ruff: noqa: S607
 
 CONSEQUENCES = dict(map(reversed, enumerate([
@@ -337,7 +337,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
             )
 
             gene_models.load()
-            gtf_content = gene_models.to_gtf()
+            gtf_content = gene_models_to_gtf(gene_models)
 
             self.gtf_path.write_text(gtf_content)
 

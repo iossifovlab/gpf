@@ -128,6 +128,7 @@ setuptools.setup(
     build_coding_length_enrichment_background=dae.enrichment_tool.build_coding_length_enrichment_background:cli
     build_ur_synonymous_enrichment_background=dae.enrichment_tool.build_ur_synonymous_enrichment_background:cli
     enrichment_cache_builder=dae.enrichment_tool.enrichment_cache_builder:cli
+    to_gpf_gene_models_format=dae.tools.to_gpf_gene_models_format:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
