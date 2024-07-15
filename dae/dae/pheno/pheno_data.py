@@ -648,48 +648,15 @@ class PhenotypeGroup(PhenotypeData):
     """Represents a group of phenotype data studies or groups."""
 
     def __init__(
-        self, pheno_id: str, phenotype_data: list[PhenotypeData],
-        config: Box | None = None,
+        self, pheno_id: str, children: list[PhenotypeData],
     ) -> None:
-        super().__init__(pheno_id, config)
-        self.phenotype_data = phenotype_data
-        self.families = self._build_families()
+        super().__init__(pheno_id, None)
+        self.children = children
         instruments, measures = self._merge_instruments(
-            [ph.instruments for ph in self.phenotype_data])
+            [ph.instruments for ph in self.children])
         self._instruments.update(instruments)
 
         self._measures.update(measures)
-
-    def _build_families(self) -> FamiliesData:
-        phenos = self.phenotype_data
-        logger.info(
-            "building combined families from phenotype data: %s",
-            [st.pheno_id for st in phenos])
-
-        if len(phenos) == 1:
-            return FamiliesData.copy(phenos[0].families)
-
-        logger.info(
-            "combining families from phenotype data %s and %s",
-            phenos[0].pheno_id, phenos[1].pheno_id)
-        result = FamiliesData.combine(
-            phenos[0].families,
-            phenos[1].families)
-
-        if len(phenos) > 2:
-            for sind in range(2, len(phenos)):
-                logger.debug(
-                    "processing pheno (%s): %s", sind, phenos[sind].pheno_id)
-                logger.info(
-                    "combining families from pheno (%s) %s with families "
-                    "from pheno %s",
-                    sind, [st.pheno_id for st in phenos[:sind]],
-                    phenos[sind].pheno_id)
-                result = FamiliesData.combine(
-                    result,
-                    phenos[sind].families,
-                    forced=True)
-        return result
 
     @staticmethod
     def _merge_instruments(
@@ -710,11 +677,9 @@ class PhenotypeGroup(PhenotypeData):
                 for name, measure in instrument.measures.items():
                     full_name = f"{instrument_name}.{name}"
                     if full_name in group_measures:
-                        logger.warning(
-                            "%s measure duplication! ignoring", full_name)
-                        del group_instrument.measures[full_name]
-                        del group_measures[full_name]
-                        continue
+                        raise ValueError(
+                            f"{full_name} measure duplication!"
+                        )
                     group_instrument.measures[full_name] = measure
                     group_measures[full_name] = measure
                 group_instruments[instrument_name] = group_instrument
@@ -723,18 +688,20 @@ class PhenotypeGroup(PhenotypeData):
 
     def get_regressions(self) -> dict[str, Any]:
         res = {}
-        for pheno in self.phenotype_data:
+        for pheno in self.children:
             res.update(pheno.get_regressions())
         return res
 
     def get_measures_info(self) -> dict[str, Any]:
         result = {
-            "base_image_url": "",
+            "base_image_url": None,
             "has_descriptions": False,
             "regression_names": {},
         }
-        for pheno in self.phenotype_data:
+        for pheno in self.children:
             measures_info = pheno.get_measures_info()
+            if result["base_image_url"] is None:
+                result["base_image_url"] = measures_info["base_image_url"]
             result["has_descriptions"] = \
                 result["has_descriptions"] or measures_info["has_descriptions"]
             cast(dict, result["regression_names"]).update(
@@ -747,7 +714,7 @@ class PhenotypeGroup(PhenotypeData):
     ) -> Generator[dict[str, Any], None, None]:
         generators = [
             pheno.search_measures(instrument, search_term)
-            for pheno in self.phenotype_data
+            for pheno in self.children
         ]
         measures = chain(*generators)
         yield from measures
@@ -759,4 +726,35 @@ class PhenotypeGroup(PhenotypeData):
         family_ids: list[str] | None = None,
         roles: list[Role] | None = None,
     ) -> Generator[dict[str, Any], None, None]:
-        raise NotImplementedError
+        generators = []
+        for child in self.children:
+            measures_in_child = list(
+                filter(child.has_measure, measure_ids))
+            if len(measures_in_child) > 0:
+                generators.append(child.get_people_measure_values(
+                    measures_in_child,
+                    person_ids,
+                    family_ids,
+                    roles,
+                ))
+        return chain.from_iterable(generators)
+
+    def get_people_measure_values_df(
+        self,
+        measure_ids: list[str],
+        person_ids: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        roles: list[Role] | None = None,
+    ) -> pd.DataFrame:
+        dfs: list[pd.DataFrame] = []
+        for child in self.children:
+            measures_in_child = list(
+                filter(child.has_measure, measure_ids))
+            if len(measures_in_child) > 0:
+                dfs.append(child.get_people_measure_values_df(
+                    measures_in_child,
+                    person_ids,
+                    family_ids,
+                    roles,
+                ))
+        return pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
