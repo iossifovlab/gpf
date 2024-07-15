@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
-import { User } from './users';
+import { User, UserInfo } from './users';
 import { LocationStrategy } from '@angular/common';
 import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
@@ -18,8 +18,8 @@ export class UsersService {
   private readonly resetPasswordUrl = 'users/forgotten_password';
   private readonly usersUrl = 'users';
 
-  private userInfo$ = new ReplaySubject<{}>(1);
-  private lastUserInfo = null;
+  private userInfo$ = new ReplaySubject<UserInfo>(1);
+  private lastUserInfo: UserInfo = null;
 
   public usersStreamingFinishedSubject = new Subject();
 
@@ -45,7 +45,7 @@ export class UsersService {
 
     return this.authService.revokeAccessToken().pipe(
       take(1),
-      switchMap(() => { return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options) }),
+      switchMap(() => this.http.post(this.config.baseUrl + this.logoutUrl, {}, options)),
       tap(() => {
         this.store.dispatch(new StateResetAll());
         window.location.href = this.locationStrategy.getBaseHref();
@@ -53,20 +53,20 @@ export class UsersService {
     );
   }
 
-  public cachedUserInfo() {
+  public cachedUserInfo(): UserInfo {
     return this.lastUserInfo;
   }
 
-  public getUserInfoObservable(): Observable<any> {
+  public getUserInfoObservable(): Observable<UserInfo> {
     return this.userInfo$.asObservable();
   }
 
-  public getUserInfo(): Observable<any> {
+  public getUserInfo(): Observable<UserInfo> {
     const options = { withCredentials: true };
 
-    return this.http.get(this.config.baseUrl + this.userInfoUrl, options).pipe(
+    return this.http.get<UserInfo>(this.config.baseUrl + this.userInfoUrl, options).pipe(
       map(res => res),
-      tap(userInfo => {
+      tap((userInfo: UserInfo) => {
         this.userInfo$.next(userInfo);
         this.lastUserInfo = userInfo;
       })

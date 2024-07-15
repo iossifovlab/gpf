@@ -1,3 +1,9 @@
+export interface UserInfo {
+  email: string;
+  isAdministrator: boolean;
+  loggedIn: boolean;
+}
+
 export class User {
   public static fromJsonArray(json): User[] {
     return json.map(user => User.fromJson(user));

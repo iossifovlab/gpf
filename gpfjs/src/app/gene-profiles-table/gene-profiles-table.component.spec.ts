@@ -236,12 +236,13 @@ const genesMock = [
 class GeneProfilesTableServiceMock {
   public getGenes(pageIndex: number, geneInput: string): Observable<Record<string, any>> {
     const res = cloneDeep(genesMock);
-    if (geneInput) {
-      res.forEach(gene => {
-        gene['search'] = geneInput;
-      });
-    }
     return of(res);
+  }
+
+  public saveUserGeneProfilesState(): void { }
+
+  public getUserGeneProfilesState(): Observable<object> {
+    return of({});
   }
 }
 
@@ -271,9 +272,9 @@ describe('GeneProfilesTableComponent', () => {
     component.config = configMock;
     store = TestBed.inject(Store);
     jest.spyOn(store, 'selectOnce').mockReturnValue(of({
-      openedTabs: [],
-      searchValue: '',
-      highlightedRows: [],
+      openedTabs: ['POGZ'],
+      searchValue: 'chd',
+      highlightedRows: ['CHD8'],
       sortBy: 'column1',
       orderBy: 'desc',
       headerLeaves: []
@@ -314,9 +315,9 @@ describe('GeneProfilesTableComponent', () => {
     component.search('mockSearch');
 
     expect(component.geneInput).toBe('mockSearch');
-    expect(component.genes[0]).toStrictEqual({search: 'mockSearch', ...genesMock[0]});
-    expect(component.genes[1]).toStrictEqual({search: 'mockSearch', ...genesMock[1]});
-    expect(component.genes[2]).toStrictEqual({search: 'mockSearch', ...genesMock[2]});
+    expect(component.genes[0]).toStrictEqual(genesMock[0]);
+    expect(component.genes[1]).toStrictEqual(genesMock[1]);
+    expect(component.genes[2]).toStrictEqual(genesMock[2]);
   });
 
   it('should update genes', () => {
@@ -402,7 +403,7 @@ describe('GeneProfilesTableComponent', () => {
     mockActivatedRoute.snapshot = {params: {genes: 'SPAST,DYRK1A,FOXP1'}};
 
     component.loadSingleView(new Set(['SPAST', 'DYRK1A', 'FOXP1']));
-    expect(component.tabs).toStrictEqual(new Set(['DYRK1A,FOXP1,SPAST']));
+    expect(component.tabs).toStrictEqual(new Set(['DYRK1A,FOXP1,SPAST', 'POGZ']));
 
     expect(openTabSpy).toHaveBeenCalledWith('DYRK1A,FOXP1,SPAST');
   });
@@ -413,11 +414,11 @@ describe('GeneProfilesTableComponent', () => {
     mockActivatedRoute.snapshot = {params: {genes: 'SPAST,FOXP1,DYRK1A'}};
 
     component.loadSingleView(new Set(['SPAST', 'FOXP1', 'DYRK1A']));
-    expect(component.tabs).toStrictEqual(new Set(['DYRK1A,FOXP1,SPAST']));
+    expect(component.tabs).toStrictEqual(new Set(['DYRK1A,FOXP1,SPAST', 'POGZ']));
     expect(openTabSpy).toHaveBeenCalledWith('DYRK1A,FOXP1,SPAST');
 
     component.loadSingleView(new Set(['SPAST', 'DYRK1A', 'FOXP1']));
-    expect(component.tabs).toStrictEqual(new Set(['DYRK1A,FOXP1,SPAST']));
+    expect(component.tabs).toStrictEqual(new Set(['DYRK1A,FOXP1,SPAST', 'POGZ']));
     expect(openTabSpy).toHaveBeenCalledWith('DYRK1A,FOXP1,SPAST');
   });
 
@@ -467,5 +468,21 @@ describe('GeneProfilesTableComponent', () => {
 
     expect(component.currentTabGeneSet).toStrictEqual(new Set(['PKD1']));
     expect(windowSpy).toHaveBeenCalledWith(`${window.location.href}/PKD1`, '_blank');
+  });
+
+  it('should load user gene proifles state', () => {
+    expect(component.tabs).toStrictEqual(new Set(['POGZ']));
+    expect(component.loadedSearchValue).toBe('chd');
+    expect(component.highlightedGenes).toStrictEqual(new Set(['CHD8']));
+    expect(component.orderBy).toBe('desc');
+    expect(component.leavesIds).toEqual([
+      'column1',
+      'column21',
+      'column22',
+      'column311',
+      'column312',
+      'column321',
+      'column322']);
+    expect(component.sortBy).toBe('column1');
   });
 });
