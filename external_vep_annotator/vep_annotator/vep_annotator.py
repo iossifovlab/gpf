@@ -17,11 +17,14 @@ from dae.annotation.annotation_pipeline import (
 )
 from dae.annotation.annotator_base import AnnotatorBase
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
-from dae.genomic_resources.gene_models import build_gene_models_from_resource
-from dae.genomic_resources.gene_models_serialization import gene_models_to_gtf
+from dae.genomic_resources.gene_models import (
+    build_gene_models_from_resource,
+    gene_models_to_gtf,
+)
+
 # ruff: noqa: S607
 
-CONSEQUENCES = dict(map(reversed, enumerate([
+CONSEQUENCES: dict[str, int] = {t[1]: t[0] for t in enumerate([
     "sequence_variant",
     "intergenic_variant",
     "regulatory_region_variant",
@@ -63,7 +66,7 @@ CONSEQUENCES = dict(map(reversed, enumerate([
     "splice_donor_variant",
     "splice_acceptor_variant",
     "transcript_ablation",
-])))
+])}
 
 IMPACTS = {
     "HIGH": 3,
@@ -144,7 +147,7 @@ class VEPAnnotatorBase(AnnotatorBase):
     def aggregate_attributes(
         self, contexts: list[dict[str, Any]],
         attr_name_list: list[str] | None = None,
-    ):
+    ) -> None:
         """Join list of attributes to display as one column in output."""
         if attr_name_list is None:
             attr_name_list = [attr.source for attr in self.attributes]
@@ -159,6 +162,8 @@ class VEPAnnotatorBase(AnnotatorBase):
         """Prepare input files for VEP in standard VEP variant format."""
         writer = csv.writer(file, delimiter="\t")
         for idx, annotatable in enumerate(annotatables, 1):
+            if annotatable is None:
+                continue
             if annotatable.type in [
                 Annotatable.Type.SMALL_DELETION,
                 Annotatable.Type.SMALL_INSERTION,
