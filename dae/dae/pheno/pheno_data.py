@@ -14,7 +14,6 @@ from box import Box
 from sqlalchemy import Select, not_
 from sqlalchemy.sql import select, union
 
-from dae.pedigrees.families_data import FamiliesData
 from dae.pheno.common import MeasureType
 from dae.pheno.db import PhenoDb, safe_db_name
 from dae.utils.helpers import isnan
@@ -678,7 +677,7 @@ class PhenotypeGroup(PhenotypeData):
                     full_name = f"{instrument_name}.{name}"
                     if full_name in group_measures:
                         raise ValueError(
-                            f"{full_name} measure duplication!"
+                            f"{full_name} measure duplication!",
                         )
                     group_instrument.measures[full_name] = measure
                     group_measures[full_name] = measure

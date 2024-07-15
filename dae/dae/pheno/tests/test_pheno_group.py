@@ -1,12 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 
-from dae.pheno.common import MeasureType
 import pandas as pd
 import pytest
 
+from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import PhenotypeGroup
 from dae.pheno.registry import PhenoRegistry
-from dae.variants.attributes import Role, Status, Sex
+from dae.variants.attributes import Role, Sex, Status
 
 
 @pytest.fixture(scope="session")
