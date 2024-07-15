@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import pathlib
 from threading import Lock
@@ -5,8 +7,11 @@ from threading import Lock
 from box import Box
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.phenotype_data import pheno_conf_schema
-from dae.pheno.pheno_data import PhenotypeData, PhenotypeStudy
+from dae.configuration.schemas.phenotype_data import (
+    groups_file_schema,
+    pheno_conf_schema,
+)
+from dae.pheno.pheno_data import PhenotypeData, PhenotypeGroup, PhenotypeStudy
 
 logger = logging.getLogger(__name__)
 
@@ -48,12 +53,37 @@ class PhenoRegistry:
         config = GPFConfigParser.load_config(str(path), pheno_conf_schema)
         pheno_id = config["phenotype_data"]["name"]
         logger.info("creating phenotype data <%s>", pheno_id)
-        phenotype_data = PhenotypeStudy(
+        return PhenotypeStudy(
             pheno_id,
             config["phenotype_data"]["dbfile"],
             config=config["phenotype_data"],
         )
-        return phenotype_data
+
+    @classmethod
+    def load_pheno_groups(
+        cls, path: pathlib.Path,
+        registry: PhenoRegistry,
+    ) -> list[PhenotypeGroup]:
+        """
+        Load groups from groups file.
+
+        Groups file should be a config file named 'groups.yaml' in the base
+        Pheno DB directory.
+        """
+        if not path.is_file() or path.suffix not in (".yaml", ".conf") \
+                or path.stem != "groups":
+            raise ValueError("Invalid groups config file.")
+        config = GPFConfigParser.load_config(str(path), groups_file_schema)
+        print(config.groups)
+        return [
+            PhenotypeGroup(
+                group.pheno_id, [
+                    registry.get_phenotype_data(child)
+                    for child in group.children
+                ],
+            ) for group in config.groups
+        ]
+
 
     def has_phenotype_data(self, data_id: str) -> bool:
         with self.CACHE_LOCK:
