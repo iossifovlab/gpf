@@ -83,9 +83,6 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
           this.router.navigate(['/', 'datasets', this.datasetTrees[0].dataset.id]);
         }
       }),
-      this.usersService.getUserInfoObservable().subscribe(() => {
-        this.setupSelectedDataset();
-      }),
       this.datasetsService.getPermissionDeniedPrompt().subscribe(aprompt => {
         this.permissionDeniedPrompt = aprompt;
       }),
