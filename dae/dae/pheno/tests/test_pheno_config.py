@@ -4,6 +4,6 @@ from box import Box
 
 def test_pheno_config_loading(fake_pheno_config: list[Box]) -> None:
     assert all(
-        db.phenotype_data.name == "fake"
+        db.phenotype_data.name.startswith("fake")
         for db in fake_pheno_config
     )

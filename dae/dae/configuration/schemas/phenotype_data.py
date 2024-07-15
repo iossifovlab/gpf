@@ -18,7 +18,6 @@ regression_conf_schema = {
 phenotype_data_schema = {
     "enabled": {"type": "boolean", "default": True},
     "name": {"type": "string"},
-    "phenotype_data_list": {"type": "list", "schema": {"type": "string"}},
     "dbfile": {
         "type": "string",
         "check_with": validate_existing_path,
@@ -36,4 +35,14 @@ pheno_conf_schema = {
     },
     "phenotype_data": {"type": "dict", "schema": phenotype_data_schema},
     **regression_conf_schema,
+}
+
+groups_file_schema = {
+    "pheno_groups": {"type": "list", "schema": {
+        "type": "dict",
+        "schema": {
+            "pheno_id": {"type": "string"},
+            "children": {"type": "list", "schema": {"type": "string"}},
+        },
+    }},
 }

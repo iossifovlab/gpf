@@ -194,14 +194,28 @@ class GPFInstance:
         pheno_configs = GPFConfigParser.collect_directory_configs(
             pheno_data_dir,
         )
+        pheno_groups_config: Path | None = None
 
         with PhenoRegistry.CACHE_LOCK:
             for config in pheno_configs:
+                config_path = Path(config)
+                if config_path.stem == "groups":
+                    # Groups file should be loaded at the end
+                    pheno_groups_config = config_path
+                    continue
                 logger.info("loading phenotype data from config: %s", config)
                 registry.register_phenotype_data(
-                    PhenoRegistry.load_pheno_data(Path(config)),
+                    PhenoRegistry.load_pheno_data(config_path),
                     lock=False,
                 )
+
+        if pheno_groups_config:
+            print("Loading groups")
+            for group in PhenoRegistry.load_pheno_groups(
+                pheno_groups_config, registry,
+            ):
+                registry.register_phenotype_data(group, lock=False)
+
         return registry
 
     @cached_property
