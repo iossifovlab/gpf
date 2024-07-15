@@ -6,6 +6,8 @@ import { switchMap } from 'rxjs/operators';
 import { GeneProfilesService } from './gene-profiles-block/gene-profiles.service';
 import { GeneProfilesSingleViewConfig } from './gene-profiles-single-view/gene-profiles-single-view';
 import { NgbConfig } from '@ng-bootstrap/ng-bootstrap';
+import { Store } from '@ngxs/store';
+import { DatasetModel } from './datasets/datasets.state';
 
 @Component({
   selector: 'gpf-root',
@@ -15,6 +17,7 @@ import { NgbConfig } from '@ng-bootstrap/ng-bootstrap';
 export class AppComponent implements OnInit {
   public title = 'GPF: Genotypes and Phenotypes in Families';
   public imgPathPrefix = environment.imgPathPrefix;
+  public datasetId = '';
   public geneProfilesConfig: GeneProfilesSingleViewConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
@@ -32,7 +35,8 @@ export class AppComponent implements OnInit {
     private geneProfilesService: GeneProfilesService,
     private bnIdle: BnNgIdleService,
     private usersService: UsersService,
-    private ngbConfig: NgbConfig
+    private ngbConfig: NgbConfig,
+    protected store: Store,
   ) {
     ngbConfig.animation = false;
   }
@@ -43,6 +47,10 @@ export class AppComponent implements OnInit {
         switchMap(() => this.usersService.logout()),
         switchMap(() => this.usersService.getUserInfo()),
       ).subscribe();
+    this.store.select((state: { datasetState: DatasetModel}) => state.datasetState)
+      .subscribe(datasetState => {
+        this.datasetId = datasetState.selectedDatasetId;
+      });
 
     this.geneProfilesService.getConfig().subscribe(res => {
       this.geneProfilesConfig = res;
