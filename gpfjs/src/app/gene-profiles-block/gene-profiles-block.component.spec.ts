@@ -103,6 +103,16 @@ class GeneProfilesServiceMock {
   }
 }
 
+class UsersServiceMock {
+  public cachedUserInfo(): object {
+    return {loggedIn: true};
+  }
+
+  public getUserInfoObservable(): Observable<object> {
+    return of({});
+  }
+}
+
 /* eslint-disable max-len */
 const geneColumn = new GeneProfilesColumn('createTab', [], 'Gene', false, 'geneSymbol', null, false, true);
 const geneSetSetsCol = new GeneProfilesColumn(null, [], 'SFARI ALL', true, 'autism_gene_sets_rank.SFARI ALL', null, true, true);
@@ -123,6 +133,7 @@ describe('GeneProfilesBlockComponent', () => {
   let component: GeneProfilesBlockComponent;
   let fixture: ComponentFixture<GeneProfilesBlockComponent>;
   const geneProfilesServiceMock = new GeneProfilesServiceMock();
+  const usersServiceMock = new UsersServiceMock();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -133,7 +144,8 @@ describe('GeneProfilesBlockComponent', () => {
         DatasetsService,
         UsersService,
         { provide: APP_BASE_HREF, useValue: '' },
-        { provide: GeneProfilesService, useValue: geneProfilesServiceMock }
+        { provide: GeneProfilesService, useValue: geneProfilesServiceMock },
+        { provide: UsersService, useValue: usersServiceMock}
       ],
       imports: [
         HttpClientTestingModule, NgbNavModule, RouterTestingModule, FormsModule,

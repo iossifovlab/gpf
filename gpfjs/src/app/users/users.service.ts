@@ -66,7 +66,7 @@ export class UsersService {
 
     return this.http.get<UserInfo>(this.config.baseUrl + this.userInfoUrl, options).pipe(
       map(res => res),
-      tap(userInfo => {
+      tap((userInfo: UserInfo) => {
         this.userInfo$.next(userInfo);
         this.lastUserInfo = userInfo;
       })
