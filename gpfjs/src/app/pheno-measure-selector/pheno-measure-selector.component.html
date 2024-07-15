@@ -27,16 +27,18 @@
         >Nothing found</mat-option
       >
     </ng-container>
-    <mat-option
-      *ngFor="let measure of filteredMeasures"
-      class="dropdown-item"
-      type="button"
-      (click)="selectMeasure(measure)"
-      (onSelectionChange)="selectMeasure(measure)"
-      [value]="measure.name"
-      [title]="measure.name">
-      <span [innerHTML]="isSelected ? measure.name : (measure.name | boldMatching : searchString)"></span>
-    </mat-option>
+      <cdk-virtual-scroll-viewport itemSize="25" [ngStyle]="{height:'200px'}">
+        <mat-option
+          *cdkVirtualFor="let measure of filteredMeasures"
+          class="dropdown-item"
+          type="button"
+          (click)="selectMeasure(measure)"
+          (onSelectionChange)="selectMeasure(measure)"
+          [value]="measure.name"
+          [title]="measure.name">
+          <span [innerHTML]="isSelected ? measure.name : (measure.name | boldMatching : searchString)"></span>
+        </mat-option>
+    </cdk-virtual-scroll-viewport>
   </mat-autocomplete>
 
   <div class="input-group-append">

@@ -145,6 +145,7 @@ import { toolPageLinks } from './datasets/datasets';
 import { GenePlotComponent } from './gene-plot/gene-plot.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ClipboardModule } from '@angular/cdk/clipboard';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 import { SplitPipe } from './utils/split.pipe';
 import { MiddleClickDirective } from './gene-profiles-table/middle-click.directive';
 import { GeneProfilesTableComponent } from './gene-profiles-table/gene-profiles-table.component';
@@ -436,6 +437,7 @@ const appRoutes: Routes = [
     NgxsResetPluginModule.forRoot(),
     DragDropModule,
     ClipboardModule,
+    ScrollingModule,
     AngularMarkdownEditorModule.forRoot(),
     MatAutocompleteModule,
     MatInputModule,
