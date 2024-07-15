@@ -9,6 +9,8 @@ from dae.genomic_resources.gene_models import (
     GeneModels,
     TranscriptModel,
     build_gene_models_from_resource,
+)
+from dae.genomic_resources.gene_models.serialization import (
     calc_frame_for_gtf_cds_feature,
     collect_gtf_cds_regions,
     collect_gtf_start_codon_regions,

@@ -12,6 +12,10 @@ from dae.genomic_resources.gene_models import (
     build_gene_models_from_file,
     build_gene_models_from_resource,
     create_regions_from_genes,
+    save_as_default_gene_models,
+)
+from dae.genomic_resources.gene_models.parsing import (
+    infer_gene_model_parser,
 )
 from dae.genomic_resources.testing import (
     build_inmemory_test_resource,
@@ -229,8 +233,10 @@ def test_infer_gene_models(
     gene_models = build_gene_models_from_file(
         filename, file_format=file_format)
     with open(filename, encoding="utf8") as infile:
-        inferred_file_format = gene_models._infer_gene_model_parser(
-            infile, file_format=file_format)
+        inferred_file_format = infer_gene_model_parser(
+            gene_models,
+            infile,
+            file_format=file_format)
 
         assert inferred_file_format is not None
         assert inferred_file_format == expected
@@ -251,7 +257,7 @@ def test_infer_gene_models_no_header(
     gene_models = build_gene_models_from_file(
         filename, file_format=file_format)
     with gzip.open(filename, "rt") as infile:
-        inferred_file_format = gene_models._infer_gene_model_parser(infile)
+        inferred_file_format = infer_gene_model_parser(gene_models, infile)
         assert inferred_file_format is not None
         assert inferred_file_format == file_format
 
@@ -313,7 +319,7 @@ def test_save_load_gene_models_from_file(
     assert gene_models is not None
     assert len(gene_models.transcript_models) > 0
 
-    gene_models.save(temp_filename, gzipped=False)
+    save_as_default_gene_models(gene_models, temp_filename, gzipped=False)
 
     gene_models1 = build_gene_models_from_file(
         temp_filename, file_format="default")
