@@ -38,7 +38,7 @@ pheno_conf_schema = {
 }
 
 groups_file_schema = {
-    "groups": {"type": "list", "schema": {
+    "pheno_groups": {"type": "list", "schema": {
         "type": "dict",
         "schema": {
             "pheno_id": {"type": "string"},
