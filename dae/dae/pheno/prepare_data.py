@@ -387,6 +387,8 @@ class PreparePhenoBrowserBase:
         self, measure: Measure,
     ) -> dict[str, tuple[Box, Measure]]:
         regression_measures: dict[str, tuple[Box, pd.DataFrame]] = {}
+        if self.pheno_regressions is None:
+            return regression_measures
         for reg_id, reg in self.pheno_regressions.regression.items():
             measure_names = reg.measure_names
             if measure_names is None:
