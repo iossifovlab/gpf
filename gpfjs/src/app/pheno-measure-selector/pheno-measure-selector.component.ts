@@ -1,10 +1,8 @@
-import { Component, OnChanges, Input, ViewChild, Output, EventEmitter,
-  ElementRef } from '@angular/core';
+import { Component, OnChanges, Input, Output, EventEmitter } from '@angular/core';
 
 import { MeasuresService } from '../measures/measures.service';
 import { ContinuousMeasure } from '../measures/measures';
 import { first } from 'rxjs/operators';
-import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'gpf-pheno-measure-selector',
@@ -16,9 +14,6 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   @Output() public selectedMeasureChange = new EventEmitter(true);
   @Output() public measuresChange = new EventEmitter(true);
 
-  @ViewChild('measuresSearchBox') private searchBox: ElementRef;
-  @ViewChild('triggeMeasuresDropdown') private dropdownTrigger: MatAutocompleteTrigger;
-
   public measures: Array<ContinuousMeasure> = [];
   public filteredMeasures: Array<ContinuousMeasure> = [];
   public searchString = '';
@@ -26,6 +21,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   public loadingMeasures = false;
   public loadingDropdown = false;
   public isSelected = false;
+  public showDropdown = false;
 
   public constructor(
     private measuresService: MeasuresService,
@@ -46,11 +42,6 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   public selectMeasure(measure: ContinuousMeasure, sendEvent: boolean = true): void {
     this.selectedMeasure = measure;
     this.searchString = measure ? measure.name : '';
-    if (measure) {
-      this.dropdownTrigger.closePanel();
-      (this.searchBox.nativeElement as HTMLInputElement).blur();
-    }
-
     if (sendEvent) {
       this.selectedMeasureChange.emit(measure);
     }

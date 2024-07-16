@@ -1,49 +1,40 @@
-<div
-  matAutocompleteOrigin
-  #phenoMeasureSearch="matAutocompleteOrigin"
-  class="input-group"
-  style="display: inline-flex; flex-wrap: nowrap">
-  <input
-    matInput
-    [matAutocomplete]="measuresDropdown"
-    [matAutocompleteConnectedTo]="phenoMeasureSearch"
-    #triggeMeasuresDropdown="matAutocompleteTrigger"
-    #measuresSearchBox
-    id="search-box"
-    placeholder="Select or start typing to search"
-    autocomplete="off"
-    spellcheck="false"
-    [(ngModel)]="searchString"
-    (keyup)="loadDropdownData()"
-    (mousedown)="clear()"
-    style="width: 100%" />
+<div>
+  <div class="input-group" style="display: inline-flex; flex-wrap: nowrap">
+    <input
+      #measuresSearchBox
+      id="search-box"
+      placeholder="Select or start typing to search"
+      autocomplete="off"
+      spellcheck="false"
+      [(ngModel)]="searchString"
+      (keyup)="loadDropdownData()"
+      (mousedown)="clear()"
+      (focus)="showDropdown = true"
+      (blur)="showDropdown = false"
+      (keydown.escape)="showDropdown = false; measuresSearchBox.blur(); clear()"
+      style="width: 100%" />
 
-  <mat-autocomplete autoActiveFirstOption #measuresDropdown="matAutocomplete" class="measures-dropdown">
-    <ng-container *ngIf="filteredMeasures.length === 0">
-      <mat-option [disabled]="true" class="status-info" *ngIf="loadingMeasures || loadingDropdown"
-        >Loading...</mat-option
+    <div class="input-group-append">
+      <button (click)="clear()" class="btn btn-secondary clear-button" id="clear-measure-button"
+        ><span id="clear-pheno-measure-icon" class="material-symbols-outlined sm">close</span></button
       >
-      <mat-option [disabled]="true" class="status-info" *ngIf="!(loadingMeasures || loadingDropdown)"
-        >Nothing found</mat-option
-      >
-    </ng-container>
-      <cdk-virtual-scroll-viewport itemSize="25" [ngStyle]="{height:'200px'}">
-        <mat-option
+    </div>
+
+    <div class="measures-dropdown" *ngIf="showDropdown">
+      <div class="status-info" *ngIf="filteredMeasures.length === 0">{{
+        loadingMeasures || loadingDropdown ? 'Loading...' : 'Nothing found'
+      }}</div>
+      <cdk-virtual-scroll-viewport itemSize="35" style="height: 240px; max-height: 240px; overflow-x: hidden">
+        <div
           *cdkVirtualFor="let measure of filteredMeasures"
           class="dropdown-item"
           type="button"
-          (click)="selectMeasure(measure)"
+          (mousedown)="selectMeasure(measure)"
           (onSelectionChange)="selectMeasure(measure)"
-          [value]="measure.name"
           [title]="measure.name">
           <span [innerHTML]="isSelected ? measure.name : (measure.name | boldMatching : searchString)"></span>
-        </mat-option>
-    </cdk-virtual-scroll-viewport>
-  </mat-autocomplete>
-
-  <div class="input-group-append">
-    <button (click)="clear()" class="btn btn-secondary clear-button" id="clear-measure-button"
-      ><span id="clear-pheno-measure-icon" class="material-symbols-outlined sm">close</span></button
-    >
+        </div>
+      </cdk-virtual-scroll-viewport>
+    </div>
   </div>
 </div>
