@@ -7,11 +7,14 @@
       autocomplete="off"
       spellcheck="false"
       [(ngModel)]="searchString"
-      (keyup)="loadDropdownData()"
+      (keyup)="loadDropdownData($event)"
       (mousedown)="clear()"
       (focus)="showDropdown = true"
       (blur)="showDropdown = false"
       (keydown.escape)="showDropdown = false; measuresSearchBox.blur(); clear()"
+      (keydown.arrowup)="$event.preventDefault(); prevItem()"
+      (keydown.arrowdown)="$event.preventDefault(); nextItem()"
+      (keydown.enter)="selectMeasure(filteredMeasures[selectedIdx]); closeDropdown()"
       style="width: 100%" />
 
     <div class="input-group-append">
@@ -24,13 +27,15 @@
       <div class="status-info" *ngIf="filteredMeasures.length === 0">{{
         loadingMeasures || loadingDropdown ? 'Loading...' : 'Nothing found'
       }}</div>
-      <cdk-virtual-scroll-viewport itemSize="35" style="height: 240px; max-height: 240px; overflow-x: hidden">
+      <cdk-virtual-scroll-viewport itemSize="35" style="height: 245px; overflow-x: hidden">
         <div
-          *cdkVirtualFor="let measure of filteredMeasures"
+          *cdkVirtualFor="let measure of filteredMeasures; let index = index"
           class="dropdown-item"
+          [ngClass]="{ 'dropdown-selected': selectedIdx === index }"
           type="button"
           (mousedown)="selectMeasure(measure)"
           (onSelectionChange)="selectMeasure(measure)"
+          (mouseover)="selectedIdx = index"
           [title]="measure.name">
           <span [innerHTML]="isSelected ? measure.name : (measure.name | boldMatching : searchString)"></span>
         </div>
