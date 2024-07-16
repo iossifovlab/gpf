@@ -78,7 +78,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public variantsCountDisplay: string;
-  public variantsCount: number;
+  public variantsCount = -1;
 
   public async ngOnInit(): Promise<void> {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
