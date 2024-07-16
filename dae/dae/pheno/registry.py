@@ -74,14 +74,13 @@ class PhenoRegistry:
                 or path.stem != "groups":
             raise ValueError("Invalid groups config file.")
         config = GPFConfigParser.load_config(str(path), groups_file_schema)
-        print(config.groups)
         return [
             PhenotypeGroup(
                 group.pheno_id, [
                     registry.get_phenotype_data(child)
                     for child in group.children
                 ],
-            ) for group in config.groups
+            ) for group in config.pheno_groups
         ]
 
 
