@@ -26,14 +26,14 @@ export class GeneProfilesTableService {
   ) {}
 
   public getUserGeneProfilesState(): Observable<GeneProfilesModel> {
-    if (!this.user.cachedUserInfo().loggedIn) {
+    if (!this.user.cachedUserInfo()?.loggedIn) {
       return of(null);
     }
     return this.http.get<GeneProfilesModel>(this.config.baseUrl + this.usersUrl, { withCredentials: true });
   }
 
   public saveUserGeneProfilesState(): void {
-    if (!this.user.cachedUserInfo().loggedIn) {
+    if (!this.user.cachedUserInfo()?.loggedIn) {
       return;
     }
 
