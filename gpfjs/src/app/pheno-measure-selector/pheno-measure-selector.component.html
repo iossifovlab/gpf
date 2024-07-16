@@ -18,7 +18,7 @@
       style="width: 100%" />
 
     <div class="input-group-append">
-      <button (click)="clear()" class="btn btn-secondary clear-button" id="clear-measure-button"
+      <button (click)="onClearButtonClick()" class="btn btn-secondary clear-button" id="clear-measure-button"
         ><span id="clear-pheno-measure-icon" class="material-symbols-outlined sm">close</span></button
       >
     </div>
@@ -37,7 +37,7 @@
           (onSelectionChange)="selectMeasure(measure)"
           (mouseover)="selectedIdx = index"
           [title]="measure.name">
-          <span [innerHTML]="isSelected ? measure.name : (measure.name | boldMatching : searchString)"></span>
+          <span [innerHTML]="measure.name | boldMatching : searchString"></span>
         </div>
       </cdk-virtual-scroll-viewport>
     </div>

@@ -27,7 +27,6 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   public selectedMeasure: ContinuousMeasure = null;
   public loadingMeasures = false;
   public loadingDropdown = false;
-  public isSelected = false;
   public showDropdown = false;
 
   public topVisibleIdx = 0;
@@ -50,15 +49,12 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
     }
   }
 
-  @HostListener('window:keydown.tab', ['$event'])
+  @HostListener('window:keydown', ['$event'])
   public handleTabKey(event): void {
-    if (!this.showDropdown) {
+    if (!this.showDropdown || event.code !== 'Tab') {
       return;
     }
     event.preventDefault();
-    if (event.code !== 'Tab') {
-      return;
-    }
     if (event.shiftKey) {
       this.prevItem();
     } else {
@@ -116,14 +112,25 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
       return;
     }
     this.selectMeasure(null);
-    this.isSelected = false;
+    this.selectedIdx = -1;
+    this.topVisibleIdx = 0;
+    this.loadDropdownData();
+  }
+
+  public onClearButtonClick(): void {
+    this.searchString = '';
+    this.selectMeasure(null);
     this.loadDropdownData();
   }
 
   public loadDropdownData($event = null): void {
-    if ($event && ($event.key === 'ArrowUp' || $event.key === 'ArrowDown')) {
+    if ($event && ($event.key === 'ArrowUp'
+                   || $event.key === 'ArrowDown'
+                   || $event.key === 'Tab'
+                   || $event.key === 'Shift')) {
       return;
     }
+
     if (!this.loadingMeasures) {
       this.filterData();
     } else {
@@ -139,9 +146,6 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   }
 
   private filterData(): void {
-    this.selectedIdx = -1;
-    this.topVisibleIdx = 0;
-    this.viewport?.scrollToIndex(0);
     this.filteredMeasures = this.measures;
     if (this.searchString.length) {
       this.filteredMeasures = this.filteredMeasures.filter(measure =>
