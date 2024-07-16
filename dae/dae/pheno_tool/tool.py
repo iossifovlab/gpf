@@ -44,9 +44,11 @@ class PhenoResult:
         self.negative_deviation = n_std
 
     def __repr__(self) -> str:
-        return f"PhenoResult: pvalue={self.pvalue}; "\
-            f"pos={self.positive_count} " \
+        return (
+            f"PhenoResult: pvalue={self.pvalue}; "
+            f"pos={self.positive_count} "
             f"(neg={self.negative_count})"
+        )
 
 
 class PhenoToolHelper:
@@ -182,9 +184,9 @@ class PhenoTool:
 
         self.normalize_by = self._init_normalize_measures(normalize_by)
 
-        # TODO currently filtering only for probands, expand with additional
+        # currently filtering only for probands, expand with additional
         # options via PeopleGroup
-        all_measures = [self.measure_id] + self.normalize_by
+        all_measures = [self.measure_id, *self.normalize_by]
 
         pheno_df = self.phenotype_data.get_people_measure_values_df(
             all_measures,
@@ -253,11 +255,10 @@ class PhenoTool:
         )
         persons_variants = persons_variants.set_index("person_id")
 
-        merged_df = pd.merge(
-            pheno_df, persons_variants, how="left", on=["person_id"],
+        merged_df = pheno_df.merge(
+            persons_variants, how="left", on=["person_id"],
         )
-        merged_df = merged_df.fillna(0)
-        return merged_df
+        return merged_df.fillna(0)
 
     @staticmethod
     def _normalize_df(
@@ -355,7 +356,7 @@ class PhenoTool:
         return result
 
     def calc(
-        self, variants: Counter,
+        self, variants: Counter, *,
         sex_split: bool = False,
     ) -> dict[str, PhenoResult] | PhenoResult:
         """Perform calculation.
