@@ -127,17 +127,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             raise ValueError(f"Could not find contig '{fchrom}'")
         return length
 
-    def _map_file_chrom(self, chrom: str) -> str:
-        """Transfrom chromosome name to the chromosomes from score file."""
-        if self.chrom_map:
-            return self.chrom_map[chrom]
-        return chrom
-
-    def _map_result_chrom(self, chrom: str) -> str | None:
-        """Transfroms chromosome from score file to the genome chromosomes."""
-        assert self.rev_chrom_map is not None
-        return self.rev_chrom_map.get(chrom)
-
     def _make_line(self, data: tuple) -> Line | None:
         line: Line = Line(
             data,

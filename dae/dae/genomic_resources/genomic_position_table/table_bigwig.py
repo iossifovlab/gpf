@@ -58,27 +58,43 @@ class BigWigTable(GenomicPositionTable):
         pos_end: int | None = None,
     ) -> Generator[LineBase, None, None]:
         assert self.bw_file is not None
+        fchrom = self._map_file_chrom(chrom)
 
-        if chrom not in self.bw_file.chroms():
+        if fchrom not in self.bw_file.chroms():
             raise KeyError
         if pos_begin is None:
             pos_begin = 0
         if pos_end is None:
-            pos_end = self.bw_file.chroms()[chrom]
+            pos_end = self.bw_file.chroms()[fchrom]
 
-        for interval in self._intervals(chrom, pos_begin, pos_end):
+        for interval in self._intervals(fchrom, pos_begin, pos_end):
             yield Line((chrom, *interval))
 
     def get_all_records(self) -> Generator[LineBase, None, None]:
         assert self.bw_file is not None
-        for chrom in self.bw_file.chroms():
+        for chrom in self.get_chromosomes():
             yield from self.get_records_in_region(chrom)
 
     def get_chromosome_length(
         self, chrom: str, _step: int = 100_000_000,
     ) -> int:
         assert self.bw_file is not None
-        return self.bw_file.chroms()[chrom]
+        if chrom not in self.get_chromosomes():
+            raise ValueError(
+                f"contig {chrom} not present in the table's contigs: "
+                f"{self.get_chromosomes()}")
+        fchrom = self._map_file_chrom(chrom)
+        if fchrom is None:
+            raise ValueError(
+                f"error in mapping chromsome {chrom} to the file contigs: "
+                f"{self.get_file_chromosomes()}",
+            )
+        if fchrom not in self.get_file_chromosomes():
+            raise ValueError(
+                f"contig {fchrom} not present in the file's contigs: "
+                f"{self.get_file_chromosomes()}",
+            )
+        return self.bw_file.chroms()[fchrom]
 
     def get_file_chromosomes(self) -> list[str]:
         assert self.bw_file is not None

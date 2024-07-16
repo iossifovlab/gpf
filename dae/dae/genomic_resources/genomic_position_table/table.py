@@ -179,6 +179,17 @@ class GenomicPositionTable(abc.ABC):
         assert self.chrom_order is not None
         return self.chrom_order
 
+    def _map_file_chrom(self, chrom: str) -> str:
+        """Transfrom chromosome name to the chromosomes from score file."""
+        if self.chrom_map:
+            return self.chrom_map[chrom]
+        return chrom
+
+    def _map_result_chrom(self, chrom: str) -> str | None:
+        """Transfroms chromosome from score file to the genome chromosomes."""
+        assert self.rev_chrom_map is not None
+        return self.rev_chrom_map.get(chrom)
+
     def map_chromosome(self, chromosome: str) -> str | None:
         """Map a chromosome from reference genome to file chromosome."""
         if self.rev_chrom_map is not None:
@@ -192,7 +203,6 @@ class GenomicPositionTable(abc.ABC):
         """Map a chromosome file contigs to reference genome chromosome."""
         if self.chrom_map is not None:
             if chromosome in self.chrom_map:
-                assert chromosome in self.chrom_map
                 return self.chrom_map[chromosome]
             return None
 

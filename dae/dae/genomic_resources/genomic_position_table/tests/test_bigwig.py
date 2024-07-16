@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+import pathlib
 import textwrap
 
 import pytest
@@ -84,7 +85,9 @@ def test_get_chromosome_length(bigwig_table: BigWigTable) -> None:
 
 
 def test_get_chromosome_length_missing(bigwig_table: BigWigTable) -> None:
-    with bigwig_table, pytest.raises(KeyError):
+    with bigwig_table, pytest.raises(
+            ValueError,
+            match="contig chrX not present in the table's contigs"):
         bigwig_table.get_chromosome_length("chrX")
 
 
@@ -137,7 +140,7 @@ def test_get_records_in_region_missing_chrom(bigwig_table: BigWigTable) -> None:
 
 
 def test_build_genomic_position_table_bigwig(
-    test_grr: GenomicResourceRepo
+    test_grr: GenomicResourceRepo,
 ) -> None:
     res = test_grr.get_resource("test_score")
 
@@ -150,3 +153,151 @@ def test_build_genomic_position_table_bigwig(
         res, {"filename": "data.bw"},
     )
     assert isinstance(table, BigWigTable)
+
+
+def test_bigwig_genomic_position_table_del_prefix(
+    tmp_path: pathlib.Path,
+) -> None:
+
+    root_path = tmp_path
+    setup_directories(
+        root_path,
+        {
+            "grr.yaml": textwrap.dedent(f"""
+                id: test_grr
+                type: directory
+                directory: {root_path!s}
+            """),
+            "test_score": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                        type: position_score
+                        table:
+                            filename: data.bw
+                            format: bigWig
+                            chrom_mapping:
+                                del_prefix: chr
+                        scores:
+                        - id: score_one
+                          type: float
+                          index: 3
+                """),
+            },
+        },
+    )
+    data = textwrap.dedent("""
+        chr1   0          10       0.01
+        chr1   10         20       0.02
+        chr1   20         30       0.03
+        chr2   30         40       0.04
+        chr2   40         50       0.05
+        chr2   50         70       0.06
+        chr3   70         80       0.07
+        chr3   80         90       0.08
+        chr3   90         120      0.09
+    """)
+    setup_bigwig(
+        root_path / "test_score" / "data.bw", data,
+        {"chr1": 1000,
+         "chr2": 2000,
+         "chr3": 3000},
+    )
+    grr = build_filesystem_test_repository(root_path)
+    assert grr is not None
+    res = grr.get_resource("test_score")
+    table_definition = res.get_config()["table"]
+
+    bigwig_table = BigWigTable(
+        grr.get_resource("test_score"),
+        table_definition,
+    )
+    with bigwig_table:
+        assert bigwig_table.get_chromosomes() == ["1", "2", "3"]
+        assert bigwig_table.get_chromosome_length("1") == 1000
+
+        vs = list(bigwig_table.get_all_records())
+        assert len(vs) == 9
+        line = vs[0]
+        assert line.chrom == "1"
+        assert line.pos_begin == 1
+        assert line.pos_end == 10
+        assert line.get(3) == pytest.approx(0.01)
+
+        vs = list(bigwig_table.get_records_in_region("1"))
+        assert len(vs) == 3
+
+        vs = list(bigwig_table.get_records_in_region("1", 1, 9))
+        assert len(vs) == 1
+
+
+def test_bigwig_genomic_position_table_add_prefix(
+    tmp_path: pathlib.Path,
+) -> None:
+
+    root_path = tmp_path
+    setup_directories(
+        root_path,
+        {
+            "grr.yaml": textwrap.dedent(f"""
+                id: test_grr
+                type: directory
+                directory: {root_path!s}
+            """),
+            "test_score": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                        type: position_score
+                        table:
+                            filename: data.bw
+                            format: bigWig
+                            chrom_mapping:
+                                add_prefix: chr
+                        scores:
+                        - id: score_one
+                          type: float
+                          index: 3
+                """),
+            },
+        },
+    )
+    data = textwrap.dedent("""
+        1   0          10       0.01
+        1   10         20       0.02
+        1   20         30       0.03
+        2   30         40       0.04
+        2   40         50       0.05
+        2   50         70       0.06
+        3   70         80       0.07
+        3   80         90       0.08
+        3   90         120      0.09
+    """)
+    setup_bigwig(
+        root_path / "test_score" / "data.bw", data,
+        {"1": 1000,
+         "2": 2000,
+         "3": 3000},
+    )
+    grr = build_filesystem_test_repository(root_path)
+    assert grr is not None
+    res = grr.get_resource("test_score")
+    table_definition = res.get_config()["table"]
+
+    bigwig_table = BigWigTable(
+        grr.get_resource("test_score"),
+        table_definition,
+    )
+    with bigwig_table:
+        assert bigwig_table.get_chromosomes() == ["chr1", "chr2", "chr3"]
+        assert bigwig_table.get_chromosome_length("chr1") == 1000
+
+        vs = list(bigwig_table.get_all_records())
+        assert len(vs) == 9
+        line = vs[0]
+        assert line.chrom == "chr1"
+        assert line.pos_begin == 1
+        assert line.pos_end == 10
+        assert line.get(3) == pytest.approx(0.01)
+
+        vs = list(bigwig_table.get_records_in_region("chr1"))
+        assert len(vs) == 3
+
+        vs = list(bigwig_table.get_records_in_region("chr1", 1, 9))
+        assert len(vs) == 1
