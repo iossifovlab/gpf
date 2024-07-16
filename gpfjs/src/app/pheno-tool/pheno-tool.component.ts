@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { PhenoToolService } from './pheno-tool.service';
@@ -43,6 +43,14 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
     private store: Store,
     private datasetsService: DatasetsService
   ) { }
+
+
+  @HostListener('keydown', ['$event'])
+  public onKeyDown($event: KeyboardEvent): void {
+    if ($event.ctrlKey && $event.code === 'Enter') {
+      this.submitQuery();
+    }
+  }
 
   @Selector([
     GenesBlockComponent.genesBlockState,

@@ -8,10 +8,27 @@
   height: 10px;
 }
 
-::ng-deep .measures-dropdown {
-  border-radius: 0.375rem !important;
+.measures-dropdown {
+  border-radius: 0.375rem;
   border: 1px solid rgba(0, 0, 0, 17%);
   border-top: none;
   padding: 0 !important;
   box-shadow: none;
+  position: absolute;
+  background: white;
+  width: 100%;
+  z-index: 3;
+  top: 38px;
+  left: 1px;
+}
+
+.dropdown-item {
+  padding-left: 10px;
+  display: flex;
+  height: 35px;
+  align-items: center;
+}
+
+.dropdown-selected {
+  background-color: #f5f5f5;
 }
