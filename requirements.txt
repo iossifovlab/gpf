@@ -18,7 +18,7 @@ fsspec==2024.6
 s3fs==2024.6
 dask==2024.6
 python-box==7.1
-setuptools==67
+setuptools==70.3
 sqlalchemy==2.0.21
 sqlite==3.45
 django==4.2.14
