@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from collections import Counter
-from typing import List
 
 import numpy as np
 import pandas as pd
@@ -70,9 +69,8 @@ def test_init_with_person_ids(fake_phenotype_data: PhenotypeStudy) -> None:
         person_ids=["f1.p1", "f3.p1", "f5.p1", "f7.p1"],
     )
 
-    assert set(pheno_tool.pheno_df["person_id"]) == set(
-        ["f1.p1", "f3.p1", "f5.p1", "f7.p1"],
-    )
+    assert set(pheno_tool.pheno_df["person_id"]) == {
+        "f1.p1", "f3.p1", "f5.p1", "f7.p1"}
 
 
 def test_init_normalize_measures(fake_phenotype_data: PhenotypeStudy) -> None:
@@ -90,9 +88,8 @@ def test_init_normalize_measures(fake_phenotype_data: PhenotypeStudy) -> None:
         assert fake_phenotype_data.has_measure(measure_id)
 
 
-@pytest.mark.parametrize("measure_name", [("m4"), ("m5"), ("m6")])
 def test_init_normalize_measures_non_continuous(
-    fake_phenotype_data: PhenotypeStudy, measure_name: str,
+    fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     pheno_tool = PhenoTool(fake_phenotype_data, "i1.m1")
     norm_measures = [
@@ -237,10 +234,10 @@ def test_normalize_df() -> None:
     assert normalized["i1.m2"][1] == pytest.approx(1e-3)
     assert normalized["normalized"][0] == pytest.approx(
         0.0004882, abs=1e-4,
-    )  # FIXME:
+    )
     assert normalized["normalized"][1] == pytest.approx(
         0.000488, abs=1e-2,
-    )  # FIXME:
+    )
 
 
 def test_normalize_df_no_normalize_by() -> None:
@@ -312,7 +309,7 @@ def test_calc_pv() -> None:
 @pytest.mark.parametrize(
     "positive,negative", [([1], [1, 1]), ([1, 1], [1]), ([1], [1])],
 )
-def test_calc_pv_less_than_2(positive: List[int], negative: List[int]) -> None:
+def test_calc_pv_less_than_2(positive: list[int], negative: list[int]) -> None:
     assert PhenoTool._calc_pv(positive, negative) == "NA"  # type: ignore
 
 
@@ -505,6 +502,7 @@ def test_calc_empty_pheno_df(fake_phenotype_data: PhenotypeStudy) -> None:
     assert res.negative_deviation == 0
     assert res.pvalue == "NA"  # type: ignore
 
+    # pylint: disable=unbalanced-dict-unpacking
     res_m, res_f = \
         pheno_tool.calc(variants, sex_split=True).values()  # type: ignore
     assert isinstance(res_m, PhenoResult)
@@ -541,6 +539,7 @@ def test_calc_empty_variants(fake_phenotype_data: PhenotypeStudy) -> None:
     assert res.negative_deviation
     assert res.pvalue == "NA"  # type: ignore
 
+    # pylint: disable=unbalanced-dict-unpacking
     res_m, res_f = \
         pheno_tool.calc(variants, sex_split=True).values()  # type: ignore
     assert isinstance(res_m, PhenoResult)

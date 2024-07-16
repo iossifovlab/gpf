@@ -17,7 +17,7 @@ def mock_allele(
     return {"effects": {"types": {effect}}, "variant_in_members": in_members}
 
 
-def mocked_query_variants(**kwargs: Any) -> Iterator[Box]:
+def mocked_query_variants(**_kwargs: Any) -> Iterator[Box]:
     variants = [
         {
             "matched_alleles": [
@@ -35,7 +35,7 @@ def mocked_query_variants(**kwargs: Any) -> Iterator[Box]:
         yield Box(v)
 
 
-def mocked_filter_transform(pheno_filters: list[str]) -> tuple:
+def mocked_filter_transform(_pheno_filters: list[str]) -> tuple:
     return None, None
 
 
@@ -118,28 +118,6 @@ def test_genotype_data_persons_invalid_family_ids() -> None:
         helper.genotype_data_persons(family_ids="fam1")  # type: ignore
 
 
-# def test_pheno_filter_persons(mocker):
-#     mocker.spy(mocked_study.query_transformer, "_transform_filters_to_ids")
-#     helper = PhenoToolHelper(mocked_study, mocked_pheno)
-#     helper.pheno_filter_persons([1])
-#     mocked_study.query_transformer._transform_filters_to_ids \
-#         .assert_called_once_with([1])
-
-
-# def test_pheno_filter_persons_none_or_empty():
-#     helper = PhenoToolHelper(mocked_study, mocked_pheno)
-#     assert helper.pheno_filter_persons(None) is None
-#     assert helper.pheno_filter_persons(list()) is None
-
-
-# def test_pheno_filter_persons_invalid_input_type():
-#     helper = PhenoToolHelper(mocked_study, mocked_pheno)
-#     with pytest.raises(AssertionError):
-#         helper.pheno_filter_persons(dict)
-#     with pytest.raises(AssertionError):
-#         helper.pheno_filter_persons(tuple)
-
-
 def test_genotype_data_variants() -> None:
     helper = PhenoToolHelper(mocked_study, mocked_pheno)  # type: ignore
     variants = helper.genotype_data_variants(
@@ -170,7 +148,6 @@ def test_genotype_data_variants() -> None:
     )
     assert variants.get("frame-shift") == Counter({"fam2.prb": 1})
     assert variants.get("nonsense") == Counter({"fam2.prb": 1})
-    # assert variants.get("no-frame-shift-newStop") == Counter({"fam2.prb": 1})
 
 
 def test_genotype_data_variants_invalid_data() -> None:
