@@ -1,6 +1,28 @@
 Release Notes
 =============
 
+* 2024.7.3
+    * Bump versions of django dependencies
+    * Fix handling of phenotype data groups
+    * Fix sorting of pheno browser table
+    * Gene profiles user interface state store in user profile
+    * Improvement in enrichment tool results display
+    * Fixes in `gpf_validation_runner` tool
+    * Fixes for serialization of gene models in GTF format
+    * Fix chromosome mapping for bigWig genomic position table
+    * Fix in phenotype tool user interface controls
+    * Fix in gene browser user interface coding only control
+    * Fix in histogram sliders user interface
+    * Fixes for handling of selected dataset in GPFjs internal state
+    * New pheno measures dropdown selector for genotype browser and pheno tool
+
+
+* 2024.7.2
+    * Tool for drawing score resources histograms `draw_score_histograms`
+    * Gene sets clean up and fixes
+    * Fix handling of internal buffer of tabix genomic position table
+
+
 * 2024.7.1
     * Improvements in genomic position table performance
     * Initial support for 0-based genomic scores in genomic position table
