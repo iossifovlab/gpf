@@ -208,6 +208,15 @@ class IsDatasetAllowed(permissions.BasePermission):
         wgpf_instance = get_wgpf_instance()
         dataset_ids = set(wgpf_instance.get_genotype_data_ids())
 
+        user_groups = get_user_groups(user)
+        if (
+            settings.DISABLE_PERMISSIONS or
+            user.is_superuser or
+            user.is_staff or
+            "admin" in user_groups
+        ):
+            return dataset_ids
+
         query = IsDatasetAllowed.get_allowed_datasets_query()
 
         with connection.cursor() as cursor:
