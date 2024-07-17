@@ -1,4 +1,6 @@
 """Module containing the base view for data-related views."""
+from collections.abc import Iterable
+
 from datasets_api.permissions import IsDatasetAllowed
 from django.contrib.auth.models import User
 from gpf_instance.gpf_instance import get_wgpf_instance, recreated_dataset_perm
@@ -24,9 +26,8 @@ class QueryBaseView(views.APIView):
         self.variants_db = self.gpf_instance._variants_db
         self.pheno_registry = self.gpf_instance._pheno_registry
 
-    @staticmethod
-    def get_permitted_datasets(user: User) -> list[str]:
-        return IsDatasetAllowed.permitted_datasets(user)
+    def get_permitted_datasets(self, user: User) -> Iterable[str]:
+        return IsDatasetAllowed.permitted_datasets(user, self.instance_id)
 
 
 class QueryDatasetView(QueryBaseView):

@@ -141,9 +141,9 @@ class GenotypeBrowserQueryView(QueryDatasetView):
         if dataset is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if not dataset.is_remote:
-            data = expand_gene_set(data, user)
+            data = expand_gene_set(data, user, self.instance_id)
         elif "geneSet" in data:
-            gene_set = expand_gene_syms(data, user)
+            gene_set = expand_gene_syms(data, user, self.instance_id)
             data["geneSymbols"] = list(gene_set["syms"])
             del data["geneSet"]
 

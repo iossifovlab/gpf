@@ -1,5 +1,6 @@
 import logging
 import os
+from collections.abc import Iterable
 from typing import Any, cast
 
 from django.conf import settings
@@ -16,6 +17,7 @@ from studies.study_wrapper import StudyWrapper, StudyWrapperBase
 
 from dae.studies.study import GenotypeData
 from datasets_api.permissions import (
+    IsDatasetAllowed,
     get_instance_timestamp_etag,
     get_permissions_etag,
     get_wdae_parents,
@@ -28,13 +30,12 @@ logger = logging.getLogger(__name__)
 
 
 def augment_accessibility(
-    instance_id: str, dataset: dict[str, Any], user: User,
+    dataset: dict[str, Any], allowed_datasets: Iterable[str],
 ) -> dict[str, Any]:
     """Augment a dataset response JSON with access_rights section."""
     # pylint: disable=no-member
-    dataset["access_rights"] = user_has_permission(
-        instance_id, user, dataset["id"],
-    )
+    dataset["access_rights"] = dataset["id"] in allowed_datasets
+
     return dataset
 
 
@@ -141,7 +142,9 @@ class DatasetView(QueryBaseView):
             db_datasets.values(),
         )
 
-        res = [augment_accessibility(self.instance_id, ds, user) for ds in res]
+        allowed_datasets = self.get_permitted_datasets(user)
+
+        res = [augment_accessibility(ds, allowed_datasets) for ds in res]
         res = [augment_with_groups(ds, db_datasets[ds["id"]]) for ds in res]
 
         for result in res:
@@ -188,7 +191,9 @@ class DatasetView(QueryBaseView):
             )
             res["description"] = dataset.description
 
-        res = augment_accessibility(self.instance_id, res, user)
+        allowed_datasets = self.get_permitted_datasets(user)
+
+        res = augment_accessibility(res, allowed_datasets)
         res = augment_with_groups(res)
         res = augment_with_parents(self.instance_id, res)
 
@@ -236,10 +241,11 @@ class StudiesView(QueryBaseView):
                 StudyWrapperBase.build_genotype_data_all_datasets(
                     dataset.config))
 
-        res = [augment_accessibility(self.instance_id, ds, user) for ds in res]
+        allowed_datasets = self.get_permitted_datasets(user)
+
+        res = [augment_accessibility(ds, allowed_datasets) for ds in res]
         res = [augment_with_groups(ds) for ds in res]
-        res = [augment_with_parents(self.instance_id, ds) for ds in res]
-        return res
+        return [augment_with_parents(self.instance_id, ds) for ds in res]
 
     @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
