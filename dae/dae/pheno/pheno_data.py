@@ -618,9 +618,9 @@ class PhenotypeStudy(PhenotypeData):
         }
 
     def search_measures(
-        self, instrument: str | None, search_term: str | None,
-    ) -> Generator[dict[str, Any], None, None]:
-        measures = self.db.search_measures(instrument, search_term)
+        self, instrument: str | None, page: int, search_term: str | None,
+    ) -> list[dict[str, Any]]:
+        measures = self.db.search_measures(instrument, page, search_term)
         for measure in measures:
             if measure["values_domain"] is None:
                 measure["values_domain"] = ""
@@ -638,9 +638,7 @@ class PhenotypeStudy(PhenotypeData):
                     reg["pvalue_regression_female"] = "NaN"
                 measure["regressions"].append(dict(reg))
 
-            yield {
-                "measure": measure,
-            }
+        return measures
 
 
 class PhenotypeGroup(PhenotypeData):
