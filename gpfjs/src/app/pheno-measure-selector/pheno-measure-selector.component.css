@@ -25,10 +25,17 @@
 .dropdown-item {
   padding-left: 10px;
   display: flex;
-  height: 35px;
+  height: 30px;
   align-items: center;
 }
 
 .dropdown-selected {
   background-color: #f5f5f5;
+}
+
+#search-box {
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

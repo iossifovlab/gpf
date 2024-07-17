@@ -84,9 +84,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
     if (this.selectedIdx > 0) {
       this.selectedIdx -= 1;
     }
-    if (this.selectedIdx < this.topVisibleIdx) {
-      this.viewport.scrollToIndex(this.topVisibleIdx - 1);
-    }
+    this.recenterVirtualScroll();
   }
 
   public nextItem(): void {
@@ -97,12 +95,22 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
     if (this.selectedIdx + 1 < this.filteredMeasures.length) {
       this.selectedIdx += 1;
     }
-    if (this.selectedIdx >= this.topVisibleIdx + 7) {
-      this.viewport.scrollToIndex(this.topVisibleIdx + 1);
+    this.recenterVirtualScroll();
+  }
+
+  private recenterVirtualScroll(): void {
+    if (this.selectedIdx < this.topVisibleIdx) {
+      this.viewport.scrollToIndex(this.selectedIdx);
+    }
+    if (this.selectedIdx >= this.topVisibleIdx + 8) {
+      this.viewport.scrollToIndex(this.selectedIdx - 7);
     }
   }
 
   public closeDropdown(): void {
+    this.idxSubscription?.unsubscribe();
+    this.idxSubscription = null;
+    this.resetScroll();
     this.showDropdown = false;
     (this.searchBox.nativeElement as HTMLInputElement).blur();
   }
@@ -112,9 +120,14 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
       return;
     }
     this.selectMeasure(null);
+    this.resetScroll();
+    this.loadDropdownData();
+  }
+
+  private resetScroll(): void {
     this.selectedIdx = -1;
     this.topVisibleIdx = 0;
-    this.loadDropdownData();
+    this.viewport?.scrollToIndex(0);
   }
 
   public onClearButtonClick(): void {
@@ -126,6 +139,10 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   public loadDropdownData($event = null): void {
     if ($event && ($event.key === 'ArrowUp'
                    || $event.key === 'ArrowDown'
+                   || $event.key === 'ArrowLeft'
+                   || $event.key === 'ArrowRight'
+                   || $event.key === 'Home'
+                   || $event.key === 'End'
                    || $event.key === 'Tab'
                    || $event.key === 'Shift')) {
       return;
@@ -146,6 +163,7 @@ export class PhenoMeasureSelectorComponent implements OnChanges {
   }
 
   private filterData(): void {
+    this.resetScroll();
     this.filteredMeasures = this.measures;
     if (this.searchString.length) {
       this.filteredMeasures = this.filteredMeasures.filter(measure =>
