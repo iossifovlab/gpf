@@ -118,7 +118,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
     """Phenotype measures view."""
 
     def get(self, request: Request) -> Response:
-        """Stream pheno measures."""
+        """Get pheno measures pages."""
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
@@ -135,18 +135,18 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         if instrument and instrument not in pheno_instruments:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        data = dataset.phenotype_data.search_measures(
-            instrument, search_term,
+        page = int(request.query_params.get("page", 1))
+
+        measures = dataset.phenotype_data.search_measures(
+            instrument, page, search_term,
         )
 
-        response = StreamingHttpResponse(
-            iterator_to_json(data),
-            status=status.HTTP_200_OK,
-            content_type="text/event-stream",
-        )
+        if measures is None:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        response = Response(measures)
         response["Cache-Control"] = "no-cache"
         return response
-
 
 class CountError(Exception):
     pass

@@ -29,7 +29,7 @@ from dae.variants.attributes import Status
 class PhenoDb:  # pylint: disable=too-many-instance-attributes
     """Class that manages access to phenotype databases."""
 
-    STREAMING_CHUNK_SIZE = 25
+    PAGE_SIZE = 50
 
     def __init__(
             self, dbfile: str, read_only: bool = True,
@@ -497,29 +497,34 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         )
 
     def search_measures(
-        self, instrument_name: str | None = None,
+        self,
+        instrument_name: str | None = None,
+        page: int = 1,
         keyword: str | None = None,
     ) -> Iterator[dict[str, Any]]:
         """Find measures by keyword search."""
         query = self.build_measures_query(instrument_name, keyword)
+        query = query.limit(self.PAGE_SIZE).offset(
+            self.PAGE_SIZE * (page - 1),
+        )
 
         with self.engine.connect() as connection:
-            cursor = connection.execution_options(stream_results=True)\
-                .execute(query)
-            rows = cursor.fetchmany(self.STREAMING_CHUNK_SIZE)
-            while rows:
-                for row in rows:
-                    yield {
-                        "measure_id": row[0],
-                        "instrument_name": row[1],
-                        "measure_name": row[2],
-                        "measure_type": MeasureType(row[3]),
-                        "description": row[4],
-                        "values_domain": row[5],
-                        "figure_distribution_small": row[6],
-                        "figure_distribution": row[7],
-                    }
-                rows = cursor.fetchmany(self.STREAMING_CHUNK_SIZE)
+            rows = connection.execution_options(stream_results=True)\
+                .execute(query) \
+                .fetchall()
+
+            return [
+                {
+                    "measure_id": row[0],
+                    "instrument_name": row[1],
+                    "measure_name": row[2],
+                    "measure_type": MeasureType(row[3]),
+                    "description": row[4],
+                    "values_domain": row[5],
+                    "figure_distribution_small": row[6],
+                    "figure_distribution": row[7],
+                } for row in rows
+            ]
 
     def search_measures_df(
         self, instrument_name: str | None = None,
