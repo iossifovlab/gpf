@@ -13,6 +13,7 @@ import {
   GeneProfileSingleViewComponent
 } from 'app/gene-profiles-single-view/gene-profiles-single-view.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-gene-profiles-block',
@@ -21,6 +22,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 export class GeneProfilesBlockComponent implements OnInit {
   public geneProfilesTableConfig: GeneProfilesTableConfig;
   public geneProfilesSingleViewConfig: GeneProfilesSingleViewConfig;
+  private geneProfilesTableConfigOriginal: GeneProfilesTableConfig;
 
   public constructor(
     private geneProfilesService: GeneProfilesService,
@@ -30,15 +32,25 @@ export class GeneProfilesBlockComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    this.geneProfilesService.getConfig().pipe(
-      map(config => this.createTableConfig(config))
-    ).subscribe((config: GeneProfilesTableConfig) => {
-      this.geneProfilesTableConfig = config;
-    });
+    this.getConfig();
 
     this.geneProfilesService.getConfig().pipe(take(1)).subscribe(config => {
       this.geneProfilesSingleViewConfig = config;
     });
+  }
+
+  public getConfig(): void {
+    this.geneProfilesService.getConfig().pipe(
+      map(config => this.createTableConfig(config)
+      )
+    ).subscribe((config: GeneProfilesTableConfig) => {
+      this.geneProfilesTableConfig = config;
+      this.geneProfilesTableConfigOriginal = cloneDeep(config);
+    });
+  }
+
+  public resetConf(): void {
+    this.geneProfilesTableConfig = cloneDeep(this.geneProfilesTableConfigOriginal);
   }
 
   private createTableConfig(config: GeneProfilesSingleViewConfig): GeneProfilesTableConfig {

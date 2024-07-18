@@ -4,7 +4,7 @@ import { plainToClass } from 'class-transformer';
 import { Observable, of } from 'rxjs';
 import { cloneDeep } from 'lodash';
 import { GeneProfilesTableService } from './gene-profiles-table.service';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { NgxsModule, Store } from '@ngxs/store';
 import { GeneProfilesModel } from './gene-profiles-table.state';
@@ -17,7 +17,7 @@ const column1 = {
   displayVertical: false,
   id: 'column1',
   meta: null,
-  sortable: false,
+  sortable: true,
   visible: true
 };
 
@@ -254,7 +254,9 @@ describe('GeneProfilesTableComponent', () => {
   let component: GeneProfilesTableComponent;
   const geneProfilesTableServiceMock = new GeneProfilesTableServiceMock();
   const mockActivatedRoute = new MockActivatedRoute();
+  let fixture: ComponentFixture<GeneProfilesTableComponent>;
   let store: Store;
+
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [GeneProfilesTableComponent, TruncatePipe],
@@ -265,7 +267,7 @@ describe('GeneProfilesTableComponent', () => {
       imports: [NgxsModule.forRoot([], {developmentMode: true})]
     }).compileComponents();
 
-    const fixture = TestBed.createComponent(GeneProfilesTableComponent);
+    fixture = TestBed.createComponent(GeneProfilesTableComponent);
     component = fixture.componentInstance;
 
     component.sortingButtonsComponents = [];
@@ -484,5 +486,48 @@ describe('GeneProfilesTableComponent', () => {
       'column321',
       'column322']);
     expect(component.sortBy).toBe('column1');
+  });
+
+  it('should reset table state', () => {
+    component.tabs = new Set(['POGZ']);
+    component.loadedSearchValue = 'chd';
+    component.highlightedGenes = new Set(['CHD8']);
+    component.orderBy = 'desc';
+    component.sortBy = 'column1';
+
+    component.hideTable = false;
+    component.config = cloneDeep(configMock);
+    fixture.detectChanges();
+
+
+    component.resetState();
+    expect(component.tabs).toStrictEqual(new Set());
+    expect(component.loadedSearchValue).toBe('');
+    expect(component.highlightedGenes).toStrictEqual(new Set());
+    expect(component.orderBy).toBe('desc');
+    expect(component.sortBy).toBe('column1');
+  });
+
+  it('should reset table header state', () => {
+    component.leavesIds = [
+      'column1',
+      'column21',
+      'column322'];
+
+    component.stateFinishedLoading = true;
+
+    component.config = cloneDeep(configMock);
+    component.ngOnInit();
+
+    component.ngOnChanges();
+    expect(component.leavesIds).toStrictEqual([
+      'column1',
+      'column21',
+      'column22',
+      'column311',
+      'column312',
+      'column321',
+      'column322'
+    ]);
   });
 });

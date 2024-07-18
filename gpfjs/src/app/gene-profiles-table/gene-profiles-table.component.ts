@@ -23,6 +23,7 @@ import {
   SetGeneProfilesSortBy,
   SetGeneProfilesTabs } from './gene-profiles-table.state';
 import { StatefulComponent } from 'app/common/stateful-component';
+import { StateReset } from 'ngxs-reset-plugin';
 
 @Component({
   selector: 'gpf-gene-profiles-table',
@@ -33,6 +34,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   @Input() public config: GeneProfilesTableConfig;
   public sortBy: string;
   @Output() public goToQueryEvent = new EventEmitter();
+  @Output() public resetConfig = new EventEmitter();
 
   @ViewChild(NgbDropdownMenu) public ngbDropdownMenu: NgbDropdownMenu;
   @ViewChild('dropdownSpan') public dropdownSpan: ElementRef;
@@ -76,7 +78,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   public currentTabGeneSet= new Set<string>();
   public currentTabString = 'all genes';
 
-  private stateFinishedLoading = false;
+  public stateFinishedLoading = false;
 
   public constructor(
     private geneProfilesTableService: GeneProfilesTableService,
@@ -127,6 +129,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
 
   public ngOnChanges(): void {
     if (this.stateFinishedLoading) {
+      this.resetLeavesIds();
       this.prepareTable();
     }
   }
@@ -263,7 +266,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     }
   }
 
-  public calculateHeaderLayout(): void {
+  public resetLeavesIds(): void {
     this.leaves = GeneProfilesColumn.leaves(this.config.columns);
     this.leavesIds = [];
     this.leaves.map(leaf => {
@@ -271,6 +274,10 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
         this.leavesIds.push(leaf.id);
       }
     });
+  }
+
+  public calculateHeaderLayout(): void {
+    this.resetLeavesIds();
 
     this.nothingFoundWidth = (this.leaves.length * 110) + 40; // must match .table-row values
     let columnIdx = 0;
@@ -494,5 +501,20 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     this.waitForSearchBoxToLoad().then(() => {
       (this.searchBox.nativeElement as HTMLInputElement).focus();
     });
+  }
+
+  public resetState(): void {
+    this.tabs = new Set();
+    this.highlightedGenes = new Set<string>();
+    this.orderBy = 'desc';
+    this.loadedSearchValue = '';
+    (this.searchBox.nativeElement as HTMLInputElement).value = '';
+    this.search(this.loadedSearchValue);
+    this.setDefaultSortableCategory();
+
+    this.resetConfig.emit();
+
+    this.store.dispatch(new StateReset(GeneProfilesState));
+    this.geneProfilesTableService.saveUserGeneProfilesState();
   }
 }
