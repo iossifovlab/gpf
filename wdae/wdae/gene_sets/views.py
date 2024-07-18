@@ -6,7 +6,7 @@ import json
 import logging
 from collections.abc import Sequence
 from copy import deepcopy
-from typing import Any
+from typing import Any, cast
 
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.http.response import StreamingHttpResponse
@@ -80,7 +80,7 @@ class GeneSetsView(QueryBaseView):
                 return Response(status=status.HTTP_404_NOT_FOUND)
             gene_sets = self.gpf_instance.get_all_denovo_gene_sets(
                 gene_sets_types,
-                self.get_permitted_datasets(request.user),
+                cast(list, self.get_permitted_datasets(request.user)),
                 gene_sets_collection_id,
             )
         else:
@@ -158,7 +158,7 @@ class GeneSetDownloadView(QueryBaseView):
             if not self.gpf_instance.has_denovo_gene_sets():
                 return Response(status=status.HTTP_404_NOT_FOUND)
             gene_set = self.gpf_instance.get_denovo_gene_set(
-                gene_set_id, gene_sets_types, permitted_datasets,
+                gene_set_id, gene_sets_types, cast(list, permitted_datasets),
                 gene_sets_collection_id,
             )
         else:

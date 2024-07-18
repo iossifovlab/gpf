@@ -15,6 +15,7 @@ from gpf_instance.gpf_instance import (
     get_wgpf_instance,
 )
 from rest_framework import permissions
+from rest_framework.request import Request
 from utils.datasets import find_dataset_id_in_request
 
 from .models import Dataset, DatasetHierarchy
@@ -22,12 +23,17 @@ from .models import Dataset, DatasetHierarchy
 logger = logging.getLogger(__name__)
 
 
-def get_instance_timestamp_etag(_request, **_kwargs) -> str:
+def get_instance_timestamp_etag(
+    _request: Request, **_kwargs: dict[str, Any],
+) -> str:
     etag = f"{get_instance_timestamp()}"
     return hashlib.md5(etag.encode()).hexdigest()
 
 
-def get_permissions_etag(request, **_kwargs) -> str:
+def get_permissions_etag(
+    request: Request, **_kwargs: dict[str, Any],
+) -> str:
+    """Return E-Tag for queries dependant on user access permissions."""
     etag = (
         f"{get_instance_timestamp()}"
         f"{get_permission_timestamp()}"
@@ -220,7 +226,7 @@ class IsDatasetAllowed(permissions.BasePermission):
         query = IsDatasetAllowed.get_allowed_datasets_query()
 
         with connection.cursor() as cursor:
-            cursor.execute(query, [user.id, instance_id])
+            cursor.execute(query, [user.id, instance_id])  # type: ignore
 
             allowed_datasets_ids = {row[1] for row in cursor.fetchall()}
 

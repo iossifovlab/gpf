@@ -48,7 +48,8 @@ class QueryVariantsView(QueryDatasetView):
 
     @request_logging(LOGGER)
     @method_decorator(etag(get_permissions_etag))
-    def post(self, request):
+    def post(self, request: Request) -> Response:
+        """Query gene view summary variants."""
         data = expand_gene_set(request.data, request.user, self.instance_id)
         dataset_id = data.pop("datasetId", None)
         if dataset_id is None:
@@ -93,7 +94,10 @@ class DownloadSummaryVariantsView(QueryDatasetView):
         handle_partial_permissions(self.instance_id, user, dataset_id, data)
 
         download_limit = None
-        if not (user.is_authenticated and user.has_unlimited_download):
+        if not (
+            user.is_authenticated and
+            user.has_unlimited_download  # type: ignore
+        ):
             download_limit = self.DOWNLOAD_LIMIT
         data.update({"limit": download_limit})
 
@@ -103,8 +107,7 @@ class DownloadSummaryVariantsView(QueryDatasetView):
         variants = dataset.get_gene_view_summary_variants_download(
             freq_col, **data)
 
-        for variant in variants:
-            yield variant
+        yield from variants
 
     @request_logging(LOGGER)
     def post(self, request: Request) -> Response:

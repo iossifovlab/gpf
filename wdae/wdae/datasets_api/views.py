@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from collections.abc import Iterable
 from typing import Any, cast
 
@@ -17,7 +18,6 @@ from studies.study_wrapper import StudyWrapper, StudyWrapperBase
 
 from dae.studies.study import GenotypeData
 from datasets_api.permissions import (
-    IsDatasetAllowed,
     get_instance_timestamp_etag,
     get_permissions_etag,
     get_wdae_parents,
@@ -61,6 +61,7 @@ def augment_with_parents(
         )
     ]
     return dataset
+
 
 def produce_description_hierarchy(
     dataset: GenotypeData,
