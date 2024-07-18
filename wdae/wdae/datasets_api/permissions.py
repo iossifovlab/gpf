@@ -1,15 +1,21 @@
 import hashlib
 import logging
-from typing import Any, List, cast
+import textwrap
+from collections.abc import Iterable
+from typing import Any, cast
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.db import connection
 from django.http import HttpRequest
 from django.utils.encoding import force_str
-from gpf_instance.gpf_instance import get_instance_timestamp, \
-    get_permission_timestamp, get_wgpf_instance
+from gpf_instance.gpf_instance import (
+    get_instance_timestamp,
+    get_permission_timestamp,
+    get_wgpf_instance,
+)
 from rest_framework import permissions
+from rest_framework.request import Request
 from utils.datasets import find_dataset_id_in_request
 
 from .models import Dataset, DatasetHierarchy
@@ -17,12 +23,17 @@ from .models import Dataset, DatasetHierarchy
 logger = logging.getLogger(__name__)
 
 
-def get_instance_timestamp_etag(_request, **_kwargs) -> str:
+def get_instance_timestamp_etag(
+    _request: Request, **_kwargs: dict[str, Any],
+) -> str:
     etag = f"{get_instance_timestamp()}"
     return hashlib.md5(etag.encode()).hexdigest()
 
 
-def get_permissions_etag(request, **_kwargs) -> str:
+def get_permissions_etag(
+    request: Request, **_kwargs: dict[str, Any],
+) -> str:
+    """Return E-Tag for queries dependant on user access permissions."""
     etag = (
         f"{get_instance_timestamp()}"
         f"{get_permission_timestamp()}"
@@ -43,29 +54,183 @@ class IsDatasetAllowed(permissions.BasePermission):
         return self.has_object_permission(request, view, dataset_id)
 
     def has_object_permission(
-            self, request: HttpRequest, view: Any, obj: str,
+        self, request: HttpRequest, _view: Any, obj: str,
     ) -> bool:
         wgpf_instance = get_wgpf_instance()
-        if user_has_permission(
+        return user_has_permission(
             wgpf_instance.instance_id, cast(User, request.user), obj,
-        ):
-            return True
-
-        return False
+        )
 
     @staticmethod
-    def permitted_datasets(user: User) -> list[str]:
-        wgpf_instance = get_wgpf_instance()
-        dataset_ids = wgpf_instance.get_genotype_data_ids()
+    def prepare_allowed_datasets_query() -> str:
+        """
+        Return query for getting all datasets a user has access to.
 
-        return list(
-            filter(
-                lambda dataset_id: user_has_permission(
-                    wgpf_instance.instance_id, user, dataset_id,
-                ),
-                dataset_ids,
-            ),
+        This handles cases in the hierarchy where there are partial rights.
+        Query is divided and abstracted into multiple Common Table Expressions.
+        The query has a single parameter for user ID and returns rows of
+        dataset DB ID and WDAE ID pairs.
+
+        user_to_group joins users with their respective groups.
+        dataset_to_group joins datasets with their respective groups.
+
+        from_root and to_root are recursive and walk through the dataset
+        hierarchy from a given dataset ID in the respective direction.
+
+        dataset_branch combines from_root and to_root to give all datasets
+        present in a dataset hierarchy "branch".
+        """
+        return textwrap.dedent("""
+        WITH RECURSIVE
+        --
+        user_to_group AS (
+            SELECT
+                u.id AS uid,
+                u.email AS uname,
+                g.id AS gid,
+                g.name AS gname
+            FROM
+                users AS u
+                LEFT OUTER JOIN users_groups AS ug ON u.id = ug.wdaeuser_id
+                LEFT OUTER JOIN auth_group AS g ON ug.group_id = g.id
+        ),
+        --
+        dataset_to_group AS (
+            SELECT
+                d.id AS did,
+                d.dataset_id AS dname,
+                g.id AS gid,
+                g.name AS gname
+            FROM
+                datasets_api_dataset AS d
+                LEFT OUTER JOIN datasets_api_dataset_groups AS dg
+                    ON d.id = dg.dataset_id
+                LEFT OUTER JOIN auth_group AS g ON dg.group_id = g.id
+        ),
+        --
+        from_root (
+            dataset_id, descendant_id, descendant_wdae_id,
+            instance_id, DEPTH
+        ) AS (
+            SELECT
+                t.id AS dataset_id,
+                t.id AS descendant_id,
+                t.dataset_id AS descendant_wdae_id,
+                h.instance_id AS instance_id,
+                0
+            FROM
+                datasets_api_dataset AS t
+            LEFT OUTER JOIN datasets_api_datasethierarchy AS h
+                ON h.ancestor_id = t.id and h.descendant_id = t.id
+            UNION ALL
+            SELECT
+                t.dataset_id,
+                h.descendant_id,
+                hd.dataset_id,
+                h.instance_id,
+                t.DEPTH + 1
+            FROM
+                from_root AS t
+                LEFT OUTER JOIN datasets_api_datasethierarchy AS h
+                    ON h.ancestor_id = t.descendant_id
+                LEFT OUTER JOIN datasets_api_dataset AS hd
+                    ON hd.id = h.descendant_id
+            WHERE
+                1 = 1
+                AND h.ancestor_id <> h.descendant_id
+                AND h.direct == TRUE
+                AND h.id IS NOT NULL
+        ),
+        to_root (
+            dataset_id, ancestor_id, ancestor_wdae_id,
+            instance_id, DEPTH
+        ) AS (
+            SELECT
+                t.id AS dataset_id,
+                t.id AS ancestor_id,
+                t.dataset_id AS ancestor_wdae_id,
+                h.instance_id AS instance_id,
+                0
+            FROM
+                datasets_api_dataset AS t
+            LEFT OUTER JOIN datasets_api_datasethierarchy AS h
+                ON h.ancestor_id = t.id and h.descendant_id = t.id
+            UNION ALL
+            SELECT
+                t.dataset_id,
+                h.ancestor_id,
+                hd.dataset_id,
+                h.instance_id,
+                t.DEPTH - 1
+            FROM
+                to_root AS t
+                LEFT OUTER JOIN datasets_api_datasethierarchy AS h
+                    ON 1=1
+                    AND h.descendant_id = t.ancestor_id
+                LEFT OUTER JOIN datasets_api_dataset AS hd
+                    ON hd.id = h.ancestor_id
+            WHERE
+                1 = 1
+                AND h.ancestor_id <> h.descendant_id
+                AND h.direct == TRUE
+                AND h.id IS NOT NULL
+        ),
+        dataset_branch(
+            dataset_id, branch_dataset_id, branch_dataset_wdae_id,
+            instance_id
+        ) AS (
+            SELECT
+                to_root.dataset_id,
+                to_root.ancestor_id,
+                to_root.ancestor_wdae_id,
+                to_root.instance_id
+            FROM
+                to_root
+            UNION ALL
+            SELECT
+                from_root.dataset_id,
+                from_root.descendant_id,
+                from_root.descendant_wdae_id,
+                from_root.instance_id
+            FROM
+                from_root
         )
+        SELECT DISTINCT db.branch_dataset_id, db.branch_dataset_wdae_id
+        FROM user_to_group AS ug
+        LEFT OUTER JOIN dataset_to_group AS dg ON ug.gid = dg.gid
+        LEFT OUTER JOIN dataset_branch AS db ON db.dataset_id = dg.did
+        WHERE
+            1=1
+            AND dg.gid IS NOT NULL
+            AND db.branch_dataset_id IS NOT NULL
+            AND ug.uid = %s
+            AND db.instance_id = %s
+        ORDER BY db.branch_dataset_id;
+        """)
+
+    @staticmethod
+    def permitted_datasets(user: User, instance_id: str) -> Iterable[str]:
+        """Return list of allowed datasets for a specific user."""
+        wgpf_instance = get_wgpf_instance()
+        dataset_ids = set(wgpf_instance.get_genotype_data_ids())
+
+        user_groups = get_user_groups(user)
+        if (
+            settings.DISABLE_PERMISSIONS or
+            user.is_superuser or
+            user.is_staff or
+            "admin" in user_groups
+        ):
+            return dataset_ids
+
+        query = IsDatasetAllowed.prepare_allowed_datasets_query()
+
+        with connection.cursor() as cursor:
+            cursor.execute(query, [user.id, instance_id])  # type: ignore
+
+            allowed_datasets_ids = {row[1] for row in cursor.fetchall()}
+
+        return dataset_ids.intersection(allowed_datasets_ids)
 
 
 def get_wdae_dataset(
@@ -87,7 +252,7 @@ def get_wdae_dataset(
 
 def get_wdae_parents(
     instance_id: str, dataset_id: str, direct: bool = False,
-) -> List[Dataset]:
+) -> list[Dataset]:
     """
     Return list of parent wdae dataset objects.
 
@@ -103,7 +268,7 @@ def get_wdae_parents(
     return DatasetHierarchy.get_parents(instance_id, dataset)
 
 
-def get_wdae_children(instance_id: str, dataset_id: str) -> List[Dataset]:
+def get_wdae_children(instance_id: str, dataset_id: str) -> list[Dataset]:
     """
     Return list of child wdae dataset objects.
 

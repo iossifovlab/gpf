@@ -122,7 +122,7 @@ class PhenoToolView(QueryDatasetView):
 
     def post(self, request: Request) -> Response:
         """Return pheno tool results based on POST request."""
-        data = expand_gene_set(request.data, request.user)
+        data = expand_gene_set(request.data, request.user, self.instance_id)
         adapter = self.prepare_pheno_tool_adapter(data)
 
         if not adapter:
@@ -189,7 +189,8 @@ class PhenoToolDownload(PhenoToolView):
 
     def post(self, request: Request) -> Response:
         """Pheno tool download."""
-        data = expand_gene_set(parse_query_params(request.data), request.user)
+        data = expand_gene_set(
+            parse_query_params(request.data), request.user, self.instance_id)
 
         if not user_has_permission(
             self.instance_id, request.user, data["datasetId"],

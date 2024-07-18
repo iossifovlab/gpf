@@ -23,7 +23,7 @@ dependencies:
   - pytest-doctestplus=1.2
   - pylint=3.2
   - pandas-stubs=2.1
-  - django-stubs=4.2
+  - django-stubs=5.0.2
   - types-pyyaml=6.0
   - types-setuptools=67
   - types-toml=0.10

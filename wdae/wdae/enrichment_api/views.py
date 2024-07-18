@@ -145,7 +145,7 @@ class EnrichmentTestView(QueryDatasetView):
     # @silk_profile(name="Enrichment Test")
     def post(self, request: Request) -> Response:
         """Run the enrichment test and return the result."""
-        query = expand_gene_set(request.data, request.user)
+        query = expand_gene_set(request.data, request.user, self.instance_id)
         dataset_id = query.get("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)

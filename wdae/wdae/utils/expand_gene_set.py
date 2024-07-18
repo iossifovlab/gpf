@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from gpf_instance.gpf_instance import get_wgpf_instance
 
 
-def expand_gene_set(data: dict, user: User) -> dict:
+def expand_gene_set(data: dict, user: User, instance_id: str) -> dict:
     """Expand gene set to list of gene symbols."""
     if "geneSet" in data:
         gene_sets_collection_id = None
@@ -21,14 +21,14 @@ def expand_gene_set(data: dict, user: User) -> dict:
 
         assert gene_sets_collection_id is not None
         gene_set = expand_gene_syms(
-            data, user,
+            data, user, instance_id,
         )
         data["geneSymbols"] = list(gene_set["syms"])
         data["geneSet"] = gene_set["desc"]
     return data
 
 
-def expand_gene_syms(data: dict, user: User) -> dict:
+def expand_gene_syms(data: dict, user: User, instance_id: str) -> dict:
     """Expand gene set symbols."""
     gene_set = None
     query = data.get("geneSet")
@@ -44,7 +44,9 @@ def expand_gene_syms(data: dict, user: User) -> dict:
         gene_set = denovo_gene_sets_db.get_gene_set(
             gene_set,
             denovo_gene_set_spec,
-            permitted_datasets=IsDatasetAllowed.permitted_datasets(user),
+            permitted_datasets=IsDatasetAllowed.permitted_datasets(
+                user, instance_id,
+            ),
             collection_id=gene_sets_collection,
         )
     else:
