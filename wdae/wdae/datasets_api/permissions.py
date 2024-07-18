@@ -62,7 +62,7 @@ class IsDatasetAllowed(permissions.BasePermission):
         )
 
     @staticmethod
-    def get_allowed_datasets_query() -> str:
+    def prepare_allowed_datasets_query() -> str:
         """
         Return query for getting all datasets a user has access to.
 
@@ -102,8 +102,8 @@ class IsDatasetAllowed(permissions.BasePermission):
                 g.id AS gid,
                 g.name AS gname
             FROM
-                datasets_api_dataset d
-                LEFT OUTER JOIN datasets_api_dataset_groups dg
+                datasets_api_dataset AS d
+                LEFT OUTER JOIN datasets_api_dataset_groups AS dg
                     ON d.id = dg.dataset_id
                 LEFT OUTER JOIN auth_group AS g ON dg.group_id = g.id
         ),
@@ -116,11 +116,11 @@ class IsDatasetAllowed(permissions.BasePermission):
                 t.id AS dataset_id,
                 t.id AS descendant_id,
                 t.dataset_id AS descendant_wdae_id,
-                h.instance_id as instance_id,
+                h.instance_id AS instance_id,
                 0
             FROM
-                datasets_api_dataset t
-            LEFT OUTER JOIN datasets_api_datasethierarchy h
+                datasets_api_dataset AS t
+            LEFT OUTER JOIN datasets_api_datasethierarchy AS h
                 ON h.ancestor_id = t.id and h.descendant_id = t.id
             UNION ALL
             SELECT
@@ -149,11 +149,11 @@ class IsDatasetAllowed(permissions.BasePermission):
                 t.id AS dataset_id,
                 t.id AS ancestor_id,
                 t.dataset_id AS ancestor_wdae_id,
-                h.instance_id as instance_id,
+                h.instance_id AS instance_id,
                 0
             FROM
-                datasets_api_dataset t
-            LEFT OUTER JOIN datasets_api_datasethierarchy h
+                datasets_api_dataset AS t
+            LEFT OUTER JOIN datasets_api_datasethierarchy AS h
                 ON h.ancestor_id = t.id and h.descendant_id = t.id
             UNION ALL
             SELECT
@@ -163,7 +163,7 @@ class IsDatasetAllowed(permissions.BasePermission):
                 h.instance_id,
                 t.DEPTH - 1
             FROM
-                to_root t
+                to_root AS t
                 LEFT OUTER JOIN datasets_api_datasethierarchy AS h
                     ON 1=1
                     AND h.descendant_id = t.ancestor_id
@@ -196,9 +196,9 @@ class IsDatasetAllowed(permissions.BasePermission):
                 from_root
         )
         SELECT DISTINCT db.branch_dataset_id, db.branch_dataset_wdae_id
-        FROM user_to_group ug
-        LEFT OUTER JOIN dataset_to_group dg ON ug.gid = dg.gid
-        LEFT OUTER JOIN dataset_branch db ON db.dataset_id = dg.did
+        FROM user_to_group AS ug
+        LEFT OUTER JOIN dataset_to_group AS dg ON ug.gid = dg.gid
+        LEFT OUTER JOIN dataset_branch AS db ON db.dataset_id = dg.did
         WHERE
             1=1
             AND dg.gid IS NOT NULL
@@ -223,7 +223,7 @@ class IsDatasetAllowed(permissions.BasePermission):
         ):
             return dataset_ids
 
-        query = IsDatasetAllowed.get_allowed_datasets_query()
+        query = IsDatasetAllowed.prepare_allowed_datasets_query()
 
         with connection.cursor() as cursor:
             cursor.execute(query, [user.id, instance_id])  # type: ignore
