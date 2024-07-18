@@ -102,7 +102,7 @@ test.describe('Pheno tool tests', () => {
     await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
 
     await page.getByLabel('Advanced').getByPlaceholder('Select or start typing to search').click();
-    await page.getByRole('option', { name: 'i1.age' }).first().click();
+    await page.locator('.dropdown-item span', {hasText: 'i1.age'}).click();
     await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
     await expect(page.getByText('Report')).toBeEnabled();
     await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
@@ -212,7 +212,7 @@ test.describe('Pheno tool download tests', () => {
 
       await page.getByRole('tab', { name: 'Advanced' }).click();
       await page.getByLabel('Advanced').getByPlaceholder('Select or start typing to search').click();
-      await page.getByRole('option', { name: data.familyFilter}).click();
+      await page.locator('.dropdown-item span', {hasText: data.familyFilter}).click();
 
       await expect(page.locator('gpf-histogram')).toBeVisible();
       await page.locator('#from-input-field').clear();
@@ -276,7 +276,7 @@ test.describe('Pheno tool download tests', () => {
       await page.keyboard.type(data.set.substring(0, data.set.indexOf(' (')));
       await page.getByRole('option', { name: data.set}).click();
 
-      await page.locator('gpf-pheno-tool-measure .mat-mdc-input-element').click();
+      await page.locator('gpf-pheno-tool-measure #search-box').click();
       await page.getByText(data.measure).first().click();
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
@@ -317,8 +317,8 @@ test.describe('Pheno tool download tests', () => {
       await page.getByLabel('Gene Sets').getByPlaceholder('Select or start typing to search').click();
       await page.getByRole('option', { name: data.set}).click();
 
-      await page.locator('gpf-pheno-tool-measure .mat-mdc-input-element').click();
-      await page.getByRole('option', { name: data.measure}).click();
+      await page.locator('gpf-pheno-tool-measure #search-box').click();
+      await page.locator('.dropdown-item span', {hasText: data.measure}).click();
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
       await page.getByRole('button', { name: 'Download' }).click();

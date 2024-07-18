@@ -147,7 +147,7 @@ test.describe('Family filters block tests', () => {
     await expect(page.getByText('Select at least one continuous filter.')).toBeVisible();
 
     await page.locator('gpf-family-filters-block').locator('#search-box').click();
-    await page.getByRole('option', {name: 'i1.age'}).click();
+    await page.locator('.dropdown-item span', {hasText: 'i1.age'}).click();
     await expect(page.locator('gpf-histogram')).toBeVisible();
 
     await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
