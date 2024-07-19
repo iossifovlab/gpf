@@ -408,3 +408,11 @@
 .active-tab > .close-tab-button {
   color: white;
 }
+
+#reset-button {
+  margin-left: 10px;
+  font-size: 17px;
+  border: transparent;
+  background-color: transparent;
+  color: #0645ad;
+}

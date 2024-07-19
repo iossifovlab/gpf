@@ -18,6 +18,7 @@ import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene
 import { TruncatePipe } from '../utils/truncate.pipe';
 import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-table/gene-profiles-table';
 import { GeneProfilesState } from 'app/gene-profiles-table/gene-profiles-table.state';
+import { cloneDeep } from 'lodash';
 
 const config = {
   geneLinkTemplates: [
@@ -166,5 +167,16 @@ describe('GeneProfilesBlockComponent', () => {
     component.ngOnInit();
     expect(component.geneProfilesTableConfig).toStrictEqual(geneProfilesTableConfigMock);
     expect(component.geneProfilesSingleViewConfig).toStrictEqual(config);
+  });
+
+  it('should reset table configuration', () => {
+    component.ngOnInit();
+    const oldTableConfig = cloneDeep(component.geneProfilesTableConfig);
+
+    component.geneProfilesTableConfig.columns = [];
+
+    expect(component.geneProfilesTableConfig).not.toStrictEqual(oldTableConfig);
+    component.resetConf();
+    expect(component.geneProfilesTableConfig).toStrictEqual(oldTableConfig);
   });
 });
