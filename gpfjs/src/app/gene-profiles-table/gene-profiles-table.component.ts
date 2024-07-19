@@ -102,16 +102,6 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
 
     this.focusSearchBox();
 
-    if (this.route.snapshot.params.genes as string) {
-      this.currentTabGeneSet = new Set(
-        (this.route.snapshot.params.genes as string)
-          .split(',')
-          .filter(p => p)
-          .map(p => p.trim())
-      );
-      this.loadSingleView(this.currentTabGeneSet);
-    }
-
     this.loadState();
 
     this.geneProfilesTableService.getUserGeneProfilesState().subscribe(state => {
@@ -123,6 +113,16 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
         this.store.dispatch(new SetGeneProfilesOrderBy(state.orderBy));
         this.store.dispatch(new SetGeneProfilesHeader(state.headerLeaves));
         this.loadState();
+      }
+
+      if (this.route.snapshot.params.genes as string) {
+        this.currentTabGeneSet = new Set(
+          (this.route.snapshot.params.genes as string)
+            .split(',')
+            .filter(p => p)
+            .map(p => p.trim())
+        );
+        this.loadSingleView(this.currentTabGeneSet);
       }
     });
   }
@@ -223,7 +223,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     this.store.selectOnce(
       (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
       .subscribe(state => {
-        this.tabs = new Set(state.openedTabs);
+        this.tabs = new Set([...state.openedTabs, ...this.tabs]);
         this.loadedSearchValue = state.searchValue;
         this.highlightedGenes = new Set(state.highlightedRows);
         this.orderBy = state.orderBy;

@@ -47,7 +47,7 @@ export class GeneProfilesTableService {
           this.http.post(this.config.baseUrl + this.usersUrl, state, { withCredentials: true }).subscribe();
           this.saveStateDebouncer = null;
         });
-    }, 2000);
+    }, 1000);
   }
 
   public getGenes(page: number, searchString?: string, sortBy?: string, order?: string): Observable<any[]> {
