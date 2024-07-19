@@ -138,7 +138,7 @@ class IsDatasetAllowed(permissions.BasePermission):
             WHERE
                 1 = 1
                 AND h.ancestor_id <> h.descendant_id
-                AND h.direct == TRUE
+                AND h.direct = TRUE
                 AND h.id IS NOT NULL
         ),
         to_root (
@@ -172,7 +172,7 @@ class IsDatasetAllowed(permissions.BasePermission):
             WHERE
                 1 = 1
                 AND h.ancestor_id <> h.descendant_id
-                AND h.direct == TRUE
+                AND h.direct = TRUE
                 AND h.id IS NOT NULL
         ),
         dataset_branch(
