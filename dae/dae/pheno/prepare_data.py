@@ -1,5 +1,6 @@
 import logging
 import os
+import pathlib
 import shutil
 import tempfile
 from typing import Any
@@ -364,24 +365,25 @@ class PreparePhenoBrowserBase:
 
         graph = TaskGraph()
 
-        with tempfile.NamedTemporaryFile() as temp_dbfile:
-            shutil.copyfile(db.dbfile, temp_dbfile.name)
-            for instrument in list(self.phenotype_data.instruments.values()):
-                for measure in list(instrument.measures.values()):
-                    self.add_measure_task(graph, measure, temp_dbfile.name)
-            task_cache = TaskCache.create(
-                force=False, cache_dir=kwargs.get("task_status_dir"))
-            with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
-                try:
-                    for result in task_graph_run_with_results(graph, xtor):
-                        measure, regressions = result
-                        db.save(measure)
-                        if regressions is None:
-                            continue
-                        for regression in regressions:
-                            db.save_regression_values(regression)
-                except Exception:
-                    logger.exception("Failed to create images")
+        temp_dbfile_name = os.path.join(kwargs["output"], "tempdb.duckdb")
+        shutil.copyfile(db.dbfile, temp_dbfile_name)
+        for instrument in list(self.phenotype_data.instruments.values()):
+            for measure in list(instrument.measures.values()):
+                self.add_measure_task(graph, measure, temp_dbfile_name)
+        task_cache = TaskCache.create(
+            force=False, cache_dir=kwargs.get("task_status_dir"))
+        with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
+            try:
+                for result in task_graph_run_with_results(graph, xtor):
+                    measure, regressions = result
+                    db.save(measure)
+                    if regressions is None:
+                        continue
+                    for regression in regressions:
+                        db.save_regression_values(regression)
+            except Exception:
+                logger.exception("Failed to create images")
+        pathlib.Path(temp_dbfile_name).unlink()
 
     def get_regression_measures(
         self, measure: Measure,
