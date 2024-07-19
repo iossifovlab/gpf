@@ -2,7 +2,7 @@ import { UsersService } from '../users/users.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
-import { Subscription, combineLatest, switchMap } from 'rxjs';
+import { Subscription, combineLatest, of, switchMap } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
@@ -43,24 +43,26 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
   public ngOnInit(): void {
     this.datasetTrees = new Array<DatasetNode>();
     this.subscriptions.push(
-      this.route.params.subscribe((params: Params) => {
-        if (isEmpty(params)) {
-          return;
-        }
-        // Clear out previous loaded dataset - signifies loading and triggers change detection
-        this.selectedDataset = null;
-
-        this.datasetsService.getDataset(params['dataset'] as string).subscribe({
-          next: dataset => {
-            if (dataset) {
-              this.store.dispatch(new SetDatasetId(dataset.id));
-              this.setupSelectedDataset();
-            }
-          },
-          error: () => {
-            this.selectedDataset = undefined;
+      this.route.params.pipe(
+        switchMap((params: Params) => {
+          if (isEmpty(params)) {
+            return of();
           }
-        });
+          // Clear out previous loaded dataset - signifies loading and triggers change detection
+          this.selectedDataset = null;
+          return this.datasetsService.getDataset(params['dataset'] as string);
+        })
+      ).subscribe({
+        next: dataset => {
+          if (dataset) {
+            this.store.dispatch(new SetDatasetId(dataset.id));
+            this.selectedDataset = dataset;
+            this.setupSelectedDataset();
+          }
+        },
+        error: () => {
+          this.selectedDataset = undefined;
+        }
       }),
       // Create dataset hierarchy
       combineLatest({
@@ -109,40 +111,30 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
   }
 
   private setupSelectedDataset(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
-    ).subscribe(dataset => {
-      if (!dataset) {
-        return;
-      }
+    const firstTool = this.findFirstTool(this.selectedDataset);
 
-      this.selectedDataset = dataset;
+    this.registerAlertVisible = !this.selectedDataset.accessRights;
 
-      const firstTool = this.findFirstTool(this.selectedDataset);
-
-      this.registerAlertVisible = !this.selectedDataset.accessRights;
-
-      if (!this.isToolSelected()) {
-        if (firstTool) {
-          this.router.navigate(
-            ['/', 'datasets', this.selectedDataset.id, firstTool],
-            {replaceUrl: true}
-          );
-        } else {
-          this.router.navigate(['/', 'datasets', this.selectedDataset.id]);
-        }
+    if (!this.isToolSelected()) {
+      if (firstTool) {
+        this.router.navigate(
+          ['/', 'datasets', this.selectedDataset.id, firstTool],
+          {replaceUrl: true}
+        );
       } else {
-        const url = this.router.url.split('?')[0].split('/');
-        const toolName = url[url.indexOf('datasets') + 2];
-
-        if (!this.isToolEnabled(this.selectedDataset, toolName)) {
-          this.router.navigate(['/', 'datasets', this.selectedDataset.id, firstTool]);
-          this.selectedTool = firstTool;
-        } else {
-          this.selectedTool = toolName;
-        }
+        this.router.navigate(['/', 'datasets', this.selectedDataset.id]);
       }
-    });
+    } else {
+      const url = this.router.url.split('?')[0].split('/');
+      const toolName = url[url.indexOf('datasets') + 2];
+
+      if (!this.isToolEnabled(this.selectedDataset, toolName)) {
+        this.router.navigate(['/', 'datasets', this.selectedDataset.id, firstTool]);
+        this.selectedTool = firstTool;
+      } else {
+        this.selectedTool = toolName;
+      }
+    }
   }
 
   private isToolEnabled(dataset: Dataset, toolName: string): boolean {

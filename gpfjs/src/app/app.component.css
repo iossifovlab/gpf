@@ -48,6 +48,8 @@ h3 {
   height: 42px;
   position: relative;
   top: 2px;
+  pointer-events: none;
+  cursor: default;
 }
 
 #separator {
