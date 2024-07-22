@@ -249,7 +249,7 @@ test.describe('Pheno tool download tests', () => {
       await page.locator('gpf-gene-symbols textarea').fill(data.geneSymbol);
 
       await page.locator('input#search-box').click();
-      await page.getByText('i1.age').first().click();
+      await page.getByText('i1.age').click();
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
       await page.getByText('Download').click();

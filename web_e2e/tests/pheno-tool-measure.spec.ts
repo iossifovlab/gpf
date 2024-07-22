@@ -23,7 +23,7 @@ test.describe('Pheno tool measure tests', () => {
     await expect(page.getByLabel('Non verbal IQ')).toBeDisabled();
 
     await page.locator('#search-box').click();
-    await page.getByRole('option', {name: 'i1.m1'}).click();
+    await page.getByText('i1.m1').click();
     await expect(page.getByText('Please select a measure.')).not.toBeVisible();
     await expect(page.getByLabel('Age')).not.toBeDisabled();
     await expect(page.getByLabel('Non verbal IQ')).not.toBeDisabled();
@@ -37,18 +37,18 @@ test.describe('Pheno tool measure tests', () => {
   test('should check if the normalization checkboxes get disabled when' +
   'the measure is the same as the normalization criteria', async({ page }) => {
     await page.locator('#search-box').click();
-    await page.getByRole('option', {name: 'i1.age'}).click();
+    await page.getByText('i1.age').click();
     await expect(page.getByLabel('Age')).toBeDisabled();
 
     await page.locator('#clear-measure-button').click();
     await page.locator('#search-box').click();
-    await page.getByRole('option', {name: 'i1.iq'}).click();
+    await page.getByText('i1.iq').click();
     await expect(page.getByLabel('Non verbal IQ')).toBeDisabled();
   });
 
   test('should check the remove button with selected measure', async({ page }) => {
     await page.locator('#search-box').click();
-    await page.getByRole('option', {name: 'i1.age'}).click();
+    await page.getByText('i1.age').click();
 
     await page.locator('#clear-measure-button').click();
     await expect(page.locator('#search-box')).toBeEmpty();
