@@ -242,7 +242,14 @@ class GeneProfilesTableServiceMock {
   public saveUserGeneProfilesState(): void { }
 
   public getUserGeneProfilesState(): Observable<object> {
-    return of({});
+    return of({
+      openedTabs: ['POGZ'],
+      searchValue: 'chd',
+      highlightedRows: ['CHD8'],
+      sortBy: 'column1',
+      orderBy: 'desc',
+      headerLeaves: []
+    });
   }
 }
 
@@ -473,7 +480,7 @@ describe('GeneProfilesTableComponent', () => {
   });
 
   it('should load user gene proifles state', () => {
-    expect(component.tabs).toStrictEqual(new Set(['POGZ']));
+    expect(component.tabs).toStrictEqual(new Set(['DYRK1A,FOXP1,SPAST', 'POGZ']));
     expect(component.loadedSearchValue).toBe('chd');
     expect(component.highlightedGenes).toStrictEqual(new Set(['CHD8']));
     expect(component.orderBy).toBe('desc');

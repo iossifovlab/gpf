@@ -23,7 +23,6 @@ import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { SetVariantTypes } from 'app/variant-types/variant-types.state';
 import { LGDS } from 'app/effect-types/effect-types';
 import { GeneProfilesModel, SetGeneProfilesTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { DatasetModel } from 'app/datasets/datasets.state';
 
 @Component({
