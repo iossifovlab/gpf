@@ -218,7 +218,11 @@ class PhenotypeData(ABC):
 
     @abstractmethod
     def search_measures(
-        self, instrument: str | None, page: int, search_term: str | None,
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+        order_by:  str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         pass
 
@@ -618,9 +622,18 @@ class PhenotypeStudy(PhenotypeData):
         }
 
     def search_measures(
-        self, instrument: str | None, page: int, search_term: str | None,
-    ) -> list[dict[str, Any]]:
-        measures = self.db.search_measures(instrument, page, search_term)
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+        order_by:  str | None = None,
+    ) -> Generator[dict[str, Any], None, None]:
+        measures = self.db.search_measures(
+            instrument,
+            search_term,
+            page,
+            order_by,
+        )
         for measure in measures:
             if measure["values_domain"] is None:
                 measure["values_domain"] = ""
@@ -638,7 +651,9 @@ class PhenotypeStudy(PhenotypeData):
                     reg["pvalue_regression_female"] = "NaN"
                 measure["regressions"].append(dict(reg))
 
-        return measures
+            yield {
+                "measure": measure,
+            }
 
 
 class PhenotypeGroup(PhenotypeData):
@@ -707,10 +722,14 @@ class PhenotypeGroup(PhenotypeData):
         return result
 
     def search_measures(
-        self, instrument: str | None, search_term: str | None,
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+        order_by:  str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         generators = [
-            pheno.search_measures(instrument, search_term)
+            pheno.search_measures(instrument, search_term, page, order_by)
             for pheno in self.children
         ]
         measures = chain(*generators)
