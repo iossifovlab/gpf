@@ -86,7 +86,6 @@ test.describe('Dataset description access rights tests', () => {
   });
 
   test('should always show the dataset description button if the user is admin', async({ page }) => {
-    await page.locator('#header a:text("Datasets")').click();
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Gene browser');
     await expect(page.getByText('Dataset Description')).toBeVisible();
     await utils.navigateToDatasetPage(page, utils.datasetIds.compGenotypes, 'Gene browser');

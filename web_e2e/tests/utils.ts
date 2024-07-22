@@ -63,9 +63,11 @@ export async function navigateToDatasetPage(page: Page, dataset: string, tool: s
 }
 
 export async function navigateToDataset(page: Page, dataset: string): Promise<void> {
-  await page.locator('#header a:text("Datasets")').click();
-  await page.waitForSelector('gpf-datasets');
-  await expect(page.getByText('Loading datasets...')).not.toBeVisible();
+  if (!await page.locator('gpf-datasets').isVisible()) {
+    await page.locator('#header a:text("Datasets")').click();
+    await page.waitForSelector('gpf-datasets');
+    await expect(page.getByText('Loading datasets...')).not.toBeVisible();
+  }
   await page.locator('#datasets-dropdown-menu-button').click();
   await page.locator('a').filter({ hasText: dataset }).click();
   await expect(page.locator('#datasets-dropdown-menu-button')).toHaveText(dataset);
@@ -115,3 +117,18 @@ export async function createUser(page: Page, email: string, name: string): Promi
 
 //   this.waitForPageToLoad(page, hasAccessRights);
 // }
+
+export async function resetGeneProfiles(page: Page): Promise<void> {
+  await page.waitForSelector('#reset-button');
+  await page.locator('#reset-button').click();
+  await page.waitForResponse(
+    resp => resp.url().includes('/api/v3/users/user_gp_state') && resp.status() === 204
+  );
+
+  await expect(page.locator('#gene-search-input')).toBeEmpty();
+  await expect(page.locator('#compare-genes-modal')).not.toBeVisible();
+  await expect(page.locator('#tabs-wrapper')).toHaveText('All genes');
+  await expect(page.locator('.header-cell')).toHaveCount(25);
+  await expect(page.locator('.active-sort-header')).toContainText('Autism Gene Sets');
+}
+

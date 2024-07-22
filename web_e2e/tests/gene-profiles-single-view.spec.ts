@@ -68,10 +68,13 @@ test.describe('Gene profiles navigation to single view tests', () => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await page.locator('#header a:text("Gene Profiles")').click();
+
+    await utils.resetGeneProfiles(page);
   });
 
   test('should open single view', async({ page }) => {
-    await page.locator('input#gene-search-input').fill('GRIN2B');
+    await page.locator('input#gene-search-input').focus();
+    await page.keyboard.type('GRIN2B');
     await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
 
     expect(page.url()).toEqual(`${utils.instanceUrl}/gene-profiles/GRIN2B`);
@@ -289,6 +292,9 @@ test.describe('Gene profiles single view dynamic data and links tests', () => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await page.locator('#header a:text("Gene Profiles")').click();
+
+    await utils.resetGeneProfiles(page);
+
     await page.locator('input#gene-search-input').focus();
     await page.keyboard.type('GRIN2B');
     await page.waitForLoadState();

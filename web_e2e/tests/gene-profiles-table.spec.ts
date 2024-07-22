@@ -282,6 +282,8 @@ test.describe('Gene profiles table functionality tests', () => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await page.locator('#header a:text("Gene Profiles")').click();
+
+    await utils.resetGeneProfiles(page);
   });
   test('should sort genes by autism gene sets', async({ page }) => {
     const row = page.locator('.table-body-row:not(#nothing-found)');
@@ -471,9 +473,15 @@ test.describe('Gene profiles table functionality tests', () => {
     // change table header columns order
     // TODO
 
+    await page.waitForTimeout(1500); // wait for user's gene profile state query
+
     // go to Genotype browser and return to Gene Profiles
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Genotype browser');
     await page.locator('#header a:text("Gene Profiles")').click();
+
+    await page.waitForResponse(
+      resp => resp.url().includes('/api/v3/users/user_gp_state') && resp.status() === 204
+    );
 
     // check search and search result
     await expect(page.locator('input#gene-search-input')).toHaveValue('RAPGEF');
