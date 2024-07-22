@@ -22,8 +22,6 @@ export class DatasetsService {
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
   public datasetsLoading = false;
 
-  public static descriptionCache = [];
-
   public constructor(
     private http: HttpClient,
     private config: ConfigService,
@@ -127,18 +125,10 @@ export class DatasetsService {
   }
 
   public getDatasetDescription(datasetId: string): Observable<object> {
-    if (DatasetsService.descriptionCache.length !== 0) {
-      return of(DatasetsService.descriptionCache.find(d => d['datasetId'] === datasetId) as object);
-    }
-
     const options = { headers: this.headers, withCredentials: true };
     const description$ = this.http.get(
       `${this.config.baseUrl}${this.descriptionUrl}/${datasetId}`, options
     ).pipe(take(1), share());
-    description$.subscribe(description => {
-      DatasetsService.descriptionCache.push({datasetId: datasetId, description: description['description'] as string});
-    });
-
     return description$;
   }
 }
