@@ -218,7 +218,7 @@ class PhenotypeData(ABC):
 
     @abstractmethod
     def search_measures(
-        self, instrument: str | None, search_term: str | None,
+        self, instrument: str | None, page: int, search_term: str | None,
     ) -> Generator[dict[str, Any], None, None]:
         pass
 
