@@ -115,7 +115,7 @@ def test_measures(admin_client: Client) -> None:
     response = admin_client.get(url)
     assert response.status_code == 200
 
-    res = response.streaming_content
+    res = response
     res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
     assert len(res) == 4
 

@@ -463,11 +463,27 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             return None
 
     def build_measures_query(
-        self, instrument_name: str | None = None,
+        self,
+        instrument_name: str | None = None,
+        order_by: str | None = None,
         keyword: str | None = None,
     ) -> Select[Any]:
         """Find measures by keyword search."""
         query_params = []
+        query = self.variable_browser.select()
+
+        joined_tables = {}
+        regression_ids = self.regression_ids
+        for regression_id in regression_ids:
+            table = self.regression_values.alias(regression_id)
+            query = self.variable_browser.select().join(
+                table,
+                self.variable_browser.c.measure_id
+                    == table.c.measure_id
+                and table.c.regression_id
+                    == regression_id,
+            )
+            joined_tables[regression_id] = table
 
         if keyword:
             keyword = keyword.replace("%", r"/%").replace("_", r"/_")
@@ -483,25 +499,50 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 self.variable_browser.c.measure_name.ilike(keyword, escape="/"),
                 self.variable_browser.c.description.ilike(keyword, escape="/")),
             )
-            query = self.variable_browser.select().where(or_(*query_params))
-        else:
-            query = self.variable_browser.select()
+            query = query.where(or_(*query_params))
 
         if instrument_name:
             query = query.where(
                 self.variable_browser.c.instrument_name == instrument_name,
             )
-        return query.order_by(
-            self.variable_browser.c.instrument_name,
-            self.variable_browser.c.measure_id,
-        )
+        if order_by:
+            # query = query.order_by() ?
+            match order_by:
+                case "instrument_name":
+                    query = query.order_by(
+                        self.variable_browser.c.instrument_name)
+                case "measure_id":
+                    query = query.order_by(
+                        self.variable_browser.c.measure_id)
+                case "description":
+                    query = query.order_by(
+                        self.variable_browser.c.description)
+                case "description":
+                    query = query.order_by(
+                        self.variable_browser.c.description)
+                case _:
+                    regression_id, sex = order_by.split(".")
+                    if sex == "male":
+                        query = query.order_by(
+                            joined_tables[regression_id].c.pvalue_regression_male)
+                    elif sex == "female":
+                        query = query.order_by(
+                            joined_tables[regression_id].c.pvalue_regression_female)
+        else:
+            query.order_by(
+                self.variable_browser.c.instrument_name,
+                self.variable_browser.c.measure_id,
+            )
+
+        return query
 
     def search_measures(
         self,
         instrument_name: str | None = None,
         page: int = 1,
+        order_by:  str | None = None,
         keyword: str | None = None,
-    ) -> Iterator[dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Find measures by keyword search."""
         query = self.build_measures_query(instrument_name, keyword)
         query = query.limit(self.PAGE_SIZE).offset(
