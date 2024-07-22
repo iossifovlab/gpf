@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+* 2024.7.5
+    * Performance improvements in calculation of access rights for datasets
+    * Fixes in datasets routing in GPFjs
+    * Added UI for resetting gene profiles state
+
+* 2024.7.4
+    Fixes in pheno measures dropdown selector for genotype browser and pheno tool
+
+
 * 2024.7.3
     * Bump versions of django dependencies
     * Fix handling of phenotype data groups
