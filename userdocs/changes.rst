@@ -7,7 +7,8 @@ Release Notes
     * Added UI for resetting gene profiles state
 
 * 2024.7.4
-    Fixes in pheno measures dropdown selector for genotype browser and pheno tool
+    * Fixes in pheno measures dropdown selector for genotype browser and pheno
+      tool
 
 
 * 2024.7.3
