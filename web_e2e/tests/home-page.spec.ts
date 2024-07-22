@@ -74,6 +74,8 @@ test.describe('Home page tests', () => {
     await expect(page.locator('gpf-home')).not.toBeVisible();
     await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
     await expect(page).toHaveURL(`${utils.instanceUrl}/gene-profiles/CHD8`);
+    await expect(page.locator('.tab').getByText('CHD8')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'CHD8' })).toBeVisible();
   });
 
   test('should search genes by typing gene', async({ page }) => {
@@ -86,6 +88,8 @@ test.describe('Home page tests', () => {
     await expect(page.locator('gpf-home')).not.toBeVisible();
     await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
     await expect(page).toHaveURL(`${utils.instanceUrl}/gene-profiles/CHD8`);
+    await expect(page.locator('.tab').getByText('CHD8')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'CHD8' })).toBeVisible();
   });
 
   test('should show error message when searching invalid gene', async({ page }) => {
