@@ -128,6 +128,8 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instrument = request.query_params.get("instrument", None)
+        page = int(request.query_params.get("page", 1))
+        order_by = request.query_params.get("order_by", None)
         search_term = request.query_params.get("search", None)
 
         pheno_instruments = dataset.phenotype_data.get_instruments()
@@ -135,16 +137,16 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         if instrument and instrument not in pheno_instruments:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        page = int(request.query_params.get("page", 1))
-
         measures = dataset.phenotype_data.search_measures(
-            instrument, page, search_term,
+            instrument, search_term, page, order_by,
         )
 
-        if measures is None:
+        measures_page = list(measures)
+
+        if measures_page is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        response = Response(measures)
+        response = Response(measures_page)
         response["Cache-Control"] = "no-cache"
         return response
 

@@ -334,8 +334,12 @@ class RESTClient:
         return response.json()
 
     def get_browser_measures(
-        self, dataset_id: str, instrument: str | None,
+        self,
+        dataset_id: str,
+        instrument: str | None,
         search_term: str | None,
+        page: int | None = None,
+        order_by: str | None = None,
     ) -> Any:
         """Get pheno measures that correspond to a search."""
         response = self._get(
@@ -344,6 +348,8 @@ class RESTClient:
                 "dataset_id": dataset_id,
                 "instrument": instrument,
                 "search": search_term,
+                "page": page,
+                "order_by": order_by,
             },
             stream=True,
         )

@@ -148,12 +148,18 @@ class RemotePhenotypeData(PhenotypeData):
         return cast(dict[str, Any], output)
 
     def search_measures(
-        self, instrument: str | None, search_term: str | None,
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+        order_by: str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         measures = self.rest_client.get_browser_measures(
             self.remote_dataset_id,
             instrument,
             search_term,
+            page,
+            order_by,
         )
         for m in measures:
             yield m
