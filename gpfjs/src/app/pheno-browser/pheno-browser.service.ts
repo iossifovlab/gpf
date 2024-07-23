@@ -16,6 +16,7 @@ export class PhenoBrowserService {
   private readonly measuresInfoUrl = 'pheno_browser/measures_info';
   private readonly downloadUrl = 'pheno_browser/download';
   private readonly measureDescription = 'pheno_browser/measure_description';
+  private oboeInstance = null;
 
   public measuresStreamingFinishedSubject = new Subject();
 
@@ -25,6 +26,14 @@ export class PhenoBrowserService {
     private config: ConfigService,
     private authService: AuthService
   ) {}
+
+  public cancelStreamPost(): void {
+    if (this.oboeInstance) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      this.oboeInstance.abort();
+      this.oboeInstance = null;
+    }
+  }
 
   public getMeasureDescription(datasetId: string, measureId: string): Observable<object> {
     const headers = this.getHeaders();
@@ -63,7 +72,7 @@ export class PhenoBrowserService {
       headers['Authorization'] = `Bearer ${this.authService.accessToken}`;
     }
 
-    oboe({
+    this.oboeInstance = oboe({
       url: `${this.config.baseUrl}${this.measuresUrl}?${searchParams.toString()}`,
       method: 'GET',
       headers: headers,
