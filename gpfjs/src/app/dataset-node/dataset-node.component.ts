@@ -1,7 +1,6 @@
 import { AfterContentChecked, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
-import { Dataset } from 'app/datasets/datasets';
-import { Observable, Subject, Subscription, switchMap } from 'rxjs';
+import { Observable, Subject, Subscription } from 'rxjs';
 import { DatasetNode } from './dataset-node';
 import { Store } from '@ngxs/store';
 import { StatefulComponent } from 'app/common/stateful-component';
