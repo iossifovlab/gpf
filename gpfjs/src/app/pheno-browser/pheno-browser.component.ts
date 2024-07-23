@@ -1,7 +1,7 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
-import { Observable, BehaviorSubject, ReplaySubject, combineLatest, of, zip } from 'rxjs';
+import { Observable, BehaviorSubject, ReplaySubject, combineLatest, of, zip, Subscription } from 'rxjs';
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { Dataset } from 'app/datasets/datasets';
@@ -18,11 +18,11 @@ import { DatasetsService } from 'app/datasets/datasets.service';
   templateUrl: './pheno-browser.component.html',
   styleUrls: ['./pheno-browser.component.css'],
 })
-export class PhenoBrowserComponent implements OnInit {
+export class PhenoBrowserComponent implements OnInit, OnDestroy {
   public selectedInstrument$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
   public searchTermObs$: Observable<string>;
-  private measuresToShow: PhenoMeasures;
-  public measuresToShow$: Observable<PhenoMeasures>;
+  public measuresToShow: PhenoMeasures;
+  public measuresSubscription: Subscription;
   public errorModal = false;
 
   public instruments: Observable<PhenoInstruments>;
@@ -69,7 +69,7 @@ export class PhenoBrowserComponent implements OnInit {
       distinctUntilChanged()
     );
 
-    this.measuresToShow$ = combineLatest([this.searchTermObs$, this.selectedInstrument$]).pipe(
+    this.measuresSubscription = combineLatest([this.searchTermObs$, this.selectedInstrument$]).pipe(
       tap(([searchTerm, newSelection]) => {
         this.measuresToShow = null;
         const queryParamsObject: {
@@ -114,7 +114,7 @@ export class PhenoBrowserComponent implements OnInit {
         return this.measuresToShow;
       }),
       share()
-    );
+    ).subscribe();
 
     this.route.queryParamMap.pipe(
       map(params => [params.get('instrument') || '', params.get('search') || '']),
@@ -183,5 +183,10 @@ export class PhenoBrowserComponent implements OnInit {
 
   public errorModalBack(): void {
     this.errorModal = false;
+  }
+
+  public ngOnDestroy(): void {
+    this.measuresSubscription.unsubscribe();
+    this.phenoBrowserService.cancelStreamPost();
   }
 }
