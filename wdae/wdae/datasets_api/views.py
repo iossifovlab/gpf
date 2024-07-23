@@ -67,7 +67,7 @@ def augment_with_parents(
 def produce_description_hierarchy(
     dataset: GenotypeData,
     selected: list[str],
-    indent_level: int = 0
+    indent_level: int = 0,
 ) -> str:
     """Create dataset description hierarchy from dataset children."""
     if dataset.is_group:
@@ -78,12 +78,12 @@ def produce_description_hierarchy(
                 child_descriptions = produce_description_hierarchy(
                     child,
                     selected,
-                    indent_level + 1
+                    indent_level + 1,
                 )
                 res.append(
                     f"{indent}- **[{child.name}](datasets/{child.study_id})** "
                     f"{get_first_paragraph(child.description)}\n"
-                    f"{child_descriptions}"
+                    f"{child_descriptions}",
                 )
         return "\n".join(res)
 
@@ -298,7 +298,7 @@ class DatasetDetailsView(QueryBaseView):
     """Provide miscellaneous details for a given dataset."""
 
     @method_decorator(etag(get_instance_timestamp_etag))
-    def get(self, request: Request, dataset_id: str) -> Response:
+    def get(self, _request: Request, dataset_id: str) -> Response:
         # pylint: disable=unused-argument
         """Return response for a specific dataset configuration details."""
         genotype_data_config = \
@@ -323,7 +323,7 @@ class DatasetPedigreeView(QueryBaseView):
     """Provide pedigree data for a given dataset."""
 
     @method_decorator(etag(get_instance_timestamp_etag))
-    def get(self, request: Request, dataset_id: str, column: str) -> Response:
+    def get(self, _request: Request, dataset_id: str, column: str) -> Response:
         # pylint: disable=unused-argument
         """Return response for a pedigree get request for pedigree column."""
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
@@ -354,7 +354,7 @@ class DatasetConfigView(DatasetView):
 
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(
-        self, request: Request, dataset_id: str | None = None,
+        self, _request: Request, dataset_id: str | None = None,
     ) -> Response:
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -375,7 +375,7 @@ class DatasetDescriptionView(QueryBaseView):
 
     @method_decorator(etag(get_description_etag))
     def get(
-        self, request: Request, dataset_id: str | None,
+        self, _request: Request, dataset_id: str | None,
     ) -> Response:
         # pylint: disable=unused-argument
         """Collect a dataset's description."""
@@ -508,7 +508,7 @@ class DatasetPermissionsSingleView(BaseDatasetPermissionsView):
 
     page_size = settings.REST_FRAMEWORK["PAGE_SIZE"]
 
-    def get(self, request: Request, dataset_id: str) -> Response:
+    def get(self, _request: Request, dataset_id: str) -> Response:
         # pylint: disable=unused-argument
         """Return dataset permission details."""
         try:
@@ -583,7 +583,7 @@ class VisibleDatasetsView(QueryBaseView):
     """Provide a list of which datasets to show in the frontend."""
 
     @method_decorator(etag(get_instance_timestamp_etag))
-    def get(self, request: Request) -> Response:
+    def get(self, _request: Request) -> Response:
         """Return the list of visible datasets."""
         # pylint: disable=unused-argument
         res = self.gpf_instance.get_visible_datasets()
