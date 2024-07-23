@@ -12,6 +12,11 @@
   text-overflow: ellipsis;
 }
 
+.dataset-dropdown-item.active {
+  pointer-events: none;
+  cursor: default;
+}
+
 .collapse-dataset-icon {
   position: relative;
   left: 0;
