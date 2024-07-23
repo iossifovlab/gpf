@@ -71,6 +71,9 @@ class MockPhenoBrowserService {
   public getDownloadMeasuresLink(): string {
     return '';
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  public cancelStreamPost(): void { }
 }
 class MockDatasetsService {
   public getDataset(datasetId: string): Observable<Dataset> {
