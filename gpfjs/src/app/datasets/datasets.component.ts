@@ -1,4 +1,3 @@
-import { UsersService } from '../users/users.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
@@ -10,7 +9,7 @@ import { Store } from '@ngxs/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
 import { GeneProfilesState } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
-import { DatasetModel, DatasetState, SetDatasetId } from './datasets.state';
+import { DatasetState, SetDatasetId } from './datasets.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 
 @Component({
@@ -31,7 +30,6 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
   public selectedTool: string;
 
   public constructor(
-    private usersService: UsersService,
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
     private router: Router,
@@ -112,7 +110,7 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
 
   private setupSelectedDataset(): void {
     const firstTool = this.findFirstTool(this.selectedDataset);
-
+    this.selectedTool = firstTool;
     this.registerAlertVisible = !this.selectedDataset.accessRights;
 
     if (!this.isToolSelected()) {
