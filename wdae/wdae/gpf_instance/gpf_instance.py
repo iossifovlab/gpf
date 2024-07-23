@@ -1,6 +1,7 @@
 """Provides wdae GPFInstance class."""
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import pathlib
@@ -36,6 +37,8 @@ _GPF_RECREATED_DATASET_PERM = False
 _INSTANCE_TIMESTAMP: float = 0
 _PERMISSION_CHANGED_TIMESTAMP: float = 0
 
+_GPF_HASH_STORE = {}
+
 
 def set_instance_timestamp() -> None:
     global _INSTANCE_TIMESTAMP  # pylint: disable=global-statement
@@ -61,6 +64,15 @@ def permission_update(request_function: Callable) -> Callable:
         set_permission_timestamp()
         return response
     return decorated
+
+
+def get_cacheable_hash(hashable_id: str) -> str | None:
+    return _GPF_HASH_STORE.get(hashable_id)
+
+
+def set_cacheable_hash(hashable_id: str, content: str) -> None:
+    _GPF_HASH_STORE[hashable_id] = \
+        hashlib.md5(content.encode("utf-8")).hexdigest()  # noqa: S324
 
 
 class WGPFInstance(GPFInstance):

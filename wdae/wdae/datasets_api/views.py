@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
+from gpf_instance.gpf_instance import get_cacheable_hash, set_cacheable_hash
 from groups_api.serializers import GroupSerializer
 from query_base.query_base import QueryBaseView
 from rest_framework import status
@@ -104,6 +105,13 @@ def get_first_paragraph(
             result = paragraphs[0]
 
     return result.replace("\n", " ").strip()
+
+
+def get_description_etag(
+    request: Request, **_kwargs: dict[str, Any],
+) -> str:
+    dataset_id = request.parser_context["kwargs"]["dataset_id"]
+    return get_cacheable_hash(f"{dataset_id}_description")
 
 
 class DatasetView(QueryBaseView):
@@ -365,8 +373,9 @@ class DatasetConfigView(DatasetView):
 class DatasetDescriptionView(QueryBaseView):
     """Provide fetching and editing a dataset's description."""
 
+    @method_decorator(etag(get_description_etag))
     def get(
-        self, request: Request, dataset_id: str,
+        self, request: Request, dataset_id: str | None,
     ) -> Response:
         # pylint: disable=unused-argument
         """Collect a dataset's description."""
@@ -381,6 +390,11 @@ class DatasetDescriptionView(QueryBaseView):
                 {"error": f"Dataset {dataset_id} not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+        if get_cacheable_hash(dataset_id) is None:
+            set_cacheable_hash(f"{dataset_id}_description",
+                               genotype_data.description)
+
         return Response(
             {"description": genotype_data.description},
             status=status.HTTP_200_OK,
@@ -397,6 +411,8 @@ class DatasetDescriptionView(QueryBaseView):
         description = request.data.get("description")
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
         genotype_data.description = description
+        set_cacheable_hash(f"{dataset_id}_description",
+                           genotype_data.description)
 
         return Response(status=status.HTTP_200_OK)
 
