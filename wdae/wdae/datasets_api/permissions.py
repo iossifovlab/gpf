@@ -215,6 +215,20 @@ class IsDatasetAllowed(permissions.BasePermission):
         wgpf_instance = get_wgpf_instance()
         dataset_ids = set(wgpf_instance.get_genotype_data_ids())
 
+        if user.is_anonymous:
+            db_datasets = {
+                ds.dataset_id: ds
+                for ds in Dataset.objects.prefetch_related("groups")
+            }
+            allowed_datasets: set[str] = set()
+            for dataset_id, dataset in db_datasets.items():
+                for group in dataset.groups.all():
+                    if group.name == "any_user":
+                        allowed_datasets.add(dataset_id)
+                        break
+
+            return allowed_datasets
+
         user_groups = get_user_groups(user)
         if (
             settings.DISABLE_PERMISSIONS or
