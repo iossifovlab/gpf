@@ -198,6 +198,7 @@ class IsDatasetAllowed(permissions.BasePermission):
         SELECT DISTINCT db.branch_dataset_id, db.branch_dataset_wdae_id
         FROM user_to_group AS ug
         LEFT OUTER JOIN dataset_to_group AS dg ON ug.gid = dg.gid
+            OR dg.gname == 'any_user'
         LEFT OUTER JOIN dataset_branch AS db ON db.dataset_id = dg.did
         WHERE
             1=1
@@ -213,6 +214,20 @@ class IsDatasetAllowed(permissions.BasePermission):
         """Return list of allowed datasets for a specific user."""
         wgpf_instance = get_wgpf_instance()
         dataset_ids = set(wgpf_instance.get_genotype_data_ids())
+
+        if user.is_anonymous:
+            db_datasets = {
+                ds.dataset_id: ds
+                for ds in Dataset.objects.prefetch_related("groups")
+            }
+            allowed_datasets: set[str] = set()
+            for dataset_id, dataset in db_datasets.items():
+                for group in dataset.groups.all():
+                    if group.name == "any_user":
+                        allowed_datasets.add(dataset_id)
+                        break
+
+            return allowed_datasets
 
         user_groups = get_user_groups(user)
         if (
