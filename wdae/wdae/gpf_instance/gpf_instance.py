@@ -6,9 +6,10 @@ import logging
 import os
 import pathlib
 import time
+from collections.abc import Callable
 from functools import cached_property
 from threading import Lock
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from box import Box
 from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
@@ -37,7 +38,7 @@ _GPF_RECREATED_DATASET_PERM = False
 _INSTANCE_TIMESTAMP: float = 0
 _PERMISSION_CHANGED_TIMESTAMP: float = 0
 
-_GPF_HASH_STORE = {}
+_GPF_HASH_STORE: dict[str, str] = {}
 
 
 def set_instance_timestamp() -> None:
@@ -70,7 +71,9 @@ def get_cacheable_hash(hashable_id: str) -> str | None:
     return _GPF_HASH_STORE.get(hashable_id)
 
 
-def set_cacheable_hash(hashable_id: str, content: str) -> None:
+def set_cacheable_hash(hashable_id: str, content: str | None) -> None:
+    if content is None:
+        content = ""
     _GPF_HASH_STORE[hashable_id] = \
         hashlib.md5(content.encode("utf-8")).hexdigest()  # noqa: S324
 
