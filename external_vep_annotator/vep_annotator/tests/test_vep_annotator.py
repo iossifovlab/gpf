@@ -2,6 +2,7 @@
 import shutil
 import tempfile
 import textwrap
+from collections.abc import Generator
 from io import StringIO
 from pathlib import Path
 from typing import Any, cast
@@ -9,7 +10,7 @@ from typing import Any, cast
 import pytest
 from pytest_mock import MockerFixture
 
-from dae.annotation.annotatable import VCFAllele, Annotatable
+from dae.annotation.annotatable import Annotatable, VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from vep_annotator.vep_annotator import VEPCacheAnnotator
 
@@ -18,7 +19,7 @@ from vep_annotator.vep_annotator import VEPCacheAnnotator
 def vep_annotator(
     mocker: MockerFixture,
     vep_fixtures: Path,
-) -> VEPCacheAnnotator:
+) -> Generator[VEPCacheAnnotator, None, None]:
 
     temp_cache_dir = tempfile.mkdtemp(prefix="vep_cache_test")
 
@@ -67,7 +68,7 @@ def vep_annotator(
         ),
     )
 
-    yield annotator
+    yield cast(VEPCacheAnnotator, annotator)
 
     shutil.rmtree(temp_cache_dir)
 
@@ -164,8 +165,12 @@ def test_read_output(
     assert contexts[3]["worst_consequence"] == ["stop_gained"]
     assert contexts[3]["highest_impact"] == ["HIGH"]
 
-def test_mock_annotate(vep_annotator: VEPCacheAnnotator, mocker, vep_fixtures):
 
+def test_mock_annotate(
+    vep_annotator: VEPCacheAnnotator,
+    mocker: MockerFixture,
+    vep_fixtures: Path,
+) -> None:
     mocker.patch.object(
         vep_annotator,
         "run_vep",
@@ -190,7 +195,7 @@ def test_mock_annotate(vep_annotator: VEPCacheAnnotator, mocker, vep_fixtures):
         VCFAllele("1", 15, "A", "CGT"),
         VCFAllele("1", 20, "A", "ATGAC"),
     ]
-    contexts = [{}, {}, {}, {}]
+    contexts: list[dict[str, Any]] = [{}, {}, {}, {}]
 
     vep_annotator.batch_annotate(annotatables, contexts)
 

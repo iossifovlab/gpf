@@ -4,7 +4,7 @@ import csv
 import os
 import subprocess
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, TextIO, cast
 
 import fsspec
 
@@ -280,7 +280,11 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
         self, pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
     ):
-        self.vep_cache_dir: Path = info.parameters.get("cache_dir")
+        self.vep_cache_dir: Path | None = cast(
+            Path | None, info.parameters.get("cache_dir"),
+        )
+
+        assert self.vep_cache_dir is not None
 
         super().__init__(
             pipeline, info,
@@ -298,12 +302,14 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
         os.makedirs(work_dir, exist_ok=True)
         input_file, out_file = self.open_files(work_dir)
         with input_file, out_file:
-            self.prepare_input(input_file, annotatables)
+            self.prepare_input(
+                input_file, cast(list[VCFAllele | None], annotatables),
+            )
             args = [
-                "-i", input_file.name,
-                "-o", out_file.name,
+                "-i", cast(str, input_file.name),
+                "-o", cast(str, out_file.name),
                 "--tab", "--cache",
-                "--dir", self.vep_cache_dir,
+                "--dir", str(self.vep_cache_dir),
                 "--symbol",
                 "--no_stats",
                 "--force_overwrite",
@@ -328,10 +334,13 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
             pipeline, info,
         )
 
-        genome_id = info.parameters.get("genome")
-        gene_models_id = info.parameters.get("gene_models")
+        genome_id: str | None = info.parameters.get("genome")
+        assert genome_id is not None
+        gene_models_id: str | None = info.parameters.get("gene_models")
+        assert gene_models_id is not None
+        assert pipeline is not None
         self.cache_repo = GenomicResourceCachedRepo(
-            pipeline.repository, self.work_dir / "grr_cache",
+            pipeline.repository, str(self.work_dir / "grr_cache"),
         )
 
         self.genome_resource = self.cache_repo.get_resource(genome_id)
@@ -366,9 +375,9 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
             )
 
     def _do_batch_annotate(
-        self, annotatables: list[Annotatable] | None,
+        self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
-        batch_work_dir: [Path] = None,
+        batch_work_dir: str | None = None,
     ) -> list[dict[str, Any]]:
         genome_filepath = fsspec.url_to_fs(
             self.genome_resource.get_file_url(self.genome_filename),
@@ -380,9 +389,11 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         else:
             work_dir = self.work_dir / batch_work_dir
         os.makedirs(work_dir, exist_ok=True)
-        input_file, output_file = self.open_files(work_dir)
-        with input_file, output_file:
-            self.prepare_input(input_file, annotatables)
+        input_file, out_file = self.open_files(work_dir)
+        with input_file, out_file:
+            self.prepare_input(
+                input_file, cast(list[VCFAllele | None], annotatables),
+            )
             args = [
                 "-i", input_file.name,
                 "-o", out_file.name,
