@@ -370,8 +370,10 @@ class PreparePhenoBrowserBase:
         for instrument in list(self.phenotype_data.instruments.values()):
             for measure in list(instrument.measures.values()):
                 self.add_measure_task(graph, measure, temp_dbfile_name)
-        task_cache = TaskCache.create(
-            force=False, cache_dir=kwargs.get("task_status_dir"))
+            task_cache = TaskCache.create(
+                force=kwargs.get("force"),
+                cache_dir=kwargs.get("task_status_dir"),
+            )
         with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
             try:
                 for result in task_graph_run_with_results(graph, xtor):
