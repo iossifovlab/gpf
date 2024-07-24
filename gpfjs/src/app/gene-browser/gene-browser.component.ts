@@ -160,6 +160,10 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public reset(): void {
+    if (!this.showResults) {
+      return;
+    }
+
     this.geneSymbol = '';
     this.showResults = false;
     this.geneSymbolSuggestions = [];
@@ -173,7 +177,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public async submitGeneRequest(geneSymbol?: string): Promise<void> {
-    (this.searchBox?.nativeElement as HTMLElement)?.blur();
+    this.showError = false;
 
     if (geneSymbol) {
       this.geneSymbol = geneSymbol.trim();
@@ -195,6 +199,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       return;
     }
     this.showError = false;
+    (this.searchBox?.nativeElement as HTMLElement)?.blur();
 
     this.location.replaceState(
       `datasets/${this.selectedDatasetId}/gene-browser/${this.geneSymbol}`
