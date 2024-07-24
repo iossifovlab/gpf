@@ -198,7 +198,7 @@ class IsDatasetAllowed(permissions.BasePermission):
         SELECT DISTINCT db.branch_dataset_id, db.branch_dataset_wdae_id
         FROM user_to_group AS ug
         LEFT OUTER JOIN dataset_to_group AS dg ON ug.gid = dg.gid
-            OR dg.gname == 'any_user'
+            OR dg.gname = 'any_user'
         LEFT OUTER JOIN dataset_branch AS db ON db.dataset_id = dg.did
         WHERE
             1=1
