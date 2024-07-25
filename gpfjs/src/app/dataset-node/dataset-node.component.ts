@@ -67,17 +67,22 @@ export class DatasetNodeComponent extends StatefulComponent implements OnInit, A
   }
 
   public select(openInNewTab = false): void {
-    if (this.datasetNode !== undefined && this.datasetNode.dataset !== undefined) {
-      const url = `/datasets/${this.datasetNode.dataset.id}`;
+    if (!this.datasetNode?.dataset) {
+      return;
+    }
 
-      if (!openInNewTab) {
-        this.router.navigate([url]);
-      } else {
-        const newWindow = window.open('', '_blank');
-        if (newWindow) {
-          newWindow.location.assign(url);
-        }
+    const url = `/datasets/${this.datasetNode.dataset.id}`;
+
+    if (openInNewTab) {
+      const newWindow = window.open('', '_blank');
+      if (newWindow) {
+        newWindow.location.assign(url);
       }
+    } else {
+      if (this.datasetNode.dataset.id === this.selectedDatasetId) {
+        return;
+      }
+      this.router.navigate([url]);
     }
   }
 
