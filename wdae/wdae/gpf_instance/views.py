@@ -26,13 +26,17 @@ def version(_request: Request) -> Response:
 def get_description_etag(
     _request: Request, **_kwargs: dict[str, Any],
 ) -> str:
-    return get_cacheable_hash("instance_description")
+    cache_hash = get_cacheable_hash("instance_description")
+    assert cache_hash is not None
+    return cache_hash
 
 
 def get_about_etag(
     _request: Request, **_kwargs: dict[str, Any],
 ) -> str:
-    return get_cacheable_hash("instance_about")
+    cache_hash = get_cacheable_hash("instance_about")
+    assert cache_hash is not None
+    return cache_hash
 
 
 class MarkdownFileView(QueryBaseView):

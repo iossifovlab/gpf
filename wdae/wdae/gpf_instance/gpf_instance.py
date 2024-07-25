@@ -175,7 +175,7 @@ class WGPFInstance(GPFInstance):
         return RemoteGeneSetsDb(self._clients, gene_sets_db)
 
     @cached_property
-    def denovo_gene_sets_db(self) -> RemoteDenovoGeneSetsDb:
+    def denovo_gene_sets_db(self) -> RemoteDenovoGeneSetsDb:  # type: ignore
         self.load_remotes()
         denovo_gene_sets_db = super().denovo_gene_sets_db
         return RemoteDenovoGeneSetsDb(self._clients, denovo_gene_sets_db)
