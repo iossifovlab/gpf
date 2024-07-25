@@ -31,6 +31,8 @@ import { StateReset } from 'ngxs-reset-plugin';
   styleUrls: ['./gene-profiles-table.component.css']
 })
 export class GeneProfilesTableComponent extends StatefulComponent implements OnInit, OnChanges, OnDestroy {
+  private subscription: Subscription = new Subscription();
+
   @Input() public config: GeneProfilesTableConfig;
   public sortBy: string;
   @Output() public goToQueryEvent = new EventEmitter();
@@ -69,8 +71,6 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   private baseRowHeight = 35; // px, this should match the height found in the table-row CSS class
   private prevVerticalScroll = 0;
   private loadMoreGenes = true;
-  private keystrokeSubscription: Subscription;
-  private getGenesSubscription: Subscription = new Subscription();
   public imgPathPrefix = environment.imgPathPrefix;
 
   public tabs = new Set<string>();
@@ -90,7 +90,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   }
 
   public ngOnInit(): void {
-    this.keystrokeSubscription = this.searchKeystrokes$.pipe(
+    this.subscription.add(this.searchKeystrokes$.pipe(
       distinctUntilChanged(),
       tap(() => {
         this.showSearchLoading = true;
@@ -98,13 +98,13 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
       debounceTime(250),
     ).subscribe(searchTerm => {
       this.search(searchTerm);
-    });
+    }));
 
     this.focusSearchBox();
 
     this.loadState();
 
-    this.geneProfilesTableService.getUserGeneProfilesState().subscribe(state => {
+    this.subscription.add(this.geneProfilesTableService.getUserGeneProfilesState().subscribe(state => {
       if (state) {
         this.store.dispatch(new SetGeneProfilesTabs(state.openedTabs));
         this.store.dispatch(new SetGeneProfilesSearchValue(state.searchValue));
@@ -124,7 +124,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
         );
         this.loadSingleView(this.currentTabGeneSet);
       }
-    });
+    }));
   }
 
   public ngOnChanges(): void {
@@ -135,7 +135,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   }
 
   public ngOnDestroy(): void {
-    this.keystrokeSubscription.unsubscribe();
+    this.subscription.unsubscribe();
   }
 
   @HostListener('document:keydown.esc')
@@ -206,8 +206,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
       this.pageIndex++;
     }
     this.pageIndex = initialPageCount;
-    this.getGenesSubscription.unsubscribe();
-    this.getGenesSubscription = zip(geneProfilesRequests).subscribe(res => {
+    this.subscription.add(zip(geneProfilesRequests).subscribe(res => {
       this.genes = [];
       for (const genes of res) {
         this.genes = this.genes.concat(genes);
@@ -216,7 +215,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
       this.showNothingFound = !this.genes.length;
       this.showInitialLoading = false;
       this.showSearchLoading = false;
-    });
+    }));
   }
 
   private loadState(): void {
@@ -313,13 +312,13 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   public updateGenes(): void {
     this.pageIndex++;
     this.loadMoreGenes = false;
-    this.geneProfilesTableService
+    this.subscription.add(this.geneProfilesTableService
       .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
       .pipe(take(1))
       .subscribe(res => {
         this.genes = this.genes.concat(res);
         this.loadMoreGenes = Boolean(res.length); // stop making requests if the last response was empty
-      });
+      }));
   }
 
   public openDropdown(column: GeneProfilesColumn, $event: MouseEvent): void {

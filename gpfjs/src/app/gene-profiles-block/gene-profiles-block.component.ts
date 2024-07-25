@@ -12,7 +12,6 @@ import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-t
 import {
   GeneProfileSingleViewComponent
 } from 'app/gene-profiles-single-view/gene-profiles-single-view.component';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { cloneDeep } from 'lodash';
 
 @Component({
@@ -27,7 +26,6 @@ export class GeneProfilesBlockComponent implements OnInit {
   public constructor(
     private geneProfilesService: GeneProfilesService,
     private queryService: QueryService,
-    private datasetsService: DatasetsService,
     private store: Store
   ) { }
 

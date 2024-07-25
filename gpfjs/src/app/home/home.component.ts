@@ -18,6 +18,8 @@ import { Subject, Subscription, combineLatest, debounceTime, distinctUntilChange
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements OnInit, OnDestroy {
+  private subscription: Subscription = new Subscription();
+
   public gpfVersion = '';
   public gpfjsVersion = environment?.version;
 
@@ -25,10 +27,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   public visibleDatasets: string[];
   public datasets: string[] = [];
   public content: object = null;
-
   public loadingFinished = false;
   public studiesLoaded = 0;
-
   public geneProfilesConfig: GeneProfilesSingleViewConfig;
   public homeDescription: string;
 
@@ -52,7 +52,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) {}
 
   public ngOnInit(): void {
-    combineLatest({
+    this.subscription.add(combineLatest({
       datasets: this.datasetsTreeService.getDatasetHierarchy(),
       visibleDatasets: this.datasetsService.getVisibleDatasets()
     }).subscribe(({datasets, visibleDatasets}) => {
@@ -76,21 +76,21 @@ export class HomeComponent implements OnInit, OnDestroy {
           });
         }
       });
-    });
+    }));
 
-    this.instanceService.getGpfVersion().subscribe(res => {
+    this.subscription.add(this.instanceService.getGpfVersion().subscribe(res => {
       this.gpfVersion = res;
-    });
+    }));
 
-    this.geneProfilesService.getConfig().subscribe(res => {
+    this.subscription.add(this.geneProfilesService.getConfig().subscribe(res => {
       this.geneProfilesConfig = res;
-    });
+    }));
 
-    this.instanceService.getHomeDescription().subscribe((res: {content: string}) => {
+    this.subscription.add(this.instanceService.getHomeDescription().subscribe((res: {content: string}) => {
       this.homeDescription = res.content;
-    });
+    }));
 
-    this.keystrokeSubscription = this.searchBoxInput$.pipe(
+    this.subscription.add(this.searchBoxInput$.pipe(
       distinctUntilChanged(),
       debounceTime(250),
       switchMap(searchTerm => {
@@ -105,11 +105,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         return;
       }
       this.geneSymbolSuggestions = response;
-    });
-  }
-
-  public ngOnDestroy(): void {
-    this.keystrokeSubscription.unsubscribe();
+    }));
   }
 
   public openSingleView(searchTerm: string): void {
@@ -126,7 +122,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.geneService.getGene(this.geneSymbol.trim())
+    this.subscription.add(this.geneService.getGene(this.geneSymbol.trim())
       .subscribe({
         next: gene => {
           this.geneSymbol = gene.geneSymbol;
@@ -138,7 +134,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           this.showError = true;
           this.dropdownTrigger.closePanel();
         }
-      });
+      }));
   }
 
   public reset(): void {
@@ -149,7 +145,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   public attachDatasetDescription(entry: object): void {
     entry['children']?.forEach((d: object) => this.attachDatasetDescription(d));
-    this.datasetsService.getDatasetDescription(entry['dataset'] as string).subscribe(res => {
+    this.subscription.add(this.datasetsService.getDatasetDescription(entry['dataset'] as string).subscribe(res => {
       if (res['description']) {
         entry['description'] = this.getFirstParagraph(res['description'] as string);
       }
@@ -158,7 +154,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       if (this.studiesLoaded === this.allStudies.size) {
         this.loadingFinished = true;
       }
-    });
+    }));
   }
 
   public getFirstParagraph(description: string): string {
@@ -223,11 +219,15 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   public writeDescription(markdown: string): void {
-    this.instanceService.writeHomeDescription(markdown).pipe(
+    this.subscription.add(this.instanceService.writeHomeDescription(markdown).pipe(
       take(1),
       switchMap(() => this.instanceService.getHomeDescription())
     ).subscribe((res: {content: string}) => {
       this.homeDescription = res.content;
-    });
+    }));
+  }
+
+  public ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 }
