@@ -135,7 +135,8 @@ def test_summary_query_builder_simple(
 ) -> None:
     query = sql_query_builder_simple.build_summary_variants_query()
     assert query
-    expr = parse_one(query)
+    assert len(query) == 1
+    expr = parse_one(query[0])
     assert expr
 
 
@@ -269,8 +270,9 @@ def test_build_gene_query_where(
     query = sql_query_builder_simple.build_summary_variants_query(
         genes=["t4"], effect_types=["missense"],
     )
+    assert len(query) == 1
     print(query)
-    expr = parse_one(query, read="duckdb")
+    expr = parse_one(query[0], read="duckdb")
     assert expr
 
 

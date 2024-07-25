@@ -179,8 +179,10 @@ def test_coding_bin_heuristics_query(
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    query = query_builder.build_summary_variants_query(**params)
-    assert query is not None
+    queries = query_builder.build_summary_variants_query(**params)
+    assert queries is not None
+    assert len(queries) > 0
+    query = queries[0]
 
     if coding_bin is None:
         assert "coding_bin" not in query
@@ -201,8 +203,10 @@ def test_region_bin_heuristics_query(
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    query = query_builder.build_summary_variants_query(**params)
-    assert query is not None
+    queries = query_builder.build_summary_variants_query(**params)
+    assert queries is not None
+    assert len(queries) > 0
+    query = queries[0]
 
     if region_bins is None:
         assert "region_bin" not in query
@@ -226,8 +230,10 @@ def test_frequency_bin_heuristics_query(
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    query = query_builder.build_summary_variants_query(**params)
-    assert query is not None
+    queries = query_builder.build_summary_variants_query(**params)
+    assert queries is not None
+    assert len(queries) > 0
+    query = queries[0]
 
     if frequency_bins is None:
         assert "frequency_bin" not in query
@@ -249,8 +255,10 @@ def test_coding_bin_heuristics_family_query(
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    query = query_builder.build_family_variants_query(**params)
-    assert query is not None
+    queries = query_builder.build_family_variants_query(**params)
+    assert queries is not None
+    assert len(queries) > 0
+    query = queries[0]
 
     if coding_bin is None:
         assert "coding_bin" not in query
@@ -265,6 +273,7 @@ def test_coding_bin_heuristics_family_query(
     ({"regions": [Region("chr1")]}, ["chr1_0", "chr1_1", "chr1_2"]),
     ({"regions": [Region("chr1", 105)]}, ["chr1_1", "chr1_2"]),
     ({"regions": [Region("chr1", None, 105)]}, ["chr1_0", "chr1_1"]),
+    ({"regions": None}, []),
 ])
 def test_region_bin_heuristics_family_query(
     params: dict[str, Any],
@@ -272,8 +281,10 @@ def test_region_bin_heuristics_family_query(
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    query = query_builder.build_family_variants_query(**params)
-    assert query is not None
+    queries = query_builder.build_family_variants_query(**params)
+    assert queries is not None
+    assert len(queries) > 0
+    query = queries[0]
 
     if region_bins is None:
         assert "region_bin" not in query
@@ -282,6 +293,19 @@ def test_region_bin_heuristics_family_query(
         assert "fa.region_bin" in query
         for region_bin in region_bins:
             assert f"'{region_bin}'" in query
+
+
+def test_region_bin_heuristics_batched_query(
+    query_builder: SqlQueryBuilder,
+) -> None:
+
+    queries = query_builder.build_family_variants_query()
+
+    assert queries is not None
+    assert len(queries) == 3
+    for query in queries:
+        assert "sa.region_bin" in query
+        assert "fa.region_bin" in query
 
 
 @pytest.mark.parametrize("params, frequency_bins", [
@@ -298,8 +322,10 @@ def test_frequency_bin_heuristics_family_query(
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    query = query_builder.build_family_variants_query(**params)
-    assert query is not None
+    queries = query_builder.build_family_variants_query(**params)
+    assert queries is not None
+    assert len(queries) > 0
+    query = queries[0]
 
     if frequency_bins is None:
         assert "frequency_bin" not in query

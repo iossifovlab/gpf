@@ -39,7 +39,7 @@ class DuckDbRunner(QueryRunner):
     def __init__(
             self,
             connection_factory: duckdb.DuckDBPyConnection,
-            query: str,
+            query: list[str],
             deserializer: Any | None = None):
         super().__init__(deserializer=deserializer)
 
@@ -61,16 +61,18 @@ class DuckDbRunner(QueryRunner):
                 return
 
             with self.connection.cursor() as cursor:
-                for record in cursor.execute(self.query).fetchall():
-                    val = self.deserializer(record)
-                    if val is None:
-                        continue
-                    self._put_value_in_result_queue(val)
-                    if self.is_closed():
-                        logger.debug(
-                            "query runner (%s) closed while iterating",
-                            self.query)
-                        break
+                for query in self.query:
+                    logger.debug("running SQL query: %s", query)
+                    for record in cursor.execute(query).fetchall():
+                        val = self.deserializer(record)
+                        if val is None:
+                            continue
+                        self._put_value_in_result_queue(val)
+                        if self.is_closed():
+                            logger.debug(
+                                "query runner (%s) closed while iterating",
+                                query)
+                            break
 
         except Exception as ex:  # pylint: disable=broad-except
             logger.exception(

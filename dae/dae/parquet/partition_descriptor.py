@@ -109,7 +109,7 @@ class PartitionDescriptor:
 
         if content_format == "conf":
             try:
-                parsed_data = cast(dict[str, Any], toml.loads(content))
+                parsed_data = toml.loads(content)
             except toml.TomlDecodeError:
                 parser = configparser.ConfigParser()
                 parser.read_string(content)
@@ -228,6 +228,17 @@ class PartitionDescriptor:
             for i in range(int(start / self.region_length),
                            int(stop / self.region_length) + 1)
         ]
+
+    def make_all_region_bins(self, chrom_lens: dict[str, int])  -> list[str]:
+        """Produce all region bins for all chromosomes."""
+        bins = []
+        for chrom in self.chromosomes:
+            chrom_len = chrom_lens[chrom]
+            bins.extend([
+                rb for _, rb in
+                self.region_to_bins(Region(chrom, 1, chrom_len), chrom_lens)
+            ])
+        return bins
 
     def make_family_bin(self, family_id: str) -> int:
         """Produce family bin for given family ID."""
