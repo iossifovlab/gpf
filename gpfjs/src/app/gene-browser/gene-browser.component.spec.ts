@@ -74,6 +74,8 @@ class MockQueryService {
     return of([] as any);
   }
 
+
+  public streamingStartSubject = new Subject();
   public streamingFinishedSubject = new Subject();
   public summaryStreamingFinishedSubject = new Subject();
 
@@ -94,8 +96,8 @@ describe('GeneBrowserComponent', () => {
   const mockQueryService = new MockQueryService();
   let loadingService: FullscreenLoadingService;
 
-  beforeEach(async() => {
-    await TestBed.configureTestingModule({
+  beforeEach(() => {
+    TestBed.configureTestingModule({
       declarations: [
         GeneBrowserComponent, GenePlotComponent,
         GenotypePreviewTableComponent,

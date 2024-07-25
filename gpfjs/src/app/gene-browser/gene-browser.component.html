@@ -183,7 +183,7 @@
           <input
             id="unique-family-variants-checkbox"
             type="checkbox"
-            [disabled]="!isUniqueFamilyFilterEnabled"
+            [disabled]="!isUniqueFamilyFilterEnabled || !this.summaryVariantsArrayFiltered?.totalFamilyVariantsCount"
             (click)="checkUniqueFamilyVariantsFilter()" />
         </div>
         <div id="family-variants-wrapper">
