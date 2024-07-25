@@ -35,6 +35,11 @@ urlpatterns = [
     ),
     re_path(
         r"^/hierarchy/?$",
+        views.FullDatasetHierarchyView.as_view(),
+        name="full_dataset_hierarchy",
+    ),
+    re_path(
+        r"^/dataset-hierarchy/(?P<dataset_id>.+)",
         views.DatasetHierarchyView.as_view(),
         name="dataset_hierarchy",
     ),

@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 from collections.abc import Iterable
 from typing import Any, cast
 
@@ -62,49 +61,6 @@ def augment_with_parents(
         )
     ]
     return dataset
-
-
-def produce_description_hierarchy(
-    dataset: GenotypeData,
-    selected: list[str],
-    indent_level: int = 0,
-) -> str:
-    """Create dataset description hierarchy from dataset children."""
-    if dataset.is_group:
-        res = []
-        indent = "\t" * indent_level
-        for child in dataset.studies:
-            if child.study_id in selected:
-                child_descriptions = produce_description_hierarchy(
-                    child,
-                    selected,
-                    indent_level + 1,
-                )
-                res.append(
-                    f"{indent}- **[{child.name}](datasets/{child.study_id})** "
-                    f"{get_first_paragraph(child.description)}\n"
-                    f"{child_descriptions}",
-                )
-        return "\n".join(res)
-
-    return ""
-
-
-def get_first_paragraph(
-    text: str | None,
-) -> str:
-    """Get first paragraph of text."""
-    result = ""
-    if text is not None:
-        paragraphs = text.split("\n\n")
-        if paragraphs[0].startswith("#"):
-            title_match = re.match("^##((?:\n|.)*?)$\n", paragraphs[0])
-            result = re.sub("^##((?:\n|.)*?)$\n", "", paragraphs[0]) \
-                if title_match else paragraphs[1]
-        else:
-            result = paragraphs[0]
-
-    return result.replace("\n", " ").strip()
 
 
 def get_description_etag(
@@ -190,7 +146,6 @@ class DatasetView(QueryBaseView):
             res = StudyWrapperBase.build_genotype_data_description(
                 self.gpf_instance,
                 dataset.config,
-                dataset.description,
                 person_set_collection_configs,
             )
         else:
@@ -205,24 +160,6 @@ class DatasetView(QueryBaseView):
         res = augment_with_groups(res)
         res = augment_with_parents(self.instance_id, res)
 
-        raw_study = dataset.genotype_data_study \
-            if isinstance(dataset, StudyWrapper) \
-            else dataset.remote_genotype_data
-        if dataset.is_group:
-            visible_datasets = self.gpf_instance.get_visible_datasets()
-            visible_datasets = visible_datasets if visible_datasets else []
-            genotype_data_ids = [
-                gd_id for gd_id in dataset.get_studies_ids()
-                if gd_id in visible_datasets and gd_id != dataset.study_id
-            ]
-            if genotype_data_ids:
-                descriptions = produce_description_hierarchy(
-                    raw_study, genotype_data_ids,
-                )
-                res["children_description"] = (
-                    "\nThis dataset includes:\n"
-                    f"{descriptions}"
-                )
         return Response({"data": res})
 
 
@@ -523,38 +460,8 @@ class DatasetPermissionsSingleView(BaseDatasetPermissionsView):
         return Response(dataset_details)
 
 
-class DatasetHierarchyView(QueryBaseView):
+class FullDatasetHierarchyView(QueryBaseView):
     """Provide the hierarchy of all datasets configured in the instance."""
-
-    @staticmethod
-    def produce_tree(
-        instance_id: str, dataset: GenotypeData,
-        user: User, selected: list[str],
-    ) -> dict[str, Any] | None:
-        """Recursively collect a dataset's id, children and access rights."""
-        has_rights = user_has_permission(instance_id, user, dataset.study_id)
-        dataset_obj = Dataset.objects.get(dataset_id=dataset.study_id)
-        groups = dataset_obj.groups.all()
-        if "hidden" in [group.name for group in groups] and not has_rights:
-            return None
-
-        children = None
-        if dataset.is_group:
-            children = []
-            for child in dataset.studies:
-                if child.study_id in selected:
-                    tree = DatasetHierarchyView.produce_tree(
-                        instance_id, child, user, selected,
-                    )
-                    if tree is not None:
-                        children.append(tree)
-
-        return {
-            "dataset": dataset.study_id,
-            "name": dataset.name,
-            "children": children,
-            "access_rights": has_rights,
-        }
 
     @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
@@ -569,13 +476,34 @@ class DatasetHierarchyView(QueryBaseView):
         trees = []
 
         for gd in genotype_data:
-            tree = DatasetHierarchyView.produce_tree(
+            tree = produce_tree(
                 self.instance_id, gd, user, genotype_data_ids,
             )
             if tree is not None:
                 trees.append(tree)
 
         return Response({"data": trees}, status=status.HTTP_200_OK)
+
+
+class DatasetHierarchyView(QueryBaseView):
+    """Provide the hierarchy of one dataset configured in the instance."""
+
+    @method_decorator(etag(get_permissions_etag))
+    def get(self, request: Request, dataset_id: str) -> Response:
+        """Return the hierarchy of one dataset in the instance."""
+        user = request.user
+
+        if not dataset_id:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
+        genotype_data_ids = self.gpf_instance.get_genotype_data_ids()
+
+        tree = produce_tree(
+            self.instance_id, genotype_data, user, genotype_data_ids,
+        )
+
+        return Response({"data": tree}, status=status.HTTP_200_OK)
 
 
 class VisibleDatasetsView(QueryBaseView):
@@ -589,3 +517,33 @@ class VisibleDatasetsView(QueryBaseView):
         if not res:
             res = sorted(self.gpf_instance.get_genotype_data_ids())
         return Response(res)
+
+
+def produce_tree(
+    instance_id: str, dataset: GenotypeData,
+    user: User, selected: list[str],
+) -> dict[str, Any] | None:
+    """Recursively collect a dataset's id, children and access rights."""
+    has_rights = user_has_permission(instance_id, user, dataset.study_id)
+    dataset_obj = Dataset.objects.get(dataset_id=dataset.study_id)
+    groups = dataset_obj.groups.all()
+    if "hidden" in [group.name for group in groups] and not has_rights:
+        return None
+
+    children = None
+    if dataset.is_group:
+        children = []
+        for child in dataset.studies:
+            if child.study_id in selected:
+                tree = produce_tree(
+                    instance_id, child, user, selected,
+                )
+                if tree is not None:
+                    children.append(tree)
+
+    return {
+        "dataset": dataset.study_id,
+        "name": dataset.name,
+        "children": children,
+        "access_rights": has_rights,
+    }

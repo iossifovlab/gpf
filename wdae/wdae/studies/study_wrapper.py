@@ -93,7 +93,6 @@ class StudyWrapperBase:
     def build_genotype_data_description(
         gpf_instance: Any,
         config: Box,
-        description: str | None,
         person_set_collection_configs: dict[str, Any] | None,
     ) -> dict[str, Any]:
         """Build and return genotype data group description."""
@@ -111,13 +110,10 @@ class StudyWrapperBase:
             "genome",
             "chr_prefix",
             "gene_browser",
-            "description_editable",
         ]
         result = {
             key: config.get(key, None) for key in keys
         }
-
-        result["description"] = description
 
         result["genotype_browser"] = config.genotype_browser.enabled
         result["genotype_browser_config"] = {
