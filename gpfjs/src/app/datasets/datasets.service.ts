@@ -2,10 +2,10 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, ReplaySubject, zip, of } from 'rxjs';
 
-import { Dataset } from '../datasets/datasets';
+import { Dataset, DatasetHierarchy } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';
 import { ConfigService } from '../config/config.service';
-import { distinctUntilChanged, map, share, take } from 'rxjs/operators';
+import { distinctUntilChanged, map, take } from 'rxjs/operators';
 import { DatasetPermissions } from 'app/datasets-table/datasets-table';
 
 @Injectable()
@@ -124,11 +124,19 @@ export class DatasetsService {
     return this.http.get(`${this.config.baseUrl}${this.visibleDatasetsUrl}`, options);
   }
 
-  public getDatasetDescription(datasetId: string): Observable<object> {
+  public getDatasetDescription(datasetId: string): Observable<string> {
     const options = { headers: this.headers, withCredentials: true };
-    const description$ = this.http.get(
+    return this.http.get<{description: string}>(
       `${this.config.baseUrl}${this.descriptionUrl}/${datasetId}`, options
-    ).pipe(take(1), share());
-    return description$;
+    ).pipe(
+      take(1),
+      map((res: {description: string}) => res.description)
+    );
+  }
+
+  public getSingleDatasetHierarchy(datasetId: string): Observable<object> {
+    return this.http.get(`${this.config.baseUrl}datasets/dataset-hierarchy/${datasetId}`).pipe(
+      map((json: {data: object}) => DatasetHierarchy.fromJson(json.data))
+    );
   }
 }

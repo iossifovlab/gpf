@@ -139,7 +139,8 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
     let result: boolean;
     switch (toolName) {
       case 'dataset-description':
-        result = dataset.description !== undefined;
+        // Always true.
+        result = true;
         break;
       case 'dataset-statistics':
         result = dataset.commonReport.enabled;
@@ -183,10 +184,10 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
       firstTool = toolPageLinks.enrichmentTool;
     } else if (selectedDataset.phenotypeTool) {
       firstTool = toolPageLinks.phenotypeTool;
-    } else if (selectedDataset.description) {
-      firstTool = toolPageLinks.datasetDescription;
     } else if (selectedDataset.commonReport.enabled) {
       firstTool = toolPageLinks.datasetStatistics;
+    } else {
+      firstTool = toolPageLinks.datasetDescription;
     }
 
     return firstTool;
