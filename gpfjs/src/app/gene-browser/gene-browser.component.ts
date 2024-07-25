@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
-import { ActivatedRoute, NavigationStart, Params, Router } from '@angular/router';
+import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { GeneService } from 'app/gene-browser/gene.service';
 import { Gene } from 'app/gene-browser/gene';
@@ -80,7 +80,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public variantsCountDisplay: string;
   public variantsCount = -1;
 
-  public async ngOnInit(): Promise<void> {
+  public ngOnInit(): void {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
       switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
     ).subscribe(dataset => {
@@ -96,6 +96,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       if (this.route.snapshot.params.gene && typeof this.route.snapshot.params.gene === 'string') {
         this.geneSymbol = this.route.snapshot.params.gene;
       }
+
+      this.enableUniqueFamilyVarinats();
     });
 
     this.route.queryParams.subscribe(params => {
@@ -142,7 +144,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser`);
       this.interruptSummaryVariants$.next(true);
     });
+  }
 
+  private async enableUniqueFamilyVarinats(): Promise<void> {
     const childLeaves = await this.datasetsTreeService.getUniqueLeafNodes(this.selectedDatasetId);
     if (childLeaves.size > 1) {
       this.isUniqueFamilyFilterEnabled = true;
