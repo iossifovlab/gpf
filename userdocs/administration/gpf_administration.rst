@@ -11,5 +11,6 @@ GPF Administration
    working_with_pedigree_files
    working_with_vcf_files
    pheno
+   pheno_measure_configuration
    gpf_tools
    data_appendix
