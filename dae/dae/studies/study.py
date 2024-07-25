@@ -298,7 +298,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         if len(runners) == 0:
             return None
 
-        return QueryResult(runners)
+        return QueryResult(runners, limit=limit)
 
     def query_variants(  # pylint: disable=too-many-locals,too-many-arguments
         self,

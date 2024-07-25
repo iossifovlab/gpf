@@ -160,6 +160,10 @@ class QueryResult:
                     self._exceptions.append(item)
                     continue
                 self._counter += 1
+                if self.limit > 0 and self._counter > self.limit:
+                    logger.debug(
+                        "limit reached %d > %d", self._counter, self.limit)
+                    raise StopIteration()
                 return item
             except queue.Empty as exp:
                 if not self.is_done():

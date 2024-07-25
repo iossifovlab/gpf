@@ -1,4 +1,5 @@
 import logging
+import sys
 import time
 from collections.abc import Generator
 from contextlib import closing
@@ -37,14 +38,18 @@ class DuckDbRunner(QueryRunner):
     """Run a DuckDb query in a separate thread."""
 
     def __init__(
-            self,
-            connection_factory: duckdb.DuckDBPyConnection,
-            query: list[str],
-            deserializer: Any | None = None):
+        self,
+        connection_factory: duckdb.DuckDBPyConnection,
+        query: list[str],
+        deserializer: Any | None = None,
+        limit: int | None = None,
+    ):
         super().__init__(deserializer=deserializer)
 
         self.connection = connection_factory
         self.query = query
+        self.limit = sys.maxsize if limit is None else limit
+        self._counter = 0
 
     def run(self) -> None:
         """Execute the query and enqueue the resulting rows."""
@@ -68,11 +73,16 @@ class DuckDbRunner(QueryRunner):
                         if val is None:
                             continue
                         self._put_value_in_result_queue(val)
+                        self._counter += 1
                         if self.is_closed():
                             logger.debug(
                                 "query runner (%s) closed while iterating",
                                 query)
                             break
+                    if self.is_closed() or self._counter >= self.limit:
+                        logger.debug(
+                            "runner (%s) reached limit", self.study_id)
+                        break
 
         except Exception as ex:  # pylint: disable=broad-except
             logger.exception(

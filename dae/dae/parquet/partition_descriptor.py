@@ -229,15 +229,38 @@ class PartitionDescriptor:
                            int(stop / self.region_length) + 1)
         ]
 
+    def _make_region_bins(
+        self, chrom: str,
+        start: int,
+        end: int,
+    ) -> list[str]:
+        return [
+            f"{chrom}_{i}"
+
+            for i in range(
+                int(start / self.region_length),
+                int(end / self.region_length) + 1)
+        ]
+
     def make_all_region_bins(self, chrom_lens: dict[str, int])  -> list[str]:
         """Produce all region bins for all chromosomes."""
         bins = []
+
         for chrom in self.chromosomes:
+            if chrom not in chrom_lens:
+                continue
+
             chrom_len = chrom_lens[chrom]
-            bins.extend([
-                rb for _, rb in
-                self.region_to_bins(Region(chrom, 1, chrom_len), chrom_lens)
-            ])
+            bins.extend(
+                self._make_region_bins(chrom, 0, chrom_len),
+            )
+        other_chroms = set(chrom_lens.keys()) - set(self.chromosomes)
+        if other_chroms:
+            max_other_len = max(
+                chrom_lens[chrom] for chrom in other_chroms)
+            bins.extend(
+                self._make_region_bins("other", 1, max_other_len),
+            )
         return bins
 
     def make_family_bin(self, family_id: str) -> int:
