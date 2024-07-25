@@ -52,12 +52,366 @@ class Db2Layout:
     meta: str
 
 
-class SqlQueryBuilder:
-    """Class that abstracts away the process of building a query."""
+class QueryBuilderBase:
+    """Base class for building SQL queries."""
 
     GENE_REGIONS_HEURISTIC_CUTOFF = 20
     GENE_REGIONS_HEURISTIC_EXTEND = 20000
     REGION_BINS_HEURISTIC_CUTOFF = 20
+
+    def __init__(
+        self,
+        pedigree_schema: dict[str, str],
+        summary_schema: dict[str, str],
+        family_schema: dict[str, str],
+        partition_descriptor: PartitionDescriptor | None,
+        gene_models: GeneModels,
+        reference_genome: ReferenceGenome,
+    ):
+        if gene_models is None:
+            raise ValueError("gene_models are required")
+        self.gene_models = gene_models
+
+        if reference_genome is None:
+            raise ValueError("reference genome isrequired")
+        self.reference_genome = reference_genome
+
+        self.pedigree_schema = pedigree_schema
+        self.summary_schema = summary_schema
+        self.family_schema = family_schema
+        self.partition_descriptor = partition_descriptor
+
+    def build_gene_regions_heuristic(
+        self, genes: list[str], regions: list[Region] | None,
+    ) -> list[Region] | None:
+        """Build a list of regions based on genes."""
+        assert self.gene_models is not None
+        return create_regions_from_genes(
+            self.gene_models, genes, regions,
+            self.GENE_REGIONS_HEURISTIC_CUTOFF,
+            self.GENE_REGIONS_HEURISTIC_EXTEND,
+        )
+
+    @staticmethod
+    def build_regions_where(
+        regions: list[Region],
+    ) -> str:
+        """Build a WHERE clause for regions."""
+        where: list[str] = []
+        for reg in regions:
+            if reg.start is None and reg.stop is None:
+                reg_where = f"sa.chromosome = '{reg.chrom}'"
+            elif reg.start is None:
+                assert reg.stop is not None
+                reg_where = (
+                    f"sa.chromosome = '{reg.chrom}'"
+                    f" AND NOT ( "
+                    f"sa.position > {reg.stop} )"
+                )
+            elif reg.stop is None:
+                assert reg.start is not None
+                reg_where = (
+                    f"sa.chromosome = '{reg.chrom}'"
+                    f" AND ( "
+                    f"COALESCE(sa.end_position, sa.position) > {reg.start} )"
+                )
+            else:
+                assert reg.stop is not None
+                assert reg.start is not None
+
+                reg_where = (
+                    f"sa.chromosome = '{reg.chrom}'"
+                    f" AND NOT ( "
+                    f"COALESCE(sa.end_position, sa.position) < {reg.start} OR "
+                    f"sa.position > {reg.stop} )"
+                )
+            where.append(f"( {reg_where} )")
+        return " OR ".join(where)
+
+    def calc_coding_bins(
+        self,
+        effect_types: Sequence[str] | None,
+    ) -> list[str]:
+        """Calculate applicable coding bins for a query."""
+        if self.partition_descriptor is None:
+            return []
+        if effect_types is None:
+            return []
+        if "coding_bin" not in self.summary_schema:
+            return []
+        assert "coding_bin" in self.summary_schema
+        assert "coding_bin" in self.family_schema
+
+        assert effect_types is not None
+        query_effect_types = set(effect_types)
+        intersection = query_effect_types & set(
+            self.partition_descriptor.coding_effect_types,
+        )
+
+        coding_bins = []
+        if intersection == query_effect_types:
+            coding_bins.append("1")
+        return coding_bins
+
+    def calc_region_bins(
+        self, regions: list[Region] | None,
+    ) -> list[str]:
+        """Calculate applicable region bins for a query."""
+        if self.partition_descriptor is None:
+            return []
+        if not regions or self.partition_descriptor.region_length == 0:
+            return []
+
+        chroms = set(self.partition_descriptor.chromosomes)
+        region_length = self.partition_descriptor.region_length
+        region_bins: set[str] = set()
+        for region in regions:
+            chrom_bin = region.chrom if region.chrom in chroms else "other"
+            stop = region.stop
+            if stop is None:
+                if self.reference_genome is None:
+                    continue
+                stop = self.reference_genome.get_chrom_length(region.chrom)
+
+            start = region.start
+            if start is None:
+                start = 1
+
+            start = start // region_length
+            stop = stop // region_length
+            region_bins.update(
+                f"'{chrom_bin}_{position_bin}'"
+                for position_bin in range(start, stop + 1))
+        if len(region_bins) == 0:
+            return []
+        if len(region_bins) > self.REGION_BINS_HEURISTIC_CUTOFF:
+            return []
+
+        return list(region_bins)
+
+    def build_roles_query(self, roles_query: str, attr: str) -> str:
+        """Construct a roles query."""
+        parsed = role_query.transform_query_string_to_tree(roles_query)
+        transformer = QueryTreeToSQLBitwiseTransformer(
+            attr, use_bit_and_function=False)
+        return cast(str, transformer.transform(parsed))
+
+    def check_roles_query_value(self, roles_query: str, value: int) -> bool:
+        """Check if value satisfies a given roles query."""
+        with duckdb.connect(":memory:") as con:
+            query = self.build_roles_query(
+                roles_query, str(value))
+            res = con.execute(f"SELECT {query}").fetchall()
+            assert len(res) == 1
+            assert len(res[0]) == 1
+
+            return cast(bool, res[0][0])
+
+    def build_inheritance_query(
+        self, inheritance_query: Sequence[str], attr: str,
+    ) -> str:
+        """Construct an inheritance query."""
+        result = []
+        transformer = InheritanceTransformer(attr, use_bit_and_function=False)
+        for query in inheritance_query:
+            parsed = inheritance_parser.parse(query)
+            result.append(str(transformer.transform(parsed)))
+        if not result:
+            return ""
+        return " AND ".join(result)
+
+    def check_inheritance_query_value(
+        self, inheritance_query: Sequence[str], value: int,
+    ) -> bool:
+        """Check if value satisfies a given inheritance query."""
+        with duckdb.connect(":memory:") as con:
+            query = self.build_inheritance_query(
+                inheritance_query, str(value))
+            res = con.execute(f"SELECT {query}").fetchall()
+            assert len(res) == 1
+            assert len(res[0]) == 1
+
+            return cast(bool, res[0][0])
+
+    def check_roles_denovo_only(self, roles_query: str) -> bool:
+        """Check if roles query is de novo only."""
+        return self.check_roles_query_value(
+            roles_query,
+            Role.prb.value | Role.sib.value) and \
+            not self.check_roles_query_value(
+                roles_query,
+                Role.prb.value | Role.sib.value
+                | Role.dad.value | Role.mom.value)
+
+    def check_inheritance_denovo_only(
+        self, inheritance_query: Sequence[str],
+    ) -> bool:
+        """Check if inheritance query is de novo only."""
+        return not self.check_inheritance_query_value(
+            inheritance_query,
+            Inheritance.mendelian.value) \
+            and not self.check_inheritance_query_value(
+                inheritance_query,
+                Inheritance.possible_denovo.value) \
+            and not self.check_inheritance_query_value(
+                inheritance_query,
+                Inheritance.possible_omission.value) \
+            and not self.check_inheritance_query_value(
+                inheritance_query,
+                Inheritance.missing.value)
+
+    def build_sexes_query(self, sexes_query: str, attr: str) -> str:
+        """Build sexes query."""
+        parsed = sex_query.transform_query_string_to_tree(sexes_query)
+        transformer = QueryTreeToSQLBitwiseTransformer(
+            attr, use_bit_and_function=False)
+        return cast(str, transformer.transform(parsed))
+
+    def check_sexes_query_value(self, sexes_query: str, value: int) -> bool:
+        """Check if value matches a given sexes query."""
+        with duckdb.connect(":memory:") as con:
+            query = self.build_sexes_query(
+                sexes_query, str(value))
+            res = con.execute(f"SELECT {query}").fetchall()
+            assert len(res) == 1
+            assert len(res[0]) == 1
+
+            return cast(bool, res[0][0])
+
+    def build_variant_types_query(
+        self, variant_types_query: str, attr: str,
+    ) -> str:
+        """Build a variant types query."""
+        parsed = VARIANT_TYPE_PARSER.transform_query_string_to_tree(
+            variant_types_query)
+        transformer = QueryTreeToSQLBitwiseTransformer(
+            attr, use_bit_and_function=False)
+        return cast(str, transformer.transform(parsed))
+
+    def check_variant_types_value(
+        self, variant_types_query: str, value: int,
+    ) -> bool:
+        """Check if value satisfies a given variant types query."""
+        with duckdb.connect(":memory:") as con:
+            query = self.build_variant_types_query(
+                variant_types_query, str(value))
+            res = con.execute(f"SELECT {query}").fetchall()
+            assert len(res) == 1
+            assert len(res[0]) == 1
+
+            return cast(bool, res[0][0])
+
+    def calc_frequency_bins(
+        self, *,
+        inheritance: Sequence[str] | None = None,
+        roles: str | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+    ) -> list[str]:
+        """Calculate applicable frequency bins for a query."""
+        if self.partition_descriptor is None:
+            return []
+        if "frequency_bin" not in self.summary_schema:
+            return []
+        assert "frequency_bin" in self.summary_schema
+        assert "frequency_bin" in self.family_schema
+
+        if roles and self.check_roles_denovo_only(roles):
+            return ["0"]
+        if inheritance and self.check_inheritance_denovo_only(inheritance):
+            return ["0"]
+
+        if not ultra_rare and frequency_filter is None:
+            return []
+
+        frequency_bins: set[int] = {0}  # always search de Novo variants
+        if ultra_rare is not None and ultra_rare:
+            frequency_bins.add(1)
+        if frequency_filter is not None:
+            for freq, (_, right) in frequency_filter:
+                if freq != "af_allele_freq":
+                    continue
+                if right is None:
+                    return []
+                assert right is not None
+                if right <= self.partition_descriptor.rare_boundary:
+                    frequency_bins.add(2)
+                elif right > self.partition_descriptor.rare_boundary:
+                    return []
+        result: list[str] = []
+        if frequency_bins and len(frequency_bins) < 4:
+            result = [
+                str(fb) for fb in range(max(frequency_bins) + 1)
+            ]
+
+        return result
+
+    def calc_family_bins(
+        self,
+        family_ids: Iterable[str] | None,
+    ) -> list[str]:
+        """Calculate family bins for a query."""
+        if self.partition_descriptor is None:
+            return []
+        if not self.partition_descriptor.has_family_bins():
+            return []
+        if "family_bin" not in self.family_schema:
+            return []
+        if family_ids is None:
+            return []
+
+        assert family_ids is not None
+        family_ids = set(family_ids)
+
+        family_bins: set[str] = set()
+        family_bins.update(
+            str(self.partition_descriptor.make_family_bin(family_id))
+            for family_id in family_ids)
+        if len(family_bins) >= self.partition_descriptor.family_bin_size // 2:
+            return []
+        return list(family_bins)
+
+    def calc_heuristic_bins(
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        inheritance: Sequence[str] | None = None,
+        roles: str | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        family_ids: Iterable[str] | None = None,
+    ) -> dict[str, list[str]]:
+        """Calculate heuristic bins for a query."""
+        heuristics = {}
+        if genes is not None:
+            regions = self.build_gene_regions_heuristic(genes, regions)
+        region_bins = self.calc_region_bins(regions)
+        if region_bins:
+            heuristics["region_bin"] = region_bins
+
+        coding_bins = self.calc_coding_bins(effect_types)
+        if coding_bins:
+            heuristics["coding_bin"] = coding_bins
+
+        frequency_bins = self.calc_frequency_bins(
+            inheritance=inheritance,
+            roles=roles,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+        )
+        if frequency_bins:
+            heuristics["frequency_bin"] = frequency_bins
+
+        family_bins = self.calc_family_bins(family_ids)
+        if family_bins:
+            heuristics["family_bin"] = family_bins
+
+        return heuristics
+
+
+class SqlQueryBuilder(QueryBuilderBase):
+    """Class that abstracts away the process of building a query."""
 
     def __init__(
         self,
@@ -68,20 +422,19 @@ class SqlQueryBuilder:
         partition_descriptor: PartitionDescriptor | None,
         families: FamiliesData,
         gene_models: GeneModels,
-        reference_genome: ReferenceGenome | None = None,
+        reference_genome: ReferenceGenome,
     ):
-        if gene_models is None:
-            raise ValueError("gene_models are required")
+        super().__init__(
+            pedigree_schema=pedigree_schema,
+            summary_schema=summary_schema,
+            family_schema=family_schema,
+            partition_descriptor=partition_descriptor,
+            gene_models=gene_models,
+            reference_genome=reference_genome,
+        )
 
         self.db_layout = db_layout
-        self.pedigree_schema = pedigree_schema
-        self.summary_schema = summary_schema
-        self.family_schema = family_schema
-        self.partition_descriptor = partition_descriptor
-
         self.families = families
-        self.gene_models = gene_models
-        self.reference_genome = reference_genome
 
     def build_summary_variants_query(
         self, *,
@@ -97,7 +450,7 @@ class SqlQueryBuilder:
         limit: int | None = None,
     ) -> str:
         """Build a query for summary variants."""
-        heuristics = self._calc_heuristic_bins(
+        heuristics = self.calc_heuristic_bins(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
@@ -196,9 +549,9 @@ class SqlQueryBuilder:
         """
         where_parts: list[str] = []
         if genes is not None:
-            regions = self._build_gene_regions_heuristic(genes, regions)
+            regions = self.build_gene_regions_heuristic(genes, regions)
         if regions is not None:
-            where_parts.append(self._build_regions_where(regions))
+            where_parts.append(self.build_regions_where(regions))
         if frequency_filter is not None:
             where_parts.append(
                 self._build_real_attr_where(
@@ -244,51 +597,6 @@ class SqlQueryBuilder:
                 {summary_where}
             )
             """)
-
-    def _build_gene_regions_heuristic(
-        self, genes: list[str], regions: list[Region] | None,
-    ) -> list[Region] | None:
-        assert self.gene_models is not None
-        return create_regions_from_genes(
-            self.gene_models, genes, regions,
-            self.GENE_REGIONS_HEURISTIC_CUTOFF,
-            self.GENE_REGIONS_HEURISTIC_EXTEND,
-        )
-
-    def _build_regions_where(
-        self, regions: list[Region],
-    ) -> str:
-
-        where: list[str] = []
-        for reg in regions:
-            if reg.start is None and reg.stop is None:
-                reg_where = f"sa.chromosome = '{reg.chrom}'"
-            elif reg.start is None:
-                assert reg.stop is not None
-                reg_where = (
-                    f"sa.chromosome = '{reg.chrom}'"
-                    f" AND NOT ( "
-                    f"sa.position > {reg.stop} )"
-                )
-            elif reg.stop is None:
-                assert reg.start is not None
-                reg_where = (
-                    f"sa.chromosome = '{reg.chrom}'"
-                    f" AND ( "
-                    f"COALESCE(sa.end_position, sa.position) > {reg.start} )"
-                )
-            else:
-                assert reg.stop is not None
-                assert reg.start is not None
-
-                reg_where = (
-                    f"sa.chromosome = '{reg.chrom}'"
-                    f" AND NOT ( "
-                    f"COALESCE(sa.end_position, sa.position) < {reg.start} OR "
-                    f"sa.position > {reg.stop} )"
-                )
-            where.append(f"( {reg_where} )")
-        return " OR ".join(where)
 
     def _build_real_attr_where(
         self, real_attr_filter: RealAttrFilterType, *,
@@ -353,65 +661,6 @@ class SqlQueryBuilder:
         effect_set = ",".join(f"'{g}'" for g in effect_types)
         return f"eg.effect_types in ({effect_set})"
 
-    def _calc_coding_bins(
-        self,
-        effect_types: Sequence[str] | None,
-    ) -> list[str]:
-        if self.partition_descriptor is None:
-            return []
-        if effect_types is None:
-            return []
-        if "coding_bin" not in self.summary_schema:
-            return []
-        assert "coding_bin" in self.summary_schema
-        assert "coding_bin" in self.family_schema
-
-        assert effect_types is not None
-        query_effect_types = set(effect_types)
-        intersection = query_effect_types & set(
-            self.partition_descriptor.coding_effect_types,
-        )
-
-        coding_bins = []
-        if intersection == query_effect_types:
-            coding_bins.append("1")
-        return coding_bins
-
-    def _calc_region_bins(
-        self, regions: list[Region] | None,
-    ) -> list[str]:
-        if self.partition_descriptor is None:
-            return []
-        if not regions or self.partition_descriptor.region_length == 0:
-            return []
-
-        chroms = set(self.partition_descriptor.chromosomes)
-        region_length = self.partition_descriptor.region_length
-        region_bins: set[str] = set()
-        for region in regions:
-            chrom_bin = region.chrom if region.chrom in chroms else "other"
-            stop = region.stop
-            if stop is None:
-                if self.reference_genome is None:
-                    continue
-                stop = self.reference_genome.get_chrom_length(region.chrom)
-
-            start = region.start
-            if start is None:
-                start = 1
-
-            start = start // region_length
-            stop = stop // region_length
-            region_bins.update(
-                f"'{chrom_bin}_{position_bin}'"
-                for position_bin in range(start, stop + 1))
-        if len(region_bins) == 0:
-            return []
-        if len(region_bins) > self.REGION_BINS_HEURISTIC_CUTOFF:
-            return []
-
-        return list(region_bins)
-
     def _adapt_family_and_person_ids(
         self, family_ids: Sequence[str] | None,
         person_ids: Sequence[str] | None,
@@ -464,6 +713,28 @@ class SqlQueryBuilder:
             )
         """
 
+    def _build_roles_query_where(self, roles_query: str) -> str:
+        subquery = self.build_roles_query(roles_query, "fa.allele_in_roles")
+        return f"({subquery})"
+
+    def _build_inheritance_query_where(
+        self, inheritance_query: Sequence[str],
+    ) -> str:
+        subquery = self.build_inheritance_query(
+            inheritance_query, "fa.inheritance_in_members")
+        return f"({subquery})"
+
+    def _build_sexes_query_where(self, sexes_query: str) -> str:
+        subquery = self.build_sexes_query(sexes_query, "fa.allele_in_sexes")
+        return f"({subquery})"
+
+    def _build_variant_types_where(
+        self, variant_types_query: str,
+    ) -> str:
+        subquery = self.build_variant_types_query(
+            variant_types_query, "sa.variant_type")
+        return f"({subquery})"
+
     def build_family_variants_query(
         self, *,
         regions: list[Region] | None = None,
@@ -485,7 +756,7 @@ class SqlQueryBuilder:
     ) -> str:
         """Build a query for family variants."""
         # pylint: disable=too-many-arguments
-        heuristics = self._calc_heuristic_bins(
+        heuristics = self.calc_heuristic_bins(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
@@ -627,7 +898,7 @@ class SqlQueryBuilder:
 
         where_parts = []
         if genes is not None:
-            regions = self._build_gene_regions_heuristic(genes, regions)
+            regions = self.build_gene_regions_heuristic(genes, regions)
         if roles is not None:
             where_parts.append(self._build_roles_query_where(roles))
         if sexes is not None:
@@ -669,232 +940,3 @@ class SqlQueryBuilder:
             return "fa.family_id IS NULL"
         family_ids = [f"'{fid}'" for fid in family_ids]
         return f"fa.family_id IN ({', '.join(family_ids)})"
-
-    def _build_roles_query(self, roles_query: str, attr: str) -> str:
-        parsed = role_query.transform_query_string_to_tree(roles_query)
-        transformer = QueryTreeToSQLBitwiseTransformer(
-            attr, use_bit_and_function=False)
-        return cast(str, transformer.transform(parsed))
-
-    def _check_roles_query_value(self, roles_query: str, value: int) -> bool:
-        with duckdb.connect(":memory:") as con:
-            query = self._build_roles_query(
-                roles_query, str(value))
-            res = con.execute(f"SELECT {query}").fetchall()
-            assert len(res) == 1
-            assert len(res[0]) == 1
-
-            return cast(bool, res[0][0])
-
-    def _build_roles_query_where(self, roles_query: str) -> str:
-        subquery = self._build_roles_query(roles_query, "fa.allele_in_roles")
-        return f"({subquery})"
-
-    def _build_sexes_query(self, sexes_query: str, attr: str) -> str:
-        parsed = sex_query.transform_query_string_to_tree(sexes_query)
-        transformer = QueryTreeToSQLBitwiseTransformer(
-            attr, use_bit_and_function=False)
-        return cast(str, transformer.transform(parsed))
-
-    def _check_sexes_query_value(self, sexes_query: str, value: int) -> bool:
-        with duckdb.connect(":memory:") as con:
-            query = self._build_sexes_query(
-                sexes_query, str(value))
-            res = con.execute(f"SELECT {query}").fetchall()
-            assert len(res) == 1
-            assert len(res[0]) == 1
-
-            return cast(bool, res[0][0])
-
-    def _build_sexes_query_where(self, sexes_query: str) -> str:
-        subquery = self._build_sexes_query(sexes_query, "fa.allele_in_sexes")
-        return f"({subquery})"
-
-    def _build_variant_types_query(
-        self, variant_types_query: str, attr: str,
-    ) -> str:
-        parsed = VARIANT_TYPE_PARSER.transform_query_string_to_tree(
-            variant_types_query)
-        transformer = QueryTreeToSQLBitwiseTransformer(
-            attr, use_bit_and_function=False)
-        return cast(str, transformer.transform(parsed))
-
-    def _check_variant_types_value(
-        self, variant_types_query: str, value: int,
-    ) -> bool:
-        with duckdb.connect(":memory:") as con:
-            query = self._build_variant_types_query(
-                variant_types_query, str(value))
-            res = con.execute(f"SELECT {query}").fetchall()
-            assert len(res) == 1
-            assert len(res[0]) == 1
-
-            return cast(bool, res[0][0])
-
-    def _build_variant_types_where(
-        self, variant_types_query: str,
-    ) -> str:
-        subquery = self._build_variant_types_query(
-            variant_types_query, "sa.variant_type")
-        return f"({subquery})"
-
-    def _build_inheritance_query(
-        self, inheritance_query: Sequence[str], attr: str,
-    ) -> str:
-        result = []
-        transformer = InheritanceTransformer(attr, use_bit_and_function=False)
-        for query in inheritance_query:
-            parsed = inheritance_parser.parse(query)
-            result.append(str(transformer.transform(parsed)))
-        if not result:
-            return ""
-        return " AND ".join(result)
-
-    def _check_inheritance_query_value(
-        self, inheritance_query: Sequence[str], value: int,
-    ) -> bool:
-        with duckdb.connect(":memory:") as con:
-            query = self._build_inheritance_query(
-                inheritance_query, str(value))
-            res = con.execute(f"SELECT {query}").fetchall()
-            assert len(res) == 1
-            assert len(res[0]) == 1
-
-            return cast(bool, res[0][0])
-
-    def _build_inheritance_query_where(
-        self, inheritance_query: Sequence[str],
-    ) -> str:
-        subquery = self._build_inheritance_query(
-            inheritance_query, "fa.inheritance_in_members")
-        return f"({subquery})"
-
-    def _check_roles_denovo_only(self, roles_query: str) -> bool:
-        return self._check_roles_query_value(
-            roles_query,
-            Role.prb.value | Role.sib.value) and \
-            not self._check_roles_query_value(
-                roles_query,
-                Role.prb.value | Role.sib.value
-                | Role.dad.value | Role.mom.value)
-
-    def _check_inheritance_denovo_only(
-        self, inheritance_query: Sequence[str],
-    ) -> bool:
-        return not self._check_inheritance_query_value(
-            inheritance_query,
-            Inheritance.mendelian.value) \
-            and not self._check_inheritance_query_value(
-                inheritance_query,
-                Inheritance.possible_denovo.value) \
-            and not self._check_inheritance_query_value(
-                inheritance_query,
-                Inheritance.possible_omission.value) \
-            and not self._check_inheritance_query_value(
-                inheritance_query,
-                Inheritance.missing.value)
-
-    def _calc_frequency_bins(
-        self, *,
-        inheritance: Sequence[str] | None = None,
-        roles: str | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: RealAttrFilterType | None = None,
-    ) -> list[str]:
-        if self.partition_descriptor is None:
-            return []
-        if "frequency_bin" not in self.summary_schema:
-            return []
-        assert "frequency_bin" in self.summary_schema
-        assert "frequency_bin" in self.family_schema
-
-        if roles and self._check_roles_denovo_only(roles):
-            return ["0"]
-        if inheritance and self._check_inheritance_denovo_only(inheritance):
-            return ["0"]
-
-        if not ultra_rare and frequency_filter is None:
-            return []
-
-        frequency_bins: set[int] = {0}  # always search de Novo variants
-        if ultra_rare is not None and ultra_rare:
-            frequency_bins.add(1)
-        if frequency_filter is not None:
-            for freq, (_, right) in frequency_filter:
-                if freq != "af_allele_freq":
-                    continue
-                if right is None:
-                    return []
-                assert right is not None
-                if right <= self.partition_descriptor.rare_boundary:
-                    frequency_bins.add(2)
-                elif right > self.partition_descriptor.rare_boundary:
-                    return []
-        result: list[str] = []
-        if frequency_bins and len(frequency_bins) < 4:
-            result = [
-                str(fb) for fb in range(max(frequency_bins) + 1)
-            ]
-
-        return result
-
-    def _calc_family_bins(
-        self,
-        family_ids: Iterable[str] | None,
-    ) -> list[str]:
-        if self.partition_descriptor is None:
-            return []
-        if not self.partition_descriptor.has_family_bins():
-            return []
-        if "family_bin" not in self.family_schema:
-            return []
-        if family_ids is None:
-            return []
-
-        assert family_ids is not None
-        family_ids = set(family_ids)
-
-        family_bins: set[str] = set()
-        family_bins.update(
-            str(self.partition_descriptor.make_family_bin(family_id))
-            for family_id in family_ids)
-        if len(family_bins) >= self.partition_descriptor.family_bin_size // 2:
-            return []
-        return list(family_bins)
-
-    def _calc_heuristic_bins(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        inheritance: Sequence[str] | None = None,
-        roles: str | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: RealAttrFilterType | None = None,
-        family_ids: Iterable[str] | None = None,
-    ) -> dict[str, list[str]]:
-        heuristics = {}
-        if genes is not None:
-            regions = self._build_gene_regions_heuristic(genes, regions)
-        region_bins = self._calc_region_bins(regions)
-        if region_bins:
-            heuristics["region_bin"] = region_bins
-
-        coding_bins = self._calc_coding_bins(effect_types)
-        if coding_bins:
-            heuristics["coding_bin"] = coding_bins
-
-        frequency_bins = self._calc_frequency_bins(
-            inheritance=inheritance,
-            roles=roles,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-        )
-        if frequency_bins:
-            heuristics["frequency_bin"] = frequency_bins
-
-        family_bins = self._calc_family_bins(family_ids)
-        if family_bins:
-            heuristics["family_bin"] = family_bins
-
-        return heuristics

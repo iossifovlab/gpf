@@ -47,8 +47,7 @@ def t4c8_instance(
     duckdb_storage: DuckDbGenotypeStorage,
 ) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("t4c8_instance")
-    gpf_instance = t4c8_gpf(root_path, duckdb_storage)
-    return gpf_instance
+    return t4c8_gpf(root_path, duckdb_storage)
 
 
 @pytest.fixture(scope="module")
@@ -153,7 +152,6 @@ def query_builder(
     ({"regions": [Region("chr1", 55, None)]}, 2),
     ({"frequency_filter": [("af_allele_freq", (None, 15.0))]}, 3),
     ({"frequency_filter": [("af_allele_freq", (15.0, None))]}, 1),
-    ({"frequency_filter": [("af_allele_freq", (15.0, None))]}, 1),
     ({"real_attr_filter": [("af_allele_count", (None, 1))]}, 3),
     ({"real_attr_filter": [("af_allele_count", (1, None))]}, 3),
     ({"real_attr_filter": [("af_allele_count", (1, 1))]}, 3),
@@ -171,27 +169,25 @@ def test_query_summary_variants_counting(
     assert len(svs) == count
 
 
-@pytest.mark.parametrize("index, params, count", [
-    (0, {"genes": ["t4"]}, 1),
-    (1, {"genes": ["c8"]}, 3),
-    (2, {"effect_types": ["missense"]}, 2),
-    (3, {"effect_types": ["synonymous"]}, 3),
-    (4, {"regions": [Region("chr1")]}, 4),
-    (5, {"regions": [Region("chr1", None, 55)]}, 1),
-    (6, {"regions": [Region("chr1", 55, None)]}, 3),
-    (7, {"frequency_filter": [("af_allele_freq", (None, 15.0))]}, 3),
-    (8, {"frequency_filter": [("af_allele_freq", (15.0, None))]}, 2),
-    (9, {"frequency_filter": [("af_allele_freq", (15.0, None))]}, 2),
-    (10, {"real_attr_filter": [("af_allele_count", (None, 1))]}, 3),
-    (11, {"real_attr_filter": [("af_allele_count", (1, None))]}, 4),
-    (12, {"real_attr_filter": [("af_allele_count", (1, 1))]}, 3),
-    (13, {"real_attr_filter": [("af_allele_count", (2, None))]}, 2),
-    (14, {"real_attr_filter": [("af_allele_count", (2, 2))]}, 2),
-    (15, {"limit": 1}, 1),
-    (16, {"limit": 2}, 2),
+@pytest.mark.parametrize("params, count", [
+    ({"genes": ["t4"]}, 1),
+    ({"genes": ["c8"]}, 3),
+    ({"effect_types": ["missense"]}, 2),
+    ({"effect_types": ["synonymous"]}, 3),
+    ({"regions": [Region("chr1")]}, 4),
+    ({"regions": [Region("chr1", None, 55)]}, 1),
+    ({"regions": [Region("chr1", 55, None)]}, 3),
+    ({"frequency_filter": [("af_allele_freq", (None, 15.0))]}, 3),
+    ({"frequency_filter": [("af_allele_freq", (15.0, None))]}, 2),
+    ({"real_attr_filter": [("af_allele_count", (None, 1))]}, 3),
+    ({"real_attr_filter": [("af_allele_count", (1, None))]}, 4),
+    ({"real_attr_filter": [("af_allele_count", (1, 1))]}, 3),
+    ({"real_attr_filter": [("af_allele_count", (2, None))]}, 2),
+    ({"real_attr_filter": [("af_allele_count", (2, 2))]}, 2),
+    ({"limit": 1}, 1),
+    ({"limit": 2}, 2),
 ])
 def test_query_family_variants_counting(
-    index: int,
     params: dict[str, Any],
     count: int,
     duckdb2_variants: DuckDb2Variants,

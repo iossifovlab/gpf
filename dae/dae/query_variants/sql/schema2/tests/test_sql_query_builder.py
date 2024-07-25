@@ -153,7 +153,7 @@ def test_build_gene_regions_heuristic(
     genes = [gene]
     regions = None
     sql_query_builder_simple.GENE_REGIONS_HEURISTIC_EXTEND = 0
-    result = sql_query_builder_simple._build_gene_regions_heuristic(
+    result = sql_query_builder_simple.build_gene_regions_heuristic(
         genes, regions,
     )
     assert result is not None
@@ -187,7 +187,7 @@ def test_build_regions_where(
             {"chromosome": "chr1", "position": 50, "end_position": None},
         ],
     }
-    where = sql_query_builder_simple._build_regions_where(regions)
+    where = sql_query_builder_simple.build_regions_where(regions)
     query = f"SELECT * FROM summary_allele sa WHERE {where}"  # noqa: S608
 
     result = execute(
@@ -367,7 +367,7 @@ def test_sex_query_duckdb(
     expected: int,
     sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
-    res = sql_query_builder_simple._check_sexes_query_value(sex_query, value)
+    res = sql_query_builder_simple.check_sexes_query_value(sex_query, value)
     assert res == expected
 
 
@@ -384,7 +384,7 @@ def test_inheritance_query_duckdb(
     expected: int,
     sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
-    res = sql_query_builder_simple._check_inheritance_query_value(
+    res = sql_query_builder_simple.check_inheritance_query_value(
         inheritance_query, value)
     assert res == expected
 
@@ -440,7 +440,7 @@ def test_role_query_duckdb(
     expected: int,
     sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
-    res = sql_query_builder_simple._check_roles_query_value(role_query, value)
+    res = sql_query_builder_simple.check_roles_query_value(role_query, value)
     assert res == expected
 
 
@@ -464,7 +464,7 @@ def test_role_query_denovo_only(
     expected: int,
     sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
-    res = sql_query_builder_simple._check_roles_denovo_only(roles_query)
+    res = sql_query_builder_simple.check_roles_denovo_only(roles_query)
     assert res == expected
 
 
@@ -487,7 +487,7 @@ def test_inheritance_query_denovo_only(
     expected: int,
     sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
-    res = sql_query_builder_simple._check_inheritance_denovo_only(
+    res = sql_query_builder_simple.check_inheritance_denovo_only(
         inheritance_query)
     assert res == expected
 
@@ -531,6 +531,6 @@ def test_variant_types_query_duckdb(
     expected: bool,  # noqa: FBT001
     sql_query_builder_simple: SqlQueryBuilder,
 ) -> None:
-    res = sql_query_builder_simple._check_variant_types_value(
+    res = sql_query_builder_simple.check_variant_types_value(
         variant_types_query, value)
     assert res == expected
