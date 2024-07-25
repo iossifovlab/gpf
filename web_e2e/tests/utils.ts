@@ -64,7 +64,7 @@ export async function navigateToDatasetPage(page: Page, dataset: string, tool: s
 
 export async function navigateToDataset(page: Page, dataset: string): Promise<void> {
   if (!await page.locator('gpf-datasets').isVisible()) {
-    await page.locator('#header a:text("Datasets")').click();
+    await page.locator('#header a:text("Datasets")').click({ force: true });
     await page.waitForSelector('gpf-datasets');
     await expect(page.getByText('Loading datasets...')).not.toBeVisible();
   }
