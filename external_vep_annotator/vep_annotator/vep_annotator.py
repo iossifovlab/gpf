@@ -4,7 +4,7 @@ import csv
 import os
 import subprocess
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, TextIO, cast
 
 import fsspec
 
@@ -191,6 +191,17 @@ class VEPAnnotatorBase(AnnotatorBase):
                 ])
         file.flush()
 
+    def run_vep(self, args: list[str]) -> None:
+        command = ["vep"]
+        command.extend(args)
+        subprocess.run(command, check=True)
+
+    def open_files(self, work_dir: Path) -> tuple[TextIO, TextIO]:
+        return (
+            (work_dir / "input.tsv").open("w+t"),
+            (work_dir / "output.tsv").open("w+t"),
+        )
+
     def read_output(
         self, file: TextIO, contexts: list[dict[str, Any]],
     ) -> None:
@@ -254,9 +265,11 @@ class VEPAnnotatorBase(AnnotatorBase):
 
             context["worst_consequence"] = [sorted(
                 the_consequences, key=lambda x: CONSEQUENCES[x],
+                reverse=True,
             )[0]]
             context["highest_impact"] = [sorted(
                 context["impact"], key=lambda x: IMPACTS[x],
+                reverse=True,
             )[0]]
 
 
@@ -267,7 +280,11 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
         self, pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
     ):
-        self.vep_cache_dir: Path = info.parameters.get("cache_dir")
+        self.vep_cache_dir: Path | None = cast(
+            Path | None, info.parameters.get("cache_dir"),
+        )
+
+        assert self.vep_cache_dir is not None
 
         super().__init__(
             pipeline, info,
@@ -283,19 +300,21 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
         else:
             work_dir = self.work_dir / batch_work_dir
         os.makedirs(work_dir, exist_ok=True)
-        with (work_dir / "input.tsv").open("w+t") as input_file, \
-                (work_dir / "output.tsv").open("w+t") as out_file:
-            self.prepare_input(input_file, annotatables)
+        input_file, out_file = self.open_files(work_dir)
+        with input_file, out_file:
+            self.prepare_input(
+                input_file, cast(list[VCFAllele | None], annotatables),
+            )
             args = [
-                "vep", "-i", input_file.name,
-                "-o", out_file.name,
+                "-i", cast(str, input_file.name),
+                "-o", cast(str, out_file.name),
                 "--tab", "--cache",
-                "--dir", self.vep_cache_dir,
+                "--dir", str(self.vep_cache_dir),
                 "--symbol",
                 "--no_stats",
                 "--force_overwrite",
             ]
-            subprocess.run(args, check=True)
+            self.run_vep(args)
             out_file.flush()
             self.read_output(out_file, contexts)
 
@@ -315,10 +334,13 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
             pipeline, info,
         )
 
-        genome_id = info.parameters.get("genome")
-        gene_models_id = info.parameters.get("gene_models")
+        genome_id: str | None = info.parameters.get("genome")
+        assert genome_id is not None
+        gene_models_id: str | None = info.parameters.get("gene_models")
+        assert gene_models_id is not None
+        assert pipeline is not None
         self.cache_repo = GenomicResourceCachedRepo(
-            pipeline.repository, self.work_dir / "grr_cache",
+            pipeline.repository, str(self.work_dir / "grr_cache"),
         )
 
         self.genome_resource = self.cache_repo.get_resource(genome_id)
@@ -353,9 +375,9 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
             )
 
     def _do_batch_annotate(
-        self, annotatables: list[Annotatable] | None,
+        self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
-        batch_work_dir: [Path] = None,
+        batch_work_dir: str | None = None,
     ) -> list[dict[str, Any]]:
         genome_filepath = fsspec.url_to_fs(
             self.genome_resource.get_file_url(self.genome_filename),
@@ -367,11 +389,13 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         else:
             work_dir = self.work_dir / batch_work_dir
         os.makedirs(work_dir, exist_ok=True)
-        with (work_dir / "input.tsv").open("w+t") as input_file, \
-                (work_dir / "output.tsv").open("w+t") as out_file:
-            self.prepare_input(input_file, annotatables)
+        input_file, out_file = self.open_files(work_dir)
+        with input_file, out_file:
+            self.prepare_input(
+                input_file, cast(list[VCFAllele | None], annotatables),
+            )
             args = [
-                "vep", "-i", input_file.name,
+                "-i", input_file.name,
                 "-o", out_file.name,
                 "--tab",
                 "--fasta", genome_filepath,
@@ -380,7 +404,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
                 "--symbol",
                 "--force_overwrite",
             ]
-            subprocess.run(args, check=True)
+            self.run_vep(args)
             out_file.flush()
             self.read_output(out_file, contexts)
 
