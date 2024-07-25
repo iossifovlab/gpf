@@ -37,7 +37,7 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: process.env.JENKINS ? 'on' : 'on-first-retry',
-    video: process.env.JENKINS ? { mode: 'on', size: { width: 1920, height: 1080 } }: { mode: 'on', size: { width: 1920, height: 1080 } },
+    video: process.env.JENKINS ? { mode: 'retain-on-failure', size: { width: 1920, height: 1080 } }: { mode: 'retain-on-failure', size: { width: 1920, height: 1080 } },
     actionTimeout: 60000
   },
   projects: [
