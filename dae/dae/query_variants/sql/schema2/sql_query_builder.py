@@ -6,6 +6,8 @@ from typing import Any, cast
 
 import duckdb
 import sqlglot
+from sqlglot import condition, or_, select
+from sqlglot.expressions import Condition, Select
 
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.genomic_resources.gene_models import (
@@ -1036,3 +1038,142 @@ class SqlQueryBuilder(QueryBuilderBase):
             return "fa.family_id IS NULL"
         family_ids = [f"'{fid}'" for fid in family_ids]
         return f"fa.family_id IN ({', '.join(family_ids)})"
+
+
+class SqlBuilder:
+    """Build SQL queries using sqlglot."""
+
+    @staticmethod
+    def summary_base() -> Select:
+        return select("*").from_("summary as sa")
+
+    @staticmethod
+    def family_base() -> Select:
+        return select("*").from_("family as fa")
+
+    @staticmethod
+    def family_variants(
+        summary: Select,
+        family: Select,
+    ) -> Select:
+        return Select().with_(
+            "summary", as_=summary,
+        ).with_(
+            "family", as_=family,
+        ).select(
+            "*",
+        ).from_(
+            "summary as sa",
+        ).join(
+            "family as fa",
+            on="sa.sj_index = fa.sj_index",
+        )
+
+    @staticmethod
+    def region_bins(region_bins: list[str]) -> Condition:
+        """Create region bins condition."""
+        assert len(region_bins) > 0
+        if len(region_bins) == 1:
+            return condition(f":region_bin = '{region_bins[0]}'")
+        rbs = [f"'{rb}'" for rb in region_bins]
+        return condition(f":region_bin IN ({', '.join(rbs)})")
+
+    @staticmethod
+    def _region_to_condition(reg: Region) -> Condition:
+        if reg.start is None and reg.stop is None:
+            return condition(f":chromosome = '{reg.chrom}'")
+
+        if reg.start is None:
+            assert reg.stop is not None
+            return condition(
+                f":chromosome = '{reg.chrom}'"
+                f" AND NOT ( "
+                f":position > {reg.stop} )",
+            )
+        if reg.stop is None:
+            assert reg.start is not None
+            return condition(
+                f":chromosome = '{reg.chrom}'"
+                f" AND ( "
+                f"COALESCE(:end_position, :position) > {reg.start} )",
+            )
+
+        assert reg.stop is not None
+        assert reg.start is not None
+
+        return condition(
+            f":chromosome = '{reg.chrom}'"
+            f" AND NOT ( "
+            f"COALESCE(:end_position, :position) < {reg.start} OR "
+            f":position > {reg.stop} )",
+        )
+
+    @staticmethod
+    def regions(regions: list[Region]) -> Condition:
+        """Create regions condition."""
+        assert len(regions) > 0
+
+        result = SqlBuilder._region_to_condition(regions[0])
+        for reg in regions[1:]:
+            result = or_(
+                result,
+                SqlBuilder._region_to_condition(reg),
+            )
+
+        return result
+
+    @staticmethod
+    def _real_attr_filter(
+        attr: str,
+        value_range: tuple[float | None, float | None], *,
+        is_frequency: bool = False,
+    ) -> Condition:
+        """Create real attribute condition."""
+        left, right = value_range
+
+        if left is None and right is None:
+            if is_frequency:
+                return condition("1 = 1")
+            return condition(f":{attr} IS NOT NULL")
+
+        if left is None:
+            assert right is not None
+            if is_frequency:
+                return condition(
+                    f":{attr} <= {right} OR :{attr} IS NULL",
+                )
+            return condition(f":{attr} <= {right}")
+
+        if right is None:
+            assert left is not None
+            return condition(f":{attr} >= {left}")
+
+        return condition(
+            f":{attr} >= {left} AND :{attr} <= {right}",
+        )
+
+    @staticmethod
+    def frequency(
+        freq: str,
+        value_range: tuple[float | None, float | None],
+    ) -> Condition:
+        return SqlBuilder._real_attr_filter(
+            freq, value_range,
+            is_frequency=True,
+        )
+
+    @staticmethod
+    def real_attr(
+        attr: str,
+        value_range: tuple[float | None, float | None],
+    ) -> Condition:
+        return SqlBuilder._real_attr_filter(
+            attr, value_range,
+            is_frequency=False,
+        )
+
+    @staticmethod
+    def ultra_rare() -> Condition:
+        return SqlBuilder._real_attr_filter(
+            "af_allele_count", (None, 1),
+            is_frequency=True)
