@@ -12,7 +12,7 @@ test.describe('Unique family variants filter tests', () => {
     await expect(page.locator('#unique-family-variants-block')).not.toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Gene Browser');
-    await page.locator('gpf-gene-browser input#search-box').fill('chd8');
+    await page.locator('gpf-gene-browser input#search-box').fill('SAMD11');
     await page.getByText('Go').click();
     await expect(page.locator('gpf-gene-plot')).toBeVisible();
     await expect(page.locator('#unique-family-variants-checkbox')).toBeDisabled();
@@ -29,7 +29,7 @@ test.describe('Unique family variants filter tests', () => {
     await expect(page.locator('#unique-family-variants-block')).toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.compGenotypes, 'Gene Browser');
-    await page.locator('gpf-gene-browser input#search-box').fill('chd8');
+    await page.locator('gpf-gene-browser input#search-box').fill('SAMD11');
     await page.getByText('Go').click();
     await expect(page.locator('gpf-gene-plot')).toBeVisible();
     await expect(page.locator('#unique-family-variants-checkbox')).toBeEnabled();
