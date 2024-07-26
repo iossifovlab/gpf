@@ -122,18 +122,21 @@ class DatasetHierarchy(models.Model):
 
     @classmethod
     def get_direct_datasets_parents(
-        cls, instance_id: str, datasets: Iterable[Dataset]
-    ) -> dict[str, Dataset]:
+        cls, instance_id: str, datasets: Iterable[Dataset],
+    ) -> dict[str, list[str]]:
         """Return dictionary of parents for a list of DB datasets."""
         dataset_ids = [ds.id for ds in datasets]
         relations = cls.objects.filter(
-            instance_id=instance_id, descendant_id__in=dataset_ids
+            instance_id=instance_id, descendant_id__in=dataset_ids,
         )
-        return {
-            relation.descendant.dataset_id: relation.ancestor
-            for relation in relations
-            if relation.ancestor.id != relation.descendant.id
-        }
+
+        result: dict[str, list[str]] = {ds.dataset_id: [] for ds in datasets}
+        for relation in relations:
+            if relation.direct:
+                result[relation.descendant.dataset_id].append(
+                    relation.ancestor.dataset_id)
+
+        return result
 
     @classmethod
     def get_children(

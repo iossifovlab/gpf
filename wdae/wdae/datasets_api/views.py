@@ -157,9 +157,8 @@ class DatasetView(QueryBaseView):
         res = [augment_with_groups(ds, db_datasets[ds["id"]]) for ds in res]
 
         for result in res:
-            result["parents"] = []
             if result["id"] in parents:
-                result["parents"] = [parents[result["id"]].dataset_id]
+                result["parents"] = parents[result["id"]]
 
         return res
 
