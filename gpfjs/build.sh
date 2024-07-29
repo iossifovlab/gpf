@@ -67,7 +67,7 @@ function main() {
 
   build_stage "Clean and fetch fresh dependencies"
   {
-    build_run rm -rf dist
+    build_run rm -rf dist dist.orig
     build_run rm -rf node_modules package-lock.json
     build_run npm install
   }
