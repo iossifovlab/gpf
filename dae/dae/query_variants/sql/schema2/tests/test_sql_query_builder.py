@@ -154,7 +154,7 @@ def test_build_gene_regions_heuristic(
     genes = [gene]
     regions = None
     sql_query_builder_simple.GENE_REGIONS_HEURISTIC_EXTEND = 0
-    result = sql_query_builder_simple.build_gene_regions_heuristic(
+    result = sql_query_builder_simple.build_gene_regions(
         genes, regions,
     )
     assert result is not None

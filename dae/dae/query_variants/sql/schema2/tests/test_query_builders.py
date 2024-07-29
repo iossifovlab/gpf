@@ -36,8 +36,8 @@ SUMMARY_ALLELE_SCHEMA = {
     "chromosome": "string",
     "position": "int",
     "end_position": "int",
-    "effect_gene": "array<struct<\n  effect_gene_symbols:string,\n  \
-effect_types:string\n>>",
+    "effect_gene": "array<struct<effect_gene_symbols:string,"
+    "effect_types:string>>",
     "variant_type": "tinyint",
     "transmission_type": "tinyint",
     "reference": "string",

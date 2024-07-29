@@ -6,8 +6,15 @@ from typing import Any, cast
 
 import duckdb
 import sqlglot
-from sqlglot import condition, or_, select
-from sqlglot.expressions import Condition, Select
+from sqlglot import condition, exp, or_
+from sqlglot.expressions import (
+    Condition,
+    Expression,
+    Select,
+    replace_placeholders,
+)
+from sqlglot.optimizer import optimize
+from sqlglot.schema import Schema
 
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.genomic_resources.gene_models import (
@@ -98,7 +105,7 @@ class QueryBuilderBase:
         self.family_schema = family_schema
         self.partition_descriptor = partition_descriptor
 
-    def build_gene_regions_heuristic(
+    def build_gene_regions(
         self, genes: list[str], regions: list[Region] | None,
     ) -> list[Region] | None:
         """Build a list of regions based on genes."""
@@ -416,7 +423,7 @@ class QueryBuilderBase:
         """Calculate heuristic bins for a query."""
         heuristics_region_bins = []
         if genes is not None:
-            regions = self.build_gene_regions_heuristic(genes, regions)
+            regions = self.build_gene_regions(genes, regions)
         region_bins = self.calc_region_bins(regions)
         if region_bins:
             heuristics_region_bins = region_bins
@@ -621,7 +628,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         """
         where_parts: list[str] = []
         if genes is not None:
-            regions = self.build_gene_regions_heuristic(genes, regions)
+            regions = self.build_gene_regions(genes, regions)
         if regions is not None:
             where_parts.append(self.build_regions_where(regions))
         if frequency_filter is not None:
@@ -996,7 +1003,7 @@ class SqlQueryBuilder(QueryBuilderBase):
 
         where_parts = []
         if genes is not None:
-            regions = self.build_gene_regions_heuristic(genes, regions)
+            regions = self.build_gene_regions(genes, regions)
         if roles is not None:
             where_parts.append(self._build_roles_query_where(roles))
         if sexes is not None:
@@ -1043,31 +1050,48 @@ class SqlQueryBuilder(QueryBuilderBase):
 class SqlBuilder:
     """Build SQL queries using sqlglot."""
 
+    def __init__(self, schema: Schema):
+        self.schema = schema
+
     @staticmethod
     def summary_base() -> Select:
-        return select("*").from_("summary as sa")
+        return exp.select("*").from_("summary_table as sa")
 
     @staticmethod
     def family_base() -> Select:
-        return select("*").from_("family as fa")
+        return exp.select("*").from_("family_table as fa")
+
+    def family_variants(
+        self,
+        summary: Expression,
+        family: Expression,
+    ) -> Select:
+        return cast(Select, optimize(
+            Select().with_(
+                "summary", as_=summary,
+            ).with_(
+                "family", as_=family,
+            ).select(
+                "*",
+            ).from_(
+                "summary as sa",
+            ).join(
+                "family as fa",
+                on="sa.sj_index = fa.sj_index",
+            ),
+        ))
 
     @staticmethod
-    def family_variants(
-        summary: Select,
-        family: Select,
-    ) -> Select:
+    def summary_effect_gene_base() -> Select:
         return Select().with_(
-            "summary", as_=summary,
+            "summary_internal",
+            as_=exp.select("*").from_("summary_table as sa"),
         ).with_(
-            "family", as_=family,
-        ).select(
-            "*",
-        ).from_(
-            "summary as sa",
-        ).join(
-            "family as fa",
-            on="sa.sj_index = fa.sj_index",
-        )
+            "effect_gene_all",
+            as_=exp.select(
+                "*", "UNNEST(effect_gene) as eg",
+            ).from_("summary_internal"),
+        ).select("*").from_("effect_gene_all")
 
     @staticmethod
     def region_bins(region_bins: list[str]) -> Condition:
@@ -1134,36 +1158,42 @@ class SqlBuilder:
         if left is None and right is None:
             if is_frequency:
                 return condition("1 = 1")
-            return condition(f":{attr} IS NOT NULL")
+            return condition(f"sa.{attr} IS NOT NULL")
 
         if left is None:
             assert right is not None
             if is_frequency:
                 return condition(
-                    f":{attr} <= {right} OR :{attr} IS NULL",
+                    f"sa.{attr} <= {right} OR sa.{attr} IS NULL",
                 )
-            return condition(f":{attr} <= {right}")
+            return condition(f"sa.{attr} <= {right}")
 
         if right is None:
             assert left is not None
-            return condition(f":{attr} >= {left}")
+            return condition(f"sa.{attr} >= {left}")
 
         return condition(
-            f":{attr} >= {left} AND :{attr} <= {right}",
+            f"sa.{attr} >= {left} AND sa.{attr} <= {right}",
         )
 
     @staticmethod
     def frequency(
-        freq: str,
-        value_range: tuple[float | None, float | None],
+        real_attrs: RealAttrFilterType,
     ) -> Condition:
-        return SqlBuilder._real_attr_filter(
-            freq, value_range,
-            is_frequency=True,
-        )
+        """Build frequencies filter where condition."""
+        conditions = [
+            SqlBuilder._real_attr_filter(attr, value_range, is_frequency=True)
+            for attr, value_range in real_attrs
+        ]
+        if len(conditions) == 1:
+            return conditions[0]
+        result = conditions[0]
+        for cond in conditions[1:]:
+            result = result.and_(cond)
+        return result
 
     @staticmethod
-    def real_attr(
+    def _real_attr(
         attr: str,
         value_range: tuple[float | None, float | None],
     ) -> Condition:
@@ -1173,7 +1203,62 @@ class SqlBuilder:
         )
 
     @staticmethod
+    def real_attr(
+        real_attrs: RealAttrFilterType,
+    ) -> Condition:
+        """Build real attributes filter where condition."""
+        conditions = [
+            SqlBuilder._real_attr_filter(attr, value_range, is_frequency=False)
+            for attr, value_range in real_attrs
+        ]
+        if len(conditions) == 1:
+            return conditions[0]
+        result = conditions[0]
+        for cond in conditions[1:]:
+            result = result.and_(cond)
+        return result
+
+    @staticmethod
     def ultra_rare() -> Condition:
         return SqlBuilder._real_attr_filter(
             "af_allele_count", (None, 1),
             is_frequency=True)
+
+    def summary_variants_query(
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+    ) -> Expression:
+        """Build a query for summary variants."""
+        query = self.summary_base()
+        if genes is not None or effect_types is not None:
+            query = self.summary_effect_gene_base()
+        if regions is not None:
+            clause = self.regions(regions)
+            query = query.where(replace_placeholders(
+                clause,
+                chromosome=exp.to_column("sa.chromosome"),
+                position=exp.to_column("sa.position"),
+                end_position=exp.to_column("sa.end_position"),
+            ))
+        if real_attr_filter is not None:
+            clause = self.real_attr(real_attr_filter)
+            query = query.where(clause)
+        if frequency_filter is not None:
+            clause = self.frequency(frequency_filter)
+            query = query.where(clause)
+        if ultra_rare is not None and ultra_rare:
+            clause = self.ultra_rare()
+            query = query.where(clause)
+        if not return_reference and not return_unknown:
+            query = query.where("sa.allele_index > 0")
+
+        return optimize(query)
