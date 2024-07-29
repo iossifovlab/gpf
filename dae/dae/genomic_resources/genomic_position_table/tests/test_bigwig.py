@@ -114,6 +114,18 @@ def test_get_records_in_region_with_position(bigwig_table: BigWigTable) -> None:
         assert len(vs) == 1
 
 
+def test_get_records_begin_pos_out_of_bounds(bigwig_table: BigWigTable) -> None:
+    with bigwig_table:
+        vs = list(bigwig_table.get_records_in_region("chr1", -1))
+        assert len(vs) == 3
+
+
+def test_get_records_end_pos_out_of_bounds(bigwig_table: BigWigTable) -> None:
+    with bigwig_table:
+        vs = list(bigwig_table.get_records_in_region("chr1", 1, 999_999_999))
+        assert len(vs) == 3
+
+
 def test_get_records_in_region_with_position_single(
     bigwig_table: BigWigTable,
 ) -> None:
@@ -301,3 +313,61 @@ def test_bigwig_genomic_position_table_add_prefix(
 
         vs = list(bigwig_table.get_records_in_region("chr1", 1, 9))
         assert len(vs) == 1
+
+
+def test_bigwig_correct_fetching_of_intervals(
+    tmp_path: pathlib.Path,
+) -> None:
+    # Make sure there are no duplicated entries returned:
+    # This was happening with naive incrementation of the start/stop fetch
+    # positions, as it was possible to land in the middle of a long entry
+    # spanning many bases, which would be returned more than once by the
+    # intervals fetching method
+
+    root_path = tmp_path
+    setup_directories(
+        root_path,
+        {
+            "grr.yaml": textwrap.dedent(f"""
+                id: test_grr
+                type: directory
+                directory: {root_path!s}
+            """),
+            "test_score": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                        type: position_score
+                        table:
+                            filename: data.bw
+                            format: bigWig
+                        scores:
+                        - id: score_one
+                          type: float
+                          index: 3
+                """),
+            },
+        },
+    )
+    data = textwrap.dedent("""
+        chr1   0          10000       0.01
+        chr1   10000      20000       0.02
+        chr1   20000      30000       0.03
+        chr1   30000      40000       0.04
+        chr1   40000      50000       0.05
+        chr1   50000      60000       0.06
+    """)
+    setup_bigwig(
+        root_path / "test_score" / "data.bw", data,
+        {"chr1": 100_000},
+    )
+    grr = build_filesystem_test_repository(root_path)
+    assert grr is not None
+    res = grr.get_resource("test_score")
+    table_definition = res.get_config()["table"]
+    bigwig_table = BigWigTable(grr.get_resource("test_score"), table_definition)
+    with bigwig_table:
+        vs = list(bigwig_table.get_all_records())
+        assert len(vs) == 6
+        vs = list(bigwig_table.get_records_in_region("chr1", 1))
+        assert len(vs) == 6
+        vs = list(bigwig_table.get_records_in_region("chr1", 0, 30000))
+        assert len(vs) == 3
