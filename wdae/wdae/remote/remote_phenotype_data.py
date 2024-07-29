@@ -152,6 +152,7 @@ class RemotePhenotypeData(PhenotypeData):
         instrument: str | None,
         search_term: str | None,
         page: int | None = None,
+        sort_by: str | None = None,
         order_by: str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         measures = self.rest_client.get_browser_measures(
@@ -159,6 +160,7 @@ class RemotePhenotypeData(PhenotypeData):
             instrument,
             search_term,
             page,
+            sort_by,
             order_by,
         )
         for m in measures:

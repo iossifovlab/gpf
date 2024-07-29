@@ -222,6 +222,7 @@ class PhenotypeData(ABC):
         instrument: str | None,
         search_term: str | None,
         page: int | None = None,
+        sort_by: str | None = None,
         order_by:  str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         pass
@@ -626,12 +627,14 @@ class PhenotypeStudy(PhenotypeData):
         instrument: str | None,
         search_term: str | None,
         page: int | None = None,
+        sort_by: str | None = None,
         order_by:  str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         measures = self.db.search_measures(
             instrument,
             search_term,
             page,
+            sort_by,
             order_by,
         )
         for measure in measures:
@@ -726,10 +729,17 @@ class PhenotypeGroup(PhenotypeData):
         instrument: str | None,
         search_term: str | None,
         page: int | None = None,
+        sort_by: str | None = None,
         order_by:  str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         generators = [
-            pheno.search_measures(instrument, search_term, page, order_by)
+            pheno.search_measures(
+                instrument,
+                search_term,
+                page,
+                sort_by,
+                order_by,
+            )
             for pheno in self.children
         ]
         measures = chain(*generators)
