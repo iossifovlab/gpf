@@ -466,6 +466,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         self,
         instrument_name: str | None = None,
         keyword: str | None = None,
+        sort_by: str | None = None,
         order_by: str | None = None,
     ) -> Select[Any]:
         """Find measures by keyword search."""
@@ -506,33 +507,31 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             query = query.where(
                 self.variable_browser.c.instrument_name == instrument_name,
             )
-        if order_by:
-            # query = query.order_by() ?
-            match order_by:
+        if sort_by:
+            column_to_sort: KeyedColumnElement[Any] | Column[Any]  # type: ignore  # noqa: F821
+            match sort_by:
                 case "instrument_name":
-                    query = query.order_by(
-                        self.variable_browser.c.instrument_name)
+                    column_to_sort = self.variable_browser.c.instrument_name
                 case "measure_id":
-                    query = query.order_by(
-                        self.variable_browser.c.measure_id)
+                    column_to_sort = self.variable_browser.c.measure_id
                 case "description":
-                    query = query.order_by(
-                        self.variable_browser.c.description)
-                case "description":
-                    query = query.order_by(
-                        self.variable_browser.c.description)
+                    column_to_sort = self.variable_browser.c.description
                 case _:
-                    regression_id, sex = order_by.split(".")
+                    regression_id, sex = sort_by.split(".")
                     if sex == "male":
-                        query = query.order_by(
-                            joined_tables[regression_id].c.pvalue_regression_male)
+                        column_to_sort = joined_tables[regression_id].c \
+                            .pvalue_regression_male
                     elif sex == "female":
-                        query = query.order_by(
-                            joined_tables[regression_id].c.pvalue_regression_female)
+                        column_to_sort = joined_tables[regression_id].c \
+                            .pvalue_regression_female
+            if order_by == "desc":
+                query.order_by(column_to_sort.desc())
+            else:
+                query.order_by(column_to_sort.asc())
         else:
             query.order_by(
-                self.variable_browser.c.instrument_name,
-                self.variable_browser.c.measure_id,
+                self.variable_browser.c.instrument_name.asc(),
+                self.variable_browser.c.measure_id.asc(),
             )
 
         return query
@@ -542,10 +541,16 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         instrument_name: str | None = None,
         keyword: str | None = None,
         page: int | None = None,
+        sort_by: str | None = None,
         order_by:  str | None = None,
     ) -> Iterator[dict[str, Any]]:
         """Find measures by keyword search."""
-        query = self.build_measures_query(instrument_name, keyword, order_by)
+        query = self.build_measures_query(
+            instrument_name,
+            keyword,
+            sort_by,
+            order_by,
+        )
         if page:
             query = query.limit(self.PAGE_SIZE).offset(
                 self.PAGE_SIZE * (page - 1),
