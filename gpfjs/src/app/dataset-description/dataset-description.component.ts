@@ -43,9 +43,7 @@ export class DatasetDescriptionComponent implements OnInit {
       .subscribe(desc => {
         if (visibleDatasets.includes(hierarchy.id)) {
           hierarchy.description = desc;
-        } else {
-          // Remove whole dataset from hierarchy if its not visible.
-          hierarchy = null;
+          hierarchy.visibility = true;
         }
         subscription.unsubscribe();
       });

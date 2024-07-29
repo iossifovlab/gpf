@@ -340,7 +340,8 @@ export class Dataset extends IdName {
 }
 
 export class DatasetHierarchy {
-  public description: string;
+  public description = '';
+  public visibility = false;
 
   public constructor(
     public id: string,

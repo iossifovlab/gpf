@@ -22,7 +22,7 @@
 </ng-container>
 
 <ng-template #Recursion let-data>
-  <li>
+  <li *ngIf="data.visibility">
     <p>
       <a [href]="'datasets/' + data.id">{{ data.name }}</a>
       <markdown *ngIf="data.description">
