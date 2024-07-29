@@ -1,0 +1,19 @@
+#!/bin/bash
+# Redirect output to stderr.
+exec 1>&2
+
+found_errors=0
+
+while read st file; do
+    # skip deleted files
+    if [ "$st" == 'D' ]; then continue; fi
+
+    if [[ $file == *.py ]] && ! ruff check -s "$file"; then
+        echo "Ruff check failed for file: $file"
+        found_errors=1
+    fi
+done < <(git diff --cached --name-status)
+
+if [[ $found_errors -eq 1 ]]; then
+        exit 1
+fi

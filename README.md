@@ -128,3 +128,11 @@ To run the intergration tests use:
 ```bash
 py.test -v ../dae/tests/ --gsf gcp_storage/tests/gcp_storage.yaml
 ```
+
+#### Pre-commit lint check hook
+
+A git pre-commit hook for lint checking with Ruff is included.
+To install it, run the following command from the repository's directory:
+
+```bash
+cp pre-commit .git/hooks
