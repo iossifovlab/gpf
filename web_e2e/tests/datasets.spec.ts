@@ -54,6 +54,10 @@ test.describe('Dataset description tests', () => {
       {id: utils.datasetIds.multi, url: 'multi'}
     ];
 
+    await page.locator('#datasets-dropdown-menu-button').click();
+    await page.locator('.collapse-dataset-icon').nth(1).click();
+    await page.keyboard.press('Escape');
+
     for (const dataset of datasets) {
       // eslint-disable-next-line no-await-in-loop
       await page.locator('#datasets-dropdown-menu-button').click();

@@ -69,6 +69,19 @@ export async function navigateToDataset(page: Page, dataset: string): Promise<vo
     await expect(page.getByText('Loading datasets...')).not.toBeVisible();
   }
   await page.locator('#datasets-dropdown-menu-button').click();
+
+
+  if (!await page.locator('a').filter({ hasText: dataset }).isVisible()) {
+    for (const ele of (await page.locator('.collapse-dataset-icon.rotate').all()).reverse()) {
+      // eslint-disable-next-line no-await-in-loop
+      await ele.click();
+    }
+    for (const ele of await page.locator('.collapse-dataset-icon').all()) {
+      // eslint-disable-next-line no-await-in-loop
+      await ele.click();
+    }
+  }
+
   await page.locator('a').filter({ hasText: dataset }).click();
   await expect(page.locator('#datasets-dropdown-menu-button')).toHaveText(dataset);
 }
