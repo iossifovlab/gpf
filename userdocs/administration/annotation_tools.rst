@@ -422,3 +422,23 @@ Example annotation with gene score annotator and changed aggregator
         - source: pLI
           gene_aggregator: max
 
+
+Example annotation config with preamble
+#######################################
+
+.. code:: yaml
+    preamble:
+        summary: phyloP hg38 annotation
+        description: Annotates with all available HG38 phyloP scores.
+        input_reference_genome: hg38/genomes/GRCh38-hg38
+        metadata:
+            author: Me
+            customField: someCustomValue
+            customField2: "The metadata section can hold arbitrary key/value pairs - you can put anything here."
+            customNestedDictionary:
+                key1: value1
+    annotators:
+        - position_score: hg38/scores/phyloP100way
+        - position_score: hg38/scores/phyloP30way
+        - position_score: hg38/scores/phyloP20way
+        - position_score: hg38/scores/phyloP7way
