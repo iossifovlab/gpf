@@ -40,14 +40,21 @@ class BigWigTable(GenomicPositionTable):
         self, chrom: str, pos_begin: int, pos_end: int,
     ) -> Generator[tuple[int, int, float], None, None]:
         assert self.bw_file is not None
-        chrom_pos_end = self.bw_file.chroms()[chrom]
-        pos_begin = max(0, pos_begin - 1)
-        pos_end = min(pos_end, chrom_pos_end)
-        for start in range(pos_begin, pos_end, self.BATCH_SIZE):
-            stop = min(start + self.BATCH_SIZE, pos_end)
+        chrom_len = self.bw_file.chroms()[chrom]
+        pos_end = min(pos_end, chrom_len)
+
+        start = max(0, pos_begin - 1)
+        stop = min(start + self.BATCH_SIZE, pos_end)
+        while start < pos_end:
             intervals = self.bw_file.intervals(chrom, start, stop)
-            if not intervals:
-                continue
+            while intervals is None:
+                start = stop
+                stop = min(start + self.BATCH_SIZE, pos_end)
+                if start >= pos_end:
+                    return
+                intervals = self.bw_file.intervals(chrom, start, stop)
+            start = intervals[-1][1]
+            stop = min(start + self.BATCH_SIZE, pos_end)
             for interval in intervals:
                 yield (interval[0] + 1, interval[1], interval[2])
 
