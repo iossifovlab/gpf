@@ -482,7 +482,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     == table.c.measure_id
                 and table.c.regression_id
                     == regression_id,
-            )
+                isouter=True,
+            ).distinct()
             joined_tables[regression_id] = table
 
         if keyword:
