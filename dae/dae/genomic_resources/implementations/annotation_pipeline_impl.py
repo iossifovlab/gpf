@@ -58,7 +58,7 @@ class AnnotationPipelineImplementation(
         return {
             "content": doc_template.render(
                 annotation_pipeline_info=self.pipeline.get_info(),
-                preambule=self.pipeline.preambule,
+                preamble=self.pipeline.preamble,
                 markdown=markdown,
             ),
         }
