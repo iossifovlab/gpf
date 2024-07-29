@@ -59,44 +59,40 @@ export class PhenoBrowserService {
       .pipe(map(response => response as PhenoInstruments));
   }
 
-  public getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasure> {
+  public getMeasures(
+    page: number,
+    datasetId: string,
+    instrument: PhenoInstrument,
+    search: string,
+    sortBy?: string,
+    orderBy?: string
+  ): Observable<PhenoMeasure[]> {
     const headers = this.getHeaders();
-    const searchParams =
-      new HttpParams()
-        .set('dataset_id', datasetId)
-        .set('instrument', instrument)
-        .set('search', search);
-    const measuresSubject: Subject<PhenoMeasure> = new Subject();
-
     if (this.authService.accessToken !== '') {
       headers['Authorization'] = `Bearer ${this.authService.accessToken}`;
     }
+    const options = { headers: headers, withCredentials: true };
 
-    this.oboeInstance = oboe({
-      url: `${this.config.baseUrl}${this.measuresUrl}?${searchParams.toString()}`,
-      method: 'GET',
-      headers: headers,
-      withCredentials: true,
-    }).start(data => {
-      this.measuresStreamingFinishedSubject.next(false);
-    }).node('!.*', data => {
-      measuresSubject.next(data);
-    }).done(data => {
-      if (data.length === 0) {
-        measuresSubject.next(null);
-      }
-      this.measuresStreamingFinishedSubject.next(true);
-    }).fail(error => {
-      this.measuresStreamingFinishedSubject.next(true);
-      console.warn('oboejs encountered a fail event while streaming');
-    });
+    let url = `${this.config.baseUrl}${this.measuresUrl}?page=${page}`;
+    const datasetParam = new HttpParams().set('dataset_id', datasetId);
+    url += `&${datasetParam.toString()}`;
 
-    return measuresSubject.pipe(map(data => {
-      if (data === null) {
-        return null;
-      }
-      return PhenoMeasure.fromJson(data['measure'] as object);
-    }));
+    if (search) {
+      const searchParams = new HttpParams().set('search', search);
+      url += `&${searchParams.toString()}`;
+    }
+
+    const instrumentParam = new HttpParams().set('instrument', instrument);
+    url += `&${instrumentParam.toString()}`;
+
+    return this.http.get<PhenoMeasure[]>(url, options).pipe(
+      map(res => {
+        if (!res) {
+          return [];
+        }
+        return res.map(measure => PhenoMeasure.fromJson(measure['measure']));
+      })
+    );
   }
 
   public getMeasuresInfo(datasetId: string): Observable<PhenoMeasures> {
