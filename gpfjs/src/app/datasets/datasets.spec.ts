@@ -490,8 +490,6 @@ describe('GeneBrowser', () => {
 describe('Dataset', () => {
   const datasetMock1 = new Dataset(
     'id1',
-    'desc1',
-    '',
     'name1',
     ['parent1', 'parent2'],
     false,
@@ -572,8 +570,6 @@ describe('Dataset', () => {
 
   const datasetMock2 = new Dataset(
     'id2',
-    'desc2',
-    '',
     'name2',
     ['parent2', 'parent2'],
     true,

@@ -119,9 +119,9 @@ export class DatasetsService {
     );
   }
 
-  public getVisibleDatasets(): Observable<object> {
+  public getVisibleDatasets(): Observable<string[]> {
     const options = { headers: this.headers, withCredentials: true };
-    return this.http.get(`${this.config.baseUrl}${this.visibleDatasetsUrl}`, options);
+    return this.http.get<string[]>(`${this.config.baseUrl}${this.visibleDatasetsUrl}`, options);
   }
 
   public getDatasetDescription(datasetId: string): Observable<string> {
@@ -134,7 +134,7 @@ export class DatasetsService {
     );
   }
 
-  public getSingleDatasetHierarchy(datasetId: string): Observable<object> {
+  public getSingleDatasetHierarchy(datasetId: string): Observable<DatasetHierarchy> {
     return this.http.get(`${this.config.baseUrl}datasets/dataset-hierarchy/${datasetId}`).pipe(
       map((json: {data: object}) => DatasetHierarchy.fromJson(json.data))
     );

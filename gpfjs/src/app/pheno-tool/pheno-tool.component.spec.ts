@@ -38,7 +38,7 @@ class MockDatasetsService {
     // eslint-disable-next-line max-len
     const genotypeBrowserConfigMock = new GenotypeBrowser(true, true, true, true, true, true, true, true, true, new Array<object>(), new Array<PersonFilter>(), new Array<PersonFilter>(), [], [], [], [], 0);
     // eslint-disable-next-line max-len
-    return of(new Dataset(datasetId, 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, genotypeBrowserConfigMock, null, [], null, null, '', null));
+    return of(new Dataset(datasetId, 'testDataset', [], true, [], [], [], '', true, true, true, true, null, genotypeBrowserConfigMock, null, [], null, null, '', null));
   }
 }
 
@@ -75,10 +75,10 @@ describe('PhenoToolComponent', () => {
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
-    
+
     fixture = TestBed.createComponent(PhenoToolComponent);
     component = fixture.componentInstance;
-    
+
     // eslint-disable-next-line max-len
     // eslint-disable-next-line max-len
     const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};

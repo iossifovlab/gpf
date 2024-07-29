@@ -4,6 +4,7 @@ import { switchMap, take } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
 import { DatasetModel } from 'app/datasets/datasets.state';
 import { DatasetHierarchy } from 'app/datasets/datasets';
+import { zip } from 'rxjs';
 
 @Component({
   selector: 'gpf-dataset-description',
@@ -25,24 +26,32 @@ export class DatasetDescriptionComponent implements OnInit {
       switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId)),
       switchMap(dataset => {
         this.editable = dataset.descriptionEditable;
-        return this.datasetsService.getSingleDatasetHierarchy(dataset.id);
+        return zip(
+          this.datasetsService.getSingleDatasetHierarchy(dataset.id),
+          this.datasetsService.getVisibleDatasets()
+        );
       }))
-      .subscribe((hierarchy: DatasetHierarchy) => {
-        this.addDescriptions(hierarchy);
+      .subscribe(([hierarchy, visibleDatasets]: [DatasetHierarchy, string[]]) => {
+        this.setDescriptionsAndVisibility(hierarchy, visibleDatasets);
         this.descriptionHierarchy = hierarchy;
         subscription.unsubscribe();
       });
   }
 
-  public addDescriptions(hierarchy: DatasetHierarchy): void {
+  public setDescriptionsAndVisibility(hierarchy: DatasetHierarchy, visibleDatasets: string[]): void {
     const subscription = this.datasetsService.getDatasetDescription(hierarchy.id)
       .subscribe(desc => {
-        hierarchy.description = desc;
+        if (visibleDatasets.includes(hierarchy.id)) {
+          hierarchy.description = desc;
+        } else {
+          // Remove whole dataset from hierarchy if its not visible.
+          hierarchy = null;
+        }
         subscription.unsubscribe();
       });
 
     for (const child of hierarchy.children) {
-      this.addDescriptions(child);
+      this.setDescriptionsAndVisibility(child, visibleDatasets);
     }
   }
 
