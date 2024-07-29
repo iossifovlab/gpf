@@ -130,11 +130,11 @@ def build_annotation_pipeline(
     work_dir: Path | None = None,
 ) -> AnnotationPipeline:
     """Build an annotation pipeline."""
-    preambule, pipeline_config = AnnotationConfigParser.parse_raw(
+    preamble, pipeline_config = AnnotationConfigParser.parse_raw(
         config, grr=grr,
     )
     pipeline = AnnotationPipeline(grr)
-    pipeline.preambule = preambule
+    pipeline.preamble = preamble
     pipeline.raw = config
     try:
         for idx, annotator_config in enumerate(pipeline_config):

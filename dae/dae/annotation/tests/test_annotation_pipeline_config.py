@@ -9,7 +9,7 @@ from dae.annotation.annotation_config import (
     AnnotationConfigParser,
 )
 from dae.annotation.annotation_pipeline import (
-    AnnotationPreambule,
+    AnnotationPreamble,
     AnnotatorInfo,
     AttributeInfo,
 )
@@ -392,9 +392,9 @@ def test_wildcard_label_substring(test_grr: GenomicResourceRepo) -> None:
     ]
 
 
-def test_parse_preambule() -> None:
-    preambule, _ = AnnotationConfigParser.parse_str("""
-        preambule:
+def test_parse_preamble() -> None:
+    preamble, _ = AnnotationConfigParser.parse_str("""
+        preamble:
           summary: asdf
           description: lorem ipsum
           input_reference_genome: acgt_genome
@@ -406,30 +406,30 @@ def test_parse_preambule() -> None:
           - sample_annotator
     """)
 
-    assert preambule == AnnotationPreambule(
+    assert preamble == AnnotationPreamble(
         "asdf", "lorem ipsum", "acgt_genome", None,
         {"foo": "bar", "subdata": {"a": "b"}},
     )
 
 
-def test_parse_preambule_with_valid_genome(
+def test_parse_preamble_with_valid_genome(
     test_grr: GenomicResourceRepo,
 ) -> None:
-    preambule, _ = AnnotationConfigParser.parse_str("""
-        preambule:
+    preamble, _ = AnnotationConfigParser.parse_str("""
+        preamble:
           input_reference_genome: dummy_genome
         annotators:
           - sample_annotator
     """, grr=test_grr)
-    assert preambule is not None
-    assert preambule.input_reference_genome == "dummy_genome"
-    assert preambule.input_reference_genome_res is not None
+    assert preamble is not None
+    assert preamble.input_reference_genome == "dummy_genome"
+    assert preamble.input_reference_genome_res is not None
 
 
-def test_parse_preambule_no_preambule() -> None:
-    preambule, _ = AnnotationConfigParser.parse_str("""
+def test_parse_preamble_no_preamble() -> None:
+    preamble, _ = AnnotationConfigParser.parse_str("""
         - annotator:
             attributes:
             - att1
     """)
-    assert preambule is None
+    assert preamble is None

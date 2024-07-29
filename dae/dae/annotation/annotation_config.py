@@ -16,7 +16,7 @@ from dae.genomic_resources.repository import (
 logger = logging.getLogger(__name__)
 
 
-class RawPreambule(TypedDict):
+class RawPreamble(TypedDict):
     summary: str
     description: str
     input_reference_genome: str
@@ -27,7 +27,7 @@ RawAnnotatorsConfig = list[dict[str, Any]]
 
 
 class RawFullConfig(TypedDict):
-    preambule: RawPreambule
+    preamble: RawPreamble
     annotators: RawAnnotatorsConfig
 
 
@@ -144,7 +144,7 @@ class AnnotatorInfo:
 
 
 @dataclass
-class AnnotationPreambule:
+class AnnotationPreamble:
     summary: str
     description: str
     input_reference_genome: str
@@ -246,31 +246,31 @@ class AnnotationConfigParser:
         )
 
     @staticmethod
-    def _parse_preambule(
-        raw: RawPreambule,
+    def _parse_preamble(
+        raw: RawPreamble,
         grr: GenomicResourceRepo | None = None,
-    ) -> AnnotationPreambule | None:
-        """Parse the preambule section of a pipeline config, if present."""
+    ) -> AnnotationPreamble | None:
+        """Parse the preamble section of a pipeline config, if present."""
         if not set(raw.keys()) <= {
             "summary", "description", "input_reference_genome", "metadata",
         }:
             raise AnnotationConfigurationError
 
         if not isinstance(raw.get("summary", ""), str):
-            raise TypeError("Preambule summary must be a string!")
+            raise TypeError("preamble summary must be a string!")
         if not isinstance(raw.get("description", ""), str):
-            raise TypeError("Preambule description must be a string!")
+            raise TypeError("preamble description must be a string!")
         if not isinstance(raw.get("input_reference_genome", ""), str):
-            raise TypeError("Preambule reference genome id must be a string!")
+            raise TypeError("preamble reference genome id must be a string!")
         if not isinstance(raw.get("metadata", {}), dict):
-            raise TypeError("Preambule metadata must be a dictionary!")
+            raise TypeError("preamble metadata must be a dictionary!")
 
         genome_id = raw.get("input_reference_genome", "")
         genome = None
         if genome_id != "" and grr is not None:
             genome = grr.get_resource(genome_id)
 
-        return AnnotationPreambule(
+        return AnnotationPreamble(
             raw.get("summary", ""),
             raw.get("description", ""),
             genome_id,
@@ -282,7 +282,7 @@ class AnnotationConfigParser:
     def parse_raw(
         pipeline_raw_config: RawPipelineConfig | None,
         grr: GenomicResourceRepo | None = None,
-    ) -> tuple[AnnotationPreambule | None, list[AnnotatorInfo]]:
+    ) -> tuple[AnnotationPreamble | None, list[AnnotatorInfo]]:
         """Parse raw dictionary annotation pipeline configuration."""
         if pipeline_raw_config is None:
             logger.warning("empty annotation pipeline configuration")
@@ -290,12 +290,12 @@ class AnnotationConfigParser:
 
         if isinstance(pipeline_raw_config, dict):
             annotators = pipeline_raw_config["annotators"]
-            preambule = AnnotationConfigParser._parse_preambule(
-                pipeline_raw_config["preambule"], grr,
+            preamble = AnnotationConfigParser._parse_preamble(
+                pipeline_raw_config["preamble"], grr,
             )
         elif isinstance(pipeline_raw_config, list):
             annotators = pipeline_raw_config
-            preambule = None
+            preamble = None
         else:
             raise AnnotationConfigurationError
 
@@ -340,13 +340,13 @@ class AnnotationConfigParser:
                             - <att1 config>
                             ....
             """))
-        return preambule, result
+        return preamble, result
 
     @staticmethod
     def parse_str(
         content: str, source_file_name: str | None = None,
         grr: GenomicResourceRepo | None = None,
-    ) -> tuple[AnnotationPreambule | None, list[AnnotatorInfo]]:
+    ) -> tuple[AnnotationPreamble | None, list[AnnotatorInfo]]:
         """Parse annotation pipeline configuration string."""
         try:
             pipeline_raw_config = yaml.safe_load(content)

@@ -27,14 +27,14 @@
         font-size: 24px;
       }
 
-      .preambule-header,
+      .preamble-header,
       .annotator-list-header,
       .pipeline-header {
         margin-top: 40px;
         margin-bottom: 20px;
       }
 
-      .preambule-header,
+      .preamble-header,
       .annotator-list-header {
         font-size: 30px;
       }
@@ -187,37 +187,37 @@
 
   <body>
     <h1 class="pipeline-header">Pipeline Documentation</h1>
-    {% if preambule is not none %}
-      <h2 class="preambule-header">Preambule</h2>
+    {% if preamble is not none %}
+      <h2 class="preamble-header">preamble</h2>
       <table style="width: 100%">
-      {% if preambule.summary %}
+      {% if preamble.summary %}
         <tr>
           <th>Summary</th>
-          <td>{{preambule.summary}}</td>
+          <td>{{preamble.summary}}</td>
         </tr>
       {% endif %}
-      {% if preambule.description %}
+      {% if preamble.description %}
         <tr>
           <th>Description</th>
-          <td>{{preambule.description}}</td>
+          <td>{{preamble.description}}</td>
         </tr>
       {% endif %}
-      {% if preambule.input_reference_genome_res.get_url() %}
+      {% if preamble.input_reference_genome_res.get_url() %}
         <tr>
           <th>Input reference genome</th>
           <td>
-            <a href="{{preambule.input_reference_genome_res.get_url() + "/index.html"}}">
-              {{preambule.input_reference_genome}}
+            <a href="{{preamble.input_reference_genome_res.get_url() + "/index.html"}}">
+              {{preamble.input_reference_genome}}
             </a>
           </td>
         </tr>
       {% endif %}
-      {% if preambule.metadata.items()|length > 1 %}
+      {% if preamble.metadata.items()|length > 1 %}
         <tr>
           <th>Metadata</th>
           <td>
             <ul>
-                {%- for k, v in preambule.metadata.items() %}
+                {%- for k, v in preamble.metadata.items() %}
                 <li>{{k}} = {{v}}</li>
                 {%- endfor %}
             </ul>

@@ -11,7 +11,7 @@ from typing import Any
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import (
-    AnnotationPreambule,
+    AnnotationPreamble,
     AnnotatorInfo,
     AttributeInfo,
     RawPipelineConfig,
@@ -91,7 +91,7 @@ class AnnotationPipeline:
 
         self.repository: GenomicResourceRepo = repository
         self.annotators: list[Annotator] = []
-        self.preambule: AnnotationPreambule | None = None
+        self.preamble: AnnotationPreamble | None = None
         self.raw: RawPipelineConfig = []
         self._is_open = False
 

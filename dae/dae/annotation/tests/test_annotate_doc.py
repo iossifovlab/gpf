@@ -27,7 +27,7 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
                 directory: {root_path!s}
             """),
             "pipeline_config.yaml": textwrap.dedent("""
-                preambule:
+                preamble:
                     input_reference_genome: acgt
                     summary: asdf summary
                     description: sample description
@@ -88,7 +88,7 @@ def test_annotate_doc(
     assert 'href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#position-score"' in output_template  # noqa: E501
     assert "Annotator to use with genomic scores depending on genomic position" in output_template  # noqa: E501
 
-    assert "Preambule" in output_template
+    assert "preamble" in output_template
     assert "acgt" in output_template
     assert "asdf summary" in output_template
     assert "sample description" in output_template
