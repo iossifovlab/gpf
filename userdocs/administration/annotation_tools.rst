@@ -427,6 +427,7 @@ Example annotation config with preamble
 #######################################
 
 .. code:: yaml
+
     preamble:
         summary: phyloP hg38 annotation
         description: Annotates with all available HG38 phyloP scores.

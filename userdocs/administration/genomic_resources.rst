@@ -328,7 +328,7 @@ allele_score
 gene_models
 ###########
 
-Example genomic_resoruce.yaml:
+Example genomic_resource.yaml:
 
 .. code:: yaml
 
@@ -355,7 +355,7 @@ liftover
 Annotation pipeline
 ###################
 
-Example genomic_resoruce.yaml:
+Example genomic_resource.yaml:
 
 .. code:: yaml
 
