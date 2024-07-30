@@ -4,7 +4,7 @@ import json
 import logging
 from collections.abc import Iterable
 from dataclasses import asdict
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 import numpy as np
 from jinja2 import Template
@@ -126,7 +126,7 @@ class GenomicScoreImplementation(
 
             return [save_task]
 
-    _REF_GENOME_CACHE: dict[str, Any] = {}
+    _REF_GENOME_CACHE: ClassVar[dict[str, Any]] = {}
 
     @property
     def files(self) -> set[str]:
@@ -185,10 +185,7 @@ class GenomicScoreImplementation(
                             for line in
                             self.score.table.get_records_in_region(chrom))
                 elif isinstance(self.score.table, BigWigTable):
-                    fchrom = self.score.table.unmap_chromosome(chrom)
-                    if fchrom is not None:
-                        chrom_length = self.score.table.get_chromosome_length(
-                            fchrom)
+                    chrom_length = self.score.table.get_chromosome_length(chrom)
                 else:
                     assert isinstance(self.score.table,
                                       TabixGenomicPositionTable)
@@ -316,10 +313,7 @@ class GenomicScoreImplementation(
         The histogram tasks are dependant on the provided minmax task.
         """
         regions = self._get_chrom_regions(region_size, grr)
-        if minmax_task is None:
-            update_hist_confs_deps = []
-        else:
-            update_hist_confs_deps = [minmax_task]
+        update_hist_confs_deps = [] if minmax_task is None else [minmax_task]
         update_hist_confs = graph.create_task(
             f"{self.resource.get_full_id()}_update_hist_confs",
             GenomicScoreImplementation._update_hist_confs,
@@ -376,7 +370,7 @@ class GenomicScoreImplementation(
                     try:
                         result[scr_id].add_value(rec[scr_id])  # type: ignore
                     except TypeError as err:
-                        logger.error(
+                        logger.exception(
                             "Failed adding value %s to histogram of %s; "
                             "%s:%s-%s", rec[scr_id], resource.resource_id,
                             chrom, start, end)
@@ -423,7 +417,7 @@ class GenomicScoreImplementation(
                         result[score_id].merge(hist)
 
             except HistogramError as err:
-                logger.error(
+                logger.exception(
                     "Histogram for %s nullified",
                     score_id,
                 )
@@ -637,4 +631,4 @@ GENOMIC_SCORES_TEMPLATE = """
 </table>
 
 {% endblock %}
-"""
+"""  # noqa: E501
