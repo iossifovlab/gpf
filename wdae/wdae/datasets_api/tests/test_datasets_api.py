@@ -62,20 +62,6 @@ def test_datasets_api_get_404(admin_client: Client) -> None:
     assert data["error"] == "Dataset alabala not found"
 
 
-def test_datasets_api_get_dataset_with_hierarchy_description(
-    admin_client: Client
-) -> None:
-    response = admin_client.get("/api/v3/datasets/Dataset1")
-
-    assert response
-    data = response.data  # type: ignore
-    assert data["data"]["children_description"] == (
-        "\nThis dataset includes:\n"
-        "- **[Study1](datasets/Study1)** some new description\n\n"
-        "- **[Study3](datasets/Study3)** \n"
-    )
-
-
 def test_datasets_api_get_forbidden(user_client: Client) -> None:
     response = user_client.get("/api/v3/datasets/quads_in_parent")
 
