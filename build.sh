@@ -293,7 +293,7 @@ EOT
 
   build_stage "Tests"
   {
-    # run dae, wdae, dae integration, wdae integration, demo annotator tests asynchronously
+    # run dae, wdae, dae integration, wdae integration, demo annotator and vep annotator tests asynchronously
     {
       # dae
       {
@@ -401,13 +401,13 @@ EOT
 
         defer_ret build_run_ctx_reset ctx:ctx_demo
 
-        for d in /wd/dae /wd/wdae /wd/dae_conftests /wd/external_vep_annotator; do
+        for d in /wd/dae /wd/wdae /wd/dae_conftests /wd/external_demo_annotator; do
           build_run_container ctx:ctx_demo bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
             pip install -e .'
         done
 
         build_run_detached ctx:ctx_demo bash -c '
-            cd /wd/external_vep_annotator;
+            cd /wd/external_demo_annotator;
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
               -n 5 \
@@ -416,6 +416,35 @@ EOT
               --junitxml=/wd/results/demo-annotator-junit.xml \
               --cov demo_annotator \
               demo_annotator/ || true'
+      }
+      # vep_annotator
+      {
+        local -A ctx_vep
+        build_run_ctx_init ctx:ctx_demo "container" "${gpf_dev_image_ref}" \
+          --network "${ctx_network["network_id"]}" \
+          --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
+          --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env TEST_REMOTE_HOST="gpfremote" \
+          --env LOCALSTACK_HOST="localstack" \
+          --env WDAE_EMAIL_HOST="mailhog"
+
+        defer_ret build_run_ctx_reset ctx:ctx_vep
+
+        for d in /wd/dae /wd/wdae /wd/dae_conftests /wd/external_vep_annotator; do
+          build_run_container ctx:ctx_vep bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
+            pip install -e .'
+        done
+
+        build_run_detached ctx:ctx_vep bash -c '
+            cd /wd/external_vep_annotator;
+            export PYTHONHASHSEED=0;
+            /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
+              -n 5 \
+              --durations 20 \
+              --cov-config /wd/coveragerc \
+              --junitxml=/wd/results/vep-annotator-junit.xml \
+              --cov vep_annotator \
+              vep_annotator/ || true'
       }
     }
 
@@ -439,6 +468,11 @@ EOT
       {
         build_run_container ctx:ctx_demo wait
         build_run_container ctx:ctx_demo cp ./results/demo-annotator-junit.xml ./test-results/
+      }
+
+      {
+        build_run_container ctx:ctx_vep wait
+        build_run_container ctx:ctx_vep cp ./results/vep-annotator-junit.xml ./test-results/
       }
 
       # wdae
