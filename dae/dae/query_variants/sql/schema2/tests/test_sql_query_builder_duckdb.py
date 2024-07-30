@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-import pathlib
 from typing import Any
 
 import duckdb
@@ -8,90 +7,16 @@ import pytest
 
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
-from dae.genotype_storage.genotype_storage_registry import (
-    get_genotype_storage_factory,
-)
 from dae.gpf_instance import GPFInstance
 from dae.query_variants.sql.schema2.sql_query_builder import (
     Db2Layout,
     SqlQueryBuilder,
 )
 from dae.studies.study import GenotypeData
-from dae.testing import setup_pedigree, setup_vcf, vcf_study
-from dae.testing.t4c8_import import t4c8_gpf
 from dae.utils.regions import Region
 
 
-@pytest.fixture(scope="module")
-def duckdb_storage(
-    tmp_path_factory: pytest.TempPathFactory,
-) -> DuckDbGenotypeStorage:
-    storage_path = tmp_path_factory.mktemp("duckdb_storage")
-    storage_config = {
-        "id": "duckdb_test",
-        "storage_type": "duckdb",
-        "db": "duckdb_storage/test.duckdb",
-        "base_dir": str(storage_path),
-    }
-    storage_factory = get_genotype_storage_factory("duckdb")
-    assert storage_factory is not None
-    storage = storage_factory(storage_config)
-    assert storage is not None
-    assert isinstance(storage, DuckDbGenotypeStorage)
-    return storage
-
-
-@pytest.fixture(scope="module")
-def t4c8_instance(
-    tmp_path_factory: pytest.TempPathFactory,
-    duckdb_storage: DuckDbGenotypeStorage,
-) -> GPFInstance:
-    root_path = tmp_path_factory.mktemp("t4c8_instance")
-    return t4c8_gpf(root_path, duckdb_storage)
-
-
-@pytest.fixture(scope="module")
-def t4c8_study_1(
-    t4c8_instance: GPFInstance,
-    duckdb_storage: DuckDbGenotypeStorage,
-) -> GenotypeData:
-    root_path = pathlib.Path(t4c8_instance.dae_dir)
-    ped_path = setup_pedigree(
-        root_path / "study_1" / "pedigree" / "in.ped",
-        """
-familyId personId dadId momId sex status role
-f1.1     mom1     0     0     2   1      mom
-f1.1     dad1     0     0     1   1      dad
-f1.1     ch1      dad1  mom1  2   2      prb
-f1.3     mom3     0     0     2   1      mom
-f1.3     dad3     0     0     1   1      dad
-f1.3     ch3      dad3  mom3  2   2      prb
-        """)
-    vcf_path1 = setup_vcf(
-        root_path / "study_1" / "vcf" / "in.vcf.gz",
-        """
-##fileformat=VCFv4.2
-##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chr1>
-##contig=<ID=chr2>
-##contig=<ID=chr3>
-#CHROM POS  ID REF ALT QUAL FILTER INFO FORMAT mom1 dad1 ch1 mom3 dad3 ch3
-chr1   54   .  T   C   .    .      .    GT     0/1  0/0  0/1 0/0  0/0  0/0
-chr1   119  .  A   G,C .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
-chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
-        """)
-
-    study = vcf_study(
-        root_path,
-        "study_1", ped_path, [vcf_path1],
-        t4c8_instance,
-    )
-    duckdb_storage.shutdown()
-
-    return study
-
-
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def duckdb2_variants(
     t4c8_study_1: GenotypeData,
     duckdb_storage: DuckDbGenotypeStorage,
@@ -133,7 +58,7 @@ def duckdb2_variants(
     return duckdb_variants
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def query_builder(
     duckdb2_variants: DuckDb2Variants,
 ) -> SqlQueryBuilder:

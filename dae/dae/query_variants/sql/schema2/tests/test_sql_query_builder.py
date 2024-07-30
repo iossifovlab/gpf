@@ -24,7 +24,37 @@ from dae.variants.core import Allele
 
 @pytest.fixture()
 def pedigree_schema_simple() -> dict[str, str]:
-    schema: dict[str, str] = {}
+    schema: dict[str, str] = {
+        "family_id": "string",
+        "person_id": "string",
+        "dad_id": "string",
+        "mom_id": "string",
+        "sex": "tinyint",
+        "status": "tinyint",
+        "role": "int",
+        "sample_id": "string",
+        "generated": "boolean",
+        "layout": "string",
+        "not_sequenced": "boolean",
+        "tag_multiplex_family": "string",
+        "tag_simplex_family": "string",
+        "tag_quad_family": "string",
+        "tag_family_type": "string",
+        "tag_affected_prb_family": "string",
+        "tag_affected_mom_family": "string",
+        "tag_missing_dad_family": "string",
+        "tag_control_family": "string",
+        "tags": "string",
+        "tag_missing_mom_family": "string",
+        "tag_affected_dad_family": "string",
+        "tag_nuclear_family": "string",
+        "tag_trio_family": "string",
+        "tag_affected_sib_family": "string",
+        "tag_family_type_full": "string",
+        "member_index": "string",
+        "tag_male_prb_family": "string",
+        "tag_female_prb_family": "string",
+    }
     return schema
 
 
@@ -118,11 +148,14 @@ def sql_query_builder_simple(
     t4c8_gene_models: GeneModels,
     t4c8_ref_genome: ReferenceGenome,
 ) -> SqlQueryBuilder:
-    return SqlQueryBuilder(
-        db_layout_simple,
+    schema = SqlQueryBuilder.build_schema(
         pedigree_schema=pedigree_schema_simple,
         summary_schema=summary_schema_simple,
         family_schema=family_schema_simple,
+    )
+    return SqlQueryBuilder(
+        db_layout_simple,
+        schema=schema,
         partition_descriptor=None,
         families=families_simple,
         gene_models=t4c8_gene_models,

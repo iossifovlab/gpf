@@ -1,13 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from sqlglot import exp, parse_one, table
+from sqlglot import diff, exp, parse_one, table
+from sqlglot.diff import Keep
 from sqlglot.executor import execute
 from sqlglot.expressions import replace_placeholders
 from sqlglot.schema import Schema, ensure_schema
 
+from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.pedigrees.families_data import FamiliesData
 from dae.query_variants.sql.schema2.sql_query_builder import (
+    Db2Layout,
     RealAttrFilterType,
-    SqlBuilder,
+    SqlQueryBuilder2,
 )
 from dae.utils.regions import Region
 
@@ -99,16 +104,50 @@ def sql_schema() -> Schema:
 
 
 @pytest.fixture()
-def sql_builder(sql_schema: Schema) -> SqlBuilder:
-    return SqlBuilder(sql_schema)
+def sql_builder(
+    sql_schema: Schema,
+    t4c8_genes: GeneModels,
+    t4c8_genome: ReferenceGenome,
+    t4c8_families_1: FamiliesData,
+) -> SqlQueryBuilder2:
+    db_layout = Db2Layout(
+        db="test_db",
+        study="test_study",
+        pedigree="pedigree_table",
+        summary="summary_table",
+        family="family_table",
+        meta="meta_table",
+
+    )
+    return SqlQueryBuilder2(
+        db_layout=db_layout,
+        schema=sql_schema,
+        gene_models=t4c8_genes,
+        reference_genome=t4c8_genome,
+        partition_descriptor=None,
+        families=t4c8_families_1,
+    )
 
 
-def test_summary_simple(sql_builder: SqlBuilder) -> None:
+def sql_equal(
+    q1: exp.Expression,
+    q2: exp.Expression,
+) -> bool:
+    edit = diff(q1, q2)
+    return sum(
+        0 if isinstance(e, Keep) else 1
+        for e in edit
+    ) == 0
+
+
+def test_summary_simple(sql_builder: SqlQueryBuilder2) -> None:
     assert sql_builder is not None
     query = sql_builder.summary_base()
     assert query is not None
 
-    assert query.sql() == "SELECT * FROM summary_table AS sa"
+    assert query.sql(pretty=False) == (
+            "SELECT * FROM summary_table AS sa"
+        )
 
     t = query.find(exp.Table)
     assert t is not None
@@ -116,20 +155,24 @@ def test_summary_simple(sql_builder: SqlBuilder) -> None:
     assert t.alias == "sa"
 
     t.replace(table("summary2"))
-    assert query.sql() == "SELECT * FROM summary2"
+    assert query.sql(pretty=False) == (
+            "SELECT * FROM summary2"
+        )
 
 
-def test_summary_replace_table(sql_builder: SqlBuilder) -> None:
+def test_summary_replace_table(sql_builder: SqlQueryBuilder2) -> None:
     assert sql_builder is not None
     query = sql_builder.summary_base()
     q = exp.replace_tables(
         query,
         {"summary_table": "summary2"},
     )
-    assert q.sql() == "SELECT * FROM summary2 AS sa /* summary_table */"
+    assert q.sql(pretty=False) == (
+        "SELECT * FROM summary2 AS sa /* summary_table */"
+    )
 
 
-def test_family_variants(sql_builder: SqlBuilder) -> None:
+def test_family_variants(sql_builder: SqlQueryBuilder2) -> None:
     assert sql_builder is not None
     query = sql_builder.family_variants(
         sql_builder.summary_base(),
@@ -137,31 +180,31 @@ def test_family_variants(sql_builder: SqlBuilder) -> None:
     )
     assert query is not None
 
-    assert query.sql() == (
-        'WITH '
-        '"summary" AS (SELECT * FROM "summary_table" AS "sa"), '
-        '"family" AS (SELECT * FROM "family_table" AS "fa") '
-        'SELECT * FROM "summary" AS "sa" JOIN "family" AS "fa" '
-        'ON "fa"."sj_index" = "sa"."sj_index"'
-    )
+    assert query.sql(pretty=False) == (
+            'WITH '
+            '"summary" AS (SELECT * FROM "summary_table" AS "sa"), '
+            '"family" AS (SELECT * FROM "family_table" AS "fa") '
+            'SELECT * FROM "summary" AS "sa" JOIN "family" AS "fa" '
+            'ON "fa"."sj_index" = "sa"."sj_index"'
+        )
 
 
-def test_region_bins_condition(sql_builder: SqlBuilder) -> None:
+def test_region_bins_condition(sql_builder: SqlQueryBuilder2) -> None:
     rb = sql_builder.region_bins(
         ["chr1_0", "chr1_1"],
     )
-    assert rb.sql() == ":region_bin IN ('chr1_0', 'chr1_1')"
+    assert rb.sql(pretty=False) == ":region_bin IN ('chr1_0', 'chr1_1')"
     assert replace_placeholders(
         rb,
         region_bin=exp.to_column("sa.region_bin"),
     ).sql() == "sa.region_bin IN ('chr1_0', 'chr1_1')"
 
 
-def test_regions_condition(sql_builder: SqlBuilder) -> None:
+def test_regions_condition(sql_builder: SqlQueryBuilder2) -> None:
     regs = sql_builder.regions(
         [Region("chr1", 1, 10)],
     )
-    assert regs.sql() == (
+    assert regs.sql(pretty=False) == (
         ":chromosome = 'chr1' "
         "AND NOT (COALESCE(:end_position, :position) < 1 "
         "OR :position > 10)"
@@ -171,14 +214,14 @@ def test_regions_condition(sql_builder: SqlBuilder) -> None:
         chromosome=exp.to_column("fa.chromosome"),
         position=exp.to_column("fa.position"),
         end_position=exp.to_column("fa.end_position"),
-    ).sql() == (
+    ).sql(pretty=False) == (
         "fa.chromosome = 'chr1' "
         "AND NOT (COALESCE(fa.end_position, fa.position) < 1 "
         "OR fa.position > 10)"
     )
 
 
-def test_real_attr_filter_simple(sql_builder: SqlBuilder) -> None:
+def test_real_attr_filter_simple(sql_builder: SqlQueryBuilder2) -> None:
     raf = sql_builder._real_attr_filter(
         "attr1",
         (None, 1.0),
@@ -194,10 +237,10 @@ def test_real_attr_filter_simple(sql_builder: SqlBuilder) -> None:
     assert raf.sql() == "sa.attr1 <= 1.0 OR sa.attr1 IS NULL"
 
 
-def test_summary_effect_gene_base(sql_builder: SqlBuilder) -> None:
+def test_summary_effect_gene_base(sql_builder: SqlQueryBuilder2) -> None:
     query = sql_builder.summary_effect_gene_base()
 
-    assert query.sql() == (
+    assert query.sql(pretty=False) == (
         "WITH summary_internal AS (SELECT * FROM summary_table AS sa), "
         "effect_gene_all AS (SELECT *, UNNEST(effect_gene) AS eg "
         "FROM summary_internal) "
@@ -205,13 +248,15 @@ def test_summary_effect_gene_base(sql_builder: SqlBuilder) -> None:
     )
 
 
-def test_family_variants_with_effect_gene(sql_builder: SqlBuilder) -> None:
+def test_family_variants_with_effect_gene(
+    sql_builder: SqlQueryBuilder2,
+) -> None:
     query = sql_builder.family_variants(
         sql_builder.summary_effect_gene_base(),
         sql_builder.family_base(),
     )
 
-    assert query.sql() == (
+    assert query.sql(pretty=False) == (
         'WITH '
         '"summary_internal" AS (SELECT * FROM "summary_table" AS "sa"), '
         '"effect_gene_all" AS ('
@@ -238,7 +283,7 @@ def test_family_variants_with_effect_gene(sql_builder: SqlBuilder) -> None:
     ],
 )
 def test_summary_variants_regions_query(
-    sql_builder: SqlBuilder,
+    sql_builder: SqlQueryBuilder2,
     regions: list[Region],
     expected: int,
 ) -> None:
@@ -252,7 +297,7 @@ def test_summary_variants_regions_query(
              "position": 50, "end_position": None},
         ],
     }
-    query = sql_builder.summary_variants_query(regions=regions)
+    query = sql_builder.build_summary_variants_query(regions=regions)
     result = execute(
         query,
         tables=tables)
@@ -269,7 +314,7 @@ def test_summary_variants_regions_query(
     ],
 )
 def test_summary_variants_real_attr_query(
-    sql_builder: SqlBuilder,
+    sql_builder: SqlQueryBuilder2,
     real_attr_filter: RealAttrFilterType,
     expected: int,
 ) -> None:
@@ -281,7 +326,7 @@ def test_summary_variants_real_attr_query(
 
         ],
     }
-    query = sql_builder.summary_variants_query(
+    query = sql_builder.build_summary_variants_query(
         real_attr_filter=real_attr_filter,
     )
 
@@ -301,7 +346,7 @@ def test_summary_variants_real_attr_query(
     ],
 )
 def test_summary_variants_frequency_query(
-    sql_builder: SqlBuilder,
+    sql_builder: SqlQueryBuilder2,
     frequency_filter: RealAttrFilterType,
     expected: int,
 ) -> None:
@@ -313,7 +358,7 @@ def test_summary_variants_frequency_query(
 
         ],
     }
-    query = sql_builder.summary_variants_query(
+    query = sql_builder.build_summary_variants_query(
         frequency_filter=frequency_filter,
     )
 
@@ -325,7 +370,7 @@ def test_summary_variants_frequency_query(
 
 
 def test_build_ultra_rare_where(
-    sql_builder: SqlBuilder,
+    sql_builder: SqlQueryBuilder2,
 ) -> None:
     tables = {
         "summary_table": [
@@ -335,7 +380,7 @@ def test_build_ultra_rare_where(
 
         ],
     }
-    query = sql_builder.summary_variants_query(
+    query = sql_builder.build_summary_variants_query(
         ultra_rare=True,
     )
 
@@ -395,7 +440,7 @@ def test_real_attr_filter(
     value_range: tuple[float | None, float | None],
     is_frequency: bool,  # noqa: FBT001
     expected: str,
-    sql_builder: SqlBuilder,
+    sql_builder: SqlQueryBuilder2,
 ) -> None:
     clause = sql_builder._real_attr_filter(
         attr,

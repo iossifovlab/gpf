@@ -124,13 +124,17 @@ class DuckDb2Variants(QueryVariantsBase):
         pedigree_schema = self._fetch_pedigree_schema()
         summary_schema = self._fetch_summary_schema()
         family_schema = self._fetch_family_schema()
-        partition_description = self._fetch_partition_descriptor()
-        self.families = self._fetch_families()
-        self.query_builder = SqlQueryBuilder(
-            self.layout,
+        schema = SqlQueryBuilder.build_schema(
             pedigree_schema=pedigree_schema,
             summary_schema=summary_schema,
             family_schema=family_schema,
+        )
+        partition_description = self._fetch_partition_descriptor()
+        self.families = self._fetch_families()
+
+        self.query_builder = SqlQueryBuilder(
+            self.layout,
+            schema=schema,
             partition_descriptor=partition_description,
             families=self.families,
             gene_models=self.gene_models,

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import textwrap
 from collections.abc import Iterable, Sequence
@@ -14,7 +16,7 @@ from sqlglot.expressions import (
     replace_placeholders,
 )
 from sqlglot.optimizer import optimize
-from sqlglot.schema import Schema
+from sqlglot.schema import Schema, ensure_schema
 
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.genomic_resources.gene_models import (
@@ -85,9 +87,7 @@ class QueryBuilderBase:
 
     def __init__(
         self,
-        pedigree_schema: dict[str, str],
-        summary_schema: dict[str, str],
-        family_schema: dict[str, str],
+        schema: Schema,
         partition_descriptor: PartitionDescriptor | None,
         gene_models: GeneModels,
         reference_genome: ReferenceGenome,
@@ -100,9 +100,7 @@ class QueryBuilderBase:
             raise ValueError("reference genome isrequired")
         self.reference_genome = reference_genome
 
-        self.pedigree_schema = pedigree_schema
-        self.summary_schema = summary_schema
-        self.family_schema = family_schema
+        self.schema = schema
         self.partition_descriptor = partition_descriptor
 
     def build_gene_regions(
@@ -116,42 +114,6 @@ class QueryBuilderBase:
             self.GENE_REGIONS_HEURISTIC_EXTEND,
         )
 
-    @staticmethod
-    def build_regions_where(
-        regions: list[Region],
-    ) -> str:
-        """Build a WHERE clause for regions."""
-        where: list[str] = []
-        for reg in regions:
-            if reg.start is None and reg.stop is None:
-                reg_where = f"sa.chromosome = '{reg.chrom}'"
-            elif reg.start is None:
-                assert reg.stop is not None
-                reg_where = (
-                    f"sa.chromosome = '{reg.chrom}'"
-                    f" AND NOT ( "
-                    f"sa.position > {reg.stop} )"
-                )
-            elif reg.stop is None:
-                assert reg.start is not None
-                reg_where = (
-                    f"sa.chromosome = '{reg.chrom}'"
-                    f" AND ( "
-                    f"COALESCE(sa.end_position, sa.position) > {reg.start} )"
-                )
-            else:
-                assert reg.stop is not None
-                assert reg.start is not None
-
-                reg_where = (
-                    f"sa.chromosome = '{reg.chrom}'"
-                    f" AND NOT ( "
-                    f"COALESCE(sa.end_position, sa.position) < {reg.start} OR "
-                    f"sa.position > {reg.stop} )"
-                )
-            where.append(f"( {reg_where} )")
-        return " OR ".join(where)
-
     def calc_coding_bins(
         self,
         effect_types: Sequence[str] | None,
@@ -161,10 +123,11 @@ class QueryBuilderBase:
             return []
         if effect_types is None:
             return []
-        if "coding_bin" not in self.summary_schema:
+
+        if "coding_bin" not in self.schema.column_names("summary_table"):
             return []
-        assert "coding_bin" in self.summary_schema
-        assert "coding_bin" in self.family_schema
+        assert "coding_bin" in self.schema.column_names("summary_table")
+        assert "coding_bin" in self.schema.column_names("family_table")
 
         assert effect_types is not None
         query_effect_types = set(effect_types)
@@ -213,17 +176,19 @@ class QueryBuilderBase:
 
         return list(region_bins)
 
-    def build_roles_query(self, roles_query: str, attr: str) -> str:
+    @staticmethod
+    def build_roles_query(roles_query: str, attr: str) -> str:
         """Construct a roles query."""
         parsed = role_query.transform_query_string_to_tree(roles_query)
         transformer = QueryTreeToSQLBitwiseTransformer(
             attr, use_bit_and_function=False)
         return cast(str, transformer.transform(parsed))
 
-    def check_roles_query_value(self, roles_query: str, value: int) -> bool:
+    @staticmethod
+    def check_roles_query_value(roles_query: str, value: int) -> bool:
         """Check if value satisfies a given roles query."""
         with duckdb.connect(":memory:") as con:
-            query = self.build_roles_query(
+            query = QueryBuilderBase.build_roles_query(
                 roles_query, str(value))
             res = con.execute(f"SELECT {query}").fetchall()
             assert len(res) == 1
@@ -231,8 +196,9 @@ class QueryBuilderBase:
 
             return cast(bool, res[0][0])
 
+    @staticmethod
     def build_inheritance_query(
-        self, inheritance_query: Sequence[str], attr: str,
+        inheritance_query: Sequence[str], attr: str,
     ) -> str:
         """Construct an inheritance query."""
         result = []
@@ -244,12 +210,13 @@ class QueryBuilderBase:
             return ""
         return " AND ".join(result)
 
+    @staticmethod
     def check_inheritance_query_value(
-        self, inheritance_query: Sequence[str], value: int,
+        inheritance_query: Sequence[str], value: int,
     ) -> bool:
         """Check if value satisfies a given inheritance query."""
         with duckdb.connect(":memory:") as con:
-            query = self.build_inheritance_query(
+            query = QueryBuilderBase.build_inheritance_query(
                 inheritance_query, str(value))
             res = con.execute(f"SELECT {query}").fetchall()
             assert len(res) == 1
@@ -257,44 +224,48 @@ class QueryBuilderBase:
 
             return cast(bool, res[0][0])
 
-    def check_roles_denovo_only(self, roles_query: str) -> bool:
+    @staticmethod
+    def check_roles_denovo_only(roles_query: str) -> bool:
         """Check if roles query is de novo only."""
-        return self.check_roles_query_value(
+        return QueryBuilderBase.check_roles_query_value(
             roles_query,
             Role.prb.value | Role.sib.value) and \
-            not self.check_roles_query_value(
+            not QueryBuilderBase.check_roles_query_value(
                 roles_query,
                 Role.prb.value | Role.sib.value
                 | Role.dad.value | Role.mom.value)
 
+    @staticmethod
     def check_inheritance_denovo_only(
-        self, inheritance_query: Sequence[str],
+        inheritance_query: Sequence[str],
     ) -> bool:
         """Check if inheritance query is de novo only."""
-        return not self.check_inheritance_query_value(
+        return not QueryBuilderBase.check_inheritance_query_value(
             inheritance_query,
             Inheritance.mendelian.value) \
-            and not self.check_inheritance_query_value(
+            and not QueryBuilderBase.check_inheritance_query_value(
                 inheritance_query,
                 Inheritance.possible_denovo.value) \
-            and not self.check_inheritance_query_value(
+            and not QueryBuilderBase.check_inheritance_query_value(
                 inheritance_query,
                 Inheritance.possible_omission.value) \
-            and not self.check_inheritance_query_value(
+            and not QueryBuilderBase.check_inheritance_query_value(
                 inheritance_query,
                 Inheritance.missing.value)
 
-    def build_sexes_query(self, sexes_query: str, attr: str) -> str:
+    @staticmethod
+    def build_sexes_query(sexes_query: str, attr: str) -> str:
         """Build sexes query."""
         parsed = sex_query.transform_query_string_to_tree(sexes_query)
         transformer = QueryTreeToSQLBitwiseTransformer(
             attr, use_bit_and_function=False)
         return cast(str, transformer.transform(parsed))
 
-    def check_sexes_query_value(self, sexes_query: str, value: int) -> bool:
+    @staticmethod
+    def check_sexes_query_value(sexes_query: str, value: int) -> bool:
         """Check if value matches a given sexes query."""
         with duckdb.connect(":memory:") as con:
-            query = self.build_sexes_query(
+            query = QueryBuilderBase.build_sexes_query(
                 sexes_query, str(value))
             res = con.execute(f"SELECT {query}").fetchall()
             assert len(res) == 1
@@ -302,8 +273,9 @@ class QueryBuilderBase:
 
             return cast(bool, res[0][0])
 
+    @staticmethod
     def build_variant_types_query(
-        self, variant_types_query: str, attr: str,
+        variant_types_query: str, attr: str,
     ) -> str:
         """Build a variant types query."""
         parsed = VARIANT_TYPE_PARSER.transform_query_string_to_tree(
@@ -312,12 +284,13 @@ class QueryBuilderBase:
             attr, use_bit_and_function=False)
         return cast(str, transformer.transform(parsed))
 
+    @staticmethod
     def check_variant_types_value(
-        self, variant_types_query: str, value: int,
+        variant_types_query: str, value: int,
     ) -> bool:
         """Check if value satisfies a given variant types query."""
         with duckdb.connect(":memory:") as con:
-            query = self.build_variant_types_query(
+            query = QueryBuilderBase.build_variant_types_query(
                 variant_types_query, str(value))
             res = con.execute(f"SELECT {query}").fetchall()
             assert len(res) == 1
@@ -335,10 +308,10 @@ class QueryBuilderBase:
         """Calculate applicable frequency bins for a query."""
         if self.partition_descriptor is None:
             return []
-        if "frequency_bin" not in self.summary_schema:
+        if "frequency_bin" not in self.schema.column_names("summary_table"):
             return []
-        assert "frequency_bin" in self.summary_schema
-        assert "frequency_bin" in self.family_schema
+        assert "frequency_bin" in self.schema.column_names("summary_table")
+        assert "frequency_bin" in self.schema.column_names("family_table")
 
         if roles and self.check_roles_denovo_only(roles):
             return ["0"]
@@ -379,7 +352,7 @@ class QueryBuilderBase:
             return []
         if not self.partition_descriptor.has_family_bins():
             return []
-        if "family_bin" not in self.family_schema:
+        if "family_bin" not in self.schema.column_names("family_table"):
             return []
         if family_ids is None:
             return []
@@ -455,6 +428,20 @@ class QueryBuilderBase:
             family_bins=heuristics_family_bins,
         )
 
+    @staticmethod
+    def build_schema(
+        summary_schema: dict[str, str],
+        family_schema: dict[str, str],
+        pedigree_schema: dict[str, str],
+    ) -> Schema:
+        return ensure_schema(
+            {
+                "summary_table": summary_schema,
+                "family_table": family_schema,
+                "pedigree_table": pedigree_schema,
+            },
+        )
+
 
 class SqlQueryBuilder(QueryBuilderBase):
     """Class that abstracts away the process of building a query."""
@@ -462,18 +449,14 @@ class SqlQueryBuilder(QueryBuilderBase):
     def __init__(
         self,
         db_layout: Db2Layout, *,
-        pedigree_schema: dict[str, str],
-        summary_schema: dict[str, str],
-        family_schema: dict[str, str],
+        schema: Schema,
         partition_descriptor: PartitionDescriptor | None,
         families: FamiliesData,
         gene_models: GeneModels,
         reference_genome: ReferenceGenome,
     ):
         super().__init__(
-            pedigree_schema=pedigree_schema,
-            summary_schema=summary_schema,
-            family_schema=family_schema,
+            schema=schema,
             partition_descriptor=partition_descriptor,
             gene_models=gene_models,
             reference_genome=reference_genome,
@@ -481,6 +464,42 @@ class SqlQueryBuilder(QueryBuilderBase):
 
         self.db_layout = db_layout
         self.families = families
+
+    @staticmethod
+    def build_regions_where(
+        regions: list[Region],
+    ) -> str:
+        """Build a WHERE clause for regions."""
+        where: list[str] = []
+        for reg in regions:
+            if reg.start is None and reg.stop is None:
+                reg_where = f"sa.chromosome = '{reg.chrom}'"
+            elif reg.start is None:
+                assert reg.stop is not None
+                reg_where = (
+                    f"sa.chromosome = '{reg.chrom}'"
+                    f" AND NOT ( "
+                    f"sa.position > {reg.stop} )"
+                )
+            elif reg.stop is None:
+                assert reg.start is not None
+                reg_where = (
+                    f"sa.chromosome = '{reg.chrom}'"
+                    f" AND ( "
+                    f"COALESCE(sa.end_position, sa.position) > {reg.start} )"
+                )
+            else:
+                assert reg.stop is not None
+                assert reg.start is not None
+
+                reg_where = (
+                    f"sa.chromosome = '{reg.chrom}'"
+                    f" AND NOT ( "
+                    f"COALESCE(sa.end_position, sa.position) < {reg.start} OR "
+                    f"sa.position > {reg.stop} )"
+                )
+            where.append(f"( {reg_where} )")
+        return " OR ".join(where)
 
     def build_summary_variants_query(
         self, *,
@@ -684,7 +703,7 @@ class SqlQueryBuilder(QueryBuilderBase):
 
         where = []
         for attr_name, attr_range in real_attr_filter:
-            if attr_name not in self.summary_schema:
+            if attr_name not in self.schema.column_names("summary_table"):
                 where.append("false")
                 continue
 
@@ -920,8 +939,8 @@ class SqlQueryBuilder(QueryBuilderBase):
                     fa.bucket_index = sa.bucket_index AND
                     fa.allele_index = sa.allele_index)
             """)
-            if "sj_index" in self.summary_schema and \
-                    "sj_index" in self.family_schema:
+            if "sj_index" in self.schema.column_names("summary_table") and \
+                    "sj_index" in self.schema.column_names("family_table"):
                 join_on_clause = textwrap.dedent("""
                     ON fa.sj_index = sa.sj_index
                 """)
@@ -1047,11 +1066,26 @@ class SqlQueryBuilder(QueryBuilderBase):
         return f"fa.family_id IN ({', '.join(family_ids)})"
 
 
-class SqlBuilder:
+class SqlQueryBuilder2(QueryBuilderBase):
     """Build SQL queries using sqlglot."""
 
-    def __init__(self, schema: Schema):
-        self.schema = schema
+    def __init__(
+        self,
+        db_layout: Db2Layout, *,
+        schema: Schema,
+        partition_descriptor: PartitionDescriptor | None,
+        families: FamiliesData,
+        gene_models: GeneModels,
+        reference_genome: ReferenceGenome,
+    ):
+        super().__init__(
+            schema=schema,
+            partition_descriptor=partition_descriptor,
+            gene_models=gene_models,
+            reference_genome=reference_genome,
+        )
+        self.db_layout = db_layout
+        self.families = families
 
     @staticmethod
     def summary_base() -> Select:
@@ -1137,11 +1171,11 @@ class SqlBuilder:
         """Create regions condition."""
         assert len(regions) > 0
 
-        result = SqlBuilder._region_to_condition(regions[0])
+        result = SqlQueryBuilder2._region_to_condition(regions[0])
         for reg in regions[1:]:
             result = or_(
                 result,
-                SqlBuilder._region_to_condition(reg),
+                SqlQueryBuilder2._region_to_condition(reg),
             )
 
         return result
@@ -1182,7 +1216,10 @@ class SqlBuilder:
     ) -> Condition:
         """Build frequencies filter where condition."""
         conditions = [
-            SqlBuilder._real_attr_filter(attr, value_range, is_frequency=True)
+            SqlQueryBuilder2._real_attr_filter(
+                attr, value_range,
+                is_frequency=True,
+            )
             for attr, value_range in real_attrs
         ]
         if len(conditions) == 1:
@@ -1197,7 +1234,7 @@ class SqlBuilder:
         attr: str,
         value_range: tuple[float | None, float | None],
     ) -> Condition:
-        return SqlBuilder._real_attr_filter(
+        return SqlQueryBuilder2._real_attr_filter(
             attr, value_range,
             is_frequency=False,
         )
@@ -1208,7 +1245,10 @@ class SqlBuilder:
     ) -> Condition:
         """Build real attributes filter where condition."""
         conditions = [
-            SqlBuilder._real_attr_filter(attr, value_range, is_frequency=False)
+            SqlQueryBuilder2._real_attr_filter(
+                attr, value_range,
+                is_frequency=False,
+            )
             for attr, value_range in real_attrs
         ]
         if len(conditions) == 1:
@@ -1220,22 +1260,22 @@ class SqlBuilder:
 
     @staticmethod
     def ultra_rare() -> Condition:
-        return SqlBuilder._real_attr_filter(
+        return SqlQueryBuilder2._real_attr_filter(
             "af_allele_count", (None, 1),
             is_frequency=True)
 
-    def summary_variants_query(
+    def build_summary_variants_query(
         self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
-        variant_type: str | None = None,
+        variant_type: str | None = None,  # noqa: ARG002
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        limit: int | None = None,
+        limit: int | None = None,  # noqa: ARG002
     ) -> Expression:
         """Build a query for summary variants."""
         query = self.summary_base()
@@ -1262,3 +1302,31 @@ class SqlBuilder:
             query = query.where("sa.allele_index > 0")
 
         return optimize(query)
+
+    @staticmethod
+    def build(
+        db_layout: Db2Layout, *,
+        pedigree_schema: dict[str, str],
+        summary_schema: dict[str, str],
+        family_schema: dict[str, str],
+        partition_descriptor: PartitionDescriptor | None,
+        families: FamiliesData,
+        gene_models: GeneModels,
+        reference_genome: ReferenceGenome,
+    ) -> SqlQueryBuilder2:
+        """Return a new instance of the builder."""
+        schema = ensure_schema(
+            {
+                "summary_table": summary_schema,
+                "family_table": family_schema,
+                "pedigree_table": pedigree_schema,
+            },
+        )
+        return SqlQueryBuilder2(
+            db_layout=db_layout,
+            schema=schema,
+            partition_descriptor=partition_descriptor,
+            families=families,
+            gene_models=gene_models,
+            reference_genome=reference_genome,
+        )
