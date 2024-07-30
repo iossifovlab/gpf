@@ -136,3 +136,10 @@ To install it, run the following command from the repository's directory:
 
 ```bash
 cp pre-commit .git/hooks
+```
+
+To bypass the pre-commit hook, use the following flag when committing:
+
+```bash
+git commit --no-verify
+```
