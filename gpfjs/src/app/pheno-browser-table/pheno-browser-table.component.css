@@ -59,3 +59,13 @@
 .single-sorting-button {
   display: flex;
 }
+
+#nothing-found-row {
+  background-color: #fafafa;
+  font-style: italic;
+  opacity: 75%;
+  text-align: center;
+  height: 43px;
+  line-height: 43px;
+  border-bottom: 1px solid #ddd;
+}

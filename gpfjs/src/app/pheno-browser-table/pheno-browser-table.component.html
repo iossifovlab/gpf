@@ -1,7 +1,7 @@
 <div
   class="grid-container"
   [ngStyle]="{
-    'grid-template-columns': 'repeat(' + columnsCount + ', auto)'
+    'grid-template-columns': 'repeat(' + columnsCount + ', 3fr)'
   }">
   <div class="grid-header" (click)="sort('instrument', 'instrument' === sortBy && orderBy === 'desc' ? 'asc' : 'desc')">
     <div class="single-sorting-button">
@@ -90,6 +90,14 @@
       </div>
     </div>
   </ng-container>
+
+  <div
+    *ngIf="!measures.measures.length"
+    id="nothing-found-row"
+    [ngStyle]="{ 'grid-column': '1 /' + (columnsCount + 1) }"
+    >Nothing found</div
+  >
+
   <ng-container *ngFor="let measure of measures.measures">
     <div class="grid-cell" [attr.title]="measure.instrumentName">{{ measure.instrumentName }}</div>
 
@@ -154,7 +162,7 @@
       <div class="grid-cell">
         <div
           [style.background-color]="
-            measure.regressions.getReg(regressionId).pvalueRegressionMale.toString() | getBackgroundColor
+            measure.regressions.getReg(regressionId).pvalueRegressionMale?.toString() | getBackgroundColor
           "
           [attr.title]="measure.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4'"
           >{{ measure.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4' }}</div
@@ -162,7 +170,7 @@
 
         <div
           [style.background-color]="
-            measure.regressions.getReg(regressionId).pvalueRegressionFemale.toString() | getBackgroundColor
+            measure.regressions.getReg(regressionId).pvalueRegressionFemale?.toString() | getBackgroundColor
           "
           [attr.title]="measure.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4'"
           >{{ measure.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4' }}</div
