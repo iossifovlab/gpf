@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+* 2024.7.7
+    * Added unit tests for external VEP annotator plugin
+    * Fix collection of study parents in `gpf_wdae`
+    * Fix bigWig genomic position table fetch method
+    * Fix annotation pipeline preamble
+    * Fix gene browser input field behavior in GPFjs
+    * Fix query cancelation on destroy of component in GPFjs
+
+* 2024.7.6
+    * Added web caching for GPF instance home and about pages
+    * Fix handling of permissions for `any_user`` group in `gpf_wdae`
+    * Fix gene profiles single gene search from home page
+    * Clean up old dataset description cache in GPFjs
+    * Fix search query cancelation in phenotype browser
+    * Fix handling of description for annonymous users in GPFjs
+    * Fix in dataset selector dropdown in GPFjs
+
 * 2024.7.5
     * Performance improvements in calculation of access rights for datasets
     * Fixes in datasets routing in GPFjs
