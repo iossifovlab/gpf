@@ -475,17 +475,20 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         joined_tables = {}
         regression_ids = self.regression_ids
+        query = self.variable_browser.select()
         for regression_id in regression_ids:
             table = self.regression_values.alias(regression_id)
-            query = self.variable_browser.select().join(
+            query = query.join(
                 table,
                 self.variable_browser.c.measure_id
                     == table.c.measure_id
                 and table.c.regression_id
                     == regression_id,
                 isouter=True,
-            ).distinct()
+            )
             joined_tables[regression_id] = table
+
+        query = query.distinct()
 
         if keyword:
             keyword = keyword.replace("%", r"/%").replace("_", r"/_")
