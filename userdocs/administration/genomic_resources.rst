@@ -352,6 +352,18 @@ reference_genome
 liftover
 ########
 
+Annotation pipeline
+###################
+
+Example genomic_resoruce.yaml:
+
+.. code:: yaml
+
+    type: annotation_pipeline
+    filename: annotation.yaml
+
+The ``annotation.yaml`` config must be placed inside the resource's directory.
+
 
 Aggregators
 ***********
