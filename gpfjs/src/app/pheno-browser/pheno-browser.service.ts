@@ -82,6 +82,12 @@ export class PhenoBrowserService {
       url += `&${searchParams.toString()}`;
     }
 
+    if (sortBy && orderBy) {
+      const sortParams = new HttpParams().set('sort_by', sortBy);
+      const orderParams = new HttpParams().set('order_by', orderBy);
+      url += `&${sortParams.toString()}&${orderParams.toString()}`;
+    }
+
     const instrumentParam = new HttpParams().set('instrument', instrument);
     url += `&${instrumentParam.toString()}`;
 

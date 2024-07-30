@@ -134,6 +134,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
 
   public emitInstrument(instrument: PhenoInstrument): void {
     this.selectedInstrument$.next(instrument);
+    this.pageCount = 1;
   }
 
   @HostListener('window:scroll', ['$event'])
@@ -146,14 +147,16 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
     }
   }
 
-  private updateTable(): void {
+  private updateTable(orderBy?: string, sortBy?: string): void {
     this.getPageSubscription?.unsubscribe();
     this.getPageSubscription =
       this.phenoBrowserService.getMeasures(
         this.pageCount,
         this.selectedDataset.id,
         this.selectedInstrument$.value,
-        this.searchBox.nativeElement.value
+        (this.searchBox.nativeElement as HTMLInputElement).value,
+        sortBy,
+        orderBy
       ).subscribe(res => {
         if (!res.length) {
           this.allPagesLoaded = true;
@@ -197,17 +200,11 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
 
   public search(value: string): void {
     this.input$.next(value);
+    this.pageCount = 1;
   }
 
   public handleSort(event: { id: string; order: string}): void {
-    this.phenoBrowserService.getMeasures(
-      this.pageCount,
-      this.selectedDataset.id,
-      this.selectedInstrument$.value,
-      this.searchBox.nativeElement.value,
-      event.id,
-      event.order
-    );
+    this.updateTable(event.order, event.id);
   }
 
   private async waitForSearchBoxToLoad(): Promise<void> {
