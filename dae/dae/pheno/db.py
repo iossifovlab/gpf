@@ -508,16 +508,21 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 self.variable_browser.c.instrument_name == instrument_name,
             )
         if sort_by:
-            column_to_sort: KeyedColumnElement[Any] | Column[Any]  # type: ignore  # noqa: F821
+            column_to_sort: Any
             match sort_by:
-                case "instrument_name":
-                    column_to_sort = self.variable_browser.c.instrument_name
-                case "measure_id":
+                case "instrument":
                     column_to_sort = self.variable_browser.c.measure_id
+                case "measure":
+                    column_to_sort = self.variable_browser.c.measure_name
+                case "measure_type":
+                    column_to_sort = self.variable_browser.c.measure_type
                 case "description":
                     column_to_sort = self.variable_browser.c.description
                 case _:
-                    regression_id, sex = sort_by.split(".")
+                    regression = sort_by.split(".")
+                    if len(regression) != 2:
+                        raise ValueError(f"{sort_by} is an invalid sort column")
+                    regression_id, sex = regression
                     if sex == "male":
                         column_to_sort = joined_tables[regression_id].c \
                             .pvalue_regression_male
@@ -525,12 +530,11 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                         column_to_sort = joined_tables[regression_id].c \
                             .pvalue_regression_female
             if order_by == "desc":
-                query.order_by(column_to_sort.desc())
+                query = query.order_by(column_to_sort.desc())
             else:
-                query.order_by(column_to_sort.asc())
+                query = query.order_by(column_to_sort.asc())
         else:
-            query.order_by(
-                self.variable_browser.c.instrument_name.asc(),
+            query = query.order_by(
                 self.variable_browser.c.measure_id.asc(),
             )
 

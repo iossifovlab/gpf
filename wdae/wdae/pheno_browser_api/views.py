@@ -138,11 +138,15 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         if instrument and instrument not in pheno_instruments:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        measures = dataset.phenotype_data.search_measures(
-            instrument, search_term, page, sort_by, order_by,
-        )
+        try:
+            measures = dataset.phenotype_data.search_measures(
+                instrument, search_term, page, sort_by, order_by,
+            )
 
-        measures_page = list(measures)
+            measures_page = list(measures)
+        except ValueError:
+            logger.exception("Error when searching measures")
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if measures_page is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
