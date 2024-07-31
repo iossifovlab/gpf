@@ -590,6 +590,7 @@ EOT
           --exclude pylintrc \
           --transform "s,^,gpf/," \
           dae/ wdae/ impala_storage/ impala2_storage \
+          external_vep_annotator \
           environment.yml dev-environment.yml VERSION BUILD
     )
   }
