@@ -1,7 +1,7 @@
 Release Notes
 =============
 * 2024.7.8
-    * Fix handling of bigWig resource with chromosome mapping in `grr_manage`
+    * Fix handling of bigWig resources with chromosome mapping in `grr_manage`
 
 * 2024.7.7
     * Added unit tests for external VEP annotator plugin
