@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import logging
 from collections.abc import Generator
 from types import TracebackType
 from typing import cast
@@ -10,6 +11,8 @@ from box import Box
 from dae.genomic_resources.repository import GenomicResource
 
 from .line import Key, Line, LineBase
+
+logger = logging.getLogger(__name__)
 
 
 class GenomicPositionTable(abc.ABC):
@@ -106,11 +109,29 @@ class GenomicPositionTable(abc.ABC):
         """Find the index of a column in the table."""
         if col in self.definition:
             if "index" in self.definition[col]:
-                return cast(int, self.definition[col].index)
+                self.definition[col]["column_index"] = \
+                    self.definition[col]["index"]
+                logger.debug(
+                    "%s: Using 'index' to configure columns is outdated,"
+                    " use 'column_index' instead.",
+                    self.genomic_resource.get_full_id(),
+                )
             if "name" in self.definition[col]:
+                self.definition[col]["column_name"] = \
+                    self.definition[col]["name"]
+                logger.debug(
+                    "%s: Using 'name' to configure columns is outdated,"
+                    " use 'column_name' instead.",
+                    self.genomic_resource.get_full_id(),
+                )
+
+            if "column_index" in self.definition[col]:
+                return cast(int, self.definition[col]["column_index"])
+            if "column_name" in self.definition[col]:
                 assert self.header is not None
-                col_index = self.header.index(self.definition[col].name)
-                self.definition[col]["index"] = col_index
+                col_index = self.header.index(
+                    self.definition[col]["column_name"])
+                self.definition[col]["column_index"] = col_index
                 return col_index
         if self.header is not None and col in self.header:
             return self.header.index(col)

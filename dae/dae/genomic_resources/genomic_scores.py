@@ -274,6 +274,14 @@ class GenomicScore(ResourceConfigValidationMixin):
                     "id": {"type": "string"},
                     "index": {"type": "integer"},
                     "name": {"type": "string", "excludes": "index"},
+                    "column_index": {
+                        "type": "integer",
+                        "excludes": ["index", "name", "column_name"],
+                    },
+                    "column_name": {
+                        "type": "string",
+                        "excludes": ["name", "index", "column_index"],
+                    },
                     "type": {"type": "string"},
                     "desc": {"type": "string"},
                     "na_values": {"type": ["string", "list"]},
@@ -356,14 +364,38 @@ class GenomicScore(ResourceConfigValidationMixin):
                 "chrom": {"type": "dict", "schema": {
                     "index": {"type": "integer"},
                     "name": {"type": "string", "excludes": "index"},
+                    "column_index": {
+                        "type": "integer",
+                        "excludes": ["index", "name", "column_name"],
+                    },
+                    "column_name": {
+                        "type": "string",
+                        "excludes": ["name", "index", "column_index"],
+                    },
                 }},
                 "pos_begin": {"type": "dict", "schema": {
                     "index": {"type": "integer"},
                     "name": {"type": "string", "excludes": "index"},
+                    "column_index": {
+                        "type": "integer",
+                        "excludes": ["index", "name", "column_name"],
+                    },
+                    "column_name": {
+                        "type": "string",
+                        "excludes": ["name", "index", "column_index"],
+                    },
                 }},
                 "pos_end": {"type": "dict", "schema": {
                     "index": {"type": "integer"},
                     "name": {"type": "string", "excludes": "index"},
+                    "column_index": {
+                        "type": "integer",
+                        "excludes": ["index", "name", "column_name"],
+                    },
+                    "column_name": {
+                        "type": "string",
+                        "excludes": ["name", "index", "column_index"],
+                    },
                 }},
                 "chrom_mapping": {"type": "dict", "schema": {
                     "filename": {
@@ -402,8 +434,10 @@ class GenomicScore(ResourceConfigValidationMixin):
         for score_conf in config["scores"]:
             value_parser = SCORE_TYPE_PARSERS[score_conf.get("type", "float")]
 
-            col_name = score_conf.get("name")
-            col_index_str = score_conf.get("index")
+            col_name = score_conf.get("column_name") \
+                or score_conf.get("name")
+            col_index_str = score_conf.get("column_index") \
+                or score_conf.get("index")
             col_index = int(col_index_str) if col_index_str else None
 
             hist_conf = build_histogram_config(score_conf)
@@ -490,10 +524,26 @@ class GenomicScore(ResourceConfigValidationMixin):
         else:
             assert self.table.header is not None
             for score in self.config["scores"]:
+
                 if "name" in score:
-                    assert score["name"] in self.table.header
+                    score["column_name"] = score["name"]
+                    logger.debug(
+                        "%s: Using 'name' to configure score columns is"
+                        " outdated, use 'column_name' instead.",
+                        self.resource.get_full_id(),
+                    )
                 elif "index" in score:
-                    assert 0 <= score["index"] < len(self.table.header)
+                    score["column_index"] = score["index"]
+                    logger.debug(
+                        "%s: Using 'index' to configure score columns is"
+                        " outdated, use 'column_index' instead.",
+                        self.resource.get_full_id(),
+                    )
+
+                if "column_name" in score:
+                    assert score["column_name"] in self.table.header
+                elif "column_index" in score:
+                    assert 0 <= score["column_index"] < len(self.table.header)
                 else:
                     raise AssertionError("Either an index or name must"
                                          " be configured for scores!")
