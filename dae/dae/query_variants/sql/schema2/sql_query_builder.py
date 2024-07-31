@@ -15,7 +15,6 @@ from sqlglot.expressions import (
     Select,
     replace_placeholders,
 )
-from sqlglot.optimizer import optimize
 from sqlglot.schema import Schema, ensure_schema
 
 from dae.effect_annotation.effect import EffectTypesMixin
@@ -382,7 +381,7 @@ class QueryBuilderBase:
             )
         ]
 
-    def calc_heuristic_bins(
+    def calc_heuristics(
         self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
@@ -427,6 +426,57 @@ class QueryBuilderBase:
             frequency_bins=heuristics_frequency_bins,
             family_bins=heuristics_family_bins,
         )
+
+    def calc_batched_heuristics(
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        inheritance: Sequence[str] | None = None,
+        roles: str | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        family_ids: Iterable[str] | None = None,
+    ) -> list[QueryHeuristics]:
+        """Calculate heuristics baches for a query."""
+        heuristics = self.calc_heuristics(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            inheritance=inheritance,
+            roles=roles,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            family_ids=family_ids,
+        )
+        if heuristics.region_bins:
+            # single batch if we have region bins in heuristics
+            return [heuristics]
+
+        if heuristics.frequency_bins:
+            # single batch if we dont search for common variants
+            common_bin = "2"
+            if common_bin not in heuristics.frequency_bins:
+                return [heuristics]
+
+        if heuristics.coding_bins:
+            # single batch if we search for coding variants
+            noncoding_bin = "0"
+            if noncoding_bin not in heuristics.coding_bins:
+                return [heuristics]
+
+        if self.partition_descriptor and \
+                self.partition_descriptor.has_region_bins():
+            return [
+                QueryHeuristics(
+                    region_bins=[f"'{rb}'"],
+                    coding_bins=heuristics.coding_bins,
+                    frequency_bins=heuristics.frequency_bins,
+                    family_bins=heuristics.family_bins,
+                )
+                for rb in self.all_region_bins()
+            ]
+        return [heuristics]
 
     @staticmethod
     def build_schema(
@@ -515,7 +565,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         limit: int | None = None,
     ) -> list[str]:
         """Build a query for summary variants."""
-        heuristics = self.calc_heuristic_bins(
+        heuristics = self.calc_heuristics(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
@@ -854,7 +904,7 @@ class SqlQueryBuilder(QueryBuilderBase):
     ) -> list[str]:
         """Build a query for family variants."""
         # pylint: disable=too-many-arguments,too-many-locals
-        heuristics = self.calc_heuristic_bins(
+        heuristics = self.calc_heuristics(
             regions=regions,
             genes=genes,
             effect_types=effect_types,
@@ -1088,53 +1138,94 @@ class SqlQueryBuilder2(QueryBuilderBase):
         self.families = families
 
     @staticmethod
+    def build(
+        db_layout: Db2Layout, *,
+        pedigree_schema: dict[str, str],
+        summary_schema: dict[str, str],
+        family_schema: dict[str, str],
+        partition_descriptor: PartitionDescriptor | None,
+        families: FamiliesData,
+        gene_models: GeneModels,
+        reference_genome: ReferenceGenome,
+    ) -> SqlQueryBuilder2:
+        """Return a new instance of the builder."""
+        schema = ensure_schema(
+            {
+                "summary_table": summary_schema,
+                "family_table": family_schema,
+                "pedigree_table": pedigree_schema,
+            },
+        )
+        return SqlQueryBuilder2(
+            db_layout=db_layout,
+            schema=schema,
+            partition_descriptor=partition_descriptor,
+            families=families,
+            gene_models=gene_models,
+            reference_genome=reference_genome,
+        )
+
+    @staticmethod
+    def genes(genes: list[str]) -> Condition:
+        """Create genes condition."""
+        if len(genes) == 0:
+            return condition("s.eg.effect_gene_symbols IS NULL")
+        if len(genes) == 1:
+            return condition(f"s.eg.effect_gene_symbols = '{genes[0]}'")
+        gene_set = ",".join(f"'{g}'" for g in genes)
+        return condition(f"s.eg.effect_gene_symbols in ({gene_set})")
+
+    @staticmethod
+    def effect_types(effect_types: list[str]) -> Condition:
+        """Create effect types condition."""
+        effect_types = [et.replace("'", "''") for et in effect_types]
+        if len(effect_types) == 0:
+            return condition("s.eg.effect_types IS NULL")
+        effect_set = ",".join(f"'{g}'" for g in effect_types)
+        return condition(f"s.eg.effect_types in ({effect_set})")
+
+    @staticmethod
     def summary_base() -> Select:
+        """Create summary base query."""
         return exp.select("*").from_("summary_table as sa")
 
     @staticmethod
     def family_base() -> Select:
         return exp.select("*").from_("family_table as fa")
 
+    def summary_variants(
+        self,
+        summary: Expression,
+    ) -> Select:
+        return Select().with_(
+                "summary", as_=summary,
+            ).select(
+                "sa.bucket_index", "sa.summary_index", "sa.allele_index",
+                "sa.summary_variant_data",
+            ).from_(
+                "summary as sa",
+            )
+
     def family_variants(
         self,
         summary: Expression,
         family: Expression,
     ) -> Select:
-        return cast(Select, optimize(
-            Select().with_(
+        return Select().with_(
                 "summary", as_=summary,
             ).with_(
                 "family", as_=family,
             ).select(
-                "*",
+                "fa.bucket_index", "fa.summary_index", "fa.family_index",
+                "sa.allele_index",
+                "sa.summary_variant_data",
+                "fa.family_variant_data",
             ).from_(
                 "summary as sa",
             ).join(
                 "family as fa",
                 on="sa.sj_index = fa.sj_index",
-            ),
-        ))
-
-    @staticmethod
-    def summary_effect_gene_base() -> Select:
-        return Select().with_(
-            "summary_internal",
-            as_=exp.select("*").from_("summary_table as sa"),
-        ).with_(
-            "effect_gene_all",
-            as_=exp.select(
-                "*", "UNNEST(effect_gene) as eg",
-            ).from_("summary_internal"),
-        ).select("*").from_("effect_gene_all")
-
-    @staticmethod
-    def region_bins(region_bins: list[str]) -> Condition:
-        """Create region bins condition."""
-        assert len(region_bins) > 0
-        if len(region_bins) == 1:
-            return condition(f":region_bin = '{region_bins[0]}'")
-        rbs = [f"'{rb}'" for rb in region_bins]
-        return condition(f":region_bin IN ({', '.join(rbs)})")
+            )
 
     @staticmethod
     def _region_to_condition(reg: Region) -> Condition:
@@ -1215,6 +1306,7 @@ class SqlQueryBuilder2(QueryBuilderBase):
         real_attrs: RealAttrFilterType,
     ) -> Condition:
         """Build frequencies filter where condition."""
+        assert len(real_attrs) > 0
         conditions = [
             SqlQueryBuilder2._real_attr_filter(
                 attr, value_range,
@@ -1244,6 +1336,7 @@ class SqlQueryBuilder2(QueryBuilderBase):
         real_attrs: RealAttrFilterType,
     ) -> Condition:
         """Build real attributes filter where condition."""
+        assert len(real_attrs) > 0
         conditions = [
             SqlQueryBuilder2._real_attr_filter(
                 attr, value_range,
@@ -1264,23 +1357,21 @@ class SqlQueryBuilder2(QueryBuilderBase):
             "af_allele_count", (None, 1),
             is_frequency=True)
 
-    def build_summary_variants_query(
+    def summary_query(
         self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
-        variant_type: str | None = None,  # noqa: ARG002
+        variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        limit: int | None = None,  # noqa: ARG002
-    ) -> Expression:
-        """Build a query for summary variants."""
+    ) -> Select:
+        """Build a summary variant query."""
         query = self.summary_base()
-        if genes is not None or effect_types is not None:
-            query = self.summary_effect_gene_base()
+
         if regions is not None:
             clause = self.regions(regions)
             query = query.where(replace_placeholders(
@@ -1289,44 +1380,307 @@ class SqlQueryBuilder2(QueryBuilderBase):
                 position=exp.to_column("sa.position"),
                 end_position=exp.to_column("sa.end_position"),
             ))
-        if real_attr_filter is not None:
+        if real_attr_filter:
             clause = self.real_attr(real_attr_filter)
             query = query.where(clause)
-        if frequency_filter is not None:
+        if frequency_filter:
             clause = self.frequency(frequency_filter)
             query = query.where(clause)
         if ultra_rare is not None and ultra_rare:
             clause = self.ultra_rare()
             query = query.where(clause)
+        if variant_type is not None:
+            query = query.where(
+                self.build_variant_types_query(
+                    variant_type, "sa.variant_type"))
         if not return_reference and not return_unknown:
             query = query.where("sa.allele_index > 0")
 
-        return optimize(query)
+        if genes is not None or effect_types is not None:
+            query = query.join("UNNEST(sa.effect_gene) as s(eg)")
+        if genes is not None:
+            query = query.where(SqlQueryBuilder2.genes(genes))
+        if effect_types is not None:
+            query = query.where(SqlQueryBuilder2.effect_types(effect_types))
+
+        return query
 
     @staticmethod
-    def build(
-        db_layout: Db2Layout, *,
-        pedigree_schema: dict[str, str],
-        summary_schema: dict[str, str],
-        family_schema: dict[str, str],
-        partition_descriptor: PartitionDescriptor | None,
-        families: FamiliesData,
-        gene_models: GeneModels,
-        reference_genome: ReferenceGenome,
-    ) -> SqlQueryBuilder2:
-        """Return a new instance of the builder."""
-        schema = ensure_schema(
+    def roles(
+        roles_query: str,
+    ) -> Condition:
+        return condition(
+            SqlQueryBuilder2.build_roles_query(
+                roles_query, "fa.allele_in_roles"))
+
+    @staticmethod
+    def sexes(
+        sexes_query: str,
+    ) -> Condition:
+        return condition(
+            SqlQueryBuilder2.build_sexes_query(
+                sexes_query, "fa.allele_in_sexes"))
+
+    @staticmethod
+    def inheritance(
+        inheritance_query: str | Sequence[str],
+    ) -> Condition:
+        """Build inheritance filter."""
+        if isinstance(inheritance_query, str):
+            return condition(
+                SqlQueryBuilder2.build_inheritance_query(
+                    [inheritance_query], "fa.inheritance_in_members"))
+        return condition(
+            SqlQueryBuilder2.build_inheritance_query(
+                inheritance_query, "fa.inheritance_in_members"))
+
+    @staticmethod
+    def family_ids(
+        family_ids: Sequence[str],
+    ) -> Condition:
+        """Create family IDs filter."""
+        if not family_ids:
+            return condition("fa.family_id IS NULL")
+        if len(family_ids) == 1:
+            return condition(f"fa.family_id = '{next(iter(family_ids))}'")
+        fids = [f"'{fid}'" for fid in family_ids]
+        return condition(f"fa.family_id IN ({', '.join(fids)})")
+
+    @staticmethod
+    def person_ids(
+        person_ids: Sequence[str],
+    ) -> Condition:
+        """Create person IDs filter."""
+        if not person_ids:
+            return condition("f.aim IS NULL")
+        if len(person_ids) == 1:
+            return condition(f"f.aim = '{next(iter(person_ids))}'")
+        pids = [f"'{pid}'" for pid in person_ids]
+        return condition(f"f.aim IN ({', '.join(pids)})")
+
+    def family_query(
+        self,
+        family_ids: Sequence[str] | None = None,
+        person_ids: Sequence[str] | None = None,
+        inheritance: str | Sequence[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+    ) -> Select:
+        """Build a family subclause query."""
+        query = self.family_base()
+        if roles is not None:
+            clause = self.roles(roles)
+            query = query.where(clause)
+        if inheritance is not None:
+            clause = self.inheritance(inheritance)
+            query = query.where(clause)
+        if sexes is not None:
+            clause = self.sexes(sexes)
+            query = query.where(clause)
+        if family_ids is not None:
+            clause = self.family_ids(family_ids)
+            query = query.where(clause)
+        if person_ids is not None:
+            query = query.join("UNNEST(fa.allele_in_members) as f(aim)")
+            clause = self.person_ids(person_ids)
+            query = query.where(clause)
+        return query
+
+    @staticmethod
+    def _heuristic_bins(
+        table: str,
+        heuristic: str,
+        bins: list[str],
+    ) -> Condition:
+        assert len(bins) > 0
+        if len(bins) == 1:
+            return condition(f"{table}.{heuristic} = {bins[0]}")
+        return condition(
+            f"{table}.{heuristic} IN ({', '.join(bins)})")
+
+    @staticmethod
+    def region_bins(table: str, region_bins: list[str]) -> Condition:
+        """Create region bins condition."""
+        return SqlQueryBuilder2._heuristic_bins(
+            table, "region_bin", region_bins)
+
+    @staticmethod
+    def frequency_bins(table: str, frequency_bins: list[str]) -> Condition:
+        """Create frequency bins condition."""
+        return SqlQueryBuilder2._heuristic_bins(
+            table, "frequency_bin", frequency_bins)
+
+    @staticmethod
+    def coding_bins(table: str, coding_bins: list[str]) -> Condition:
+        """Create coding bins condition."""
+        return SqlQueryBuilder2._heuristic_bins(
+            table, "coding_bin", coding_bins)
+
+    @staticmethod
+    def family_bins(table: str, family_bins: list[str]) -> Condition:
+        """Create family bins condition."""
+        return SqlQueryBuilder2._heuristic_bins(
+            table, "family_bin", family_bins)
+
+    def apply_summary_heuristics(
+        self,
+        query: Select,
+        heuristics: QueryHeuristics | None,
+        table: str = "sa",
+    ) -> Select:
+        """Apply heuristics to the summary query."""
+        if heuristics is None or heuristics.is_empty():
+            return query
+
+        if heuristics.region_bins:
+            query = query.where(
+                self.region_bins(table, heuristics.region_bins))
+        if heuristics.frequency_bins:
+            query = query.where(
+                self.frequency_bins(table, heuristics.frequency_bins))
+        if heuristics.coding_bins:
+            query = query.where(
+                self.coding_bins(table, heuristics.coding_bins))
+
+        return query
+
+    def apply_family_heuristics(
+        self,
+        query: Select,
+        heuristics: QueryHeuristics | None,
+    ) -> Select:
+        """Apply heuristics to the family query."""
+        if heuristics is None or heuristics.is_empty():
+            return query
+
+        query = self.apply_summary_heuristics(query, heuristics, table="fa")
+        if heuristics.family_bins:
+            query = query.where(
+                self.family_bins("fa", heuristics.family_bins))
+        return query
+
+    def build_summary_variants_query(
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        limit: int | None = None,
+    ) -> list[str]:
+        """Build a query for summary variants."""
+        squery = self.summary_query(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
+        )
+        batched_heuristics = self.calc_batched_heuristics(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+        )
+        result = []
+        for heuristics in batched_heuristics:
+            query = self.summary_variants(
+                summary=self.apply_summary_heuristics(squery, heuristics),
+            )
+
+            if limit is not None:
+                query = query.limit(limit)
+            query = self.replace_tables(query)
+            result.append(query.sql())
+
+        return result
+
+    def replace_tables(self, query: Select) -> Select:
+        """Replace table names in the query."""
+        if self.db_layout.summary is None:
+            assert self.db_layout.family is None
+            return exp.replace_tables(
+                query,
+                {
+                    "pedigree_table": self.db_layout.pedigree,
+                },
+            )
+        assert self.db_layout.summary is not None
+        assert self.db_layout.family is not None
+
+        return exp.replace_tables(
+            query,
             {
-                "summary_table": summary_schema,
-                "family_table": family_schema,
-                "pedigree_table": pedigree_schema,
+                "summary_table": self.db_layout.summary,
+                "family_table": self.db_layout.family,
+                "pedigree_table": self.db_layout.pedigree,
             },
         )
-        return SqlQueryBuilder2(
-            db_layout=db_layout,
-            schema=schema,
-            partition_descriptor=partition_descriptor,
-            families=families,
-            gene_models=gene_models,
-            reference_genome=reference_genome,
+
+    def build_family_variants_query(
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: Sequence[str] | None = None,
+        person_ids: Sequence[str] | None = None,
+        inheritance: Sequence[str] | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
+        **_kwargs: Any,
+    ) -> list[str]:
+        """Build a query for family variants."""
+        squery = self.summary_query(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            variant_type=variant_type,
+            real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            return_reference=return_reference,
+            return_unknown=return_unknown,
         )
+        fquery = self.family_query(
+            family_ids=family_ids,
+            person_ids=person_ids,
+            inheritance=inheritance,
+            roles=roles,
+            sexes=sexes,
+        )
+
+        batched_heuristics = self.calc_batched_heuristics(
+            regions=regions,
+            genes=genes,
+            effect_types=effect_types,
+            inheritance=inheritance,
+            roles=roles,
+            ultra_rare=ultra_rare,
+            frequency_filter=frequency_filter,
+            family_ids=family_ids,
+        )
+        result = []
+        for heuristics in batched_heuristics:
+            query = self.family_variants(
+                summary=self.apply_summary_heuristics(squery, heuristics),
+                family=self.apply_family_heuristics(fquery, heuristics),
+            )
+            query = self.replace_tables(query)
+
+            result.append(query.sql())
+        return result

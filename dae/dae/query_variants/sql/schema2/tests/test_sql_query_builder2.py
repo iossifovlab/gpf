@@ -172,32 +172,11 @@ def test_summary_replace_table(sql_builder: SqlQueryBuilder2) -> None:
     )
 
 
-def test_family_variants(sql_builder: SqlQueryBuilder2) -> None:
-    assert sql_builder is not None
-    query = sql_builder.family_variants(
-        sql_builder.summary_base(),
-        sql_builder.family_base(),
-    )
-    assert query is not None
-
-    assert query.sql(pretty=False) == (
-            'WITH '
-            '"summary" AS (SELECT * FROM "summary_table" AS "sa"), '
-            '"family" AS (SELECT * FROM "family_table" AS "fa") '
-            'SELECT * FROM "summary" AS "sa" JOIN "family" AS "fa" '
-            'ON "fa"."sj_index" = "sa"."sj_index"'
-        )
-
-
 def test_region_bins_condition(sql_builder: SqlQueryBuilder2) -> None:
     rb = sql_builder.region_bins(
-        ["chr1_0", "chr1_1"],
+        "sa", ["'chr1_0'", "'chr1_1'"],
     )
-    assert rb.sql(pretty=False) == ":region_bin IN ('chr1_0', 'chr1_1')"
-    assert replace_placeholders(
-        rb,
-        region_bin=exp.to_column("sa.region_bin"),
-    ).sql() == "sa.region_bin IN ('chr1_0', 'chr1_1')"
+    assert rb.sql(pretty=False) == "sa.region_bin IN ('chr1_0', 'chr1_1')"
 
 
 def test_regions_condition(sql_builder: SqlQueryBuilder2) -> None:
@@ -237,38 +216,6 @@ def test_real_attr_filter_simple(sql_builder: SqlQueryBuilder2) -> None:
     assert raf.sql() == "sa.attr1 <= 1.0 OR sa.attr1 IS NULL"
 
 
-def test_summary_effect_gene_base(sql_builder: SqlQueryBuilder2) -> None:
-    query = sql_builder.summary_effect_gene_base()
-
-    assert query.sql(pretty=False) == (
-        "WITH summary_internal AS (SELECT * FROM summary_table AS sa), "
-        "effect_gene_all AS (SELECT *, UNNEST(effect_gene) AS eg "
-        "FROM summary_internal) "
-        "SELECT * FROM effect_gene_all"
-    )
-
-
-def test_family_variants_with_effect_gene(
-    sql_builder: SqlQueryBuilder2,
-) -> None:
-    query = sql_builder.family_variants(
-        sql_builder.summary_effect_gene_base(),
-        sql_builder.family_base(),
-    )
-
-    assert query.sql(pretty=False) == (
-        'WITH '
-        '"summary_internal" AS (SELECT * FROM "summary_table" AS "sa"), '
-        '"effect_gene_all" AS ('
-        'SELECT *, UNNEST("summary_internal"."effect_gene") AS "eg" '
-        'FROM "summary_internal" AS "summary_internal"), '
-        '"summary" AS (SELECT * FROM "effect_gene_all" AS "effect_gene_all"), '
-        '"family" AS (SELECT * FROM "family_table" AS "fa") '
-        'SELECT * FROM "summary" AS "sa" JOIN "family" AS "fa" '
-        'ON "fa"."sj_index" = "sa"."sj_index"'
-    )
-
-
 @pytest.mark.parametrize(
     "regions,expected", [
         (None, 3),
@@ -289,17 +236,21 @@ def test_summary_variants_regions_query(
 ) -> None:
     tables = {
         "summary_table": [
-            {"allele_index": 1, "chromosome": "chr1",
-             "position": 11, "end_position": 13},
-            {"allele_index": 1, "chromosome": "chr1",
-             "position": 30, "end_position": 33},
-            {"allele_index": 1, "chromosome": "chr1",
-             "position": 50, "end_position": None},
+            {"bucket_index": 1, "summary_index": 1, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "chromosome": "chr1", "position": 11, "end_position": 13},
+            {"bucket_index": 1, "summary_index": 2, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "chromosome": "chr1", "position": 30, "end_position": 33},
+            {"bucket_index": 1, "summary_index": 3, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "chromosome": "chr1", "position": 50, "end_position": None},
         ],
     }
     query = sql_builder.build_summary_variants_query(regions=regions)
+    assert len(query) == 1
     result = execute(
-        query,
+        query[0],
         tables=tables)
 
     assert len(result) == expected
@@ -320,18 +271,24 @@ def test_summary_variants_real_attr_query(
 ) -> None:
     tables = {
         "summary_table": [
-            {"allele_index": 1, "af_allele_freq": 0.5},
-            {"allele_index": 1, "af_allele_freq": None},
-            {"allele_index": 1, "af_allele_freq": 50.0},
+            {"bucket_index": 1, "summary_index": 1, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "af_allele_freq": 0.5},
+            {"bucket_index": 1, "summary_index": 2, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "af_allele_freq": None},
+            {"bucket_index": 1, "summary_index": 3, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "af_allele_freq": 50.0},
 
         ],
     }
     query = sql_builder.build_summary_variants_query(
         real_attr_filter=real_attr_filter,
     )
-
+    assert len(query) == 1
     result = execute(
-        query,
+        query[0],
         tables=tables)
 
     assert len(result) == expected
@@ -352,18 +309,24 @@ def test_summary_variants_frequency_query(
 ) -> None:
     tables = {
         "summary_table": [
-            {"allele_index": 1, "af_allele_freq": 0.5},
-            {"allele_index": 1, "af_allele_freq": None},
-            {"allele_index": 1, "af_allele_freq": 50.0},
+            {"bucket_index": 1, "summary_index": 1, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "af_allele_freq": 0.5},
+            {"bucket_index": 1, "summary_index": 2, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "af_allele_freq": None},
+            {"bucket_index": 1, "summary_index": 3, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "af_allele_freq": 50.0},
 
         ],
     }
     query = sql_builder.build_summary_variants_query(
         frequency_filter=frequency_filter,
     )
-
+    assert len(query) == 1
     result = execute(
-        query,
+        query[0],
         tables=tables)
 
     assert len(result) == expected
@@ -374,18 +337,24 @@ def test_build_ultra_rare_where(
 ) -> None:
     tables = {
         "summary_table": [
-            {"allele_index": 1, "af_allele_count": 1},
-            {"allele_index": 1, "af_allele_count": None},
-            {"allele_index": 1, "af_allele_count": 50},
+            {"bucket_index": 1, "summary_index": 1, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "af_allele_count": 1},
+            {"bucket_index": 1, "summary_index": 2, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "af_allele_count": None},
+            {"bucket_index": 1, "summary_index": 3, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "af_allele_count": 50},
 
         ],
     }
     query = sql_builder.build_summary_variants_query(
         ultra_rare=True,
     )
-
+    assert len(query) == 1
     result = execute(
-        query,
+        query[0],
         tables=tables)
 
     assert len(result) == 2
@@ -451,22 +420,30 @@ def test_real_attr_filter(
 
 
 @pytest.mark.xfail(reason="SQLGlot executor does not support UNNEST")
-def test_sqlglot_nested_schema_experiments() -> None:
+def test_sqlglot_nested_schema_experiments(
+    sql_builder: SqlQueryBuilder2,
+) -> None:
     tables = {
         "summary_table": [
-            {"allele_index": 1, "chromosome": "chr1",
+            {"bucket_index": 1, "summary_index": 1, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "chromosome": "chr1",
              "position": 11, "end_position": 13,
              "effect_gene": [
                  {"effect_gene_symbols": "A", "effect_types": "B"},
                  {"effect_gene_symbols": "C", "effect_types": "D"},
              ]},
-            {"allele_index": 1, "chromosome": "chr1",
+            {"bucket_index": 1, "summary_index": 1, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "chromosome": "chr1",
              "position": 30, "end_position": 33,
              "effect_gene": [
                  {"effect_gene_symbols": "E", "effect_types": "F"},
                  {"effect_gene_symbols": "G", "effect_types": "H"},
              ]},
-            {"allele_index": 1, "chromosome": "chr1",
+            {"bucket_index": 1, "summary_index": 1, "allele_index": 1,
+             "summary_variant_data": "data1",
+             "chromosome": "chr1",
              "position": 50, "end_position": None,
              "effect_gene": [
                  {"effect_gene_symbols": "I", "effect_types": "J"},
@@ -474,27 +451,13 @@ def test_sqlglot_nested_schema_experiments() -> None:
              ]},
         ],
     }
-    query = parse_one(
-        """
-        with
-        effect_gene_all AS (
-            SELECT *, UNNEST(effect_gene) as eg
-            FROM summary_table as sa
-        ),
-        effect_gene AS (
-            SELECT *
-            FROM effect_gene_all
-            WHERE
-                eg.effect_gene_symbols = 'A'
-        )
-        select * from effect_gene
-        """,
-        dialect="duckdb",
-    )
+    query = sql_builder.build_summary_variants_query(
+        genes=["A", "I"])
 
-    assert query is not None
+    assert len(query) == 1
+
     result = execute(
-        query,
+        query[0],
         tables=tables)
 
     assert len(result) == 2
