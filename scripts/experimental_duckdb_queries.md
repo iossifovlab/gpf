@@ -2897,3 +2897,62 @@ on t1.sj_index = fa.sj_index
 LIMIT 10001;
 ```
 
+
+
+```sql
+WITH summary_base AS (
+  SELECT
+    *
+  FROM summary_table AS sa
+  WHERE
+    sa.region_bin = 'chr14_0' AND sa.allele_index > 0
+), summary AS (
+  SELECT
+    *
+  FROM summary, UNNEST(sa.effect_gene) as s(eg)
+  WHERE
+    s.eg.effect_gene_symbols IN ('CHD8')
+    AND s.eg.effect_types IN ('frame-shift', 'nonsense', 'splice-site')
+), family AS (
+  SELECT
+    *
+  FROM family_table AS fa
+  WHERE fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM effect_gene_summary AS sa
+JOIN family AS fa
+  ON (
+    fa.summary_index = sa.summary_index
+    AND fa.bucket_index = sa.bucket_index
+    AND fa.allele_index = sa.allele_index
+  )
+LIMIT 10010
+```
+
+```sql
+WITH summary_base AS (
+  SELECT
+    *
+  FROM summary_table AS sa
+  WHERE
+    sa.region_bin = 'chr14_0' AND sa.allele_index > 0
+), summary AS (
+  SELECT
+    *
+  FROM summary_base, UNNEST(sa.effect_gene) as s(eg)
+  WHERE
+    s.eg.effect_gene_symbols IN ('CHD8')
+    AND s.eg.effect_types IN ('frame-shift', 'nonsense', 'splice-site')
+)
+SELECT
+    *
+FROM summary AS sa
+LIMIT 10010
+```
