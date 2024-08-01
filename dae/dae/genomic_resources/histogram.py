@@ -650,7 +650,9 @@ def build_histogram_config(
     return NullHistogramConfig(f"Invalid histogram configuration {config}")
 
 
-def build_default_histogram_conf(value_type: str, **kwargs: Any) -> NumberHistogramConfig | CategoricalHistogramConfig | NullHistogramConfig:
+def build_default_histogram_conf(
+    value_type: str, **kwargs: Any,
+) -> NumberHistogramConfig | CategoricalHistogramConfig | NullHistogramConfig:
     """Build default histogram config for given value type."""
     if value_type in ["int", "float"]:
         min_max = kwargs.get("min_max")

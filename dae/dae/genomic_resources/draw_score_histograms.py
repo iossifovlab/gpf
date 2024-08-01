@@ -105,6 +105,7 @@ def main(
 
         for score_id in score_ids:
             hist = genomic_score.get_score_histogram(score_id)
+
             if not isinstance(hist, NullHistogram):
                 with proto.open_raw_file(
                     res,

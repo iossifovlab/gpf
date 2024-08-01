@@ -449,7 +449,7 @@ class GenomicScoreImplementation(
                         outfile,
                         score_id,
                         impl.score.score_definitions[score_id].small_values_desc,
-                        impl.score.score_definitions[score_id].small_values_desc,
+                        impl.score.score_definitions[score_id].large_values_desc,
                     )
         return merged_histograms
 
