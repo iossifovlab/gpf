@@ -1642,6 +1642,7 @@ class SqlQueryBuilder2(QueryBuilderBase):
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
+        limit: int | None = None,
         **_kwargs: Any,
     ) -> list[str]:
         """Build a query for family variants."""
@@ -1680,6 +1681,8 @@ class SqlQueryBuilder2(QueryBuilderBase):
                 summary=self.apply_summary_heuristics(squery, heuristics),
                 family=self.apply_family_heuristics(fquery, heuristics),
             )
+            if limit is not None:
+                query = query.limit(limit)
             query = self.replace_tables(query)
 
             result.append(query.sql())
