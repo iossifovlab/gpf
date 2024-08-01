@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, Output } from '@angular/core';
 import { EditorOption } from 'angular-markdown-editor';
 import DOMPurify from 'dompurify';
 import { MarkdownService } from 'ngx-markdown';
@@ -8,7 +8,7 @@ import { MarkdownService } from 'ngx-markdown';
   templateUrl: './markdown-editor.component.html',
   styleUrls: ['./markdown-editor.component.css']
 })
-export class MarkdownEditorComponent implements OnInit {
+export class MarkdownEditorComponent implements OnChanges {
   @Input() public initialMarkdown: string;
   @Input() public editable = true;
 
@@ -40,7 +40,7 @@ export class MarkdownEditorComponent implements OnInit {
     }
   }
 
-  public ngOnInit(): void {
+  public ngOnChanges(): void {
     this.markdown = this.initialMarkdown;
   }
 
