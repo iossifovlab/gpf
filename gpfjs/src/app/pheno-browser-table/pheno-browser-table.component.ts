@@ -1,10 +1,4 @@
-import {
-  OnInit, Component, HostListener, Input, OnChanges, TemplateRef, ViewContainerRef, ViewChild,
-  ViewChildren,
-  Output,
-  EventEmitter
-} from '@angular/core';
-
+import { OnInit, Component, HostListener, Input, ViewChildren, Output, EventEmitter } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import {
   PhenoBrowserModalContentComponent
@@ -17,10 +11,8 @@ import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.com
   templateUrl: './pheno-browser-table.component.html',
   styleUrls: ['./pheno-browser-table.component.css']
 })
-export class PhenoBrowserTableComponent implements OnInit, OnChanges {
+export class PhenoBrowserTableComponent implements OnInit {
   @Input() public measures: PhenoMeasures;
-  @ViewChild('templateRef', { read: TemplateRef }) private templateRef: TemplateRef<Element>;
-  @ViewChild('viewContainerRef', { read: ViewContainerRef }) private viewContainerRef: ViewContainerRef;
   @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
   @Output() public sortEvent = new EventEmitter<{id: string; order: string}>();
 
@@ -40,11 +32,6 @@ export class PhenoBrowserTableComponent implements OnInit, OnChanges {
       this.columnsCount += 1;
     }
     this.onResize();
-  }
-
-  public ngOnChanges(): void {
-    this.viewContainerRef?.clear();
-    this.viewContainerRef?.createEmbeddedView(this.templateRef);
   }
 
   public sort(sortBy: string, orderBy: string): void {
