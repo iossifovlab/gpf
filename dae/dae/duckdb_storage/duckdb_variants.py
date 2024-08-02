@@ -50,7 +50,7 @@ class DuckDbRunner(QueryRunner):
                     val = self.deserializer(record)
                     if val is None:
                         continue
-                    self._put_value_in_result_queue(val)
+                    self.put_value_in_result_queue(val)
                     if self.is_closed():
                         logger.debug(
                             "query runner (%s) closed while iterating",
@@ -61,7 +61,7 @@ class DuckDbRunner(QueryRunner):
             logger.exception(
                 "exception in runner (%s) run",
                 self.query)
-            self._put_value_in_result_queue(ex)
+            self.put_value_in_result_queue(ex)
         finally:
             logger.debug(
                 "runner (%s) closing connection", self.query)

@@ -5,8 +5,9 @@ import logging
 import queue
 import threading
 import time
+from collections.abc import Callable
 from concurrent.futures import Executor, Future, ThreadPoolExecutor
-from typing import Any, Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +26,16 @@ class QueryRunner(abc.ABC):
 
         self._result_queue: queue.Queue | None = None
         self._future: Future | None = None
-        self.study_id = None
+        self.study_id: str | None = None
 
         deserializer = kwargs.get("deserializer")
         if deserializer is not None:
             self.deserializer = deserializer
         else:
             self.deserializer = lambda v: v
+
+    def set_study_id(self, study_id: str) -> None:
+        self.study_id = study_id
 
     def adapt(self, adapter_func: Callable[[Any], Any]) -> None:
         func = self.deserializer
@@ -75,10 +79,21 @@ class QueryRunner(abc.ABC):
     def _set_future(self, future: Future) -> None:
         self._future = future
 
-    def _set_result_queue(self, result_queue: queue.Queue) -> None:
+    @property
+    def result_queue(self) -> queue.Queue | None:
+        return self._result_queue
+
+    def set_result_queue(self, result_queue: queue.Queue) -> None:
+        assert self._result_queue is None
+        assert result_queue is not None
         self._result_queue = result_queue
 
-    def _put_value_in_result_queue(self, val: Any) -> None:
+    def put_value_in_result_queue(self, val: Any) -> None:
+        """Put a value in the result queue.
+
+        The result queue is blocking, so it will wait until there is space
+        for the new value. So it causes backpressure on the QueryRunners.
+        """
         assert self._result_queue is not None
 
         no_interest = 0
@@ -125,8 +140,8 @@ class QueryResult:
 
         self.runners = runners
         for runner in self.runners:
-            assert runner._result_queue is None
-            runner._set_result_queue(self.result_queue)
+            assert runner.result_queue is None
+            runner.set_result_queue(self.result_queue)
         self.executor = ThreadPoolExecutor(max_workers=len(runners))
         self._is_done_check = 0
 
@@ -163,12 +178,12 @@ class QueryResult:
                 if self.limit > 0 and self._counter > self.limit:
                     logger.debug(
                         "limit reached %d > %d", self._counter, self.limit)
-                    raise StopIteration()
-                return item
+                    raise StopIteration
             except queue.Empty as exp:
                 if not self.is_done():
                     return None
                 raise StopIteration from exp
+            return item
 
     def get(self, timeout: float = 0.0) -> Any:
         """Pop the next entry from the queue.
@@ -180,11 +195,11 @@ class QueryResult:
             if isinstance(row, Exception):
                 self._exceptions.append(row)
                 return None
-            return row
         except queue.Empty as exp:
             if self.is_done():
                 raise StopIteration from exp
             return None
+        return row
 
     def start(self) -> None:
         self.timestamp = time.time()
@@ -197,7 +212,7 @@ class QueryResult:
         for runner in self.runners:
             try:
                 runner.close()
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:  # noqa: BLE001 pylint: disable=broad-except
                 logger.info(
                     "exception in result close: %s", type(ex), exc_info=True)
         while not self.result_queue.empty():

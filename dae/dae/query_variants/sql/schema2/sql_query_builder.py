@@ -11,7 +11,6 @@ import sqlglot
 from sqlglot import condition, exp, or_
 from sqlglot.expressions import (
     Condition,
-    Expression,
     Select,
     replace_placeholders,
 )
@@ -1195,37 +1194,60 @@ class SqlQueryBuilder2(QueryBuilderBase):
 
     def summary_variants(
         self,
-        summary: Expression,
+        summary: Select,
     ) -> Select:
-        return Select().with_(
-                "summary", as_=summary,
-            ).select(
+        """Construct summary variants query."""
+        return self._append_cte(
+            target=Select(),
+            source=summary,
+            alias="summary",
+        ).select(
                 "sa.bucket_index", "sa.summary_index", "sa.allele_index",
                 "sa.summary_variant_data",
             ).from_(
                 "summary as sa",
             )
 
+    @staticmethod
+    def _append_cte(
+        target: Select,
+        source: Select,
+        alias: str,
+    ) -> Select:
+        if source.ctes:
+            for cte in source.ctes:
+                target = target.with_(
+                    cte.alias, as_=cte.this,
+                )
+        else:
+            target = target.with_(
+                alias, as_=source,
+            )
+        return target
+
     def family_variants(
         self,
-        summary: Expression,
-        family: Expression,
+        summary: Select,
+        family: Select,
     ) -> Select:
-        return Select().with_(
-                "summary", as_=summary,
-            ).with_(
-                "family", as_=family,
-            ).select(
-                "fa.bucket_index", "fa.summary_index", "fa.family_index",
-                "sa.allele_index",
-                "sa.summary_variant_data",
-                "fa.family_variant_data",
-            ).from_(
-                "summary as sa",
-            ).join(
-                "family as fa",
-                on="sa.sj_index = fa.sj_index",
-            )
+        """Construct family variants query."""
+        return self._append_cte(
+            Select(),
+            summary,
+            "summary",
+        ).with_(
+            "family", as_=family,
+        ).select(
+            "fa.bucket_index", "fa.summary_index", "fa.family_index",
+            "sa.allele_index",
+            "sa.summary_variant_data",
+            "fa.family_variant_data",
+        ).from_(
+            "summary as sa",
+        ).join(
+            "family as fa",
+            on="sa.sj_index = fa.sj_index",
+        )
 
     @staticmethod
     def _region_to_condition(reg: Region) -> Condition:
@@ -1397,12 +1419,22 @@ class SqlQueryBuilder2(QueryBuilderBase):
             query = query.where("sa.allele_index > 0")
 
         if genes is not None or effect_types is not None:
-            query = query.join("UNNEST(sa.effect_gene) as s(eg)")
-        if genes is not None:
-            query = query.where(SqlQueryBuilder2.genes(genes))
-        if effect_types is not None:
-            query = query.where(SqlQueryBuilder2.effect_types(effect_types))
-
+            equery = exp.select("*").from_(
+                "summary_base as sa",
+            ).join(
+                "UNNEST(sa.effect_gene) as s(eg)",
+            )
+            if genes is not None:
+                equery = equery.where(
+                    SqlQueryBuilder2.genes(genes))
+            if effect_types is not None:
+                equery = equery.where(
+                    SqlQueryBuilder2.effect_types(effect_types))
+            query = Select().with_(
+                "summary_base", as_=query,
+            ).with_(
+                "summary", as_=equery,
+            ).select("*").from_("summary")
         return query
 
     @staticmethod
@@ -1531,18 +1563,26 @@ class SqlQueryBuilder2(QueryBuilderBase):
         """Apply heuristics to the summary query."""
         if heuristics is None or heuristics.is_empty():
             return query
+        base_query = cast(
+            Select,
+            query.ctes[0].this if query.ctes else query,
+        )
 
         if heuristics.region_bins:
-            query = query.where(
+            base_query = base_query.where(
                 self.region_bins(table, heuristics.region_bins))
         if heuristics.frequency_bins:
-            query = query.where(
+            base_query = base_query.where(
                 self.frequency_bins(table, heuristics.frequency_bins))
         if heuristics.coding_bins:
-            query = query.where(
+            base_query = base_query.where(
                 self.coding_bins(table, heuristics.coding_bins))
+        if not query.ctes:
+            return base_query
 
-        return query
+        result = cast(Select, query.copy())
+        result.ctes[0].args["this"] = base_query
+        return result
 
     def apply_family_heuristics(
         self,
@@ -1592,11 +1632,11 @@ class SqlQueryBuilder2(QueryBuilderBase):
             frequency_filter=frequency_filter,
         )
         result = []
+
         for heuristics in batched_heuristics:
             query = self.summary_variants(
                 summary=self.apply_summary_heuristics(squery, heuristics),
             )
-
             if limit is not None:
                 query = query.limit(limit)
             query = self.replace_tables(query)

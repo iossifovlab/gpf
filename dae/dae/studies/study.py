@@ -122,7 +122,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     def person_set_collections(self) -> dict[str, PersonSetCollection]:
         return self._person_set_collections
 
-    def _add_parent(self, genotype_data_id: str) -> None:
+    def add_parent(self, genotype_data_id: str) -> None:
         self._parents.add(genotype_data_id)
 
     @property
@@ -241,14 +241,14 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
                     # pylint: disable=no-member,protected-access
                     person_sets_query = genotype_study\
-                        ._backend\
+                        .backend\
                         .build_person_set_collection_query(psc, psc_query)
                     if person_sets_query == ([], []):
                         continue
 
                     if person_sets_query is None:
                         query_person_ids = genotype_study\
-                            ._transform_person_set_collection_query(
+                            .transform_person_set_collection_query(
                                 psc_query, person_ids)
 
             if query_person_ids is not None and len(query_person_ids) == 0:
@@ -260,7 +260,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                 continue
 
             # pylint: disable=no-member,protected-access
-            runner = genotype_study._backend\
+            runner = genotype_study.backend\
                 .build_family_variants_query_runner(
                     regions=regions,
                     genes=genes,
@@ -280,6 +280,8 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     pedigree_fields=person_sets_query,
                     **kwargs,
                 )
+            runner.set_study_id(genotype_study.study_id)
+
             if runner is None:
                 logger.debug(
                     "study %s has no varants... skipping",
@@ -407,7 +409,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         runners = []
         for genotype_study in self._get_query_leaf_studies(study_filters):
             # pylint: disable=no-member,protected-access
-            runner = genotype_study._backend \
+            runner = genotype_study.backend \
                 .build_summary_variants_query_runner(
                     regions=regions,
                     genes=genes,
@@ -538,10 +540,11 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             result[psc_id] = psc
         return result
 
-    def _transform_person_set_collection_query(
+    def transform_person_set_collection_query(
         self, collection_query: tuple[str, list[str]],
         person_ids: Iterable[str] | None,
     ) -> set[str] | None:
+        """Transform person set collection query to person ids."""
         assert collection_query is not None
 
         collection_id, selected_sets = collection_query
@@ -596,7 +599,7 @@ class GenotypeDataGroup(GenotypeData):
         self._executor = None
         self.is_remote = False
         for study in self.studies:
-            study._add_parent(self.study_id)
+            study.add_parent(self.study_id)
 
     @property
     def is_group(self) -> bool:
@@ -867,6 +870,10 @@ class GenotypeDataStudy(GenotypeData):
         )
 
         self.is_remote = False
+
+    @property
+    def backend(self) -> Any:
+        return self._backend
 
     @property
     def study_phenotype(self) -> str:

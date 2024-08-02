@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
 import textwrap
-from typing import Set
 
 import pytest
 
@@ -20,13 +20,12 @@ from dae.testing import (
 from dae.utils.regions import Region
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def imported_study(
-    tmp_path_factory: pytest.TempPathFactory,
+    tmp_path: pathlib.Path,
     genotype_storage: GenotypeStorage,
 ) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp(
-        f"vcf_path_{genotype_storage.storage_id}")
+    root_path = tmp_path
     setup_genome(
         root_path / "foobar_genome" / "chrAll.fa",
         """
@@ -114,24 +113,23 @@ def imported_study(
         },
     }
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "partitoned_vcf", ped_path, [vcf_path],
         gpf_instance,
         project_config_update=project_config_update)
-    return study
 
 
 @pytest.mark.parametrize(
     "family_ids,count",
     [
         (None, 8),
-        (set(["f1"]), 5),
-        (set(["f2"]), 3),
+        ({"f1"}, 5),
+        ({"f2"}, 3),
     ],
 )
 def test_query_family_id(
-    family_ids: Set[str] | None, count: int,
+    family_ids: set[str] | None, count: int,
     imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(family_ids=family_ids))
@@ -142,17 +140,17 @@ def test_query_family_id(
     "person_ids,count",
     [
         (None, 8),
-        (set(["m1"]), 2),
-        (set(["d1"]), 3),
-        (set(["p1"]), 4),
-        (set(["s1"]), 2),
-        (set(["m2"]), 3),
-        (set(["d2"]), 2),
-        (set(["p2"]), 2),
+        ({"m1"}, 2),
+        ({"d1"}, 3),
+        ({"p1"}, 4),
+        ({"s1"}, 2),
+        ({"m2"}, 3),
+        ({"d2"}, 2),
+        ({"p2"}, 2),
     ],
 )
 def test_query_person_id(
-    person_ids: Set[str] | None, count: int, imported_study: GenotypeData,
+    person_ids: set[str] | None, count: int, imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(person_ids=person_ids))
     assert len(vs) == count
@@ -197,24 +195,25 @@ def test_query_effect(
     imported_study: GenotypeData,
 ) -> None:
     assert len(list(imported_study.
-                    query_variants(effect_types=effect))) == family_count
-
-    assert len(list(imported_study.
                     query_summary_variants(effect_types=effect))) == \
         summary_count
 
+    assert len(list(imported_study.
+                    query_variants(effect_types=effect))) == family_count
+
 
 def test_query_complex(imported_study: GenotypeData) -> None:
-    assert len(list(imported_study.
-                    query_variants(
-                        effect_types=["missense"],
-                        person_ids={"s1"},
-                        frequency_filter=[("af_allele_freq", (10, 27))],
-                        regions=[Region("bar", 3, 17)],
-                        # genes=set(["g2"])
-                    ),
-                    ),
-               ) == 1
+    assert len(list(
+        imported_study.
+            query_variants(
+                effect_types=["missense"],
+                person_ids={"s1"},
+                frequency_filter=[("af_allele_freq", (10, 27))],
+                regions=[Region("bar", 3, 17)],
+                genes=["g2"],
+            ),
+        ),
+    ) == 1
 
 
 def test_query_pedigree_fields(imported_study: GenotypeData) -> None:

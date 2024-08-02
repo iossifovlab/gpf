@@ -2956,3 +2956,122 @@ SELECT
 FROM summary AS sa
 LIMIT 10010
 ```
+
+
+```sql
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_summary AS sa /* summary_table */
+        WHERE
+            sa.allele_index > 0
+            AND sa.region_bin = 'foo_0'
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_base AS sa,
+            UNNEST (sa.effect_gene) AS s (eg)
+        WHERE
+            s.eg.effect_types IN ('missense', 'intron')
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_family AS fa /* family_table */
+        WHERE
+            fa.region_bin = 'foo_0'
+    )
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.summary_variant_data,
+    fa.family_variant_data
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index;
+```
+
+```sql
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_summary AS sa /* summary_table */
+        WHERE
+            sa.allele_index > 0
+            AND sa.region_bin = 'bar_0'
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_base AS sa,
+            UNNEST (sa.effect_gene) AS s (eg)
+        WHERE
+            s.eg.effect_types IN ('missense', 'intron')
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_family AS fa /* family_table */
+        WHERE
+            fa.region_bin = 'bar_0'
+    )
+SELECT
+    fa.region_bin,
+    fa.family_id,
+    sa.chromosome,
+    "sa"."position",
+    sa.effect_gene,
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index;
+```
+
+```sql
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_summary AS sa /* summary_table */
+        WHERE
+            sa.allele_index > 0
+            AND sa.region_bin = 'foo_0'
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_base AS sa,
+            UNNEST (sa.effect_gene) AS s (eg)
+        WHERE
+            s.eg.effect_types IN ('missense', 'intron')
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_family AS fa /* family_table */
+        WHERE
+            fa.region_bin = 'foo_0'
+    )
+SELECT
+    fa.region_bin,
+    fa.family_id,
+    sa.chromosome,
+    "sa"."position",
+    sa.effect_gene,
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index;
+```

@@ -34,7 +34,7 @@ RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 logger = logging.getLogger(__name__)
 
 
-class DuckDbRunner(QueryRunner):
+class DuckDb2Runner(QueryRunner):
     """Run a DuckDb query in a separate thread."""
 
     def __init__(
@@ -55,7 +55,8 @@ class DuckDbRunner(QueryRunner):
         """Execute the query and enqueue the resulting rows."""
         started = time.time()
         logger.debug(
-            "duckdb runner (%s) started", self.study_id)
+            "duckdb2 runner (%s) started; running %s queries",
+            self.study_id, len(self.query))
 
         try:
             if self.is_closed():
@@ -65,33 +66,39 @@ class DuckDbRunner(QueryRunner):
                 self._finalize(started)
                 return
 
-            with self.connection.cursor() as cursor:
-                for query in self.query:
-                    logger.debug("running SQL query: %s", query)
-                    for record in cursor.execute(query).fetchall():
+            for single_query in self.query:
+                with self.connection.cursor() as cursor:
+                    logger.debug("running SQL query: %s", single_query)
+                    cursor.execute(single_query)
+                    while record := cursor.fetchone():
+                        if record is None:
+                            logger.debug("query %s done")
+                            break
                         val = self.deserializer(record)
+                        logger.debug("deserialized variant: %s", val)
                         if val is None:
                             continue
-                        self._put_value_in_result_queue(val)
+                        self.put_value_in_result_queue(val)
                         self._counter += 1
                         if self.is_closed():
                             logger.debug(
                                 "query runner (%s) closed while iterating",
-                                query)
+                                self.study_id)
                             break
                     if self.is_closed() or self._counter >= self.limit:
                         logger.debug(
-                            "runner (%s) reached limit", self.study_id)
+                            "runner (%s) reached limit: %s",
+                            self.study_id, self.limit)
                         break
 
         except Exception as ex:  # pylint: disable=broad-except
             logger.exception(
                 "exception in runner (%s)",
-                self.query)
-            self._put_value_in_result_queue(ex)
+                self.study_id)
+            self.put_value_in_result_queue(ex)
         finally:
             logger.debug(
-                "runner (%s) closing connection", self.query)
+                "runner (%s) closing connection", self.study_id)
 
         self._finalize(started)
 
@@ -99,13 +106,13 @@ class DuckDbRunner(QueryRunner):
         with self._status_lock:
             self._done = True
         elapsed = time.time() - started
-        logger.debug("runner (%s) done in %0.3f sec", self.query, elapsed)
+        logger.debug("runner (%s) done in %0.3f sec", self.study_id, elapsed)
 
 
 class DuckDb2Variants(QueryVariantsBase):
     """Backend for DuckDb storage backend."""
 
-    RUNNER_CLASS = DuckDbRunner
+    RUNNER_CLASS = DuckDb2Runner
 
     def __init__(
         self,

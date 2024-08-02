@@ -111,7 +111,7 @@ class ImpalaQueryRunner(QueryRunner):
                         if val is None:
                             continue
 
-                        self._put_value_in_result_queue(val)
+                        self.put_value_in_result_queue(val)
                         self._counter += 1
 
                         if self.is_closed():
@@ -124,7 +124,7 @@ class ImpalaQueryRunner(QueryRunner):
                     logger.error(
                         "exception in runner (%s) run: %s",
                         self.study_id, type(ex), exc_info=True)
-                    self._put_value_in_result_queue(ex)
+                    self.put_value_in_result_queue(ex)
         logger.debug(
             "(%s) runner connection closed", self.study_id)
         self.close()
