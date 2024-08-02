@@ -386,15 +386,19 @@ Example table configuration for a genomic score resource.
 This configuration is embedded in the score's ``genomic_resource.yaml`` config.
 
 .. code:: yaml
+    # Example genomic_resource.yaml for a score resource.
+    # Contains both a genomic position table configuration under 'table',
+    # and configuration for scores under 'scores'.
 
     table:
       filename: whole_genome_SNVs.tsv.gz
       format: tabix
 
+      # how to modify the values found when reading the chromosome column
       chrom_mapping:
         add_prefix: chr
 
-      # defined by score_type
+      # configuration for essential columns
       chrom:
         name: Chrom
       pos_begin:
@@ -422,41 +426,226 @@ This configuration is embedded in the score's ``genomic_resource.yaml`` config.
             max: 36.0
           y_log_scale: True
 
-      - id: cadd_phred
-        type: float
-        name: PHRED
-        desc: |
-          CADD phred-like score. This is phred-like rank score based on whole
-          genome CADD raw scores. The larger the score the more likely the SNP
-          has damaging effect.
-        large_values_desc: "more damaging"
-        small_values_desc: "less damaging"
-        histogram:
-          type: number
-          number_of_bins: 100
-          view_range:
-            min: 0.0
-            max: 99.0
-          y_log_scale: True
 
-    default_annotation:
-      - source: cadd_raw
-        name: cadd_raw
+Table configuration fields
+##########################
 
-      - source: cadd_phred
-        name: cadd_phred
-
-    meta:
-      summary: |
-
-        CADD (Combined Annotation Dependent Depletion score) predicts the potential impact of a SNP
-
-      description: |
-        ## CADD GRCh38-v1.4
-
-        CADD score for functional prediction of a SNP. Please refer to Kircher
+filename
+  Path to the file containing the data, relative to the genomic resource's directory.
 
 
+format
+  Format of the file configured in ``filename``. Currently supported formats are ``tabix``, ``vcf_info``, ``tsv``, ``csv`` and ``bw``.
+  Auto-detection of the format works for the following filename extensions:
+
+  ============================  ======
+  Extension                     Format
+  ============================  ======
+  .bgz                          tabix
+  .vcf.gz                       vcf_info
+  .txt, .txt.gz, .tsv, .tsv.gz  tsv
+  .csv, .csv.gz                 csv
+  .bw                           bw
+  ============================  ======
+
+header_mode
+  The default value is ``file``.
+
+  =====  ======
+  Value  Effect
+  =====  ======
+  file   Will attempt to extract a header from the provided file.
+  list   Will take the list of strings provided with the configuration field ``header`` as header.
+  none   No header. Columns will only be able to be configured via index.
+  =====  ======
+
+header
+  Used for providing a header when ``header_mode`` is set to ``list``. Example:
+
+  .. code:: yaml
+      header_mode: list
+      header: ["chrom", "start", "end", "score_value"]
+
+chrom_mapping
+  Allows transformation of the values in the chromosome column. Three options are available:
+
+  add_prefix
+    Takes a string value and adds it as a prefix.
+
+  del_prefix
+    Takes a string value to remove from the start of each chromosome.
+
+  filename
+    Takes a filepath, relative to the genomic resource's directory.
+    The file's contents must contain two columns delimited by whitespace.
+    The first line must be the header, containing ``chrom`` and ``file_chrom`` as values.
+    The ``file_chrom`` column contains values that will be found in the file, while the ``chrom`` column contains what they will be mapped to.
+    An example is given below:
+
+    .. code::
+
+        chrom           file_chrom
+        Chromosome_1    1
+        Chromosome_22   22
+
+
+{column}
+  Generic configuration for a column in the genomic position table.
+
+  column_name
+    Takes a string value. The name of the column as it appears in the file's header. Cannot be used if no header has been provided for the table.
+
+  column_index
+    Takes an integer value. The index of the column in the file.
+
+  name
+    Deprecated version of ``column_name``.
+
+  index
+    Deprecated version of ``column_index``.
+
+
+chrom
+  Column configuration for the chromosome column. See explanation for {column} above.
+
+
+pos_begin
+  Column configuration for the start position column. See explanation for {column} above.
+
+
+pos_end
+  Column configuration for the end position column. See explanation for {column} above.
+
+
+reference
+  Column configuration for the reference column. See explanation for {column} above.
+
+
+alternative
+  Column configuration for the alternative column. See explanation for {column} above.
+
+
+Score configuration fields
+##########################
+
+id
+  Takes a string value. The identifier the system will use to refer to this score column in annotation configurations.
+
+
+type
+  Type of the column's values. Takes one of the following values - ``str``, ``float``, ``int``.
+
+
+column_name
+  Takes a string value. The name of the column as it appears in the file's header. Cannot be used if no header has been provided for the table.
+
+
+column_index
+  Takes an integer value. The index of the column in the file.
+
+
+name
+  Deprecated version of ``column_name``.
+
+
+index
+  Deprecated version of ``column_index``.
+
+
+desc
+  A string describing the score column.
+
+
+na_values
+  Takes a string or list of strings value. Which score values to consider as ``na``.
+
+
+histogram
+  type
+    The type of histogram to build. Takes one of the following valeus - ``number``, ``categorical``, ``null``.
+
+
+  number_of_bins
+    The amount of bins to create. The default value is 100.
+
+
+  view_range
+    Restricts which score values to use for the histogram.
+
+    min
+      The minimum value.
+
+    max
+      The maximum value.
+
+
+  x_log_scale
+    Boolean. If true, the X scale will be logarithmic.
+
+
+  y_log_scale
+    Boolean. If true, the Y scale will be logarithmic.
+
+
+  x_min_log
+    Takes a float value. Values less than this will not be included in logarithmic scales, and will instead be separated into their own bin.
+
+
+  value_order
+    The ordering of values for categorical histograms.
+
+
+  reason
+    Used when type is ``null``. Explanation why no histogram has been constructed.
+
+
+number_hist
+  Specific configuration for ``number`` type histograms.
+
+  number_of_bins
+    See above, under ``histogram``.
+
+
+  view_range
+    See above, under ``histogram``.
+
+
+  x_log_scale
+    See above, under ``histogram``.
+
+
+  y_log_scale
+    See above, under ``histogram``.
+
+
+  x_min_log
+    See above, under ``histogram``.
+
+
+categorical_hist
+  Specific configuration for ``categorical`` type histograms.
+
+  y_log_scale
+    See above, under ``histogram``.
+
+
+  value_order
+    See above, under ``histogram``.
+
+
+null_hist
+  Specific configuration for skipping the calculation of a histogram.
+
+  reason
+    See above, under ``histogram``.
+
+
+large_values_desc
+  Text that will be included in the histogram image as description for large values.
+
+
+small_values_desc
+  Text that will be included in the histogram image as description for small values.
 
 
 Zero-based / BED format scores
