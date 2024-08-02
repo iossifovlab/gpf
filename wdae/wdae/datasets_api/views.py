@@ -14,7 +14,7 @@ from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import StudyWrapper, StudyWrapperBase
+from studies.study_wrapper import StudyWrapperBase
 
 from dae.studies.study import GenotypeData
 from datasets_api.permissions import (
