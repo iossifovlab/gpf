@@ -41,14 +41,21 @@ fakeJsonMeasurei1['measure_id'] = 'i1.test_measure';
 fakeJsonMeasurei1['measure_name'] = 'test_measure';
 (fakeJsonMeasurei1['regressions'] as PhenoRegressions[])[0]['measure_id']= 'i1.test_measure';
 
+const fakeJsonMeasurei2 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression)) as object;
+fakeJsonMeasurei2['instrument_name'] = 'i2';
+fakeJsonMeasurei2['measure_id'] = 'i2.test_measure';
+fakeJsonMeasurei2['measure_name'] = 'test_measure2';
+(fakeJsonMeasurei2['regressions'] as PhenoRegressions[])[0]['measure_id']= 'i2.test_measure';
+
 class MockPhenoBrowserService {
   public getInstruments(): Observable<PhenoInstruments> {
     return of(new PhenoInstruments('i1', ['i1', 'i2', 'i3']));
   }
 
-  public getMeasures(): Observable<PhenoMeasure> {
-    const measures = PhenoMeasure.fromJson(fakeJsonMeasurei1);
-    return of(measures);
+  public getMeasures(): Observable<PhenoMeasure[]> {
+    const measure1 = PhenoMeasure.fromJson(fakeJsonMeasurei1);
+    const measure2 = PhenoMeasure.fromJson(fakeJsonMeasurei2);
+    return of([measure1, measure2]);
   }
 
   public getMeasuresInfo(): Observable<PhenoMeasures> {
@@ -102,11 +109,15 @@ class MockRouter {
   }
 }
 
+class MockPhenoMeasures {
+  public clear(): void { }
+}
+
 const setQuery = (fixture: ComponentFixture<PhenoBrowserComponent>, instrument: number, search: string): void => {
-  const selectElem = fixture.nativeElement.querySelector('select');
-  const searchElem = fixture.nativeElement.querySelector('input');
+  const selectElem = (fixture.nativeElement as HTMLSelectElement).querySelector('select');
+  const searchElem = (fixture.nativeElement as HTMLInputElement).querySelector('input');
   const selectedOptionElem = fixture.debugElement.queryAll(By.css('option'))[instrument];
-  selectElem.value = selectedOptionElem.nativeElement.value;
+  selectElem.value = (selectedOptionElem.nativeElement as HTMLOptionElement).value;
   selectElem.dispatchEvent(new Event('change'));
   searchElem.value = search;
   searchElem.dispatchEvent(new Event('input'));
@@ -121,6 +132,7 @@ describe('PhenoBrowserComponent', () => {
   const activatedRoute = new MockActivatedRoute();
   const phenoBrowserServiceMock = new MockPhenoBrowserService();
   const mockDatasetsService = new MockDatasetsService();
+  const mockPhenoMeasures = new MockPhenoMeasures();
 
   let locationSpy;
   const resizeSpy = {
@@ -153,6 +165,7 @@ describe('PhenoBrowserComponent', () => {
         { provide: Location, useValue: locationSpy as object},
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
         { provide: ResizeService, useValue: resizeSpy },
+        { provide: PhenoMeasures, useValue: mockPhenoMeasures },
         ConfigService
       ]
     }).compileComponents();
@@ -168,6 +181,9 @@ describe('PhenoBrowserComponent', () => {
     component['store'] = {
       selectOnce: () => of(selectedDatasetMockModel)
     } as never;
+
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
 
     component.ngOnInit();
     fixture.detectChanges();
@@ -262,5 +278,72 @@ describe('PhenoBrowserComponent', () => {
     expect(validateSpy).toHaveBeenCalledWith(data);
     expect(downloadSpy).toHaveBeenCalledWith(data);
     expect(component.errorModal).toBe(false);
+  });
+
+  it('should change instrument', () => {
+    component['pageCount'] = 5; // access private property
+    expect(component.selectedInstrument$.value).not.toBe('mockInstrument');
+    component.emitInstrument('mockInstrument');
+    expect(component.selectedInstrument$.value).toBe('mockInstrument');
+    expect(component['pageCount']).toBe(1);
+  });
+
+  it('should check page counter when searching', () => {
+    component['pageCount'] = 5;
+    component['allPagesLoaded'] = true;
+    const mockMeasure1 = new PhenoMeasure(1, 'instrument', '', '', '', 'm1', 'measure1', 'type1', '', null, '');
+    const mockMeasure2 = new PhenoMeasure(1, 'instrument', '', '', '', 'm1', 'measure1', 'type1', '', null, '');
+    component.measuresToShow = new PhenoMeasures('', [mockMeasure1, mockMeasure2], false, {});
+
+    component.search('searchValue');
+    expect(component['pageCount']).toBe(1);
+    expect(component['allPagesLoaded']).toBe(false);
+    expect(component.measuresToShow.measures).toBeNull();
+  });
+
+  it('should handle sort', () => {
+    const updateTableSpy = jest.spyOn(PhenoBrowserComponent.prototype as any, 'updateTable').mockImplementation();
+    const mockMeasure1 = new PhenoMeasure(1, 'instrument', '', '', '', 'm1', 'measure1', 'type1', '', null, '');
+    const mockMeasure2 = new PhenoMeasure(1, 'instrument', '', '', '', 'm1', 'measure1', 'type1', '', null, '');
+    component.measuresToShow = new PhenoMeasures('', [mockMeasure1, mockMeasure2], false, {});
+    component.handleSort({id: 'id', order: 'asc'});
+    expect(component['orderBy']).toBe('asc');
+    expect(component['sortBy']).toBe('id');
+    expect(component['pageCount']).toBe(1);
+    expect(component.measuresToShow.measures).toBeNull();
+    expect(updateTableSpy).toHaveBeenCalledWith();
+  });
+
+  it('should update table on scroll', () => {
+    const updateTableSpy = jest.spyOn(PhenoBrowserComponent.prototype as any, 'updateTable').mockImplementation();
+    component['pageCount'] = 2;
+
+    jest.spyOn(window, 'open').mockImplementation();
+
+    component.updateTableOnScroll();
+    expect(component['pageCount']).toBe(3);
+    expect(updateTableSpy).toHaveBeenCalledWith();
+  });
+
+  it('should update table on scroll when all pages are loaded', () => {
+    jest.spyOn(phenoBrowserServiceMock, 'getMeasures').mockReturnValue(of([] as PhenoMeasure[]));
+    const mockMeasure1 = new PhenoMeasure(1, 'instrument', '', '', '', 'm1', 'measure1', 'type1', '', null, '');
+    component.measuresToShow = new PhenoMeasures('', [mockMeasure1], false, {});
+
+    const updateTableSpy = jest.spyOn(PhenoBrowserComponent.prototype as any, 'updateTable');
+    component['pageCount'] = 2;
+
+    component.measuresToShow.clear();
+    component.updateTableOnScroll();
+
+    expect(component['pageCount']).toBe(3);
+    expect(updateTableSpy).toHaveBeenCalledWith();
+    expect(component['allPagesLoaded']).toBe(true);
+
+    component.updateTableOnScroll();
+
+    expect(component['pageCount']).toBe(3);
+    expect(component['allPagesLoaded']).toBe(true);
+    expect(updateTableSpy).not.toHaveBeenCalledTimes(2);
   });
 });

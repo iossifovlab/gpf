@@ -11,7 +11,7 @@ export const fakeJsonMeasure = {
   measure_name: 'test_measure',
   measure_type: 'ordinal',
   description: 'a test measure',
-  regressions: []
+  regressions: [],
 };
 
 export const fakeJsonMeasureOneRegression = {
