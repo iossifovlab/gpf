@@ -66,8 +66,12 @@ def augment_with_parents(
 def get_description_etag(
     request: Request, **_kwargs: dict[str, Any],
 ) -> str:
+    """Get description etag."""
     dataset_id = request.parser_context["kwargs"]["dataset_id"]
-    return get_cacheable_hash(f"{dataset_id}_description")
+    cache_hash = get_cacheable_hash(f"{dataset_id}_description")
+    if cache_hash is None:
+        cache_hash = "0"
+    return cache_hash
 
 
 class DatasetView(QueryBaseView):
