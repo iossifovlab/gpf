@@ -166,6 +166,11 @@ export class PhenoMeasures {
     this.measures.push(newMeasure);
   }
 
+  public clear(): void {
+    this.measures = null;
+  }
+
+
   public static fromJson(json: object): PhenoMeasures {
     const measures = new PhenoMeasures(
       json['base_image_url'] as string,
@@ -183,7 +188,7 @@ export class PhenoMeasures {
 
   public constructor(
     public readonly baseImageUrl: string,
-    public readonly measures: Array<PhenoMeasure>,
+    public measures: Array<PhenoMeasure>,
     public readonly hasDescriptions: boolean,
     public readonly regressionNames: object
   ) { }

@@ -34,9 +34,10 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   private getPageSubscription: Subscription = new Subscription();
   private pageCount = 1;
   private allPagesLoaded = false;
+  private sortBy = '';
+  private orderBy = '';
 
   public constructor(
-    private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
     private phenoBrowserService: PhenoBrowserService,
@@ -71,53 +72,21 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
     );
 
     this.measuresSubscription = combineLatest([this.searchTermObs$, this.selectedInstrument$]).pipe(
-      tap(([searchTerm, newSelection]) => {
+      switchMap(([searchTerm, instrument]) => {
+        this.updateUrl(searchTerm, instrument);
+
         this.measuresToShow = null;
-        const queryParamsObject: {
-            instrument: string;
-            search: string;
-        } = {
-          instrument: undefined,
-          search: undefined
-        };
-        if (newSelection) {
-          queryParamsObject.instrument = newSelection;
-        }
-        if (searchTerm) {
-          queryParamsObject.search = searchTerm;
-        }
-        const url = this.router.createUrlTree(['.'], {
-          /* Removed unsupported properties by Angular migration: replaceUrl. */
-          relativeTo: this.route,
-          queryParams: queryParamsObject
-        }).toString();
-        this.location.replaceState(url);
-      }),
-      switchMap(([searchTerm, newSelection]) => {
-        this.measuresToShow = null;
-        return combineLatest([
-          of(searchTerm),
-          of(newSelection),
-          this.phenoBrowserService.getMeasuresInfo(datasetId)
-        ]);
-      }),
-      switchMap(([searchTerm, newSelection, measuresInfo]) => {
-        this.measuresToShow = measuresInfo;
-        return this.phenoBrowserService.getMeasures(this.pageCount, datasetId, newSelection, searchTerm);
-      }),
-      map((measures: PhenoMeasure[]) => {
-        if (this.measuresToShow === null) {
-          return null;
-        }
-        if (measures !== null) {
-          measures.forEach(measure => {
-            this.measuresToShow.addMeasure(measure);
-          });
-        }
-        return this.measuresToShow;
-      }),
-      share()
-    ).subscribe();
+        this.sortBy = '';
+        this.orderBy = '';
+        return this.phenoBrowserService.getMeasuresInfo(datasetId);
+      })
+    ).subscribe(phenoMeasures => {
+      this.measuresToShow = phenoMeasures;
+      this.measuresToShow?.clear();
+      this.allPagesLoaded = false;
+      this.pageCount = 1;
+      this.updateTable();
+    });
 
     this.route.queryParamMap.pipe(
       map(params => [params.get('instrument') || '', params.get('search') || '']),
@@ -128,12 +97,35 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
     });
   }
 
+  private updateUrl(searchText: string, instrument: string): void {
+    const queryParamsObject: {
+        instrument: string;
+        search: string;
+    } = {
+      instrument: undefined,
+      search: undefined
+    };
+    if (instrument) {
+      queryParamsObject.instrument = instrument;
+    }
+    if (searchText) {
+      queryParamsObject.search = searchText;
+    }
+    const url = this.router.createUrlTree(['.'], {
+      relativeTo: this.route,
+      queryParams: queryParamsObject
+    }).toString();
+    this.location.replaceState(url);
+  }
+
   private initInstruments(datasetId: string): void {
     this.instruments = this.phenoBrowserService.getInstruments(datasetId);
   }
 
   public emitInstrument(instrument: PhenoInstrument): void {
     this.selectedInstrument$.next(instrument);
+    this.measuresToShow?.clear();
+    this.allPagesLoaded = false;
     this.pageCount = 1;
   }
 
@@ -147,7 +139,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
     }
   }
 
-  private updateTable(orderBy?: string, sortBy?: string): void {
+  private updateTable(): void {
     this.getPageSubscription?.unsubscribe();
     this.getPageSubscription =
       this.phenoBrowserService.getMeasures(
@@ -155,12 +147,16 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
         this.selectedDataset.id,
         this.selectedInstrument$.value,
         (this.searchBox.nativeElement as HTMLInputElement).value,
-        sortBy,
-        orderBy
+        this.sortBy,
+        this.orderBy
       ).subscribe(res => {
-        if (!res.length) {
+        if (!res.length && this.measuresToShow.measures) {
           this.allPagesLoaded = true;
           return;
+        }
+
+        if (this.measuresToShow.measures === null) {
+          this.measuresToShow.measures = [];
         }
 
         res.forEach(r => {
@@ -200,11 +196,17 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
 
   public search(value: string): void {
     this.input$.next(value);
+    this.measuresToShow?.clear();
+    this.allPagesLoaded = false;
     this.pageCount = 1;
   }
 
   public handleSort(event: { id: string; order: string}): void {
-    this.updateTable(event.order, event.id);
+    this.sortBy = event.id;
+    this.orderBy = event.order;
+    this.measuresToShow.clear();
+    this.pageCount = 1;
+    this.updateTable();
   }
 
   private async waitForSearchBoxToLoad(): Promise<void> {
