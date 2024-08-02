@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-
 import pathlib
 import textwrap
 from typing import cast
@@ -357,13 +356,10 @@ def test_chrom_mapping_file_with_tabix(tmp_path: pathlib.Path) -> None:
 
     with build_genomic_position_table(res, res.config["table"]) as tab:
         assert tab.get_chromosomes() == ["gosho", "pesho"]
-        assert [
-            line.chrom for line in tab.get_all_records()  # type: ignore
-        ] == ["gosho", "pesho"]
-        assert [
-            line.chrom
-            for line in tab.get_records_in_region("pesho")
-        ] == ["pesho"]
+        assert [line.chrom for line in tab.get_all_records()] == \
+            ["gosho", "pesho"]
+        assert [line.chrom for line in tab.get_records_in_region("pesho")] == \
+            ["pesho"]
 
 
 def test_invalid_chrom_mapping_file_with_tabix(tmp_path: pathlib.Path) -> None:
@@ -1731,3 +1727,26 @@ def test_tabix_table_zero_based(tmp_path: pathlib.Path) -> None:
         ] == [
             ("1", 4, 4, "3.14"),
         ]
+
+
+def test_new_score_configuration_fields() -> None:
+    res = build_inmemory_test_resource({
+        "genomic_resource.yaml": """
+            table:
+                filename: data.mem
+                header_mode: list
+                header: ["chrom", "pos", "pos2", "score", "score2"]
+                pos_begin:
+                    column_name: pos
+                pos_end:
+                    column_index: 2
+            """,
+        "data.mem": convert_to_tab_separated(
+            """
+            1     10        12    6.28  3.14
+            """)})
+    assert res.config is not None
+
+    with build_genomic_position_table(res, res.config["table"]) as table:
+        assert table.get_column_key("pos_begin") == 1
+        assert table.get_column_key("pos_end") == 2

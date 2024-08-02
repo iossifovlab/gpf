@@ -5,8 +5,8 @@ from typing import cast
 
 import pytest
 
-from dae.genomic_resources.genomic_position_table import VCFGenomicPositionTable
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
+from dae.genomic_resources.genomic_position_table import VCFGenomicPositionTable
 from dae.genomic_resources.genomic_scores import (
     AlleleScore,
     build_score_from_resource,
@@ -233,8 +233,7 @@ def test_forbid_column_names_in_scores_when_no_header_configured() -> None:
         """),
     })
     with pytest.raises(AssertionError) as excinfo:
-        score = build_score_from_resource(res)
-        score.open()
+        build_score_from_resource(res).open()
     assert str(excinfo.value) == ("Cannot configure score columns by name"
                                   " when header_mode is 'none'!")
 
@@ -258,8 +257,7 @@ def test_raise_error_when_missing_column_name_in_header() -> None:
             """),
     })
     with pytest.raises(AssertionError):
-        score = build_score_from_resource(res)
-        score.open()
+        build_score_from_resource(res).open()
 
 
 def test_raise_error_when_missing_column_name_in_header_as_list() -> None:
@@ -281,8 +279,7 @@ def test_raise_error_when_missing_column_name_in_header_as_list() -> None:
         """),
     })
     with pytest.raises(AssertionError):
-        score = build_score_from_resource(res)
-        score.open()
+        build_score_from_resource(res).open()
 
 
 def test_vcf_check_for_missing_score_columns(tmp_path: pathlib.Path) -> None:
@@ -336,9 +333,8 @@ def test_line_score_value_parsing(tmp_path: pathlib.Path) -> None:
     res = build_filesystem_test_resource(tmp_path)
     score = build_score_from_resource(res)
     score.open()
-    assert list(map(
-        lambda l: l.get_score("c2"),
-        score._fetch_lines("1", 10, 30))) == [3.14, 4.14, 5.14]
+    result = [line.get_score("c2") for line in score._fetch_lines("1", 10, 30)]
+    assert result == [3.14, 4.14, 5.14]
 
 
 def test_genomic_score_chrom_mapping(tmp_path: pathlib.Path) -> None:
@@ -452,9 +448,8 @@ def test_line_score_na_values(tmp_path: pathlib.Path) -> None:
 
     score = build_score_from_resource(res)
     score.open()
-    assert list(map(
-        lambda l: l.get_score("c2"),
-        score._fetch_lines("1", 10, 30))) == [3.14, None, None]
+    result = [line.get_score("c2") for line in score._fetch_lines("1", 10, 30)]
+    assert result == [3.14, None, None]
 
 
 def test_line_get_available_score_columns(vcf_score: AlleleScore) -> None:
@@ -465,10 +460,10 @@ def test_line_get_available_score_columns(vcf_score: AlleleScore) -> None:
 
 def test_vcf_tuple_scores_autoconcat_to_string(vcf_score: AlleleScore) -> None:
     vcf_score.open()
-    results = tuple(map(
-        lambda r: (r.chrom, r.pos_begin, r.pos_end, r.get_score("B")),
-        vcf_score._fetch_lines("chr1", 2, 30),
-    ))
+    results = tuple(
+        (r.chrom, r.pos_begin, r.pos_end, r.get_score("B"))
+        for r in vcf_score._fetch_lines("chr1", 2, 30)
+    )
     assert results == (
         ("chr1", 2, 2, "1,2,3"),
         ("chr1", 5, 5, "11,12,13"),
@@ -518,3 +513,47 @@ chr1   5   .  A   T   .    .       A=1;C=c11,c12;D=d11
     assert score.score_definitions["A"].value_type == "int"
     assert score.score_definitions["C"].desc == "Score C"
     assert score.score_definitions["C"].value_type == "str"
+
+
+def test_score_definition_new_configuration_fields(
+    tmp_path: pathlib.Path,
+) -> None:
+    setup_directories(
+        tmp_path, {
+            "genomic_resource.yaml": """
+                type: position_score
+                table:
+                  filename: data.txt.gz
+                  format: tabix
+                  header_mode: list
+                  header: ["chrom", "pos", "pos2", "score", "score2"]
+                  chrom:
+                    column_index: 0
+                  pos_begin:
+                    column_index: 1
+                  pos_end:
+                    column_name: pos2
+                scores:
+                - id: piscore
+                  column_index: 3
+                  type: float
+                - id: 2piscore
+                  column_name: score2
+                  type: float
+            """,
+        })
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        "1     10        12       3.14  6.28",
+        seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
+    score = build_score_from_resource(res)
+    score.open()
+    assert len(score.score_definitions) == 2
+    assert "piscore" in score.score_definitions
+    assert "2piscore" in score.score_definitions
+
+    score_line = next(score._fetch_lines("1", 10, 12))
+    assert score_line.get_available_scores() == ("piscore", "2piscore")
+    assert score_line.get_score("piscore") == 3.14
+    assert score_line.get_score("2piscore") == 6.28
