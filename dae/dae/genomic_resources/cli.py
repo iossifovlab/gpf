@@ -355,7 +355,7 @@ def _do_resource_manifest_command(
                 f"entries to delete from manifest "
                 f"{sorted(manifest_update.entries_to_delete)}"
             )
-        logger.info(msg)
+        logger.warning(msg)
 
     if dry_run:
         return bool(manifest_update)
@@ -717,7 +717,7 @@ def _run_repo_info_command(
     for res in proto.get_all_resources():
         try:
             _do_resource_info_command(repo, proto, res)
-        except ValueError:  # noqa PERF203
+        except ValueError:
             logger.exception(
                 "Failed to generate repo index for %s",
                 res.resource_id,

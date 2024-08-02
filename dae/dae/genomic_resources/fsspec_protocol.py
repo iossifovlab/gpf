@@ -418,6 +418,7 @@ class FsspecReadWriteProtocol(
 
             if self.filesystem.exists(manifest_filename):
                 with self.filesystem.open(manifest_filename, "rt") as infile:
+                    logger.debug("loading manifest from %s", manifest_filename)
                     manifest = Manifest.from_file_content(infile.read())
             yield self.build_genomic_resource(
                 res_id, res_ver, config, manifest)
