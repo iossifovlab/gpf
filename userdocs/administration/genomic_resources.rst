@@ -386,6 +386,7 @@ Example table configuration for a genomic score resource.
 This configuration is embedded in the score's ``genomic_resource.yaml`` config.
 
 .. code:: yaml
+
     # Example genomic_resource.yaml for a score resource.
     # Contains both a genomic position table configuration under 'table',
     # and configuration for scores under 'scores'.
