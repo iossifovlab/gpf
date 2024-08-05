@@ -357,6 +357,7 @@ class GenomicScore(ResourceConfigValidationMixin):
             "table": {"type": "dict", "schema": {
                 "filename": {"type": "string"},
                 "index_filename": {"type": "string"},
+                "zero_based": {"type": "boolean", "default": False},
                 "desc": {"type": "string"},
                 "format": {"type": "string"},
                 "header_mode": {"type": "string"},

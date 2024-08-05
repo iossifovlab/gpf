@@ -40,9 +40,35 @@ def proto_fixture(
                       bins: 100
                 """),
         },
+        "two": {
+            GR_CONF_FILE_NAME: textwrap.dedent("""
+                type: position_score
+                table:
+                    filename: data.txt.gz
+                    format: tabix
+                    zero_based: true
+                scores:
+                    - id: phastCons100way
+                      type: float
+                      name: s1
+                histograms:
+                    - score: phastCons100way
+                      bins: 100
+                """),
+        },
     })
     setup_tabix(
         path / "one" / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end  s1    s2
+        1       10         15       0.02  1.02
+        1       17         19       0.03  1.03
+        1       22         25       0.04  1.04
+        2       5          80       0.01  2.01
+        2       10         11       0.02  2.02
+        """, seq_col=0, start_col=1, end_col=2)
+    setup_tabix(
+        path / "two" / "data.txt.gz",
         """
         #chrom  pos_begin  pos_end  s1    s2
         1       10         15       0.02  1.02
@@ -83,6 +109,7 @@ def test_repo_repair_simple(
     proto.filesystem.delete(
         os.path.join(proto.url, ".CONTENTS"))
     assert not (path / "one/statistics").exists()
+    assert not (path / "two/statistics").exists()
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
 
     # When
@@ -92,6 +119,8 @@ def test_repo_repair_simple(
     # Then
     assert (path / "one/statistics").exists()
     assert (path / "one" / GR_MANIFEST_FILE_NAME).exists()
+    assert (path / "two/statistics").exists()
+    assert (path / "two" / GR_MANIFEST_FILE_NAME).exists()
     assert (path / GR_CONTENTS_FILE_NAME).exists()
 
 
