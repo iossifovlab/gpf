@@ -3075,3 +3075,72 @@ FROM
     summary AS sa
     JOIN family AS fa ON sa.sj_index = fa.sj_index;
 ```
+
+
+```sql
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_summary AS sa /* summary_table */
+        WHERE
+            (
+                (
+                    (
+                        sa.af_allele_freq <= 1
+                        OR sa.af_allele_freq IS NULL
+                    )
+                    AND sa.allele_index > 0
+                )
+                AND sa.frequency_bin IN (0, 1, 2)
+            )
+            AND sa.coding_bin = 1
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_base AS sa,
+            UNNEST (sa.effect_gene) AS s (eg)
+        WHERE
+            s.eg.effect_types IN (
+                'splice-site',
+                'frame-shift',
+                'nonsense',
+                'no-frame-shift-newStop',
+                'noStart',
+                'noEnd',
+                'missense',
+                'no-frame-shift',
+                'CDS'
+            )
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_family AS fa /* family_table */
+        WHERE
+            (
+                (
+                    fa.family_id = '11542'
+                    AND fa.frequency_bin IN (0, 1, 2)
+                )
+                AND fa.coding_bin = 1
+            )
+            AND fa.family_bin = 4
+    )
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.summary_variant_data,
+    fa.family_variant_data
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index
+LIMIT
+    20010
+```

@@ -453,15 +453,17 @@ class QueryBuilderBase:
             return [heuristics]
 
         if heuristics.frequency_bins:
-            # single batch if we dont search for common variants
-            common_bin = "2"
-            if common_bin not in heuristics.frequency_bins:
+            # single batch if we dont search for rare and common variants
+            rare_and_common_bins = {"2", "3"}
+            if rare_and_common_bins & set(heuristics.frequency_bins):
                 return [heuristics]
 
         if heuristics.coding_bins:
-            # single batch if we search for coding variants
+            # single batch if we search for rare coding variants
             noncoding_bin = "0"
-            if noncoding_bin not in heuristics.coding_bins:
+            common_bin = "3"
+            if noncoding_bin not in heuristics.coding_bins and \
+                    common_bin not in heuristics.frequency_bins:
                 return [heuristics]
 
         if self.partition_descriptor and \
