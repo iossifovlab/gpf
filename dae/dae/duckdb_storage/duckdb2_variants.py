@@ -75,7 +75,6 @@ class DuckDb2Runner(QueryRunner):
                             logger.debug("query %s done")
                             break
                         val = self.deserializer(record)
-                        logger.debug("deserialized variant: %s", val)
                         if val is None:
                             continue
                         self.put_value_in_result_queue(val)
