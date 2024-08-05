@@ -3,10 +3,11 @@ from __future__ import annotations
 import logging
 import os
 import re
+import shutil
 from collections import defaultdict
-from multiprocessing import Pool
+from collections.abc import Callable
 from multiprocessing.pool import AsyncResult
-from typing import Any, Callable, Dict, Tuple, cast
+from typing import Any, cast
 
 import duckdb
 import numpy as np
@@ -26,6 +27,9 @@ from dae.pheno.prepare.measure_classifier import (
     convert_to_numeric,
     convert_to_string,
 )
+from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
+from dae.task_graph.executor import task_graph_run_with_results
+from dae.task_graph.graph import TaskGraph
 
 logger = logging.getLogger(__name__)
 
@@ -48,11 +52,11 @@ class PrepareBase(PrepareCommon):
         self.connection = duckdb.connect(self.dbfile)
         self.parquet_dir = os.path.join(self.config.output, "parquet")
 
-    def get_persons(self, force: bool = False) -> dict[str, Any] | None:
+    def get_persons(self, *, force: bool = False) -> dict[str, Any] | None:
         """Return dictionary of all people in the pheno DB."""
         if not self.persons or len(self.persons) == 0 or force:
             self.persons = {}
-            result = self.connection.sql(
+            result = self.connection.execute(
                 "SELECT person_id, family_id, role, status, sex FROM person",
             )
             for row in result.fetchall():
@@ -73,14 +77,14 @@ class PreparePersons(PrepareBase):
         super().__init__(config)
         self.pedigree_df: pd.DataFrame | None = None
 
-    def _save_families(self, ped_df: pd.DataFrame) -> None:
+    def _save_families(self, ped_df: pd.DataFrame) -> None:  # noqa: ARG002
         # pylint: disable=unused-argument
-        self.connection.sql(
+        self.connection.execute(
             "CREATE TABLE family AS "
             "SELECT DISTINCT family_id FROM ped_df",
         )
         family_file = f"{self.parquet_dir}/family.parquet"
-        self.connection.sql(
+        self.connection.execute(
             f"COPY family TO '{family_file}' (FORMAT PARQUET)",
         )
 
@@ -97,12 +101,12 @@ class PreparePersons(PrepareBase):
         ped_df["sample_id"] = ped_df["sample_id"].transform(
             self._build_sample_id,
         )
-        self.connection.sql(
+        self.connection.execute(
             "CREATE TABLE person AS "
             "SELECT family_id, person_id, "
             "role, status, sex, sample_id FROM ped_df ",
         )
-        self.connection.sql(
+        self.connection.execute(
             f"COPY person TO '{person_file}' (FORMAT PARQUET)",
         )
 
@@ -115,7 +119,6 @@ class PreparePersons(PrepareBase):
         ped_df = FamiliesLoader.flexible_pedigree_read(
             pedfile, enums_as_values=True,
         )
-        # ped_df = self.prepare_pedigree(ped_df)
         self.save_pedigree(ped_df)
         self.pedigree_df = ped_df
         return ped_df
@@ -173,15 +176,14 @@ class ClassifyMeasureTask(Task):
             "values_domain": None,
             "rank": None,
         }
-        measure = Box(measure)
-        return measure
+        return Box(measure)
 
     def build_meta_measure(self, cursor: duckdb.DuckDBPyConnection) -> None:
         """Build measure meta data."""
         measure_type = self.measure.measure_type
         assert self.classifier_report is not None
 
-        if measure_type in set([MeasureType.continuous, MeasureType.ordinal]):
+        if measure_type in {MeasureType.continuous, MeasureType.ordinal}:
             min_value = np.min(
                 cast(np.ndarray, self.classifier_report.numeric_values),
             )
@@ -200,7 +202,7 @@ class ClassifyMeasureTask(Task):
             cursor, self.instrument_table_name,
         )
 
-        if measure_type in set([MeasureType.continuous, MeasureType.ordinal]):
+        if measure_type in {MeasureType.continuous, MeasureType.ordinal}:
             values_domain = f"[{min_value}, {max_value}]"
         else:
             unique_values = [v for (v, _) in distribution if v.strip() != ""]
@@ -215,7 +217,7 @@ class ClassifyMeasureTask(Task):
         try:
             logging.info("classifying measure %s", self.measure.measure_id)
             classifier = MeasureClassifier(self.config)
-            cursor = duckdb.connect(self.dbfile).cursor()
+            cursor = duckdb.connect(self.dbfile, read_only=True).cursor()
             self.classifier_report = classifier.meta_measures(
                 cursor,
                 self.instrument_table_name,
@@ -230,9 +232,9 @@ class ClassifyMeasureTask(Task):
             )
             self.build_meta_measure(cursor)
         except Exception:  # pylint: disable=broad-except
-            logger.error(
+            logger.exception(
                 "problem processing measure: %s", self.measure.measure_id,
-                exc_info=True)
+            )
         return self
 
     def done(self) -> Any:
@@ -251,7 +253,7 @@ class MeasureValuesTask(Task):
         measure_id = self.measure.db_id
         measure = self.measure
 
-        values: Dict[Tuple[int, int], Any] = {}
+        values: dict[tuple[int, int], Any] = {}
         measure_values = self.mdf.to_dict(orient="records")
         for record in measure_values:
             person_id = int(record[self.PID_COLUMN])
@@ -268,7 +270,10 @@ class MeasureValuesTask(Task):
                 if np.isnan(value):
                     continue
             else:
-                assert False, measure.measure_type.name
+                raise ValueError(
+                    f"measure type {measure.measure_type.name} "
+                    f"on measure {measure.db_id} is not supported",
+                )
             v = {
                 self.PERSON_ID: person_id,
                 "measure_id": measure_id,
@@ -326,14 +331,14 @@ class PrepareVariables(PreparePersons):
     ) -> bool:
         if connection is None:
             connection = duckdb.cursor()
-        tables = connection.sql("SHOW TABLES")
+        tables = connection.execute("SHOW TABLES")
         for table_row in tables.fetchall():
             if table_row[0] == "rejects":
                 result = \
-                    connection.sql("SELECT COUNT(*) from rejects").fetchone()
-                if result and result[0] == 0:
-                    return False
-                return True
+                    connection.execute(
+                        "SELECT COUNT(*) from rejects",
+                    ).fetchone()
+                return not (result and result[0] == 0)
         return False
 
     def load_instrument(
@@ -359,32 +364,32 @@ class PrepareVariables(PreparePersons):
         # segmentation fault due to faulty formatting
         print(f"{table_name} - {filenames_list}")
 
-        self.connection.sql(
-            f"CREATE TABLE {table_name} AS SELECT * FROM "
+        self.connection.execute(
+            f"CREATE TABLE {table_name} AS SELECT * FROM "  # noqa: S608
             f"read_csv({filenames_list}, delim='{sep}', header=true, "
             "ignore_errors=true, rejects_table='rejects')",
         )
         if self._check_for_rejects(self.connection):
-            describe = self.connection.sql(f"DESCRIBE {table_name}")
+            describe = self.connection.execute(f"DESCRIBE {table_name}")
             columns = {}
             for row in describe.fetchall():
                 columns[row[0]] = row[1]
-            reject_columns = self.connection.sql(
+            reject_columns = self.connection.execute(
                 "SELECT DISTINCT column_name FROM rejects",
             )
             for row in reject_columns.fetchall():
                 columns[row[0].strip('"')] = "VARCHAR"
-            self.connection.sql(f"DROP TABLE {table_name}")
+            self.connection.execute(f"DROP TABLE {table_name}")
             columns_string = ", ".join([
                 f"'{k}': '{v}'" for k, v in columns.items()
             ])
             columns_string = "{" + columns_string + "}"
-            self.connection.sql(
-                f"CREATE TABLE {table_name} AS SELECT * FROM "
+            self.connection.execute(
+                f"CREATE TABLE {table_name} AS SELECT * FROM "  # noqa: S608
                 f"read_csv({filenames_list}, delim='{sep}', "
                 f"columns={columns_string})",
             )
-        self.connection.sql("DROP TABLE rejects")
+        self.connection.execute("DROP TABLE rejects")
 
         self._clean_missing_person_ids(instrument_name)
 
@@ -405,8 +410,7 @@ class PrepareVariables(PreparePersons):
             return filename
 
         filename, _ext = os.path.splitext(db_filename)
-        filename = filename + "_report_log.tsv"
-        return filename
+        return filename + "_report_log.tsv"
 
     def log_header(self) -> None:
         with open(self.log_filename, "w", encoding="utf8") as log:
@@ -448,20 +452,20 @@ class PrepareVariables(PreparePersons):
         return instruments
 
     def build_variables(
-        self, instruments_dirname: str, description_path: str,
+        self, instruments_dirname: str, description_path: str, **kwargs: Any,
     ) -> None:
         """Build and store phenotype data into an sqlite database."""
         self.log_header()
 
         instruments = self._collect_instruments(instruments_dirname)
         descriptions = PrepareVariables.load_descriptions(description_path)
-        self.connection.sql(
+        self.connection.execute(
             "CREATE TABLE instrument ("
             "instrument_name VARCHAR, "
             "table_name VARCHAR"
             ")",
         )
-        self.connection.sql(
+        self.connection.execute(
             "CREATE TABLE measure ("
             "measure_id VARCHAR, "
             "measure_name VARCHAR, "
@@ -478,26 +482,43 @@ class PrepareVariables(PreparePersons):
             ")",
         )
 
-        self.build_pheno_common()
-
         for instrument_name, instrument_filenames in list(instruments.items()):
             assert instrument_name is not None
             self.load_instrument(instrument_name, instrument_filenames)
+
+        if not kwargs.get("skip_pheno_common"):
+            self.prepare_pheno_common_data()
+
+        self.connection.execute("CHECKPOINT")
+
+        temp_dbfile_name = os.path.join(
+            cast(str, kwargs["output"]), "tempdb.duckdb",
+        )
+        shutil.copyfile(self.dbfile, temp_dbfile_name)
+
+        if not kwargs.get("skip_pheno_common"):
+            self.build_pheno_common(temp_dbfile_name, **kwargs)
+
+        for instrument_name in list(instruments.keys()):
             table_name = self._instrument_tmp_table_name(instrument_name)
-            out = self.connection.sql(f"SELECT * FROM {table_name} LIMIT 1")
+            out = self.connection.execute(
+                f"SELECT * FROM {table_name} LIMIT 1",  # noqa: S608
+            )
             if len(out.fetchall()) == 0:
                 logger.info(
                     "instrument %s is empty; skipping", instrument_name)
                 continue
-            self.build_instrument(instrument_name, descriptions)
-            self.connection.sql(f"DROP TABLE {table_name}")
+            self.build_instrument(
+                instrument_name, temp_dbfile_name, descriptions, **kwargs,
+            )
+            self.connection.execute(f"DROP TABLE {table_name}")
 
         instrument_file = f"{self.parquet_dir}/instrument.parquet"
-        self.connection.sql(
+        self.connection.execute(
             f"COPY instrument TO '{instrument_file}' (FORMAT PARQUET)",
         )
         measure_file = f"{self.parquet_dir}/measure.parquet"
-        self.connection.sql(
+        self.connection.execute(
             f"COPY measure TO '{measure_file}' (FORMAT PARQUET)",
         )
 
@@ -508,20 +529,20 @@ class PrepareVariables(PreparePersons):
 
         table_name = self._instrument_tmp_table_name(instrument_name)
 
-        self.connection.sql(
-            f"DELETE FROM {table_name} "
-            f'WHERE "{self.config.person.column}" NOT IN '
+        self.connection.execute(
+            f"DELETE FROM {table_name} "  # noqa: S608
+            f"WHERE {self.config.person.column} NOT IN "
             "(SELECT person_id from person)",
         )
 
-    def build_pheno_common(self) -> None:
-        """Build a pheno common instrument."""
+    def prepare_pheno_common_data(self) -> None:
+        """Prepare data table for pheno common."""
         assert self.pedigree_df is not None
 
         pheno_common_measures = set(self.pedigree_df.columns) - (
-            set(self.PED_COLUMNS_REQUIRED) | set(
-                ["sampleId", "role", "generated", "not_sequenced"],
-            )
+            set(self.PED_COLUMNS_REQUIRED) | {
+                "sampleId", "role", "generated", "not_sequenced",
+            }
         )
         pheno_common_measures = set(filter(
             lambda m: not m.startswith("tag"), pheno_common_measures,
@@ -529,8 +550,8 @@ class PrepareVariables(PreparePersons):
 
         df = self.pedigree_df.copy(deep=True)
         assert "person_id" in df.columns
-        df.rename(
-            columns={"person_id": self.config.person.column}, inplace=True,
+        df = df.rename(
+            columns={"person_id": self.config.person.column},
         )
 
         pheno_common_columns = [
@@ -543,24 +564,34 @@ class PrepareVariables(PreparePersons):
         tmp_table_name = self._instrument_tmp_table_name("pheno_common")
         cursor = self.connection.cursor()
 
-        cursor.sql("SET GLOBAL pandas_analyze_sample=100000")
-        cursor.sql(
-            f"CREATE TABLE {tmp_table_name} AS "
+        cursor.execute("SET GLOBAL pandas_analyze_sample=100000")
+        cursor.execute(
+            f"CREATE TABLE {tmp_table_name} AS "  # noqa: S608
             "SELECT * FROM pheno_common_df",
         )
 
-        self.build_instrument("pheno_common")
+    def build_pheno_common(
+        self, temp_dbfile: str, **kwargs: dict[str, Any],
+    ) -> None:
+        """Build a pheno common instrument."""
+
+        self.build_instrument(
+            "pheno_common", temp_dbfile, descriptions=None, **kwargs,
+        )
         self._clean_missing_person_ids("pheno_common")
-        self.connection.sql(
+        tmp_table_name = self._instrument_tmp_table_name("pheno_common")
+        self.connection.execute(
             f"DROP TABLE {tmp_table_name}",
         )
 
     def build_instrument(
         self, instrument_name: str,
+        temp_dbfile: str,
         descriptions: Callable | None = None,
+        **kwargs: dict[str, Any],
     ) -> None:
         """Build and store all measures in an instrument."""
-        classify_queue = TaskQueue()
+        task_graph = TaskGraph()
         measures: list[Box] = []
         measure_reports: dict[str, ClassifierReport] = {}
         measure_col_names: dict[str, str] = {}
@@ -569,67 +600,85 @@ class PrepareVariables(PreparePersons):
 
         cursor = self.connection.cursor()
 
-        with Pool(processes=self.config.parallel) as pool:
-            data_measures = []
-            for row in cursor.sql(f"DESCRIBE {tmp_table_name}").fetchall():
-                if row[0] not in {
-                    self.PID_COLUMN, self.PERSON_ID, self.config.person.column,
-                }:
-                    data_measures.append(row[0])
-            for measure_name in data_measures:
+        def run_classify_task(classify_task: ClassifyMeasureTask) -> Any:
+            classify_task.run()
+            return classify_task.done()
 
-                if descriptions:
-                    measure_desc = descriptions(instrument_name, measure_name)
-                else:
-                    measure_desc = None
+        columns_to_exclude = {
+            self.PID_COLUMN, self.PERSON_ID, self.config.person.column,
+        }
+        measures_in_data = [
+            row[0]
+            for row in cursor.execute(f"DESCRIBE {tmp_table_name}").fetchall()
+            if row[0] not in columns_to_exclude
+        ]
 
-                classify_task = ClassifyMeasureTask(
-                    self.config,
-                    instrument_name,
-                    tmp_table_name,
-                    measure_name,
-                    measure_desc,
-                    self.dbfile,
-                )
-                fut = pool.apply_async(classify_task)
-                classify_queue.put(fut)
+        for measure_name in measures_in_data:
+            if descriptions:
+                measure_desc = descriptions(instrument_name, measure_name)
+            else:
+                measure_desc = None
 
-            seen_measure_names: dict[str, int] = {}
-            while not classify_queue.empty():
-                res = classify_queue.get()
-                task = res.get()
-                measure, classifier_report = task.done()
-                self.log_measure(measure, classifier_report)
-                if measure.measure_type == MeasureType.skipped:
-                    logging.info(
-                        "skip saving measure: %s; measurings: %s",
-                        measure.measure_id,
-                        classifier_report.count_with_values)
-                    continue
+            classify_task = ClassifyMeasureTask(
+                self.config,
+                instrument_name,
+                tmp_table_name,
+                measure_name,
+                measure_desc,
+                temp_dbfile,
+            )
+            task_graph.create_task(
+                f"{instrument_name}_{measure_name}_classify",
+                run_classify_task,
+                [classify_task],
+                [],
+            )
 
-                measures.append(measure)
+        task_cache = TaskCache.create(
+            force=cast(bool | None, kwargs.get("force")),
+            cache_dir=cast(str | None, kwargs.get("task_status_dir")),
+        )
 
-                measure_reports[measure.measure_id] = classifier_report
+        seen_measure_names: dict[str, int] = {}
+        with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
+            try:
+                for result in task_graph_run_with_results(task_graph, xtor):
+                    measure, classifier_report = result
 
-                m_name = self._adjust_instrument_measure_name(
-                    instrument_name, measure.measure_name,
-                )
+                    self.log_measure(measure, classifier_report)
+                    if measure.measure_type == MeasureType.skipped:
+                        logging.info(
+                            "skip saving measure: %s; measurings: %s",
+                            measure.measure_id,
+                            classifier_report.count_with_values)
+                        continue
 
-                db_name = safe_db_name(m_name)
-                if db_name.lower() in seen_measure_names:
-                    seen_measure_names[db_name.lower()] += 1
-                    db_name = \
-                        f"{db_name}_{seen_measure_names[db_name.lower()]}"
-                else:
-                    seen_measure_names[db_name.lower()] = 1
-                measure_col_names[measure.measure_id] = db_name
+                    measures.append(measure)
+
+                    measure_reports[measure.measure_id] = classifier_report
+
+                    m_name = self._adjust_instrument_measure_name(
+                        instrument_name, measure.measure_name,
+                    )
+
+                    db_name = safe_db_name(m_name)
+                    if db_name.lower() in seen_measure_names:
+                        seen_measure_names[db_name.lower()] += 1
+                        db_name = \
+                            f"{db_name}_{seen_measure_names[db_name.lower()]}"
+                    else:
+                        seen_measure_names[db_name.lower()] = 1
+                    measure_col_names[measure.measure_id] = db_name
+            except Exception:
+                logger.exception("Failed to create images")
 
         if self.config.report_only:
             return
 
-        cursor.sql(
+        cursor.execute(
             "INSERT INTO instrument VALUES "
-            f"('{instrument_name}', '{output_table_name}')",
+            "(?, ?)",
+            parameters=[instrument_name, output_table_name],
         )
 
         output_table_cols = {
@@ -670,14 +719,14 @@ class PrepareVariables(PreparePersons):
                 measure.rank,
             ]
             values = [
-                f"'{val}'" if val is not None else "NULL" for val in values
+                f"{val}" if val is not None else None for val in values
             ]
-            columns = ", ".join(values)
 
-            cursor.sql(
+            cursor.execute(
                 "INSERT INTO measure VALUES ("
-                f"{columns}"
+                "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
                 ")",
+                parameters=[*values],
             )
 
         select_measures = []
@@ -694,8 +743,8 @@ class PrepareVariables(PreparePersons):
 
         select_measure_cols = ", ".join(select_measures)
 
-        cursor.sql(
-            f"CREATE TABLE {output_table_name} AS FROM ("
+        cursor.execute(
+            f"CREATE TABLE {output_table_name} AS FROM ("  # noqa: S608
             f'SELECT i."{self.config.person.column}" as person_id, '
             "p.family_id, p.role, p.status, p.sex, "
             f"{select_measure_cols} "
@@ -706,7 +755,7 @@ class PrepareVariables(PreparePersons):
         instruments_dir = os.path.join(self.parquet_dir, "instruments")
         os.makedirs(instruments_dir, exist_ok=True)
         output_file = f"{instruments_dir}/{output_table_name}.parquet"
-        self.connection.sql(
+        self.connection.execute(
             f"COPY {output_table_name} TO '{output_file}' (FORMAT PARQUET)",
         )
 
@@ -723,8 +772,7 @@ class PrepareVariables(PreparePersons):
             "individuals": None,
             "default_filter": None,
         }
-        measure = Box(measure)
-        return measure
+        return Box(measure)
 
     @staticmethod
     def load_descriptions(
@@ -757,7 +805,7 @@ class PrepareVariables(PreparePersons):
             def __call__(self, iname: str, mname: str) -> str | None:
                 if (
                     f"{iname}.{mname}"
-                    not in self.desc_df["measureId"].values
+                    not in self.desc_df["measureId"].to_numpy()
                 ):
                     return None
                 row = self.desc_df.query(
