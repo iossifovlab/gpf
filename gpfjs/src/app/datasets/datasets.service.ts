@@ -135,7 +135,7 @@ export class DatasetsService {
   }
 
   public getSingleDatasetHierarchy(datasetId: string): Observable<DatasetHierarchy> {
-    return this.http.get(`${this.config.baseUrl}datasets/dataset-hierarchy/${datasetId}`).pipe(
+    return this.http.get(`${this.config.baseUrl}datasets/hierarchy/${datasetId}`).pipe(
       map((json: {data: object}) => DatasetHierarchy.fromJson(json.data))
     );
   }
