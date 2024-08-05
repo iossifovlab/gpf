@@ -14,27 +14,27 @@ urlpatterns = [
         name="denied_prompt",
     ),
     re_path(
-        r"^/details/(?P<dataset_id>.+)$",
+        r"^/details/(?P<dataset_id>[^/]+)/?$",
         views.DatasetDetailsView.as_view(),
         name="dataset_details",
     ),
     re_path(
-        r"^/pedigree/(?P<dataset_id>.+)/(?P<column>.+)$",
+        r"^/pedigree/(?P<dataset_id>.+)/(?P<column>[^/]+)/?$",
         views.DatasetPedigreeView.as_view(),
         name="pedigree",
     ),
     re_path(
-        r"^/config/(?P<dataset_id>.+)$",
+        r"^/config/(?P<dataset_id>[^/]+)/?$",
         views.DatasetConfigView.as_view(),
         name="dataset_config",
     ),
     re_path(
-        r"^/description/(?P<dataset_id>.+)$",
+        r"^/description/(?P<dataset_id>[^/]+)/?$",
         views.DatasetDescriptionView.as_view(),
         name="dataset_description",
     ),
     re_path(
-        r"^/hierarchy/(?P<dataset_id>.+)",
+        r"^/hierarchy/(?P<dataset_id>[^/]+)/?$",
         views.DatasetHierarchyView.as_view(),
         name="dataset_hierarchy",
     ),
@@ -59,7 +59,7 @@ urlpatterns = [
         name="list_studies",
     ),
     re_path(
-        r"^/(?P<dataset_id>.+)$",
+        r"^/(?P<dataset_id>[^/]+)/?$",
         views.DatasetView.as_view(),
         name="dataset",
     ),
