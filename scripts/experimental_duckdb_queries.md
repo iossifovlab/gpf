@@ -3076,6 +3076,806 @@ FROM
     JOIN family AS fa ON sa.sj_index = fa.sj_index;
 ```
 
+## SqlQueryBuilder2
+
+```sql
+explain analyze
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_summary AS sa /* summary_table */
+        WHERE
+            (
+                (
+                    (
+                        sa.af_allele_freq <= 1
+                        OR sa.af_allele_freq IS NULL
+                    )
+                    AND sa.allele_index > 0
+                )
+                AND sa.frequency_bin IN (0, 1, 2)
+            )
+            AND sa.coding_bin = 1
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_base AS sa,
+            UNNEST (sa.effect_gene) AS s (eg)
+        WHERE
+            s.eg.effect_types IN (
+                'splice-site',
+                'frame-shift',
+                'nonsense',
+                'no-frame-shift-newStop',
+                'noStart',
+                'noEnd',
+                'missense',
+                'no-frame-shift',
+                'CDS'
+            )
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_family AS fa /* family_table */
+        WHERE
+            (
+                (
+                    fa.family_id = '11542'
+                    AND fa.frequency_bin IN (0, 1, 2)
+                )
+                AND fa.coding_bin = 1
+            )
+            AND fa.family_bin = 4
+    )
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.summary_variant_data,
+    fa.family_variant_data
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index
+LIMIT
+    20010
+```
+
+```sql
+explain analyze
+WITH
+    summary AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_summary AS sa
+        WHERE
+            (
+                sa.af_allele_freq <= 1
+                OR sa.af_allele_freq IS NULL
+            )
+            AND sa.coding_bin = 1
+            AND sa.frequency_bin IN (0, 1, 2)
+            AND sa.allele_index > 0
+    ),
+    effect_gene AS (
+        SELECT
+            *,
+            UNNEST (effect_gene) AS eg
+        FROM
+            summary
+    ),
+    effect_gene_summary AS (
+        SELECT
+            *
+        FROM
+            effect_gene
+        WHERE
+            eg.effect_types IN (
+                'splice-site',
+                'frame-shift',
+                'nonsense',
+                'no-frame-shift-newStop',
+                'noStart',
+                'noEnd',
+                'missense',
+                'no-frame-shift',
+                'CDS'
+            )
+    ),
+    family_bins AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_family AS fa
+        WHERE
+            fa.coding_bin = 1
+            AND fa.frequency_bin IN (0, 1, 2)
+            AND fa.family_bin = 4
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            family_bins AS fa
+        WHERE
+            fa.family_id IN ('11542')
+            AND fa.allele_index > 0
+    )
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.summary_variant_data,
+    fa.family_variant_data
+FROM
+    effect_gene_summary AS sa
+    JOIN family AS fa ON fa.sj_index = sa.sj_index
+LIMIT
+    20010
+```
+
+
+## SqlQueryBuilder2 experiments
+
+```sql
+explain analyze
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_summary AS sa /* summary_table */
+        WHERE
+            (
+                (
+                    (
+                        sa.af_allele_freq <= 1
+                        OR sa.af_allele_freq IS NULL
+                    )
+                    AND sa.allele_index > 0
+                )
+                AND sa.frequency_bin IN (0, 1, 2)
+            )
+            AND sa.coding_bin = 1
+    ),
+    summary_effects AS (
+        SELECT
+            *,
+            UNNEST (sa.effect_gene) AS eg
+        FROM
+            summary_base AS sa
+    ),
+    summary as (
+        select *
+        from summary_effects
+        WHERE
+            eg.effect_types IN (
+                'splice-site',
+                'frame-shift',
+                'nonsense',
+                'no-frame-shift-newStop',
+                'noStart',
+                'noEnd',
+                'missense',
+                'no-frame-shift',
+                'CDS'
+            )
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_family AS fa /* family_table */
+        WHERE
+            (
+                (
+                    fa.family_id = '11542'
+                    AND fa.frequency_bin IN (0, 1, 2)
+                )
+                AND fa.coding_bin = 1
+            )
+            AND fa.family_bin = 4
+    )
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.summary_variant_data,
+    fa.family_variant_data
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index
+LIMIT
+    20010
+```
+
+
+```sql
+WITH summary_base AS (
+  SELECT
+    *
+  FROM summary_table AS sa
+  WHERE
+    sa.region_bin = 'chr14_0' AND sa.allele_index > 0
+), summary AS (
+  SELECT
+    *
+  FROM summary, UNNEST(sa.effect_gene) as s(eg)
+  WHERE
+    s.eg.effect_gene_symbols IN ('CHD8')
+    AND s.eg.effect_types IN ('frame-shift', 'nonsense', 'splice-site')
+), family AS (
+  SELECT
+    *
+  FROM family_table AS fa
+  WHERE fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM effect_gene_summary AS sa
+JOIN family AS fa
+  ON (
+    fa.summary_index = sa.summary_index
+    AND fa.bucket_index = sa.bucket_index
+    AND fa.allele_index = sa.allele_index
+  )
+LIMIT 10010
+```
+
+```sql
+WITH summary_base AS (
+  SELECT
+    *
+  FROM summary_table AS sa
+  WHERE
+    sa.region_bin = 'chr14_0' AND sa.allele_index > 0
+), summary AS (
+  SELECT
+    *
+  FROM summary_base, UNNEST(sa.effect_gene) as s(eg)
+  WHERE
+    s.eg.effect_gene_symbols IN ('CHD8')
+    AND s.eg.effect_types IN ('frame-shift', 'nonsense', 'splice-site')
+)
+SELECT
+    *
+FROM summary AS sa
+LIMIT 10010
+```
+
+
+```sql
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_summary AS sa /* summary_table */
+        WHERE
+            sa.allele_index > 0
+            AND sa.region_bin = 'foo_0'
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_base AS sa,
+            UNNEST (sa.effect_gene) AS s (eg)
+        WHERE
+            s.eg.effect_types IN ('missense', 'intron')
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_family AS fa /* family_table */
+        WHERE
+            fa.region_bin = 'foo_0'
+    )
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.summary_variant_data,
+    fa.family_variant_data
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index;
+```
+
+```sql
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_summary AS sa /* summary_table */
+        WHERE
+            sa.allele_index > 0
+            AND sa.region_bin = 'bar_0'
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_base AS sa,
+            UNNEST (sa.effect_gene) AS s (eg)
+        WHERE
+            s.eg.effect_types IN ('missense', 'intron')
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_family AS fa /* family_table */
+        WHERE
+            fa.region_bin = 'bar_0'
+    )
+SELECT
+    fa.region_bin,
+    fa.family_id,
+    sa.chromosome,
+    "sa"."position",
+    sa.effect_gene,
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index;
+```
+
+```sql
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_summary AS sa /* summary_table */
+        WHERE
+            sa.allele_index > 0
+            AND sa.region_bin = 'foo_0'
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_base AS sa,
+            UNNEST (sa.effect_gene) AS s (eg)
+        WHERE
+            s.eg.effect_types IN ('missense', 'intron')
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_family AS fa /* family_table */
+        WHERE
+            fa.region_bin = 'foo_0'
+    )
+SELECT
+    fa.region_bin,
+    fa.family_id,
+    sa.chromosome,
+    "sa"."position",
+    sa.effect_gene,
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index;
+```
+
+## SqlQueryBuilder2
+
+```sql
+explain analyze
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_summary AS sa /* summary_table */
+        WHERE
+            (
+                (
+                    (
+                        sa.af_allele_freq <= 1
+                        OR sa.af_allele_freq IS NULL
+                    )
+                    AND sa.allele_index > 0
+                )
+                AND sa.frequency_bin IN (0, 1, 2)
+            )
+            AND sa.coding_bin = 1
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_base AS sa,
+            UNNEST (sa.effect_gene) AS s (eg)
+        WHERE
+            s.eg.effect_types IN (
+                'splice-site',
+                'frame-shift',
+                'nonsense',
+                'no-frame-shift-newStop',
+                'noStart',
+                'noEnd',
+                'missense',
+                'no-frame-shift',
+                'CDS'
+            )
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_family AS fa /* family_table */
+        WHERE
+            (
+                (
+                    fa.family_id = '11542'
+                    AND fa.frequency_bin IN (0, 1, 2)
+                )
+                AND fa.coding_bin = 1
+            )
+            AND fa.family_bin = 4
+    )
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.summary_variant_data,
+    fa.family_variant_data
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index
+LIMIT
+    20010
+```
+
+```sql
+explain analyze
+WITH
+    summary AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_summary AS sa
+        WHERE
+            (
+                sa.af_allele_freq <= 1
+                OR sa.af_allele_freq IS NULL
+            )
+            AND sa.coding_bin = 1
+            AND sa.frequency_bin IN (0, 1, 2)
+            AND sa.allele_index > 0
+    ),
+    effect_gene AS (
+        SELECT
+            *,
+            UNNEST (effect_gene) AS eg
+        FROM
+            summary
+    ),
+    effect_gene_summary AS (
+        SELECT
+            *
+        FROM
+            effect_gene
+        WHERE
+            eg.effect_types IN (
+                'splice-site',
+                'frame-shift',
+                'nonsense',
+                'no-frame-shift-newStop',
+                'noStart',
+                'noEnd',
+                'missense',
+                'no-frame-shift',
+                'CDS'
+            )
+    ),
+    family_bins AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_family AS fa
+        WHERE
+            fa.coding_bin = 1
+            AND fa.frequency_bin IN (0, 1, 2)
+            AND fa.family_bin = 4
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            family_bins AS fa
+        WHERE
+            fa.family_id IN ('11542')
+            AND fa.allele_index > 0
+    )
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.summary_variant_data,
+    fa.family_variant_data
+FROM
+    effect_gene_summary AS sa
+    JOIN family AS fa ON fa.sj_index = sa.sj_index
+LIMIT
+    20010
+```
+
+
+## SqlQueryBuilder2 experiments
+
+```sql
+explain analyze
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_summary AS sa /* summary_table */
+        WHERE
+            (
+                (
+                    (
+                        sa.af_allele_freq <= 1
+                        OR sa.af_allele_freq IS NULL
+                    )
+                    AND sa.allele_index > 0
+                )
+                AND sa.frequency_bin IN (0, 1, 2)
+            )
+            AND sa.coding_bin = 1
+    ),
+    summary_effects AS (
+        SELECT
+            *,
+            UNNEST (sa.effect_gene) AS eg
+        FROM
+            summary_base AS sa
+    ),
+    summary as (
+        select *
+        from summary_effects
+        WHERE
+            eg.effect_types IN (
+                'splice-site',
+                'frame-shift',
+                'nonsense',
+                'no-frame-shift-newStop',
+                'noStart',
+                'noEnd',
+                'missense',
+                'no-frame-shift',
+                'CDS'
+            )
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_family AS fa /* family_table */
+        WHERE
+            (
+                (
+                    fa.family_id = '11542'
+                    AND fa.frequency_bin IN (0, 1, 2)
+                )
+                AND fa.coding_bin = 1
+            )
+            AND fa.family_bin = 4
+    )
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.summary_variant_data,
+    fa.family_variant_data
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index
+LIMIT
+    20010
+```
+
+
+```sql
+WITH summary_base AS (
+  SELECT
+    *
+  FROM summary_table AS sa
+  WHERE
+    sa.region_bin = 'chr14_0' AND sa.allele_index > 0
+), summary AS (
+  SELECT
+    *
+  FROM summary, UNNEST(sa.effect_gene) as s(eg)
+  WHERE
+    s.eg.effect_gene_symbols IN ('CHD8')
+    AND s.eg.effect_types IN ('frame-shift', 'nonsense', 'splice-site')
+), family AS (
+  SELECT
+    *
+  FROM family_table AS fa
+  WHERE fa.allele_index > 0
+)
+SELECT
+  fa.bucket_index,
+  fa.summary_index,
+  fa.family_index,
+  sa.allele_index,
+  sa.summary_variant_data,
+  fa.family_variant_data
+FROM effect_gene_summary AS sa
+JOIN family AS fa
+  ON (
+    fa.summary_index = sa.summary_index
+    AND fa.bucket_index = sa.bucket_index
+    AND fa.allele_index = sa.allele_index
+  )
+LIMIT 10010
+```
+
+```sql
+WITH summary_base AS (
+  SELECT
+    *
+  FROM summary_table AS sa
+  WHERE
+    sa.region_bin = 'chr14_0' AND sa.allele_index > 0
+), summary AS (
+  SELECT
+    *
+  FROM summary_base, UNNEST(sa.effect_gene) as s(eg)
+  WHERE
+    s.eg.effect_gene_symbols IN ('CHD8')
+    AND s.eg.effect_types IN ('frame-shift', 'nonsense', 'splice-site')
+)
+SELECT
+    *
+FROM summary AS sa
+LIMIT 10010
+```
+
+
+```sql
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_summary AS sa /* summary_table */
+        WHERE
+            sa.allele_index > 0
+            AND sa.region_bin = 'foo_0'
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_base AS sa,
+            UNNEST (sa.effect_gene) AS s (eg)
+        WHERE
+            s.eg.effect_types IN ('missense', 'intron')
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_family AS fa /* family_table */
+        WHERE
+            fa.region_bin = 'foo_0'
+    )
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.summary_variant_data,
+    fa.family_variant_data
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index;
+```
+
+```sql
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_summary AS sa /* summary_table */
+        WHERE
+            sa.allele_index > 0
+            AND sa.region_bin = 'bar_0'
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_base AS sa,
+            UNNEST (sa.effect_gene) AS s (eg)
+        WHERE
+            s.eg.effect_types IN ('missense', 'intron')
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_family AS fa /* family_table */
+        WHERE
+            fa.region_bin = 'bar_0'
+    )
+SELECT
+    fa.region_bin,
+    fa.family_id,
+    sa.chromosome,
+    "sa"."position",
+    sa.effect_gene,
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index;
+```
+
+```sql
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_summary AS sa /* summary_table */
+        WHERE
+            sa.allele_index > 0
+            AND sa.region_bin = 'foo_0'
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_base AS sa,
+            UNNEST (sa.effect_gene) AS s (eg)
+        WHERE
+            s.eg.effect_types IN ('missense', 'intron')
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            partitoned_vcf_family AS fa /* family_table */
+        WHERE
+            fa.region_bin = 'foo_0'
+    )
+SELECT
+    fa.region_bin,
+    fa.family_id,
+    sa.chromosome,
+    "sa"."position",
+    sa.effect_gene,
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index;
+```
+
 
 ```sql
 WITH
@@ -3143,4 +3943,223 @@ FROM
     JOIN family AS fa ON sa.sj_index = fa.sj_index
 LIMIT
     20010
+```
+
+```sql
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_summary AS sa /* summary_table */
+        WHERE
+            (
+                (
+                    (
+                        sa.af_allele_count <= 1
+                        OR sa.af_allele_count IS NULL
+                    )
+                    AND sa.allele_index > 0
+                )
+                AND sa.frequency_bin IN (0, 1)
+            )
+            AND sa.coding_bin = 1
+    ),
+    summary_effects AS (
+        SELECT
+            *,
+            UNNEST (sa.effect_ge ne) AS eg
+        FROM
+            summary_base AS sa
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_effects
+        WHERE
+            eg.effect_types IN ('splice-site', 'frame-shift', 'nonsense')
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_family AS fa /* family_table */,
+            UNNEST (fa.allele_in_members) AS f (aim)
+        WHERE
+            (
+                f.aim = '11542.p1'
+                AND fa.frequency_bin IN (0, 1)
+            )
+            AND fa.coding_bin = 1
+    )
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.summary_variant_data,
+    fa.family_variant_data
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index
+LIMIT
+    20010
+ ```
+
+ ```sql
+WITH
+    summary AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_summary AS sa
+        WHERE
+            (
+                sa.af_allele_count <= 1
+                OR sa.af_allele_count IS NULL
+            )
+            AND sa.coding_bin = 1
+            AND sa.frequency_bin IN (0, 1)
+            AND sa.allele_index > 0
+    ),
+    effect_gene AS (
+        SELECT
+            *,
+            UNNEST (effect_gene) AS eg
+        FROM
+            summary
+    ),
+    effect_gene_summary AS (
+        SELECT
+            *
+        FROM
+            effect_gene
+        WHERE
+            eg.effect_types IN ('splice-site', 'frame-shift', 'nonsense')
+    ),
+    family_bins AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_family AS fa
+        WHERE
+            fa.coding_bin = 1
+            AND fa.frequency_bin IN (0, 1)
+    ),
+    family AS (
+        SELECT
+            *
+        FROM
+            family_bins AS fa
+        WHERE
+            fa.allele_index > 0
+    ),
+    allele_in_member AS (
+        SELECT
+            *,
+            UNNEST (allele_in_members) AS aim
+        FROM
+            family
+    ),
+    family_person AS (
+        SELECT
+            *
+        FROM
+            allele_in_member AS fa
+        WHERE
+            fa.aim IN ('11542.p1')
+    )
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.summary_variant_data,
+    fa.family_variant_data
+FROM
+    effect_gene_summary AS sa
+    JOIN family_person AS fa ON fa.sj_index = sa.sj_index
+LIMIT
+    20010
+```
+
+
+```sql
+WITH
+    summary_base AS (
+        SELECT
+            *
+        FROM
+            w1202s766e611_liftover_summary AS sa /* summary_table */
+        WHERE
+            (
+                sa.af_allele_freq <= 1
+                AND sa.allele_index > 0
+            )
+            AND sa.coding_bin = 1
+    ),
+    summary_effects AS (
+        SELECT
+            *,
+            UNNEST (sa.effect_gene) AS eg
+        FROM
+            summary_base AS sa
+    ),
+    summary AS (
+        SELECT
+            *
+        FROM
+            summary_effects
+        WHERE
+            eg.effect_types IN (
+                'splice-site',
+                'nonsense',
+                'missense',
+                'frame-shift'
+            )
+    ),
+    family AS (
+        WITH
+            family_base AS (
+                SELECT
+                    *
+                FROM
+                    w1202s766e611_liftover_family AS fa /* family_table */
+                WHERE
+                    fa.coding_bin = 1
+            ),
+            family_members AS (
+                SELECT
+                    *,
+                    UNNEST (fa.allele_in_members) AS aim
+                FROM
+                    family_base AS fa
+            ),
+            family AS (
+                SELECT
+                    *
+                FROM
+                    family_members AS fa
+                WHERE
+                    fa.aim IN ('14626.p1', '14270.p1')
+            )
+        SELECT
+            *
+        FROM
+            family
+    )
+SELECT
+    fa.bucket_index,
+    fa.summary_index,
+    fa.family_index,
+    sa.allele_index,
+    sa.summary_variant_data,
+    fa.family_variant_data
+FROM
+    summary AS sa
+    JOIN family AS fa ON sa.sj_index = fa.sj_index
+LIMIT
+    20010
+
 ```

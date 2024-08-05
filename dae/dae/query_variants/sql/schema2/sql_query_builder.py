@@ -8,7 +8,7 @@ from typing import Any, cast
 
 import duckdb
 import sqlglot
-from sqlglot import condition, exp, or_
+from sqlglot import condition, exp, or_, parse_one
 from sqlglot.expressions import (
     Condition,
     Select,
@@ -86,6 +86,7 @@ class QueryBuilderBase:
     def __init__(
         self,
         schema: Schema,
+        families: FamiliesData,
         partition_descriptor: PartitionDescriptor | None,
         gene_models: GeneModels,
         reference_genome: ReferenceGenome,
@@ -98,6 +99,7 @@ class QueryBuilderBase:
             raise ValueError("reference genome isrequired")
         self.reference_genome = reference_genome
 
+        self.families = families
         self.schema = schema
         self.partition_descriptor = partition_descriptor
 
@@ -344,6 +346,7 @@ class QueryBuilderBase:
     def calc_family_bins(
         self,
         family_ids: Iterable[str] | None,
+        person_ids: Iterable[str] | None,
     ) -> list[str]:
         """Calculate family bins for a query."""
         if self.partition_descriptor is None:
@@ -352,16 +355,30 @@ class QueryBuilderBase:
             return []
         if "family_bin" not in self.schema.column_names("family_table"):
             return []
-        if family_ids is None:
+        if family_ids is None and person_ids is None:
             return []
 
-        assert family_ids is not None
-        family_ids = set(family_ids)
-
         family_bins: set[str] = set()
-        family_bins.update(
-            str(self.partition_descriptor.make_family_bin(family_id))
-            for family_id in family_ids)
+        if family_ids is not None:
+            assert family_ids is not None
+            family_ids = set(family_ids)
+
+            family_bins.update(
+                str(self.partition_descriptor.make_family_bin(family_id))
+                for family_id in family_ids)
+        if person_ids is not None:
+            assert person_ids is not None
+            person_ids = {
+                pid for pid in person_ids
+                if pid in self.families.persons_by_person_id
+            }
+            family_ids = {
+                self.families.persons_by_person_id[person_id][0].family_id
+                for person_id in person_ids
+            }
+            family_bins.update(
+                str(self.partition_descriptor.make_family_bin(family_id))
+                for family_id in family_ids)
         if len(family_bins) >= self.partition_descriptor.family_bin_size // 2:
             return []
         return list(family_bins)
@@ -390,6 +407,7 @@ class QueryBuilderBase:
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         family_ids: Iterable[str] | None = None,
+        person_ids: Iterable[str] | None = None,
     ) -> QueryHeuristics:
         """Calculate heuristic bins for a query."""
         heuristics_region_bins = []
@@ -415,7 +433,7 @@ class QueryBuilderBase:
             heuristics_frequency_bins = frequency_bins
 
         heuristics_family_bins = []
-        family_bins = self.calc_family_bins(family_ids)
+        family_bins = self.calc_family_bins(family_ids, person_ids)
         if family_bins:
             heuristics_family_bins = family_bins
 
@@ -436,6 +454,7 @@ class QueryBuilderBase:
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         family_ids: Iterable[str] | None = None,
+        person_ids: Iterable[str] | None = None,
     ) -> list[QueryHeuristics]:
         """Calculate heuristics baches for a query."""
         heuristics = self.calc_heuristics(
@@ -447,6 +466,7 @@ class QueryBuilderBase:
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             family_ids=family_ids,
+            person_ids=person_ids,
         )
         if heuristics.region_bins:
             # single batch if we have region bins in heuristics
@@ -508,13 +528,13 @@ class SqlQueryBuilder(QueryBuilderBase):
     ):
         super().__init__(
             schema=schema,
+            families=families,
             partition_descriptor=partition_descriptor,
             gene_models=gene_models,
             reference_genome=reference_genome,
         )
 
         self.db_layout = db_layout
-        self.families = families
 
     @staticmethod
     def build_regions_where(
@@ -1131,12 +1151,12 @@ class SqlQueryBuilder2(QueryBuilderBase):
     ):
         super().__init__(
             schema=schema,
+            families=families,
             partition_descriptor=partition_descriptor,
             gene_models=gene_models,
             reference_genome=reference_genome,
         )
         self.db_layout = db_layout
-        self.families = families
 
     @staticmethod
     def build(
@@ -1170,20 +1190,20 @@ class SqlQueryBuilder2(QueryBuilderBase):
     def genes(genes: list[str]) -> Condition:
         """Create genes condition."""
         if len(genes) == 0:
-            return condition("s.eg.effect_gene_symbols IS NULL")
+            return condition("eg.effect_gene_symbols IS NULL")
         if len(genes) == 1:
-            return condition(f"s.eg.effect_gene_symbols = '{genes[0]}'")
+            return condition(f"eg.effect_gene_symbols = '{genes[0]}'")
         gene_set = ",".join(f"'{g}'" for g in genes)
-        return condition(f"s.eg.effect_gene_symbols in ({gene_set})")
+        return condition(f"eg.effect_gene_symbols in ({gene_set})")
 
     @staticmethod
     def effect_types(effect_types: list[str]) -> Condition:
         """Create effect types condition."""
         effect_types = [et.replace("'", "''") for et in effect_types]
         if len(effect_types) == 0:
-            return condition("s.eg.effect_types IS NULL")
+            return condition("eg.effect_types IS NULL")
         effect_set = ",".join(f"'{g}'" for g in effect_types)
-        return condition(f"s.eg.effect_types in ({effect_set})")
+        return condition(f"eg.effect_types in ({effect_set})")
 
     @staticmethod
     def summary_base() -> Select:
@@ -1233,12 +1253,15 @@ class SqlQueryBuilder2(QueryBuilderBase):
         family: Select,
     ) -> Select:
         """Construct family variants query."""
-        return self._append_cte(
+        query = self._append_cte(
             Select(),
             summary,
             "summary",
-        ).with_(
-            "family", as_=family,
+        )
+        return self._append_cte(
+            query,
+            family,
+            "family",
         ).select(
             "fa.bucket_index", "fa.summary_index", "fa.family_index",
             "sa.allele_index",
@@ -1421,21 +1444,27 @@ class SqlQueryBuilder2(QueryBuilderBase):
             query = query.where("sa.allele_index > 0")
 
         if genes is not None or effect_types is not None:
-            equery = exp.select("*").from_(
-                "summary_base as sa",
-            ).join(
-                "UNNEST(sa.effect_gene) as s(eg)",
+            summary_effects = parse_one(
+                "select *, unnest(sa.effect_gene) as eg "
+                "from summary_base as sa",
+            )
+            summary = exp.select(
+                "*",
+            ).from_(
+                "summary_effects",
             )
             if genes is not None:
-                equery = equery.where(
+                summary = summary.where(
                     SqlQueryBuilder2.genes(genes))
             if effect_types is not None:
-                equery = equery.where(
+                summary = summary.where(
                     SqlQueryBuilder2.effect_types(effect_types))
             query = Select().with_(
                 "summary_base", as_=query,
             ).with_(
-                "summary", as_=equery,
+                "summary_effects", as_=summary_effects,
+            ).with_(
+                "summary", as_=summary,
             ).select("*").from_("summary")
         return query
 
@@ -1486,11 +1515,11 @@ class SqlQueryBuilder2(QueryBuilderBase):
     ) -> Condition:
         """Create person IDs filter."""
         if not person_ids:
-            return condition("f.aim IS NULL")
+            return condition("fa.aim IS NULL")
         if len(person_ids) == 1:
-            return condition(f"f.aim = '{next(iter(person_ids))}'")
+            return condition(f"fa.aim = '{next(iter(person_ids))}'")
         pids = [f"'{pid}'" for pid in person_ids]
-        return condition(f"f.aim IN ({', '.join(pids)})")
+        return condition(f"fa.aim IN ({', '.join(pids)})")
 
     def family_query(
         self,
@@ -1511,13 +1540,44 @@ class SqlQueryBuilder2(QueryBuilderBase):
         if sexes is not None:
             clause = self.sexes(sexes)
             query = query.where(clause)
-        if family_ids is not None:
+        if family_ids is not None or person_ids is not None:
+            if person_ids is not None:
+                person_ids = [
+                    pid for pid in person_ids
+                    if pid in self.families.persons_by_person_id
+                ]
+                fids = {
+                    self.families.persons_by_person_id[pid][0].family_id
+                    for pid in person_ids
+                }
+                if family_ids is not None:
+                    fids &= set(family_ids)
+                family_ids = list(fids)
+            assert family_ids is not None
             clause = self.family_ids(family_ids)
             query = query.where(clause)
         if person_ids is not None:
-            query = query.join("UNNEST(fa.allele_in_members) as f(aim)")
-            clause = self.person_ids(person_ids)
-            query = query.where(clause)
+
+            family_members = parse_one(
+                "select *, unnest(fa.allele_in_members) as aim "
+                "from family_base as fa",
+            )
+            family_query = exp.select(
+                "*",
+            ).from_(
+                "family_members as fa",
+            ).where(
+                SqlQueryBuilder2.person_ids(person_ids),
+            )
+
+            query = Select().with_(
+                "family_base", as_=query,
+            ).with_(
+                "family_members", as_=family_members,
+            ).with_(
+                "family", as_=family_query,
+            ).select("*").from_("family")
+
         return query
 
     @staticmethod
@@ -1573,6 +1633,7 @@ class SqlQueryBuilder2(QueryBuilderBase):
         if heuristics.region_bins:
             base_query = base_query.where(
                 self.region_bins(table, heuristics.region_bins))
+
         if heuristics.frequency_bins:
             base_query = base_query.where(
                 self.frequency_bins(table, heuristics.frequency_bins))
