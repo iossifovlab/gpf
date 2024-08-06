@@ -30,6 +30,9 @@ export const toolPageLinks = {
 
 export async function logout(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Log Out' }).click();
+  await page.waitForResponse(
+    resp => resp.url().includes('/api/v3/users/logout') && resp.status() === 204);
+  await page.waitForSelector('#log-in-button');
 }
 
 export async function login(page: Page, user = username, pass = password): Promise<void> {

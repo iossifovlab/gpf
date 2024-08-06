@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 import * as utils from './utils';
 
 test.describe('Gene profiles row data tests', () => {
@@ -7,21 +7,43 @@ test.describe('Gene profiles row data tests', () => {
     await page.locator('#header a:text("Gene Profiles")').click();
   });
 
-  // refactor;
-  // on test failure caused by a value change in the row,
-  // it's hard to track in which specific column the change has occured
   [
-    {geneSymbol: 'CHD8', expectedRow: 'CHD8✓✓✓✓✓11938331.5181787.0 (2.79)'},
-    {geneSymbol: 'SHANK2', expectedRow: 'SHANK2✓✓✓143649175171.0 (0.4)1.0 (0.52)'},
-    {geneSymbol: 'FLG', expectedRow: 'FLG✓1664018394.51.0 (0.4)'},
-    {geneSymbol: 'CMIP', expectedRow: 'CMIP✓3558249469417467'},
-    {geneSymbol: 'TBCD', expectedRow: 'TBCD✓6469111.513275.52222.0 (1.05)'}
+    {
+      geneSymbol: 'CHD8',
+      // eslint-disable-next-line max-len
+      expectedRow: ['CHD8', 'check_small', 'check_small', '', 'check_small', 'check_small', 'check_small', '1', '193', '83', '31.5', '18178', '7.0 (2.79)', '', '', '', '', '']
+    },
+    {
+      geneSymbol: 'SHANK2',
+      // eslint-disable-next-line max-len
+      expectedRow: ['SHANK2', 'check_small', 'check_small', '', '', '', 'check_small', '1', '', '43', '649', '17517', '1.0 (0.4)', '', '', '', '1.0 (0.52)', '']
+    },
+    {
+      geneSymbol: 'FLG',
+      // eslint-disable-next-line max-len
+      expectedRow: ['FLG', '', '', '', '', 'check_small', '', '', '16640', '18394.5', '', '', '1.0 (0.4)', '', '', '', '', '']
+    },
+    {
+      geneSymbol: 'CMIP',
+      // eslint-disable-next-line max-len
+      expectedRow: ['CMIP', '', '', 'check_small', '', '', '', '3', '558', '2494', '694', '17467', '', '', '', '', '', '']
+    },
+    {
+      geneSymbol: 'TBCD',
+      // eslint-disable-next-line max-len
+      expectedRow: ['TBCD', '', '', 'check_small', '', '', '', '', '646', '9111.5', '13275.5', '222', '', '', '', '', '', '2.0 (1.05)']
+    }
   ].forEach(data => {
     test(`should display correct gene data for ${data.geneSymbol}`, async({ page }) => {
       await page.locator('input#gene-search-input').focus();
       await page.keyboard.type(data.geneSymbol);
       await expect(page.locator('.table-body-row:not(#nothing-found)')).toHaveCount(1);
-      await expect(page.locator('.table-body-row').first()).toHaveText(data.expectedRow.replace(/✓/g, 'check_small'));
+
+      const cells = await page.locator('.table-body-row').locator('.row-cell').all();
+      await Promise.all(cells.map(async(cell, i) => {
+        await expect(cell).toHaveText(data.expectedRow[i]);
+        i++;
+      }));
     });
   });
 });
@@ -438,41 +460,20 @@ test.describe('Gene profiles table functionality tests', () => {
     await expect(page.locator('gpf-effect-types').getByLabel('noEnd')).not.toBeChecked();
     await expect(page.locator('gpf-effect-types').getByLabel('synonymous')).not.toBeChecked();
   });
+});
 
-  test('should check state of the table when navigating to Datasets', async({ page }) => {
-    // open tab
-    await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
-    await page.getByRole('button', {name: 'All genes'}).click();
+test.describe('Gene profiles table state tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await utils.loginAdmin(page);
+    await page.locator('#header a:text("Gene Profiles")').click();
 
-    // search
-    await page.locator('input#gene-search-input').focus();
-    await page.keyboard.type('RAPGEF');
-
-    // highlight rows and open tab
-    await page.keyboard.down('Control');
-    await page.locator('.table-body-row').filter({hasText: 'RAPGEF4'}).click();
-    await page.locator('.table-body-row').filter({hasText: 'RAPGEF2'}).click();
-    await page.keyboard.up('Control');
-    await page.locator('#compare-genes-compare-button').click();
-
-    await page.getByRole('button', {name: 'All genes'}).click();
-
-    // change table header columns visibility
-    await page.locator('#protection_scores-column-filtering-button').click({force: true});
-    await page.waitForSelector('gpf-multiple-select-menu');
-    await page.locator('gpf-multiple-select-menu').getByLabel('LGD_rank').click();
-    await page.locator('gpf-multiple-select-menu').getByLabel('pLI_rank').click();
-
-    // change table header columns sorting - asc
-    await page.getByTitle('Relevant Gene Sets', { exact: true }).click();
-    await page.waitForTimeout(200);
-    await page.getByTitle('Relevant Gene Sets', { exact: true }).click();
-    await page.waitForTimeout(200);
+    await utils.resetGeneProfiles(page);
+  });
 
 
-    // change table header columns order
-    // TODO
-
+  test('should check table state when navigating to Genotype browser', async({ page }) => {
+    await changeTable(page);
     await page.waitForTimeout(1500); // wait for user's gene profile state query
 
     // go to Genotype browser and return to Gene Profiles
@@ -482,32 +483,134 @@ test.describe('Gene profiles table functionality tests', () => {
     await page.waitForResponse(
       resp => resp.url().includes('/api/v3/users/user_gp_state') && resp.status() === 204
     );
+    await checkTable(page);
+  });
 
-    // check search and search result
-    await expect(page.locator('input#gene-search-input')).toHaveValue('RAPGEF');
-    await expect(page.locator('.table-body-row:not(#nothing-found)')).toHaveCount(4);
+  test('should check if table state is saved when logout and login', async({ page }) => {
+    await changeTable(page);
+    await page.waitForTimeout(1500); // wait for user's gene profile state query
 
-    // check highlighted rows
-    await expect(page.locator('.table-body-row').filter({hasText: 'RAPGEF4'}))
-      .toHaveClass(/row-highlight/);
-    await expect(page.locator('.table-body-row').filter({hasText: 'RAPGEF2'}))
-      .toHaveClass(/row-highlight/);
+    await utils.logout(page);
+    await page.locator('#header a:text("Gene Profiles")').click();
+    await checkDefaultTable(page);
 
-    // check column visibility - TODO
-    // await expect(page.locator('.header-cell')).toHaveCount(20);
-    // await expect(page.locator('.header-cell').filter({ hasText: 'LGD_rank'})).not.toBeVisible();
-    // await expect(page.locator('.header-cell').filter({ hasText: 'pLI_rank'})).not.toBeVisible();
+    await utils.login(page);
+    await checkTable(page);
+  });
 
-    // check opened tabs
-    await expect(page.locator('div.tab')).toHaveCount(2);
-    await expect(page.locator('div.tab').nth(0)).toContainText('GRIN2B');
-    await expect(page.locator('div.tab').nth(1)).toContainText('RAPGEF2,RAPGEF4');
+  test('should check if state in not saved when logout too fast', async({ page }) => {
+    await changeTable(page);
 
-    // check sorting
-    await expect(page.locator('div.active-sort-header')).toContainText('Relevant Gene Sets');
-    await expect(page.locator('div.active-sort-header').locator('gpf-sorting-buttons span')).toHaveId('asc');
+    await utils.logout(page);
+    await utils.login(page);
+    await page.locator('#header a:text("Gene Profiles")').click();
 
-    // check column reorder
-    // TODO
+    await checkDefaultTable(page);
+  });
+
+  test('should check if state in not saved when navigating to Home page too fast', async({ page }) => {
+    await changeTable(page);
+    await utils.navigateToHome(page);
+    await page.locator('#header a:text("Gene Profiles")').click();
+    await checkDefaultTable(page);
+  });
+
+  test('should check reset table button', async({ page }) => {
+    await changeTable(page);
+    await page.waitForTimeout(1500); // wait for user's gene profile state query
+    await utils.resetGeneProfiles(page);
+    await checkDefaultTable(page);
   });
 });
+
+async function changeTable(page: Page): Promise<void> {
+  // open tab
+  await page.locator('div').filter({ hasText: /^GRIN2B$/}).click();
+  await page.getByRole('button', {name: 'All genes'}).click();
+
+  // search
+  await page.locator('input#gene-search-input').focus();
+  await page.keyboard.type('RAPGEF');
+
+  // highlight rows and open tab
+  await page.keyboard.down('Control');
+  await page.locator('.table-body-row').filter({hasText: 'RAPGEF4'}).click();
+  await page.locator('.table-body-row').filter({hasText: 'RAPGEF2'}).click();
+  await page.keyboard.up('Control');
+  await page.locator('#compare-genes-compare-button').click();
+
+  await page.getByRole('button', {name: 'All genes'}).click();
+
+  // change table header columns visibility
+  await expect(page.locator('.header-cell')).toHaveCount(25);
+  await page.locator('#protection_scores-column-filtering-button').click({force: true});
+  await page.waitForSelector('gpf-multiple-select-menu');
+  await page.locator('gpf-multiple-select-menu').getByLabel('LGD_rank').click();
+  await page.locator('gpf-multiple-select-menu').getByLabel('pLI_rank').click();
+
+  // change table header columns sorting - asc
+  await page.getByTitle('Relevant Gene Sets', { exact: true }).click();
+  await page.waitForTimeout(200);
+  await page.getByTitle('Relevant Gene Sets', { exact: true }).click();
+  await page.waitForTimeout(200);
+
+
+  // change table header columns order
+  await page.locator('#relevant_gene_sets_rank-column-filtering-button').click();
+  await expect(page.locator('gpf-multiple-select-menu label').nth(0)).toHaveText('CHD8 target genes');
+
+  const columnHeader = page.locator('.header-cell-content-span');
+  await expect(columnHeader.nth(5)).toHaveText('CHD8 target genes');
+
+  await page.locator('gpf-multiple-select-menu label').nth(0).hover();
+  await page.mouse.down();
+  await page.mouse.move(1030, 400, {steps: 3});
+  await page.mouse.up();
+
+  await expect(page.locator('gpf-multiple-select-menu label').nth(2)).toHaveText('CHD8 target genes');
+  await expect(columnHeader.nth(7)).toHaveText('CHD8 target genes');
+}
+
+async function checkDefaultTable(page: Page): Promise<void> {
+  await expect(page.locator('input#gene-search-input')).toBeEmpty();// check search and search result
+  await expect(page.locator('.table-body-row:not(#nothing-found)')).toHaveCount(16);
+  await expect(page.locator('#compare-genes-modal')).not.toBeVisible(); // check highlighted rows
+  await expect(page.locator('.header-cell')).toHaveCount(25);// check column visibility
+  await expect(page.locator('div.tab')).toHaveCount(0);// check opened tabs
+  await expect(page.locator('div.active-sort-header')).toContainText('Autism Gene Sets'); // check sorting
+  await expect(page.locator('div.active-sort-header').locator('gpf-sorting-buttons span')).toHaveId('desc');
+  await expect(page.locator('.header-cell-content-span').nth(5))
+    .toHaveText('CHD8 target genes');// check column reorder
+}
+
+async function checkTable(page: Page): Promise<void> {
+  const columnHeader = page.locator('.header-cell-content-span');
+  // check search and search result
+  await expect(page.locator('input#gene-search-input')).toHaveValue('RAPGEF');
+  await expect(page.locator('.table-body-row:not(#nothing-found)')).toHaveCount(4);
+
+  // check highlighted rows
+  await expect(page.locator('.table-body-row').filter({hasText: 'RAPGEF4'}))
+    .toHaveClass(/row-highlight/);
+  await expect(page.locator('.table-body-row').filter({hasText: 'RAPGEF2'}))
+    .toHaveClass(/row-highlight/);
+
+  // check column visibility
+  await expect(page.locator('.header-cell')).toHaveCount(23);
+  await expect(page.locator('.header-cell').filter({ hasText: 'LGD_rank'})).not.toBeVisible();
+  await expect(page.locator('.header-cell').filter({ hasText: 'pLI_rank'})).not.toBeVisible();
+
+  // check opened tabs
+  await expect(page.locator('div.tab')).toHaveCount(2);
+  await expect(page.locator('div.tab').nth(0)).toContainText('GRIN2B');
+  await expect(page.locator('div.tab').nth(1)).toContainText('RAPGEF2,RAPGEF4');
+
+  // check sorting
+  await expect(page.locator('div.active-sort-header')).toContainText('Relevant Gene Sets');
+  await expect(page.locator('div.active-sort-header').locator('gpf-sorting-buttons span')).toHaveId('asc');
+
+  // check column reorder
+  await page.locator('#relevant_gene_sets_rank-column-filtering-button').click();
+  await expect(page.locator('gpf-multiple-select-menu label').nth(2)).toHaveText('CHD8 target genes');
+  await expect(columnHeader.nth(7)).toHaveText('CHD8 target genes');
+}
