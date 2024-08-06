@@ -382,52 +382,6 @@ Aggregators
 Genomic position table
 **********************
 
-Example table configuration for a genomic score resource.
-This configuration is embedded in the score's ``genomic_resource.yaml`` config.
-
-.. code:: yaml
-
-    # Example genomic_resource.yaml for a score resource.
-    # Contains both a genomic position table configuration under 'table',
-    # and configuration for scores under 'scores'.
-
-    table:
-      filename: whole_genome_SNVs.tsv.gz
-      format: tabix
-
-      # how to modify the values found when reading the chromosome column
-      chrom_mapping:
-        add_prefix: chr
-
-      # configuration for essential columns
-      chrom:
-        name: Chrom
-      pos_begin:
-        name: Pos
-      reference:
-        name: Ref
-      alternative:
-        name: Alt
-
-    # score values
-    scores:
-      - id: cadd_raw
-        type: float
-        name: RawScore
-        desc: |
-          CADD raw score for functional prediction of a SNP. The larger the score
-          the more likely the SNP has damaging effect
-        large_values_desc: "more damaging"
-        small_values_desc: "less damaging"
-        histogram:
-          type: number
-          number_of_bins: 100
-          view_range:
-            min: -8.0
-            max: 36.0
-          y_log_scale: True
-
-
 Table configuration fields
 ##########################
 
@@ -667,3 +621,121 @@ The ``zero_based`` argument controls how the score file will be read.
 
 | Setting it to true will read the score as a BED-style format - with 0-based, half-open intervals.
 | By default it is set to false, which will read the score in GPF's internal format - with 1-based, closed intervals.
+
+
+Example configurations
+######################
+
+Example table configuration for a genomic score resource.
+This configuration is embedded in the score's ``genomic_resource.yaml`` config.
+
+.. code:: yaml
+
+    # Example genomic_resource.yaml for an NP score resource.
+
+    table:
+      filename: whole_genome_SNVs.tsv.gz
+      format: tabix
+
+      # how to modify the values found when reading the chromosome column
+      chrom_mapping:
+        add_prefix: chr
+
+      # configuration for essential columns
+      chrom:
+        name: Chrom
+      pos_begin:
+        name: Pos
+      reference:
+        name: Ref
+      alternative:
+        name: Alt
+
+    # score values
+    scores:
+      - id: cadd_raw
+        type: float
+        name: RawScore
+        desc: |
+          CADD raw score for functional prediction of a SNP. The larger the score
+          the more likely the SNP has damaging effect
+        large_values_desc: "more damaging"
+        small_values_desc: "less damaging"
+        histogram:
+          type: number
+          number_of_bins: 100
+          view_range:
+            min: -8.0
+            max: 36.0
+          y_log_scale: True
+
+.. code:: yaml
+
+    # Example genomic_resource.yaml for a position score resource with multiple scores
+    # with different histogram configurations.
+
+    table:
+      filename: scorefile.tsv.gz
+      format: tabix
+
+      # configuration for essential columns
+      chrom:
+        name: chromosome
+      pos_begin:
+        name: start
+      pos_end:
+        name: stop
+
+    # score values
+    scores:
+      # float score
+      - id: score_A
+        type: float
+        name: NumericScore
+        number_hist:
+          number_of_bins: 120
+          view_range:
+            min: -10.0
+            max: 225.0
+          x_log_scale: True
+          x_min_log: 0.05
+      # integer score
+      - id: score_B
+        type: int
+        name: IntegerScore
+        number_hist:
+          number_of_bins: 10
+      # string score with categorical histogram
+      - id: score_C
+        type: str
+        name: CategoricalScore
+        categorical_hist:
+          value_order: ["alpha", "beta", "gamma", "delta"]
+      # string score with no histogram
+      - id: score_D
+        type: str
+        name: WeirdScore
+        null_hist:
+          reason: "Don't care about this score"
+
+
+.. code:: yaml
+
+    # Example bigWig score configuration.
+
+    type: position_score
+
+    table:
+      filename: hg38.phyloP7way.bw
+      # header mode must be set to none for bigWig scores
+      header_mode: none
+
+    # currently, it's necessary to explicitly configure the score with its index set to 3
+    scores:
+      - id: phyloP7way
+        type: float
+        column_index: 3
+
+    default_annotation:
+      - source: phyloP7way
+        name: phylop7way
