@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 
-from dae.genomic_resources.genomic_position_table.line import Line, LineBase
+from dae.genomic_resources.genomic_position_table.line import BigWigLine
 from dae.genomic_resources.genomic_position_table.table import (
     GenomicPositionTable,
 )
@@ -21,12 +21,14 @@ class BigWigTable(GenomicPositionTable):
     ):
         super().__init__(genomic_resource, table_definition)
         self.bw_file = None
+        self.chroms: dict[str, int] = {}
 
     def open(self) -> BigWigTable:
         self.bw_file = self.genomic_resource.open_bigwig_file(
             self.definition.filename)
         if self.bw_file is None:
             raise OSError
+        self.chroms = self.bw_file.chroms()
         self._set_core_column_keys()
         self._build_chrom_mapping()
         return self
@@ -40,7 +42,7 @@ class BigWigTable(GenomicPositionTable):
         self, chrom: str, pos_begin: int, pos_end: int,
     ) -> Generator[tuple[int, int, float], None, None]:
         assert self.bw_file is not None
-        chrom_len = self.bw_file.chroms()[chrom]
+        chrom_len = self.chroms[chrom]
         pos_end = min(pos_end, chrom_len)
 
         start = max(0, pos_begin - 1)
@@ -63,21 +65,21 @@ class BigWigTable(GenomicPositionTable):
         chrom: str,
         pos_begin: int | None = None,
         pos_end: int | None = None,
-    ) -> Generator[LineBase, None, None]:
+    ) -> Generator[BigWigLine, None, None]:
         assert self.bw_file is not None
         fchrom = self._map_file_chrom(chrom)
 
-        if fchrom not in self.bw_file.chroms():
+        if fchrom not in self.chroms:
             raise KeyError
         if pos_begin is None:
             pos_begin = 0
         if pos_end is None:
-            pos_end = self.bw_file.chroms()[fchrom]
+            pos_end = self.chroms[fchrom]
 
         for interval in self._intervals(fchrom, pos_begin, pos_end):
-            yield Line((chrom, *interval))
+            yield BigWigLine((chrom, *interval))
 
-    def get_all_records(self) -> Generator[LineBase, None, None]:
+    def get_all_records(self) -> Generator[BigWigLine, None, None]:
         assert self.bw_file is not None
         for chrom in self.get_chromosomes():
             yield from self.get_records_in_region(chrom)
@@ -101,8 +103,8 @@ class BigWigTable(GenomicPositionTable):
                 f"contig {fchrom} not present in the file's contigs: "
                 f"{self.get_file_chromosomes()}",
             )
-        return self.bw_file.chroms()[fchrom]
+        return self.chroms[fchrom]
 
     def get_file_chromosomes(self) -> list[str]:
         assert self.bw_file is not None
-        return list(self.bw_file.chroms().keys())
+        return list(self.chroms.keys())

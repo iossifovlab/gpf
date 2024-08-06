@@ -114,6 +114,26 @@ class VCFLine(LineBase):
         return ()
 
 
+class BigWigLine(LineBase):
+    """Represents a line read from a bigWig file."""
+
+    def __init__(self, raw_line: tuple):
+        super().__init__()
+        self._data: tuple[str, int, int, float] = raw_line
+        self.chrom: str = self._data[0]
+        self.fchrom: str = self._data[0]
+        self.pos_begin: int = self._data[1]
+        self.pos_end: int = self._data[2]
+        self.ref: str | None = None
+        self.alt: str | None = None
+
+    def get(self, key: Key) -> str | int | int | float:
+        return self._data[key]  # type: ignore
+
+    def row(self) -> tuple:
+        return tuple(self._data)
+
+
 class LineBuffer:
     """Represent a line buffer for Tabix genome position table."""
 
