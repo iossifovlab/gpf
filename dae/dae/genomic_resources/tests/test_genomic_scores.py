@@ -4,11 +4,19 @@ import textwrap
 from typing import cast
 
 import pytest
+import pytest_mock
+from pysam import VariantRecord
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.genomic_position_table import VCFGenomicPositionTable
+from dae.genomic_resources.genomic_position_table.line import (
+    BigWigLine,
+    Line,
+    VCFLine,
+)
 from dae.genomic_resources.genomic_scores import (
     AlleleScore,
+    ScoreLine,
     build_score_from_resource,
 )
 from dae.genomic_resources.implementations.genomic_scores_impl import (
@@ -56,6 +64,13 @@ chr1   30   .  A   T,G,C   .    .      A=3;B=31;C=c31,c32,c33,c34;D=d31,d32,d33
     res = build_filesystem_test_resource(tmp_path)
     score = build_score_from_resource(res)
     return cast(AlleleScore, score)
+
+
+def test_scoreline_init(mocker: pytest_mock.MockerFixture) -> None:
+    raw_line = ("chr1", 1, 10, 0.123)
+    assert ScoreLine(Line(raw_line), {})
+    assert ScoreLine(VCFLine(mocker.Mock(spec=VariantRecord), None), {})
+    assert ScoreLine(BigWigLine(raw_line), {})
 
 
 def test_default_annotation_pre_normalize_validates() -> None:

@@ -19,7 +19,10 @@ from dae.genomic_resources.genomic_position_table import (
     VCFLine,
     build_genomic_position_table,
 )
-from dae.genomic_resources.genomic_position_table.line import LineBase
+from dae.genomic_resources.genomic_position_table.line import (
+    BigWigLine,
+    LineBase,
+)
 from dae.genomic_resources.histogram import (
     Histogram,
     HistogramConfig,
@@ -150,7 +153,7 @@ class ScoreLine:
     """Abstraction for a genomic score line. Wraps the line adapter."""
 
     def __init__(self, line: LineBase, score_defs: dict[str, _ScoreDef]):
-        assert isinstance(line, (Line, VCFLine))
+        assert isinstance(line, (Line, VCFLine, BigWigLine))
         self.line = line
         self.score_defs = score_defs
 
@@ -179,7 +182,7 @@ class ScoreLine:
         key = self.score_defs[score_id].score_index
         assert key is not None
 
-        value: str | None = self.line.get(key)
+        value: str | int | float | None = self.line.get(key)
         if score_id in self.score_defs:
             col_def = self.score_defs[score_id]
             if value in col_def.na_values:
