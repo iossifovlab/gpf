@@ -10,7 +10,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from dae import __version__ as VERSION  # type: ignore
-from gpf_instance.gpf_instance import get_cacheable_hash, set_cacheable_hash
+from gpf_instance.gpf_instance import (
+    calc_and_set_cacheable_hash,
+    get_cacheable_hash,
+)
 
 
 @api_view(["GET"])
@@ -68,7 +71,7 @@ class MarkdownFileView(QueryBaseView):
             )
 
         if get_cacheable_hash(self.CONTENT_ID) is None:
-            set_cacheable_hash(self.CONTENT_ID, content)
+            calc_and_set_cacheable_hash(self.CONTENT_ID, content)
 
         return Response(
             {"content": content},
@@ -97,7 +100,10 @@ class MarkdownFileView(QueryBaseView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        set_cacheable_hash(self.CONTENT_ID, request.data.get("content"))
+        calc_and_set_cacheable_hash(
+            self.CONTENT_ID,
+            request.data.get("content"),
+        )
         return Response(status=status.HTTP_200_OK)
 
 

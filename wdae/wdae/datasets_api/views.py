@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 from collections.abc import Iterable
 from typing import Any, cast
 
@@ -9,13 +8,19 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from gpf_instance.gpf_instance import get_cacheable_hash, set_cacheable_hash
+from gpf_instance.gpf_instance import (
+    calc_and_set_cacheable_hash,
+    calc_cacheable_hash,
+    get_cacheable_hash,
+    get_wgpf_instance,
+    set_cacheable_hash,
+)
 from groups_api.serializers import GroupSerializer
 from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import StudyWrapper, StudyWrapperBase
+from studies.study_wrapper import StudyWrapperBase
 
 from dae.studies.study import GenotypeData
 from datasets_api.permissions import (
@@ -64,54 +69,24 @@ def augment_with_parents(
     return dataset
 
 
-def produce_description_hierarchy(
-    dataset: GenotypeData,
-    selected: list[str],
-    indent_level: int = 0,
-) -> str:
-    """Create dataset description hierarchy from dataset children."""
-    if dataset.is_group:
-        res = []
-        indent = "\t" * indent_level
-        for child in dataset.studies:
-            if child.study_id in selected:
-                child_descriptions = produce_description_hierarchy(
-                    child,
-                    selected,
-                    indent_level + 1,
-                )
-                res.append(
-                    f"{indent}- **[{child.name}](datasets/{child.study_id})** "
-                    f"{get_first_paragraph(child.description)}\n"
-                    f"{child_descriptions}",
-                )
-        return "\n".join(res)
-
-    return ""
-
-
-def get_first_paragraph(
-    text: str | None,
-) -> str:
-    """Get first paragraph of text."""
-    result = ""
-    if text is not None:
-        paragraphs = text.split("\n\n")
-        if paragraphs[0].startswith("#"):
-            title_match = re.match("^##((?:\n|.)*?)$\n", paragraphs[0])
-            result = re.sub("^##((?:\n|.)*?)$\n", "", paragraphs[0]) \
-                if title_match else paragraphs[1]
-        else:
-            result = paragraphs[0]
-
-    return result.replace("\n", " ").strip()
-
-
 def get_description_etag(
     request: Request, **_kwargs: dict[str, Any],
 ) -> str:
+    """Get description etag."""
     dataset_id = request.parser_context["kwargs"]["dataset_id"]
-    return get_cacheable_hash(f"{dataset_id}_description")
+    instance = get_wgpf_instance()
+
+    dataset = instance.get_wdae_wrapper(dataset_id)
+    if dataset is None:
+        return ""
+    description = dataset.description
+
+    cache_hash = get_cacheable_hash(f"{dataset_id}_description")
+    current_hash = calc_cacheable_hash(description)
+    if cache_hash is None or current_hash != cache_hash:
+        set_cacheable_hash(f"{dataset_id}_description", current_hash)
+        return current_hash
+    return cache_hash
 
 
 class DatasetView(QueryBaseView):
@@ -190,7 +165,6 @@ class DatasetView(QueryBaseView):
             res = StudyWrapperBase.build_genotype_data_description(
                 self.gpf_instance,
                 dataset.config,
-                dataset.description,
                 person_set_collection_configs,
             )
         else:
@@ -205,24 +179,6 @@ class DatasetView(QueryBaseView):
         res = augment_with_groups(res)
         res = augment_with_parents(self.instance_id, res)
 
-        raw_study = dataset.genotype_data_study \
-            if isinstance(dataset, StudyWrapper) \
-            else dataset.remote_genotype_data
-        if dataset.is_group:
-            visible_datasets = self.gpf_instance.get_visible_datasets()
-            visible_datasets = visible_datasets if visible_datasets else []
-            genotype_data_ids = [
-                gd_id for gd_id in dataset.get_studies_ids()
-                if gd_id in visible_datasets and gd_id != dataset.study_id
-            ]
-            if genotype_data_ids:
-                descriptions = produce_description_hierarchy(
-                    raw_study, genotype_data_ids,
-                )
-                res["children_description"] = (
-                    "\nThis dataset includes:\n"
-                    f"{descriptions}"
-                )
         return Response({"data": res})
 
 
@@ -391,7 +347,7 @@ class DatasetDescriptionView(QueryBaseView):
             )
 
         if get_cacheable_hash(dataset_id) is None:
-            set_cacheable_hash(f"{dataset_id}_description",
+            calc_and_set_cacheable_hash(f"{dataset_id}_description",
                                genotype_data.description)
 
         return Response(
@@ -410,7 +366,7 @@ class DatasetDescriptionView(QueryBaseView):
         description = request.data.get("description")
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
         genotype_data.description = description
-        set_cacheable_hash(f"{dataset_id}_description",
+        calc_and_set_cacheable_hash(f"{dataset_id}_description",
                            genotype_data.description)
 
         return Response(status=status.HTTP_200_OK)
@@ -524,12 +480,14 @@ class DatasetPermissionsSingleView(BaseDatasetPermissionsView):
 
 
 class DatasetHierarchyView(QueryBaseView):
-    """Provide the hierarchy of all datasets configured in the instance."""
+    """Provide the hierarchy of one dataset configured in the instance."""
 
-    @staticmethod
     def produce_tree(
-        instance_id: str, dataset: GenotypeData,
-        user: User, selected: list[str],
+        self,
+        instance_id: str,
+        dataset: GenotypeData,
+        user: User,
+        selected: list[str],
     ) -> dict[str, Any] | None:
         """Recursively collect a dataset's id, children and access rights."""
         has_rights = user_has_permission(instance_id, user, dataset.study_id)
@@ -543,7 +501,7 @@ class DatasetHierarchyView(QueryBaseView):
             children = []
             for child in dataset.studies:
                 if child.study_id in selected:
-                    tree = DatasetHierarchyView.produce_tree(
+                    tree = self.produce_tree(
                         instance_id, child, user, selected,
                     )
                     if tree is not None:
@@ -556,20 +514,33 @@ class DatasetHierarchyView(QueryBaseView):
             "access_rights": has_rights,
         }
 
+
+
     @method_decorator(etag(get_permissions_etag))
-    def get(self, request: Request) -> Response:
-        """Return the hierarchy of configured datasets in the instance."""
+    def get(self, request: Request, dataset_id: str | None = None) -> Response:
+        """Return the hierarchy of one dataset in the instance."""
         user = request.user
+
         genotype_data_ids = self.gpf_instance.get_genotype_data_ids()
-        genotype_data = filter(lambda gd: gd and not gd.parents, [
+
+        if dataset_id:
+            genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
+
+            tree = self.produce_tree(
+                self.instance_id, genotype_data, user, genotype_data_ids,
+            )
+
+            return Response({"data": tree}, status=status.HTTP_200_OK)
+
+        genotype_datas = filter(lambda gd: gd and not gd.parents, [
             self.gpf_instance.get_wdae_wrapper(genotype_data_id)
             for genotype_data_id in genotype_data_ids
         ])
 
         trees = []
 
-        for gd in genotype_data:
-            tree = DatasetHierarchyView.produce_tree(
+        for gd in genotype_datas:
+            tree = self.produce_tree(
                 self.instance_id, gd, user, genotype_data_ids,
             )
             if tree is not None:

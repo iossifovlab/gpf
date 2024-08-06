@@ -71,12 +71,18 @@ def get_cacheable_hash(hashable_id: str) -> str | None:
     return _GPF_HASH_STORE.get(hashable_id)
 
 
-def set_cacheable_hash(hashable_id: str, content: str | None) -> None:
+def calc_and_set_cacheable_hash(hashable_id: str, content: str | None) -> None:
+    _GPF_HASH_STORE[hashable_id] = calc_cacheable_hash(content)
+
+
+def set_cacheable_hash(hashable_id: str, hashsum: str) -> None:
+    _GPF_HASH_STORE[hashable_id] = hashsum
+
+
+def calc_cacheable_hash(content: str | None) -> str:
     if content is None:
         content = ""
-    _GPF_HASH_STORE[hashable_id] = \
-        hashlib.md5(content.encode("utf-8")).hexdigest()  # noqa: S324
-
+    return hashlib.md5(content.encode("utf-8")).hexdigest()  # noqa: S324
 
 class WGPFInstance(GPFInstance):
     """GPF instance class for use in wdae."""
