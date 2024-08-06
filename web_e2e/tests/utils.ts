@@ -30,8 +30,6 @@ export const toolPageLinks = {
 
 export async function logout(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Log Out' }).click();
-  await page.waitForResponse(
-    resp => resp.url().includes('/api/v3/users/logout') && resp.status() === 204);
   await page.waitForSelector('#log-in-button');
 }
 
@@ -74,7 +72,7 @@ export async function navigateToDataset(page: Page, dataset: string): Promise<vo
   await page.locator('#datasets-dropdown-menu-button').click();
 
 
-  if (!await page.locator('a').filter({ hasText: dataset }).isVisible()) {
+  if (!await page.locator('gpf-dataset-node a').filter({ hasText: dataset }).isVisible()) {
     for (const ele of (await page.locator('.collapse-dataset-icon.rotate').all()).reverse()) {
       // eslint-disable-next-line no-await-in-loop
       await ele.click();
@@ -85,7 +83,7 @@ export async function navigateToDataset(page: Page, dataset: string): Promise<vo
     }
   }
 
-  await page.locator('a').filter({ hasText: dataset }).click();
+  await page.locator('gpf-dataset-node a').filter({ hasText: dataset }).click();
   await expect(page.locator('#datasets-dropdown-menu-button')).toHaveText(dataset);
 }
 

@@ -304,6 +304,8 @@ test.describe('Gene profiles table functionality tests', () => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await page.locator('#header a:text("Gene Profiles")').click();
+    await page.waitForSelector('gpf-gene-profiles-table');
+    await page.waitForSelector('#loading', {state: 'detached'});
 
     await utils.resetGeneProfiles(page);
   });
@@ -467,6 +469,8 @@ test.describe('Gene profiles table state tests', () => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await page.locator('#header a:text("Gene Profiles")').click();
+    await page.waitForSelector('gpf-gene-profiles-table');
+    await page.waitForSelector('#loading', {state: 'detached'});
 
     await utils.resetGeneProfiles(page);
   });
@@ -519,6 +523,8 @@ test.describe('Gene profiles table state tests', () => {
     await changeTable(page);
     await page.waitForTimeout(1500); // wait for user's gene profile state query
     await utils.resetGeneProfiles(page);
+    await page.waitForSelector('gpf-gene-profiles-table');
+    await page.waitForSelector('#loading', {state: 'detached'});
     await checkDefaultTable(page);
   });
 });
