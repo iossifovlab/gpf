@@ -1,5 +1,10 @@
 Release Notes
 =============
+* 2024.8.0
+    * Fix for pheno data import on clusters
+    * Fix genomic scores histograms large and small value labels
+    * Change genomic scores configuration to support `column_name` and `column_index`
+    * Fix support for genomic scores with `zero_based` genomic position table
 * 2024.7.8
     * Fix handling of bigWig resources with chromosome mapping in `grr_manage`
 
