@@ -5,7 +5,7 @@ import pytest
 
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from dae.query_variants.sql.schema2.sql_query_builder import (
-    SqlQueryBuilder2,
+    SqlQueryBuilder,
 )
 from dae.studies.study import GenotypeData
 from dae.utils.regions import Region
@@ -26,7 +26,7 @@ def duckdb2_variants(
 @pytest.fixture()
 def query_builder(
     duckdb2_variants: DuckDb2Variants,
-) -> SqlQueryBuilder2:
+) -> SqlQueryBuilder:
     return duckdb2_variants.query_builder
 
 
@@ -40,7 +40,7 @@ def query_builder(
 def test_coding_bin_heuristics_query(
     params: dict[str, Any],
     coding_bin: int | None,
-    query_builder: SqlQueryBuilder2,
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     queries = query_builder.build_summary_variants_query(**params)
@@ -64,7 +64,7 @@ def test_coding_bin_heuristics_query(
 def test_region_bin_heuristics_query(
     params: dict[str, Any],
     region_bins: list[str] | None,
-    query_builder: SqlQueryBuilder2,
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     queries = query_builder.build_summary_variants_query(**params)
@@ -91,7 +91,7 @@ def test_region_bin_heuristics_query(
 def test_frequency_bin_heuristics_query(
     params: dict[str, Any],
     frequency_bins: str | None,
-    query_builder: SqlQueryBuilder2,
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     queries = query_builder.build_summary_variants_query(**params)
@@ -116,7 +116,7 @@ def test_frequency_bin_heuristics_query(
 def test_coding_bin_heuristics_family_query(
     params: dict[str, Any],
     coding_bin: int | None,
-    query_builder: SqlQueryBuilder2,
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     queries = query_builder.build_family_variants_query(**params)
@@ -143,7 +143,7 @@ def test_region_bin_heuristics_family_query(
     params: dict[str, Any],
     count: int,
     region_bins: list[str],
-    query_builder: SqlQueryBuilder2,
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     queries = query_builder.build_family_variants_query(**params)
@@ -158,7 +158,7 @@ def test_region_bin_heuristics_family_query(
 
 
 def test_region_bin_heuristics_batched_query(
-    query_builder: SqlQueryBuilder2,
+    query_builder: SqlQueryBuilder,
 ) -> None:
 
     queries = query_builder.build_family_variants_query()
@@ -181,7 +181,7 @@ def test_region_bin_heuristics_batched_query(
 def test_frequency_bin_heuristics_family_query(
     params: dict[str, Any],
     frequency_bins: str | None,
-    query_builder: SqlQueryBuilder2,
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     queries = query_builder.build_family_variants_query(**params)
@@ -361,7 +361,7 @@ def test_query_family_variants_by_inheritance(
 def test_calc_frequency_bin_heuristics(
     params: dict[str, Any],
     expected: list[str],
-    query_builder: SqlQueryBuilder2,
+    query_builder: SqlQueryBuilder,
 ) -> None:
     frequency_bins = query_builder.calc_frequency_bins(**params)
     assert frequency_bins == expected
@@ -407,7 +407,7 @@ def test_query_family_variants_by_family_and_person_ids(
 
 @pytest.mark.xfail(reason="impala v3.x does not support int64")
 def test_sj_index(
-    query_builder: SqlQueryBuilder2,
+    query_builder: SqlQueryBuilder,
 ) -> None:
     assert "sj_index" in query_builder.schema.column_names("summary_table")
     assert "sj_index" in query_builder.schema.column_names("family_table")

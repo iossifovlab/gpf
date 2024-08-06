@@ -5,7 +5,7 @@ import pytest
 
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from dae.query_variants.sql.schema2.sql_query_builder import (
-    SqlQueryBuilder2,
+    SqlQueryBuilder,
 )
 from dae.studies.study import GenotypeData
 from dae.utils.regions import Region
@@ -26,7 +26,7 @@ def duckdb2_variants(
 @pytest.fixture()
 def query_builder(
     duckdb2_variants: DuckDb2Variants,
-) -> SqlQueryBuilder2:
+) -> SqlQueryBuilder:
     sql_query_builder = duckdb2_variants.query_builder
     assert sql_query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
     return sql_query_builder

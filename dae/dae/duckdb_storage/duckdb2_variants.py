@@ -22,7 +22,7 @@ from dae.query_variants.base_query_variants import QueryVariantsBase
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.query_variants.sql.schema2.sql_query_builder import (
     Db2Layout,
-    SqlQueryBuilder2,
+    SqlQueryBuilder,
 )
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance, Role, Sex, Status
@@ -130,7 +130,7 @@ class DuckDb2Variants(QueryVariantsBase):
         pedigree_schema = self._fetch_pedigree_schema()
         summary_schema = self._fetch_summary_schema()
         family_schema = self._fetch_family_schema()
-        schema = SqlQueryBuilder2.build_schema(
+        schema = SqlQueryBuilder.build_schema(
             pedigree_schema=pedigree_schema,
             summary_schema=summary_schema,
             family_schema=family_schema,
@@ -138,7 +138,7 @@ class DuckDb2Variants(QueryVariantsBase):
         partition_description = self._fetch_partition_descriptor()
         self.families = self._fetch_families()
 
-        self.query_builder = SqlQueryBuilder2(
+        self.query_builder = SqlQueryBuilder(
             self.layout,
             schema=schema,
             partition_descriptor=partition_description,

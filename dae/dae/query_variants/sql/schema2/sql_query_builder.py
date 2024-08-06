@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import logging
-import textwrap
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any, cast
 
 import duckdb
-import sqlglot
 from sqlglot import condition, exp, or_, parse_one
 from sqlglot.expressions import (
     Condition,
@@ -16,7 +14,6 @@ from sqlglot.expressions import (
 )
 from sqlglot.schema import Schema, ensure_schema
 
-from dae.effect_annotation.effect import EffectTypesMixin
 from dae.genomic_resources.gene_models import (
     GeneModels,
     create_regions_from_genes,
@@ -515,629 +512,6 @@ class QueryBuilderBase:
 
 
 class SqlQueryBuilder(QueryBuilderBase):
-    """Class that abstracts away the process of building a query."""
-
-    def __init__(
-        self,
-        db_layout: Db2Layout, *,
-        schema: Schema,
-        partition_descriptor: PartitionDescriptor | None,
-        families: FamiliesData,
-        gene_models: GeneModels,
-        reference_genome: ReferenceGenome,
-    ):
-        super().__init__(
-            schema=schema,
-            families=families,
-            partition_descriptor=partition_descriptor,
-            gene_models=gene_models,
-            reference_genome=reference_genome,
-        )
-
-        self.db_layout = db_layout
-
-    @staticmethod
-    def build_regions_where(
-        regions: list[Region],
-    ) -> str:
-        """Build a WHERE clause for regions."""
-        where: list[str] = []
-        for reg in regions:
-            if reg.start is None and reg.stop is None:
-                reg_where = f"sa.chromosome = '{reg.chrom}'"
-            elif reg.start is None:
-                assert reg.stop is not None
-                reg_where = (
-                    f"sa.chromosome = '{reg.chrom}'"
-                    f" AND NOT ( "
-                    f"sa.position > {reg.stop} )"
-                )
-            elif reg.stop is None:
-                assert reg.start is not None
-                reg_where = (
-                    f"sa.chromosome = '{reg.chrom}'"
-                    f" AND ( "
-                    f"COALESCE(sa.end_position, sa.position) > {reg.start} )"
-                )
-            else:
-                assert reg.stop is not None
-                assert reg.start is not None
-
-                reg_where = (
-                    f"sa.chromosome = '{reg.chrom}'"
-                    f" AND NOT ( "
-                    f"COALESCE(sa.end_position, sa.position) < {reg.start} OR "
-                    f"sa.position > {reg.stop} )"
-                )
-            where.append(f"( {reg_where} )")
-        return " OR ".join(where)
-
-    def build_summary_variants_query(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: RealAttrFilterType | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: RealAttrFilterType | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-    ) -> list[str]:
-        """Build a query for summary variants."""
-        heuristics = self.calc_heuristics(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-        )
-        region_batches: list[list[str]] = [[]]
-        if heuristics.region_bins:
-            region_batches = [heuristics.region_bins]
-        elif self.partition_descriptor \
-                and self.partition_descriptor.has_region_bins() \
-                and heuristics.region_bins:
-            region_batches = [
-                [f"'{rb}'"]
-                for rb in self.all_region_bins()
-            ]
-
-        result = []
-        for rb in region_batches:
-            batch_heuristics = QueryHeuristics(
-                region_bins=rb,
-                coding_bins=heuristics.coding_bins,
-                frequency_bins=heuristics.frequency_bins,
-                family_bins=heuristics.family_bins,
-            )
-            summary_subclause = self._build_summary_subclause(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                heuristics=batch_heuristics,
-            )
-            eg_summary_clause = self._build_gene_effect_clause(
-                genes, effect_types)
-
-            limit_clause = ""
-            if limit is not None:
-                limit_clause = f"LIMIT {limit}"
-            summary_source = "summary"
-            if eg_summary_clause:
-                summary_source = "effect_gene"
-            query = textwrap.dedent(f"""
-                WITH
-                {summary_subclause}
-                {eg_summary_clause}
-                SELECT
-                    bucket_index, summary_index,
-                    allele_index, summary_variant_data
-                FROM {summary_source}
-                {limit_clause}
-            """)
-
-            sqlglot.pretty = True
-            tr_query = sqlglot.transpile(query, "duckdb", "duckdb")
-            assert len(tr_query) == 1
-            result.append(tr_query[0])
-        return result
-
-    def _build_gene_effect_clause(
-        self,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-    ) -> str:
-        assert self.gene_models is not None
-
-        eg_subclause = ""
-        if genes is not None or effect_types is not None:
-            where_parts: list[str] = []
-            if genes is not None:
-                genes = [g for g in genes if g in self.gene_models.gene_models]
-                where_parts.append(self._build_gene_where(genes))
-            if effect_types is not None:
-                effect_types = [
-                    et for et in effect_types
-                    if et in EffectTypesMixin.EFFECT_TYPES]
-                if set(effect_types) != set(EffectTypesMixin.EFFECT_TYPES):
-                    where_parts.append(
-                        self._build_effect_type_where(effect_types))
-            eg_where = " AND ".join([wp for wp in where_parts if wp])
-            if not eg_where:
-                return ""
-            eg_subclause = textwrap.dedent(f""",
-                effect_gene_all AS (
-                    SELECT *, UNNEST(effect_gene) as eg
-                    FROM summary
-                ),
-                effect_gene AS (
-                    SELECT *
-                    FROM effect_gene_all
-                    WHERE
-                        {eg_where}
-                )
-            """)  # noqa: S608
-        return eg_subclause
-
-    @staticmethod
-    def _heuristic_where(
-        alias: str,
-        heuristic: str,
-        bins: list[str],
-    ) -> str:
-        if len(bins) == 0:
-            return ""
-        if len(bins) == 1:
-            return f"{alias}.{heuristic} = {bins[0]}"
-        return f"{alias}.{heuristic} IN ({', '.join(bins)})"
-
-    def _build_summary_subclause(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: RealAttrFilterType | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: RealAttrFilterType | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        heuristics: QueryHeuristics | None = None,
-        **_kwargs: Any,
-    ) -> str:
-        """Build a subclause for the summary table.
-
-        This is the part of the query that is specific to the summary table.
-        """
-        where_parts: list[str] = []
-        if genes is not None:
-            regions = self.build_gene_regions(genes, regions)
-        if regions is not None:
-            where_parts.append(self.build_regions_where(regions))
-        if frequency_filter is not None:
-            where_parts.append(
-                self._build_real_attr_where(
-                    frequency_filter, is_frequency=True),
-            )
-        if real_attr_filter is not None:
-            where_parts.append(
-                self._build_real_attr_where(
-                    real_attr_filter, is_frequency=False),
-            )
-        if ultra_rare is not None and ultra_rare:
-            where_parts.append(self._build_ultra_rare_where())
-        if variant_type is not None:
-            where_parts.append(
-                self._build_variant_types_where(variant_type),
-            )
-
-        if heuristics is not None and not heuristics.is_empty():
-            where_parts.extend([
-                self._heuristic_where(
-                    "sa", "region_bin", heuristics.region_bins),
-                self._heuristic_where(
-                    "sa", "frequency_bin", heuristics.frequency_bins),
-                self._heuristic_where(
-                    "sa", "coding_bin", heuristics.coding_bins),
-            ])
-
-        if not return_reference and not return_unknown:
-            where_parts.append("sa.allele_index > 0")
-
-        summary_where = ""
-        if where_parts:
-            where = " AND ".join([wp for wp in where_parts if wp])
-            summary_where = textwrap.dedent(f"""WHERE
-                {where}
-            """)
-        return textwrap.dedent(f"""
-            summary AS (
-                SELECT
-                    *
-                FROM
-                    {self.db_layout.summary} sa
-                {summary_where}
-            )
-            """)
-
-    def _build_real_attr_where(
-        self, real_attr_filter: RealAttrFilterType, *,
-        is_frequency: bool = False,
-    ) -> str:
-
-        where = []
-        for attr_name, attr_range in real_attr_filter:
-            if attr_name not in self.schema.column_names("summary_table"):
-                where.append("false")
-                continue
-
-            left, right = attr_range
-
-            if left is None and right is None:
-                # if the filter is frequency and we have no range, we
-                # we want to include all variants - don't add filter to query
-                # otherwise we want to exclude variants that have no value
-                if not is_frequency:
-                    where.append(f"sa.{attr_name} IS NOT NULL")
-            elif left is None:
-                assert right is not None
-                if is_frequency:
-                    where.append(
-                        f"sa.{attr_name} <= {right} OR sa.{attr_name} IS NULL",
-                    )
-                else:
-                    where.append(
-                        f"sa.{attr_name} <= {right}",
-                    )
-            elif right is None:
-                assert left is not None
-                where.append(f"sa.{attr_name} >= {left}")
-            else:
-                where.append(
-                    f"sa.{attr_name} >= {left} AND sa.{attr_name} <= {right}",
-                )
-        return " AND ".join(f"( {w} )" for w in where)
-
-    def _build_ultra_rare_where(self) -> str:
-        """Create ultra rare variants filter.
-
-        Ultra rare variants are variants that are present in only one family.
-        Given ultra rare filter we return ultra rare variants and de novo
-        that have no frequency information.
-        """
-        return self._build_real_attr_where(
-            real_attr_filter=[("af_allele_count", (None, 1))],
-            is_frequency=True,
-        )
-
-    def _build_gene_where(self, genes: list[str]) -> str:
-        if len(genes) == 0:
-            return "eg.effect_gene_symbols IS NULL"
-        gene_set = ",".join(f"'{g}'" for g in genes)
-        return f"eg.effect_gene_symbols in ({gene_set})"
-
-    def _build_effect_type_where(self, effect_types: list[str]) -> str:
-        effect_types = [et.replace("'", "''") for et in effect_types]
-        if len(effect_types) == 0:
-            return "eg.effect_types IS NULL"
-        effect_set = ",".join(f"'{g}'" for g in effect_types)
-        return f"eg.effect_types in ({effect_set})"
-
-    def _adapt_family_and_person_ids(
-        self, family_ids: Sequence[str] | None,
-        person_ids: Sequence[str] | None,
-    ) -> tuple[Sequence[str] | None, Sequence[str] | None]:
-        if family_ids is None:
-            return None, person_ids
-        if person_ids is None:
-            return family_ids, person_ids
-        result = set()
-        person_ids_set = set()
-        family_ids_set = set(family_ids)
-        for pid in person_ids:
-            persons = self.families.persons_by_person_id.get(pid)
-            if persons is None:
-                continue
-            for person in persons:
-                if person.family_id not in family_ids_set:
-                    continue
-                result.add(person.family_id)
-                person_ids_set.add(pid)
-        family_ids = list(result & family_ids_set)
-        return family_ids, list(person_ids_set)
-
-    def _build_person_subclause(
-        self, person_ids: Sequence[str] | None,
-    ) -> str:
-        if person_ids is None:
-            return ""
-        if len(person_ids) == 0:
-            person_where = "fa.aim IS NULL"
-        else:
-            person_ids = [f"'{pid}'" for pid in person_ids]
-            person_where = f"fa.aim IN ({', '.join(person_ids)})"
-
-        return f"""
-            ,
-            allele_in_member AS (
-                SELECT
-                    *,
-                    UNNEST(allele_in_members) as aim
-                FROM
-                    family
-            ),
-            family_person AS (
-                SELECT
-                    *
-                FROM allele_in_member as fa
-                WHERE
-                    {person_where}
-            )
-        """
-
-    def _build_roles_query_where(self, roles_query: str) -> str:
-        subquery = self.build_roles_query(roles_query, "fa.allele_in_roles")
-        return f"({subquery})"
-
-    def _build_inheritance_query_where(
-        self, inheritance_query: Sequence[str],
-    ) -> str:
-        subquery = self.build_inheritance_query(
-            inheritance_query, "fa.inheritance_in_members")
-        return f"({subquery})"
-
-    def _build_sexes_query_where(self, sexes_query: str) -> str:
-        subquery = self.build_sexes_query(sexes_query, "fa.allele_in_sexes")
-        return f"({subquery})"
-
-    def _build_variant_types_where(
-        self, variant_types_query: str,
-    ) -> str:
-        subquery = self.build_variant_types_query(
-            variant_types_query, "sa.variant_type")
-        return f"({subquery})"
-
-    def build_family_variants_query(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        effect_types: list[str] | None = None,
-        family_ids: Sequence[str] | None = None,
-        person_ids: Sequence[str] | None = None,
-        inheritance: Sequence[str] | None = None,
-        roles: str | None = None,
-        sexes: str | None = None,
-        variant_type: str | None = None,
-        real_attr_filter: RealAttrFilterType | None = None,
-        ultra_rare: bool | None = None,
-        frequency_filter: RealAttrFilterType | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        limit: int | None = None,
-        **_kwargs: Any,
-    ) -> list[str]:
-        """Build a query for family variants."""
-        # pylint: disable=too-many-arguments,too-many-locals
-        heuristics = self.calc_heuristics(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            inheritance=inheritance,
-            roles=roles,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            family_ids=family_ids,
-        )
-
-        region_batches: list[list[str]] = [[]]
-        if heuristics.region_bins:
-            region_batches = [heuristics.region_bins]
-        elif self.partition_descriptor \
-                and self.partition_descriptor.has_region_bins():
-            region_batches = [
-                [f"'{rb}'"]
-                for rb in self.all_region_bins()
-            ]
-
-        result = []
-        for rb in region_batches:
-            batch_heuristics = QueryHeuristics(
-                region_bins=rb,
-                coding_bins=heuristics.coding_bins,
-                frequency_bins=heuristics.frequency_bins,
-                family_bins=heuristics.family_bins,
-            )
-
-            summary_subclause = self._build_summary_subclause(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                heuristics=batch_heuristics,
-            )
-            family_ids, person_ids = self._adapt_family_and_person_ids(
-                family_ids, person_ids,
-            )
-            family_subclause = self._build_family_subclause(
-                regions=regions,
-                genes=genes,
-                effect_types=effect_types,
-                family_ids=family_ids,
-                person_ids=person_ids,
-                inheritance=inheritance,
-                roles=roles,
-                sexes=sexes,
-                variant_type=variant_type,
-                real_attr_filter=real_attr_filter,
-                ultra_rare=ultra_rare,
-                frequency_filter=frequency_filter,
-                return_reference=return_reference,
-                return_unknown=return_unknown,
-                heuristics=batch_heuristics,
-            )
-
-            effect_gene_subclause = self._build_gene_effect_clause(
-                genes, effect_types)
-            summary_from = "summary"
-            if effect_gene_subclause:
-                summary_from = "effect_gene"
-
-            person_subclause = self._build_person_subclause(
-                person_ids=person_ids)
-            family_from = "family"
-            if person_subclause:
-                family_from = "family_person"
-
-            limit_clause = ""
-            if limit is not None:
-                limit_clause = f"LIMIT {limit}"
-
-            join_on_clause = textwrap.dedent("""
-                ON (
-                    fa.summary_index = sa.summary_index AND
-                    fa.bucket_index = sa.bucket_index AND
-                    fa.allele_index = sa.allele_index)
-            """)
-            if "sj_index" in self.schema.column_names("summary_table") and \
-                    "sj_index" in self.schema.column_names("family_table"):
-                join_on_clause = textwrap.dedent("""
-                    ON fa.sj_index = sa.sj_index
-                """)
-
-            query = f"""
-                WITH
-                {summary_subclause}
-                {effect_gene_subclause}
-                ,
-                {family_subclause}
-                {person_subclause}
-                SELECT
-                    fa.bucket_index, fa.summary_index, fa.family_index,
-                    sa.allele_index,
-                    sa.summary_variant_data,
-                    fa.family_variant_data
-                FROM
-                    {summary_from} as sa
-                JOIN
-                    {family_from} as fa
-                {join_on_clause}
-                {limit_clause}
-            """
-            sqlglot.pretty = True
-            tr_query = sqlglot.transpile(query, "duckdb", "duckdb")
-            assert len(tr_query) == 1
-            result.append(tr_query[0])
-        return result
-
-    def _build_family_subclause(
-        self, *,
-        regions: list[Region] | None = None,
-        genes: list[str] | None = None,
-        family_ids: Sequence[str] | None = None,
-        _person_ids: Sequence[str] | None = None,
-        inheritance: str | Sequence[str] | None = None,
-        roles: str | None = None,
-        sexes: str | None = None,
-        return_reference: bool | None = None,
-        return_unknown: bool | None = None,
-        heuristics: QueryHeuristics | None = None,
-        **_kwargs: Any,
-    ) -> str:
-        """Build a subclause for the family table.
-
-        This is the part of the query that is specific to the family table.
-        """
-        # pylint: disable=too-many-arguments
-        query: list[str] = []
-        where_parts: list[str] = []
-        from_clause = f"{self.db_layout.family} AS fa"
-        if heuristics and not heuristics.is_empty():
-            where_parts.extend([
-                self._heuristic_where(
-                    "fa", "region_bin", heuristics.region_bins),
-                self._heuristic_where(
-                    "fa", "frequency_bin", heuristics.frequency_bins),
-                self._heuristic_where(
-                    "fa", "coding_bin", heuristics.coding_bins),
-                self._heuristic_where(
-                    "fa", "family_bin", heuristics.family_bins),
-            ])
-            assert where_parts
-
-            where = " AND ".join([wp for wp in where_parts if wp])
-            family_where = textwrap.dedent(f"""WHERE
-                {where}
-            """)
-
-            query.append(f"""
-                family_bins AS (
-                    SELECT
-                        *
-                    FROM {from_clause}
-                    {family_where}
-                )
-            """)
-            from_clause = "family_bins AS fa"
-
-        where_parts = []
-        if genes is not None:
-            regions = self.build_gene_regions(genes, regions)
-        if roles is not None:
-            where_parts.append(self._build_roles_query_where(roles))
-        if sexes is not None:
-            where_parts.append(self._build_sexes_query_where(sexes))
-        if inheritance is not None:
-            if isinstance(inheritance, str):
-                inheritance = [inheritance]
-            where_parts.append(
-                self._build_inheritance_query_where(inheritance),
-            )
-        if family_ids is not None:
-            where_parts.append(self._build_family_ids_query_where(family_ids))
-
-        # Do not look into reference alleles if not requested
-        if not return_reference and not return_unknown:
-            where_parts.append("fa.allele_index > 0")
-
-        family_where = ""
-        if where_parts:
-            where = " AND ".join([wp for wp in where_parts if wp])
-            family_where = textwrap.dedent(f"""WHERE
-                {where}
-            """)
-        query.append(
-            textwrap.dedent(f"""
-                family AS (
-                    SELECT
-                        *
-                    FROM
-                        {from_clause}
-                    {family_where}
-                )
-            """),
-        )
-        return ",".join(query)
-
-    def _build_family_ids_query_where(self, family_ids: Sequence[str]) -> str:
-        if not family_ids:
-            return "fa.family_id IS NULL"
-        family_ids = [f"'{fid}'" for fid in family_ids]
-        return f"fa.family_id IN ({', '.join(family_ids)})"
-
-
-class SqlQueryBuilder2(QueryBuilderBase):
     """Build SQL queries using sqlglot."""
 
     def __init__(
@@ -1168,7 +542,7 @@ class SqlQueryBuilder2(QueryBuilderBase):
         families: FamiliesData,
         gene_models: GeneModels,
         reference_genome: ReferenceGenome,
-    ) -> SqlQueryBuilder2:
+    ) -> SqlQueryBuilder:
         """Return a new instance of the builder."""
         schema = ensure_schema(
             {
@@ -1177,7 +551,7 @@ class SqlQueryBuilder2(QueryBuilderBase):
                 "pedigree_table": pedigree_schema,
             },
         )
-        return SqlQueryBuilder2(
+        return SqlQueryBuilder(
             db_layout=db_layout,
             schema=schema,
             partition_descriptor=partition_descriptor,
@@ -1309,11 +683,11 @@ class SqlQueryBuilder2(QueryBuilderBase):
         """Create regions condition."""
         assert len(regions) > 0
 
-        result = SqlQueryBuilder2._region_to_condition(regions[0])
+        result = SqlQueryBuilder._region_to_condition(regions[0])
         for reg in regions[1:]:
             result = or_(
                 result,
-                SqlQueryBuilder2._region_to_condition(reg),
+                SqlQueryBuilder._region_to_condition(reg),
             )
 
         return result
@@ -1355,7 +729,7 @@ class SqlQueryBuilder2(QueryBuilderBase):
         """Build frequencies filter where condition."""
         assert len(real_attrs) > 0
         conditions = [
-            SqlQueryBuilder2._real_attr_filter(
+            SqlQueryBuilder._real_attr_filter(
                 attr, value_range,
                 is_frequency=True,
             )
@@ -1373,7 +747,7 @@ class SqlQueryBuilder2(QueryBuilderBase):
         attr: str,
         value_range: tuple[float | None, float | None],
     ) -> Condition:
-        return SqlQueryBuilder2._real_attr_filter(
+        return SqlQueryBuilder._real_attr_filter(
             attr, value_range,
             is_frequency=False,
         )
@@ -1385,7 +759,7 @@ class SqlQueryBuilder2(QueryBuilderBase):
         """Build real attributes filter where condition."""
         assert len(real_attrs) > 0
         conditions = [
-            SqlQueryBuilder2._real_attr_filter(
+            SqlQueryBuilder._real_attr_filter(
                 attr, value_range,
                 is_frequency=False,
             )
@@ -1400,7 +774,7 @@ class SqlQueryBuilder2(QueryBuilderBase):
 
     @staticmethod
     def ultra_rare() -> Condition:
-        return SqlQueryBuilder2._real_attr_filter(
+        return SqlQueryBuilder._real_attr_filter(
             "af_allele_count", (None, 1),
             is_frequency=True)
 
@@ -1455,10 +829,10 @@ class SqlQueryBuilder2(QueryBuilderBase):
             )
             if genes is not None:
                 summary = summary.where(
-                    SqlQueryBuilder2.genes(genes))
+                    SqlQueryBuilder.genes(genes))
             if effect_types is not None:
                 summary = summary.where(
-                    SqlQueryBuilder2.effect_types(effect_types))
+                    SqlQueryBuilder.effect_types(effect_types))
             query = Select().with_(
                 "summary_base", as_=query,
             ).with_(
@@ -1473,7 +847,7 @@ class SqlQueryBuilder2(QueryBuilderBase):
         roles_query: str,
     ) -> Condition:
         return condition(
-            SqlQueryBuilder2.build_roles_query(
+            SqlQueryBuilder.build_roles_query(
                 roles_query, "fa.allele_in_roles"))
 
     @staticmethod
@@ -1481,7 +855,7 @@ class SqlQueryBuilder2(QueryBuilderBase):
         sexes_query: str,
     ) -> Condition:
         return condition(
-            SqlQueryBuilder2.build_sexes_query(
+            SqlQueryBuilder.build_sexes_query(
                 sexes_query, "fa.allele_in_sexes"))
 
     @staticmethod
@@ -1491,10 +865,10 @@ class SqlQueryBuilder2(QueryBuilderBase):
         """Build inheritance filter."""
         if isinstance(inheritance_query, str):
             return condition(
-                SqlQueryBuilder2.build_inheritance_query(
+                SqlQueryBuilder.build_inheritance_query(
                     [inheritance_query], "fa.inheritance_in_members"))
         return condition(
-            SqlQueryBuilder2.build_inheritance_query(
+            SqlQueryBuilder.build_inheritance_query(
                 inheritance_query, "fa.inheritance_in_members"))
 
     @staticmethod
@@ -1567,7 +941,7 @@ class SqlQueryBuilder2(QueryBuilderBase):
             ).from_(
                 "family_members as fa",
             ).where(
-                SqlQueryBuilder2.person_ids(person_ids),
+                SqlQueryBuilder.person_ids(person_ids),
             )
 
             query = Select().with_(
@@ -1595,25 +969,25 @@ class SqlQueryBuilder2(QueryBuilderBase):
     @staticmethod
     def region_bins(table: str, region_bins: list[str]) -> Condition:
         """Create region bins condition."""
-        return SqlQueryBuilder2._heuristic_bins(
+        return SqlQueryBuilder._heuristic_bins(
             table, "region_bin", region_bins)
 
     @staticmethod
     def frequency_bins(table: str, frequency_bins: list[str]) -> Condition:
         """Create frequency bins condition."""
-        return SqlQueryBuilder2._heuristic_bins(
+        return SqlQueryBuilder._heuristic_bins(
             table, "frequency_bin", frequency_bins)
 
     @staticmethod
     def coding_bins(table: str, coding_bins: list[str]) -> Condition:
         """Create coding bins condition."""
-        return SqlQueryBuilder2._heuristic_bins(
+        return SqlQueryBuilder._heuristic_bins(
             table, "coding_bin", coding_bins)
 
     @staticmethod
     def family_bins(table: str, family_bins: list[str]) -> Condition:
         """Create family bins condition."""
-        return SqlQueryBuilder2._heuristic_bins(
+        return SqlQueryBuilder._heuristic_bins(
             table, "family_bin", family_bins)
 
     def apply_summary_heuristics(
