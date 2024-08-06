@@ -34,7 +34,7 @@ class MockDatasetService {
 }
 
 const mockDataset1 = new Dataset(
-  'id1', 'desc1', '', 'name1', [], true,
+  'id1', 'name1', [], true,
   ['study1'], ['studyName1'], ['studyType1'], 'phenotypeData1',
   false, true, true, false, {enabled: true},
   new GenotypeBrowser(

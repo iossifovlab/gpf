@@ -1,14 +1,39 @@
-<ng-container *ngIf="dataset">
+<ng-container *ngIf="descriptionHierarchy">
   <gpf-markdown-editor
-    [initialMarkdown]="dataset.description"
-    [editable]="dataset.descriptionEditable"
-    (writeEvent)="writeDataset($event)"></gpf-markdown-editor>
+    [initialMarkdown]="descriptionHierarchy.description"
+    [editable]="editable"
+    (writeEvent)="writeDataset(descriptionHierarchy.id, $event)"></gpf-markdown-editor>
 
   <span
-    *ngIf="!dataset.description && !('' | userInfo)?.isAdministrator"
+    *ngIf="!descriptionHierarchy.description && !('' | userInfo)?.isAdministrator"
     style="display: block; font-style: italic; opacity: 75%; text-align: center; padding-top: 15px"
     >No dataset description available</span
   >
 
-  <markdown class="container" style="display: block; padding: 0; width: auto;">{{ dataset.childrenDescription }}</markdown>
+  <div class="container" style="display: block; padding: 20px 0; width: auto">
+    <p>This dataset includes:</p>
+    <ul class="container">
+      <ng-container
+        *ngFor="let child of descriptionHierarchy.children"
+        [ngTemplateOutlet]="Recursion"
+        [ngTemplateOutletContext]="{ $implicit: child }"></ng-container>
+    </ul>
+  </div>
 </ng-container>
+
+<ng-template #Recursion let-data>
+  <li *ngIf="data.visibility">
+    <p>
+      <a [id]="'description-link-' + data.id" [href]="'datasets/' + data.id">{{ data.name }}</a>
+      <markdown *ngIf="data.description">
+        {{ getFirstParagraph(data.description) }}
+      </markdown>
+    </p>
+    <ul *ngIf="data.children.length > 0">
+      <ng-container
+        *ngFor="let child of data.children"
+        [ngTemplateOutlet]="Recursion"
+        [ngTemplateOutletContext]="{ $implicit: child }"></ng-container>
+    </ul>
+  </li>
+</ng-template>

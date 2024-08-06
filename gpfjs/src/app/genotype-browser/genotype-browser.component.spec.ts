@@ -204,7 +204,7 @@ describe('GenotypeBrowserComponent', () => {
       }
     };
     // eslint-disable-next-line max-len
-    component.selectedDataset = new Dataset('datasetId', 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, genotypeMock, null, [], null, null, '', null);
+    component.selectedDataset = new Dataset('datasetId', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, genotypeMock, null, [], null, null, '', null);
 
     component.onSubmit(mockEvent);
     expect(mockEvent.target.queryData.value).toStrictEqual(JSON.stringify({

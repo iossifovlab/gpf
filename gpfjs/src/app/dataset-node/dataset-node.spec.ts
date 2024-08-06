@@ -7,8 +7,6 @@ import { DatasetNode } from './dataset-node';
 
 const datasetMock = new Dataset(
   'id1',
-  'desc1',
-  '',
   'name1',
   ['parent1', 'parent2'],
   false,

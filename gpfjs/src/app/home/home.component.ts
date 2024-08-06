@@ -145,9 +145,9 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   public attachDatasetDescription(entry: object): void {
     entry['children']?.forEach((d: object) => this.attachDatasetDescription(d));
-    this.subscription.add(this.datasetsService.getDatasetDescription(entry['dataset'] as string).subscribe(res => {
-      if (res['description']) {
-        entry['description'] = this.getFirstParagraph(res['description'] as string);
+    this.subscription.add(this.datasetsService.getDatasetDescription(entry['dataset'] as string).subscribe(desc => {
+      if (desc) {
+        entry['description'] = this.getFirstParagraph(desc);
       }
 
       this.studiesLoaded++;

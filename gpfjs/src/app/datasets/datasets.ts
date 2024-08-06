@@ -246,8 +246,6 @@ export class Dataset extends IdName {
     }
     return new Dataset(
       json['id'] as string,
-      json['description'] as string,
-      json['children_description'] as string,
       json['name'] as string,
       json['parents'] as string[],
       json['access_rights'] as boolean,
@@ -276,8 +274,6 @@ export class Dataset extends IdName {
     }
     return new Dataset(
       datasetJson['id'] as string,
-      datasetJson['description'] as string,
-      datasetJson['children_description'] as string,
       datasetJson['name'] as string,
       datasetJson['parents'] as string[],
       datasetJson['access_rights'] as boolean,
@@ -319,8 +315,6 @@ export class Dataset extends IdName {
 
   public constructor(
     public readonly id: string,
-    public readonly description: string,
-    public readonly childrenDescription: string,
     public readonly name: string,
     public readonly parents: string[],
     public readonly accessRights: boolean,
@@ -342,5 +336,36 @@ export class Dataset extends IdName {
     public readonly descriptionEditable: boolean
   ) {
     super(id, name);
+  }
+}
+
+export class DatasetHierarchy {
+  public description;
+  public visibility = false;
+
+  public constructor(
+    public id: string,
+    public name: string,
+    public accessRights: boolean,
+    public children: DatasetHierarchy[],
+  ) { }
+
+  public static fromJson(json: object): DatasetHierarchy {
+    if (!json) {
+      return undefined;
+    }
+
+    let children: DatasetHierarchy[] = [];
+    if (json['children']) {
+      children = (json['children'] as object[])
+        .map(child => DatasetHierarchy.fromJson(child));
+    }
+
+    return new DatasetHierarchy(
+      json['dataset'] as string,
+      json['name'] as string,
+      json['access_rights'] as boolean,
+      children
+    );
   }
 }

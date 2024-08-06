@@ -78,7 +78,7 @@ class MockPhenoBrowserService {
 class MockDatasetsService {
   public getDataset(datasetId: string): Observable<Dataset> {
     // eslint-disable-next-line max-len
-    return of(new Dataset(datasetId, 'desc', '', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null));
+    return of(new Dataset(datasetId, 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, '', null));
   }
 }
 
@@ -236,7 +236,7 @@ describe('PhenoBrowserComponent', () => {
       /* eslint-enable */
     };
     // eslint-disable-next-line max-len
-    component.selectedDataset = new Dataset(data.dataset_id, '', '', '', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, true, '', null);
+    component.selectedDataset = new Dataset(data.dataset_id, '', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, true, '', null);
     component.selectedInstrument$ = new BehaviorSubject(data.instrument);
     component.searchTermObs$ = of(data.search_term);
 
