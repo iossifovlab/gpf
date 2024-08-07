@@ -1,7 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
-from typing import Callable, cast
+from collections.abc import Callable
+from typing import cast
 
 import numpy as np
 import pandas as pd
@@ -451,9 +452,10 @@ def test_read_variants_genome_assertion(
         gpf_instance_2013: GPFInstance) -> None:
     filename = fixture_dirname("denovo_import/variants_DAE_style.tsv")
 
+    loader = DenovoLoader(
+        fake_families, filename, gpf_instance_2013.reference_genome)
+
     with pytest.raises(AssertionError) as excinfo:
-        loader = DenovoLoader(
-            fake_families, filename, gpf_instance_2013.reference_genome)
         loader.flexible_denovo_load(
             filename,
             None,  # type: ignore
@@ -638,8 +640,7 @@ def test_denovo_loader_avoids_duplicates(
     for sv, fvs_ in variants_iter:
         print(sv, fvs)
         svs.append(sv)
-        for fv in fvs_:
-            fvs.append(fv)
+        fvs.extend(fvs_)
 
     assert len(svs) == 3
     assert len(fvs) == 4
