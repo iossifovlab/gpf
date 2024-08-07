@@ -1,14 +1,7 @@
 import logging
 from collections.abc import Generator, Iterable
 from contextlib import closing
-from typing import (
-    Any,
-    Dict,
-    List,
-    Set,
-    Tuple,
-    cast,
-)
+from typing import Any, ClassVar, cast
 
 import pandas as pd
 import pyarrow as pa
@@ -70,7 +63,7 @@ class ImpalaVariants:
         self.families = FamiliesData.from_pedigree_df(ped_df)
         # Temporary workaround for studies that are imported without tags
         # e.g. production data that is too large to reimport
-        FamiliesLoader._build_families_tags(
+        FamiliesLoader._build_families_tags(  # noqa: SLF001
             self.families, {"ped_tags": True},
         )
 
@@ -85,32 +78,26 @@ class ImpalaVariants:
         assert gene_models is not None
         self.gene_models = gene_models
 
-        self.table_properties = dict({
+        self.table_properties = {
             "region_length": 0,
             "chromosomes": [],
             "family_bin_size": 0,
             "coding_effect_types": [],
             "rare_boundary": 0,
-        })
+        }
         self._fetch_tblproperties()
 
     def connection(self) -> pool.PoolProxiedConnection:
-        conn = self._impala_helpers.connection()
-        return conn
+        return self._impala_helpers.connection()
 
     @property
     def connection_pool(self) -> pool.QueuePool:
         # pylint: disable=protected-access
-        return self._impala_helpers._connection_pool
-
-    # @property
-    # def executor(self) -> ThreadPoolExecutor:
-    #     assert self._impala_helpers.executor is not None
-    #     return self._impala_helpers.executor
+        return self._impala_helpers._connection_pool  # noqa: SLF001
 
     # pylint: disable=too-many-arguments,unused-argument
     def build_summary_variants_query_runner(
-        self,
+        self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
@@ -121,7 +108,7 @@ class ImpalaVariants:
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> ImpalaQueryRunner | None:
         """Build a query selecting the appropriate summary variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -138,10 +125,7 @@ class ImpalaVariants:
             self.pedigree_schema, self.families,
             self.gene_models, summary_variants_table=sv_table,
         )
-        if limit is None or limit < 0:
-            request_limit = None
-        else:
-            request_limit = limit
+        request_limit = None if limit is None or limit < 0 else limit
 
         director = ImpalaQueryDirector(query_builder)
         director.build_query(
@@ -186,7 +170,7 @@ class ImpalaVariants:
     @staticmethod
     def build_person_set_collection_query(
             person_set_collection: PersonSetCollection,
-            person_set_collection_query: Tuple[str, Set[str]],
+            person_set_collection_query: tuple[str, set[str]],
     ) -> tuple | tuple[list[str], list[str]] | None:
         """No idea what it does. If you know please edit."""
         collection_id, selected_person_sets = person_set_collection_query
@@ -212,7 +196,8 @@ class ImpalaVariants:
                     len(person_set_collection.sources)
                 person_set_query = {}
                 for source, value in zip(
-                        person_set_collection.sources, person_set.values):
+                        person_set_collection.sources, person_set.values,
+                        strict=True):
                     person_set_query[source.ssource] = value
                 result.append(person_set_query)
             return result
@@ -225,13 +210,13 @@ class ImpalaVariants:
         )
 
     def build_family_variants_query_runner(
-        self,
-        regions: List[Region] | None = None,
-        genes: List[str] | None = None,
-        effect_types: List[str] | None = None,
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
         family_ids: Iterable[str] | None = None,
         person_ids: Iterable[str] | None = None,
-        inheritance: List[str] | str | None = None,
+        inheritance: list[str] | str | None = None,
         roles: str | None = None,
         sexes: str | None = None,
         variant_type: str | None = None,
@@ -242,6 +227,7 @@ class ImpalaVariants:
         return_unknown: bool | None = None,
         limit: int | None = None,
         pedigree_fields: tuple[list[str], list[str]] | None = None,
+        **kwargs: Any,  # noqa: ARG002
     ) -> ImpalaQueryRunner | None:
         """Build a query selecting the appropriate family variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -262,10 +248,7 @@ class ImpalaVariants:
             do_join=do_join,
         )
         director = ImpalaQueryDirector(query_builder)
-        if limit is None or limit < 0:
-            request_limit = None
-        else:
-            request_limit = limit * 10
+        request_limit = None if limit is None or limit < 0 else limit * 10
 
         director.build_query(
             regions=regions,
@@ -319,7 +302,7 @@ class ImpalaVariants:
 
     # pylint: disable=unused-argument
     def query_summary_variants(
-        self,
+        self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
@@ -330,7 +313,7 @@ class ImpalaVariants:
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> Generator[SummaryVariant, None, None]:
         """Query summary variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -378,13 +361,13 @@ class ImpalaVariants:
                 seen.add(v.svuid)
 
     def query_variants(
-        self,
+        self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
         family_ids: list[str] | None = None,
         person_ids: list[str] | None = None,
-        person_set_collection: tuple | None = None,
+        person_set_collection: tuple | None = None,  # noqa: ARG002
         inheritance: list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
@@ -396,7 +379,7 @@ class ImpalaVariants:
         return_unknown: bool | None = None,
         limit: int | None = None,
         pedigree_fields: tuple[list[str], list[str]] | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> Generator[FamilyVariant, None, None]:
         """Query family variants."""
         # pylint: disable=too-many-arguments,too-many-locals
@@ -446,12 +429,12 @@ class ImpalaVariants:
                 seen.add(v.fvuid)
 
     def _fetch_pedigree(self) -> pd.DataFrame:
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                query = f"SELECT * FROM {self.db}.{self.pedigree_table}"""
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            query = f"SELECT * FROM {self.db}.{self.pedigree_table}"""  # noqa
 
-                cursor.execute(query)
-                ped_df = cast(pd.DataFrame, as_pandas(cursor))
+            cursor.execute(query)
+            ped_df = cast(pd.DataFrame, as_pandas(cursor))
 
         columns = {
             "personId": "person_id",
@@ -479,7 +462,7 @@ class ImpalaVariants:
 
         return ped_df
 
-    TYPE_MAP: Dict[str, Any] = {
+    TYPE_MAP: ClassVar[dict[str, Any]] = {
         "str": ("str", pa.string()),
         "float": ("float", pa.float32()),
         "float32": ("float", pa.float32()),
@@ -517,81 +500,82 @@ class ImpalaVariants:
             schema: list[AttributeInfo] = []
             for name, type_name in schema_desc.items():
                 py_type, _ = self.TYPE_MAP[type_name]
-                attr = AttributeInfo(name, "table schema", False, {}, py_type)
+                attr = AttributeInfo(
+                    name, "table schema", False, {}, py_type)  # noqa
                 schema.append(attr)
 
             return schema
 
-    def _fetch_pedigree_schema(self) -> Dict[str, str]:
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                query = f"DESCRIBE {self.db}.{self.pedigree_table}"
-                cursor.execute(query)
-                df = as_pandas(cursor)
-                records = df[["name", "type"]].to_records()
-                schema = {
-                    col_name: col_type for (_, col_name, col_type) in records
-                }
-                return schema
+    def _fetch_pedigree_schema(self) -> dict[str, str]:
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            query = f"DESCRIBE {self.db}.{self.pedigree_table}"
+            cursor.execute(query)
+            df = as_pandas(cursor)
+            records = df[["name", "type"]].to_records()
+            return {
+                col_name: col_type for (_, col_name, col_type) in records
+            }
 
     def _fetch_tblproperties(self) -> None:
         if not self.variants_table:
             return
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                cursor.execute(
-                    f"DESCRIBE EXTENDED {self.db}.{self.variants_table}")
-                rows = list(cursor)  # type: ignore
-                properties_start, properties_end = -1, -1
-                for row_index, row in enumerate(rows):
-                    if row[0].strip() == "Table Parameters:":
-                        properties_start = row_index + 1
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            cursor.execute(
+                f"DESCRIBE EXTENDED {self.db}.{self.variants_table}")
+            rows = list(cursor)  # type: ignore
+            properties_start, properties_end = -1, -1
+            for row_index, row in enumerate(rows):
+                if row[0].strip() == "Table Parameters:":
+                    properties_start = row_index + 1
 
-                    if (
-                        properties_start != -1
-                        and row[0] == ""
-                        and row[1] is None
-                        and row[2] is None
-                    ):
-                        properties_end = row_index + 1
+                if (
+                    properties_start != -1
+                    and row[0] == ""
+                    and row[1] is None
+                    and row[2] is None
+                ):
+                    properties_end = row_index + 1
 
-                if properties_start == -1:
-                    logger.debug("No partitioning found")
-                    return
+            if properties_start == -1:
+                logger.debug("No partitioning found")
+                return
 
-                for index in range(properties_start, properties_end):
-                    prop_name = rows[index][1]
-                    prop_value = rows[index][2]
-                    if prop_name == \
-                            "gpf_partitioning_region_bin_region_length":
-                        self.table_properties["region_length"] = \
-                            int(prop_value)
-                    elif prop_name == \
-                            "gpf_partitioning_region_bin_chromosomes":
-                        chromosomes = prop_value.split(",")
-                        chromosomes = \
-                            list(map(str.strip, chromosomes))
-                        self.table_properties["chromosomes"] = chromosomes
-                    elif prop_name == \
-                            "gpf_partitioning_family_bin_family_bin_size":
-                        self.table_properties["family_bin_size"] = \
-                            int(prop_value)
-                    elif prop_name == \
-                            "gpf_partitioning_coding_bin_coding_effect_types":
-                        coding_effect_types = prop_value.split(",")
-                        coding_effect_types = list(
-                            map(str.strip, coding_effect_types))
-                        self.table_properties["coding_effect_types"] = \
-                            coding_effect_types
-                    elif prop_name == \
-                            "gpf_partitioning_frequency_bin_rare_boundary":
-                        self.table_properties["rare_boundary"] = \
-                            float(prop_value)
+            for index in range(properties_start, properties_end):
+                prop_name = rows[index][1]
+                prop_value = rows[index][2]
+                if prop_name == \
+                        "gpf_partitioning_region_bin_region_length":
+                    self.table_properties["region_length"] = \
+                        int(prop_value)
+                elif prop_name == \
+                        "gpf_partitioning_region_bin_chromosomes":
+                    chromosomes = prop_value.split(",")
+                    chromosomes = \
+                        list(map(str.strip, chromosomes))
+                    self.table_properties["chromosomes"] = chromosomes
+                elif prop_name == \
+                        "gpf_partitioning_family_bin_family_bin_size":
+                    self.table_properties["family_bin_size"] = \
+                        int(prop_value)
+                elif prop_name == \
+                        "gpf_partitioning_coding_bin_coding_effect_types":
+                    coding_effect_types = prop_value.split(",")
+                    coding_effect_types = list(
+                        map(str.strip, coding_effect_types))
+                    self.table_properties["coding_effect_types"] = \
+                        coding_effect_types
+                elif prop_name == \
+                        "gpf_partitioning_frequency_bin_rare_boundary":
+                    self.table_properties["rare_boundary"] = \
+                        float(prop_value)
 
     def _check_summary_variants_table(self) -> bool:
-        with closing(self.connection()) as conn:
-            with closing(conn.cursor()) as cursor:
-                query = f"SHOW TABLES IN {self.db} " \
-                        f"LIKE '{self.summary_variants_table}'"
-                cursor.execute(query)
-                return len(cursor.fetchall()) == 1
+        with closing(self.connection()) as conn, \
+                closing(conn.cursor()) as cursor:
+            query = (
+                f"SHOW TABLES IN {self.db} "
+                f"LIKE '{self.summary_variants_table}'")
+            cursor.execute(query)
+            return len(cursor.fetchall()) == 1
