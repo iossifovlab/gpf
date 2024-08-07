@@ -335,7 +335,21 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         joined_tables = {}
         regression_ids = self.regression_ids
-        query = select()
+
+        query = select(
+            column("measure_id", self.variable_browser.alias_or_name),
+            column("instrument_name", self.variable_browser.alias_or_name),
+            column("measure_name", self.variable_browser.alias_or_name),
+            column("measure_type", self.variable_browser.alias_or_name),
+            column("description", self.variable_browser.alias_or_name),
+            column("values_domain", self.variable_browser.alias_or_name),
+            column(
+                "figure_distribution_small",
+                self.variable_browser.alias_or_name,
+            ),
+            column("figure_distribution", self.variable_browser.alias_or_name),
+        ).from_(self.variable_browser)
+
         for regression_id in regression_ids:
             reg_table = table("regression_values").as_(regression_id)
             query = query.join(
@@ -347,6 +361,14 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 join_type="LEFT OUTER",
             )
             joined_tables[regression_id] = reg_table
+            query.select(
+                column(
+                    "pvalue_regression_male", table=reg_table.alias_or_name,
+                ).as_(f"{regression_id}_pvalue_regression_male"),
+                column(
+                    "pvalue_regression_female", table=reg_table.alias_or_name,
+                ).as_(f"{regression_id}_pvalue_regression_female"),
+            )
 
         query = query.distinct()
 
@@ -397,11 +419,11 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
   
                     reg_table = joined_tables[regression_id]
                     if sex == "male":
-                        col_name = "pvalue_regression_male"
+                        col_name = f"{regression_id}_pvalue_regression_male"
                     elif sex == "female":
-                        col_name = "pvalue_regression_female"
+                        col_name = f"{regression_id}_pvalue_regression_female"
   
-                    column_to_sort = column(col_name, reg_table.alias_or_name)
+                    column_to_sort = column(col_name)
             if order_by == "desc":
                 query = query.order_by(f"{column_to_sort} DESC")
             else:
@@ -457,17 +479,6 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         # execute query and .df()
 
         return self.connection.execute(query).df()
-
-    def get_regression_values(self, measure_id: str) -> list[Box]:
-        # TODO: DELETE
-        selector = select(self.regression_values)
-        selector = selector.where(
-            self.regression_values.c.measure_id == measure_id)
-        with self.engine.connect() as connection:
-            return [
-                Box(r._asdict())
-                for r in connection.execute(selector).fetchall()
-            ]
 
     @property
     def regression_ids(self) -> list[str]:
