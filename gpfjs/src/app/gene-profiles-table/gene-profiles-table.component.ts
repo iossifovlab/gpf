@@ -6,7 +6,7 @@ import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
 import { debounceTime, distinctUntilChanged, take, tap } from 'rxjs/operators';
-import { Subject, Subscription, zip } from 'rxjs';
+import { BehaviorSubject, Subscription, zip } from 'rxjs';
 import { GeneProfilesTableConfig, GeneProfilesColumn } from './gene-profiles-table';
 import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { environment } from 'environments/environment';
@@ -57,9 +57,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
 
   public orderBy = 'desc';
 
-  public geneInput: string = null;
-  public loadedSearchValue: string = null;
-  public searchKeystrokes$: Subject<string> = new Subject();
+  public searchValue$: BehaviorSubject<string> = new BehaviorSubject('');
   @ViewChild('searchBox') public searchBox: ElementRef;
   public pageIndex = 0;
   public nothingFoundWidth: number;
@@ -90,7 +88,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   }
 
   public ngOnInit(): void {
-    this.subscription.add(this.searchKeystrokes$.pipe(
+    this.subscription.add(this.searchValue$.pipe(
       distinctUntilChanged(),
       tap(() => {
         this.showSearchLoading = true;
@@ -102,8 +100,6 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
 
     this.focusSearchBox();
 
-    this.loadState();
-
     this.subscription.add(this.geneProfilesTableService.getUserGeneProfilesState().subscribe(state => {
       if (state) {
         this.store.dispatch(new SetGeneProfilesTabs(state.openedTabs));
@@ -112,8 +108,9 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
         this.store.dispatch(new SetGeneProfilesSortBy(state.sortBy));
         this.store.dispatch(new SetGeneProfilesOrderBy(state.orderBy));
         this.store.dispatch(new SetGeneProfilesHeader(state.headerLeaves));
-        this.loadState();
       }
+
+      this.loadState();
 
       if (this.route.snapshot.params.genes as string) {
         this.currentTabGeneSet = new Set(
@@ -200,7 +197,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     for (let i = 1; i <= initialPageCount; i++) {
       geneProfilesRequests.push(
         this.geneProfilesTableService
-          .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
+          .getGenes(this.pageIndex, this.searchValue$.value, this.sortBy, this.orderBy)
           .pipe(take(1))
       );
       this.pageIndex++;
@@ -223,7 +220,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
       (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
       .subscribe(state => {
         this.tabs = new Set([...state.openedTabs, ...this.tabs]);
-        this.loadedSearchValue = state.searchValue;
+        this.searchValue$.next(state.searchValue);
         this.highlightedGenes = new Set(state.highlightedRows);
         this.orderBy = state.orderBy;
         this.leavesIds = state.headerLeaves;
@@ -234,10 +231,9 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
           this.setDefaultSortableCategory();
         }
         this.stateFinishedLoading = true;
+        this.search(this.searchValue$.value);
         this.prepareTable();
       });
-
-    this.search(this.loadedSearchValue);
   }
 
   private reorderHeaderByLeaves(
@@ -296,8 +292,8 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
   }
 
   public search(value: string): void {
-    this.geneInput = value;
-    this.store.dispatch(new SetGeneProfilesSearchValue(this.geneInput));
+    this.searchValue$.next(value);
+    this.store.dispatch(new SetGeneProfilesSearchValue(this.searchValue$.value));
     this.geneProfilesTableService.saveUserGeneProfilesState();
     this.fillTable();
   }
@@ -313,7 +309,7 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     this.pageIndex++;
     this.loadMoreGenes = false;
     this.subscription.add(this.geneProfilesTableService
-      .getGenes(this.pageIndex, this.geneInput, this.sortBy, this.orderBy)
+      .getGenes(this.pageIndex, this.searchValue$.value, this.sortBy, this.orderBy)
       .pipe(take(1))
       .subscribe(res => {
         this.genes = this.genes.concat(res);
@@ -506,9 +502,8 @@ export class GeneProfilesTableComponent extends StatefulComponent implements OnI
     this.tabs = new Set();
     this.highlightedGenes = new Set<string>();
     this.orderBy = 'desc';
-    this.loadedSearchValue = '';
+    this.searchValue$.next('');
     (this.searchBox.nativeElement as HTMLInputElement).value = '';
-    this.search(this.loadedSearchValue);
     this.setDefaultSortableCategory();
 
     this.resetConfig.emit();
