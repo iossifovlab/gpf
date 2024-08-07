@@ -1,13 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Observable, Subject, of } from 'rxjs';
 import { CookieService } from 'ngx-cookie-service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
 import { catchError, map } from 'rxjs/operators';
 import { AuthService } from 'app/auth.service';
-
-const oboe = require('oboe');
 
 @Injectable()
 export class PhenoBrowserService {
@@ -44,6 +42,7 @@ export class PhenoBrowserService {
 
   private getHeaders() {
     const csrfToken = this.cookieService.get('csrftoken');
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' };
 
     return headers;
@@ -96,7 +95,7 @@ export class PhenoBrowserService {
         if (!res) {
           return [];
         }
-        return res.map(measure => PhenoMeasure.fromJson(measure['measure']));
+        return res.map(measure => PhenoMeasure.fromJson(measure['measure'] as PhenoMeasure));
       })
     );
   }

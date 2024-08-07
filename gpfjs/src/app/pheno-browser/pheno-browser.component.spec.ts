@@ -110,6 +110,7 @@ class MockRouter {
 }
 
 class MockPhenoMeasures {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   public clear(): void { }
 }
 
@@ -333,7 +334,6 @@ describe('PhenoBrowserComponent', () => {
     const updateTableSpy = jest.spyOn(PhenoBrowserComponent.prototype as any, 'updateTable');
     component['pageCount'] = 2;
 
-    component.measuresToShow.clear();
     component.updateTableOnScroll();
 
     expect(component['pageCount']).toBe(3);

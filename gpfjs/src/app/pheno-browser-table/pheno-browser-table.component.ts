@@ -107,7 +107,7 @@ export class PhenoBrowserTableComponent implements OnInit {
       const modalRef = this.modalService.open(PhenoBrowserModalContentComponent, {
         windowClass: 'modal-fullscreen'
       });
-      modalRef.componentInstance.imageUrl = imageUrl;
+      (modalRef.componentInstance as PhenoBrowserModalContentComponent).imageUrl = imageUrl;
     }
   }
 }
