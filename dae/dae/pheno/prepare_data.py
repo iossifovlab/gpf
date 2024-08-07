@@ -2,7 +2,7 @@ import logging
 import os
 import pathlib
 import shutil
-from typing import Any
+from typing import Any, cast
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -101,8 +101,7 @@ class PreparePhenoBrowserBase:
         df.loc[df.role == Role.mom, "role"] = Role.parent  # type: ignore
         df.loc[df.role == Role.dad, "role"] = Role.parent  # type: ignore
 
-        df.rename(columns={augment_id: augment_name}, inplace=True)
-        return df
+        return df.rename(columns={augment_id: augment_name})
 
     @staticmethod
     def _measure_to_dict(measure: Measure) -> dict[str, Any]:
@@ -268,24 +267,6 @@ class PreparePhenoBrowserBase:
 
         return res
 
-    def build_values_other_distribution(
-        self, measure: Measure,
-    ) -> dict[str, Any]:
-        """Build an other value distribution figure."""
-        df = self.load_measure(measure)
-        drawn = draw_categorical_violin_distribution(
-            df.dropna(), measure.measure_id,
-        )
-
-        res = {}
-        if drawn:
-            (
-                res["figure_distribution_small"],
-                res["figure_distribution"],
-            ) = self.save_fig(measure, "distribution")
-
-        return res
-
     @classmethod
     def build_values_ordinal_distribution(
         cls, pheno_id: str, images_dir: str,
@@ -345,7 +326,7 @@ class PreparePhenoBrowserBase:
                 return True
         return False
 
-    def run(self, **kwargs) -> None:
+    def run(self, **kwargs: Any) -> None:
         """Run browser preparations for all measures in a phenotype data."""
         db = self.phenotype_data.db
 
@@ -369,15 +350,17 @@ class PreparePhenoBrowserBase:
         for instrument in list(self.phenotype_data.instruments.values()):
             for measure in list(instrument.measures.values()):
                 self.add_measure_task(graph, measure, temp_dbfile_name)
-            task_cache = TaskCache.create(
-                force=kwargs.get("force"),
-                cache_dir=kwargs.get("task_status_dir"),
-            )
+
+        task_cache = TaskCache.create(
+            force=kwargs.get("force"),
+            cache_dir=kwargs.get("task_status_dir"),
+        )
+
         with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
             try:
                 for result in task_graph_run_with_results(graph, xtor):
                     measure, regressions = result
-                    db.save(measure)
+                    db.save(cast(dict[str, str | None], measure))
                     if regressions is None:
                         continue
                     for regression in regressions:
@@ -389,7 +372,8 @@ class PreparePhenoBrowserBase:
     def get_regression_measures(
         self, measure: Measure,
     ) -> dict[str, tuple[Box, Measure]]:
-        regression_measures: dict[str, tuple[Box, pd.DataFrame]] = {}
+        """Collect all regressions for a given measure."""
+        regression_measures: dict[str, tuple[Box, Measure]] = {}
         if self.pheno_regressions is None:
             return regression_measures
         for reg_id, reg in self.pheno_regressions.regression.items():
@@ -443,7 +427,8 @@ class PreparePhenoBrowserBase:
         measure: Measure,
         images_dir: str,
         regression_measures: dict[str, tuple[Box, Measure]],
-    ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    ) -> tuple[dict[str, Any], list[dict[str, Any]] | None]:
+        """Create images and regressions for a given measure."""
         pheno_data = PhenotypeStudy(
             pheno_id, dbfile, db_config, read_only=True,
         )

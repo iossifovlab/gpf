@@ -52,6 +52,12 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         help="Flag for whether the instrument files are tab separated.",
     )
 
+    parser.add_argument("--skip-pheno-common",
+        dest="skip_pheno_common",
+        action="store_true",
+        help="Flag for skipping the building of the pheno common instrument.",
+    )
+
     parser.add_argument(
         "-p",
         "--pedigree",
@@ -201,15 +207,16 @@ def main(argv: list[str] | None = None) -> int:
         args = parser.parse_args(argv)
         if args.instruments is None:
             print("missing instruments directory parameter", sys.stderr)
-            raise ValueError
+            raise ValueError  # noqa: TRY301
         if args.pedigree is None:
             print("missing pedigree filename", sys.stderr)
-            raise ValueError
+            raise ValueError  # noqa: TRY301
         if args.pheno_name is None:
             print("missing pheno db name", sys.stderr)
-            raise ValueError
+            raise ValueError  # noqa: TRY301
         if args.import_only and args.browser_only:
-            raise ValueError("Both import only and continue used!")
+            raise ValueError(  # noqa: TRY301
+                "Both import only and continue used!")
 
         output_dir = args.output
 
@@ -236,7 +243,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(
                     "pheno db filename already exists:", args.pheno_db_filename,
                 )
-                raise ValueError
+                raise ValueError  # noqa: TRY301
             os.remove(args.pheno_db_filename)
 
         config = parse_phenotype_data_config(args)
@@ -244,13 +251,14 @@ def main(argv: list[str] | None = None) -> int:
 
         prep = PrepareVariables(config)
         prep.build_pedigree(args.pedigree)
-        prep.build_variables(args.instruments, args.data_dictionary)
+        kwargs = copy(vars(args))
+        prep.build_variables(args.instruments, args.data_dictionary, **kwargs)
 
         if not args.import_only:
             build_browser(args, regressions)
     except KeyboardInterrupt:
         return 0
-    except Exception as e:
+    except ValueError as e:
         traceback.print_exc()
 
         program_name = "pheno_import.py"
