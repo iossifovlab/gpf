@@ -1,5 +1,8 @@
 Release Notes
 =============
+* 2024.8.1
+    * Fix caching of genotype data groups descriptions
+    * Genomic position table optimization for bigWig resources
 * 2024.8.0
     * Fix for pheno data import on clusters
     * Fix genomic scores histograms large and small value labels
