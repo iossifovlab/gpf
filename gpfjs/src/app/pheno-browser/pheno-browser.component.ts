@@ -8,7 +8,6 @@ import { Dataset } from 'app/datasets/datasets';
 import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { ConfigService } from 'app/config/config.service';
-import { HttpClient } from '@angular/common/http';
 import { Store } from '@ngxs/store';
 import { DatasetModel } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -22,6 +21,8 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   public selectedInstrument$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
   public searchTermObs$: Observable<string>;
   public measuresToShow: PhenoMeasures;
+  // To trigger child change detection with on push strategy.
+  public measuresChangeTick = 0;
   public measuresSubscription: Subscription;
   public errorModal = false;
 
@@ -83,6 +84,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
     ).subscribe(phenoMeasures => {
       this.measuresToShow = phenoMeasures;
       this.measuresToShow?.clear();
+      this.measuresChangeTick++;
       this.allPagesLoaded = false;
       this.pageCount = 1;
       this.updateTable();
@@ -125,6 +127,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   public emitInstrument(instrument: PhenoInstrument): void {
     this.selectedInstrument$.next(instrument);
     this.measuresToShow?.clear();
+    this.measuresChangeTick++;
     this.allPagesLoaded = false;
     this.pageCount = 1;
   }
@@ -162,6 +165,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
         res.forEach(r => {
           this.measuresToShow.addMeasure(r);
         });
+        this.measuresChangeTick++;
 
         this.getPageSubscription.unsubscribe();
       });
@@ -197,6 +201,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   public search(value: string): void {
     this.input$.next(value);
     this.measuresToShow?.clear();
+    this.measuresChangeTick++;
     this.allPagesLoaded = false;
     this.pageCount = 1;
   }
@@ -205,6 +210,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
     this.sortBy = event.id;
     this.orderBy = event.order;
     this.measuresToShow.clear();
+    this.measuresChangeTick++;
     this.pageCount = 1;
     this.updateTable();
   }

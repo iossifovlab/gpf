@@ -1,4 +1,13 @@
-import { OnInit, Component, HostListener, Input, ViewChildren, Output, EventEmitter } from '@angular/core';
+import {
+  OnInit,
+  Component,
+  HostListener,
+  Input,
+  ViewChildren,
+  Output,
+  EventEmitter,
+  ChangeDetectionStrategy
+} from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import {
   PhenoBrowserModalContentComponent
@@ -9,10 +18,12 @@ import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.com
 @Component({
   selector: 'gpf-pheno-browser-table',
   templateUrl: './pheno-browser-table.component.html',
-  styleUrls: ['./pheno-browser-table.component.css']
+  styleUrls: ['./pheno-browser-table.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PhenoBrowserTableComponent implements OnInit {
   @Input() public measures: PhenoMeasures;
+  @Input() public measuresChangeTick: number;
   @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
   @Output() public sortEvent = new EventEmitter<{id: string; order: string}>();
 
