@@ -1,8 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
-from typing import Any, Callable
+from typing import Any
 
 import pytest
 
@@ -25,9 +26,8 @@ def create_runner(
     deserializer: Callable[[Any], Any] | None = None,
 ) -> ImpalaQueryRunner:
 
-    runner = ImpalaQueryRunner(
+    return ImpalaQueryRunner(
         impala_helpers._connection_pool, query, deserializer=deserializer)
-    return runner
 
 
 def test_impala_runner_simple(impala_helpers: ImpalaHelpers) -> None:
@@ -37,7 +37,7 @@ def test_impala_runner_simple(impala_helpers: ImpalaHelpers) -> None:
     result_queue: Queue = Queue(maxsize=3)
 
     runner = create_runner(impala_helpers, query)
-    runner._set_result_queue(result_queue)
+    runner.set_result_queue(result_queue)
     assert not runner.is_started()
 
     executor = ThreadPoolExecutor(max_workers=1)
@@ -85,11 +85,13 @@ def test_impala_runner_result_with_exception(
 def test_impala_runner_result_experimental_1(
     impala_helpers: ImpalaHelpers,
 ) -> None:
-    query = "SELECT COUNT(" \
-        "DISTINCT bucket_index, " \
-        "summary_variant_index, " \
-        "family_variant_index) " \
+    query = (
+        "SELECT COUNT("
+        "DISTINCT bucket_index, "
+        "summary_variant_index, "
+        "family_variant_index) "
         "FROM gpf_variant_db.test_study_impala_01_variants"
+    )
 
     runner = create_runner(impala_helpers, query)
     assert not runner.is_started()
@@ -110,11 +112,13 @@ def test_impala_runner_result_experimental_1(
 def test_impala_runner_result_experimental_2(
     impala_helpers: ImpalaHelpers,
 ) -> None:
-    query = "SELECT COUNT(" \
-        "DISTINCT bucket_index, " \
-        "summary_variant_index, " \
-        "family_variant_index) " \
+    query = (
+        "SELECT COUNT("
+        "DISTINCT bucket_index, "
+        "summary_variant_index, "
+        "family_variant_index) "
         "FROM gpf_variant_db.test_study_impala_01_variants"
+    )
 
     runner = create_runner(impala_helpers, query)
     assert not runner.is_started()
@@ -135,11 +139,13 @@ def test_impala_runner_result_experimental_2(
 def test_impala_runner_result_experimental(
     impala_helpers: ImpalaHelpers,
 ) -> None:
-    query = "SELECT COUNT(" \
-        "DISTINCT bucket_index, " \
-        "summary_variant_index, " \
-        "family_variant_index) " \
+    query = (
+        "SELECT COUNT("
+        "DISTINCT bucket_index, "
+        "summary_variant_index, "
+        "family_variant_index) "
         "FROM gpf_variant_db.test_study_impala_01_variants"
+    )
 
     runner = create_runner(impala_helpers, query)
 
