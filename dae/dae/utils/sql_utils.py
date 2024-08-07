@@ -1,14 +1,20 @@
-from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql.expression import ClauseElement, Executable
+from typing import Any
+
+import sqlglot
+from sqlglot import expressions
 
 
-class CreateView(Executable, ClauseElement):
-    def __init__(self, name, select):
-        self.name = name
-        self.select = select
+def to_duckdb_transpile(query: Any) -> Any:
+    return sqlglot.transpile(query.sql(), read="duckdb")
 
 
-@compiles(CreateView)
-def visit_create_view(element, compiler, **kw):
-    create = f"CREATE VIEW {element.name} AS {compiler.process(element.select, literal_binds=True)}"
-    return create
+def fill_query_parameters(query: Any, params: list[Any]) -> None:
+    """Filll query parameters."""
+    placeholders = list(query.find_all(expressions.Placeholder))
+    if len(placeholders) != len(params):
+        raise ValueError(
+            f"Query has {len(params)} parameters,"
+            f" received: {len(placeholders)}",
+        )
+    for placeholder, param in zip(placeholders, params, strict=True):
+        placeholder.replace(param)
