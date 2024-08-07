@@ -55,8 +55,9 @@ class SqlSchema2Variants(QueryVariantsBase):
 
         self.pedigree_schema = self._fetch_schema(self.pedigree_table)
         ped_df = self._fetch_pedigree()
-        self.families = FamiliesLoader\
+        families = FamiliesLoader\
             .build_families_data_from_pedigree(ped_df)
+        super().__init__(families)
 
         if self.has_variants:
             self.summary_allele_schema = self._fetch_summary_schema()
@@ -415,7 +416,8 @@ class SqlSchema2Variants(QueryVariantsBase):
                     len(person_set_collection.sources)
                 person_set_query = {}
                 for source, value in zip(
-                        person_set_collection.sources, person_set.values):
+                        person_set_collection.sources,
+                        person_set.values, strict=True):
                     person_set_query[source.ssource] = value
                 result.append(person_set_query)
             return result

@@ -22,6 +22,17 @@ def mat2str(mat: np.ndarray, col_sep: str = "", row_sep: str = "/") -> str:
     )
 
 
+def str2lists(
+    mat: str, col_sep: str = "", row_sep: str = "/",
+) -> list[list[int]]:
+    """Convert a string into a numpy matrix."""
+    if col_sep == "":
+        return [[int(c) for c in r] for r in mat.split(row_sep)]
+
+    return [
+        [int(v) for v in r.split(col_sep)] for r in mat.split(row_sep)]
+
+
 def str2mat(
         mat: str, col_sep: str = "", row_sep: str = "/",
         dtype: npt.DTypeLike = GenotypeType) -> np.ndarray:

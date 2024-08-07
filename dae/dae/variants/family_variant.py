@@ -301,6 +301,8 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
                 gt[gt != allele_index] = -1
 
             index = np.any(gt == allele_index, axis=0)
+            assert len(index) == len(self.members_in_order)
+
             self._variant_in_members = [
                 m.person_id if has_variant else None
                 for m, has_variant in zip(
@@ -732,4 +734,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             "genotype": self.gt.tolist(),
             "best_state": self.best_state.tolist(),
             "inheritance_in_members": self._serialize_inheritance_in_members(),
+            "family_variant_attributes": [
+                allele.family_attributes for allele in self.family_alt_alleles
+            ],
         }
