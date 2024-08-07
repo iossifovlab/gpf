@@ -1,17 +1,18 @@
 import logging
-from typing import Any, Callable, Dict, List
+from collections.abc import Callable
+from typing import Any
 
 from .genotype_storage import GenotypeStorage
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 _REGISTERED_GENOTYPE_STORAGE_FACTORIES: \
-    Dict[str, Callable[[Dict[str, Any]], GenotypeStorage]] = {}
+    dict[str, Callable[[dict[str, Any]], GenotypeStorage]] = {}
 _EXTENTIONS_LOADED = False
 
 
 def get_genotype_storage_factory(
-        storage_type: str) -> Callable[[Dict[str, Any]], GenotypeStorage]:
+        storage_type: str) -> Callable[[dict[str, Any]], GenotypeStorage]:
     """Find and return a factory function for creation of a storage type.
 
     If the specified storage type is not found, this function raises
@@ -27,7 +28,7 @@ def get_genotype_storage_factory(
     return _REGISTERED_GENOTYPE_STORAGE_FACTORIES[storage_type]
 
 
-def get_genotype_storage_types() -> List[str]:
+def get_genotype_storage_types() -> list[str]:
     """Return the list of all registered genotype storage factory types."""
     _load_genotype_storage_factory_plugins()
     return list(_REGISTERED_GENOTYPE_STORAGE_FACTORIES.keys())
@@ -35,7 +36,7 @@ def get_genotype_storage_types() -> List[str]:
 
 def register_genotype_storage_factory(
         storage_type: str,
-        factory: Callable[[Dict[str, Any]], GenotypeStorage]) -> None:
+        factory: Callable[[dict[str, Any]], GenotypeStorage]) -> None:
     """Register additional genotype storage factory.
 
     By default all genotype storage factories should be registered at

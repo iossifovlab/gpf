@@ -199,7 +199,7 @@ class ReferenceGenome(
             logger.warning(
                 "chromosome %s not found in %s",
                 chrom, self.resource.resource_id)
-            return None
+            return
         assert self._sequence is not None
         self._sequence.seek(
             self._index[chrom]["startBit"]
@@ -227,7 +227,7 @@ class ReferenceGenome(
             sequence = sequence[:end]
             yield from sequence
             read_progress += len(sequence)
-        return None
+        return
 
     def get_sequence(self, chrom: str, start: int, stop: int) -> str:
         """Return sequence of nucleotides from specified chromosome region."""

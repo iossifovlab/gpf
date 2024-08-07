@@ -40,7 +40,7 @@ class BigQueryQueryRunner(QueryRunner):
                 val = self.deserializer(record)
                 if val is None:
                     continue
-                self._put_value_in_result_queue(val)
+                self.put_value_in_result_queue(val)
                 if self.is_closed():
                     logger.debug(
                         "query runner (%s) closed while iterating",
@@ -51,14 +51,14 @@ class BigQueryQueryRunner(QueryRunner):
             logger.exception(
                 "exception in runner (%s) run",
                 self.study_id)
-            self._put_value_in_result_queue(ex)
+            self.put_value_in_result_queue(ex)
 
         logger.debug(
             "runner (%s) closing connection", self.study_id)
         self.close()
         self._finalize(started)
 
-    def _put_value_in_result_queue(self, val: Any) -> None:
+    def put_value_in_result_queue(self, val: Any) -> None:
         assert self._result_queue is not None
 
         no_interest = 0

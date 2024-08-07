@@ -336,7 +336,7 @@ def main(
                 [ps.set_name],
             )
             person_set = \
-                genotype_data._transform_person_set_collection_query(
+                genotype_data.transform_person_set_collection_query(
                     person_set_query, None,
                 )
             assert person_set is not None, person_set_query

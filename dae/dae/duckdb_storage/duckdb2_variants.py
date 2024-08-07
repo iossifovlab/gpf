@@ -1,4 +1,5 @@
 import logging
+import sys
 import time
 from collections.abc import Generator
 from contextlib import closing
@@ -33,24 +34,29 @@ RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 logger = logging.getLogger(__name__)
 
 
-class DuckDbRunner(QueryRunner):
+class DuckDb2Runner(QueryRunner):
     """Run a DuckDb query in a separate thread."""
 
     def __init__(
-            self,
-            connection_factory: duckdb.DuckDBPyConnection,
-            query: str,
-            deserializer: Any | None = None):
+        self,
+        connection_factory: duckdb.DuckDBPyConnection,
+        query: list[str],
+        deserializer: Any | None = None,
+        limit: int | None = None,
+    ):
         super().__init__(deserializer=deserializer)
 
         self.connection = connection_factory
         self.query = query
+        self.limit = sys.maxsize if limit is None else limit
+        self._counter = 0
 
     def run(self) -> None:
         """Execute the query and enqueue the resulting rows."""
         started = time.time()
         logger.debug(
-            "duckdb runner (%s) started", self.study_id)
+            "duckdb2 runner (%s) started; running %s queries",
+            self.study_id, len(self.query))
 
         try:
             if self.is_closed():
@@ -60,26 +66,38 @@ class DuckDbRunner(QueryRunner):
                 self._finalize(started)
                 return
 
-            with self.connection.cursor() as cursor:
-                for record in cursor.execute(self.query).fetchall():
-                    val = self.deserializer(record)
-                    if val is None:
-                        continue
-                    self._put_value_in_result_queue(val)
-                    if self.is_closed():
+            for single_query in self.query:
+                with self.connection.cursor() as cursor:
+                    logger.debug("running SQL query: %s", single_query)
+                    cursor.execute(single_query)
+                    while record := cursor.fetchone():
+                        if record is None:
+                            logger.debug("query %s done")
+                            break
+                        val = self.deserializer(record)
+                        if val is None:
+                            continue
+                        self.put_value_in_result_queue(val)
+                        self._counter += 1
+                        if self.is_closed():
+                            logger.debug(
+                                "query runner (%s) closed while iterating",
+                                self.study_id)
+                            break
+                    if self.is_closed() or self._counter >= self.limit:
                         logger.debug(
-                            "query runner (%s) closed while iterating",
-                            self.query)
+                            "runner (%s) reached limit: %s",
+                            self.study_id, self.limit)
                         break
 
         except Exception as ex:  # pylint: disable=broad-except
             logger.exception(
                 "exception in runner (%s)",
-                self.query)
-            self._put_value_in_result_queue(ex)
+                self.study_id)
+            self.put_value_in_result_queue(ex)
         finally:
             logger.debug(
-                "runner (%s) closing connection", self.query)
+                "runner (%s) closing connection", self.study_id)
 
         self._finalize(started)
 
@@ -87,20 +105,20 @@ class DuckDbRunner(QueryRunner):
         with self._status_lock:
             self._done = True
         elapsed = time.time() - started
-        logger.debug("runner (%s) done in %0.3f sec", self.query, elapsed)
+        logger.debug("runner (%s) done in %0.3f sec", self.study_id, elapsed)
 
 
 class DuckDb2Variants(QueryVariantsBase):
     """Backend for DuckDb storage backend."""
 
-    RUNNER_CLASS = DuckDbRunner
+    RUNNER_CLASS = DuckDb2Runner
 
     def __init__(
         self,
         connection: duckdb.DuckDBPyConnection,
         db2_layout: Db2Layout,
-        gene_models: GeneModels | None = None,
-        reference_genome: ReferenceGenome | None = None,
+        gene_models: GeneModels,
+        reference_genome: ReferenceGenome,
     ) -> None:
         self.connection = connection
         assert self.connection is not None
@@ -112,17 +130,21 @@ class DuckDb2Variants(QueryVariantsBase):
         pedigree_schema = self._fetch_pedigree_schema()
         summary_schema = self._fetch_summary_schema()
         family_schema = self._fetch_family_schema()
+        schema = SqlQueryBuilder.build_schema(
+            pedigree_schema=pedigree_schema,
+            summary_schema=summary_schema,
+            family_schema=family_schema,
+        )
         partition_description = self._fetch_partition_descriptor()
         self.families = self._fetch_families()
+
         self.query_builder = SqlQueryBuilder(
             self.layout,
-            pedigree_schema,
-            summary_schema,
-            family_schema,
-            partition_description,
-            self.families,
-            self.gene_models,
-            self.reference_genome,
+            schema=schema,
+            partition_descriptor=partition_description,
+            families=self.families,
+            gene_models=self.gene_models,
+            reference_genome=self.reference_genome,
         )
         variants_data_schema = self._fetch_variants_data_schema()
         self.serializer = VariantsDataSerializer.build_serializer(
@@ -239,7 +261,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,
     ) -> QueryRunner:
         """Create query runner for searching summary variants."""
         if limit is None or limit < 0:
@@ -266,21 +288,22 @@ class DuckDb2Variants(QueryVariantsBase):
             connection_factory=self.connection,
             query=query,
             deserializer=self._deserialize_summary_variant)
+        skip_inmemory_filterng = kwargs.get("skip_inmemory_filterng", False)
+        if not skip_inmemory_filterng:
+            filter_func = RawFamilyVariants.summary_variant_filter_function(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit,
+                seen=set())
 
-        filter_func = RawFamilyVariants.summary_variant_filter_function(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit,
-            seen=set())
-
-        runner.adapt(filter_func)
+            runner.adapt(filter_func)
 
         return runner
 
@@ -296,7 +319,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,
     ) -> Generator[SummaryVariant, None, None]:
         """Execute the summary variants query and yields summary variants."""
         if limit is None or limit < 0:
@@ -316,6 +339,7 @@ class DuckDb2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=query_limit,
+            **kwargs,
         )
 
         result = QueryResult(runners=[runner], limit=limit)
@@ -349,7 +373,7 @@ class DuckDb2Variants(QueryVariantsBase):
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
         pedigree_fields: tuple | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,
     ) -> QueryRunner:
         # pylint: disable=too-many-arguments
         """Create a query runner for searching family variants."""
@@ -378,6 +402,7 @@ class DuckDb2Variants(QueryVariantsBase):
             pedigree_fields=pedigree_fields,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
+
         deserialize_row = self._deserialize_family_variant
 
         # pylint: disable=protected-access
@@ -386,25 +411,27 @@ class DuckDb2Variants(QueryVariantsBase):
             query=query,
             deserializer=deserialize_row)
 
-        filter_func = RawFamilyVariants.family_variant_filter_function(
-            regions=regions,
-            genes=genes,
-            effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
-            inheritance=inheritance,
-            roles=roles,
-            sexes=sexes,
-            variant_type=variant_type,
-            real_attr_filter=real_attr_filter,
-            ultra_rare=ultra_rare,
-            frequency_filter=frequency_filter,
-            return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit,
-            seen=set())
+        skip_inmemory_filterng = kwargs.get("skip_inmemory_filterng", False)
+        if not skip_inmemory_filterng:
+            filter_func = RawFamilyVariants.family_variant_filter_function(
+                regions=regions,
+                genes=genes,
+                effect_types=effect_types,
+                family_ids=family_ids,
+                person_ids=person_ids,
+                inheritance=inheritance,
+                roles=roles,
+                sexes=sexes,
+                variant_type=variant_type,
+                real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                frequency_filter=frequency_filter,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit,
+                seen=set())
 
-        runner.adapt(filter_func)
+            runner.adapt(filter_func)
         return runner
 
     def query_variants(
@@ -425,7 +452,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_unknown: bool | None = None,
         limit: int | None = None,
         pedigree_fields: tuple | None = None,
-        **kwargs: Any,  # noqa: ARG002
+        **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
         """Execute the family variants query and yields family variants."""
@@ -452,6 +479,7 @@ class DuckDb2Variants(QueryVariantsBase):
             return_unknown=return_unknown,
             limit=query_limit,
             pedigree_fields=pedigree_fields,
+            **kwargs,
         )
         result = QueryResult(runners=[runner], limit=limit)
 

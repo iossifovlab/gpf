@@ -27,7 +27,6 @@ from dae.variants.variant import SummaryVariant
 logger = logging.getLogger(__name__)
 
 
-# FIXME: Too many public methods, refactor?
 class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     """Abstract base class for genotype data."""
 
@@ -123,7 +122,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     def person_set_collections(self) -> dict[str, PersonSetCollection]:
         return self._person_set_collections
 
-    def _add_parent(self, genotype_data_id: str) -> None:
+    def add_parent(self, genotype_data_id: str) -> None:
         self._parents.add(genotype_data_id)
 
     @property
@@ -132,7 +131,10 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return False
 
     @abstractmethod
-    def get_studies_ids(self, leaves: bool = True) -> list[str]:
+    def get_studies_ids(
+        self, *,
+        leaves: bool = True,
+    ) -> list[str]:
         pass
 
     def get_leaf_children(self) -> list[GenotypeDataStudy]:
@@ -176,9 +178,8 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         logger.debug("studies to query: %s", [st.study_id for st in leafs])
         return leafs
 
-    # FIXME: Too many locals, too many arguments, complex. To refactor
     def query_result_variants(
-        self,
+        self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
@@ -197,10 +198,9 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         limit: int | None = None,
         study_filters: Iterable[str] | None = None,
         pedigree_fields: list[str] | None = None,
-        **_kwargs: Any,
+        **kwargs: Any,
     ) -> QueryResult | None:
         """Build a query result."""
-        # flake8: noqa: C901
         # pylint: disable=too-many-locals,too-many-arguments
         del pedigree_fields  # Unused argument
         psc_query = person_set_collection
@@ -241,14 +241,14 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
                     # pylint: disable=no-member,protected-access
                     person_sets_query = genotype_study\
-                        ._backend\
+                        .backend\
                         .build_person_set_collection_query(psc, psc_query)
                     if person_sets_query == ([], []):
                         continue
 
                     if person_sets_query is None:
                         query_person_ids = genotype_study\
-                            ._transform_person_set_collection_query(
+                            .transform_person_set_collection_query(
                                 psc_query, person_ids)
 
             if query_person_ids is not None and len(query_person_ids) == 0:
@@ -260,7 +260,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                 continue
 
             # pylint: disable=no-member,protected-access
-            runner = genotype_study._backend\
+            runner = genotype_study.backend\
                 .build_family_variants_query_runner(
                     regions=regions,
                     genes=genes,
@@ -277,7 +277,11 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=limit,
-                    pedigree_fields=person_sets_query)
+                    pedigree_fields=person_sets_query,
+                    **kwargs,
+                )
+            runner.set_study_id(genotype_study.study_id)
+
             if runner is None:
                 logger.debug(
                     "study %s has no varants... skipping",
@@ -298,10 +302,10 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         if len(runners) == 0:
             return None
 
-        return QueryResult(runners)
+        return QueryResult(runners, limit=limit)
 
     def query_variants(  # pylint: disable=too-many-locals,too-many-arguments
-        self,
+        self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
@@ -370,7 +374,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         except GeneratorExit:
             logger.info("generator closed")
         except Exception:  # pylint: disable=broad-except
-            logger.exception("unexpected exception:", exc_info=True)
+            logger.exception("unexpected exception:")
         finally:
             elapsed = time.time() - started
             logger.info(
@@ -378,9 +382,8 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
             logger.debug("[DONE] executor closed...")
 
-    # FIXME: Too many locals, too many arguments, To refactor
     def query_result_summary_variants(
-        self,
+        self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
@@ -400,18 +403,13 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         logger.info(
             "study %s children: %s", self.study_id, self.get_leaf_children())
 
-        # person_ids = self._transform_person_set_collection_query(
-        #     person_set_collection, person_ids)
-        # if person_ids is not None and len(person_ids) == 0:
-        #     return None
-
         if effect_types:
             effect_types = expand_effect_types(effect_types)
 
         runners = []
         for genotype_study in self._get_query_leaf_studies(study_filters):
             # pylint: disable=no-member,protected-access
-            runner = genotype_study._backend \
+            runner = genotype_study.backend \
                 .build_summary_variants_query_runner(
                     regions=regions,
                     genes=genes,
@@ -422,18 +420,19 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     frequency_filter=frequency_filter,
                     return_reference=return_reference,
                     return_unknown=return_unknown,
-                    limit=limit)
+                    limit=limit,
+                    **kwargs,
+                )
             runner.study_id = genotype_study.study_id
             runners.append(runner)
 
         if len(runners) == 0:
             return None
 
-        result = QueryResult(runners)
-        return result
+        return QueryResult(runners)
 
     def query_summary_variants(
-        self,
+        self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
@@ -509,8 +508,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                 "processing study %s elapsed: %.3f",
                 self.study_id, elapsed)
 
-            for v in variants.values():
-                yield v
+            yield from variants.values()
         finally:
             logger.debug("[DONE] executor closed...")
 
@@ -542,10 +540,11 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             result[psc_id] = psc
         return result
 
-    def _transform_person_set_collection_query(
+    def transform_person_set_collection_query(
         self, collection_query: tuple[str, list[str]],
         person_ids: Iterable[str] | None,
     ) -> set[str] | None:
+        """Transform person set collection query to person ids."""
         assert collection_query is not None
 
         collection_id, selected_sets = collection_query
@@ -563,8 +562,9 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             selected_fpids.update(
                 collection.person_sets[set_id].persons.keys(),
             )
-        selected_person_ids: set[str] = set(
-            fpid[1] for fpid in selected_fpids)
+        selected_person_ids: set[str] = {
+            fpid[1] for fpid in selected_fpids
+        }
 
         if person_ids is not None:
             return set(person_ids) & selected_person_ids
@@ -599,7 +599,7 @@ class GenotypeDataGroup(GenotypeData):
         self._executor = None
         self.is_remote = False
         for study in self.studies:
-            study._add_parent(self.study_id)
+            study.add_parent(self.study_id)
 
     @property
     def is_group(self) -> bool:
@@ -609,8 +609,11 @@ class GenotypeDataGroup(GenotypeData):
     def families(self) -> FamiliesData:
         return self._families
 
-    def get_studies_ids(self, leaves: bool = True) -> list[str]:
-        result = set([self.study_id])
+    def get_studies_ids(
+        self, *,
+        leaves: bool = True,
+    ) -> list[str]:
+        result = {self.study_id}
         if not leaves:
             result = result.union([st.study_id for st in self.studies])
             return list(result)
@@ -626,9 +629,7 @@ class GenotypeDataGroup(GenotypeData):
                 self.config["conf_dir"], "families_cache.ped.gz",
             )
 
-        if cache_path is None or not os.path.exists(cache_path):
-            return False
-        return True
+        return not (cache_path is None or not os.path.exists(cache_path))
 
     def _load_cached_families_data(
         self, cache_dir: str | None = None,
@@ -642,11 +643,13 @@ class GenotypeDataGroup(GenotypeData):
         if cache_path is not None and os.path.exists(cache_path):
             try:
                 result = FamiliesLoader.load_pedigree_file(cache_path)
-                return result
             except BaseException:  # pylint: disable=broad-except
-                logger.error(
+                logger.exception(
                     "Couldn't load families cache for %s", self.study_id,
                 )
+            else:
+                return result
+
         return None
 
     def _ensure_cache_dir(self, cache_dir: str | None = None) -> str:
@@ -671,13 +674,13 @@ class GenotypeDataGroup(GenotypeData):
 
         try:
             FamiliesLoader.save_families(self.families, cache_path)
-            return True
         except BaseException:  # pylint: disable=broad-except
-            logger.error(
+            logger.exception(
                 "Failed to cache families for %s", self.study_id,
-                exc_info=True,
             )
             return False
+
+        return True
 
     def _save_cached_person_sets(
         self, cache_dir: str | None = None,
@@ -691,13 +694,13 @@ class GenotypeDataGroup(GenotypeData):
                     f"person_set_{psc.id}_cache.json.gz")
                 with gzip.open(cache_path, "wt") as outfile:
                     json.dump(psc.to_json(), outfile)
-            return True
         except BaseException:  # pylint: disable=broad-except
-            logger.error(
+            logger.exception(
                 "Failed to cache person sets for study %s", self.study_id,
-                exc_info=True,
             )
             return False
+
+        return True
 
     def _has_cached_person_sets(self, cache_dir: str | None = None) -> bool:
         """Save cached person set collections defined for a genotype group."""
@@ -750,12 +753,12 @@ class GenotypeDataGroup(GenotypeData):
 
                     psc = PersonSetCollection.from_json(data, self.families)
                     result[psc_id] = psc
-            return result
         except BaseException:  # pylint: disable=broad-except
-            logger.error(
+            logger.exception(
                 "Failed to load cached person sets for study %s",
-                self.study_id, exc_info=True)
+                self.study_id)
             return None
+        return result
 
     def has_families_cache(self) -> bool:
         """Check cached families and person set collections."""
@@ -869,6 +872,10 @@ class GenotypeDataStudy(GenotypeData):
         self.is_remote = False
 
     @property
+    def backend(self) -> Any:
+        return self._backend
+
+    @property
     def study_phenotype(self) -> str:
         return cast(str, self.config.get("study_phenotype", "-"))
 
@@ -876,7 +883,10 @@ class GenotypeDataStudy(GenotypeData):
     def is_group(self) -> bool:
         return False
 
-    def get_studies_ids(self, leaves: bool = True) -> list[str]:
+    def get_studies_ids(
+        self, *,
+        leaves: bool = True,  # noqa: ARG002
+    ) -> list[str]:
         return [self.study_id]
 
     @property

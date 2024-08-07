@@ -97,7 +97,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
     def get_storage_types(cls) -> set[str]:
         return {"duckdb", "duckdb2"}
 
-    def start(self) -> DuckDbGenotypeStorage:
+    def start(self, *, read_only: bool | None = None) -> DuckDbGenotypeStorage:
         if self.connection_factory:
             logger.warning(
                 "starting already started DuckDb genotype storage: <%s>",
@@ -109,8 +109,11 @@ class DuckDbGenotypeStorage(GenotypeStorage):
             db_name = self._base_dir_join(db_name)
             dirname = os.path.dirname(db_name)
             os.makedirs(dirname, exist_ok=True)
+        if not read_only:
+            read_only = self.storage_config.get("read_only", False)
+        assert read_only is not None
         self.connection_factory = duckdb_connect(
-            db_name=db_name, read_only=self.read_only)
+            db_name=db_name, read_only=read_only)
         memory_limit = self.get_memory_limit()
         if memory_limit:
             query = f"SET memory_limit='{memory_limit}'"

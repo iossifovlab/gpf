@@ -1,188 +1,52 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
-import pathlib
-from typing import Any
+from typing import Any, cast
 
-import duckdb
 import pytest
 
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
-from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
-from dae.genotype_storage.genotype_storage_registry import (
-    get_genotype_storage_factory,
-)
-from dae.gpf_instance import GPFInstance
 from dae.query_variants.sql.schema2.sql_query_builder import (
-    Db2Layout,
     SqlQueryBuilder,
 )
 from dae.studies.study import GenotypeData
-from dae.testing import setup_pedigree, setup_vcf, vcf_study
-from dae.testing.t4c8_import import t4c8_gpf
 from dae.utils.regions import Region
 
 
-@pytest.fixture(scope="module")
-def duckdb_storage(
-    tmp_path_factory: pytest.TempPathFactory,
-) -> DuckDbGenotypeStorage:
-    storage_path = tmp_path_factory.mktemp("duckdb_storage")
-    storage_config = {
-        "id": "duckdb_test",
-        "storage_type": "duckdb2",
-        "db": "duckdb_storage/test.duckdb",
-        "base_dir": str(storage_path),
-    }
-    storage_factory = get_genotype_storage_factory("duckdb2")
-    assert storage_factory is not None
-    storage = storage_factory(storage_config)
-    assert storage is not None
-    assert isinstance(storage, DuckDbGenotypeStorage)
-    return storage
-
-
-@pytest.fixture(scope="module")
-def t4c8_instance(
-    tmp_path_factory: pytest.TempPathFactory,
-    duckdb_storage: DuckDbGenotypeStorage,
-) -> GPFInstance:
-    root_path = tmp_path_factory.mktemp("t4c8_instance")
-    gpf_instance = t4c8_gpf(root_path, duckdb_storage)
-    return gpf_instance
-
-
-@pytest.fixture(scope="module")
-def t4c8_study_1(
-    t4c8_instance: GPFInstance,
-    duckdb_storage: DuckDbGenotypeStorage,
-) -> GenotypeData:
-    root_path = pathlib.Path(t4c8_instance.dae_dir)
-    ped_path = setup_pedigree(
-        root_path / "study_1" / "pedigree" / "in.ped",
-        """
-familyId personId dadId momId sex status role
-f1.1     mom1     0     0     2   1      mom
-f1.1     dad1     0     0     1   1      dad
-f1.1     ch1      dad1  mom1  2   2      prb
-f1.3     mom3     0     0     2   1      mom
-f1.3     dad3     0     0     1   1      dad
-f1.3     ch3      dad3  mom3  2   2      prb
-        """)
-    vcf_path1 = setup_vcf(
-        root_path / "study_1" / "vcf" / "in.vcf.gz",
-        """
-##fileformat=VCFv4.2
-##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##contig=<ID=chr1>
-##contig=<ID=chr2>
-##contig=<ID=chr3>
-#CHROM POS  ID REF ALT  QUAL FILTER INFO FORMAT mom1 dad1 ch1 mom3 dad3 ch3
-chr1   4    .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/1  0/2  0/2
-chr1   54   .  T   C    .    .      .    GT     0/1  0/1  0/1 0/1  0/0  0/1
-chr1   90   .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/1  0/2  0/1
-chr1   100  .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/2  0/2  0/0
-chr1   119  .  A   G,C  .    .      .    GT     0/0  0/2  0/2 0/1  0/2  0/1
-chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
-        """)
-
-    project_config_update = {
-        "partition_description": {
-            "region_bin": {
-                "chromosomes": ["chr1"],
-                "region_length": 100,
-            },
-            "frequency_bin": {
-                "rare_boundary": 25.0,
-            },
-            "coding_bin": {
-                "coding_effect_types": [
-                    "frame-shift",
-                    "noStart",
-                    "missense",
-                    "synonymous",
-                ],
-            },
-            "family_bin": {
-                "family_bin_size": 2,
-            },
-        },
-    }
-
-    study = vcf_study(
-        root_path,
-        "study_1", ped_path, [vcf_path1],
-        t4c8_instance,
-        project_config_update=project_config_update,
-    )
-    duckdb_storage.shutdown()
-    return study
-
-
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def duckdb2_variants(
-    t4c8_study_1: GenotypeData,
-    duckdb_storage: DuckDbGenotypeStorage,
-    t4c8_instance: GPFInstance,
+    t4c8_study_2: GenotypeData,
 ) -> DuckDb2Variants:
-    base_dir = duckdb_storage.get_base_dir()
-    db_file = duckdb_storage.get_db()
-    assert base_dir is not None
-    assert db_file is not None
-
-    db_filename = os.path.join(
-        base_dir,
-        db_file,
-    )
-    assert os.path.exists(db_filename)
-    study_storage = t4c8_study_1.config.genotype_storage
-
-    meta_table = study_storage.tables.meta
-    assert meta_table is not None
-
-    db_layout = Db2Layout(
-        db=db_filename,
-        study=t4c8_study_1.study_id,
-        pedigree=study_storage.tables.pedigree,
-        summary=study_storage.tables.summary,
-        family=study_storage.tables.family,
-        meta=study_storage.tables.meta,
-    )
-
-    assert db_layout is not None
-    connection = duckdb.connect(db_filename, read_only=True)
-    duckdb_variants = DuckDb2Variants(
-        connection,
-        db_layout,
-        t4c8_instance.gene_models,
-        t4c8_instance.reference_genome,
+    duckdb_variants = cast(
+        DuckDb2Variants,
+        t4c8_study_2._backend,  # type: ignore
     )
     duckdb_variants.query_builder.GENE_REGIONS_HEURISTIC_EXTEND = 0
     return duckdb_variants
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def query_builder(
     duckdb2_variants: DuckDb2Variants,
 ) -> SqlQueryBuilder:
     return duckdb2_variants.query_builder
 
 
-@pytest.mark.parametrize("index, params, coding_bin", [
-    (0, {"effect_types": ["missense"]}, 1),
-    (1, {"effect_types": ["synonymous"]}, 1),
-    (2, {"effect_types": ["intergenic"]}, None),
-    (3, {"effect_types": ["intergenic", "synonymous"]}, None),
-    (4, {}, None),
+@pytest.mark.parametrize("params, coding_bin", [
+    ({"effect_types": ["missense"]}, 1),
+    ({"effect_types": ["synonymous"]}, 1),
+    ({"effect_types": ["intergenic"]}, None),
+    ({"effect_types": ["intergenic", "synonymous"]}, None),
+    ({}, None),
 ])
 def test_coding_bin_heuristics_query(
-    index: int,
     params: dict[str, Any],
     coding_bin: int | None,
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    query = query_builder.build_summary_variants_query(**params)
-    assert query is not None
+    queries = query_builder.build_summary_variants_query(**params)
+    assert queries is not None
+    assert len(queries) > 0
+    query = queries[0]
 
     if coding_bin is None:
         assert "coding_bin" not in query
@@ -190,22 +54,23 @@ def test_coding_bin_heuristics_query(
         assert f"sa.coding_bin = {coding_bin}" in query
 
 
-@pytest.mark.parametrize("index, params, region_bins", [
-    (0, {"regions": [Region("chr1", 2, 20)]}, ["chr1_0"]),
-    (1, {"regions": [Region("chr1", 2, 120)]}, ["chr1_0", "chr1_1"]),
-    (2, {"regions": [Region("chr1")]}, ["chr1_0", "chr1_1", "chr1_2"]),
-    (3, {"regions": [Region("chr1", 105)]}, ["chr1_1", "chr1_2"]),
-    (4, {"regions": [Region("chr1", None, 105)]}, ["chr1_0", "chr1_1"]),
+@pytest.mark.parametrize("params, region_bins", [
+    ({"regions": [Region("chr1", 2, 20)]}, ["chr1_0"]),
+    ({"regions": [Region("chr1", 2, 120)]}, ["chr1_0", "chr1_1"]),
+    ({"regions": [Region("chr1")]}, ["chr1_0", "chr1_1", "chr1_2"]),
+    ({"regions": [Region("chr1", 105)]}, ["chr1_1", "chr1_2"]),
+    ({"regions": [Region("chr1", None, 105)]}, ["chr1_0", "chr1_1"]),
 ])
 def test_region_bin_heuristics_query(
-    index: int,
     params: dict[str, Any],
     region_bins: list[str] | None,
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    query = query_builder.build_summary_variants_query(**params)
-    assert query is not None
+    queries = query_builder.build_summary_variants_query(**params)
+    assert queries is not None
+    assert len(queries) > 0
+    query = queries[0]
 
     if region_bins is None:
         assert "region_bin" not in query
@@ -215,23 +80,24 @@ def test_region_bin_heuristics_query(
             assert f"'{region_bin}'" in query
 
 
-@pytest.mark.parametrize("index, params, frequency_bins", [
-    (0, {"ultra_rare": True}, "(0, 1)"),
-    (1, {"ultra_rare": False}, None),
-    (2, {}, None),
-    (3, {"frequency_filter": [("af_allele_freq", (None, 15.0))]}, "(0, 1, 2)"),
-    (4, {"frequency_filter": [("af_allele_freq", (None, 25.0))]}, "(0, 1, 2)"),
-    (5, {"frequency_filter": [("af_allele_freq", (None, 25.1))]}, None),
+@pytest.mark.parametrize("params, frequency_bins", [
+    ({"ultra_rare": True}, "(0, 1)"),
+    ({"ultra_rare": False}, None),
+    ({}, None),
+    ({"frequency_filter": [("af_allele_freq", (None, 15.0))]}, "(0, 1, 2)"),
+    ({"frequency_filter": [("af_allele_freq", (None, 25.0))]}, "(0, 1, 2)"),
+    ({"frequency_filter": [("af_allele_freq", (None, 25.1))]}, None),
 ])
 def test_frequency_bin_heuristics_query(
-    index: int,
     params: dict[str, Any],
     frequency_bins: str | None,
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    query = query_builder.build_summary_variants_query(**params)
-    assert query is not None
+    queries = query_builder.build_summary_variants_query(**params)
+    assert queries is not None
+    assert len(queries) > 0
+    query = queries[0]
 
     if frequency_bins is None:
         assert "frequency_bin" not in query
@@ -240,22 +106,23 @@ def test_frequency_bin_heuristics_query(
         assert f"sa.frequency_bin IN {frequency_bins}" in query
 
 
-@pytest.mark.parametrize("index, params, coding_bin", [
-    (0, {"effect_types": ["missense"]}, 1),
-    (1, {"effect_types": ["synonymous"]}, 1),
-    (2, {"effect_types": ["intergenic"]}, None),
-    (3, {"effect_types": ["intergenic", "synonymous"]}, None),
-    (4, {}, None),
+@pytest.mark.parametrize("params, coding_bin", [
+    ({"effect_types": ["missense"]}, 1),
+    ({"effect_types": ["synonymous"]}, 1),
+    ({"effect_types": ["intergenic"]}, None),
+    ({"effect_types": ["intergenic", "synonymous"]}, None),
+    ({}, None),
 ])
 def test_coding_bin_heuristics_family_query(
-    index: int,
     params: dict[str, Any],
     coding_bin: int | None,
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    query = query_builder.build_family_variants_query(**params)
-    assert query is not None
+    queries = query_builder.build_family_variants_query(**params)
+    assert queries is not None
+    assert len(queries) > 0
+    query = queries[0]
 
     if coding_bin is None:
         assert "coding_bin" not in query
@@ -264,49 +131,63 @@ def test_coding_bin_heuristics_family_query(
         assert f"fa.coding_bin = {coding_bin}" in query
 
 
-@pytest.mark.parametrize("index, params, region_bins", [
-    (0, {"regions": [Region("chr1", 2, 20)]}, ["chr1_0"]),
-    (1, {"regions": [Region("chr1", 2, 120)]}, ["chr1_0", "chr1_1"]),
-    (2, {"regions": [Region("chr1")]}, ["chr1_0", "chr1_1", "chr1_2"]),
-    (3, {"regions": [Region("chr1", 105)]}, ["chr1_1", "chr1_2"]),
-    (4, {"regions": [Region("chr1", None, 105)]}, ["chr1_0", "chr1_1"]),
+@pytest.mark.parametrize("params, count, region_bins", [
+    ({"regions": [Region("chr1", 2, 20)]}, 1, ["chr1_0"]),
+    ({"regions": [Region("chr1", 2, 120)]}, 1, ["chr1_0", "chr1_1"]),
+    ({"regions": [Region("chr1")]}, 1, ["chr1_0", "chr1_1", "chr1_2"]),
+    ({"regions": [Region("chr1", 105)]}, 1, ["chr1_1", "chr1_2"]),
+    ({"regions": [Region("chr1", None, 105)]}, 1, ["chr1_0", "chr1_1"]),
+    ({"regions": None}, 3, ["chr1_0"]),
 ])
 def test_region_bin_heuristics_family_query(
-    index: int,
     params: dict[str, Any],
-    region_bins: list[str] | None,
+    count: int,
+    region_bins: list[str],
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    query = query_builder.build_family_variants_query(**params)
-    assert query is not None
+    queries = query_builder.build_family_variants_query(**params)
+    assert queries is not None
+    assert len(queries) == count
+    query = queries[0]
 
-    if region_bins is None:
-        assert "region_bin" not in query
-    else:
+    assert "sa.region_bin" in query
+    assert "fa.region_bin" in query
+    for region_bin in region_bins:
+        assert f"'{region_bin}'" in query
+
+
+def test_region_bin_heuristics_batched_query(
+    query_builder: SqlQueryBuilder,
+) -> None:
+
+    queries = query_builder.build_family_variants_query()
+
+    assert queries is not None
+    assert len(queries) == 3
+    for query in queries:
         assert "sa.region_bin" in query
         assert "fa.region_bin" in query
-        for region_bin in region_bins:
-            assert f"'{region_bin}'" in query
 
 
-@pytest.mark.parametrize("index, params, frequency_bins", [
-    (0, {"ultra_rare": True}, "(0, 1)"),
-    (1, {"ultra_rare": False}, None),
-    (2, {}, None),
-    (3, {"frequency_filter": [("af_allele_freq", (None, 15.0))]}, "(0, 1, 2)"),
-    (4, {"frequency_filter": [("af_allele_freq", (None, 25.0))]}, "(0, 1, 2)"),
-    (5, {"frequency_filter": [("af_allele_freq", (None, 25.1))]}, None),
+@pytest.mark.parametrize("params, frequency_bins", [
+    ({"ultra_rare": True}, "(0, 1)"),
+    ({"ultra_rare": False}, None),
+    ({}, None),
+    ({"frequency_filter": [("af_allele_freq", (None, 15.0))]}, "(0, 1, 2)"),
+    ({"frequency_filter": [("af_allele_freq", (None, 25.0))]}, "(0, 1, 2)"),
+    ({"frequency_filter": [("af_allele_freq", (None, 25.1))]}, None),
 ])
 def test_frequency_bin_heuristics_family_query(
-    index: int,
     params: dict[str, Any],
     frequency_bins: str | None,
     query_builder: SqlQueryBuilder,
 ) -> None:
     assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    query = query_builder.build_family_variants_query(**params)
-    assert query is not None
+    queries = query_builder.build_family_variants_query(**params)
+    assert queries is not None
+    assert len(queries) > 0
+    query = queries[0]
 
     if frequency_bins is None:
         assert "frequency_bin" not in query
@@ -326,29 +207,28 @@ def test_duckdb2_variants_simple(duckdb2_variants: DuckDb2Variants) -> None:
     assert len(fvs) == 12
 
 
-@pytest.mark.parametrize("index, params, count", [
-    (0, {"genes": ["t4"]}, 2),
-    (1, {"genes": ["c8"]}, 5),
-    (2, {"effect_types": ["missense"]}, 2),
-    (3, {"effect_types": ["synonymous"]}, 4),
-    (4, {"regions": [Region("chr1")]}, 12),
-    (5, {"regions": [Region("chr1", None, 55)]}, 4),
-    (6, {"regions": [Region("chr1", 55, None)]}, 8),
-    (7, {"frequency_filter": [("af_allele_freq", (None, 15.0))]}, 2),
-    (8, {"frequency_filter": [("af_allele_freq", (15.0, None))]}, 12),
-    (9, {"frequency_filter": [("af_allele_freq", (None, 25.0))]}, 9),
-    (10, {"frequency_filter": [("af_allele_freq", (25.0, None))]}, 12),
-    (11, {"real_attr_filter": [("af_allele_count", (None, 1))]}, 2),
-    (12, {"real_attr_filter": [("af_allele_count", (1, None))]}, 12),
-    (13, {"real_attr_filter": [("af_allele_count", (1, 1))]}, 2),
-    (14, {"real_attr_filter": [("af_allele_count", (2, None))]}, 12),
-    (15, {"real_attr_filter": [("af_allele_count", (2, 2))]}, 8),
-    (16, {"limit": 1}, 1),
-    (17, {"limit": 2}, 2),
-    (15, {"ultra_rare": True}, 2),
+@pytest.mark.parametrize("params, count", [
+    ({"genes": ["t4"]}, 2),
+    ({"genes": ["c8"]}, 5),
+    ({"effect_types": ["missense"]}, 2),
+    ({"effect_types": ["synonymous"]}, 4),
+    ({"regions": [Region("chr1")]}, 12),
+    ({"regions": [Region("chr1", None, 55)]}, 4),
+    ({"regions": [Region("chr1", 55, None)]}, 8),
+    ({"frequency_filter": [("af_allele_freq", (None, 15.0))]}, 2),
+    ({"frequency_filter": [("af_allele_freq", (15.0, None))]}, 12),
+    ({"frequency_filter": [("af_allele_freq", (None, 25.0))]}, 9),
+    ({"frequency_filter": [("af_allele_freq", (25.0, None))]}, 12),
+    ({"real_attr_filter": [("af_allele_count", (None, 1))]}, 2),
+    ({"real_attr_filter": [("af_allele_count", (1, None))]}, 12),
+    ({"real_attr_filter": [("af_allele_count", (1, 1))]}, 2),
+    ({"real_attr_filter": [("af_allele_count", (2, None))]}, 12),
+    ({"real_attr_filter": [("af_allele_count", (2, 2))]}, 8),
+    ({"limit": 1}, 1),
+    ({"limit": 2}, 2),
+    ({"ultra_rare": True}, 2),
 ])
 def test_query_family_variants_counting(
-    index: int,
     params: dict[str, Any],
     count: int,
     duckdb2_variants: DuckDb2Variants,
@@ -357,29 +237,28 @@ def test_query_family_variants_counting(
     assert len(fvs) == count
 
 
-@pytest.mark.parametrize("index, params, count", [
-    (0, {"genes": ["t4"]}, 1),
-    (1, {"genes": ["c8"]}, 3),
-    (2, {"effect_types": ["missense"]}, 1),
-    (3, {"effect_types": ["synonymous"]}, 3),
-    (4, {"regions": [Region("chr1")]}, 6),
-    (5, {"regions": [Region("chr1", None, 55)]}, 2),
-    (6, {"regions": [Region("chr1", 55, None)]}, 4),
-    (7, {"frequency_filter": [("af_allele_freq", (None, 15.0))]}, 2),
-    (8, {"frequency_filter": [("af_allele_freq", (15.0, None))]}, 6),
-    (9, {"frequency_filter": [("af_allele_freq", (None, 25.0))]}, 5),
-    (10, {"frequency_filter": [("af_allele_freq", (25.0, None))]}, 6),
-    (11, {"real_attr_filter": [("af_allele_count", (None, 1))]}, 2),
-    (12, {"real_attr_filter": [("af_allele_count", (1, None))]}, 6),
-    (13, {"real_attr_filter": [("af_allele_count", (1, 1))]}, 2),
-    (14, {"real_attr_filter": [("af_allele_count", (2, None))]}, 6),
-    (15, {"real_attr_filter": [("af_allele_count", (2, 2))]}, 4),
-    (16, {"limit": 1}, 1),
-    (17, {"limit": 2}, 2),
-    (15, {"ultra_rare": True}, 2),
+@pytest.mark.parametrize("params, count", [
+    ({"genes": ["t4"]}, 1),
+    ({"genes": ["c8"]}, 3),
+    ({"effect_types": ["missense"]}, 1),
+    ({"effect_types": ["synonymous"]}, 3),
+    ({"regions": [Region("chr1")]}, 6),
+    ({"regions": [Region("chr1", None, 55)]}, 2),
+    ({"regions": [Region("chr1", 55, None)]}, 4),
+    ({"frequency_filter": [("af_allele_freq", (None, 15.0))]}, 2),
+    ({"frequency_filter": [("af_allele_freq", (15.0, None))]}, 6),
+    ({"frequency_filter": [("af_allele_freq", (None, 25.0))]}, 5),
+    ({"frequency_filter": [("af_allele_freq", (25.0, None))]}, 6),
+    ({"real_attr_filter": [("af_allele_count", (None, 1))]}, 2),
+    ({"real_attr_filter": [("af_allele_count", (1, None))]}, 6),
+    ({"real_attr_filter": [("af_allele_count", (1, 1))]}, 2),
+    ({"real_attr_filter": [("af_allele_count", (2, None))]}, 6),
+    ({"real_attr_filter": [("af_allele_count", (2, 2))]}, 4),
+    ({"limit": 1}, 1),
+    ({"limit": 2}, 2),
+    ({"ultra_rare": True}, 2),
 ])
 def test_query_summary_variants_counting(
-    index: int,
     params: dict[str, Any],
     count: int,
     duckdb2_variants: DuckDb2Variants,
@@ -388,55 +267,67 @@ def test_query_summary_variants_counting(
     assert len(svs) == count
 
 
-@pytest.mark.parametrize("index, params, count", [
-    (0, {}, 12),
-    (1, {"roles": "prb"}, 9),
-    (2, {"roles": "not prb"}, 7),
-    (3, {"roles": "mom and not prb"}, 5),
-    (4, {"roles": "mom and dad and not prb"}, 3),
-    (5, {"roles": "prb and not mom and not dad"}, 0),
+@pytest.mark.parametrize("skip,params, count", [
+    (False, {}, 12),
+    (True, {}, 16),
+    (True, {"roles": "prb"}, 9),
+    (True, {"roles": "not prb"}, 7),
+    (True, {"roles": "mom and not prb"}, 5),
+    (True, {"roles": "mom and dad and not prb"}, 3),
+    (True, {"roles": "prb and not mom and not dad"}, 0),
 ])
 def test_query_family_variants_by_role(
-    index: int,
+    skip: bool,  # noqa: FBT001
     params: dict[str, Any],
     count: int,
     duckdb2_variants: DuckDb2Variants,
 ) -> None:
-    fvs = list(duckdb2_variants.query_variants(**params))
+    fvs = list(duckdb2_variants.query_variants(
+        skip_inmemory_filterng=skip,
+        **params))
     assert len(fvs) == count
 
 
-@pytest.mark.parametrize("index, params, count", [
-    (0, {}, 12),
-    (1, {"sexes": "M"}, 11),
-    (2, {"sexes": "M and not F"}, 2),
-    (3, {"sexes": "female and not male"}, 5),
+@pytest.mark.parametrize("skip,params, count", [
+    (False, {}, 12),
+    (True, {}, 16),
+    (True, {"sexes": "M"}, 11),
+    (True, {"sexes": "M and not F"}, 2),
+    (True, {"sexes": "female and not male"}, 5),
 ])
 def test_query_family_variants_by_sex(
-    index: int,
+    skip: bool,  # noqa: FBT001
     params: dict[str, Any],
     count: int,
     duckdb2_variants: DuckDb2Variants,
 ) -> None:
-    fvs = list(duckdb2_variants.query_variants(**params))
+    fvs = list(duckdb2_variants.query_variants(
+        skip_inmemory_filterng=skip,
+        **params,
+    ))
     assert len(fvs) == count
 
 
-@pytest.mark.parametrize("index, params, count", [
-    (0, {}, 12),
-    (1, {"inheritance": ["missing"]}, 7),
-    (2, {"inheritance": ["mendelian"]}, 9),
-    (3, {"inheritance": ["denovo"]}, 0),
-    (4, {"inheritance": ["mendelian or missing"]}, 12),
-    (4, {"inheritance": ["mendelian and missing"]}, 0),
+@pytest.mark.parametrize("skip,params, count", [
+    (False, {}, 12),
+    (True, {}, 16),
+    (True, {"inheritance": ["missing"]}, 7),
+    (True, {"inheritance": ["mendelian"]}, 9),
+    (True, {"inheritance": ["denovo"]}, 0),
+    (False, {"inheritance": ["mendelian or missing"]}, 12),
+    (True, {"inheritance": ["mendelian or missing"]}, 16),
+    (True, {"inheritance": ["mendelian and missing"]}, 0),
 ])
 def test_query_family_variants_by_inheritance(
-    index: int,
+    skip: bool,  # noqa: FBT001
     params: dict[str, Any],
     count: int,
     duckdb2_variants: DuckDb2Variants,
 ) -> None:
-    fvs = list(duckdb2_variants.query_variants(**params))
+    fvs = list(duckdb2_variants.query_variants(
+        skip_inmemory_filterng=skip,
+        **params,
+    ))
     assert len(fvs) == count
 
 
@@ -472,18 +363,17 @@ def test_calc_frequency_bin_heuristics(
     expected: list[str],
     query_builder: SqlQueryBuilder,
 ) -> None:
-    frequency_bins = query_builder._calc_frequency_bins(**params)
+    frequency_bins = query_builder.calc_frequency_bins(**params)
     assert frequency_bins == expected
 
 
-@pytest.mark.parametrize("index, params, count", [
-    (0, {}, 12),
-    (1, {"variant_type": "sub"}, 10),
-    (2, {"variant_type": "ins"}, 5),
-    (3, {"variant_type": "del"}, 0),
+@pytest.mark.parametrize("params, count", [
+    ({}, 12),
+    ({"variant_type": "sub"}, 10),
+    ({"variant_type": "ins"}, 5),
+    ({"variant_type": "del"}, 0),
 ])
 def test_query_family_variants_by_variant_type(
-    index: int,
     params: dict[str, Any],
     count: int,
     duckdb2_variants: DuckDb2Variants,
@@ -492,21 +382,26 @@ def test_query_family_variants_by_variant_type(
     assert len(fvs) == count
 
 
-@pytest.mark.parametrize("index, params, count", [
-    (0, {}, 12),
-    (1, {"person_ids": ["ch3"]}, 5),
-    (2, {"person_ids": ["ch3"], "family_ids": ["f1.1"]}, 0),
-    (3, {"person_ids": ["ch3"], "family_ids": ["f1.3"]}, 5),
-    (4, {"family_ids": ["f1.1"]}, 6),
-    (5, {"family_ids": ["f1.1"], "person_ids": ["ch1"]}, 4),
+@pytest.mark.parametrize("skip,params, count", [
+    (False, {}, 12),
+    (True, {}, 16),
+    (True, {"person_ids": ["ch3"]}, 5),
+    (True, {"person_ids": ["ch3"], "family_ids": ["f1.1"]}, 0),
+    (True, {"person_ids": ["ch3"], "family_ids": ["f1.3"]}, 5),
+    (False, {"family_ids": ["f1.1"]}, 6),
+    (True, {"family_ids": ["f1.1"]}, 7),
+    (True, {"family_ids": ["f1.1"], "person_ids": ["ch1"]}, 4),
 ])
 def test_query_family_variants_by_family_and_person_ids(
-    index: int,
+    skip: bool,  # noqa: FBT001
     params: dict[str, Any],
     count: int,
     duckdb2_variants: DuckDb2Variants,
 ) -> None:
-    fvs = list(duckdb2_variants.query_variants(**params))
+    fvs = list(duckdb2_variants.query_variants(
+        skip_inmemory_filterng=skip,
+        **params,
+    ))
     assert len(fvs) == count
 
 
@@ -514,17 +409,19 @@ def test_query_family_variants_by_family_and_person_ids(
 def test_sj_index(
     query_builder: SqlQueryBuilder,
 ) -> None:
-    assert "sj_index" in query_builder.summary_schema
-    assert "sj_index" in query_builder.family_schema
+    assert "sj_index" in query_builder.schema.column_names("summary_table")
+    assert "sj_index" in query_builder.schema.column_names("family_table")
 
 
 def test_pedigree_schema(
     duckdb2_variants: DuckDb2Variants,
 ) -> None:
-    pedigree_schema = duckdb2_variants.query_builder.pedigree_schema
-    assert pedigree_schema
-    assert "family_id" in pedigree_schema
-    assert "person_id" in pedigree_schema
-    assert "family_bin" in pedigree_schema
-    assert "tag_simplex_family" in pedigree_schema
-    assert "tag_multiplex_family" in pedigree_schema
+    pedigree_columns = duckdb2_variants.query_builder.schema.column_names(
+        "pedigree_table",
+    )
+    assert pedigree_columns
+    assert "family_id" in pedigree_columns
+    assert "person_id" in pedigree_columns
+    assert "family_bin" in pedigree_columns
+    assert "tag_simplex_family" in pedigree_columns
+    assert "tag_multiplex_family" in pedigree_columns
