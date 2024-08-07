@@ -25,6 +25,7 @@ from dae.utils.variant_utils import (
     GenotypeType,
     get_locus_ploidy,
     str2gt,
+    str2lists,
     str2mat,
     str2mat_adjust_colsep,
 )
@@ -989,7 +990,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         best_states = {
             fid: (
                 str2mat(bs, col_sep="", row_sep="/"),
-                str2mat(rc, col_sep=" ", row_sep="/", dtype=np.int16),
+                str2lists(rc, col_sep=" ", row_sep="/"),
             )
             for (fid, bs, rc) in [
                 fg.split(":") for fg in family_data.split(";")
