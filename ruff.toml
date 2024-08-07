@@ -20,6 +20,8 @@ exclude = [
     ".vscode",
     "__pypackages__",
     "_build",
+    "_version.py",
+    "versioneer.py",
     "buck-out",
     "build",
     "dist",
@@ -59,6 +61,7 @@ preview = true
 [lint.per-file-ignores]
 "test*.py" = ["S101", "SLF"]
 "conftest.py" = ["D"]
+"setup.py" = ["INP001"]
 
 [lint.mccabe]
 max-complexity = 20
