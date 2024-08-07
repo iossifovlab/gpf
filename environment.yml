@@ -46,9 +46,9 @@ dependencies:
   - markdown2=2.4
   - python-duckdb=1.0
   - duckdb-engine=0.12
-  - sqlglot=24.1
-  - polars=0.20
-  - sentry-sdk=2.3
+  - sqlglot=25.9
+  - polars=1.2
+  - sentry-sdk=2.12
   - pybigwig=0.3
   - pyzstd=0.16
   - gunicorn=22.0
