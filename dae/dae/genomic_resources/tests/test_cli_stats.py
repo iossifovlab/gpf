@@ -41,7 +41,7 @@ class SomeTestImplementation(GenomicResourceImplementation):
         return b"somehash"
 
     def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any,
+        self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
     ) -> list[Task]:
         """Add tasks for calculating resource statistics to a task graph."""
         task = task_graph.create_task(
@@ -91,12 +91,12 @@ def build_test_implementation(
 
 
 @pytest.fixture(scope="module")
-def register_test_implementation() -> None:
+def register_test_implementation() -> None:  # noqa: PT004
     register_implementation("test_resource", build_test_implementation)
 
 
 def test_cli_stats(
-    tmp_path: pathlib.Path, register_test_implementation: None,
+    tmp_path: pathlib.Path, register_test_implementation: None,  # noqa: ARG001
 ) -> None:
     setup_directories(tmp_path, {
         "one": {
@@ -115,14 +115,13 @@ def test_cli_stats(
 
     statistic_path = os.path.join(tmp_path, "one", "statistics", "somestat")
     assert os.path.exists(statistic_path)
-    with open(statistic_path) as infile:
-        assert infile.read() == "test"
+    assert pathlib.Path(statistic_path).read_text() == "test"
+
     statistic_hash_path = os.path.join(
         tmp_path, "one", "statistics", "stats_hash",
     )
     assert os.path.exists(statistic_hash_path)
-    with open(statistic_hash_path) as infile:
-        assert infile.read() == "somehash"
+    assert pathlib.Path(statistic_hash_path).read_text() == "somehash"
 
 
 def test_stats_allele_score(tmp_path: pathlib.Path) -> None:
@@ -181,8 +180,8 @@ def test_stats_allele_score(tmp_path: pathlib.Path) -> None:
     assert os.path.exists(histogram_statistic_path)
     assert os.path.exists(histogram_image_path)
 
-    with open(histogram_statistic_path, "r") as infile:
-        freq_hist = NumberHistogram.deserialize(infile.read())
+    freq_hist = NumberHistogram.deserialize(
+        pathlib.Path(histogram_statistic_path).read_text())
 
     assert len(freq_hist.bars) == 100
     assert freq_hist.bars[0] == 0
@@ -270,10 +269,13 @@ def test_stats_position_score(tmp_path: pathlib.Path) -> None:
     assert os.path.exists(histogram_5way_path)
     assert os.path.exists(histogram_image_5way_path)
 
-    with open(histogram_100way_path, "r") as infile:
-        phast_cons_100way_hist = NumberHistogram.deserialize(infile.read())
-    with open(histogram_5way_path, "r") as infile:
-        phast_cons_5way_hist = NumberHistogram.deserialize(infile.read())
+    phast_cons_100way_hist = NumberHistogram.deserialize(
+        pathlib.Path(histogram_100way_path).read_text(),
+    )
+
+    phast_cons_5way_hist = NumberHistogram.deserialize(
+        pathlib.Path(histogram_5way_path).read_text(),
+    )
 
     assert len(phast_cons_100way_hist.bars) == 100
     assert phast_cons_100way_hist.bars[0] == 0
@@ -371,10 +373,13 @@ def test_stats_np_score(tmp_path: pathlib.Path) -> None:
     assert os.path.exists(histogram_cadd_test_path)
     assert os.path.exists(histogram_image_cadd_test_path)
 
-    with open(histogram_cadd_raw_path, "r") as infile:
-        cadd_raw_hist = NumberHistogram.deserialize(infile.read())
-    with open(histogram_cadd_test_path, "r") as infile:
-        cadd_test_hist = NumberHistogram.deserialize(infile.read())
+    cadd_raw_hist = NumberHistogram.deserialize(
+        pathlib.Path(histogram_cadd_raw_path).read_text(),
+    )
+
+    cadd_test_hist = NumberHistogram.deserialize(
+        pathlib.Path(histogram_cadd_test_path).read_text(),
+    )
 
     assert len(cadd_raw_hist.bars) == 100
     assert cadd_raw_hist.bars[2] == 6  # region [10-15]
@@ -538,8 +543,9 @@ def test_stats_categorical(tmp_path: pathlib.Path) -> None:
         tmp_path, "one", "statistics", "histogram_some_stat.yaml",
     )
 
-    with open(histogram_statistic_path, "r") as infile:
-        stat_hist = CategoricalHistogram.deserialize(infile.read())
+    stat_hist = CategoricalHistogram.deserialize(
+        pathlib.Path(histogram_statistic_path).read_text(),
+    )
 
     assert len(stat_hist.bars) == 3
     assert stat_hist.bars["value1"] == 2

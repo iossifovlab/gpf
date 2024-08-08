@@ -161,7 +161,6 @@ class GenomicScoreImplementation(
                 genome_id,
             )
             return None
-        ref_genome.open()
         GenomicScoreImplementation._REF_GENOME_CACHE[genome_id] = ref_genome
         return ref_genome
 

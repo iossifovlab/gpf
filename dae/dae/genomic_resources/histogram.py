@@ -586,10 +586,15 @@ class CategoricalHistogram(Statistic):
         import matplotlib.pyplot as plt
         values = list(self.bars.keys())
         counts = list(self.bars.values())
+
         plt.figure(figsize=(15, 10), tight_layout=True)
 
         _, ax = plt.subplots()
-        ax.bar(values, counts)
+        ax.bar(
+            x=values, height=counts,
+            log=self.config.y_log_scale,
+            align="center",
+        )
 
         if small_values_description is not None and \
             large_values_description is not None:
