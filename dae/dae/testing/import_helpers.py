@@ -36,8 +36,7 @@ def update_study_config(
         "studies" / \
         study_id / \
         f"{study_id}.yaml"
-    with open(config_path, "r", encoding="utf") as infile:
-        config = yaml.safe_load(infile.read())
+    config = yaml.safe_load(pathlib.Path(config_path).read_text())
     config = recursive_dict_update(config, study_config_update)
     builder = StudyConfigBuilder(config)
     with open(config_path, "wt", encoding="utf8") as outfile:
@@ -74,6 +73,13 @@ def setup_import_project_config(
             {% endfor %}
             denovo_mode: denovo
             omission_mode: omission
+        {% endif %}
+        {% if dae %}
+          dae:
+            files:
+            {% for dae_path in dae %}
+             - {{ dae_path }}
+            {% endfor %}
         {% endif %}
         {% if denovo %}
           denovo:
@@ -122,10 +128,9 @@ def setup_import_project(
         project_config_replace=project_config_replace)
 
     # pylint: disable=import-outside-toplevel
-    project = ImportProject.build_from_file(
+    return ImportProject.build_from_file(
         project_config,
         gpf_instance=gpf_instance)
-    return project
 
 
 def pedigree_import(
@@ -157,12 +162,37 @@ def vcf_import(
 ) -> ImportProject:
     """Import a VCF study and return the import project."""
     study = StudyInputLayout(study_id, ped_path, vcf_paths, [], [], [])
-    project = setup_import_project(
+    return setup_import_project(
         root_path, study, gpf_instance,
         project_config_update=project_config_update,
         project_config_overwrite=project_config_overwrite,
         project_config_replace=project_config_replace)
-    return project
+
+
+def dae_import(
+    root_path: pathlib.Path,
+    study_id: str,
+    ped_path: pathlib.Path,
+    dae_paths: list[pathlib.Path],
+    gpf_instance: GPFInstance,
+    project_config_update: dict[str, Any] | None = None,
+    project_config_overwrite: dict[str, Any] | None = None,
+    project_config_replace: dict[str, Any] | None = None,
+) -> ImportProject:
+    """Import a VCF study and return the import project."""
+    study = StudyInputLayout(
+        study_id=study_id,
+        pedigree=ped_path,
+        vcf=[],
+        denovo=[],
+        dae=dae_paths,
+        cnv=[],
+    )
+    return setup_import_project(
+        root_path, study, gpf_instance,
+        project_config_update=project_config_update,
+        project_config_overwrite=project_config_overwrite,
+        project_config_replace=project_config_replace)
 
 
 def vcf_study(
@@ -189,6 +219,30 @@ def vcf_study(
     return gpf_instance.get_genotype_data(study_id)
 
 
+def dae_study(
+    root_path: pathlib.Path,
+    study_id: str,
+    ped_path: pathlib.Path,
+    dae_paths: list[pathlib.Path],
+    gpf_instance: GPFInstance,
+    project_config_update: dict[str, Any] | None = None,
+    project_config_overwrite: dict[str, Any] | None = None,
+    study_config_update: dict[str, Any] | None = None,
+) -> GenotypeData:
+    """Import a VCF study and return the imported study."""
+    project = dae_import(
+        root_path, study_id, ped_path, dae_paths, gpf_instance,
+        project_config_update=project_config_update,
+        project_config_overwrite=project_config_overwrite)
+    run_with_project(project)
+    if study_config_update:
+        update_study_config(
+            gpf_instance, study_id, study_config_update)
+
+    gpf_instance.reload()
+    return gpf_instance.get_genotype_data(study_id)
+
+
 def denovo_import(
     root_path: pathlib.Path,
     study_id: str,
@@ -199,11 +253,10 @@ def denovo_import(
 ) -> ImportProject:
     """Import a de Novo study and return the import project."""
     study = StudyInputLayout(study_id, ped_path, [], denovo_paths, [], [])
-    project = setup_import_project(
+    return setup_import_project(
         root_path, study, gpf_instance,
         project_config_update=project_config_update,
         project_config_overwrite=project_config_overwrite)
-    return project
 
 
 def denovo_study(
@@ -239,11 +292,10 @@ def cnv_import(
 ) -> ImportProject:
     """Import a de Novo study and return the import project."""
     study = StudyInputLayout(study_id, ped_path, [], [], [], cnv_paths)
-    project = setup_import_project(
+    return setup_import_project(
         root_path, study, gpf_instance,
         project_config_update=project_config_update,
         project_config_overwrite=project_config_overwrite)
-    return project
 
 
 def cnv_study(
@@ -285,7 +337,7 @@ def setup_dataset(
     dataset = GenotypeDataGroup(
         Box(dataset_config, default_box=True), studies)
     # pylint: disable=protected-access
-    gpf_instance._variants_db.register_genotype_data(dataset)
+    gpf_instance._variants_db.register_genotype_data(dataset)  # noqa: SLF001
 
     return dataset
 

@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
 from typing import Any, cast
 
 import pytest
@@ -11,9 +12,8 @@ from dae.utils.regions import Region
 
 
 @pytest.fixture()
-def trios2_study(tmp_path_factory: pytest.TempPathFactory) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp(
-        "common_reports_trios2")
+def study(tmp_path: pathlib.Path) -> GenotypeData:
+    root_path = tmp_path
     gpf_instance = foobar_gpf(root_path)
     ped_path = setup_pedigree(
         root_path / "trios2_data" / "in.ped",
@@ -53,10 +53,10 @@ def test_phasing_serialization(
     params: dict[str, Any],
     count: int,
     phasing: str,
-    trios2_study: GenotypeData) -> None:
-    assert trios2_study is not None
+    study: GenotypeData) -> None:
+    assert study is not None
 
-    vs = list(trios2_study.query_variants(**params))
+    vs = list(study.query_variants(**params))
     assert len(vs) == count
 
     for v in vs:

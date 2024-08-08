@@ -154,8 +154,10 @@ def setup_vcf(
 
 
 def setup_dae_transmitted(
-        root_path: pathlib.Path,
-        summary_content: str, toomany_content: str) -> tuple[str, str]:
+    root_path: pathlib.Path,
+    summary_content: str,
+    toomany_content: str,
+) -> tuple[pathlib.Path, pathlib.Path]:
     """Set up a DAE transmitted variants file using passed content."""
     summary = convert_to_tab_separated(summary_content)
     toomany = convert_to_tab_separated(toomany_content)
@@ -182,8 +184,8 @@ def setup_dae_transmitted(
         str(root_path / "dae_transmitted_data" / "tr-TOOMANY.txt.gz"),
         seq_col=0, start_col=1, end_col=1, line_skip=1)
 
-    return (str(root_path / "dae_transmitted_data" / "tr.txt.gz"),
-            str(root_path / "dae_transmitted_data" / "tr-TOOMANY.txt.gz"))
+    return (root_path / "dae_transmitted_data" / "tr.txt.gz",
+            root_path / "dae_transmitted_data" / "tr-TOOMANY.txt.gz")
 
 
 def setup_bigwig(

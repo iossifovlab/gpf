@@ -21,8 +21,7 @@ def root_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
 
 @pytest.fixture()
 def gpf_instance(root_path: Path) -> GPFInstance:
-    gpf_instance = foobar_gpf(root_path)
-    return gpf_instance
+    return foobar_gpf(root_path)
 
 
 @pytest.fixture()
@@ -40,7 +39,7 @@ def families_data() -> FamiliesData:
 
 
 @pytest.fixture()
-def summary_data(root_path: Path) -> str:
+def summary_data(root_path: Path) -> Path:
     summary_data, _toomany_data = setup_dae_transmitted(
         root_path,
         textwrap.dedent("""
@@ -61,15 +60,16 @@ bar 11       sub(A->G) f1:1121/1101:38||4||83||25/16||23||0||16/0||0||0||0;f2:21
 
 @pytest.fixture()
 def dae_transmitted(
-    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str,
+    gpf_instance: GPFInstance,
+    families_data: FamiliesData,
+    summary_data: Path,
 ) -> DaeTransmittedLoader:
-    variants_loader = DaeTransmittedLoader(
+    return DaeTransmittedLoader(
         families_data,
-        summary_data,
+        str(summary_data),
         genome=gpf_instance.reference_genome,
         regions=None,
     )
-    return variants_loader
 
 
 def test_dae_transmitted_loader_simple(
@@ -87,11 +87,11 @@ def test_dae_transmitted_loader_simple(
 
 
 def test_chromosomes_have_adjusted_chrom(
-    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str,
+    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: Path,
 ) -> None:
     variants_loader = DaeTransmittedLoader(
         families_data,
-        summary_data,
+        str(summary_data),
         genome=gpf_instance.reference_genome,
         params={"add_chrom_prefix": "chr"},
         regions=None,
@@ -101,11 +101,11 @@ def test_chromosomes_have_adjusted_chrom(
 
 
 def test_variants_have_adjusted_chrom(
-    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str,
+    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: Path,
 ) -> None:
     variants_loader = DaeTransmittedLoader(
         families_data,
-        summary_data,
+        str(summary_data),
         genome=gpf_instance.reference_genome,
         params={"add_chrom_prefix": "chr"},
         regions=None,
@@ -118,11 +118,11 @@ def test_variants_have_adjusted_chrom(
 
 
 def test_reset_regions_with_adjusted_chrom(
-    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str,
+    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: Path,
 ) -> None:
     variants_loader = DaeTransmittedLoader(
         families_data,
-        summary_data,
+        str(summary_data),
         genome=gpf_instance.reference_genome,
         params={"add_chrom_prefix": "chr"},
         regions=None,
@@ -140,11 +140,11 @@ def test_reset_regions_with_adjusted_chrom(
 
 
 def test_end_position(
-    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: str,
+    gpf_instance: GPFInstance, families_data: FamiliesData, summary_data: Path,
 ) -> None:
     variants_loader = DaeTransmittedLoader(
         families_data,
-        summary_data,
+        str(summary_data),
         genome=gpf_instance.reference_genome,
         params={"add_chrom_prefix": "chr"},
         regions=None,
