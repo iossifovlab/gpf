@@ -611,6 +611,9 @@ class PhenotypeStudy(PhenotypeData):
     def get_regressions(self) -> dict[str, Any]:
         return self.db.regression_display_names_with_ids
 
+    def get_regression_ids(self) -> list[str]:
+        return self.db.regression_ids
+
     def _get_pheno_images_base_url(self) -> str | None:
         return None if self.config is None \
             else self.config.get("browser_images_url")
@@ -644,15 +647,14 @@ class PhenotypeStudy(PhenotypeData):
                 cast(MeasureType, measure["measure_type"]).name
 
             measure["regressions"] = []
-            regressions = self.db.get_regression_values(
-                measure["measure_id"]) or []
 
-            for reg in regressions:
-                if isnan(reg["pvalue_regression_male"]):
+            for reg_id in self.get_regression_ids():
+                reg = {}
+                if isnan(measure[f"{reg_id}_pvalue_regression_male"]):
                     reg["pvalue_regression_male"] = "NaN"
-                if isnan(reg["pvalue_regression_female"]):
+                if isnan(measure[f"{reg_id}_pvalue_regression_female"]):
                     reg["pvalue_regression_female"] = "NaN"
-                measure["regressions"].append(dict(reg))
+                measure["regressions"].append(reg)
 
             yield {
                 "measure": measure,

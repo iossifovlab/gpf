@@ -3,28 +3,17 @@ from __future__ import annotations
 from collections.abc import Iterator
 from functools import reduce
 from pathlib import Path
-import textwrap
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 import duckdb
 import pandas as pd
 import sqlglot
-from box import Box
-from sqlalchemy import (
-    Column,
-    Float,
-    Integer,
-    MetaData,
-    String,
-    Table,
-    func,
-)
-from sqlalchemy.sql.schema import PrimaryKeyConstraint, UniqueConstraint
+from duckdb import ConstraintException
 from sqlglot import column, expressions, select, table
+from sqlglot.expressions import delete, insert, values
 
 from dae.pheno.common import MeasureType
 from dae.utils.sql_utils import to_duckdb_transpile
-from dae.variants.attributes import Status
 
 
 class PhenoDb:  # pylint: disable=too-many-instance-attributes
@@ -33,20 +22,19 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     PAGE_SIZE = 1001
 
     def __init__(
-            self, dbfile: str, read_only: bool = True,
+            self, dbfile: str, *, read_only: bool = True,
     ) -> None:
-        # self.verify_pheno_folder(folder)
         self.dbfile = dbfile
-        self.connection = duckdb.connect(f"duckdb:///{dbfile}", read_only=True)
-        self.pheno_metadata = MetaData()
+        self.connection = duckdb.connect(
+            f"duckdb:///{dbfile}", read_only=read_only)
         self.variable_browser = table("variable_browser")
-        self.regressions = table("regressions")
+        self.regressions = table("regression")
         self.regression_values = table("regression_values")
         self.family = table("family")
         self.person = table("person")
         self.measure = table("measure")
         self.instrument = table("instrument")
-        self.instrument_values_tables = find_instrument_values_tables()
+        self.instrument_values_tables = self.find_instrument_values_tables()
 
     @staticmethod
     def verify_pheno_folder(folder: Path) -> None:
@@ -65,159 +53,6 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         assert instruments_dir.exists()
         assert instruments_dir.is_dir()
         assert len(list(instruments_dir.glob("*"))) > 0
-
-
-    def build(self) -> None:
-        """Construct all needed table connections."""
-        self._build_person_tables()
-        self._build_instruments_and_measures_table()
-        self._build_browser()
-
-    def _build_person_tables(self) -> None:
-        create_family = sqlglot.parse(textwrap.dedent(
-            """
-            CREATE TABLE family(
-                family_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
-            );
-            CREATE UNIQUE INDEX family_family_id_idx
-                ON family (family_id);
-            """,
-        ))
-
-        create_person = sqlglot.parse(textwrap.dedent(
-            f"""
-            CREATE TABLE person(
-                family_id VARCHAR NOT NULL,
-                person_id VARCHAR NOT NULL,
-                role INT NOT NULL,
-                status INT NOT NULL DEFAULT {Status.unaffected.value},
-                sex INT NOT NULL,
-                sample_id VARCHAR,
-                PRIMARY KEY (family_id, person_id)
-            );
-            CREATE UNIQUE INDEX person_person_id_idx
-                ON person (person_id);
-            """,
-        ))
-
-        queries = [
-            *create_family,
-            *create_person,
-        ]
-
-        with self.connection.cursor() as cursor:
-            for query in queries:
-                cursor.execute(query)
-
-    def _build_instruments_and_measures_table(self) -> None:
-        """Create tables for instruments and measures."""
-        create_instrument = sqlglot.parse(textwrap.dedent(
-            """
-            CREATE TABLE instrument(
-                instrument_name VARCHAR NOT NULL PRIMARY KEY,
-                table_name VARCHAR NOT NULL,
-            );
-            CREATE UNIQUE INDEX instrument_instrument_name_idx
-                ON instrument (instrument_name);
-            """,
-        ))
-
-        create_measure = sqlglot.parse(textwrap.dedent(
-            """
-            CREATE TABLE measure(
-                measure_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
-                db_column_name VARCHAR NOT NULL,
-                measure_name VARCHAR NOT NULL,
-                instrument_name VARCHAR NOT NULL,
-                description VARCHAR,
-                measure_type INT,
-                individuals INT,
-                default_filter VARCHAR,
-                min_value FLOAT,
-                max_value FLOAT,
-                values_domain VARCHAR,
-                rank INT,
-            );
-            CREATE UNIQUE INDEX measure_measure_id_idx
-                ON measure (measure_id);
-            CREATE INDEX measure_measure_name_idx
-                ON measure (measure_name);
-            CREATE INDEX measure_measure_type_idx
-                ON measure (measure_type);
-            """,
-        ))
-
-        queries = [
-            *create_instrument,
-            *create_measure,
-        ]
-
-        with self.connection.cursor() as cursor:
-            for query in queries:
-                cursor.execute(query)
-
-    def _build_browser(self) -> None:
-        create_variable_browser = sqlglot.parse(textwrap.dedent(
-            """
-            CREATE TABLE variable_browser(
-                measure_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
-                instrument_name VARCHAR NOT NULL,
-                measure_name VARCHAR NOT NULL,
-                measure_type INT NOT NULL,
-                description VARCHAR,
-                values_domain VARCHAR,
-                figure_distribution_small VARCHAR,
-                figure_distribution VARCHAR
-            );
-            CREATE UNIQUE INDEX variable_browser_measure_id_idx
-                ON variable_browser (measure_id);
-            CREATE INDEX variable_browser_instrument_name_idx
-                ON variable_browser (instrument_name);
-            CREATE INDEX variable_browser_measure_name_idx
-                ON variable_browser (measure_name);
-            """,
-        ))
-
-        create_regression = sqlglot.parse(textwrap.dedent(
-            """
-            CREATE TABLE regression(
-                regression_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
-                instrument_name VARCHAR,
-                measure_name VARCHAR NOT NULL,
-                display_name VARCHAR,
-            );
-            CREATE UNIQUE INDEX regression_regression_id_idx
-                ON regression (regression_id);
-            """,
-        ))
-
-        create_regression_values = sqlglot.parse(textwrap.dedent(
-            """
-            CREATE TABLE regression_values(
-                regression_id VARCHAR NOT NULL,
-                measure_id VARCHAR NOT NULL,
-                figure_regression VARCHAR,
-                figure_regression_small VARCHAR,
-                pvalue_regression_male DOUBLE,
-                pvalue_regression_female DOUBLE,
-                PRIMARY KEY (regression_id, measure_id)
-            );
-            CREATE INDEX regression_values_regression_id_idx
-                ON regression_values (regression_id);
-            CREATE INDEX regression_values_measure_id_idx
-                ON regression_values (measure_id);
-            """,
-        ))
-
-        queries = [
-            *create_variable_browser,
-            *create_regression,
-            *create_regression_values,
-        ]
-
-        with self.connection.cursor() as cursor:
-            for query in queries:
-                cursor.execute(query)
 
     def find_instrument_values_tables(self) -> dict[str, expressions.Table]:
         """
@@ -251,26 +86,26 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 measure_groups.append(group)
         return measure_groups
 
-    def save(self, v: Dict[str, str | None]) -> None:
+    def save(self, v: dict[str, str | None]) -> None:
         """Save measure values into the database."""
+        query = insert(
+            values([(*v.values(),)]),
+            self.variable_browser,
+            columns=[*v.keys()],
+        )
+
         try:
-            insert = self.variable_browser.insert().values(**v)
-            with self.engine.begin() as connection:
-                connection.execute(insert)
-                connection.commit()
-        except Exception:  # pylint: disable=broad-except
+            with self.connection.cursor() as cursor:
+                cursor.execute(query)
+        except ConstraintException:  # pylint: disable=broad-except
             measure_id = v["measure_id"]
 
-            delete = (
-                self.variable_browser.delete()
-                .where(self.variable_browser.c.measure_id == measure_id)
-            )
-            with self.engine.connect() as connection:
-                connection.execute(delete)
-                connection.commit()
-            with self.engine.connect() as connection:
-                connection.execute(insert)
-                connection.commit()
+            delete_query = delete(
+                self.variable_browser,
+            ).where(f"measure_id = {measure_id}")
+            with self.connection.cursor() as cursor:
+                cursor.execute(delete_query)
+                cursor.execute(query)
 
     def save_regression(self, reg: Dict[str, str]) -> None:
         """Save regressions into the database."""
@@ -316,12 +151,13 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
     def get_browser_measure(self, measure_id: str) -> dict | None:
         """Get measure description from phenotype browser database."""
-        sel = select(self.variable_browser)
-        sel = sel.where(self.variable_browser.c.measure_id == measure_id)
-        with self.engine.connect() as connection:
-            vs = connection.execute(sel).fetchall()
-            if vs:
-                return Box(cast(dict, vs[0]._asdict()))
+        query = select(
+            column("*", self.variable_browser.alias_or_name),
+        ).from_(self.variable_browser).where(f"measure_id = {measure_id}")
+        with self.connection.cursor() as cursor:
+            rows = cursor.execute(query).df()
+            if rows:
+                return rows.to_dict("records")[0]
             return None
 
     def build_measures_query(
@@ -337,17 +173,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         regression_ids = self.regression_ids
 
         query = select(
-            column("measure_id", self.variable_browser.alias_or_name),
-            column("instrument_name", self.variable_browser.alias_or_name),
-            column("measure_name", self.variable_browser.alias_or_name),
-            column("measure_type", self.variable_browser.alias_or_name),
-            column("description", self.variable_browser.alias_or_name),
-            column("values_domain", self.variable_browser.alias_or_name),
-            column(
-                "figure_distribution_small",
-                self.variable_browser.alias_or_name,
-            ),
-            column("figure_distribution", self.variable_browser.alias_or_name),
+            column("*", self.variable_browser.alias_or_name),
         ).from_(self.variable_browser)
 
         for regression_id in regression_ids:
@@ -416,13 +242,13 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     if len(regression) != 2:
                         raise ValueError(f"{sort_by} is an invalid sort column")
                     regression_id, sex = regression
-  
+
                     reg_table = joined_tables[regression_id]
                     if sex == "male":
                         col_name = f"{regression_id}_pvalue_regression_male"
                     elif sex == "female":
                         col_name = f"{regression_id}_pvalue_regression_female"
-  
+
                     column_to_sort = column(col_name)
             if order_by == "desc":
                 query = query.order_by(f"{column_to_sort} DESC")
@@ -482,21 +308,24 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
     @property
     def regression_ids(self) -> list[str]:
-        selector = select(self.regressions.c.regression_id)
-        with self.engine.connect() as connection:
-            return list(map(
-                lambda x: x[0],
-                connection.execute(selector)))
+        query = select(
+            column("regression_id", self.regressions.alias_or_name),
+        ).from_(self.regressions)
+        with self.connection.cursor() as cursor:
+            return [
+                x[0] for x in cursor.execute(query).fetchall()
+            ]
 
     @property
-    def regression_display_names(self) -> Dict[str, str]:
+    def regression_display_names(self) -> dict[str, str]:
         """Return regressions display name."""
         res = {}
-        selector = select(
-            self.regressions.c.regression_id, self.regressions.c.display_name,
-        )
-        with self.engine.connect() as connection:
-            for row in connection.execute(selector):
+        query = select(
+            column("regression_id", self.regressions.alias_or_name),
+            column("display_name", self.regressions.alias_or_name),
+        ).from_(self.regressions)
+        with self.connection.cursor() as cursor:
+            for row in cursor.execute(query).fetchall():
                 res[row[0]] = row[1]
         return res
 
@@ -504,14 +333,14 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     def regression_display_names_with_ids(self) -> dict[str, Any]:
         """Return regression display names with measure IDs."""
         res = {}
-        selector = select(
-            self.regressions.c.regression_id,
-            self.regressions.c.display_name,
-            self.regressions.c.instrument_name,
-            self.regressions.c.measure_name,
-        )
-        with self.engine.connect() as connection:
-            for row in connection.execute(selector):
+        query = select(
+            column("regression_id", self.regressions.alias_or_name),
+            column("display_name", self.regressions.alias_or_name),
+            column("instrument_name", self.regressions.alias_or_name),
+            column("measure_name", self.regressions.alias_or_name),
+        ).from_(self.regressions)
+        with self.connection.cursor() as cursor:
+            for row in cursor.execute(query).fetchall():
                 res[row[0]] = {
                     "display_name": row[1],
                     "instrument_name": row[2],
@@ -522,14 +351,15 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     @property
     def has_descriptions(self) -> bool:
         """Check if the database has a description data."""
-        with self.engine.connect() as connection:
-            return bool(
-                connection.execute(
-                    select(func.count())  # pylint: disable=not-callable
-                    .select_from(self.variable_browser)
-                    .where(Column("description").isnot(None)),
-                ).scalar(),
-            )
+        with self.connection.cursor() as cursor:
+            row = cursor.execute(
+                select("COUNT(*)")
+                .from_(self.variable_browser)
+                .where("description IS NOT NULL"),
+            ).fetchone()
+            if row is None:
+                return False
+            return bool(row[0])
 
 def safe_db_name(name: str) -> str:
     name = name.replace(".", "_").replace("-", "_").replace(" ", "_").lower()
