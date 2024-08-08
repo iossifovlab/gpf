@@ -63,17 +63,21 @@ class ReferenceGenome(
     @property
     def chromosomes(self) -> list[str]:
         """Return a list of all chromosomes of the reference genome."""
+        self._load_genome_index()
         return self._chromosomes
 
     @property
     def chrom_prefix(self) -> str:
         """Return a prefix of all chromosomes of the reference genome."""
+        self._load_genome_index()
         chrom = self._chromosomes[0]
         if chrom.startswith("chr"):
             return "chr"
         return ""
 
     def _load_genome_index(self) -> None:
+        if self._index:
+            return
         config = self.resource.get_config()
         file_name = config["filename"]
         index_file_name = config.get(
@@ -141,9 +145,7 @@ class ReferenceGenome(
 
     def get_chrom_length(self, chrom: str) -> int:
         """Return the length of a specified chromosome."""
-        if not self._index:
-            logger.info("genome index not loaded; loading")
-            self._load_genome_index()
+        self._load_genome_index()
         chrom_data = self._index.get(chrom)
         if chrom_data is None:
             raise ValueError(f"can't find chromosome {chrom}")
@@ -151,9 +153,7 @@ class ReferenceGenome(
 
     def get_all_chrom_lengths(self) -> list[tuple[str, int]]:
         """Return list of all chromosomes lengths."""
-        if not self._index:
-            logger.info("genome index not loaded; loading")
-            self._load_genome_index()
+        self._load_genome_index()
         return [
             (key, value["length"])
             for key, value in self._index.items()]
