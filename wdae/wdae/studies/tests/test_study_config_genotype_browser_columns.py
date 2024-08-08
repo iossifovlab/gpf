@@ -4,6 +4,8 @@ import textwrap
 import pytest
 import yaml
 
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.studies.study import GenotypeData
 from dae.testing import (
     alla_gpf,
     denovo_study,
@@ -15,15 +17,17 @@ from studies.study_wrapper import StudyWrapper
 
 
 @pytest.fixture()
-def gpf_fixture(tmp_path_factory):
+def gpf_fixture(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp(
         "genotype_browser_columns_config")
-    gpf_instance = alla_gpf(root_path)
-    return gpf_instance
+    return alla_gpf(root_path)
 
 
 @pytest.fixture()
-def trio_study(tmp_path_factory, gpf_fixture):
+def trio_study(
+    tmp_path_factory: pytest.TempPathFactory,
+    gpf_fixture: GPFInstance,
+) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         "genotype_browser_columns_config")
     ped_path = setup_pedigree(
@@ -33,6 +37,7 @@ def trio_study(tmp_path_factory, gpf_fixture):
         f1       m1       0      0      2   1      mom
         f1       d1       0      0      1   1      dad
         f1       p1       d1     m1     1   2      prb
+        f1       s1       d1     m1     1   1      sib
         """)
     vcf_path = setup_denovo(
         root_path / "trio_data" / "in.tsv",
@@ -42,17 +47,18 @@ def trio_study(tmp_path_factory, gpf_fixture):
         """,
     )
 
-    study = denovo_study(
+    return denovo_study(
         root_path,
         "trio", ped_path, [vcf_path],
         gpf_fixture,
         study_config_update={
             "id": "trio",
         })
-    return study
 
 
-def test_genotype_browser_preview_columns_default(trio_study):
+def test_genotype_browser_preview_columns_default(
+    trio_study: GenotypeData,
+) -> None:
     config = trio_study.config.genotype_browser
 
     assert config.preview_columns == [
@@ -60,7 +66,10 @@ def test_genotype_browser_preview_columns_default(trio_study):
     ]
 
 
-def test_genotype_browser_download_columns_default(trio_study):
+def test_genotype_browser_download_columns_default(
+    trio_study: GenotypeData,
+) -> None:
+
     config = trio_study.config.genotype_browser
 
     assert config.download_columns == [
@@ -73,7 +82,10 @@ def test_genotype_browser_download_columns_default(trio_study):
     ]
 
 
-def test_genotype_browser_preview_columns_ext(trio_study, gpf_fixture):
+def test_genotype_browser_preview_columns_ext(
+    trio_study: GenotypeData,
+    gpf_fixture: GPFInstance,
+) -> None:
     study = study_update(
         gpf_fixture, trio_study, yaml.safe_load(textwrap.dedent("""
         genotype_browser:
@@ -92,7 +104,11 @@ def test_genotype_browser_preview_columns_ext(trio_study, gpf_fixture):
     ]
 
 
-def test_genotype_browser_download_columns_ext(trio_study, gpf_fixture):
+def test_genotype_browser_download_columns_ext(
+    trio_study: GenotypeData,
+    gpf_fixture: GPFInstance,
+) -> None:
+
     study = study_update(
         gpf_fixture, trio_study, yaml.safe_load(textwrap.dedent("""
         genotype_browser:
@@ -111,7 +127,11 @@ def test_genotype_browser_download_columns_ext(trio_study, gpf_fixture):
     ]
 
 
-def test_study_wrapper_preview_columns_ext(trio_study, gpf_fixture):
+def test_study_wrapper_preview_columns_ext(
+    trio_study: GenotypeData,
+    gpf_fixture: GPFInstance,
+) -> None:
+
     study = study_update(
         gpf_fixture, trio_study, yaml.safe_load(textwrap.dedent("""
         genotype_browser:
@@ -124,13 +144,17 @@ def test_study_wrapper_preview_columns_ext(trio_study, gpf_fixture):
                 - aaa
         """)),
     )
-    wrapper = StudyWrapper(study, None, None, None)
+    wrapper = StudyWrapper(study, None, None, None)  # type: ignore
     assert wrapper.preview_columns == [
         "family", "variant", "genotype", "effect", "gene_scores", "freq", "aaa",
     ]
 
 
-def test_study_wrapper_download_columns_ext(trio_study, gpf_fixture):
+def test_study_wrapper_download_columns_ext(
+    trio_study: GenotypeData,
+    gpf_fixture: GPFInstance,
+) -> None:
+
     study = study_update(
         gpf_fixture, trio_study, yaml.safe_load(textwrap.dedent("""
         genotype_browser:
@@ -143,7 +167,7 @@ def test_study_wrapper_download_columns_ext(trio_study, gpf_fixture):
                 - aaa
         """)),
     )
-    wrapper = StudyWrapper(study, None, None, None)
+    wrapper = StudyWrapper(study, None, None, None)  # type: ignore
     assert wrapper.download_columns == [
         "family", "study_phenotype", "variant", "variant_extra",
         "family_person_ids", "family_structure", "best", "family_genotype",

@@ -2,7 +2,6 @@ import logging
 import time
 from typing import Any, cast
 
-import numpy as np
 import pandas as pd
 import yaml
 from google.cloud import bigquery
@@ -10,9 +9,9 @@ from google.cloud import bigquery
 from dae.genomic_resources.gene_models import GeneModels
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
 from dae.query_variants.sql.schema2.base_variants import SqlSchema2Variants
-from dae.variants.attributes import Inheritance, Role, Sex, Status
+from dae.variants.attributes import Role, Sex, Status
 from dae.variants.family_variant import FamilyVariant
-from dae.variants.variant import SummaryVariant, SummaryVariantFactory
+from dae.variants.variant import SummaryVariant
 from gcp_storage.bigquery_query_runner import BigQueryQueryRunner
 
 logger = logging.getLogger(__name__)
@@ -137,30 +136,12 @@ class BigQueryVariants(SqlSchema2Variants):
     def _deserialize_summary_variant(
         self, record: Any,
     ) -> SummaryVariant:
-        sv_record = self.serializer.deserialize_summary_record(
-            record.summary_variant_data)
-        return SummaryVariantFactory.summary_variant_from_records(
-            sv_record,
-        )
+        return self.deserialize_summary_variant(record.summary_variant_data)
 
     def _deserialize_family_variant(
         self, record: Any,
     ) -> FamilyVariant:
-        sv_record = self.serializer.deserialize_summary_record(
-            record.summary_variant_data)
-        fv_record = self.serializer.deserialize_family_record(
-            record.family_variant_data)
-        inheritance_in_members = {
-            int(k): [Inheritance.from_value(inh) for inh in v]
-            for k, v in fv_record["inheritance_in_members"].items()
-        }
-
-        return FamilyVariant(
-            SummaryVariantFactory.summary_variant_from_records(
-                sv_record,
-            ),
-            self.families[fv_record["family_id"]],
-            np.array(fv_record["genotype"]),
-            np.array(fv_record["best_state"]),
-            inheritance_in_members=inheritance_in_members,
+        return self.deserialize_family_variant(
+            record.summary_variant_data,
+            record.family_variant_data,
         )

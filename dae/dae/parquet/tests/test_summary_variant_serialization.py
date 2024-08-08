@@ -4,9 +4,6 @@ import json
 import pytest
 import pyzstd
 
-from dae.parquet.schema2.variant_serializers import (
-    ZstdIndexedVariantsDataSerializer,
-)
 from dae.variants.variant import SummaryVariant, SummaryVariantFactory
 
 SUMMARY_SCHEMA = {
@@ -366,43 +363,3 @@ ANNOTATION_FIELDS = [
     "genome_gnomad_v3_ac",
     "genome_gnomad_v3_an",
 ]
-
-
-def test_zstd_indexed_serialization(sv: SummaryVariant) -> None:
-    meta = ZstdIndexedVariantsDataSerializer.build_serialization_meta(
-        ANNOTATION_FIELDS,
-    )
-    serializer = ZstdIndexedVariantsDataSerializer(meta)
-    assert serializer is not None
-
-    data = serializer.serialize_summary(sv)
-
-    record = serializer.deserialize_summary_record(data)
-    sv2 = SummaryVariantFactory.summary_variant_from_records(record)
-    assert sv2 is not None
-
-    assert sv2 == sv
-
-    assert sv2.summary_index == 12
-    assert sv2.chromosome == "chr1"
-    assert sv2.position == 213094429
-    assert sv2.end_position == 213094434
-
-    assert sv2.allele_count == 2
-    assert len(sv2.alt_alleles) == 1
-
-    sa = sv2.alt_alleles[0]
-    assert sa.alternative == "T"
-    assert sa.reference == "TTAATC"
-    assert sa.get_attribute("af_allele_count") == 137
-    assert sa.get_attribute("af_allele_freq") == 4.07
-    assert sa.get_attribute("af_parents_called_count") == 1684
-    assert sa.get_attribute("af_parents_called_percent") == 98.02
-    assert sa.get_attribute("seen_as_denovo") is False
-    assert sa.get_attribute("seen_in_status") == 3
-    assert sa.get_attribute("family_variants_count") == 134
-
-    assert {str(eg) for eg in sa.effect_genes} == {
-        "RPS6KC1:intron", "RPS6KC1:5'UTR-intron",
-        "RPS6KC1:non-coding-intron",
-    }

@@ -19,7 +19,6 @@ from dae.parquet.parquet_writer import (
     append_meta_to_parquet,
     merge_variants_parquets,
     serialize_summary_schema,
-    serialize_variants_data_schema,
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.parquet_io import VariantsParquetWriter
@@ -71,7 +70,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         region: str,
         grr_definition: dict,
         bucket_idx: int,
-        allow_repeated_attributes: bool,
+        allow_repeated_attributes: bool,  # noqa: FBT001
     ) -> None:
         """Run annotation over a given directory of Parquet files."""
         loader = ParquetLoader(input_dir)
@@ -132,21 +131,17 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         meta_keys = [
             "annotation_pipeline",
             "summary_schema",
-            "variants_data_schema",
         ]
         meta_values = [
             yaml.dump(pipeline_raw_config, sort_keys=False),
             serialize_summary_schema(
                 pipeline.get_attributes(),
                 loader.partition_descriptor),
-            serialize_variants_data_schema(
-                pipeline.get_attributes()),
         ]
         for k, v in loader.meta.items():
             if k in {
                     "annotation_pipeline",
-                    "summary_schema",
-                    "variants_data_schema"}:
+                    "summary_schema"}:
                 continue  # ignore old annotation
             meta_keys.append(k)
             meta_values.append(str(v))
@@ -172,7 +167,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             raise ValueError("Invalid family dir in output layout!")
 
         pipeline = AnnotateSchema2ParquetTool._produce_annotation_pipeline(
-            self.pipeline.raw,
+            self.pipeline.raw,  # type: ignore
             (loader.meta["annotation_pipeline"]
              if loader.has_annotation else None),
             self.grr.definition,
@@ -181,7 +176,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
         self._write_meta(
             layout, loader,
-            self.pipeline.raw,
+            self.pipeline.raw,  # type: ignore
             pipeline,
         )
 

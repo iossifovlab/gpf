@@ -15,7 +15,6 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
 from dae.parquet.schema2.variant_serializers import (
     VariantsDataSerializer,
-    ZstdIndexedVariantsDataSerializer,
 )
 from dae.utils import fs_utils
 from dae.utils.variant_utils import (
@@ -184,13 +183,7 @@ class VariantsParquetWriter:
         self.out_dir = out_dir
 
         if serializer is None:
-            annotation_fields = [
-                a.name for a in annotation_schema
-                if not a.internal
-            ]
-            meta = ZstdIndexedVariantsDataSerializer.build_serialization_meta(
-                annotation_fields)
-            serializer = VariantsDataSerializer.build_serializer(meta)
+            serializer = VariantsDataSerializer.build_serializer()
         self.serializer = serializer
 
         self.bucket_index = bucket_index
@@ -245,6 +238,7 @@ class VariantsParquetWriter:
                 filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_family",
+                blob_column="family_variant_data",
             )
 
         return self.data_writers[filename]
@@ -263,15 +257,14 @@ class VariantsParquetWriter:
                 filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_summary",
+                blob_column="summary_variant_data",
             )
 
         return self.data_writers[filename]
 
     def _calc_sj_index(self, summary_index: int, allele_index: int) -> int:
         assert allele_index < 10_000, "too many alleles"
-        return (
-            self.bucket_index * 1_000_000_000
-            + summary_index) * 10_000 + allele_index
+        return self._calc_sj_base_index(summary_index) + allele_index
 
     def _calc_sj_base_index(self, summary_index: int) -> int:
         return (

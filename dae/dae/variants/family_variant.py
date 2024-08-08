@@ -1,6 +1,6 @@
 import copy
 import logging
-from typing import Any, List, cast
+from typing import Any, cast
 
 import numpy as np
 from deprecation import deprecated
@@ -106,7 +106,6 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
         self.gt = genotype
 
-        # assert self.gt.dtype == GenotypeType, (self.gt, self.gt.dtype)
         self._best_state = best_state
         if genetic_model is None:
             self._genetic_model = GeneticModel.autosomal
@@ -122,7 +121,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         self._family_index: int | None = None
         self._family_attributes: dict = {}
 
-        self.matched_gene_effects: List = []
+        self.matched_gene_effects: list = []
 
     def __repr__(self) -> str:
         allele_repr = SummaryAllele.__repr__(self)
@@ -302,9 +301,12 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
                 gt[gt != allele_index] = -1
 
             index = np.any(gt == allele_index, axis=0)
+            assert len(index) == len(self.members_in_order)
+
             self._variant_in_members = [
                 m.person_id if has_variant else None
-                for m, has_variant in zip(self.members_in_order, index)
+                for m, has_variant in zip(
+                    self.members_in_order, index, strict=True)
             ]
 
         return self._variant_in_members
@@ -484,8 +486,6 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         inheritance_in_members: dict[int, list[Inheritance]] | None = None,
     ):
 
-        # super(FamilyVariant, self).__init__()
-
         assert family is not None
         assert isinstance(family, Family)
         FamilyDelegate.__init__(self, family)
@@ -495,7 +495,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         self.gt = genotype
         self._genetic_model: GeneticModel | None = None
 
-        self._family_alleles: List[FamilyAllele] | None = None
+        self._family_alleles: list[FamilyAllele] | None = None
         self._best_state = best_state
 
         self._fvuid: str | None = None
@@ -542,9 +542,12 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
 
     @property
     def fvuid(self) -> str:
+        """Construct and return the family variant unique identifier."""
         if self._fvuid is None:
-            self._fvuid = f"{self.family_id}.{self.location}" \
+            self._fvuid = (
+                f"{self.family_id}.{self.location}"
                 f".{self.reference}.{self.alternative}"
+            )
         return self._fvuid
 
     @property
@@ -562,10 +565,6 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
     @property
     def reference(self) -> str | None:
         return self.summary_variant.reference
-
-    # @property
-    # def alternative(self) -> Optional[str]:
-    #     return self.summary_variant.alternative
 
     @property
     def end_position(self) -> int | None:
@@ -614,7 +613,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         return cast(list[FamilyAllele], self._family_alleles)
 
     @property
-    def family_alt_alleles(self) -> List[FamilyAllele]:
+    def family_alt_alleles(self) -> list[FamilyAllele]:
         return self.family_alleles[1:]
 
     def gt_flatten(self) -> np.ndarray:
@@ -647,7 +646,11 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
     def family_genotype(self) -> list[list[int]]:
         """Return family genotype using family variant indexes."""
         assert self.gt is not None
-        gt2fgt = zip(self.allele_indexes, self.family_allele_indexes)
+        gt2fgt = zip(
+            self.allele_indexes,
+            self.family_allele_indexes,
+            strict=True,
+        )
         fgt = np.zeros(shape=self.gt.shape, dtype=np.int8)
         # pylint: disable=invalid-name
         for gi, fgi in gt2fgt:
@@ -691,7 +694,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         :return: list of all alternative allele indexes present into
                  genotype passed.
         """
-        return sorted(list(set(gt.flatten()).difference({0})))
+        return sorted(set(gt.flatten()).difference({0}))
 
     @staticmethod
     def calc_alleles(gt: np.ndarray) -> list[int]:
@@ -701,7 +704,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         :param gt: genotype as `np.array`.
         :return: list of all allele indexes present into genotype passed.
         """
-        return sorted(list(set(gt.flatten()).difference({-1})))
+        return sorted(set(gt.flatten()).difference({-1}))
 
     @property
     def variant_in_members(self) -> set[str]:
@@ -731,4 +734,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             "genotype": self.gt.tolist(),
             "best_state": self.best_state.tolist(),
             "inheritance_in_members": self._serialize_inheritance_in_members(),
+            "family_variant_attributes": [
+                allele.family_attributes for allele in self.family_alt_alleles
+            ],
         }

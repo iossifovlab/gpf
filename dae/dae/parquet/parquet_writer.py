@@ -7,16 +7,12 @@ import fsspec
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-import yaml
 
 from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.parquet import helpers as parquet_helpers
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
-from dae.parquet.schema2.variant_serializers import (
-    ZstdIndexedVariantsDataSerializer,
-)
 from dae.pedigrees.families_data import FamiliesData
 from dae.utils import fs_utils
 
@@ -200,17 +196,3 @@ def serialize_summary_schema(
     return "\n".join([
         f"{n}|{t}" for n, t in schema
     ])
-
-
-def serialize_variants_data_schema(
-    annotation_attributes: list[AttributeInfo],
-) -> str:
-    """Serialize the variants data schema."""
-    annotation_fields = [
-        attr.name
-        for attr in annotation_attributes
-        if not attr.internal
-    ]
-    return yaml.dump(
-        ZstdIndexedVariantsDataSerializer.build_serialization_meta(
-            annotation_fields))

@@ -13,8 +13,6 @@ from dae.testing import (
 )
 from dae.testing.acgt_import import acgt_gpf
 
-# from dae.pedigrees.loader import FamiliesLoader
-
 
 @pytest.fixture()
 def dataset(
@@ -175,7 +173,7 @@ f2       ch2      dad2  mom2  2   2      prb
 
 
 def test_dataset_build_person_set_collection(
-    tmp_path: pathlib.Path, dataset: GenotypeDataGroup,
+    dataset: GenotypeDataGroup,
 ) -> None:
 
     assert dataset is not None

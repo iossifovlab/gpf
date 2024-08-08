@@ -13,16 +13,12 @@ from dae.parquet.parquet_writer import (
     merge_variants_parquets,
     save_ped_df_to_parquet,
     serialize_summary_schema,
-    serialize_variants_data_schema,
 )
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.parquet_io import (
     VariantsParquetWriter,
 )
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
-from dae.parquet.schema2.variant_serializers import (
-    ZstdIndexedVariantsDataSerializer,
-)
 from dae.schema2_storage.schema2_layout import (
     Schema2DatasetLayout,
     create_schema2_dataset_layout,
@@ -60,13 +56,6 @@ class Schema2ImportStorage(ImportStorage):
             os.makedirs(dirname, exist_ok=True)
         save_ped_df_to_parquet(
             families.ped_df, layout.pedigree)
-
-    @classmethod
-    def _serialize_variants_data_schema(cls, project: ImportProject) -> str:
-        annotation_pipeline = project.build_annotation_pipeline()
-        return serialize_variants_data_schema(
-            annotation_pipeline.get_attributes(),
-        )
 
     @classmethod
     def _serialize_summary_schema(cls, project: ImportProject) -> str:
@@ -137,7 +126,6 @@ class Schema2ImportStorage(ImportStorage):
                 "study",
                 "contigs",
 
-                "variants_data_schema",
             ],
             [
                 cls._get_partition_description(project).serialize(),
@@ -151,7 +139,6 @@ class Schema2ImportStorage(ImportStorage):
                 study,
                 contigs,
 
-                cls._serialize_variants_data_schema(project),
             ])
 
     @classmethod
@@ -174,19 +161,10 @@ class Schema2ImportStorage(ImportStorage):
         logger.debug("argv.rows: %s", row_group_size)
         annotation_pipeline = project.build_annotation_pipeline()
 
-        meta = ZstdIndexedVariantsDataSerializer.build_serialization_meta(
-            [
-                attr.name
-                for attr in annotation_pipeline.get_attributes()
-                if not attr.internal
-            ])
-        serializer = ZstdIndexedVariantsDataSerializer(meta)
-
         variants_writer = VariantsParquetWriter(
             out_dir=layout.study,
             annotation_schema=annotation_pipeline.get_attributes(),
             partition_descriptor=cls._get_partition_description(project),
-            serializer=serializer,
             bucket_index=bucket.index,
             row_group_size=row_group_size,
             include_reference=project.include_reference,

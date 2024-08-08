@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
+from collections.abc import Callable
 from glob import glob
-from typing import Callable
 
 import pytest
 import pytest_mock
@@ -108,8 +108,7 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
     setup_denovo(root_path / "one" / "data.txt", one_content)
     setup_denovo(root_path / "two" / "data.txt", two_content)
     setup_denovo(root_path / "three" / "data.txt", three_content)
-    gpf_instance = t4c8_gpf(root_path)
-    return gpf_instance
+    return t4c8_gpf(root_path)
 
 
 @pytest.fixture()

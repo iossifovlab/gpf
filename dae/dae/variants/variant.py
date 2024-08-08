@@ -4,7 +4,8 @@ from __future__ import annotations
 import enum
 import itertools
 import logging
-from typing import Any, Callable, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 import pysam
 
@@ -420,12 +421,14 @@ class SummaryAllele(core.Allele):
                         zip(
                             record["effect_gene_genes"],
                             record["effect_gene_types"],
+                            strict=True,
                         ),
                     ),
                     list(
                         zip(
                             record["effect_details_transcript_ids"],
                             record["effect_details_details"],
+                            strict=True,
                         ),
                     ),
                 )

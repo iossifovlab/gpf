@@ -1,5 +1,5 @@
 familyId	chrom	pos	ref	alt	bestState
 f1	1	123	A	G	2 2 1 2 1/0 0 1 0 1
 f1	2	234	T	A	2 2 1 2 2/0 0 1 0 0
-f2	2	234	T	A	2 2 1 2 2/0 0 1 0 0
+f2	2	234	T	A	2 2 1 2/0 0 1 0
 f4	4	456	G	A	1 1/1 1

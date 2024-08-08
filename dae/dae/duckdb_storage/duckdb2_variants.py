@@ -6,7 +6,6 @@ from contextlib import closing
 from typing import Any, cast
 
 import duckdb
-import numpy as np
 import pandas as pd
 import yaml
 
@@ -14,7 +13,6 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.parquet.partition_descriptor import PartitionDescriptor
-from dae.parquet.schema2.variant_serializers import VariantsDataSerializer
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import PersonSetCollection
@@ -25,9 +23,9 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
     SqlQueryBuilder,
 )
 from dae.utils.regions import Region
-from dae.variants.attributes import Inheritance, Role, Sex, Status
+from dae.variants.attributes import Role, Sex, Status
 from dae.variants.family_variant import FamilyVariant
-from dae.variants.variant import SummaryVariant, SummaryVariantFactory
+from dae.variants.variant import SummaryVariant
 
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 
@@ -136,7 +134,8 @@ class DuckDb2Variants(QueryVariantsBase):
             family_schema=family_schema,
         )
         partition_description = self._fetch_partition_descriptor()
-        self.families = self._fetch_families()
+        families = self._fetch_families()
+        super().__init__(families)
 
         self.query_builder = SqlQueryBuilder(
             self.layout,
@@ -145,10 +144,6 @@ class DuckDb2Variants(QueryVariantsBase):
             families=self.families,
             gene_models=self.gene_models,
             reference_genome=self.reference_genome,
-        )
-        variants_data_schema = self._fetch_variants_data_schema()
-        self.serializer = VariantsDataSerializer.build_serializer(
-            variants_data_schema,
         )
 
     def _fetch_meta_property(self, key: str) -> str:
@@ -225,28 +220,15 @@ class DuckDb2Variants(QueryVariantsBase):
     def _deserialize_summary_variant(
         self, record: list[bytes],
     ) -> SummaryVariant:
-        sv_record = self.serializer.deserialize_summary_record(record[3])
-        return SummaryVariantFactory.summary_variant_from_records(
-            sv_record,
+        return self.deserialize_summary_variant(
+            record[3],
         )
 
     def _deserialize_family_variant(
         self, record: list[bytes],
     ) -> FamilyVariant:
-        sv_record = self.serializer.deserialize_summary_record(record[4])
-        fv_record = self.serializer.deserialize_family_record(record[5])
-        inheritance_in_members = {
-            int(k): [Inheritance.from_value(inh) for inh in v]
-            for k, v in fv_record["inheritance_in_members"].items()
-        }
-        return FamilyVariant(
-            SummaryVariantFactory.summary_variant_from_records(
-                sv_record,
-            ),
-            self.families[fv_record["family_id"]],
-            np.array(fv_record["genotype"]),
-            np.array(fv_record["best_state"]),
-            inheritance_in_members=inheritance_in_members,
+        return self.deserialize_family_variant(
+            record[4], record[5],
         )
 
     def build_summary_variants_query_runner(
