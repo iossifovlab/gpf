@@ -128,7 +128,7 @@
             </label>
             <input
               #searchBox
-              (keyup)="searchKeystrokes$.next(searchBox.value)"
+              (keyup)="searchValue$.next(searchBox.value)"
               id="gene-search-input"
               class="search-input form-control"
               autocomplete="off"
@@ -136,11 +136,11 @@
               placeholder="Search gene"
               type="text"
               spellcheck="false"
-              [value]="loadedSearchValue" />
+              [value]="searchValue$ | async" />
             <span
               *ngIf="searchBox.value !== '' && !showSearchLoading"
               class="material-symbols-outlined search-clear-icon"
-              (click)="searchBox.value = ''; searchKeystrokes$.next(searchBox.value); showSearchLoading = true"
+              (click)="searchBox.value = ''; searchValue$.next(searchBox.value); showSearchLoading = true"
               >close</span
             >
             <span *ngIf="showSearchLoading" class="material-symbols-outlined search-loading-icon"

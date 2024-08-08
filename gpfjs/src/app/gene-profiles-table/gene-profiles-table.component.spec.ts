@@ -323,7 +323,7 @@ describe('GeneProfilesTableComponent', () => {
     component.ngOnChanges();
     component.search('mockSearch');
 
-    expect(component.geneInput).toBe('mockSearch');
+    expect(component.searchValue$.value).toBe('mockSearch');
     expect(component.genes[0]).toStrictEqual(genesMock[0]);
     expect(component.genes[1]).toStrictEqual(genesMock[1]);
     expect(component.genes[2]).toStrictEqual(genesMock[2]);
@@ -481,7 +481,7 @@ describe('GeneProfilesTableComponent', () => {
 
   it('should load user gene proifles state', () => {
     expect(component.tabs).toStrictEqual(new Set(['DYRK1A,FOXP1,SPAST', 'POGZ']));
-    expect(component.loadedSearchValue).toBe('chd');
+    expect(component.searchValue$.value).toBe('chd');
     expect(component.highlightedGenes).toStrictEqual(new Set(['CHD8']));
     expect(component.orderBy).toBe('desc');
     expect(component.leavesIds).toEqual([
@@ -497,7 +497,7 @@ describe('GeneProfilesTableComponent', () => {
 
   it('should reset table state', () => {
     component.tabs = new Set(['POGZ']);
-    component.loadedSearchValue = 'chd';
+    component.searchValue$.next('chd');
     component.highlightedGenes = new Set(['CHD8']);
     component.orderBy = 'desc';
     component.sortBy = 'column1';
@@ -509,7 +509,7 @@ describe('GeneProfilesTableComponent', () => {
 
     component.resetState();
     expect(component.tabs).toStrictEqual(new Set());
-    expect(component.loadedSearchValue).toBe('');
+    expect(component.searchValue$.value).toBe('');
     expect(component.highlightedGenes).toStrictEqual(new Set());
     expect(component.orderBy).toBe('desc');
     expect(component.sortBy).toBe('column1');
