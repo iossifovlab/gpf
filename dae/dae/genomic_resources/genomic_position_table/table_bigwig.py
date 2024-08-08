@@ -23,12 +23,14 @@ class BigWigTable(GenomicPositionTable):
         self.chroms: dict[str, int] = {}
         self._buffer: list[tuple[int, int, float]] = []
         self._buffer_region: Region = Region("?", -1, -1)
-        self._last_pos = -1
 
         self.direct_fetch_size = self.definition.get("direct_fetch_size", 50)
         self.buffer_fetch_size = self.definition.get("buffer_fetch_size", 500)
         self.use_buffered_threshold = \
             self.definition.get("use_buffered_threshold", 500)
+
+        # this forces the initial fetch to be made directly
+        self._last_pos = -(self.use_buffered_threshold + 1)
 
     def open(self) -> BigWigTable:
         self._bw_file = self.genomic_resource.open_bigwig_file(
