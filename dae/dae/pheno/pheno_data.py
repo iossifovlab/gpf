@@ -11,8 +11,7 @@ from typing import Any, cast
 
 import pandas as pd
 from box import Box
-from sqlalchemy import Select, not_
-from sqlalchemy.sql import select, union
+from sqlglot import column, select
 
 from dae.pheno.common import MeasureType
 from dae.pheno.db import PhenoDb, safe_db_name
@@ -39,6 +38,7 @@ def get_pheno_db_dir(dae_config: Box | None) -> str:
 
 
 def get_pheno_browser_images_dir(dae_config: Box | None = None) -> str:
+    """Get images directory for pheno DB."""
     pheno_db_dir = os.environ.get(
         "DAE_PHENODB_DIR",
         get_pheno_db_dir(dae_config),
@@ -46,7 +46,7 @@ def get_pheno_browser_images_dir(dae_config: Box | None = None) -> str:
     browser_images_path = os.path.join(pheno_db_dir, "images")
     if not os.path.exists(browser_images_path):
         logger.error(
-            "Pheno images path %s does not exist!", browser_images_path
+            "Pheno images path %s does not exist!", browser_images_path,
         )
     return browser_images_path
 
@@ -107,8 +107,10 @@ class Measure:
         self.max_value = None
 
     def __repr__(self) -> str:
-        return f"Measure({self.measure_id}, " \
+        return (
+            f"Measure({self.measure_id}, "
             f"{self.measure_type}, {self.values_domain})"
+        )
 
     @property
     def domain(self) -> Sequence[str | float]:
@@ -225,7 +227,7 @@ class PhenotypeData(ABC):
         sort_by: str | None = None,
         order_by:  str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
-        pass
+        """Yield measures in the DB according to filters."""
 
     def has_measure(self, measure_id: str) -> bool:
         """Check if phenotype DB contains a measure by ID."""
@@ -264,7 +266,7 @@ class PhenotypeData(ABC):
         if measure_type is not None:
             assert isinstance(measure_type, MeasureType)
 
-        for _, instrument in instruments.items():
+        for instrument in instruments.values():
             for measure in instrument.measures.values():
                 if measure_type is not None and \
                         measure.measure_type != measure_type:
@@ -293,10 +295,9 @@ class PhenotypeData(ABC):
         """Return measures for given instrument."""
         assert instrument_name in self.instruments
         instrument = self.instruments[instrument_name]
-        measure_ids = [
+        return [
             m.measure_id for m in list(instrument.measures.values())
         ]
-        return measure_ids
 
     @abstractmethod
     def get_people_measure_values(
@@ -370,7 +371,7 @@ class PhenotypeStudy(PhenotypeData):
 
     def __init__(
             self, pheno_id: str, dbfile: str,
-            config: Box | None = None, read_only: bool = True) -> None:
+            config: Box | None = None, *, read_only: bool = True) -> None:
         super().__init__(pheno_id, config)
 
         self.db = PhenoDb(dbfile, read_only=read_only)
@@ -404,27 +405,27 @@ class PhenotypeStudy(PhenotypeData):
         assert instrument is None or instrument in self.instruments
         assert measure_type is None or isinstance(measure_type, MeasureType)
 
-        measure = self.db.measure
+        measure_table = self.db.measure
         columns = [
-            measure.c.measure_id,
-            measure.c.instrument_name,
-            measure.c.measure_name,
-            measure.c.description,
-            measure.c.measure_type,
-            measure.c.individuals,
-            measure.c.default_filter,
-            measure.c.values_domain,
-            measure.c.min_value,
-            measure.c.max_value,
+            column("measure_id", measure_table.alias_or_name),
+            column("instrument_name", measure_table.alias_or_name),
+            column("measure_name", measure_table.alias_or_name),
+            column("description", measure_table.alias_or_name),
+            column("measure_type", measure_table.alias_or_name),
+            column("individuals", measure_table.alias_or_name),
+            column("default_filter", measure_table.alias_or_name),
+            column("values_domain", measure_table.alias_or_name),
+            column("min_value", measure_table.alias_or_name),
+            column("max_value", measure_table.alias_or_name),
         ]
-        query = select(*columns)
-        query = query.where(not_(measure.c.measure_type.is_(None)))
+        query = select(*columns).where("measure_type IS NOT NULL")
         if instrument is not None:
-            query = query.where(measure.c.instrument_name == instrument)
+            query = query.where(f"instrument_name == {instrument}")
         if measure_type is not None:
-            query = query.where(measure.c.measure_type == measure_type.value)
+            query = query.where(f"measure_type == {measure_type.value}")
 
-        df = pd.read_sql(query, self.db.engine)
+        with self.db.connection.cursor() as cursor:
+            df = cursor.execute(query).df()
 
         df_columns = [
             "measure_id",
@@ -438,8 +439,7 @@ class PhenotypeStudy(PhenotypeData):
             "min_value",
             "max_value",
         ]
-        res_df = df[df_columns]
-        return res_df
+        return df[df_columns]
 
     def _load_instruments(self, df: pd.DataFrame) -> dict[str, Instrument]:
         instruments = {}
@@ -709,7 +709,7 @@ class PhenotypeGroup(PhenotypeData):
         return res
 
     def get_measures_info(self) -> dict[str, Any]:
-        result = {
+        result: dict[str, Any] = {
             "base_image_url": None,
             "has_descriptions": False,
             "regression_names": {},

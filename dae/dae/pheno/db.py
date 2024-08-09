@@ -10,7 +10,7 @@ import pandas as pd
 import sqlglot
 from duckdb import ConstraintException
 from sqlglot import column, expressions, select, table
-from sqlglot.expressions import delete, insert, values
+from sqlglot.expressions import delete, insert, update, values
 
 from dae.pheno.common import MeasureType
 from dae.utils.sql_utils import to_duckdb_transpile, glot_and
@@ -108,47 +108,51 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 cursor.execute(delete_query)
                 cursor.execute(query)
 
-    def save_regression(self, reg: Dict[str, str]) -> None:
+    def save_regression(self, reg: dict[str, str]) -> None:
         """Save regressions into the database."""
+        query = to_duckdb_transpile((
+            values([(*reg.values(),)]),
+            self.regressions,
+            columns=[*reg.keys()],
+        ))
         try:
-            insert = to_duckdb_transpile(self.regressions.insert().values(reg))
-            with self.engine.begin() as connection:
-                connection.execute(insert)
-        except Exception:  # pylint: disable=broad-except
+            with self.connection.cursor() as cursor:
+                cursor.execute(query)
+        except ConstraintException:  # pylint: disable=broad-except
             regression_id = reg["regression_id"]
             del reg["regression_id"]
-            update = (
-                self.regressions.update()
-                .values(reg)
-                .where(self.regressions.c.regression_id == regression_id)
+            update_query = update(
+                self.regressions, reg,
+                where=f"regression_id = {regression_id}",
             )
-            with self.engine.begin() as connection:
-                connection.execute(update)
-                connection.commit()
+            with self.connection.cursor() as cursor:
+                cursor.execute(update_query)
 
-    def save_regression_values(self, reg: Dict[str, str]) -> None:
+    def save_regression_values(self, reg: dict[str, str]) -> None:
         """Save regression values into the databases."""
+        query = insert(
+            values([(*reg.values(),)]),
+            self.regression_values,
+            columns=[*reg.keys()],
+        )
         try:
-            insert = self.regression_values.insert().values(reg)
-            with self.engine.begin() as connection:
-                connection.execute(insert)
-        except Exception:  # pylint: disable=broad-except
+            with self.connection.cursor() as cursor:
+                cursor.execute(query)
+        except ConstraintException:  # pylint: disable=broad-except
             regression_id = reg["regression_id"]
             measure_id = reg["measure_id"]
 
             del reg["regression_id"]
             del reg["measure_id"]
-            update = (
-                self.regression_values.update()
-                .values(reg)
-                .where(
-                    (self.regression_values.c.regression_id == regression_id)
-                    & (self.regression_values.c.measure_id == measure_id),
-                )
+            update_query = update(
+                self.regression_values, reg,
+                where=(
+                    f"regression_id = {regression_id} AND "
+                    f"measure_id = {measure_id}"
+                ),
             )
-            with self.engine.begin() as connection:
-                connection.execute(update)
-                connection.commit()
+            with self.connection.cursor() as cursor:
+                cursor.execute(update_query)
 
     def get_browser_measure(self, measure_id: str) -> dict | None:
         """Get measure description from phenotype browser database."""
@@ -241,13 +245,19 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 case _:
                     regression = sort_by.split(".")
                     if len(regression) != 2:
-                        raise ValueError(f"{sort_by} is an invalid sort column")
+                        raise ValueError(
+                            f"{sort_by} is an invalid sort column",
+                        )
                     regression_id, sex = regression
 
                     reg_table = joined_tables[regression_id]
                     if sex == "male":
                         col_name = f"{regression_id}_pvalue_regression_male"
-                    elif sex == "female":
+                    else:
+                        if sex != "female":
+                            raise ValueError(
+                                f"{sort_by} is an invalid sort column",
+                            )
                         col_name = f"{regression_id}_pvalue_regression_female"
 
                     column_to_sort = column(col_name)
@@ -503,6 +513,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             df["status"] = df["status"].transform(Status.from_value)
             df["role"] = df["role"].transform(Role.from_value)
             return df
+
 
 def safe_db_name(name: str) -> str:
     name = name.replace(".", "_").replace("-", "_").replace(" ", "_").lower()
