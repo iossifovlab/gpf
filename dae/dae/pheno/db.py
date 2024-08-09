@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Generator, Iterator
 from functools import reduce
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import duckdb
 import pandas as pd
@@ -323,7 +323,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             column("max_value", measure_table.alias_or_name),
         ]
         query: Any = select(*columns).from_(
-            measure_table
+            measure_table,
         ).where(f"{columns[4].sql()} IS NOT NULL")
         if instrument is not None:
             query = query.where(columns[1]).eq(instrument)
@@ -363,7 +363,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             order_by,
         )
         reg_col_names = [reg_col.alias for reg_col in reg_cols]
-        
+
         if page is None:
             page = 1
 
@@ -374,7 +374,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         query_str = to_duckdb_transpile(query)
 
         with self.connection.cursor() as cursor:
-            rows = self.connection.execute(query_str).fetchall()
+            rows = cursor.execute(query_str).fetchall()
             for row in rows:
                 yield {
                     "measure_id": row[0],
@@ -452,7 +452,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             if row is None:
                 return False
             return bool(row[0])
-        
+
     def _get_measure_values_query(
         self,
         measure_ids: list[str],
@@ -538,13 +538,16 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             )
             cols_in.append(col.isin(*[r.value for r in roles]))
 
-        query.order_by(column(
+        query = query.order_by(column(
             "person_id",
             first_instrument_table.alias_or_name,
         ))
 
+        if cols_in:
+            query = query.where(reduce(glot_and, cols_in))
+
         return (
-            to_duckdb_transpile(query.where(reduce(glot_and, cols_in))),
+            to_duckdb_transpile(query),
             output_cols,
         )
 
@@ -555,6 +558,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         family_ids: list[str] | None = None,
         roles: list[Role] | None = None,
     ) -> Generator[dict[str, Any], None, None]:
+        """Yield lines from measure values tables."""
         query, output_cols = self._get_measure_values_query(
             measure_ids, person_ids, family_ids, roles,
         )
@@ -578,7 +582,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         family_ids: list[str] | None = None,
         roles: list[Role] | None = None,
     ) -> pd.DataFrame:
-
+        """Return dataframe from measure values tables."""
         query, _ = self._get_measure_values_query(
             measure_ids,
             person_ids=person_ids,
