@@ -254,6 +254,7 @@ def main(argv: list[str] | None = None) -> int:
             )
 
         prep = PrepareVariables(config, inference_configs)
+        prep.build_tables()
         prep.build_pedigree(args.pedigree)
         kwargs = copy(vars(args))
         prep.build_variables(
