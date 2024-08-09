@@ -246,35 +246,37 @@ class PhenoMeasuresDownload(QueryDatasetView):
             response = StreamingHttpResponse(
                 values_iterator, content_type="text/csv")
 
+        except ValueError:
+            logger.exception("Error")
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except KeyError:
+            logger.exception("Measures not found")
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except CountError:
+            logger.exception("Measure count is too large")
+            return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+        else:
             response["Content-Disposition"] = \
                 "attachment; filename=measures.csv"
             response["Expires"] = "0"
             return response
-        except ValueError as err:
-            logger.exception(err)
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        except KeyError as err:
-            logger.exception(err)
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        except CountError as err:
-            logger.exception(err)
-            return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
     #  pylint:disable=method-hidden
     def head(self, request: Request) -> Response:
         """Return a status code validating if measures can be downloaded."""
         try:
             self.get_measure_ids(request)
-            return Response(status=status.HTTP_200_OK)
-        except ValueError as err:
-            logger.exception(err)
+        except ValueError:
+            logger.exception("Error")
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except KeyError as err:
-            logger.exception(err)
+        except KeyError:
+            logger.exception("Measures not found")
             return Response(status=status.HTTP_404_NOT_FOUND)
-        except CountError as err:
-            logger.exception(err)
+        except CountError:
+            logger.exception("Measure count is too large")
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+        else:
+            return Response(status=status.HTTP_200_OK)
 
 
 class PhenoMeasureValues(QueryDatasetView):
@@ -315,13 +317,11 @@ class PhenoMeasureValues(QueryDatasetView):
             measure_ids,
         )
 
-        response = StreamingHttpResponse(
+        return StreamingHttpResponse(
             iterator_to_json(values_iterator),
             status=status.HTTP_200_OK,
             content_type="text/event-stream",
         )
-
-        return response
 
 
 class PhenoRemoteImages(QueryDatasetView):
