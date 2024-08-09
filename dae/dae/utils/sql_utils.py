@@ -4,8 +4,11 @@ import sqlglot
 from sqlglot import expressions
 
 
-def to_duckdb_transpile(query: Any) -> Any:
-    return sqlglot.transpile(query.sql(), read="duckdb")
+def to_duckdb_transpile(query: Any) -> str:
+    return sqlglot.transpile(query.sql(), read="duckdb")[0]
+
+def glot_and(left_expr: Any, right_expr: Any) -> Any:
+    return left_expr.and_(right_expr)
 
 
 def fill_query_parameters(query: Any, params: list[Any]) -> None:

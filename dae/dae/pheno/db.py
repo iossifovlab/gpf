@@ -13,7 +13,8 @@ from sqlglot import column, expressions, select, table
 from sqlglot.expressions import delete, insert, values
 
 from dae.pheno.common import MeasureType
-from dae.utils.sql_utils import to_duckdb_transpile
+from dae.utils.sql_utils import to_duckdb_transpile, glot_and
+from dae.variants.attributes import Role, Sex, Status
 
 
 class PhenoDb:  # pylint: disable=too-many-instance-attributes
@@ -26,7 +27,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     ) -> None:
         self.dbfile = dbfile
         self.connection = duckdb.connect(
-            f"duckdb:///{dbfile}", read_only=read_only)
+            f"{dbfile}", read_only=read_only)
         self.variable_browser = table("variable_browser")
         self.regressions = table("regression")
         self.regression_values = table("regression_values")
@@ -61,10 +62,10 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         Each row is basically a list of every measure value in the instrument
         for a certain person.
         """
-        query = select(
+        query = to_duckdb_transpile(select(
             "instrument_name",
             "table_name",
-        ).from_(self.instrument)
+        ).from_(self.instrument))
 
         with self.connection.cursor() as cursor:
             results = cursor.execute(query).fetchall()
@@ -88,11 +89,11 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
     def save(self, v: dict[str, str | None]) -> None:
         """Save measure values into the database."""
-        query = insert(
+        query = to_duckdb_transpile(insert(
             values([(*v.values(),)]),
             self.variable_browser,
             columns=[*v.keys()],
-        )
+        ))
 
         try:
             with self.connection.cursor() as cursor:
@@ -100,9 +101,9 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         except ConstraintException:  # pylint: disable=broad-except
             measure_id = v["measure_id"]
 
-            delete_query = delete(
+            delete_query = to_duckdb_transpile(delete(
                 self.variable_browser,
-            ).where(f"measure_id = {measure_id}")
+            ).where(f"measure_id = {measure_id}"))
             with self.connection.cursor() as cursor:
                 cursor.execute(delete_query)
                 cursor.execute(query)
@@ -110,7 +111,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     def save_regression(self, reg: Dict[str, str]) -> None:
         """Save regressions into the database."""
         try:
-            insert = self.regressions.insert().values(reg)
+            insert = to_duckdb_transpile(self.regressions.insert().values(reg))
             with self.engine.begin() as connection:
                 connection.execute(insert)
         except Exception:  # pylint: disable=broad-except
@@ -151,9 +152,9 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
     def get_browser_measure(self, measure_id: str) -> dict | None:
         """Get measure description from phenotype browser database."""
-        query = select(
+        query = to_duckdb_transpile(select(
             column("*", self.variable_browser.alias_or_name),
-        ).from_(self.variable_browser).where(f"measure_id = {measure_id}")
+        ).from_(self.variable_browser).where(f"measure_id = {measure_id}"))
         with self.connection.cursor() as cursor:
             rows = cursor.execute(query).df()
             if rows:
@@ -259,7 +260,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 "variable_browser.measure_id ASC",
             )
 
-        return cast(expressions.Select, to_duckdb_transpile(query))
+        return cast(expressions.Select, query)
 
     def search_measures(
         self,
@@ -281,6 +282,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 self.PAGE_SIZE * (page - 1),
             )
 
+        query = to_duckdb_transpile(query)
+
         cursor = self.connection
         with cursor:
             rows = self.connection.execute(query).fetchall()
@@ -301,16 +304,17 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         keyword: str | None = None,
     ) -> pd.DataFrame:
         """Find measures and return a dataframe with values."""
-        query = self.build_measures_query(instrument_name, keyword)
+        query = to_duckdb_transpile(
+            self.build_measures_query(instrument_name, keyword))
         # execute query and .df()
 
         return self.connection.execute(query).df()
 
     @property
     def regression_ids(self) -> list[str]:
-        query = select(
+        query = to_duckdb_transpile(select(
             column("regression_id", self.regressions.alias_or_name),
-        ).from_(self.regressions)
+        ).from_(self.regressions))
         with self.connection.cursor() as cursor:
             return [
                 x[0] for x in cursor.execute(query).fetchall()
@@ -320,10 +324,10 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     def regression_display_names(self) -> dict[str, str]:
         """Return regressions display name."""
         res = {}
-        query = select(
+        query = to_duckdb_transpile(select(
             column("regression_id", self.regressions.alias_or_name),
             column("display_name", self.regressions.alias_or_name),
-        ).from_(self.regressions)
+        ).from_(self.regressions))
         with self.connection.cursor() as cursor:
             for row in cursor.execute(query).fetchall():
                 res[row[0]] = row[1]
@@ -333,12 +337,12 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     def regression_display_names_with_ids(self) -> dict[str, Any]:
         """Return regression display names with measure IDs."""
         res = {}
-        query = select(
+        query = to_duckdb_transpile(select(
             column("regression_id", self.regressions.alias_or_name),
             column("display_name", self.regressions.alias_or_name),
             column("instrument_name", self.regressions.alias_or_name),
             column("measure_name", self.regressions.alias_or_name),
-        ).from_(self.regressions)
+        ).from_(self.regressions))
         with self.connection.cursor() as cursor:
             for row in cursor.execute(query).fetchall():
                 res[row[0]] = {
@@ -351,15 +355,154 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     @property
     def has_descriptions(self) -> bool:
         """Check if the database has a description data."""
+        query = to_duckdb_transpile(select("COUNT(*)").from_(
+            self.variable_browser,
+        ).where("description IS NOT NULL"))
         with self.connection.cursor() as cursor:
-            row = cursor.execute(
-                select("COUNT(*)")
-                .from_(self.variable_browser)
-                .where("description IS NOT NULL"),
-            ).fetchone()
+            row = cursor.execute(query).fetchone()
             if row is None:
                 return False
             return bool(row[0])
+        
+    def _get_measure_values_query(
+        self,
+        measure_ids: list[str],
+        person_ids: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        roles: list[Role] | None = None,
+    ) -> tuple[str, list[expressions.Column]]:
+        assert isinstance(measure_ids, list)
+        assert len(measure_ids) >= 1
+        assert len(self.instrument_values_tables) > 0
+
+        instrument_measures = [
+            (*measure_id.split("."),) for measure_id in measure_ids
+        ]
+
+        query = None
+        instrument_tables = {}
+        output_cols = []
+        for instrument, measure in instrument_measures:
+            instrument_table = table(generate_instrument_table_name(instrument))
+            if instrument not in instrument_tables:
+                if query is None:
+                    first_instrument_table = instrument_table
+                    cols = [
+                        column("person_id", instrument_table.alias_or_name),
+                        column("family_id", instrument_table.alias_or_name),
+                        column("role", instrument_table.alias_or_name),
+                        column("status", instrument_table.alias_or_name),
+                        column("sex", instrument_table.alias_or_name),
+                        column(
+                            safe_db_name(measure),
+                            instrument_table.alias_or_name,
+                        ),
+                    ]
+                    query = select(
+                        *cols,
+                    ).from_(instrument_table)
+                    output_cols.extend(cols)
+                else:
+                    left_col = column(
+                        "person_id", first_instrument_table.alias_or_name,
+                    ).sql()
+                    right_col = column(
+                        "person_id", instrument_table.alias_or_name,
+                    ).sql()
+                    measure_col = column(
+                        safe_db_name(measure),
+                        instrument_table.alias_or_name,
+                    )
+                    query = query.select(
+                        measure_col,
+                    ).join(instrument_table, on=f"{left_col} = {right_col}")
+                    output_cols.append(measure_col)
+
+                instrument_tables[instrument] = instrument_table
+            else:
+                assert query is not None
+                measure_col = column(
+                    safe_db_name(measure),
+                    instrument_table.alias_or_name,
+                )
+                query = query.select(
+                    measure_col,
+                )
+                output_cols.append(measure_col)
+
+        assert query is not None
+
+        cols_in = []
+        if person_ids is not None:
+            col = column(
+                "person_id",
+                first_instrument_table.alias_or_name,
+            )
+            cols_in.append(col.isin(*person_ids))
+        if family_ids is not None:
+            col = column(
+                "family_id",
+                first_instrument_table.alias_or_name,
+            )
+            cols_in.append(col.isin(*family_ids))
+        if roles is not None:
+            col = column(
+                "role",
+                first_instrument_table.alias_or_name,
+            )
+            cols_in.append(col.isin(*[r.value for r in roles]))
+
+        return (
+            to_duckdb_transpile(query.where(reduce(glot_and, cols_in))),
+            output_cols,
+        )
+
+    def get_people_measure_values(
+        self,
+        measure_ids: list[str],
+        person_ids: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        roles: list[Role] | None = None,
+    ) -> Generator[dict[str, Any], None, None]:
+        query, output_cols = self._get_measure_values_query(
+            measure_ids, person_ids, family_ids, roles,
+        )
+        with self.connection.cursor() as cursor:
+            result = cursor.execute(query)
+
+            for row in result.fetchall():
+                output = {
+                    col.alias_or_name: row[idx]
+                    for idx, col in enumerate(output_cols)
+                }
+                output["role"] = Role.to_name(output["role"])
+                output["status"] = Status.to_name(output["status"])
+                output["sex"] = Sex.to_name(output["sex"])
+                yield output
+
+    def get_people_measure_values_df(
+        self,
+        measure_ids: list[str],
+        person_ids: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        roles: list[Role] | None = None,
+    ) -> pd.DataFrame:
+
+        query, _ = self._get_measure_values_query(
+            measure_ids,
+            person_ids=person_ids,
+            family_ids=family_ids,
+            roles=roles,
+        )
+
+        with self.connection.cursor() as cursor:
+            result = cursor.execute(query)
+
+            df = result.df()
+            df["sex"] = df["sex"].transform(Sex.from_value)
+            df["status"] = df["status"].transform(Status.from_value)
+            df["role"] = df["role"].transform(Role.from_value)
+            return df
 
 def safe_db_name(name: str) -> str:
     name = name.replace(".", "_").replace("-", "_").replace(" ", "_").lower()
