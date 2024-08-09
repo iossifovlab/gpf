@@ -4,13 +4,14 @@ import textwrap
 
 import pytest
 
-from dae.annotation.annotatable import VCFAllele
+from dae.annotation.annotatable import Position, VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.genomic_resources.genomic_scores import PositionScore
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
     build_inmemory_test_repository,
+    setup_bigwig,
     setup_directories,
     setup_tabix,
 )
@@ -96,8 +97,8 @@ def test_position_score_annotator_all_attributes(
 
 
 #  hg19
-#  chrom: 1
-#  pos:   14970
+#  chrom: 1      # noqa: ERA001
+#  pos:   14970  # noqa: ERA001
 #
 #  T     A     C     C    C    T    T    G    C    G
 #  67    68    69    70   71   72   73   74   75   76
@@ -438,3 +439,61 @@ def test_position_annotator_add_chrom_prefix_inmemory_table(
 
         print(annotatable, result)
         assert result.get("test100way") == expected
+
+
+@pytest.mark.parametrize("allele, expected", [
+    (("chr1", 1), 0.1),
+    (("chr1", 20), 0.2),
+    (("chr1", 21), 0.3),
+    (("chr1", 31), 0.4),
+])
+def test_bigwig_annotation(
+    allele: tuple, expected: float,
+    tmp_path: pathlib.Path,
+) -> None:
+    root_path = tmp_path
+    setup_directories(
+        root_path,
+        {
+            "grr.yaml": textwrap.dedent(f"""
+                id: test_grr
+                type: directory
+                directory: {root_path!s}
+            """),
+            "bigwig_score": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                        type: position_score
+                        table:
+                            filename: data.bw
+                            format: bigWig
+                            header_mode: none
+                        scores:
+                        - id: score_one
+                          type: float
+                          index: 3
+                """),
+            },
+        },
+    )
+    data = textwrap.dedent("""
+        chr1   0       10       0.1
+        chr1   10      20       0.2
+        chr1   20      30       0.3
+        chr1   30      40       0.4
+    """)
+    setup_bigwig(
+        root_path / "bigwig_score" / "data.bw", data,
+        {"chr1": 1000},
+    )
+    grr = build_filesystem_test_repository(root_path)
+    assert grr is not None
+
+    pipeline_config = textwrap.dedent("""
+        - position_score: bigwig_score
+    """)
+
+    pipeline = load_pipeline_from_yaml(pipeline_config, grr)
+    with pipeline.open() as work_pipeline:
+        annotatable = Position(*allele)
+        result = work_pipeline.annotate(annotatable)
+        assert result.get("score_one") == pytest.approx(expected)

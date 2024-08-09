@@ -53,11 +53,10 @@ class GenomicPositionTable(abc.ABC):
             self.header = None
         else:
             raise ValueError(
-                f"The 'header' property in a table definition "
-                f"must be 'file' [by default], 'none', or a "
-                f"list of strings. The current value "
-                f"{self.header_mode} does not meet these "
-                f"requirements.")
+                f"The 'header_mode' property in a table definition "
+                f"must be 'file' [by default], 'none', or 'list'."
+                f" The current value {self.header_mode}"
+                f"does not meet these requirements.")
 
     def _build_chrom_mapping(self) -> None:
         self.chrom_map = None
