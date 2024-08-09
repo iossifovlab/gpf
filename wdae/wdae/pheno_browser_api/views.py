@@ -127,10 +127,12 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        if request.query_params.get("page") is not None \
+            or request.query_params.get("sort_by") is not None \
+            or request.query_params.get("order_by") is not None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         instrument = request.query_params.get("instrument", None)
-        page = int(request.query_params.get("page", 1))
-        sort_by = request.query_params.get("sort_by", None)
-        order_by = request.query_params.get("order_by", None)
         search_term = request.query_params.get("search", None)
 
         pheno_instruments = dataset.phenotype_data.get_instruments()
@@ -140,7 +142,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
 
         try:
             measures = dataset.phenotype_data.search_measures(
-                instrument, search_term, page, sort_by, order_by,
+                instrument, search_term,
             )
 
             measures_page = list(measures)
