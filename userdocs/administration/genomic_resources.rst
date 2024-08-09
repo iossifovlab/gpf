@@ -2,8 +2,8 @@ Genomic resources repository (GRR)
 ==================================
 
 
-Introduction
-************
+Introduction to GRR
+*******************
 
 Genomic Resource Repository (GRR) is a collection of genomic resources, 
 like reference genomes, gene models, etc. One can use one or more GRRs at the 
@@ -352,7 +352,7 @@ reference_genome
 liftover
 ########
 
-Annotation pipeline
+annotation_pipeline
 ###################
 
 Example genomic_resource.yaml:
@@ -418,6 +418,7 @@ header
   Used for providing a header when ``header_mode`` is set to ``list``. Example:
 
   .. code:: yaml
+
       header_mode: list
       header: ["chrom", "start", "end", "score_value"]
 
