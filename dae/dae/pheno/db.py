@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from functools import reduce
 from pathlib import Path
 from typing import Any, cast
@@ -13,7 +13,7 @@ from sqlglot import column, expressions, select, table
 from sqlglot.expressions import delete, insert, update, values
 
 from dae.pheno.common import MeasureType
-from dae.utils.sql_utils import to_duckdb_transpile, glot_and
+from dae.utils.sql_utils import glot_and, to_duckdb_transpile
 from dae.variants.attributes import Role, Sex, Status
 
 
@@ -110,7 +110,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
     def save_regression(self, reg: dict[str, str]) -> None:
         """Save regressions into the database."""
-        query = to_duckdb_transpile((
+        query = to_duckdb_transpile(insert(
             values([(*reg.values(),)]),
             self.regressions,
             columns=[*reg.keys()],
@@ -171,35 +171,49 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         keyword: str | None = None,
         sort_by: str | None = None,
         order_by: str | None = None,
-    ) -> expressions.Select:
+    ) -> tuple[expressions.Select, list[expressions.Alias]]:
         """Find measures by keyword search."""
 
         joined_tables = {}
         regression_ids = self.regression_ids
+        reg_cols = []
 
         query = select(
-            column("*", self.variable_browser.alias_or_name),
+            f"{self.variable_browser.alias_or_name}.*",
         ).from_(self.variable_browser)
 
         for regression_id in regression_ids:
-            reg_table = table("regression_values").as_(regression_id)
+            reg_table = self.regression_values.as_(regression_id)
+            measure_id_col = column(
+                "measure_id", self.variable_browser.alias_or_name)
+            reg_m_id = column("measure_id", reg_table.alias)
+            reg_id_col = column("regression_id", reg_table.alias)
             query = query.join(
-                "regression_values",
+                reg_table,
                 on=sqlglot.condition(
-                    "variable_browser.measure_id = table.measure_id and"
-                    f"table.regression_id = {regression_id}",
+                    measure_id_col.eq(reg_m_id)
+                    .and_(reg_id_col.eq(regression_id)),
                 ),
                 join_type="LEFT OUTER",
             )
             joined_tables[regression_id] = reg_table
-            query.select(
+            cols = [
+                column(
+                    "figure_regression", table=reg_table.alias_or_name,
+                ).as_(f"{regression_id}_figure_regression"),
+                column(
+                    "figure_regression_small", table=reg_table.alias_or_name,
+                ).as_(f"{regression_id}_figure_regression_small"),
                 column(
                     "pvalue_regression_male", table=reg_table.alias_or_name,
                 ).as_(f"{regression_id}_pvalue_regression_male"),
                 column(
                     "pvalue_regression_female", table=reg_table.alias_or_name,
                 ).as_(f"{regression_id}_pvalue_regression_female"),
-            )
+            ]
+
+            reg_cols.extend(cols)
+            query = query.select(*cols)
 
         query = query.distinct()
 
@@ -225,7 +239,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         if instrument_name:
             query = query.where(
-                f"variable_browser.instrument_name = {instrument_name}",
+                f"variable_browser.instrument_name = '{instrument_name}'",
             )
         if sort_by:
             column_to_sort: Any
@@ -270,7 +284,68 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 "variable_browser.measure_id ASC",
             )
 
-        return cast(expressions.Select, query)
+        return query, reg_cols
+
+    def get_measures_df(
+        self,
+        instrument: str | None = None,
+        measure_type: MeasureType | None = None,
+    ) -> pd.DataFrame:
+        """
+        Return data frame containing measures information.
+
+        `instrument` -- an instrument name which measures should be
+        returned. If not specified all type of measures are returned.
+
+        `measure_type` -- a type ('continuous', 'ordinal' or 'categorical')
+        of measures that should be returned. If not specified all
+        type of measures are returned.
+
+        Each row in the returned data frame represents given measure.
+
+        Columns in the returned data frame are: `measure_id`, `measure_name`,
+        `instrument_name`, `description`, `stats`, `min_value`, `max_value`,
+        `value_domain`, `has_probands`, `has_siblings`, `has_parents`,
+        `default_filter`.
+        """
+
+        measure_table = self.measure
+        columns = [
+            column("measure_id", measure_table.alias_or_name),
+            column("instrument_name", measure_table.alias_or_name),
+            column("measure_name", measure_table.alias_or_name),
+            column("description", measure_table.alias_or_name),
+            column("measure_type", measure_table.alias_or_name),
+            column("individuals", measure_table.alias_or_name),
+            column("default_filter", measure_table.alias_or_name),
+            column("values_domain", measure_table.alias_or_name),
+            column("min_value", measure_table.alias_or_name),
+            column("max_value", measure_table.alias_or_name),
+        ]
+        query: Any = select(*columns).from_(
+            measure_table
+        ).where(f"{columns[4].sql()} IS NOT NULL")
+        if instrument is not None:
+            query = query.where(columns[1]).eq(instrument)
+        if measure_type is not None:
+            query = query.where(columns[4]).eq(measure_type)
+
+        with self.connection.cursor() as cursor:
+            df = cursor.execute(to_duckdb_transpile(query)).df()
+
+        df_columns = [
+            "measure_id",
+            "measure_name",
+            "instrument_name",
+            "description",
+            "individuals",
+            "measure_type",
+            "default_filter",
+            "values_domain",
+            "min_value",
+            "max_value",
+        ]
+        return df[df_columns]
 
     def search_measures(
         self,
@@ -281,22 +356,25 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         order_by:  str | None = None,
     ) -> Iterator[dict[str, Any]]:
         """Find measures by keyword search."""
-        query = self.build_measures_query(
+        query, reg_cols = self.build_measures_query(
             instrument_name,
             keyword,
             sort_by,
             order_by,
         )
-        if page:
-            query = query.limit(self.PAGE_SIZE).offset(
-                self.PAGE_SIZE * (page - 1),
-            )
+        reg_col_names = [reg_col.alias for reg_col in reg_cols]
+        
+        if page is None:
+            page = 1
 
-        query = to_duckdb_transpile(query)
+        query = query.limit(self.PAGE_SIZE).offset(
+            self.PAGE_SIZE * (page - 1),
+        )
 
-        cursor = self.connection
-        with cursor:
-            rows = self.connection.execute(query).fetchall()
+        query_str = to_duckdb_transpile(query)
+
+        with self.connection.cursor() as cursor:
+            rows = self.connection.execute(query_str).fetchall()
             for row in rows:
                 yield {
                     "measure_id": row[0],
@@ -307,6 +385,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     "values_domain": row[5],
                     "figure_distribution_small": row[6],
                     "figure_distribution": row[7],
+                    **dict(zip(reg_col_names, row[8:], strict=True)),
                 }
 
     def search_measures_df(
@@ -380,19 +459,16 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         person_ids: list[str] | None = None,
         family_ids: list[str] | None = None,
         roles: list[Role] | None = None,
-    ) -> tuple[str, list[expressions.Column]]:
+    ) -> tuple[str, list[expressions.Expression]]:
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
         assert len(self.instrument_values_tables) > 0
 
-        instrument_measures = [
-            (*measure_id.split("."),) for measure_id in measure_ids
-        ]
-
         query = None
         instrument_tables = {}
         output_cols = []
-        for instrument, measure in instrument_measures:
+        for measure_id in measure_ids:
+            instrument, measure = measure_id.split(".")
             instrument_table = table(generate_instrument_table_name(instrument))
             if instrument not in instrument_tables:
                 if query is None:
@@ -406,7 +482,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                         column(
                             safe_db_name(measure),
                             instrument_table.alias_or_name,
-                        ),
+                        ).as_(measure_id),
                     ]
                     query = select(
                         *cols,
@@ -422,7 +498,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     measure_col = column(
                         safe_db_name(measure),
                         instrument_table.alias_or_name,
-                    )
+                    ).as_(measure_id)
                     query = query.select(
                         measure_col,
                     ).join(instrument_table, on=f"{left_col} = {right_col}")
@@ -434,7 +510,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 measure_col = column(
                     safe_db_name(measure),
                     instrument_table.alias_or_name,
-                )
+                ).as_(measure_id)
                 query = query.select(
                     measure_col,
                 )
@@ -461,6 +537,11 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 first_instrument_table.alias_or_name,
             )
             cols_in.append(col.isin(*[r.value for r in roles]))
+
+        query.order_by(column(
+            "person_id",
+            first_instrument_table.alias_or_name,
+        ))
 
         return (
             to_duckdb_transpile(query.where(reduce(glot_and, cols_in))),

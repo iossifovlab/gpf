@@ -11,12 +11,11 @@ from typing import Any, cast
 
 import pandas as pd
 from box import Box
-from sqlglot import column, select
 
 from dae.pheno.common import MeasureType
-from dae.pheno.db import PhenoDb, safe_db_name
+from dae.pheno.db import PhenoDb
 from dae.utils.helpers import isnan
-from dae.variants.attributes import Role, Sex, Status
+from dae.variants.attributes import Role
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +130,7 @@ class Measure:
         return domain_list
 
     @classmethod
-    def _from_record(cls, row: dict[str, Any]) -> Measure:
+    def from_record(cls, row: dict[str, Any]) -> Measure:
         """Create `Measure` object from pandas data frame row."""
         assert row["measure_type"] is not None
 
@@ -405,41 +404,7 @@ class PhenotypeStudy(PhenotypeData):
         assert instrument is None or instrument in self.instruments
         assert measure_type is None or isinstance(measure_type, MeasureType)
 
-        measure_table = self.db.measure
-        columns = [
-            column("measure_id", measure_table.alias_or_name),
-            column("instrument_name", measure_table.alias_or_name),
-            column("measure_name", measure_table.alias_or_name),
-            column("description", measure_table.alias_or_name),
-            column("measure_type", measure_table.alias_or_name),
-            column("individuals", measure_table.alias_or_name),
-            column("default_filter", measure_table.alias_or_name),
-            column("values_domain", measure_table.alias_or_name),
-            column("min_value", measure_table.alias_or_name),
-            column("max_value", measure_table.alias_or_name),
-        ]
-        query = select(*columns).where("measure_type IS NOT NULL")
-        if instrument is not None:
-            query = query.where(f"instrument_name == {instrument}")
-        if measure_type is not None:
-            query = query.where(f"measure_type == {measure_type.value}")
-
-        with self.db.connection.cursor() as cursor:
-            df = cursor.execute(query).df()
-
-        df_columns = [
-            "measure_id",
-            "measure_name",
-            "instrument_name",
-            "description",
-            "individuals",
-            "measure_type",
-            "default_filter",
-            "values_domain",
-            "min_value",
-            "max_value",
-        ]
-        return df[df_columns]
+        return self.db.get_measures_df(instrument, measure_type)
 
     def _load_instruments(self, df: pd.DataFrame) -> dict[str, Instrument]:
         instruments = {}
@@ -453,8 +418,7 @@ class PhenotypeStudy(PhenotypeData):
             measures_df = df[df.instrument_name == instrument_name]
 
             for row in measures_df.to_dict("records"):
-                # pylint: disable=protected-access
-                measure = Measure._from_record(row)
+                measure = Measure.from_record(row)
                 measures[measure.measure_name] = measure
                 self._measures[measure.measure_id] = measure
             instrument.measures = measures
@@ -476,82 +440,6 @@ class PhenotypeStudy(PhenotypeData):
             f"bad default_filter value: {default_filter}",
         )
 
-    def _get_measure_values_query(
-        self,
-        measure_ids: list[str],
-        person_ids: list[str] | None = None,
-        family_ids: list[str] | None = None,
-        roles: list[Role] | None = None,
-    ) -> Select:
-        assert isinstance(measure_ids, list)
-        assert len(measure_ids) >= 1
-        assert all(self.has_measure(m) for m in measure_ids), self.measures
-        assert len(self.db.instrument_values_tables) > 0
-
-        instrument_tables = {}
-        instrument_table_columns: dict[str, Any] = {}
-        for measure_id in measure_ids:
-            measure = self.get_measure(measure_id)
-            instrument_name = measure_id.split(".")[0]
-            table = self.db.instrument_values_tables[instrument_name]
-            instrument_tables[instrument_name] = table
-            if instrument_name not in instrument_table_columns:
-                instrument_table_columns[instrument_name] = []
-            instrument_table_columns[instrument_name].append(
-                table.c[safe_db_name(measure.measure_name)].label(measure_id),
-            )
-
-        subquery_selects = []
-        for table in instrument_tables.values():
-            subquery_selects.append(
-                select(
-                    table.c.person_id, table.c.family_id, table.c.role,
-                    table.c.status, table.c.sex,
-                ).select_from(table),
-            )
-
-        subquery = union(*subquery_selects).subquery("instruments_people")
-
-        select_cols = []
-        for instrument_name, columns in instrument_table_columns.items():
-            select_cols.extend(columns)
-
-        query = select(
-            subquery.c.person_id,
-            subquery.c.family_id,
-            subquery.c.role,
-            subquery.c.status,
-            subquery.c.sex,
-            *select_cols,
-        )
-        query = query.select_from(subquery)
-
-        for instrument_name in instrument_table_columns:
-            table = instrument_tables[instrument_name]
-            query = query.join(
-                table,
-                subquery.c.person_id == table.c.person_id,
-                isouter=True,
-                full=True,
-            )
-
-        if person_ids is not None:
-            query = query.where(
-                subquery.c.person_id.in_(person_ids),
-            )
-        if family_ids is not None:
-            query = query.where(
-                subquery.c.family_id.in_(family_ids),
-            )
-        if roles is not None:
-            query_roles = [role.value for role in roles]
-            query = query.where(
-                subquery.c.role.in_(query_roles),
-            )
-        query = query.order_by(subquery.c.person_id)
-
-        return query
-
     def get_people_measure_values(
         self,
         measure_ids: list[str],
@@ -559,27 +447,9 @@ class PhenotypeStudy(PhenotypeData):
         family_ids: list[str] | None = None,
         roles: list[Role] | None = None,
     ) -> Generator[dict[str, Any], None, None]:
-        assert isinstance(measure_ids, list)
-        assert len(measure_ids) >= 1
-        assert all(self.has_measure(m) for m in measure_ids)
-        assert len(self.db.instrument_values_tables) > 0
-
-        query = self._get_measure_values_query(
-            measure_ids,
-            person_ids=person_ids,
-            family_ids=family_ids,
-            roles=roles,
+        yield from self.db.get_people_measure_values(
+            measure_ids, person_ids, family_ids, roles,
         )
-
-        with self.db.engine.connect() as connection:
-            result = connection.execute(query)
-
-            for row in result:
-                output = {**row._mapping}  # pylint: disable=protected-access
-                output["role"] = Role.to_name(output["role"])
-                output["status"] = Status.to_name(output["status"])
-                output["sex"] = Sex.to_name(output["sex"])
-                yield output
 
     def get_people_measure_values_df(
         self,
@@ -588,24 +458,9 @@ class PhenotypeStudy(PhenotypeData):
         family_ids: list[str] | None = None,
         roles: list[Role] | None = None,
     ) -> pd.DataFrame:
-        assert isinstance(measure_ids, list)
-        assert len(measure_ids) >= 1
-        assert all(self.has_measure(m) for m in measure_ids)
-        assert len(self.db.instrument_values_tables) > 0
-
-        query = self._get_measure_values_query(
-            measure_ids,
-            person_ids=person_ids,
-            family_ids=family_ids,
-            roles=roles,
+        return self.db.get_people_measure_values_df(
+            measure_ids, person_ids, family_ids, roles,
         )
-
-        with self.db.engine.connect() as connection:
-            df = pd.read_sql(query, connection)
-            df["sex"] = df["sex"].transform(Sex.from_value)
-            df["status"] = df["status"].transform(Status.from_value)
-            df["role"] = df["role"].transform(Role.from_value)
-            return df
 
     def get_regressions(self) -> dict[str, Any]:
         return self.db.regression_display_names_with_ids
@@ -646,13 +501,29 @@ class PhenotypeStudy(PhenotypeData):
                 cast(MeasureType, measure["measure_type"]).name
 
             measure["regressions"] = []
-
             for reg_id in self.get_regression_ids():
-                reg = {}
+                reg = {
+                    "regression_id": reg_id,
+                    "measure_id": measure["measure_id"],
+                }
+
                 if isnan(measure[f"{reg_id}_pvalue_regression_male"]):
-                    reg["pvalue_regression_male"] = "NaN"
+                    measure[f"{reg_id}_pvalue_regression_male"] = "NaN"
                 if isnan(measure[f"{reg_id}_pvalue_regression_female"]):
-                    reg["pvalue_regression_female"] = "NaN"
+                    measure[f"{reg_id}_pvalue_regression_female"] = "NaN"
+
+                reg["figure_regression"] = measure.pop(
+                    f"{reg_id}_figure_regression",
+                )
+                reg["figure_regression_small"] = measure.pop(
+                    f"{reg_id}_figure_regression_small",
+                )
+                reg["pvalue_regression_male"] = measure.pop(
+                    f"{reg_id}_pvalue_regression_male",
+                )
+                reg["pvalue_regression_female"] = measure.pop(
+                    f"{reg_id}_pvalue_regression_female",
+                )
                 measure["regressions"].append(reg)
 
             yield {
@@ -764,7 +635,10 @@ class PhenotypeGroup(PhenotypeData):
                     family_ids,
                     roles,
                 ))
-        return chain.from_iterable(generators)
+        return cast(
+            Generator[dict[str, Any], None, None],
+            chain.from_iterable(generators),
+        )
 
     def get_people_measure_values_df(
         self,

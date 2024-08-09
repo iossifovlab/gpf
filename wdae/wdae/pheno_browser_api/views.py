@@ -126,10 +126,14 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if request.query_params.get("page") is not None \
-            or request.query_params.get("sort_by") is not None \
-            or request.query_params.get("order_by") is not None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        if (
+            request.query_params.get("page") is not None
+            or request.query_params.get("sort_by") is not None
+            or request.query_params.get("order_by") is not None
+        ):
+            logger.warning(
+                "Received deprecated params %s", request.query_params,
+            )
 
         instrument = request.query_params.get("instrument", None)
         search_term = request.query_params.get("search", None)
