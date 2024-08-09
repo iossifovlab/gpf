@@ -1,5 +1,12 @@
 Release Notes
 =============
+* 2024.8.2
+    * Improvement of SQL query builder for family and summary variants in
+      DuckDb genotype storage
+    * Fix packaging of external VEP annotator plugin
+    * Support for serialisation of  additional attributes of family variants
+    * Fix support for log-scale Y axis in categorical histograms
+    * Fix loading of gene profiles search term from gene profiles state
 * 2024.8.1
     * Fix caching of genotype data groups descriptions
     * Genomic position table optimization for bigWig resources
