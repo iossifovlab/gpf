@@ -375,7 +375,6 @@ class PhenotypeStudy(PhenotypeData):
 
         self.db = PhenoDb(dbfile, read_only=read_only)
         self.config = config
-        self.db.build()
         df = self._get_measures_df()
         self._instruments = self._load_instruments(df)
         logger.warning("phenotype study %s fully loaded", pheno_id)
