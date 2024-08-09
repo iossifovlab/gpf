@@ -250,6 +250,7 @@ def main(argv: list[str] | None = None) -> int:
         os.makedirs(os.path.join(config.output, "parquet"), exist_ok=True)
 
         prep = PrepareVariables(config)
+        prep.build_tables()
         prep.build_pedigree(args.pedigree)
         kwargs = copy(vars(args))
         prep.build_variables(args.instruments, args.data_dictionary, **kwargs)
