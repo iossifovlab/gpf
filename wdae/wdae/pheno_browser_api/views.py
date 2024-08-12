@@ -116,6 +116,7 @@ class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
 class PhenoMeasuresView(PhenoBrowserBaseView):
     """Phenotype measures view."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         """Get pheno measures pages."""
         if "dataset_id" not in request.query_params:
@@ -156,9 +157,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         if measures_page is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        response = Response(measures_page)
-        response["Cache-Control"] = "no-cache"
-        return response
+        return Response(measures_page)
 
 
 class CountError(Exception):
@@ -239,6 +238,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
             dataset, measure_ids,
         )
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         """Return a CSV file stream for measures."""
         try:
@@ -260,6 +260,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
         response["Expires"] = "0"
         return response
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     #  pylint:disable=method-hidden
     def head(self, request: Request) -> Response:
         """Return a status code validating if measures can be downloaded."""
