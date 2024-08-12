@@ -465,6 +465,7 @@ class QueryBuilderBase:
             family_ids=family_ids,
             person_ids=person_ids,
         )
+
         if heuristics.region_bins:
             # single batch if we have region bins in heuristics
             return [heuristics]
@@ -472,10 +473,10 @@ class QueryBuilderBase:
         if heuristics.frequency_bins:
             # single batch if we dont search for rare and common variants
             rare_and_common_bins = {"2", "3"}
-            if rare_and_common_bins & set(heuristics.frequency_bins):
+            if not rare_and_common_bins & set(heuristics.frequency_bins):
                 return [heuristics]
 
-        if heuristics.coding_bins:
+        if heuristics.coding_bins and heuristics.frequency_bins:
             # single batch if we search for rare coding variants
             noncoding_bin = "0"
             common_bin = "3"
