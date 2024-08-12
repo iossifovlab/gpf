@@ -6,7 +6,7 @@ import argparse
 import logging
 import os
 import sys
-from typing import Any, Dict, List, Type, cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 import fsspec
@@ -15,10 +15,7 @@ from jinja2 import Template
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.import_tools.import_tools import (
-    MakefilePartitionHelper,
-    construct_import_annotation_pipeline,
-)
+from dae.import_tools.import_tools import construct_import_annotation_pipeline
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
@@ -30,6 +27,7 @@ from dae.variants_loaders.raw.loader import (
     VariantsLoader,
 )
 from dae.variants_loaders.vcf.loader import VcfLoader
+from impala_storage.helpers.partition_helper import MakefilePartitionHelper
 from impala_storage.helpers.rsync_helpers import RsyncHelpers
 from impala_storage.schema1.parquet_io import (
     ParquetWriter,
@@ -552,7 +550,7 @@ class BatchImporter:
             generator = SnakefileKubernetesGenerator()
             filename = os.path.join(dirname, "Snakefile")
         else:
-            assert False, f"unexpected tool format: {argv.tool}"
+            raise ValueError(f"unexpected tool format: {argv.tool}")
 
         content = generator.generate(context)
 
@@ -650,7 +648,7 @@ class BatchImporter:
                 outdir, f"{study_id}_variants"))
 
         for prefix, variants_loader in self.variants_loaders.items():
-            variants_context: Dict[str, Any] = {}
+            variants_context: dict[str, Any] = {}
             if "target_chromosomes" in argv and \
                     argv.target_chromosomes is not None:
                 target_chromosomes = argv.target_chromosomes
@@ -881,8 +879,8 @@ class BatchImporter:
         if gpf_instance is None:
             try:
                 gpf_instance = GPFInstance.build()
-            except Exception:  # pylint: disable=broad-except
-                logger.warning("GPF not configured properly...", exc_info=True)
+            except Exception:  # noqa: pylint: disable=broad-except
+                logger.exception("GPF not configured properly...")
 
         assert gpf_instance is not None
         parser = BatchImporter.cli_arguments_parser(gpf_instance)
@@ -908,7 +906,7 @@ class BatchImporter:
 class Variants2ParquetTool:
     """Tool for importing variants into parquet dataset."""
 
-    VARIANTS_LOADER_CLASS: Type[VariantsLoader] | None = None
+    VARIANTS_LOADER_CLASS: type[VariantsLoader] | None = None
     VARIANTS_TOOL: str | None = None
     VARIANTS_FREQUENCIES: bool = False
 
@@ -1023,7 +1021,7 @@ class Variants2ParquetTool:
 
     @classmethod
     def main(
-        cls, argv: List[str] | None = None,
+        cls, argv: list[str] | None = None,
         gpf_instance: GPFInstance | None = None,
     ) -> None:
         """Construct and run importer to transform variants into parquet.
@@ -1079,12 +1077,6 @@ class Variants2ParquetTool:
         variants_targets = generator.generate_variants_targets(
             target_chromosomes,
         )
-
-        # if argv.study_id is not None:
-        #     study_id = argv.study_id
-        # else:
-        #     study_id, _ = os.path.splitext(
-        #         os.path.basename(families_filename))
 
         bucket_index = argv.bucket_index
         if argv.region_bin is not None:
@@ -1165,13 +1157,12 @@ class Variants2ParquetTool:
             cls.VARIANTS_LOADER_CLASS.parse_cli_arguments(argv)
 
         # pylint: disable=not-callable
-        variants_loader = cls.VARIANTS_LOADER_CLASS(
+        return cls.VARIANTS_LOADER_CLASS(
             families,
             variants_filenames,
             genome=gpf_instance.reference_genome,
             params=variants_params,
         )
-        return variants_loader
 
     @staticmethod
     def _build_partition_description(
@@ -1190,17 +1181,16 @@ class Variants2ParquetTool:
         partition_description: PartitionDescriptor,
     ) -> MakefilePartitionHelper:
 
-        generator = MakefilePartitionHelper(
+        return MakefilePartitionHelper(
             partition_description,
             gpf_instance.reference_genome,
         )
-        return generator
 
     @staticmethod
     def _collect_target_chromosomes(
         argv: argparse.Namespace,
         variants_loader: VariantsLoader,
-    ) -> List[str]:
+    ) -> list[str]:
         if (
             "target_chromosomes" in argv
             and argv.target_chromosomes is not None

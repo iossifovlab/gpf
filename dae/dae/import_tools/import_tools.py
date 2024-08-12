@@ -6,13 +6,11 @@ import pathlib
 import sys
 import time
 from abc import ABC, abstractmethod
-from collections import defaultdict
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from copy import deepcopy
 from dataclasses import dataclass
 from functools import cache
-from math import ceil
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 import yaml
 from box import Box
@@ -32,7 +30,9 @@ from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
 from dae.gpf_instance import GPFInstance
-from dae.parquet.partition_descriptor import PartitionDescriptor
+from dae.parquet.partition_descriptor import (
+    PartitionDescriptor,
+)
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.task_graph.graph import TaskGraph
@@ -228,6 +228,7 @@ class ImportProject:
             config = self.import_config["input"].get(loader_type, None)
             if config is not None:
                 buckets.extend(self._loader_region_bins(loader_type))
+
         return buckets
 
     def get_variant_loader(
@@ -512,14 +513,9 @@ class ImportProject:
         # specified in the parition description section of the import config
         processing_region_length = \
             self._get_processing_region_length(loader_type)
-        partition_description = PartitionDescriptor(
+        processing_descriptor = PartitionDescriptor(
             chromosomes=target_chromosomes,
             region_length=processing_region_length,  # type: ignore
-        )
-
-        partition_helper = MakefilePartitionHelper(
-            partition_description,
-            reference_genome,
         )
 
         processing_config = self._get_loader_processing_config(loader_type)
@@ -528,16 +524,35 @@ class ImportProject:
             mode = processing_config
         elif len(processing_config) == 0:
             mode = "single_bucket"  # default mode when missing config
-        variants_targets = partition_helper.generate_variants_targets(
-            loader_chromosomes,
-            mode=mode,
-        )
+        if mode == "single_bucket":
+            processing_regions: dict[str, list[str]] = {"all": []}
+        elif mode == "chromosome":
+            processing_regions = {
+                chrom: [chrom] for chrom in loader_chromosomes}
+        else:
+            assert mode is None
+            processing_regions = {
+                chrom: [str(r) for r in regions]
+                for chrom, regions in processing_descriptor
+                    .make_region_bins_regions(
+                        chromosomes=loader_chromosomes,
+                        chromosome_lengths=reference_genome
+                        .get_all_chrom_lengths(),
+                    ).items()
+            }
 
         default_bucket_index = self._get_default_bucket_index(loader_type)
-        for index, (region_bin, regions) in enumerate(variants_targets.items()):
+        for index, (region_bin, regions) in enumerate(
+                processing_regions.items()):
             assert index <= 100_000, f"Too many buckets {loader_type}"
             bucket_index = default_bucket_index + index
-            yield Bucket(loader_type, region_bin, regions, bucket_index)
+
+            yield Bucket(
+                loader_type,
+                region_bin,
+                regions,
+                bucket_index,
+            )
 
     def _get_processing_region_length(self, loader_type: str) -> int | None:
         processing_config = self._get_loader_processing_config(loader_type)
@@ -864,95 +879,3 @@ def construct_import_annotation_pipeline(
         gpf_instance, annotation_configfile)
     grr = gpf_instance.grr
     return build_annotation_pipeline(pipeline_config, grr)
-
-
-class MakefilePartitionHelper:
-    """Helper class for organizing partition targets."""
-
-    def __init__(
-            self,
-            partition_descriptor: PartitionDescriptor,
-            genome: ReferenceGenome):
-
-        self.genome = genome
-        self.partition_descriptor = partition_descriptor
-        self.chromosome_lengths = dict(
-            self.genome.get_all_chrom_lengths(),
-        )
-
-    def region_bins_count(self, chrom: str) -> int:
-        return ceil(
-            self.chromosome_lengths[chrom]
-            / self.partition_descriptor.region_length,
-        )
-
-    @staticmethod
-    def build_target_chromosomes(target_chromosomes: list[str]) -> list[str]:
-        return target_chromosomes.copy()
-
-    def generate_chrom_targets(
-            self, target_chrom: str) -> list[tuple[str, str]]:
-        """Generate variant targets based on partition descriptor."""
-        target = target_chrom
-        if target_chrom not in self.partition_descriptor.chromosomes:
-            target = "other"
-        region_bins_count = self.region_bins_count(target_chrom)
-
-        chrom = target_chrom
-
-        if region_bins_count == 1:
-            return [(f"{target}_0", chrom)]
-        result = []
-        for region_index in range(region_bins_count):
-            start = region_index * self.partition_descriptor.region_length + 1
-            end = (region_index + 1) * self.partition_descriptor.region_length
-            if end > self.chromosome_lengths[target_chrom]:
-                end = self.chromosome_lengths[target_chrom]
-            result.append(
-                (f"{target}_{region_index}", f"{chrom}:{start}-{end}"),
-            )
-        return result
-
-    def bucket_index(self, region_bin: str) -> int:
-        """Return bucket index based on variants target."""
-        genome_chromosomes = [
-            chrom
-            for chrom, _ in
-            self.genome.get_all_chrom_lengths()
-        ]
-        variants_targets = self.generate_variants_targets(genome_chromosomes)
-        assert region_bin in variants_targets
-
-        targets = list(variants_targets.keys())
-        return targets.index(region_bin)
-
-    def generate_variants_targets(
-            self, target_chromosomes: list[str],
-            mode: str | None = None) -> dict[str, list]:
-        """Produce variants targets."""
-        if len(self.partition_descriptor.chromosomes) == 0:
-            return {"none": [""]}
-
-        generated_target_chromosomes = target_chromosomes.copy()
-        targets: dict[str, list]
-        if mode == "single_bucket":
-            targets = {"all": [None]}
-            return targets
-        if mode == "chromosome":
-            targets = {chrom: [chrom]
-                       for chrom in generated_target_chromosomes}
-            return targets
-        if mode is not None:
-            raise ValueError(f"Invalid value for mode '{mode}'")
-
-        targets = defaultdict(list)
-        for target_chrom in generated_target_chromosomes:
-            assert target_chrom in self.chromosome_lengths, (
-                target_chrom,
-                self.chromosome_lengths,
-            )
-            region_targets = self.generate_chrom_targets(target_chrom)
-
-            for target, region in region_targets:
-                targets[target].append(region)
-        return targets

@@ -3,6 +3,8 @@ import pathlib
 import sys
 import textwrap
 
+import pytest
+
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.testing import setup_directories
 from dae.utils.regions import Region
@@ -33,6 +35,37 @@ def test_parse_toml_partition_description(tmp_path: pathlib.Path) -> None:
     assert pdesc.region_length == 8
     assert pdesc.family_bin_size == 2
     assert pdesc.rare_boundary == 50
+
+
+def test_parse_toml_partition_description_int_region_bins(
+    tmp_path: pathlib.Path,
+) -> None:
+    setup_directories(
+        tmp_path / "partition_description.conf",
+        textwrap.dedent("""
+          [region_bin]
+          chromosomes=foo,bar
+          region_length=8
+          integer_region_bins=true
+          [frequency_bin]
+          rare_boundary=50.0
+          [coding_bin]
+          coding_effect_types=missense,splice-site,frame-shift
+          [family_bin]
+          family_bin_size=2"""),
+    )
+    pd_filename = tmp_path / "partition_description.conf"
+    pdesc = PartitionDescriptor.parse(pd_filename)
+
+    assert pdesc.chromosomes == ["foo", "bar"]
+    assert pdesc.region_length == 8
+    assert pdesc.integer_region_bins
+    assert pdesc.family_bin_size == 2
+    assert pdesc.rare_boundary == 50
+
+    content = pdesc.serialize("conf")
+    assert "integer_region_bins=true" in content
+    assert (tmp_path / "partition_description.conf").read_text() == content
 
 
 def test_parse_toml_partition_description_chrom_list(
@@ -77,6 +110,37 @@ def test_parse_yaml_partition_description(tmp_path: pathlib.Path) -> None:
     assert pdesc.region_length == 8
     assert pdesc.family_bin_size == 2
     assert pdesc.rare_boundary == 50
+
+
+def test_parse_yaml_partition_description_int_region_bins(
+    tmp_path: pathlib.Path,
+) -> None:
+    setup_directories(
+        tmp_path / "partition_description.yaml",
+        textwrap.dedent("""
+            region_bin:
+              chromosomes: foo,bar
+              region_length: 8
+              integer_region_bins: true
+            frequency_bin:
+              rare_boundary: 50.0
+            coding_bin:
+              coding_effect_types: missense,splice-site,frame-shift
+            family_bin:
+              family_bin_size: 2"""),
+    )
+    pd_filename = tmp_path / "partition_description.yaml"
+    pdesc = PartitionDescriptor.parse(pd_filename)
+
+    assert pdesc.chromosomes == ["foo", "bar"]
+    assert pdesc.region_length == 8
+    assert pdesc.integer_region_bins
+    assert pdesc.family_bin_size == 2
+    assert pdesc.rare_boundary == 50
+
+    content = pdesc.serialize("yaml")
+    assert "integer_region_bins: true" in content
+    assert (tmp_path / "partition_description.yaml").read_text() == content
 
 
 def test_parse_yaml_partition_description_chrom_list(
@@ -398,3 +462,51 @@ def test_path_to_partitions() -> None:
     )
     assert res == [("region_bin", "foo_1"), ("frequency_bin", "2"),
                    ("coding_bin", "1")]
+
+
+@pytest.mark.parametrize("chroms, expected", [
+    (["foo"], {
+        "foo_0": [Region("foo", 1, 8)],
+        "foo_1": [Region("foo", 9, 16)],
+        "foo_2": [Region("foo", 17, 24)],
+     }),
+    (["bar"], {
+        "other_0": [Region("bar", 1, 8)],
+        "other_1": [Region("bar", 9, 16)],
+        "other_2": [Region("bar", 17, 17)],
+    }),
+    (["baz"], {
+        "other_0": [Region("baz", 1, 8)],
+        "other_1": [Region("baz", 9, 12)],
+    }),
+    (["bar", "baz"], {
+        "other_0": [Region("bar", 1, 8), Region("baz", 1, 8)],
+        "other_1": [Region("bar", 9, 16), Region("baz", 9, 12)],
+        "other_2": [Region("bar", 17, 17)],
+    }),
+    (["foo", "bar", "baz"], {
+        "foo_0": [Region("foo", 1, 8)],
+        "foo_1": [Region("foo", 9, 16)],
+        "foo_2": [Region("foo", 17, 24)],
+        "other_0": [Region("bar", 1, 8), Region("baz", 1, 8)],
+        "other_1": [Region("bar", 9, 16), Region("baz", 9, 12)],
+        "other_2": [Region("bar", 17, 17)],
+    }),
+])
+def test_make_region_bins_regions(
+    chroms: list[str],
+    expected: dict[str, list[Region]],
+) -> None:
+    pd = PartitionDescriptor.parse_string("""
+        [region_bin]
+        chromosomes = foo
+        region_length = 8
+    """)
+    chrom_lens = {
+        "foo": 24,
+        "bar": 17,
+        "baz": 12,
+    }
+    result = pd.make_region_bins_regions(
+        chroms, chrom_lens)
+    assert result == expected

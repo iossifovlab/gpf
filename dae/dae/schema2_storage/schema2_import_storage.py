@@ -179,11 +179,13 @@ class Schema2ImportStorage(ImportStorage):
     ) -> Generator[tuple[str, list[tuple[str, str]]], None, None]:
         part_desc = cls._get_partition_description(project)
         chromosomes = project.get_variant_loader_chromosomes()
-        chromosome_lengths = dict(filter(
-            lambda cl: cl[0] in chromosomes,
-            project.get_gpf_instance()
-            .reference_genome
-            .get_all_chrom_lengths()))
+
+        reference_genome = project.get_gpf_instance().reference_genome
+        chromosome_lengths = {
+            chrom: reference_genome.get_all_chrom_lengths()[chrom]
+            for chrom in chromosomes
+        }
+
         sum_parts, fam_parts = \
             part_desc.get_variant_partitions(chromosome_lengths)
         if len(sum_parts) == 0:
@@ -238,6 +240,7 @@ class Schema2ImportStorage(ImportStorage):
             "sync_parquet_write", lambda: None, [], bucket_tasks,
         )
         output_dir_tasks = []
+
         for output_dir, partitions in self._variant_partitions(project):
             output_dir_tasks.append(graph.create_task(
                 f"merge_parquet_files_{output_dir}", self._merge_parquets,

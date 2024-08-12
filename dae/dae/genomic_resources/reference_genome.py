@@ -4,7 +4,7 @@ import logging
 import os
 from collections.abc import Generator
 from types import TracebackType
-from typing import IO, Any, cast
+from typing import IO, Any
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.fsspec_protocol import build_local_resource
@@ -29,6 +29,7 @@ class ReferenceGenome(
                 f"wrong type of resource passed: {resource.get_type()}")
         self._index: dict[str, Any] = {}
         self._chromosomes: list[str] = []
+        self._chromosome_lengths: dict[str, int] = {}
         self._sequence: IO | None = None
 
         self.pars: dict = self._parse_pars(resource.get_config())
@@ -99,7 +100,11 @@ class ReferenceGenome(
                 "seqLineLength": int(rec[3]),
                 "lineLength": int(rec[4]),
             }
-        self._chromosomes = list(self._index.keys())
+        self._chromosome_lengths = {
+            chrom: data["length"]
+            for chrom, data in self._index.items()
+        }
+        self._chromosomes = list(self._chromosome_lengths.keys())
 
     def close(self) -> None:
         """Close reference genome sequence file-like objects."""
@@ -146,17 +151,15 @@ class ReferenceGenome(
     def get_chrom_length(self, chrom: str) -> int:
         """Return the length of a specified chromosome."""
         self._load_genome_index()
-        chrom_data = self._index.get(chrom)
-        if chrom_data is None:
+        if chrom not in self._chromosome_lengths:
             raise ValueError(f"can't find chromosome {chrom}")
-        return cast(int, chrom_data["length"])
 
-    def get_all_chrom_lengths(self) -> list[tuple[str, int]]:
+        return self._chromosome_lengths[chrom]
+
+    def get_all_chrom_lengths(self) -> dict[str, int]:
         """Return list of all chromosomes lengths."""
         self._load_genome_index()
-        return [
-            (key, value["length"])
-            for key, value in self._index.items()]
+        return self._chromosome_lengths
 
     def split_into_regions(
         self, region_size: int, chromosome: str | None = None,
@@ -168,7 +171,7 @@ class ReferenceGenome(
         in that chromosome only.
         """
         if chromosome is None:
-            chromosome_lengths = self.get_all_chrom_lengths()
+            chromosome_lengths = list(self.get_all_chrom_lengths().items())
         else:
             chromosome_lengths = [
                 (chromosome, self.get_chrom_length(chromosome)),

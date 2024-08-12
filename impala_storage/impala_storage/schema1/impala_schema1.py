@@ -128,7 +128,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             lambda cl: cl[0] in chromosomes,
             project.get_gpf_instance()
             .reference_genome
-            .get_all_chrom_lengths()))
+            .get_all_chrom_lengths().items()))
         _, fam_parts = \
             part_desc.get_variant_partitions(chromosome_lengths)
         for part in fam_parts:

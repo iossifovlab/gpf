@@ -37,7 +37,7 @@ def test_import_task_bin_size(
     cli.run_with_project(project)
 
     # Assert the expected output files and dirs are created in the work_dir
-    # (i.e. tmpdir)
+    # i.e. tmpdir
     files = os.listdir(tmp_path)
     assert "test_import" in files
 
@@ -166,10 +166,6 @@ def test_bucket_generation_no_processing_region_length(
         },
         "processing_config": {
             "work_dir": "",
-            # "denovo": {
-            #     "chromosomes": ["chr1"],
-            #     "region_length": 15
-            # }
         },
         "partition_description": {
             "region_bin": {
@@ -182,7 +178,7 @@ def test_bucket_generation_no_processing_region_length(
         import_config, gpf_instance=gpf_fixture)
     buckets = list(project._loader_region_bins("denovo"))
     assert len(buckets) == 1
-    assert buckets[0].regions == [None]
+    assert buckets[0].regions == []
 
 
 def test_bucket_generation_chrom_mismatch(
@@ -259,9 +255,7 @@ _denovo_multi_chrom_config = {
 }
 
 
-@pytest.mark.parametrize("add_chrom_prefix", [None, "chr"])
 def test_single_bucket_generation(
-    add_chrom_prefix: str | None,
     gpf_fixture: GPFInstance,
 ) -> None:
     import_config = deepcopy(_denovo_multi_chrom_config)
@@ -273,7 +267,7 @@ def test_single_bucket_generation(
         import_config, gpf_instance=gpf_fixture)
     buckets = list(project._loader_region_bins("denovo"))
     assert len(buckets) == 1
-    assert buckets[0].regions == [None]
+    assert buckets[0].regions == []
 
 
 def test_single_bucket_is_default_when_missing_processing_config(
@@ -286,7 +280,7 @@ def test_single_bucket_is_default_when_missing_processing_config(
         import_config, gpf_instance=gpf_fixture)
     buckets = list(project._loader_region_bins("denovo"))
     assert len(buckets) == 1
-    assert buckets[0].regions == [None]
+    assert buckets[0].regions == []
 
 
 def test_chromosome_bucket_generation(

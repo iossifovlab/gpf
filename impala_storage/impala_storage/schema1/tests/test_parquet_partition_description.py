@@ -87,7 +87,8 @@ def test_parquet_region_bin(
 ) -> None:
     sv = SummaryVariant(summary_alleles)
     fv = FamilyVariant(sv, fam1, genotype, None)
-    part_desc = PartitionDescriptor(chromosomes, region_length)
+    part_desc = PartitionDescriptor(
+        chromosomes=chromosomes, region_length=region_length)
     region_bin = part_desc.make_region_bin(fv.chrom, fv.position)
     for aa in fv.alleles:
         fa = cast(FamilyAllele, aa)
@@ -105,8 +106,9 @@ def test_parquet_family_bin(
     fv2 = FamilyVariant(sv, fam2, genotype, None)
 
     family_bin_size = 10
-    part_desc = PartitionDescriptor(["1"], 1000, family_bin_size)
-    for a1, a2 in zip(fv1.alleles, fv2.alleles):
+    part_desc = PartitionDescriptor(
+        chromosomes=["1"], region_length=1000, family_bin_size=family_bin_size)
+    for a1, a2 in zip(fv1.alleles, fv2.alleles, strict=True):
         fa1 = cast(FamilyAllele, a1)
         fa2 = cast(FamilyAllele, a2)
         assert part_desc.make_family_bin(fa1.family_id) == 9
@@ -139,7 +141,8 @@ def test_parquet_frequency_bin(
     sv = SummaryVariant(summary_alleles)
     fv = FamilyVariant(sv, fam1, genotype, None)
     part_desc = PartitionDescriptor(
-        ["1"], 1000, rare_boundary=rare_boundary)
+        chromosomes=["1"], region_length=1000,
+        rare_boundary=rare_boundary)
 
     for fa in fv.alleles:
         allele_count = fa.get_attribute("af_allele_count")
