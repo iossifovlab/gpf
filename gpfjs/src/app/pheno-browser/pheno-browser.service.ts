@@ -59,12 +59,9 @@ export class PhenoBrowserService {
   }
 
   public getMeasures(
-    page: number,
     datasetId: string,
     instrument: PhenoInstrument,
-    search: string,
-    sortBy?: string,
-    orderBy?: string
+    search: string
   ): Observable<PhenoMeasure[]> {
     const headers = this.getHeaders();
     if (this.authService.accessToken !== '') {
@@ -72,7 +69,7 @@ export class PhenoBrowserService {
     }
     const options = { headers: headers, withCredentials: true };
 
-    let url = `${this.config.baseUrl}${this.measuresUrl}?page=${page}`;
+    let url = `${this.config.baseUrl}${this.measuresUrl}?instrument=${instrument}`;
     const datasetParam = new HttpParams().set('dataset_id', datasetId);
     url += `&${datasetParam.toString()}`;
 
@@ -80,15 +77,6 @@ export class PhenoBrowserService {
       const searchParams = new HttpParams().set('search', search);
       url += `&${searchParams.toString()}`;
     }
-
-    if (sortBy && orderBy) {
-      const sortParams = new HttpParams().set('sort_by', sortBy);
-      const orderParams = new HttpParams().set('order_by', orderBy);
-      url += `&${sortParams.toString()}&${orderParams.toString()}`;
-    }
-
-    const instrumentParam = new HttpParams().set('instrument', instrument);
-    url += `&${instrumentParam.toString()}`;
 
     return this.http.get<PhenoMeasure[]>(url, options).pipe(
       map(res => {

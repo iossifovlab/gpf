@@ -3,7 +3,9 @@
   [ngStyle]="{
     'grid-template-columns': 'repeat(' + columnsCount + ', 4fr)'
   }">
-  <div class="grid-header" (click)="sort('instrument', 'instrument' === sortBy && orderBy === 'desc' ? 'asc' : 'desc')">
+  <div
+    class="grid-header"
+    (click)="sort('instrumentName', 'instrumentName' === sortBy && orderBy === 'desc' ? 'asc' : 'desc')">
     <div class="single-sorting-button">
       <span>Instrument</span>
       <gpf-sorting-buttons
@@ -15,7 +17,9 @@
     </div>
   </div>
 
-  <div class="grid-header" (click)="sort('measure', 'measure' === sortBy && orderBy === 'desc' ? 'asc' : 'desc')">
+  <div
+    class="grid-header"
+    (click)="sort('measureName', 'measureName' === sortBy && orderBy === 'desc' ? 'asc' : 'desc')">
     <div class="single-sorting-button">
       <span>Proband Pheno Measure</span>
       <gpf-sorting-buttons
@@ -34,7 +38,7 @@
   <div class="grid-header">
     <div
       class="subheader-sorting-button"
-      (click)="sort('measure_type', 'measure_type' === sortBy && orderBy === 'desc' ? 'asc' : 'desc')">
+      (click)="sort('measureType', 'measureType' === sortBy && orderBy === 'desc' ? 'asc' : 'desc')">
       Measure Type
       <gpf-sorting-buttons
         *ngIf="true"
@@ -56,28 +60,34 @@
       <div
         class="subheader-sorting-button"
         (click)="
-          sort(regressionId + '.male', regressionId + '.male' === sortBy && orderBy === 'desc' ? 'asc' : 'desc')
+          sort(
+            regressionId + '.pvalueRegressionMale',
+            regressionId + '.pvalueRegressionMale' === sortBy && orderBy === 'desc' ? 'asc' : 'desc'
+          )
         ">
         <div>male</div>
         <gpf-sorting-buttons
           *ngIf="true"
-          [id]="regressionId + '.male'"
+          [id]="regressionId + '.pvalueRegressionMale'"
           class="header-button sorting-button"
-          [sortState]="regressionId + '.male' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
+          [sortState]="regressionId + '.pvalueRegressionMale' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
         </gpf-sorting-buttons>
       </div>
 
       <div
         class="subheader-sorting-button"
         (click)="
-          sort(regressionId + '.female', regressionId + '.female' === sortBy && orderBy === 'desc' ? 'asc' : 'desc')
+          sort(
+            regressionId + '.pvalueRegressionFemale',
+            regressionId + '.pvalueRegressionFemale' === sortBy && orderBy === 'desc' ? 'asc' : 'desc'
+          )
         ">
         <div>female</div>
         <gpf-sorting-buttons
           *ngIf="true"
-          [id]="regressionId + '.female'"
+          [id]="regressionId + '.pvalueRegressionFemale'"
           class="header-button sorting-button"
-          [sortState]="regressionId + '.female' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
+          [sortState]="regressionId + '.pvalueRegressionFemale' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
         </gpf-sorting-buttons>
       </div>
     </div>

@@ -36,6 +36,12 @@
           >close</span
         >
       </div>
+
+      <div id="measures-counter" *ngIf="measuresToShow?.measures">
+        <span *ngIf="measuresToShow.measures.length < 1001">Measures count: {{ measuresToShow.measures.length }}</span>
+        <span *ngIf="measuresToShow.measures.length > 1000">More than 1000 measures selected (1000 shown)</span>
+      </div>
+
       <div id="download-wrapper">
         <span>Phenotype measures</span>
         <input name="queryData" type="hidden" />
@@ -50,8 +56,7 @@
 <div *ngIf="measuresToShow" class="col-lg-12" style="padding: 0 30px">
   <gpf-pheno-browser-table
     [measures]="measuresToShow"
-    [measuresChangeTick]="measuresChangeTick"
-    (sortEvent)="handleSort($event)"></gpf-pheno-browser-table>
+    [measuresChangeTick]="measuresChangeTick"></gpf-pheno-browser-table>
 </div>
 
 <div *ngIf="errorModal">
