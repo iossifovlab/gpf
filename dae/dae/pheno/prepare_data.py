@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from box import Box
-from sqlalchemy import text
 
 from dae.pheno.common import MeasureType
 from dae.pheno.graphs import (
@@ -340,8 +339,8 @@ class PreparePhenoBrowserBase:
                         "display_name": reg_data.display_name,
                     },
                 )
-        with db.engine.begin() as conn:
-            conn.execute(text("CHECKPOINT"))
+        with db.connection.cursor() as cursor:
+            cursor.execute("CHECKPOINT")
 
         graph = TaskGraph()
 

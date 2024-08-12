@@ -245,7 +245,6 @@ class PhenoMeasuresDownload(QueryDatasetView):
             values_iterator = self.get_measure_ids(request)
             response = StreamingHttpResponse(
                 values_iterator, content_type="text/csv")
-
         except ValueError:
             logger.exception("Error")
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -255,11 +254,11 @@ class PhenoMeasuresDownload(QueryDatasetView):
         except CountError:
             logger.exception("Measure count is too large")
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
-        else:
-            response["Content-Disposition"] = \
-                "attachment; filename=measures.csv"
-            response["Expires"] = "0"
-            return response
+
+        response["Content-Disposition"] = \
+            "attachment; filename=measures.csv"
+        response["Expires"] = "0"
+        return response
 
     #  pylint:disable=method-hidden
     def head(self, request: Request) -> Response:
@@ -275,8 +274,8 @@ class PhenoMeasuresDownload(QueryDatasetView):
         except CountError:
             logger.exception("Measure count is too large")
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
-        else:
-            return Response(status=status.HTTP_200_OK)
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class PhenoMeasureValues(QueryDatasetView):

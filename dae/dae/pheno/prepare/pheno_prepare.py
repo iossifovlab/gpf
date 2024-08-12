@@ -105,7 +105,7 @@ class PrepareBase(PrepareCommon):
 
         with self.connection.cursor() as cursor:
             for query in queries:
-                cursor.execute(query)
+                cursor.execute(to_duckdb_transpile(query))
 
     def _build_instruments_and_measures_table(self) -> None:
         """Create tables for instruments and measures."""
@@ -152,7 +152,7 @@ class PrepareBase(PrepareCommon):
 
         with self.connection.cursor() as cursor:
             for query in queries:
-                cursor.execute(query)
+                cursor.execute(to_duckdb_transpile(query))
 
     def _build_browser(self) -> None:
         create_variable_browser = sqlglot.parse(textwrap.dedent(
@@ -215,7 +215,7 @@ class PrepareBase(PrepareCommon):
 
         with self.connection.cursor() as cursor:
             for query in queries:
-                cursor.execute(query)
+                cursor.execute(to_duckdb_transpile(query))
 
 
 class PreparePersons(PrepareBase):
@@ -252,7 +252,7 @@ class PreparePersons(PrepareBase):
             self._build_sample_id,
         )
         self.connection.execute(
-            "INSERT INTO TABLE person "
+            "INSERT INTO person "
             "SELECT family_id, person_id, "
             "role, status, sex, sample_id FROM ped_df ",
         )
