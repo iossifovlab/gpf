@@ -279,6 +279,65 @@ def test_bigwig_correct_fetching_of_intervals(
         assert len(vs) == 3
 
 
+def test_no_repeating_in_buffered(
+    tmp_path: pathlib.Path,
+) -> None:
+    root_path = tmp_path
+    setup_directories(
+        root_path,
+        {
+            "grr.yaml": textwrap.dedent(f"""
+                id: test_grr
+                type: directory
+                directory: {root_path!s}
+            """),
+            "test_score": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                        type: position_score
+                        table:
+                            filename: data.bw
+                            format: bigWig
+                        scores:
+                        - id: score_one
+                          type: float
+                          index: 3
+                """),
+            },
+        },
+    )
+    data = textwrap.dedent("""
+        chr1   0         1000       0.01
+        chr1   1000      1001       0.02
+        chr1   1001      1002       0.03
+        chr1   1002      1003       0.04
+        chr1   1003      1004       0.05
+    """)
+    setup_bigwig(
+        root_path / "test_score" / "data.bw", data,
+        {"chr1": 5000},
+    )
+    grr = build_filesystem_test_repository(root_path)
+    assert grr is not None
+    res = grr.get_resource("test_score")
+    table_definition = res.get_config()["table"]
+    with BigWigTable(res, table_definition) as bigwig_table:
+        vs = list(bigwig_table.get_records_in_region("chr1", 1001, 1001))
+        assert len(vs) == 1
+        assert vs[0].chrom == "chr1"
+        assert vs[0].pos_begin == 1001
+        assert vs[0].pos_end == 1001
+        vs = list(bigwig_table.get_records_in_region("chr1", 1002, 1002))
+        assert len(vs) == 1
+        assert vs[0].chrom == "chr1"
+        assert vs[0].pos_begin == 1002
+        assert vs[0].pos_end == 1002
+        vs = list(bigwig_table.get_records_in_region("chr1", 1003, 1003))
+        assert len(vs) == 1
+        assert vs[0].chrom == "chr1"
+        assert vs[0].pos_begin == 1003
+        assert vs[0].pos_end == 1003
+
+
 def test_bigwig_buffering_switching(
     tmp_path: pathlib.Path, mocker: pytest_mock.MockerFixture,
 ) -> None:

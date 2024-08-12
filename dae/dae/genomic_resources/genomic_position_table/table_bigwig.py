@@ -77,31 +77,45 @@ class BigWigTable(GenomicPositionTable):
                 self._buffer[0][0] + 1,
                 self._buffer[-1][1])
 
-    @staticmethod
-    def _binary_search(q_start: int, q_stop: int, start: int, stop: int) -> int:
-        if q_stop < start:
-            return -1
-        if q_start > stop:
-            return 1
-        return 0
-
     def _find(self, chrom: str, pos_begin: int, pos_end: int) -> int:
+
+        def _left_right_helper(
+            q_start: int, q_stop: int,
+            start: int, stop: int,
+        ) -> int:
+            if q_stop <= start:
+                return -1
+            if q_start >= stop:
+                return 1
+            return 0
+
         query = Region(chrom, pos_begin, pos_end)
         if not query.intersects(self._buffer_region):
             return -1
-        idx: int = len(self._buffer) // 2
+
         # do binary search on buffer, get idx
+        idx: int = len(self._buffer) // 2
         l_bound = 0
         r_bound = len(self._buffer) - 1
         while l_bound <= r_bound:
             idx = (r_bound + l_bound) // 2
             line = self._buffer[idx]
-            res = BigWigTable._binary_search(
+            res = _left_right_helper(
                 pos_begin, pos_end, line[0], line[1])
             if res == 1:
                 l_bound = idx + 1
-            elif res in (0, -1):
+            elif res == -1:
                 r_bound = idx - 1
+            elif res == 0:
+                if idx == 0:
+                    return idx
+                prevline = self._buffer[idx - 1]
+                subres = _left_right_helper(
+                    pos_begin, pos_end, prevline[0], prevline[1])
+                if subres == 0:
+                    r_bound = idx - 1
+                else:
+                    return idx
         return idx
 
     def _fetch_buffered(
@@ -130,7 +144,7 @@ class BigWigTable(GenomicPositionTable):
         chrom_len = self.chroms[chrom]
         pos_end = min(pos_end, chrom_len)
 
-        start = max(0, pos_begin - 1)
+        start = pos_begin
         stop = min(start + self.direct_fetch_size, pos_end)
         while start < pos_end:
             intervals = self._bw_file.intervals(chrom, start, stop)
@@ -159,6 +173,8 @@ class BigWigTable(GenomicPositionTable):
             pos_begin = 0
         if pos_end is None:
             pos_end = self.chroms[fchrom]
+
+        pos_begin = max(0, pos_begin - 1)
 
         fetch_method = self._fetch_buffered \
             if pos_begin - self._last_pos <= self.use_buffered_threshold \
