@@ -546,27 +546,40 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         assert query is not None
 
+        empty_result = False
         cols_in = []
         if person_ids is not None:
-            col = person_id_col
-            cols_in.append(col.isin(*person_ids))
+            if len(person_ids) == 0:
+                empty_result = True
+            else:
+                col = person_id_col
+                cols_in.append(col.isin(*person_ids))
         if family_ids is not None:
-            col = column(
-                "family_id",
-                instrument_people.alias_or_name,
-            )
-            cols_in.append(col.isin(*family_ids))
+            if len(family_ids) == 0:
+                empty_result = True
+            else:
+                col = column(
+                    "family_id",
+                    instrument_people.alias_or_name,
+                )
+                cols_in.append(col.isin(*family_ids))
         if roles is not None:
-            col = column(
-                "role",
-                instrument_people.alias_or_name,
-            )
-            cols_in.append(col.isin(*[r.value for r in roles]))
+            if len(roles) == 0:
+                empty_result = True
+            else:
+                col = column(
+                    "role",
+                    instrument_people.alias_or_name,
+                )
+                cols_in.append(col.isin(*[r.value for r in roles]))
 
         query = query.order_by(person_id_col)
 
         if cols_in:
             query = query.where(reduce(glot_and, cols_in))
+
+        if empty_result:
+            query = query.where("1=2")
 
         return (
             to_duckdb_transpile(query),
