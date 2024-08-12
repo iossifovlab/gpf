@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Generator, Iterator
 from functools import reduce
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import duckdb
 import pandas as pd
@@ -11,6 +11,7 @@ import sqlglot
 from duckdb import ConstraintException
 from sqlglot import column, expressions, select, table
 from sqlglot.expressions import delete, insert, update, values
+from sqlglot.parser import build_like
 
 from dae.pheno.common import MeasureType
 from dae.utils.sql_utils import glot_and, to_duckdb_transpile
@@ -87,14 +88,13 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 measure_groups.append(group)
         return measure_groups
 
-    def save(self, v: dict[str, str | None]) -> None:
+    def save(self, v: dict[str, Any]) -> None:
         """Save measure values into the database."""
         query = to_duckdb_transpile(insert(
             values([(*v.values(),)]),
             self.variable_browser,
             columns=[*v.keys()],
         ))
-
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(query)
@@ -103,7 +103,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
             delete_query = to_duckdb_transpile(delete(
                 self.variable_browser,
-            ).where(f"measure_id = {measure_id}"))
+            ).where("measure_id").eq(measure_id))
             with self.connection.cursor() as cursor:
                 cursor.execute(delete_query)
                 cursor.execute(query)
@@ -156,12 +156,11 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
     def get_browser_measure(self, measure_id: str) -> dict | None:
         """Get measure description from phenotype browser database."""
-        query = to_duckdb_transpile(select(
-            column("*", self.variable_browser.alias_or_name),
-        ).from_(self.variable_browser).where(f"measure_id = {measure_id}"))
+        query = to_duckdb_transpile(select("variable_browser.*",
+        ).from_(self.variable_browser).where("measure_id").eq(measure_id))
         with self.connection.cursor() as cursor:
             rows = cursor.execute(query).df()
-            if rows:
+            if not rows.empty:
                 return rows.to_dict("records")[0]
             return None
 
@@ -219,18 +218,33 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         if keyword:
             column_filters = []
-            keyword = keyword.replace("%", r"/%").replace("_", r"/_")
-            keyword = f"%{keyword}%"
+            keyword = keyword.replace("/", "//")\
+                .replace("%", r"/%").replace("_", r"/_")
+            keyword = f"'%{keyword}%'"
             if not instrument_name:
                 column_filters.append(
-                    column(
-                        "instrument_name",
-                        table="variable_browser",
-                    ).like(keyword))
+                    build_like([
+                        keyword,
+                        column("instrument_name", table="variable_browser"),
+                        "'/'",
+                    ]),
+                )
             column_filters.extend((
-                column("measure_id", table="variable_browser").like(keyword),
-                column("measure_name", table="variable_browser").like(keyword),
-                column("description", table="variable_browser").like(keyword),
+                build_like([
+                    keyword,
+                    column("measure_id", table="variable_browser"),
+                    "'/'",
+                ]),
+                build_like([
+                    keyword,
+                    column("measure_name", table="variable_browser"),
+                    "'/'",
+                ]),
+                build_like([
+                    keyword,
+                    column("description", table="variable_browser"),
+                    "'/'",
+                ]),
             ))
             query = query.where(reduce(
                 lambda left, right: left.or_(right),  # type: ignore
@@ -328,7 +342,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         if instrument is not None:
             query = query.where(columns[1]).eq(instrument)
         if measure_type is not None:
-            query = query.where(columns[4]).eq(measure_type)
+            query = query.where(columns[4]).eq(measure_type.value)
 
         with self.connection.cursor() as cursor:
             df = cursor.execute(to_duckdb_transpile(query)).df()
@@ -394,7 +408,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     ) -> pd.DataFrame:
         """Find measures and return a dataframe with values."""
         query = to_duckdb_transpile(
-            self.build_measures_query(instrument_name, keyword))
+            self.build_measures_query(instrument_name, keyword)[0])
         # execute query and .df()
 
         return self.connection.execute(query).df()
@@ -459,52 +473,66 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         person_ids: list[str] | None = None,
         family_ids: list[str] | None = None,
         roles: list[Role] | None = None,
-    ) -> tuple[str, list[expressions.Expression]]:
+    ) -> tuple[str, list[expressions.Column]]:
         assert isinstance(measure_ids, list)
         assert len(measure_ids) >= 1
         assert len(self.instrument_values_tables) > 0
 
-        query = None
         instrument_tables = {}
-        output_cols = []
+
+        for measure_id in measure_ids:
+            instrument, _ = measure_id.split(".")
+            instrument_table = table(generate_instrument_table_name(instrument))
+            instrument_tables[instrument] = instrument_table
+
+        union_queries = [
+            select(
+                column("person_id", table.alias_or_name),
+                column("family_id", table.alias_or_name),
+                column("role", table.alias_or_name),
+                column("status", table.alias_or_name),
+                column("sex", table.alias_or_name),
+            ).from_(table)
+            for table in instrument_tables.values()
+        ]
+        instrument_people = reduce(
+            lambda left, right: left.union(right),  # type: ignore
+            union_queries,
+        ).subquery(alias="instrument_people")
+
+        person_id_col = column("person_id", instrument_people.alias_or_name)
+
+        output_cols = [
+            person_id_col,
+            column("family_id", instrument_people.alias_or_name),
+            column("role", instrument_people.alias_or_name),
+            column("status", instrument_people.alias_or_name),
+            column("sex", instrument_people.alias_or_name),
+        ]
+
+        query = select(*output_cols).from_(instrument_people)
+        joined = set()
         for measure_id in measure_ids:
             instrument, measure = measure_id.split(".")
-            instrument_table = table(generate_instrument_table_name(instrument))
-            if instrument not in instrument_tables:
-                if query is None:
-                    first_instrument_table = instrument_table
-                    cols = [
-                        column("person_id", instrument_table.alias_or_name),
-                        column("family_id", instrument_table.alias_or_name),
-                        column("role", instrument_table.alias_or_name),
-                        column("status", instrument_table.alias_or_name),
-                        column("sex", instrument_table.alias_or_name),
-                        column(
-                            safe_db_name(measure),
-                            instrument_table.alias_or_name,
-                        ).as_(measure_id),
-                    ]
-                    query = select(
-                        *cols,
-                    ).from_(instrument_table)
-                    output_cols.extend(cols)
-                else:
-                    left_col = column(
-                        "person_id", first_instrument_table.alias_or_name,
-                    ).sql()
-                    right_col = column(
-                        "person_id", instrument_table.alias_or_name,
-                    ).sql()
-                    measure_col = column(
-                        safe_db_name(measure),
-                        instrument_table.alias_or_name,
-                    ).as_(measure_id)
-                    query = query.select(
-                        measure_col,
-                    ).join(instrument_table, on=f"{left_col} = {right_col}")
-                    output_cols.append(measure_col)
-
-                instrument_tables[instrument] = instrument_table
+            instrument_table = instrument_tables[instrument]
+            if instrument not in joined:
+                left_col = person_id_col.sql()
+                right_col = column(
+                    "person_id", instrument_table.alias_or_name,
+                ).sql()
+                measure_col = column(
+                    safe_db_name(measure),
+                    instrument_table.alias_or_name,
+                ).as_(measure_id)
+                query = query.select(
+                    measure_col,
+                ).join(
+                    instrument_table,
+                    on=f"{left_col} = {right_col}",
+                    join_type="FULL OUTER",
+                )
+                joined.add(instrument)
+                output_cols.append(cast(expressions.Column, measure_col))
             else:
                 assert query is not None
                 measure_col = column(
@@ -514,34 +542,28 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 query = query.select(
                     measure_col,
                 )
-                output_cols.append(measure_col)
+                output_cols.append(cast(expressions.Column, measure_col))
 
         assert query is not None
 
         cols_in = []
         if person_ids is not None:
-            col = column(
-                "person_id",
-                first_instrument_table.alias_or_name,
-            )
+            col = person_id_col
             cols_in.append(col.isin(*person_ids))
         if family_ids is not None:
             col = column(
                 "family_id",
-                first_instrument_table.alias_or_name,
+                instrument_people.alias_or_name,
             )
             cols_in.append(col.isin(*family_ids))
         if roles is not None:
             col = column(
                 "role",
-                first_instrument_table.alias_or_name,
+                instrument_people.alias_or_name,
             )
             cols_in.append(col.isin(*[r.value for r in roles]))
 
-        query = query.order_by(column(
-            "person_id",
-            first_instrument_table.alias_or_name,
-        ))
+        query = query.order_by(person_id_col)
 
         if cols_in:
             query = query.where(reduce(glot_and, cols_in))

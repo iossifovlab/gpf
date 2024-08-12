@@ -131,6 +131,13 @@ def fake_phenotype_data_dbfile() -> str:
 
 
 @pytest.fixture(scope="session")
+def fake_phenotype_data_i1_dbfile() -> str:
+    return relative_to_this_folder(
+        "fixtures/fake_phenoDB/fake_i1/fake_i1.db",
+    )
+
+
+@pytest.fixture(scope="session")
 def fake_phenotype_data_browser_dbfile() -> str:
     return relative_to_this_folder(
         "fixtures/fake_phenoDB/main_fake/fake_browser.db",
@@ -230,3 +237,17 @@ def temp_dirname_figures(request) -> str:
 
     request.addfinalizer(fin)
     return dirname
+
+
+@pytest.fixture()
+def fake_phenodb_file_copy(
+    output_dir: str,
+    fake_phenotype_data_i1_dbfile: str,
+) -> str:
+    temp_dbfile = os.path.join(output_dir, "phenodb.db")
+    shutil.copy(
+        fake_phenotype_data_i1_dbfile,
+        temp_dbfile,
+    )
+
+    return temp_dbfile

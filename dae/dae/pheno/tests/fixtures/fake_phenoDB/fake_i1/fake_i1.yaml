@@ -1,0 +1,3 @@
+phenotype_data:
+  dbfile: '%(wd)s/fake_i1.db'
+  name: fake_i1

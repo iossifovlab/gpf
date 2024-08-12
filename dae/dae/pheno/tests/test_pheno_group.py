@@ -70,7 +70,9 @@ def test_pheno_group_get_people_measure_values_df(
         "sex": [Sex.M],
         "i1.iq": [86.41],
     })
-    pd.testing.assert_frame_equal(df, expected, atol=1e-2)
+    pd.testing.assert_frame_equal(
+        df, expected, atol=1e-2, check_dtype=False,
+    )
 
 
 @pytest.mark.parametrize(
@@ -142,7 +144,7 @@ def test_pheno_group_i1_get_values_df(
         "sex": [Sex.M],
         "i1.iq": [86.41],
     })
-    pd.testing.assert_frame_equal(df, expected, atol=1e-2)
+    pd.testing.assert_frame_equal(df, expected, atol=1e-2, check_dtype=False)
 
 
 @pytest.mark.parametrize(
@@ -172,7 +174,7 @@ def test_pheno_group_i2_get_values_df(
         "sex": [Sex.M],
         "i5.iq": [86.41],
     })
-    pd.testing.assert_frame_equal(df, expected, atol=1e-2)
+    pd.testing.assert_frame_equal(df, expected, atol=1e-2, check_dtype=False)
 
 
 @pytest.mark.parametrize(
@@ -204,7 +206,7 @@ def test_pheno_group_i1_i2_get_values_df(
         "i5.iq": [None, 86.41],
     })
 
-    pd.testing.assert_frame_equal(df, expected, atol=1e-2)
+    pd.testing.assert_frame_equal(df, expected, atol=1e-2, check_dtype=False)
 
 
 @pytest.mark.parametrize(

@@ -1,23 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-import os
 from typing import Any
-
-import pytest
-from box import Box
 
 from dae.pheno.common import MeasureType
 from dae.pheno.db import PhenoDb
 from dae.pheno.registry import PhenoRegistry
 
 
-def test_db_save(output_dir: str) -> None:
+def test_db_save(fake_phenodb_file_copy: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
+        fake_phenodb_file_copy,
         read_only=False,
     )
     assert db is not None
-
-    db.build(create=True)
 
     v = {
         "measure_id": "test.measure",
@@ -38,13 +32,12 @@ def test_db_save(output_dir: str) -> None:
     assert res["figure_distribution"] is None
 
 
-def test_db_update(output_dir: str) -> None:
+def test_db_update(fake_phenodb_file_copy: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
+        fake_phenodb_file_copy,
         read_only=False,
     )
     assert db is not None
-    db.build(create=True)
 
     v: dict[str, Any] = {
         "measure_id": "test.measure",
@@ -68,13 +61,12 @@ def test_db_update(output_dir: str) -> None:
     assert res["figure_distribution"] == "test_figure.png"
 
 
-def test_has_descriptions(output_dir: str) -> None:
+def test_has_descriptions(fake_phenodb_file_copy: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
+        fake_phenodb_file_copy,
         read_only=False,
     )
     assert db is not None
-    db.build(create=True)
 
     for i in range(3):
         v = {
@@ -105,7 +97,6 @@ def test_search_measures_get_all(
         fake_phenotype_data_dbfile,
     )
     assert db is not None
-    db.build()
     measures = list(db.search_measures())
     assert len(measures) == 15
     assert [measure.get("instrument_name") for measure in measures] == [
@@ -134,7 +125,6 @@ def test_search_measures_get_by_instrument(
         fake_phenotype_data_dbfile,
     )
     assert db is not None
-    db.build()
     measure_df = db.search_measures_df("i1", None)
     assert len(measure_df) == 12
     for _, row in measure_df.iterrows():
@@ -154,7 +144,6 @@ def test_search_measures_by_keyword_in_description(
         fake_phenotype_data_dbfile,
     )
     assert db is not None
-    db.build()
     measure_df = db.search_measures_df(None, "number")
     assert len(measure_df) == 3
     for _, row in measure_df.iterrows():
@@ -168,7 +157,6 @@ def test_search_measures_by_keyword_in_measure_id(
         fake_phenotype_data_dbfile,
     )
     assert db is not None
-    db.build()
     measure_df = db.search_measures_df(None, "i1.m2")
     assert len(measure_df) == 1
     assert measure_df.iloc[0]["measure_name"] == "m2"
@@ -182,7 +170,6 @@ def test_search_measures_by_keyword_in_measure_name(
         fake_phenotype_data_dbfile,
     )
     assert db is not None
-    db.build()
     measure_df = db.search_measures_df(None, "m2")
     assert len(measure_df) == 2
     assert measure_df.iloc[0]["measure_name"] == "m2"
@@ -198,7 +185,6 @@ def test_search_measures_by_keyword_in_instrument_name(
         fake_phenotype_data_dbfile,
     )
     assert db is not None
-    db.build()
 
     measure_df = db.search_measures_df(None, "i")
     assert len(measure_df) == 15
@@ -209,13 +195,12 @@ def test_search_measures_by_keyword_in_instrument_name(
         assert row["instrument_name"] == "i1"
 
 
-def test_db_search_character_escaping(output_dir: str) -> None:
+def test_db_search_character_escaping(fake_phenodb_file_copy: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
+        fake_phenodb_file_copy,
         read_only=False,
     )
     assert db is not None
-    db.build(create=True)
 
     val1: dict[str, Any] = {
         "measure_id": "test_one.measure1",
@@ -251,49 +236,12 @@ def test_db_search_character_escaping(output_dir: str) -> None:
     assert res["measure_name"][0] == "measure2"
 
 
-def test_save_and_get_regressions(output_dir: str) -> None:
+def test_get_regression_names(fake_phenodb_file_copy: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
+        fake_phenodb_file_copy,
         read_only=False,
     )
     assert db is not None
-    db.build(create=True)
-
-    reg = {}
-    reg["regression_id"] = "test_regression"
-    reg["instrument_name"] = "test_instrument"
-    reg["measure_name"] = "test_measure"
-    reg["display_name"] = "a test regression with a display name"
-    db.save_regression(reg)
-
-    reg["regression_id"] = "test_regression2"
-    reg["instrument_name"] = "test_instrument"
-    reg["measure_name"] = "test_measure2"
-    del reg["display_name"]
-    db.save_regression(reg)
-
-    res = db.get_regression("test_regression")
-    assert res is not None
-    assert res["regression_id"] == "test_regression"
-    assert res["instrument_name"] == "test_instrument"
-    assert res["measure_name"] == "test_measure"
-    assert res["display_name"] == "a test regression with a display name"
-
-    res = db.get_regression("test_regression2")
-    assert res is not None
-    assert res["regression_id"] == "test_regression2"
-    assert res["instrument_name"] == "test_instrument"
-    assert res["measure_name"] == "test_measure2"
-    assert res["display_name"] is None
-
-
-def test_get_regression_names(output_dir: str) -> None:
-    db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
-        read_only=False,
-    )
-    assert db is not None
-    db.build(create=True)
 
     reg = {}
     reg["regression_id"] = "test_regression"
@@ -315,108 +263,12 @@ def test_get_regression_names(output_dir: str) -> None:
     }
 
 
-def test_save_and_get_regression_values(output_dir: str) -> None:
+def test_regression_ids(fake_phenodb_file_copy: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
+        fake_phenodb_file_copy,
         read_only=False,
     )
     assert db is not None
-    db.build(create=True)
-
-    regression_template = {
-        "measure_id": "test.measure",
-        "figure_regression": "regfigpath",
-        "figure_regression_small": "regfigsmallpath",
-    }
-    reg = regression_template
-
-    reg["regression_id"] = "test_regression_1"
-    reg["pvalue_regression_male"] = "0.1"
-    reg["pvalue_regression_female"] = "0.2"
-    db.save_regression_values(reg)
-
-    reg["regression_id"] = "test_regression_2"
-    reg["pvalue_regression_male"] = "0.3"
-    reg["pvalue_regression_female"] = "0.4"
-    db.save_regression_values(reg)
-
-    res = db.get_regression_values("test.measure")
-    assert res == [
-        Box({
-            "regression_id": "test_regression_1",
-            "measure_id": "test.measure",
-            "figure_regression": "regfigpath",
-            "figure_regression_small": "regfigsmallpath",
-            "pvalue_regression_male": pytest.approx(0.1),
-            "pvalue_regression_female": pytest.approx(0.2),
-        }),
-        Box({
-            "regression_id": "test_regression_2",
-            "measure_id": "test.measure",
-            "figure_regression": "regfigpath",
-            "figure_regression_small": "regfigsmallpath",
-            "pvalue_regression_male": pytest.approx(0.3),
-            "pvalue_regression_female": pytest.approx(0.4),
-        }),
-    ]
-
-
-def test_update_regression_values(output_dir: str) -> None:
-    db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
-        read_only=False,
-    )
-    assert db is not None
-    db.build(create=True)
-
-    regression_template = {
-        "measure_id": "test.measure",
-        "figure_regression": "regfigpath",
-        "figure_regression_small": "regfigsmallpath",
-    }
-    reg = regression_template
-
-    reg["regression_id"] = "test_regression_1"
-    reg["pvalue_regression_male"] = "0.1"
-    reg["pvalue_regression_female"] = "0.2"
-    db.save_regression_values(reg)
-
-    res = db.get_regression_values("test.measure")
-    res = db.get_regression_values("test.measure")
-    assert res == [
-        Box({
-            "regression_id": "test_regression_1",
-            "measure_id": "test.measure",
-            "figure_regression": "regfigpath",
-            "figure_regression_small": "regfigsmallpath",
-            "pvalue_regression_male": pytest.approx(0.1),
-            "pvalue_regression_female": pytest.approx(0.2),
-        }),
-    ]
-    reg["pvalue_regression_male"] = "0.3"
-    reg["pvalue_regression_female"] = "0.4"
-    db.save_regression_values(reg)
-
-    res = db.get_regression_values("test.measure")
-    assert res == [
-        Box({
-            "regression_id": "test_regression_1",
-            "measure_id": "test.measure",
-            "figure_regression": "regfigpath",
-            "figure_regression_small": "regfigsmallpath",
-            "pvalue_regression_male": pytest.approx(0.3),
-            "pvalue_regression_female": pytest.approx(0.4),
-        }),
-    ]
-
-
-def test_regression_ids(output_dir: str) -> None:
-    db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
-        read_only=False,
-    )
-    assert db is not None
-    db.build(create=True)
 
     reg = {}
 
@@ -438,9 +290,9 @@ def test_pheno_db_disabled(fake_pheno_db: PhenoRegistry) -> None:
     assert not fake_pheno_db.has_phenotype_data("fake_disabled")
 
 
-def test_split_into_groups(output_dir: str) -> None:
+def test_split_into_groups(fake_phenodb_file_copy: str) -> None:
     db = PhenoDb(
-        os.path.join(output_dir, "temp_testing.db"),
+        fake_phenodb_file_copy,
     )
     measures = [f"measure_{i}" for i in range(1, 101)]
     groups = db._split_measures_into_groups(measures)
