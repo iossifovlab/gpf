@@ -6,7 +6,7 @@ import math
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Generator, Iterable, Sequence
-from itertools import chain
+from itertools import chain, islice
 from typing import Any, cast
 
 import pandas as pd
@@ -614,7 +614,7 @@ class PhenotypeGroup(PhenotypeData):
             )
             for pheno in self.children
         ]
-        measures = chain(*generators)
+        measures = islice(chain(*generators), 1001)
         yield from measures
 
     def get_people_measure_values(
