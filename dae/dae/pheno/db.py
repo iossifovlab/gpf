@@ -137,7 +137,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         )
         try:
             with self.connection.cursor() as cursor:
-                cursor.execute(query)
+                cursor.execute(to_duckdb_transpile(query))
         except ConstraintException:  # pylint: disable=broad-except
             regression_id = reg["regression_id"]
             measure_id = reg["measure_id"]
