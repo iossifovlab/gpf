@@ -58,8 +58,8 @@ class BigWigTable(GenomicPositionTable):
         self._buffer = ()
         self._buffer_region = Region("?", -1, -1)
 
-        range_start = max(0, start - 1)
         chromlen = self.chroms[chrom]
+        range_start = start
         range_stop = min(chromlen, range_start + self.buffer_fetch_size)
         stop = min(stop, chromlen)
 
@@ -128,8 +128,10 @@ class BigWigTable(GenomicPositionTable):
             self._fill(chrom, pos_begin, pos_end)
             idx = self._find(chrom, pos_begin, pos_end)
 
-        while pos_current <= pos_end and self._buffer:
+        while self._buffer:
             line = self._buffer[idx]
+            if line[0] + 1 > pos_end:
+                return
             yield (line[0] + 1, line[1], line[2])
             pos_current = line[1] + 1
             idx += 1
