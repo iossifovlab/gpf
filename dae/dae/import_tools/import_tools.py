@@ -524,6 +524,7 @@ class ImportProject:
             mode = processing_config
         elif len(processing_config) == 0:
             mode = "single_bucket"  # default mode when missing config
+
         if mode == "single_bucket":
             processing_regions: dict[str, list[str]] = {"all": []}
         elif mode == "chromosome":

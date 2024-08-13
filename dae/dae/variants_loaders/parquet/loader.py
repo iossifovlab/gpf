@@ -263,9 +263,14 @@ class ParquetLoader:
             yield list(ds.dataset(f"{self.layout.summary}").files)
             return
 
-        region_bins = self.partition_descriptor.region_to_bins(
-            region, self.contigs,
-        ) if region is not None else self.files_per_region.keys()
+        if region is None:
+            region_bins = list(self.files_per_region.keys())
+        else:
+            region_bins = [
+                ("region_bin", r)
+                for r in self.partition_descriptor.region_to_region_bins(
+                    region, self.contigs)
+            ]
 
         for r_bin in region_bins:
             if r_bin in self.files_per_region:

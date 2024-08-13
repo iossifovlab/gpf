@@ -425,29 +425,29 @@ def test_partition_descriptor_varint_dirs_full() -> None:
         assert fam_part[-1] == ("family_bin", str(i % family_bin_size))
 
 
-def test_region_to_bins() -> None:
+@pytest.mark.parametrize("region, region_bins", [
+    (Region("foo", 1, 7), ["foo_0"]),
+    (Region("foo", 1, 8), ["foo_0"]),
+    (Region("foo", 1), ["foo_0", "foo_1", "foo_2"]),
+    (Region("foo", stop=8), ["foo_0"]),
+    (Region("foo", stop=16), ["foo_0", "foo_1"]),
+    (Region("foo", stop=17), ["foo_0", "foo_1", "foo_2"]),
+    (Region("foo"), ["foo_0", "foo_1", "foo_2"]),
+    (Region("foo", 1, 24), ["foo_0", "foo_1", "foo_2"]),
+    (Region("foo", 1, 999_999_999), ["foo_0", "foo_1", "foo_2"]),
+])
+def test_region_to_region_bins(
+    region: Region,
+    region_bins: list[str],
+) -> None:
     pd = PartitionDescriptor.parse_string("""
         [region_bin]
         chromosomes = foo
         region_length = 8
     """)
     chrom_lens = {"foo": 24}
-    assert pd.region_to_bins(Region("foo", 0, 7), chrom_lens) == [
-        ("region_bin", "foo_0")]
-    assert pd.region_to_bins(Region("foo", 0, 8), chrom_lens) == [
-        ("region_bin", "foo_0"),
-        ("region_bin", "foo_1")]
-    assert pd.region_to_bins(Region("foo", 0), chrom_lens) == [
-        ("region_bin", "foo_0")]
-    assert pd.region_to_bins(Region("foo", stop=15), chrom_lens) == [
-        ("region_bin", "foo_0"),
-        ("region_bin", "foo_1")]
-    assert pd.region_to_bins(Region("foo"), chrom_lens) == [
-        ("region_bin", "foo_0")]
-    assert pd.region_to_bins(Region("foo", 0, 9999999), chrom_lens) == [
-        ("region_bin", "foo_0"),
-        ("region_bin", "foo_1"),
-        ("region_bin", "foo_2")]
+
+    assert pd.region_to_region_bins(region, chrom_lens) == region_bins
 
 
 def test_path_to_partitions() -> None:
@@ -509,4 +509,26 @@ def test_make_region_bins_regions(
     }
     result = pd.make_region_bins_regions(
         chroms, chrom_lens)
+    assert result == expected
+
+
+@pytest.mark.parametrize("chrom_lens, expected", [
+    ({"foo": 24, "bar": 15},
+     ["foo_0", "foo_1", "foo_2", "other_0", "other_1"]),
+    ({"foo": 25, "bar": 15},
+     ["foo_0", "foo_1", "foo_2", "foo_3", "other_0", "other_1"]),
+    ({"foo": 16, "bar": 8, "baz": 12},
+     ["foo_0", "foo_1", "other_0", "other_1"]),
+])
+def test_make_all_region_bins(
+    chrom_lens: dict[str, int],
+    expected: list[str],
+) -> None:
+    pd = PartitionDescriptor.parse_string("""
+        [region_bin]
+        chromosomes = foo
+        region_length = 8
+    """)
+
+    result = pd.make_all_region_bins(chrom_lens)
     assert result == expected

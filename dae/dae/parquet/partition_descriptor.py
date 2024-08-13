@@ -223,55 +223,91 @@ class PartitionDescriptor:
 
         return f"other_{pos_bin}"
 
-    def region_to_bins(
-        self, region: Region, chrom_lens: dict[str, int],
-    ) -> list[tuple[str, str]]:
-        """Provide a list of bins the given region intersects."""
-        start = region.start or 0
-        stop = min(region.stop or start, chrom_lens[region.chrom] - 1)
-        if start == stop:
-            return [("region_bin", self.make_region_bin(region.chrom, start))]
-        return [
-            ("region_bin", self.make_region_bin(region.chrom,
-                                                i * self.region_length))
-            for i in range(int(start / self.region_length),
-                           int(stop / self.region_length) + 1)
-        ]
-
-    def _make_region_bins(
+    def region_bins_count(
         self, chrom: str,
-        start: int,
-        end: int,
-    ) -> list[str]:
-        return [
-            f"{chrom}_{i}"
+        chromosome_lengths: dict[str, int],
+    ) -> int:
+        return ceil(
+            chromosome_lengths[chrom]
+            / self.region_length,
+        )
 
-            for i in range(
-                int(start / self.region_length),
-                int(end / self.region_length) + 1)
+    def make_region_bins_regions(
+            self, chromosomes: list[str],
+            chromosome_lengths: dict[str, int],
+    ) -> dict[str, list[Region]]:
+        """Generate region_bin to regions based on a partition descriptor."""
+        assert self.has_region_bins()
+
+        result = defaultdict(list)
+        for chrom in chromosomes:
+            region_bins_count = self.region_bins_count(
+                chrom, chromosome_lengths)
+
+            if region_bins_count == 1:
+                region_bin = self.make_region_bin(chrom, 1)
+                result[region_bin].append(Region(chrom))
+                continue
+
+            for region_index in range(region_bins_count):
+                start = region_index * self.region_length + 1
+                end = (region_index + 1) * self.region_length
+                end = min(end, chromosome_lengths[chrom])
+                region_bin = self.make_region_bin(chrom, start)
+                result[region_bin].append(Region(chrom, start, end))
+        return result
+
+    def region_to_region_bins(
+        self, region: Region, chrom_lens: dict[str, int],
+    ) -> list[str]:
+        """Provide a list of bins the given region intersects."""
+        start = region.start or 1
+        stop = region.stop or chrom_lens[region.chrom]
+        stop = min(stop or start, chrom_lens[region.chrom])
+
+        if start == stop:
+            return [self.make_region_bin(region.chrom, start)]
+        return [
+            self.make_region_bin(region.chrom, i * self.region_length)
+            for i in range(start // self.region_length,
+                           (stop - 1) // self.region_length + 1)
         ]
 
-    def make_all_region_bins(self, chrom_lens: dict[str, int])  -> list[str]:
+    def make_all_region_bins(
+        self, chromosome_lengths: dict[str, int],
+    )  -> list[str]:
         """Produce all region bins for all chromosomes."""
         bins = []
 
-        for chrom in self.chromosomes:
-            if chrom not in chrom_lens:
+        genome_chroms = set(chromosome_lengths.keys())
+        partition_chroms = set(self.chromosomes) & genome_chroms
+
+        for chrom in partition_chroms:
+            if chrom not in chromosome_lengths:
                 raise ValueError(
                     f"Partition descriptor chromosome <{chrom}> "
                     f"not found in reference genome chromosome lengths.")
 
-            chrom_len = chrom_lens[chrom]
+            chrom_len = chromosome_lengths[chrom]
             bins.extend(
-                self._make_region_bins(chrom, 0, chrom_len),
-            )
-        other_chroms = set(chrom_lens.keys()) - set(self.chromosomes)
+                self.region_to_region_bins(
+                    Region(chrom, 1, chrom_len),
+                    chromosome_lengths,
+                ))
+        other_chroms = genome_chroms - partition_chroms
         if other_chroms:
-            max_other_len = max(
-                chrom_lens[chrom] for chrom in other_chroms)
+            max_other_len = 0
+            max_chrom = ""
+            for chrom in other_chroms:
+                if chromosome_lengths[chrom] > max_other_len:
+                    max_other_len = chromosome_lengths[chrom]
+                    max_chrom = chrom
+
             bins.extend(
-                self._make_region_bins("other", 1, max_other_len),
-            )
+                self.region_to_region_bins(
+                    Region(max_chrom, 1, max_other_len),
+                    chromosome_lengths,
+                ))
         return bins
 
     def make_family_bin(self, family_id: str) -> int:
@@ -596,40 +632,3 @@ class PartitionDescriptor:
         raise ValueError(
             f"usupported output format for partition descriptor: "
             f"<{output_format}>")
-
-    def region_bins_count(
-        self, chrom: str,
-        chromosome_lengths: dict[str, int],
-    ) -> int:
-        return ceil(
-            chromosome_lengths[chrom]
-            / self.region_length,
-        )
-
-    def make_region_bins_regions(
-            self, chromosomes: list[str],
-            chromosome_lengths: dict[str, int],
-    ) -> dict[str, list[Region]]:
-        """Generate region_bin to regions based on a partition descriptor."""
-        assert self.has_region_bins()
-
-        result = defaultdict(list)
-        for chrom in chromosomes:
-            target = chrom
-            if chrom not in self.chromosomes:
-                target = "other"
-            region_bins_count = self.region_bins_count(
-                chrom, chromosome_lengths)
-
-            if region_bins_count == 1:
-                region_bin = f"{target}_0"
-                result[region_bin].append(Region(chrom))
-                continue
-
-            for region_index in range(region_bins_count):
-                start = region_index * self.region_length + 1
-                end = (region_index + 1) * self.region_length
-                end = min(end, chromosome_lengths[chrom])
-                region_bin = f"{target}_{region_index}"
-                result[region_bin].append(Region(chrom, start, end))
-        return result
