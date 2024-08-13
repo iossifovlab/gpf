@@ -4,6 +4,7 @@
 </div>
 
 <div
+  id="pheno-browser-table"
   class="grid-container"
   [ngStyle]="{
     'grid-template-columns': 'repeat(' + columnsCount + ', 4fr)'
@@ -105,22 +106,22 @@
     >Nothing found</div
   >
 
-  <ng-container *ngFor="let measure of measures.measures">
-    <div class="grid-cell" [attr.title]="measure.instrumentName">{{ measure.instrumentName }}</div>
+  <ng-container *ngFor="let measure of measures.measures" class="grid-row">
+    <div class="grid-cell instrument-cell" [attr.title]="measure.instrumentName">{{ measure.instrumentName }}</div>
 
-    <div class="grid-cell" [attr.title]="measure.measureName">{{ measure.measureName }}</div>
+    <div class="grid-cell measure-name-cell" [attr.title]="measure.measureName">{{ measure.measureName }}</div>
 
-    <div class="grid-cell" *ngIf="measures.hasDescriptions" [attr.title]="measure.description">{{
+    <div class="grid-cell description-cell" *ngIf="measures.hasDescriptions" [attr.title]="measure.description">{{
       measure.description
     }}</div>
 
-    <div class="grid-cell">
+    <div class="grid-cell figure-distribution-cell">
       <a [class.clickable]="!!measure.figureDistribution" (click)="openModal(measure.figureDistribution)">
         <img *ngIf="measure.figureDistributionSmall" class="table-chart" [src]="measure.figureDistributionSmall" />
       </a>
     </div>
 
-    <div class="grid-cell">
+    <div class="grid-cell measure-type-cell">
       <div>
         <div>{{ measure.measureType }}</div>
         <ng-container *ngIf="measure.measureType === 'continuous'">
@@ -157,7 +158,7 @@
     </div>
 
     <ng-container *ngFor="let regressionId of measures.regressionNames | getRegressionIds">
-      <div class="grid-cell">
+      <div class="grid-cell" [ngClass]="regressionId + '.img'">
         <a
           [class.clickable]="!!measure.regressions.getReg(regressionId).figureRegression"
           (click)="openModal(measure.regressions.getReg(regressionId).figureRegression)">
@@ -168,9 +169,10 @@
         </a>
       </div>
 
-      <div class="grid-cell">
+      <div class="grid-cell" [ngClass]="regressionId">
         <div>
           <div
+            [ngClass]="regressionId + '.pvalueRegressionMale'"
             [style.background-color]="
               measure.regressions.getReg(regressionId).pvalueRegressionMale?.toString() | getBackgroundColor
             "
@@ -180,6 +182,7 @@
           >
 
           <div
+            [ngClass]="regressionId + '.pvalueRegressionFemale'"
             [style.background-color]="
               measure.regressions.getReg(regressionId).pvalueRegressionFemale?.toString() | getBackgroundColor
             "
