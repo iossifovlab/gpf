@@ -58,12 +58,12 @@ describe('pheno browser service', () => {
     const getMeasuresSpy = jest.spyOn(phenoBrowserService['http'], 'get');
     getMeasuresSpy.mockReturnValue(of([{measure: fakeJsonMeasureCopy}]));
 
-    const resObservable = phenoBrowserService.getMeasures(1, 'datasetId', null, '');
+    const resObservable = phenoBrowserService.getMeasures('datasetId', null, '');
 
     // jest.spyOn(PhenoMeasure, 'fromJson').mockReturnValue(null);
 
     const url = phenoBrowserService['config'].baseUrl +
-      phenoBrowserService['measuresUrl'] + '?page=1&dataset_id=datasetId&instrument=null';
+      phenoBrowserService['measuresUrl'] + '?instrument=null&dataset_id=datasetId';
     const options =
       // eslint-disable-next-line @typescript-eslint/naming-convention
       {headers: {'Content-Type': 'application/json', 'X-CSRFToken': undefined}, withCredentials: true};

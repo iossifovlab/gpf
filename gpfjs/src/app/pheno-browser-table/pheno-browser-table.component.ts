@@ -106,46 +106,6 @@ export class PhenoBrowserTableComponent implements OnInit {
     return 0;
   }
 
-  // public sort2(data: PhenoMeasure[], orderBy: string, sortBy: string): void {
-  //   data.forEach((measure, idx) => {
-  //     measure['arrayPosition'] = idx;
-  //   });
-  //   data.sort((a, b) => {
-  //     const compareResult = orderBy === 'asc' ? this.comparator(a, b, sortBy) : this.comparator(b, a, sortBy);
-  //     if (compareResult === 0) {
-  //       return a['arrayPosition'] - b['arrayPosition'];
-  //     }
-  //     return compareResult;
-  //   });
-  // }
-
-  // public comparator(a: any, b: any, sortBy: string): number {
-  //   let leftVal = a[sortBy];
-  //   let rightVal = b[sortBy];
-
-  //   if (leftVal === '-') {
-  //     leftVal = null;
-  //   }
-  //   if (rightVal === '-') {
-  //     rightVal = null;
-  //   }
-  //   if ((leftVal === undefined || leftVal === null) && (rightVal === undefined || rightVal === null)) {
-  //     return 0;
-  //   }
-  //   if (leftVal === undefined || leftVal === null) {
-  //     return -1;
-  //   }
-  //   if (rightVal === undefined || rightVal === null) {
-  //     return 1;
-  //   }
-
-  //   if (!isNaN(leftVal) && !isNaN(rightVal)) {
-  //     return Number(leftVal) - Number(rightVal);
-  //   }
-  //   return leftVal.localeCompare(rightVal);
-  // }
-
-
   private resetSortButtons(): void {
     const sortButton = this.sortingButtonsComponents.find(
       sortingButtonsComponent => sortingButtonsComponent.id === this.sortBy

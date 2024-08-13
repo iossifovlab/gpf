@@ -37,11 +37,6 @@
         >
       </div>
 
-      <div id="measures-counter" *ngIf="measuresToShow?.measures">
-        <span *ngIf="measuresToShow.measures.length < 1001">Measures count: {{ measuresToShow.measures.length }}</span>
-        <span *ngIf="measuresToShow.measures.length > 1000">More than 1000 measures selected (1000 shown)</span>
-      </div>
-
       <div id="download-wrapper">
         <span>Phenotype measures</span>
         <input name="queryData" type="hidden" />

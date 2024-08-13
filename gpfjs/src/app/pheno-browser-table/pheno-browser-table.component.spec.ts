@@ -23,8 +23,6 @@ import { ResizeService } from '../table/resize.service';
 import { GetRegressionIdsPipe } from 'app/utils/get-regression-ids.pipe';
 import { RegressionComparePipe } from 'app/utils/regression-compare.pipe';
 import { BackgroundColorPipe } from 'app/utils/background-color.pipe';
-
-
 @Component({
   template:
     `<gpf-pheno-browser-table #table
@@ -164,7 +162,7 @@ class HostComponentTwoRegressions {
       regression_names: {age: '', iq: ''}
     }
   );
-  @ViewChild('table') public table;
+  // @ViewChild('table') public table;
 }
 
 describe('PhenoBrowserTableComponent; two regressions', () => {

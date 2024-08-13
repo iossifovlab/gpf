@@ -1,3 +1,8 @@
+<div id="measures-counter" *ngIf="measures?.measures">
+  <span *ngIf="measures.measures.length < 1001">Measures count: {{ measures.measures.length }}</span>
+  <span *ngIf="measures.measures.length > 1000">More than 1000 measures selected (1000 shown)</span>
+</div>
+
 <div
   class="grid-container"
   [ngStyle]="{
