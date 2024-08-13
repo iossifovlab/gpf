@@ -60,8 +60,6 @@ describe('pheno browser service', () => {
 
     const resObservable = phenoBrowserService.getMeasures('datasetId', null, '');
 
-    // jest.spyOn(PhenoMeasure, 'fromJson').mockReturnValue(null);
-
     const url = phenoBrowserService['config'].baseUrl +
       phenoBrowserService['measuresUrl'] + '?instrument=null&dataset_id=datasetId';
     const options =

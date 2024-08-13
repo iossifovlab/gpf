@@ -78,7 +78,7 @@ const mockMeasures = PhenoMeasures.fromJson(
       }
     ],
     has_descriptions: true,
-    regression_names: {}
+    regression_names: {age: 'age at assessment', iq: 'nonverbal iq'}
     /* eslint-enable */
   }
 );
@@ -105,10 +105,75 @@ describe('PhenoBrowserTableComponent; no regressions', () => {
     fixture = TestBed.createComponent(PhenoBrowserTableComponent);
     component = fixture.componentInstance;
     component.measures = cloneDeep(mockMeasures);
-    fixture.detectChanges();
   }));
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should sort table by insturment', () => {
+    const data = cloneDeep(mockMeasures.measures);
+    component.sortTable(data, 'desc', 'instrumentName');
+    expect(data[0].instrumentName).toBe('cab');
+    expect(data[1].instrumentName).toBe('bca');
+    expect(data[2].instrumentName).toBe('abc');
+  });
+
+  it('should sort table by pheno measure', () => {
+    const data = cloneDeep(mockMeasures.measures);
+    component.sortTable(data, 'desc', 'measureName');
+    expect(data[0].measureName).toBe('c');
+    expect(data[1].measureName).toBe('b');
+    expect(data[2].measureName).toBe('a');
+  });
+
+  it('should sort table by measure type', () => {
+    const data = cloneDeep(mockMeasures.measures);
+    component.sortTable(data, 'desc', 'measureType');
+    expect(data[0].measureType).toBe('cab');
+    expect(data[1].measureType).toBe('bca');
+    expect(data[2].measureType).toBe('abc');
+  });
+
+  it('should sort table by male regression', () => {
+    const data = cloneDeep(mockMeasures.measures);
+    component.sortTable(data, 'desc', 'iq.pvalueRegressionMale');
+    expect(data[0].regressions.getReg('iq').pvalueRegressionMale).toBe(0.04);
+    expect(data[1].regressions.getReg('iq').pvalueRegressionMale).toBe(0.02);
+    expect(data[2].regressions.getReg('iq').pvalueRegressionMale).toBeNull();
+  });
+
+  it('should sort table by female regression', () => {
+    const data = cloneDeep(mockMeasures.measures);
+    component.sortTable(data, 'asc', 'age.pvalueRegressionFemale');
+    expect(data[0].regressions.getReg('age').pvalueRegressionFemale).toBeNull();
+    expect(data[1].regressions.getReg('age').pvalueRegressionFemale).toBe(1);
+    expect(data[2].regressions.getReg('age').pvalueRegressionFemale).toBe(3);
+  });
+
+  it('should sort when there is regression value NaN', () => {
+    const data = cloneDeep(mockMeasures.measures);
+    data[0].regressions.getReg('age').pvalueRegressionFemale = NaN;
+    component.sortTable(data, 'asc', 'age.pvalueRegressionFemale');
+    expect(data[0].regressions.getReg('age').pvalueRegressionFemale).toBeNull();
+    expect(data[1].regressions.getReg('age').pvalueRegressionFemale).toBeNaN();
+    expect(data[2].regressions.getReg('age').pvalueRegressionFemale).toBe(3);
+  });
+
+  it('should sort when there is regression value undefined', () => {
+    const data = cloneDeep(mockMeasures.measures);
+    data[1].regressions.getReg('age').pvalueRegressionFemale = undefined;
+    component.sortTable(data, 'asc', 'age.pvalueRegressionFemale');
+    expect(data[0].regressions.getReg('age').pvalueRegressionFemale).toBeUndefined();
+    expect(data[1].regressions.getReg('age').pvalueRegressionFemale).toBeNull();
+    expect(data[2].regressions.getReg('age').pvalueRegressionFemale).toBe(1);
+  });
+
+  it('should count columns', () => {
+    expect(component.columnsCount).toBe(4);
+    const resizeSpy = jest.spyOn(component, 'onResize');
+    component.ngOnInit();
+    expect(component.columnsCount).toBe(9);
+    expect(resizeSpy).toHaveBeenCalledWith();
   });
 });

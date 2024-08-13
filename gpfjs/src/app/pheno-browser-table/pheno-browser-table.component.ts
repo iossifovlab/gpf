@@ -87,7 +87,7 @@ export class PhenoBrowserTableComponent implements OnInit {
     });
   }
 
-  public comparator(a: string | number, b: string | number): number {
+  private comparator(a: string | number, b: string | number): number {
     if ((a === undefined || a === null || a === 'NaN') && (b === undefined || b === null || b === 'NaN')) {
       return 0;
     }
