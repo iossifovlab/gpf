@@ -1,6 +1,8 @@
 import logging
 import os
 from collections.abc import Iterable
+from operator import itemgetter
+from pathlib import Path
 from typing import Any, cast
 
 from django.conf import settings
@@ -10,10 +12,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
 from gpf_instance.gpf_instance import (
     calc_and_set_cacheable_hash,
-    calc_cacheable_hash,
     get_cacheable_hash,
-    get_wgpf_instance,
-    set_cacheable_hash,
 )
 from groups_api.serializers import GroupSerializer
 from query_base.query_base import QueryBaseView
@@ -71,22 +70,11 @@ def augment_with_parents(
 
 def get_description_etag(
     request: Request, **_kwargs: dict[str, Any],
-) -> str:
+) -> str | None:
     """Get description etag."""
     dataset_id = request.parser_context["kwargs"]["dataset_id"]
-    instance = get_wgpf_instance()
 
-    dataset = instance.get_wdae_wrapper(dataset_id)
-    if dataset is None:
-        return ""
-    description = dataset.description
-
-    cache_hash = get_cacheable_hash(f"{dataset_id}_description")
-    current_hash = calc_cacheable_hash(description)
-    if cache_hash is None or current_hash != cache_hash:
-        set_cacheable_hash(f"{dataset_id}_description", current_hash)
-        return current_hash
-    return cache_hash
+    return get_cacheable_hash(f"{dataset_id}_description")
 
 
 class DatasetView(QueryBaseView):
@@ -241,8 +229,8 @@ class PermissionDeniedPromptView(QueryBaseView):
                     not os.path.isfile(prompt_filepath):
                 self.permission_denied_prompt = default_prompt
             else:
-                with open(prompt_filepath, "r") as infile:
-                    self.permission_denied_prompt = infile.read()
+                self.permission_denied_prompt = \
+                    Path(prompt_filepath).read_text()
 
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, _request: Request) -> Response:
@@ -392,7 +380,7 @@ class BaseDatasetPermissionsView(QueryBaseView):
                         {"name": user.name, "email": user.email},
                     ]
                     users_found.add(user.email)
-        users_list = sorted(users_list, key=lambda d: d["email"])
+        users_list = sorted(users_list, key=itemgetter("email"))
 
         dataset_gd = self.gpf_instance.get_genotype_data(
             dataset.dataset_id,
@@ -513,8 +501,6 @@ class DatasetHierarchyView(QueryBaseView):
             "children": children,
             "access_rights": has_rights,
         }
-
-
 
     @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request, dataset_id: str | None = None) -> Response:

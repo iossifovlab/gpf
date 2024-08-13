@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 
 from datasets_api.permissions import get_instance_timestamp_etag
@@ -28,20 +29,14 @@ def version(_request: Request) -> Response:
 
 def get_description_etag(
     _request: Request, **_kwargs: dict[str, Any],
-) -> str:
-    cache_hash = get_cacheable_hash("instance_description")
-    if cache_hash is None:
-        cache_hash = "0"
-    return cache_hash
+) -> str | None:
+    return get_cacheable_hash("instance_description")
 
 
 def get_about_etag(
     _request: Request, **_kwargs: dict[str, Any],
-) -> str:
-    cache_hash = get_cacheable_hash("instance_about")
-    if cache_hash is None:
-        cache_hash = "0"
-    return cache_hash
+) -> str | None:
+    return get_cacheable_hash("instance_about")
 
 
 class MarkdownFileView(QueryBaseView):
@@ -62,8 +57,7 @@ class MarkdownFileView(QueryBaseView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         try:
-            with open(self.filepath, "r") as markdown_file:
-                content = markdown_file.read()
+            content = Path(self.filepath).read_text()
         except FileNotFoundError:
             return Response(
                 {"error": "File not found"},
@@ -92,8 +86,7 @@ class MarkdownFileView(QueryBaseView):
                 status=status.HTTP_403_FORBIDDEN,
             )
         try:
-            with open(self.filepath, "w") as markdown_file:
-                markdown_file.write(request.data.get("content"))
+            Path(self.filepath).write_text(request.data.get("content"))
         except PermissionError:
             return Response(
                 {"error": "Failed to write to file"},
