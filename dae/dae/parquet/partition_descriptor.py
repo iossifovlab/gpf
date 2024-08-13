@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import configparser
 import hashlib
-import math
 import pathlib
 import sys
 import textwrap
@@ -219,8 +218,14 @@ class PartitionDescriptor:
         pos_bin = pos // self.region_length
 
         if chrom in self.chromosomes:
+            if self.integer_region_bins:
+                chrom_index = self.chromosomes.index(chrom)
+                return f"{chrom_index * 10_000 + pos_bin}"
+
             return f"{chrom}_{pos_bin}"
 
+        if self.integer_region_bins:
+            return f"{10_000_000 + pos_bin}"
         return f"other_{pos_bin}"
 
     def region_bins_count(
@@ -466,28 +471,16 @@ class PartitionDescriptor:
             ))
         return partition
 
-    def get_variant_partitions(self, chrom_lens: dict[str, int]) \
-            -> tuple[list[list[tuple[str, str]]], list[list[tuple[str, str]]]]:
+    def get_variant_partitions(
+        self, chromosome_lengths: dict[str, int],
+    ) -> tuple[list[list[tuple[str, str]]], list[list[tuple[str, str]]]]:
         """Return the output summary and family variant partition names."""
-        summary_parts = []
+        summary_parts: list[list[tuple[str, str]]] = []
         if self.has_region_bins():
-            other_max_len = -1
-            for chrom, chrom_len in chrom_lens.items():
-                if chrom not in self.chromosomes:
-                    other_max_len = max(other_max_len, chrom_len)
-                    continue
-                num_buckets = math.ceil(chrom_len / self.region_length)
-                summary_parts.extend([
-                    [("region_bin", f"{chrom}_{bin_i}")]
-                    for bin_i in range(num_buckets)
-                ])
-
-            if other_max_len > 0:
-                num_buckets = math.ceil(other_max_len / self.region_length)
-                summary_parts.extend([
-                    [("region_bin", f"other_{bin_i}")]
-                    for bin_i in range(num_buckets)
-                ])
+            summary_parts.extend(
+                [("region_bin", r)]
+                for r in self.make_all_region_bins(chromosome_lengths)
+            )
         if self.has_frequency_bins():
             summary_parts = self._add_product(
                 summary_parts, [("frequency_bin", str(i)) for i in range(4)],
