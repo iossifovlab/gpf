@@ -115,8 +115,7 @@ def test_measures(admin_client: Client) -> None:
     response = admin_client.get(url)
     assert response.status_code == 200
 
-    res = response
-    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+    res = json.loads("".join([x.decode("utf-8") for x in response]))
     assert len(res) == 4
 
 
@@ -146,7 +145,8 @@ def test_download(admin_client: Client) -> None:
 
     assert response.status_code == 200
 
-    header = list(response.streaming_content)[0].decode("utf-8")
+    first_line = next(response.streaming_content)
+    header = first_line.decode("utf-8")
     header = header.split()[0].split(",")
     assert header[0] == "person_id"
 
@@ -163,7 +163,8 @@ def test_download_specific_measures(admin_client: Client) -> None:
 
     assert response.status_code == 200
 
-    content = list(response.streaming_content)[0].decode("utf-8")
+    first_line = next(response.streaming_content)
+    content = first_line.decode("utf-8")
     header = content.split()[0].split(",")
     assert len(header) == 2
     assert header[0] == "person_id"
@@ -182,7 +183,8 @@ def test_download_all_instruments(admin_client: Client) -> None:
 
     assert response.status_code == 200
 
-    header = list(response.streaming_content)[0].decode("utf-8")
+    first_line = next(response.streaming_content)
+    header = first_line.decode("utf-8")
     header = header.split()[0].split(",")
 
     print("header:\n", header)
@@ -209,7 +211,8 @@ def test_download_all_instruments_specific_measures(
 
     assert response.status_code == 200
 
-    header = list(response.streaming_content)[0].decode("utf-8")
+    first_line = next(response.streaming_content)
+    header = first_line.decode("utf-8")
     header = header.split()[0].split(",")
 
     print("header:\n", header)
