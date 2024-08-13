@@ -841,9 +841,9 @@ class PrepareVariables(PreparePersons):
 
             values = [
                 measure.measure_id,
+                db_name,
                 m_name,
                 measure.instrument_name,
-                db_name,
                 description,
                 measure.measure_type.value,
                 measure.individuals,
