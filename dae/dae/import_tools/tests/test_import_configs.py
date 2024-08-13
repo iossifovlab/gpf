@@ -2,8 +2,9 @@
 
 import os
 import pathlib
+from collections.abc import Callable
 from glob import glob
-from typing import Any, Callable
+from typing import Any
 
 import fsspec
 import pytest
@@ -75,8 +76,7 @@ def test_parquet_files_are_generated(
 
 def test_import_with_add_chrom_prefix(
     tmp_path: pathlib.Path,
-    gpf_instance_grch38: GPFInstance,
-    mocker: pytest_mock.MockerFixture,
+    gpf_instance: GPFInstance,
     resources_dir: pathlib.Path,
 ) -> None:
     input_dir = resources_dir / "vcf_import"
@@ -87,10 +87,8 @@ def test_import_with_add_chrom_prefix(
         "work_dir": str(tmp_path),
     }
 
-    mocker.patch.object(import_tools.ImportProject, "get_gpf_instance",
-                        return_value=gpf_instance_grch38)
     project = import_tools.ImportProject.build_from_config(
-        import_config, str(input_dir))
+        import_config, str(input_dir), gpf_instance=gpf_instance)
     cli.run_with_project(project)
 
     files = os.listdir(tmp_path)
@@ -167,7 +165,9 @@ def test_shorthand_for_large_integers() -> None:
         == 100_000_000
 
 
-def test_shorthand_autosomes() -> None:
+def test_shorthand_autosomes(
+    gpf_instance: GPFInstance,
+) -> None:
     config = {
         "id": "test_import",
         "input": {},
@@ -184,23 +184,22 @@ def test_shorthand_autosomes() -> None:
             },
         },
     }
-    project = import_tools.ImportProject.build_from_config(config)
+    project = import_tools.ImportProject.build_from_config(
+        config, gpf_instance=gpf_instance)
     loader_chromosomes = project._get_loader_target_chromosomes("vcf")
     assert loader_chromosomes is not None
-    assert len(loader_chromosomes) == 22 * 2
-    for i in range(1, 23):
-        assert str(i) in loader_chromosomes
+    # alla genome has 4 autosomes and X
+    assert len(loader_chromosomes) == 4
+    for i in range(1, 5):
         assert f"chr{i}" in loader_chromosomes
 
     part_desc = project.get_partition_descriptor()
     pd_chromosomes = part_desc.chromosomes
-    assert len(pd_chromosomes) == 22 * 2 + 4
-    for i in range(1, 23):
-        assert str(i) in pd_chromosomes
+    # alla genome has 4 autosomes and X
+    assert len(pd_chromosomes) == 5
+    for i in range(1, 5):
         assert f"chr{i}" in pd_chromosomes
-    for j in ["X", "Y"]:
-        assert str(j) in pd_chromosomes
-        assert f"chr{j}" in pd_chromosomes
+    assert "chrX" in pd_chromosomes
 
 
 def test_shorthand_chromosomes() -> None:
@@ -271,6 +270,7 @@ def test_get_genotype_storage_no_explicit_config(
 
 def test_add_chrom_prefix_already_present(
     resources_dir: pathlib.Path,
+    gpf_instance: GPFInstance,
 ) -> None:
     config = {
         "id": "test_import",
@@ -284,13 +284,17 @@ def test_add_chrom_prefix_already_present(
             },
         },
     }
-    project = import_tools.ImportProject.build_from_config(config)
-    with pytest.raises(ValueError):
+    project = import_tools.ImportProject.build_from_config(
+        config, gpf_instance=gpf_instance)
+    with pytest.raises(
+            ValueError,
+            match="All chromosomes already have the prefix chr"):
         project._get_variant_loader("vcf")
 
 
 def test_del_chrom_prefix_already_deleted(
     resources_dir: pathlib.Path,
+    gpf_instance: GPFInstance,
 ) -> None:
     config = {
         "id": "test_import",
@@ -304,8 +308,11 @@ def test_del_chrom_prefix_already_deleted(
             },
         },
     }
-    project = import_tools.ImportProject.build_from_config(config)
-    with pytest.raises(ValueError):
+    project = import_tools.ImportProject.build_from_config(
+        config, gpf_instance=gpf_instance)
+    with pytest.raises(
+            ValueError,
+            match="Chromosomes already missing the prefix chr"):
         project._get_variant_loader("vcf")
 
 

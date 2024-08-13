@@ -291,7 +291,8 @@ class PartitionDescriptor:
             if chrom not in chromosome_lengths:
                 raise ValueError(
                     f"Partition descriptor chromosome <{chrom}> "
-                    f"not found in reference genome chromosome lengths.")
+                    f"not found in reference genome chromosome lengths. "
+                    f"Chromosomes: {chromosome_lengths.keys()}")
 
             chrom_len = chromosome_lengths[chrom]
             bins.extend(

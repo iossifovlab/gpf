@@ -146,31 +146,22 @@ class QueryBuilderBase:
         if not regions or not self.partition_descriptor.has_region_bins():
             return []
 
-        chroms = set(self.partition_descriptor.chromosomes)
-        region_length = self.partition_descriptor.region_length
         region_bins: set[str] = set()
         for region in regions:
-            chrom_bin = region.chrom if region.chrom in chroms else "other"
-            stop = region.stop
-            if stop is None:
-                if self.reference_genome is None:
-                    continue
-                stop = self.reference_genome.get_chrom_length(region.chrom)
-
-            start = region.start
-            if start is None:
-                start = 1
-
-            start = start // region_length
-            stop = stop // region_length
             region_bins.update(
-                f"'{chrom_bin}_{position_bin}'"
-                for position_bin in range(start, stop + 1))
+                self.partition_descriptor.region_to_region_bins(
+                    region, self.reference_genome.get_all_chrom_lengths(),
+                ),
+            )
         assert len(region_bins) > 0
 
         if len(region_bins) > self.REGION_BINS_HEURISTIC_CUTOFF:
             return []
-
+        if not self.partition_descriptor.integer_region_bins:
+            return [
+                f"'{rb}'"
+                for rb in region_bins
+            ]
         return list(region_bins)
 
     @staticmethod
@@ -387,12 +378,15 @@ class QueryBuilderBase:
         if not self.partition_descriptor.has_region_bins():
             return []
         chrom_lens = dict(self.reference_genome.get_all_chrom_lengths())
-        return [
-            str(rb)
-            for rb in self.partition_descriptor.make_all_region_bins(
-                chrom_lens,
-            )
-        ]
+        all_region_bins = self.partition_descriptor.make_all_region_bins(
+            chrom_lens,
+        )
+        if not self.partition_descriptor.integer_region_bins:
+            all_region_bins = [
+                f"'{rb}'"
+                for rb in all_region_bins
+            ]
+        return all_region_bins
 
     def calc_heuristics(
         self, *,
@@ -488,7 +482,7 @@ class QueryBuilderBase:
                 self.partition_descriptor.has_region_bins():
             return [
                 QueryHeuristics(
-                    region_bins=[f"'{rb}'"],
+                    region_bins=[f"{rb}"],
                     coding_bins=heuristics.coding_bins,
                     frequency_bins=heuristics.frequency_bins,
                     family_bins=heuristics.family_bins,

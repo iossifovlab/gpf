@@ -178,13 +178,9 @@ class Schema2ImportStorage(ImportStorage):
         cls, project: ImportProject,
     ) -> Generator[tuple[str, list[tuple[str, str]]], None, None]:
         part_desc = cls._get_partition_description(project)
-        chromosomes = project.get_variant_loader_chromosomes()
 
         reference_genome = project.get_gpf_instance().reference_genome
-        chromosome_lengths = {
-            chrom: reference_genome.get_all_chrom_lengths()[chrom]
-            for chrom in chromosomes
-        }
+        chromosome_lengths = reference_genome.get_all_chrom_lengths()
 
         sum_parts, fam_parts = \
             part_desc.get_variant_partitions(chromosome_lengths)

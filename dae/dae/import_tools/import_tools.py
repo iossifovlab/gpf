@@ -197,12 +197,12 @@ class ImportProject:
     def get_variant_loader_chromosomes(
             self, loader_type: str | None = None) -> list[str]:
         """Collect all chromosomes available in input files."""
-        if loader_type is None:
-            loader_types = self.get_variant_loader_types()
-        else:
-            if loader_type not in self.get_variant_loader_types():
+        loader_types = self.get_variant_loader_types()
+        if loader_type is not None:
+            if loader_type not in loader_types:
                 return []
             loader_types = {loader_type}
+
         chromosomes = set()
         for ltype in loader_types:
             loader = self.get_variant_loader(loader_type=ltype)
@@ -306,11 +306,20 @@ class ImportProject:
         return loader
 
     def get_partition_descriptor(self) -> PartitionDescriptor:
+        """Return the partition descriptor as described in the config."""
         if "partition_description" not in self.import_config:
             return PartitionDescriptor()
 
         config_dict: dict = self.import_config["partition_description"]
-        return PartitionDescriptor.parse_dict(config_dict)
+
+        partition_descriptor = PartitionDescriptor.parse_dict(config_dict)
+        if partition_descriptor.has_region_bins():
+            reference_genome = self.get_gpf_instance().reference_genome
+            partition_descriptor.chromosomes = [
+                chrom for chrom in partition_descriptor.chromosomes
+                if chrom in reference_genome.chromosomes
+            ]
+        return partition_descriptor
 
     def get_gpf_instance(self) -> GPFInstance:
         """Create and return a gpf instance as desribed in the config."""
@@ -566,8 +575,14 @@ class ImportProject:
         processing_config = self._get_loader_processing_config(loader_type)
         if isinstance(processing_config, str):
             return None
-        return cast(
-            list[str] | None, processing_config.get("chromosomes", None))
+        processing_chromsomes = processing_config.get("chromosomes", None)
+        if processing_chromsomes is None:
+            return None
+        reference_genome = self.get_gpf_instance().reference_genome
+        return [
+            chrom for chrom in processing_chromsomes
+            if chrom in reference_genome.chromosomes
+        ]
 
     def _get_loader_processing_config(
             self, loader_type: str) -> dict[str, Any]:
