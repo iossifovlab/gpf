@@ -97,22 +97,22 @@ def default_config() -> Box:
     return Box(config)
 
 
-def check_phenotype_data_config(config: ImportConfig) -> bool:
+def check_phenotype_data_config(config: InferenceConfig) -> bool:
     """Check phenotype database preparation config for consistency."""
-    categorical = config.default_inference.categorical.min_rank
+    categorical = config.categorical.min_rank
     if categorical < 1:
         print("categorical min rank expected to be > 0")
         return False
-    ordinal = config.default_inference.ordinal.min_rank
+    ordinal = config.ordinal.min_rank
     if ordinal < categorical:
         print("ordinal min rank expected to be >= categorical min rank")
         return False
-    continuous = config.default_inference.continuous.min_rank
+    continuous = config.continuous.min_rank
     if continuous < ordinal:
         print("continuous min rank expected to be >= ordinal min rank")
         return False
 
-    individuals = config.default_inference.min_individuals
+    individuals = config.min_individuals
     if individuals < 1:
         print("minimal number of individuals expected to be >= 1")
         return False
@@ -120,7 +120,7 @@ def check_phenotype_data_config(config: ImportConfig) -> bool:
     return True
 
 
-def dump_config(config: ImportConfig) -> None:
+def dump_config(config: InferenceConfig) -> None:
     """Print phenotype database preparation configuration."""
     print("--------------------------------------------------------")
     print("CLASSIFICATION BOUNDARIES:")

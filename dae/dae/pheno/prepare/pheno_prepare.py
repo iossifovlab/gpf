@@ -20,15 +20,14 @@ from dae.pedigrees.loader import (
     PedigreeIO,
 )
 from dae.pheno.common import (
+    InferenceConfig,
     MeasureType,
     check_phenotype_data_config,
     dump_config,
-    InferenceConfig,
 )
 from dae.pheno.db import generate_instrument_table_name, safe_db_name
 from dae.pheno.prepare.measure_classifier import (
     ClassifierReport,
-    InferenceConfig,
     MeasureClassifier,
     convert_to_numeric,
     convert_to_string,
@@ -57,7 +56,7 @@ class PrepareBase(PrepareCommon):
         self.config = config
         self.inference_configs = inference_configs
         self.persons: dict[str, Any] = {}
-        self.dbfile = self.config.db.filename
+        self.dbfile = self.config.db_filename
         self.connection = duckdb.connect(self.dbfile)
         self.parquet_dir = os.path.join(self.config.output, "parquet")
 
@@ -418,7 +417,7 @@ class PrepareVariables(PreparePersons):
 
         sep = ","
 
-        if self.config.instruments.tab_separated:
+        if self.config.instruments_tab_separated:
             sep = "\t"
 
         table_name = self._instrument_tmp_table_name(instrument_name)
@@ -471,7 +470,7 @@ class PrepareVariables(PreparePersons):
     @property
     def log_filename(self) -> str:
         """Construct a filename to use for logging work on phenotype data."""
-        db_filename = self.config.db.filename
+        db_filename = self.config.db_filename
         if self.config.report_only:
             filename = cast(str, self.config.report_only)
             assert db_filename == "memory"
@@ -724,6 +723,7 @@ class PrepareVariables(PreparePersons):
                     update=update_config.dict(),
                 )
 
+            print(f"Classifying {instrument_name}.{measure_name}")
             dump_config(inference_config)
             check_phenotype_data_config(inference_config)
 

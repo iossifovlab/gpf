@@ -436,7 +436,7 @@ class MeasureClassifier:
 
     def classify(self, rep: ClassifierReport) -> MeasureType:
         """Classify a measure based on classification report."""
-        conf = self.config.classification
+        conf = self.config
 
         if rep.count_with_values < conf.min_individuals:
             return MeasureType.raw
