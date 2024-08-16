@@ -14,23 +14,10 @@ from pydantic import BaseModel
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
-from dae.pheno.prepare.measure_classifier import InferenceConfig
+from dae.pheno.common import ImportConfig, InferenceConfig
 from dae.pheno.prepare.pheno_prepare import PrepareVariables
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.tools.pheno2browser import build_pheno_browser
-
-
-class ImportConfig(BaseModel):
-    report_only: bool = False
-    instruments_tab_separated: bool = False
-    person_column: str = "personId"
-    db_filename: str = "pheno.db"
-    default_inference: InferenceConfig = InferenceConfig()
-    output: str = "output"
-    verbose: int = 0
-    instruments_dir: str = ""
-    pedigree: str = ""
-
 
 
 def pheno_cli_parser() -> argparse.ArgumentParser:

@@ -6,27 +6,9 @@ from typing import Any, cast
 import duckdb
 import numpy as np
 from box import Box
-from pydantic import BaseModel
 
-from dae.pheno.common import MeasureType
+from dae.pheno.common import InferenceConfig, MeasureType
 from dae.pheno.utils.commons import remove_annoying_characters
-
-
-class RankRange(BaseModel):
-    min_rank: int | None = None
-    max_rank: int | None = None
-
-
-class InferenceConfig(BaseModel):
-    """Classification inference configuration class."""
-    min_individuals: int = 1
-    non_numeric_cutoff: float = 0.06
-    value_max_len: int = 32
-    continuous: RankRange = RankRange(min_rank=10)
-    ordinal: RankRange = RankRange(min_rank=1)
-    categorical: RankRange = RankRange(min_rank=1, max_rank=15)
-    skip: bool = False
-    measure_type: str | None = None
 
 
 class ClassifierReport:

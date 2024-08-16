@@ -23,6 +23,7 @@ from dae.pheno.common import (
     MeasureType,
     check_phenotype_data_config,
     dump_config,
+    InferenceConfig,
 )
 from dae.pheno.db import generate_instrument_table_name, safe_db_name
 from dae.pheno.prepare.measure_classifier import (

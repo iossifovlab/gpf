@@ -2,10 +2,40 @@ from __future__ import annotations
 
 import enum
 from pprint import pprint
-from typing import Any
 
 from box import Box
-from dae.tools.pheno_import import ImportConfig
+from pydantic import BaseModel
+
+
+class RankRange(BaseModel):
+    min_rank: int | None = None
+    max_rank: int | None = None
+
+
+class InferenceConfig(BaseModel):
+    """Classification inference configuration class."""
+    min_individuals: int = 1
+    non_numeric_cutoff: float = 0.06
+    value_max_len: int = 32
+    continuous: RankRange = RankRange(min_rank=10)
+    ordinal: RankRange = RankRange(min_rank=1)
+    categorical: RankRange = RankRange(min_rank=1, max_rank=15)
+    skip: bool = False
+    measure_type: str | None = None
+
+
+class ImportConfig(BaseModel):
+    report_only: bool = False
+    instruments_tab_separated: bool = False
+    person_column: str = "personId"
+    db_filename: str = "pheno.db"
+    default_inference: InferenceConfig = InferenceConfig()
+    output: str = "output"
+    verbose: int = 0
+    instruments_dir: str = ""
+    pedigree: str = ""
+
+
 
 
 class MeasureType(enum.Enum):
