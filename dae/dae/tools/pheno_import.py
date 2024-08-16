@@ -10,14 +10,11 @@ from typing import Any
 
 import yaml
 from box import Box
+from pydantic import BaseModel
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
-from dae.pheno.common import (
-    check_phenotype_data_config,
-    default_config,
-    dump_config,
-)
+from dae.pheno.common import ImportConfig, InferenceConfig
 from dae.pheno.prepare.pheno_prepare import PrepareVariables
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.tools.pheno2browser import build_pheno_browser
@@ -56,6 +53,11 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         dest="skip_pheno_common",
         action="store_true",
         help="Flag for skipping the building of the pheno common instrument.",
+    )
+
+    parser.add_argument("--inference-config",
+        dest="inference_config",
+        help="Measure classification type inference configuration",
     )
 
     parser.add_argument(
@@ -148,19 +150,17 @@ def generate_phenotype_data_config(
 
 def parse_phenotype_data_config(args: argparse.Namespace) -> Box:
     """Construct phenotype data configuration from command line arguments."""
-    config = default_config()
+    config = ImportConfig()
     config.verbose = args.verbose
-    config.instruments.dir = args.instruments
-    config.instruments.tab_separated = args.tab_separated
+    config.instruments_dir = args.instruments
+    config.instruments_tab_separated = args.tab_separated
 
     config.pedigree = args.pedigree
     config.output = args.output
 
-    config.db.filename = args.pheno_db_filename
-    config.person.column = args.person_column
+    config.db_filename = args.pheno_db_filename
+    config.person_column = args.person_column
 
-    dump_config(config)
-    check_phenotype_data_config(config)
 
     return config
 
@@ -249,10 +249,18 @@ def main(argv: list[str] | None = None) -> int:
         config = parse_phenotype_data_config(args)
         os.makedirs(os.path.join(config.output, "parquet"), exist_ok=True)
 
-        prep = PrepareVariables(config)
+        inference_configs: dict[str, InferenceConfig] = {}
+        if args.inference_config:
+            inference_configs: dict[str, InferenceConfig] = yaml.safe_load(
+                Path(args.inference_config).read_text()
+            )
+
+        prep = PrepareVariables(config, inference_configs)
         prep.build_pedigree(args.pedigree)
         kwargs = copy(vars(args))
-        prep.build_variables(args.instruments, args.data_dictionary, **kwargs)
+        prep.build_variables(
+            args.instruments, args.data_dictionary, **kwargs
+        )
 
         if not args.import_only:
             build_browser(args, regressions)

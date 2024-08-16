@@ -19,7 +19,12 @@ from dae.pedigrees.loader import (
     FamiliesLoader,
     PedigreeIO,
 )
-from dae.pheno.common import MeasureType
+from dae.pheno.common import (
+    InferenceConfig,
+    MeasureType,
+    check_phenotype_data_config,
+    dump_config,
+)
 from dae.pheno.db import generate_instrument_table_name, safe_db_name
 from dae.pheno.prepare.measure_classifier import (
     ClassifierReport,
@@ -44,11 +49,14 @@ class PrepareCommon:
 class PrepareBase(PrepareCommon):
     """Base class for phenotype data preparation tasks."""
 
-    def __init__(self, config: Box) -> None:
+    def __init__(
+        self, config: Box, inference_configs: dict[str, InferenceConfig],
+    ) -> None:
         assert config is not None
         self.config = config
+        self.inference_configs = inference_configs
         self.persons: dict[str, Any] = {}
-        self.dbfile = self.config.db.filename
+        self.dbfile = self.config.db_filename
         self.connection = duckdb.connect(self.dbfile)
         self.parquet_dir = os.path.join(self.config.output, "parquet")
 
@@ -73,8 +81,10 @@ class PrepareBase(PrepareCommon):
 class PreparePersons(PrepareBase):
     """Praparation of individuals DB tables."""
 
-    def __init__(self, config: Box) -> None:
-        super().__init__(config)
+    def __init__(
+        self, config: Box, inference_configs: dict[str, InferenceConfig],
+    ) -> None:
+        super().__init__(config, inference_configs)
         self.pedigree_df: pd.DataFrame | None = None
 
     def _save_families(self, ped_df: pd.DataFrame) -> None:  # noqa: ARG002
@@ -142,7 +152,7 @@ class ClassifyMeasureTask(Task):
 
     def __init__(
         self,
-        config: Box,
+        config: InferenceConfig,
         instrument_name: str,
         instrument_table_name: str,
         measure_name: str,
@@ -215,12 +225,67 @@ class ClassifyMeasureTask(Task):
 
     def run(self) -> ClassifyMeasureTask:
         try:
-            logging.info("classifying measure %s", self.measure.measure_id)
-            classifier = MeasureClassifier(self.config)
             cursor = duckdb.connect(self.dbfile, read_only=True).cursor()
+            table_name = self.instrument_table_name
+            measure_name = self.measure.measure_name
+
+            logging.info("classifying measure %s", self.measure.measure_id)
+            if self.config.measure_type is not None:
+                logging.info(
+                    "Type infered as %s via config", self.config.measure_type,
+                )
+                self.measure.measure_type = MeasureType.from_str(
+                    self.config.measure_type,
+                )
+
+                if self.measure.measure_type in {
+                    MeasureType.continuous, MeasureType.ordinal,
+                }:
+                    result = cursor.sql(
+                        f'SELECT COUNT("{measure_name}") FROM {table_name} '
+                        'WHERE '
+                        f'"{measure_name}" != \'NaN\' AND '
+                        f'"{measure_name}" IS NOT NULL',
+                    ).fetchone()
+                    assert result is not None
+                    self.measure.individuals = result[0]
+
+                    result = cursor.sql(
+                        f'SELECT MIN("{measure_name}") FROM {table_name}'
+                    ).fetchone()
+                    assert result is not None
+                    min_value = result[0]
+                    self.measure.min_value = min_value
+
+                    result = cursor.sql(
+                        f'SELECT MAX("{measure_name}") FROM {table_name}'
+                    ).fetchone()
+                    assert result is not None
+                    max_value = result[0]
+                    self.measure.max_value = max_value
+                    self.measure.values_domain = f"[{min_value}, {max_value}]"
+                else:
+                    self.measure.min_value = None
+                    self.measure.max_value = None
+                    rows = list(cursor.sql(
+                        f'SELECT DISTINCT "{measure_name}" FROM ('
+                        f'SELECT "{measure_name}", '
+                        f'TRY_CAST("{measure_name}" AS FLOAT) as casted '
+                        f'from {table_name} WHERE "{measure_name}" IS NOT NULL'
+                        ")",
+                    ).fetchall())
+                    assert rows is not None
+                    unique_values = [row[0] for row in rows]
+                    self.measure.values_domain = ", ".join(
+                        sorted(unique_values),
+                    )
+
+                return self
+
+            classifier = MeasureClassifier(self.config)
             self.classifier_report = classifier.meta_measures(
                 cursor,
-                self.instrument_table_name,
+                table_name,
                 self.measure.measure_name,
             )
             assert self.classifier_report is not None
@@ -312,14 +377,16 @@ class TaskQueue:
 class PrepareVariables(PreparePersons):
     """Supports preparation of measurements."""
 
-    def __init__(self, config: Box) -> None:
-        super().__init__(config)
+    def __init__(
+        self, config: Box, inference_configs: dict[str, InferenceConfig],
+    ) -> None:
+        super().__init__(config, inference_configs)
         self.sample_ids = None
         self.classifier = MeasureClassifier(config)
 
     def _get_person_column_name(self, df: pd.DataFrame) -> str:
-        if self.config.person.column:
-            person_id = self.config.person.column
+        if self.config.person_column:
+            person_id = self.config.person_column
         else:
             person_id = df.columns[0]
         logger.debug("Person ID: %s", person_id)
@@ -350,7 +417,7 @@ class PrepareVariables(PreparePersons):
 
         sep = ","
 
-        if self.config.instruments.tab_separated:
+        if self.config.instruments_tab_separated:
             sep = "\t"
 
         table_name = self._instrument_tmp_table_name(instrument_name)
@@ -403,7 +470,7 @@ class PrepareVariables(PreparePersons):
     @property
     def log_filename(self) -> str:
         """Construct a filename to use for logging work on phenotype data."""
-        db_filename = self.config.db.filename
+        db_filename = self.config.db_filename
         if self.config.report_only:
             filename = cast(str, self.config.report_only)
             assert db_filename == "memory"
@@ -452,7 +519,10 @@ class PrepareVariables(PreparePersons):
         return instruments
 
     def build_variables(
-        self, instruments_dirname: str, description_path: str, **kwargs: Any,
+        self,
+        instruments_dirname: str,
+        description_path: str,
+        **kwargs: Any,
     ) -> None:
         """Build and store phenotype data into an sqlite database."""
         self.log_header()
@@ -509,7 +579,10 @@ class PrepareVariables(PreparePersons):
                     "instrument %s is empty; skipping", instrument_name)
                 continue
             self.build_instrument(
-                instrument_name, temp_dbfile_name, descriptions, **kwargs,
+                instrument_name,
+                temp_dbfile_name,
+                descritpions=descriptions,
+                **kwargs,
             )
             self.connection.execute(f"DROP TABLE {table_name}")
 
@@ -531,7 +604,7 @@ class PrepareVariables(PreparePersons):
 
         self.connection.execute(
             f"DELETE FROM {table_name} "  # noqa: S608
-            f"WHERE {self.config.person.column} NOT IN "
+            f"WHERE {self.config.person_column} NOT IN "
             "(SELECT person_id from person)",
         )
 
@@ -551,11 +624,11 @@ class PrepareVariables(PreparePersons):
         df = self.pedigree_df.copy(deep=True)
         assert "person_id" in df.columns
         df = df.rename(
-            columns={"person_id": self.config.person.column},
+            columns={"person_id": self.config.person_column},
         )
 
         pheno_common_columns = [
-            self.config.person.column,
+            self.config.person_column,
         ]
         pheno_common_columns.extend(pheno_common_measures)
 
@@ -576,7 +649,9 @@ class PrepareVariables(PreparePersons):
         """Build a pheno common instrument."""
 
         self.build_instrument(
-            "pheno_common", temp_dbfile, descriptions=None, **kwargs,
+            "pheno_common", temp_dbfile,
+            descriptions=None,
+            inference_configs=None, **kwargs,
         )
         self._clean_missing_person_ids("pheno_common")
         tmp_table_name = self._instrument_tmp_table_name("pheno_common")
@@ -587,6 +662,7 @@ class PrepareVariables(PreparePersons):
     def build_instrument(
         self, instrument_name: str,
         temp_dbfile: str,
+        *,
         descriptions: Callable | None = None,
         **kwargs: dict[str, Any],
     ) -> None:
@@ -605,7 +681,7 @@ class PrepareVariables(PreparePersons):
             return classify_task.done()
 
         columns_to_exclude = {
-            self.PID_COLUMN, self.PERSON_ID, self.config.person.column,
+            self.PID_COLUMN, self.PERSON_ID, self.config.person_column,
         }
         measures_in_data = [
             row[0]
@@ -619,8 +695,43 @@ class PrepareVariables(PreparePersons):
             else:
                 measure_desc = None
 
+            inference_config = InferenceConfig()
+
+            if "*.*" in self.inference_configs:
+                update_config = self.inference_configs["*.*"]
+                inference_config = inference_config.model_copy(
+                    update=update_config.dict(),
+                )
+
+            if f"{instrument_name}.*" in self.inference_configs:
+                update_config = self.inference_configs[f"{instrument_name}.*"]
+                inference_config = inference_config.model_copy(
+                    update=update_config.dict(),
+                )
+
+            if f"*.{measure_name}" in self.inference_configs:
+                update_config = self.inference_configs[f"*.{measure_name}"]
+                inference_config = inference_config.model_copy(
+                    update=update_config.dict(),
+                )
+
+            if f"{instrument_name}.{measure_name}" in self.inference_configs:
+                update_config = self.inference_configs[
+                    f"{instrument_name}.{measure_name}"
+                ]
+                inference_config = inference_config.model_copy(
+                    update=update_config.dict(),
+                )
+
+            print(f"Classifying {instrument_name}.{measure_name}")
+            dump_config(inference_config)
+            check_phenotype_data_config(inference_config)
+
+            if inference_config.skip:
+                continue
+
             classify_task = ClassifyMeasureTask(
-                self.config,
+                inference_config,
                 instrument_name,
                 tmp_table_name,
                 measure_name,
@@ -745,11 +856,11 @@ class PrepareVariables(PreparePersons):
 
         cursor.execute(
             f"CREATE TABLE {output_table_name} AS FROM ("  # noqa: S608
-            f'SELECT i."{self.config.person.column}" as person_id, '
+            f'SELECT i."{self.config.person_column}" as person_id, '
             "p.family_id, p.role, p.status, p.sex, "
             f"{select_measure_cols} "
             f"FROM {tmp_table_name} AS i JOIN person AS p "
-            f'ON i."{self.config.person.column}" = p.person_id'
+            f'ON i."{self.config.person_column}" = p.person_id'
             ")",
         )
         instruments_dir = os.path.join(self.parquet_dir, "instruments")

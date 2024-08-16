@@ -7,7 +7,7 @@ import duckdb
 import numpy as np
 from box import Box
 
-from dae.pheno.common import MeasureType
+from dae.pheno.common import InferenceConfig, MeasureType
 from dae.pheno.utils.commons import remove_annoying_characters
 
 
@@ -134,12 +134,10 @@ def is_nan(val: Any) -> bool:
     """Check if the passed value is a NaN."""
     if val is None:
         return True
-    if isinstance(val, str):
-        if val.strip() == "":
-            return True
-    if type(val) in set([float, np.float64, np.float32]) and np.isnan(val):
+    if isinstance(val, str) and val.strip() == "":
         return True
-    return False
+
+    return type(val) in {float, np.float64, np.float32} and np.isnan(val)
 
 
 class Convertible(enum.Enum):
@@ -167,9 +165,10 @@ def is_convertible_to_numeric(val: Any) -> Convertible:
 
     try:
         val = float(val)
-        return Convertible.numeric
     except ValueError:
         pass
+    else:
+        return Convertible.numeric
 
     return Convertible.non_numeric
 
@@ -195,7 +194,7 @@ def convert_to_string(val: Any) -> str | None:
 class MeasureClassifier:
     """Defines a measure classification report."""
 
-    def __init__(self, config: Box):
+    def __init__(self, config: InferenceConfig):
         self.config = config
 
     @staticmethod
@@ -389,18 +388,16 @@ class MeasureClassifier:
                 f"Could not find column {measure_name} in {table_name}",
             )
 
-        if column_type in set(
-            [
-                "TINYINT",
-                "SMALLINT",
-                "INTEGER",
-                "BIGINT",
-                "HUGEINT",
-                "FLOAT",
-                "DOUBLE",
-                "BOOLEAN",
-            ],
-        ):
+        if column_type in {
+            "TINYINT",
+            "SMALLINT",
+            "INTEGER",
+            "BIGINT",
+            "HUGEINT",
+            "FLOAT",
+            "DOUBLE",
+            "BOOLEAN",
+        }:
             return MeasureClassifier._meta_measures_numeric(
                 cursor, table_name, measure_name, column_type, report,
             )
@@ -410,21 +407,19 @@ class MeasureClassifier:
                 cursor, table_name, measure_name, report,
             )
 
-        assert False, f"NOT SUPPORTED VALUES TYPES {column_type}"
+        raise ValueError(f"NOT SUPPORTED VALUES TYPES {column_type}")
 
     @staticmethod
     def convert_to_numeric(values: np.ndarray) -> np.ndarray:
         """Convert value to numeric."""
-        if values.dtype in set(
-            [
-                int,
-                float,
-                float,
-                int,
-                np.dtype("int64"),
-                np.dtype("float64"),
-            ],
-        ):
+        if values.dtype in {
+            int,
+            float,
+            float,
+            int,
+            np.dtype("int64"),
+            np.dtype("float64"),
+        }:
             return values
 
         result = np.array([convert_to_numeric(val) for val in values])
@@ -441,7 +436,7 @@ class MeasureClassifier:
 
     def classify(self, rep: ClassifierReport) -> MeasureType:
         """Classify a measure based on classification report."""
-        conf = self.config.classification
+        conf = self.config
 
         if rep.count_with_values < conf.min_individuals:
             return MeasureType.raw

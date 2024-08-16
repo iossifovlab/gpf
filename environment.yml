@@ -53,3 +53,4 @@ dependencies:
   - pyzstd=0.16
   - gunicorn=22.0
   - mysqlclient=2.2
+  - pydantic=2.8.2
