@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import enum
 from pprint import pprint
+from typing import Any
 
-import box.box
 from box import Box
+from dae.tools.pheno_import import ImportConfig
 
 
 class MeasureType(enum.Enum):
@@ -35,7 +36,7 @@ class MeasureType(enum.Enum):
         return not MeasureType.is_numeric(measure_type)
 
 
-def default_config() -> box.box.Box:
+def default_config() -> Box:
     """Construct phenotype database preparation configuration."""
     config = {
         "report_only": False,
@@ -66,22 +67,22 @@ def default_config() -> box.box.Box:
     return Box(config)
 
 
-def check_phenotype_data_config(config: Box) -> bool:
+def check_phenotype_data_config(config: ImportConfig) -> bool:
     """Check phenotype database preparation config for consistency."""
-    categorical = config.classification.categorical.min_rank
+    categorical = config.default_inference.categorical.min_rank
     if categorical < 1:
         print("categorical min rank expected to be > 0")
         return False
-    ordinal = config.classification.ordinal.min_rank
+    ordinal = config.default_inference.ordinal.min_rank
     if ordinal < categorical:
         print("ordinal min rank expected to be >= categorical min rank")
         return False
-    continuous = config.classification.continuous.min_rank
+    continuous = config.default_inference.continuous.min_rank
     if continuous < ordinal:
         print("continuous min rank expected to be >= ordinal min rank")
         return False
 
-    individuals = config.classification.min_individuals
+    individuals = config.default_inference.min_individuals
     if individuals < 1:
         print("minimal number of individuals expected to be >= 1")
         return False
@@ -89,10 +90,10 @@ def check_phenotype_data_config(config: Box) -> bool:
     return True
 
 
-def dump_config(config: Box) -> None:
+def dump_config(config: ImportConfig) -> None:
     """Print phenotype database preparation configuration."""
     print("--------------------------------------------------------")
     print("CLASSIFICATION BOUNDARIES:")
     print("--------------------------------------------------------")
-    pprint(config.to_dict())
+    pprint(config.dict())  # noqa: T203
     print("--------------------------------------------------------")
