@@ -693,8 +693,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
             return (count_result, variants_result)  # noqa: TRY300
         except Exception as ex:  # noqa: BLE001 pylint: disable=broad-except
-            logger.debug(
-                "unexpected error %s: %s", study_id, ex, exc_info=True)
+            logger.exception("unexpected error in %s:", study_id)
             test_result = TestResult(
                 expectation=self.expectations,
                 case=case,
