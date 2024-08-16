@@ -726,6 +726,9 @@ class PrepareVariables(PreparePersons):
             dump_config(inference_config)
             check_phenotype_data_config(inference_config)
 
+            if inference_config.skip:
+                continue
+
             classify_task = ClassifyMeasureTask(
                 inference_config,
                 instrument_name,
