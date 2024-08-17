@@ -33,7 +33,7 @@ def test_fi1(
     expected_type: MeasureType,
 ) -> None:
     connection, table_name = fi1_db
-    classifier = MeasureClassifier(default_config())
+    classifier = MeasureClassifier(default_config().classification)
     classifier_report = MeasureClassifier.meta_measures(
         connection.cursor(),
         table_name, measure,

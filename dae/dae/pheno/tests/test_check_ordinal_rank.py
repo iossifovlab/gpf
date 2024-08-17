@@ -49,8 +49,7 @@ def test_fake_phenotype_data_ordinal_m4(
 
     table_name = db_builder(df)
 
-    measure_conf = default_config()
-    classifier = MeasureClassifier(measure_conf)
+    classifier = MeasureClassifier(default_config().classification)
     report = classifier.meta_measures(
         db_connection.cursor(), table_name, measure_id,
     )

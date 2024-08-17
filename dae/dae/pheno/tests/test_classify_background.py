@@ -14,7 +14,7 @@ def test_fake_background_classify(
     connection, table_name = fake_background_db
     columns = list(fake_background_df.columns)
     for col in columns[1:]:
-        classifier = MeasureClassifier(default_config())
+        classifier = MeasureClassifier(default_config().classification)
         classifier_report = MeasureClassifier.meta_measures(
             connection, table_name, col,
         )

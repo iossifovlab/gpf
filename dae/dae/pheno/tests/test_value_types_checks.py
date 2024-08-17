@@ -156,15 +156,15 @@ def test_should_convert_to_numeric_cutoff(
 
     report = MeasureClassifier.meta_measures(cursor, table_name, "test")
 
-    config = default_config()
-    config.classification.min_individuals = 1
-    config.classification.ordinal.min_rank = 2
+    config = default_config().classification
+    config.min_individuals = 1
+    config.ordinal.min_rank = 2
 
     classifier = MeasureClassifier(config)
     measure_type = classifier.classify(report)
     assert measure_type == MeasureType.categorical
 
-    config.classification.non_numeric_cutoff = 0.2
+    config.non_numeric_cutoff = 0.2
     classifier = MeasureClassifier(config)
     measure_type = classifier.classify(report)
     assert measure_type == MeasureType.ordinal
