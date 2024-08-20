@@ -19,17 +19,18 @@ Import Tools config files
 
 Import Tools config files has a relatively simple structure. In their simple
 form they consist of 3 sections:
- - Input section: describing the input files. Files like the pedigree file, vcf
-   files and the configuration options required to read these files successfully.
- - Processing config: describing how the input is supposed to be handled and
-   processed.
- - Destination: describing where to store the generated data. For example this
-   could be an impala table. This section also includes the
-   partition_description.
+- Input section: describing the input files. Files like the pedigree file, vcf
+files and the configuration options required to read these files successfully.
+- Processing config: describing how the input is supposed to be handled and
+processed.
+- Destination: describing where to store the generated data. For example this
+could be an impala table. This section also includes the
+partition_description.
 
 Import Tools configuration format
 ---------------------------------
-.. code-block:: yaml
+
+.. code:: yaml
 
     vars:
         my_dir: "..."

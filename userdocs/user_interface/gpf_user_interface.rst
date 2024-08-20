@@ -184,7 +184,6 @@ Rows can be highlighted using the middle mouse button or CTRL / ⌘ + click. Hig
 and can be opened for comparison (see fig. 5).
 
 .. video:: ../_static/gene-profiles.mp4
-   :width: 100%
 
 |
 
@@ -243,7 +242,7 @@ The pedigree selector has a dropdown to choose a criteria from:
    :align: center
 
 Gene symbols filter
-##############
+###################
 
 Specific genes can be queried for using this filter.
 Gene symbols can be listed as comma or newline separated values.
@@ -312,7 +311,7 @@ This filter is dependent on variant annotation during genotype data import.
    :align: center
 
 Family and person filters
-##############
+#########################
 
 These two filters have identical interfaces, but work on families or individuals respectively.
 Specific families or individuals can be queried for using the "IDs" tab.

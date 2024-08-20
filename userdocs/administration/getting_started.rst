@@ -269,7 +269,7 @@ Example import of VCF variants: ``vcf_helloworld``
     :download:`vcf-helloworld.tar.gz <getting_started_files/vcf-helloworld.tar.gz>`.
 
 
-Let us have a small VCF file ``hellowrold.vcf``:
+Let us have a small VCF file ``helloworld.vcf``:
 
 .. code-block::
 
@@ -290,8 +290,7 @@ Let us have a small VCF file ``hellowrold.vcf``:
   chr14  21431623 .  A    C   .    .      .    GT     0/0 0/0 0/0 0/0 0/1 1/1 1/1   
   chr14  21393540 .  GGAA G   .    .      .    GT     0/1 0/1 1/1 0/0 0/0 0/0 0/0   
 
-and a pedigree file ``helloworld.ped`` (the same pedigree file used in 
-`Example import of de novo variants: ``helloworld```_):
+and a pedigree file ``helloworld.ped`` (the same pedigree file used in the example import of de novo variants):
 
 .. code-block::
 
@@ -343,7 +342,7 @@ When the import finishes you can run the GPF development server using:
 
     wgpf run
 
-and browse the content of the GPF development server at `http://localhost:8000`
+and browse the content of the GPF development server at ``http://localhost:8000``
 
 
 Example of a dataset (group of genotype studies)
@@ -579,7 +578,7 @@ Getting started with de novo gene sets
 ######################################
 
 To generate de novo gene sets, you can use the
-``generate_denovo_gene_sets.py`` tool. Similar to :ref:`reports_tool` above,
+``generate_denovo_gene_sets.py`` tool. Similar to the `reports_tool`_ above,
 you can use the ``--show-studies`` and ``--studies`` option.
 
 By default the de novo gene sets are disabled. If you want to enable them for a 

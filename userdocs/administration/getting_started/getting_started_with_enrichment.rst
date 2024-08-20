@@ -2,7 +2,7 @@
 Getting Started with Enrichment Tool
 ####################################
 
-For studies that include de Novo variants, you can enable the :ref:`enrichment_tool_ui`.
+For studies that include de Novo variants, you can enable the enrichment tool UI.
 As an example, let us enable it for the already imported
 `iossifov_2014` study.
 
