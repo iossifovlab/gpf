@@ -488,6 +488,8 @@ class BaseQueryBuilder(ABC):
                     esc=esc,
                 )
             else:
+                region_start = region.start or 1
+                region_stop = region.stop or 3_000_000_000
                 query += (
                     " AND "
                     "("
@@ -505,8 +507,8 @@ class BaseQueryBuilder(ABC):
                 query = query.format(
                     q=self.QUOTE,
                     chrom=region.chrom,
-                    start=region.start,
-                    stop=region.stop,
+                    start=region_start,
+                    stop=region_stop,
                     end_position=end_position,
                     esc=esc,
                 )
@@ -683,9 +685,8 @@ class BaseQueryBuilder(ABC):
 
                         if end and end < rare_boundary:
                             frequency_bins |= {"0", "1", "2"}
-                        elif begin and begin >= rare_boundary:
-                            frequency_bins |= {"0", "1", "3"}
-                        elif end is not None and end >= rare_boundary:
+                        elif (begin and begin >= rare_boundary) or \
+                                (end is not None and end >= rare_boundary):
                             frequency_bins |= {"0", "1", "2", "3"}
             elif inheritance is not None:
                 frequency_bins |= {"0", "1", "2", "3"}

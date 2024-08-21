@@ -46,6 +46,7 @@ class SqlSchema2Variants(QueryVariantsBase):
 
         self.dialect = dialect
         self.db = db
+        logger.debug("workging with db: %s", db)
         self.family_variant_table = family_variant_table
         self.summary_allele_table = summary_allele_table
         self.has_variants = self.summary_allele_table is not None
@@ -145,6 +146,11 @@ class SqlSchema2Variants(QueryVariantsBase):
             self.families,
             gene_models=self.gene_models,
         )
+        if limit is None or limit < 0:
+            query_limit = None
+            limit = -1
+        else:
+            query_limit = 10 * limit
 
         query = query_builder.build_query(
             regions=regions,
@@ -156,7 +162,7 @@ class SqlSchema2Variants(QueryVariantsBase):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=limit,
+            limit=query_limit,
         )
         logger.info("SUMMARY VARIANTS QUERY:\n%s", query)
 
@@ -211,6 +217,11 @@ class SqlSchema2Variants(QueryVariantsBase):
 
         assert self.family_variant_table is not None
         assert self.summary_allele_table is not None
+        if limit is None or limit < 0:
+            query_limit = None
+            limit = -1
+        else:
+            query_limit = 10 * limit
 
         query_builder = FamilyQueryBuilder(
             self.dialect,
@@ -243,7 +254,7 @@ class SqlSchema2Variants(QueryVariantsBase):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            limit=limit,
+            limit=query_limit,
             pedigree_fields=pedigree_fields,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)

@@ -1,7 +1,7 @@
 import logging
 import os
 import time
-from typing import Any, Dict, cast
+from typing import Any, ClassVar, cast
 
 from box import Box
 from cerberus import Validator
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class InmemoryGenotypeStorage(GenotypeStorage):
     """A storage that uses the in-memory as its backend."""
 
-    VALIDATION_SCHEMA = {
+    VALIDATION_SCHEMA: ClassVar[dict[str, Any]] = {
         "storage_type": {"type": "string", "allowed": ["inmemory"]},
         "id": {
             "type": "string",
@@ -43,7 +43,7 @@ class InmemoryGenotypeStorage(GenotypeStorage):
         },
     }
 
-    def __init__(self, storage_config: Dict[str, Any]):
+    def __init__(self, storage_config: dict[str, Any]):
         super().__init__(storage_config)
         self.data_dir = self.storage_config["dir"]
 
@@ -52,7 +52,7 @@ class InmemoryGenotypeStorage(GenotypeStorage):
         return {"inmemory"}
 
     @classmethod
-    def validate_and_normalize_config(cls, config: Dict) -> Dict:
+    def validate_and_normalize_config(cls, config: dict) -> dict:
         config = super().validate_and_normalize_config(config)
         validator = Validator(cls.VALIDATION_SCHEMA)
         if not validator.validate(config):
@@ -62,7 +62,7 @@ class InmemoryGenotypeStorage(GenotypeStorage):
             raise ValueError(
                 f"wrong config format for inmemory storage: "
                 f"{validator.errors}")
-        return cast(Dict, validator.document)
+        return cast(dict, validator.document)
 
     def start(self) -> GenotypeStorage:
         return self
@@ -75,9 +75,10 @@ class InmemoryGenotypeStorage(GenotypeStorage):
         return os.path.join(self.data_dir, *path)
 
     def build_backend(
-            self, study_config: dict[str, Any],
-            genome: ReferenceGenome,
-            gene_models: GeneModels | None) -> Any:
+        self, study_config: dict[str, Any],
+        genome: ReferenceGenome,
+        gene_models: GeneModels | None,  # noqa: ARG002
+    ) -> Any:
         start = time.time()
         config = Box(study_config)
         ped_params = \
