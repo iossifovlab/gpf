@@ -245,7 +245,7 @@ class ClassifyMeasureTask(Task):
                     result = cursor.sql(
                         f'SELECT COUNT("{measure_name}") FROM {table_name} '
                         'WHERE '
-                        f'"{measure_name}" != \'NaN\' AND '
+                        f'TRY_CAST("{measure_name}" AS FLOAT) != \'NaN\' AND '
                         f'"{measure_name}" IS NOT NULL',
                     ).fetchone()
                     assert result is not None
@@ -269,7 +269,8 @@ class ClassifyMeasureTask(Task):
                     self.measure.min_value = None
                     self.measure.max_value = None
                     rows = list(cursor.sql(
-                        f'SELECT DISTINCT "{measure_name}" FROM ('
+                        f'SELECT DISTINCT "{measure_name}" FROM {table_name}'
+                        f'WHERE "{measure_name}" IS NOT NULL'
                         f'SELECT "{measure_name}", '
                         f'TRY_CAST("{measure_name}" AS FLOAT) as casted '
                         f'from {table_name} WHERE "{measure_name}" IS NOT NULL'
@@ -486,9 +487,11 @@ class PrepareVariables(PreparePersons):
 
     def log_measure(
         self, measure: Box,
-        classifier_report: ClassifierReport,
+        classifier_report: ClassifierReport | None,
     ) -> None:
         """Log measure classification."""
+        if classifier_report is None:
+            return
         classifier_report.set_measure(measure)
         logging.info(classifier_report.log_line(short=True))
 
