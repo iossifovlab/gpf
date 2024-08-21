@@ -60,7 +60,7 @@ class ClassifierReport:
     def __repr__(self) -> str:
         return self.log_line(short=True)
 
-    def log_line(self, short: bool = False) -> str:
+    def log_line(self, *, short: bool = False) -> str:
         """Construct a log line in clissifier report."""
         attributes = self.short_attributes()
         values = [str(getattr(self, attr)).strip() for attr in attributes]
@@ -78,7 +78,7 @@ class ClassifierReport:
         return "\t".join(attributes)
 
     @staticmethod
-    def header_line(short: bool = False) -> str:
+    def header_line(*, short: bool = False) -> str:
         """Construct clissifier report header line."""
         attributes = ClassifierReport.short_attributes()
         if not short:
@@ -438,7 +438,8 @@ class MeasureClassifier:
         """Classify a measure based on classification report."""
         conf = self.config
 
-        if rep.count_with_values < conf.min_individuals:
+        if conf.min_individuals and rep.count_with_values and \
+                rep.count_with_values < conf.min_individuals:
             return MeasureType.raw
 
         non_numeric = (
@@ -446,15 +447,26 @@ class MeasureClassifier:
         ) / cast(int, rep.count_with_values)
 
         if non_numeric <= conf.non_numeric_cutoff:
-            if rep.count_unique_numeric_values >= conf.continuous.min_rank:
+            if (
+                rep.count_unique_numeric_values and
+                conf.continuous.min_rank and
+                rep.count_unique_numeric_values >= conf.continuous.min_rank
+            ):
                 return MeasureType.continuous
-            if rep.count_unique_numeric_values >= conf.ordinal.min_rank:
+            if (
+                rep.count_unique_numeric_values and
+                conf.ordinal.min_rank and
+                rep.count_unique_numeric_values >= conf.ordinal.min_rank
+            ):
                 return MeasureType.ordinal
 
             return MeasureType.raw
 
         if (
-            rep.count_unique_values >= conf.categorical.min_rank
+            rep.count_unique_values
+            and conf.categorical.min_rank
+            and conf.categorical.max_rank
+            and rep.count_unique_values >= conf.categorical.min_rank
             and rep.count_unique_values <= conf.categorical.max_rank
             # and rep.value_max_len <= conf.value_max_len
         ):

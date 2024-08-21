@@ -10,11 +10,10 @@ from typing import Any
 
 import yaml
 from box import Box
-from pydantic import BaseModel
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
-from dae.pheno.common import ImportConfig, InferenceConfig
+from dae.pheno.common import ImportConfig
 from dae.pheno.prepare.pheno_prepare import PrepareVariables
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.tools.pheno2browser import build_pheno_browser
@@ -148,7 +147,7 @@ def generate_phenotype_data_config(
     return config
 
 
-def parse_phenotype_data_config(args: argparse.Namespace) -> Box:
+def parse_phenotype_data_config(args: argparse.Namespace) -> ImportConfig:
     """Construct phenotype data configuration from command line arguments."""
     config = ImportConfig()
     config.verbose = args.verbose
@@ -160,7 +159,6 @@ def parse_phenotype_data_config(args: argparse.Namespace) -> Box:
 
     config.db_filename = args.pheno_db_filename
     config.person_column = args.person_column
-
 
     return config
 
@@ -249,17 +247,17 @@ def main(argv: list[str] | None = None) -> int:
         config = parse_phenotype_data_config(args)
         os.makedirs(os.path.join(config.output, "parquet"), exist_ok=True)
 
-        inference_configs: dict[str, InferenceConfig] = {}
+        inference_configs: dict[str, Any] = {}
         if args.inference_config:
-            inference_configs: dict[str, InferenceConfig] = yaml.safe_load(
-                Path(args.inference_config).read_text()
+            inference_configs = yaml.safe_load(
+                Path(args.inference_config).read_text(),
             )
 
         prep = PrepareVariables(config, inference_configs)
         prep.build_pedigree(args.pedigree)
         kwargs = copy(vars(args))
         prep.build_variables(
-            args.instruments, args.data_dictionary, **kwargs
+            args.instruments, args.data_dictionary, **kwargs,
         )
 
         if not args.import_only:

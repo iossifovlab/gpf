@@ -20,6 +20,7 @@ from dae.pedigrees.loader import (
     PedigreeIO,
 )
 from dae.pheno.common import (
+    ImportConfig,
     InferenceConfig,
     MeasureType,
     check_phenotype_data_config,
@@ -50,7 +51,7 @@ class PrepareBase(PrepareCommon):
     """Base class for phenotype data preparation tasks."""
 
     def __init__(
-        self, config: Box, inference_configs: dict[str, InferenceConfig],
+        self, config: ImportConfig, inference_configs: dict[str, Any],
     ) -> None:
         assert config is not None
         self.config = config
@@ -82,7 +83,7 @@ class PreparePersons(PrepareBase):
     """Praparation of individuals DB tables."""
 
     def __init__(
-        self, config: Box, inference_configs: dict[str, InferenceConfig],
+        self, config: ImportConfig, inference_configs: dict[str, Any],
     ) -> None:
         super().__init__(config, inference_configs)
         self.pedigree_df: pd.DataFrame | None = None
@@ -156,7 +157,7 @@ class ClassifyMeasureTask(Task):
         instrument_name: str,
         instrument_table_name: str,
         measure_name: str,
-        measure_desc: str,
+        measure_desc: str | None,
         dbfile: str,
     ) -> None:
         self.config = config
@@ -170,7 +171,7 @@ class ClassifyMeasureTask(Task):
 
     @staticmethod
     def create_default_measure(
-        instrument_name: str, measure_name: str, measure_desc: str,
+        instrument_name: str, measure_name: str, measure_desc: str | None,
     ) -> Box:
         """Create empty measrue description."""
         measure = {
@@ -378,11 +379,10 @@ class PrepareVariables(PreparePersons):
     """Supports preparation of measurements."""
 
     def __init__(
-        self, config: Box, inference_configs: dict[str, InferenceConfig],
+        self, config: ImportConfig, inference_configs: dict[str, Any],
     ) -> None:
         super().__init__(config, inference_configs)
         self.sample_ids = None
-        self.classifier = MeasureClassifier(config)
 
     def _get_person_column_name(self, df: pd.DataFrame) -> str:
         if self.config.person_column:
@@ -390,7 +390,7 @@ class PrepareVariables(PreparePersons):
         else:
             person_id = df.columns[0]
         logger.debug("Person ID: %s", person_id)
-        return cast(str, person_id)
+        return person_id
 
     @staticmethod
     def _check_for_rejects(
@@ -581,7 +581,7 @@ class PrepareVariables(PreparePersons):
             self.build_instrument(
                 instrument_name,
                 temp_dbfile_name,
-                descritpions=descriptions,
+                descriptions=descriptions,
                 **kwargs,
             )
             self.connection.execute(f"DROP TABLE {table_name}")
@@ -651,7 +651,8 @@ class PrepareVariables(PreparePersons):
         self.build_instrument(
             "pheno_common", temp_dbfile,
             descriptions=None,
-            inference_configs=None, **kwargs,
+            inference_configs={},
+            **kwargs,
         )
         self._clean_missing_person_ids("pheno_common")
         tmp_table_name = self._instrument_tmp_table_name("pheno_common")
@@ -659,139 +660,41 @@ class PrepareVariables(PreparePersons):
             f"DROP TABLE {tmp_table_name}",
         )
 
-    def build_instrument(
-        self, instrument_name: str,
-        temp_dbfile: str,
-        *,
-        descriptions: Callable | None = None,
-        **kwargs: dict[str, Any],
-    ) -> None:
-        """Build and store all measures in an instrument."""
-        task_graph = TaskGraph()
-        measures: list[Box] = []
-        measure_reports: dict[str, ClassifierReport] = {}
-        measure_col_names: dict[str, str] = {}
-        output_table_name = generate_instrument_table_name(instrument_name)
-        tmp_table_name = self._instrument_tmp_table_name(instrument_name)
+    @staticmethod
+    def merge_inference_configs(
+        inference_configs: dict[str, Any],
+        instrument_name: str,
+        measure_name: str,
+    ) -> InferenceConfig:
+        inference_config = InferenceConfig()
+        current_config = inference_config.dict()
 
-        cursor = self.connection.cursor()
+        if "*.*" in inference_configs:
+            update_config = inference_configs["*.*"]
+            current_config.update(update_config)
 
-        def run_classify_task(classify_task: ClassifyMeasureTask) -> Any:
-            classify_task.run()
-            return classify_task.done()
+        if f"{instrument_name}.*" in inference_configs:
+            update_config = inference_configs[f"{instrument_name}.*"]
+            current_config.update(update_config)
 
-        columns_to_exclude = {
-            self.PID_COLUMN, self.PERSON_ID, self.config.person_column,
-        }
-        measures_in_data = [
-            row[0]
-            for row in cursor.execute(f"DESCRIBE {tmp_table_name}").fetchall()
-            if row[0] not in columns_to_exclude
-        ]
+        if f"*.{measure_name}" in inference_configs:
+            update_config = inference_configs[f"*.{measure_name}"]
+            current_config.update(update_config)
 
-        for measure_name in measures_in_data:
-            if descriptions:
-                measure_desc = descriptions(instrument_name, measure_name)
-            else:
-                measure_desc = None
+        if f"{instrument_name}.{measure_name}" in inference_configs:
+            update_config = inference_configs[
+                f"{instrument_name}.{measure_name}"
+            ]
+            current_config.update(update_config)
 
-            inference_config = InferenceConfig()
+        return InferenceConfig.parse_obj(current_config)
 
-            if "*.*" in self.inference_configs:
-                update_config = self.inference_configs["*.*"]
-                inference_config = inference_config.model_copy(
-                    update=update_config.dict(),
-                )
-
-            if f"{instrument_name}.*" in self.inference_configs:
-                update_config = self.inference_configs[f"{instrument_name}.*"]
-                inference_config = inference_config.model_copy(
-                    update=update_config.dict(),
-                )
-
-            if f"*.{measure_name}" in self.inference_configs:
-                update_config = self.inference_configs[f"*.{measure_name}"]
-                inference_config = inference_config.model_copy(
-                    update=update_config.dict(),
-                )
-
-            if f"{instrument_name}.{measure_name}" in self.inference_configs:
-                update_config = self.inference_configs[
-                    f"{instrument_name}.{measure_name}"
-                ]
-                inference_config = inference_config.model_copy(
-                    update=update_config.dict(),
-                )
-
-            print(f"Classifying {instrument_name}.{measure_name}")
-            dump_config(inference_config)
-            check_phenotype_data_config(inference_config)
-
-            if inference_config.skip:
-                continue
-
-            classify_task = ClassifyMeasureTask(
-                inference_config,
-                instrument_name,
-                tmp_table_name,
-                measure_name,
-                measure_desc,
-                temp_dbfile,
-            )
-            task_graph.create_task(
-                f"{instrument_name}_{measure_name}_classify",
-                run_classify_task,
-                [classify_task],
-                [],
-            )
-
-        task_cache = TaskCache.create(
-            force=cast(bool | None, kwargs.get("force")),
-            cache_dir=cast(str | None, kwargs.get("task_status_dir")),
-        )
-
-        seen_measure_names: dict[str, int] = {}
-        with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
-            try:
-                for result in task_graph_run_with_results(task_graph, xtor):
-                    measure, classifier_report = result
-
-                    self.log_measure(measure, classifier_report)
-                    if measure.measure_type == MeasureType.skipped:
-                        logging.info(
-                            "skip saving measure: %s; measurings: %s",
-                            measure.measure_id,
-                            classifier_report.count_with_values)
-                        continue
-
-                    measures.append(measure)
-
-                    measure_reports[measure.measure_id] = classifier_report
-
-                    m_name = self._adjust_instrument_measure_name(
-                        instrument_name, measure.measure_name,
-                    )
-
-                    db_name = safe_db_name(m_name)
-                    if db_name.lower() in seen_measure_names:
-                        seen_measure_names[db_name.lower()] += 1
-                        db_name = \
-                            f"{db_name}_{seen_measure_names[db_name.lower()]}"
-                    else:
-                        seen_measure_names[db_name.lower()] = 1
-                    measure_col_names[measure.measure_id] = db_name
-            except Exception:
-                logger.exception("Failed to create images")
-
-        if self.config.report_only:
-            return
-
-        cursor.execute(
-            "INSERT INTO instrument VALUES "
-            "(?, ?)",
-            parameters=[instrument_name, output_table_name],
-        )
-
+    def insert_measures(
+        self, cursor: duckdb.DuckDBPyConnection,
+        instrument_name: str, measures: list[Any],
+        measure_col_names: dict[str, str],
+    ) -> dict[str, str]:
+        """Insert classified measures into the DB."""
         output_table_cols = {
             "person_id": "VARCHAR",
             "family_id": "VARCHAR",
@@ -840,25 +743,138 @@ class PrepareVariables(PreparePersons):
                 parameters=[*values],
             )
 
+        return output_table_cols
+
+    def build_instrument(
+        self, instrument_name: str,
+        temp_dbfile: str,
+        *,
+        descriptions: Callable | None = None,
+        **kwargs: dict[str, Any],
+    ) -> None:
+        """Build and store all measures in an instrument."""
+        task_graph = TaskGraph()
+        measures: list[Box] = []
+        measure_col_names: dict[str, str] = {}
+        output_table_name = generate_instrument_table_name(instrument_name)
+        tmp_table_name = self._instrument_tmp_table_name(instrument_name)
+
+        cursor = self.connection.cursor()
+
+        def run_classify_task(classify_task: ClassifyMeasureTask) -> Any:
+            classify_task.run()
+            return classify_task.done()
+
+        columns_to_exclude = {
+            self.PID_COLUMN, self.PERSON_ID, self.config.person_column,
+        }
+        measures_in_data = [
+            row[0]
+            for row in cursor.execute(f"DESCRIBE {tmp_table_name}").fetchall()
+            if row[0] not in columns_to_exclude
+        ]
+
+        for measure_name in measures_in_data:
+            measure_desc = None
+
+            if descriptions:
+                measure_desc = descriptions(instrument_name, measure_name)
+
+            inference_config = self.merge_inference_configs(
+                self.inference_configs,
+                instrument_name,
+                measure_name,
+            )
+
+            print(f"Classifying {instrument_name}.{measure_name}")
+            dump_config(inference_config)
+            check_phenotype_data_config(inference_config)
+
+            if inference_config.skip:
+                continue
+
+            classify_task = ClassifyMeasureTask(
+                inference_config,
+                instrument_name,
+                tmp_table_name,
+                measure_name,
+                measure_desc,
+                temp_dbfile,
+            )
+            task_graph.create_task(
+                f"{instrument_name}_{measure_name}_classify",
+                run_classify_task,
+                [classify_task],
+                [],
+            )
+
+        task_cache = TaskCache.create(
+            force=cast(bool | None, kwargs.get("force")),
+            cache_dir=cast(str | None, kwargs.get("task_status_dir")),
+        )
+
+        seen_measure_names: dict[str, int] = {}
+        with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
+            try:
+                for result in task_graph_run_with_results(task_graph, xtor):
+                    measure, classifier_report = result
+
+                    self.log_measure(measure, classifier_report)
+                    if measure.measure_type == MeasureType.skipped:
+                        logging.info(
+                            "skip saving measure: %s; measurings: %s",
+                            measure.measure_id,
+                            classifier_report.count_with_values)
+                        continue
+
+                    measures.append(measure)
+
+                    m_name = self._adjust_instrument_measure_name(
+                        instrument_name, measure.measure_name,
+                    )
+
+                    db_name = safe_db_name(m_name)
+                    if db_name.lower() in seen_measure_names:
+                        seen_measure_names[db_name.lower()] += 1
+                        db_name = \
+                            f"{db_name}_{seen_measure_names[db_name.lower()]}"
+                    else:
+                        seen_measure_names[db_name.lower()] = 1
+                    measure_col_names[measure.measure_id] = db_name
+            except Exception:
+                logger.exception("Failed to create images")
+
+        if self.config.report_only:
+            return
+
+        cursor.execute(
+            "INSERT INTO instrument VALUES "
+            "(?, ?)",
+            parameters=[instrument_name, output_table_name],
+        )
+
+        output_table_cols = self.insert_measures(
+            cursor, instrument_name, measures, measure_col_names,
+        )
+
         select_measures = []
         for measure in measures:
             db_name = measure_col_names[measure.measure_id]
-            col_type = output_table_cols[db_name]
-            m_name = measure.measure_name
-            if col_type == "FLOAT":
+            if output_table_cols[db_name] == "FLOAT":
                 select_measures.append(
-                    f'TRY_CAST(i."{m_name}" as FLOAT) as {db_name}',
+                        f'TRY_CAST(i."{measure.measure_name}" as FLOAT) '
+                        f"as {db_name}",
                 )
             else:
-                select_measures.append(f'i."{m_name}" as {db_name}')
-
-        select_measure_cols = ", ".join(select_measures)
+                select_measures.append(
+                    f'i."{measure.measure_name}" as {db_name}',
+                )
 
         cursor.execute(
             f"CREATE TABLE {output_table_name} AS FROM ("  # noqa: S608
             f'SELECT i."{self.config.person_column}" as person_id, '
             "p.family_id, p.role, p.status, p.sex, "
-            f"{select_measure_cols} "
+            f'{", ".join(select_measures)} '
             f"FROM {tmp_table_name} AS i JOIN person AS p "
             f'ON i."{self.config.person_column}" = p.person_id'
             ")",

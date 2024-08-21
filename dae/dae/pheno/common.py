@@ -4,7 +4,7 @@ import enum
 from pprint import pprint
 
 from box import Box
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class RankRange(BaseModel):
@@ -14,6 +14,8 @@ class RankRange(BaseModel):
 
 class InferenceConfig(BaseModel):
     """Classification inference configuration class."""
+    model_config = ConfigDict(extra="forbid")
+
     min_individuals: int = 1
     non_numeric_cutoff: float = 0.06
     value_max_len: int = 32
@@ -25,6 +27,9 @@ class InferenceConfig(BaseModel):
 
 
 class ImportConfig(BaseModel):
+    """Pheno import tool configuration."""
+    model_config = ConfigDict(extra="forbid")
+
     report_only: bool = False
     instruments_tab_separated: bool = False
     person_column: str = "personId"
@@ -34,8 +39,6 @@ class ImportConfig(BaseModel):
     verbose: int = 0
     instruments_dir: str = ""
     pedigree: str = ""
-
-
 
 
 class MeasureType(enum.Enum):
@@ -100,15 +103,15 @@ def default_config() -> Box:
 def check_phenotype_data_config(config: InferenceConfig) -> bool:
     """Check phenotype database preparation config for consistency."""
     categorical = config.categorical.min_rank
-    if categorical < 1:
+    if categorical and categorical < 1:
         print("categorical min rank expected to be > 0")
         return False
     ordinal = config.ordinal.min_rank
-    if ordinal < categorical:
+    if ordinal and categorical and ordinal < categorical:
         print("ordinal min rank expected to be >= categorical min rank")
         return False
     continuous = config.continuous.min_rank
-    if continuous < ordinal:
+    if continuous and ordinal and continuous < ordinal:
         print("continuous min rank expected to be >= ordinal min rank")
         return False
 
