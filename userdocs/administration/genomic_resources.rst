@@ -13,7 +13,7 @@ https://storage.googleapis.com/iossifovlab-grr/.
 
 .. note::
 
-    To browse the conent of the default GRR follow this link:
+    To browse the content of the default GRR follow this link:
     https://storage.googleapis.com/iossifovlab-grr/index.html
 
 If you want to use additional genomic resources, you can build your own GRR 
