@@ -8,4 +8,5 @@ GPF Tools
    gpf_tools/impala_batch_import
    gpf_tools/generate_denovo_gene_sets
    gpf_tools/generate_common_report
+   gpf_tools/annotation_tools
    import_tool
