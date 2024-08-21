@@ -438,8 +438,11 @@ class MeasureClassifier:
         """Classify a measure based on classification report."""
         conf = self.config
 
-        if conf.min_individuals and rep.count_with_values and \
-                rep.count_with_values < conf.min_individuals:
+        if (
+            conf.min_individuals is not None and
+            rep.count_with_values is not None and 
+            rep.count_with_values < conf.min_individuals
+        ):
             return MeasureType.raw
 
         non_numeric = (
@@ -448,14 +451,14 @@ class MeasureClassifier:
 
         if non_numeric <= conf.non_numeric_cutoff:
             if (
-                rep.count_unique_numeric_values and
-                conf.continuous.min_rank and
+                rep.count_unique_numeric_values is not None and
+                conf.continuous.min_rank is not None and
                 rep.count_unique_numeric_values >= conf.continuous.min_rank
             ):
                 return MeasureType.continuous
             if (
-                rep.count_unique_numeric_values and
-                conf.ordinal.min_rank and
+                rep.count_unique_numeric_values is not None and
+                conf.ordinal.min_rank is not None and
                 rep.count_unique_numeric_values >= conf.ordinal.min_rank
             ):
                 return MeasureType.ordinal
@@ -463,9 +466,9 @@ class MeasureClassifier:
             return MeasureType.raw
 
         if (
-            rep.count_unique_values
-            and conf.categorical.min_rank
-            and conf.categorical.max_rank
+            rep.count_unique_values is not None
+            and conf.categorical.min_rank is not None
+            and conf.categorical.max_rank is not None
             and rep.count_unique_values >= conf.categorical.min_rank
             and rep.count_unique_values <= conf.categorical.max_rank
             # and rep.value_max_len <= conf.value_max_len
