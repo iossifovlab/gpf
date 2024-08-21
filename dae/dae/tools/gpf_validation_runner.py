@@ -451,7 +451,6 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
 
         return df
 
-    # pylint: disable=too-many-branches
     def _variants_diff(
         self, variants_df: pd.DataFrame,
         expected_df: pd.DataFrame,
@@ -467,21 +466,104 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                 f"got {len(variants_df)}"
             )
 
-            variants_df = variants_df.sort_index().sort_index(axis=1)
-            expected_df = expected_df.sort_index().sort_index(axis=1)
+            variants_df = variants_df.sort_values(
+                by=["chromosome", "position",
+                    "reference", "alternative",
+                    "family_id"])
+            expected_df = expected_df.sort_values(
+                by=["chromosome", "position",
+                    "reference", "alternative",
+                    "family_id"])
+            header = sorted(variants_df.columns.to_list())
+            diff_columns = []
+            for column in header:
+                col1 = variants_df[column]
+                col2 = expected_df[column]
 
-            pd.testing.assert_frame_equal(
-                variants_df.sort_index(axis=1), expected_df.sort_index(axis=1),
-                check_exact=False,
-                rtol=1e-4,
-            )
+                if col1.dtype == float:
+                    diff = (col1 - col2).abs() > 1e-6
+                else:
+                    diff = col1[col1 != col2]
+
+                if diff.any():
+                    diff_columns.append(column)
+
+            assert not diff_columns, \
+                    f"Columns with differences: {diff_columns}"
+
         except AssertionError as ex:
-            return self._error_reporter(ex, variants_df, expected_df)
+            return self._error_reporter2(ex, variants_df, expected_df)
         except Exception:  # pylint: disable=broad-except
             logger.exception(
                 "unexpected exception whild running tests")
 
         return None
+
+    def _error_reporter2(
+        self, ex: AssertionError,
+        variants_df: pd.DataFrame,
+        expected_df: pd.DataFrame,
+    ) -> str:
+        with io.StringIO() as out:
+            print(ex, file=out)
+
+            if len(variants_df) != len(expected_df):
+                print(
+                    f"Length mismatch: {len(variants_df)} vs expected "
+                    f"{len(expected_df)}", file=out)
+                return out.getvalue()
+
+            header1 = sorted(variants_df.columns.tolist())
+            header2 = sorted(expected_df.columns.tolist())
+            if header1 != header2:
+                print(f"Header mismatch: {header1} vs {header2}", file=out)
+                return out.getvalue()
+
+            variants_df = variants_df.sort_values(
+                by=["chromosome", "position",
+                    "reference", "alternative", "family_id"])
+            expected_df = expected_df.sort_values(
+                by=["chromosome", "position",
+                    "reference", "alternative", "family_id"])
+
+            diff_columns = []
+            for column in header1:
+                col1 = variants_df[column]
+                col2 = expected_df[column]
+
+                if col1.dtype == float:
+                    diff = (col1 - col2).abs() > 1e-6
+                else:
+                    diff = col1[col1 != col2]
+
+                if diff.any():
+                    diff_columns.append(column)
+
+            for column in diff_columns:
+                print(f"Column {column} differences:", file=out)
+                variants = pd.concat([
+                    variants_df[[
+                        "chromosome", "position", "reference", "alternative",
+                        column]],
+                    expected_df[[column]],
+                ], axis=1, join="inner", ignore_index=True)
+                variants = variants.rename(columns={
+                    0: "chromosome",
+                    1: "position",
+                    2: "reference",
+                    3: "alternative",
+                    4: f"variants_{column}",
+                    5: f"expected_{column}",
+                })
+                col1 = variants_df[column]
+                col2 = expected_df[column]
+                if col1.dtype == float:
+                    diff = (col1 - col2).abs() > 1e-6
+                else:
+                    diff = col1[col1 != col2]
+                print(variants.loc[diff], file=out)
+
+            return out.getvalue()
 
     def _error_reporter(
         self, ex: AssertionError,
@@ -692,7 +774,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                 case, params, variants)
 
             return (count_result, variants_result)  # noqa: TRY300
-        except Exception as ex:  # noqa: BLE001 pylint: disable=broad-except
+        except Exception as ex:  # pylint: disable=broad-except
             logger.exception("unexpected error in %s:", study_id)
             test_result = TestResult(
                 expectation=self.expectations,
