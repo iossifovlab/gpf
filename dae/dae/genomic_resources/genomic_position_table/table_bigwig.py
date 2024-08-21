@@ -89,7 +89,7 @@ class BigWigTable(GenomicPositionTable):
                 return 1
             return 0
 
-        query = Region(chrom, pos_begin, pos_end)
+        query = Region(chrom, pos_begin + 1, pos_end)
         if not query.intersects(self._buffer_region):
             return -1
 
