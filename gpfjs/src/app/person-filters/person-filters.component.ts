@@ -1,20 +1,24 @@
-import { Component, OnChanges, Input } from '@angular/core';
+import { Component, OnChanges, Input, OnInit } from '@angular/core';
 import { Dataset, PersonFilter } from '../datasets/datasets';
 import { PersonFilterState, CategoricalFilterState, ContinuousFilterState, ContinuousSelection, CategoricalSelection } from './person-filters';
-import { Store } from '@ngxs/store';
-import { SetFamilyFilters, SetPersonFilters, PersonFiltersState } from './person-filters.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { Store } from '@ngrx/store';
+import { selectPersonFilters, setFamilyFilters, setPersonFilters } from './person-filters.state';
 import { IsNotEmpty, ValidateNested } from 'class-validator';
+import { selectDatasetId } from 'app/datasets/datasets.state';
+import { take } from 'rxjs';
+import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
 
 @Component({
   selector: 'gpf-person-filters',
   templateUrl: './person-filters.component.html',
   styleUrls: ['./person-filters.component.css'],
 })
-export class PersonFiltersComponent extends StatefulComponent implements OnChanges {
+export class PersonFiltersComponent extends StatefulComponentNgRx implements OnChanges, OnInit {
   @Input() public dataset: Dataset;
   @Input() public filters: PersonFilter[];
   @Input() public isFamilyFilters: boolean;
+
+  public selectedDatasetId: string;
 
   @IsNotEmpty({message: 'Select at least one continuous filter.'})
   public selected = false;
@@ -23,11 +27,17 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
   private personFiltersState = new Map<string, PersonFilterState>();
 
   public constructor(protected store: Store) {
-    super(store, PersonFiltersState, 'personFilters');
+    super(store, 'personFilters', selectPersonFilters);
   }
 
-  public ngOnChanges(changes): void {
-    this.store.selectOnce(PersonFiltersState).subscribe(state => {
+  public ngOnInit(): void {
+    this.store.select(selectDatasetId).pipe(take(1)).subscribe(datasetId => {
+      this.selectedDatasetId = datasetId;
+    });
+  }
+
+  public ngOnChanges(): void {
+    this.store.select(selectPersonFilters).pipe(take(1)).subscribe(state => {
       // set default state
       for (const filter of this.filters) {
         let filterState = null;
@@ -46,30 +56,30 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
         this.personFiltersState.set(filter.name, filterState);
       }
 
-      // restore state
-      const filterStates: PersonFilterState[] = this.isFamilyFilters ? state.familyFilters : state.personFilters;
-      if (filterStates.length) {
-        for (const filterState of filterStates) {
-          const filterType = filterState.sourceType === 'continuous' ? ContinuousFilterState : CategoricalFilterState;
-          let selection = null;
-          if (filterState.sourceType === 'continuous') {
-            const filterStateSelection = filterState.selection as ContinuousSelection;
-            selection = new ContinuousSelection(
-              filterStateSelection.min,
-              filterStateSelection.max,
-              filterStateSelection.domainMin,
-              filterStateSelection.domainMax,
-            );
-          } else {
-            selection = new CategoricalSelection((filterState.selection as CategoricalSelection).selection);
-          }
-          const newFilter = new filterType(
-            filterState.id, filterState.sourceType, filterState.role,
-            filterState.source, filterState.from, selection
-          );
-          this.personFiltersState.set(filterState.id, newFilter);
-        }
-      }
+      // // restore state
+      // const filterStates: PersonFilterState[] = this.isFamilyFilters ? state.familyFilters : state.personFilters;
+      // if (filterStates.length) {
+      //   for (const filterState of filterStates) {
+      //     const filterType = filterState.sourceType === 'continuous' ? ContinuousFilterState : CategoricalFilterState;
+      //     let selection = null;
+      //     if (filterState.sourceType === 'continuous') {
+      //       const filterStateSelection = filterState.selection as ContinuousSelection;
+      //       selection = new ContinuousSelection(
+      //         filterStateSelection.min,
+      //         filterStateSelection.max,
+      //         filterStateSelection.domainMin,
+      //         filterStateSelection.domainMax,
+      //       );
+      //     } else {
+      //       selection = new CategoricalSelection((filterState.selection as CategoricalSelection).selection);
+      //     }
+      //     const newFilter = new filterType(
+      //       filterState.id, filterState.sourceType, filterState.role,
+      //       filterState.source, filterState.from, selection
+      //     );
+      //     this.personFiltersState.set(filterState.id, newFilter);
+      //   }
+      // }
     });
     this.updateFilters();
   }
@@ -96,9 +106,9 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
       .map(([_, personFilter]) => personFilter)
       .filter(personFilter => personFilter && !personFilter.isEmpty());
     if (this.isFamilyFilters) {
-      this.store.dispatch(new SetFamilyFilters(filters));
+      this.store.dispatch(setFamilyFilters({familyFilters: filters}));
     } else {
-      this.store.dispatch(new SetPersonFilters(filters));
+      this.store.dispatch(setPersonFilters({personFilters: filters}));
     }
   }
 

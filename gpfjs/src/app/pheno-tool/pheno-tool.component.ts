@@ -23,7 +23,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
   styleUrls: ['./pheno-tool.component.css'],
 })
 export class PhenoToolComponent implements OnInit, OnDestroy {
-  @Select(PhenoToolComponent.phenoToolStateSelector) public state$: Observable<object[]>;
+  // @Select(PhenoToolComponent.phenoToolStateSelector) public state$: Observable<object[]>;
   @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
 
   public selectedDataset: Dataset;
@@ -52,22 +52,22 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
     }
   }
 
-  @Selector([
-    GenesBlockComponent.genesBlockState,
-    PhenoToolMeasureState,
-    PhenoToolGenotypeBlockComponent.phenoToolGenotypeBlockQueryState,
-    FamilyFiltersBlockComponent.familyFiltersBlockState,
-  ])
-  public static phenoToolStateSelector(
-    genesBlockState: object, measureState: object, genotypeState: object, familyFiltersState: object
-  ): object {
-    return {
-      ...genesBlockState,
-      ...measureState,
-      ...genotypeState,
-      ...familyFiltersState,
-    };
-  }
+  // @Selector([
+  //   GenesBlockComponent.genesBlockState,
+  //   PhenoToolMeasureState,
+  //   PhenoToolGenotypeBlockComponent.phenoToolGenotypeBlockQueryState,
+  //   FamilyFiltersBlockComponent.familyFiltersBlockState,
+  // ])
+  // public static phenoToolStateSelector(
+  //   genesBlockState: object, measureState: object, genotypeState: object, familyFiltersState: object
+  // ): object {
+  //   return {
+  //     ...genesBlockState,
+  //     ...measureState,
+  //     ...genotypeState,
+  //     ...familyFiltersState,
+  //   };
+  // }
 
   public ngOnInit(): void {
     this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
@@ -80,10 +80,10 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       this.variantTypesSet = new Set(this.selectedDataset.genotypeBrowserConfig.variantTypes);
     });
 
-    this.state$.subscribe(state => {
-      this.phenoToolState = state;
-      this.phenoToolResults = null;
-    });
+    // this.state$.subscribe(state => {
+    //   this.phenoToolState = state;
+    //   this.phenoToolResults = null;
+    // });
 
     this.loadingService.interruptEvent.subscribe(_ => {
       if (this.phenoToolSubscription !== null) {

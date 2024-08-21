@@ -1,23 +1,25 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
-import { Subscription, combineLatest, of, switchMap } from 'rxjs';
+import { Subscription, combineLatest, of, switchMap, take } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngxs/store';
+import { Store as Store1 } from '@ngrx/store';
 import { StateResetAll } from 'ngxs-reset-plugin';
 import { GeneProfilesState } from 'app/gene-profiles-table/gene-profiles-table.state';
-import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
-import { DatasetState, SetDatasetId } from './datasets.state';
+// import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
+import { selectDatasetId, setDatasetId } from './datasets.state';
 import { StatefulComponent } from 'app/common/stateful-component';
+import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
 
 @Component({
   selector: 'gpf-datasets',
   templateUrl: './datasets.component.html',
   styleUrls: ['./datasets.component.css'],
 })
-export class DatasetsComponent extends StatefulComponent implements OnInit, OnDestroy {
+export class DatasetsComponent extends StatefulComponentNgRx implements OnInit, OnDestroy {
   private static previousUrl = '';
   public registerAlertVisible = false;
   public datasetTrees: DatasetNode[];
@@ -33,9 +35,9 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
     private router: Router,
-    protected store: Store,
+    protected store1: Store1,
   ) {
-    super(store, DatasetState, 'dataset');
+    super(store1, 'dataset', selectDatasetId);
   }
 
   public ngOnInit(): void {
@@ -53,7 +55,7 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
       ).subscribe({
         next: dataset => {
           if (dataset) {
-            this.store.dispatch(new SetDatasetId(dataset.id));
+            this.store1.dispatch(setDatasetId({datasetId: dataset.id}));
             this.selectedDataset = dataset;
             this.setupSelectedDataset();
           }
@@ -90,14 +92,14 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
   }
 
   private saveTopLevelDatasetsToState(): void {
-    this.store.selectOnce(
-      (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
-      .subscribe(state => {
-        this.datasetTrees.forEach(node => {
-          state.expandedDatasets.push(node.dataset.id);
-        });
-        this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
-      });
+    // this.store.selectOnce(
+    //   (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
+    //   .subscribe(state => {
+    //     this.datasetTrees.forEach(node => {
+    //       state.expandedDatasets.push(node.dataset.id);
+    //     });
+    //     this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
+    //   });
   }
 
   public ngOnDestroy(): void {
@@ -199,7 +201,7 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
     /* In order to have state separation between the dataset tools,
     we clear the state if the previous url is from a different dataset tool */
     if (DatasetsComponent.previousUrl !== url && DatasetsComponent.previousUrl.startsWith('/datasets')) {
-      this.store.dispatch(new StateResetAll(GeneProfilesState, DatasetNodeState, DatasetState));
+      // this.store.dispatch(new StateResetAll(GeneProfilesState, DatasetNodeState, DatasetState));
     }
 
     this.selectedTool = url.split('/').pop();

@@ -55,14 +55,13 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 import { Router, RouterModule, Routes, UrlSerializer } from '@angular/router';
 import { PersonFiltersComponent } from './person-filters/person-filters.component';
-import { PersonFiltersState } from './person-filters/person-filters.state';
+import { personFiltersReducer } from './person-filters/person-filters.state';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
 import { ContinuousFilterComponent } from './continuous-filter/continuous-filter.component';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter/multi-continuous-filter.component';
 import { CategoricalFilterComponent } from './categorical-filter/categorical-filter.component';
 import { MeasuresService } from './measures/measures.service';
 import { FamilyIdsComponent } from './family-ids/family-ids.component';
-import { FamilyIdsState } from './family-ids/family-ids.state';
 import { NumberWithExpPipe } from './utils/number-with-exp.pipe';
 import { PhenoToolComponent } from './pheno-tool/pheno-tool.component';
 import { PhenoMeasureSelectorComponent } from './pheno-measure-selector/pheno-measure-selector.component';
@@ -106,7 +105,6 @@ import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock
 import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.component';
 import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { StudyFiltersComponent } from './study-filters/study-filters.component';
-import { StudyFiltersState } from './study-filters/study-filters.state';
 import { AddButtonComponent } from './add-button/add-button.component';
 import { RemoveButtonComponent } from './remove-button/remove-button.component';
 import { PopupComponent } from './popup/popup.component';
@@ -128,7 +126,7 @@ import { GeneProfilesBlockComponent } from './gene-profiles-block/gene-profiles-
 import { GeneProfileSingleViewComponent } from './gene-profiles-single-view/gene-profiles-single-view.component';
 import { PersonFiltersBlockComponent } from './person-filters-block/person-filters-block.component';
 import { PersonIdsComponent } from './person-ids/person-ids.component';
-import { PersonIdsState } from './person-ids/person-ids.state';
+import { personIdsReducer } from './person-ids/person-ids.state';
 import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filter.component';
 import { FamilyTypeFilterState } from './family-type-filter/family-type-filter.state';
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
@@ -183,12 +181,17 @@ import { HomeComponent } from './home/home.component';
 import { AboutComponent } from './about/about.component';
 import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.component';
 import { FamilyTagsComponent } from './family-tags/family-tags.component';
-import { FamilyTagsState } from './family-tags/family-tags.state';
+import { familyTagsReducer } from './family-tags/family-tags.state';
 import { GeneProfilesState } from './gene-profiles-table/gene-profiles-table.state';
-import { DatasetNodeState } from './dataset-node/dataset-node.state';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
-import { DatasetState } from './datasets/datasets.state';
+import { datasetIdReducer, DatasetState } from './datasets/datasets.state';
+
+import { StoreModule } from '@ngrx/store';
+import { errorsReducer } from './common/errors_ngrx.state';
+import { familyIdsReducer } from './family-ids/family-ids.state';
+import { expandedDatasetsReducer } from './dataset-node/dataset-node.state';
+import { studyFiltersReducer } from './study-filters/study-filters.state';
 
 const appRoutes: Routes = [
   {
@@ -427,11 +430,11 @@ const appRoutes: Routes = [
     NgMultiSelectDropDownModule.forRoot(),
     NgxsModule.forRoot([
       VarianttypesState, EffecttypesState, GenderState,
-      InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
-      GeneSymbolsState, FamilyIdsState, FamilyTagsState, RegionsFilterState, StudyTypesState, GeneSetsState,
+      InheritancetypesState, PresentInChildState, PresentInParentState,
+      GeneSymbolsState, RegionsFilterState, StudyTypesState, GeneSetsState,
       GeneScoresState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
-      StudyFiltersState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
-      UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState, DatasetNodeState, DatasetState
+      GenomicScoresBlockState, PhenoToolMeasureState,
+      UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState, DatasetState
     ], {compatibility: { strictContentSecurityPolicy: true }}
     ),
     NgxsResetPluginModule.forRoot(),
@@ -441,7 +444,8 @@ const appRoutes: Routes = [
     AngularMarkdownEditorModule.forRoot(),
     MatAutocompleteModule,
     MatInputModule,
-    NoopAnimationsModule
+    NoopAnimationsModule,
+    StoreModule.forRoot({ errors: errorsReducer, familyIds: familyIdsReducer, datasetId: datasetIdReducer, expandedDatasets: expandedDatasetsReducer, familyTags: familyTagsReducer, personIds: personIdsReducer, personFilters: personFiltersReducer, studyFilters: studyFiltersReducer}),
   ],
   providers: [
     CookieService,

@@ -10,7 +10,7 @@ import { Dictionary } from 'lodash';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 import { Store } from '@ngxs/store';
-import { SetFamilyTags } from 'app/family-tags/family-tags.state';
+// import { SetFamilyTags } from 'app/family-tags/family-tags.state';
 import { Router } from '@angular/router';
 import { DatasetModel } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -69,7 +69,7 @@ export class VariantReportsComponent implements OnInit {
     private datasetsService: DatasetsService,
   ) {
     router.events.subscribe(() => {
-      this.store.dispatch(new SetFamilyTags([], [], true));
+      // this.store.dispatch(new SetFamilyTags([], [], true));
     });
   }
 

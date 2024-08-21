@@ -1,15 +1,16 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { StatefulComponent } from 'app/common/stateful-component';
-import { FamilyTagsModel, FamilyTagsState, SetFamilyTags } from './family-tags.state';
-import { Store } from '@ngxs/store';
-import { FamilyTags } from './family-tags';
+import { selectFamilyTags, setFamilyTags } from './family-tags.state';
+// import { FamilyTags } from './family-tags';
+import { Store } from '@ngrx/store';
+import { take } from 'rxjs';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-family-tags',
   templateUrl: './family-tags.component.html',
   styleUrls: ['./family-tags.component.css']
 })
-export class FamilyTagsComponent extends StatefulComponent implements OnInit {
+export class FamilyTagsComponent implements OnInit {
   @Input() public numOfCols: number;
   @Input() public tags = [];
   @Output() public chooseMode = new EventEmitter<boolean>();
@@ -19,22 +20,21 @@ export class FamilyTagsComponent extends StatefulComponent implements OnInit {
   public deselectedTags: string[] = [];
   public filtersButtonsState: Record<string, number> = {};
   public tagIntersection = true; // mode "And"
-  public familyTags = new FamilyTags();
+  // public familyTags = new FamilyTags();
 
-  public constructor(protected store: Store) {
-    super(store, FamilyTagsState, 'familyTags');
-  }
+  public constructor(protected store: Store) { }
 
   public ngOnInit(): void {
     this.tags.forEach((tag: string) => {
       this.filtersButtonsState[tag] = 0;
     });
 
-    this.store.selectOnce(
-      (state: { familyTagsState: FamilyTagsModel}) => state.familyTagsState)
-      .subscribe((state: SetFamilyTags) => {
-        this.restoreFamilyTags(state.selectedFamilyTags, state.deselectedFamilyTags, state.tagIntersection);
-      });
+    // this.store
+    //   .select(selectFamilyTags)
+    //   .pipe(take(1))
+    //   .subscribe((familyTags: { selectedFamilyTags: string[], deselectedFamilyTags: string[], tagIntersection: boolean }) => {
+    //     this.restoreFamilyTags(familyTags.selectedFamilyTags, familyTags.deselectedFamilyTags, familyTags.tagIntersection);
+    //   });
   }
 
   public restoreFamilyTags(selectedTags: string[], deselectedTags: string[], intersection: boolean): void {
@@ -50,16 +50,16 @@ export class FamilyTagsComponent extends StatefulComponent implements OnInit {
 
     this.tagIntersection = intersection;
 
-    this.familyTags.deselectedTags = deselectedTags;
-    this.familyTags.selectedTags = selectedTags;
-    this.familyTags.tagIntersection = intersection;
-    this.store.dispatch(new SetFamilyTags(this.selectedTags, this.deselectedTags, this.tagIntersection));
+    // this.familyTags.deselectedTags = deselectedTags;
+    // this.familyTags.selectedTags = selectedTags;
+    // this.familyTags.tagIntersection = intersection;
     this.onUpdateTags();
+    this.dispatchState();
   }
 
   public onChooseMode(intersected = true): void {
     this.tagIntersection = intersected;
-    this.store.dispatch(new SetFamilyTags(this.selectedTags, this.deselectedTags, this.tagIntersection));
+    this.dispatchState();
     this.chooseMode.emit(intersected);
   }
 
@@ -93,7 +93,7 @@ export class FamilyTagsComponent extends StatefulComponent implements OnInit {
     });
 
     this.onUpdateTags();
-    this.store.dispatch(new SetFamilyTags(this.selectedTags, this.deselectedTags, this.tagIntersection));
+    this.dispatchState();
   }
 
   public updateSelectedTagsList(tag: string): void {
@@ -107,8 +107,8 @@ export class FamilyTagsComponent extends StatefulComponent implements OnInit {
       const index = this.deselectedTags.indexOf(tag);
       this.deselectedTags.splice(index, 1);
     }
-    this.store.dispatch(new SetFamilyTags(this.selectedTags, this.deselectedTags, this.tagIntersection));
     this.onUpdateTags();
+    this.dispatchState();
   }
 
   public updateDeselectedTagsList(tag: string): void {
@@ -122,7 +122,17 @@ export class FamilyTagsComponent extends StatefulComponent implements OnInit {
       const index = this.selectedTags.indexOf(tag);
       this.selectedTags.splice(index, 1);
     }
-    this.store.dispatch(new SetFamilyTags(this.selectedTags, this.deselectedTags, this.tagIntersection));
     this.onUpdateTags();
+    this.dispatchState();
+  }
+
+  private dispatchState(): void {
+    this.store.dispatch(
+      setFamilyTags({
+        selectedFamilyTags: cloneDeep(this.selectedTags),
+        deselectedFamilyTags: cloneDeep(this.deselectedTags),
+        tagIntersection: cloneDeep(this.tagIntersection),
+      })
+    );
   }
 }

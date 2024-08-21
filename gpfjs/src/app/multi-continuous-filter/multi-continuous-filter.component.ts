@@ -2,17 +2,19 @@ import { Component, OnInit, Input, EventEmitter, Output, ViewChild } from '@angu
 import { ContinuousMeasure } from '../measures/measures';
 import { ContinuousFilterState } from '../person-filters/person-filters';
 import { PersonFilter } from '../datasets/datasets';
-import { Store } from '@ngxs/store';
+import { Store } from '@ngrx/store';
 import { StatefulComponent } from 'app/common/stateful-component';
-import { PersonFiltersState } from 'app/person-filters/person-filters.state';
+// import { PersonFiltersState } from 'app/person-filters/person-filters.state';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
+import { selectPersonFilters } from 'app/person-filters/person-filters.state';
+import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
 
 @Component({
   selector: 'gpf-multi-continuous-filter',
   templateUrl: './multi-continuous-filter.component.html',
   styleUrls: ['./multi-continuous-filter.component.css'],
 })
-export class MultiContinuousFilterComponent extends StatefulComponent implements OnInit {
+export class MultiContinuousFilterComponent extends StatefulComponentNgRx implements OnInit {
   @Input() public datasetId: string;
   @Input() public continuousFilter: PersonFilter;
   @Input() public continuousFilterState: ContinuousFilterState;
@@ -24,33 +26,33 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
   public internalSelectedMeasure: ContinuousMeasure;
 
   public constructor(protected store: Store) {
-    super(store, PersonFiltersState, 'personFilters');
+    super(store, 'personFilters', selectPersonFilters);
   }
 
   public ngOnInit(): void {
-    this.store.selectOnce(state => state).subscribe(state => {
-      this.restoreContinuousFilter(state);
-    });
+  //   this.store.selectOnce(state => state).subscribe(state => {
+  //     this.restoreContinuousFilter(state);
+  //   });
   }
 
-  public restoreContinuousFilter(state): void {
-    if (!state['personFiltersState']) {
-      return;
-    }
-    const filters = state['personFiltersState'][this.isFamilyFilter ? 'familyFilters' : 'personFilters'];
-    filters.forEach(async(filter) => {
-      if (filter['sourceType'] === 'continuous') {
-        const selection = {
-          name: filter.source,
-          min: filter['selection']['min'],
-          max: filter['selection']['max']
-        };
-        this.selectedMeasure = selection;
-        await this.waitForSelectorComponent();
-        this.measureSelectorComponent.selectMeasure(this.selectedMeasure);
-      }
-    });
-  }
+  // public restoreContinuousFilter(state): void {
+  //   if (!state['personFiltersState']) {
+  //     return;
+  //   }
+  //   const filters = state['personFiltersState'][this.isFamilyFilter ? 'familyFilters' : 'personFilters'];
+  //   filters.forEach(async(filter) => {
+  //     if (filter['sourceType'] === 'continuous') {
+  //       const selection = {
+  //         name: filter.source,
+  //         min: filter['selection']['min'],
+  //         max: filter['selection']['max']
+  //       };
+  //       this.selectedMeasure = selection;
+  //       await this.waitForSelectorComponent();
+  //       this.measureSelectorComponent.selectMeasure(this.selectedMeasure);
+  //     }
+  //   });
+  // }
 
   private async waitForSelectorComponent(): Promise<void> {
     return new Promise<void>(resolve => {

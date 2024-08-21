@@ -1,19 +1,19 @@
 import { AfterContentChecked, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { Observable, Subject, Subscription, take } from 'rxjs';
 import { DatasetNode } from './dataset-node';
-import { Store } from '@ngxs/store';
-import { StatefulComponent } from 'app/common/stateful-component';
-import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from './dataset-node.state';
-import { DatasetModel } from 'app/datasets/datasets.state';
-import { DatasetsService } from 'app/datasets/datasets.service';
+import { Store } from '@ngrx/store';
+import { selectExpandedDatasets, setExpandedDatasets } from './dataset-node.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
+import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-dataset-node',
   templateUrl: './dataset-node.component.html',
   styleUrls: ['./dataset-node.component.css']
 })
-export class DatasetNodeComponent extends StatefulComponent implements OnInit, AfterContentChecked {
+export class DatasetNodeComponent extends StatefulComponentNgRx implements OnInit, AfterContentChecked {
   @Input() public datasetNode: DatasetNode;
   @Output() public setExpandabilityEvent = new EventEmitter<boolean>();
   public selectedDatasetId: string;
@@ -25,27 +25,24 @@ export class DatasetNodeComponent extends StatefulComponent implements OnInit, A
   public constructor(
     private router: Router,
     private changeDetector: ChangeDetectorRef,
-    protected store: Store,
-    private datasetService: DatasetsService
+    protected store: Store
   ) {
-    super(store, DatasetNodeState, 'datasetNode');
+    super(store, 'datasetNode', selectExpandedDatasets);
   }
 
   public ngOnInit(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      this.selectedDatasetId = state.selectedDatasetId;
+    this.store.select(selectDatasetId).pipe(take(1)).subscribe(datasetId => {
+      this.selectedDatasetId = datasetId;
       if (this.datasetNode.dataset.id === this.selectedDatasetId) {
         this.setExpandability();
       }
     });
 
-    this.store.selectOnce(
-      (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
-      .subscribe(state => {
-        if (state.expandedDatasets.includes(this.datasetNode.dataset.id)) {
-          this.isExpanded = true;
-        }
-      });
+    this.store.select(selectExpandedDatasets).pipe(take(1)).subscribe((expandedDatasets: string[]) => {
+      if (expandedDatasets.includes(this.datasetNode.dataset.id)) {
+        this.isExpanded = true;
+      }
+    });
 
     this.closeChildrenSubscription = this.closeObservable.subscribe(() => {
       this.isExpanded = false;
@@ -87,40 +84,37 @@ export class DatasetNodeComponent extends StatefulComponent implements OnInit, A
   }
 
   private addToState(nodeId: string): void {
-    this.store.selectOnce(
-      (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
-      .subscribe(state => {
-        if (!state.expandedDatasets.includes(nodeId)) {
-          state.expandedDatasets.push(nodeId);
-          this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
-        }
-      });
+    this.store.select(selectExpandedDatasets).pipe(take(1)).subscribe((expandedDatasets: string[]) => {
+      const eq = cloneDeep(expandedDatasets);
+      if (!expandedDatasets.includes(nodeId)) {
+        eq.push(nodeId);
+        this.store.dispatch(setExpandedDatasets({expandedDatasets: eq}))
+      }
+    });
   }
 
   private removeFromState(nodeId: string): void {
-    this.store.selectOnce(
-      (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
-      .subscribe(state => {
-        if (state.expandedDatasets.includes(nodeId)) {
-          const index = state.expandedDatasets.indexOf(nodeId, 0);
-          state.expandedDatasets.splice(index, 1);
-          this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
-        }
-      });
+    this.store.select(selectExpandedDatasets).pipe(take(1)).subscribe((expandedDatasets: string[]) => {
+      const eq = cloneDeep(expandedDatasets);
+      if (expandedDatasets.includes(nodeId)) {
+        const index = expandedDatasets.indexOf(nodeId, 0);
+        eq.splice(index, 1);
+        this.store.dispatch(setExpandedDatasets({expandedDatasets: eq}))
+      }
+    });
   }
 
   private updateState(nodeId: string): void {
-    this.store.selectOnce(
-      (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
-      .subscribe(state => {
-        if (state.expandedDatasets.includes(nodeId)) {
-          const index = state.expandedDatasets.indexOf(nodeId, 0);
-          state.expandedDatasets.splice(index, 1);
-        } else {
-          state.expandedDatasets.push(nodeId);
-        }
-        this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
-      });
+    this.store.select(selectExpandedDatasets).pipe(take(1)).subscribe((expandedDatasets: string[]) => {
+      const eq = cloneDeep(expandedDatasets);
+      if (expandedDatasets.includes(nodeId)) {
+        const index = expandedDatasets.indexOf(nodeId, 0);
+        eq.splice(index, 1);
+      } else {
+        eq.push(nodeId);
+      }
+      this.store.dispatch(setExpandedDatasets({expandedDatasets: eq}));
+    });
   }
 
   public setIsExpanded(): void {

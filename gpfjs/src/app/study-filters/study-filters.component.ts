@@ -1,23 +1,23 @@
 import { Component, OnInit, Input, ViewChild, OnDestroy } from '@angular/core';
-import { Store } from '@ngxs/store';
+import { Store } from '@ngrx/store';
 import { Dataset } from '../datasets/datasets';
-import { SetStudyFilters, StudyFiltersModel, StudyFiltersState } from './study-filters.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { resetStudyFilters, selectStudyFilters, setStudyFilters } from './study-filters.state';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
-import { StateReset } from 'ngxs-reset-plugin';
 import { SetNotEmpty } from 'app/utils/set.validators';
 import { Validate } from 'class-validator';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Subscription } from 'rxjs/internal/Subscription';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
+import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'gpf-study-filters-block',
   templateUrl: './study-filters.component.html',
   styleUrls: ['./study-filters.component.css']
 })
-export class StudyFiltersComponent extends StatefulComponent implements OnInit, OnDestroy {
+export class StudyFiltersComponent extends StatefulComponentNgRx implements OnInit, OnDestroy {
   @Input() public dataset: Dataset;
 
   @Validate(SetNotEmpty, {message: 'Select at least one.'})
@@ -30,7 +30,7 @@ export class StudyFiltersComponent extends StatefulComponent implements OnInit, 
   public constructor(
     protected store: Store, public datasets: DatasetsService, private datasetsTreeService: DatasetsTreeService
   ) {
-    super(store, StudyFiltersState, 'studyFilters');
+    super(store, 'studyFilters', selectStudyFilters);
   }
 
   public showStudyFilters = false;
@@ -52,14 +52,14 @@ export class StudyFiltersComponent extends StatefulComponent implements OnInit, 
       }
     });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    this.store.selectOnce(state => state.studyFiltersState as StudyFiltersModel).subscribe(state => {
+    this.store.select(selectStudyFilters).pipe(take(1)).subscribe((studyFilters: string[]) => {
       // restore state
-      if ((state?.studyFilters?.length ?? 0) !== 0) {
+      if ((studyFilters?.length ?? 0) !== 0) {
         setTimeout(() => {
           if (this.showStudyFilters === false) {
             this.showStudyFilters = true;
             this.ngbNav.select('studies');
-            this.updateState(new Set(state.studyFilters));
+            this.updateState(new Set(studyFilters));
           }
         }, 200);
       }
@@ -78,12 +78,11 @@ export class StudyFiltersComponent extends StatefulComponent implements OnInit, 
     } else {
       this.selectedStudies.clear();
     }
-    this.store.dispatch(new SetStudyFilters([]));
-    this.store.dispatch(new StateReset(StudyFiltersState));
+    this.store.dispatch(resetStudyFilters());
   }
 
   public updateState(newValues: Set<string>): void {
     this.selectedStudies = newValues;
-    this.store.dispatch(new SetStudyFilters(Array.from(this.selectedStudies)));
+    this.store.dispatch(setStudyFilters({ studyFilters: Array.from(this.selectedStudies) }));
   }
 }

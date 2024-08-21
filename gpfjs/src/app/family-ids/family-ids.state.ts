@@ -1,27 +1,19 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+export const initialState = [];
 
-export class SetFamilyIds {
-  public static readonly type = '[Genotype] Set family ids';
-  public constructor(public familyIds: string[]) {}
-}
+export const selectFamilyIds = createFeatureSelector<object>('familyIds');
 
-export interface FamilyIdsModel {
-  familyIds: string[];
-}
+export const setFamilyIds = createAction(
+  '[Genotype] Set family ids',
+  props<{ familyIds: string[] }>()
+);
 
-@State<FamilyIdsModel>({
-  name: 'familyIdsState',
-  defaults: {
-    familyIds: []
-  },
-})
-@Injectable()
-export class FamilyIdsState {
-  @Action(SetFamilyIds)
-  public changeFamilyIds(ctx: StateContext<FamilyIdsModel>, action: SetFamilyIds): void {
-    ctx.patchState({
-      familyIds: action.familyIds
-    });
-  }
-}
+export const resetFamilyIds = createAction(
+  '[Genotype] Reset family ids'
+);
+
+export const familyIdsReducer = createReducer(
+  initialState,
+  on(setFamilyIds, (state, {familyIds}) => familyIds),
+  on(resetFamilyIds, state => []),
+);

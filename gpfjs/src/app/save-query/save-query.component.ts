@@ -4,6 +4,7 @@ import { QueryService } from '../query/query.service';
 import { NgbDropdown, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { UsersService } from '../users/users.service';
 import { Store } from '@ngxs/store';
+import { Store as Store1} from '@ngrx/store'
 import { share, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 
@@ -32,6 +33,7 @@ export class SaveQueryComponent implements OnInit {
 
   public constructor(
     private store: Store,
+    private store1: Store1,
     private queryService: QueryService,
     private usersService: UsersService,
     private changeDetectorRef: ChangeDetectorRef
@@ -74,7 +76,20 @@ export class SaveQueryComponent implements OnInit {
       return;
     }
 
-    this.store.selectOnce(state => state).subscribe(state => {
+    // this.store.selectOnce(state => state).subscribe(state => {
+    //   this.queryService.saveQuery(state, this.queryType)
+    //     .pipe(take(1))
+    //     .subscribe(response => {
+    //       this.urlUUID = response['uuid'];
+    //       this.setUrl();
+    //       this.dropdown.open();
+    //     });
+    // }, () => {
+    //   this.resetUrl();
+    // }
+    // );
+
+    this.store1.subscribe(state => {
       this.queryService.saveQuery(state, this.queryType)
         .pipe(take(1))
         .subscribe(response => {
@@ -84,8 +99,7 @@ export class SaveQueryComponent implements OnInit {
         });
     }, () => {
       this.resetUrl();
-    }
-    );
+    });
   }
 
   private resetUrl(): void {

@@ -15,11 +15,13 @@ import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-fil
 import { UniqueFamilyVariantsFilterState } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
 import { ErrorsState, ErrorsModel } from '../common/errors.state';
 import { filter, switchMap, take } from 'rxjs/operators';
-import { StudyFiltersState } from 'app/study-filters/study-filters.state';
-import { clone } from 'lodash';
+// import { StudyFiltersState } from 'app/study-filters/study-filters.state';
+import { clone, isEmpty } from 'lodash';
 import { NavigationStart, Router } from '@angular/router';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { DatasetModel, selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { Store as Store1} from '@ngrx/store';
+import { selectErrors } from 'app/common/errors_ngrx.state';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -31,7 +33,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public showTable = false;
   public legend: Array<PersonSet>;
 
-  public disableQueryButtons = false;
+  public disableQueryButtons;
   private routerSubscription: Subscription;
 
   public selectedDatasetId: string;
@@ -43,43 +45,43 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
 
   public variantsCountDisplay: string;
 
-  @Select(GenotypeBrowserComponent.genotypeBrowserStateSelector) private state$: Observable<any[]>;
-  @Select(ErrorsState) private errorsState$: Observable<ErrorsModel>;
+  // @Select(GenotypeBrowserComponent.genotypeBrowserStateSelector) private state$: Observable<any[]>;
+  // @Select(ErrorsState) private errorsState$: Observable<ErrorsModel>;
 
-  @Selector([
-    GenotypeBlockComponent.genotypeBlockQueryState,
-    GenesBlockComponent.genesBlockState,
-    RegionsFilterState,
-    GenomicScoresBlockState,
-    FamilyFiltersBlockComponent.familyFiltersBlockState,
-    PersonFiltersBlockComponent.personFiltersBlockState,
-    UniqueFamilyVariantsFilterState,
-    StudyFiltersState
-  ])
-  public static genotypeBrowserStateSelector(
-    genotypeBlockState,
-    genesBlockState,
-    regionsFilterState,
-    genomicScoresBlockState,
-    familyFiltersBlockState,
-    personFiltersBlockState,
-    uniqueFamilyVariantsFilterState,
-    StudyFiltersState
-  ): object {
-    const res = {
-      ...genotypeBlockState,
-      ...genesBlockState,
-      ...genomicScoresBlockState,
-      ...familyFiltersBlockState,
-      ...personFiltersBlockState,
-      ...uniqueFamilyVariantsFilterState,
-      ...StudyFiltersState
-    };
-    if (regionsFilterState.regionsFilters.length) {
-      res.regions = regionsFilterState.regionsFilters;
-    }
-    return res;
-  }
+  // @Selector([
+  //   GenotypeBlockComponent.genotypeBlockQueryState,
+  //   GenesBlockComponent.genesBlockState,
+  //   RegionsFilterState,
+  //   GenomicScoresBlockState,
+  //   FamilyFiltersBlockComponent.familyFiltersBlockState,
+  //   PersonFiltersBlockComponent.personFiltersBlockState,
+  //   UniqueFamilyVariantsFilterState,
+  //   StudyFiltersState
+  // ])
+  // public static genotypeBrowserStateSelector(
+  //   genotypeBlockState,
+  //   genesBlockState,
+  //   regionsFilterState,
+  //   genomicScoresBlockState,
+  //   familyFiltersBlockState,
+  //   personFiltersBlockState,
+  //   uniqueFamilyVariantsFilterState,
+  //   StudyFiltersState
+  // ): object {
+  //   const res = {
+  //     ...genotypeBlockState,
+  //     ...genesBlockState,
+  //     ...genomicScoresBlockState,
+  //     ...familyFiltersBlockState,
+  //     ...personFiltersBlockState,
+  //     ...uniqueFamilyVariantsFilterState,
+  //     ...StudyFiltersState
+  //   };
+  //   if (regionsFilterState.regionsFilters.length) {
+  //     res.regions = regionsFilterState.regionsFilters;
+  //   }
+  //   return res;
+  // }
 
   public constructor(
     private queryService: QueryService,
@@ -87,7 +89,8 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     private loadingService: FullscreenLoadingService,
     private router: Router,
     private store: Store,
-    private datasetsService: DatasetsService
+    private datasetsService: DatasetsService,
+    private store1: Store1
   ) {
     this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationStart)
@@ -100,8 +103,18 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public ngOnInit(): void {
     this.genotypeBrowserState = {};
 
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
+    // this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
+    //   switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
+    // ).subscribe(dataset => {
+    //   if (!dataset) {
+    //     return;
+    //   }
+    //   this.selectedDataset = dataset;
+    // });
+
+
+    this.store1.select(selectDatasetId).pipe(
+      switchMap(datasetId => this.datasetsService.getDataset(datasetId))
     ).subscribe(dataset => {
       if (!dataset) {
         return;
@@ -109,10 +122,18 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
       this.selectedDataset = dataset;
     });
 
-    this.state$.subscribe(state => {
-      this.genotypeBrowserState = {...state};
+
+
+    // this.state$.subscribe(state => {
+    //   this.genotypeBrowserState = {...state};
+    //   this.genotypePreviewVariantsArray = null;
+    // });
+
+    this.store1.subscribe(state => {
+      this.genotypeBrowserState['familyIds'] = state['familyIds'];
       this.genotypePreviewVariantsArray = null;
     });
+
 
     this.loadingService.interruptEvent.subscribe(_ => {
       this.queryService.cancelStreamPost();
@@ -122,8 +143,11 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
       this.genotypePreviewVariantsArray = null;
     });
 
-    this.errorsState$.subscribe(state => {
-      setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
+    // this.errorsState$.subscribe(state => {
+    //   setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
+    // });
+    this.store1.select(selectErrors).subscribe(errorState => {
+      setTimeout(() => this.disableQueryButtons = Object.values(errorState).toString() !== '');
     });
   }
 

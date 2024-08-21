@@ -1,27 +1,19 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+export const initialState = [];
 
-export class SetStudyFilters {
-  public static readonly type = '[Genotype] Set studyFilters';
-  public constructor(public studyFilters: string[]) {}
-}
+export const selectStudyFilters = createFeatureSelector<object>('studyFilters');
 
-export interface StudyFiltersModel {
-  studyFilters: string[];
-}
+export const setStudyFilters = createAction(
+  '[Genotype] Set study filters',
+  props<{ studyFilters: string[] }>()
+);
 
-@State<StudyFiltersModel>({
-  name: 'studyFiltersState',
-  defaults: {
-    studyFilters: []
-  },
-})
-@Injectable()
-export class StudyFiltersState {
-  @Action(SetStudyFilters)
-  public setStudyFilters(ctx: StateContext<StudyFiltersModel>, action: SetStudyFilters): void {
-    ctx.patchState({
-      studyFilters: [...action.studyFilters]
-    });
-  }
-}
+export const resetStudyFilters = createAction(
+  '[Genotype] Reset study filters'
+);
+
+export const studyFiltersReducer = createReducer(
+  initialState,
+  on(setStudyFilters, (state, {studyFilters}) => studyFilters),
+  on(resetStudyFilters, state => []),
+);

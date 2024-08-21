@@ -1,8 +1,9 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { IsNotEmpty, ValidateNested } from 'class-validator';
-import { Store } from '@ngxs/store';
-import { SetPersonIds, PersonIdsState } from './person-ids.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { Store } from '@ngrx/store';
+import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { selectPersonIds, setPersonIds } from './person-ids.state';
+import { take } from 'rxjs';
 
 export class PersonIds {
   @IsNotEmpty({message: 'Please insert at least one person id.'})
@@ -14,26 +15,25 @@ export class PersonIds {
   templateUrl: './person-ids.component.html',
   styleUrls: ['./person-ids.component.css'],
 })
-export class PersonIdsComponent extends StatefulComponent implements OnInit {
+export class PersonIdsComponent extends StatefulComponentNgRx implements OnInit {
   @ValidateNested()
   public personIds = new PersonIds();
   @ViewChild('textArea') private textArea: ElementRef;
 
   public constructor(protected store: Store) {
-    super(store, PersonIdsState, 'personIds');
+    super(store, 'personIds', selectPersonIds);
   }
 
   public ngOnInit(): void {
     super.ngOnInit();
     this.focusTextInputArea();
-    this.store.selectOnce(state => state.personIdsState).subscribe(state => {
-      // restore state
+
+    this.store.select(selectPersonIds).pipe(take(1)).subscribe((personIds: string[]) => {
       let separator = '\n';
-      if (state.personIds.length >= 3) {
+      if (personIds.length >= 3) {
         separator = ', ';
       }
-
-      this.setPersonIds(state.personIds.join(separator));
+      this.setPersonIds(personIds.join(separator));
     });
   }
 
@@ -42,7 +42,7 @@ export class PersonIdsComponent extends StatefulComponent implements OnInit {
       .split(/[,\s]/)
       .filter(s => s !== '');
     this.personIds.personIds = personIds;
-    this.store.dispatch(new SetPersonIds(result));
+    this.store.dispatch(setPersonIds({personIds: result}));
   }
 
   private async waitForTextInputAreaToLoad(): Promise<void> {
