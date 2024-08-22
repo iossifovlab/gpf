@@ -1,53 +1,42 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
+from functools import reduce
 from pathlib import Path
-from typing import Any, Dict, cast
+from typing import Any, cast
 
+import duckdb
 import pandas as pd
-from box import Box
-from sqlalchemy import (
-    Column,
-    Double,
-    Float,
-    Integer,
-    MetaData,
-    Select,
-    String,
-    Table,
-    create_engine,
-    func,
-    or_,
-)
-from sqlalchemy.sql import select
-from sqlalchemy.sql.schema import PrimaryKeyConstraint, UniqueConstraint
+import sqlglot
+from duckdb import ConstraintException
+from sqlglot import column, expressions, select, table
+from sqlglot.expressions import delete, insert, update, values
+from sqlglot.parser import build_like
 
 from dae.pheno.common import MeasureType
-from dae.variants.attributes import Status
+from dae.utils.sql_utils import glot_and, to_duckdb_transpile
+from dae.variants.attributes import Role, Sex, Status
 
 
 class PhenoDb:  # pylint: disable=too-many-instance-attributes
     """Class that manages access to phenotype databases."""
 
-    STREAMING_CHUNK_SIZE = 25
+    PAGE_SIZE = 1001
 
     def __init__(
-            self, dbfile: str, read_only: bool = True,
+            self, dbfile: str, *, read_only: bool = True,
     ) -> None:
-        # self.verify_pheno_folder(folder)
         self.dbfile = dbfile
-        self.engine = create_engine(
-            f"duckdb:///{dbfile}", connect_args={"read_only": read_only},
-        )
-        self.pheno_metadata = MetaData()
-        self.variable_browser: Table
-        self.regressions: Table
-        self.regression_values: Table
-        self.family: Table
-        self.person: Table
-        self.measure: Table
-        self.instrument: Table
-        self.instrument_values_tables: dict[str, Table] = {}
+        self.connection = duckdb.connect(
+            f"{dbfile}", read_only=read_only)
+        self.variable_browser = table("variable_browser")
+        self.regressions = table("regression")
+        self.regression_values = table("regression_values")
+        self.family = table("family")
+        self.person = table("person")
+        self.measure = table("measure")
+        self.instrument = table("instrument")
+        self.instrument_values_tables = self.find_instrument_values_tables()
 
     @staticmethod
     def verify_pheno_folder(folder: Path) -> None:
@@ -67,143 +56,22 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         assert instruments_dir.is_dir()
         assert len(list(instruments_dir.glob("*"))) > 0
 
-    def build_browser(self) -> None:
-        self._build_browser_tables()
-
-    def build(self, create: bool = False) -> None:
-        """Construct all needed table connections."""
-        self._build_person_tables()
-        self.build_instruments_and_measures_table()
-        if create:
-            self.pheno_metadata.create_all(self.engine)
-        self.build_instrument_values_tables()
-
-        self.build_browser()
-
-        if create:
-            self.pheno_metadata.create_all(self.engine)
-
-    def create_all_tables(self) -> None:
-        self.pheno_metadata.create_all(self.engine)
-
-    def build_instruments_and_measures_table(self) -> None:
-        """Create tables for instruments and measures."""
-        if getattr(self, "instruments", None) is None:
-            self.instrument = Table(
-                "instrument",
-                self.pheno_metadata,
-                Column(
-                    "instrument_name", String(64), nullable=False, index=True,
-                ),
-                Column("table_name", String(64), nullable=False),
-            )
-
-        if getattr(self, "measure", None) is None:
-            self.measure = Table(
-                "measure",
-                self.pheno_metadata,
-                Column(
-                    "measure_id",
-                    String(128),
-                    nullable=False,
-                    index=True,
-                    unique=True,
-                ),
-                Column(
-                    "db_column_name",
-                    String(128),
-                    nullable=False,
-                ),
-                Column("measure_name", String(64), nullable=False, index=True),
-                Column("instrument_name", String(64), nullable=False),
-                Column("description", String(255)),
-                Column("measure_type", Integer(), index=True),
-                Column("individuals", Integer()),
-                Column("default_filter", String(255)),
-                Column("min_value", Float(), nullable=True),
-                Column("max_value", Float(), nullable=True),
-                Column("values_domain", String(255), nullable=True),
-                Column("rank", Integer(), nullable=True),
-            )
-
-    def build_instrument_values_tables(self) -> None:
+    def find_instrument_values_tables(self) -> dict[str, expressions.Table]:
         """
         Create instrument values tables.
 
         Each row is basically a list of every measure value in the instrument
         for a certain person.
         """
-        query = select(
-            self.instrument.c.instrument_name,
-            self.instrument.c.table_name,
-        )
-        with self.engine.connect() as connection:
-            instruments_rows = connection.execute(query)
-            instrument_table_names = {}
-            instrument_measures: dict[str, list[str]] = {}
-            for row in instruments_rows:
-                instrument_table_names[row.instrument_name] = row.table_name
-                instrument_measures[row.instrument_name] = []
+        query = to_duckdb_transpile(select(
+            "instrument_name",
+            "table_name",
+        ).from_(self.instrument))
 
-        query = select(
-            self.measure.c.measure_id,
-            self.measure.c.measure_type,
-            self.measure.c.db_column_name,
-            self.instrument.c.instrument_name,
-        ).join(
-            self.instrument,
-            self.measure.c.instrument_name == self.instrument.c.instrument_name,
-        )
-        with self.engine.connect() as connection:
-            results = connection.execute(query)
-            measure_columns = {}
-            for result_row in results:
-                instrument_measures[result_row.instrument_name].append(
-                    result_row.measure_id,
-                )
-                if MeasureType.is_numeric(result_row.measure_type):
-                    column_type: Float | String = Float()
-                else:
-                    column_type = String(127)
-                measure_columns[result_row.measure_id] = \
-                    Column(
-                        f"{result_row.db_column_name}",
-                        column_type, nullable=True,
-                )
+        with self.connection.cursor() as cursor:
+            results = cursor.execute(query).fetchall()
 
-        for instrument_name, table_name in instrument_table_names.items():
-            cols = [
-                measure_columns[m_id]
-                for m_id in
-                instrument_measures[instrument_name]
-            ]
-
-            if instrument_name not in self.instrument_values_tables:
-                self.instrument_values_tables[instrument_name] = Table(
-                    table_name,
-                    self.pheno_metadata,
-                    Column(
-                        "person_id",
-                        String(16),
-                        nullable=False,
-                        index=True,
-                        unique=True,
-                        primary_key=True,
-                    ),
-                    Column(
-                        "family_id", String(64), nullable=False, index=True,
-                    ),
-                    Column("role", String(64), nullable=False, index=True),
-                    Column(
-                        "status",
-                        Integer(),
-                        nullable=False,
-                        default=Status.unaffected,
-                    ),
-                    Column("sex", Integer(), nullable=False),
-                    *cols,
-                    extend_existing=True,
-                )
+        return {i_name: table(t_name) for i_name, t_name in results}
 
     def _split_measures_into_groups(
         self, measure_ids: list[str], group_size: int = 60,
@@ -220,355 +88,351 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 measure_groups.append(group)
         return measure_groups
 
-    def clear_instruments_table(self, drop: bool = False) -> None:
-        """Clear the instruments table."""
-        if getattr(self, "instruments", None) is None:
-            return
-        with self.engine.begin() as connection:
-            connection.execute(self.instrument.delete())
-            if drop:
-                self.instrument.drop(connection, checkfirst=False)
-            connection.commit()
-
-    def clear_measures_table(self, drop: bool = False) -> None:
-        """Clear the measures table."""
-        if getattr(self, "measures", None) is None:
-            return
-        with self.engine.begin() as connection:
-            connection.execute(self.measure.delete())
-            if drop:
-                self.measure.drop(connection, checkfirst=False)
-            connection.commit()
-
-    def clear_instrument_values_tables(self, drop: bool = False) -> None:
-        """Clear all instrument values tables."""
-        if getattr(self, "instrument_values_tables", None) is None:
-            return
-        with self.engine.begin() as connection:
-            for instrument_table in self.instrument_values_tables.values():
-                connection.execute(instrument_table.delete())
-                if drop:
-                    instrument_table.drop(connection, checkfirst=False)
-            connection.commit()
-
-    def get_instrument_column_names(self) -> dict[str, list[str]]:
-        """Return a map of instruments and their measure column names."""
-        query = select(
-            self.measure.c.db_column_name,
-            self.instrument.c.instrument_name,
-        ).join(self.instrument)
-        with self.engine.connect() as connection:
-            results = connection.execute(query)
-
-        instrument_col_names = {}
-        for result_row in results:
-            if result_row.instrument_name not in instrument_col_names:
-                instrument_col_names[result_row.instrument_name] = [
-                    result_row.db_column_name,
-                ]
-            else:
-                instrument_col_names[result_row.instrument_name].append(
-                    result_row.db_column_name,
-                )
-        return instrument_col_names
-
-    def get_measure_column_names(
-        self, measure_ids: list[str] | None = None,
-    ) -> dict[str, str]:
-        """Return measure column names mapped to their measure IDs."""
-        query = select(
-            self.measure.c.measure_id,
-            self.measure.c.db_column_name,
-        )
-        if measure_ids is not None:
-            query = query.where(self.measure.c.measure_id.in_(measure_ids))
-        with self.engine.connect() as connection:
-            results = connection.execute(query)
-
-            measure_column_names = {}
-            for result_row in results:
-                measure_column_names[result_row.measure_id] = \
-                    result_row.db_column_name
-        return measure_column_names
-
-    def get_measure_column_names_reverse(
-        self, measure_ids: list[str] | None = None,
-    ) -> dict[str, str]:
-        """Return measure column names mapped to their measure IDs."""
-        query = select(
-            self.measure.c.measure_id,
-            self.measure.c.db_column_name,
-        )
-        if measure_ids is not None:
-            query = query.where(self.measure.c.measure_id.in_(measure_ids))
-        with self.engine.connect() as connection:
-            results = connection.execute(query)
-
-            measure_column_names = {}
-            for result_row in results:
-                measure_column_names[result_row.db_column_name] = \
-                    result_row.measure_id
-        return measure_column_names
-
-    def _build_browser_tables(self) -> None:
-        self.variable_browser = Table(
-            "variable_browser",
-            self.pheno_metadata,
-            Column(
-                "measure_id",
-                String(128),
-                nullable=False,
-                index=True,
-                unique=True,
-                primary_key=True,
-            ),
-            Column("instrument_name", String(64), nullable=False, index=True),
-            Column("measure_name", String(64), nullable=False, index=True),
-            Column("measure_type", Integer(), nullable=False),
-            Column("description", String(256)),
-            Column("values_domain", String(256)),
-            Column("figure_distribution_small", String(256)),
-            Column("figure_distribution", String(256)),
-        )
-
-        self.regressions = Table(
-            "regression",
-            self.pheno_metadata,
-            Column(
-                "regression_id",
-                String(128),
-                nullable=False,
-                index=True,
-                primary_key=True,
-            ),
-            Column("instrument_name", String(128)),
-            Column("measure_name", String(128), nullable=False),
-            Column("display_name", String(256)),
-        )
-
-        self.regression_values = Table(
-            "regression_values",
-            self.pheno_metadata,
-            Column("regression_id", String(128), nullable=False, index=True),
-            Column("measure_id", String(128), nullable=False, index=True),
-            Column("figure_regression", String(256)),
-            Column("figure_regression_small", String(256)),
-            Column("pvalue_regression_male", Double()),
-            Column("pvalue_regression_female", Double()),
-            PrimaryKeyConstraint(
-                "regression_id", "measure_id", name="regression_pkey",
-            ),
-        )
-
-    def _build_person_tables(self) -> None:
-        self.family = Table(
-            "family",
-            self.pheno_metadata,
-            Column(
-                "family_id",
-                String(64),
-                nullable=False,
-                unique=True,
-                index=True,
-            ),
-        )
-        self.person = Table(
-            "person",
-            self.pheno_metadata,
-            Column("family_id", String(64), nullable=False),
-            Column("person_id", String(16), nullable=False, index=True),
-            Column("role", Integer(), nullable=False),
-            Column(
-                "status",
-                Integer(),
-                nullable=False,
-                default=Status.unaffected,
-            ),
-            Column("sex", Integer(), nullable=False),
-            Column("sample_id", String(16), nullable=True),
-            UniqueConstraint("family_id", "person_id", name="person_key"),
-        )
-
-    def save(self, v: Dict[str, str | None]) -> None:
+    def save(self, v: dict[str, Any]) -> None:
         """Save measure values into the database."""
+        query = to_duckdb_transpile(insert(
+            values([(*v.values(),)]),
+            self.variable_browser,
+            columns=[*v.keys()],
+        ))
         try:
-            insert = self.variable_browser.insert().values(**v)
-            with self.engine.begin() as connection:
-                connection.execute(insert)
-                connection.commit()
-        except Exception:  # pylint: disable=broad-except
+            with self.connection.cursor() as cursor:
+                cursor.execute(query)
+        except ConstraintException:  # pylint: disable=broad-except
             measure_id = v["measure_id"]
 
-            delete = (
-                self.variable_browser.delete()
-                .where(self.variable_browser.c.measure_id == measure_id)
-            )
-            with self.engine.connect() as connection:
-                connection.execute(delete)
-                connection.commit()
-            with self.engine.connect() as connection:
-                connection.execute(insert)
-                connection.commit()
+            delete_query = to_duckdb_transpile(delete(
+                self.variable_browser,
+            ).where("measure_id").eq(measure_id))
+            with self.connection.cursor() as cursor:
+                cursor.execute(delete_query)
+                cursor.execute(query)
 
-    def save_regression(self, reg: Dict[str, str]) -> None:
+    def save_regression(self, reg: dict[str, str]) -> None:
         """Save regressions into the database."""
+        query = to_duckdb_transpile(insert(
+            values([(*reg.values(),)]),
+            self.regressions,
+            columns=[*reg.keys()],
+        ))
         try:
-            insert = self.regressions.insert().values(reg)
-            with self.engine.begin() as connection:
-                connection.execute(insert)
-        except Exception:  # pylint: disable=broad-except
+            with self.connection.cursor() as cursor:
+                cursor.execute(query)
+        except ConstraintException:  # pylint: disable=broad-except
             regression_id = reg["regression_id"]
             del reg["regression_id"]
-            update = (
-                self.regressions.update()
-                .values(reg)
-                .where(self.regressions.c.regression_id == regression_id)
+            update_query = update(
+                self.regressions, reg,
+                where=f"regression_id = {regression_id}",
             )
-            with self.engine.begin() as connection:
-                connection.execute(update)
-                connection.commit()
+            with self.connection.cursor() as cursor:
+                cursor.execute(update_query)
 
-    def save_regression_values(self, reg: Dict[str, str]) -> None:
+    def save_regression_values(self, reg: dict[str, str]) -> None:
         """Save regression values into the databases."""
+        query = insert(
+            values([(*reg.values(),)]),
+            self.regression_values,
+            columns=[*reg.keys()],
+        )
         try:
-            insert = self.regression_values.insert().values(reg)
-            with self.engine.begin() as connection:
-                connection.execute(insert)
-        except Exception:  # pylint: disable=broad-except
+            with self.connection.cursor() as cursor:
+                cursor.execute(to_duckdb_transpile(query))
+        except ConstraintException:  # pylint: disable=broad-except
             regression_id = reg["regression_id"]
             measure_id = reg["measure_id"]
 
             del reg["regression_id"]
             del reg["measure_id"]
-            update = (
-                self.regression_values.update()
-                .values(reg)
-                .where(
-                    (self.regression_values.c.regression_id == regression_id)
-                    & (self.regression_values.c.measure_id == measure_id),
-                )
+            update_query = update(
+                self.regression_values, reg,
+                where=(
+                    f"regression_id = {regression_id} AND "
+                    f"measure_id = {measure_id}"
+                ),
             )
-            with self.engine.begin() as connection:
-                connection.execute(update)
-                connection.commit()
+            with self.connection.cursor() as cursor:
+                cursor.execute(update_query)
 
     def get_browser_measure(self, measure_id: str) -> dict | None:
         """Get measure description from phenotype browser database."""
-        sel = select(self.variable_browser)
-        sel = sel.where(self.variable_browser.c.measure_id == measure_id)
-        with self.engine.connect() as connection:
-            vs = connection.execute(sel).fetchall()
-            if vs:
-                return Box(cast(dict, vs[0]._asdict()))
+        query = to_duckdb_transpile(select("variable_browser.*",
+        ).from_(self.variable_browser).where("measure_id").eq(measure_id))
+        with self.connection.cursor() as cursor:
+            rows = cursor.execute(query).df()
+            if not rows.empty:
+                return rows.to_dict("records")[0]
             return None
 
     def build_measures_query(
-        self, instrument_name: str | None = None,
+        self,
+        instrument_name: str | None = None,
         keyword: str | None = None,
-    ) -> Select[Any]:
+        sort_by: str | None = None,
+        order_by: str | None = None,
+    ) -> tuple[expressions.Select, list[expressions.Alias]]:
         """Find measures by keyword search."""
-        query_params = []
+
+        joined_tables = {}
+        regression_ids = self.regression_ids
+        reg_cols = []
+
+        query = select(
+            f"{self.variable_browser.alias_or_name}.*",
+        ).from_(self.variable_browser)
+
+        for regression_id in regression_ids:
+            reg_table = self.regression_values.as_(regression_id)
+            measure_id_col = column(
+                "measure_id", self.variable_browser.alias_or_name)
+            reg_m_id = column("measure_id", reg_table.alias)
+            reg_id_col = column("regression_id", reg_table.alias)
+            query = query.join(
+                reg_table,
+                on=sqlglot.condition(
+                    measure_id_col.eq(reg_m_id)
+                    .and_(reg_id_col.eq(regression_id)),
+                ),
+                join_type="LEFT OUTER",
+            )
+            joined_tables[regression_id] = reg_table
+            cols = [
+                column(
+                    "figure_regression", table=reg_table.alias_or_name,
+                ).as_(f"{regression_id}_figure_regression"),
+                column(
+                    "figure_regression_small", table=reg_table.alias_or_name,
+                ).as_(f"{regression_id}_figure_regression_small"),
+                column(
+                    "pvalue_regression_male", table=reg_table.alias_or_name,
+                ).as_(f"{regression_id}_pvalue_regression_male"),
+                column(
+                    "pvalue_regression_female", table=reg_table.alias_or_name,
+                ).as_(f"{regression_id}_pvalue_regression_female"),
+            ]
+
+            reg_cols.extend(cols)
+            query = query.select(*cols)
+
+        query = query.distinct()
 
         if keyword:
-            keyword = keyword.replace("%", r"/%").replace("_", r"/_")
-            keyword = f"%{keyword}%"
+            column_filters = []
+            keyword = keyword.replace("/", "//")\
+                .replace("%", r"/%").replace("_", r"/_")
+            keyword = f"'%{keyword}%'"
             if not instrument_name:
-                query_params.append(
-                    self.variable_browser.c.instrument_name.ilike(
-                        keyword, escape="/",
-                    ),
+                column_filters.append(
+                    build_like([
+                        keyword,
+                        column("instrument_name", table="variable_browser"),
+                        "'/'",
+                    ]),
                 )
-            query_params.extend(
-                (self.variable_browser.c.measure_id.ilike(keyword, escape="/"),
-                self.variable_browser.c.measure_name.ilike(keyword, escape="/"),
-                self.variable_browser.c.description.ilike(keyword, escape="/")),
-            )
-            query = self.variable_browser.select().where(or_(*query_params))
-        else:
-            query = self.variable_browser.select()
+            column_filters.extend((
+                build_like([
+                    keyword,
+                    column("measure_id", table="variable_browser"),
+                    "'/'",
+                ]),
+                build_like([
+                    keyword,
+                    column("measure_name", table="variable_browser"),
+                    "'/'",
+                ]),
+                build_like([
+                    keyword,
+                    column("description", table="variable_browser"),
+                    "'/'",
+                ]),
+            ))
+            query = query.where(reduce(
+                lambda left, right: left.or_(right),  # type: ignore
+                column_filters,
+            ))
 
         if instrument_name:
             query = query.where(
-                self.variable_browser.c.instrument_name == instrument_name,
+                f"variable_browser.instrument_name = '{instrument_name}'",
             )
-        return query.order_by(
-            self.variable_browser.c.instrument_name,
-            self.variable_browser.c.measure_id,
-        )
+        if sort_by:
+            column_to_sort: Any
+            match sort_by:
+                case "instrument":
+                    column_to_sort = column(
+                        "measure_id", self.variable_browser.alias_or_name)
+                case "measure":
+                    column_to_sort = column(
+                        "measure_name", self.variable_browser.alias_or_name)
+                case "measure_type":
+                    column_to_sort = column(
+                        "measure_type", self.variable_browser.alias_or_name)
+                case "description":
+                    column_to_sort = column(
+                        "description", self.variable_browser.alias_or_name)
+                case _:
+                    regression = sort_by.split(".")
+                    if len(regression) != 2:
+                        raise ValueError(
+                            f"{sort_by} is an invalid sort column",
+                        )
+                    regression_id, sex = regression
+
+                    reg_table = joined_tables[regression_id]
+                    if sex == "male":
+                        col_name = f"{regression_id}_pvalue_regression_male"
+                    else:
+                        if sex != "female":
+                            raise ValueError(
+                                f"{sort_by} is an invalid sort column",
+                            )
+                        col_name = f"{regression_id}_pvalue_regression_female"
+
+                    column_to_sort = column(col_name)
+            if order_by == "desc":
+                query = query.order_by(f"{column_to_sort} DESC")
+            else:
+                query = query.order_by(f"{column_to_sort} ASC")
+        else:
+            query = query.order_by(
+                "variable_browser.measure_id ASC",
+            )
+
+        return query, reg_cols
+
+    def get_measures_df(
+        self,
+        instrument: str | None = None,
+        measure_type: MeasureType | None = None,
+    ) -> pd.DataFrame:
+        """
+        Return data frame containing measures information.
+
+        `instrument` -- an instrument name which measures should be
+        returned. If not specified all type of measures are returned.
+
+        `measure_type` -- a type ('continuous', 'ordinal' or 'categorical')
+        of measures that should be returned. If not specified all
+        type of measures are returned.
+
+        Each row in the returned data frame represents given measure.
+
+        Columns in the returned data frame are: `measure_id`, `measure_name`,
+        `instrument_name`, `description`, `stats`, `min_value`, `max_value`,
+        `value_domain`, `has_probands`, `has_siblings`, `has_parents`,
+        `default_filter`.
+        """
+
+        measure_table = self.measure
+        columns = [
+            column("measure_id", measure_table.alias_or_name),
+            column("instrument_name", measure_table.alias_or_name),
+            column("measure_name", measure_table.alias_or_name),
+            column("description", measure_table.alias_or_name),
+            column("measure_type", measure_table.alias_or_name),
+            column("individuals", measure_table.alias_or_name),
+            column("default_filter", measure_table.alias_or_name),
+            column("values_domain", measure_table.alias_or_name),
+            column("min_value", measure_table.alias_or_name),
+            column("max_value", measure_table.alias_or_name),
+        ]
+        query: Any = select(*columns).from_(
+            measure_table,
+        ).where(f"{columns[4].sql()} IS NOT NULL")
+        if instrument is not None:
+            query = query.where(columns[1]).eq(instrument)
+        if measure_type is not None:
+            query = query.where(columns[4]).eq(measure_type.value)
+
+        with self.connection.cursor() as cursor:
+            df = cursor.execute(to_duckdb_transpile(query)).df()
+
+        df_columns = [
+            "measure_id",
+            "measure_name",
+            "instrument_name",
+            "description",
+            "individuals",
+            "measure_type",
+            "default_filter",
+            "values_domain",
+            "min_value",
+            "max_value",
+        ]
+        return df[df_columns]
 
     def search_measures(
-        self, instrument_name: str | None = None,
+        self,
+        instrument_name: str | None = None,
         keyword: str | None = None,
+        page: int | None = None,
+        sort_by: str | None = None,
+        order_by:  str | None = None,
     ) -> Iterator[dict[str, Any]]:
         """Find measures by keyword search."""
-        query = self.build_measures_query(instrument_name, keyword)
+        query, reg_cols = self.build_measures_query(
+            instrument_name,
+            keyword,
+            sort_by,
+            order_by,
+        )
+        reg_col_names = [reg_col.alias for reg_col in reg_cols]
 
-        with self.engine.connect() as connection:
-            cursor = connection.execution_options(stream_results=True)\
-                .execute(query)
-            rows = cursor.fetchmany(self.STREAMING_CHUNK_SIZE)
-            while rows:
-                for row in rows:
-                    yield {
-                        "measure_id": row[0],
-                        "instrument_name": row[1],
-                        "measure_name": row[2],
-                        "measure_type": MeasureType(row[3]),
-                        "description": row[4],
-                        "values_domain": row[5],
-                        "figure_distribution_small": row[6],
-                        "figure_distribution": row[7],
-                    }
-                rows = cursor.fetchmany(self.STREAMING_CHUNK_SIZE)
+        if page is None:
+            page = 1
+
+        query = query.limit(self.PAGE_SIZE).offset(
+            self.PAGE_SIZE * (page - 1),
+        )
+
+        query_str = to_duckdb_transpile(query)
+
+        with self.connection.cursor() as cursor:
+            rows = cursor.execute(query_str).fetchall()
+            for row in rows:
+                yield {
+                    "measure_id": row[0],
+                    "instrument_name": row[1],
+                    "measure_name": row[2],
+                    "measure_type": MeasureType(row[3]),
+                    "description": row[4],
+                    "values_domain": row[5],
+                    "figure_distribution_small": row[6],
+                    "figure_distribution": row[7],
+                    **dict(zip(reg_col_names, row[8:], strict=True)),
+                }
 
     def search_measures_df(
         self, instrument_name: str | None = None,
         keyword: str | None = None,
     ) -> pd.DataFrame:
         """Find measures and return a dataframe with values."""
-        query = self.build_measures_query(instrument_name, keyword)
+        query = to_duckdb_transpile(
+            self.build_measures_query(instrument_name, keyword)[0])
+        # execute query and .df()
 
-        df = pd.read_sql(query, self.engine)
-        return df
-
-    def get_regression(self, regression_id: str) -> Any:
-        """Return regressions."""
-        selector = select(self.regressions)
-        selector = selector.where(
-            self.regressions.c.regression_id == regression_id)
-        with self.engine.connect() as connection:
-            vs = connection.execute(selector).fetchall()
-            if vs:
-                return vs[0]._mapping  # pylint: disable=protected-access
-            return None
-
-    def get_regression_values(self, measure_id: str) -> list[Box]:
-        selector = select(self.regression_values)
-        selector = selector.where(
-            self.regression_values.c.measure_id == measure_id)
-        with self.engine.connect() as connection:
-            return [
-                Box(r._asdict())
-                for r in connection.execute(selector).fetchall()
-            ]
+        return self.connection.execute(query).df()
 
     @property
     def regression_ids(self) -> list[str]:
-        selector = select(self.regressions.c.regression_id)
-        with self.engine.connect() as connection:
-            return list(map(
-                lambda x: x[0],
-                connection.execute(selector)))
+        query = to_duckdb_transpile(select(
+            column("regression_id", self.regressions.alias_or_name),
+        ).from_(self.regressions))
+        with self.connection.cursor() as cursor:
+            return [
+                x[0] for x in cursor.execute(query).fetchall()
+            ]
 
     @property
-    def regression_display_names(self) -> Dict[str, str]:
+    def regression_display_names(self) -> dict[str, str]:
         """Return regressions display name."""
         res = {}
-        selector = select(
-            self.regressions.c.regression_id, self.regressions.c.display_name,
-        )
-        with self.engine.connect() as connection:
-            for row in connection.execute(selector):
+        query = to_duckdb_transpile(select(
+            column("regression_id", self.regressions.alias_or_name),
+            column("display_name", self.regressions.alias_or_name),
+        ).from_(self.regressions))
+        with self.connection.cursor() as cursor:
+            for row in cursor.execute(query).fetchall():
                 res[row[0]] = row[1]
         return res
 
@@ -576,14 +440,14 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     def regression_display_names_with_ids(self) -> dict[str, Any]:
         """Return regression display names with measure IDs."""
         res = {}
-        selector = select(
-            self.regressions.c.regression_id,
-            self.regressions.c.display_name,
-            self.regressions.c.instrument_name,
-            self.regressions.c.measure_name,
-        )
-        with self.engine.connect() as connection:
-            for row in connection.execute(selector):
+        query = to_duckdb_transpile(select(
+            column("regression_id", self.regressions.alias_or_name),
+            column("display_name", self.regressions.alias_or_name),
+            column("instrument_name", self.regressions.alias_or_name),
+            column("measure_name", self.regressions.alias_or_name),
+        ).from_(self.regressions))
+        with self.connection.cursor() as cursor:
+            for row in cursor.execute(query).fetchall():
                 res[row[0]] = {
                     "display_name": row[1],
                     "instrument_name": row[2],
@@ -594,47 +458,181 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
     @property
     def has_descriptions(self) -> bool:
         """Check if the database has a description data."""
-        with self.engine.connect() as connection:
-            return bool(
-                connection.execute(
-                    select(func.count())  # pylint: disable=not-callable
-                    .select_from(self.variable_browser)
-                    .where(Column("description").isnot(None)),
-                ).scalar(),
-            )
+        query = to_duckdb_transpile(select("COUNT(*)").from_(
+            self.variable_browser,
+        ).where("description IS NOT NULL"))
+        with self.connection.cursor() as cursor:
+            row = cursor.execute(query).fetchone()
+            if row is None:
+                return False
+            return bool(row[0])
 
-    def get_families(self) -> dict:
-        """Return families in the phenotype database."""
-        value_type = select(self.family)
-        with self.engine.connect() as connection:
-            families = connection.execute(value_type).fetchall()
-        return {f.family_id: f for f in families}
+    def _get_measure_values_query(
+        self,
+        measure_ids: list[str],
+        person_ids: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        roles: list[Role] | None = None,
+    ) -> tuple[str, list[expressions.Column]]:
+        assert isinstance(measure_ids, list)
+        assert len(measure_ids) >= 1
+        assert len(self.instrument_values_tables) > 0
 
-    def get_persons(self) -> dict:
-        """Return individuals in the phenotype database."""
-        selector = select(
-            self.person.c.person_id,
-            self.person.c.family_id,
-            self.person.c.role,
-            self.person.c.status,
-            self.person.c.sex,
+        instrument_tables = {}
+
+        for measure_id in measure_ids:
+            instrument, _ = measure_id.split(".")
+            instrument_table = table(generate_instrument_table_name(instrument))
+            instrument_tables[instrument] = instrument_table
+
+        union_queries = [
+            select(
+                column("person_id", table.alias_or_name),
+                column("family_id", table.alias_or_name),
+                column("role", table.alias_or_name),
+                column("status", table.alias_or_name),
+                column("sex", table.alias_or_name),
+            ).from_(table)
+            for table in instrument_tables.values()
+        ]
+        instrument_people = reduce(
+            lambda left, right: left.union(right),  # type: ignore
+            union_queries,
+        ).subquery(alias="instrument_people")
+
+        person_id_col = column("person_id", instrument_people.alias_or_name)
+
+        output_cols = [
+            person_id_col,
+            column("family_id", instrument_people.alias_or_name),
+            column("role", instrument_people.alias_or_name),
+            column("status", instrument_people.alias_or_name),
+            column("sex", instrument_people.alias_or_name),
+        ]
+
+        query = select(*output_cols).from_(instrument_people)
+        joined = set()
+        for measure_id in measure_ids:
+            instrument, measure = measure_id.split(".")
+            instrument_table = instrument_tables[instrument]
+            if instrument not in joined:
+                left_col = person_id_col.sql()
+                right_col = column(
+                    "person_id", instrument_table.alias_or_name,
+                ).sql()
+                measure_col = column(
+                    safe_db_name(measure),
+                    instrument_table.alias_or_name,
+                ).as_(measure_id)
+                query = query.select(
+                    measure_col,
+                ).join(
+                    instrument_table,
+                    on=f"{left_col} = {right_col}",
+                    join_type="FULL OUTER",
+                )
+                joined.add(instrument)
+                output_cols.append(cast(expressions.Column, measure_col))
+            else:
+                assert query is not None
+                measure_col = column(
+                    safe_db_name(measure),
+                    instrument_table.alias_or_name,
+                ).as_(measure_id)
+                query = query.select(
+                    measure_col,
+                )
+                output_cols.append(cast(expressions.Column, measure_col))
+
+        assert query is not None
+
+        empty_result = False
+        cols_in = []
+        if person_ids is not None:
+            if len(person_ids) == 0:
+                empty_result = True
+            else:
+                col = person_id_col
+                cols_in.append(col.isin(*person_ids))
+        if family_ids is not None:
+            if len(family_ids) == 0:
+                empty_result = True
+            else:
+                col = column(
+                    "family_id",
+                    instrument_people.alias_or_name,
+                )
+                cols_in.append(col.isin(*family_ids))
+        if roles is not None:
+            if len(roles) == 0:
+                empty_result = True
+            else:
+                col = column(
+                    "role",
+                    instrument_people.alias_or_name,
+                )
+                cols_in.append(col.isin(*[r.value for r in roles]))
+
+        query = query.order_by(person_id_col)
+
+        if cols_in:
+            query = query.where(reduce(glot_and, cols_in))
+
+        if empty_result:
+            query = query.where("1=2")
+
+        return (
+            to_duckdb_transpile(query),
+            output_cols,
         )
-        with self.engine.connect() as connection:
-            persons = connection.execute(selector).fetchall()
-        return {p.person_id: p for p in persons}
 
-    def get_measures(self) -> dict:
-        """Return measures in the phenotype database."""
-        selector = select(
-            self.measure.c.measure_id,
-            self.measure.c.instrument_name,
-            self.measure.c.measure_name,
-            self.measure.c.measure_type,
+    def get_people_measure_values(
+        self,
+        measure_ids: list[str],
+        person_ids: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        roles: list[Role] | None = None,
+    ) -> Generator[dict[str, Any], None, None]:
+        """Yield lines from measure values tables."""
+        query, output_cols = self._get_measure_values_query(
+            measure_ids, person_ids, family_ids, roles,
         )
-        selector = selector.select_from(self.measure)
-        with self.engine.begin() as connection:
-            measures = connection.execute(selector).fetchall()
-        return {m.measure_id: m for m in measures}
+        with self.connection.cursor() as cursor:
+            result = cursor.execute(query)
+
+            for row in result.fetchall():
+                output = {
+                    col.alias_or_name: row[idx]
+                    for idx, col in enumerate(output_cols)
+                }
+                output["role"] = Role.to_name(output["role"])
+                output["status"] = Status.to_name(output["status"])
+                output["sex"] = Sex.to_name(output["sex"])
+                yield output
+
+    def get_people_measure_values_df(
+        self,
+        measure_ids: list[str],
+        person_ids: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        roles: list[Role] | None = None,
+    ) -> pd.DataFrame:
+        """Return dataframe from measure values tables."""
+        query, _ = self._get_measure_values_query(
+            measure_ids,
+            person_ids=person_ids,
+            family_ids=family_ids,
+            roles=roles,
+        )
+
+        with self.connection.cursor() as cursor:
+            result = cursor.execute(query)
+
+            df = result.df()
+            df["sex"] = df["sex"].transform(Sex.from_value)
+            df["status"] = df["status"].transform(Status.from_value)
+            df["role"] = df["role"].transform(Role.from_value)
+            return df
 
 
 def safe_db_name(name: str) -> str:

@@ -8,6 +8,8 @@ from datasets_api.permissions import (
     get_permissions_etag,
 )
 from django.http.response import HttpResponse, StreamingHttpResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import etag
 from query_base.query_base import QueryDatasetView
 from rest_framework import status
 from rest_framework.request import Request
@@ -16,9 +18,6 @@ from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
 from utils.streaming_response_util import iterator_to_json
 
 logger = logging.getLogger(__name__)
-
-from django.utils.decorators import method_decorator
-from django.views.decorators.http import etag
 
 
 class PhenoBrowserBaseView(QueryDatasetView):
@@ -117,8 +116,9 @@ class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
 class PhenoMeasuresView(PhenoBrowserBaseView):
     """Phenotype measures view."""
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
-        """Stream pheno measures."""
+        """Get pheno measures pages."""
         if "dataset_id" not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params["dataset_id"]
@@ -126,6 +126,15 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if not dataset or dataset.phenotype_data is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if (
+            request.query_params.get("page") is not None
+            or request.query_params.get("sort_by") is not None
+            or request.query_params.get("order_by") is not None
+        ):
+            logger.warning(
+                "Received deprecated params %s", request.query_params,
+            )
 
         instrument = request.query_params.get("instrument", None)
         search_term = request.query_params.get("search", None)
@@ -135,17 +144,20 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         if instrument and instrument not in pheno_instruments:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        data = dataset.phenotype_data.search_measures(
-            instrument, search_term,
-        )
+        try:
+            measures = dataset.phenotype_data.search_measures(
+                instrument, search_term,
+            )
 
-        response = StreamingHttpResponse(
-            iterator_to_json(data),
-            status=status.HTTP_200_OK,
-            content_type="text/event-stream",
-        )
-        response["Cache-Control"] = "no-cache"
-        return response
+            measures_page = list(measures)
+        except ValueError:
+            logger.exception("Error when searching measures")
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if measures_page is None:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        return Response(measures_page)
 
 
 class CountError(Exception):
@@ -161,7 +173,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
         measure_ids: list[str],
     ) -> Generator[str, None, None]:
         """Create CSV content for people measures data."""
-        header = ["person_id"] + measure_ids
+        header = ["person_id", *measure_ids]
         buffer = StringIO()
         writer = csv.writer(buffer, delimiter=",")
         writer.writerow(header)
@@ -226,42 +238,45 @@ class PhenoMeasuresDownload(QueryDatasetView):
             dataset, measure_ids,
         )
 
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         """Return a CSV file stream for measures."""
         try:
             values_iterator = self.get_measure_ids(request)
             response = StreamingHttpResponse(
                 values_iterator, content_type="text/csv")
-
-            response["Content-Disposition"] = \
-                "attachment; filename=measures.csv"
-            response["Expires"] = "0"
-            return response
-        except ValueError as err:
-            logger.exception(err)
+        except ValueError:
+            logger.exception("Error")
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except KeyError as err:
-            logger.exception(err)
+        except KeyError:
+            logger.exception("Measures not found")
             return Response(status=status.HTTP_404_NOT_FOUND)
-        except CountError as err:
-            logger.exception(err)
+        except CountError:
+            logger.exception("Measure count is too large")
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
+        response["Content-Disposition"] = \
+            "attachment; filename=measures.csv"
+        response["Expires"] = "0"
+        return response
+
+    @method_decorator(etag(get_instance_timestamp_etag))
     #  pylint:disable=method-hidden
     def head(self, request: Request) -> Response:
         """Return a status code validating if measures can be downloaded."""
         try:
             self.get_measure_ids(request)
-            return Response(status=status.HTTP_200_OK)
-        except ValueError as err:
-            logger.exception(err)
+        except ValueError:
+            logger.exception("Error")
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        except KeyError as err:
-            logger.exception(err)
+        except KeyError:
+            logger.exception("Measures not found")
             return Response(status=status.HTTP_404_NOT_FOUND)
-        except CountError as err:
-            logger.exception(err)
+        except CountError:
+            logger.exception("Measure count is too large")
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class PhenoMeasureValues(QueryDatasetView):
@@ -302,13 +317,11 @@ class PhenoMeasureValues(QueryDatasetView):
             measure_ids,
         )
 
-        response = StreamingHttpResponse(
+        return StreamingHttpResponse(
             iterator_to_json(values_iterator),
             status=status.HTTP_200_OK,
             content_type="text/event-stream",
         )
-
-        return response
 
 
 class PhenoRemoteImages(QueryDatasetView):

@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import shutil
+import textwrap
 from collections import defaultdict
 from collections.abc import Callable
 from multiprocessing.pool import AsyncResult
@@ -12,6 +13,7 @@ from typing import Any, cast
 import duckdb
 import numpy as np
 import pandas as pd
+import sqlglot
 from box import Box
 
 from dae.pedigrees.loader import (
@@ -36,6 +38,8 @@ from dae.pheno.prepare.measure_classifier import (
 from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
 from dae.task_graph.executor import task_graph_run_with_results
 from dae.task_graph.graph import TaskGraph
+from dae.utils.sql_utils import fill_query_parameters, to_duckdb_transpile
+from dae.variants.attributes import Status
 
 logger = logging.getLogger(__name__)
 
@@ -61,22 +65,157 @@ class PrepareBase(PrepareCommon):
         self.connection = duckdb.connect(self.dbfile)
         self.parquet_dir = os.path.join(self.config.output, "parquet")
 
-    def get_persons(self, *, force: bool = False) -> dict[str, Any] | None:
-        """Return dictionary of all people in the pheno DB."""
-        if not self.persons or len(self.persons) == 0 or force:
-            self.persons = {}
-            result = self.connection.execute(
-                "SELECT person_id, family_id, role, status, sex FROM person",
-            )
-            for row in result.fetchall():
-                self.persons[row[0]] = {
-                    "person_id": row[0],
-                    "family_id": row[1],
-                    "role": row[2],
-                    "status": row[3],
-                    "sex": row[4],
-                }
-        return self.persons
+    def build_tables(self) -> None:
+        """Construct all needed table connections."""
+        self._build_person_tables()
+        self._build_instruments_and_measures_table()
+        self._build_browser()
+
+    def _build_person_tables(self) -> None:
+        create_family = sqlglot.parse(textwrap.dedent(
+            """
+            CREATE TABLE family(
+                family_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
+            );
+            CREATE UNIQUE INDEX family_family_id_idx
+                ON family (family_id);
+            """,
+        ))
+
+        create_person = sqlglot.parse(textwrap.dedent(
+            f"""
+            CREATE TABLE person(
+                family_id VARCHAR NOT NULL,
+                person_id VARCHAR NOT NULL,
+                role INT NOT NULL,
+                status INT NOT NULL DEFAULT {Status.unaffected.value},
+                sex INT NOT NULL,
+                sample_id VARCHAR,
+                PRIMARY KEY (family_id, person_id)
+            );
+            CREATE UNIQUE INDEX person_person_id_idx
+                ON person (person_id);
+            """,
+        ))
+
+        queries = [
+            *create_family,
+            *create_person,
+        ]
+
+        with self.connection.cursor() as cursor:
+            for query in queries:
+                cursor.execute(to_duckdb_transpile(query))
+
+    def _build_instruments_and_measures_table(self) -> None:
+        """Create tables for instruments and measures."""
+        create_instrument = sqlglot.parse(textwrap.dedent(
+            """
+            CREATE TABLE instrument(
+                instrument_name VARCHAR NOT NULL PRIMARY KEY,
+                table_name VARCHAR NOT NULL,
+            );
+            CREATE UNIQUE INDEX instrument_instrument_name_idx
+                ON instrument (instrument_name);
+            """,
+        ))
+
+        create_measure = sqlglot.parse(textwrap.dedent(
+            """
+            CREATE TABLE measure(
+                measure_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
+                db_column_name VARCHAR NOT NULL,
+                measure_name VARCHAR NOT NULL,
+                instrument_name VARCHAR NOT NULL,
+                description VARCHAR,
+                measure_type INT,
+                individuals INT,
+                default_filter VARCHAR,
+                min_value FLOAT,
+                max_value FLOAT,
+                values_domain VARCHAR,
+                rank INT,
+            );
+            CREATE UNIQUE INDEX measure_measure_id_idx
+                ON measure (measure_id);
+            CREATE INDEX measure_measure_name_idx
+                ON measure (measure_name);
+            CREATE INDEX measure_measure_type_idx
+                ON measure (measure_type);
+            """,
+        ))
+
+        queries = [
+            *create_instrument,
+            *create_measure,
+        ]
+
+        with self.connection.cursor() as cursor:
+            for query in queries:
+                cursor.execute(to_duckdb_transpile(query))
+
+    def _build_browser(self) -> None:
+        create_variable_browser = sqlglot.parse(textwrap.dedent(
+            """
+            CREATE TABLE variable_browser(
+                measure_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
+                instrument_name VARCHAR NOT NULL,
+                measure_name VARCHAR NOT NULL,
+                measure_type INT NOT NULL,
+                description VARCHAR,
+                values_domain VARCHAR,
+                figure_distribution_small VARCHAR,
+                figure_distribution VARCHAR
+            );
+            CREATE UNIQUE INDEX variable_browser_measure_id_idx
+                ON variable_browser (measure_id);
+            CREATE INDEX variable_browser_instrument_name_idx
+                ON variable_browser (instrument_name);
+            CREATE INDEX variable_browser_measure_name_idx
+                ON variable_browser (measure_name);
+            """,
+        ))
+
+        create_regression = sqlglot.parse(textwrap.dedent(
+            """
+            CREATE TABLE regression(
+                regression_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
+                instrument_name VARCHAR,
+                measure_name VARCHAR NOT NULL,
+                display_name VARCHAR,
+            );
+            CREATE UNIQUE INDEX regression_regression_id_idx
+                ON regression (regression_id);
+            """,
+        ))
+
+        create_regression_values = sqlglot.parse(textwrap.dedent(
+            """
+            CREATE TABLE regression_values(
+                regression_id VARCHAR NOT NULL,
+                measure_id VARCHAR NOT NULL,
+                figure_regression VARCHAR,
+                figure_regression_small VARCHAR,
+                pvalue_regression_male DOUBLE,
+                pvalue_regression_female DOUBLE,
+                PRIMARY KEY (regression_id, measure_id)
+            );
+            CREATE INDEX regression_values_regression_id_idx
+                ON regression_values (regression_id);
+            CREATE INDEX regression_values_measure_id_idx
+                ON regression_values (measure_id);
+            """,
+        ))
+
+        queries = [
+            *create_variable_browser,
+            *create_regression,
+            *create_regression_values,
+        ]
+
+        with self.connection.cursor() as cursor:
+            for query in queries:
+                cursor.execute(to_duckdb_transpile(query))
 
 
 class PreparePersons(PrepareBase):
@@ -91,7 +230,7 @@ class PreparePersons(PrepareBase):
     def _save_families(self, ped_df: pd.DataFrame) -> None:  # noqa: ARG002
         # pylint: disable=unused-argument
         self.connection.execute(
-            "CREATE TABLE family AS "
+            "INSERT INTO family "
             "SELECT DISTINCT family_id FROM ped_df",
         )
         family_file = f"{self.parquet_dir}/family.parquet"
@@ -113,7 +252,7 @@ class PreparePersons(PrepareBase):
             self._build_sample_id,
         )
         self.connection.execute(
-            "CREATE TABLE person AS "
+            "INSERT INTO person "
             "SELECT family_id, person_id, "
             "role, status, sex, sample_id FROM ped_df ",
         )
@@ -532,28 +671,6 @@ class PrepareVariables(PreparePersons):
 
         instruments = self._collect_instruments(instruments_dirname)
         descriptions = PrepareVariables.load_descriptions(description_path)
-        self.connection.execute(
-            "CREATE TABLE instrument ("
-            "instrument_name VARCHAR, "
-            "table_name VARCHAR"
-            ")",
-        )
-        self.connection.execute(
-            "CREATE TABLE measure ("
-            "measure_id VARCHAR, "
-            "measure_name VARCHAR, "
-            "instrument_name VARCHAR, "
-            "db_column_name VARCHAR, "
-            "description VARCHAR, "
-            "measure_type INT, "
-            "individuals INT, "
-            "default_filter VARCHAR, "
-            "min_value FLOAT, "
-            "max_value FLOAT, "
-            "values_domain VARCHAR, "
-            "rank INTEGER"
-            ")",
-        )
 
         for instrument_name, instrument_filenames in list(instruments.items()):
             assert instrument_name is not None
@@ -638,13 +755,14 @@ class PrepareVariables(PreparePersons):
         pheno_common_df = df[pheno_common_columns]
         assert pheno_common_df is not None
         tmp_table_name = self._instrument_tmp_table_name("pheno_common")
-        cursor = self.connection.cursor()
-
-        cursor.execute("SET GLOBAL pandas_analyze_sample=100000")
-        cursor.execute(
-            f"CREATE TABLE {tmp_table_name} AS "  # noqa: S608
-            "SELECT * FROM pheno_common_df",
-        )
+        with self.connection.cursor() as cursor:
+            cursor.execute("SET GLOBAL pandas_analyze_sample=100000")
+            query = sqlglot.parse_one(
+                "CREATE TABLE ? AS "
+                "SELECT * FROM pheno_common_df",
+            )
+            fill_query_parameters(query, [tmp_table_name])
+            cursor.execute(to_duckdb_transpile(query))
 
     def build_pheno_common(
         self, temp_dbfile: str, **kwargs: dict[str, Any],
@@ -723,9 +841,9 @@ class PrepareVariables(PreparePersons):
 
             values = [
                 measure.measure_id,
+                db_name,
                 m_name,
                 measure.instrument_name,
-                db_name,
                 description,
                 measure.measure_type.value,
                 measure.individuals,

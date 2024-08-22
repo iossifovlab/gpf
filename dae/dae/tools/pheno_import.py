@@ -14,9 +14,10 @@ from box import Box
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
 from dae.pheno.common import ImportConfig
+from dae.pheno.pheno_data import PhenotypeStudy
 from dae.pheno.prepare.pheno_prepare import PrepareVariables
+from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.task_graph.cli_tools import TaskGraphCli
-from dae.tools.pheno2browser import build_pheno_browser
 
 
 def pheno_cli_parser() -> argparse.ArgumentParser:
@@ -163,6 +164,24 @@ def parse_phenotype_data_config(args: argparse.Namespace) -> ImportConfig:
     return config
 
 
+def build_pheno_browser(
+    dbfile: str, pheno_name: str, output_dir: str,
+    pheno_regressions: Box | None = None, **kwargs: Any,
+) -> None:
+    """Calculate and save pheno browser values to db."""
+
+    phenodb = PhenotypeStudy(
+        pheno_name, dbfile=dbfile, read_only=False,
+    )
+
+    images_dir = os.path.join(output_dir, "images")
+    os.makedirs(images_dir, exist_ok=True)
+
+    prep = PreparePhenoBrowserBase(
+        pheno_name, phenodb, output_dir, pheno_regressions, images_dir)
+    prep.run(**kwargs)
+
+
 def build_browser(
     args: argparse.Namespace, regressions: Box | None,
 ) -> None:
@@ -254,6 +273,7 @@ def main(argv: list[str] | None = None) -> int:
             )
 
         prep = PrepareVariables(config, inference_configs)
+        prep.build_tables()
         prep.build_pedigree(args.pedigree)
         kwargs = copy(vars(args))
         prep.build_variables(

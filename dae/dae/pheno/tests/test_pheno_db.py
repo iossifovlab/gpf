@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-from collections.abc import Generator
-from typing import Any, Callable
+from collections.abc import Callable, Generator
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -33,7 +33,7 @@ def dict_check(
     dict_: dict[str, Any], expected_count: int, expected_cols: list[str],
 ) -> None:
     assert isinstance(dict_, dict)
-    for _person, measures in dict_.items():
+    for measures in dict_.values():
         assert all(col in measures for col in expected_cols)
     assert expected_count == len(dict_)
 
@@ -64,10 +64,10 @@ def dict_list_check(
 def dict_check_measure(
     dict_: dict[str, Measure],
     expected_count: int,
-    *args: Any,
+    *args: Any,  # noqa: ARG001
 ) -> None:
     assert isinstance(dict_, dict)
-    for _id, measure in dict_.items():
+    for measure in dict_.values():
         assert isinstance(measure, Measure)
     assert expected_count == len(dict_)
 
@@ -255,7 +255,7 @@ def test_min_max_measure_values(fake_phenotype_data: PhenotypeStudy) -> None:
             [measure.measure_id],
         )
         df = df[
-            pd.to_numeric(df[measure.measure_id], errors="coerce").notnull()
+            pd.to_numeric(df[measure.measure_id], errors="coerce").notna()
         ]
         error = np.abs(mmin - df[measure.measure_id].min())
         assert error < 1e-5, measure.measure_id

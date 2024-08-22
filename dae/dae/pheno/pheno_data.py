@@ -6,18 +6,16 @@ import math
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Generator, Iterable, Sequence
-from itertools import chain
+from itertools import chain, islice
 from typing import Any, cast
 
 import pandas as pd
 from box import Box
-from sqlalchemy import Select, not_
-from sqlalchemy.sql import select, union
 
 from dae.pheno.common import MeasureType
-from dae.pheno.db import PhenoDb, safe_db_name
+from dae.pheno.db import PhenoDb
 from dae.utils.helpers import isnan
-from dae.variants.attributes import Role, Sex, Status
+from dae.variants.attributes import Role
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +37,7 @@ def get_pheno_db_dir(dae_config: Box | None) -> str:
 
 
 def get_pheno_browser_images_dir(dae_config: Box | None = None) -> str:
+    """Get images directory for pheno DB."""
     pheno_db_dir = os.environ.get(
         "DAE_PHENODB_DIR",
         get_pheno_db_dir(dae_config),
@@ -46,7 +45,7 @@ def get_pheno_browser_images_dir(dae_config: Box | None = None) -> str:
     browser_images_path = os.path.join(pheno_db_dir, "images")
     if not os.path.exists(browser_images_path):
         logger.error(
-            "Pheno images path %s does not exist!", browser_images_path
+            "Pheno images path %s does not exist!", browser_images_path,
         )
     return browser_images_path
 
@@ -107,8 +106,10 @@ class Measure:
         self.max_value = None
 
     def __repr__(self) -> str:
-        return f"Measure({self.measure_id}, " \
+        return (
+            f"Measure({self.measure_id}, "
             f"{self.measure_type}, {self.values_domain})"
+        )
 
     @property
     def domain(self) -> Sequence[str | float]:
@@ -129,7 +130,7 @@ class Measure:
         return domain_list
 
     @classmethod
-    def _from_record(cls, row: dict[str, Any]) -> Measure:
+    def from_record(cls, row: dict[str, Any]) -> Measure:
         """Create `Measure` object from pandas data frame row."""
         assert row["measure_type"] is not None
 
@@ -218,9 +219,14 @@ class PhenotypeData(ABC):
 
     @abstractmethod
     def search_measures(
-        self, instrument: str | None, search_term: str | None,
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+        sort_by: str | None = None,
+        order_by:  str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
-        pass
+        """Yield measures in the DB according to filters."""
 
     def has_measure(self, measure_id: str) -> bool:
         """Check if phenotype DB contains a measure by ID."""
@@ -259,7 +265,7 @@ class PhenotypeData(ABC):
         if measure_type is not None:
             assert isinstance(measure_type, MeasureType)
 
-        for _, instrument in instruments.items():
+        for instrument in instruments.values():
             for measure in instrument.measures.values():
                 if measure_type is not None and \
                         measure.measure_type != measure_type:
@@ -288,10 +294,9 @@ class PhenotypeData(ABC):
         """Return measures for given instrument."""
         assert instrument_name in self.instruments
         instrument = self.instruments[instrument_name]
-        measure_ids = [
+        return [
             m.measure_id for m in list(instrument.measures.values())
         ]
-        return measure_ids
 
     @abstractmethod
     def get_people_measure_values(
@@ -365,12 +370,11 @@ class PhenotypeStudy(PhenotypeData):
 
     def __init__(
             self, pheno_id: str, dbfile: str,
-            config: Box | None = None, read_only: bool = True) -> None:
+            config: Box | None = None, *, read_only: bool = True) -> None:
         super().__init__(pheno_id, config)
 
         self.db = PhenoDb(dbfile, read_only=read_only)
         self.config = config
-        self.db.build()
         df = self._get_measures_df()
         self._instruments = self._load_instruments(df)
         logger.warning("phenotype study %s fully loaded", pheno_id)
@@ -400,42 +404,7 @@ class PhenotypeStudy(PhenotypeData):
         assert instrument is None or instrument in self.instruments
         assert measure_type is None or isinstance(measure_type, MeasureType)
 
-        measure = self.db.measure
-        columns = [
-            measure.c.measure_id,
-            measure.c.instrument_name,
-            measure.c.measure_name,
-            measure.c.description,
-            measure.c.measure_type,
-            measure.c.individuals,
-            measure.c.default_filter,
-            measure.c.values_domain,
-            measure.c.min_value,
-            measure.c.max_value,
-        ]
-        query = select(*columns)
-        query = query.where(not_(measure.c.measure_type.is_(None)))
-        if instrument is not None:
-            query = query.where(measure.c.instrument_name == instrument)
-        if measure_type is not None:
-            query = query.where(measure.c.measure_type == measure_type.value)
-
-        df = pd.read_sql(query, self.db.engine)
-
-        df_columns = [
-            "measure_id",
-            "measure_name",
-            "instrument_name",
-            "description",
-            "individuals",
-            "measure_type",
-            "default_filter",
-            "values_domain",
-            "min_value",
-            "max_value",
-        ]
-        res_df = df[df_columns]
-        return res_df
+        return self.db.get_measures_df(instrument, measure_type)
 
     def _load_instruments(self, df: pd.DataFrame) -> dict[str, Instrument]:
         instruments = {}
@@ -449,8 +418,7 @@ class PhenotypeStudy(PhenotypeData):
             measures_df = df[df.instrument_name == instrument_name]
 
             for row in measures_df.to_dict("records"):
-                # pylint: disable=protected-access
-                measure = Measure._from_record(row)
+                measure = Measure.from_record(row)
                 measures[measure.measure_name] = measure
                 self._measures[measure.measure_id] = measure
             instrument.measures = measures
@@ -472,82 +440,6 @@ class PhenotypeStudy(PhenotypeData):
             f"bad default_filter value: {default_filter}",
         )
 
-    def _get_measure_values_query(
-        self,
-        measure_ids: list[str],
-        person_ids: list[str] | None = None,
-        family_ids: list[str] | None = None,
-        roles: list[Role] | None = None,
-    ) -> Select:
-        assert isinstance(measure_ids, list)
-        assert len(measure_ids) >= 1
-        assert all(self.has_measure(m) for m in measure_ids), self.measures
-        assert len(self.db.instrument_values_tables) > 0
-
-        instrument_tables = {}
-        instrument_table_columns: dict[str, Any] = {}
-        for measure_id in measure_ids:
-            measure = self.get_measure(measure_id)
-            instrument_name = measure_id.split(".")[0]
-            table = self.db.instrument_values_tables[instrument_name]
-            instrument_tables[instrument_name] = table
-            if instrument_name not in instrument_table_columns:
-                instrument_table_columns[instrument_name] = []
-            instrument_table_columns[instrument_name].append(
-                table.c[safe_db_name(measure.measure_name)].label(measure_id),
-            )
-
-        subquery_selects = []
-        for table in instrument_tables.values():
-            subquery_selects.append(
-                select(
-                    table.c.person_id, table.c.family_id, table.c.role,
-                    table.c.status, table.c.sex,
-                ).select_from(table),
-            )
-
-        subquery = union(*subquery_selects).subquery("instruments_people")
-
-        select_cols = []
-        for instrument_name, columns in instrument_table_columns.items():
-            select_cols.extend(columns)
-
-        query = select(
-            subquery.c.person_id,
-            subquery.c.family_id,
-            subquery.c.role,
-            subquery.c.status,
-            subquery.c.sex,
-            *select_cols,
-        )
-        query = query.select_from(subquery)
-
-        for instrument_name in instrument_table_columns:
-            table = instrument_tables[instrument_name]
-            query = query.join(
-                table,
-                subquery.c.person_id == table.c.person_id,
-                isouter=True,
-                full=True,
-            )
-
-        if person_ids is not None:
-            query = query.where(
-                subquery.c.person_id.in_(person_ids),
-            )
-        if family_ids is not None:
-            query = query.where(
-                subquery.c.family_id.in_(family_ids),
-            )
-        if roles is not None:
-            query_roles = [role.value for role in roles]
-            query = query.where(
-                subquery.c.role.in_(query_roles),
-            )
-        query = query.order_by(subquery.c.person_id)
-
-        return query
-
     def get_people_measure_values(
         self,
         measure_ids: list[str],
@@ -555,27 +447,9 @@ class PhenotypeStudy(PhenotypeData):
         family_ids: list[str] | None = None,
         roles: list[Role] | None = None,
     ) -> Generator[dict[str, Any], None, None]:
-        assert isinstance(measure_ids, list)
-        assert len(measure_ids) >= 1
-        assert all(self.has_measure(m) for m in measure_ids)
-        assert len(self.db.instrument_values_tables) > 0
-
-        query = self._get_measure_values_query(
-            measure_ids,
-            person_ids=person_ids,
-            family_ids=family_ids,
-            roles=roles,
+        yield from self.db.get_people_measure_values(
+            measure_ids, person_ids, family_ids, roles,
         )
-
-        with self.db.engine.connect() as connection:
-            result = connection.execute(query)
-
-            for row in result:
-                output = {**row._mapping}  # pylint: disable=protected-access
-                output["role"] = Role.to_name(output["role"])
-                output["status"] = Status.to_name(output["status"])
-                output["sex"] = Sex.to_name(output["sex"])
-                yield output
 
     def get_people_measure_values_df(
         self,
@@ -584,27 +458,15 @@ class PhenotypeStudy(PhenotypeData):
         family_ids: list[str] | None = None,
         roles: list[Role] | None = None,
     ) -> pd.DataFrame:
-        assert isinstance(measure_ids, list)
-        assert len(measure_ids) >= 1
-        assert all(self.has_measure(m) for m in measure_ids)
-        assert len(self.db.instrument_values_tables) > 0
-
-        query = self._get_measure_values_query(
-            measure_ids,
-            person_ids=person_ids,
-            family_ids=family_ids,
-            roles=roles,
+        return self.db.get_people_measure_values_df(
+            measure_ids, person_ids, family_ids, roles,
         )
-
-        with self.db.engine.connect() as connection:
-            df = pd.read_sql(query, connection)
-            df["sex"] = df["sex"].transform(Sex.from_value)
-            df["status"] = df["status"].transform(Status.from_value)
-            df["role"] = df["role"].transform(Role.from_value)
-            return df
 
     def get_regressions(self) -> dict[str, Any]:
         return self.db.regression_display_names_with_ids
+
+    def get_regression_ids(self) -> list[str]:
+        return self.db.regression_ids
 
     def _get_pheno_images_base_url(self) -> str | None:
         return None if self.config is None \
@@ -618,9 +480,20 @@ class PhenotypeStudy(PhenotypeData):
         }
 
     def search_measures(
-        self, instrument: str | None, search_term: str | None,
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+        sort_by: str | None = None,
+        order_by:  str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
-        measures = self.db.search_measures(instrument, search_term)
+        measures = self.db.search_measures(
+            instrument,
+            search_term,
+            page,
+            sort_by,
+            order_by,
+        )
         for measure in measures:
             if measure["values_domain"] is None:
                 measure["values_domain"] = ""
@@ -628,15 +501,30 @@ class PhenotypeStudy(PhenotypeData):
                 cast(MeasureType, measure["measure_type"]).name
 
             measure["regressions"] = []
-            regressions = self.db.get_regression_values(
-                measure["measure_id"]) or []
+            for reg_id in self.get_regression_ids():
+                reg = {
+                    "regression_id": reg_id,
+                    "measure_id": measure["measure_id"],
+                }
 
-            for reg in regressions:
-                if isnan(reg["pvalue_regression_male"]):
-                    reg["pvalue_regression_male"] = "NaN"
-                if isnan(reg["pvalue_regression_female"]):
-                    reg["pvalue_regression_female"] = "NaN"
-                measure["regressions"].append(dict(reg))
+                if isnan(measure[f"{reg_id}_pvalue_regression_male"]):
+                    measure[f"{reg_id}_pvalue_regression_male"] = "NaN"
+                if isnan(measure[f"{reg_id}_pvalue_regression_female"]):
+                    measure[f"{reg_id}_pvalue_regression_female"] = "NaN"
+
+                reg["figure_regression"] = measure.pop(
+                    f"{reg_id}_figure_regression",
+                )
+                reg["figure_regression_small"] = measure.pop(
+                    f"{reg_id}_figure_regression_small",
+                )
+                reg["pvalue_regression_male"] = measure.pop(
+                    f"{reg_id}_pvalue_regression_male",
+                )
+                reg["pvalue_regression_female"] = measure.pop(
+                    f"{reg_id}_pvalue_regression_female",
+                )
+                measure["regressions"].append(reg)
 
             yield {
                 "measure": measure,
@@ -692,7 +580,7 @@ class PhenotypeGroup(PhenotypeData):
         return res
 
     def get_measures_info(self) -> dict[str, Any]:
-        result = {
+        result: dict[str, Any] = {
             "base_image_url": None,
             "has_descriptions": False,
             "regression_names": {},
@@ -709,13 +597,24 @@ class PhenotypeGroup(PhenotypeData):
         return result
 
     def search_measures(
-        self, instrument: str | None, search_term: str | None,
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+        sort_by: str | None = None,
+        order_by:  str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         generators = [
-            pheno.search_measures(instrument, search_term)
+            pheno.search_measures(
+                instrument,
+                search_term,
+                page,
+                sort_by,
+                order_by,
+            )
             for pheno in self.children
         ]
-        measures = chain(*generators)
+        measures = islice(chain(*generators), 1001)
         yield from measures
 
     def get_people_measure_values(
@@ -736,7 +635,10 @@ class PhenotypeGroup(PhenotypeData):
                     family_ids,
                     roles,
                 ))
-        return chain.from_iterable(generators)
+        return cast(
+            Generator[dict[str, Any], None, None],
+            chain.from_iterable(generators),
+        )
 
     def get_people_measure_values_df(
         self,
