@@ -57,7 +57,6 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
       this.initMeasuresToShow(this.selectedDataset.id);
     });
 
-    this.getPageSubscription?.unsubscribe();
     this.focusSearchBox();
   }
 
@@ -77,7 +76,6 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
       })
     ).subscribe(phenoMeasures => {
       this.measuresToShow = phenoMeasures;
-      this.measuresToShow?.clear();
       this.measuresChangeTick++;
       this.updateTable();
     });
@@ -118,11 +116,10 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
 
   public emitInstrument(instrument: PhenoInstrument): void {
     this.selectedInstrument$.next(instrument);
-    this.measuresToShow?.clear();
-    this.measuresChangeTick++;
   }
 
   private updateTable(): void {
+    this.measuresToShow?.clear();
     this.getPageSubscription?.unsubscribe();
     this.getPageSubscription =
       this.phenoBrowserService.getMeasures(
@@ -130,7 +127,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
         this.selectedInstrument$.value,
         (this.searchBox.nativeElement as HTMLInputElement).value
       ).subscribe(res => {
-        if (!res.length && this.measuresToShow.measures) {
+        if (!res.length) {
           return;
         }
 
@@ -176,8 +173,6 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
 
   public search(value: string): void {
     this.input$.next(value);
-    this.measuresToShow?.clear();
-    this.measuresChangeTick++;
   }
 
   private async waitForSearchBoxToLoad(): Promise<void> {
@@ -202,6 +197,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
+    this.getPageSubscription?.unsubscribe();
     this.measuresSubscription.unsubscribe();
     this.phenoBrowserService.cancelStreamPost();
   }

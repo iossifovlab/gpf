@@ -16,7 +16,7 @@
   display: grid;
 }
 
-.grid-header {
+.grid-header-cell {
   display: flex;
   justify-content: center;
   align-items: center;

@@ -45,7 +45,7 @@ export class PhenoBrowserTableComponent implements OnInit {
 
   public sort(sortBy: string, orderBy: string): void {
     if (this.sortBy !== sortBy) {
-      this.resetSortButtons();
+      this.resetCurrentSortButton();
     }
 
     this.sortBy = sortBy;
@@ -67,13 +67,13 @@ export class PhenoBrowserTableComponent implements OnInit {
       let a: string | number;
       let b: string | number;
       if (sortBy.includes('pvalueRegressionMale')) {
-        const arr = sortBy.split('.');
-        a = m1.regressions.getReg(arr[0]).pvalueRegressionMale;
-        b = m2.regressions.getReg(arr[0]).pvalueRegressionMale;
+        const regId = sortBy.split('.')[0];
+        a = m1.regressions.getReg(regId).pvalueRegressionMale;
+        b = m2.regressions.getReg(regId).pvalueRegressionMale;
       } else if (sortBy.includes('pvalueRegressionFemale')) {
-        const arr = sortBy.split('.');
-        a = m1.regressions.getReg(arr[0]).pvalueRegressionFemale;
-        b = m2.regressions.getReg(arr[0]).pvalueRegressionFemale;
+        const regId = sortBy.split('.')[0];
+        a = m1.regressions.getReg(regId).pvalueRegressionFemale;
+        b = m2.regressions.getReg(regId).pvalueRegressionFemale;
       } else {
         a = m1[sortBy] as string;
         b = m2[sortBy] as string;
@@ -106,7 +106,7 @@ export class PhenoBrowserTableComponent implements OnInit {
     return 0;
   }
 
-  private resetSortButtons(): void {
+  private resetCurrentSortButton(): void {
     const sortButton = this.sortingButtonsComponents.find(
       sortingButtonsComponent => sortingButtonsComponent.id === this.sortBy
     );
