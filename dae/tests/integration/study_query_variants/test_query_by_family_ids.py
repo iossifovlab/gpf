@@ -63,5 +63,5 @@ def test_query_by_family_ids(
         region: Region,
         family_ids: list[str], count: int) -> None:
     vs = list(imported_study.query_variants(
-        region=region, family_ids=family_ids))
+        regions=[region], family_ids=family_ids))
     assert len(vs) == count

@@ -291,6 +291,7 @@ def test_query_family_variants_counting(
     fvs = list(study_2p.query_variants(**params))
     assert len(fvs) == count
 
+
 @pytest.mark.no_gs_parquet()
 @pytest.mark.parametrize("params, count", [
     ({"genes": ["t4"]}, 1),
