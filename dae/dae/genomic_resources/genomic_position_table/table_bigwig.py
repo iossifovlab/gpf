@@ -133,7 +133,7 @@ class BigWigTable(GenomicPositionTable):
             if line[0] + 1 > pos_end:
                 return
             yield (line[0] + 1, line[1], line[2])
-            pos_current = line[1] + 1
+            pos_current = line[1]
             idx += 1
             if idx == len(self._buffer):
                 self._fill(chrom, pos_current, pos_end)
