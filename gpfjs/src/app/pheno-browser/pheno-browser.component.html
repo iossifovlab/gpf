@@ -32,9 +32,11 @@
         <span
           class="material-symbols-outlined md search-clear-icon"
           *ngIf="searchBox.value !== ''"
-          (click)="searchBox.value = ''; search(searchBox.value)">close</span
+          (click)="searchBox.value = ''; search(searchBox.value)"
+          >close</span
         >
       </div>
+
       <div id="download-wrapper">
         <span>Phenotype measures</span>
         <input name="queryData" type="hidden" />
@@ -46,8 +48,11 @@
   </div>
 </div>
 
-<div *ngIf="measuresToShow" class="col-lg-12" style="padding: 0 30px">
-  <gpf-pheno-browser-table [measures]="measuresToShow"></gpf-pheno-browser-table>
+<div *ngIf="measuresToShow?.regressionNames" class="col-lg-12" style="padding: 0 30px">
+  <gpf-pheno-browser-table
+    [measures]="measuresToShow"
+    [measuresChangeTick]="measuresChangeTick"
+    [measuresLoading]="measuresLoading"></gpf-pheno-browser-table>
 </div>
 
 <div *ngIf="errorModal">

@@ -1,6 +1,7 @@
 import { PhenoMeasure, PhenoMeasures, PhenoRegression, PhenoRegressions } from './pheno-browser';
 import { environment } from '../../environments/environment';
 
+/* eslint-disable */
 export const fakeJsonMeasure = {
   Index: 1,
   instrument_name: 'test_instrument',
@@ -11,7 +12,7 @@ export const fakeJsonMeasure = {
   measure_name: 'test_measure',
   measure_type: 'ordinal',
   description: 'a test measure',
-  regressions: []
+  regressions: [],
 };
 
 export const fakeJsonMeasureOneRegression = {
@@ -65,6 +66,7 @@ export const fakeJsonMeasureTwoRegressions = {
     }
   ]
 };
+/* eslint-enable */
 
 describe('pheno measure', () => {
   it('should be creatable from a given json', () => {

@@ -41,14 +41,21 @@ fakeJsonMeasurei1['measure_id'] = 'i1.test_measure';
 fakeJsonMeasurei1['measure_name'] = 'test_measure';
 (fakeJsonMeasurei1['regressions'] as PhenoRegressions[])[0]['measure_id']= 'i1.test_measure';
 
+const fakeJsonMeasurei2 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression)) as object;
+fakeJsonMeasurei2['instrument_name'] = 'i2';
+fakeJsonMeasurei2['measure_id'] = 'i2.test_measure';
+fakeJsonMeasurei2['measure_name'] = 'test_measure2';
+(fakeJsonMeasurei2['regressions'] as PhenoRegressions[])[0]['measure_id']= 'i2.test_measure';
+
 class MockPhenoBrowserService {
   public getInstruments(): Observable<PhenoInstruments> {
     return of(new PhenoInstruments('i1', ['i1', 'i2', 'i3']));
   }
 
-  public getMeasures(): Observable<PhenoMeasure> {
-    const measures = PhenoMeasure.fromJson(fakeJsonMeasurei1);
-    return of(measures);
+  public getMeasures(): Observable<PhenoMeasure[]> {
+    const measure1 = PhenoMeasure.fromJson(fakeJsonMeasurei1);
+    const measure2 = PhenoMeasure.fromJson(fakeJsonMeasurei2);
+    return of([measure1, measure2]);
   }
 
   public getMeasuresInfo(): Observable<PhenoMeasures> {
@@ -102,11 +109,16 @@ class MockRouter {
   }
 }
 
+class MockPhenoMeasures {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  public clear(): void { }
+}
+
 const setQuery = (fixture: ComponentFixture<PhenoBrowserComponent>, instrument: number, search: string): void => {
-  const selectElem = fixture.nativeElement.querySelector('select');
-  const searchElem = fixture.nativeElement.querySelector('input');
+  const selectElem = (fixture.nativeElement as HTMLSelectElement).querySelector('select');
+  const searchElem = (fixture.nativeElement as HTMLInputElement).querySelector('input');
   const selectedOptionElem = fixture.debugElement.queryAll(By.css('option'))[instrument];
-  selectElem.value = selectedOptionElem.nativeElement.value;
+  selectElem.value = (selectedOptionElem.nativeElement as HTMLOptionElement).value;
   selectElem.dispatchEvent(new Event('change'));
   searchElem.value = search;
   searchElem.dispatchEvent(new Event('input'));
@@ -121,6 +133,7 @@ describe('PhenoBrowserComponent', () => {
   const activatedRoute = new MockActivatedRoute();
   const phenoBrowserServiceMock = new MockPhenoBrowserService();
   const mockDatasetsService = new MockDatasetsService();
+  const mockPhenoMeasures = new MockPhenoMeasures();
 
   let locationSpy;
   const resizeSpy = {
@@ -153,6 +166,7 @@ describe('PhenoBrowserComponent', () => {
         { provide: Location, useValue: locationSpy as object},
         { provide: PValueIntensityPipe, useClass: PValueIntensityPipe },
         { provide: ResizeService, useValue: resizeSpy },
+        { provide: PhenoMeasures, useValue: mockPhenoMeasures },
         ConfigService
       ]
     }).compileComponents();
@@ -168,6 +182,9 @@ describe('PhenoBrowserComponent', () => {
     component['store'] = {
       selectOnce: () => of(selectedDatasetMockModel)
     } as never;
+
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
 
     component.ngOnInit();
     fixture.detectChanges();

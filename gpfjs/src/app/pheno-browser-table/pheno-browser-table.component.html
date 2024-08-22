@@ -1,144 +1,189 @@
-<ng-container #viewContainerRef [ngTemplateOutlet]="templateRef"></ng-container>
-<ng-template #templateRef>
-  <gpf-table [dataSource]="measures.measures" style="display: inline-block; min-width: 1200px">
-    <gpf-table-column [columnWidth]="singleColumnWidth">
-      <gpf-table-header caption="Instrument" field="instrumentName"></gpf-table-header>
-      <gpf-table-content>
-        <span *gpfTableCellContent="let data">
-          <div [attr.title]="data.instrumentName">{{ data.instrumentName }}</div>
-        </span>
-      </gpf-table-content>
-    </gpf-table-column>
-    <gpf-table-column [columnWidth]="singleColumnWidth">
-      <gpf-table-header caption="Proband Pheno Measure" field="measureName"></gpf-table-header>
-      <gpf-table-content>
-        <span *gpfTableCellContent="let data">
-          <div [attr.title]="data.measureName">{{ data.measureName }}</div>
-        </span>
-      </gpf-table-content>
-    </gpf-table-column>
-    <gpf-table-column [columnWidth]="singleColumnWidth" *ngIf="measures.hasDescriptions">
-      <gpf-table-header caption="Measure Description" field="description"></gpf-table-header>
-      <gpf-table-content>
-        <span *gpfTableCellContent="let data">
-          <div [attr.title]="data.description">{{ data.description }}</div>
-        </span>
-      </gpf-table-content>
-    </gpf-table-column>
-    <gpf-table-column [columnWidth]="singleColumnWidth">
-      <gpf-table-header caption="Pheno Measure Values"></gpf-table-header>
-      <gpf-table-content>
-        <span *gpfTableCellContent="let data">
-          <a [class.clickable]="!!data.figureDistribution" (click)="openModal(data.figureDistribution)">
-            <img *ngIf="data.figureDistributionSmall" class="table-chart" [src]="data.figureDistributionSmall" />
-          </a>
-        </span>
-      </gpf-table-content>
-    </gpf-table-column>
-    <gpf-table-column [columnWidth]="singleColumnWidth">
-      <gpf-table-header>
-        <gpf-table-subheader caption="Measure Type" field="measureType"></gpf-table-subheader>
-        <gpf-table-subheader caption="Values Domain"></gpf-table-subheader>
-      </gpf-table-header>
-      <gpf-table-content>
-        <gpf-table-subcontent field="measureType"></gpf-table-subcontent>
-        <gpf-table-subcontent>
-          <span *gpfTableCellContent="let data">
-            <ng-container *ngIf="data.measureType === 'continuous'">
-              <div
-                title="[{{
-                  +data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(','))
-                    | numberWithExp : '1.3-3'
-                }},{{
-                  +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']'))
-                    | numberWithExp : '1.3-3'
-                }}]">
-                <span
-                  >[{{
-                    +data.valuesDomain.slice(data.valuesDomain.indexOf('[') + 1, data.valuesDomain.indexOf(','))
-                      | numberWithExp : '1.3-3'
-                  }},</span
-                >
-                <span
-                  >{{
-                    +data.valuesDomain.slice(data.valuesDomain.indexOf(',') + 1, data.valuesDomain.indexOf(']'))
-                      | numberWithExp : '1.3-3'
-                  }}]</span
-                >
-              </div>
-            </ng-container>
-            <ng-container
-              *ngIf="
-                data.measureType === 'categorical' || data.measureType === 'raw' || data.measureType === 'ordinal'
-              ">
-              <span *ngFor="let value of data.valuesDomain.split(', ')" title="[{{ value }}]">[{{ value }}]</span>
-            </ng-container>
-          </span>
-        </gpf-table-subcontent>
-      </gpf-table-content>
-    </gpf-table-column>
+<div id="measures-counter" *ngIf="measures?.measures">
+  <span *ngIf="measures.measures.length < 1001">Measures count: {{ measures.measures.length }}</span>
+  <span *ngIf="measures.measures.length > 1000">More than 1000 measures selected (1000 shown)</span>
+</div>
+
+<div
+  id="pheno-browser-table"
+  class="grid-container"
+  [ngStyle]="{
+    'grid-template-columns': 'repeat(' + columnsCount + ', 4fr)'
+  }">
+  <div
+    class="grid-header-cell"
+    (click)="sort('instrumentName', 'instrumentName' === sortBy && orderBy === 'desc' ? 'asc' : 'desc')">
+    <div class="single-sorting-button">
+      <span>Instrument</span>
+      <gpf-sorting-buttons
+        [id]="'instrument'"
+        class="header-button sorting-button"
+        [sortState]="'instrument' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
+      </gpf-sorting-buttons>
+    </div>
+  </div>
+
+  <div
+    class="grid-header-cell"
+    (click)="sort('measureName', 'measureName' === sortBy && orderBy === 'desc' ? 'asc' : 'desc')">
+    <div class="single-sorting-button">
+      <span>Proband Pheno Measure</span>
+      <gpf-sorting-buttons
+        [id]="'measure'"
+        class="header-button sorting-button"
+        [sortState]="'measure' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
+      </gpf-sorting-buttons>
+    </div>
+  </div>
+
+  <div class="grid-header-cell" *ngIf="measures.hasDescriptions">Measure Description</div>
+
+  <div class="grid-header-cell">Pheno Measure Values</div>
+
+  <div class="grid-header-cell">
+    <div
+      class="subheader-sorting-button"
+      (click)="sort('measureType', 'measureType' === sortBy && orderBy === 'desc' ? 'asc' : 'desc')">
+      Measure Type
+      <gpf-sorting-buttons
+        [id]="'measure_type'"
+        class="header-button sorting-button"
+        [sortState]="'measure_type' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
+      </gpf-sorting-buttons>
+    </div>
+    <div id="values-domain">Values Domain</div>
+  </div>
+
+  <ng-container *ngFor="let regressionId of measures.regressionNames | getRegressionIds">
+    <div class="grid-header-cell"
+      >Regression by
+      {{ measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId }}</div
+    >
+    <div class="grid-header-cell"
+      >{{ measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId }} PV
+      <div
+        class="subheader-sorting-button"
+        (click)="
+          sort(
+            regressionId + '.pvalueRegressionMale',
+            regressionId + '.pvalueRegressionMale' === sortBy && orderBy === 'desc' ? 'asc' : 'desc'
+          )
+        ">
+        <div>male</div>
+        <gpf-sorting-buttons
+          [id]="regressionId + '.pvalueRegressionMale'"
+          class="header-button sorting-button"
+          [sortState]="regressionId + '.pvalueRegressionMale' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
+        </gpf-sorting-buttons>
+      </div>
+
+      <div
+        class="subheader-sorting-button"
+        (click)="
+          sort(
+            regressionId + '.pvalueRegressionFemale',
+            regressionId + '.pvalueRegressionFemale' === sortBy && orderBy === 'desc' ? 'asc' : 'desc'
+          )
+        ">
+        <div>female</div>
+        <gpf-sorting-buttons
+          [id]="regressionId + '.pvalueRegressionFemale'"
+          class="header-button sorting-button"
+          [sortState]="regressionId + '.pvalueRegressionFemale' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
+        </gpf-sorting-buttons>
+      </div>
+    </div>
+  </ng-container>
+
+  <div
+    *ngIf="!measuresLoading && !measures.measures.length"
+    id="nothing-found-row"
+    [ngStyle]="{ 'grid-column': '1 /' + (columnsCount + 1) }"
+    >Nothing found</div
+  >
+
+  <div *ngIf="measuresLoading" id="loading-row" [ngStyle]="{ 'grid-column': '1 /' + (columnsCount + 1) }"
+    >Loading...</div
+  >
+
+  <ng-container *ngFor="let measure of measures.measures">
+    <div class="grid-cell instrument-cell" [attr.title]="measure.instrumentName">{{ measure.instrumentName }}</div>
+
+    <div class="grid-cell measure-name-cell" [attr.title]="measure.measureName">{{ measure.measureName }}</div>
+
+    <div class="grid-cell description-cell" *ngIf="measures.hasDescriptions" [attr.title]="measure.description">{{
+      measure.description
+    }}</div>
+
+    <div class="grid-cell figure-distribution-cell">
+      <a [class.clickable]="!!measure.figureDistribution" (click)="openModal(measure.figureDistribution)">
+        <img *ngIf="measure.figureDistributionSmall" class="table-chart" [src]="measure.figureDistributionSmall" />
+      </a>
+    </div>
+
+    <div class="grid-cell measure-type-cell">
+      <div>
+        <div>{{ measure.measureType }}</div>
+        <ng-container *ngIf="measure.measureType === 'continuous'">
+          <div>
+            <span
+              >[{{
+                +measure.valuesDomain.slice(measure.valuesDomain.indexOf('[') + 1, measure.valuesDomain.indexOf(','))
+                  | numberWithExp : '1.3-3'
+              }},</span
+            >
+            <span
+              >{{
+                +measure.valuesDomain.slice(measure.valuesDomain.indexOf(',') + 1, measure.valuesDomain.indexOf(']'))
+                  | numberWithExp : '1.3-3'
+              }}]</span
+            >
+          </div>
+        </ng-container>
+
+        <ng-container
+          *ngIf="
+            measure.measureType === 'categorical' || measure.measureType === 'raw' || measure.measureType === 'ordinal'
+          ">
+          <span *ngFor="let value of measure.valuesDomain.split(', ')" title="[{{ value }}]">[{{ value }}]</span>
+        </ng-container>
+      </div>
+    </div>
+
     <ng-container *ngFor="let regressionId of measures.regressionNames | getRegressionIds">
-      <gpf-table-column [columnWidth]="singleColumnWidth">
-        <gpf-table-header
-          caption="Regression by {{
-            measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId
-          }}"></gpf-table-header>
-        <gpf-table-content>
-          <span *gpfTableCellContent="let data">
-            <a
-              [class.clickable]="!!data.regressions.getReg(regressionId).figureRegression"
-              (click)="openModal(data.regressions.getReg(regressionId).figureRegression)">
-              <img
-                *ngIf="data.regressions.getReg(regressionId).figureRegressionSmall"
-                class="table-chart"
-                [src]="data.regressions.getReg(regressionId).figureRegressionSmall" />
-            </a>
-          </span>
-        </gpf-table-content>
-      </gpf-table-column>
-      <gpf-table-column [columnWidth]="singleColumnWidth">
-        <gpf-table-header
-          caption="{{
-            measures.regressionNames[regressionId] ? measures.regressionNames[regressionId] : regressionId
-          }} PV">
-          <gpf-table-subheader
-            caption="male"
-            field="pvalueRegressionMale"
-            [comparator]="regressionId | regressionComparePipe : 'pvalueRegressionMale'"></gpf-table-subheader>
-          <gpf-table-subheader
-            caption="female"
-            field="pvalueRegressionFemale"
-            [comparator]="regressionId | regressionComparePipe : 'pvalueRegressionFemale'"></gpf-table-subheader>
-        </gpf-table-header>
-        <gpf-table-content>
-          <gpf-table-subcontent>
-            <span
-              class="expanded-span"
-              *gpfTableCellContent="let data"
-              [style.background-color]="
-                data.regressions.getReg(regressionId).pvalueRegressionMale | getBackgroundColor
-              ">
-              <span
-                [attr.title]="data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4'"
-                >{{ data.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4' }}</span
-              >
-            </span>
-          </gpf-table-subcontent>
-          <gpf-table-subcontent>
-            <span
-              class="expanded-span"
-              *gpfTableCellContent="let data"
-              [style.background-color]="
-                data.regressions.getReg(regressionId).pvalueRegressionFemale | getBackgroundColor
-              ">
-              <span
-                [attr.title]="data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4'"
-                >{{ data.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4' }}</span
-              >
-            </span>
-          </gpf-table-subcontent>
-        </gpf-table-content>
-      </gpf-table-column>
+      <div class="grid-cell" [ngClass]="regressionId + '.img'">
+        <a
+          [class.clickable]="!!measure.regressions.getReg(regressionId).figureRegression"
+          (click)="openModal(measure.regressions.getReg(regressionId).figureRegression)">
+          <img
+            *ngIf="measure.regressions.getReg(regressionId).figureRegressionSmall"
+            class="table-chart"
+            [src]="measure.regressions.getReg(regressionId).figureRegressionSmall" />
+        </a>
+      </div>
+
+      <div class="grid-cell" [ngClass]="regressionId">
+        <div>
+          <div
+            [ngClass]="regressionId + '.pvalueRegressionMale'"
+            [style.background-color]="
+              measure.regressions.getReg(regressionId).pvalueRegressionMale?.toString() | getBackgroundColor
+            "
+            [style.width]="'100%'"
+            [attr.title]="measure.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4'"
+            >{{ measure.regressions.getReg(regressionId).pvalueRegressionMale | numberWithExp : '1.2-4' }}</div
+          >
+
+          <div
+            [ngClass]="regressionId + '.pvalueRegressionFemale'"
+            [style.background-color]="
+              measure.regressions.getReg(regressionId).pvalueRegressionFemale?.toString() | getBackgroundColor
+            "
+            [style.width]="'100%'"
+            [attr.title]="measure.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4'"
+            >{{ measure.regressions.getReg(regressionId).pvalueRegressionFemale | numberWithExp : '1.2-4' }}</div
+          >
+        </div>
+      </div>
     </ng-container>
-  </gpf-table>
-</ng-template>
+  </ng-container>
+</div>

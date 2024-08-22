@@ -1,10 +1,3 @@
-gpf-table {
-  display: inline-block;
-  width: 100%;
-  margin-top: 20px;
-  margin-bottom: 50px;
-}
-
 .table-chart {
   width: 128px;
   height: 88px;
@@ -15,4 +8,81 @@ gpf-table {
   display: inline-block;
   width: 100%;
   height: 100%;
+}
+
+.grid-container {
+  padding-top: 10px;
+  min-width: 1200px;
+  display: grid;
+}
+
+.grid-header-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 9px;
+  border: 1px solid #ddd;
+  padding: 8px;
+  font-size: 0.9em;
+  background: #eee;
+  font-weight: 600;
+  min-height: 115px;
+  max-height: 135px;
+  position: sticky;
+  top: 0;
+}
+
+.grid-cell {
+  min-width: 100px;
+  height: 111px;
+  max-height: 111px;
+  border: 1px solid #ddd;
+  word-break: break-word;
+  overflow: hidden;
+  padding: 8px;
+  padding-top: 10px;
+  text-align: center;
+  display: grid;
+  align-items: center;
+}
+
+.header-button {
+  padding: 0;
+}
+
+::ng-deep .sorting-button span {
+  font-size: 24px !important;
+  font-weight: 400 !important;
+}
+
+.subheader-sorting-button {
+  align-self: end;
+  display: flex;
+}
+
+.single-sorting-button {
+  display: flex;
+}
+
+#nothing-found-row,
+#loading-row {
+  background-color: #fafafa;
+  font-style: italic;
+  opacity: 75%;
+  text-align: center;
+  height: 43px;
+  line-height: 43px;
+  border-bottom: 1px solid #ddd;
+}
+
+#values-domain {
+  align-self: flex-end;
+  margin-right: 24px;
+}
+
+#measures-counter {
+  margin-top: 10px;
+  font-size: 0.75em;
+  font-weight: 500;
 }

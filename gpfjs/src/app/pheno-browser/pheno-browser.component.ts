@@ -3,12 +3,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { Observable, BehaviorSubject, ReplaySubject, combineLatest, of, zip, Subscription } from 'rxjs';
 import { PhenoBrowserService } from './pheno-browser.service';
-import { PhenoInstruments, PhenoInstrument, PhenoMeasures, PhenoMeasure } from './pheno-browser';
+import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
 import { Dataset } from 'app/datasets/datasets';
-import { debounceTime, distinctUntilChanged, map, share, switchMap, take, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map, switchMap, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { ConfigService } from 'app/config/config.service';
-import { HttpClient } from '@angular/common/http';
 import { Store } from '@ngxs/store';
 import { DatasetModel } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -22,21 +21,21 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   public selectedInstrument$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
   public searchTermObs$: Observable<string>;
   public measuresToShow: PhenoMeasures;
+  public measuresLoading = false;
+  // To trigger child change detection with on push strategy.
+  public measuresChangeTick = 0;
   public measuresSubscription: Subscription;
   public errorModal = false;
 
   public instruments: Observable<PhenoInstruments>;
-
   public selectedDataset: Dataset;
-
   public input$ = new ReplaySubject<string>(1);
-
   @ViewChild('searchBox') public searchBox: ElementRef;
-
   public imgPathPrefix = environment.imgPathPrefix;
 
+  private getPageSubscription: Subscription = new Subscription();
+
   public constructor(
-    private http: HttpClient,
     private route: ActivatedRoute,
     private router: Router,
     private phenoBrowserService: PhenoBrowserService,
@@ -65,56 +64,21 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   private initMeasuresToShow(datasetId: string): void {
     this.searchTermObs$ = this.input$.pipe(
       map((searchTerm: string) => searchTerm.trim()),
-      debounceTime(300),
+      debounceTime(500),
       distinctUntilChanged()
     );
 
     this.measuresSubscription = combineLatest([this.searchTermObs$, this.selectedInstrument$]).pipe(
-      tap(([searchTerm, newSelection]) => {
-        this.measuresToShow = null;
-        const queryParamsObject: {
-            instrument: string;
-            search: string;
-        } = {
-          instrument: undefined,
-          search: undefined
-        };
-        if (newSelection) {
-          queryParamsObject.instrument = newSelection;
-        }
-        if (searchTerm) {
-          queryParamsObject.search = searchTerm;
-        }
-        const url = this.router.createUrlTree(['.'], {
-          /* Removed unsupported properties by Angular migration: replaceUrl. */
-          relativeTo: this.route,
-          queryParams: queryParamsObject
-        }).toString();
-        this.location.replaceState(url);
-      }),
-      switchMap(([searchTerm, newSelection]) => {
-        this.measuresToShow = null;
-        return combineLatest([
-          of(searchTerm),
-          of(newSelection),
-          this.phenoBrowserService.getMeasuresInfo(datasetId)
-        ]);
-      }),
-      switchMap(([searchTerm, newSelection, measuresInfo]) => {
-        this.measuresToShow = measuresInfo;
-        return this.phenoBrowserService.getMeasures(datasetId, newSelection, searchTerm);
-      }),
-      map((measure: PhenoMeasure) => {
-        if (this.measuresToShow === null) {
-          return null;
-        }
-        if (measure !== null) {
-          this.measuresToShow.addMeasure(measure);
-        }
-        return this.measuresToShow;
-      }),
-      share()
-    ).subscribe();
+      switchMap(([searchTerm, instrument]) => {
+        this.updateUrl(searchTerm, instrument);
+
+        return this.phenoBrowserService.getMeasuresInfo(datasetId);
+      })
+    ).subscribe(phenoMeasures => {
+      this.measuresToShow = phenoMeasures;
+      this.measuresChangeTick++;
+      this.updateTable();
+    });
 
     this.route.queryParamMap.pipe(
       map(params => [params.get('instrument') || '', params.get('search') || '']),
@@ -125,12 +89,58 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
     });
   }
 
+  private updateUrl(searchText: string, instrument: string): void {
+    const queryParamsObject: {
+        instrument: string;
+        search: string;
+    } = {
+      instrument: undefined,
+      search: undefined
+    };
+    if (instrument) {
+      queryParamsObject.instrument = instrument;
+    }
+    if (searchText) {
+      queryParamsObject.search = searchText;
+    }
+    const url = this.router.createUrlTree(['.'], {
+      relativeTo: this.route,
+      queryParams: queryParamsObject
+    }).toString();
+    this.location.replaceState(url);
+  }
+
   private initInstruments(datasetId: string): void {
     this.instruments = this.phenoBrowserService.getInstruments(datasetId);
   }
 
   public emitInstrument(instrument: PhenoInstrument): void {
     this.selectedInstrument$.next(instrument);
+  }
+
+  private updateTable(): void {
+    this.measuresToShow?.clear();
+    this.getPageSubscription?.unsubscribe();
+    this.measuresLoading = true;
+    this.getPageSubscription =
+      this.phenoBrowserService.getMeasures(
+        this.selectedDataset.id,
+        this.selectedInstrument$.value,
+        (this.searchBox.nativeElement as HTMLInputElement).value
+      ).subscribe(res => {
+        if (!res.length) {
+          this.measuresLoading = false;
+          return;
+        }
+
+        res.forEach(r => {
+          this.measuresToShow.addMeasure(r);
+        });
+
+        this.measuresChangeTick++;
+        this.measuresLoading = false;
+        this.getPageSubscription.unsubscribe();
+      });
   }
 
   public downloadMeasures(): void {
@@ -152,7 +162,6 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
         })
       ).subscribe(([data, validity]) => {
         if (validity.status === 200) {
-          // this.phenoBrowserService.getDownloadMeasuresLink(data)
           window.open(this.phenoBrowserService.getDownloadMeasuresLink(data));
         } else if (validity.status === 413) {
           this.errorModal = true;
@@ -186,6 +195,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
+    this.getPageSubscription?.unsubscribe();
     this.measuresSubscription.unsubscribe();
     this.phenoBrowserService.cancelStreamPost();
   }

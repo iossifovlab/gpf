@@ -3,6 +3,7 @@ import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoMeasure } from './pheno-browser';
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
+import * as lodash from 'lodash';
 import { lastValueFrom, of } from 'rxjs';
 import { fakeJsonMeasure } from './pheno-browser.spec';
 import { HttpClient } from '@angular/common/http';
@@ -49,17 +50,26 @@ describe('pheno browser service', () => {
     });
   });
 
-  it.skip('should fetch measures by parameters', (done) => {
-    // Test was very slow >5000ms and Jest failed it, so skipping for now
-    const phenoMeasuresJson = {base_image_url: 'base', has_descriptions: true, regression_names: []};
-    const expectedMeasure: PhenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasure);
-    const response = phenoMeasuresJson;
+  it('should fetch measures by parameters', async() => {
+    const fakeJsonMeasureCopy = lodash.cloneDeep(fakeJsonMeasure);
 
-    httpSpy.get.mockReturnValue(of(response));
-    phenoBrowserService.getMeasures(null, null, null).subscribe(measures => {
-      expect(measures).toEqual(expectedMeasure);
-      done();
-    });
+    const expectedMeasure: PhenoMeasure = PhenoMeasure.fromJson(fakeJsonMeasureCopy);
+
+    const getMeasuresSpy = jest.spyOn(phenoBrowserService['http'], 'get');
+    getMeasuresSpy.mockReturnValue(of([{measure: fakeJsonMeasureCopy}]));
+
+    const resObservable = phenoBrowserService.getMeasures('datasetId', null, '');
+
+    const url = phenoBrowserService['config'].baseUrl +
+      phenoBrowserService['measuresUrl'] + '?instrument=null&dataset_id=datasetId';
+    const options =
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      {headers: {'Content-Type': 'application/json', 'X-CSRFToken': undefined}, withCredentials: true};
+    expect(getMeasuresSpy).toHaveBeenCalledWith(url, options);
+
+    const res = await lastValueFrom(resObservable);
+    expect(res).toBeInstanceOf(Array<PhenoMeasure>);
+    expect(res).toStrictEqual([expectedMeasure]);
   });
 
   it('should provide a correct download link', () => {
