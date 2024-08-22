@@ -48,10 +48,11 @@
   </div>
 </div>
 
-<div *ngIf="measuresToShow" class="col-lg-12" style="padding: 0 30px">
+<div *ngIf="measuresToShow?.regressionNames" class="col-lg-12" style="padding: 0 30px">
   <gpf-pheno-browser-table
     [measures]="measuresToShow"
-    [measuresChangeTick]="measuresChangeTick"></gpf-pheno-browser-table>
+    [measuresChangeTick]="measuresChangeTick"
+    [measuresLoading]="measuresLoading"></gpf-pheno-browser-table>
 </div>
 
 <div *ngIf="errorModal">

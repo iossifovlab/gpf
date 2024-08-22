@@ -23,6 +23,7 @@ import { isNumber, isString } from 'lodash';
 export class PhenoBrowserTableComponent implements OnInit {
   @Input() public measures: PhenoMeasures;
   @Input() public measuresChangeTick: number;
+  @Input() public measuresLoading: boolean;
   @ViewChildren(SortingButtonsComponent) public sortingButtonsComponents: SortingButtonsComponent[];
 
 

@@ -21,6 +21,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   public selectedInstrument$: BehaviorSubject<PhenoInstrument> = new BehaviorSubject<PhenoInstrument>(undefined);
   public searchTermObs$: Observable<string>;
   public measuresToShow: PhenoMeasures;
+  public measuresLoading = false;
   // To trigger child change detection with on push strategy.
   public measuresChangeTick = 0;
   public measuresSubscription: Subscription;
@@ -63,7 +64,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   private initMeasuresToShow(datasetId: string): void {
     this.searchTermObs$ = this.input$.pipe(
       map((searchTerm: string) => searchTerm.trim()),
-      debounceTime(300),
+      debounceTime(500),
       distinctUntilChanged()
     );
 
@@ -71,7 +72,6 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
       switchMap(([searchTerm, instrument]) => {
         this.updateUrl(searchTerm, instrument);
 
-        this.measuresToShow = null;
         return this.phenoBrowserService.getMeasuresInfo(datasetId);
       })
     ).subscribe(phenoMeasures => {
@@ -121,6 +121,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   private updateTable(): void {
     this.measuresToShow?.clear();
     this.getPageSubscription?.unsubscribe();
+    this.measuresLoading = true;
     this.getPageSubscription =
       this.phenoBrowserService.getMeasures(
         this.selectedDataset.id,
@@ -128,18 +129,16 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
         (this.searchBox.nativeElement as HTMLInputElement).value
       ).subscribe(res => {
         if (!res.length) {
+          this.measuresLoading = false;
           return;
-        }
-
-        if (this.measuresToShow.measures === null) {
-          this.measuresToShow.measures = [];
         }
 
         res.forEach(r => {
           this.measuresToShow.addMeasure(r);
         });
-        this.measuresChangeTick++;
 
+        this.measuresChangeTick++;
+        this.measuresLoading = false;
         this.getPageSubscription.unsubscribe();
       });
   }
@@ -163,7 +162,6 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
         })
       ).subscribe(([data, validity]) => {
         if (validity.status === 200) {
-          // this.phenoBrowserService.getDownloadMeasuresLink(data)
           window.open(this.phenoBrowserService.getDownloadMeasuresLink(data));
         } else if (validity.status === 413) {
           this.errorModal = true;

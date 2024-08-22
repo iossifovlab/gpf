@@ -65,7 +65,8 @@
   display: flex;
 }
 
-#nothing-found-row {
+#nothing-found-row,
+#loading-row {
   background-color: #fafafa;
   font-style: italic;
   opacity: 75%;

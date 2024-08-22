@@ -95,10 +95,14 @@
   </ng-container>
 
   <div
-    *ngIf="measures.measures !== null && !measures.measures.length"
+    *ngIf="!measuresLoading && !measures.measures.length"
     id="nothing-found-row"
     [ngStyle]="{ 'grid-column': '1 /' + (columnsCount + 1) }"
     >Nothing found</div
+  >
+
+  <div *ngIf="measuresLoading" id="loading-row" [ngStyle]="{ 'grid-column': '1 /' + (columnsCount + 1) }"
+    >Loading...</div
   >
 
   <ng-container *ngFor="let measure of measures.measures">

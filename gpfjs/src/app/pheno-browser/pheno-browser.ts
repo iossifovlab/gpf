@@ -167,7 +167,7 @@ export class PhenoMeasures {
   }
 
   public clear(): void {
-    this.measures = null;
+    this.measures.length = 0;
   }
 
 
