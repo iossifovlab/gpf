@@ -2,6 +2,7 @@ import glob
 import os
 import pathlib
 from collections.abc import Generator, Iterable
+from typing import ClassVar
 
 import numpy as np
 import yaml
@@ -137,12 +138,12 @@ class MultiReader:
 class ParquetLoader:
     """Variants loader implementation for the Parquet format."""
 
-    SUMMARY_COLUMNS = [  # noqa: RUF012
+    SUMMARY_COLUMNS: ClassVar[list[str]] = [
         "bucket_index", "summary_index", "allele_index",
         "summary_variant_data", "chromosome", "position", "end_position",
     ]
 
-    FAMILY_COLUMNS = [  # noqa: RUF012
+    FAMILY_COLUMNS: ClassVar[list[str]] = [
         "bucket_index", "summary_index", "family_id", "family_variant_data",
     ]
 

@@ -3,7 +3,6 @@ from typing import Any
 
 import pytest
 
-from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.query_variants.sql.schema2.sql_query_builder import (
     SqlQueryBuilder,
@@ -15,14 +14,14 @@ from dae.utils.regions import Region
 
 
 @pytest.fixture(scope="module")
-def study_2(
+def study_2p(
         tmp_path_factory: pytest.TempPathFactory,
         genotype_storage: GenotypeStorage) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
-        f"study_2_{genotype_storage.storage_id}")
+        f"study_2p_{genotype_storage.storage_id}")
     t4c8_instance = t4c8_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
-        root_path / "study_2" / "pedigree" / "in.ped",
+        root_path / "study_2p" / "pedigree" / "in.ped",
         """
 familyId personId dadId momId sex status role
 f1.1     mom1     0     0     2   1      mom
@@ -33,7 +32,7 @@ f1.3     dad3     0     0     1   1      dad
 f1.3     ch3      dad3  mom3  2   2      prb
         """)
     vcf_path1 = setup_vcf(
-        root_path / "study_2" / "vcf" / "in.vcf.gz",
+        root_path / "study_2p" / "vcf" / "in.vcf.gz",
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -74,7 +73,7 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
 
     return vcf_study(
         root_path,
-        "study_2", ped_path, [vcf_path1],
+        "study_2p", ped_path, [vcf_path1],
         t4c8_instance,
         project_config_update=project_config_update,
     )
@@ -254,14 +253,15 @@ def test_frequency_bin_heuristics_family_query(
         assert f"fa.frequency_bin IN {frequency_bins}" in query
 
 
-def test_variants_simple(study_2: GenotypeData) -> None:
-    svs = list(study_2.query_summary_variants())
+def test_variants_simple(study_2p: GenotypeData) -> None:
+    svs = list(study_2p.query_summary_variants())
     assert len(svs) == 6
 
-    fvs = list(study_2.query_variants())
+    fvs = list(study_2p.query_variants())
     assert len(fvs) == 12
 
 
+@pytest.mark.no_gs_parquet()
 @pytest.mark.parametrize("params, count", [
     ({"genes": ["t4"]}, 2),
     ({"genes": ["c8"]}, 5),
@@ -286,12 +286,12 @@ def test_variants_simple(study_2: GenotypeData) -> None:
 def test_query_family_variants_counting(
     params: dict[str, Any],
     count: int,
-    study_2: GenotypeData,
+    study_2p: GenotypeData,
 ) -> None:
-    fvs = list(study_2.query_variants(**params))
+    fvs = list(study_2p.query_variants(**params))
     assert len(fvs) == count
 
-
+@pytest.mark.no_gs_parquet()
 @pytest.mark.parametrize("params, count", [
     ({"genes": ["t4"]}, 1),
     ({"genes": ["c8"]}, 3),
@@ -316,71 +316,61 @@ def test_query_family_variants_counting(
 def test_query_summary_variants_counting(
     params: dict[str, Any],
     count: int,
-    study_2: GenotypeData,
+    study_2p: GenotypeData,
 ) -> None:
-    svs = list(study_2.query_summary_variants(**params))
+    svs = list(study_2p.query_summary_variants(**params))
     assert len(svs) == count
 
 
-@pytest.mark.parametrize("skip,params, count", [
-    (False, {}, 12),
-    (True, {}, 16),
-    (True, {"roles": "prb"}, 9),
-    (True, {"roles": "not prb"}, 7),
-    (True, {"roles": "mom and not prb"}, 5),
-    (True, {"roles": "mom and dad and not prb"}, 3),
-    (True, {"roles": "prb and not mom and not dad"}, 0),
+@pytest.mark.parametrize("params, count", [
+    ({}, 12),
+    ({"roles": "prb"}, 9),
+    ({"roles": "not prb"}, 7),
+    ({"roles": "mom and not prb"}, 5),
+    ({"roles": "mom and dad and not prb"}, 3),
+    ({"roles": "prb and not mom and not dad"}, 0),
 ])
 def test_query_family_variants_by_role(
-    skip: bool,  # noqa: FBT001
     params: dict[str, Any],
     count: int,
-    study_2: GenotypeData,
+    study_2p: GenotypeData,
 ) -> None:
-    fvs = list(study_2.query_variants(
-        skip_inmemory_filterng=skip,
+    fvs = list(study_2p.query_variants(
         **params))
     assert len(fvs) == count
 
 
-@pytest.mark.parametrize("skip,params, count", [
-    (False, {}, 12),
-    (True, {}, 16),
-    (True, {"sexes": "M"}, 11),
-    (True, {"sexes": "M and not F"}, 2),
-    (True, {"sexes": "female and not male"}, 5),
+@pytest.mark.parametrize("params, count", [
+    ({}, 12),
+    ({"sexes": "M"}, 11),
+    ({"sexes": "M and not F"}, 2),
+    ({"sexes": "female and not male"}, 5),
 ])
 def test_query_family_variants_by_sex(
-    skip: bool,  # noqa: FBT001
     params: dict[str, Any],
     count: int,
-    duckdb2_variants: DuckDb2Variants,
+    study_2p: GenotypeData,
 ) -> None:
-    fvs = list(duckdb2_variants.query_variants(
-        skip_inmemory_filterng=skip,
+    fvs = list(study_2p.query_variants(
         **params,
     ))
     assert len(fvs) == count
 
 
-@pytest.mark.parametrize("skip,params, count", [
-    (False, {}, 12),
-    (True, {}, 16),
-    (True, {"inheritance": ["missing"]}, 7),
-    (True, {"inheritance": ["mendelian"]}, 9),
-    (True, {"inheritance": ["denovo"]}, 0),
-    (False, {"inheritance": ["mendelian or missing"]}, 12),
-    (True, {"inheritance": ["mendelian or missing"]}, 16),
-    (True, {"inheritance": ["mendelian and missing"]}, 0),
+@pytest.mark.parametrize("params, count", [
+    ({}, 12),
+    ({"inheritance": ["missing"]}, 7),
+    ({"inheritance": ["mendelian"]}, 9),
+    ({"inheritance": ["denovo"]}, 0),
+    ({"inheritance": ["mendelian or missing"]}, 12),
+    ({"inheritance": ["mendelian and missing"]}, 0),
 ])
 def test_query_family_variants_by_inheritance(
-    skip: bool,  # noqa: FBT001
     params: dict[str, Any],
     count: int,
-    study_2: GenotypeData,
+    study_2p: GenotypeData,
 ) -> None:
-    fvs = list(study_2.query_variants(
-        skip_inmemory_filterng=skip,
+    fvs = list(study_2p.query_variants(
         **params,
     ))
     assert len(fvs) == count
@@ -432,30 +422,26 @@ def test_calc_frequency_bin_heuristics(
 def test_query_family_variants_by_variant_type(
     params: dict[str, Any],
     count: int,
-    study_2: GenotypeData,
+    study_2p: GenotypeData,
 ) -> None:
-    fvs = list(study_2.query_variants(**params))
+    fvs = list(study_2p.query_variants(**params))
     assert len(fvs) == count
 
 
-@pytest.mark.parametrize("skip, params, count", [
-    (False, {}, 12),
-    (True, {}, 16),
-    (True, {"person_ids": ["ch3"]}, 5),
-    (True, {"person_ids": ["ch3"], "family_ids": ["f1.1"]}, 0),
-    (True, {"person_ids": ["ch3"], "family_ids": ["f1.3"]}, 5),
-    (False, {"family_ids": ["f1.1"]}, 6),
-    (True, {"family_ids": ["f1.1"]}, 7),
-    (True, {"family_ids": ["f1.1"], "person_ids": ["ch1"]}, 4),
+@pytest.mark.parametrize("params, count", [
+    ({}, 12),
+    ({"person_ids": ["ch3"]}, 5),
+    ({"person_ids": ["ch3"], "family_ids": ["f1.1"]}, 0),
+    ({"person_ids": ["ch3"], "family_ids": ["f1.3"]}, 5),
+    ({"family_ids": ["f1.1"]}, 6),
+    ({"family_ids": ["f1.1"], "person_ids": ["ch1"]}, 4),
 ])
 def test_query_family_variants_by_family_and_person_ids(
-    skip: bool,  # noqa: FBT001
     params: dict[str, Any],
     count: int,
-    study_2: GenotypeData,
+    study_2p: GenotypeData,
 ) -> None:
-    fvs = list(study_2.query_variants(
-        skip_inmemory_filterng=skip,
+    fvs = list(study_2p.query_variants(
         **params,
     ))
     assert len(fvs) == count
