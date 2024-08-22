@@ -463,6 +463,13 @@ def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
         "gcp",
         "parquet",
     }
+    schema2_storage_types = {
+        "duckdb", "duckdb2",
+        "impala2",
+        "gcp",
+        "parquet",
+    }
+
     if hasattr(metafunc, "function"):
         marked_types = set()
         removed_types = set()
@@ -476,6 +483,9 @@ def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
                 marked_types.add(storage_type)
                 if storage_type == "duckdb":
                     marked_types.add("duckdb2")
+                if storage_type == "schema2":
+                    marked_types.update(schema2_storage_types)
+
         marked_types = marked_types & all_storage_types
         removed_types = removed_types & all_storage_types
         if marked_types:
