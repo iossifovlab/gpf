@@ -53,7 +53,7 @@ class ParquetLoaderVariants:
         return self.loader.families
 
     def build_summary_variants_query_runner(
-        self,
+        self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
@@ -102,7 +102,7 @@ class ParquetLoaderVariants:
             deserializer=filter_func)
 
     def build_family_variants_query_runner(
-        self,
+        self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
@@ -220,6 +220,9 @@ class ParquetGenotypeStorage(GenotypeStorage):
             study_path = pathlib.Path(self.data_dir, study_id)
             if study_path.exists():
                 path = study_path
+            else:
+                raise FileNotFoundError(
+                    f"Study {study_id} not found in {self.data_dir}")
         else:
             table_path = study_config["genotype_storage"]["tables"]["summary"]
             path = pathlib.Path(table_path).parent

@@ -1,4 +1,4 @@
-from typing import Any, Type
+from typing import Any
 
 from dae.configuration.schemas.dae_conf import storage_schema
 from dae.pedigrees.loader import FamiliesLoader
@@ -18,6 +18,7 @@ _region_chromosomes_schema: dict[str, Any] = {
         },
         ],
     },
+    "integer_region_bins": {"type": "boolean"},
 }
 
 _loader_processing_params = {
@@ -91,15 +92,6 @@ import_config_schema: dict[str, Any] = {
             "dae": _loader_processing_schema,
         },
     },
-    # "parquet_row_group_size": {
-    #     "type": "dict",
-    #     "schema": {
-    #         "vcf": {"anyof_type": ["integer", "string"]},
-    #         "denovo": {"anyof_type": ["integer", "string"]},
-    #         "dae": {"anyof_type": ["integer", "string"]},
-    #         "cnv": {"anyof_type": ["integer", "string"]},
-    #     },
-    # },
     "annotation": {
         "anyof": [
             {
@@ -191,7 +183,7 @@ def _fill_with_loader_arguments() -> None:
 
 
 def _set_loader_args(
-    loader_cls: Type[CLILoader],
+    loader_cls: type[CLILoader],
     schema: dict,
     prefix: str,
 ) -> None:
@@ -204,12 +196,13 @@ def _set_loader_args(
 
 
 def _copy_loader_args(
-    loader_cls: Type[CLILoader],
+    loader_cls: type[CLILoader],
     schema: dict,
     prefix: str,
 ) -> None:
     # FIXME: Fix use of private _arguments of loaders
-    for arg in loader_cls._arguments():  # pylint: disable=protected-access
+    # pylint: disable=protected-access
+    for arg in loader_cls._arguments():  # noqa: SLF001
         if not arg.argument_name.startswith("--"):
             # ignore positional arguments as they are explicitly
             # specified in the schema

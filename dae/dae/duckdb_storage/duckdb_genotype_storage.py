@@ -107,6 +107,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         db_name = self.get_db()
         if db_name is not None:
             db_name = self._base_dir_join(db_name)
+            logger.debug("working with duckdb: %s", db_name)
             dirname = os.path.dirname(db_name)
             os.makedirs(dirname, exist_ok=True)
         if not read_only:

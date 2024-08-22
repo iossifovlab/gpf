@@ -2,10 +2,10 @@ import abc
 import logging
 import queue
 import time
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import closing
 from functools import reduce
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import PersonSetCollection
@@ -147,18 +147,19 @@ class RawFamilyVariants(abc.ABC):
                 if end_pos >= reg.start:
                     return True
             if reg.start is not None and reg.stop is not None:
-                if (
-                    reg.start <= pos <= reg.stop
+                assert reg.start <= reg.stop
+                if (reg.start <= pos <= reg.stop
                     or reg.start <= end_pos <= reg.stop
                     or (reg.start >= pos and reg.stop <= end_pos)
                 ):
+                    logger.debug("variant %s in region %s", v, reg)
                     return True
         return False
 
     @staticmethod
     def filter_real_attr(
         allele: SummaryAllele,
-        real_attr_filter: RealAttrFilterType,
+        real_attr_filter: RealAttrFilterType, *,
         is_frequency: bool = False,
     ) -> bool:
         # pylint: disable=unused-argument
@@ -174,9 +175,13 @@ class RawFamilyVariants(abc.ABC):
             val = allele.get_attribute(key)
             rmin, rmax = ranges
             if rmin is None and rmax is None:
-                result.append(True)
+                if is_frequency or val is not None:
+                    result.append(True)
             elif rmin is None:
-                result.append(val is None or val <= rmax)
+                if is_frequency and val is None:
+                    result.append(True)
+                elif val is not None:
+                    result.append(val <= rmax)
             elif rmax is None:
                 result.append(val is not None and val >= rmin)
             else:
@@ -220,9 +225,9 @@ class RawFamilyVariants(abc.ABC):
         return False
 
     @classmethod
-    def filter_allele(  # noqa: C901
+    def filter_allele(
         cls,
-        allele: FamilyAllele,
+        allele: FamilyAllele, *,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
         person_ids: Sequence[str] | None = None,
@@ -233,7 +238,7 @@ class RawFamilyVariants(abc.ABC):
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG003
     ) -> bool:
         # pylint: disable=too-many-arguments,too-many-return-statements
         # pylint: disable=too-many-branches,unused-argument
@@ -244,25 +249,24 @@ class RawFamilyVariants(abc.ABC):
                 if not inh.match(allele.inheritance_in_members):
                     return False
 
-        if real_attr_filter is not None:
-            if not cls.filter_real_attr(allele, real_attr_filter):
-                return False
-        if frequency_filter is not None:
-            if not cls.filter_real_attr(
+        if real_attr_filter is not None and \
+                not cls.filter_real_attr(allele, real_attr_filter):
+            return False
+        if frequency_filter is not None and \
+                not cls.filter_real_attr(
                     allele, frequency_filter, is_frequency=True):
-                return False
-        if ultra_rare:
-            if not cls.filter_real_attr(
-                    allele, [("af_allele_count", (None, 1))]):
-                return False
+            return False
+        if ultra_rare and not cls.filter_real_attr(
+                allele, [("af_allele_count", (None, 1))], is_frequency=True):
+            return False
 
         if genes is None and effect_types is None:
             allele.matched_gene_effects = []
         elif not cls.filter_gene_effects(allele, effect_types, genes):
             return False
-        if variant_type is not None:
-            if not variant_type.match([allele.allele_type]):
-                return False
+        if variant_type is not None and not variant_type.match(
+                [allele.allele_type]):
+            return False
         if person_ids is not None:
             if allele.is_reference_allele:
                 return False
@@ -283,36 +287,36 @@ class RawFamilyVariants(abc.ABC):
     @classmethod
     def filter_summary_allele(
         cls,
-        allele: SummaryAllele,
+        allele: SummaryAllele, *,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
         variant_type: Matcher | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG003
     ) -> bool:
         # pylint: disable=too-many-return-statements,too-many-branches
         # pylint: disable=unused-argument
         """Return True if a summary allele meets the required conditions."""
         assert isinstance(allele, SummaryAllele)
-        if real_attr_filter is not None:
-            if not cls.filter_real_attr(allele, real_attr_filter):
-                return False
-        if frequency_filter is not None:
-            if not cls.filter_real_attr(
+        if real_attr_filter is not None and \
+                not cls.filter_real_attr(allele, real_attr_filter):
+            return False
+        if frequency_filter is not None and \
+                not cls.filter_real_attr(
                     allele, frequency_filter, is_frequency=True):
-                return False
-        if ultra_rare:
-            if not cls.filter_real_attr(allele, [("af_allele_count", (0, 1))]):
-                return False
+            return False
+        if ultra_rare and not cls.filter_real_attr(
+                allele, [("af_allele_count", (0, 1))]):
+            return False
 
-        if genes is not None or effect_types is not None:
-            if not cls.filter_gene_effects(allele, effect_types, genes):
-                return False
+        if (genes is not None or effect_types is not None) and \
+                not cls.filter_gene_effects(allele, effect_types, genes):
+            return False
         if variant_type is not None:
-            if not variant_type.match([allele.allele_type]):
-                return False
+            return variant_type.match([allele.allele_type])
+
         return True
 
     @classmethod
@@ -320,13 +324,12 @@ class RawFamilyVariants(abc.ABC):
         cls, v: FamilyVariant, **kwargs: Any,
     ) -> bool:
         """Return true if variant meets conditions in kwargs."""
-        if kwargs.get("regions") is not None:
-            if not cls.filter_regions(v, kwargs["regions"]):
-                return False
+        if kwargs.get("regions") is not None and \
+                not cls.filter_regions(v, kwargs["regions"]):
+            return False
         family_ids = kwargs.get("family_ids")
-        if family_ids is not None:
-            if v.family_id not in family_ids:
-                return False
+        if family_ids is not None and v.family_id not in family_ids:
+            return False
         if "filter" in kwargs:
             func = kwargs["filter"]
             if not func(v):
@@ -338,9 +341,9 @@ class RawFamilyVariants(abc.ABC):
         cls, v: SummaryVariant, **kwargs: Any,
     ) -> bool:
         """Return true if variant meets conditions in kwargs."""
-        if kwargs.get("regions") is not None:
-            if not cls.filter_regions(v, kwargs["regions"]):
-                return False
+        if kwargs.get("regions") is not None and \
+                not cls.filter_regions(v, kwargs["regions"]):
+            return False
         if "filter" in kwargs:
             func = kwargs["filter"]
             if not func(v):
@@ -539,7 +542,7 @@ class RawFamilyVariants(abc.ABC):
                     v.set_matched_alleles(alleles_matched)
                     return v
                 logger.info("no matched alleles for family variant: %s", v)
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:  # pylint: disable=broad-except  # noqa: BLE001
                 logger.warning("unexpected error: %s", ex, exc_info=True)
                 return None
             return None
@@ -548,13 +551,14 @@ class RawFamilyVariants(abc.ABC):
 
     @staticmethod
     def build_person_set_collection_query(
-            person_set_collection: PersonSetCollection,
-            person_set_collection_query: tuple[str, list[str]]) -> None:
+        person_set_collection: PersonSetCollection,  # noqa: ARG004
+        person_set_collection_query: tuple[str, list[str]],  # noqa: ARG004
+    ) -> None:
         # pylint: disable=unused-argument
         return None
 
     def build_family_variants_query_runner(
-        self,
+        self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
@@ -569,7 +573,7 @@ class RawFamilyVariants(abc.ABC):
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> RawVariantsQueryRunner:
         # pylint: disable=too-many-arguments,unused-argument
         """Return a query runner for the family variants."""
@@ -628,7 +632,8 @@ class RawMemoryVariants(RawFamilyVariants):
         super().__init__(families)
         self.variants_loaders = loaders
         if len(loaders) > 0:
-            self._full_variants: list[tuple[SummaryVariant, list[FamilyVariant]]] | None = None
+            self._full_variants: list[
+                tuple[SummaryVariant, list[FamilyVariant]]] | None = None
         else:
             logger.debug("no variants to load")
             self._full_variants = []

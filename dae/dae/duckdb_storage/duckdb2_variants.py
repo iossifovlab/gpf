@@ -121,6 +121,7 @@ class DuckDb2Variants(QueryVariantsBase):
         self.connection = connection
         assert self.connection is not None
         self.layout = db2_layout
+        logger.debug("working with duckdb2 layout: %s", self.layout)
         self.gene_models = gene_models
         self.reference_genome = reference_genome
 

@@ -501,7 +501,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
                     variants[v.svuid] = v
                     if limit and len(variants) >= limit:
-                        return
+                        break
 
             elapsed = time.time() - started
             logger.info(

@@ -1,3 +1,4 @@
+# noqa: INP001
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
@@ -402,11 +403,10 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 def pytest_sessionstart(session: pytest.Session) -> None:
     global GENOTYPE_STORAGES  # pylint: disable=global-statement
     if not GENOTYPE_STORAGES:
-        #
         # pylint: disable=protected-access
-        root_path = session\
-            .config\
-            ._tmp_path_factory.mktemp("genotype_storage")  # type: ignore
+        root_path = session.config \
+            ._tmp_path_factory.mktemp(  # type: ignore # noqa: SLF001
+                "genotype_storage")
         _populate_default_genotype_storages(root_path)
 
         storage_types = session.config.getoption("storage_types")
@@ -432,8 +432,8 @@ def pytest_sessionstart(session: pytest.Session) -> None:
             GENOTYPE_STORAGES = selected_storages
         elif storage_config_filename:
             import yaml  # pylint: disable=import-outside-toplevel
-            with open(storage_config_filename, encoding="utf8") as infile:
-                storage_config = yaml.safe_load(infile.read())
+            storage_config = yaml.safe_load(
+                pathlib.Path(storage_config_filename).read_text())
             storage = GENOTYPE_STORAGE_REGISTRY\
                 .register_storage_config(storage_config)
             storage.start()
@@ -456,23 +456,52 @@ def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
 def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
     assert GENOTYPE_STORAGES is not None
     storages = GENOTYPE_STORAGES
+    all_storage_types = {
+        "inmemory",
+        "duckdb", "duckdb2",
+        "impala", "impala2",
+        "gcp",
+        "parquet",
+    }
+    schema2_storage_types = {
+        "duckdb", "duckdb2",
+        "impala2",
+        "gcp",
+        "parquet",
+    }
 
     if hasattr(metafunc, "function"):
         marked_types = set()
+        removed_types = set()
         for mark in getattr(metafunc.function, "pytestmark", []):
+            if mark.name.startswith("no_gs_"):
+                storage_type = mark.name[6:]
+                removed_types.add(storage_type)
+
             if mark.name.startswith("gs_"):
                 storage_type = mark.name[3:]
                 marked_types.add(storage_type)
                 if storage_type == "duckdb":
                     marked_types.add("duckdb2")
-        marked_types = marked_types & {
-            "impala", "impala2", "duckdb", "duckdb2", "inmemory", "gcp"}
-        if marked_types:
-            result = {}
-            for storage_id, storage in GENOTYPE_STORAGES.items():
-                if storage.storage_type in marked_types:
-                    result[storage_id] = storage
+                if storage_type == "schema2":
+                    marked_types.update(schema2_storage_types)
 
+        marked_types = marked_types & all_storage_types
+        removed_types = removed_types & all_storage_types
+        if marked_types:
+            result = {
+                storage_id: storage
+                for storage_id, storage in storages.items()
+                if (storage.storage_type in marked_types)
+            }
+
+            storages = result
+        elif removed_types:
+            result = {
+                storage_id: storage
+                for storage_id, storage in storages.items()
+                if (storage.storage_type not in removed_types)
+            }
             storages = result
 
     metafunc.parametrize(

@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from typing import Callable
+from collections.abc import Callable
 
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from impala_storage.schema1.parquet_io import VariantsParquetWriter
@@ -15,7 +15,7 @@ def test_region_partition(
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
-        ["1", "2"], 10000,
+        chromosomes=["1", "2"], region_length=10000,
     )
 
     parquet_writer = VariantsParquetWriter(
@@ -49,7 +49,7 @@ def test_region_partition_chromosome_filter(
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
-        ["1"], 10000)
+        chromosomes=["1"], region_length=10000)
 
     parquet_writer = VariantsParquetWriter(temp_dirname, fvars, partition_desc)
     parquet_writer.write_dataset()
@@ -81,7 +81,8 @@ def test_region_partition_small_region(
 ) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
-    partition_desc = PartitionDescriptor(["1", "2"], 10)
+    partition_desc = PartitionDescriptor(
+        chromosomes=["1", "2"], region_length=10)
 
     parquet_writer = VariantsParquetWriter(temp_dirname, fvars, partition_desc)
     parquet_writer.write_dataset()
@@ -122,7 +123,8 @@ def test_region_partition_large_region(
 ) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
-    partition_desc = PartitionDescriptor(["1", "2"], 10000000)
+    partition_desc = PartitionDescriptor(
+        chromosomes=["1", "2"], region_length=10000000)
 
     parquet_writer = VariantsParquetWriter(temp_dirname, fvars, partition_desc)
     parquet_writer.write_dataset()
@@ -148,7 +150,7 @@ def test_family_partition(
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
-        ["1", "2"], 10000000, 1000)
+        chromosomes=["1", "2"], region_length=10000000, family_bin_size=1000)
 
     parquet_writer = VariantsParquetWriter(temp_dirname, fvars, partition_desc)
     parquet_writer.write_dataset()
@@ -200,8 +202,8 @@ def test_coding_partition_1(
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
-        ["1", "2"],
-        10000000,
+        chromosomes=["1", "2"],
+        region_length=10000000,
         coding_effect_types=["missense"],
     )
 
@@ -249,8 +251,8 @@ def test_coding_partition_2(
 
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
     partition_desc = PartitionDescriptor(
-        ["1", "2"],
-        10000000,
+        chromosomes=["1", "2"],
+        region_length=10000000,
         coding_effect_types=[
             "missense",
             "nonsense",
@@ -292,8 +294,8 @@ def test_coding_partition_3(
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
-        ["1", "2"],
-        10000000,
+        chromosomes=["1", "2"],
+        region_length=10000000,
         coding_effect_types=["asdfghjkl"],
     )
 
@@ -331,7 +333,9 @@ def test_frequency_partition_1(
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
-        ["1", "2"], 10000000, rare_boundary=30)
+        chromosomes=["1", "2"],
+        region_length=10000000,
+        rare_boundary=30)
 
     parquet_writer = VariantsParquetWriter(temp_dirname, fvars, partition_desc)
     parquet_writer.write_dataset()
@@ -389,7 +393,9 @@ def test_frequency_partition_2(
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
-        ["1", "2"], 10000000, rare_boundary=1,
+        chromosomes=["1", "2"],
+        region_length=10000000,
+        rare_boundary=1,
     )
 
     parquet_writer = VariantsParquetWriter(temp_dirname, fvars, partition_desc)
@@ -426,7 +432,9 @@ def test_frequency_partition_3(
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
-        ["1", "2"], 10000000, rare_boundary=100,
+        chromosomes=["1", "2"],
+        region_length=10000000,
+        rare_boundary=100,
     )
 
     parquet_writer = VariantsParquetWriter(temp_dirname, fvars, partition_desc)
@@ -460,8 +468,8 @@ def test_all(vcf_variants_loaders: Callable, temp_dirname: str) -> None:
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
-        ["1", "2"],
-        100000,
+        chromosomes=["1", "2"],
+        region_length=100000,
         family_bin_size=100,
         coding_effect_types=[
             "missense",
@@ -614,8 +622,8 @@ def test_region_family_frequency(
     fvars = vcf_variants_loaders(PARTITION_STUDY_DATA)[0]
 
     partition_desc = PartitionDescriptor(
-        ["1", "2"],
-        100000,
+        chromosomes=["1", "2"],
+        region_length=100000,
         family_bin_size=100,
         rare_boundary=30,
     )

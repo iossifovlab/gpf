@@ -12,7 +12,7 @@ input:
 
 partition_description:
   region_bin:
-    chromosomes: 1, 2
+    chromosomes: chr1, chr2
     region_length: 100000000
   family_bin:
     family_bin_size: 10

@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import configparser
 import hashlib
-import math
 import pathlib
 import sys
 import textwrap
+from collections import defaultdict
 from collections.abc import Iterable
+from math import ceil
 from typing import Any, cast
 
 import jinja2
@@ -26,9 +27,10 @@ class PartitionDescriptor:
 
     # pylint: disable=too-many-public-methods
     def __init__(
-            self,
+            self, *,
             chromosomes: list[str] | None = None,
             region_length: int = 0,
+            integer_region_bins: bool = False,
             family_bin_size: int = 0,
             coding_effect_types: list[str] | None = None,
             rare_boundary: float = 0):
@@ -37,6 +39,7 @@ class PartitionDescriptor:
         else:
             self.chromosomes = chromosomes
         self.region_length = region_length
+        self.integer_region_bins = integer_region_bins
         self.family_bin_size = family_bin_size
         self.coding_effect_types: set[str] = \
             set(coding_effect_types) if coding_effect_types else set()
@@ -82,6 +85,7 @@ class PartitionDescriptor:
         [region_bin]
         chromosomes = chr1, chr2
         region_length = 10
+        integer_region_bins = False
         [frequency_bin]
         rare_boundary = 5.0
         [coding_bin]
@@ -95,6 +99,7 @@ class PartitionDescriptor:
         region_bin:
             chromosomes: chr1, chr2
             region_length: 10
+            integer_region_bins: False
         frequency_bin:
             rare_boundary: 5.0
         coding_bin:
@@ -130,6 +135,8 @@ class PartitionDescriptor:
         if "region_bin" in config_dict:
             config["region_length"] = int(
                 config_dict["region_bin"].get("region_length", sys.maxsize))
+            config["integer_region_bins"] = bool(
+                config_dict["region_bin"].get("integer_region_bins", False))
             chromosomes = config_dict["region_bin"]["chromosomes"]
 
             if isinstance(chromosomes, int):
@@ -169,6 +176,7 @@ class PartitionDescriptor:
         return PartitionDescriptor(
             chromosomes=config.get("chromosomes"),
             region_length=config.get("region_length", 0),
+            integer_region_bins=config.get("integer_region_bins", False),
             family_bin_size=config.get("family_bin_size", 0),
             rare_boundary=config.get("rare_boundary", 0.0),
             coding_effect_types=config.get("coding_effect_types"),
@@ -210,57 +218,102 @@ class PartitionDescriptor:
         pos_bin = pos // self.region_length
 
         if chrom in self.chromosomes:
+            if self.integer_region_bins:
+                chrom_index = self.chromosomes.index(chrom)
+                return f"{chrom_index * 10_000 + pos_bin}"
+
             return f"{chrom}_{pos_bin}"
 
+        if self.integer_region_bins:
+            return f"{10_000_000 + pos_bin}"
         return f"other_{pos_bin}"
 
-    def region_to_bins(
-        self, region: Region, chrom_lens: dict[str, int],
-    ) -> list[tuple[str, str]]:
-        """Provide a list of bins the given region intersects."""
-        start = region.start or 0
-        stop = min(region.stop or start, chrom_lens[region.chrom] - 1)
-        if start == stop:
-            return [("region_bin", self.make_region_bin(region.chrom, start))]
-        return [
-            ("region_bin", self.make_region_bin(region.chrom,
-                                                i * self.region_length))
-            for i in range(int(start / self.region_length),
-                           int(stop / self.region_length) + 1)
-        ]
-
-    def _make_region_bins(
+    def region_bins_count(
         self, chrom: str,
-        start: int,
-        end: int,
-    ) -> list[str]:
-        return [
-            f"{chrom}_{i}"
+        chromosome_lengths: dict[str, int],
+    ) -> int:
+        return ceil(
+            chromosome_lengths[chrom]
+            / self.region_length,
+        )
 
-            for i in range(
-                int(start / self.region_length),
-                int(end / self.region_length) + 1)
+    def make_region_bins_regions(
+            self, chromosomes: list[str],
+            chromosome_lengths: dict[str, int],
+    ) -> dict[str, list[Region]]:
+        """Generate region_bin to regions based on a partition descriptor."""
+        assert self.has_region_bins()
+
+        result = defaultdict(list)
+        for chrom in chromosomes:
+            region_bins_count = self.region_bins_count(
+                chrom, chromosome_lengths)
+
+            if region_bins_count == 1:
+                region_bin = self.make_region_bin(chrom, 1)
+                result[region_bin].append(Region(chrom))
+                continue
+
+            for region_index in range(region_bins_count):
+                start = region_index * self.region_length + 1
+                end = (region_index + 1) * self.region_length
+                end = min(end, chromosome_lengths[chrom])
+                region_bin = self.make_region_bin(chrom, start)
+                result[region_bin].append(Region(chrom, start, end))
+        return result
+
+    def region_to_region_bins(
+        self, region: Region, chrom_lens: dict[str, int],
+    ) -> list[str]:
+        """Provide a list of bins the given region intersects."""
+        start = region.start or 1
+        stop = region.stop or chrom_lens[region.chrom]
+        stop = min(stop or start, chrom_lens[region.chrom])
+
+        if start == stop:
+            return [self.make_region_bin(region.chrom, start)]
+        return [
+            self.make_region_bin(region.chrom, i * self.region_length)
+            for i in range(start // self.region_length,
+                           (stop - 1) // self.region_length + 1)
         ]
 
-    def make_all_region_bins(self, chrom_lens: dict[str, int])  -> list[str]:
+    def make_all_region_bins(
+        self, chromosome_lengths: dict[str, int],
+    )  -> list[str]:
         """Produce all region bins for all chromosomes."""
         bins = []
 
-        for chrom in self.chromosomes:
-            if chrom not in chrom_lens:
-                continue
+        genome_chroms = set(chromosome_lengths.keys())
+        partition_chroms = set(self.chromosomes) & genome_chroms
 
-            chrom_len = chrom_lens[chrom]
+        for chrom in partition_chroms:
+            if chrom not in chromosome_lengths:
+                raise ValueError(
+                    f"Partition descriptor chromosome <{chrom}> "
+                    f"not found in reference genome chromosome lengths. "
+                    f"Chromosomes: {chromosome_lengths.keys()}")
+
+            chrom_len = chromosome_lengths[chrom]
             bins.extend(
-                self._make_region_bins(chrom, 0, chrom_len),
-            )
-        other_chroms = set(chrom_lens.keys()) - set(self.chromosomes)
+                self.region_to_region_bins(
+                    Region(chrom, 1, chrom_len),
+                    chromosome_lengths,
+                ))
+        other_chroms = genome_chroms - partition_chroms
         if other_chroms:
-            max_other_len = max(
-                chrom_lens[chrom] for chrom in other_chroms)
+            max_other_len = 0
+            max_chrom = ""
+            for chrom in other_chroms:
+                if chromosome_lengths[chrom] > max_other_len:
+                    max_other_len = chromosome_lengths[chrom]
+                    max_chrom = chrom
+
             bins.extend(
-                self._make_region_bins("other", 1, max_other_len),
-            )
+                self.region_to_region_bins(
+                    Region(max_chrom, 1, max_other_len),
+                    chromosome_lengths,
+                ))
         return bins
 
     def make_family_bin(self, family_id: str) -> int:
@@ -419,28 +472,16 @@ class PartitionDescriptor:
             ))
         return partition
 
-    def get_variant_partitions(self, chrom_lens: dict[str, int]) \
-            -> tuple[list[list[tuple[str, str]]], list[list[tuple[str, str]]]]:
+    def get_variant_partitions(
+        self, chromosome_lengths: dict[str, int],
+    ) -> tuple[list[list[tuple[str, str]]], list[list[tuple[str, str]]]]:
         """Return the output summary and family variant partition names."""
-        summary_parts = []
+        summary_parts: list[list[tuple[str, str]]] = []
         if self.has_region_bins():
-            other_max_len = -1
-            for chrom, chrom_len in chrom_lens.items():
-                if chrom not in self.chromosomes:
-                    other_max_len = max(other_max_len, chrom_len)
-                    continue
-                num_buckets = math.ceil(chrom_len / self.region_length)
-                summary_parts.extend([
-                    [("region_bin", f"{chrom}_{bin_i}")]
-                    for bin_i in range(num_buckets)
-                ])
-
-            if other_max_len > 0:
-                num_buckets = math.ceil(other_max_len / self.region_length)
-                summary_parts.extend([
-                    [("region_bin", f"other_{bin_i}")]
-                    for bin_i in range(num_buckets)
-                ])
+            summary_parts.extend(
+                [("region_bin", r)]
+                for r in self.make_all_region_bins(chromosome_lengths)
+            )
         if self.has_frequency_bins():
             summary_parts = self._add_product(
                 summary_parts, [("frequency_bin", str(i)) for i in range(4)],
@@ -528,6 +569,7 @@ class PartitionDescriptor:
         result: dict[str, Any] = {}
         result["chromosomes"] = self.chromosomes
         result["region_length"] = self.region_length
+        result["integer_region_bins"] = self.integer_region_bins
         result["rare_boundary"] = self.rare_boundary
         result["coding_effect_types"] = self.coding_effect_types
         result["family_bin_size"] = self.family_bin_size
@@ -537,43 +579,49 @@ class PartitionDescriptor:
         """Serialize a partition descriptor into a string."""
         if output_format == "conf":
             return jinja2.Template(textwrap.dedent("""
-                {% if chromosomes %}
+                {%- if chromosomes %}
                 [region_bin]
-                chromosomes={{ chromosomes|join(', ') }}
+                chromosomes={{ chromosomes|join(',') }}
                 region_length={{ region_length }}
-                {% endif %}
-                {% if rare_boundary %}
+                {%- if integer_region_bins %}
+                integer_region_bins=true
+                {%- endif %}
+                {%- endif %}
+                {%- if rare_boundary %}
                 [frequency_bin]
                 rare_boundary={{ rare_boundary }}
-                {% endif %}
-                {% if coding_effect_types %}
+                {%- endif %}
+                {%- if coding_effect_types %}
                 [coding_bin]
-                coding_effect_types={{ coding_effect_types|join(', ') }}
-                {% endif %}
-                {% if family_bin_size %}
+                coding_effect_types={{ coding_effect_types|join(',') }}
+                {%- endif %}
+                {%- if family_bin_size %}
                 [family_bin]
                 family_bin_size={{ family_bin_size }}
-                {% endif %}
+                {%- endif %}
             """)).render(self.to_dict())
         if output_format == "yaml":
             return jinja2.Template(textwrap.dedent("""
-                {% if chromosomes %}
+                {%- if chromosomes %}
                 region_bin:
-                  chromosomes: {{ chromosomes|join(', ') }}
+                  chromosomes: {{ chromosomes|join(',') }}
                   region_length: {{ region_length }}
-                {% endif %}
-                {% if rare_boundary %}
+                {%- if integer_region_bins %}
+                  integer_region_bins: true
+                {%- endif %}
+                {%- endif %}
+                {%- if rare_boundary %}
                 frequency_bin:
                   rare_boundary: {{ rare_boundary }}
-                {% endif %}
-                {% if coding_effect_types %}
+                {%- endif %}
+                {%- if coding_effect_types %}
                 coding_bin:
-                  coding_effect_types: {{ coding_effect_types|join(', ') }}
-                {% endif %}
-                {% if family_bin_size %}
+                  coding_effect_types: {{ coding_effect_types|join(',') }}
+                {%- endif %}
+                {%- if family_bin_size %}
                 family_bin:
                   family_bin_size: {{ family_bin_size }}
-                {% endif %}
+                {%- endif %}
             """)).render(self.to_dict())
         raise ValueError(
             f"usupported output format for partition descriptor: "

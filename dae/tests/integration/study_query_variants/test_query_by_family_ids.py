@@ -37,11 +37,10 @@ chrA   1   .  A   G     .    .      .    GT     0/0  0/1  0/0 0/1  0/0 0/0
 chrA   2   .  A   G     .    .      .    GT     1/1  1/1  0/0 1/1 0/0  1/1
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "minimal_vcf", ped_path, [vcf_path],
         gpf_instance)
-    return study
 
 
 @pytest.mark.parametrize(
@@ -63,4 +62,6 @@ def test_query_by_family_ids(
         imported_study: GenotypeData,
         region: Region,
         family_ids: list[str], count: int) -> None:
-    pass
+    vs = list(imported_study.query_variants(
+        regions=[region], family_ids=family_ids))
+    assert len(vs) == count

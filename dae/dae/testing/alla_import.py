@@ -19,7 +19,15 @@ def alla_gpf(
     setup_genome(
         root_path / "alla_gpf" / "genome" / "allChr.fa",
         f"""
-        >chrA
+        >chr1
+        {100 * "A"}
+        >chr2
+        {100 * "A"}
+        >chr3
+        {100 * "A"}
+        >chr4
+        {100 * "A"}
+        >chrX
         {100 * "A"}
         """,
     )

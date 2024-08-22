@@ -2,6 +2,7 @@ import glob
 import os
 import pathlib
 from collections.abc import Generator, Iterable
+from typing import ClassVar
 
 import numpy as np
 import yaml
@@ -137,12 +138,12 @@ class MultiReader:
 class ParquetLoader:
     """Variants loader implementation for the Parquet format."""
 
-    SUMMARY_COLUMNS = [  # noqa: RUF012
+    SUMMARY_COLUMNS: ClassVar[list[str]] = [
         "bucket_index", "summary_index", "allele_index",
         "summary_variant_data", "chromosome", "position", "end_position",
     ]
 
-    FAMILY_COLUMNS = [  # noqa: RUF012
+    FAMILY_COLUMNS: ClassVar[list[str]] = [
         "bucket_index", "summary_index", "family_id", "family_variant_data",
     ]
 
@@ -263,9 +264,14 @@ class ParquetLoader:
             yield list(ds.dataset(f"{self.layout.summary}").files)
             return
 
-        region_bins = self.partition_descriptor.region_to_bins(
-            region, self.contigs,
-        ) if region is not None else self.files_per_region.keys()
+        if region is None:
+            region_bins = list(self.files_per_region.keys())
+        else:
+            region_bins = [
+                ("region_bin", r)
+                for r in self.partition_descriptor.region_to_region_bins(
+                    region, self.contigs)
+            ]
 
         for r_bin in region_bins:
             if r_bin in self.files_per_region:
