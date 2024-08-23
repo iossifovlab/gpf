@@ -6,11 +6,11 @@ import { Store } from '@ngxs/store';
 import { Store as Store1 } from '@ngrx/store';
 import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { SetStudyTypes } from 'app/study-types/study-types.state';
-import { SetVariantTypes } from 'app/variant-types/variant-types.state';
 import { take } from 'rxjs/operators';
 import { cloneDeep } from 'lodash';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
 import { setGenders } from 'app/gender/genders.state';
+import { setVariantTypes } from 'app/variant-types/variant-types.state';
 
 @Component({
   selector: '[gpf-enrichment-table-row]',
@@ -35,7 +35,8 @@ export class EnrichmentTableRowComponent {
     const newWindow = window.open('', '_blank');
 
     this.store1.dispatch(setEffectTypes({effectTypes: browserQueryFilter.effectTypes}));
-    this.store1.dispatch(setGenders({genders: browserQueryFilter['gender']}));
+    this.store1.dispatch(setGenders({genders: browserQueryFilter.gender}));
+    this.store1.dispatch(setVariantTypes({variantTypes: browserQueryFilter.variantTypes}));
 
 
     this.store.dispatch([
@@ -46,7 +47,7 @@ export class EnrichmentTableRowComponent {
         new Set(browserQueryFilter.personSetCollection.checkedValues)
       ),
       new SetStudyTypes(new Set(browserQueryFilter['studyTypes'])),
-      new SetVariantTypes(new Set(browserQueryFilter['variantTypes'])),
+      // new SetVariantTypes(new Set(browserQueryFilter['variantTypes'])),
     ]);
 
     this.store.selectOnce(state => state as object).subscribe(state => {

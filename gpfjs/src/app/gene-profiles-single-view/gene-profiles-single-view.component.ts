@@ -20,11 +20,11 @@ import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.sta
 import { SetPresentInChildValues } from 'app/present-in-child/present-in-child.state';
 import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
 import { SetStudyTypes } from 'app/study-types/study-types.state';
-import { SetVariantTypes } from 'app/variant-types/variant-types.state';
 import { LGDS } from 'app/effect-types/effect-types';
 import { GeneProfilesModel, SetGeneProfilesTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { DatasetModel } from 'app/datasets/datasets.state';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
+import { setVariantTypes } from 'app/variant-types/variant-types.state';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -209,12 +209,13 @@ export class GeneProfileSingleViewComponent implements OnInit {
     }
 
     store1.dispatch(setEffectTypes({effectTypes: effectTypes[statistic['effects'][0]] as string[]}));
+    store1.dispatch(setVariantTypes({variantTypes: statistic['variantTypes']}));
 
     store.dispatch([
       new SetGeneSymbols([geneSymbol]),
       // new SetEffectTypes(new Set(effectTypes[statistic['effects'][0]])),
       new SetStudyTypes(new Set(['we'])),
-      new SetVariantTypes(new Set(statistic['variantTypes'])),
+      // new SetVariantTypes(new Set(statistic['variantTypes'])),
       new SetGenomicScores(genomicScores),
       new SetPresentInChildValues(new Set(presentInChildValues)),
       new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),

@@ -133,7 +133,7 @@ import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.compo
 import { BnNgIdleService } from 'bn-ng-idle';
 import { NgxsModule } from '@ngxs/store';
 import { NgxsResetPluginModule } from 'ngxs-reset-plugin';
-import { variantTypesReducer, VarianttypesState } from './variant-types/variant-types.state';
+import { variantTypesReducer } from './variant-types/variant-types.state';
 import { effectTypesReducer } from './effect-types/effect-types.state';
 import { RegionsFilterState } from './regions-filter/regions-filter.state';
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox-list.component';

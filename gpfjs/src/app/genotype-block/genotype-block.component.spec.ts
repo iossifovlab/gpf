@@ -18,7 +18,6 @@ import { EffecttypesColumnComponent } from 'app/effect-types/effect-types-column
 import { NgxsModule } from '@ngxs/store';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { EffecttypesState } from 'app/effect-types/effect-types.state';
-import { VarianttypesState } from 'app/variant-types/variant-types.state';
 
 describe('GenotypeBlockComponent', () => {
   let component: GenotypeBlockComponent;

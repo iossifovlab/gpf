@@ -3,10 +3,10 @@ export class BrowserQueryFilter {
     private datasetId: string,
     private geneSymbols: string[],
     public effectTypes: string[],
-    private gender: string[],
+    public gender: string[],
     public personSetCollection: PersonSetCollection,
     private studyTypes: string[],
-    private variantTypes: string[]
+    public variantTypes: string[]
   ) { }
 
   public static fromJson(json: object): BrowserQueryFilter {
