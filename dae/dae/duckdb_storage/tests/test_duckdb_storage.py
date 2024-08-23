@@ -17,7 +17,7 @@ def test_genotype_storage_config(duckdb_storage_config: dict) -> None:
     assert isinstance(storage, DuckDbGenotypeStorage)
 
 
-def test_import_storage_config(duckdb_storage_config: dict) -> None:
+def test_import_storage_config() -> None:
     storage_factory = get_import_storage_factory("duckdb")
     assert storage_factory is not None
     storage = storage_factory()

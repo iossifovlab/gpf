@@ -9,8 +9,8 @@ genotype_storage:
   storages:
   - id: remote_duckdb
     storage_type: duckdb2
-    studies_dir: "genotype_storage/remote_duckdb"
-    base_dir: "%(wd)s"
+    db: remote_duckdb/data_hg19_remote.db
+    base_dir: "%(wd)s/genotype_storage"
 
 phenotype_data:
   dir: "pheno"

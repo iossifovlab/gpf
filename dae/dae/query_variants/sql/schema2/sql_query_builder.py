@@ -1089,12 +1089,23 @@ class SqlQueryBuilder(QueryBuilderBase):
         assert self.db_layout.summary is not None
         assert self.db_layout.family is not None
 
+        if self.db_layout.db is None:
+            return exp.replace_tables(
+                query,
+                {
+                    "summary_table": self.db_layout.summary,
+                    "family_table": self.db_layout.family,
+                    "pedigree_table": self.db_layout.pedigree,
+                },
+            )
+        db = self.db_layout.db
+        assert db is not None
         return exp.replace_tables(
             query,
             {
-                "summary_table": self.db_layout.summary,
-                "family_table": self.db_layout.family,
-                "pedigree_table": self.db_layout.pedigree,
+                "summary_table": f"{db}.{self.db_layout.summary}",
+                "family_table": f"{db}.{self.db_layout.family}",
+                "pedigree_table": f"{db}.{self.db_layout.pedigree}",
             },
         )
 

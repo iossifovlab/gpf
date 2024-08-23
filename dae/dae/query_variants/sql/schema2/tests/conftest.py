@@ -92,8 +92,6 @@ chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
     storage = t4c8_instance\
         .genotype_storages.get_genotype_storage("duckdb_test")
     assert storage is not None
-    storage.shutdown()
-    storage.start(read_only=True)
     t4c8_instance.reload()
     return t4c8_instance.get_genotype_data("study_1")
 
@@ -170,7 +168,5 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
     storage = t4c8_instance\
         .genotype_storages.get_genotype_storage("duckdb_test")
     assert storage is not None
-    storage.shutdown()
-    storage.start(read_only=True)
     t4c8_instance.reload()
     return t4c8_instance.get_genotype_data("study_2")

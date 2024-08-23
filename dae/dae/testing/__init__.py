@@ -10,6 +10,7 @@ from .import_helpers import StudyInputLayout, setup_import_project, \
     vcf_import, vcf_study, \
     denovo_import, denovo_study, \
     cnv_import, cnv_study, \
+    update_study_config, \
     setup_dataset, study_update
 from .acgt_import import acgt_gpf
 from .alla_import import alla_gpf
@@ -27,6 +28,8 @@ __all__ = [
     "vcf_import", "vcf_study",
     "denovo_import", "denovo_study",
     "cnv_import", "cnv_study",
+
+    "update_study_config",
 
     "setup_dataset", "study_update",
 

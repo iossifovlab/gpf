@@ -37,7 +37,7 @@ class DuckDbImportStorage(Schema2ImportStorage):
         genotype_storage = project.get_genotype_storage()
         if project.get_processing_parquet_dataset_dir() is not None:
             meta = cls.load_meta(project)
-            study_config = yaml.load(meta["study"], yaml.Loader)
+            study_config = yaml.safe_load(meta["study"])
             study_config["id"] = project.study_id
         else:
             variants_types = project.get_variant_loader_types()

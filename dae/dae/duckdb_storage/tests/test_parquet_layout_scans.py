@@ -38,8 +38,7 @@ def duckdb_storage_parquet(
     storage_config = {
         "id": "dev_duckdb_storage",
         "storage_type": "duckdb",
-        "studies_dir": "duckdb_genotype_storage",
-        "base_dir": str(storage_path),
+        "base_dir": str(storage_path / "duckdb_genotype_storage"),
     }
     storage_factory = get_genotype_storage_factory("duckdb")
     genotype_storage = cast(
@@ -72,12 +71,10 @@ def imported_study(
         foo    14  .  C   T   .    .      .    GT     0/0 0/1 0/1
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "minimal_vcf", ped_path, [vcf_path],
         gpf_instance)
-
-    return study
 
 
 @pytest.mark.parametrize(

@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from dae.genotype_storage import get_genotype_storage_factory
 from dae.genotype_storage.genotype_storage import GenotypeStorage
@@ -24,7 +24,7 @@ class GenotypeStorageRegistry:
     """
 
     def __init__(self) -> None:
-        self._genotype_storages: Dict[str, GenotypeStorage] = {}
+        self._genotype_storages: dict[str, GenotypeStorage] = {}
         self._default_genotype_storage: GenotypeStorage | None = None
 
     def register_storage_config(
@@ -34,14 +34,13 @@ class GenotypeStorageRegistry:
         storage_factory = get_genotype_storage_factory(storage_type)
 
         genotype_storage = storage_factory(storage_config)
-        genotype_storage.start()
         return self.register_genotype_storage(genotype_storage)
 
     def register_genotype_storage(
             self, storage: GenotypeStorage) -> GenotypeStorage:
         """Register a genotype storage instance."""
         if not isinstance(storage, GenotypeStorage):
-            raise ValueError(
+            raise TypeError(
                 f"trying to register object of type <{type(storage)}>"
                 f" as genotype storage.")
         storage_id = storage.storage_id

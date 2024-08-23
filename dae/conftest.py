@@ -24,15 +24,15 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
         {
             "id": "duckdb2",
             "storage_type": "duckdb2",
-            "db": "duckdb_storage/dev_storage.db",
+            "db": "duckdb2_storage/storage2.db",
             "base_dir": str(root_path),
+            "read_only": False,
         },
         # DuckDb2 Parquet Storage
         {
             "id": "duckdb2_parquet",
             "storage_type": "duckdb2",
-            "studies_dir": "duckdb_parquet",
-            "base_dir": str(root_path),
+            "base_dir": str(root_path / "duckdb_parquet"),
         },
         # DuckDb2 Parquet Inplace Storage
         {
@@ -44,15 +44,15 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
         {
             "id": "duckdb",
             "storage_type": "duckdb",
-            "db": "duckdb_storage/dev_storage.db",
+            "db": "duckdb_storage/storage.db",
             "base_dir": str(root_path),
+            "read_only": False,
         },
         # DuckDb Parquet Storage
         {
             "id": "duckdb_parquet",
             "storage_type": "duckdb",
-            "studies_dir": "duckdb_parquet",
-            "base_dir": str(root_path),
+            "base_dir": str(root_path / "duckdb_parquet"),
         },
         # DuckDb Parquet Inplace Storage
         {
@@ -407,6 +407,7 @@ def pytest_sessionstart(session: pytest.Session) -> None:
         root_path = session.config \
             ._tmp_path_factory.mktemp(  # type: ignore # noqa: SLF001
                 "genotype_storage")
+
         _populate_default_genotype_storages(root_path)
 
         storage_types = session.config.getoption("storage_types")
@@ -436,7 +437,6 @@ def pytest_sessionstart(session: pytest.Session) -> None:
                 pathlib.Path(storage_config_filename).read_text())
             storage = GENOTYPE_STORAGE_REGISTRY\
                 .register_storage_config(storage_config)
-            storage.start()
             GENOTYPE_STORAGES = {
                 storage.storage_id: storage,
             }

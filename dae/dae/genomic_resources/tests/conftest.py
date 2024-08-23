@@ -71,7 +71,6 @@ def content_fixture(alabala_gz: bytes) -> dict[str, Any]:
 
 @pytest.fixture()
 def fsspec_proto(
-    request: pytest.FixtureRequest,
     content_fixture: dict[str, Any],
     tmp_path_factory: pytest.TempPathFactory,
     grr_scheme: str,

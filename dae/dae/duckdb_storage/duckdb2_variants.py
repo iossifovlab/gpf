@@ -148,7 +148,11 @@ class DuckDb2Variants(QueryVariantsBase):
         )
 
     def _fetch_meta_property(self, key: str) -> str:
-        query = f"""SELECT value FROM {self.layout.meta}
+        meta = self.layout.meta
+        if self.layout.db is not None:
+            meta = f"{self.layout.db}.{meta}"
+
+        query = f"""SELECT value FROM {meta}
                WHERE key = '{key}'
                LIMIT 1
             """  # noqa: S608
@@ -187,7 +191,11 @@ class DuckDb2Variants(QueryVariantsBase):
         return cast(dict[str, Any], yaml.safe_load(content))
 
     def _fetch_pedigree(self) -> pd.DataFrame:
-        query = f"SELECT * FROM {self.layout.pedigree}"  # noqa: S608
+        pedigree = self.layout.pedigree
+        if self.layout.db is not None:
+            pedigree = f"{self.layout.db}.{pedigree}"
+
+        query = f"SELECT * FROM {pedigree}"  # noqa: S608
         with self.connection.cursor() as cursor:
 
             ped_df = cursor.execute(query).df()

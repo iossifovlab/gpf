@@ -8,6 +8,10 @@ from urllib.parse import urlparse
 from fsspec.core import url_to_fs
 
 
+def is_s3url(path: str) -> bool:
+    return path.startswith("s3://")
+
+
 def abspath(filename: str) -> str:
     url = urlparse(filename)
     if url.scheme:
@@ -87,6 +91,7 @@ def sign(filename: str) -> str:
 
 
 def copy(dest: str, src: str) -> None:
+    """Copy a file or directory."""
     shutil.copytree(src, dest, dirs_exist_ok=True)
 
 
