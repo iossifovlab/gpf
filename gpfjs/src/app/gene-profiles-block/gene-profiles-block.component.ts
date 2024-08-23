@@ -7,6 +7,7 @@ import {
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { map, take } from 'rxjs/operators';
 import { Store } from '@ngxs/store';
+import { Store as Store1 } from '@ngrx/store';
 import { QueryService } from 'app/query/query.service';
 import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-table/gene-profiles-table';
 import {
@@ -26,7 +27,8 @@ export class GeneProfilesBlockComponent implements OnInit {
   public constructor(
     private geneProfilesService: GeneProfilesService,
     private queryService: QueryService,
-    private store: Store
+    private store: Store,
+    private store1: Store1,
   ) { }
 
   public ngOnInit(): void {
@@ -187,6 +189,7 @@ export class GeneProfilesBlockComponent implements OnInit {
     const statistic = personSet.statistics.find(st => st.id === tokens[2]);
     GeneProfileSingleViewComponent.goToQuery(
       this.store,
+      this.store1,
       this.queryService,
       $event.geneSymbol,
       personSet,

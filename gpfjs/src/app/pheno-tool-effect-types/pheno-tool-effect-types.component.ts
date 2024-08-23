@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { Store } from '@ngxs/store';
+import { Store } from '@ngrx/store';
 
 import { EffectTypesComponent } from '../effect-types/effect-types.component';
 import {

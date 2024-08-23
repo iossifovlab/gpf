@@ -134,7 +134,7 @@ import { BnNgIdleService } from 'bn-ng-idle';
 import { NgxsModule } from '@ngxs/store';
 import { NgxsResetPluginModule } from 'ngxs-reset-plugin';
 import { VarianttypesState } from './variant-types/variant-types.state';
-import { EffecttypesState } from './effect-types/effect-types.state';
+import { effectTypesReducer } from './effect-types/effect-types.state';
 import { GenderState } from './gender/gender.state';
 import { RegionsFilterState } from './regions-filter/regions-filter.state';
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox-list.component';
@@ -429,7 +429,7 @@ const appRoutes: Routes = [
     }),
     NgMultiSelectDropDownModule.forRoot(),
     NgxsModule.forRoot([
-      VarianttypesState, EffecttypesState, GenderState,
+      VarianttypesState, GenderState,
       InheritancetypesState, PresentInChildState, PresentInParentState,
       GeneSymbolsState, RegionsFilterState, StudyTypesState, GeneSetsState,
       GeneScoresState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
@@ -445,7 +445,17 @@ const appRoutes: Routes = [
     MatAutocompleteModule,
     MatInputModule,
     NoopAnimationsModule,
-    StoreModule.forRoot({ errors: errorsReducer, familyIds: familyIdsReducer, datasetId: datasetIdReducer, expandedDatasets: expandedDatasetsReducer, familyTags: familyTagsReducer, personIds: personIdsReducer, personFilters: personFiltersReducer, studyFilters: studyFiltersReducer}),
+    StoreModule.forRoot({
+      errors: errorsReducer,
+      familyIds: familyIdsReducer,
+      datasetId: datasetIdReducer,
+      expandedDatasets: expandedDatasetsReducer,
+      familyTags: familyTagsReducer,
+      personIds: personIdsReducer,
+      personFilters: personFiltersReducer,
+      studyFilters: studyFiltersReducer,
+      effectTypes: effectTypesReducer
+    }),
   ],
   providers: [
     CookieService,

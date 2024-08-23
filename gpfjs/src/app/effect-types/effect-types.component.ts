@@ -1,19 +1,18 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { EffectTypes, CODING, NONCODING, CNV, ALL, LGDS, NONSYNONYMOUS, UTRS } from './effect-types';
 import { ValidateNested } from 'class-validator';
-import { Store } from '@ngxs/store';
-import {
-  EffecttypesState, AddEffectType, RemoveEffectType, SetEffectTypes, EffectTypeModel
-} from './effect-types.state';
-import { StatefulComponent } from 'app/common/stateful-component';
 import { PHENO_TOOL_CNV } from 'app/pheno-tool-effect-types/pheno-tool-effect-types';
 import * as lodash from 'lodash';
+import { addEffectType, removeEffectType, selectEffectTypes, setEffectTypes } from './effect-types.state';
+import { take } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
 
 @Component({
   selector: 'gpf-effect-types',
   templateUrl: './effect-types.component.html'
 })
-export class EffectTypesComponent extends StatefulComponent implements OnInit {
+export class EffectTypesComponent extends StatefulComponentNgRx implements OnInit {
   @Input() public variantTypes: Set<string> = new Set();
 
   public codingColumn: Set<string> = CODING;
@@ -25,14 +24,14 @@ export class EffectTypesComponent extends StatefulComponent implements OnInit {
   public effectTypesButtons: Map<string, Set<string>>;
 
   public constructor(protected store: Store) {
-    super(store, EffecttypesState, 'effectTypes');
+    super(store, 'effectTypes', selectEffectTypes);
     this.initButtonGroups();
   }
 
   public ngOnInit(): void {
     super.ngOnInit();
-    this.store.selectOnce(EffecttypesState).subscribe(state => {
-      const effectTypes = (state as EffectTypeModel).effectTypes;
+    this.store.select(selectEffectTypes).pipe(take(1)).subscribe(effectTypesState => {
+      const effectTypes = effectTypesState;
       if (effectTypes.length) {
         for (const effectType of effectTypes) {
           this.onEffectTypeChange({checked: true, effectType: effectType});
@@ -69,16 +68,16 @@ export class EffectTypesComponent extends StatefulComponent implements OnInit {
 
   public setEffectTypes(effectTypes: Set<string>): void {
     this.effectTypes.selected = new Set(effectTypes);
-    this.store.dispatch(new SetEffectTypes(this.effectTypes.selected));
+    this.store.dispatch(setEffectTypes({effectTypes: [...this.effectTypes.selected]}));
   }
 
   public onEffectTypeChange(value: {checked: boolean; effectType: string}): void {
     if (value.checked && !this.effectTypes.selected.has(value.effectType)) {
       this.effectTypes.selected.add(value.effectType);
-      this.store.dispatch(new AddEffectType(value.effectType));
+      this.store.dispatch(addEffectType({effectType: value.effectType}));
     } else if (!value.checked && this.effectTypes.selected.has(value.effectType)) {
       this.effectTypes.selected.delete(value.effectType);
-      this.store.dispatch(new RemoveEffectType(value.effectType));
+      this.store.dispatch(removeEffectType({effectType: value.effectType}));
     }
   }
 }

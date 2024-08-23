@@ -2,7 +2,7 @@ export class BrowserQueryFilter {
   public constructor(
     private datasetId: string,
     private geneSymbols: string[],
-    private effectTypes: string[],
+    public effectTypes: string[],
     private gender: string[],
     public personSetCollection: PersonSetCollection,
     private studyTypes: string[],

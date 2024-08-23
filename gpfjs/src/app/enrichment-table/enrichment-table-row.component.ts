@@ -3,13 +3,14 @@ import { EnrichmentEffectResult } from '../enrichment-query/enrichment-result';
 import { QueryService } from '../query/query.service';
 import { BrowserQueryFilter } from 'app/genotype-browser/genotype-browser';
 import { Store } from '@ngxs/store';
-import { SetEffectTypes } from 'app/effect-types/effect-types.state';
+import { Store as Store1 } from '@ngrx/store';
 import { SetGender } from 'app/gender/gender.state';
 import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { SetVariantTypes } from 'app/variant-types/variant-types.state';
 import { take } from 'rxjs/operators';
 import { cloneDeep } from 'lodash';
+import { setEffectTypes } from 'app/effect-types/effect-types.state';
 
 @Component({
   selector: '[gpf-enrichment-table-row]',
@@ -23,6 +24,7 @@ export class EnrichmentTableRowComponent {
   public constructor(
     private queryService: QueryService,
     private store: Store,
+    private store1: Store1,
   ) {}
 
   public goToQuery(browserQueryFilter: BrowserQueryFilter, skipGenes = false): void {
@@ -32,8 +34,10 @@ export class EnrichmentTableRowComponent {
     // https://stackoverflow.com/a/22470171/2316754
     const newWindow = window.open('', '_blank');
 
+    this.store1.dispatch(setEffectTypes({effectTypes: browserQueryFilter.effectTypes}));
+
     this.store.dispatch([
-      new SetEffectTypes(new Set(browserQueryFilter['effectTypes'])),
+      // new SetEffectTypes(new Set(browserQueryFilter['effectTypes'])),
       new SetGender(browserQueryFilter['gender']),
       new SetPedigreeSelector(
         browserQueryFilter.personSetCollection.id,

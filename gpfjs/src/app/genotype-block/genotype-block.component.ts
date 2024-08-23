@@ -1,9 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
-import { Selector } from '@ngxs/store';
 
 import { VarianttypesState, VarianttypeModel } from 'app/variant-types/variant-types.state';
-import { EffecttypesState, EffectTypeModel } from 'app/effect-types/effect-types.state';
 import { GenderState, GenderModel } from 'app/gender/gender.state';
 import { InheritancetypesState, InheritancetypesModel } from 'app/inheritancetypes/inheritancetypes.state';
 import { PresentInChildState, PresentInChildModel } from 'app/present-in-child/present-in-child.state';
@@ -31,33 +29,33 @@ export class GenotypeBlockComponent implements OnInit {
     this.selectedInheritanceTypeFilterValuesSet =
       new Set(this.dataset.genotypeBrowserConfig.selectedInheritanceTypeFilterValues);
   }
-  @Selector([
-    VarianttypesState, EffecttypesState, GenderState,
-    InheritancetypesState, PresentInChildState,
-    PresentInParentState.queryStateSelector, StudyTypesState,
-    PedigreeSelectorState, FamilyTypeFilterState,
-  ])
-  public static genotypeBlockQueryState(
-    variantTypesState: VarianttypeModel,
-    effectTypesState: EffectTypeModel,
-    genderState: GenderModel,
-    inheritanceTypesState: InheritancetypesModel,
-    presentInChildState: PresentInChildModel,
-    presentInParentState: PresentInParentState,
-    studyTypesState: StudyTypesModel,
-    pedigreeSelectorState: PedigreeSelectorModel,
-    familyTypeFilterState: FamilyTypeFilterModel,
-  ): object {
-    return {
-      variantTypes: variantTypesState.variantTypes,
-      effectTypes: effectTypesState.effectTypes,
-      gender: genderState.genders,
-      inheritanceTypeFilter: inheritanceTypesState.inheritanceTypes,
-      presentInChild: presentInChildState.presentInChild,
-      presentInParent: presentInParentState,
-      studyTypes: studyTypesState.studyTypes,
-      personSetCollection: pedigreeSelectorState,
-      familyTypes: familyTypeFilterState.familyTypes,
-    };
-  }
+  // @Selector([
+  //   VarianttypesState, EffecttypesState, GenderState,
+  //   InheritancetypesState, PresentInChildState,
+  //   PresentInParentState.queryStateSelector, StudyTypesState,
+  //   PedigreeSelectorState, FamilyTypeFilterState,
+  // ])
+  // public static genotypeBlockQueryState(
+  //   variantTypesState: VarianttypeModel,
+  //   effectTypesState: EffectTypeModel,
+  //   genderState: GenderModel,
+  //   inheritanceTypesState: InheritancetypesModel,
+  //   presentInChildState: PresentInChildModel,
+  //   presentInParentState: PresentInParentState,
+  //   studyTypesState: StudyTypesModel,
+  //   pedigreeSelectorState: PedigreeSelectorModel,
+  //   familyTypeFilterState: FamilyTypeFilterModel,
+  // ): object {
+  //   return {
+  //     variantTypes: variantTypesState.variantTypes,
+  //     effectTypes: effectTypesState.effectTypes,
+  //     gender: genderState.genders,
+  //     inheritanceTypeFilter: inheritanceTypesState.inheritanceTypes,
+  //     presentInChild: presentInChildState.presentInChild,
+  //     presentInParent: presentInParentState,
+  //     studyTypes: studyTypesState.studyTypes,
+  //     personSetCollection: pedigreeSelectorState,
+  //     familyTypes: familyTypeFilterState.familyTypes,
+  //   };
+  // }
 }

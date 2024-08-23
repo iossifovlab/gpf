@@ -11,9 +11,9 @@ import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.servi
 import { switchMap, take } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Store } from '@ngxs/store';
+import { Store as Store1 } from '@ngrx/store';
 import { QueryService } from 'app/query/query.service';
 import { GenomicScore } from 'app/genotype-browser/genotype-browser';
-import { SetEffectTypes } from 'app/effect-types/effect-types.state';
 import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { SetGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
@@ -24,6 +24,7 @@ import { SetVariantTypes } from 'app/variant-types/variant-types.state';
 import { LGDS } from 'app/effect-types/effect-types';
 import { GeneProfilesModel, SetGeneProfilesTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { DatasetModel } from 'app/datasets/datasets.state';
+import { setEffectTypes } from 'app/effect-types/effect-types.state';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -67,6 +68,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
     private router: Router,
     private queryService: QueryService,
     private store: Store,
+    private store1: Store1,
   ) { }
 
   public errorModal = false;
@@ -165,12 +167,13 @@ export class GeneProfileSingleViewComponent implements OnInit {
     statistic: GeneProfilesDatasetStatistic
   ): void {
     GeneProfileSingleViewComponent.goToQuery(
-      this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
+      this.store, this.store1, this.queryService, geneSymbol, personSet, datasetId, statistic
     );
   }
 
   public static goToQuery(
     store: Store,
+    store1: Store1,
     queryService:
     QueryService,
     geneSymbol: string,
@@ -205,9 +208,11 @@ export class GeneProfileSingleViewComponent implements OnInit {
       presentInParent = presentInParentRareValues;
     }
 
+    store1.dispatch(setEffectTypes({effectTypes: effectTypes[statistic['effects'][0]] as string[]}));
+
     store.dispatch([
       new SetGeneSymbols([geneSymbol]),
-      new SetEffectTypes(new Set(effectTypes[statistic['effects'][0]])),
+      // new SetEffectTypes(new Set(effectTypes[statistic['effects'][0]])),
       new SetStudyTypes(new Set(['we'])),
       new SetVariantTypes(new Set(statistic['variantTypes'])),
       new SetGenomicScores(genomicScores),
