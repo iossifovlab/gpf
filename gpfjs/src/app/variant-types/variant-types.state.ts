@@ -1,27 +1,19 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+export const initialState: string[] = [];
 
-export class SetVariantTypes {
-  public static readonly type = '[Genotype] Set VariantType';
-  public constructor(public variantTypes: Set<string>) {}
-}
+export const selectVariantTypes = createFeatureSelector<string[]>('variantTypes');
 
-export interface VarianttypeModel {
-  variantTypes: string[];
-}
+export const setVariantTypes = createAction(
+  '[Genotype] Set variant types',
+  props<{ variantTypes: string[] }>()
+);
 
-@State<VarianttypeModel>({
-  name: 'varianttypesState',
-  defaults: {
-    variantTypes: []
-  },
-})
-@Injectable()
-export class VarianttypesState {
-  @Action(SetVariantTypes)
-  public setVariantTypes(ctx: StateContext<VarianttypeModel>, action: SetVariantTypes): void {
-    ctx.patchState({
-      variantTypes: [...action.variantTypes]
-    });
-  }
-}
+export const resetVariantTypes = createAction(
+  '[Genotype] Reset variant types'
+);
+
+export const variantTypesReducer = createReducer(
+  initialState,
+  on(setVariantTypes, (state: string[], {variantTypes}) => [...variantTypes]),
+  on(resetVariantTypes, state => [...initialState]),
+);

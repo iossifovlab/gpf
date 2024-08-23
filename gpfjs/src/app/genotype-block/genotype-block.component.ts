@@ -1,7 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 
-import { VarianttypesState, VarianttypeModel } from 'app/variant-types/variant-types.state';
 import { InheritancetypesState, InheritancetypesModel } from 'app/inheritancetypes/inheritancetypes.state';
 import { PresentInChildState, PresentInChildModel } from 'app/present-in-child/present-in-child.state';
 import { PresentInParentState } from 'app/present-in-parent/present-in-parent.state';
