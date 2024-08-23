@@ -18,7 +18,6 @@ import { EffecttypesColumnComponent } from 'app/effect-types/effect-types-column
 import { NgxsModule } from '@ngxs/store';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { EffecttypesState } from 'app/effect-types/effect-types.state';
-import { GenderState } from 'app/gender/gender.state';
 import { VarianttypesState } from 'app/variant-types/variant-types.state';
 
 describe('GenotypeBlockComponent', () => {
@@ -46,7 +45,7 @@ describe('GenotypeBlockComponent', () => {
         NgbModule,
         HttpClientTestingModule,
         RouterTestingModule,
-        NgxsModule.forRoot([EffecttypesState, GenderState, VarianttypesState], {developmentMode: true})
+        NgxsModule.forRoot([EffecttypesState, VarianttypesState], {developmentMode: true})
       ],
       schemas: [
         NO_ERRORS_SCHEMA

@@ -135,7 +135,6 @@ import { NgxsModule } from '@ngxs/store';
 import { NgxsResetPluginModule } from 'ngxs-reset-plugin';
 import { VarianttypesState } from './variant-types/variant-types.state';
 import { effectTypesReducer } from './effect-types/effect-types.state';
-import { GenderState } from './gender/gender.state';
 import { RegionsFilterState } from './regions-filter/regions-filter.state';
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox-list.component';
 import { ErrorsState } from './common/errors.state';
@@ -192,6 +191,7 @@ import { errorsReducer } from './common/errors_ngrx.state';
 import { familyIdsReducer } from './family-ids/family-ids.state';
 import { expandedDatasetsReducer } from './dataset-node/dataset-node.state';
 import { studyFiltersReducer } from './study-filters/study-filters.state';
+import { gendersReducer } from './gender/genders.state';
 
 const appRoutes: Routes = [
   {
@@ -429,7 +429,7 @@ const appRoutes: Routes = [
     }),
     NgMultiSelectDropDownModule.forRoot(),
     NgxsModule.forRoot([
-      VarianttypesState, GenderState,
+      VarianttypesState,
       InheritancetypesState, PresentInChildState, PresentInParentState,
       GeneSymbolsState, RegionsFilterState, StudyTypesState, GeneSetsState,
       GeneScoresState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
@@ -454,7 +454,8 @@ const appRoutes: Routes = [
       personIds: personIdsReducer,
       personFilters: personFiltersReducer,
       studyFilters: studyFiltersReducer,
-      effectTypes: effectTypesReducer
+      effectTypes: effectTypesReducer,
+      genders: gendersReducer,
     }),
   ],
   providers: [
