@@ -1,15 +1,14 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-
-import { Observable, of, Subscription, switchMap, zip } from 'rxjs';
-
+import { combineLatest, Observable, Subscription, take } from 'rxjs';
 import { EnrichmentResults } from '../enrichment-query/enrichment-result';
 import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
-import { Select, Selector, Store } from '@ngxs/store';
-import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
-import { EnrichmentModelsState } from 'app/enrichment-models/enrichment-models.state';
-import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { Store } from '@ngrx/store';
+import { selectDatasetId } from 'app/datasets/datasets.state';
+import { selectEnrichmentModels } from 'app/enrichment-models/enrichment-models.state';
+import { selectGeneScores } from 'app/gene-scores/gene-scores.state';
+import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
+import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 
 @Component({
   selector: 'gpf-enrichment-tool',
@@ -21,8 +20,8 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
   public selectedDatasetId: string;
   public disableQueryButtons = false;
 
-  @Select(EnrichmentToolComponent.enrichmentToolStateSelector) public state$: Observable<object[]>;
-  @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
+  public enrichmentState: Observable<object[]>;
+  // @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
   private enrichmentToolState = {};
   private enrichmentQuerySubscription: Subscription = null;
 
@@ -33,16 +32,26 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
   ) { }
 
   public ngOnInit(): void {
-    this.state$.pipe(
-      switchMap(enrichmentState => {
-        const datasetState$ = this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState);
-        return zip(of(enrichmentState), datasetState$);
-      })
-    ).subscribe(([enrichmentState, datasetState]) => {
-      this.selectedDatasetId = datasetState.selectedDatasetId;
+    combineLatest([
+      this.store.select(selectGeneSymbols),
+      this.store.select(selectGeneSets),
+      this.store.select(selectGeneScores),
+      this.store.select(selectEnrichmentModels),
+      this.store.select(selectDatasetId),
+    ]).pipe(take(1)).subscribe(([
+      geneSymbols,
+      geneSets,
+      geneScores,
+      enrichmentModels,
+      datasetId,
+    ]) => {
+      this.selectedDatasetId = datasetId;
       this.enrichmentToolState = {
         datasetId: this.selectedDatasetId,
-        ...enrichmentState
+        ...geneSymbols,
+        ...geneSets,
+        ...geneScores,
+        ...enrichmentModels,
       };
       this.enrichmentResults = null;
     });
@@ -56,22 +65,15 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.errorsState$.subscribe(state => {
-      setTimeout(() => {
-        this.disableQueryButtons = state.componentErrors.size > 0;
-      });
-    });
+    // this.errorsState$.subscribe(state => {
+    //   setTimeout(() => {
+    //     this.disableQueryButtons = state.componentErrors.size > 0;
+    //   });
+    // });
   }
 
   public ngOnDestroy(): void {
     this.loadingService.setLoadingStop();
-  }
-
-  @Selector([GenesBlockComponent.genesBlockState, EnrichmentModelsState])
-  public static enrichmentToolStateSelector(genesBlockState: object, enrichmentModelsState: object): object {
-    return {
-      ...genesBlockState, ...enrichmentModelsState,
-    };
   }
 
   public submitQuery(): void {

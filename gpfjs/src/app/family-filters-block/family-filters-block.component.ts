@@ -11,7 +11,7 @@ import { FamilyCounter, PedigreeCounter, VariantReport } from 'app/variant-repor
 import { switchMap, take } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { DatasetModel, selectDatasetId } from 'app/datasets/datasets.state';
-import { resetFamilyIds } from 'app/family-ids/family-ids.state';
+import { resetFamilyIds, selectFamilyIds } from 'app/family-ids/family-ids.state';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -104,8 +104,8 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   }
 
   public ngAfterViewInit(): void {
-    this.store1.pipe(take(1)).subscribe(state => {
-      if (state['familyIds'].length !== 0) {
+    this.store1.select(selectFamilyIds).pipe(take(1)).subscribe(familyIds => {
+      if (familyIds.length !== 0) {
         setTimeout(() => {
           this.ngbNav.select('familyIds');
           this.hasContent = true;

@@ -1,56 +1,39 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext, Selector } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { cloneDeep } from 'lodash';
+export const initialState: { geneScores: object; rangeStart: number; rangeEnd: number } = {
+  geneScores: null,
+  rangeStart: 0,
+  rangeEnd: 0
+};
 
-export class SetHistogramValues {
-  public static readonly type = '[Genotype] Set geneScores histogram values';
-  public constructor(public rangeStart: number, public rangeEnd: number) {}
-}
+export const selectGeneScores =
+  createFeatureSelector<{ geneScores: object; rangeStart: number; rangeEnd: number }>('geneScores');
 
-export class SetGeneScore {
-  public static readonly type = '[Genotype] Set geneScore';
-  public constructor(public geneScore: object) {}
-}
+export const setGeneScoresHistogramValues = createAction(
+  '[Genotype] Set geneScores histogram values',
+  props<{ rangeStart: number; rangeEnd: number }>()
+);
 
-export interface GeneScoresModel {
-  geneScore: object;
-  rangeStart: number;
-  rangeEnd: number;
-}
+export const setGeneScore = createAction(
+  '[Genotype] Set geneScore',
+  props<{ geneScores: object; rangeStart: number; rangeEnd: number }>()
+);
 
-@State<GeneScoresModel>({
-  name: 'geneScoresState',
-  defaults: {
-    geneScore: null,
-    rangeStart: 0,
-    rangeEnd: 0,
-  },
-})
-@Injectable()
-export class GeneScoresState {
-  @Action(SetHistogramValues)
-  public setHistogramValues(ctx: StateContext<GeneScoresModel>, action: SetHistogramValues): void {
-    ctx.patchState({
-      rangeStart: action.rangeStart,
-      rangeEnd: action.rangeEnd,
-    });
-  }
+export const resetGeneScoresValues = createAction(
+  '[Genotype] Reset geneScores values'
+);
 
-  @Action(SetGeneScore)
-  public setGeneScore(ctx: StateContext<GeneScoresModel>, action: SetGeneScore): void {
-    ctx.patchState({ geneScore: action.geneScore });
-  }
-
-  @Selector([GeneScoresState])
-  public static queryStateSelector(geneScoresState: GeneScoresModel): object {
-    if (geneScoresState.geneScore) {
-      return {
-        geneScores: {
-          score: geneScoresState.geneScore['score'],
-          rangeStart: geneScoresState.rangeStart,
-          rangeEnd: geneScoresState.rangeEnd,
-        }
-      };
-    }
-    return null;
-  }
-}
+export const geneScoresReducer = createReducer(
+  initialState,
+  on(setGeneScoresHistogramValues, (state, { rangeStart, rangeEnd }) => ({
+    ...state,
+    rangeStart: rangeStart,
+    rangeEnd: rangeEnd
+  })),
+  on(setGeneScore, (state, { geneScores, rangeStart, rangeEnd }) => ({
+    geneScores: cloneDeep(geneScores),
+    rangeStart: rangeStart,
+    rangeEnd: rangeEnd
+  })),
+  on(resetGeneScoresValues, state => cloneDeep(initialState))
+);

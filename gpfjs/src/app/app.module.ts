@@ -24,15 +24,12 @@ import { PedigreeSelectorState } from './pedigree-selector/pedigree-selector.sta
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 import { GenesBlockComponent } from './genes-block/genes-block.component';
 import { GeneSymbolsComponent } from './gene-symbols/gene-symbols.component';
-import { GeneSymbolsState } from './gene-symbols/gene-symbols.state';
 import { RegionsFilterComponent } from './regions-filter/regions-filter.component';
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
 import { HistogramModule } from './histogram/histogram.module';
 import { GeneScoresComponent } from './gene-scores/gene-scores.component';
 import { GeneScoresService } from './gene-scores/gene-scores.service';
-import { GeneScoresState } from './gene-scores/gene-scores.state';
 import { GeneSetsComponent } from './gene-sets/gene-sets.component';
-import { GeneSetsState } from './gene-sets/gene-sets.state';
 import { GeneSetsService } from './gene-sets/gene-sets.service';
 import { UsersComponent } from './users/users.component';
 import { UsersService } from './users/users.service';
@@ -46,7 +43,6 @@ import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.compo
 import { EnrichmentModelsBlockComponent } from './enrichment-models-block/enrichment-models-block.component';
 import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component';
 import { EnrichmentModelsService } from './enrichment-models/enrichment-models.service';
-import { EnrichmentModelsState } from './enrichment-models/enrichment-models.state';
 import { EnrichmentQueryService } from './enrichment-query/enrichment-query.service';
 import { EnrichmentTableComponent } from './enrichment-table/enrichment-table.component';
 import { EnrichmentTableRowComponent } from './enrichment-table/enrichment-table-row.component';
@@ -112,7 +108,7 @@ import { SaveQueryComponent } from './save-query/save-query.component';
 import { SavedQueriesTableComponent } from './saved-queries-table/saved-queries-table.component';
 import { UserProfileComponent } from './user-profile/user-profile.component';
 import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
-import { InheritancetypesState } from './inheritancetypes/inheritancetypes.state';
+import { inheritanceTypesReducer, InheritancetypesState } from './inheritancetypes/inheritancetypes.state';
 import { GeneBrowserComponent } from './gene-browser/gene-browser.component';
 import { GlobalErrorHandler } from './global-error-handler/global-error-handler';
 import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
@@ -192,6 +188,10 @@ import { familyIdsReducer } from './family-ids/family-ids.state';
 import { expandedDatasetsReducer } from './dataset-node/dataset-node.state';
 import { studyFiltersReducer } from './study-filters/study-filters.state';
 import { gendersReducer } from './gender/genders.state';
+import { enrichmentModelsReducer } from './enrichment-models/enrichment-models.state';
+import { geneSetsReducer } from './gene-sets/gene-sets.state';
+import { geneScoresReducer } from './gene-scores/gene-scores.state';
+import { geneSymbolsReducer } from './gene-symbols/gene-symbols.state';
 
 const appRoutes: Routes = [
   {
@@ -430,8 +430,7 @@ const appRoutes: Routes = [
     NgMultiSelectDropDownModule.forRoot(),
     NgxsModule.forRoot([
       InheritancetypesState, PresentInChildState, PresentInParentState,
-      GeneSymbolsState, RegionsFilterState, StudyTypesState, GeneSetsState,
-      GeneScoresState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
+      RegionsFilterState, StudyTypesState, PedigreeSelectorState, FamilyTypeFilterState,
       GenomicScoresBlockState, PhenoToolMeasureState,
       UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState, DatasetState
     ], {compatibility: { strictContentSecurityPolicy: true }}
@@ -456,6 +455,11 @@ const appRoutes: Routes = [
       effectTypes: effectTypesReducer,
       genders: gendersReducer,
       variantTypes: variantTypesReducer,
+      inheritanceTypes: inheritanceTypesReducer,
+      enrichmentModels: enrichmentModelsReducer,
+      geneSets: geneSetsReducer,
+      geneScores: geneScoresReducer,
+      geneSymbols: geneSymbolsReducer,
     }),
   ],
   providers: [
