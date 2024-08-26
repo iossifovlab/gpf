@@ -1,27 +1,19 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+export const initialState: string[] = ['proband only', 'proband and sibling'];
 
-export class SetPresentInChildValues {
-  public static readonly type = '[Genotype] Set presentInChild values';
-  public constructor(public presentInChild: Set<string>) {}
-}
+export const selectPresentInChild = createFeatureSelector<string[]>('presentInChild');
 
-export interface PresentInChildModel {
-  presentInChild: string[];
-}
+export const setPresentInChild = createAction(
+  '[Genotype] Set present in child',
+  props<{ presentInChild: string[] }>()
+);
 
-@State<PresentInChildModel>({
-  name: 'presentInChildState',
-  defaults: {
-    presentInChild: ['proband only', 'proband and sibling']
-  },
-})
-@Injectable()
-export class PresentInChildState {
-  @Action(SetPresentInChildValues)
-  public setPresentInChildValue(ctx: StateContext<PresentInChildModel>, action: SetPresentInChildValues): void {
-    ctx.patchState({
-      presentInChild: [...action.presentInChild]
-    });
-  }
-}
+export const resetPresentInChild = createAction(
+  '[Genotype] Reset present in child'
+);
+
+export const presentInChildReducer = createReducer(
+  initialState,
+  on(setPresentInChild, (state: string[], {presentInChild}) => [...presentInChild]),
+  on(resetPresentInChild, state => [...initialState]),
+);

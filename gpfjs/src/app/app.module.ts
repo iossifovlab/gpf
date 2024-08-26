@@ -9,7 +9,7 @@ import { DatasetsService } from './datasets/datasets.service';
 import { ConfigService } from './config/config.service';
 import { GenderComponent } from './gender/gender.component';
 import { PresentInChildComponent } from './present-in-child/present-in-child.component';
-import { PresentInChildState } from './present-in-child/present-in-child.state';
+import { presentInChildReducer } from './present-in-child/present-in-child.state';
 import { PresentInParentComponent } from './present-in-parent/present-in-parent.component';
 import { PresentInParentState } from './present-in-parent/present-in-parent.state';
 import { VariantTypesComponent } from './variant-types/variant-types.component';
@@ -429,7 +429,7 @@ const appRoutes: Routes = [
     }),
     NgMultiSelectDropDownModule.forRoot(),
     NgxsModule.forRoot([
-      InheritancetypesState, PresentInChildState, PresentInParentState,
+      InheritancetypesState, PresentInParentState,
       RegionsFilterState, StudyTypesState, PedigreeSelectorState, FamilyTypeFilterState,
       GenomicScoresBlockState, PhenoToolMeasureState,
       UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState, DatasetState
@@ -460,6 +460,7 @@ const appRoutes: Routes = [
       geneSets: geneSetsReducer,
       geneScores: geneScoresReducer,
       geneSymbols: geneSymbolsReducer,
+      presentInChild: presentInChildReducer,
     }),
   ],
   providers: [
