@@ -2,13 +2,13 @@ import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { Partitions, GeneScoresLocalState, GeneScores } from './gene-scores';
 import { GeneScoresService } from './gene-scores.service';
 import { ReplaySubject, Observable, combineLatest, of } from 'rxjs';
-import { Store } from '@ngxs/store';
+import { Store } from '@ngrx/store';
 import { ConfigService } from '../config/config.service';
-import { SetGeneScore, SetHistogramValues, GeneScoresState } from './gene-scores.state';
-import { catchError, debounceTime, distinctUntilChanged, map, switchMap } from 'rxjs/operators';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { catchError, debounceTime, distinctUntilChanged, map, switchMap, take } from 'rxjs/operators';
 import { ValidateNested } from 'class-validator';
 import { environment } from 'environments/environment';
+import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { selectGeneScores, setGeneScore, setGeneScoresHistogramValues } from './gene-scores.state';
 
 @Component({
   encapsulation: ViewEncapsulation.None, // TODO: What is this?
@@ -16,7 +16,7 @@ import { environment } from 'environments/environment';
   templateUrl: './gene-scores.component.html',
   styleUrls: ['./gene-scores.component.css'],
 })
-export class GeneScoresComponent extends StatefulComponent implements OnInit {
+export class GeneScoresComponent extends StatefulComponentNgRx implements OnInit {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
   private partitions: Observable<Partitions>;
 
@@ -33,7 +33,7 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
     private geneScoresService: GeneScoresService,
     private config: ConfigService
   ) {
-    super(store, GeneScoresState, 'geneScores');
+    super(store, 'geneScores', selectGeneScores);
     this.partitions = this.rangeChanges.pipe(
       debounceTime(100),
       distinctUntilChanged(),
@@ -57,17 +57,17 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
     super.ngOnInit();
     this.geneScoresService.getGeneScores().pipe(
       switchMap(geneScores =>
-        combineLatest([of(geneScores), this.store.selectOnce(GeneScoresState)])
+        combineLatest([of(geneScores), this.store.select(selectGeneScores).pipe(take(1))])
       )
     ).subscribe(([geneScores, state]) => {
       this.geneScoresArray = geneScores;
 
-      if (state.geneScore !== null) {
+      if (state.geneScores !== null) {
         for (const geneScore of this.geneScoresArray) {
-          if (geneScore.score === state.geneScore.score) {
+          if (geneScore.score === state.geneScores.score) {
             this.selectedGeneScores = geneScore;
-            this.rangeStart = state.rangeStart as number;
-            this.rangeEnd = state.rangeEnd as number;
+            this.rangeStart = state.rangeStart;
+            this.rangeEnd = state.rangeEnd;
             break;
           }
         }
@@ -90,10 +90,10 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
 
   private updateHistogramState(): void {
     this.updateLabels();
-    this.store.dispatch(new SetHistogramValues(
-      this.geneScoresLocalState.rangeStart,
-      this.geneScoresLocalState.rangeEnd,
-    ));
+    this.store.dispatch(setGeneScoresHistogramValues({
+      rangeStart: this.geneScoresLocalState.rangeStart,
+      rangeEnd: this.geneScoresLocalState.rangeEnd,
+    }));
   }
 
   public get selectedGeneScores(): GeneScores {
@@ -107,7 +107,11 @@ export class GeneScoresComponent extends StatefulComponent implements OnInit {
     this.rangeEnd = this.geneScoresLocalState.domainMax;
     this.updateLabels();
     this.downloadUrl = this.getDownloadUrl();
-    this.store.dispatch(new SetGeneScore(this.geneScoresLocalState.score));
+    this.store.dispatch(setGeneScore({
+      geneScores: this.geneScoresLocalState.score,
+      rangeStart: this.geneScoresLocalState.rangeStart,
+      rangeEnd: this.geneScoresLocalState.rangeEnd,
+    }));
   }
 
   public set rangeStart(range: number) {

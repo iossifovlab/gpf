@@ -15,6 +15,6 @@ export const resetGeneSymbols = createAction(
 
 export const geneSymbolsReducer = createReducer(
   initialState,
-  on(setGeneSymbols, (state, { geneSymbols }) => [...geneSymbols]),
+  on(setGeneSymbols, (state: string[], { geneSymbols }) => [...geneSymbols]),
   on(resetGeneSymbols, state => cloneDeep(initialState)),
 );

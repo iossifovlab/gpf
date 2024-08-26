@@ -4,21 +4,21 @@ import { GeneSetsService } from './gene-sets.service';
 import { GeneSetsCollection, GeneSet, GeneSetType } from './gene-sets';
 import { Subject, Observable, combineLatest, of } from 'rxjs';
 import { ValidateNested } from 'class-validator';
-import { Store } from '@ngxs/store';
-import { SetGeneSetsValues, GeneSetsState, GeneSetsModel } from './gene-sets.state';
-import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { Store } from '@ngrx/store';
+import { catchError, debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { PersonSet } from 'app/datasets/datasets';
 import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
+import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { selectGeneSets, setGeneSetsValues } from './gene-sets.state';
 
 @Component({
   selector: 'gpf-gene-sets',
   templateUrl: './gene-sets.component.html',
   styleUrls: ['./gene-sets.component.css']
 })
-export class GeneSetsComponent extends StatefulComponent implements OnInit {
+export class GeneSetsComponent extends StatefulComponentNgRx implements OnInit {
   public geneSetsCollections: Array<GeneSetsCollection>;
   public geneSets: Array<GeneSet>;
   public searchQuery: string;
@@ -47,7 +47,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     protected store: Store,
     private geneSetsService: GeneSetsService,
   ) {
-    super(store, GeneSetsState, 'geneSets');
+    super(store, 'geneSets', selectGeneSets);
   }
 
   public ngOnInit(): void {
@@ -57,11 +57,11 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     this.geneSetsService.getGeneSetsCollections().pipe(
       switchMap(geneSetsCollections => combineLatest(
         of(geneSetsCollections),
-        this.store.selectOnce((state: { geneSetsState: GeneSetsModel}) => state.geneSetsState),
-        this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState),
+        this.store.select(selectGeneSets).pipe(take(1)),
+        this.store.select(selectDatasetId).pipe(take(1)),
       ))
-    ).subscribe(([geneSetsCollections, geneSetsState, datasetState]) => {
-      this.selectedDatasetId = datasetState.selectedDatasetId;
+    ).subscribe(([geneSetsCollections, geneSetsState, datasetIdState]) => {
+      this.selectedDatasetId = datasetIdState;
 
       const denovoGeneSetTypes = geneSetsCollections.filter(
         geneSetCollection => geneSetCollection.name === 'denovo'
@@ -103,13 +103,13 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
     this.geneSetsResult.subscribe(geneSets => {
       this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
-      this.store.selectOnce(state => state.geneSetsState).subscribe((state) => {
-        if (!state.geneSet || !state.geneSet.geneSet) {
+      this.store.select(selectGeneSets).pipe(take(1)).subscribe(geneSetsState => {
+        if (!geneSetsState || !geneSetsState.geneSet) {
           this.isLoading = false;
           return;
         }
         for (const geneSet of this.geneSets) {
-          if (geneSet.name === state.geneSet.geneSet) {
+          if (geneSet.name === geneSetsState.geneSet.name) {
             this.geneSetsLocalState.geneSet = geneSet;
             this.isLoading = false;
           }
@@ -118,7 +118,11 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     });
   }
 
-  private restoreState(state): void {
+  private restoreState(state: {
+    geneSetsTypes: GeneSetType[];
+    geneSetsCollection: GeneSetsCollection;
+    geneSet: GeneSet;
+}): void {
     if (state.geneSet && state.geneSetsCollection) {
       for (const geneSetCollection of this.geneSetsCollections) {
         if (geneSetCollection.name === state.geneSetsCollection.name) {
@@ -257,7 +261,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
   public set selectedGeneSet(geneSet) {
     this.geneSetsLocalState.geneSet = geneSet;
-    this.store.dispatch(new SetGeneSetsValues(this.geneSetsLocalState));
+    this.store.dispatch(setGeneSetsValues(this.geneSetsLocalState));
   }
 
   public getDownloadLink(): string {
