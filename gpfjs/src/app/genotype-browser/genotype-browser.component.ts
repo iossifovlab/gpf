@@ -8,11 +8,9 @@ import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotyp
 import { Select, Selector, Store } from '@ngxs/store';
 import { GenotypeBlockComponent } from '../genotype-block/genotype-block.component';
 import { GenesBlockComponent } from '../genes-block/genes-block.component';
-import { RegionsFilterState } from 'app/regions-filter/regions-filter.state';
-import { GenomicScoresBlockState } from 'app/genomic-scores-block/genomic-scores-block.state';
+// import { RegionsFilterState } from 'app/regions-filter/regions-filter.state';
 import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
 import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-filters-block.component';
-import { UniqueFamilyVariantsFilterState } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
 import { ErrorsState, ErrorsModel } from '../common/errors.state';
 import { filter, switchMap, take } from 'rxjs/operators';
 // import { StudyFiltersState } from 'app/study-filters/study-filters.state';

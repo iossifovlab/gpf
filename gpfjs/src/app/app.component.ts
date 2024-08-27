@@ -6,9 +6,8 @@ import { switchMap, take } from 'rxjs/operators';
 import { GeneProfilesService } from './gene-profiles-block/gene-profiles.service';
 import { GeneProfilesSingleViewConfig } from './gene-profiles-single-view/gene-profiles-single-view';
 import { NgbConfig } from '@ng-bootstrap/ng-bootstrap';
-import { Store } from '@ngxs/store';
-import { Store as Store1 } from '@ngrx/store';
-import { DatasetModel, selectDatasetId } from './datasets/datasets.state';
+import { Store } from '@ngrx/store';
+import { selectDatasetId } from './datasets/datasets.state';
 
 @Component({
   selector: 'gpf-root',
@@ -24,7 +23,7 @@ export class AppComponent implements OnInit {
 
   @HostListener('window:keydown.s')
   public printState(): void {
-    this.store1.pipe(take(1)).subscribe(state => {
+    this.store.pipe(take(1)).subscribe(state => {
       console.log(state);
     });
   }
@@ -45,7 +44,6 @@ export class AppComponent implements OnInit {
     private usersService: UsersService,
     private ngbConfig: NgbConfig,
     protected store: Store,
-    protected store1: Store1,
   ) {
     ngbConfig.animation = false;
   }
@@ -56,18 +54,10 @@ export class AppComponent implements OnInit {
         switchMap(() => this.usersService.logout()),
         switchMap(() => this.usersService.getUserInfo()),
       ).subscribe();
-    this.store.select((state: { datasetState: DatasetModel}) => state.datasetState)
-      .subscribe(datasetState => {
-        this.selectedDatasetId = datasetState.selectedDatasetId;
-      });
 
-    // this.store1.select(selectDatasetId).subscribe(datasetId => {
-    //   this.selectedDatasetId = datasetId;
-
-    //   console.log(this.selectedDatasetId)
-    //   if (this.datasetNode.dataset.id === this.selectedDatasetId) {
-    //     this.setExpandability();
-    //   }
+    this.store.select(selectDatasetId).subscribe(datasetId => {
+      this.selectedDatasetId = datasetId;
+    });
 
     this.geneProfilesService.getConfig().subscribe(res => {
       this.geneProfilesConfig = res;

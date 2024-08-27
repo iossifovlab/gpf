@@ -1,31 +1,32 @@
 import { RegionsFilter } from './regions-filter';
 import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
-import { Store } from '@ngxs/store';
-import { RegionsFilterModel, RegionsFilterState, SetRegionsFilter } from './regions-filter.state';
+import { Store } from '@ngrx/store';
+import { selectRegionsFilters, setRegionsFilters } from './regions-filter.state';
 import { ValidateNested } from 'class-validator';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { take } from 'rxjs';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-regions-filter',
   templateUrl: './regions-filter.component.html',
 })
-export class RegionsFilterComponent extends StatefulComponent implements OnInit {
+export class RegionsFilterComponent extends StatefulComponentNgRx implements OnInit {
   @Input() public genome = '';
   @ValidateNested() public regionsFilter = new RegionsFilter();
   @ViewChild('textArea') private textArea: ElementRef;
 
   public constructor(protected store: Store) {
-    super(store, RegionsFilterState, 'regionsFilter');
+    super(store, 'regionsFilter', selectRegionsFilters);
   }
 
   public ngOnInit(): void {
     super.ngOnInit();
     this.focusTextInputArea();
     this.regionsFilter.genome = this.genome;
-    this.store.selectOnce((state: { regionsFiltersState: RegionsFilterModel}) => state.regionsFiltersState)
-      .subscribe(state => {
-        this.setRegionsFilter(state.regionsFilters.join('\n'));
-      });
+    // this.store.select(selectRegionsFilters).pipe(take(1)).subscribe((regionsFilters: string[]) => {
+    //   this.setRegionsFilter(regionsFilters.join('\n'));
+    // });
   }
 
   public setRegionsFilter(regionsFilter: string): void {
@@ -34,7 +35,7 @@ export class RegionsFilterComponent extends StatefulComponent implements OnInit 
       .map(s => s.replace(/[,]/g, ''))
       .filter(s => s !== '');
     this.regionsFilter.regionsFilter = regionsFilter;
-    this.store.dispatch(new SetRegionsFilter(result));
+    this.store.dispatch(setRegionsFilters({regionsFilter: cloneDeep(result)}));
   }
 
   private async waitForTextInputAreaToLoad(): Promise<void> {

@@ -78,7 +78,7 @@ import { VariantReportsService } from './variant-reports/variant-reports.service
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
 import { GenomicScoresComponent } from './genomic-scores/genomic-scores.component';
 import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component';
-import { GenomicScoresBlockState } from './genomic-scores-block/genomic-scores-block.state';
+import { genomicScoresReducer } from './genomic-scores-block/genomic-scores-block.state';
 import { GenomicScoresBlockService } from './genomic-scores-block/genomic-scores-block.service';
 import { MarkdownModule } from 'ngx-markdown';
 import { UserManagementComponent } from './user-management/user-management.component';
@@ -129,7 +129,6 @@ import { NgxsModule } from '@ngxs/store';
 import { NgxsResetPluginModule } from 'ngxs-reset-plugin';
 import { variantTypesReducer } from './variant-types/variant-types.state';
 import { effectTypesReducer } from './effect-types/effect-types.state';
-import { RegionsFilterState } from './regions-filter/regions-filter.state';
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox-list.component';
 import { ErrorsState } from './common/errors.state';
 import { toolPageLinks } from './datasets/datasets';
@@ -143,7 +142,6 @@ import { GeneProfilesTableComponent } from './gene-profiles-table/gene-profiles-
 import { GeneProfileSingleViewWrapperComponent } from './gene-profiles-single-view-wrapper/gene-profiles-single-view-wrapper.component';
 import { TruncatePipe } from './utils/truncate.pipe';
 import { UniqueFamilyVariantsFilterComponent } from './unique-family-variants-filter/unique-family-variants-filter.component';
-import { UniqueFamilyVariantsFilterState } from './unique-family-variants-filter/unique-family-variants-filter.state';
 import { AngularMarkdownEditorModule } from 'angular-markdown-editor';
 import { PedigreeChartComponent } from './pedigree-chart/pedigree-chart.component';
 import { PedigreeChartMemberComponent } from './pedigree-chart/pedigree-chart-member.component';
@@ -178,7 +176,6 @@ import { familyTagsReducer } from './family-tags/family-tags.state';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
 import { datasetIdReducer, DatasetState } from './datasets/datasets.state';
-
 import { StoreModule } from '@ngrx/store';
 import { errorsReducer } from './common/errors_ngrx.state';
 import { familyIdsReducer } from './family-ids/family-ids.state';
@@ -192,6 +189,8 @@ import { geneSymbolsReducer } from './gene-symbols/gene-symbols.state';
 import { presentInParentReducer } from './present-in-parent/present-in-parent.state';
 import { pedigreeSelectorReducer } from './pedigree-selector/pedigree-selector.state';
 import { geneProfilesReducer } from './gene-profiles-table/gene-profiles-table.state';
+import { regionsFiltersReducer } from './regions-filter/regions-filter.state';
+import { uniqueFamilyVariantsFilterReducer } from './unique-family-variants-filter/unique-family-variants-filter.state';
 
 const appRoutes: Routes = [
   {
@@ -430,9 +429,10 @@ const appRoutes: Routes = [
     NgMultiSelectDropDownModule.forRoot(),
     NgxsModule.forRoot([
       InheritancetypesState,
-      RegionsFilterState, StudyTypesState, FamilyTypeFilterState,
-      GenomicScoresBlockState,
-      UniqueFamilyVariantsFilterState, ErrorsState, DatasetState
+      StudyTypesState, FamilyTypeFilterState,
+      ErrorsState, DatasetState,
+      StudyTypesState, FamilyTypeFilterState,
+      ErrorsState, DatasetState
     ], {compatibility: { strictContentSecurityPolicy: true }}
     ),
     NgxsResetPluginModule.forRoot(),
@@ -464,7 +464,10 @@ const appRoutes: Routes = [
       presentInParent: presentInParentReducer,
       phenoToolMeasure: phenoToolMeasureReducer,
       pedigreeSelector: pedigreeSelectorReducer,
-      geneProfiles: geneProfilesReducer
+      geneProfiles: geneProfilesReducer,
+      regionsFilter: regionsFiltersReducer,
+      genomicScores: genomicScoresReducer,
+      uniqueFamilyVariantsFilter: uniqueFamilyVariantsFilterReducer
     }),
   ],
   providers: [

@@ -9,11 +9,12 @@ import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
-import { Store } from '@ngxs/store';
+import { Store } from '@ngrx/store';
 // import { SetFamilyTags } from 'app/family-tags/family-tags.state';
 import { Router } from '@angular/router';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { DatasetModel, selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { setFamilyTags } from 'app/family-tags/family-tags.state';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -68,9 +69,15 @@ export class VariantReportsComponent implements OnInit {
     private router: Router,
     private datasetsService: DatasetsService,
   ) {
-    router.events.subscribe(() => {
-      // this.store.dispatch(new SetFamilyTags([], [], true));
-    });
+    // router.events.subscribe(() => {
+    //   this.store.dispatch(
+    //     setFamilyTags({
+    //       selectedFamilyTags: [],
+    //       deselectedFamilyTags: [],
+    //       tagIntersection: true,
+    //     })
+    //   );
+    // });
   }
 
   @HostListener('window:resize')
@@ -79,9 +86,9 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public ngOnInit(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => {
-        this.selectedDatasetId = state.selectedDatasetId;
+    this.store.select(selectDatasetId).pipe(
+      switchMap(datasetId => {
+        this.selectedDatasetId = datasetId;
         return this.variantReportsService.getVariantReport(this.selectedDatasetId);
       }),
       take(1)

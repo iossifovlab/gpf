@@ -3,7 +3,6 @@ import { ContinuousMeasure } from '../measures/measures';
 import { ContinuousFilterState } from '../person-filters/person-filters';
 import { PersonFilter } from '../datasets/datasets';
 import { Store } from '@ngrx/store';
-import { StatefulComponent } from 'app/common/stateful-component';
 // import { PersonFiltersState } from 'app/person-filters/person-filters.state';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
 import { selectPersonFilters } from 'app/person-filters/person-filters.state';

@@ -10,7 +10,6 @@ import { Observable, of } from 'rxjs';
 
 import { GenomicScoresBlockComponent } from './genomic-scores-block.component';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
-import { GenomicScoresBlockState } from './genomic-scores-block.state';
 import { GenomicScores } from './genomic-scores-block';
 import { GenomicScoresComponent } from 'app/genomic-scores/genomic-scores.component';
 import { GenomicScoreState, GenomicScoresState } from 'app/genomic-scores/genomic-scores-store';
@@ -53,7 +52,6 @@ describe('GenomicScoresBlockComponent', () => {
         NgbModule,
         FormsModule,
         MarkdownModule,
-        NgxsModule.forRoot([GenomicScoresBlockState], {developmentMode: true}),
       ],
       providers: [
         { provide: GenomicScoresBlockService, useClass: MockGenomicScoresBlockService },

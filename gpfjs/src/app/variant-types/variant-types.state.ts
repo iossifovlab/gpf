@@ -1,5 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
-export const initialState: string[] = [];
+export const initialState = [];
 
 export const selectVariantTypes = createFeatureSelector<string[]>('variantTypes');
 
@@ -9,11 +9,11 @@ export const setVariantTypes = createAction(
 );
 
 export const resetVariantTypes = createAction(
-  '[Genotype] Reset variant types'
+  '[Genotype] Reset family ids'
 );
 
 export const variantTypesReducer = createReducer(
   initialState,
-  on(setVariantTypes, (state: string[], {variantTypes}) => [...variantTypes]),
-  on(resetVariantTypes, state => [...initialState]),
+  on(setVariantTypes, (state, {variantTypes}) => [...variantTypes]),
+  on(resetVariantTypes, state => []),
 );

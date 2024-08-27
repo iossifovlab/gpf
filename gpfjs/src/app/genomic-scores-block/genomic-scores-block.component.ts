@@ -3,19 +3,20 @@ import { Component, OnInit } from '@angular/core';
 import { GenomicScoreState, GenomicScoresState } from '../genomic-scores/genomic-scores-store';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
 import { GenomicScores } from './genomic-scores-block';
-import { Store} from '@ngxs/store';
-import { SetGenomicScores, GenomicScoresBlockState } from './genomic-scores-block.state';
+import { Store} from '@ngrx/store';
+import { selectGenomicScores, setGenomicScores } from './genomic-scores-block.state';
 import { combineLatest, of } from 'rxjs';
 import { switchMap, take } from 'rxjs/operators';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { ValidateNested } from 'class-validator';
+import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
 
 @Component({
   selector: 'gpf-genomic-scores-block',
   templateUrl: './genomic-scores-block.component.html',
   styleUrls: ['./genomic-scores-block.component.css'],
 })
-export class GenomicScoresBlockComponent extends StatefulComponent implements OnInit {
+export class GenomicScoresBlockComponent extends StatefulComponentNgRx implements OnInit {
   @ValidateNested()
   public genomicScoresState = new GenomicScoresState();
   public genomicScoresArray: GenomicScores[];
@@ -24,7 +25,7 @@ export class GenomicScoresBlockComponent extends StatefulComponent implements On
     protected store: Store,
     private genomicScoresBlockService: GenomicScoresBlockService,
   ) {
-    super(store, GenomicScoresBlockState, 'genomicScores');
+    super(store, 'genomicScores', selectGenomicScores);
   }
 
   public ngOnInit(): void {
@@ -33,17 +34,17 @@ export class GenomicScoresBlockComponent extends StatefulComponent implements On
       take(1),
       switchMap(genomicScores => combineLatest(
         of(genomicScores),
-        this.store.selectOnce(state => state.genomicScoresBlockState)
+        this.store.select(selectGenomicScores)
       ))
-    ).subscribe(([genomicScores, state]) => {
+    ).pipe(take(1)).subscribe(([genomicScores, genomicScoresState]) => {
       this.genomicScoresArray = genomicScores;
-      if (state.genomicScores.length > 0) {
+      if (genomicScoresState.length > 0) {
         // restore state
-        for (const score of state.genomicScores) {
+        for (const score of genomicScoresState) {
           const genomicScore = new GenomicScoreState();
-          genomicScore.score = this.genomicScoresArray.find(el => el.score === score.metric);
-          genomicScore.rangeStart = score.rangeStart;
-          genomicScore.rangeEnd = score.rangeEnd;
+          genomicScore.score = this.genomicScoresArray.find(el => el.score === score['metric']);
+          genomicScore.rangeStart = score['rangeStart'];
+          genomicScore.rangeEnd = score['rangeEnd'];
           genomicScore.domainMin = genomicScore.score.bins[0];
           genomicScore.domainMax =
             genomicScore.score.bins[genomicScore.score.bins.length - 1];
@@ -73,6 +74,7 @@ export class GenomicScoresBlockComponent extends StatefulComponent implements On
         rangeStart: el.rangeStart,
         rangeEnd: el.rangeEnd
       }));
-    this.store.dispatch(new SetGenomicScores(newState));
+
+    this.store.dispatch(setGenomicScores({genomicScores: newState}));
   }
 }

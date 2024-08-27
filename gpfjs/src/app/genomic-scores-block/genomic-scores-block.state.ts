@@ -1,29 +1,19 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+export const initialState = [];
 
-export class SetGenomicScores {
-  public static readonly type = '[Genotype] Set genomicScores values';
-  public constructor(
-    public genomicScores: object[]
-  ) {}
-}
+export const selectGenomicScores = createFeatureSelector<object[]>('genomicScores');
 
-export interface GenomicScoresBlockModel {
-  genomicScores: object[];
-}
+export const setGenomicScores = createAction(
+  '[Genotype] Set genomic scores',
+  props<{ genomicScores: object[] }>()
+);
 
-@State<GenomicScoresBlockModel>({
-  name: 'genomicScoresBlockState',
-  defaults: {
-    genomicScores: []
-  },
-})
-@Injectable()
-export class GenomicScoresBlockState {
-  @Action(SetGenomicScores)
-  public setGenomicScores(ctx: StateContext<GenomicScoresBlockModel>, action: SetGenomicScores): void {
-    ctx.patchState({
-      genomicScores: [...action.genomicScores]
-    });
-  }
-}
+export const resetGenomicScores = createAction(
+  '[Genotype] Reset genomic scores'
+);
+
+export const genomicScoresReducer = createReducer(
+  initialState,
+  on(setGenomicScores, (state, {genomicScores}) => genomicScores),
+  on(resetGenomicScores, state => []),
+);
