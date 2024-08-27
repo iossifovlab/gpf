@@ -18,7 +18,6 @@ import { SetGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.
 // import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { LGDS } from 'app/effect-types/effect-types';
-import { GeneProfilesModel, SetGeneProfilesTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { DatasetModel } from 'app/datasets/datasets.state';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
 import { setVariantTypes } from 'app/variant-types/variant-types.state';
@@ -26,6 +25,7 @@ import { setGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { setPresentInChild } from 'app/present-in-child/present-in-child.state';
 import { setPresentInParent } from 'app/present-in-parent/present-in-parent.state';
 import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
+import { selectGeneProfiles, setGeneProfilesOpenedTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -260,16 +260,14 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
     let tabs = [] as string[];
 
-    this.store.selectOnce(
-      (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
-      .subscribe(state => {
-        tabs = state.openedTabs;
-      });
+    this.store1.select(selectGeneProfiles).pipe(take(1)).subscribe(state => {
+      tabs = state.openedTabs;
+    });
 
     const index = tabs.indexOf(this.geneSymbol, 0);
     tabs.splice(index, 1);
 
-    this.store.dispatch(new SetGeneProfilesTabs(tabs));
+    this.store.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
     this.router.navigate(['/gene-profiles']);
   }
 }

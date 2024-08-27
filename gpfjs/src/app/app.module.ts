@@ -175,7 +175,6 @@ import { AboutComponent } from './about/about.component';
 import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.component';
 import { FamilyTagsComponent } from './family-tags/family-tags.component';
 import { familyTagsReducer } from './family-tags/family-tags.state';
-import { GeneProfilesState } from './gene-profiles-table/gene-profiles-table.state';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
 import { datasetIdReducer, DatasetState } from './datasets/datasets.state';
@@ -192,6 +191,7 @@ import { geneScoresReducer } from './gene-scores/gene-scores.state';
 import { geneSymbolsReducer } from './gene-symbols/gene-symbols.state';
 import { presentInParentReducer } from './present-in-parent/present-in-parent.state';
 import { pedigreeSelectorReducer } from './pedigree-selector/pedigree-selector.state';
+import { geneProfilesReducer } from './gene-profiles-table/gene-profiles-table.state';
 
 const appRoutes: Routes = [
   {
@@ -432,7 +432,7 @@ const appRoutes: Routes = [
       InheritancetypesState,
       RegionsFilterState, StudyTypesState, FamilyTypeFilterState,
       GenomicScoresBlockState,
-      UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState, DatasetState
+      UniqueFamilyVariantsFilterState, ErrorsState, DatasetState
     ], {compatibility: { strictContentSecurityPolicy: true }}
     ),
     NgxsResetPluginModule.forRoot(),
@@ -463,7 +463,8 @@ const appRoutes: Routes = [
       presentInChild: presentInChildReducer,
       presentInParent: presentInParentReducer,
       phenoToolMeasure: phenoToolMeasureReducer,
-      pedigreeSelector: pedigreeSelectorReducer
+      pedigreeSelector: pedigreeSelectorReducer,
+      geneProfiles: geneProfilesReducer
     }),
   ],
   providers: [
