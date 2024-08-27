@@ -4,7 +4,7 @@ import { QueryService } from '../query/query.service';
 import { BrowserQueryFilter } from 'app/genotype-browser/genotype-browser';
 import { Store } from '@ngxs/store';
 import { Store as Store1 } from '@ngrx/store';
-import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
+import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { take } from 'rxjs/operators';
 import { cloneDeep } from 'lodash';
@@ -37,15 +37,21 @@ export class EnrichmentTableRowComponent {
     this.store1.dispatch(setEffectTypes({effectTypes: browserQueryFilter.effectTypes}));
     this.store1.dispatch(setGenders({genders: browserQueryFilter.gender}));
     this.store1.dispatch(setVariantTypes({variantTypes: browserQueryFilter.variantTypes}));
+    this.store1.dispatch(setPedigreeSelector({
+      pedigreeSelector: {
+        id: browserQueryFilter.personSetCollection.id,
+        checkedValues: browserQueryFilter.personSetCollection.checkedValues
+      }
+    }));
 
 
     this.store.dispatch([
       // new SetEffectTypes(new Set(browserQueryFilter['effectTypes'])),
       // new SetGender(browserQueryFilter['gender']),
-      new SetPedigreeSelector(
-        browserQueryFilter.personSetCollection.id,
-        new Set(browserQueryFilter.personSetCollection.checkedValues)
-      ),
+      // new SetPedigreeSelector(
+      //   browserQueryFilter.personSetCollection.id,
+      //   new Set(browserQueryFilter.personSetCollection.checkedValues)
+      // ),
       new SetStudyTypes(new Set(browserQueryFilter['studyTypes'])),
       // new SetVariantTypes(new Set(browserQueryFilter['variantTypes'])),
     ]);

@@ -15,7 +15,7 @@ export const selectPhenoToolMeasure = createFeatureSelector<PhenoToolMeasure>('p
 
 export const setPhenoToolMeasure = createAction(
   '[Phenotype] Set phenoToolMeasure values',
-  props<PhenoToolMeasure>()
+  props<{ phenoToolMeasure: PhenoToolMeasure }>()
 );
 
 export const resetPhenoToolMeasure = createAction(
@@ -24,9 +24,6 @@ export const resetPhenoToolMeasure = createAction(
 
 export const phenoToolMeasureReducer = createReducer(
   initialState,
-  on(setPhenoToolMeasure, (state, { measureId, normalizeBy }) => ({
-    measureId: measureId,
-    normalizeBy: [...normalizeBy],
-  })),
+  on(setPhenoToolMeasure, (state, { phenoToolMeasure }) => cloneDeep(phenoToolMeasure)),
   on(resetPhenoToolMeasure, state => cloneDeep(initialState)),
 );

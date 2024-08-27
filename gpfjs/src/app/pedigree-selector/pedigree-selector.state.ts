@@ -1,29 +1,30 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { cloneDeep } from 'lodash';
 
-export class SetPedigreeSelector {
-  public static readonly type = '[Genotype] Set pedigreeSelector';
-  public constructor(
-    public id: string, public checkedValues: Set<string>,
-  ) {}
-}
-
-export interface PedigreeSelectorModel {
+export interface PedigreeSelector {
   id: string;
   checkedValues: string[];
 }
 
-@State<PedigreeSelectorModel>({
-  name: 'pedigreeSelectorState',
-  defaults: {} as any,
-})
-@Injectable()
-export class PedigreeSelectorState {
-  @Action(SetPedigreeSelector)
-  public setPedigreeSelector(ctx: StateContext<PedigreeSelectorModel>, action: SetPedigreeSelector): void {
-    ctx.patchState({
-      id: action.id,
-      checkedValues: [...action.checkedValues],
-    });
-  }
-}
+export const initialState: PedigreeSelector = {
+  id: '',
+  checkedValues: []
+};
+
+export const selectPedigreeSelector =
+  createFeatureSelector<PedigreeSelector>('pedigreeSelector');
+
+export const setPedigreeSelector = createAction(
+  '[Genotype] Set pedigreeSelector',
+  props<{ pedigreeSelector: PedigreeSelector}>()
+);
+
+export const resetPedigreeSelector = createAction(
+  '[Genotype] Reset pedigreeSelector'
+);
+
+export const pedigreeSelectorReducer = createReducer(
+  initialState,
+  on(setPedigreeSelector, (state: PedigreeSelector, { pedigreeSelector }) => cloneDeep(pedigreeSelector)),
+  on(resetPedigreeSelector, state => cloneDeep(initialState))
+);

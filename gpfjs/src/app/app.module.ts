@@ -19,7 +19,6 @@ import { QueryService } from './query/query.service';
 import { GpfTableModule } from './table/table.module';
 import { DatasetsComponent } from './datasets/datasets.component';
 import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector.component';
-import { PedigreeSelectorState } from './pedigree-selector/pedigree-selector.state';
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 import { GenesBlockComponent } from './genes-block/genes-block.component';
 import { GeneSymbolsComponent } from './gene-symbols/gene-symbols.component';
@@ -192,6 +191,7 @@ import { geneSetsReducer } from './gene-sets/gene-sets.state';
 import { geneScoresReducer } from './gene-scores/gene-scores.state';
 import { geneSymbolsReducer } from './gene-symbols/gene-symbols.state';
 import { presentInParentReducer } from './present-in-parent/present-in-parent.state';
+import { pedigreeSelectorReducer } from './pedigree-selector/pedigree-selector.state';
 
 const appRoutes: Routes = [
   {
@@ -430,7 +430,7 @@ const appRoutes: Routes = [
     NgMultiSelectDropDownModule.forRoot(),
     NgxsModule.forRoot([
       InheritancetypesState,
-      RegionsFilterState, StudyTypesState, PedigreeSelectorState, FamilyTypeFilterState,
+      RegionsFilterState, StudyTypesState, FamilyTypeFilterState,
       GenomicScoresBlockState,
       UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState, DatasetState
     ], {compatibility: { strictContentSecurityPolicy: true }}
@@ -462,7 +462,8 @@ const appRoutes: Routes = [
       geneSymbols: geneSymbolsReducer,
       presentInChild: presentInChildReducer,
       presentInParent: presentInParentReducer,
-      phenoToolMeasure: phenoToolMeasureReducer
+      phenoToolMeasure: phenoToolMeasureReducer,
+      pedigreeSelector: pedigreeSelectorReducer
     }),
   ],
   providers: [

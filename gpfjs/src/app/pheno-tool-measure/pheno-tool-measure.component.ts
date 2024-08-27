@@ -12,7 +12,6 @@ import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
-import { cloneDeep } from 'lodash';
 
 interface Regression {
   display_name: string;
@@ -118,8 +117,10 @@ export class PhenoToolMeasureComponent extends StatefulComponentNgRx implements 
 
   public updateState(): void {
     this.store.dispatch(setPhenoToolMeasure({
-      measureId: this.selectedMeasure?.name,
-      normalizeBy: cloneDeep(this.normalizeBy)
+      phenoToolMeasure: {
+        measureId: this.selectedMeasure?.name,
+        normalizeBy: this.normalizeBy
+      }
     }));
   }
 

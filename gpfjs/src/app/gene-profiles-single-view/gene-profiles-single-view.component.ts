@@ -15,7 +15,7 @@ import { Store as Store1 } from '@ngrx/store';
 import { QueryService } from 'app/query/query.service';
 import { GenomicScore } from 'app/genotype-browser/genotype-browser';
 import { SetGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
-import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
+// import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { LGDS } from 'app/effect-types/effect-types';
 import { GeneProfilesModel, SetGeneProfilesTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
@@ -25,6 +25,7 @@ import { setVariantTypes } from 'app/variant-types/variant-types.state';
 import { setGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { setPresentInChild } from 'app/present-in-child/present-in-child.state';
 import { setPresentInParent } from 'app/present-in-parent/present-in-parent.state';
+import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -218,6 +219,13 @@ export class GeneProfileSingleViewComponent implements OnInit {
       rarityIntervalStart: 0,
       rarityIntervalEnd: 1
     }}));
+    store1.dispatch(setPedigreeSelector({
+      pedigreeSelector: {
+        id: personSet.collectionId,
+        checkedValues: [personSet.id]
+      }
+    }));
+
 
     store.dispatch([
       // new SetGeneSymbols([geneSymbol]),
@@ -227,7 +235,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
       new SetGenomicScores(genomicScores),
       // new SetPresentInChildValues(new Set(presentInChildValues)),
       // new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),
-      new SetPedigreeSelector(personSet.collectionId, new Set([personSet.id])),
+      // new SetPedigreeSelector(personSet.collectionId, new Set([personSet.id])),
     ]);
 
 
