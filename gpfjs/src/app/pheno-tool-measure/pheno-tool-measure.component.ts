@@ -4,14 +4,15 @@ import { combineLatest, of, ReplaySubject } from 'rxjs';
 import { ContinuousMeasure } from '../measures/measures';
 import { MeasuresService } from '../measures/measures.service';
 import { IsNotEmpty } from 'class-validator';
-import { Store } from '@ngxs/store';
-import { SetPhenoToolMeasure, PhenoToolMeasureState, PhenoToolMeasureModel } from './pheno-tool-measure.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { Store } from '@ngrx/store';
+import { selectPhenoToolMeasure, PhenoToolMeasure, setPhenoToolMeasure } from './pheno-tool-measure.state';
 import { switchMap, take } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { cloneDeep } from 'lodash';
 
 interface Regression {
   display_name: string;
@@ -24,7 +25,7 @@ interface Regression {
   templateUrl: './pheno-tool-measure.component.html',
   styleUrls: ['./pheno-tool-measure.component.css'],
 })
-export class PhenoToolMeasureComponent extends StatefulComponent implements OnInit {
+export class PhenoToolMeasureComponent extends StatefulComponentNgRx implements OnInit {
   @ViewChildren('checkboxes') public inputs: QueryList<ElementRef>;
 
   @IsNotEmpty({message: 'Please select a measure.'})
@@ -44,14 +45,15 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
     private measuresService: MeasuresService,
     private datasetsService: DatasetsService
   ) {
-    super(store, PhenoToolMeasureState, 'phenoToolMeasure');
+    super(store, 'phenoToolMeasure', selectPhenoToolMeasure);
   }
 
   public ngOnInit(): void {
     super.ngOnInit();
 
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId)),
+    this.store.select(selectDatasetId).pipe(
+      take(1),
+      switchMap(selectedDatasetIdState => this.datasetsService.getDataset(selectedDatasetIdState)),
       switchMap(dataset => {
         if (!dataset) {
           return;
@@ -76,14 +78,15 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
     });
 
 
-    combineLatest([this.store.selectOnce(PhenoToolMeasureState), this.measuresLoaded$]).pipe(take(1))
-      .subscribe(async([state, measures]: [PhenoToolMeasureModel, ContinuousMeasure[]]) => {
-        if (state.measureId) {
-          this.selectedMeasure = measures.find(m => m.name === state.measureId);
+    combineLatest([this.store.select(selectPhenoToolMeasure), this.measuresLoaded$]).pipe(take(1))
+      .subscribe(async([selectPhenoToolMeasureState, measures]: [PhenoToolMeasure, ContinuousMeasure[]]) => {
+        if (selectPhenoToolMeasureState.measureId) {
+          this.selectedMeasure = measures.find(m => m.name === selectPhenoToolMeasureState.measureId);
           await this.waitForSelectorComponent();
           this.measureSelectorComponent.selectMeasure(this.selectedMeasure, false);
         }
-        this.normalizeBy = state.normalizeBy.length ? state.normalizeBy as Regression[] : [];
+        this.normalizeBy = selectPhenoToolMeasureState.normalizeBy.length
+          ? selectPhenoToolMeasureState.normalizeBy as Regression[] : [];
         this.updateState();
       });
   }
@@ -114,9 +117,10 @@ export class PhenoToolMeasureComponent extends StatefulComponent implements OnIn
   }
 
   public updateState(): void {
-    this.store.dispatch(new SetPhenoToolMeasure(
-      this.selectedMeasure?.name, this.normalizeBy,
-    ));
+    this.store.dispatch(setPhenoToolMeasure({
+      measureId: this.selectedMeasure?.name,
+      normalizeBy: cloneDeep(this.normalizeBy)
+    }));
   }
 
   public measuresUpdate(measures: Array<ContinuousMeasure>): void {

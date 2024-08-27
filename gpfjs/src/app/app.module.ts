@@ -61,7 +61,7 @@ import { NumberWithExpPipe } from './utils/number-with-exp.pipe';
 import { PhenoToolComponent } from './pheno-tool/pheno-tool.component';
 import { PhenoMeasureSelectorComponent } from './pheno-measure-selector/pheno-measure-selector.component';
 import { PhenoToolMeasureComponent } from './pheno-tool-measure/pheno-tool-measure.component';
-import { PhenoToolMeasureState } from './pheno-tool-measure/pheno-tool-measure.state';
+import { phenoToolMeasureReducer } from './pheno-tool-measure/pheno-tool-measure.state';
 import { PhenoToolGenotypeBlockComponent } from './pheno-tool-genotype-block/pheno-tool-genotype-block.component';
 import { PhenoToolService } from './pheno-tool/pheno-tool.service';
 import { PhenoToolResultsChartComponent } from './pheno-tool-results-chart/pheno-tool-results-chart.component';
@@ -431,7 +431,7 @@ const appRoutes: Routes = [
     NgxsModule.forRoot([
       InheritancetypesState,
       RegionsFilterState, StudyTypesState, PedigreeSelectorState, FamilyTypeFilterState,
-      GenomicScoresBlockState, PhenoToolMeasureState,
+      GenomicScoresBlockState,
       UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState, DatasetState
     ], {compatibility: { strictContentSecurityPolicy: true }}
     ),
@@ -462,6 +462,7 @@ const appRoutes: Routes = [
       geneSymbols: geneSymbolsReducer,
       presentInChild: presentInChildReducer,
       presentInParent: presentInParentReducer,
+      phenoToolMeasure: phenoToolMeasureReducer
     }),
   ],
   providers: [
