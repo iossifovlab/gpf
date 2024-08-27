@@ -41,8 +41,12 @@ export const setDatasetId = createAction(
   props<{ datasetId: string }>()
 );
 
+export const resetDatasetId = createAction(
+  '[Errors] Reset dataset id',
+);
 
 export const datasetIdReducer = createReducer(
   initialState,
   on(setDatasetId, (state, {datasetId}) => datasetId),
+  on(resetDatasetId, (state,) => initialState),
 );

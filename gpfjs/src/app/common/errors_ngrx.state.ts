@@ -1,4 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { cloneDeep } from 'lodash';
 export const initialState = {};
 
 export const selectErrors = createFeatureSelector<object>('errors');
@@ -13,6 +14,9 @@ export const resetErrors = createAction(
   props<{ componentId: string }>()
 );
 
+export const resetAllErrors = createAction(
+  '[Errors] Reset all errors',
+);
 
 export const errorsReducer = createReducer(
   initialState,
@@ -21,9 +25,5 @@ export const errorsReducer = createReducer(
     newState[componentId] = errors;
     return newState;
   }),
-  on(resetErrors, (state, {componentId}) => {
-    const newState = {...state};
-    delete newState[componentId];
-    return newState;
-  }),
+  on(resetAllErrors, (state) => cloneDeep(initialState)),
 );

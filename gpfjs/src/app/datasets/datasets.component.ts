@@ -5,14 +5,25 @@ import { Subscription, combineLatest, of, switchMap, take } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
-import { Store } from '@ngxs/store';
-import { Store as Store1 } from '@ngrx/store';
-import { StateResetAll } from 'ngxs-reset-plugin';
-import { GeneProfilesState } from 'app/gene-profiles-table/gene-profiles-table.state';
+import { Store } from '@ngrx/store';
 // import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
-import { selectDatasetId, setDatasetId } from './datasets.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { resetDatasetId, selectDatasetId, setDatasetId } from './datasets.state';
 import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { resetAllErrors, resetErrors } from 'app/common/errors_ngrx.state';
+import { resetFamilyIds } from 'app/family-ids/family-ids.state';
+import { resetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
+import { resetPersonIds } from 'app/person-ids/person-ids.state';
+import { resetStudyFilters } from 'app/study-filters/study-filters.state';
+import { resetEffectTypes } from 'app/effect-types/effect-types.state';
+import { resetGenders } from 'app/gender/genders.state';
+import { resetVariantTypes } from 'app/variant-types/variant-types.state';
+import { resetInheritanceTypes } from 'app/inheritancetypes/inheritancetypes.state';
+import { resetEnrichmentModels } from 'app/enrichment-models/enrichment-models.state';
+import { resetGeneScoresValues } from 'app/gene-scores/gene-scores.state';
+import { resetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { resetPresentInChild } from 'app/present-in-child/present-in-child.state';
+import { resetPresentInParent } from 'app/present-in-parent/present-in-parent.state';
+import { resetPhenoToolMeasure } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 
 @Component({
   selector: 'gpf-datasets',
@@ -35,9 +46,9 @@ export class DatasetsComponent extends StatefulComponentNgRx implements OnInit, 
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
     private router: Router,
-    protected store1: Store1,
+    protected store: Store,
   ) {
-    super(store1, 'dataset', selectDatasetId);
+    super(store, 'dataset', selectDatasetId);
   }
 
   public ngOnInit(): void {
@@ -55,7 +66,7 @@ export class DatasetsComponent extends StatefulComponentNgRx implements OnInit, 
       ).subscribe({
         next: dataset => {
           if (dataset) {
-            this.store1.dispatch(setDatasetId({datasetId: dataset.id}));
+            this.store.dispatch(setDatasetId({datasetId: dataset.id}));
             this.selectedDataset = dataset;
             this.setupSelectedDataset();
           }
@@ -201,7 +212,26 @@ export class DatasetsComponent extends StatefulComponentNgRx implements OnInit, 
     /* In order to have state separation between the dataset tools,
     we clear the state if the previous url is from a different dataset tool */
     if (DatasetsComponent.previousUrl !== url && DatasetsComponent.previousUrl.startsWith('/datasets')) {
-      // this.store.dispatch(new StateResetAll(GeneProfilesState, DatasetNodeState, DatasetState));
+      // Do not reset GeneProfiles DatasetNode, Dataset states
+      this.store.dispatch(resetAllErrors());
+      this.store.dispatch(resetFamilyIds());
+      this.store.dispatch(resetExpandedDatasets());
+      // this.store.dispatch(resetFamilyTags());
+      this.store.dispatch(resetEffectTypes());
+      this.store.dispatch(resetPersonIds());
+      // this.store.dispatch(resetPersonFilters());
+      this.store.dispatch(resetStudyFilters());
+      this.store.dispatch(resetGenders());
+      this.store.dispatch(resetVariantTypes());
+      this.store.dispatch(resetInheritanceTypes());
+      this.store.dispatch(resetEnrichmentModels());
+      // this.store.dispatch(resetGeneSets());
+      this.store.dispatch(resetGeneScoresValues());
+      this.store.dispatch(resetGeneSymbols());
+      this.store.dispatch(resetPresentInChild());
+      this.store.dispatch(resetPresentInParent());
+      this.store.dispatch(resetPhenoToolMeasure());
+      // ...
     }
 
     this.selectedTool = url.split('/').pop();
