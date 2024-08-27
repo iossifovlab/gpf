@@ -16,7 +16,6 @@ import { QueryService } from 'app/query/query.service';
 import { GenomicScore } from 'app/genotype-browser/genotype-browser';
 import { SetGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
-import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
 import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { LGDS } from 'app/effect-types/effect-types';
 import { GeneProfilesModel, SetGeneProfilesTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
@@ -25,6 +24,7 @@ import { setEffectTypes } from 'app/effect-types/effect-types.state';
 import { setVariantTypes } from 'app/variant-types/variant-types.state';
 import { setGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { setPresentInChild } from 'app/present-in-child/present-in-child.state';
+import { setPresentInParent } from 'app/present-in-parent/present-in-parent.state';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -212,6 +212,12 @@ export class GeneProfileSingleViewComponent implements OnInit {
     store1.dispatch(setVariantTypes({variantTypes: statistic['variantTypes']}));
     store1.dispatch(setGeneSymbols({geneSymbols: [geneSymbol]}));
     store1.dispatch(setPresentInChild({presentInChild: presentInChildValues}));
+    store1.dispatch(setPresentInParent({presentInParent: {
+      presentInParent: presentInParent,
+      rarityType: rarityType,
+      rarityIntervalStart: 0,
+      rarityIntervalEnd: 1
+    }}));
 
     store.dispatch([
       // new SetGeneSymbols([geneSymbol]),
@@ -220,7 +226,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
       // new SetVariantTypes(new Set(statistic['variantTypes'])),
       new SetGenomicScores(genomicScores),
       // new SetPresentInChildValues(new Set(presentInChildValues)),
-      new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),
+      // new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),
       new SetPedigreeSelector(personSet.collectionId, new Set([personSet.id])),
     ]);
 

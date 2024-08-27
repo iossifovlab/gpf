@@ -11,7 +11,6 @@ import { GenderComponent } from './gender/gender.component';
 import { PresentInChildComponent } from './present-in-child/present-in-child.component';
 import { presentInChildReducer } from './present-in-child/present-in-child.state';
 import { PresentInParentComponent } from './present-in-parent/present-in-parent.component';
-import { PresentInParentState } from './present-in-parent/present-in-parent.state';
 import { VariantTypesComponent } from './variant-types/variant-types.component';
 import { EffectTypesComponent } from './effect-types/effect-types.component';
 import { EffecttypesColumnComponent } from './effect-types/effect-types-column.component';
@@ -192,6 +191,7 @@ import { enrichmentModelsReducer } from './enrichment-models/enrichment-models.s
 import { geneSetsReducer } from './gene-sets/gene-sets.state';
 import { geneScoresReducer } from './gene-scores/gene-scores.state';
 import { geneSymbolsReducer } from './gene-symbols/gene-symbols.state';
+import { presentInParentReducer } from './present-in-parent/present-in-parent.state';
 
 const appRoutes: Routes = [
   {
@@ -429,7 +429,7 @@ const appRoutes: Routes = [
     }),
     NgMultiSelectDropDownModule.forRoot(),
     NgxsModule.forRoot([
-      InheritancetypesState, PresentInParentState,
+      InheritancetypesState,
       RegionsFilterState, StudyTypesState, PedigreeSelectorState, FamilyTypeFilterState,
       GenomicScoresBlockState, PhenoToolMeasureState,
       UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState, DatasetState
@@ -461,6 +461,7 @@ const appRoutes: Routes = [
       geneScores: geneScoresReducer,
       geneSymbols: geneSymbolsReducer,
       presentInChild: presentInChildReducer,
+      presentInParent: presentInParentReducer,
     }),
   ],
   providers: [
