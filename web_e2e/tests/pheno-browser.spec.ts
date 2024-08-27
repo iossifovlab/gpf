@@ -9,6 +9,8 @@ test.describe('Pheno browser tests', () => {
     await page.goto(utils.instanceUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
     await utils.loginAdmin(page);
+
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
   });
 
 
@@ -17,87 +19,75 @@ test.describe('Pheno browser tests', () => {
     {seachQuery: 'measure 1'}
   ].forEach(data => {
     test(`should filter the right rows when typing "${data.seachQuery}" in the searchbox`, async({ page }) => {
-      await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
-
-      await expect(page.locator('gpf-table .table-row')).toHaveCount(8);
+      await expect(page.locator('.instrument-cell')).toHaveCount(8);
 
       await page.locator('input.form-control').fill(data.seachQuery);
-      await expect(page.locator('gpf-table .table-row')).toHaveCount(1);
+      await expect(page.locator('.instrument-cell')).toHaveCount(1);
     });
   });
 
   test('should filter the right rows when typing "1" in the sarchbox', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
-
-    await expect(page.locator('gpf-table .table-row')).toHaveCount(8);
+    await expect(page.locator('.instrument-cell')).toHaveCount(8);
 
     await page.locator('input.form-control').fill('1');
-    await expect(page.locator('gpf-table .table-row')).toHaveCount(7);
+    await expect(page.locator('.instrument-cell')).toHaveCount(7);
   });
 
   test('should filter the right rows using the instruments dropdown', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
-
-    await expect(page.locator('gpf-table .table-row')).toHaveCount(8);
+    await expect(page.locator('.instrument-cell')).toHaveCount(8);
 
     await page.locator('select.form-control').selectOption('i1');
-    await expect(page.locator('gpf-table .table-row')).toHaveCount(7);
+    await expect(page.locator('.instrument-cell')).toHaveCount(7);
 
     await page.locator('select.form-control').selectOption('pheno_common');
-    await expect(page.locator('gpf-table .table-row')).toHaveCount(1);
+    await expect(page.locator('.instrument-cell')).toHaveCount(1);
 
     await page.locator('select.form-control').selectOption('All instruments');
-    await expect(page.locator('gpf-table .table-row')).toHaveCount(8);
+    await expect(page.locator('.instrument-cell')).toHaveCount(8);
   });
 
   test('should have working table header sorting buttons', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
+    await page.getByText('Instrument', { exact: true }).click();
+    await expect(page.locator('.instrument-cell').nth(0)).toHaveText('pheno_common');
 
-    await page.locator('gpf-table-view-header-cell').nth(0).click();
-    await expect(page.locator('gpf-table-view-cell').nth(0)).toHaveText('pheno_common');
+    await page.getByText('Instrument', { exact: true }).click();
+    await expect(page.locator('.instrument-cell').nth(0)).toHaveText('i1');
 
-    await page.locator('gpf-table-view-header-cell').nth(0).click();
-    await expect(page.locator('gpf-table-view-cell').nth(0)).toHaveText('i1');
+    await page.getByText('Proband Pheno Measure', { exact: true }).click();
+    await expect(page.locator('.measure-name-cell').nth(0)).toHaveText('sample_id');
 
-    await page.locator('gpf-table-view-header-cell').nth(1).click();
-    await expect(page.locator('gpf-table-view-cell').nth(1)).toHaveText('sample_id');
+    await page.getByText('Proband Pheno Measure', { exact: true }).click();
+    await expect(page.locator('.measure-name-cell').nth(0)).toHaveText('age');
 
-    await page.locator('gpf-table-view-header-cell').nth(1).click();
-    await expect(
-      page.locator('gpf-pheno-browser-table > gpf-table .table-row')
-        .locator('gpf-table-view-cell').nth(1)).toHaveText('age');
+    await page.getByText('Proband Pheno Measure', { exact: true }).click();
+    await expect(page.locator('.measure-name-cell').nth(0)).toHaveText('sample_id');
 
-    await page.locator('gpf-table-view-header-cell').nth(1).click();
-    await expect(
-      page.locator('gpf-pheno-browser-table > gpf-table .table-row')
-        .locator('gpf-table-view-cell').nth(1)).toHaveText('sample_id');
+    await page.getByText('Measure Description', { exact: true }).click();
+    await expect(page.locator('.description-cell').nth(2)).toHaveText('The IQ of the individual');
 
-    await page.locator('gpf-table-view-header-cell').nth(2).click();
-    await expect(
-      page.locator('gpf-pheno-browser-table > gpf-table .table-row')
-        .locator('gpf-table-view-cell').nth(2)).toHaveText('The IQ of the individual');
-
-    await page.locator('gpf-table-view-header-cell').nth(2).click();
-    await expect(
-      page.locator('gpf-pheno-browser-table > gpf-table .table-row')
-        .locator('gpf-table-view-cell').nth(2)).toHaveText('');
+    await page.getByText('Measure Description', { exact: true }).click();
+    await expect(page.locator('.description-cell').nth(2)).toHaveText('');
   });
 
   test('should have the correct text values in all rows', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
     const expectedFile = fs.readFileSync(path.join(__dirname + '/../fixtures/pheno-browser/row_values.txt'), 'utf-8');
 
     const rowValues = expectedFile.split(',\n');
 
     await Promise.all(rowValues.map(async(val, i) => {
-      const row = page.locator('gpf-pheno-browser-table > gpf-table .table-row').nth(i);
-      const text = await row.textContent();
-      expect(text).toBe(val.trim());
+      const instrument = await page.locator('.instrument-cell').nth(i).textContent();
+      const measureName = await page.locator('.measure-name-cell').nth(i).textContent();
+      const description = await page.locator('.description-cell').nth(i).textContent();
+      const measureType = await page.locator('.measure-type-cell ').nth(i).textContent();
+      const age = await page.locator('.age').nth(i).textContent();
+      const iq = await page.locator('.iq').nth(i).textContent();
+
+      const row = instrument + measureName + description + measureType + age + iq;
+      expect(row).toBe(val.trim());
     }));
   });
 
   test('should download all instruments and validate whether they are equal to the reference data', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
     await page.waitForSelector('gpf-pheno-browser-table');
 
     let downloadPromise = page.waitForEvent('download');

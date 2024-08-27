@@ -1,8 +1,8 @@
-i1ageThe age of the individual (in months)continuous[68.001,606.229],
-i1iqThe IQ of the individualcontinuous[-1.111e+1,174.290],
+i1ageThe age of the individual (in months)continuous[68.001,606.229]NaNNaNNaNNaN,
+i1iqThe IQ of the individualcontinuous[-1.111e+1,174.290]NaNNaNNaNNaN,
 i1m1Measure 1, a normally distributed continuous measure with a mean of 80continuous[28.877,143.029]0.97110.25120.02990.6413,
 i1m2Measure 2, a normally distributed continuous measure with a mean of 40continuous[17.650,69.721]0.43890.42630.55470.3443,
 i1m3Measure 3, a continuous measure with a normal distribution with mean of 80 for non-affected individuals, and 40 for affected individualscontinuous[20.349,122.832]0.11730.62940.05560.0393,
 i1m4Measure 4, an ordinal measure with a Poisson distribution with an average number of events per interval of 4 for non-affected individuals, and 1 for affected individualscontinuous[0.000,10.000]0.32060.32320.94930.5862,
-i1m5Measure 5, a categorical measure with random distribution of 5 distinct valuescategorical[val1][val2][val3][val4][val5],
-pheno_commonsample_idraw[f1.dad][f1.mom][f1.p1][f1.s1][f10.dad][f10.mom][f10.p1][f10.s1][f10.s2][f11.dad][f11.mom][f11.p1][f11.s1][f11.s2][f12.dad][f12.mom][f12.p1][f12.s1][f13.dad][f13.mom]
+i1m5Measure 5, a categorical measure with random distribution of 5 distinct valuescategorical[val1][val2][val3][val4][val5]NaNNaNNaNNaN,
+pheno_commonsample_idraw[f1.dad][f1.mom][f1.p1][f1.s1][f10.dad][f10.mom][f10.p1][f10.s1][f10.s2][f11.dad][f11.mom][f11.p1][f11.s1][f11.s2][f12.dad][f12.mom][f12.p1][f12.s1][f13.dad][f13.mom]NaNNaNNaNNaN
