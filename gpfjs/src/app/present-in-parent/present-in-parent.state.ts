@@ -23,8 +23,7 @@ export const setPresentInParent = createAction(
 );
 
 export const getPresentInParentRarity = createAction(
-  '[Genotype] Get present in parent with rarity',
-  props<{ presentInParent: PresentInParent }>()
+  '[Genotype] Get present in parent with rarity'
 );
 
 export const resetPresentInParent = createAction(
@@ -36,19 +35,3 @@ export const presentInParentReducer = createReducer(
   on(setPresentInParent, (state: PresentInParent, {presentInParent}) => cloneDeep(presentInParent)),
   on(resetPresentInParent, state => cloneDeep(initialState)),
 );
-
-// @Selector([PresentInParentState])
-// public static queryStateSelector(state: PresentInParentModel): object {
-//   const res = {
-//     presentInParent: state.presentInParent
-//   };
-//   if (state.presentInParent.length === 1 && state.presentInParent[0] === 'neither') {
-//     return res;
-//   }
-//   res['rarity'] = { ultraRare: state.rarityType === 'ultraRare' };
-//   if (state.rarityType !== 'ultraRare' && state.rarityType !== 'all') {
-//     res['rarity']['minFreq'] = state.rarityIntervalStart;
-//     res['rarity']['maxFreq'] = state.rarityIntervalEnd;
-//   }
-//   return res;
-// }

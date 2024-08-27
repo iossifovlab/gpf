@@ -4,18 +4,20 @@ import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loadi
 import { PhenoToolService } from './pheno-tool.service';
 import { PhenoToolResults } from './pheno-tool-results';
 import { ConfigService } from '../config/config.service';
-import { Observable, Subscription, switchMap } from 'rxjs';
-import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
-import { PhenoToolGenotypeBlockComponent } from 'app/pheno-tool-genotype-block/pheno-tool-genotype-block.component';
-import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
-import { PhenoToolMeasureState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
-import { Select, Selector, Store } from '@ngxs/store';
+import { combineLatest, Observable, Subscription, switchMap, take } from 'rxjs';
+import { selectPhenoToolMeasure } from 'app/pheno-tool-measure/pheno-tool-measure.state';
+import { Store } from '@ngrx/store';
 import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
 import {
   PHENO_TOOL_CNV, PHENO_TOOL_LGDS, PHENO_TOOL_OTHERS
 } from 'app/pheno-tool-effect-types/pheno-tool-effect-types';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { selectGeneScores } from 'app/gene-scores/gene-scores.state';
+import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
+import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { selectPresentInParent } from 'app/present-in-parent/present-in-parent.state';
+import { selectEffectTypes } from 'app/effect-types/effect-types.state';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -23,8 +25,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
   styleUrls: ['./pheno-tool.component.css'],
 })
 export class PhenoToolComponent implements OnInit, OnDestroy {
-  // @Select(PhenoToolComponent.phenoToolStateSelector) public state$: Observable<object[]>;
-  @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
+  // @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
 
   public selectedDataset: Dataset;
   public variantTypesSet: Set<string>;
@@ -52,26 +53,10 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
     }
   }
 
-  // @Selector([
-  //   GenesBlockComponent.genesBlockState,
-  //   PhenoToolMeasureState,
-  //   PhenoToolGenotypeBlockComponent.phenoToolGenotypeBlockQueryState,
-  //   FamilyFiltersBlockComponent.familyFiltersBlockState,
-  // ])
-  // public static phenoToolStateSelector(
-  //   genesBlockState: object, measureState: object, genotypeState: object, familyFiltersState: object
-  // ): object {
-  //   return {
-  //     ...genesBlockState,
-  //     ...measureState,
-  //     ...genotypeState,
-  //     ...familyFiltersState,
-  //   };
-  // }
-
   public ngOnInit(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
+    this.store.select(selectDatasetId).pipe(
+      take(1),
+      switchMap(datasetId => this.datasetsService.getDataset(datasetId))
     ).subscribe(dataset => {
       if (!dataset) {
         return;
@@ -80,10 +65,43 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       this.variantTypesSet = new Set(this.selectedDataset.genotypeBrowserConfig.variantTypes);
     });
 
-    // this.state$.subscribe(state => {
-    //   this.phenoToolState = state;
-    //   this.phenoToolResults = null;
-    // });
+    combineLatest([
+      this.store.select(selectGeneSymbols),
+      this.store.select(selectGeneSets),
+      this.store.select(selectGeneScores),
+      this.store.select(selectPhenoToolMeasure),
+      this.store.select(selectEffectTypes),
+      this.store.select(selectPresentInParent),
+    ]).subscribe(([
+      geneSymbolsState,
+      geneSetsState,
+      geneScoresState,
+      phenoToolMeasureState,
+      effectTypesState,
+      presentInParentState,
+    ]) => {
+      const presentInParentRarity = {
+        presentInParent: presentInParentState.presentInParent
+      };
+      if (presentInParentState.presentInParent.length === 1 && presentInParentState.presentInParent[0] === 'neither') {
+        return presentInParentRarity;
+      }
+      presentInParentRarity['rarity'] = { ultraRare: presentInParentState.rarityType === 'ultraRare' };
+      if (presentInParentState.rarityType !== 'ultraRare' && presentInParentState.rarityType !== 'all') {
+        presentInParentRarity['rarity']['minFreq'] = presentInParentState.rarityIntervalStart;
+        presentInParentRarity['rarity']['maxFreq'] = presentInParentState.rarityIntervalEnd;
+      }
+
+      this.phenoToolState = {
+        ...geneSymbolsState,
+        ...geneSetsState,
+        ...geneScoresState,
+        ...phenoToolMeasureState,
+        ...effectTypesState,
+        ...presentInParentRarity,
+      };
+      this.phenoToolResults = null;
+    });
 
     this.loadingService.interruptEvent.subscribe(_ => {
       if (this.phenoToolSubscription !== null) {
@@ -94,11 +112,11 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       this.phenoToolResults = null;
     });
 
-    this.errorsState$.subscribe(state => {
-      setTimeout(() => {
-        this.disableQueryButtons = state.componentErrors.size > 0;
-      });
-    });
+    // this.errorsState$.subscribe(state => {
+    //   setTimeout(() => {
+    //     this.disableQueryButtons = state.componentErrors.size > 0;
+    //   });
+    // });
   }
 
   public ngOnDestroy(): void {

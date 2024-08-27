@@ -7,12 +7,4 @@ import { Component, Input } from '@angular/core';
 })
 export class PhenoToolGenotypeBlockComponent {
   @Input() public variantTypes: Set<string> = new Set();
-
-  // @Selector([PresentInParentState.queryStateSelector, EffecttypesState])
-  // public static phenoToolGenotypeBlockQueryState(presentInParentState, phenoEffectTypesState: EffectTypeModel): object {
-  //   return {
-  //     presentInParent: presentInParentState,
-  //     effectTypes: phenoEffectTypesState.effectTypes,
-  //   };
-  // }
 }
