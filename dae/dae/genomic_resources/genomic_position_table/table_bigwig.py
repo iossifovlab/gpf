@@ -123,10 +123,16 @@ class BigWigTable(GenomicPositionTable):
     ) -> Generator[tuple[int, int, float], None, None]:
         pos_current = pos_begin
 
-        idx = self._find(chrom, pos_begin, pos_end)
+        idx = self._find(chrom, pos_begin, pos_begin + 1)
         if idx == -1:
             self._fill(chrom, pos_begin, pos_end)
-            idx = self._find(chrom, pos_begin, pos_end)
+            idx = self._find(chrom, pos_begin, pos_begin + 1)
+
+        if idx == -1:
+            # there's no direct match for (pos_begin, pos_begin + 1), but
+            # we set the idx to 0 anyways since there might be something
+            # in the buffer to yield (since _fill is called with pos_end)
+            idx = 0
 
         while self._buffer:
             line = self._buffer[idx]
