@@ -34,7 +34,7 @@ import { UsersService } from './users/users.service';
 import { BoldMatchingPipe } from './utils/bold-matching.pipe';
 import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.validator';
 import { StudyTypesComponent } from './study-types/study-types.component';
-import { StudyTypesState } from './study-types/study-types.state';
+import { studyTypesReducer } from './study-types/study-types.state';
 import { CookieService} from 'ngx-cookie-service';
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component';
 import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.component';
@@ -429,7 +429,6 @@ const appRoutes: Routes = [
     NgMultiSelectDropDownModule.forRoot(),
     NgxsModule.forRoot([
       InheritancetypesState,
-      StudyTypesState,
       ErrorsState, DatasetState,
     ], {compatibility: { strictContentSecurityPolicy: true }}
     ),
@@ -467,6 +466,7 @@ const appRoutes: Routes = [
       genomicScores: genomicScoresReducer,
       uniqueFamilyVariantsFilter: uniqueFamilyVariantsFilterReducer,
       familyTypeFilter: familyTypeFilterReducer,
+      studyTypes: studyTypesReducer,
     }),
   ],
   providers: [

@@ -2,7 +2,6 @@ import { Component, Input, OnInit } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 
 import { InheritancetypesState, InheritancetypesModel } from 'app/inheritancetypes/inheritancetypes.state';
-import { StudyTypesState, StudyTypesModel } from 'app/study-types/study-types.state';
 // import { PedigreeSelectorState, PedigreeSelectorModel } from 'app/pedigree-selector/pedigree-selector.state';
 
 @Component({

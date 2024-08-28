@@ -5,12 +5,12 @@ import { BrowserQueryFilter } from 'app/genotype-browser/genotype-browser';
 import { Store } from '@ngxs/store';
 import { Store as Store1 } from '@ngrx/store';
 import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
-import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { take } from 'rxjs/operators';
 import { cloneDeep } from 'lodash';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
 import { setGenders } from 'app/gender/genders.state';
 import { setVariantTypes } from 'app/variant-types/variant-types.state';
+import { setStudyTypes } from 'app/study-types/study-types.state';
 
 @Component({
   selector: '[gpf-enrichment-table-row]',
@@ -43,18 +43,7 @@ export class EnrichmentTableRowComponent {
         checkedValues: browserQueryFilter.personSetCollection.checkedValues
       }
     }));
-
-
-    this.store.dispatch([
-      // new SetEffectTypes(new Set(browserQueryFilter['effectTypes'])),
-      // new SetGender(browserQueryFilter['gender']),
-      // new SetPedigreeSelector(
-      //   browserQueryFilter.personSetCollection.id,
-      //   new Set(browserQueryFilter.personSetCollection.checkedValues)
-      // ),
-      new SetStudyTypes(new Set(browserQueryFilter['studyTypes'])),
-      // new SetVariantTypes(new Set(browserQueryFilter['variantTypes'])),
-    ]);
+    this.store1.dispatch(setStudyTypes({studyTypes: browserQueryFilter['studyTypes']}));
 
     this.store.selectOnce(state => state as object).subscribe(state => {
       const queryData = cloneDeep(state);

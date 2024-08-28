@@ -20,7 +20,6 @@ import { GenomicScore } from 'app/genotype-browser/genotype-browser';
 // import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 // import { SetPresentInChildValues } from 'app/present-in-child/present-in-child.state';
 // import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
-import { SetStudyTypes } from 'app/study-types/study-types.state';
 import { LGDS } from 'app/effect-types/effect-types';
 import { DatasetModel } from 'app/datasets/datasets.state';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
@@ -30,6 +29,8 @@ import { setPresentInChild } from 'app/present-in-child/present-in-child.state';
 import { setPresentInParent } from 'app/present-in-parent/present-in-parent.state';
 import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { selectGeneProfiles, setGeneProfilesOpenedTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
+import { setStudyTypes } from 'app/study-types/study-types.state';
+import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -229,19 +230,23 @@ export class GeneProfileSingleViewComponent implements OnInit {
         checkedValues: [personSet.id]
       }
     }));
-
-
-    // store.dispatch([
-    //   // new SetGeneSymbols([geneSymbol]),
-    //   // new SetEffectTypes(new Set(effectTypes[statistic['effects'][0]])),
-    //   new SetStudyTypes(new Set(['we'])),
-    //   new SetVariantTypes(new Set(statistic['variantTypes'])),
-    //   // new SetGenomicScores(genomicScores),
-    //   new SetPresentInChildValues(new Set(presentInChildValues)),
-    //   new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),
-    //   new SetPedigreeSelector(personSet.collectionId, new Set([personSet.id])),
-    // ]);
-
+    store1.dispatch(setStudyTypes({studyTypes: ['we']}));
+    store1.dispatch(setGenomicScores({genomicScores: genomicScores}));
+    store1.dispatch(setPresentInChild({presentInChild: presentInChildValues}));
+    store1.dispatch(setPresentInParent({
+      presentInParent: {
+        presentInParent: presentInParent,
+        rarityType: rarityType,
+        rarityIntervalStart: 0,
+        rarityIntervalEnd: 1,
+      }
+    }));
+    store1.dispatch(setPedigreeSelector({
+      pedigreeSelector: {
+        id: personSet.collectionId,
+        checkedValues: [personSet.id],
+      }
+    }));
 
     store.selectOnce((state: object) => state).subscribe((state) => {
       (state['datasetState'] as DatasetModel).selectedDatasetId = datasetId;
@@ -271,7 +276,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
     const index = tabs.indexOf(this.geneSymbol, 0);
     tabs.splice(index, 1);
 
-    this.store.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
+    this.store1.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
     this.router.navigate(['/gene-profiles']);
   }
 }
