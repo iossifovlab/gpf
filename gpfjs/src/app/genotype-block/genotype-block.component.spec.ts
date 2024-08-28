@@ -15,9 +15,11 @@ import { ConfigService } from 'app/config/config.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { EffecttypesColumnComponent } from 'app/effect-types/effect-types-column.component';
-import { NgxsModule } from '@ngxs/store';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { EffecttypesState } from 'app/effect-types/effect-types.state';
+import { effectTypesReducer } from 'app/effect-types/effect-types.state';
+import { StoreModule } from '@ngrx/store';
+import { variantTypesReducer } from 'app/variant-types/variant-types.state';
+import { gendersReducer } from 'app/gender/genders.state';
 
 describe('GenotypeBlockComponent', () => {
   let component: GenotypeBlockComponent;
@@ -44,7 +46,11 @@ describe('GenotypeBlockComponent', () => {
         NgbModule,
         HttpClientTestingModule,
         RouterTestingModule,
-        NgxsModule.forRoot([EffecttypesState, VarianttypesState], {developmentMode: true})
+        StoreModule.forRoot({
+          variantTypes: variantTypesReducer,
+          effectTypes: effectTypesReducer,
+          genders: gendersReducer
+        })
       ],
       schemas: [
         NO_ERRORS_SCHEMA

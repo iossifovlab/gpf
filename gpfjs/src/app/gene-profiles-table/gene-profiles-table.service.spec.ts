@@ -4,9 +4,9 @@ import { ConfigService } from 'app/config/config.service';
 // eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
 import { GeneProfilesTableService } from './gene-profiles-table.service';
-import { NgxsModule } from '@ngxs/store';
 import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
+import { StoreModule } from '@ngrx/store';
 
 class UsersServiceMock {
   public cachedUserInfo(): object {
@@ -24,12 +24,12 @@ describe('GeneProfilesTableService', () => {
         { provide: UsersService, useValue: usersServiceMock},
         { provide: APP_BASE_HREF, useValue: '' }
       ],
-      imports: [HttpClientTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
+      imports: [HttpClientTestingModule, StoreModule.forRoot({})]
     });
     service = TestBed.inject(GeneProfilesTableService);
 
     service['store'] = {
-      selectOnce: () => of({
+      select: () => of({
         headerLeaves: [],
         higlightedRows: ['CHD8'],
         openedTabs: ['POGZ'],

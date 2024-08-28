@@ -1,10 +1,9 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { NgxsModule, Store } from '@ngxs/store';
 import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
-
 import { ErrorsAlertComponent } from '../errors-alert/errors-alert.component';
 import { InheritancetypesComponent } from './inheritancetypes.component';
-import { InheritancetypesState, SetInheritanceTypes } from './inheritancetypes.state';
+import { inheritanceTypesReducer, setInheritanceTypes, SetInheritanceTypes } from './inheritancetypes.state';
+import { Store, StoreModule } from '@ngrx/store';
 
 describe('InheritancetypesComponent', () => {
   let component: InheritancetypesComponent;
@@ -18,10 +17,10 @@ describe('InheritancetypesComponent', () => {
         InheritancetypesComponent,
         CheckboxListComponent
       ],
-      imports: [NgxsModule.forRoot([InheritancetypesState], {developmentMode: true})],
+      imports: [StoreModule.forRoot({inheritanceTypes: inheritanceTypesReducer})],
     }).compileComponents();
     store = TestBed.inject(Store);
-    store.dispatch(new SetInheritanceTypes(new Set(['value1', 'value2'])));
+    store.dispatch(setInheritanceTypes({inheritanceTypes: ['value1', 'value2']}));
     fixture = TestBed.createComponent(InheritancetypesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -41,12 +40,12 @@ describe('InheritancetypesComponent', () => {
 
   it('should update variant types', () => {
     component.selectedValues = undefined;
-    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 
     component.updateInheritanceTypes(mockSet);
 
     expect(component.selectedValues).toStrictEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetInheritanceTypes(mockSet));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(1, setInheritanceTypes({inheritanceTypes: [...mockSet]}));
   });
 });

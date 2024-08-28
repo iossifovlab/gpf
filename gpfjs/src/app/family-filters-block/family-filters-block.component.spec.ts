@@ -6,7 +6,6 @@ import { Observable, of } from 'rxjs';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { HttpResponse } from '@angular/common/http';
-import { NgxsModule } from '@ngxs/store';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
@@ -14,6 +13,7 @@ import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 import { Dataset, GenotypeBrowser } from 'app/datasets/datasets';
 import { DatasetModel } from 'app/datasets/datasets.state';
+import { Store, StoreModule } from '@ngrx/store';
 
 class VariantReportsServiceMock {
   private variantsUrl = 'common_reports/studies/';
@@ -241,11 +241,12 @@ describe('FamilyFiltersBlockComponent', () => {
   let component: FamilyFiltersBlockComponent;
   let fixture: ComponentFixture<FamilyFiltersBlockComponent>;
   const variantReportsServiceMock = new VariantReportsServiceMock();
+  let store: Store;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [FamilyFiltersBlockComponent],
-      imports: [NgbNavModule, NgxsModule.forRoot([], {developmentMode: true}), HttpClientTestingModule],
+      imports: [NgbNavModule, StoreModule.forRoot({}), HttpClientTestingModule],
       providers: [
         DatasetsService,
         ConfigService,
@@ -266,9 +267,8 @@ describe('FamilyFiltersBlockComponent', () => {
     // eslint-disable-next-line max-len
     const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
 
-    component['store'] = {
-      selectOnce: () => of(selectedDatasetMockModel)
-    } as never;
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
 
     fixture.detectChanges();
   }));

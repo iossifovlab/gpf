@@ -1,32 +1,30 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { NgxsModule } from '@ngxs/store';
-// eslint-disable-next-line no-restricted-imports
 import { of } from 'rxjs';
-
 import { PresentInChildComponent } from './present-in-child.component';
-import { SetPresentInChildValues } from './present-in-child.state';
+import { presentInChildReducer, setPresentInChild } from './present-in-child.state';
+import { Store, StoreModule } from '@ngrx/store';
 
 describe('PresentInChildComponent', () => {
   let component: PresentInChildComponent;
   let fixture: ComponentFixture<PresentInChildComponent>;
+  let store: Store;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [PresentInChildComponent],
       providers: [],
-      imports: [NgxsModule.forRoot([], {developmentMode: true})],
+      imports: [StoreModule.forRoot({presentInChild: presentInChildReducer})],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
     fixture = TestBed.createComponent(PresentInChildComponent);
     component = fixture.componentInstance;
-    component['store'] = {
-      selectOnce() {
-        return of({presentInChild: ['value1', 'value2']});
-      },
-      dispatch() {}
-    } as any;
+
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'select').mockReturnValue(of(['value1', 'value2']));
+    jest.spyOn(store, 'dispatch').mockReturnValue();
+
     fixture.detectChanges();
   }));
 
@@ -42,13 +40,15 @@ describe('PresentInChildComponent', () => {
 
   it('should update present in child', () => {
     component.selectedValues = undefined;
-    component['store'] = { dispatch() {} } as any;
-    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
+    // component['store'] = { dispatch() {} } as any;
+    // jest.spyOn(store, 'dispatch').mockReturnValue();
+
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 
     component.updatePresentInChild(mockSet);
 
     expect(component.selectedValues).toStrictEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetPresentInChildValues(mockSet));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(1, setPresentInChild({presentInChild: [...mockSet]}));
   });
 });

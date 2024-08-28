@@ -3,13 +3,13 @@ import { Component, OnInit } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
 import { MarkdownService } from 'ngx-markdown';
 import { DatasetDescriptionComponent } from './dataset-description.component';
 import { APP_BASE_HREF } from '@angular/common';
+import { StoreModule } from '@ngrx/store';
 
 class MarkdownServiceMock {
   public compile = (): void => null;
@@ -44,7 +44,7 @@ describe('DatasetDescriptionComponent', () => {
         {provide: MarkdownService, useClass: MarkdownServiceMock},
         { provide: APP_BASE_HREF, useValue: '' }
       ],
-      imports: [RouterTestingModule, HttpClientTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
+      imports: [RouterTestingModule, HttpClientTestingModule, StoreModule.forRoot({})]
     }).compileComponents();
 
     fixture = TestBed.createComponent(MockDatasetDescriptionComponent);

@@ -5,7 +5,7 @@ import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
 import { Logout, User, UserInfo } from './users';
 import { LocationStrategy } from '@angular/common';
-import { Store } from '@ngxs/store';
+import { Store } from '@ngrx/store';
 import { catchError, map, tap, take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
 import { FederationCredential, FederationJson } from 'app/federation-credentials/federation-credentials';

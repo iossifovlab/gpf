@@ -1,7 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { GeneScoresService } from 'app/gene-scores/gene-scores.service';
@@ -10,6 +9,7 @@ import { of } from 'rxjs';
 import { GeneProfileSingleViewComponent } from './gene-profiles-single-view.component';
 import { QueryService } from 'app/query/query.service';
 import { APP_BASE_HREF } from '@angular/common';
+import { StoreModule } from '@ngrx/store';
 
 describe('GeneProfileSingleViewComponent', () => {
   let component: GeneProfileSingleViewComponent;
@@ -22,7 +22,7 @@ describe('GeneProfileSingleViewComponent', () => {
         ConfigService, GeneScoresService, DatasetsService,
         UsersService, QueryService, { provide: APP_BASE_HREF, useValue: '' }
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
+      imports: [HttpClientTestingModule, RouterTestingModule, StoreModule.forRoot({})]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GeneProfileSingleViewComponent);

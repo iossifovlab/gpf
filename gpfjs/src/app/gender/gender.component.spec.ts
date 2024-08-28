@@ -2,7 +2,8 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { GenderComponent } from './gender.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
-import { NgxsModule } from '@ngxs/store';
+import { StoreModule } from '@ngrx/store';
+import { gendersReducer } from './genders.state';
 
 
 describe('GenderComponent', () => {
@@ -12,7 +13,7 @@ describe('GenderComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [GenderComponent, ErrorsAlertComponent],
-      imports: [NgxsModule.forRoot([GenderState], {developmentMode: true})]
+      imports: [StoreModule.forRoot({genders: gendersReducer})]
     })
       .compileComponents();
     fixture = TestBed.createComponent(GenderComponent);

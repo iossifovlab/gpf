@@ -2,7 +2,6 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
-import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { QueryService } from 'app/query/query.service';
@@ -11,6 +10,7 @@ import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 
 import { UserProfileComponent } from './user-profile.component';
+import { StoreModule } from '@ngrx/store';
 
 describe('UserProfileComponent', () => {
   let component: UserProfileComponent;
@@ -26,7 +26,7 @@ describe('UserProfileComponent', () => {
         { provide: APP_BASE_HREF, useValue: '' }
       ],
       imports: [
-        RouterTestingModule, HttpClientTestingModule, NgbNavModule, NgxsModule.forRoot([], {developmentMode: true})
+        RouterTestingModule, HttpClientTestingModule, NgbNavModule, StoreModule.forRoot({})
       ]
     }).compileComponents();
 

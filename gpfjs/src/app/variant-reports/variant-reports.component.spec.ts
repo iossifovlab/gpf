@@ -12,8 +12,8 @@ import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { HttpResponse } from '@angular/common/http';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
-import { NgxsModule } from '@ngxs/store';
 import { RouterTestingModule } from '@angular/router/testing';
+import { StoreModule } from '@ngrx/store';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -307,7 +307,7 @@ describe('VariantReportsComponent', () => {
     const datasetsServiceMock = new MockDatasetsService();
     TestBed.configureTestingModule({
       declarations: [VariantReportsComponent, PeopleCounterRowPipe],
-      imports: [FormsModule, NgxsModule.forRoot([], {developmentMode: true}), RouterTestingModule.withRoutes([])],
+      imports: [FormsModule, StoreModule.forRoot({}), RouterTestingModule.withRoutes([])],
       providers: [
         ConfigService,
         { provide: VariantReportsService, useValue: variantReportsServiceMock },

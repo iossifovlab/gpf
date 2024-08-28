@@ -15,6 +15,7 @@ import { UserGroup } from 'app/users-groups/users-groups';
 import { Observable } from 'rxjs/internal/Observable';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { RouterTestingModule } from '@angular/router/testing';
+import { StoreModule } from '@ngrx/store';
 
 class MockDatasetService {
   public getDatasetsObservable(): Observable<Dataset[]> {
@@ -82,7 +83,7 @@ describe('DatasetComponent', () => {
     TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
-        NgxsModule.forRoot([], {developmentMode: true}),
+        StoreModule.forRoot({}),
         RouterTestingModule
       ],
       providers: [

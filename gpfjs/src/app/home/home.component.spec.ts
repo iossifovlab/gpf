@@ -5,7 +5,6 @@ import { HttpClient, HttpHandler } from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
-import { NgxsModule } from '@ngxs/store';
 import { APP_BASE_HREF } from '@angular/common';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { Observable, of, throwError } from 'rxjs';
@@ -16,6 +15,7 @@ import {
   MatAutocompleteTrigger,
   MAT_AUTOCOMPLETE_SCROLL_STRATEGY } from '@angular/material/autocomplete';
 import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
+import { StoreModule } from '@ngrx/store';
 
 class MockGeneService {
   public getGene(): Observable<Record<string, unknown>> {
@@ -49,7 +49,7 @@ describe('HomeComponent', () => {
         { provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''},
         DatasetsTreeService,
       ],
-      imports: [NgxsModule.forRoot([])]
+      imports: [StoreModule.forRoot({})]
     }).compileComponents();
 
     fixture = TestBed.createComponent(HomeComponent);

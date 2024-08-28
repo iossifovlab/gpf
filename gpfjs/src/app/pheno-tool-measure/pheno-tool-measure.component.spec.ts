@@ -2,7 +2,6 @@ import { HttpClient, HttpHandler } from '@angular/common/http';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { MeasuresService } from 'app/measures/measures.service';
 import { UsersService } from 'app/users/users.service';
@@ -12,10 +11,13 @@ import { PhenoToolMeasureComponent } from './pheno-tool-measure.component';
 import { DatasetModel } from 'app/datasets/datasets.state';
 import { of } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { Store, StoreModule } from '@ngrx/store';
+import { phenoToolMeasureReducer } from './pheno-tool-measure.state';
 
 describe('PhenoToolMeasureComponent', () => {
   let component: PhenoToolMeasureComponent;
   let fixture: ComponentFixture<PhenoToolMeasureComponent>;
+  let store: Store;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -31,7 +33,7 @@ describe('PhenoToolMeasureComponent', () => {
         DatasetsService,
         { provide: APP_BASE_HREF, useValue: '' }
       ],
-      imports: [RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
+      imports: [RouterTestingModule, StoreModule.forRoot({phenoToolMeasure: phenoToolMeasureReducer})],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
@@ -41,10 +43,10 @@ describe('PhenoToolMeasureComponent', () => {
     // eslint-disable-next-line max-len
     const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
 
-    component['store'] = {
-      selectOnce: () => of(selectedDatasetMockModel),
-      dispatch: () => null
-    } as never;
+
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
+    jest.spyOn(store, 'dispatch').mockReturnValue(null);
 
     fixture.detectChanges();
   }));

@@ -8,7 +8,6 @@ import { GeneProfilesBlockComponent } from './gene-profiles-block.component';
 import { GeneProfilesTableComponent } from 'app/gene-profiles-table/gene-profiles-table.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
-import { NgxsModule } from '@ngxs/store';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { FormsModule } from '@angular/forms';
 import { APP_BASE_HREF } from '@angular/common';
@@ -17,8 +16,9 @@ import { Observable, of } from 'rxjs';
 import { GeneProfilesSingleViewConfig } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { TruncatePipe } from '../utils/truncate.pipe';
 import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-table/gene-profiles-table';
-import { GeneProfilesState } from 'app/gene-profiles-table/gene-profiles-table.state';
+import { geneProfilesReducer } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { cloneDeep } from 'lodash';
+import { StoreModule } from '@ngrx/store';
 
 const config = {
   geneLinkTemplates: [
@@ -150,7 +150,7 @@ describe('GeneProfilesBlockComponent', () => {
       ],
       imports: [
         HttpClientTestingModule, NgbNavModule, RouterTestingModule, FormsModule,
-        NgxsModule.forRoot([GeneProfilesState], {developmentMode: true})
+        StoreModule.forRoot({geneProfiles: geneProfilesReducer})
       ]
     }).compileComponents();
 

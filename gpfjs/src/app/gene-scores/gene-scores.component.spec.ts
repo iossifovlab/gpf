@@ -3,14 +3,14 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
-import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { Observable } from 'rxjs';
 import { of } from 'rxjs/internal/observable/of';
 import { GeneScores } from './gene-scores';
 import { GeneScoresComponent } from './gene-scores.component';
 import { GeneScoresService } from './gene-scores.service';
-import { GeneScoresState } from './gene-scores.state';
+import { geneScoresReducer } from './gene-scores.state';
+import { StoreModule } from '@ngrx/store';
 
 class MockGeneScoresService {
   public provide = true;
@@ -39,7 +39,7 @@ describe('GeneScoresComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [
-        NgxsModule.forRoot([GeneScoresState], {developmentMode: true}), HttpClientTestingModule, NgbNavModule
+        StoreModule.forRoot({geneScores: geneScoresReducer}), HttpClientTestingModule, NgbNavModule
       ],
       declarations: [GeneScoresComponent],
       providers: [{provide: GeneScoresService, useValue: mockGeneScoresService}, ConfigService],

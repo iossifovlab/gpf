@@ -15,13 +15,14 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ConfigService } from './config/config.service';
 import { UsersService } from './users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-loading.component';
 import { UsersComponent } from './users/users.component';
 import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service';
 import { FormsModule } from '@angular/forms';
 import { APP_BASE_HREF } from '@angular/common';
 import { UserInfoPipe } from './users/user-info.pipe';
+import { Store, StoreModule } from '@ngrx/store';
+
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -54,7 +55,7 @@ describe('AppComponent', () => {
         HttpClientTestingModule,
         RouterTestingModule,
         FormsModule,
-        NgxsModule.forRoot([], {developmentMode: true})
+        StoreModule.forRoot({})
       ],
       providers: [
         { provide: DatasetsService, useValue: datasetsServiceMock },

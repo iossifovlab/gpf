@@ -2,9 +2,8 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, NavigationStart, Router, RouterEvent } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { Observable, of, Subject } from 'rxjs';
-import { GeneSymbolsState } from 'app/gene-symbols/gene-symbols.state';
+import { geneSymbolsReducer } from 'app/gene-symbols/gene-symbols.state';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
@@ -26,6 +25,7 @@ import {
   MatAutocompleteOrigin,
   MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { DatasetModel } from 'app/datasets/datasets.state';
+import { Store, StoreModule } from '@ngrx/store';
 
 jest.mock('../utils/svg-drawing');
 
@@ -95,6 +95,7 @@ describe('GeneBrowserComponent', () => {
   const mockDatasetsService = new MockDatasetsService();
   const mockQueryService = new MockQueryService();
   let loadingService: FullscreenLoadingService;
+  let store: Store;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -114,7 +115,7 @@ describe('GeneBrowserComponent', () => {
       ],
       imports: [
         HttpClientTestingModule, RouterTestingModule,
-        NgxsModule.forRoot([GeneSymbolsState], {developmentMode: true}),
+        StoreModule.forRoot({geneSymbols: geneSymbolsReducer}),
         NgbModule, FormsModule
       ],
     }).compileComponents();
@@ -129,9 +130,8 @@ describe('GeneBrowserComponent', () => {
     // eslint-disable-next-line max-len
     const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
 
-    component['store'] = {
-      selectOnce: () => of(selectedDatasetMockModel)
-    } as never;
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
 
     fixture.detectChanges();
   });

@@ -8,10 +8,14 @@ import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-
 import { UsersService } from 'app/users/users.service';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter.component';
 import { Observable, of } from 'rxjs';
-import { NgxsModule } from '@ngxs/store';
 import { FormsModule } from '@angular/forms';
 import { PhenoMeasure } from 'app/pheno-browser/pheno-browser';
-import { MatAutocompleteOrigin, MatAutocomplete, MAT_AUTOCOMPLETE_SCROLL_STRATEGY, MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import {
+  MatAutocompleteOrigin,
+  MatAutocomplete,
+  MAT_AUTOCOMPLETE_SCROLL_STRATEGY,
+  MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { StoreModule } from '@ngrx/store';
 
 const SelectionMock = {
   isEmpty: (): boolean => true,
@@ -73,7 +77,7 @@ describe('MultiContinuousFilterComponent', () => {
       ],
       imports: [
         RouterTestingModule,
-        NgxsModule.forRoot([], {developmentMode: true}),
+        StoreModule.forRoot({}),
         FormsModule
       ]
     }).compileComponents();

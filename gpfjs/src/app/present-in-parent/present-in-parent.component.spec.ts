@@ -1,33 +1,34 @@
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { NgxsModule } from '@ngxs/store';
 import { of } from 'rxjs';
 import { PresentInParentComponent } from './present-in-parent.component';
-import { SetPresentInParentValues } from './present-in-parent.state';
+import { setPresentInParent } from './present-in-parent.state';
+import { Store, StoreModule } from '@ngrx/store';
 
 describe('PresentInParentComponent', () => {
   let component: PresentInParentComponent;
   let fixture: ComponentFixture<PresentInParentComponent>;
+  let store: Store;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [PresentInParentComponent],
-      imports: [NgxsModule.forRoot([], {developmentMode: true})],
+      imports: [StoreModule.forRoot({})],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
     fixture = TestBed.createComponent(PresentInParentComponent);
     component = fixture.componentInstance;
-    component['store'] = {
-      selectOnce() {
-        return of({
-          presentInParent: ['value1', 'value2'],
-          rarityType: 'rarityType',
-          rarityIntervalStart: 'fakeStartNumber',
-          rarityIntervalEnd: 'fakeEndNumber',
-        });
-      },
-      dispatch() {}
-    } as any;
+
+    store = TestBed.inject(Store);
+
+    jest.spyOn(store, 'select').mockReturnValue(of({
+      presentInParent: ['value1', 'value2'],
+      rarityType: 'rarityType',
+      rarityIntervalStart: -12,
+      rarityIntervalEnd: -11,
+    }));
+
+    jest.spyOn(store, 'dispatch').mockReturnValue();
     fixture.detectChanges();
   }));
 
@@ -39,8 +40,8 @@ describe('PresentInParentComponent', () => {
     component.ngOnInit();
     expect(component.selectedValues).toStrictEqual(new Set(['value1', 'value2']));
     expect(component.selectedRarityType).toBe('rarityType');
-    expect(component.rarityIntervalStart).toBe('fakeStartNumber' as any);
-    expect(component.rarityIntervalEnd).toBe('fakeEndNumber' as any);
+    expect(component.rarityIntervalStart).toBe(-12);
+    expect(component.rarityIntervalEnd).toBe(-11);
   });
 
   it('should update rarity interval start', () => {
@@ -48,8 +49,8 @@ describe('PresentInParentComponent', () => {
     component.rarityIntervalEnd = undefined;
     const updateStateSpy = jest.spyOn(component, 'updateState');
 
-    component.updateRarityIntervalStart('fakeStartNumber' as any);
-    expect(component.rarityIntervalStart).toBe('fakeStartNumber' as any);
+    component.updateRarityIntervalStart(6);
+    expect(component.rarityIntervalStart).toBe(6);
     expect(component.rarityIntervalEnd).toBeUndefined();
     expect(updateStateSpy).toHaveBeenCalled();
   });
@@ -59,8 +60,8 @@ describe('PresentInParentComponent', () => {
     component.rarityIntervalEnd = undefined;
     const updateStateSpy = jest.spyOn(component, 'updateState');
 
-    component.updateRarityIntervalEnd('fakeEndNumber' as any);
-    expect(component.rarityIntervalEnd).toBe('fakeEndNumber' as any);
+    component.updateRarityIntervalEnd(100);
+    expect(component.rarityIntervalEnd).toBe(100);
     expect(component.rarityIntervalStart).toBeUndefined();
     expect(updateStateSpy).toHaveBeenCalled();
   });
@@ -90,11 +91,13 @@ describe('PresentInParentComponent', () => {
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
 
     component.updateState();
-    expect(dispatchSpy).toHaveBeenCalledWith(new SetPresentInParentValues(
-      new Set(['value1', 'value2']),
-      'rarityType',
-      'fakeStartNumber' as any,
-      'fakeEndNumber' as any,
-    ));
+    expect(dispatchSpy).toHaveBeenCalledWith(setPresentInParent({
+      presentInParent: {
+        presentInParent: ['value1', 'value2'],
+        rarityType: 'rarityType',
+        rarityIntervalStart: -12,
+        rarityIntervalEnd: -11
+      }
+    }));
   });
 });

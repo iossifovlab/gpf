@@ -6,17 +6,17 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { UsersService } from 'app/users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { Dataset } from './datasets';
 import { lastValueFrom, of, take } from 'rxjs';
 import { APP_BASE_HREF } from '@angular/common';
+import { StoreModule } from '@ngrx/store';
 
 describe('DatasetService', () => {
   let service: DatasetsService;
   beforeEach(waitForAsync(() => {
     const configMock = { baseUrl: 'testUrl/' };
     TestBed.configureTestingModule({
-      imports: [NgxsModule.forRoot([], {developmentMode: true}), RouterTestingModule, HttpClientTestingModule],
+      imports: [StoreModule.forRoot({}), RouterTestingModule, HttpClientTestingModule],
       providers: [
         DatasetsService,
         UsersService,

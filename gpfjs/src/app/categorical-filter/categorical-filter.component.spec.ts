@@ -2,13 +2,14 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
 import { UsersService } from 'app/users/users.service';
 import { CategoricalFilterComponent } from './categorical-filter.component';
 import { APP_BASE_HREF } from '@angular/common';
+import { StoreModule } from '@ngrx/store';
+import { datasetIdReducer } from 'app/datasets/datasets.state';
 
 describe('CategoricalFilterComponent', () => {
   let component: CategoricalFilterComponent;
@@ -26,7 +27,7 @@ describe('CategoricalFilterComponent', () => {
       ],
       imports: [
         HttpClientTestingModule, RouterTestingModule, FormsModule,
-        NgxsModule.forRoot([], {developmentMode: true})
+        StoreModule.forRoot({datasetId: datasetIdReducer})
       ]
     }).compileComponents();
 

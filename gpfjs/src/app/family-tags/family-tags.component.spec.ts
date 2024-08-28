@@ -1,10 +1,9 @@
-import { NgxsModule } from '@ngxs/store';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { FamilyTagsComponent } from './family-tags.component';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
-import { ErrorsState } from 'app/common/errors.state';
-import { FamilyTagsState } from './family-tags.state';
+import { familyTagsReducer } from './family-tags.state';
+import { errorsReducer } from 'app/common/errors_ngrx.state';
+import { StoreModule } from '@ngrx/store';
 
 describe('FamilyTagsComponent', () => {
   let component: FamilyTagsComponent;
@@ -14,7 +13,7 @@ describe('FamilyTagsComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [FamilyTagsComponent],
       imports: [
-        NgxsModule.forRoot([ErrorsState, FamilyTagsState], {developmentMode: true}),
+        StoreModule.forRoot({errors: errorsReducer, familyTags: familyTagsReducer}),
         NgbNavModule
       ],
     }).compileComponents();

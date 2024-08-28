@@ -16,6 +16,7 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { RouterModule } from '@angular/router';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
+import { Store, StoreModule } from '@ngrx/store';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const datasetConfigMock: any = {
@@ -29,6 +30,7 @@ class DatasetsComponentMock {
 describe('StudyFiltersComponent', () => {
   let component: StudyFiltersComponent;
   let fixture: ComponentFixture<StudyFiltersComponent>;
+  let store: Store;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -46,23 +48,18 @@ describe('StudyFiltersComponent', () => {
       ],
       imports: [
         NgbNavModule, NgbModule, FormsModule,
-        NgxsModule.forRoot([], {developmentMode: true}), HttpClientTestingModule,
+        StoreModule.forRoot({}), HttpClientTestingModule,
         RouterModule.forRoot([])
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(StudyFiltersComponent);
     component = fixture.componentInstance;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    component['store'] = {
-      // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
-      selectOnce: function() {
-        return of({});
-      },
-      // eslint-disable-next-line prefer-arrow/prefer-arrow-functions, @typescript-eslint/no-empty-function
-      dispatch: function() {}
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any;
+
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'select').mockReturnValue(of({}));
+    jest.spyOn(store, 'dispatch').mockReturnValue();
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     component.dataset = datasetConfigMock;
     fixture.detectChanges();
