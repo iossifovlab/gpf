@@ -22,10 +22,6 @@ export const setPresentInParent = createAction(
   props<{ presentInParent: PresentInParent }>()
 );
 
-export const getPresentInParentRarity = createAction(
-  '[Genotype] Get present in parent with rarity'
-);
-
 export const resetPresentInParent = createAction(
   '[Genotype] Reset present in parent'
 );

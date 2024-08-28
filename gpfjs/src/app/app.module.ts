@@ -122,7 +122,6 @@ import { PersonFiltersBlockComponent } from './person-filters-block/person-filte
 import { PersonIdsComponent } from './person-ids/person-ids.component';
 import { personIdsReducer } from './person-ids/person-ids.state';
 import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filter.component';
-import { FamilyTypeFilterState } from './family-type-filter/family-type-filter.state';
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
 import { BnNgIdleService } from 'bn-ng-idle';
 import { NgxsModule } from '@ngxs/store';
@@ -191,6 +190,7 @@ import { pedigreeSelectorReducer } from './pedigree-selector/pedigree-selector.s
 import { geneProfilesReducer } from './gene-profiles-table/gene-profiles-table.state';
 import { regionsFiltersReducer } from './regions-filter/regions-filter.state';
 import { uniqueFamilyVariantsFilterReducer } from './unique-family-variants-filter/unique-family-variants-filter.state';
+import { familyTypeFilterReducer } from './family-type-filter/family-type-filter.state';
 
 const appRoutes: Routes = [
   {
@@ -429,10 +429,8 @@ const appRoutes: Routes = [
     NgMultiSelectDropDownModule.forRoot(),
     NgxsModule.forRoot([
       InheritancetypesState,
-      StudyTypesState, FamilyTypeFilterState,
+      StudyTypesState,
       ErrorsState, DatasetState,
-      StudyTypesState, FamilyTypeFilterState,
-      ErrorsState, DatasetState
     ], {compatibility: { strictContentSecurityPolicy: true }}
     ),
     NgxsResetPluginModule.forRoot(),
@@ -467,7 +465,8 @@ const appRoutes: Routes = [
       geneProfiles: geneProfilesReducer,
       regionsFilter: regionsFiltersReducer,
       genomicScores: genomicScoresReducer,
-      uniqueFamilyVariantsFilter: uniqueFamilyVariantsFilterReducer
+      uniqueFamilyVariantsFilter: uniqueFamilyVariantsFilterReducer,
+      familyTypeFilter: familyTypeFilterReducer,
     }),
   ],
   providers: [

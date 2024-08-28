@@ -4,7 +4,6 @@ import { Dataset } from '../datasets/datasets';
 import { InheritancetypesState, InheritancetypesModel } from 'app/inheritancetypes/inheritancetypes.state';
 import { StudyTypesState, StudyTypesModel } from 'app/study-types/study-types.state';
 // import { PedigreeSelectorState, PedigreeSelectorModel } from 'app/pedigree-selector/pedigree-selector.state';
-import { FamilyTypeFilterState, FamilyTypeFilterModel } from 'app/family-type-filter/family-type-filter.state';
 
 @Component({
   selector: 'gpf-genotype-block',
