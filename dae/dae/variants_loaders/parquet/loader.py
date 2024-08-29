@@ -320,20 +320,22 @@ class ParquetLoader:
         )
 
     def fetch_summary_variants(
-        self, region: str | None = None,
+        self, region: Region | None = None,
     ) -> Generator[SummaryVariant, None, None]:
         """Iterate over summary variants."""
-        region_obj = None
         region_filter = None
         if region is not None:
-            region_obj = Region.from_str(region)
-            region_filter = (
-                (pc.field("chromosome") == region_obj.chrom)
-                & (pc.field("end_position") >= region_obj.start)
-                & (pc.field("position") <= region_obj.stop)
-            )
+            region_filter = (pc.field("chromosome") == region.chrom)
+            if region.start is not None:
+                region_filter = (
+                    region_filter & (pc.field("end_position") >= region.start)
+                )
+            if region.stop is not None:
+                region_filter = (
+                    region_filter & (pc.field("position") <= region.stop)
+                )
 
-        for summary_paths in self.get_summary_pq_filepaths(region_obj):
+        for summary_paths in self.get_summary_pq_filepaths(region):
             if not summary_paths:
                 continue
             seen = set()
@@ -349,14 +351,10 @@ class ParquetLoader:
                         )
 
     def fetch_variants(
-        self, region: str | None = None,
+        self, region: Region | None = None,
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
         """Iterate over summary and family variants."""
-        region_obj = None
-        if region is not None:
-            region_obj = Region.from_str(region)
-
-        for summary_paths in self.get_summary_pq_filepaths(region_obj):
+        for summary_paths in self.get_summary_pq_filepaths(region):
             if not summary_paths:
                 continue
             family_paths: list[str] = []
@@ -368,10 +366,10 @@ class ParquetLoader:
 
             for alleles in summary_reader:
                 rec = alleles[0]
-                if region_obj is not None \
-                    and not region_obj.intersects(Region(rec["chromosome"],
-                                                         rec["position"],
-                                                         rec["end_position"])):
+                if region is not None \
+                    and not region.intersects(Region(rec["chromosome"],
+                                                     rec["position"],
+                                                     rec["end_position"])):
                     continue
 
                 sv_idx = (rec["bucket_index"], rec["summary_index"])
@@ -400,7 +398,7 @@ class ParquetLoader:
             family_reader.close()
 
     def fetch_family_variants(
-        self, region: str | None = None,
+        self, region: Region | None = None,
     ) -> Generator[FamilyVariant, None, None]:
         """Iterate over family variants."""
         for _, fvs in self.fetch_variants(region):
