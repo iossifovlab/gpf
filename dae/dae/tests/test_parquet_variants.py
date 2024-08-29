@@ -136,9 +136,28 @@ def test_query_all_variants(imported_study: GenotypeData) -> None:
     assert len(vs) == 12
 
 
-def test_query_variants_with_region(imported_study: GenotypeData) -> None:
-    vs = list(imported_study.query_variants(regions=[Region("chr1", 1, 99)]))
-    assert len(vs) == 6
+@pytest.mark.parametrize("region, expected", [
+    (Region("chr1", 1, 99), 3),
+    (Region("chr1", 90, None), 4),
+    (Region("chr1", None, 89), 2),
+])
+def test_query_summary_variants_with_region(
+    imported_study: GenotypeData, region: Region, expected: int,
+) -> None:
+    vs = list(imported_study.query_summary_variants(regions=[region]))
+    assert len(vs) == expected
+
+
+@pytest.mark.parametrize("region, expected", [
+    (Region("chr1", 1, 99), 6),
+    (Region("chr1", 90, None), 8),
+    (Region("chr1", None, 89), 4),
+])
+def test_query_family_variants_with_region(
+    imported_study: GenotypeData, region: Region, expected: int,
+) -> None:
+    vs = list(imported_study.query_variants(regions=[region]))
+    assert len(vs) == expected
 
 
 def test_query_study_with_dirless_storage(
