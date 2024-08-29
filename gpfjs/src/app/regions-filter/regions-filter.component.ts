@@ -24,9 +24,9 @@ export class RegionsFilterComponent extends StatefulComponentNgRx implements OnI
     super.ngOnInit();
     this.focusTextInputArea();
     this.regionsFilter.genome = this.genome;
-    // this.store.select(selectRegionsFilters).pipe(take(1)).subscribe((regionsFilters: string[]) => {
-    //   this.setRegionsFilter(regionsFilters.join('\n'));
-    // });
+    this.store.select(selectRegionsFilters).pipe(take(1)).subscribe((regionsFilters: string[]) => {
+      this.setRegionsFilter(regionsFilters.join('\n'));
+    });
   }
 
   public setRegionsFilter(regionsFilter: string): void {

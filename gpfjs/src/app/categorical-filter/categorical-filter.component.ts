@@ -3,10 +3,10 @@ import { CategoricalFilterState, CategoricalSelection } from '../person-filters/
 import { PersonFilter } from '../datasets/datasets';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { Observable, switchMap, take } from 'rxjs';
+import { Observable, pipe, switchMap, take } from 'rxjs';
 import { environment } from 'environments/environment';
 import { Store } from '@ngrx/store';
-import { DatasetModel, selectDatasetId } from 'app/datasets/datasets.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-categorical-filter',
@@ -46,24 +46,25 @@ export class CategoricalFilterComponent implements OnInit {
       });
     });
 
-    // this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-    //   switchMap((state: DatasetModel) => {
-    //     const selectedDatasetId = state.selectedDatasetId;
+    this.store.select(selectDatasetId).pipe(
+      take(1),
+      switchMap((datasetIdState: string) => {
+        const selectedDatasetId = datasetIdState;
 
-    //     if (this.categoricalFilter.from === 'phenodb') {
-    //       this.sourceDescription$ = this.phenoBrowserService.getMeasureDescription(
-    //         selectedDatasetId, this.categoricalFilter.source
-    //       );
-    //     } else if (this.categoricalFilter.from === 'pedigree') {
-    //       this.sourceDescription$ = this.datasetsService.getDatasetPedigreeColumnDetails(
-    //         selectedDatasetId, this.categoricalFilter.source
-    //       );
-    //     }
-    //     return this.sourceDescription$;
-    //   })
-    // ).subscribe(res => {
-    //   this.valuesDomain = res['values_domain'];
-    // });
+        if (this.categoricalFilter.from === 'phenodb') {
+          this.sourceDescription$ = this.phenoBrowserService.getMeasureDescription(
+            selectedDatasetId, this.categoricalFilter.source
+          );
+        } else if (this.categoricalFilter.from === 'pedigree') {
+          this.sourceDescription$ = this.datasetsService.getDatasetPedigreeColumnDetails(
+            selectedDatasetId, this.categoricalFilter.source
+          );
+        }
+        return this.sourceDescription$;
+      })
+    ).subscribe(res => {
+      this.valuesDomain = res['values_domain'];
+    });
   }
 
   public set selectedValue(value) {

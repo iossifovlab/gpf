@@ -17,7 +17,7 @@ import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { Store } from '@ngrx/store';
-import { DatasetModel, selectDatasetId } from 'app/datasets/datasets.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({

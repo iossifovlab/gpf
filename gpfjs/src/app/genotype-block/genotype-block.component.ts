@@ -1,9 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 
-import { InheritancetypesState, InheritancetypesModel } from 'app/inheritancetypes/inheritancetypes.state';
-// import { PedigreeSelectorState, PedigreeSelectorModel } from 'app/pedigree-selector/pedigree-selector.state';
-
 @Component({
   selector: 'gpf-genotype-block',
   templateUrl: './genotype-block.component.html',

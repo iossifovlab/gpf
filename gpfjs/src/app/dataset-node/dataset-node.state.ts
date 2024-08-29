@@ -2,7 +2,7 @@ import { createReducer, createAction, on, props, createFeatureSelector } from '@
 import { cloneDeep } from 'lodash';
 export const initialState: string[] = [];
 
-export const selectExpandedDatasets = createFeatureSelector<object>('expandedDatasets');
+export const selectExpandedDatasets = createFeatureSelector<string[]>('expandedDatasets');
 
 export const setExpandedDatasets = createAction(
   '[Genotype] Set expanded datasets',

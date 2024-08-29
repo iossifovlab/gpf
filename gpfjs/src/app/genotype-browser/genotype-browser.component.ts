@@ -9,7 +9,7 @@ import { filter, map, switchMap, take } from 'rxjs/operators';
 // import { StudyFiltersState } from 'app/study-filters/study-filters.state';
 import { clone, isEmpty } from 'lodash';
 import { NavigationStart, Router } from '@angular/router';
-import { DatasetModel, selectDatasetId } from 'app/datasets/datasets.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store } from '@ngrx/store';
 import { selectErrors } from 'app/common/errors_ngrx.state';

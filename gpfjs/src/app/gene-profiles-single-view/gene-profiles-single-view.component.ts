@@ -21,7 +21,6 @@ import { GenomicScore } from 'app/genotype-browser/genotype-browser';
 // import { SetPresentInChildValues } from 'app/present-in-child/present-in-child.state';
 // import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
 import { LGDS } from 'app/effect-types/effect-types';
-import { DatasetModel } from 'app/datasets/datasets.state';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
 import { setVariantTypes } from 'app/variant-types/variant-types.state';
 import { setGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
@@ -31,6 +30,7 @@ import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.sta
 import { selectGeneProfiles, setGeneProfilesOpenedTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { setStudyTypes } from 'app/study-types/study-types.state';
 import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -248,8 +248,8 @@ export class GeneProfileSingleViewComponent implements OnInit {
       }
     }));
 
-    store.selectOnce((state: object) => state).subscribe((state) => {
-      (state['datasetState'] as DatasetModel).selectedDatasetId = datasetId;
+    store.subscribe(state => {
+      state['datasetState'].selectedDatasetId = datasetId;
       queryService.saveQuery(state, 'genotype')
         .pipe(take(1))
         .subscribe(urlObject => {

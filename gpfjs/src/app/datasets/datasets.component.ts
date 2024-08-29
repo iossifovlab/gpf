@@ -1,17 +1,21 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
-import { Subscription, combineLatest, of, switchMap } from 'rxjs';
+import { Subscription, combineLatest, of, switchMap, take } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngrx/store';
 // import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
-import { resetDatasetId, selectDatasetId, setDatasetId } from './datasets.state';
+import { selectDatasetId, setDatasetId } from './datasets.state';
 import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
 import { resetAllErrors, resetErrors } from 'app/common/errors_ngrx.state';
 import { resetFamilyIds } from 'app/family-ids/family-ids.state';
-import { resetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
+import {
+  resetExpandedDatasets,
+  selectExpandedDatasets,
+  setExpandedDatasets
+} from 'app/dataset-node/dataset-node.state';
 import { resetPersonIds } from 'app/person-ids/person-ids.state';
 import { resetStudyFilters } from 'app/study-filters/study-filters.state';
 import { resetEffectTypes } from 'app/effect-types/effect-types.state';
@@ -24,6 +28,7 @@ import { resetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { resetPresentInChild } from 'app/present-in-child/present-in-child.state';
 import { resetPresentInParent } from 'app/present-in-parent/present-in-parent.state';
 import { resetPhenoToolMeasure } from 'app/pheno-tool-measure/pheno-tool-measure.state';
+import { resetFamilyTags } from 'app/family-tags/family-tags.state';
 
 @Component({
   selector: 'gpf-datasets',
@@ -80,7 +85,7 @@ export class DatasetsComponent extends StatefulComponentNgRx implements OnInit, 
         datasets: this.datasetsService.getDatasetsObservable(),
         visibleDatasets: this.datasetsService.getVisibleDatasets()
       }).subscribe(({datasets, visibleDatasets}) => {
-        this.visibleDatasets = visibleDatasets as string[];
+        this.visibleDatasets = visibleDatasets;
         this.datasetTrees = new Array<DatasetNode>();
         datasets = datasets
           .filter(d => d.groups.find((g) => g.name === 'hidden') === undefined || d.accessRights)
@@ -103,14 +108,13 @@ export class DatasetsComponent extends StatefulComponentNgRx implements OnInit, 
   }
 
   private saveTopLevelDatasetsToState(): void {
-    // this.store.selectOnce(
-    //   (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
-    //   .subscribe(state => {
-    //     this.datasetTrees.forEach(node => {
-    //       state.expandedDatasets.push(node.dataset.id);
-    //     });
-    //     this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
-    //   });
+    this.store.select(selectExpandedDatasets).pipe(take(1))
+      .subscribe(expandedDatasetsState => {
+        this.datasetTrees.forEach(node => {
+          expandedDatasetsState.push(node.dataset.id);
+        });
+        this.store.dispatch(setExpandedDatasets({expandedDatasets: expandedDatasetsState}));
+      });
   }
 
   public ngOnDestroy(): void {
@@ -216,7 +220,7 @@ export class DatasetsComponent extends StatefulComponentNgRx implements OnInit, 
       this.store.dispatch(resetAllErrors());
       this.store.dispatch(resetFamilyIds());
       this.store.dispatch(resetExpandedDatasets());
-      // this.store.dispatch(resetFamilyTags());
+      this.store.dispatch(resetFamilyTags());
       this.store.dispatch(resetEffectTypes());
       this.store.dispatch(resetPersonIds());
       // this.store.dispatch(resetPersonFilters());

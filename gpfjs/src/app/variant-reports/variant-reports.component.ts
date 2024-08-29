@@ -3,7 +3,6 @@ import { VariantReportsService } from './variant-reports.service';
 import {
   VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
 } from './variant-reports';
-import { Dataset } from 'app/datasets/datasets';
 import { switchMap, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
@@ -12,9 +11,9 @@ import { ConfigService } from 'app/config/config.service';
 import { Store } from '@ngrx/store';
 // import { SetFamilyTags } from 'app/family-tags/family-tags.state';
 import { Router } from '@angular/router';
-import { DatasetModel, selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { setFamilyTags } from 'app/family-tags/family-tags.state';
+import { resetFamilyTags } from 'app/family-tags/family-tags.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -69,15 +68,11 @@ export class VariantReportsComponent implements OnInit {
     private router: Router,
     private datasetsService: DatasetsService,
   ) {
-    // router.events.subscribe(() => {
-    //   this.store.dispatch(
-    //     setFamilyTags({
-    //       selectedFamilyTags: [],
-    //       deselectedFamilyTags: [],
-    //       tagIntersection: true,
-    //     })
-    //   );
-    // });
+    router.events.subscribe(() => {
+      this.store.dispatch(
+        resetFamilyTags()
+      );
+    });
   }
 
   @HostListener('window:resize')

@@ -1,6 +1,8 @@
 import { Component, ViewChild, AfterViewInit, Input } from '@angular/core';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
+import { resetRegionsFilters, selectRegionsFilters } from 'app/regions-filter/regions-filter.state';
+import { take } from 'rxjs';
 // import { RegionsFilterModel, RegionsFilterState } from 'app/regions-filter/regions-filter.state';
 
 @Component({
@@ -15,14 +17,14 @@ export class RegionsBlockComponent implements AfterViewInit {
   public constructor(private store: Store) { }
 
   public ngAfterViewInit(): void {
-    // this.store.selectOnce(RegionsFilterState).subscribe((state: RegionsFilterModel) => {
-    //   if (state.regionsFilters.length) {
-    //     setTimeout(() => this.ngbNav.select('regionsFilter'));
-    //   }
-    // });
+    this.store.select(selectRegionsFilters).pipe(take(1)).subscribe(regionsFiltersState => {
+      if (regionsFiltersState.length) {
+        setTimeout(() => this.ngbNav.select('regionsFilter'));
+      }
+    });
   }
 
   public onNavChange(): void {
-    // this.store.dispatch(new StateReset(RegionsFilterState));
+    this.store.dispatch(resetRegionsFilters());
   }
 }

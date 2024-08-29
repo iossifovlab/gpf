@@ -174,7 +174,7 @@ import { FamilyTagsComponent } from './family-tags/family-tags.component';
 import { familyTagsReducer } from './family-tags/family-tags.state';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
-import { datasetIdReducer, DatasetState } from './datasets/datasets.state';
+import { datasetIdReducer } from './datasets/datasets.state';
 import { StoreModule } from '@ngrx/store';
 import { errorsReducer } from './common/errors_ngrx.state';
 import { familyIdsReducer } from './family-ids/family-ids.state';
@@ -429,9 +429,8 @@ const appRoutes: Routes = [
     NgMultiSelectDropDownModule.forRoot(),
     NgxsModule.forRoot([
       InheritancetypesState,
-      ErrorsState, DatasetState,
-    ], {compatibility: { strictContentSecurityPolicy: true }}
-    ),
+      ErrorsState
+    ], {compatibility: { strictContentSecurityPolicy: true }}),
     NgxsResetPluginModule.forRoot(),
     DragDropModule,
     ClipboardModule,

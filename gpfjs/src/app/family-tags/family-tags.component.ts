@@ -4,6 +4,7 @@ import { selectFamilyTags, setFamilyTags } from './family-tags.state';
 import { Store } from '@ngrx/store';
 import { take } from 'rxjs';
 import { cloneDeep } from 'lodash';
+import { FamilyTags } from './family-tags';
 
 @Component({
   selector: 'gpf-family-tags',
@@ -20,7 +21,7 @@ export class FamilyTagsComponent implements OnInit {
   public deselectedTags: string[] = [];
   public filtersButtonsState: Record<string, number> = {};
   public tagIntersection = true; // mode "And"
-  // public familyTags = new FamilyTags();
+  public familyTags: FamilyTags;
 
   public constructor(protected store: Store) { }
 
@@ -29,12 +30,16 @@ export class FamilyTagsComponent implements OnInit {
       this.filtersButtonsState[tag] = 0;
     });
 
-    // this.store
-    //   .select(selectFamilyTags)
-    //   .pipe(take(1))
-    //   .subscribe((familyTags: { selectedFamilyTags: string[], deselectedFamilyTags: string[], tagIntersection: boolean }) => {
-    //     this.restoreFamilyTags(familyTags.selectedFamilyTags, familyTags.deselectedFamilyTags, familyTags.tagIntersection);
-    //   });
+    this.store
+      .select(selectFamilyTags)
+      .pipe(take(1))
+      .subscribe((familyTags: FamilyTags) => {
+        this.restoreFamilyTags(
+          familyTags.selectedFamilyTags,
+          familyTags.deselectedFamilyTags,
+          familyTags.tagIntersection
+        );
+      });
   }
 
   public restoreFamilyTags(selectedTags: string[], deselectedTags: string[], intersection: boolean): void {
@@ -50,9 +55,9 @@ export class FamilyTagsComponent implements OnInit {
 
     this.tagIntersection = intersection;
 
-    // this.familyTags.deselectedTags = deselectedTags;
-    // this.familyTags.selectedTags = selectedTags;
-    // this.familyTags.tagIntersection = intersection;
+    this.familyTags.deselectedFamilyTags = deselectedTags;
+    this.familyTags.selectedFamilyTags = selectedTags;
+    this.familyTags.tagIntersection = intersection;
     this.onUpdateTags();
     this.dispatchState();
   }

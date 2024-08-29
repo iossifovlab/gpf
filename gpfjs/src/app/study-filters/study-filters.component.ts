@@ -51,19 +51,18 @@ export class StudyFiltersComponent extends StatefulComponentNgRx implements OnIn
         }
       }
     });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    // this.store.select(selectStudyFilters).pipe(take(1)).subscribe((studyFilters: string[]) => {
-    //   // restore state
-    //   if ((studyFilters?.length ?? 0) !== 0) {
-    //     setTimeout(() => {
-    //       if (this.showStudyFilters === false) {
-    //         this.showStudyFilters = true;
-    //         this.ngbNav.select('studies');
-    //         this.updateState(new Set(studyFilters));
-    //       }
-    //     }, 200);
-    //   }
-    // });
+    this.store.select(selectStudyFilters).pipe(take(1)).subscribe((studyFilters: string[]) => {
+      // restore state
+      if ((studyFilters?.length ?? 0) !== 0) {
+        setTimeout(() => {
+          if (this.showStudyFilters === false) {
+            this.showStudyFilters = true;
+            this.ngbNav.select('studies');
+            this.updateState(new Set(studyFilters));
+          }
+        }, 200);
+      }
+    });
   }
 
   public ngOnDestroy(): void {
