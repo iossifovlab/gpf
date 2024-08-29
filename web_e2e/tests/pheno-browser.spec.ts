@@ -62,11 +62,11 @@ test.describe('Pheno browser tests', () => {
     await page.getByText('Proband Pheno Measure', { exact: true }).click();
     await expect(page.locator('.measure-name-cell').nth(0)).toHaveText('sample_id');
 
-    await page.getByText('Measure Description', { exact: true }).click();
-    await expect(page.locator('.description-cell').nth(2)).toHaveText('The IQ of the individual');
+    await page.getByText('male', { exact: true }).first().click();
+    await expect(page.locator('.age').nth(0)).toHaveText('0.97110.2512');
 
-    await page.getByText('Measure Description', { exact: true }).click();
-    await expect(page.locator('.description-cell').nth(2)).toHaveText('');
+    await page.getByText('male', { exact: true }).first().click();
+    await expect(page.locator('.age').nth(0)).toHaveText('NaNNaN');
   });
 
   test('should have the correct text values in all rows', async({ page }) => {
