@@ -325,7 +325,7 @@ class ParquetLoader:
         """Iterate over summary variants."""
         region_filter = None
         if region is not None:
-            region_filter = (pc.field("chromosome") == region.chrom)
+            region_filter = pc.field("chromosome") == region.chrom
             if region.start is not None:
                 region_filter = (
                     region_filter & (pc.field("end_position") >= region.start)
