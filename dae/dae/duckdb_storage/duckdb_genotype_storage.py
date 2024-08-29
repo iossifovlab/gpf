@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import logging
 import os
 import pathlib
@@ -16,6 +17,11 @@ from cerberus import Validator
 from s3fs.core import S3FileSystem
 
 from dae.duckdb_storage.duckdb2_variants import Db2Layout, DuckDb2Variants
+from dae.duckdb_storage.duckdb_storage_config import (
+    DuckDbConf,
+    DuckDbParquetConf,
+    parse_duckdb_config,
+)
 from dae.duckdb_storage.duckdb_variants import DuckDbVariants
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
@@ -54,6 +60,9 @@ def duckdb_connect(
     if db_name is not None:
         return _duckdb_db_connect(db_name, read_only=read_only)
     return _duckdb_global_connect()
+
+
+PARQUET_SCAN = re.compile(r"parquet_scan\('(?P<parquet_path>.+)'\)")
 
 
 class DuckDbGenotypeStorage(GenotypeStorage):
@@ -493,8 +502,6 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         return self.create_parquet_scans_layout_from_layout(
             layout, partition_descriptor)
 
-    PARQUET_SCAN = re.compile(r"parquet_scan\('(?P<parquet_path>.+)'\)")
-
     def _base_dir_join(self, dir_name: str) -> str:
         base_dir = self.get_base_dir()
         assert base_dir is not None
@@ -507,7 +514,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
         if self.get_base_dir() is None:
             return parquet_scan
 
-        match = self.PARQUET_SCAN.fullmatch(parquet_scan)
+        match = PARQUET_SCAN.fullmatch(parquet_scan)
         if not match:
             return parquet_scan
 
@@ -583,3 +590,238 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
         raise ValueError(
             f"Unsuported DuckDb storage type: {self.storage_type}")
+
+
+def duckdb_storage_factory(storage_config: dict) -> DuckDbGenotypeStorage:
+    dd_config = parse_duckdb_config(storage_config)
+    if dd_config.storage_type != "duckdb":
+        raise TypeError(
+            f"unexpected storage type: {dd_config.storage_type}")
+    return DuckDbGenotypeStorage(storage_config)
+
+
+class AbstractDuckDbStorage(GenotypeStorage):
+    """Defines abstract DuckDb genotype storage."""
+
+    def __init__(
+        self,
+        dd_config: DuckDbConf | DuckDbParquetConf,
+    ):
+        super().__init__(dd_config.dict())
+        self.dd_config = dd_config
+        self.connection_factory: duckdb.DuckDBPyConnection | None = None
+
+    def _memory_limit_clause(self) -> str | None:
+        memory_limit = self.dd_config.memory_limit
+        if memory_limit is None:
+            return None
+
+        mlimit = memory_limit.human_readable(decimal=True)
+        return f"SET memory_limit='{mlimit}'"
+
+    def shutdown(self) -> AbstractDuckDbStorage:
+        if self.connection_factory is None:
+            logger.warning(
+                "trying to shutdown already stopped DuckDbGenotypeStorage")
+            return self
+        self.connection_factory.close()
+        self.connection_factory = None
+        return self
+
+    def get_study_config_tables(
+        self,
+        study_config: dict[str, Any],
+    ) -> Db2Layout:
+        """Return the study tables configuration."""
+        tables = study_config["genotype_storage"]["tables"]
+        db_name = None
+        if self.storage_type in {"duckdb", "duckdb-s3", "duckdb-legacy"}:
+            db_name = self.storage_config.get("db")
+        return Db2Layout(
+            db=db_name,
+            study=study_config["id"],
+            pedigree=tables["pedigree"],
+            summary=tables.get("summary"),
+            family=tables.get("family"),
+            meta=tables["meta"],
+        )
+
+    @abc.abstractmethod
+    def import_dataset(
+        self,
+        study_id: str,
+        layout: Schema2DatasetLayout,
+        partition_descriptor: PartitionDescriptor,
+    ) -> Schema2DatasetLayout:
+        """Import study parquet dataset into a DuckDb genotype storage."""
+
+    @abc.abstractmethod
+    def build_study_layout(
+        self,
+        study_config: dict[str, Any],
+    ) -> Db2Layout:
+        """Construct study layout from study and storage configuration."""
+
+    def build_backend(
+            self, study_config: dict,
+            genome: ReferenceGenome,
+            gene_models: GeneModels) -> DuckDbVariants | DuckDb2Variants:
+        if self.connection_factory is None:
+            self.start()
+
+        tables_layout = self.build_study_layout(study_config)
+
+        if self.connection_factory is None:
+            raise ValueError(
+                f"duckdb genotype storage not started: "
+                f"{self.storage_config}")
+        assert self.connection_factory is not None
+
+        if self.storage_type == "duckdb-legacy":
+            return DuckDbVariants(
+                self.connection_factory,
+                tables_layout.db,
+                tables_layout.family,
+                tables_layout.summary,
+                tables_layout.pedigree,
+                tables_layout.meta,
+                gene_models)
+
+        return DuckDb2Variants(
+            self.connection_factory,
+            tables_layout,
+            gene_models,
+            genome,
+        )
+
+
+def _join_base_dir_and_parquet_scan(
+    base_dir: pathlib.Path,
+    parquet_scan: str | None,
+) -> str | None:
+    if parquet_scan is None:
+        return None
+
+    match = PARQUET_SCAN.fullmatch(parquet_scan)
+    if not match:
+        return parquet_scan
+
+    parquet_path = match.groupdict()["parquet_path"]
+    assert parquet_path
+    assert base_dir is not None
+
+    full_path = fs_utils.join(str(base_dir), parquet_path)
+    return f"parquet_scan('{full_path}')"
+
+
+def _create_relative_parquet_scans_layout(
+    base_dir: pathlib.Path,
+    study_id: str,
+    partition_descriptor: PartitionDescriptor,
+) -> Schema2DatasetLayout:
+    """Construct DuckDb parquet scans relative to base dir."""
+
+    study_dir = study_id
+    pedigree_path = fs_utils.join(study_dir, "pedigree")
+    meta_path = fs_utils.join(study_dir, "meta")
+    summary_path = fs_utils.join(study_dir, "summary")
+    summary_partition = partition_descriptor.dataset_summary_partition()
+    family_path = fs_utils.join(study_dir, "family")
+    family_partition = partition_descriptor.dataset_family_partition()
+    study_dir = fs_utils.join(str(base_dir), study_dir)
+    paths = Schema2DatasetLayout(
+        study_dir,
+        f"{pedigree_path}/pedigree.parquet",
+        f"{summary_path}/{'*/' * len(summary_partition)}*.parquet",
+        f"{family_path}/{'*/' * len(family_partition)}*.parquet",
+        f"{meta_path}/meta.parquet")
+    return Schema2DatasetLayout(
+        study_dir,
+        f"parquet_scan('{paths.pedigree}')",
+        f"parquet_scan('{paths.summary}')",
+        f"parquet_scan('{paths.family}')",
+        f"parquet_scan('{paths.meta}')")
+
+
+class DuckDbParquetStorage(AbstractDuckDbStorage):
+    """Defines `duckdb-parquet` genotype storage."""
+
+    def __init__(self, dd_config: DuckDbParquetConf):
+        super().__init__(dd_config)
+        self.dd_config = dd_config
+        self.connection_factory: duckdb.DuckDBPyConnection | None = None
+
+    def start(self) -> DuckDbParquetStorage:
+        if self.connection_factory:
+            logger.warning(
+                "starting already started DuckDb genotype storage: <%s>",
+                self.storage_id)
+            return self
+
+        logger.info("connection to inmemory duckdb")
+        self.connection_factory = duckdb.connect(":memory:")
+
+        memory_limit = self._memory_limit_clause()
+        if memory_limit:
+            logger.info("memory limit: %s", memory_limit)
+            self.connection_factory.sql(memory_limit)
+
+        return self
+
+    @classmethod
+    def get_storage_types(cls) -> set[str]:
+        return {"duckdb-parquet"}
+
+    def build_study_layout(
+        self,
+        study_config: dict[str, Any],
+    ) -> Db2Layout:
+        study_config_layout = self.get_study_config_tables(study_config)
+        assert study_config_layout.db is None
+        base_dir = self.dd_config.base_dir
+
+        pedigree = _join_base_dir_and_parquet_scan(
+            base_dir, study_config_layout.pedigree)
+        meta = _join_base_dir_and_parquet_scan(
+            base_dir, study_config_layout.meta)
+        assert pedigree is not None
+        assert meta is not None
+
+        return Db2Layout(
+            db=None,
+            study=study_config_layout.study,
+            pedigree=pedigree,
+            summary=_join_base_dir_and_parquet_scan(
+                base_dir, study_config_layout.summary),
+            family=_join_base_dir_and_parquet_scan(
+                base_dir, study_config_layout.family),
+            meta=meta,
+        )
+
+    def import_dataset(
+        self,
+        study_id: str,
+        layout: Schema2DatasetLayout,
+        partition_descriptor: PartitionDescriptor,
+    ) -> Schema2DatasetLayout:
+        """Import study parquet dataset into duckdb genotype storage."""
+
+        dest_layout = _create_relative_parquet_scans_layout(
+            self.dd_config.base_dir,
+            study_id,
+            partition_descriptor,
+        )
+
+        fs_utils.copy(dest_layout.study, layout.study)
+        return dest_layout
+
+
+def duckdb_parquet_storage_factory(
+    storage_config: dict[str, Any],
+) -> DuckDbParquetStorage:
+    """Create `duckdb-parquet` genotype storage."""
+    dd_config = parse_duckdb_config(storage_config)
+    if dd_config.storage_type != "duckdb-parquet":
+        raise TypeError(
+            f"unexpected storage type: {dd_config.storage_type}")
+    return DuckDbParquetStorage(dd_config)

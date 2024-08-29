@@ -60,13 +60,15 @@ def _load_genotype_storage_factory_plugins() -> None:
     # pylint: disable=import-outside-toplevel
     from importlib_metadata import entry_points
     discovered_entries = entry_points(group="dae.genotype_storage.factories")
+
     for entry in discovered_entries:
         storage_type = entry.name
         factory = entry.load()
         if storage_type in _REGISTERED_GENOTYPE_STORAGE_FACTORIES:
             logger.warning(
                 "overwriting genotype storage type: %s", storage_type)
-        if storage_type not in factory.get_storage_types():
+        if hasattr(factory, "get_storage_types") and \
+                storage_type not in factory.get_storage_types():
             raise ValueError("missmatch genotype storage types")
 
         _REGISTERED_GENOTYPE_STORAGE_FACTORIES[storage_type] = factory

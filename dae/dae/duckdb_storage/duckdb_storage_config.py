@@ -6,6 +6,7 @@ from typing import Annotated, Any, Literal
 from pydantic import (
     AnyUrl,
     BaseModel,
+    ByteSize,
     ConfigDict,
     HttpUrl,
     UrlConstraints,
@@ -25,23 +26,30 @@ BaseDirPath = Annotated[
 ]
 
 S3Path = Annotated[
-    AnyUrl,  # type: ignore
+    AnyUrl,
     UrlConstraints(allowed_schemes=["s3"]),
 ]
 
 
-class DuckDbConf(BaseModel):
-    """`duckdb` storage configuration class."""
+class DuckDbBaseConf(BaseModel):
+    """Base class for DuckDb based storage configuration."""
     model_config = ConfigDict(extra="forbid")
 
-    storage_type: Literal["duckdb"]
+    id: str
+    memory_limit: ByteSize | None = None
+
+
+class DuckDbConf(DuckDbBaseConf):
+    """`duckdb` storage configuration class."""
+
+    storage_type: Literal["duckdb"] | Literal["duckdb-legacy"]
     id: str
     db: pathlib.Path
     read_only: bool = True
     base_dir: BaseDirPath
 
 
-class DuckDbParquetConf(BaseModel):
+class DuckDbParquetConf(DuckDbBaseConf):
     """`duckdb-parquet` storage configuration class."""
     model_config = ConfigDict(extra="forbid")
 
@@ -50,7 +58,7 @@ class DuckDbParquetConf(BaseModel):
     base_dir: BaseDirPath
 
 
-class DuckDbS3Conf(BaseModel):
+class DuckDbS3Conf(DuckDbBaseConf):
     """`duckdb-s3` storage configuration class."""
     model_config = ConfigDict(extra="forbid")
 
@@ -62,7 +70,7 @@ class DuckDbS3Conf(BaseModel):
     work_dir: pathlib.Path | None = None
 
 
-class DuckDbS3ParquetConf(BaseModel):
+class DuckDbS3ParquetConf(DuckDbBaseConf):
     """`duckdb-parquet` storage configuration class."""
     model_config = ConfigDict(extra="forbid")
 

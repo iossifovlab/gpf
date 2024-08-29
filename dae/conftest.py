@@ -20,25 +20,25 @@ pytest_plugins = ["dae_conftests.dae_conftests"]
 
 def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
     return [
-        # DuckDb2 Storage
-        {
-            "id": "duckdb2",
-            "storage_type": "duckdb2",
-            "db": "duckdb2_storage/storage2.db",
-            "base_dir": str(root_path),
-            "read_only": False,
-        },
+        # # DuckDb2 Storage
+        # {
+        #     "id": "duckdb2",
+        #     "storage_type": "duckdb2",
+        #     "db": "duckdb2_storage/storage2.db",
+        #     "base_dir": str(root_path),
+        #     "read_only": False,
+        # },
         # DuckDb2 Parquet Storage
         {
             "id": "duckdb2_parquet",
-            "storage_type": "duckdb2",
+            "storage_type": "duckdb-parquet",
             "base_dir": str(root_path / "duckdb_parquet"),
         },
-        # DuckDb2 Parquet Inplace Storage
-        {
-            "id": "duckdb2_inplace",
-            "storage_type": "duckdb2",
-        },
+        # # DuckDb2 Parquet Inplace Storage
+        # {
+        #     "id": "duckdb2_inplace",
+        #     "storage_type": "duckdb2",
+        # },
 
         # DuckDb Storage
         {
@@ -48,17 +48,18 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
             "base_dir": str(root_path),
             "read_only": False,
         },
-        # DuckDb Parquet Storage
-        {
-            "id": "duckdb_parquet",
-            "storage_type": "duckdb",
-            "base_dir": str(root_path / "duckdb_parquet"),
-        },
-        # DuckDb Parquet Inplace Storage
-        {
-            "id": "duckdb_inplace",
-            "storage_type": "duckdb",
-        },
+
+        # # DuckDb Parquet Storage
+        # {
+        #     "id": "duckdb_parquet",
+        #     "storage_type": "duckdb",
+        #     "base_dir": str(root_path / "duckdb_parquet"),
+        # },
+        # # DuckDb Parquet Inplace Storage
+        # {
+        #     "id": "duckdb_inplace",
+        #     "storage_type": "duckdb",
+        # },
 
         # Filesystem InMemory
         {
@@ -67,12 +68,12 @@ def default_genotype_storage_configs(root_path: pathlib.Path) -> list[dict]:
             "dir": f"{root_path}/genotype_filesystem_data",
         },
 
-        # Schema2 Parquet
-        {
-            "id": "schema2_parquet",
-            "storage_type": "parquet",
-            "dir": str(root_path),
-        },
+        # # Schema2 Parquet
+        # {
+        #     "id": "schema2_parquet",
+        #     "storage_type": "parquet",
+        #     "dir": str(root_path),
+        # },
     ]
 
 
@@ -459,12 +460,14 @@ def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
     all_storage_types = {
         "inmemory",
         "duckdb", "duckdb2",
+        "duckdb-parquet",
         "impala", "impala2",
         "gcp",
         "parquet",
     }
     schema2_storage_types = {
         "duckdb", "duckdb2",
+        "duckdb-parquet",
         "impala2",
         "gcp",
         "parquet",
