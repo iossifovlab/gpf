@@ -4,7 +4,7 @@ import pathlib
 import pytest
 
 from dae.genotype_storage import get_genotype_storage_factory
-from dae.parquet_variants import ParquetGenotypeStorage
+from dae.parquet_storage.storage import ParquetGenotypeStorage
 from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
