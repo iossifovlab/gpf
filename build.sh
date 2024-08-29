@@ -127,14 +127,17 @@ function main() {
   build_stage "Run localstack"
   {
 
-       local -A ctx_localstack
-       build_run_ctx_init ctx:ctx_localstack "persistent" "container" "localstack/localstack" \
+        local -A ctx_localstack
+
+        build_run_local docker pull localstack/localstack
+
+        build_run_ctx_init ctx:ctx_localstack "persistent" "container" "localstack/localstack" \
            "cmd-from-image" "no-def-mounts" \
            'ports:4566,4510-4559' \
            --hostname localstack --network "${ctx_network["network_id"]}" --workdir /opt/code/localstack/
 
-       defer_ret build_run_ctx_reset ctx:ctx_localstack
-       build_run_ctx_persist ctx:ctx_localstack
+        defer_ret build_run_ctx_reset ctx:ctx_localstack
+        build_run_ctx_persist ctx:ctx_localstack
 
   }
 
