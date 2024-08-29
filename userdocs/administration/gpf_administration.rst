@@ -7,7 +7,7 @@ GPF Administration
 
    getting_started
    genomic_resources
-   annotation_tools
+   annotation
    working_with_pedigree_files
    working_with_vcf_files
    pheno
