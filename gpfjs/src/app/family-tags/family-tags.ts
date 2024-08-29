@@ -1,5 +1,5 @@
-// export class FamilyTags {
-//   public selectedTags: string[] = [];
-//   public deselectedTags: string[] = [];
-//   public tagIntersection = true; // mode "And"
-// }
+export interface FamilyTags {
+  selectedFamilyTags: string[];
+  deselectedFamilyTags: string[];
+  tagIntersection: boolean;
+}

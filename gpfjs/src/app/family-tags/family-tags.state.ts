@@ -1,11 +1,21 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
-export const initialState = {};
+import { FamilyTags } from './family-tags';
+import { cloneDeep } from 'lodash';
+export const initialState: FamilyTags = {
+  selectedFamilyTags: [],
+  deselectedFamilyTags: [],
+  tagIntersection: true,
+};
 
-export const selectFamilyTags = createFeatureSelector<object>('familyTags');
+export const selectFamilyTags = createFeatureSelector<FamilyTags>('familyTags');
 
 export const setFamilyTags = createAction(
   '[Genotype] Set family tags',
-  props<{ selectedFamilyTags: string[]; deselectedFamilyTags: string[]; tagIntersection: boolean }>()
+  props<FamilyTags>()
+);
+
+export const resetFamilyTags = createAction(
+  '[Genotype] Reset family tags'
 );
 
 export const familyTagsReducer = createReducer(
@@ -17,5 +27,6 @@ export const familyTagsReducer = createReducer(
       deselectedFamilyTags: deselectedFamilyTags,
       tagIntersection: tagIntersection,
     })
-  )
+  ),
+  on(resetFamilyTags, state => cloneDeep(initialState)),
 );

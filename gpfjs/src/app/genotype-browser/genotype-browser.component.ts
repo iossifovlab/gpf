@@ -1,25 +1,40 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, zip } from 'rxjs';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
 import { Dataset, PersonSet } from '../datasets/datasets';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
-import { Select, Selector, Store } from '@ngxs/store';
-import { GenotypeBlockComponent } from '../genotype-block/genotype-block.component';
-import { GenesBlockComponent } from '../genes-block/genes-block.component';
-// import { RegionsFilterState } from 'app/regions-filter/regions-filter.state';
-import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
-import { PersonFiltersBlockComponent } from 'app/person-filters-block/person-filters-block.component';
-import { ErrorsState, ErrorsModel } from '../common/errors.state';
-import { filter, switchMap, take } from 'rxjs/operators';
+import { filter, map, switchMap, take } from 'rxjs/operators';
 // import { StudyFiltersState } from 'app/study-filters/study-filters.state';
 import { clone, isEmpty } from 'lodash';
 import { NavigationStart, Router } from '@angular/router';
 import { DatasetModel, selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { Store as Store1} from '@ngrx/store';
+import { Store } from '@ngrx/store';
 import { selectErrors } from 'app/common/errors_ngrx.state';
+import { selectVariantTypes } from 'app/variant-types/variant-types.state';
+import { selectEffectTypes } from 'app/effect-types/effect-types.state';
+import { selectFamilyIds } from 'app/family-ids/family-ids.state';
+import { selectFamilyTags } from 'app/family-tags/family-tags.state';
+import { selectFamilyTypeFilter } from 'app/family-type-filter/family-type-filter.state';
+import { selectGenders } from 'app/gender/genders.state';
+import { selectGeneScores } from 'app/gene-scores/gene-scores.state';
+import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
+import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { selectGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { selectInheritanceTypes } from 'app/inheritancetypes/inheritancetypes.state';
+import { selectPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
+import { selectPersonFilters } from 'app/person-filters/person-filters.state';
+import { selectPersonIds } from 'app/person-ids/person-ids.state';
+import { selectPresentInChild } from 'app/present-in-child/present-in-child.state';
+import { selectPresentInParent } from 'app/present-in-parent/present-in-parent.state';
+import { selectRegionsFilters } from 'app/regions-filter/regions-filter.state';
+import { selectStudyFilters } from 'app/study-filters/study-filters.state';
+import { selectStudyTypes } from 'app/study-types/study-types.state';
+import {
+  selectUniqueFamilyVariantsFilter
+} from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -43,52 +58,13 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
 
   public variantsCountDisplay: string;
 
-  // @Select(GenotypeBrowserComponent.genotypeBrowserStateSelector) private state$: Observable<any[]>;
-  // @Select(ErrorsState) private errorsState$: Observable<ErrorsModel>;
-
-  // @Selector([
-  //   GenotypeBlockComponent.genotypeBlockQueryState,
-  //   GenesBlockComponent.genesBlockState,
-  //   RegionsFilterState,
-  //   GenomicScoresBlockState,
-  //   FamilyFiltersBlockComponent.familyFiltersBlockState,
-  //   PersonFiltersBlockComponent.personFiltersBlockState,
-  //   UniqueFamilyVariantsFilterState,
-  //   StudyFiltersState
-  // ])
-  // public static genotypeBrowserStateSelector(
-  //   genotypeBlockState,
-  //   genesBlockState,
-  //   regionsFilterState,
-  //   genomicScoresBlockState,
-  //   familyFiltersBlockState,
-  //   personFiltersBlockState,
-  //   uniqueFamilyVariantsFilterState,
-  //   StudyFiltersState
-  // ): object {
-  //   const res = {
-  //     ...genotypeBlockState,
-  //     ...genesBlockState,
-  //     ...genomicScoresBlockState,
-  //     ...familyFiltersBlockState,
-  //     ...personFiltersBlockState,
-  //     ...uniqueFamilyVariantsFilterState,
-  //     ...StudyFiltersState
-  //   };
-  //   if (regionsFilterState.regionsFilters.length) {
-  //     res.regions = regionsFilterState.regionsFilters;
-  //   }
-  //   return res;
-  // }
-
   public constructor(
     private queryService: QueryService,
     public readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
     private router: Router,
-    private store: Store,
     private datasetsService: DatasetsService,
-    private store1: Store1
+    private store: Store
   ) {
     this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationStart)
@@ -101,18 +77,9 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public ngOnInit(): void {
     this.genotypeBrowserState = {};
 
-    // this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-    //   switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
-    // ).subscribe(dataset => {
-    //   if (!dataset) {
-    //     return;
-    //   }
-    //   this.selectedDataset = dataset;
-    // });
-
-
-    this.store1.select(selectDatasetId).pipe(
-      switchMap(datasetId => this.datasetsService.getDataset(datasetId))
+    this.store.select(selectDatasetId).pipe(
+      take(1),
+      switchMap(datasetIdState => this.datasetsService.getDataset(datasetIdState))
     ).subscribe(dataset => {
       if (!dataset) {
         return;
@@ -120,14 +87,13 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
       this.selectedDataset = dataset;
     });
 
+    this.getGenotypeBrowserState().subscribe(state => {
+      console.log(state)
+      this.genotypeBrowserState = {...state};
+      this.genotypePreviewVariantsArray = null;
+    });
 
-
-    // this.state$.subscribe(state => {
-    //   this.genotypeBrowserState = {...state};
-    //   this.genotypePreviewVariantsArray = null;
-    // });
-
-    this.store1.subscribe(state => {
+    this.store.subscribe(state => {
       this.genotypeBrowserState['familyIds'] = state['familyIds'];
       this.genotypePreviewVariantsArray = null;
     });
@@ -144,10 +110,97 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     // this.errorsState$.subscribe(state => {
     //   setTimeout(() => this.disableQueryButtons = state.componentErrors.size > 0);
     // });
-    this.store1.select(selectErrors).subscribe(errorState => {
+    this.store.select(selectErrors).subscribe(errorState => {
       setTimeout(() => this.disableQueryButtons = Object.values(errorState).toString() !== '');
     });
   }
+
+  private getGenotypeBrowserState(): Observable<object> {
+    return zip(
+      this.store.select(selectVariantTypes),
+      this.store.select(selectEffectTypes),
+      this.store.select(selectGenders),
+      this.store.select(selectInheritanceTypes),
+      this.store.select(selectPresentInChild),
+      this.store.select(selectPresentInParent), // edited
+      this.store.select(selectStudyTypes),
+      this.store.select(selectPedigreeSelector),
+      this.store.select(selectFamilyTypeFilter),
+      this.store.select(selectFamilyIds),
+      this.store.select(selectFamilyTags),
+      this.store.select(selectPersonFilters),
+      this.store.select(selectGeneSymbols),
+      this.store.select(selectGeneSets),
+      this.store.select(selectGeneScores),
+      this.store.select(selectRegionsFilters),
+      this.store.select(selectGenomicScores),
+      this.store.select(selectPersonIds),
+      this.store.select(selectUniqueFamilyVariantsFilter),
+      this.store.select(selectStudyFilters)
+    ).pipe(
+      take(1),
+      map(([
+        variantTypesState,
+        effectTypesState,
+        gendersState,
+        inheritanceTypesState,
+        presentInChildState,
+        presentInParentState, // edited
+        studyTypesState,
+        pedigreeSelectorState,
+        familyTypeFilterState,
+        familyIdsState,
+        familyTagsState,
+        personFiltersState,
+        geneSymbolsState,
+        geneSetsState,
+        geneScoresState,
+        regionsFiltersState,
+        genomicScoresState,
+        personIdsState,
+        uniqueFamilyVariantsFilterState,
+        studyFiltersState
+      ]) => {
+        const presentInParentRarity = {
+          presentInParent: presentInParentState.presentInParent
+        };
+        if (presentInParentState.presentInParent.length !== 1
+          || presentInParentState.presentInParent[0] !== 'neither') {
+          presentInParentRarity['rarity'] = { ultraRare: presentInParentState.rarityType === 'ultraRare' };
+          if (presentInParentState.rarityType !== 'ultraRare' && presentInParentState.rarityType !== 'all') {
+            presentInParentRarity['rarity']['minFreq'] = presentInParentState.rarityIntervalStart;
+            presentInParentRarity['rarity']['maxFreq'] = presentInParentState.rarityIntervalEnd;
+          }
+        }
+
+        const state = {
+          variantTypes: variantTypesState,
+          effectTypes: effectTypesState,
+          genders: gendersState,
+          inheritanceTypes: inheritanceTypesState,
+          presentInChild: presentInChildState,
+          studyTypes: studyTypesState,
+          ...pedigreeSelectorState,
+          familyTypes: familyTypeFilterState,
+          familyIds: familyIdsState,
+          ...familyTagsState,
+          ...personFiltersState,
+          geneSymbols: geneSymbolsState,
+          ...geneSetsState,
+          ...geneScoresState,
+          regionsFilters: regionsFiltersState,
+          genomicScores: genomicScoresState,
+          personIds: personIdsState,
+          uniqueFamilyVariants: uniqueFamilyVariantsFilterState,
+          studyFilters: studyFiltersState,
+          ...presentInParentRarity,
+        };
+        return state;
+      })
+    );
+  }
+
+
 
   public ngOnDestroy(): void {
     this.loadingService.setLoadingStop();

@@ -1,17 +1,18 @@
 import { Component, AfterViewInit, Input, ViewChild, OnInit, HostListener } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
-import { Store, Selector } from '@ngxs/store';
-import { Store as Store1} from '@ngrx/store';
+import { Store } from '@ngrx/store';
 // import { PersonFiltersModel, PersonFiltersState, SetFamilyFilters } from 'app/person-filters/person-filters.state';
-import { StateReset } from 'ngxs-reset-plugin';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 // import { FamilyTagsModel, FamilyTagsState, SetFamilyTags } from 'app/family-tags/family-tags.state';
 import { FamilyCounter, PedigreeCounter, VariantReport } from 'app/variant-reports/variant-reports';
-import { switchMap, take } from 'rxjs';
+import { combineLatest, switchMap, take } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import { DatasetModel, selectDatasetId } from 'app/datasets/datasets.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
 import { resetFamilyIds, selectFamilyIds } from 'app/family-ids/family-ids.state';
+import { resetFamilyTypeFilter } from 'app/family-type-filter/family-type-filter.state';
+import { resetFamilyTags, selectFamilyTags } from 'app/family-tags/family-tags.state';
+import { selectPersonFilters } from 'app/person-filters/person-filters.state';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -38,7 +39,6 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
 
   public constructor(
     private store: Store,
-    private store1: Store1,
     private variantReportsService: VariantReportsService,
   ) { }
 
@@ -59,27 +59,27 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
       });
     }
 
-    // this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-    //   switchMap((state: DatasetModel) => {
-    //     const selectedDatasetId = state.selectedDatasetId;
-    //     return this.variantReportsService.getVariantReport(selectedDatasetId);
-    //   }),
-    //   take(1)
-    // ).subscribe({
-    //   next: (variantReport: VariantReport) => {
-    //     this.familiesCounters = variantReport.familyReport.familiesCounters;
-    //     this.setFamiliesCount();
-    //   },
-    //   error: (err: HttpErrorResponse) => {
-    //     if (err.status === 404) {
-    //       this.showSelectedFamilies = false;
-    //     } else {
-    //       throw err;
-    //     }
-    //   }
-    // });
+    this.store.select(selectDatasetId).pipe(
+      switchMap(selectDatasetIdState => {
+        const selectedDatasetId = selectDatasetIdState;
+        return this.variantReportsService.getVariantReport(selectedDatasetId);
+      }),
+      take(1)
+    ).subscribe({
+      next: (variantReport: VariantReport) => {
+        this.familiesCounters = variantReport.familyReport.familiesCounters;
+        this.setFamiliesCount();
+      },
+      error: (err: HttpErrorResponse) => {
+        if (err.status === 404) {
+          this.showSelectedFamilies = false;
+        } else {
+          throw err;
+        }
+      }
+    });
 
-    this.store1.select(selectDatasetId).pipe(
+    this.store.select(selectDatasetId).pipe(
       switchMap(datasetId => this.variantReportsService.getVariantReport(datasetId)),
       take(1)
     ).subscribe({
@@ -104,7 +104,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   }
 
   public ngAfterViewInit(): void {
-    this.store1.select(selectFamilyIds).pipe(take(1)).subscribe(familyIds => {
+    this.store.select(selectFamilyIds).pipe(take(1)).subscribe(familyIds => {
       if (familyIds.length !== 0) {
         setTimeout(() => {
           this.ngbNav.select('familyIds');
@@ -113,32 +113,38 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
       }
     });
 
-    // this.store.selectOnce(FamilyFiltersBlockComponent.familyFiltersBlockState).subscribe(state => {
-    //   if (state['familyIds']) {
-    //     setTimeout(() => {
-    //       this.ngbNav.select('familyIds');
-    //       this.hasContent = true;
-    //     });
-    //   } else if (state['selectedFamilyTags'] || state['deselectedFamilyTags'] || state['tagIntersection']) {
-    //     setTimeout(() => {
-    //       this.ngbNav.select('familyTags');
-    //       this.hasContent = true;
-    //     });
-    //   } else if (state['familyFilters']) {
-    //     setTimeout(() => {
-    //       this.ngbNav.select('advanced');
-    //       this.hasContent = true;
-    //     });
-    //   }
-    // });
+    combineLatest(
+      this.store.select(selectFamilyIds),
+      this.store.select(selectFamilyTags),
+      this.store.select(selectPersonFilters),
+    ).pipe(take(1)).subscribe(([familyIdsState, familyTagsState, personFiltersState]) => {
+      if (familyIdsState) {
+        setTimeout(() => {
+          this.ngbNav.select('familyIds');
+          this.hasContent = true;
+        });
+      } else if (
+        familyTagsState.selectedFamilyTags
+        || familyTagsState.deselectedFamilyTags
+        || familyTagsState.tagIntersection
+      ) {
+        setTimeout(() => {
+          this.ngbNav.select('familyTags');
+          this.hasContent = true;
+        });
+      } else if (personFiltersState['familyFilters']) {
+        setTimeout(() => {
+          this.ngbNav.select('advanced');
+          this.hasContent = true;
+        });
+      }
+    });
   }
 
   public onNavChange(): void {
-    // this.store.dispatch(new SetFamilyFilters([]));
-    // this.store.dispatch(new StateReset(FamilyIdsState));
-    // this.store.dispatch(new SetFamilyTags([], [], true));
-
-    this.store1.dispatch(resetFamilyIds());
+    this.store.dispatch(resetFamilyTypeFilter());
+    this.store.dispatch(resetFamilyTags());
+    this.store.dispatch(resetFamilyIds());
   }
 
   public updateTags(tags: {selected: string[]; deselected: string[]}): void {
@@ -175,27 +181,4 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
       });
     }
   }
-
-  // @Selector([FamilyTagsState, PersonFiltersState])
-  // public static familyFiltersBlockState(
-  //   familyTagsState: FamilyTagsModel, personFiltersState: PersonFiltersModel
-  // ): object {
-  //   const res = {};
-  //   // if (familyIdsState.familyIds.length) {
-  //   //   res['familyIds'] = familyIdsState.familyIds;
-  //   // }
-  //   if (familyTagsState.selectedFamilyTags.length) {
-  //     res['selectedFamilyTags'] = familyTagsState.selectedFamilyTags;
-  //   }
-  //   if (familyTagsState.deselectedFamilyTags.length) {
-  //     res['deselectedFamilyTags'] = familyTagsState.deselectedFamilyTags;
-  //   }
-  //   if (!familyTagsState.tagIntersection) {
-  //     res['tagIntersection'] = familyTagsState.tagIntersection;
-  //   }
-  //   if (personFiltersState.familyFilters.length) {
-  //     res['familyFilters'] = personFiltersState.familyFilters;
-  //   }
-  //   return res;
-  // }
 }

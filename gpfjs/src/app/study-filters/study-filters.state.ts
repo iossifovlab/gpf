@@ -1,7 +1,7 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 export const initialState = [];
 
-export const selectStudyFilters = createFeatureSelector<object>('studyFilters');
+export const selectStudyFilters = createFeatureSelector<string[]>('studyFilters');
 
 export const setStudyFilters = createAction(
   '[Genotype] Set study filters',

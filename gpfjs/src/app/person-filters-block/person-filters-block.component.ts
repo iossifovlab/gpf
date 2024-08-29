@@ -19,21 +19,6 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
 
   public constructor(private store: Store) { }
 
-  // @Selector([PersonIdsState, PersonFiltersState])
-  // public static personFiltersBlockState(
-  //   personIdsState: PersonIdsModel,
-  //   personFiltersState: PersonFiltersModel
-  // ): object {
-  //   const res = {};
-  //   if (personIdsState.personIds.length) {
-  //     res['personIds'] = personIdsState.personIds;
-  //   }
-  //   if (personFiltersState.personFilters.length) {
-  //     res['personFilters'] = personFiltersState.personFilters;
-  //   }
-  //   return res;
-  // }
-
   public ngOnInit(): void {
     this.showAdvancedButton = this.dataset.genotypeBrowserConfig.personFilters.length !== 0;
   }

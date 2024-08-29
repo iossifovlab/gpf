@@ -23,33 +23,4 @@ export class GenotypeBlockComponent implements OnInit {
     this.selectedInheritanceTypeFilterValuesSet =
       new Set(this.dataset.genotypeBrowserConfig.selectedInheritanceTypeFilterValues);
   }
-  // @Selector([
-  //   VarianttypesState, EffecttypesState, GenderState,
-  //   InheritancetypesState, PresentInChildState,
-  //   PresentInParentState.queryStateSelector, StudyTypesState,
-  //   PedigreeSelectorState, FamilyTypeFilterState,
-  // ])
-  // public static genotypeBlockQueryState(
-  //   variantTypesState: VarianttypeModel,
-  //   effectTypesState: EffectTypeModel,
-  //   genderState: GenderModel,
-  //   inheritanceTypesState: InheritancetypesModel,
-  //   presentInChildState: PresentInChildModel,
-  //   presentInParentState: PresentInParentState,
-  //   studyTypesState: StudyTypesModel,
-  //   pedigreeSelectorState: PedigreeSelectorModel,
-  //   familyTypeFilterState: FamilyTypeFilterModel,
-  // ): object {
-  //   return {
-  //     variantTypes: variantTypesState.variantTypes,
-  //     effectTypes: effectTypesState.effectTypes,
-  //     gender: genderState.genders,
-  //     inheritanceTypeFilter: inheritanceTypesState.inheritanceTypes,
-  //     presentInChild: presentInChildState.presentInChild,
-  //     presentInParent: presentInParentState,
-  //     studyTypes: studyTypesState.studyTypes,
-  //     personSetCollection: pedigreeSelectorState,
-  //     familyTypes: familyTypeFilterState.familyTypes,
-  //   };
-  // }
 }
