@@ -27,6 +27,7 @@ from dae.schema2_storage.schema2_import_storage import (
     create_schema2_dataset_layout,
 )
 from dae.task_graph.cli_tools import TaskGraphCli
+from dae.utils.regions import Region
 from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
@@ -103,7 +104,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                 if attribute.internal
             ]
 
-        for variant in loader.fetch_summary_variants(region=region):
+        region_obj = Region.from_str(region)
+        for variant in loader.fetch_summary_variants(region=region_obj):
             for allele in variant.alt_alleles:
                 if isinstance(pipeline, ReannotationPipeline):
                     result = pipeline.annotate_summary_allele(allele)

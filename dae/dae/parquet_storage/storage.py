@@ -91,7 +91,7 @@ class ParquetLoaderVariants:
         summary_variants_iterator: Iterable
         if regions:
             summary_variants_iterator = itertools.chain.from_iterable(
-                self.loader.fetch_summary_variants(repr(region))
+                self.loader.fetch_summary_variants(region)
                 for region in regions
             )
         else:
@@ -149,7 +149,7 @@ class ParquetLoaderVariants:
         family_variants_iterator: Iterable
         if regions:
             family_variants_iterator = itertools.chain.from_iterable(
-                self.loader.fetch_family_variants(repr(region))
+                self.loader.fetch_family_variants(region)
                 for region in regions
             )
         else:

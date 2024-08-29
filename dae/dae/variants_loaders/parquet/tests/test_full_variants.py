@@ -5,6 +5,7 @@ import pytest
 
 from dae.gpf_instance import GPFInstance
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.utils.regions import Region
 from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
@@ -100,13 +101,13 @@ def test_fetch_variants_count_nonpartitioned_region(
     t4c8_study_nonpartitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_nonpartitioned)
-    vs = list(loader.fetch_variants(region="chr1:119"))
+    vs = list(loader.fetch_variants(region=Region("chr1", 119, 119)))
     # summary variants
     assert len(vs) == 1
     # family variants
     assert sum(len(fvs) for _, fvs in vs) == 2
 
-    vs = list(loader.fetch_variants(region="chr1:119-122"))
+    vs = list(loader.fetch_variants(region=Region("chr1", 119, 122)))
     # summary variants
     assert len(vs) == 2
     # family variants
@@ -117,13 +118,13 @@ def test_fetch_variants_count_partitioned_region(
     t4c8_study_partitioned: str,
 ) -> None:
     loader = ParquetLoader(t4c8_study_partitioned)
-    vs = list(loader.fetch_variants(region="chr1:1-89"))
+    vs = list(loader.fetch_variants(region=Region("chr1", 1, 89)))
     # summary variants
     assert len(vs) == 2
     # family variants
     assert sum(len(fvs) for _, fvs in vs) == 4
 
-    vs = list(loader.fetch_variants(region="chr1:90-200"))
+    vs = list(loader.fetch_variants(region=Region("chr1", 90, 200)))
     # summary variants
     assert len(vs) == 4
     # family variants

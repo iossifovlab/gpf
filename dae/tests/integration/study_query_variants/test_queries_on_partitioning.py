@@ -99,7 +99,6 @@ def test_variants_simple(study_2p: GenotypeData) -> None:
 
 
 @pytest.mark.no_gs_impala()
-@pytest.mark.no_gs_parquet()
 @pytest.mark.parametrize("params, count", [
     ({"genes": ["t4"]}, 2),
     ({"genes": ["c8"]}, 5),
@@ -131,7 +130,6 @@ def test_query_family_variants_counting(
 
 
 @pytest.mark.no_gs_impala()
-@pytest.mark.no_gs_parquet()
 @pytest.mark.parametrize("params, count", [
     ({"genes": ["t4"]}, 1),
     ({"genes": ["c8"]}, 3),
