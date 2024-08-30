@@ -8,6 +8,10 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any, cast
 
+from dae.enrichment_tool.enrichment_builder import BaseEnrichmentBuilder, EnrichmentBuilder
+from dae.pheno_tool.pheno_tool_adapter import PhenoToolAdapter, PhenoToolAdapterBase
+from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
+from django.db.models import Value
 import yaml
 from box import Box
 
@@ -17,6 +21,7 @@ from dae.common_reports.common_report import CommonReport
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.gene_profile import gene_profiles_config
+from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.statistic import GPStatistic
 from dae.gene_scores.gene_scores import GeneScore
@@ -107,7 +112,11 @@ class GPFInstance:
             GeneModels,
             kwargs.get("gene_models"),
         )
+        self._enrichment_builders: dict[str, EnrichmentBuilder] = {}
+        self._pheno_tool_adapters: dict[str, PhenoToolAdapterBase] = {}
         self._annotation_pipeline: AnnotationPipeline | None = None
+
+        self.enrichment_helper = EnrichmentHelper(self.gpf_instance.grr)
 
     def load(self) -> GPFInstance:
         """Load all GPF instance attributes."""
@@ -421,15 +430,7 @@ class GPFInstance:
     def get_common_report(self, study_id: str) -> CommonReport | None:
         """Load and return common report (dataset statistics) for a study."""
         study = self.get_genotype_data(study_id)
-        if study is None or study.is_remote:
-            return None
-        if not study.config.common_report.enabled:
-            return None
-        report = CommonReport.load(
-            study.config.common_report.file_path)
-        if report is None:
-            report = CommonReport.build_and_save(study)
-        return report
+        return study.get_common_report()
 
     def get_all_common_report_configs(self) -> list[Box]:
         """Return all common report configuration."""
@@ -462,7 +463,7 @@ class GPFInstance:
     ) -> list[dict[str, Any]]:
         return cast(
             list[dict[str, Any]],
-            self.denovo_gene_sets_db.get_gene_set_descriptions(datasets),
+            [self.denovo_gene_sets_db.get_gene_set_descriptions(datasets)],
         )
 
     def has_denovo_gene_sets(self) -> bool:
@@ -490,6 +491,12 @@ class GPFInstance:
                 gene_set_id, types, datasets,
             ),
         )
+
+    def get_denovo_gene_set_collection_types_legend(
+        self, collection_id: str,
+    ) -> list[Any]:
+        return \
+            self.denovo_gene_sets_db.get_collection_types_legend(collection_id)
 
     # Variants DB
     def get_dataset(self, dataset_id: str) -> GenotypeData:
@@ -581,3 +588,88 @@ class GPFInstance:
             self._annotation_pipeline = pipeline
 
         return self._annotation_pipeline
+
+    def register_enrichment_builder(
+        self, dataset_id: str, builder: BaseEnrichmentBuilder,
+    ):
+        """Register a new enrichment builder to a given dataset ID."""
+        if dataset_id in self._enrichment_builders:
+            raise ValueError(
+                f"Enrichment builder for {dataset_id} already registered!",
+            )
+        self._enrichment_builders[dataset_id] = builder
+
+    def make_enrichment_builder(
+        self, dataset: GenotypeData,
+    ) -> EnrichmentBuilder:
+        return EnrichmentBuilder(self.enrichment_helper, dataset)
+
+    def get_enrichment_builder(
+        self, dataset: GenotypeData,
+    ) -> EnrichmentBuilder:
+        """
+        Get enrichment builder for specific dataset.
+
+        Will create and register new one if one isn't found.
+        """
+        if dataset.study_id not in self._enrichment_builders:
+            self.register_enrichment_builder(
+                dataset.study_id, self.make_enrichment_builder(dataset),
+            )
+
+        return self._enrichment_builders[dataset.study_id]
+
+    def register_pheno_tool_adapter(
+        self, dataset_id: str, adapter: PhenoToolAdapterBase,
+    ):
+        """Register a new enrichment builder to a given dataset ID."""
+        if dataset_id in self._pheno_tool_adapters:
+            raise ValueError(
+                f"Pheno tool adapter for {dataset_id} already registered!",
+            )
+        self._pheno_tool_adapters[dataset_id] = adapter
+
+    def make_pheno_tool_adapter(
+        self, dataset: GenotypeData,
+    ) -> PhenoToolAdapterBase:
+        if dataset.config.phenotype_data is None \
+                or dataset.config.phenotype_data == "":
+            raise ValueError(
+                f"{dataset.study_id} has no phenotype data "
+                "configured!",
+            )
+
+        phenotype_data_id = dataset.config.phenotype_data
+        phenotype_data_ids = self.get_phenotype_data_ids()
+
+        if phenotype_data_id not in phenotype_data_ids:
+            raise KeyError(
+                f"Phenotype data {phenotype_data_id} "
+                "found in registry!\n"
+                f"Available phenotype datas: {phenotype_data_ids}",
+            )
+
+        phenotype_data = self.get_phenotype_data(phenotype_data_id)
+
+        helper = PhenoToolHelper(
+            dataset, phenotype_data,
+        )
+
+        tool = PhenoTool(helper.phenotype_data)
+
+        return PhenoToolAdapter(tool, helper)
+
+    def get_pheno_tool_adapter(
+        self, dataset: GenotypeData,
+    ) -> PhenoToolAdapterBase:
+        """
+        Get enrichment builder for specific dataset.
+
+        Will create and register new one if one isn't found.
+        """
+        if dataset.study_id not in self._enrichment_builders:
+            self.register_pheno_tool_adapter((
+                dataset.study_id, self.make_pheno_tool_adapter(dataset),
+            )
+
+        return self._pheno_tool_adapters[dataset.study_id]

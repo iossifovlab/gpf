@@ -1,8 +1,7 @@
 from collections.abc import Generator, Iterable
 from typing import Any, cast
 
-from remote.rest_api_client import RESTClient
-
+from dae.common_reports.common_report import CommonReport
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.families_data import FamiliesData, tag_families_data
 from dae.pedigrees.family import Family, Person
@@ -11,27 +10,33 @@ from dae.studies.study import GenotypeData
 from dae.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
+from federation.remote.rest_api_client import RESTClient
 
 
 class RemoteGenotypeData(GenotypeData):
     """Represent remote genotype data."""
 
     def __init__(self, study_id: str, rest_client: RESTClient):
-        self._remote_study_id = study_id
+        self.remote_study_id = study_id
         self.rest_client = rest_client
 
-        config = self.rest_client.get_dataset_config(self._remote_study_id)
+        config = self.rest_client.get_dataset_config(self.remote_study_id)
         if config is None:
             raise ValueError(f"unable to find remote study {study_id}")
 
         config["id"] = self.rest_client.prefix_remote_identifier(study_id)
         config["name"] = self.rest_client.prefix_remote_name(
-            config.get("name", self._remote_study_id),
+            config.get("name", self.remote_study_id),
         )
         config["phenotype_tool"] = False
         config["description_editable"] = False
         if config["gene_browser"]:
             config["gene_browser"]["enabled"] = False
+
+        remote_common_report = rest_client.get_common_report(
+            self.remote_study_id, full=True)
+
+        self.common_report = CommonReport(remote_common_report)
 
         if config["parents"]:
             config["parents"] = list(
@@ -57,7 +62,7 @@ class RemoteGenotypeData(GenotypeData):
         """Construct remote genotype data families."""
         families = {}
         families_details = self.rest_client.get_all_family_details(
-            self._remote_study_id,
+            self.remote_study_id,
         )
         for family in families_details:
             family_id = family["family_id"]
@@ -81,7 +86,7 @@ class RemoteGenotypeData(GenotypeData):
             return {}
         result = {}
         configs = self.rest_client.get_person_set_collection_configs(
-            self._remote_study_id,
+            self.remote_study_id,
         )
         for conf in configs.values():
             psc = PersonSetCollection.from_families(conf, self._families)
@@ -154,7 +159,7 @@ class RemoteGenotypeData(GenotypeData):
         return cast(
             dict[str, Any],
             self.rest_client.get_person_set_collection_configs(
-                self._remote_study_id),
+                self.remote_study_id),
         )
 
     def get_person_set_collection(
@@ -163,3 +168,6 @@ class RemoteGenotypeData(GenotypeData):
         if person_set_collection_id is None:
             return None
         return self._person_set_collections[person_set_collection_id]
+
+    def get_common_report(self) -> CommonReport | None:
+        return self.common_report

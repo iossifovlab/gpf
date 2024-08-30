@@ -7,7 +7,7 @@ import pandas as pd
 
 from dae.pheno.pheno_data import Instrument, Measure, PhenotypeData
 from dae.variants.attributes import Role
-from remote.rest_api_client import RESTClient
+from federation.remote.rest_api_client import RESTClient
 
 logger = logging.getLogger(__name__)
 

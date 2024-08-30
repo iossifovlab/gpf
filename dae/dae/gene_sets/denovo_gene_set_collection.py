@@ -26,7 +26,7 @@ class DenovoGeneSetCollection:
     def get_gene_sets_types_legend(self):
         """Return list of dictionaries for legends for each collection."""
         if self._gene_sets_types_legend is None:
-            name = self.study_name if self.study_name else self.study_id
+            name = self.study_name or self.study_id
             # TODO Rename these dictionary keys accordingly
             self._gene_sets_types_legend = [
                 {

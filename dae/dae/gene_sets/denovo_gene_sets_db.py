@@ -1,5 +1,6 @@
 import logging
 from functools import cache
+from typing import Any
 
 from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.gene_sets.denovo_gene_set_collection_factory import (
@@ -68,11 +69,15 @@ class DenovoGeneSetsDb:
             "types": gene_sets_types,
         }
 
+    def get_collection_types_legend(self, gs_collection_id: str) -> list[Any]:
+        return self._denovo_gene_set_collections[gs_collection_id]\
+            .get_gene_sets_types_legend()
+
     @cache
     def get_genotype_data_ids(self):
         """Return list of genotype data IDs with denovo gene sets."""
         study_ids = set(
-            self.gpf_instance.get_genotype_data_ids(local_only=True))
+            self.gpf_instance.get_genotype_data_ids())
         result = set()
         for study_id in study_ids:
             config = self.gpf_instance.get_genotype_data_config(study_id)

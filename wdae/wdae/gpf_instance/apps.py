@@ -5,7 +5,7 @@ import pathlib
 from django.apps import AppConfig
 from django.conf import settings
 
-from gpf_instance.gpf_instance import get_wgpf_instance
+from gpf_instance.gpf_instance import get_wgpf_instance, WGPFInstance
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +14,14 @@ class WDAEConfig(AppConfig):
     """Configure WDAE django application."""
 
     name = "gpf_instance"
+
+    def load_extensions(self, instance: WGPFInstance):
+        logger.info("Loading extensions")
+        from importlib_metadata import entry_points
+        discovered_entries = entry_points(group="wdae.gpf_instance.extensions")
+        for entry in discovered_entries:
+            extension_loader = entry.load()
+            extension_loader(instance)
 
     def ready(self) -> None:
         logger.info("WGPConfig application starting...")
@@ -29,6 +37,7 @@ class WDAEConfig(AppConfig):
 
         if not settings.STUDIES_EAGER_LOADING:
             logger.info("skip preloading gpf instance...")
+            self.load_extensions(gpf_instance)
             return
 
         try:
@@ -46,3 +55,4 @@ class WDAEConfig(AppConfig):
             logger.error(
                 "problem while eager loading of studies", exc_info=True)
         logger.info("Eager loading DONE")
+        self.load_extensions(gpf_instance)

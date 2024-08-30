@@ -9,7 +9,7 @@ from dae.gene_sets.gene_sets_db import (
     GeneSetCollection,
     GeneSetsDb,
 )
-from remote.rest_api_client import RESTClient
+from federation.remote.rest_api_client import RESTClient
 
 logger = logging.getLogger(__name__)
 

@@ -9,14 +9,13 @@ from query_base.query_base import QueryDatasetView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
+from studies.study_wrapper import StudyWrapper
 from utils.expand_gene_set import expand_gene_set
 
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.studies.study import GenotypeData
 from enrichment_api.enrichment_builder import (
     EnrichmentBuilder,
-    RemoteEnrichmentBuilder,
 )
 
 logger = logging.getLogger(__name__)
@@ -195,36 +194,12 @@ class EnrichmentTestView(QueryDatasetView):
         logger.info("selected background model: %s", background_name)
         logger.info("selected counting model: %s", counting_name)
 
-        builder = self._create_enrichment_builder(
-            dataset, background_name, counting_name, gene_syms)
+        builder = self.gpf_instance.get_enrichment_builder(dataset)
 
         if builder is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        results = builder.build()
+        results = builder.build(background_name, counting_name, gene_syms)
 
         enrichment = {"desc": desc, "result": results}
         return Response(enrichment)
-
-    def _create_enrichment_builder(
-        self, study_wrapper: StudyWrapper | RemoteStudyWrapper,
-        background_id: str | None,
-        counting_id: str | None,
-        gene_syms: Iterable[str],
-    ) -> EnrichmentBuilder | RemoteEnrichmentBuilder:
-
-        if not study_wrapper.is_remote:
-            study = study_wrapper.genotype_data
-            return EnrichmentBuilder(
-                self.enrichment_helper,
-                study,
-                gene_syms,
-                background_id,
-                counting_id)
-
-        assert study_wrapper.is_remote
-        remote_study_wrapper = cast(RemoteStudyWrapper, study_wrapper)
-        return RemoteEnrichmentBuilder(
-            remote_study_wrapper,
-            remote_study_wrapper.rest_client,
-            background_id, counting_id, gene_syms)

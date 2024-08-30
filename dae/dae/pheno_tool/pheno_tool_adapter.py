@@ -1,8 +1,5 @@
 from collections import Counter
-from typing import Any, Dict, List
-
-from remote.rest_api_client import RESTClient
-from studies.study_wrapper import StudyWrapper
+from typing import Any
 
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
@@ -12,7 +9,15 @@ from dae.variants.attributes import Sex
 class PhenoToolAdapterBase:
 
     def calc_by_effect(
-        self, effect: str, people_variants: Counter,
+        self, measure_id: str, effect: str, people_variants: Counter,
+        person_ids: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        normalize_by: list[dict[str, str]] | None = None,
+    ) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def calc_variants(
+        self, data: dict[str, Any], effect_groups: list[str],
     ) -> dict[str, Any]:
         raise NotImplementedError
 
@@ -21,16 +26,15 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
     """Adapter for PhenoTool class."""
 
     def __init__(
-        self, study_wrapper: StudyWrapper,
+        self,
         pheno_tool: PhenoTool,
         pheno_tool_helper: PhenoToolHelper,
     ) -> None:
-        self.study_wrapper = study_wrapper
         self.pheno_tool = pheno_tool
         self.helper = pheno_tool_helper
 
     def get_result_by_sex(
-        self, result: Dict[str, PhenoResult],
+        self, result: dict[str, PhenoResult],
         sex: str,
     ) -> dict[str, Any]:
         return {
@@ -48,9 +52,18 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         }
 
     def calc_by_effect(
-        self, effect: str, people_variants: Counter,
+        self, measure_id: str, effect: str, people_variants: Counter,
+        person_ids: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        normalize_by: list[dict[str, str]] | None = None,
     ) -> dict[str, Any]:
-        result = self.pheno_tool.calc(people_variants, sex_split=True)
+        result = self.pheno_tool.calc(
+            measure_id, people_variants,
+            sex_split=True,
+            person_ids=person_ids,
+            family_ids=family_ids,
+            normalize_by=normalize_by,
+        )
         assert isinstance(result, dict)
 
         return {
@@ -61,7 +74,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
 
     @staticmethod
     def align_na_results(
-        results: List[Dict[str, Any]],
+        results: list[dict[str, Any]],
     ) -> None:
         """Align NA results."""
         for result in results:
@@ -87,10 +100,14 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         return f"{measure_id} ~ {' + '.join(normalize_by)}"
 
     def calc_variants(
-        self, data: Dict[str, Any], effect_groups: list[str],
+        self, data: dict[str, Any], effect_groups: list[str],
     ) -> dict[str, Any]:
         """Run pheno tool on given data."""
-        data = self.study_wrapper.transform_request(data)
+        measure_id = data["measureId"]
+        family_ids = data.get("familyIds", [])
+        person_ids = set(self.helper.genotype_data_persons(family_ids))
+        normalize_by = data.get("normalizeBy")
+
         effect_groups = EffectTypesMixin.build_effect_types_list(effect_groups)
 
         people_variants = self.helper.genotype_data_variants(
@@ -98,35 +115,16 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
 
         results = [
             self.calc_by_effect(
-                effect, people_variants.get(effect, Counter()),
+                measure_id, effect, people_variants.get(effect, Counter()),
+                person_ids=person_ids,
+                family_ids=family_ids,
+                normalize_by=normalize_by,
             )
             for effect in effect_groups
         ]
         self.align_na_results(results)
 
-        output = {
+        return {
             "description": self.build_report_description(),
             "results": results,
         }
-
-        return output
-
-
-class RemotePhenoToolAdapter(PhenoToolAdapterBase):
-    """Adapter for remote PhenoTool class."""
-
-    def __init__(self, rest_client: RESTClient, dataset_id: str) -> None:
-        self.rest_client = rest_client
-        self.dataset_id = dataset_id
-
-    def calc_variants(
-        self, data: Dict[str, Any], effect_groups: list[str],
-    ) -> dict[str, Any]:
-        # pylint: disable=W0613
-        data["datasetId"] = self.dataset_id
-        return self.rest_client.post_pheno_tool(data)  # type: ignore
-
-    def calc_by_effect(
-        self, effect: str, people_variants: Counter,
-    ) -> dict[str, Any]:
-        raise NotImplementedError
