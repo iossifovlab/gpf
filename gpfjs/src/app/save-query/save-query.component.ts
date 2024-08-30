@@ -3,10 +3,10 @@ import { Component, OnInit, Input, ViewChild, ElementRef, ChangeDetectorRef } fr
 import { QueryService } from '../query/query.service';
 import { NgbDropdown, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { UsersService } from '../users/users.service';
-import { Store } from '@ngxs/store';
-import { Store as Store1} from '@ngrx/store'
-import { share, take } from 'rxjs/operators';
+import { Store} from '@ngrx/store';
+import { share, switchMap, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
+import { UserInfo } from 'app/users/users';
 
 @Component({
   selector: 'gpf-save-query',
@@ -22,7 +22,7 @@ export class SaveQueryComponent implements OnInit {
   @ViewChild('copiedTooltip') public copiedTooltip: NgbTooltip;
   @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
 
-  public userInfo$: Observable<any>;
+  public userInfo$: Observable<UserInfo>;
 
   private urlUUID: string;
   public url: string;
@@ -33,7 +33,6 @@ export class SaveQueryComponent implements OnInit {
 
   public constructor(
     private store: Store,
-    private store1: Store1,
     private queryService: QueryService,
     private usersService: UsersService,
     private changeDetectorRef: ChangeDetectorRef
@@ -47,20 +46,18 @@ export class SaveQueryComponent implements OnInit {
     this.nameInputRef.nativeElement.value = '';
     this.descInputRef.nativeElement.value = '';
 
-    this.store.selectOnce(state => state).subscribe(state => {
-      this.queryService.saveQuery(state, this.queryType).pipe(take(1)).subscribe(response => {
-        this.queryService.saveUserQuery(response['uuid'], name, description)
-          .pipe(take(1))
-          .subscribe(response => {
-            if (response.hasOwnProperty('uuid')) {
-              this.saveButtonText = 'Saved';
-              window.clearTimeout(this.savedTimeoutHandle);
-              this.savedTimeoutHandle = setTimeout(() => {
-                this.saveButtonText = 'Save';
-              }, 2000);
-            }
-          });
-      });
+    this.store.pipe(
+      switchMap(state => this.queryService.saveQuery(state, this.queryType).pipe(take(1))),
+      switchMap((response: {uuid: string}) =>
+        this.queryService.saveUserQuery(response.uuid, name, description).pipe(take(1)))
+    ).subscribe((response: {uuid: string}) => {
+      if (response.uuid) {
+        this.saveButtonText = 'Saved';
+        window.clearTimeout(this.savedTimeoutHandle);
+        this.savedTimeoutHandle = setTimeout(() => {
+          this.saveButtonText = 'Save';
+        }, 2000);
+      }
     });
   }
 
@@ -76,29 +73,15 @@ export class SaveQueryComponent implements OnInit {
       return;
     }
 
-    // this.store.selectOnce(state => state).subscribe(state => {
-    //   this.queryService.saveQuery(state, this.queryType)
-    //     .pipe(take(1))
-    //     .subscribe(response => {
-    //       this.urlUUID = response['uuid'];
-    //       this.setUrl();
-    //       this.dropdown.open();
-    //     });
-    // }, () => {
-    //   this.resetUrl();
-    // }
-    // );
-
-    this.store1.subscribe(state => {
-      this.queryService.saveQuery(state, this.queryType)
-        .pipe(take(1))
-        .subscribe(response => {
-          this.urlUUID = response['uuid'];
-          this.setUrl();
-          this.dropdown.open();
-        });
-    }, () => {
-      this.resetUrl();
+    this.store.pipe(
+      switchMap(state => this.queryService.saveQuery(state, this.queryType).pipe(take(1)))
+    ).subscribe({
+      next: (response: {uuid: string}) => {
+        this.urlUUID = response.uuid;
+        this.setUrl();
+        this.dropdown.open();
+      },
+      error: () => this.resetUrl()
     });
   }
 
