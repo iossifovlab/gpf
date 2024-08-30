@@ -1,7 +1,7 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
-export const initialState = [];
+export const initialState: string[] = [];
 
-export const selectPersonIds = createFeatureSelector<object>('personIds');
+export const selectPersonIds = createFeatureSelector<string[]>('personIds');
 
 export const setPersonIds = createAction(
   '[Genotype] Set person ids',

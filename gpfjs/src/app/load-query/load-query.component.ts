@@ -2,11 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { QueryService } from '../query/query.service';
-import { Store } from '@ngxs/store';
 import { StateReset } from 'ngxs-reset-plugin';
 import { ErrorsState } from 'app/common/errors.state';
 import { take } from 'rxjs/operators';
-import {Store as Store1} from '@ngrx/store'
+import { Store } from '@ngrx/store';
 
 const PAGE_TYPE_TO_NAVIGATE = {
   genotype: (datasetId: string): string[] => ['datasets', datasetId, 'genotype-browser'],
@@ -23,7 +22,6 @@ const PAGE_TYPE_TO_NAVIGATE = {
 export class LoadQueryComponent implements OnInit {
   public constructor(
     private store: Store,
-    private store1: Store1,
     private queryService: QueryService,
     private route: ActivatedRoute,
     private router: Router
@@ -51,12 +49,9 @@ export class LoadQueryComponent implements OnInit {
   }
 
   private restoreQuery(state: object, page: string): void {
-    console.log(state)
     if (page in PAGE_TYPE_TO_NAVIGATE) {
       const navigationParams: string[] = PAGE_TYPE_TO_NAVIGATE[page](state['datasetId']);
-      this.store.reset(state);
-      this.store.dispatch(new StateReset(ErrorsState));
-      // this.store1..dis
+      // this.store = state;
       this.router.navigate(navigationParams);
     }
   }
