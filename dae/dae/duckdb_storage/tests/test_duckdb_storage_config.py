@@ -66,7 +66,7 @@ def test_duckdb_config_missing_params() -> None:
 
 def test_duckdb_parquet_config() -> None:
     config = {
-        "storage_type": "duckdb-parquet",
+        "storage_type": "duckdb_parquet",
         "id": "id",
         "base_dir": "/storage/base_dir",
     }
@@ -80,7 +80,7 @@ def test_duckdb_parquet_config_missing_params() -> None:
             ValidationError,
             match="1 validation error for DuckDbParquetConf\nid"):
         parse_duckdb_config({
-            "storage_type": "duckdb-parquet",
+            "storage_type": "duckdb_parquet",
             "base_dir": "/storage/base_dir",
         })
 
@@ -88,14 +88,14 @@ def test_duckdb_parquet_config_missing_params() -> None:
             ValidationError,
             match="1 validation error for DuckDbParquetConf\nbase_dir"):
         parse_duckdb_config({
-            "storage_type": "duckdb-parquet",
+            "storage_type": "duckdb_parquet",
             "id": "id",
         })
 
 
 def test_duckdb_s3_config() -> None:
     dd_config = parse_duckdb_config({
-        "storage_type": "duckdb-s3",
+        "storage_type": "duckdb_s3",
         "id": "id",
         "db": "db",
         "bucket_url": "s3://duckdb/storage/studies",
@@ -104,7 +104,7 @@ def test_duckdb_s3_config() -> None:
     assert isinstance(dd_config, DuckDbS3Conf)
 
     dd_config = parse_duckdb_config({
-        "storage_type": "duckdb-s3",
+        "storage_type": "duckdb_s3",
         "id": "id",
         "db": "db",
         "bucket_url": "s3://duckdb/storage/studies",
@@ -114,7 +114,7 @@ def test_duckdb_s3_config() -> None:
     assert isinstance(dd_config, DuckDbS3Conf)
 
     dd_config = parse_duckdb_config({
-        "storage_type": "duckdb-s3",
+        "storage_type": "duckdb_s3",
         "id": "id",
         "db": "db",
         "bucket_url": "s3://duckdb/storage/studies",
@@ -130,7 +130,7 @@ def test_duckdb_s3_config_bad_urls() -> None:
             ValidationError,
             match="1 validation error for DuckDbS3Conf\nbucket_url"):
         parse_duckdb_config({
-            "storage_type": "duckdb-s3",
+            "storage_type": "duckdb_s3",
             "id": "id",
             "db": "db",
             "bucket_url": "https://duckdb/storage/studies",
@@ -141,7 +141,7 @@ def test_duckdb_s3_config_bad_urls() -> None:
             ValidationError,
             match="1 validation error for DuckDbS3Conf\nendpoint_url"):
         parse_duckdb_config({
-            "storage_type": "duckdb-s3",
+            "storage_type": "duckdb_s3",
             "id": "id",
             "db": "db",
             "bucket_url": "s3://duckdb/storage/studies",

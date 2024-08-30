@@ -28,10 +28,8 @@ def gpf_fixture(
         # DuckDb Storage
         "duckdb": {
             "id": "duckdb",
-            "storage_type": "duckdb",
-            "db": "duckdb_storage/dev_storage.db",
+            "storage_type": "duckdb_parquet",
             "base_dir": str(root_path),
-            "read_only": False,
         },
 
         # Filesystem InMemory

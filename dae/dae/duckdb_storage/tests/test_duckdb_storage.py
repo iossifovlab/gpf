@@ -10,7 +10,7 @@ from dae.studies.study import GenotypeData
 
 
 def test_genotype_storage_config(duckdb_storage_config: dict) -> None:
-    storage_factory = get_genotype_storage_factory("duckdb")
+    storage_factory = get_genotype_storage_factory("duckdb_legacy")
     assert storage_factory is not None
     storage = storage_factory(duckdb_storage_config)
     assert storage is not None
@@ -18,7 +18,7 @@ def test_genotype_storage_config(duckdb_storage_config: dict) -> None:
 
 
 def test_import_storage_config() -> None:
-    storage_factory = get_import_storage_factory("duckdb")
+    storage_factory = get_import_storage_factory("duckdb_legacy")
     assert storage_factory is not None
     storage = storage_factory()
     assert storage is not None

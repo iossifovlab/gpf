@@ -21,4 +21,4 @@ partition_description:
 
 destination:
   id: dummy_id
-  storage_type: duckdb
+  storage_type: duckdb_parquet

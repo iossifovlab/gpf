@@ -42,23 +42,23 @@ class DuckDbBaseConf(BaseModel):
 class DuckDbConf(DuckDbBaseConf):
     """`duckdb` storage configuration class."""
 
-    storage_type: Literal["duckdb"] | Literal["duckdb-legacy"]
+    storage_type: Literal["duckdb"] | Literal["duckdb_legacy"]
     db: pathlib.Path
     read_only: bool = True
     base_dir: BaseDirPath
 
 
 class DuckDbParquetConf(DuckDbBaseConf):
-    """`duckdb-parquet` storage configuration class."""
+    """`duckdb_parquet` storage configuration class."""
 
-    storage_type: Literal["duckdb-parquet"]
+    storage_type: Literal["duckdb_parquet"]
     base_dir: BaseDirPath
 
 
 class DuckDbS3Conf(DuckDbBaseConf):
-    """`duckdb-s3` storage configuration class."""
+    """`duckdb_s3` storage configuration class."""
 
-    storage_type: Literal["duckdb-s3"]
+    storage_type: Literal["duckdb_s3"]
     db: str
     bucket_url: S3Path
     endpoint_url: HttpUrl | None = None
@@ -66,8 +66,8 @@ class DuckDbS3Conf(DuckDbBaseConf):
 
 
 class DuckDbS3ParquetConf(DuckDbBaseConf):
-    """`duckdb-parquet` storage configuration class."""
-    storage_type: Literal["duckdb-s3-parquet"]
+    """`duckdb_parquet` storage configuration class."""
+    storage_type: Literal["duckdb_s3_parquet"]
     bucket_url: S3Path
     endpoint_url: HttpUrl | None = None
 
@@ -79,10 +79,10 @@ def parse_duckdb_config(
     storage_type = config.get("storage_type")
     if storage_type == "duckdb":
         return DuckDbConf(**config)
-    if storage_type == "duckdb-parquet":
+    if storage_type == "duckdb_parquet":
         return DuckDbParquetConf(**config)
-    if storage_type == "duckdb-s3":
+    if storage_type == "duckdb_s3":
         return DuckDbS3Conf(**config)
-    if storage_type == "duckdb-s3-parquet":
+    if storage_type == "duckdb_s3_parquet":
         return DuckDbS3ParquetConf(**config)
     raise ValueError(f"unexpected storage type: {storage_type}")

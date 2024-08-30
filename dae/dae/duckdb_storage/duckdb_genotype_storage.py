@@ -71,7 +71,10 @@ class DuckDbGenotypeStorage(GenotypeStorage):
     """Defines DuckDb genotype storage."""
 
     VALIDATION_SCHEMA: ClassVar[dict[str, Any]] = {
-        "storage_type": {"type": "string", "allowed": ["duckdb", "duckdb2"]},
+        "storage_type": {
+            "type": "string",
+            "allowed": ["duckdb_legacy", "duckdb2"],
+        },
         "id": {
             "type": "string", "required": True,
         },
@@ -123,7 +126,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
 
     @classmethod
     def get_storage_types(cls) -> set[str]:
-        return {"duckdb", "duckdb2"}
+        return {"duckdb_legacy", "duckdb2"}
 
     def _s3_secret_clause(self) -> str:
         endpoint_url = self.storage_config.get("endpoint_url")
@@ -562,7 +565,7 @@ class DuckDbGenotypeStorage(GenotypeStorage):
                 f"{self.storage_config}")
         assert self.connection_factory is not None
 
-        if self.storage_type == "duckdb":
+        if self.storage_type == "duckdb_legacy":
             return DuckDbVariants(
                 self.connection_factory,
                 db_name,
@@ -637,7 +640,7 @@ class AbstractDuckDbStorage(GenotypeStorage):
         """Return the study tables configuration."""
         tables = study_config["genotype_storage"]["tables"]
         db_name = None
-        if self.storage_type in {"duckdb", "duckdb-s3", "duckdb-legacy"}:
+        if self.storage_type in {"duckdb", "duckdb_s3", "duckdb_legacy"}:
             db_name = self.storage_config.get("db")
         return Db2Layout(
             db=db_name,
@@ -679,7 +682,7 @@ class AbstractDuckDbStorage(GenotypeStorage):
                 f"{self.storage_config}")
         assert self.connection_factory is not None
 
-        if self.storage_type == "duckdb-legacy":
+        if self.storage_type == "duckdb_legacy":
             return DuckDbVariants(
                 self.connection_factory,
                 tables_layout.db,
@@ -746,7 +749,7 @@ def _create_relative_parquet_scans_layout(
 
 
 class DuckDbParquetStorage(AbstractDuckDbStorage):
-    """Defines `duckdb-parquet` genotype storage."""
+    """Defines `duckdb_parquet` genotype storage."""
 
     def __init__(self, dd_config: DuckDbParquetConf):
         super().__init__(dd_config)
@@ -772,7 +775,7 @@ class DuckDbParquetStorage(AbstractDuckDbStorage):
 
     @classmethod
     def get_storage_types(cls) -> set[str]:
-        return {"duckdb-parquet"}
+        return {"duckdb_parquet"}
 
     def build_study_layout(
         self,
@@ -821,9 +824,9 @@ class DuckDbParquetStorage(AbstractDuckDbStorage):
 def duckdb_parquet_storage_factory(
     storage_config: dict[str, Any],
 ) -> DuckDbParquetStorage:
-    """Create `duckdb-parquet` genotype storage."""
+    """Create `duckdb_parquet` genotype storage."""
     dd_config = parse_duckdb_config(storage_config)
-    if dd_config.storage_type != "duckdb-parquet":
+    if dd_config.storage_type != "duckdb_parquet":
         raise TypeError(
             f"unexpected storage type: {dd_config.storage_type}")
     return DuckDbParquetStorage(dd_config)
@@ -880,7 +883,7 @@ def _s3_filesystem(endpoint_url: str | S3Path | None) -> S3FileSystem:
 
 
 class DuckDbS3ParquetStorage(AbstractDuckDbStorage):
-    """Defines `duckdb-s3-parquet` genotype storage."""
+    """Defines `duckdb_s3_parquet` genotype storage."""
 
     def __init__(self, dd_config: DuckDbS3ParquetConf):
         super().__init__(dd_config)
@@ -910,7 +913,7 @@ class DuckDbS3ParquetStorage(AbstractDuckDbStorage):
 
     @classmethod
     def get_storage_types(cls) -> set[str]:
-        return {"duckdb-s3-parquet"}
+        return {"duckdb_s3_parquet"}
 
     def build_study_layout(
         self,
@@ -961,9 +964,9 @@ class DuckDbS3ParquetStorage(AbstractDuckDbStorage):
 def duckdb_s3_parquet_storage_factory(
     storage_config: dict[str, Any],
 ) -> DuckDbS3ParquetStorage:
-    """Create `duckdb-s3-parquet` genotype storage."""
+    """Create `duckdb_s3_parquet` genotype storage."""
     dd_config = parse_duckdb_config(storage_config)
-    if dd_config.storage_type != "duckdb-s3-parquet":
+    if dd_config.storage_type != "duckdb_s3_parquet":
         raise TypeError(
             f"unexpected storage type: {dd_config.storage_type}")
     return DuckDbS3ParquetStorage(dd_config)

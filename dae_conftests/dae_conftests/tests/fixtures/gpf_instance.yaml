@@ -38,7 +38,8 @@ genotype_storage:
       storage_type: inmemory
 
     - id: test_duckdb_storage
-      storage_type: "duckdb"
+      storage_type: duckdb_parquet
+      base_dir: /tmp/test_duckdb_storage/studies
 
 remotes:
   - id: "TEST_REMOTE"

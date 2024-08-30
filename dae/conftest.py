@@ -34,26 +34,26 @@ def _default_genotype_storage_configs(
         },
 
         # Legacy DuckDb Storage
-        "duckdb": {
-            "id": "duckdb",
-            "storage_type": "duckdb",
+        "duckdb_legacy": {
+            "id": "duckdb_legacy",
+            "storage_type": "duckdb_legacy",
             "db": "duckdb_storage/storage.db",
             "base_dir": str(root_path),
             "read_only": False,
         },
 
         # DuckDb Parquet Storage
-        "duckdb-parquet": {
+        "duckdb_parquet": {
             "id": "duckdb_parquet",
-            "storage_type": "duckdb-parquet",
+            "storage_type": "duckdb_parquet",
             "base_dir": str(root_path / "duckdb_parquet"),
         },
 
         # DuckDb S3 Parquet Storage
-        "duckdb-s3-parquet": {
+        "duckdb_s3_parquet": {
             "id": "duckdb_s3_parquet",
-            "storage_type": "duckdb-s3-parquet",
-            "bucket_url": f"s3:/{root_path}/duckdb_s3_parquet",
+            "storage_type": "duckdb_s3_parquet",
+            "bucket_url": f"s3:/{root_path}/duckdb-s3-parquet",
             "endpoint_url": f"http://{localstack_host}:4566/",
         },
 
@@ -115,7 +115,8 @@ def _select_storage_factories_by_type(
     for storage_type in storage_types:
         factory = _default_storage_factory(storage_type)
         if factory is None:
-            raise ValueError(f"unsupported genotype storage type: {storage_type}")
+            raise ValueError(
+                f"unsupported genotype storage type: {storage_type}")
         storage_factories[storage_type] = factory
     return storage_factories
 
@@ -210,17 +211,18 @@ def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
 
     all_storage_types = {
         "inmemory",
-        "duckdb", "duckdb2",
-        "duckdb-parquet",
-        "duckdb-s3-parquet",
-        "impala", "impala2",
+        "duckdb_legacy",
+        "duckdb_parquet",
+        "duckdb_s3_parquet",
+        "impala",
+        "impala2",
         "gcp",
         "parquet",
     }
     schema2_storage_types = {
-        "duckdb", "duckdb2",
-        "duckdb-parquet",
-        "duckdb-s3-parquet",
+        "duckdb_legacy",
+        "duckdb_parquet",
+        "duckdb_s3_parquet",
         "impala2",
         "gcp",
         "parquet",
@@ -237,8 +239,6 @@ def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
             if mark.name.startswith("gs_"):
                 storage_type = mark.name[3:]
                 marked_types.add(storage_type)
-                if storage_type == "duckdb":
-                    marked_types.add("duckdb2")
                 if storage_type == "schema2":
                     marked_types.update(schema2_storage_types)
 

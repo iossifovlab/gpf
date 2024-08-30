@@ -17,7 +17,7 @@ def duckdb_storage_config(
     storage_path = tmp_path_factory.mktemp("duckdb_storage")
     return {
         "id": "dev_duckdb_storage",
-        "storage_type": "duckdb",
+        "storage_type": "duckdb_legacy",
         "db": "duckdb_storage/dev_storage.db",
         "base_dir": str(storage_path),
     }
@@ -26,7 +26,7 @@ def duckdb_storage_config(
 @pytest.fixture(scope="session")
 def duckdb_storage_fixture(
         duckdb_storage_config: dict) -> DuckDbGenotypeStorage:
-    storage_factory = get_genotype_storage_factory("duckdb")
+    storage_factory = get_genotype_storage_factory("duckdb_legacy")
     assert storage_factory is not None
     storage = storage_factory(duckdb_storage_config)
     assert storage is not None

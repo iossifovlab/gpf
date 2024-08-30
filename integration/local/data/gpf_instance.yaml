@@ -8,8 +8,7 @@ genotype_storage:
 
   storages:
   - id: local_duckdb
-    storage_type: duckdb2
-    db: local_duckdb/data_hg19_local.db
+    storage_type: duckdb_parquet
     base_dir: "%(wd)s/genotype_storage"
 
 # annotation:

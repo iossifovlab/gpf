@@ -28,4 +28,4 @@ partition_description:
     rare_boundary: 5
 
 destination:
-  storage_type: duckdb
+  storage_type: duckdb_parquet

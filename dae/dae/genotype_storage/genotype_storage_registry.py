@@ -71,7 +71,7 @@ class GenotypeStorageRegistry:
         if storage_id is None:
             return self.get_default_genotype_storage()
         if storage_id not in self._genotype_storages:
-            raise ValueError(f"unknown storage id {storage_id}")
+            raise ValueError(f"unknown storage id: <{storage_id}>")
         return self._genotype_storages[storage_id]
 
     def get_all_genotype_storage_ids(self) -> list[str]:
