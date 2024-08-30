@@ -19,7 +19,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { effectTypesReducer } from 'app/effect-types/effect-types.state';
 import { StoreModule } from '@ngrx/store';
 import { variantTypesReducer } from 'app/variant-types/variant-types.state';
-import { gendersReducer } from 'app/gender/genders.state';
+import { gendersReducer } from 'app/gender/gender.state';
 
 describe('GenotypeBlockComponent', () => {
   let component: GenotypeBlockComponent;

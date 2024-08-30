@@ -179,7 +179,7 @@ import { errorsReducer } from './common/errors.state';
 import { familyIdsReducer } from './family-ids/family-ids.state';
 import { expandedDatasetsReducer } from './dataset-node/dataset-node.state';
 import { studyFiltersReducer } from './study-filters/study-filters.state';
-import { gendersReducer } from './gender/genders.state';
+import { gendersReducer } from './gender/gender.state';
 import { enrichmentModelsReducer } from './enrichment-models/enrichment-models.state';
 import { geneSetsReducer } from './gene-sets/gene-sets.state';
 import { geneScoresReducer } from './gene-scores/gene-scores.state';

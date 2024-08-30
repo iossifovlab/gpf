@@ -10,7 +10,7 @@ import { initialState as personIdsInitialState } from 'app/person-ids/person-ids
 import { initialState as personFiltersInitialState } from 'app/person-filters/person-filters.state';
 import { initialState as studyFiltersInitialState } from 'app/study-filters/study-filters.state';
 import { initialState as effectTypesInitialState } from 'app/effect-types/effect-types.state';
-import { initialState as genderInitialState } from 'app/gender/genders.state'
+import { initialState as genderInitialState } from 'app/gender/gender.state'
 import { initialState as variantTypesInitialState } from 'app/variant-types/variant-types.state';
 import { initialState as inheritanceTypesInitialState } from 'app/inheritancetypes/inheritancetypes.state';
 import { EnrichmentModels, initialState as enrichmentModelsInitialState } from 'app/enrichment-models/enrichment-models.state';

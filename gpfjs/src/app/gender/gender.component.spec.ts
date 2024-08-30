@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { GenderComponent } from './gender.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { StoreModule } from '@ngrx/store';
-import { gendersReducer } from './genders.state';
+import { gendersReducer } from './gender.state';
 
 
 describe('GenderComponent', () => {

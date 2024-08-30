@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
 import { ValidateNested } from 'class-validator';
-import { addGender, removeGender, selectGenders } from './genders.state';
+import { addGender, removeGender, selectGenders } from './gender.state';
 import { take } from 'rxjs';
 
 @Component({

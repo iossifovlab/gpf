@@ -7,7 +7,7 @@ import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.sta
 import { take } from 'rxjs/operators';
 import { cloneDeep } from 'lodash';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
-import { setGenders } from 'app/gender/genders.state';
+import { setGenders } from 'app/gender/gender.state';
 import { setVariantTypes } from 'app/variant-types/variant-types.state';
 import { setStudyTypes } from 'app/study-types/study-types.state';
 
