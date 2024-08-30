@@ -15,6 +15,6 @@ export const resetExpandedDatasets = createAction(
 
 export const expandedDatasetsReducer = createReducer(
   initialState,
-  on(setExpandedDatasets, (state, {expandedDatasets}) => expandedDatasets),
+  on(setExpandedDatasets, (state, {expandedDatasets}) => cloneDeep(expandedDatasets)),
   on(resetExpandedDatasets, (state) => cloneDeep(initialState)),
 );

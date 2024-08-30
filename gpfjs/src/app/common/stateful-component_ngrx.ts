@@ -34,6 +34,7 @@ export abstract class StatefulComponentNgRx implements OnInit, OnDestroy {
             }
           }));
         } else {
+          this.errors = [];
           this.store.dispatch(resetErrors({componentId: this.componentId}));
         }
       });

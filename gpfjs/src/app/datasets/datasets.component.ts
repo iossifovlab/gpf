@@ -3,7 +3,7 @@ import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
 import { Subscription, combineLatest, of, switchMap, take } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { isEmpty } from 'lodash';
+import { cloneDeep, isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngrx/store';
 // import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
@@ -110,10 +110,11 @@ export class DatasetsComponent extends StatefulComponentNgRx implements OnInit, 
   private saveTopLevelDatasetsToState(): void {
     this.store.select(selectExpandedDatasets).pipe(take(1))
       .subscribe(expandedDatasetsState => {
+        const expandedDatasets = cloneDeep(expandedDatasetsState);
         this.datasetTrees.forEach(node => {
-          expandedDatasetsState.push(node.dataset.id);
+          expandedDatasets.push(node.dataset.id);
         });
-        this.store.dispatch(setExpandedDatasets({expandedDatasets: expandedDatasetsState}));
+        this.store.dispatch(setExpandedDatasets({expandedDatasets: expandedDatasets}));
       });
   }
 

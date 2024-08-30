@@ -24,19 +24,20 @@ export const resetAllErrors = createAction(
 
 export const errorsReducer = createReducer(
   initialState,
-  on(setErrors, (state, { errors }) => {
-    if (!state.length) {
-      state = [errors];
-      return state;
+  on(setErrors, (state, { errors }
+  ) => {
+    let updatedState: Errors[] = cloneDeep(state);
+    const currentIndex = state.findIndex(e => e.componentId === errors.componentId);
+
+    if (currentIndex === -1) {
+      updatedState = [...state, cloneDeep(errors)];
+      return updatedState;
     }
-    state.forEach(s => {
-      if (s.componentId === errors.componentId) {
-        s = {componentId: s.componentId, errors: [...s.errors, ...errors.errors]};
-      } else {
-        state = [...state, errors];
-      }
-    });
-    return state;
+    updatedState[currentIndex] = {
+      componentId: state[currentIndex].componentId,
+      errors: [...state[currentIndex].errors, ...errors.errors]
+    };
+    return updatedState;
   }),
   on(resetErrors, (state, { componentId }) => state.filter(s => s.componentId !== componentId)
   ),
