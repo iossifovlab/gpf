@@ -1,6 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+from collections.abc import Callable
+
 import pytest
 
+from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.studies.study import GenotypeData
 from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.alla_import import alla_gpf
 from dae.utils.regions import Region
@@ -8,10 +13,13 @@ from dae.variants.attributes import Status
 
 
 @pytest.fixture(scope="module")
-def imported_dataset(tmp_path_factory, genotype_storage):
+def imported_dataset(
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
-        f"vcf_path_{genotype_storage.storage_id}")
-    gpf_instance = alla_gpf(root_path, genotype_storage)
+        "test_summary_variants_seen_in_status")
+    gpf_instance = alla_gpf(root_path, genotype_storage_factory(root_path))
     ped_path1 = setup_pedigree(
         root_path / "study_1" / "in.ped",
         """
@@ -84,7 +92,10 @@ def imported_dataset(tmp_path_factory, genotype_storage):
     (Region("chrA", 6, 6), Status.affected.value | Status.unaffected.value),
 ])
 def test_summary_variants_seen_in_status_single_allele(
-        region, seen_in_status, imported_dataset):
+    region: Region,
+    seen_in_status: bool,  # noqa: FBT001
+    imported_dataset: GenotypeData,
+) -> None:
 
     svs = list(imported_dataset.query_summary_variants(regions=[region]))
     assert len(svs) == 1

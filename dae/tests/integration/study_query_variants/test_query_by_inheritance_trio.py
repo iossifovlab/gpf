@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Callable
 from typing import cast
 
 import pytest
@@ -15,10 +16,11 @@ from dae.variants.family_variant import FamilyAllele
 
 @pytest.fixture(scope="module")
 def trio_study(
-        tmp_path_factory: pytest.TempPathFactory,
-        genotype_storage: GenotypeStorage) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp(
-        f"query_by_inheritance_trio_{genotype_storage.storage_id}")
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> GenotypeData:
+    root_path = tmp_path_factory.mktemp("test_query_by_inheritance_trio")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = alla_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
@@ -52,7 +54,7 @@ chrA   14  .  A   G     .    .      .    GT     1/1  1/1  1/0
 chrA   15  .  A   G     .    .      .    GT     1/.  1/1  1/0
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "inheritance_trio_vcf", pathlib.Path(ped_path),
         [vcf_path],
@@ -71,7 +73,6 @@ chrA   15  .  A   G     .    .      .    GT     1/.  1/1  1/0
                 "include_reference": True,
             },
         })
-    return study
 
 
 @pytest.mark.parametrize(

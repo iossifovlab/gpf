@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from typing import Callable, cast
+from collections.abc import Callable
+from typing import cast
 
 import pytest
 from box import Box
@@ -44,12 +45,12 @@ def dae_config_fixture(local_gpf_instance: GPFInstance) -> Box:
 
 @pytest.fixture(scope="session")
 def variants_db_fixture(local_gpf_instance: GPFInstance) -> VariantsDb:
-    return local_gpf_instance._variants_db
+    return local_gpf_instance._variants_db  # noqa: SLF001
 
 
 @pytest.fixture(scope="session")
 def pheno_db(local_gpf_instance: GPFInstance) -> PhenoRegistry:
-    return local_gpf_instance._pheno_registry
+    return local_gpf_instance._pheno_registry  # noqa: SLF001
 
 
 @pytest.fixture(scope="session")
@@ -58,7 +59,7 @@ def gene_scores_db(local_gpf_instance: GPFInstance) -> GeneScoresDb:
 
 
 @pytest.fixture(scope="session")
-def genotype_storage_factory(
+def genotype_storage_registry(
     local_gpf_instance: GPFInstance,
 ) -> GenotypeStorageRegistry:
     return cast(GenotypeStorageRegistry, local_gpf_instance.genotype_storages)
@@ -68,7 +69,7 @@ def genotype_storage_factory(
 def genotype_data_study_configs(
     variants_db_fixture: VariantsDb,
 ) -> dict[str, Box]:
-    return variants_db_fixture._load_study_configs()
+    return variants_db_fixture._load_study_configs()  # noqa: SLF001
 
 
 @pytest.fixture(scope="session")
@@ -82,7 +83,7 @@ def quads_f1_config(variants_db_fixture: VariantsDb) -> GenotypeData:
 def genotype_data_group_configs(
     variants_db_fixture: VariantsDb,
 ) -> dict[str, Box]:
-    return variants_db_fixture._load_group_configs()
+    return variants_db_fixture._load_group_configs()  # noqa: SLF001
 
 
 @pytest.fixture(scope="session")

@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 
@@ -69,10 +69,11 @@ def test_import_iossifov2014_filesystem(
 
 def test_flexible_denovo_default(
     tmp_path_factory: pytest.TempPathFactory,
-    genotype_storage: GenotypeStorage,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
     resources_dir: pathlib.Path,
 ) -> None:
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    root_path = tmp_path_factory.mktemp("test_flexible_denovo_default")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     pedigree_filename = resources_dir / \
@@ -106,10 +107,11 @@ def test_flexible_denovo_default(
 
 def test_flexible_denovo_vcf(
     tmp_path_factory: pytest.TempPathFactory,
-    genotype_storage: GenotypeStorage,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
     resources_dir: pathlib.Path,
 ) -> None:
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    root_path = tmp_path_factory.mktemp("test_flexible_denovo_vcf")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     pedigree_filename = resources_dir / \
@@ -151,10 +153,11 @@ def test_flexible_denovo_vcf(
 
 def test_flexible_denovo_vcf_location(
     tmp_path_factory: pytest.TempPathFactory,
-    genotype_storage: GenotypeStorage,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
     resources_dir: pathlib.Path,
 ) -> None:
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    root_path = tmp_path_factory.mktemp("test_flexible_denovo_vcf_location")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     pedigree_filename = resources_dir / \
@@ -162,8 +165,9 @@ def test_flexible_denovo_vcf_location(
     denovo_filename = resources_dir / \
         "flexible_short/flexible_short_vcf_location.txt"
 
-    study_id = f"test_flexible_denovo_vcf_location_" \
-        f"{genotype_storage.storage_id}"
+    study_id = (
+        f"test_flexible_denovo_vcf_location_"
+        f"{genotype_storage.storage_id}")
 
     argv = [
         str(pedigree_filename),
@@ -198,10 +202,11 @@ def test_flexible_denovo_vcf_location(
 
 def test_flexible_denovo_vcf_best_state(
     tmp_path_factory: pytest.TempPathFactory,
-    genotype_storage: GenotypeStorage,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
     resources_dir: pathlib.Path,
 ) -> None:
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    root_path = tmp_path_factory.mktemp("test_flexible_denovo_vcf_best_state")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     pedigree_filename = resources_dir / \
@@ -209,8 +214,10 @@ def test_flexible_denovo_vcf_best_state(
     denovo_filename = resources_dir / \
         "flexible_short/flexible_short_vcf_best_state.txt"
 
-    study_id = f"test_flexible_denovo_vcf_best_state_" \
+    study_id = (
+        f"test_flexible_denovo_vcf_best_state_"
         f"{genotype_storage.storage_id}"
+    )
 
     argv = [
         str(pedigree_filename),
@@ -247,10 +254,11 @@ def test_flexible_denovo_vcf_best_state(
 
 def test_flexible_denovo_dae_chrom_pos(
     tmp_path_factory: pytest.TempPathFactory,
-    genotype_storage: GenotypeStorage,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
     resources_dir: pathlib.Path,
 ) -> None:
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    root_path = tmp_path_factory.mktemp("test_flexible_denovo_dae_chrom_pos")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     pedigree_filename = resources_dir / \
@@ -258,8 +266,10 @@ def test_flexible_denovo_dae_chrom_pos(
     denovo_filename = resources_dir / \
         "flexible_short/flexible_short_dae_chrom_pos.txt"
 
-    study_id = f"test_flexible_denovo_dae_chrom_pos_" \
+    study_id = (
+        f"test_flexible_denovo_dae_chrom_pos_"
         f"{genotype_storage.storage_id}"
+    )
 
     argv = [
         str(pedigree_filename),
@@ -296,10 +306,11 @@ def test_flexible_denovo_dae_chrom_pos(
 
 def test_flexible_denovo_dae_person(
     tmp_path_factory: pytest.TempPathFactory,
-    genotype_storage: GenotypeStorage,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
     resources_dir: pathlib.Path,
 ) -> None:
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    root_path = tmp_path_factory.mktemp("test_flexible_denovo_dae_person")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     pedigree_filename = resources_dir / \
@@ -307,8 +318,10 @@ def test_flexible_denovo_dae_person(
     denovo_filename = resources_dir / \
         "flexible_short/flexible_short_dae_person.txt"
 
-    study_id = f"test_flexible_denovo_dae_person_" \
+    study_id = (
+        f"test_flexible_denovo_dae_person_"
         f"{genotype_storage.storage_id}"
+    )
 
     argv = [
         str(pedigree_filename),

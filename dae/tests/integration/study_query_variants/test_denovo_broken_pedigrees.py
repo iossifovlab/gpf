@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Callable
 from typing import cast
 
 import pytest
@@ -14,8 +15,9 @@ from dae.variants.family_variant import FamilyAllele
 
 @pytest.fixture()
 def denovo_broken_pedigrees(
-        tmp_path: pathlib.Path,
-        genotype_storage: GenotypeStorage) -> GenotypeData:
+    tmp_path: pathlib.Path,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> GenotypeData:
     ped_path = setup_pedigree(
         tmp_path / "pedigree_data" / "in.ped",
         """
@@ -36,6 +38,8 @@ def denovo_broken_pedigrees(
           f2        bar:12    sub(G->A)  1/1
         """,
     )
+    genotype_storage = genotype_storage_factory(
+        tmp_path / "denovo_broken_pedigrees" / "genotype_storage")
     gpf = foobar_gpf(tmp_path, genotype_storage)
     return denovo_study(
         tmp_path, "denovo_broken_pedigrees",

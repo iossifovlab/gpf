@@ -607,7 +607,7 @@ class AbstractDuckDbStorage(GenotypeStorage):
         self,
         dd_config: DuckDbConf | DuckDbParquetConf,
     ):
-        super().__init__(dd_config.dict())
+        super().__init__(dd_config.model_dump())
         self.dd_config = dd_config
         self.connection_factory: duckdb.DuckDBPyConnection | None = None
 

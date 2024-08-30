@@ -1,4 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+from collections.abc import Callable
+
 import pytest
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
@@ -15,10 +18,11 @@ from dae.testing.alla_import import alla_gpf
 
 @pytest.fixture(scope="module")
 def imported_vcf_study(
-        tmp_path_factory: pytest.TempPathFactory,
-        genotype_storage: GenotypeStorage) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp(
-        f"vcf_path_{genotype_storage.storage_id}")
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> GenotypeData:
+    root_path = tmp_path_factory.mktemp("test_query_by_frequencies_vcf")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = alla_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
@@ -54,11 +58,10 @@ chrA   13  .  A   G,T,C .    .      .    GT     0/1  0/2  0/0 0/1  0/0 0/2
 
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "minimal_vcf", ped_path, [vcf_path],
         gpf_instance)
-    return study
 
 
 @pytest.mark.parametrize(
@@ -94,10 +97,11 @@ def test_query_by_ultra_rare(imported_vcf_study: GenotypeData) -> None:
 
 @pytest.fixture(scope="module")
 def imported_denovo_study(
-        tmp_path_factory: pytest.TempPathFactory,
-        genotype_storage: GenotypeStorage) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp(
-        f"denovo_path_{genotype_storage.storage_id}")
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> GenotypeData:
+    root_path = tmp_path_factory.mktemp("test_query_by_frequencies_denovo")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = alla_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / "denovo_data" / "in.ped",
@@ -118,11 +122,10 @@ def imported_denovo_study(
         chrA:4    sub(A->T)  f1        2||2||1||2/0||0||1||0
         """)
 
-    study = denovo_study(
+    return denovo_study(
         root_path,
         "helloworld", ped_path, [denovo_path],
         gpf_instance)
-    return study
 
 
 def test_query_denovo_variants_by_allele_frequency(

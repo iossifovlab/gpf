@@ -1,68 +1,32 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-import textwrap
+from collections.abc import Callable
 
 import pytest
 
-from dae.genomic_resources.repository_factory import (
-    build_genomic_resource_repository,
-)
 from dae.genotype_storage import GenotypeStorage
 from dae.studies.study import GenotypeData
 from dae.testing import (
-    setup_gene_models,
-    setup_genome,
-    setup_gpf_instance,
     setup_pedigree,
     setup_vcf,
     vcf_study,
 )
+from dae.testing.foobar_import import foobar_gpf
 from dae.utils.regions import Region
 
 
 @pytest.fixture()
 def imported_study(
     tmp_path: pathlib.Path,
-    genotype_storage: GenotypeStorage,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeData:
     root_path = tmp_path
-    setup_genome(
-        root_path / "foobar_genome" / "chrAll.fa",
-        """
-            >foo
-            NNACCCAAAC
-            GGGCCTTCCN
-            NNNAAAAACC
-            >bar
-            NNGGGCCTTC
-            CACGACCCAA
-            NN
-        """,
+    genotype_storage = genotype_storage_factory(root_path)
+    gpf_instance = foobar_gpf(
+        root_path / "gpf_instance",
+        genotype_storage,
     )
 
-    setup_gene_models(
-        root_path / "foobar_genes" / "genes.txt", textwrap.dedent("""
-        #geneName name chrom strand txStart txEnd cdsStart cdsEnd exonCount exonStarts exonEnds
-        g1        tx1  foo   +      3       19    3        17     2         3,13       6,17
-        g1        tx2  foo   +      3       9     3        6      1         3          6
-        g2        tx3  bar   -      3       20    3        18     1         3          17
-        """),  # noqa
-        fileformat="refflat")
-    local_repo = build_genomic_resource_repository({
-        "id": "foobar_local",
-        "type": "directory",
-        "directory": str(root_path),
-    })
-    gpf_instance = setup_gpf_instance(
-        root_path / "gpf_instance",
-        reference_genome_id="foobar_genome",
-        gene_models_id="foobar_genes",
-        grr=local_repo)
-
-    if genotype_storage:
-        gpf_instance\
-            .genotype_storages\
-            .register_default_storage(genotype_storage)
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
         """
@@ -203,17 +167,17 @@ def test_query_effect(
 
 
 def test_query_complex(imported_study: GenotypeData) -> None:
-    assert len(list(
+    vs = list(
         imported_study.
             query_variants(
-                effect_types=["missense"],
+                effect_types=["noStart"],
                 person_ids={"s1"},
                 frequency_filter=[("af_allele_freq", (10, 27))],
                 regions=[Region("bar", 3, 17)],
                 genes=["g2"],
             ),
-        ),
-    ) == 1
+        )
+    assert len(vs) == 1
 
 
 def test_query_pedigree_fields(imported_study: GenotypeData) -> None:

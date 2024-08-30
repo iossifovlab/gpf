@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 
@@ -60,11 +60,12 @@ def denovo_dae_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
 
 
 def test_import_denovo_dae_style_into_genotype_storage(
-        tmp_path_factory: pytest.TempPathFactory,
-        pedigree_data: pathlib.Path, denovo_dae_data: pathlib.Path,
-        genotype_storage: GenotypeStorage) -> None:
-    root_path = tmp_path_factory.mktemp(
-        genotype_storage.storage_id)
+    tmp_path: pathlib.Path,
+    pedigree_data: pathlib.Path, denovo_dae_data: pathlib.Path,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> None:
+    root_path = tmp_path
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
     study_id = f"test_denovo_dae_style_{genotype_storage.storage_id}"
 
@@ -103,10 +104,12 @@ def test_import_denovo_dae_style_into_genotype_storage(
 
 
 def test_import_denovo_dae_style_sep(
-        tmp_path_factory: pytest.TempPathFactory,
-        pedigree_data: pathlib.Path,
-        genotype_storage: GenotypeStorage) -> None:
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    tmp_path: pathlib.Path,
+    pedigree_data: pathlib.Path,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> None:
+    root_path = tmp_path
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     in_var = textwrap.dedent("""
@@ -168,8 +171,10 @@ def test_import_denovo_dae_style_sep(
 
 
 @pytest.fixture()
-def vcf_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
-    root_path = tmp_path_factory.mktemp("vcf_data")
+def vcf_data(
+    tmp_path: pathlib.Path,
+) -> pathlib.Path:
+    root_path = tmp_path
 
     return setup_vcf(root_path / "vcf_data" / "in.vcf.gz", textwrap.dedent("""
         ##fileformat=VCFv4.2
@@ -182,11 +187,12 @@ def vcf_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
 
 
 def test_import_comp_vcf_into_genotype_storage(
-        tmp_path_factory: pytest.TempPathFactory,
-        pedigree_data: pathlib.Path, vcf_data: pathlib.Path,
-        genotype_storage: GenotypeStorage) -> None:
-
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    tmp_path: pathlib.Path,
+    pedigree_data: pathlib.Path, vcf_data: pathlib.Path,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> None:
+    root_path = tmp_path
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
     study_id = f"test_comp_vcf_{genotype_storage.storage_id}"
 
@@ -218,11 +224,13 @@ def test_import_comp_vcf_into_genotype_storage(
 
 
 def test_import_vcf_and_denovo_into_genotype_storage(
-        tmp_path_factory: pytest.TempPathFactory,
-        pedigree_data: pathlib.Path,
-        denovo_dae_data: pathlib.Path, vcf_data: pathlib.Path,
-        genotype_storage: GenotypeStorage) -> None:
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    tmp_path: pathlib.Path,
+    pedigree_data: pathlib.Path,
+    denovo_dae_data: pathlib.Path, vcf_data: pathlib.Path,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> None:
+    root_path = tmp_path
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     study_id = f"test_comp_all_{genotype_storage.storage_id}"
@@ -257,11 +265,13 @@ def test_import_vcf_and_denovo_into_genotype_storage(
 
 
 def test_add_chrom_prefix_simple(
-        tmp_path_factory: pytest.TempPathFactory,
-        pedigree_data: pathlib.Path,
-        denovo_dae_data: pathlib.Path, vcf_data: pathlib.Path,
-        genotype_storage: GenotypeStorage) -> None:
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    tmp_path: pathlib.Path,
+    pedigree_data: pathlib.Path,
+    denovo_dae_data: pathlib.Path, vcf_data: pathlib.Path,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> None:
+    root_path = tmp_path
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
     study_id = f"test_comp_all_prefix_{genotype_storage.storage_id}"
 
@@ -314,10 +324,12 @@ def test_add_chrom_prefix_simple(
 
 
 def test_import_del_chrom_prefix(
-        tmp_path_factory: pytest.TempPathFactory,
-        pedigree_data: pathlib.Path, vcf_data: pathlib.Path,
-        genotype_storage: GenotypeStorage) -> None:
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    tmp_path: pathlib.Path,
+    pedigree_data: pathlib.Path, vcf_data: pathlib.Path,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> None:
+    root_path = tmp_path
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     study_id = f"test_comp_all_del_chrom_prefix_{genotype_storage.storage_id}"
@@ -355,11 +367,13 @@ def test_import_del_chrom_prefix(
 
 
 def test_import_transmitted_dae_into_genotype_storage(
-        tmp_path_factory: pytest.TempPathFactory,
-        pedigree_data: pathlib.Path,
-        genotype_storage: GenotypeStorage) -> None:
+    tmp_path: pathlib.Path,
+    pedigree_data: pathlib.Path,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> None:
 
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    root_path = tmp_path
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
     study_id = f"test_dae_transmitted_{genotype_storage.storage_id}"
 
@@ -406,10 +420,12 @@ bar 11       sub(A->G) f1:1121/1101:38||4||83||25/16||23||0||16/0||0||0||0;f2:21
 
 
 def test_import_wild_multivcf_into_genotype_storage(
-        tmp_path_factory: pytest.TempPathFactory,
-        genotype_storage: GenotypeStorage,
-        pedigree_data: pathlib.Path) -> None:
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    tmp_path: pathlib.Path,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+    pedigree_data: pathlib.Path,
+) -> None:
+    root_path = tmp_path
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     setup_vcf(
@@ -486,11 +502,13 @@ def test_import_wild_multivcf_into_genotype_storage(
 
 
 def test_import_study_config_arg(
-        tmp_path_factory: pytest.TempPathFactory,
-        genotype_storage: GenotypeStorage,
-        pedigree_data: pathlib.Path,
-        vcf_data: pathlib.Path) -> None:
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    tmp_path: pathlib.Path,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+    pedigree_data: pathlib.Path,
+    vcf_data: pathlib.Path,
+) -> None:
+    root_path = tmp_path
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     study_config = root_path / "study_import" / "study_config.conf"
@@ -517,10 +535,12 @@ def test_import_study_config_arg(
 
 
 def test_denovo_db_import(
-        tmp_path_factory: pytest.TempPathFactory,
-        genotype_storage: GenotypeStorage,
-        fixture_dirname: Callable[[str], str]) -> None:
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    tmp_path: pathlib.Path,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+    fixture_dirname: Callable[[str], str],
+) -> None:
+    root_path = tmp_path
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     families_filename = fixture_dirname("backends/denovo-db-person-id.ped")

@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Callable
 
 import pytest
 
@@ -12,10 +13,11 @@ from dae.utils.regions import Region
 
 @pytest.fixture(scope="module")
 def imported_study(
-        tmp_path_factory: pytest.TempPathFactory,
-        genotype_storage: GenotypeStorage) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp(
-        f"cnv_variants_{genotype_storage.storage_id}")
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> GenotypeData:
+    root_path = tmp_path_factory.mktemp("test_cnv_variants")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = alla_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / "cnv_data" / "in.ped",
@@ -39,12 +41,11 @@ f2        chrA:51-70  CNV+     2||2||3
 f2        chrA:81-100 CNV-     2||2||1
         """)
 
-    study = cnv_study(
+    return cnv_study(
         root_path,
         "cnv_variants", pathlib.Path(ped_path),
         [pathlib.Path(cnv_path)],
         gpf_instance)
-    return study
 
 
 @pytest.mark.parametrize(
