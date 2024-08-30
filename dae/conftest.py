@@ -1,5 +1,6 @@
 # noqa: INP001
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
 import pathlib
 from collections.abc import Callable
 from typing import Any
@@ -17,6 +18,7 @@ pytest_plugins = ["dae_conftests.dae_conftests"]
 def _default_genotype_storage_configs(
     root_path: pathlib.Path,
 ) -> dict[str, dict[str, Any]]:
+    localstack_host = os.environ.get("LOCALSTACK_HOST", "localhost")
     return {
         # Filesystem InMemory
         "inmemory": {
@@ -34,11 +36,19 @@ def _default_genotype_storage_configs(
             "read_only": False,
         },
 
-        # DuckDb2 Parquet Storage
+        # DuckDb Parquet Storage
         "duckdb-parquet": {
-            "id": "duckdb2_parquet",
+            "id": "duckdb_parquet",
             "storage_type": "duckdb-parquet",
             "base_dir": str(root_path / "duckdb_parquet"),
+        },
+
+        # DuckDb S3 Parquet Storage
+        "duckdb-s3-parquet": {
+            "id": "duckdb_s3_parquet",
+            "storage_type": "duckdb-s3-parquet",
+            "bucket_url": f"s3:/{root_path}/duckdb_s3_parquet",
+            "endpoint_url": f"http://{localstack_host}:4566/",
         },
 
         # # DuckDb2 Storage
@@ -97,9 +107,10 @@ def _select_storage_factories_by_type(
 ) -> dict[str, Callable[[pathlib.Path], GenotypeStorage]]:
     storage_factories = {}
     for storage_type in storage_types:
-        if storage_type in GENOTYPE_STORAGE_FACTORIES:
-            storage_factories[storage_type] = \
-                GENOTYPE_STORAGE_FACTORIES[storage_type]
+        factory = _default_storage_factory(storage_type)
+        if factory is None:
+            raise ValueError(f"unsupported genotype storage type: {storage_type}")
+        storage_factories[storage_type] = factory
     return storage_factories
 
 
@@ -195,6 +206,7 @@ def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
         "inmemory",
         "duckdb", "duckdb2",
         "duckdb-parquet",
+        "duckdb-s3-parquet",
         "impala", "impala2",
         "gcp",
         "parquet",
@@ -202,6 +214,7 @@ def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
     schema2_storage_types = {
         "duckdb", "duckdb2",
         "duckdb-parquet",
+        "duckdb-s3-parquet",
         "impala2",
         "gcp",
         "parquet",

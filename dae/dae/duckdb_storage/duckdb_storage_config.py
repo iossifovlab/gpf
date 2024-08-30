@@ -43,7 +43,6 @@ class DuckDbConf(DuckDbBaseConf):
     """`duckdb` storage configuration class."""
 
     storage_type: Literal["duckdb"] | Literal["duckdb-legacy"]
-    id: str
     db: pathlib.Path
     read_only: bool = True
     base_dir: BaseDirPath
@@ -51,19 +50,15 @@ class DuckDbConf(DuckDbBaseConf):
 
 class DuckDbParquetConf(DuckDbBaseConf):
     """`duckdb-parquet` storage configuration class."""
-    model_config = ConfigDict(extra="forbid")
 
     storage_type: Literal["duckdb-parquet"]
-    id: str
     base_dir: BaseDirPath
 
 
 class DuckDbS3Conf(DuckDbBaseConf):
     """`duckdb-s3` storage configuration class."""
-    model_config = ConfigDict(extra="forbid")
 
     storage_type: Literal["duckdb-s3"]
-    id: str
     db: str
     bucket_url: S3Path
     endpoint_url: HttpUrl | None = None
@@ -72,10 +67,7 @@ class DuckDbS3Conf(DuckDbBaseConf):
 
 class DuckDbS3ParquetConf(DuckDbBaseConf):
     """`duckdb-parquet` storage configuration class."""
-    model_config = ConfigDict(extra="forbid")
-
     storage_type: Literal["duckdb-s3-parquet"]
-    id: str
     bucket_url: S3Path
     endpoint_url: HttpUrl | None = None
 

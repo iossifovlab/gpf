@@ -78,7 +78,8 @@ setuptools.setup(
     duckdb=dae.duckdb_storage.duckdb_genotype_storage:DuckDbGenotypeStorage
     duckdb2=dae.duckdb_storage.duckdb_genotype_storage:DuckDbGenotypeStorage
     duckdb-parquet=dae.duckdb_storage.duckdb_genotype_storage:duckdb_parquet_storage_factory
-    parquet=dae.parquet_variants:ParquetGenotypeStorage
+    duckdb-s3-parquet=dae.duckdb_storage.duckdb_genotype_storage:duckdb_s3_parquet_storage_factory
+    parquet=dae.parquet_storage.storage:ParquetGenotypeStorage
 
     [dae.import_tools.storages]
     schema2=dae.schema2_storage.schema2_import_storage:Schema2ImportStorage
@@ -86,6 +87,7 @@ setuptools.setup(
     duckdb=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
     duckdb2=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
     duckdb-parquet=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
+    duckdb-s3-parquet=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
     parquet=dae.parquet_storage.storage:ParquetImportStorage
 
     [console_scripts]

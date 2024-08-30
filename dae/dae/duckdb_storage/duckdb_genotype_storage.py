@@ -20,6 +20,8 @@ from dae.duckdb_storage.duckdb2_variants import Db2Layout, DuckDb2Variants
 from dae.duckdb_storage.duckdb_storage_config import (
     DuckDbConf,
     DuckDbParquetConf,
+    DuckDbS3ParquetConf,
+    S3Path,
     parse_duckdb_config,
 )
 from dae.duckdb_storage.duckdb_variants import DuckDbVariants
@@ -605,7 +607,7 @@ class AbstractDuckDbStorage(GenotypeStorage):
 
     def __init__(
         self,
-        dd_config: DuckDbConf | DuckDbParquetConf,
+        dd_config: DuckDbConf | DuckDbParquetConf | DuckDbS3ParquetConf,
     ):
         super().__init__(dd_config.model_dump())
         self.dd_config = dd_config
@@ -695,8 +697,8 @@ class AbstractDuckDbStorage(GenotypeStorage):
         )
 
 
-def _join_base_dir_and_parquet_scan(
-    base_dir: pathlib.Path,
+def _join_base_url_and_parquet_scan(
+    base_url: str,
     parquet_scan: str | None,
 ) -> str | None:
     if parquet_scan is None:
@@ -708,14 +710,14 @@ def _join_base_dir_and_parquet_scan(
 
     parquet_path = match.groupdict()["parquet_path"]
     assert parquet_path
-    assert base_dir is not None
+    assert base_url is not None
 
-    full_path = fs_utils.join(str(base_dir), parquet_path)
+    full_path = fs_utils.join(base_url, parquet_path)
     return f"parquet_scan('{full_path}')"
 
 
 def _create_relative_parquet_scans_layout(
-    base_dir: pathlib.Path,
+    base_url: str,
     study_id: str,
     partition_descriptor: PartitionDescriptor,
 ) -> Schema2DatasetLayout:
@@ -728,7 +730,7 @@ def _create_relative_parquet_scans_layout(
     summary_partition = partition_descriptor.dataset_summary_partition()
     family_path = fs_utils.join(study_dir, "family")
     family_partition = partition_descriptor.dataset_family_partition()
-    study_dir = fs_utils.join(str(base_dir), study_dir)
+    study_dir = fs_utils.join(base_url, study_dir)
     paths = Schema2DatasetLayout(
         study_dir,
         f"{pedigree_path}/pedigree.parquet",
@@ -748,7 +750,7 @@ class DuckDbParquetStorage(AbstractDuckDbStorage):
 
     def __init__(self, dd_config: DuckDbParquetConf):
         super().__init__(dd_config)
-        self.dd_config = dd_config
+        self.config = dd_config
         self.connection_factory: duckdb.DuckDBPyConnection | None = None
 
     def start(self) -> DuckDbParquetStorage:
@@ -778,12 +780,12 @@ class DuckDbParquetStorage(AbstractDuckDbStorage):
     ) -> Db2Layout:
         study_config_layout = self.get_study_config_tables(study_config)
         assert study_config_layout.db is None
-        base_dir = self.dd_config.base_dir
+        base_url = str(self.config.base_dir)
 
-        pedigree = _join_base_dir_and_parquet_scan(
-            base_dir, study_config_layout.pedigree)
-        meta = _join_base_dir_and_parquet_scan(
-            base_dir, study_config_layout.meta)
+        pedigree = _join_base_url_and_parquet_scan(
+            base_url, study_config_layout.pedigree)
+        meta = _join_base_url_and_parquet_scan(
+            base_url, study_config_layout.meta)
         assert pedigree is not None
         assert meta is not None
 
@@ -791,10 +793,10 @@ class DuckDbParquetStorage(AbstractDuckDbStorage):
             db=None,
             study=study_config_layout.study,
             pedigree=pedigree,
-            summary=_join_base_dir_and_parquet_scan(
-                base_dir, study_config_layout.summary),
-            family=_join_base_dir_and_parquet_scan(
-                base_dir, study_config_layout.family),
+            summary=_join_base_url_and_parquet_scan(
+                base_url, study_config_layout.summary),
+            family=_join_base_url_and_parquet_scan(
+                base_url, study_config_layout.family),
             meta=meta,
         )
 
@@ -807,7 +809,7 @@ class DuckDbParquetStorage(AbstractDuckDbStorage):
         """Import study parquet dataset into duckdb genotype storage."""
 
         dest_layout = _create_relative_parquet_scans_layout(
-            self.dd_config.base_dir,
+            str(self.config.base_dir),
             study_id,
             partition_descriptor,
         )
@@ -825,3 +827,143 @@ def duckdb_parquet_storage_factory(
         raise TypeError(
             f"unexpected storage type: {dd_config.storage_type}")
     return DuckDbParquetStorage(dd_config)
+
+
+def _s3_secret_clause(
+    storage_id: str,
+    endpoint_url: str | S3Path | None,
+) -> str:
+    endpoint = None
+    if endpoint_url:
+        parsed = urlparse(str(endpoint_url))
+        endpoint = parsed.netloc
+
+    return jinja2.Template(textwrap.dedent(
+        """
+            drop secret if exists {{ storage_id }}_secret;
+
+            create secret {{ storage_id }}_secret (
+                type s3,
+                key_id '{{ aws_access_key_id }}',
+                secret '{{ aws_secret_access_key }}',
+                {%- if endpoint %}
+                endpoint '{{ endpoint }}',
+                {%- endif %}
+                url_style 'path',
+                {%- if region %}
+                region '{{ region }}',
+                {%- else %}
+                region 'None'
+                {%- endif %}
+            );
+        """,
+    )).render(
+        storage_id=storage_id,
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        endpoint=endpoint,
+        region=os.getenv("AWS_REGION"),
+    )
+
+
+def _s3_attach_db_clause(db_url: str) -> str:
+    return f"ATTACH DATABASE '{ db_url }' (type duckdb, read_only);"
+
+
+def _s3_filesystem(endpoint_url: str | S3Path | None) -> S3FileSystem:
+    client_kwargs = {}
+    if endpoint_url:
+        client_kwargs["endpoint_url"] = str(endpoint_url)
+    s3filesystem = S3FileSystem(anon=False, client_kwargs=client_kwargs)
+    s3filesystem.invalidate_cache()
+    return s3filesystem
+
+
+class DuckDbS3ParquetStorage(AbstractDuckDbStorage):
+    """Defines `duckdb-s3-parquet` genotype storage."""
+
+    def __init__(self, dd_config: DuckDbS3ParquetConf):
+        super().__init__(dd_config)
+        self.config = dd_config
+        self.connection_factory: duckdb.DuckDBPyConnection | None = None
+
+    def start(self) -> DuckDbS3ParquetStorage:
+        if self.connection_factory:
+            logger.warning(
+                "starting already started DuckDb genotype storage: <%s>",
+                self.storage_id)
+            return self
+
+        logger.info("connection to inmemory duckdb")
+        self.connection_factory = duckdb.connect(":memory:")
+
+        memory_limit = self._memory_limit_clause()
+        if memory_limit:
+            logger.info("memory limit: %s", memory_limit)
+            self.connection_factory.sql(memory_limit)
+
+        s3_secret_clause = _s3_secret_clause(
+            self.storage_id, self.config.endpoint_url)
+        self.connection_factory.sql(s3_secret_clause)
+
+        return self
+
+    @classmethod
+    def get_storage_types(cls) -> set[str]:
+        return {"duckdb-s3-parquet"}
+
+    def build_study_layout(
+        self,
+        study_config: dict[str, Any],
+    ) -> Db2Layout:
+        study_config_layout = self.get_study_config_tables(study_config)
+        assert study_config_layout.db is None
+        base_url = str(self.config.bucket_url)
+
+        pedigree = _join_base_url_and_parquet_scan(
+            base_url, study_config_layout.pedigree)
+        meta = _join_base_url_and_parquet_scan(
+            base_url, study_config_layout.meta)
+        assert pedigree is not None
+        assert meta is not None
+
+        return Db2Layout(
+            db=None,
+            study=study_config_layout.study,
+            pedigree=pedigree,
+            summary=_join_base_url_and_parquet_scan(
+                base_url, study_config_layout.summary),
+            family=_join_base_url_and_parquet_scan(
+                base_url, study_config_layout.family),
+            meta=meta,
+        )
+
+    def import_dataset(
+        self,
+        study_id: str,
+        layout: Schema2DatasetLayout,
+        partition_descriptor: PartitionDescriptor,
+    ) -> Schema2DatasetLayout:
+        """Import study parquet dataset into duckdb genotype storage."""
+
+        dest_layout = _create_relative_parquet_scans_layout(
+            str(self.config.bucket_url),
+            study_id,
+            partition_descriptor,
+        )
+
+        s3_fs = _s3_filesystem(self.config.endpoint_url)
+        s3_fs.put(layout.study, dest_layout.study, recursive=True)
+
+        return dest_layout
+
+
+def duckdb_s3_parquet_storage_factory(
+    storage_config: dict[str, Any],
+) -> DuckDbS3ParquetStorage:
+    """Create `duckdb-s3-parquet` genotype storage."""
+    dd_config = parse_duckdb_config(storage_config)
+    if dd_config.storage_type != "duckdb-s3-parquet":
+        raise TypeError(
+            f"unexpected storage type: {dd_config.storage_type}")
+    return DuckDbS3ParquetStorage(dd_config)
