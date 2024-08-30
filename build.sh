@@ -307,6 +307,8 @@ EOT
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
+          --env AWS_ACCESS_KEY_ID="foo" \
+          --env AWS_SECRET_ACCESS_KEY="foo" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_dae
@@ -338,6 +340,8 @@ EOT
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
+          --env AWS_ACCESS_KEY_ID="foo" \
+          --env AWS_SECRET_ACCESS_KEY="foo" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_dae_integ
@@ -370,6 +374,8 @@ EOT
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
+          --env AWS_ACCESS_KEY_ID="foo" \
+          --env AWS_SECRET_ACCESS_KEY="foo" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_wdae_integ
@@ -400,6 +406,8 @@ EOT
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
+          --env AWS_ACCESS_KEY_ID="foo" \
+          --env AWS_SECRET_ACCESS_KEY="foo" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_demo
@@ -429,6 +437,8 @@ EOT
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
+          --env AWS_ACCESS_KEY_ID="foo" \
+          --env AWS_SECRET_ACCESS_KEY="foo" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_vep

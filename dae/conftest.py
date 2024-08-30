@@ -18,7 +18,13 @@ pytest_plugins = ["dae_conftests.dae_conftests"]
 def _default_genotype_storage_configs(
     root_path: pathlib.Path,
 ) -> dict[str, dict[str, Any]]:
+
     localstack_host = os.environ.get("LOCALSTACK_HOST", "localhost")
+    if "AWS_SECRET_ACCESS_KEY" not in os.environ:
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"  # noqa: S105
+    if "AWS_ACCESS_KEY_ID" not in os.environ:
+        os.environ["AWS_ACCESS_KEY_ID"] = "foo"
+
     return {
         # Filesystem InMemory
         "inmemory": {
