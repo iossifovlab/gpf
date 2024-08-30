@@ -9,6 +9,7 @@ import { selectEnrichmentModels } from 'app/enrichment-models/enrichment-models.
 import { selectGeneScores } from 'app/gene-scores/gene-scores.state';
 import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
 import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { selectErrors } from 'app/common/errors_ngrx.state';
 
 @Component({
   selector: 'gpf-enrichment-tool',
@@ -21,7 +22,6 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
   public disableQueryButtons = false;
 
   public enrichmentState: Observable<object[]>;
-  // @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
   private enrichmentToolState = {};
   private enrichmentQuerySubscription: Subscription = null;
 
@@ -65,11 +65,11 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
       }
     });
 
-    // this.errorsState$.subscribe(state => {
-    //   setTimeout(() => {
-    //     this.disableQueryButtons = state.componentErrors.size > 0;
-    //   });
-    // });
+    this.store.select(selectErrors).subscribe(errorsState => {
+      setTimeout(() => {
+        this.disableQueryButtons = errorsState.length > 0;
+      });
+    });
   }
 
   public ngOnDestroy(): void {

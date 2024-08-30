@@ -235,6 +235,7 @@ export class DatasetsComponent extends StatefulComponentNgRx implements OnInit, 
       this.store.dispatch(resetPresentInChild());
       this.store.dispatch(resetPresentInParent());
       this.store.dispatch(resetPhenoToolMeasure());
+      this.store.dispatch(resetAllErrors());
       // ...
     }
 

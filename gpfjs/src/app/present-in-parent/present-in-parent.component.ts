@@ -45,6 +45,7 @@ export class PresentInParentComponent extends StatefulComponentNgRx implements O
 
   public ngOnInit(): void {
     super.ngOnInit();
+
     this.store.select(selectPresentInParent).pipe(take(1)).subscribe(state => {
       // restore state
       this.selectedValues = new Set([...state.presentInParent]);

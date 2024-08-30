@@ -131,7 +131,7 @@ export class PhenoToolMeasureComponent extends StatefulComponentNgRx implements 
   public onNormalizeByChange(value: Regression, event): void {
     if (event.target.checked) {
       if (!this.normalizeBy.some((reg) => reg.measure_name === value.measure_name)) {
-        this.normalizeBy.push(value);
+        this.normalizeBy = [...this.normalizeBy, value];
       }
     } else {
       this.normalizeBy = this.normalizeBy.filter(

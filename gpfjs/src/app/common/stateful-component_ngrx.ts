@@ -26,8 +26,16 @@ export abstract class StatefulComponentNgRx implements OnInit, OnDestroy {
     this.componentStateSubscription = this.componentState$.subscribe(() => {
       // validate for errors
       validate(this, { forbidUnknownValues: true }).then(errors => {
-        this.errors = this.errorsToMessages(errors);
-        this.store.dispatch(setErrors({componentId: this.componentId, errors: this.errors}));
+        if (errors.length) {
+          this.errors = this.errorsToMessages(errors);
+          this.store.dispatch(setErrors({
+            errors: {
+              componentId: this.componentId, errors: this.errors
+            }
+          }));
+        } else {
+          this.store.dispatch(resetErrors({componentId: this.componentId}));
+        }
       });
     });
   }
