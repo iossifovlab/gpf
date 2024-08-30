@@ -23,11 +23,11 @@ export class GenesBlockComponent implements AfterViewInit {
       this.store.select(selectGeneSets),
       this.store.select(selectGeneScores),
     ]).pipe(take(1)).subscribe(([geneSymbols, geneSets, geneScores]) => {
-      if (geneSymbols) {
+      if (geneSymbols.length) {
         setTimeout(() => this.ngbNav.select('geneSymbols'));
-      } else if (geneSets) {
+      } else if (geneSets.geneSet) {
         setTimeout(() => this.ngbNav.select('geneSets'));
-      } else if (geneScores) {
+      } else if (geneScores.geneScores) {
         setTimeout(() => this.ngbNav.select('geneScores'));
       }
     });

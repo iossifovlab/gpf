@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-
 import { GenomicScoreState, GenomicScoresState } from '../genomic-scores/genomic-scores-store';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
 import { GenomicScores } from './genomic-scores-block';
@@ -7,7 +6,6 @@ import { Store} from '@ngrx/store';
 import { selectGenomicScores, setGenomicScores } from './genomic-scores-block.state';
 import { combineLatest, of } from 'rxjs';
 import { switchMap, take } from 'rxjs/operators';
-import { StatefulComponent } from 'app/common/stateful-component';
 import { ValidateNested } from 'class-validator';
 import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
 

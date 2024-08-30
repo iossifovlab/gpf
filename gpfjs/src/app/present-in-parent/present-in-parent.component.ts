@@ -4,11 +4,9 @@ import { Validate, ValidateIf, Min, Max } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 import { SetNotEmpty } from '../utils/set.validators';
-import { StatefulComponent } from 'app/common/stateful-component';
 import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
 import { selectPresentInParent, setPresentInParent } from './present-in-parent.state';
 import { take } from 'rxjs';
-import { setPresentInChild } from 'app/present-in-child/present-in-child.state';
 
 @Component({
   selector: 'gpf-present-in-parent',

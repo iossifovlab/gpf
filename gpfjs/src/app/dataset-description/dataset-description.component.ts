@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { DatasetsService } from '../datasets/datasets.service';
 import { switchMap, take } from 'rxjs/operators';
-import { Store } from '@ngxs/store';
+import { Store } from '@ngrx/store';
 import { DatasetHierarchy } from 'app/datasets/datasets';
 import { zip } from 'rxjs';
 import { selectDatasetId } from 'app/datasets/datasets.state';
@@ -23,6 +23,7 @@ export class DatasetDescriptionComponent implements OnInit {
 
   public ngOnInit(): void {
     const subscription = this.store.select(selectDatasetId).pipe(
+      take(1),
       switchMap(datasetIdState => this.datasetsService.getDataset(datasetIdState)),
       switchMap(dataset => {
         this.editable = dataset.descriptionEditable;

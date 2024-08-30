@@ -2,8 +2,7 @@ import { Component, Input } from '@angular/core';
 import { EnrichmentEffectResult } from '../enrichment-query/enrichment-result';
 import { QueryService } from '../query/query.service';
 import { BrowserQueryFilter } from 'app/genotype-browser/genotype-browser';
-import { Store } from '@ngxs/store';
-import { Store as Store1 } from '@ngrx/store';
+import { Store } from '@ngrx/store';
 import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { take } from 'rxjs/operators';
 import { cloneDeep } from 'lodash';
@@ -24,7 +23,6 @@ export class EnrichmentTableRowComponent {
   public constructor(
     private queryService: QueryService,
     private store: Store,
-    private store1: Store1,
   ) {}
 
   public goToQuery(browserQueryFilter: BrowserQueryFilter, skipGenes = false): void {
@@ -34,18 +32,18 @@ export class EnrichmentTableRowComponent {
     // https://stackoverflow.com/a/22470171/2316754
     const newWindow = window.open('', '_blank');
 
-    this.store1.dispatch(setEffectTypes({effectTypes: browserQueryFilter.effectTypes}));
-    this.store1.dispatch(setGenders({genders: browserQueryFilter.gender}));
-    this.store1.dispatch(setVariantTypes({variantTypes: browserQueryFilter.variantTypes}));
-    this.store1.dispatch(setPedigreeSelector({
+    this.store.dispatch(setEffectTypes({effectTypes: browserQueryFilter.effectTypes}));
+    this.store.dispatch(setGenders({genders: browserQueryFilter.gender}));
+    this.store.dispatch(setVariantTypes({variantTypes: browserQueryFilter.variantTypes}));
+    this.store.dispatch(setPedigreeSelector({
       pedigreeSelector: {
         id: browserQueryFilter.personSetCollection.id,
         checkedValues: browserQueryFilter.personSetCollection.checkedValues
       }
     }));
-    this.store1.dispatch(setStudyTypes({studyTypes: browserQueryFilter['studyTypes']}));
+    this.store.dispatch(setStudyTypes({studyTypes: browserQueryFilter['studyTypes']}));
 
-    this.store.selectOnce(state => state as object).subscribe(state => {
+    this.store.subscribe(state => {
       const queryData = cloneDeep(state);
 
       const datasetId = browserQueryFilter['datasetId'];

@@ -1,10 +1,8 @@
 import { Component, AfterViewInit, Input, ViewChild, OnInit, HostListener } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { Store } from '@ngrx/store';
-// import { PersonFiltersModel, PersonFiltersState, SetFamilyFilters } from 'app/person-filters/person-filters.state';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
-// import { FamilyTagsModel, FamilyTagsState, SetFamilyTags } from 'app/family-tags/family-tags.state';
 import { FamilyCounter, PedigreeCounter, VariantReport } from 'app/variant-reports/variant-reports';
 import { combineLatest, switchMap, take } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -78,23 +76,6 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
         }
       }
     });
-
-    this.store.select(selectDatasetId).pipe(
-      switchMap(datasetId => this.variantReportsService.getVariantReport(datasetId)),
-      take(1)
-    ).subscribe({
-      next: (variantReport: VariantReport) => {
-        this.familiesCounters = variantReport.familyReport.familiesCounters;
-        this.setFamiliesCount();
-      },
-      error: (err: HttpErrorResponse) => {
-        if (err.status === 404) {
-          this.showSelectedFamilies = false;
-        } else {
-          throw err;
-        }
-      }
-    });
   }
 
   @HostListener('window:resize')
@@ -118,21 +99,21 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
       this.store.select(selectFamilyTags),
       this.store.select(selectPersonFilters),
     ).pipe(take(1)).subscribe(([familyIdsState, familyTagsState, personFiltersState]) => {
-      if (familyIdsState) {
+      if (familyIdsState.length) {
         setTimeout(() => {
           this.ngbNav.select('familyIds');
           this.hasContent = true;
         });
       } else if (
-        familyTagsState.selectedFamilyTags
-        || familyTagsState.deselectedFamilyTags
-        || familyTagsState.tagIntersection
+        familyTagsState.selectedFamilyTags.length
+        || familyTagsState.deselectedFamilyTags.length
+        || !familyTagsState.tagIntersection
       ) {
         setTimeout(() => {
           this.ngbNav.select('familyTags');
           this.hasContent = true;
         });
-      } else if (personFiltersState['familyFilters']) {
+      } else if (personFiltersState.familyFilters.length) {
         setTimeout(() => {
           this.ngbNav.select('advanced');
           this.hasContent = true;

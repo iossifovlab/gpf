@@ -3,7 +3,6 @@ import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
 import { resetRegionsFilters, selectRegionsFilters } from 'app/regions-filter/regions-filter.state';
 import { take } from 'rxjs';
-// import { RegionsFilterModel, RegionsFilterState } from 'app/regions-filter/regions-filter.state';
 
 @Component({
   selector: 'gpf-regions-block',

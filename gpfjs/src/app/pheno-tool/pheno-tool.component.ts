@@ -4,10 +4,9 @@ import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loadi
 import { PhenoToolService } from './pheno-tool.service';
 import { PhenoToolResults } from './pheno-tool-results';
 import { ConfigService } from '../config/config.service';
-import { combineLatest, Observable, Subscription, switchMap, take } from 'rxjs';
+import { combineLatest, Subscription, switchMap, take } from 'rxjs';
 import { selectPhenoToolMeasure } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 import { Store } from '@ngrx/store';
-import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
 import {
   PHENO_TOOL_CNV, PHENO_TOOL_LGDS, PHENO_TOOL_OTHERS
 } from 'app/pheno-tool-effect-types/pheno-tool-effect-types';
@@ -18,6 +17,7 @@ import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
 import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { selectPresentInParent } from 'app/present-in-parent/present-in-parent.state';
 import { selectEffectTypes } from 'app/effect-types/effect-types.state';
+import { selectErrors } from 'app/common/errors_ngrx.state';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -25,8 +25,6 @@ import { selectEffectTypes } from 'app/effect-types/effect-types.state';
   styleUrls: ['./pheno-tool.component.css'],
 })
 export class PhenoToolComponent implements OnInit, OnDestroy {
-  // @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
-
   public selectedDataset: Dataset;
   public variantTypesSet: Set<string>;
 
@@ -83,23 +81,24 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       const presentInParentRarity = {
         presentInParent: presentInParentState.presentInParent
       };
-      if (presentInParentState.presentInParent.length === 1 && presentInParentState.presentInParent[0] === 'neither') {
-        return presentInParentRarity;
-      }
-      presentInParentRarity['rarity'] = { ultraRare: presentInParentState.rarityType === 'ultraRare' };
-      if (presentInParentState.rarityType !== 'ultraRare' && presentInParentState.rarityType !== 'all') {
-        presentInParentRarity['rarity']['minFreq'] = presentInParentState.rarityIntervalStart;
-        presentInParentRarity['rarity']['maxFreq'] = presentInParentState.rarityIntervalEnd;
+      if (presentInParentState.presentInParent.length !== 1
+        || presentInParentState.presentInParent[0] !== 'neither') {
+        presentInParentRarity['rarity'] = { ultraRare: presentInParentState.rarityType === 'ultraRare' };
+        if (presentInParentState.rarityType !== 'ultraRare' && presentInParentState.rarityType !== 'all') {
+          presentInParentRarity['rarity']['minFreq'] = presentInParentState.rarityIntervalStart;
+          presentInParentRarity['rarity']['maxFreq'] = presentInParentState.rarityIntervalEnd;
+        }
       }
 
       this.phenoToolState = {
-        ...geneSymbolsState,
-        ...geneSetsState,
-        ...geneScoresState,
+        ...geneSymbolsState.length && geneSymbolsState,
+        ...geneSetsState.geneSet && geneSetsState,
+        ...geneScoresState.geneScores && geneScoresState,
         ...phenoToolMeasureState,
-        ...effectTypesState,
-        ...presentInParentRarity,
+        effectTypes: effectTypesState,
+        presentInParent: presentInParentRarity
       };
+
       this.phenoToolResults = null;
     });
 
@@ -112,11 +111,11 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       this.phenoToolResults = null;
     });
 
-    // this.errorsState$.subscribe(state => {
-    //   setTimeout(() => {
-    //     this.disableQueryButtons = state.componentErrors.size > 0;
-    //   });
-    // });
+    this.store.select(selectErrors).subscribe(errorsState => {
+      setTimeout(() => {
+        this.disableQueryButtons = errorsState.length > 0;
+      });
+    });
   }
 
   public ngOnDestroy(): void {

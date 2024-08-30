@@ -38,7 +38,7 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
       this.store.select(selectGeneScores),
       this.store.select(selectEnrichmentModels),
       this.store.select(selectDatasetId),
-    ]).pipe(take(1)).subscribe(([
+    ]).subscribe(([
       geneSymbols,
       geneSets,
       geneScores,
@@ -48,9 +48,9 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
       this.selectedDatasetId = datasetId;
       this.enrichmentToolState = {
         datasetId: this.selectedDatasetId,
-        ...geneSymbols,
-        ...geneSets,
-        ...geneScores,
+        ...geneSymbols.length && geneSymbols,
+        ...geneSets.geneSet && geneSets,
+        ...geneScores.geneScores && geneScores,
         ...enrichmentModels,
       };
       this.enrichmentResults = null;
