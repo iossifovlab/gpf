@@ -1,5 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
-export const initialState = [];
+export const initialState: string[] = [];
 
 export const selectFamilyIds = createFeatureSelector<string[]>('familyIds');
 

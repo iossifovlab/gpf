@@ -1,6 +1,7 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { FamilyTags } from './family-tags';
 import { cloneDeep } from 'lodash';
+
 export const initialState: FamilyTags = {
   selectedFamilyTags: [],
   deselectedFamilyTags: [],

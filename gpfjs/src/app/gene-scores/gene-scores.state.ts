@@ -1,14 +1,21 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
 import { GeneScores } from './gene-scores';
-export const initialState: { geneScores: GeneScores; rangeStart: number; rangeEnd: number } = {
+
+export interface GeneScoresState {
+  geneScores: GeneScores;
+  rangeStart: number;
+  rangeEnd: number;
+}
+
+export const initialState: GeneScoresState = {
   geneScores: null,
   rangeStart: 0,
   rangeEnd: 0
 };
 
 export const selectGeneScores =
-  createFeatureSelector<{ geneScores: GeneScores; rangeStart: number; rangeEnd: number }>('geneScores');
+  createFeatureSelector<GeneScoresState>('geneScores');
 
 export const setGeneScoresHistogramValues = createAction(
   '[Genotype] Set geneScores histogram values',
@@ -17,7 +24,7 @@ export const setGeneScoresHistogramValues = createAction(
 
 export const setGeneScore = createAction(
   '[Genotype] Set geneScore',
-  props<{ geneScores: GeneScores; rangeStart: number; rangeEnd: number }>()
+  props<GeneScoresState>()
 );
 
 export const resetGeneScoresValues = createAction(

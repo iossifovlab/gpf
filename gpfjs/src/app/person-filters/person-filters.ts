@@ -49,7 +49,16 @@ export class ContinuousSelection implements Selection {
   }
 }
 
-export class PersonFilterState {
+export interface PersonFilterInterface {
+  selection: Selection;
+  source: string;
+  id: string;
+  sourceType: string;
+  role: string;
+  from: string;
+}
+
+export class PersonFilterState implements PersonFilterInterface {
   @ValidateNested()
   public selection: Selection;
   public source: string;

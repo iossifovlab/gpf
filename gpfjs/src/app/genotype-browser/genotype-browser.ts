@@ -36,11 +36,17 @@ export class PersonSetCollection {
   }
 }
 
-export class GenomicScore {
+export interface GenomicScoreInterface {
+  metric: string;
+  rangeStart: number;
+  rangeEnd: number;
+}
+
+export class GenomicScore implements GenomicScoreInterface {
   public constructor(
-    private metric: string,
-    private rangeStart: number,
-    private rangeEnd: number,
+    public metric: string,
+    public rangeStart: number,
+    public rangeEnd: number,
   ) {}
 
   public static fromJson(json: object): GenomicScore {

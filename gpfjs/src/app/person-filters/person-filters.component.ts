@@ -105,6 +105,8 @@ export class PersonFiltersComponent extends StatefulComponentNgRx implements OnC
     const filters = [...this.personFiltersState]
       .map(([_, personFilter]) => personFilter)
       .filter(personFilter => personFilter && !personFilter.isEmpty());
+
+    console.log(this.filters)
     if (this.isFamilyFilters) {
       this.store.dispatch(setFamilyFilters({familyFilters: filters}));
     } else {

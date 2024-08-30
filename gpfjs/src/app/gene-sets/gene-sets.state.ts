@@ -1,22 +1,25 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
 import { GeneSet, GeneSetsCollection, GeneSetType } from './gene-sets';
-export const initialState: { geneSetsTypes: object; geneSetsCollection: object; geneSet: object } = {
+
+export interface GeneSetsState {
+  geneSetsTypes: GeneSetType[];
+  geneSetsCollection: GeneSetsCollection;
+  geneSet: GeneSet;
+}
+
+export const initialState: GeneSetsState = {
   geneSet: null,
   geneSetsCollection: null,
   geneSetsTypes: null,
 };
 
 export const selectGeneSets =
-  createFeatureSelector<{
-    geneSetsTypes: GeneSetType[];
-    geneSetsCollection: GeneSetsCollection;
-    geneSet: GeneSet;
-  }>('geneSets');
+  createFeatureSelector<GeneSetsState>('geneSets');
 
 export const setGeneSetsValues = createAction(
   '[Genotype] Set geneSets values',
-  props<{ geneSetsTypes: GeneSetType[]; geneSetsCollection: GeneSetsCollection; geneSet: GeneSet }>()
+  props<GeneSetsState>()
 );
 
 export const getGeneSetsValues = createAction(

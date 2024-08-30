@@ -30,9 +30,9 @@ export class MultiContinuousFilterComponent extends StatefulComponentNgRx implem
   }
 
   public ngOnInit(): void {
-    this.store.select(selectPersonFilters).pipe(take(1)).subscribe(personFiltersState => {
-      this.restoreContinuousFilter(personFiltersState);
-    });
+    // this.store.select(selectPersonFilters).pipe(take(1)).subscribe(personFiltersState => {
+    //   this.restoreContinuousFilter(personFiltersState);
+    // });
   }
 
   public restoreContinuousFilter(
