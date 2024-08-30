@@ -12,7 +12,7 @@ import { NavigationStart, Router } from '@angular/router';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store } from '@ngrx/store';
-import { selectErrors } from 'app/common/errors_ngrx.state';
+import { selectErrors } from 'app/common/errors.state';
 import { selectVariantTypes } from 'app/variant-types/variant-types.state';
 import { selectEffectTypes } from 'app/effect-types/effect-types.state';
 import { selectFamilyIds } from 'app/family-ids/family-ids.state';

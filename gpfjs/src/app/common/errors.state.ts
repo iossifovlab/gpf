@@ -1,33 +1,45 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
-
-export class SetComponentErrors {
-  public static readonly type = '[Error handling] Set component errors';
-  public constructor(
-    public componentId: string, public errors: Array<string>
-  ) {}
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { cloneDeep } from 'lodash';
+export const initialState: Errors[] = [];
+export interface Errors {
+  componentId: string;
+  errors: string[];
 }
 
-export interface ErrorsModel {
-  componentErrors: Map<string, Array<string>>;
-}
+export const selectErrors = createFeatureSelector<Errors[]>('errors');
 
-@State<ErrorsModel>({
-  name: 'errorsState',
-  defaults: {
-    componentErrors: new Map<string, Array<string>>()
-  },
-})
-@Injectable()
-export class ErrorsState {
-  @Action(SetComponentErrors)
-  public setComponentErrors(ctx: StateContext<ErrorsModel>, action: SetComponentErrors): void {
-    const errors: Map<string, Array<string>> = ctx.getState().componentErrors;
-    if (action.errors.length) {
-      errors.set(action.componentId, action.errors);
-    } else {
-      errors.delete(action.componentId);
+export const setErrors = createAction(
+  '[Errors] Set errors',
+  props<{ errors: Errors }>()
+);
+
+export const resetErrors = createAction(
+  '[Errors] Reset errors',
+  props<{ componentId: string }>()
+);
+
+export const resetAllErrors = createAction(
+  '[Errors] Reset all errors',
+);
+
+export const errorsReducer = createReducer(
+  initialState,
+  on(setErrors, (state, { errors }
+  ) => {
+    let updatedState: Errors[] = cloneDeep(state);
+    const currentIndex = state.findIndex(e => e.componentId === errors.componentId);
+
+    if (currentIndex === -1) {
+      updatedState = [...state, cloneDeep(errors)];
+      return updatedState;
     }
-    ctx.patchState({ componentErrors: errors });
-  }
-}
+    updatedState[currentIndex] = {
+      componentId: state[currentIndex].componentId,
+      errors: [...state[currentIndex].errors, ...errors.errors]
+    };
+    return updatedState;
+  }),
+  on(resetErrors, (state, { componentId }) => state.filter(s => s.componentId !== componentId)
+  ),
+  on(resetAllErrors, (state) => cloneDeep(initialState)),
+);

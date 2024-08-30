@@ -2,9 +2,9 @@ import { createReducer, createAction, on, props, createFeatureSelector } from '@
 import { cloneDeep } from 'lodash';
 import { GeneSet, GeneSetsCollection, GeneSetType } from './gene-sets';
 export const initialState: { geneSetsTypes: object; geneSetsCollection: object; geneSet: object } = {
-  geneSetsTypes: null,
+  geneSet: null,
   geneSetsCollection: null,
-  geneSet: null
+  geneSetsTypes: null,
 };
 
 export const selectGeneSets =

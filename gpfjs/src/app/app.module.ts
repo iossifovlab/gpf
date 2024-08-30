@@ -129,7 +129,6 @@ import { NgxsResetPluginModule } from 'ngxs-reset-plugin';
 import { variantTypesReducer } from './variant-types/variant-types.state';
 import { effectTypesReducer } from './effect-types/effect-types.state';
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox-list.component';
-import { ErrorsState } from './common/errors.state';
 import { toolPageLinks } from './datasets/datasets';
 import { GenePlotComponent } from './gene-plot/gene-plot.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
@@ -176,7 +175,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
 import { datasetIdReducer } from './datasets/datasets.state';
 import { StoreModule } from '@ngrx/store';
-import { errorsReducer } from './common/errors_ngrx.state';
+import { errorsReducer } from './common/errors.state';
 import { familyIdsReducer } from './family-ids/family-ids.state';
 import { expandedDatasetsReducer } from './dataset-node/dataset-node.state';
 import { studyFiltersReducer } from './study-filters/study-filters.state';
@@ -429,7 +428,6 @@ const appRoutes: Routes = [
     NgMultiSelectDropDownModule.forRoot(),
     NgxsModule.forRoot([
       InheritancetypesState,
-      ErrorsState
     ], {compatibility: { strictContentSecurityPolicy: true }}),
     NgxsResetPluginModule.forRoot(),
     DragDropModule,

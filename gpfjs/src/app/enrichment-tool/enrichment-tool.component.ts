@@ -9,7 +9,8 @@ import { selectEnrichmentModels } from 'app/enrichment-models/enrichment-models.
 import { selectGeneScores } from 'app/gene-scores/gene-scores.state';
 import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
 import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
-import { selectErrors } from 'app/common/errors_ngrx.state';
+import { selectErrors } from 'app/common/errors.state';
+import { GeneSetsCollection } from 'app/gene-sets/gene-sets';
 
 @Component({
   selector: 'gpf-enrichment-tool',
@@ -48,11 +49,19 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
       this.selectedDatasetId = datasetId;
       this.enrichmentToolState = {
         datasetId: this.selectedDatasetId,
-        ...geneSymbols.length && geneSymbols,
-        ...geneSets.geneSet && geneSets,
-        ...geneScores.geneScores && geneScores,
         ...enrichmentModels,
       };
+      if (geneSymbols.length) {
+        this.enrichmentToolState['geneSymbols'] = geneSymbols;
+      } else if (geneSets.geneSet) {
+        this.enrichmentToolState['geneSet'] = {
+          geneSet: geneSets.geneSet.name,
+          geneSetsCollection: geneSets.geneSetsCollection.name,
+          geneTypes: geneSets.geneSetsTypes
+        };
+      } else if (geneScores.geneScores) {
+        this.enrichmentToolState['geneSymbols'] = geneScores.geneScores;
+      }
       this.enrichmentResults = null;
     });
 

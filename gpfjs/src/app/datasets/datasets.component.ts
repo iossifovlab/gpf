@@ -9,7 +9,7 @@ import { Store } from '@ngrx/store';
 // import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
 import { selectDatasetId, setDatasetId } from './datasets.state';
 import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
-import { resetAllErrors, resetErrors } from 'app/common/errors_ngrx.state';
+import { resetAllErrors, resetErrors } from 'app/common/errors.state';
 import { resetFamilyIds } from 'app/family-ids/family-ids.state';
 import {
   resetExpandedDatasets,

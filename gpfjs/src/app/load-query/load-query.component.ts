@@ -3,7 +3,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 
 import { QueryService } from '../query/query.service';
 import { StateReset } from 'ngxs-reset-plugin';
-import { ErrorsState } from 'app/common/errors.state';
 import { take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 

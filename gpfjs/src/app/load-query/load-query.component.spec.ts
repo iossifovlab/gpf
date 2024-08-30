@@ -8,7 +8,7 @@ import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 import { LoadQueryComponent } from './load-query.component';
 import { StoreModule } from '@ngrx/store';
-import { errorsReducer } from 'app/common/errors_ngrx.state';
+import { errorsReducer } from 'app/common/errors.state';
 
 describe('LoadQueryComponent', () => {
   let component: LoadQueryComponent;

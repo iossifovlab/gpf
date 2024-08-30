@@ -17,7 +17,7 @@ import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
 import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { selectPresentInParent } from 'app/present-in-parent/present-in-parent.state';
 import { selectEffectTypes } from 'app/effect-types/effect-types.state';
-import { selectErrors } from 'app/common/errors_ngrx.state';
+import { selectErrors } from 'app/common/errors.state';
 
 @Component({
   selector: 'gpf-pheno-tool',

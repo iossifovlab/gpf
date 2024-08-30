@@ -2,7 +2,7 @@ import { OnDestroy, OnInit, Directive } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 import { validate, ValidationError } from 'class-validator';
 import { Selector, Store } from '@ngrx/store';
-import { resetErrors, selectErrors, setErrors } from './errors_ngrx.state';
+import { resetErrors, selectErrors, setErrors } from './errors.state';
 
 @Directive()
 export abstract class StatefulComponentNgRx implements OnInit, OnDestroy {

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FamilyTagsComponent } from './family-tags.component';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { familyTagsReducer } from './family-tags.state';
-import { errorsReducer } from 'app/common/errors_ngrx.state';
+import { errorsReducer } from 'app/common/errors.state';
 import { StoreModule } from '@ngrx/store';
 
 describe('FamilyTagsComponent', () => {
