@@ -106,7 +106,7 @@ import { SaveQueryComponent } from './save-query/save-query.component';
 import { SavedQueriesTableComponent } from './saved-queries-table/saved-queries-table.component';
 import { UserProfileComponent } from './user-profile/user-profile.component';
 import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
-import { inheritanceTypesReducer, InheritancetypesState } from './inheritancetypes/inheritancetypes.state';
+import { inheritanceTypesReducer } from './inheritancetypes/inheritancetypes.state';
 import { GeneBrowserComponent } from './gene-browser/gene-browser.component';
 import { GlobalErrorHandler } from './global-error-handler/global-error-handler';
 import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
@@ -124,8 +124,6 @@ import { personIdsReducer } from './person-ids/person-ids.state';
 import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filter.component';
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
 import { BnNgIdleService } from 'bn-ng-idle';
-import { NgxsModule } from '@ngxs/store';
-import { NgxsResetPluginModule } from 'ngxs-reset-plugin';
 import { variantTypesReducer } from './variant-types/variant-types.state';
 import { effectTypesReducer } from './effect-types/effect-types.state';
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox-list.component';
@@ -426,10 +424,6 @@ const appRoutes: Routes = [
       confirmButtonType: 'danger'
     }),
     NgMultiSelectDropDownModule.forRoot(),
-    NgxsModule.forRoot([
-      InheritancetypesState,
-    ], {compatibility: { strictContentSecurityPolicy: true }}),
-    NgxsResetPluginModule.forRoot(),
     DragDropModule,
     ClipboardModule,
     ScrollingModule,

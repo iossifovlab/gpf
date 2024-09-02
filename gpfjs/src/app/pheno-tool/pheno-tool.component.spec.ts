@@ -2,26 +2,31 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule, Store } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { UsersService } from 'app/users/users.service';
 import { PhenoToolComponent } from './pheno-tool.component';
 import { PhenoToolService } from './pheno-tool.service';
-import { ErrorsState } from 'app/common/errors.state';
 import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { PhenoToolMeasureComponent } from 'app/pheno-tool-measure/pheno-tool-measure.component';
 import { MeasuresService } from 'app/measures/measures.service';
 import { GeneSymbolsComponent } from 'app/gene-symbols/gene-symbols.component';
-import { GeneSymbolsState, SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { HttpResponse } from '@angular/common/http';
 import { PhenoToolResults } from './pheno-tool-results';
 import { Dataset, GenotypeBrowser, PersonFilter } from 'app/datasets/datasets';
-import { DatasetModel, DatasetState } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { Store, StoreModule } from '@ngrx/store';
+import { errorsReducer } from 'app/common/errors.state';
+import { geneSymbolsReducer, setGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { datasetIdReducer } from 'app/datasets/datasets.state';
+import { geneSetsReducer, GeneSetsState } from 'app/gene-sets/gene-sets.state';
+import { geneScoresReducer, GeneScoresState } from 'app/gene-scores/gene-scores.state';
+import { phenoToolMeasureReducer, PhenoToolMeasureState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
+import { PresentInParent, presentInParentReducer } from 'app/present-in-parent/present-in-parent.state';
+import { effectTypesReducer } from 'app/effect-types/effect-types.state';
 
 class PhenoToolServiceMock {
   public getPhenoToolResults(): Observable<PhenoToolResults> {
@@ -70,7 +75,16 @@ describe('PhenoToolComponent', () => {
       imports: [
         HttpClientTestingModule,
         RouterTestingModule,
-        NgxsModule.forRoot([ErrorsState, GeneSymbolsState, DatasetState], {developmentMode: true}),
+        StoreModule.forRoot({
+          errors: errorsReducer,
+          geneSymbols: geneSymbolsReducer,
+          datasetId: datasetIdReducer,
+          geneSets: geneSetsReducer,
+          geneScores: geneScoresReducer,
+          phenoToolMeasure: phenoToolMeasureReducer,
+          effectTypes: effectTypesReducer,
+          presentInParent: presentInParentReducer
+        }),
         NgbNavModule
       ],
       schemas: [NO_ERRORS_SCHEMA]
@@ -81,12 +95,13 @@ describe('PhenoToolComponent', () => {
 
     // eslint-disable-next-line max-len
     // eslint-disable-next-line max-len
-    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
 
     store = TestBed.inject(Store);
-    jest.spyOn(store, 'selectOnce').mockReturnValue(of(selectedDatasetMockModel));
 
-    component.ngOnInit();
+    // const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
+    // jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
+
+    // component.ngOnInit();
   }));
 
   it('should create', () => {
@@ -94,31 +109,55 @@ describe('PhenoToolComponent', () => {
   });
 
   it('should test state selector', () => {
-    const mockStateSelector = PhenoToolComponent.phenoToolStateSelector({
-      genesBlockState: 'state1',
-      testGene: 'test1'
-    }, {
-      measureState: 'state2',
-      testMeasure: 'test2'
-    }, {
-      genotypeState: 'state3',
-      testGeno: 'test3'
-    }, {
-      familyFilterState: 'state4',
-      testFamily: 'test4'
-    });
+    jest.clearAllMocks();
+    const rxjs = jest.requireActual('rxjs');
 
-    expect(mockStateSelector).toStrictEqual(
-      Object({
-        genesBlockState: 'state1',
-        testGene: 'test1',
-        measureState: 'state2',
-        testMeasure: 'test2',
-        genotypeState: 'state3',
-        testGeno: 'test3',
-        familyFilterState: 'state4',
-        testFamily: 'test4'
-      })
+    const geneSetsMock: GeneSetsState = {
+      geneSet: null,
+      geneSetsCollection: null,
+      geneSetsTypes: null,
+    };
+
+    const geneScoresMock: GeneScoresState = {
+      geneScores: null,
+      rangeStart: 0,
+      rangeEnd: 0
+    };
+
+    const phenoToolMeasureMock: PhenoToolMeasureState = {
+      measureId: 'abc',
+      normalizeBy: []
+    };
+
+    const presentInParentMock: PresentInParent = {
+      presentInParent: ['neither'],
+      rarityType: '',
+      rarityIntervalStart: 0,
+      rarityIntervalEnd: 1,
+    };
+
+
+    jest.spyOn(rxjs, 'combineLatest')
+      .mockReturnValue(of([
+        [],
+        geneSetsMock,
+        geneScoresMock,
+        phenoToolMeasureMock,
+        ['missense', 'splice-site'],
+        presentInParentMock
+      ]));
+
+    component.ngOnInit();
+
+    expect(component.phenoToolState).toStrictEqual(
+      {
+        effectTypes: ['missense', 'splice-site'],
+        measureId: 'abc',
+        normalizeBy: [],
+        presentInParent: {
+          presentInParent: ['neither'],
+        }
+      }
     );
   });
 
@@ -129,14 +168,22 @@ describe('PhenoToolComponent', () => {
   });
 
   it('should hide results on a state change', () => {
+    jest.clearAllMocks();
+
     component.ngOnInit();
+    expect(component.phenoToolResults).toBeNull();
     component.submitQuery();
     expect(component.phenoToolResults).toStrictEqual(new PhenoToolResults('asdf', []));
-    store.dispatch(new SetGeneSymbols(['POGZ']));
+    store.dispatch(setGeneSymbols({geneSymbols: ['POGZ']}));
+    expect(jest.spyOn(store, 'select')).toHaveBeenCalledWith()
     expect(component.phenoToolResults).toBeNull();
   });
 
   it('should test download', () => {
+    // const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
+    // jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
+
+    component.ngOnInit();
     const mockEvent = {
       target: document.createElement('form'),
       preventDefault: jest.fn()

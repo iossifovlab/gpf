@@ -5,7 +5,7 @@ import { ContinuousMeasure } from '../measures/measures';
 import { MeasuresService } from '../measures/measures.service';
 import { IsNotEmpty } from 'class-validator';
 import { Store } from '@ngrx/store';
-import { selectPhenoToolMeasure, PhenoToolMeasure, setPhenoToolMeasure } from './pheno-tool-measure.state';
+import { selectPhenoToolMeasure, PhenoToolMeasureState, setPhenoToolMeasure } from './pheno-tool-measure.state';
 import { switchMap, take } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
@@ -78,7 +78,7 @@ export class PhenoToolMeasureComponent extends StatefulComponentNgRx implements 
 
 
     combineLatest([this.store.select(selectPhenoToolMeasure), this.measuresLoaded$]).pipe(take(1))
-      .subscribe(async([selectPhenoToolMeasureState, measures]: [PhenoToolMeasure, ContinuousMeasure[]]) => {
+      .subscribe(async([selectPhenoToolMeasureState, measures]: [PhenoToolMeasureState, ContinuousMeasure[]]) => {
         if (selectPhenoToolMeasureState.measureId) {
           this.selectedMeasure = measures.find(m => m.name === selectPhenoToolMeasureState.measureId);
           await this.waitForSelectorComponent();

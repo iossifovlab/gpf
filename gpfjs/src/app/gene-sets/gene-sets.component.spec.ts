@@ -18,7 +18,6 @@ import {
   MatAutocomplete,
   MatAutocompleteTrigger,
   MAT_AUTOCOMPLETE_SCROLL_STRATEGY } from '@angular/material/autocomplete';
-import { DatasetModel } from 'app/datasets/datasets.state';
 import { StoreModule, Store } from '@ngrx/store';
 
 class MockGeneSetsService {
@@ -245,7 +244,7 @@ describe('GeneSetsComponent MockedGeneSetsService', () => {
     component = fixture.componentInstance;
 
     // eslint-disable-next-line max-len
-    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
+    const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
 
     store = TestBed.inject(Store);
     jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));

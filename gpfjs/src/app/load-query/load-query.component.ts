@@ -1,8 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-
 import { QueryService } from '../query/query.service';
-import { StateReset } from 'ngxs-reset-plugin';
 import { take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 

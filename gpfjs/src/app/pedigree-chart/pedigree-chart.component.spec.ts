@@ -14,9 +14,9 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { Observable } from 'rxjs/internal/Observable';
 import { of } from 'rxjs';
+import { StoreModule } from '@ngrx/store';
 
 const mockFamilies = {
   familiesWithoutPosition: {
@@ -225,7 +225,7 @@ describe('PedigreeChartComponent', () => {
       imports: [
         NgbModule,
         RouterTestingModule,
-        NgxsModule.forRoot([], {developmentMode: true})
+        StoreModule.forRoot({})
       ],
       providers: [
         PerfectlyDrawablePedigreeService,

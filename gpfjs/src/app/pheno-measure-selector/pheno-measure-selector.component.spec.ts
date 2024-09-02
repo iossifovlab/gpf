@@ -2,7 +2,6 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { MeasuresService } from 'app/measures/measures.service';
@@ -14,6 +13,7 @@ import {
   MatAutocomplete,
   MatAutocompleteOrigin,
   MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { StoreModule } from '@ngrx/store';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -36,7 +36,7 @@ describe('PhenoMeasureSelectorComponent', () => {
         UsersService,
         {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})],
+      imports: [HttpClientTestingModule, RouterTestingModule, StoreModule.forRoot({})],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 

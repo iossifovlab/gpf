@@ -12,7 +12,6 @@ import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 import { Dataset, GenotypeBrowser } from 'app/datasets/datasets';
-import { DatasetModel } from 'app/datasets/datasets.state';
 import { Store, StoreModule } from '@ngrx/store';
 
 class VariantReportsServiceMock {
@@ -265,7 +264,7 @@ describe('FamilyFiltersBlockComponent', () => {
     component.dataset = datasetMock;
 
     // eslint-disable-next-line max-len
-    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
+    const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
 
     store = TestBed.inject(Store);
     jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));

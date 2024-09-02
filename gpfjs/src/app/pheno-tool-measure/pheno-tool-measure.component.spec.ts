@@ -8,7 +8,6 @@ import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 
 import { PhenoToolMeasureComponent } from './pheno-tool-measure.component';
-import { DatasetModel } from 'app/datasets/datasets.state';
 import { of } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store, StoreModule } from '@ngrx/store';
@@ -41,7 +40,7 @@ describe('PhenoToolMeasureComponent', () => {
     component = fixture.componentInstance;
 
     // eslint-disable-next-line max-len
-    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
+    const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
 
 
     store = TestBed.inject(Store);

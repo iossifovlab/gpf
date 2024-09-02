@@ -6,7 +6,6 @@ import { RemoveButtonComponent } from 'app/remove-button/remove-button.component
 import { AddButtonComponent } from 'app/add-button/add-button.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { FormsModule } from '@angular/forms';
-import { NgxsModule } from '@ngxs/store';
 import { DatasetsComponent } from 'app/datasets/datasets.component';
 import { UsersService } from 'app/users/users.service';
 import { ConfigService } from 'app/config/config.service';
@@ -17,6 +16,7 @@ import { RouterModule } from '@angular/router';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { Store, StoreModule } from '@ngrx/store';
+import { studyTypesReducer } from 'app/study-types/study-types.state';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const datasetConfigMock: any = {
@@ -48,7 +48,7 @@ describe('StudyFiltersComponent', () => {
       ],
       imports: [
         NgbNavModule, NgbModule, FormsModule,
-        StoreModule.forRoot({}), HttpClientTestingModule,
+        StoreModule.forRoot({studyFilters: studyTypesReducer}), HttpClientTestingModule,
         RouterModule.forRoot([])
       ]
     }).compileComponents();

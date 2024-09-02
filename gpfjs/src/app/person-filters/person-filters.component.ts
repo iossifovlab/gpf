@@ -1,6 +1,6 @@
 import { Component, OnChanges, Input, OnInit } from '@angular/core';
 import { Dataset, PersonFilter } from '../datasets/datasets';
-import { PersonFilterState, CategoricalFilterState, ContinuousFilterState, ContinuousSelection, CategoricalSelection } from './person-filters';
+import { PersonFilterState, CategoricalFilterState, ContinuousFilterState } from './person-filters';
 import { Store } from '@ngrx/store';
 import { selectPersonFilters, setFamilyFilters, setPersonFilters } from './person-filters.state';
 import { IsNotEmpty, ValidateNested } from 'class-validator';
@@ -106,7 +106,6 @@ export class PersonFiltersComponent extends StatefulComponentNgRx implements OnC
       .map(([_, personFilter]) => personFilter)
       .filter(personFilter => personFilter && !personFilter.isEmpty());
 
-    console.log(this.filters)
     if (this.isFamilyFilters) {
       this.store.dispatch(setFamilyFilters({familyFilters: filters}));
     } else {

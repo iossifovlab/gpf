@@ -3,7 +3,6 @@ import { DatasetsComponent } from './datasets.component';
 import { UsersService } from 'app/users/users.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
-import { NgxsModule } from '@ngxs/store';
 import { APP_BASE_HREF } from '@angular/common';
 import { DatasetsService } from './datasets.service';
 import { of } from 'rxjs/internal/observable/of';

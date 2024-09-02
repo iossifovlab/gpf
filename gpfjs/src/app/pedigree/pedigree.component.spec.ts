@@ -4,7 +4,6 @@ import { ConfigService } from 'app/config/config.service';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { Observable, of } from 'rxjs';
 import { PedigreeComponent } from './pedigree.component';
-import { DatasetModel } from 'app/datasets/datasets.state';
 import { Store, StoreModule } from '@ngrx/store';
 
 class MockVariantReportsService {
@@ -35,7 +34,7 @@ describe('PedigreeComponent', () => {
     fixture = TestBed.createComponent(PedigreeComponent);
     component = fixture.componentInstance;
 
-    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
+    const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
 
     store = TestBed.inject(Store);
     jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));

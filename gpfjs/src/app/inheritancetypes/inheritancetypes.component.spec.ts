@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
 import { ErrorsAlertComponent } from '../errors-alert/errors-alert.component';
 import { InheritancetypesComponent } from './inheritancetypes.component';
-import { inheritanceTypesReducer, setInheritanceTypes, SetInheritanceTypes } from './inheritancetypes.state';
+import { inheritanceTypesReducer, setInheritanceTypes } from './inheritancetypes.state';
 import { Store, StoreModule } from '@ngrx/store';
 
 describe('InheritancetypesComponent', () => {

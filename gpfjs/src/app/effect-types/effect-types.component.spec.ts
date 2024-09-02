@@ -89,31 +89,36 @@ describe('EffectTypesComponent', () => {
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType1'});
     expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType1']));
+    expect(dispatchSpy).toHaveBeenCalledWith(addEffectType({effectType: 'effectType1'}));
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType2'});
     expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType1', 'effectType2']));
+    expect(dispatchSpy).toHaveBeenCalledWith(addEffectType({effectType: 'effectType2'}));
+
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType1'});
     expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType2']));
+    expect(dispatchSpy).toHaveBeenCalledWith(removeEffectType({effectType: 'effectType1'}));
+
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType1'});
     expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType2']));
+    expect(dispatchSpy).toHaveBeenCalledWith(removeEffectType({effectType: 'effectType1'}));
+
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType2'});
     expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType2']));
+    expect(dispatchSpy).toHaveBeenCalledWith(addEffectType({effectType: 'effectType2'}));
+
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
     expect(component.effectTypes.selected).toStrictEqual(new Set([]));
+    expect(dispatchSpy).toHaveBeenCalledWith(removeEffectType({effectType: 'effectType2'}));
+
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
     expect(component.effectTypes.selected).toStrictEqual(new Set([]));
-
-    expect(dispatchSpy.mock.calls).toEqual([
-      [addEffectType({effectType: 'effectType1'})],
-      [addEffectType({effectType: 'effectType2'})],
-      [removeEffectType({effectType: 'effectType1'})],
-      [removeEffectType({effectType: 'effectType2'})],
-    ]);
+    expect(dispatchSpy).toHaveBeenCalledWith(removeEffectType({effectType: 'effectType2'}));
   });
 
   it('should not modify original effect group values', () => {

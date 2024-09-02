@@ -3,7 +3,6 @@ import { VariantReportsService } from './variant-reports.service';
 import { HttpClientModule} from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
 import { APP_BASE_HREF } from '@angular/common';
-import { NgxsModule } from '@ngxs/store';
 
 
 describe('VariantReportsService', () => {
@@ -12,7 +11,7 @@ describe('VariantReportsService', () => {
   beforeEach(() => {
     const configMock = { baseUrl: 'testUrl/' };
     TestBed.configureTestingModule({
-      imports: [HttpClientModule, NgxsModule.forRoot([], {developmentMode: true})],
+      imports: [HttpClientModule],
       providers: [VariantReportsService,
         { provide: ConfigService, useValue: configMock },
         { provide: APP_BASE_HREF, useValue: '' },

@@ -2,7 +2,7 @@ import { createReducer, createAction, on, props, createFeatureSelector } from '@
 import { GeneProfiles, initialState as geneProfilesInitialState } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { GeneScoresState, initialState as geneScoresInitialState } from 'app/gene-scores/gene-scores.state';
 import { PedigreeSelector, initialState as pedigreeSelectorInitialState } from 'app/pedigree-selector/pedigree-selector.state';
-import { PhenoToolMeasure, initialState as phenoToolMeasureInitialState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
+import { PhenoToolMeasureState, initialState as phenoToolMeasureInitialState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 import { PresentInParent, initialState as presentInParentInitialState } from 'app/present-in-parent/present-in-parent.state';
 import { initialState as genomicScoresInitialState } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { initialState as familyTagsInitialState } from 'app/family-tags/family-tags.state';
@@ -45,7 +45,7 @@ export interface State {
   geneSymbols: string[];
   presentInChild: string[];
   presentInParent: PresentInParent;
-  phenoToolMeasure: PhenoToolMeasure;
+  phenoToolMeasure: PhenoToolMeasureState;
   pedigreeSelector: PedigreeSelector;
   geneProfiles: GeneProfiles;
   regionsFilter: string[];

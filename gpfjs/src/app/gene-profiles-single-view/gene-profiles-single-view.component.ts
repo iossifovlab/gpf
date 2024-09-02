@@ -3,23 +3,15 @@ import {
   GeneProfilesDatasetPersonSet, GeneProfilesDatasetStatistic, GeneProfilesGene,
   GeneProfilesGenomicScores, GeneProfilesSingleViewConfig, GeneProfilesEffectType
 } from 'app/gene-profiles-single-view/gene-profiles-single-view';
-// eslint-disable-next-line no-restricted-imports
 import { Observable, of, zip } from 'rxjs';
 import { GeneScoresService } from '../gene-scores/gene-scores.service';
 import { GeneScores } from 'app/gene-scores/gene-scores';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { switchMap, take } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { Store } from '@ngxs/store';
-import { Store as Store1 } from '@ngrx/store';
+import { Store } from '@ngrx/store';
 import { QueryService } from 'app/query/query.service';
 import { GenomicScore } from 'app/genotype-browser/genotype-browser';
-// import { SetEffectTypes } from 'app/effect-types/effect-types.state';
-// import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
-// import { SetGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
-// import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
-// import { SetPresentInChildValues } from 'app/present-in-child/present-in-child.state';
-// import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
 import { LGDS } from 'app/effect-types/effect-types';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
 import { setVariantTypes } from 'app/variant-types/variant-types.state';
@@ -30,7 +22,6 @@ import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.sta
 import { selectGeneProfiles, setGeneProfilesOpenedTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { setStudyTypes } from 'app/study-types/study-types.state';
 import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
-import { selectDatasetId } from 'app/datasets/datasets.state';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -74,7 +65,6 @@ export class GeneProfileSingleViewComponent implements OnInit {
     private router: Router,
     private queryService: QueryService,
     private store: Store,
-    private store1: Store1,
   ) { }
 
   public errorModal = false;
@@ -173,13 +163,12 @@ export class GeneProfileSingleViewComponent implements OnInit {
     statistic: GeneProfilesDatasetStatistic
   ): void {
     GeneProfileSingleViewComponent.goToQuery(
-      this.store, this.store1, this.queryService, geneSymbol, personSet, datasetId, statistic
+      this.store, this.queryService, geneSymbol, personSet, datasetId, statistic
     );
   }
 
   public static goToQuery(
     store: Store,
-    store1: Store1,
     queryService:
     QueryService,
     geneSymbol: string,
@@ -214,26 +203,26 @@ export class GeneProfileSingleViewComponent implements OnInit {
       presentInParent = presentInParentRareValues;
     }
 
-    store1.dispatch(setEffectTypes({effectTypes: effectTypes[statistic['effects'][0]] as string[]}));
-    store1.dispatch(setVariantTypes({variantTypes: statistic['variantTypes']}));
-    store1.dispatch(setGeneSymbols({geneSymbols: [geneSymbol]}));
-    store1.dispatch(setPresentInChild({presentInChild: presentInChildValues}));
-    store1.dispatch(setPresentInParent({presentInParent: {
+    store.dispatch(setEffectTypes({effectTypes: effectTypes[statistic['effects'][0]] as string[]}));
+    store.dispatch(setVariantTypes({variantTypes: statistic['variantTypes']}));
+    store.dispatch(setGeneSymbols({geneSymbols: [geneSymbol]}));
+    store.dispatch(setPresentInChild({presentInChild: presentInChildValues}));
+    store.dispatch(setPresentInParent({presentInParent: {
       presentInParent: presentInParent,
       rarityType: rarityType,
       rarityIntervalStart: 0,
       rarityIntervalEnd: 1
     }}));
-    store1.dispatch(setPedigreeSelector({
+    store.dispatch(setPedigreeSelector({
       pedigreeSelector: {
         id: personSet.collectionId,
         checkedValues: [personSet.id]
       }
     }));
-    store1.dispatch(setStudyTypes({studyTypes: ['we']}));
-    store1.dispatch(setGenomicScores({genomicScores: genomicScores}));
-    store1.dispatch(setPresentInChild({presentInChild: presentInChildValues}));
-    store1.dispatch(setPresentInParent({
+    store.dispatch(setStudyTypes({studyTypes: ['we']}));
+    store.dispatch(setGenomicScores({genomicScores: genomicScores}));
+    store.dispatch(setPresentInChild({presentInChild: presentInChildValues}));
+    store.dispatch(setPresentInParent({
       presentInParent: {
         presentInParent: presentInParent,
         rarityType: rarityType,
@@ -241,7 +230,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
         rarityIntervalEnd: 1,
       }
     }));
-    store1.dispatch(setPedigreeSelector({
+    store.dispatch(setPedigreeSelector({
       pedigreeSelector: {
         id: personSet.collectionId,
         checkedValues: [personSet.id],
@@ -269,14 +258,14 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
     let tabs = [] as string[];
 
-    this.store1.select(selectGeneProfiles).pipe(take(1)).subscribe(state => {
+    this.store.select(selectGeneProfiles).pipe(take(1)).subscribe(state => {
       tabs = state.openedTabs;
     });
 
     const index = tabs.indexOf(this.geneSymbol, 0);
     tabs.splice(index, 1);
 
-    this.store1.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
+    this.store.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
     this.router.navigate(['/gene-profiles']);
   }
 }

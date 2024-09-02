@@ -31,7 +31,6 @@ import { GetRegressionIdsPipe } from 'app/utils/get-regression-ids.pipe';
 import { BackgroundColorPipe } from 'app/utils/background-color.pipe';
 import { HttpClient, HttpHandler } from '@angular/common/http';
 import { Dataset } from 'app/datasets/datasets';
-import { DatasetModel } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store, StoreModule } from '@ngrx/store';
 
@@ -178,7 +177,7 @@ describe('PhenoBrowserComponent', () => {
     fixture = TestBed.createComponent(PhenoBrowserComponent);
     component = fixture.componentInstance;
 
-    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
+    const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
 
     store = TestBed.inject(Store);
     jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));

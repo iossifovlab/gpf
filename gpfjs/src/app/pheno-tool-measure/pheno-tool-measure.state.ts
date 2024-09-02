@@ -1,21 +1,21 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
 
-export interface PhenoToolMeasure {
+export interface PhenoToolMeasureState {
   measureId: string;
   normalizeBy: object[];
 }
 
-export const initialState: PhenoToolMeasure = {
+export const initialState: PhenoToolMeasureState = {
   measureId: '',
   normalizeBy: []
 };
 
-export const selectPhenoToolMeasure = createFeatureSelector<PhenoToolMeasure>('phenoToolMeasure');
+export const selectPhenoToolMeasure = createFeatureSelector<PhenoToolMeasureState>('phenoToolMeasure');
 
 export const setPhenoToolMeasure = createAction(
   '[Phenotype] Set phenoToolMeasure values',
-  props<{ phenoToolMeasure: PhenoToolMeasure }>()
+  props<{ phenoToolMeasure: PhenoToolMeasureState }>()
 );
 
 export const resetPhenoToolMeasure = createAction(

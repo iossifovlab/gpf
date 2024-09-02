@@ -2,30 +2,29 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { StudyTypesComponent } from './study-types.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { of } from 'rxjs';
-import { NgxsModule } from '@ngxs/store';
-import { SetStudyTypes } from './study-types.state';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Store, StoreModule } from '@ngrx/store';
+import { setStudyTypes, studyTypesReducer } from './study-types.state';
 
 describe('StudyTypesComponent', () => {
   let component: StudyTypesComponent;
   let fixture: ComponentFixture<StudyTypesComponent>;
+  let store: Store;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [StudyTypesComponent, ErrorsAlertComponent],
       providers: [],
-      imports: [NgxsModule.forRoot([], {developmentMode: true})],
+      imports: [StoreModule.forRoot({studyTypes: studyTypesReducer})],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
     fixture = TestBed.createComponent(StudyTypesComponent);
     component = fixture.componentInstance;
-    component['store'] = {
-      selectOnce() {
-        return of({studyTypes: ['value1', 'value2']});
-      },
-      dispatch() {}
-    } as any;
+
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'select').mockReturnValue(of(['value1', 'value2']));
+
     fixture.detectChanges();
   }));
 
@@ -41,12 +40,13 @@ describe('StudyTypesComponent', () => {
   it('should update variant types', () => {
     component.selectedValues = undefined;
     component['store'] = { dispatch() {} } as any;
+
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 
     component.updateStudyTypes(mockSet);
 
     expect(component.selectedValues).toStrictEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetStudyTypes(mockSet));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(1, setStudyTypes({studyTypes: [...mockSet]}));
   });
 });

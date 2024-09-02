@@ -2,7 +2,6 @@ import { APP_BASE_HREF } from '@angular/common';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { UserGroup } from 'app/users-groups/users-groups';
 import { Item } from 'app/item-add-menu/item-add-menu';
@@ -12,6 +11,7 @@ import { UsersService } from 'app/users/users.service';
 import { Observable, lastValueFrom, of } from 'rxjs';
 
 import { UsersTableComponent } from './users-table.component';
+import { StoreModule } from '@ngrx/store';
 
 const datasetMock1 = {datasetId: 'dataset1', datasetName: 'dataset1'};
 const datasetMock2 = {datasetId: 'dataset2', datasetName: 'dataset2'};
@@ -123,7 +123,7 @@ describe('UsersTableComponent', () => {
       imports: [
         HttpClientTestingModule,
         RouterTestingModule,
-        NgxsModule.forRoot([], {developmentMode: true})
+        StoreModule.forRoot({})
       ]
     }).compileComponents();
 
