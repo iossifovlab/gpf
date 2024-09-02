@@ -8,10 +8,6 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any, cast
 
-from dae.enrichment_tool.enrichment_builder import BaseEnrichmentBuilder, EnrichmentBuilder
-from dae.pheno_tool.pheno_tool_adapter import PhenoToolAdapter, PhenoToolAdapterBase
-from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
-from django.db.models import Value
 import yaml
 from box import Box
 
@@ -21,6 +17,10 @@ from dae.common_reports.common_report import CommonReport
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.gene_profile import gene_profiles_config
+from dae.enrichment_tool.enrichment_builder import (
+    BaseEnrichmentBuilder,
+    EnrichmentBuilder,
+)
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.statistic import GPStatistic
@@ -38,6 +38,11 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_scores.scores import GenomicScoresRegistry
 from dae.pheno.pheno_data import PhenotypeData, get_pheno_db_dir
 from dae.pheno.registry import PhenoRegistry
+from dae.pheno_tool.pheno_tool_adapter import (
+    PhenoToolAdapter,
+    PhenoToolAdapterBase,
+)
+from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
 from dae.studies.study import GenotypeData
 from dae.studies.variants_db import VariantsDb
 from dae.utils.fs_utils import find_directory_with_a_file
@@ -121,14 +126,14 @@ class GPFInstance:
     def load(self) -> GPFInstance:
         """Load all GPF instance attributes."""
         # pylint: disable=pointless-statement
-        self.reference_genome
-        self.gene_models
-        self.gene_sets_db
-        self._pheno_registry
-        self._variants_db
-        self.denovo_gene_sets_db
-        self.genomic_scores
-        self.genotype_storages
+        self.reference_genome  # noqa: B018
+        self.gene_models  # noqa: B018
+        self.gene_sets_db  # noqa: B018
+        self._pheno_registry  # noqa: B018
+        self._variants_db  # noqa: B018
+        self.denovo_gene_sets_db  # noqa: B018
+        self.genomic_scores  # noqa: B018
+        self.genotype_storages  # noqa: B018
         return self
 
     @cached_property
@@ -288,11 +293,10 @@ class GPFInstance:
         config = None if self._gene_profile_config is None else\
             self._gene_profile_config.to_dict()
 
-        gpdb = GeneProfileDB(
+        return GeneProfileDB(
             config,
             os.path.join(self.dae_dir, "gpdb"),
         )
-        return gpdb
 
     def reload(self) -> None:
         """Reload GPF instance studies, de Novo gene sets, etc."""
@@ -345,7 +349,7 @@ class GPFInstance:
     def denovo_gene_sets_db(self) -> DenovoGeneSetsDb:
         return DenovoGeneSetsDb(self)
 
-    def get_genotype_data_ids(self, *, local_only: bool = True) -> list[str]:
+    def get_genotype_data_ids(self) -> list[str]:
         # pylint: disable=unused-argument
         return cast(list[str], (
             self._variants_db.get_all_genotype_study_ids()
@@ -472,7 +476,7 @@ class GPFInstance:
     def get_all_denovo_gene_sets(
         self, types: dict[str, Any],
         datasets: list[Any],
-        collection_id: str,  # pylint: disable=unused-argument
+        collection_id: str,  # noqa: ARG002
     ) -> list[dict[str, Any]]:
         return cast(
             list[dict[str, Any]],
@@ -483,7 +487,7 @@ class GPFInstance:
         self, gene_set_id: str,
         types: dict[str, Any],
         datasets: list[GenotypeData],
-        collection_id: str,  # pylint: disable=unused-argument
+        collection_id: str,  # noqa: ARG002
     ) -> dict[str, Any]:
         return cast(
             dict[str, Any],
@@ -545,7 +549,7 @@ class GPFInstance:
         genome = self.reference_genome
         gene_models = self.gene_models
 
-        config = {
+        return {
             "effect_annotator": {
                 "genome": genome.resource_id,
                 "gene_models": gene_models.resource_id,
@@ -561,7 +565,6 @@ class GPFInstance:
                 ],
             },
         }
-        return config
 
     def get_annotation_pipeline_config(self) -> list[dict[str, Any]]:
         """Return the annotation pipeline config."""
@@ -632,6 +635,7 @@ class GPFInstance:
     def make_pheno_tool_adapter(
         self, dataset: GenotypeData,
     ) -> PhenoToolAdapterBase:
+        """Create a pheno tool adapter for dataset."""
         if dataset.config.phenotype_data is None \
                 or dataset.config.phenotype_data == "":
             raise ValueError(
@@ -668,7 +672,7 @@ class GPFInstance:
         Will create and register new one if one isn't found.
         """
         if dataset.study_id not in self._enrichment_builders:
-            self.register_pheno_tool_adapter((
+            self.register_pheno_tool_adapter(
                 dataset.study_id, self.make_pheno_tool_adapter(dataset),
             )
 

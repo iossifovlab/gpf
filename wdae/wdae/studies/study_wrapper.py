@@ -170,11 +170,11 @@ class StudyWrapperBase:
         result["enrichment"] = config.enrichment.to_dict()
         if "background" in result["enrichment"]:
             if "coding_len_background_model" in \
-                    result["enrichment"]["background"].keys():
+                    result["enrichment"]["background"]:
                 del result["enrichment"]["background"][
                     "coding_len_background_model"]["file"]
             if "samocha_background_model" in \
-                    result["enrichment"]["background"].keys():
+                    result["enrichment"]["background"]:
                 del result["enrichment"]["background"][
                     "samocha_background_model"]["file"]
 
@@ -202,12 +202,13 @@ class StudyWrapperBase:
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
         max_variants_count: int = 10000,
+        *,
         max_variants_message: bool = False,
     ) -> Iterable[list]:
         """Wrap query variants method for WDAE streaming."""
         variants_result = self.query_variants_wdae_streaming(
             kwargs, sources, max_variants_count,
-            max_variants_message)
+            max_variants_message=max_variants_message)
         return filter(None, variants_result)
 
     @abstractmethod
@@ -215,6 +216,7 @@ class StudyWrapperBase:
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
         max_variants_count: int = 10000,
+        *,
         max_variants_message: bool = False,
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming."""
@@ -267,7 +269,7 @@ class StudyWrapper(StudyWrapperBase):
     def person_set_collections(self) -> dict[str, PersonSetCollection]:
         return self.genotype_data_study.person_set_collections
 
-    def get_studies_ids(self, leaves: bool = True) -> list[str]:
+    def get_studies_ids(self, *, leaves: bool = True) -> list[str]:
         return self.genotype_data_study.get_studies_ids(leaves=leaves)
 
     def _init_wdae_config(self) -> None:
@@ -350,6 +352,7 @@ class StudyWrapper(StudyWrapperBase):
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
         max_variants_count: int = 10000,
+        *,
         max_variants_message: bool = False,
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming of variants."""
@@ -360,7 +363,7 @@ class StudyWrapper(StudyWrapperBase):
 
         if summary_variant_ids is None:
             def filter_allele(
-                allele: FamilyAllele,  # pylint: disable=unused-argument
+                _allele: FamilyAllele,  # pylint: disable=unused-argument
             ) -> bool:
                 return True
 
@@ -465,9 +468,8 @@ class StudyWrapper(StudyWrapperBase):
             cast(int | None, limit),
         )
         for v in variants_from_studies:
-            for aa in self.response_transformer.\
-                    transform_gene_view_summary_variant(v, frequency_column):
-                yield aa
+            yield from self.response_transformer.\
+                transform_gene_view_summary_variant(v, frequency_column)
 
     def get_gene_view_summary_variants_download(
         self, frequency_column: str,

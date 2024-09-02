@@ -56,8 +56,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
     @property
     def families(self) -> FamiliesData:
-        # pylint: disable=protected-access
-        return self.remote_genotype_data._families
+        return self.remote_genotype_data._families  # noqa: SLF001
 
     @property
     def parents(self) -> set[str]:
@@ -70,14 +69,15 @@ class RemoteStudyWrapper(StudyWrapperBase):
     def has_pheno_data(self) -> bool:
         return self.phenotype_data is not None
 
-    def get_studies_ids(self, leaves: bool = True) -> list[str]:
+    def get_studies_ids(self, *, leaves: bool = True) -> list[str]:
         return self.remote_genotype_data.get_studies_ids(leaves=leaves)
 
-    def query_variants_wdae_streaming(
+    def query_variants_wdae_streaming(  # pylint: disable=arguments-differ
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
+        *,
         max_variants_count: int = 10000,
-        max_variants_message: bool = False,
+        _max_variants_message: bool = False,
     ) -> Generator[list, None, None]:
         study_filters = kwargs.get("study_filters")
         person_set_collection_id = \
@@ -93,7 +93,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         new_sources = []
         for query_s in QUERY_SOURCES:
             if not any(query_s["source"] == s["source"] for s in sources):
-                new_sources.append(query_s)
+                new_sources.append(query_s)  # noqa: PERF401
         sources.extend(new_sources)
         kwargs["sources"] = sources
 

@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_extension(instance: WGPFInstance) -> None:
+    """Load remote studies and modules into a running GPF instance."""
     clients: dict[str, RESTClient] = {}
     remotes = instance.dae_config.remotes
     if remotes is not None:
@@ -58,7 +59,6 @@ def load_extension(instance: WGPFInstance) -> None:
 
             instance.register_pheno_tool_adapter(pheno_tool_adapter)
 
-        # remote_collection = RemoteDenovoGeneSetsCollection(client)
         gs_db = instance.gene_sets_db
         for collection in client.get_gene_set_collections():
             gsc_id = collection["name"]
@@ -89,8 +89,9 @@ def load_extension(instance: WGPFInstance) -> None:
 
 
 def fetch_studies_from_client(
-    rest_client: RESTClient
+    rest_client: RESTClient,
 ) -> list[RemoteGenotypeData]:
+    """Get all remote studies from a REST client."""
     studies = []
     fetched_studies = rest_client.get_studies()
     if fetched_studies is None:

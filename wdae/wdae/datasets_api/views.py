@@ -123,9 +123,6 @@ class DatasetView(QueryBaseView):
             if result["id"] in parents:
                 result["parents"] = parents[result["id"]]
 
-        if self.gpf_instance.dae_dir == "/home/ivo/data-hg38-production":
-            import pdb; pdb.set_trace()
-
         return res
 
     @method_decorator(etag(get_permissions_etag))

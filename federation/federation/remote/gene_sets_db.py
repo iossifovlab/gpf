@@ -1,7 +1,7 @@
 """Classes for handling of remote gene sets."""
 
 import logging
-from typing import Any, Dict, List, Set
+from typing import Any
 
 from dae.gene_sets.gene_sets_db import (
     BaseGeneSetCollection,
@@ -23,8 +23,8 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
         self.rest_client: RESTClient = rest_client
         self._remote_collection_id = collection_id
         self._remote_gene_sets_loaded = False
-        self.remote_gene_sets_names: List[str] = []
-        self.remote_gene_sets_desc: List[Dict[str, Any]] = []
+        self.remote_gene_sets_names: list[str] = []
+        self.remote_gene_sets_desc: list[dict[str, Any]] = []
 
         collection_id = self.rest_client.prefix_remote_identifier(
             collection_id,
@@ -33,7 +33,7 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
         self.collection_description: str = \
             self.rest_client.prefix_remote_name(desc)
         self.collection_format: str = fmt
-        self.gene_sets: Dict[str, GeneSet] = {}
+        self.gene_sets: dict[str, GeneSet] = {}
 
     def _load_remote_gene_sets(self):
         if self._remote_gene_sets_loaded:
@@ -70,14 +70,15 @@ class RemoteGeneSetCollection(BaseGeneSetCollection):
             raw_gene_set = [gs for gs in raw_gene_set if gs]
             name, description = raw_gene_set.pop(0).strip('"').split(":", 1)
             description = description.strip()
-            assert name is not None and description is not None
+            assert name is not None
+            assert description is not None
             assert name == gene_set_id
             gene_set = GeneSet(gene_set_id, description, raw_gene_set)
             self.gene_sets[gene_set_id] = gene_set
 
         return gene_set
 
-    def get_all_gene_sets(self) -> List[GeneSet]:
+    def get_all_gene_sets(self) -> list[GeneSet]:
         self._load_remote_gene_sets()
         for gene_set_name in self.remote_gene_sets_names:
             self.get_gene_set(gene_set_name)
@@ -88,13 +89,13 @@ class RemoteGeneSetsDb(GeneSetsDb):
     """Class for handling remote gene sets."""
 
     def __init__(
-        self, remote_clients: Dict[str, RESTClient],
+        self, remote_clients: dict[str, RESTClient],
         local_gene_sets_db: GeneSetsDb,
     ):
         super().__init__([])
         self._local_gsdb: GeneSetsDb = local_gene_sets_db
-        self.gene_set_collections: Dict[str, GeneSetCollection] = {}
-        self.remote_clients: List[RESTClient] = list(remote_clients.values())
+        self.gene_set_collections: dict[str, GeneSetCollection] = {}
+        self.remote_clients: list[RESTClient] = list(remote_clients.values())
         self._load_remote_collections()
 
     def _load_remote_collections(self):
@@ -117,7 +118,7 @@ class RemoteGeneSetsDb(GeneSetsDb):
             self._local_gsdb.collections_descriptions,
         )
         for gsc in self.gene_set_collections.values():
-            gene_sets_collections_desc.append(
+            gene_sets_collections_desc.append(  # noqa: PERF401
                 {
                     "desc": gsc.collection_description,
                     "name": gsc.collection_id,
@@ -131,7 +132,7 @@ class RemoteGeneSetsDb(GeneSetsDb):
         return self._local_gsdb.has_gene_set_collection(gsc_id) \
             or gsc_id in self.gene_set_collections
 
-    def get_gene_set_collection_ids(self) -> Set[str]:
+    def get_gene_set_collection_ids(self) -> set[str]:
         """Return all gene set collection ids.
 
         Including the ids of collections which have not been loaded.
@@ -139,14 +140,14 @@ class RemoteGeneSetsDb(GeneSetsDb):
         return set(self.gene_set_collections.keys()).union(
             set(self._local_gsdb.get_gene_set_collection_ids()))
 
-    def get_gene_set_ids(self, collection_id: str) -> Set[str]:
+    def get_gene_set_ids(self, collection_id: str) -> set[str]:
         if self._local_gsdb.has_gene_set_collection(collection_id):
             return self._local_gsdb.get_gene_set_ids(collection_id)
         return set(
             self.gene_set_collections[collection_id].gene_sets.keys(),
         )
 
-    def get_all_gene_sets(self, collection_id: str) -> List[GeneSet]:
+    def get_all_gene_sets(self, collection_id: str) -> list[GeneSet]:
         if self._local_gsdb.has_gene_set_collection(collection_id):
             return self._local_gsdb.get_all_gene_sets(collection_id)
         return list(

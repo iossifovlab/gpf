@@ -15,10 +15,10 @@ class EnrichmentSerializer(EffectTypesMixin):
 
     def serialize(self) -> list[dict]:
         assert self.enrichment_results is not None
-        output = []
-        for results in self.enrichment_results:
-            output.append(self.serialize_people_groups(results))
-        return output
+        return [
+            self.serialize_people_groups(results)
+            for results in self.enrichment_results
+        ]
 
     def serialize_people_groups(
         self, grouping_results: dict[str, Any],
@@ -61,7 +61,7 @@ class EnrichmentSerializer(EffectTypesMixin):
             gender = ["male", "female", "unspecified"]
 
         effect_types_fixed = self.build_effect_types(effect_type)
-        common_filter = {
+        return {
             "datasetId": grouping_results["datasetId"],
             "effectTypes": effect_types_fixed,
             "gender": gender,
@@ -72,12 +72,6 @@ class EnrichmentSerializer(EffectTypesMixin):
             "studyTypes": ["we"],
             "variantTypes": ["ins", "sub", "del", "complex"],
         }
-        return common_filter
-
-    # def serialize_events_gene_symbols(
-    #     self, events: list[list[str]]
-    # ) -> set[str]:
-    #     return reduce(lambda x, y: set(x) | set(y), events, set([]))
 
     def serialize_rec_filter(
         self, grouping_results: dict[str, Any],
@@ -89,15 +83,15 @@ class EnrichmentSerializer(EffectTypesMixin):
         if gender is None:
             gender = ["male", "female", "unspecified"]
 
-        rec_filter = self.serialize_common_filter(
+        return self.serialize_common_filter(
             grouping_results, effect_type, result, gender,
         )
-        return rec_filter
 
     def serialize_overlap_filter(
         self, grouping_results: dict[str, Any],
         effect_type: str,
         result: EnrichmentSingleResult,
+        *,
         gender: list[str] | None = None,
         overlapped_genes: bool = False,
     ) -> dict[str, Any]:
@@ -155,7 +149,7 @@ class EnrichmentSerializer(EffectTypesMixin):
         effect_type: str,
         result: EnrichmentSingleResult,
     ) -> dict[str, Any]:
-        assert result.name in set(["all", "male", "female"])
+        assert result.name in {"all", "male", "female"}
         gender = self._get_child_gender(result.name)
         output = self.serialize_enrichment_result(result)
         output["countFilter"] = self.serialize_common_filter(

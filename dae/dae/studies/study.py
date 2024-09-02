@@ -16,6 +16,7 @@ from typing import Any, cast
 from box import Box
 
 from dae.common_reports.common_report import CommonReport
+from dae.common_reports.denovo_report import DenovoReport
 from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.people_counter import PeopleReport
 from dae.effect_annotation.effect import expand_effect_types
@@ -647,7 +648,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         assert collection is not None
         for person_set in collection.person_sets.values():
             if len(person_set.persons) > 0:
-                phenotype += person_set.values
+                phenotype += person_set.to_numpy()
 
         study_type = (
             ",".join(self.study_type)
@@ -706,15 +707,16 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         try:
             if os.path.exists(report_filename) and not force:
                 return CommonReport.load(report_filename)
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             logger.warning(
                 "unable to load common report for %s", self.study_id,
                 exc_info=True)
-        report = self.build_report(self)
+        report = self.build_report()
         report.save(report_filename)
         return report
 
     def get_common_report(self) -> CommonReport | None:
+        """Return a study's common report."""
         if not self.config.common_report.enabled:
             return None
 

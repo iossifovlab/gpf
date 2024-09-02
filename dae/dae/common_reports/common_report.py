@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import time
 from typing import Any, cast
 
 from dae.common_reports.denovo_report import DenovoReport
@@ -34,7 +33,7 @@ class CommonReport:
         self.transmitted = data["transmitted"]
         self.study_description = data["study_description"]
 
-    def to_dict(self, full: bool = False) -> dict[str, Any]:
+    def to_dict(self, *, full: bool = False) -> dict[str, Any]:
         return {
             "id": self.study_id,
             "people_report": self.people_report.to_dict(),

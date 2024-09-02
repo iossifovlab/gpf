@@ -9,8 +9,9 @@ from dae.studies.study import GenotypeData
 
 
 class BaseEnrichmentBuilder:
+    """Base class for enrichment builders."""
     def __init__(
-        self, enrichment_helper: EnrichmentHelper, dataset: GenotypeData
+        self, enrichment_helper: EnrichmentHelper, dataset: GenotypeData,
     ):
         self.enrichment_helper = enrichment_helper
         self.dataset = dataset
@@ -33,8 +34,7 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         self, enrichment_helper: EnrichmentHelper,
         dataset: GenotypeData,
     ):
-        self.enrichment_helper = enrichment_helper
-        self.dataset = dataset
+        super().__init__(enrichment_helper, dataset)
 
         self.results: list[dict[str, Any]]
 

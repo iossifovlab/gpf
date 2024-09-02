@@ -7,14 +7,12 @@ import os
 import pathlib
 import time
 from collections.abc import Callable
-from functools import cached_property
 from threading import Lock
 from typing import Any, cast
 
 from box import Box
 from studies.study_wrapper import StudyWrapper, StudyWrapperBase
 
-from dae.common_reports.common_report import CommonReport
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.utils.fs_utils import find_directory_with_a_file
@@ -167,7 +165,7 @@ class WGPFInstance(GPFInstance):
 
         return wrapper
 
-    def get_genotype_data_ids(self, *, local_only: bool = False) -> list[str]:
+    def get_genotype_data_ids(self) -> list[str]:
         result = list(super().get_genotype_data_ids())
 
         if self.visible_datasets is None:

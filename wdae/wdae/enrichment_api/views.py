@@ -1,6 +1,5 @@
 import logging
-from collections.abc import Iterable
-from typing import Any, cast
+from typing import Any
 
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
@@ -9,14 +8,10 @@ from query_base.query_base import QueryDatasetView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import StudyWrapper
 from utils.expand_gene_set import expand_gene_set
 
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.studies.study import GenotypeData
-from enrichment_api.enrichment_builder import (
-    EnrichmentBuilder,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +35,7 @@ class EnrichmentModelsView(QueryDatasetView):
         result = []
         for counting_model in enrichment_config["counting"].values():
             if counting_model.id in selected_models:
-                result.append({
+                result.append({  # noqa: PERF401
                     "id": counting_model.id,
                     "name": counting_model.name,
                     "desc": counting_model.desc,
@@ -49,7 +44,7 @@ class EnrichmentModelsView(QueryDatasetView):
 
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(
-        self, request: Request,  # pylint: disable=unused-argument
+        self, _request: Request,  # pylint: disable=unused-argument
         dataset_id: str,
     ) -> Response:
         """Return enrichment configuration prepared for choosing."""
@@ -68,7 +63,7 @@ class EnrichmentModelsView(QueryDatasetView):
             .get_default_counting_model(study)
 
         for background in study_backgrounds:
-            background_descriptions.append({
+            background_descriptions.append({  # noqa: PERF401
                 "id": background.background_id,
                 "name": background.name,
                 "type": background.background_type,
@@ -107,11 +102,12 @@ class EnrichmentTestView(QueryDatasetView):
         """Build enrichment result description."""
         gene_set = query.get("geneSet")
         if gene_set:
-            desc = f"Gene Set: {gene_set}"
-            return desc
+            return f"Gene Set: {gene_set}"
 
         gene_score_request = query.get("geneScores")
         gene_scores_id = None
+        range_start = None
+        range_end = None
         if gene_score_request is not None:
             gene_scores_id = gene_score_request.get("score", None)
             range_start = gene_score_request.get("rangeStart", None)
@@ -138,8 +134,7 @@ class EnrichmentTestView(QueryDatasetView):
             return desc
 
         gene_syms = ",".join(self._parse_gene_syms(query))
-        desc = f"Gene Symbols: {gene_syms}"
-        return desc
+        return f"Gene Symbols: {gene_syms}"
 
     # @silk_profile(name="Enrichment Test")
     def post(self, request: Request) -> Response:

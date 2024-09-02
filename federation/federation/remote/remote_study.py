@@ -67,9 +67,9 @@ class RemoteGenotypeData(GenotypeData):
         for family in families_details:
             family_id = family["family_id"]
             person_jsons = family["members"]
-            family_members = []
-            for person_json in person_jsons:
-                family_members.append(Person(**person_json))
+            family_members = [
+                Person(**person_json) for person_json in person_jsons
+            ]
             families[family_id] = Family.from_persons(family_members)
         self._families = FamiliesData.from_families(families)
         tag_families_data(self._families)
@@ -79,7 +79,7 @@ class RemoteGenotypeData(GenotypeData):
 
     def _build_person_set_collections(
         self, pscs_config: dict[str, Any] | None,
-        families: FamiliesData,
+        _families: FamiliesData,
     ) -> dict[str, PersonSetCollection]:
 
         if pscs_config is None:
@@ -99,7 +99,9 @@ class RemoteGenotypeData(GenotypeData):
     ) -> PersonSetCollection:
         raise NotImplementedError
 
-    def get_studies_ids(self, leaves: bool = True) -> list[str]:
+    def get_studies_ids(  # pylint: disable=arguments-differ
+        self, *, _leaves: bool = True,
+    ) -> list[str]:
         return [self.study_id]
 
     @property
@@ -112,6 +114,7 @@ class RemoteGenotypeData(GenotypeData):
 
     def query_variants(
         self,
+        *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
@@ -138,6 +141,7 @@ class RemoteGenotypeData(GenotypeData):
 
     def query_summary_variants(
         self,
+        *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,

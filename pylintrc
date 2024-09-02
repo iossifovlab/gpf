@@ -91,7 +91,8 @@ disable=missing-module-docstring,
         no-member,
         protected-access,
         unused-argument,
-        wrong-import-order
+        wrong-import-order,
+        broad-exception-caught
 
 
 # Enable the message, report, category or checker with the given id(s). You can

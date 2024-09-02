@@ -7,6 +7,7 @@ from dae.variants.attributes import Sex
 
 
 class PhenoToolAdapterBase:
+    """Base class for pheno tool adapters."""
 
     def calc_by_effect(
         self, measure_id: str, effect: str, people_variants: Counter,

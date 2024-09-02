@@ -24,7 +24,6 @@ class RemotePhenotypeData(PhenotypeData):
         super().__init__(pheno_id, None)
 
         self.remote_dataset_id = remote_dataset_id
-        # self.measures = self.get_measures()
 
     @property
     def measures(self) -> dict[str, Measure]:
@@ -38,7 +37,7 @@ class RemotePhenotypeData(PhenotypeData):
         person_ids: Iterable[str] | None = None,
         family_ids: Iterable[str] | None = None,
         roles: Iterable[Role] | None = None,
-        default_filter: str = "apply",  # pylint: disable=unused-argument
+        _default_filter: str = "apply",  # pylint: disable=unused-argument
     ) -> pd.DataFrame:
         """Get values for a list of measures for a list of persons."""
         roles_los: Iterable[str] | None = None
@@ -133,8 +132,7 @@ class RemotePhenotypeData(PhenotypeData):
     def _extract_pheno_dir(url: str) -> str:
         """Extract the pheno directory from a measures info URL."""
         url = url.strip("/")
-        pheno_folder = url[url.rindex("/") + 1:]
-        return pheno_folder
+        return url[url.rindex("/") + 1:]
 
     def get_measures_info(self) -> dict[str, Any]:
         output = self.rest_client.get_browser_measures_info(
@@ -163,5 +161,4 @@ class RemotePhenotypeData(PhenotypeData):
             sort_by,
             order_by,
         )
-        for m in measures:
-            yield m
+        yield from measures
