@@ -88,6 +88,7 @@ resource_id
 genome
 gene_models
 chain
+source_genome
 target_genome
 input_gene_list
 =================  ========  ======
@@ -164,6 +165,9 @@ Predicts the variant's effect on proteins (i.e. missense, synonymous, LGD, etc.)
 Normalize allele annotator
 ##########################
 
+Normalize an allele using the algorithm defined here:
+https://genome.sph.umich.edu/wiki/Variant_Normalization
+
 .. code:: yaml
 
     - normalize_allele_annotator:
@@ -181,6 +185,7 @@ This produced annotatable can then be passed to other annotators using the ``inp
 
     - liftover_annotator:
         chain: liftover/hg38ToHg19
+        source_genome: hg38/genomes/GRCh38-hg38
         target_genome: hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174
         attributes:
         - source: liftover_annotatable
@@ -331,20 +336,25 @@ We'll use a small list of de Novo variants saved as ``denovo-variants.tsv``:
 
 .. code-block::
 
-    CHROM   POS	      REF    ALT  person_ids
-    chr14   21403214  T      C    f1.p1
-    chr14   21431459  G      C    f1.p1
-    chr14   21391016  A      AT   f2.p1
-    chr14   21403019  G      A    f2.p1
-    chr14   21402010  G      A    f3.p1
-    chr14   21393484  TCTTC  T    f3.p1
+    CHROM   POS	      REF    ALT
+    chr14   21403214  T      C
+    chr14   21431459  G      C
+    chr14   21391016  A      AT
+    chr14   21403019  G      A
+    chr14   21402010  G      A
+    chr14   21393484  TCTTC  T
+
+.. note::
+
+    The example variants can be downloaded from here:
+    :download:`denovo-variants.tsv <annotation_files/denovo-variants.tsv>`.
 
 
 Let us create an annotation configuration stored as ``clinvar-annotation.yaml``:
 
 .. code:: yaml
 
-    - allele_score: clinvar_20221105
+    - allele_score: hg38/scores/clinvar_20221105
 
 
 Run the ``annotate_columns`` tool:
@@ -359,42 +369,9 @@ Run the ``annotate_columns`` tool:
 How to annotate with gene score annotators
 ##########################################
 
-Preparing a variants file
-+++++++++++++++++++++++++
+For this example we will reuse the ``denovo_variants.tsv`` from the previous example.
 
-For this example we will reuse the ``denovo_variants.tsv`` in the previous example:
-
-.. code-block::
-
-    CHROM   POS       REF    ALT  person_ids
-    chr14   21403214  T      C    f1.p1
-    chr14   21431459  G      C    f1.p1
-    chr14   21391016  A      AT   f2.p1
-    chr14   21403019  G      A    f2.p1
-    chr14   21402010  G      A    f3.p1
-    chr14   21393484  TCTTC  T    f3.p1
-
-
-Setting up the Genomic Resource Repository
-++++++++++++++++++++++++++++++++++++++++++
-
-We will be using the SFARI gene score along with a genome and gene models
-from the `public GRR <https://grr.seqpipe.org>`_. Create a ``grr_definition.yaml``
-that looks like this:
-
-  .. code-block:: yaml
-
-    type: group
-    children:
-    - id: "seqpipe"
-      type: "url"
-      directory: "https://grr.seqpipe.org"
-
-
-Setting up the annotation configuration
-+++++++++++++++++++++++++++++++++++++++
-
-Create a ``properties-annotation.yaml`` like this:
+Create an ``annotation.yaml`` config with the following contents:
 
   .. code-block:: yaml
 
@@ -411,16 +388,13 @@ Create a ``properties-annotation.yaml`` like this:
 As mentioned before, when setting up gene score annotators, we need to have a gene list in the annotation context.
 The gene list is provided by the effect annotator preceding the gene score annotator.
 
-Annotating the variants
-+++++++++++++++++++++++
-
-Run the ``annotate_columns`` tool:
+Next, run the ``annotate_columns`` tool:
 
 .. code-block:: bash
 
     annotate_columns --grr ./grr_definition.yaml \
         --col_pos POS --col_chrom CHROM --col_ref REF --col_alt ALT \
-        denovo-variants.tsv properties_annotation.yaml
+        denovo-variants.tsv annotation.yaml
 
 
 Gene score annotator with changed aggregator
@@ -463,25 +437,16 @@ This effect annotator will use the reference genome and gene models from the act
     --ref hg38/genomes/GRCh38-hg38 --genes hg38/gene_models/refSeq_v20200330
 
 
-Large annotation with various annotators
-########################################
+Liftover annotation
+###################
 
 .. code:: yaml
 
     - position_score: hg38/scores/phyloP100way
-    - position_score: hg38/scores/phyloP30way
-    - position_score: hg38/scores/phyloP20way
-    - position_score: hg38/scores/phyloP7way
-
-    - position_score: hg38/scores/phastCons100way
-    - position_score: hg38/scores/phastCons30way
-    - position_score: hg38/scores/phastCons20way
-    - position_score: hg38/scores/phastCons7way
-
-    - np_score: hg38/scores/CADD_v1.4
 
     - liftover_annotator:
         chain: liftover/hg38ToHg19
+        source_genome: hg38/genomes/GRCh38-hg38
         target_genome: hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174
         attributes:
         - source: liftover_annotatable
@@ -491,69 +456,3 @@ Large annotation with various annotators
     - position_score:
         resource_id: hg19/scores/FitCons-i6-merged
         input_annotatable: hg19_annotatable
-
-    - position_score:
-        resource_id: hg19/scores/Linsight
-        input_annotatable: hg19_annotatable
-
-    - position_score:
-        resource_id: hg19/scores/FitCons2_E067
-        input_annotatable: hg19_annotatable
-
-    - position_score:
-        resource_id: hg19/scores/FitCons2_E068
-        input_annotatable: hg19_annotatable
-
-    - position_score:
-        resource_id: hg19/scores/FitCons2_E069
-        input_annotatable: hg19_annotatable
-
-    - position_score:
-        resource_id: hg19/scores/FitCons2_E070
-        input_annotatable: hg19_annotatable
-
-    - position_score:
-        resource_id: hg19/scores/FitCons2_E071
-        input_annotatable: hg19_annotatable
-
-    - position_score:
-        resource_id: hg19/scores/FitCons2_E072
-        input_annotatable: hg19_annotatable
-
-    - position_score:
-        resource_id: hg19/scores/FitCons2_E073
-        input_annotatable: hg19_annotatable
-
-    - position_score:
-        resource_id: hg19/scores/FitCons2_E074
-        input_annotatable: hg19_annotatable
-
-    - position_score:
-        resource_id: hg19/scores/FitCons2_E081
-        input_annotatable: hg19_annotatable
-
-    - position_score:
-        resource_id: hg19/scores/FitCons2_E082
-        input_annotatable: hg19_annotatable
-
-    - np_score:
-        resource_id: hg19/scores/MPC
-        input_annotatable: hg19_annotatable
-
-    - normalize_allele_annotator:
-        genome: hg38/genomes/GRCh38-hg38
-
-    - allele_score:
-        resource_id: hg38/variant_frequencies/SSC_WG38_CSHL_2380
-
-    - allele_score:
-        resource_id: hg38/variant_frequencies/gnomAD_v2.1.1_liftover/exomes
-        input_annotatable: normalized_allele
-
-    - allele_score:
-        resource_id: hg38/variant_frequencies/gnomAD_v2.1.1_liftover/genomes
-        input_annotatable: normalized_allele
-
-    - allele_score:
-        resource_id: hg38/variant_frequencies/gnomAD_v3/genomes
-        input_annotatable: normalized_allele
