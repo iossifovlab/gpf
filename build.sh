@@ -62,6 +62,7 @@ function main() {
 
     build_run rm -rf ./data/ ./results ./gpf
     build_run rm -rf ./userdocs/gpf
+    build_run rm -rf ./userdocs/_build
 
     build_run_local mkdir -p ./data/ ./results ./cache
   }
