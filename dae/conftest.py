@@ -238,6 +238,16 @@ def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
             }
             storage_factories = result
 
+    s3_enabled = False
+    if metafunc.config.getoption("enable_s3"):
+        s3_enabled = True
+
+    if not s3_enabled:
+        if "duckdb_s3_parquet" in storage_factories:
+            del storage_factories["duckdb_s3_parquet"]
+        if "duckdb_s3" in storage_factories:
+            del storage_factories["duckdb_s3"]
+
     metafunc.parametrize(
         "genotype_storage_factory",
         storage_factories.values(),
