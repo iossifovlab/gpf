@@ -92,6 +92,12 @@ def sign(filename: str) -> str:
 
 def copy(dest: str, src: str) -> None:
     """Copy a file or directory."""
+    if os.path.isfile(src):
+        dest_dirname = os.path.dirname(dest)
+        if not os.path.exists(dest_dirname):
+            os.makedirs(dest_dirname)
+        shutil.copy(src, dest)
+        return
     shutil.copytree(src, dest, dirs_exist_ok=True)
 
 

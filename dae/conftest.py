@@ -57,38 +57,16 @@ def _default_genotype_storage_configs(
             "endpoint_url": f"http://{localstack_host}:4566/",
         },
 
-        # # DuckDb2 Storage
-        # {
-        #     "id": "duckdb2",
-        #     "storage_type": "duckdb2",
-        #     "db": "duckdb2_storage/storage2.db",
-        #     "base_dir": str(root_path),
-        #     "read_only": False,
-        # },
-        # # DuckDb2 Parquet Inplace Storage
-        # {
-        #     "id": "duckdb2_inplace",
-        #     "storage_type": "duckdb2",
-        # },
+        # DuckDb Storage
+        "duckdb": {
+            "id": "duckdb",
+            "storage_type": "duckdb",
+            "db": "duckdb2_storage/storage2.db",
+            "base_dir": str(root_path),
+        },
 
-        # # DuckDb Parquet Storage
-        # {
-        #     "id": "duckdb_parquet",
-        #     "storage_type": "duckdb",
-        #     "base_dir": str(root_path / "duckdb_parquet"),
-        # },
-        # # DuckDb Parquet Inplace Storage
-        # {
-        #     "id": "duckdb_inplace",
-        #     "storage_type": "duckdb",
-        # },
-
-        # # Schema2 Parquet
-        # {
-        #     "id": "schema2_parquet",
-        #     "storage_type": "parquet",
-        #     "dir": str(root_path),
-        # },
+        # DuckDb S3 Storage
+        # ??
     }
 
 

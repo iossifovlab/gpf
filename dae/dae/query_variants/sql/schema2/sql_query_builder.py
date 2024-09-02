@@ -627,6 +627,15 @@ class SqlQueryBuilder(QueryBuilderBase):
             summary,
             "summary",
         )
+        on_clause = (
+            "sa.bucket_index = fa.bucket_index "
+            "and sa.summary_index = fa.summary_index "
+            "and sa.allele_index = fa.allele_index"
+        )
+        if "sj_index" in self.schema.column_names("family_table"):
+            assert "sj_index" in self.schema.column_names("summary_table")
+            on_clause = "sa.sj_index = fa.sj_index"
+
         return self._append_cte(
             query,
             family,
@@ -640,7 +649,7 @@ class SqlQueryBuilder(QueryBuilderBase):
             "summary as sa",
         ).join(
             "family as fa",
-            on="sa.sj_index = fa.sj_index",
+            on=on_clause,
         )
 
     @staticmethod

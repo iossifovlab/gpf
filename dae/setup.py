@@ -77,6 +77,7 @@ setuptools.setup(
     inmemory=dae.inmemory_storage.inmemory_genotype_storage:InmemoryGenotypeStorage
     duckdb_legacy=dae.duckdb_storage.duckdb_genotype_storage:DuckDbGenotypeStorage
     duckdb2=dae.duckdb_storage.duckdb_genotype_storage:DuckDbGenotypeStorage
+    duckdb=dae.duckdb_storage.duckdb_genotype_storage:duckdb_storage_factory
     duckdb_parquet=dae.duckdb_storage.duckdb_genotype_storage:duckdb_parquet_storage_factory
     duckdb_s3_parquet=dae.duckdb_storage.duckdb_genotype_storage:duckdb_s3_parquet_storage_factory
     parquet=dae.parquet_storage.storage:ParquetGenotypeStorage
@@ -86,6 +87,7 @@ setuptools.setup(
     inmemory=dae.inmemory_storage.inmemory_import_storage:InmemoryImportStorage
     duckdb_legacy=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
     duckdb2=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
+    duckdb=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
     duckdb_parquet=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
     duckdb_s3_parquet=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
     parquet=dae.parquet_storage.storage:ParquetImportStorage

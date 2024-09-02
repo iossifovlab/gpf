@@ -6,6 +6,7 @@ import duckdb
 import pandas as pd
 import yaml
 
+from dae.duckdb_storage.duckdb_connection_factory import DuckDbConnectionFactory
 from dae.genomic_resources.gene_models import GeneModels
 from dae.query_variants.query_runners import QueryRunner
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
@@ -128,7 +129,7 @@ class DuckDbVariants(SqlSchema2Variants):
 
     def __init__(
         self,
-        connection: duckdb.DuckDBPyConnection,
+        connection_factory: DuckDbConnectionFactory,
         db: str | None,
         family_variant_table: str | None,
         summary_allele_table: str | None,
@@ -136,8 +137,8 @@ class DuckDbVariants(SqlSchema2Variants):
         meta_table: str,
         gene_models: GeneModels | None = None,
     ) -> None:
-        self.connection = connection
-        assert self.connection is not None
+        self.connection_factory = connection_factory
+        assert self.connection_factory is not None
 
         super().__init__(
             DuckDbQueryDialect(),
@@ -151,7 +152,7 @@ class DuckDbVariants(SqlSchema2Variants):
         self.start_time = time.time()
 
     def _get_connection_factory(self) -> Any:
-        return self.connection.cursor()
+        return self.connection_factory.connect().cursor()
 
     def _fetch_variants_data_schema(self) -> dict[str, Any] | None:
         query = f"""SELECT value FROM {self.meta_table}

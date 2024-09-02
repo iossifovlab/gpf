@@ -23,7 +23,8 @@ class DuckDbImportStorage(Schema2ImportStorage):
 
     @classmethod
     def _do_import_dataset(
-            cls, project: ImportProject) -> Schema2DatasetLayout:
+        cls, project: ImportProject,
+    ) -> Schema2DatasetLayout:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(
             genotype_storage,
@@ -31,8 +32,14 @@ class DuckDbImportStorage(Schema2ImportStorage):
         layout = load_schema2_dataset_layout(
             project.get_parquet_dataset_dir(),
         )
+        work_dir = project.work_dir
+
         return genotype_storage.import_dataset(
-            project.study_id, layout, project.get_partition_descriptor())
+            work_dir,
+            project.study_id,
+            layout,
+            project.get_partition_descriptor(),
+        )
 
     @classmethod
     def do_study_config(
