@@ -133,7 +133,7 @@ def add_record_to_annotable_arguments(parser: argparse.ArgumentParser) -> None:
         col for cols in RECORD_TO_ANNOTATABLE_CONFIGURATION
         for col in cols}
     for col in all_columns:
-        parser.add_argument(f"--col_{col}", default=col,
+        parser.add_argument(f"--col-{col.replace('_', '-')}", default=col,
                             help=f"The column name that stores {col}")
 
 
