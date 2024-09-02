@@ -627,6 +627,15 @@ class SqlQueryBuilder(QueryBuilderBase):
             summary,
             "summary",
         )
+        on_clause = (
+            "sa.bucket_index = fa.bucket_index "
+            "and sa.summary_index = fa.summary_index "
+            "and sa.allele_index = fa.allele_index"
+        )
+        if "sj_index" in self.schema.column_names("family_table"):
+            assert "sj_index" in self.schema.column_names("summary_table")
+            on_clause = "sa.sj_index = fa.sj_index"
+
         return self._append_cte(
             query,
             family,
@@ -640,7 +649,7 @@ class SqlQueryBuilder(QueryBuilderBase):
             "summary as sa",
         ).join(
             "family as fa",
-            on="sa.sj_index = fa.sj_index",
+            on=on_clause,
         )
 
     @staticmethod
@@ -1089,12 +1098,23 @@ class SqlQueryBuilder(QueryBuilderBase):
         assert self.db_layout.summary is not None
         assert self.db_layout.family is not None
 
+        if self.db_layout.db is None:
+            return exp.replace_tables(
+                query,
+                {
+                    "summary_table": self.db_layout.summary,
+                    "family_table": self.db_layout.family,
+                    "pedigree_table": self.db_layout.pedigree,
+                },
+            )
+        db = self.db_layout.db
+        assert db is not None
         return exp.replace_tables(
             query,
             {
-                "summary_table": self.db_layout.summary,
-                "family_table": self.db_layout.family,
-                "pedigree_table": self.db_layout.pedigree,
+                "summary_table": f"{db}.{self.db_layout.summary}",
+                "family_table": f"{db}.{self.db_layout.family}",
+                "pedigree_table": f"{db}.{self.db_layout.pedigree}",
             },
         )
 

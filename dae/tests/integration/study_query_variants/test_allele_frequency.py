@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Callable
 
 import pytest
 
@@ -56,14 +57,15 @@ f2       c2       d2    m2    2   2      prb
 def freq_study(
     tmp_path_factory: pytest.TempPathFactory,
     freq_vcf: tuple[pathlib.Path, pathlib.Path],
-    genotype_storage: GenotypeStorage,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeData:
     # pylint: disable=import-outside-toplevel
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    root_path = tmp_path_factory.mktemp("test_allele_frequency")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
     ped_path, vcf_path = freq_vcf
 
-    study = vcf_study(
+    return vcf_study(
         root_path, "freq_vcf", ped_path, [vcf_path], gpf_instance,
         project_config_update={
             "input": {
@@ -76,7 +78,6 @@ def freq_study(
                 },
             },
         })
-    return study
 
 
 @pytest.mark.parametrize("region,count,freqs", [

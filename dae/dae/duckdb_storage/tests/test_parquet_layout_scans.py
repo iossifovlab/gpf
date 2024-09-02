@@ -15,33 +15,15 @@ from dae.testing.foobar_import import foobar_gpf
 
 
 @pytest.fixture()
-def duckdb_storage_db(
-        tmp_path_factory: pytest.TempPathFactory) -> DuckDbGenotypeStorage:
-    storage_path = tmp_path_factory.mktemp("duckdb_storage")
-    storage_config = {
-        "id": "dev_duckdb_storage",
-        "storage_type": "duckdb",
-        "db": "duckdb_genotype_storage/dev_storage.db",
-        "base_dir": storage_path,
-    }
-    storage_factory = get_genotype_storage_factory("duckdb")
-    genotype_storage = cast(
-        DuckDbGenotypeStorage, storage_factory(storage_config))
-    genotype_storage.start()
-    return genotype_storage
-
-
-@pytest.fixture()
 def duckdb_storage_parquet(
         tmp_path_factory: pytest.TempPathFactory) -> DuckDbGenotypeStorage:
     storage_path = tmp_path_factory.mktemp("duckdb_storage")
     storage_config = {
         "id": "dev_duckdb_storage",
-        "storage_type": "duckdb",
-        "studies_dir": "duckdb_genotype_storage",
-        "base_dir": str(storage_path),
+        "storage_type": "duckdb_legacy",
+        "base_dir": str(storage_path / "duckdb_genotype_storage"),
     }
-    storage_factory = get_genotype_storage_factory("duckdb")
+    storage_factory = get_genotype_storage_factory("duckdb_legacy")
     genotype_storage = cast(
         DuckDbGenotypeStorage, storage_factory(storage_config))
     genotype_storage.start()
@@ -72,12 +54,10 @@ def imported_study(
         foo    14  .  C   T   .    .      .    GT     0/0 0/1 0/1
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "minimal_vcf", ped_path, [vcf_path],
         gpf_instance)
-
-    return study
 
 
 @pytest.mark.parametrize(

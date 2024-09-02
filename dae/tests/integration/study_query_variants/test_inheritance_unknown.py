@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Callable
 from typing import cast
 
 import pytest
@@ -15,10 +16,11 @@ from dae.variants.family_variant import FamilyAllele
 
 @pytest.fixture(scope="module")
 def nontrio_study(
-        tmp_path_factory: pytest.TempPathFactory,
-        genotype_storage: GenotypeStorage) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp(
-        f"nontrio_{genotype_storage.storage_id}")
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> GenotypeData:
+    root_path = tmp_path_factory.mktemp("test_inheritance_unknown")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = alla_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
@@ -45,7 +47,7 @@ chrA   5   .  A   G,C .    .      .    GT     0/0  2/1  2/1 0/0  0/0  0/0 0/0
 chrA   6   .  A   G,C .    .      .    GT     0/0  2/2  2/2 0/0  0/0  0/0 0/0
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "unknown_vcf", pathlib.Path(ped_path),
         [vcf_path],
@@ -64,7 +66,6 @@ chrA   6   .  A   G,C .    .      .    GT     0/0  2/2  2/2 0/0  0/0  0/0 0/0
                 "include_reference": True,
             },
         })
-    return study
 
 
 @pytest.mark.parametrize(
@@ -79,9 +80,10 @@ chrA   6   .  A   G,C .    .      .    GT     0/0  2/2  2/2 0/0  0/0  0/0 0/0
     ],
 )
 def test_inheritance_nontrio(
-        nontrio_study: GenotypeData,
-        region: Region,
-        inheritance: Inheritance) -> None:
+    nontrio_study: GenotypeData,
+    region: Region,
+    inheritance: Inheritance,
+) -> None:
     vs = list(nontrio_study.query_variants(
         regions=[region],
         family_ids=["f1"],
@@ -92,4 +94,4 @@ def test_inheritance_nontrio(
     for v in vs:
         for aa in v.alt_alleles:
             fa = cast(FamilyAllele, aa)
-            assert set(fa.inheritance_in_members) == set([Inheritance.unknown])
+            assert set(fa.inheritance_in_members) == {inheritance}

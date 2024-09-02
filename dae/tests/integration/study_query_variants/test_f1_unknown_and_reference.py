@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Callable
 from typing import cast
 
 import pytest
@@ -14,10 +15,11 @@ from dae.variants.family_variant import FamilyAllele
 
 @pytest.fixture(scope="module")
 def imported_study(
-        tmp_path_factory: pytest.TempPathFactory,
-        genotype_storage: GenotypeStorage) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp(
-        f"query_by_genes_effects_{genotype_storage.storage_id}")
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> GenotypeData:
+    root_path = tmp_path_factory.mktemp("test_f1_unknown_and_reference")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
@@ -39,7 +41,7 @@ bar    7   .  A   C,G,T .    .      .    GT     ./. ./. ./. ./.
 bar    8   .  A   T,C,G .    .      .    GT     0/0 0/0 ./. 0/0
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "effects_trio_vcf", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
@@ -58,7 +60,6 @@ bar    8   .  A   T,C,G .    .      .    GT     0/0 0/0 ./. 0/0
                 "include_reference": True,
             },
         })
-    return study
 
 
 @pytest.mark.parametrize(
@@ -147,8 +148,8 @@ def test_all_unknown_variants_return_reference_or_unknown(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
-    return_reference: bool,
-    return_unknown: bool,
+    return_reference: bool,  # noqa: FBT001
+    return_unknown: bool,  # noqa: FBT001
     count: int,
 ) -> None:
     region = Region("bar", position, position)
@@ -180,8 +181,8 @@ def test_reference_and_unknown_return_reference_or_unknown(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
-    return_reference: bool,
-    return_unknown: bool,
+    return_reference: bool,  # noqa: FBT001
+    return_unknown: bool,  # noqa: FBT001
     count: int,
 ) -> None:
     region = Region("bar", position, position)

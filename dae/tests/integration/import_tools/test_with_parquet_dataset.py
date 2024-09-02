@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
+from collections.abc import Callable
 
 import pytest
 
@@ -15,17 +16,11 @@ from dae.testing.import_helpers import StudyInputLayout
 @pytest.fixture(scope="module")
 def vcf_import_data(
     tmp_path_factory: pytest.TempPathFactory,
-    genotype_storage: GenotypeStorage,
-) -> tuple[pathlib.Path, GPFInstance, StudyInputLayout]:
-    root_path = tmp_path_factory.mktemp(
-        f"parquet_dataset_{genotype_storage.storage_id}")
-
-    gpf_instance = alla_gpf(root_path)
-
-    if genotype_storage:
-        gpf_instance\
-            .genotype_storages\
-            .register_default_storage(genotype_storage)
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> tuple[pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout]:
+    root_path = tmp_path_factory.mktemp("test_with_parquet_dataset")
+    genotype_storage = genotype_storage_factory(root_path)
+    gpf_instance = alla_gpf(root_path, genotype_storage)
 
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
@@ -46,38 +41,37 @@ def vcf_import_data(
         chrA   2   .  A   G   .    .      .    GT     0/0 0/1 0/1
         """)
 
-    return root_path, gpf_instance, StudyInputLayout(
-        "with_parquet_dataset", ped_path, [vcf_path], [], [], [])
+    return (
+        root_path, gpf_instance, genotype_storage,
+        StudyInputLayout(
+            "with_parquet_dataset", ped_path, [vcf_path], [], [], []))
 
 
 @pytest.fixture(scope="module")
 def vcf_project_to_parquet(
-    tmp_path_factory: pytest.TempPathFactory,
-    vcf_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
-    genotype_storage: GenotypeStorage,
+    vcf_import_data: tuple[
+        pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout],
 ) -> ImportProject:
-    root_path, gpf_instance, layout = vcf_import_data
+    root_path, gpf_instance, genotype_storage, layout = vcf_import_data
 
     project_config_overwrite = {
         "destination": {
             "storage_type": genotype_storage.storage_type,
         },
     }
-    project = vcf_import(
+    return vcf_import(
         root_path,
         "parquet_dataset", layout.pedigree, layout.vcf,
         gpf_instance,
         project_config_overwrite=project_config_overwrite)
-    return project
 
 
 @pytest.fixture(scope="module")
 def vcf_project_from_parquet(
-    tmp_path_factory: pytest.TempPathFactory,
-    vcf_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
-    genotype_storage: GenotypeStorage,
+    vcf_import_data: tuple[
+        pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout],
 ) -> ImportProject:
-    root_path, gpf_instance, layout = vcf_import_data
+    root_path, gpf_instance, _genotype_storage, layout = vcf_import_data
 
     project_config_replace = {
         "id": "from_parquet_dataset",
@@ -86,12 +80,11 @@ def vcf_project_from_parquet(
                 root_path / "work_dir" / "parquet_dataset"),
         },
     }
-    project = vcf_import(
+    return vcf_import(
         root_path,
         "from_parquet_dataset", layout.pedigree, layout.vcf,
         gpf_instance,
         project_config_replace=project_config_replace)
-    return project
 
 
 @pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
@@ -100,7 +93,6 @@ def vcf_project_from_parquet(
 def test_with_destination_storage_type(
     vcf_project_to_parquet: ImportProject,
     vcf_project_from_parquet: ImportProject,
-    genotype_storage: GenotypeStorage,
 ) -> None:
 
     run_with_project(vcf_project_to_parquet)

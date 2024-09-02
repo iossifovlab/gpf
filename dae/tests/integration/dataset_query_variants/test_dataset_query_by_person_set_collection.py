@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
+from collections.abc import Callable
 
 import pytest
 
@@ -9,16 +10,14 @@ from dae.studies.study import GenotypeDataGroup
 from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.alla_import import alla_gpf
 
-# from dae.pedigrees.loader import FamiliesLoader
-
 
 @pytest.fixture()
 def dataset(
     tmp_path: pathlib.Path,
-    genotype_storage: GenotypeStorage,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeDataGroup:
     root_path = tmp_path
-    gpf_instance = alla_gpf(root_path, genotype_storage)
+    gpf_instance = alla_gpf(root_path, genotype_storage_factory(root_path))
 
     ped_path1 = setup_pedigree(
         root_path / "study_1" / "in.ped", textwrap.dedent("""

@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
 import pathlib
+from collections.abc import Callable
 
 import pytest
 
@@ -23,15 +24,11 @@ from dae.testing.import_helpers import StudyInputLayout
 @pytest.fixture()
 def vcf_import_data(
     tmp_path: pathlib.Path,
-    genotype_storage: GenotypeStorage,
-) -> tuple[pathlib.Path, GPFInstance, StudyInputLayout]:
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> tuple[pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout]:
     root_path = tmp_path
-    gpf_instance = alla_gpf(root_path)
-
-    if genotype_storage:
-        gpf_instance\
-            .genotype_storages\
-            .register_default_storage(genotype_storage)
+    genotype_storage = genotype_storage_factory(root_path)
+    gpf_instance = alla_gpf(root_path, genotype_storage)
 
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
@@ -55,16 +52,17 @@ chrA   1   .  A   C   .    .      .    GT     0/1 0/1 0/1 0/0 0/0 0/1
 chrA   2   .  A   G   .    .      .    GT     0/0 0/0 0/1 0/1 0/0 0/1
         """)
 
-    return root_path, gpf_instance, StudyInputLayout(
-        "vcf_fixture", ped_path, [vcf_path], [], [], [])
+    return (
+        root_path, gpf_instance, genotype_storage,
+        StudyInputLayout("vcf_fixture", ped_path, [vcf_path], [], [], []))
 
 
 @pytest.fixture()
 def vcf_fixture(
-    vcf_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
-    genotype_storage: GenotypeStorage,
+    vcf_import_data: tuple[
+        pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout],
 ) -> tuple[pathlib.Path, GenotypeData]:
-    root_path, gpf_instance, layout = vcf_import_data
+    root_path, gpf_instance, genotype_storage, layout = vcf_import_data
 
     project_config_update = {
         "input": {
@@ -106,8 +104,8 @@ def vcf_fixture(
 )
 def test_family_frequency_bin_for_vcf(
     vcf_fixture: tuple[pathlib.Path, GenotypeData],
-    genotype_storage: GenotypeStorage,
-    label: str, frequency_bin: int, exists: bool,
+    label: str, frequency_bin: int,
+    exists: bool,  # noqa: FBT001
 ) -> None:
 
     root_path, _ = vcf_fixture
@@ -132,8 +130,9 @@ def test_family_frequency_bin_for_vcf(
 )
 def test_summary_frequency_bin_for_vcf(
     vcf_fixture: tuple[pathlib.Path, GenotypeData],
-    genotype_storage: GenotypeStorage,
-    label: str, frequency_bin: int, exists: bool,
+    label: str,
+    frequency_bin: int,
+    exists: bool,  # noqa: FBT001
 ) -> None:
 
     root_path, _ = vcf_fixture
@@ -158,7 +157,6 @@ def test_summary_frequency_bin_for_vcf(
 def test_frequency_bin_queries(
     frequency_filter: list[tuple], count: int,
     vcf_fixture: tuple[pathlib.Path, GenotypeData],
-    genotype_storage: GenotypeStorage,
 ) -> None:
     _, study = vcf_fixture
     vs = list(study.query_variants(frequency_filter=frequency_filter))
@@ -168,16 +166,11 @@ def test_frequency_bin_queries(
 @pytest.fixture()
 def denovo_import_data(
     tmp_path: pathlib.Path,
-    genotype_storage: GenotypeStorage,
-) -> tuple[pathlib.Path, GPFInstance, StudyInputLayout]:
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> tuple[pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout]:
     root_path = tmp_path
-
-    gpf_instance = alla_gpf(root_path)
-
-    if genotype_storage:
-        gpf_instance\
-            .genotype_storages\
-            .register_default_storage(genotype_storage)
+    genotype_storage = genotype_storage_factory(root_path)
+    gpf_instance = alla_gpf(root_path, genotype_storage)
 
     ped_path = setup_pedigree(
         root_path / "denovo_data" / "in.ped",
@@ -198,17 +191,17 @@ def denovo_import_data(
         f2       chrA:2   sub(A->C) 2||2||1/0||0||1
         """)
 
-    return root_path, gpf_instance, StudyInputLayout(
-        "denovo_fixture", ped_path, [], [denovo_path], [], [])
+    return (
+        root_path, gpf_instance, genotype_storage,
+        StudyInputLayout("denovo_fixture", ped_path, [], [denovo_path], [], []))
 
 
 @pytest.fixture()
 def denovo_project_to_parquet(
-    tmp_path: pathlib.Path,
-    denovo_import_data: tuple[pathlib.Path, GPFInstance, StudyInputLayout],
-    genotype_storage: GenotypeStorage,
+    denovo_import_data: tuple[
+        pathlib.Path, GPFInstance, GenotypeStorage, StudyInputLayout],
 ) -> ImportProject:
-    root_path, gpf_instance, layout = denovo_import_data
+    root_path, gpf_instance, genotype_storage, layout = denovo_import_data
 
     project_config_update = {
         "destination": {
@@ -220,12 +213,11 @@ def denovo_project_to_parquet(
             },
         },
     }
-    project = denovo_import(
+    return denovo_import(
         root_path,
         "denovo_frequency_bin", layout.pedigree, layout.denovo,
         gpf_instance,
         project_config_update=project_config_update)
-    return project
 
 
 @pytest.mark.gs_duckdb(reason="supported for schema2 duckdb")
@@ -242,8 +234,9 @@ def denovo_project_to_parquet(
 )
 def test_denovo_frequency_bin_for_denovo_import(
     denovo_project_to_parquet: ImportProject,
-    genotype_storage: GenotypeStorage,
-    label: str, frequency_bin: int, exists: bool,
+    label: str,
+    frequency_bin: int,
+    exists: bool,  # noqa: FBT001
 ) -> None:
 
     run_with_project(denovo_project_to_parquet)

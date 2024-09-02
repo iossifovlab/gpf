@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -14,13 +16,12 @@ from dae.utils.regions import Region
 def study_2p(
     request: pytest.FixtureRequest,
     tmp_path_factory: pytest.TempPathFactory,
-    genotype_storage: GenotypeStorage,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeData:
     param = request.param
-    study_id = f"study_2p_{genotype_storage.storage_id}_{param}"
-
+    study_id = f"study_2p_{param}"
     root_path = tmp_path_factory.mktemp(study_id)
-
+    genotype_storage = genotype_storage_factory(root_path)
     t4c8_instance = t4c8_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / study_id / "pedigree" / "in.ped",

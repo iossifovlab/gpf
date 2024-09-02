@@ -127,14 +127,17 @@ function main() {
   build_stage "Run localstack"
   {
 
-       local -A ctx_localstack
-       build_run_ctx_init ctx:ctx_localstack "persistent" "container" "localstack/localstack" \
+        local -A ctx_localstack
+
+        build_run_local docker pull localstack/localstack
+
+        build_run_ctx_init ctx:ctx_localstack "persistent" "container" "localstack/localstack" \
            "cmd-from-image" "no-def-mounts" \
            'ports:4566,4510-4559' \
            --hostname localstack --network "${ctx_network["network_id"]}" --workdir /opt/code/localstack/
 
-       defer_ret build_run_ctx_reset ctx:ctx_localstack
-       build_run_ctx_persist ctx:ctx_localstack
+        defer_ret build_run_ctx_reset ctx:ctx_localstack
+        build_run_ctx_persist ctx:ctx_localstack
 
   }
 
@@ -304,6 +307,8 @@ EOT
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
+          --env AWS_ACCESS_KEY_ID="foo" \
+          --env AWS_SECRET_ACCESS_KEY="foo" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_dae
@@ -335,6 +340,8 @@ EOT
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
+          --env AWS_ACCESS_KEY_ID="foo" \
+          --env AWS_SECRET_ACCESS_KEY="foo" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_dae_integ
@@ -367,6 +374,8 @@ EOT
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
+          --env AWS_ACCESS_KEY_ID="foo" \
+          --env AWS_SECRET_ACCESS_KEY="foo" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_wdae_integ
@@ -397,6 +406,8 @@ EOT
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
+          --env AWS_ACCESS_KEY_ID="foo" \
+          --env AWS_SECRET_ACCESS_KEY="foo" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_demo
@@ -426,6 +437,8 @@ EOT
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
+          --env AWS_ACCESS_KEY_ID="foo" \
+          --env AWS_SECRET_ACCESS_KEY="foo" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_vep

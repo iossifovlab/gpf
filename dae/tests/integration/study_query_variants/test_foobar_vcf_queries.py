@@ -1,4 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+from collections.abc import Callable
+
 import pytest
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
@@ -10,10 +13,11 @@ from dae.utils.regions import Region
 
 @pytest.fixture(scope="module")
 def imported_study(
-        tmp_path_factory: pytest.TempPathFactory,
-        genotype_storage: GenotypeStorage) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp(
-        f"vcf_path_{genotype_storage.storage_id}")
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> GenotypeData:
+    root_path = tmp_path_factory.mktemp("test_foobar_vcf_queries")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
@@ -34,41 +38,43 @@ def imported_study(
         foo    14  .  C   G   .    .      .    GT     0/0 0/1 0/1
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "minimal_vcf", ped_path, [vcf_path],
         gpf_instance)
-    return study
 
 
-@pytest.mark.parametrize("index,query,ecount", [
-    (1, {}, 2),
-    (2, {"genes": ["g1"]}, 2),
-    (3, {"genes": ["g2"]}, 0),
-    (4, {"effect_types": ["missense"]}, 1),
-    (5, {"effect_types": ["splice-site"]}, 1),
-    (6, {"regions": [Region("foo", 14, 14)]}, 1),
+@pytest.mark.parametrize("query,ecount", [
+    ({}, 2),
+    ({"genes": ["g1"]}, 2),
+    ({"genes": ["g2"]}, 0),
+    ({"effect_types": ["missense"]}, 1),
+    ({"effect_types": ["splice-site"]}, 1),
+    ({"regions": [Region("foo", 14, 14)]}, 1),
 ])
 def test_family_queries(
-        imported_study: GenotypeData, index: int, query: dict,
-        ecount: int) -> None:
+    imported_study: GenotypeData, query: dict,
+    ecount: int,
+) -> None:
 
     vs = list(imported_study.query_variants(**query))
 
     assert len(vs) == ecount
 
 
-@pytest.mark.parametrize("index,query,ecount", [
-    (1, {}, 2),
-    (2, {"genes": ["g1"]}, 2),
-    (3, {"genes": ["g2"]}, 0),
-    (4, {"effect_types": ["missense"]}, 1),
-    (5, {"effect_types": ["splice-site"]}, 1),
-    (6, {"regions": [Region("foo", 14, 14)]}, 1),
+@pytest.mark.parametrize("query,ecount", [
+    ({}, 2),
+    ({"genes": ["g1"]}, 2),
+    ({"genes": ["g2"]}, 0),
+    ({"effect_types": ["missense"]}, 1),
+    ({"effect_types": ["splice-site"]}, 1),
+    ({"regions": [Region("foo", 14, 14)]}, 1),
 ])
 def test_summary_queries(
-        imported_study: GenotypeData, index: int, query: dict,
-        ecount: int) -> None:
+    imported_study: GenotypeData,
+    query: dict,
+    ecount: int,
+) -> None:
 
     vs = list(imported_study.query_summary_variants(**query))
 

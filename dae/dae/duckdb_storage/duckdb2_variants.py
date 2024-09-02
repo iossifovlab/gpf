@@ -9,6 +9,7 @@ import duckdb
 import pandas as pd
 import yaml
 
+from dae.duckdb_storage.duckdb_connection_factory import DuckDbConnectionFactory
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
@@ -113,13 +114,13 @@ class DuckDb2Variants(QueryVariantsBase):
 
     def __init__(
         self,
-        connection: duckdb.DuckDBPyConnection,
+        connection_factory: DuckDbConnectionFactory,
         db2_layout: Db2Layout,
         gene_models: GeneModels,
         reference_genome: ReferenceGenome,
     ) -> None:
-        self.connection = connection
-        assert self.connection is not None
+        self.connection_factory = connection_factory
+        assert self.connection_factory is not None
         self.layout = db2_layout
         logger.debug("working with duckdb2 layout: %s", self.layout)
         self.gene_models = gene_models
@@ -148,11 +149,15 @@ class DuckDb2Variants(QueryVariantsBase):
         )
 
     def _fetch_meta_property(self, key: str) -> str:
-        query = f"""SELECT value FROM {self.layout.meta}
+        meta = self.layout.meta
+        if self.layout.db is not None:
+            meta = f"{self.layout.db}.{meta}"
+
+        query = f"""SELECT value FROM {meta}
                WHERE key = '{key}'
                LIMIT 1
             """  # noqa: S608
-        with self.connection.cursor() as cursor:
+        with self.connection_factory.connect().cursor() as cursor:
             content = ""
             result = cursor.execute(query).fetchall()
             for row in result:
@@ -175,10 +180,22 @@ class DuckDb2Variants(QueryVariantsBase):
 
     def _fetch_pedigree_schema(self) -> dict[str, str]:
         schema_content = self._fetch_meta_property("pedigree_schema")
-        if not schema_content:
-            return {}
-        return dict(
-            line.split("|") for line in schema_content.split("\n"))
+        if schema_content:
+            return dict(
+                line.split("|") for line in schema_content.split("\n"))
+        return {
+            "family_id": "VARCHAR",
+            "person_id": "VARCHAR",
+            "dad_id": "VARCHAR",
+            "mom_id": "VARCHAR",
+            "sex": "TINYINT",
+            "status": "TINYINT",
+            "role": "INTEGER",
+            "sample_id": "VARCHAR",
+            "generated": "BOOLEAN",
+            "layout": "VARCHAR",
+            "not_sequenced": "BOOLEAN",
+        }
 
     def _fetch_variants_data_schema(self) -> dict[str, Any] | None:
         content = self._fetch_meta_property("variants_data_schema")
@@ -187,8 +204,12 @@ class DuckDb2Variants(QueryVariantsBase):
         return cast(dict[str, Any], yaml.safe_load(content))
 
     def _fetch_pedigree(self) -> pd.DataFrame:
-        query = f"SELECT * FROM {self.layout.pedigree}"  # noqa: S608
-        with self.connection.cursor() as cursor:
+        pedigree = self.layout.pedigree
+        if self.layout.db is not None:
+            pedigree = f"{self.layout.db}.{pedigree}"
+
+        query = f"SELECT * FROM {pedigree}"  # noqa: S608
+        with self.connection_factory.connect().cursor() as cursor:
 
             ped_df = cursor.execute(query).df()
             columns = {
@@ -268,7 +289,7 @@ class DuckDb2Variants(QueryVariantsBase):
         logger.info("SUMMARY VARIANTS QUERY:\n%s", query)
 
         runner = self.RUNNER_CLASS(
-            connection_factory=self.connection,
+            connection_factory=self.connection_factory.connect(),
             query=query,
             deserializer=self._deserialize_summary_variant)
         skip_inmemory_filterng = kwargs.get("skip_inmemory_filterng", False)
@@ -390,7 +411,7 @@ class DuckDb2Variants(QueryVariantsBase):
 
         # pylint: disable=protected-access
         runner = self.RUNNER_CLASS(
-            connection_factory=self.connection,
+            connection_factory=self.connection_factory.connect(),
             query=query,
             deserializer=deserialize_row)
 

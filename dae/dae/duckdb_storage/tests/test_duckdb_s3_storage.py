@@ -2,7 +2,12 @@
 
 import pytest
 
-from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
+from dae.duckdb_storage.duckdb_genotype_storage import DuckDbS3ParquetStorage
+from dae.genomic_resources.testing import (
+    build_s3_test_bucket,
+    build_s3_test_filesystem,
+    s3_test_server_endpoint,
+)
 from dae.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )
@@ -12,32 +17,35 @@ from dae.testing.foobar_import import foobar_gpf
 
 
 @pytest.fixture(scope="session")
-def duckdb_storage_config(
-        tmp_path_factory: pytest.TempPathFactory) -> dict:
-    storage_path = tmp_path_factory.mktemp("duckdb_storage")
+def duckdb_storage_config() -> dict:
+    s3_endpoint = s3_test_server_endpoint()
+    s3_filesystem = build_s3_test_filesystem(s3_endpoint)
+    s3_test_bucket = build_s3_test_bucket(s3_filesystem)
+
     return {
         "id": "dev_duckdb_storage",
-        "storage_type": "duckdb_legacy",
-        "db": "duckdb_storage/dev_storage.db",
-        "base_dir": str(storage_path),
+        "storage_type": "duckdb_s3_parquet",
+        "bucket_url": s3_test_bucket,
+        "endpoint_url": s3_endpoint,
     }
 
 
 @pytest.fixture(scope="session")
 def duckdb_storage_fixture(
-        duckdb_storage_config: dict) -> DuckDbGenotypeStorage:
-    storage_factory = get_genotype_storage_factory("duckdb_legacy")
+        duckdb_storage_config: dict) -> DuckDbS3ParquetStorage:
+    storage_factory = get_genotype_storage_factory("duckdb_s3_parquet")
     assert storage_factory is not None
     storage = storage_factory(duckdb_storage_config)
     assert storage is not None
-    assert isinstance(storage, DuckDbGenotypeStorage)
+    assert isinstance(storage, DuckDbS3ParquetStorage)
     return storage
 
 
 @pytest.fixture(scope="session")
 def imported_study(
-        tmp_path_factory: pytest.TempPathFactory,
-        duckdb_storage_fixture: DuckDbGenotypeStorage) -> GenotypeData:
+    tmp_path_factory: pytest.TempPathFactory,
+    duckdb_storage_fixture: DuckDbS3ParquetStorage,
+) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{duckdb_storage_fixture.storage_id}")
     gpf_instance = foobar_gpf(root_path, duckdb_storage_fixture)
@@ -64,3 +72,16 @@ def imported_study(
         root_path,
         "minimal_vcf", ped_path, [vcf_path],
         gpf_instance)
+
+
+def test_duckdb_s3_storage(
+    duckdb_storage_fixture: DuckDbS3ParquetStorage,
+) -> None:
+    assert duckdb_storage_fixture is not None
+    assert duckdb_storage_fixture.connection_factory is None
+
+
+def test_import_storage(
+    imported_study: GenotypeData,
+) -> None:
+    assert imported_study is not None

@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 import pytest_mock
@@ -13,6 +13,16 @@ from dae.gpf_instance import GPFInstance
 from dae.gpf_instance_plugin.gpf_instance_context_plugin import (
     init_gpf_instance_genomic_context_plugin,
 )
+from dae.testing.t4c8_import import t4c8_gpf
+
+
+@pytest.fixture(scope="module")
+def t4c8_instance(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> GPFInstance:
+    root_path = tmp_path_factory.mktemp(
+        "study_group_person_set_queries")
+    return t4c8_gpf(root_path)
 
 
 @pytest.fixture()
@@ -67,9 +77,10 @@ def test_gpf_instance_context_gene_models(
     gene_models = context_fixture.get_gene_models()
 
     assert gene_models is not None
-    assert gene_models.resource.resource_id == \
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/" \
+    assert gene_models.resource.resource_id == (
+        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
         "gene_models/refGene_201309"
+    )
 
 
 def test_gpf_instance_context_keys(

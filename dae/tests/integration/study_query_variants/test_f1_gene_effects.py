@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Callable
 
 import pytest
 
@@ -11,10 +12,11 @@ from dae.testing.foobar_import import foobar_gpf
 
 @pytest.fixture(scope="module")
 def imported_study(
-        tmp_path_factory: pytest.TempPathFactory,
-        genotype_storage: GenotypeStorage) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp(
-        f"query_by_genes_effects_{genotype_storage.storage_id}")
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> GenotypeData:
+    root_path = tmp_path_factory.mktemp("test_f1_gene_effects")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
@@ -40,7 +42,7 @@ bar    11  .  G   A,C,T .    .      .    GT     0/1 0/2 1/3 1/2
 bar    12  .  G   A,C,T .    .      .    GT     0/1 0/2 1/3 1/2
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "effects_trio_vcf", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
@@ -59,7 +61,6 @@ bar    12  .  G   A,C,T .    .      .    GT     0/1 0/2 1/3 1/2
                 "include_reference": True,
             },
         })
-    return study
 
 
 # --------------------------------------------------------------

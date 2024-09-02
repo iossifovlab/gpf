@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Callable
 
 import pytest
 
@@ -41,12 +42,13 @@ f1       c1       d1    m1    2    2     prb
 def multi_study(
     tmp_path_factory: pytest.TempPathFactory,
     multi_vcf: tuple[pathlib.Path, pathlib.Path],
-    genotype_storage: GenotypeStorage,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeData:
     # pylint: disable=import-outside-toplevel
     from dae.testing.foobar_import import foobar_gpf
 
-    root_path = tmp_path_factory.mktemp(genotype_storage.storage_id)
+    root_path = tmp_path_factory.mktemp("test_best_state")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
     ped_path, vcf_path = multi_vcf
@@ -56,12 +58,13 @@ def multi_study(
 
 
 @pytest.mark.parametrize("region, count, best_state", [
-    [Region("foo", 10, 10), 1, "122/100/000"],  # first allele
-    [Region("foo", 12, 12), 0, None],  # all reference
+    (Region("foo", 10, 10), 1, "122/100/000"),  # first allele
+    (Region("foo", 12, 12), 0, None),  # all reference
 ])
 def test_trios_multi(
-        multi_study: GenotypeData, region: Region, count: int,
-        best_state: str | None) -> None:
+    multi_study: GenotypeData, region: Region, count: int,
+    best_state: str | None,
+) -> None:
 
     variants = list(
         multi_study.query_variants(

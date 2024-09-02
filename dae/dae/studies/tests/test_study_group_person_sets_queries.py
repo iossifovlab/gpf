@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
+from typing import Any, cast
 
 import pytest
 
@@ -27,8 +28,7 @@ def gpf_fixture(
         # DuckDb Storage
         "duckdb": {
             "id": "duckdb",
-            "storage_type": "duckdb",
-            "db": "duckdb_storage/dev_storage.db",
+            "storage_type": "duckdb_parquet",
             "base_dir": str(root_path),
         },
 
@@ -43,7 +43,8 @@ def gpf_fixture(
     if not GENOTYPE_STORAGE_REGISTRY.get_all_genotype_storage_ids():
         for storage_config in storage_configs.values():
             GENOTYPE_STORAGE_REGISTRY\
-                .register_storage_config(storage_config)
+                .register_storage_config(
+                    cast(dict[str, Any], storage_config))
 
     genotype_storage = GENOTYPE_STORAGE_REGISTRY.get_genotype_storage(
         request.param)
@@ -51,8 +52,7 @@ def gpf_fixture(
 
     root_path = tmp_path_factory.mktemp(
         "study_group_person_set_queries")
-    gpf_instance = acgt_gpf(root_path, storage=genotype_storage)
-    return gpf_instance
+    return acgt_gpf(root_path, storage=genotype_storage)
 
 
 @pytest.fixture(scope="module")
@@ -91,7 +91,7 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
             },
         },
     }
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
         gpf_fixture,
@@ -137,7 +137,6 @@ chr1   3   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0
                 ],
             },
         })
-    return study
 
 
 @pytest.fixture(scope="module")
@@ -177,7 +176,7 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
             },
         },
     }
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "study_2", ped_path, [vcf_path1],
         gpf_fixture,
@@ -223,7 +222,6 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
                 ],
             },
         })
-    return study
 
 
 @pytest.fixture()

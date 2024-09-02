@@ -3,7 +3,10 @@ from typing import Any, cast
 import yaml
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
+from dae.duckdb_storage.duckdb_genotype_storage import (
+    AbstractDuckDbStorage,
+    DuckDbGenotypeStorage,
+)
 from dae.import_tools.import_tools import ImportProject, save_study_config
 from dae.schema2_storage.schema2_import_storage import (
     Schema2ImportStorage,
@@ -20,14 +23,23 @@ class DuckDbImportStorage(Schema2ImportStorage):
 
     @classmethod
     def _do_import_dataset(
-            cls, project: ImportProject) -> Schema2DatasetLayout:
+        cls, project: ImportProject,
+    ) -> Schema2DatasetLayout:
         genotype_storage = project.get_genotype_storage()
-        assert isinstance(genotype_storage, DuckDbGenotypeStorage)
+        assert isinstance(
+            genotype_storage,
+            (AbstractDuckDbStorage, DuckDbGenotypeStorage))
         layout = load_schema2_dataset_layout(
             project.get_parquet_dataset_dir(),
         )
+        work_dir = project.work_dir
+
         return genotype_storage.import_dataset(
-            project.study_id, layout, project.get_partition_descriptor())
+            work_dir,
+            project.study_id,
+            layout,
+            project.get_partition_descriptor(),
+        )
 
     @classmethod
     def do_study_config(
@@ -37,7 +49,7 @@ class DuckDbImportStorage(Schema2ImportStorage):
         genotype_storage = project.get_genotype_storage()
         if project.get_processing_parquet_dataset_dir() is not None:
             meta = cls.load_meta(project)
-            study_config = yaml.load(meta["study"], yaml.Loader)
+            study_config = yaml.safe_load(meta["study"])
             study_config["id"] = project.study_id
         else:
             variants_types = project.get_variant_loader_types()

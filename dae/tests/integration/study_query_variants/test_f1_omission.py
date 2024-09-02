@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+from collections.abc import Callable
 
 import pytest
 
@@ -12,10 +13,11 @@ from dae.utils.regions import Region
 
 @pytest.fixture(scope="module")
 def imported_study(
-        tmp_path_factory: pytest.TempPathFactory,
-        genotype_storage: GenotypeStorage) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp(
-        f"query_by_genes_effects_{genotype_storage.storage_id}")
+    tmp_path_factory: pytest.TempPathFactory,
+    genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
+) -> GenotypeData:
+    root_path = tmp_path_factory.mktemp("test_f1_omission")
+    genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
@@ -37,7 +39,7 @@ foo    14  .  C   T,A   .    .      .    GT     1/1 2/2 1/1 2/2
 foo    15   . C   A,T   .    .      .    GT     1/1 0/0 0/1 0/0
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "effects_trio_vcf", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
@@ -56,7 +58,6 @@ foo    15   . C   A,T   .    .      .    GT     1/1 0/0 0/1 0/0
                 "include_reference": True,
             },
         })
-    return study
 
 
 @pytest.mark.parametrize(
@@ -151,8 +152,8 @@ def test_f1_canonical_omission_return_reference_or_unknown(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
-    return_reference: bool,
-    return_unknown: bool,
+    return_reference: bool,  # noqa: FBT001
+    return_unknown: bool,  # noqa: FBT001
     count: int,
 ) -> None:
     region = Region("foo", position, position)
@@ -179,8 +180,8 @@ def test_f1_non_canonical_omission_return_reference_or_unknown(
     imported_study: GenotypeData,
     position: int,
     inheritance: str,
-    return_reference: bool,
-    return_unknown: bool,
+    return_reference: bool,  # noqa: FBT001
+    return_unknown: bool,  # noqa: FBT001
     count: int,
 ) -> None:
     region = Region("foo", position, position)
