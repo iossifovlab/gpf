@@ -601,7 +601,7 @@ GENOMIC_SCORES_TEMPLATE = """
                     style="cursor: pointer"
                     onclick="openModal(title)">
                 {%- else -%}
-                NO HISTOGRAM
+                <p>No histogram: {{ hist.reason }}</p>
                 {%- endif -%}
             </td>
 
