@@ -1,4 +1,4 @@
-import { GeneSetsLocalState } from './gene-sets-state';
+import { GeneSetsLocalState } from './gene-sets-local-state';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
 import { GeneSetsCollection, GeneSet, GeneSetType } from './gene-sets';
