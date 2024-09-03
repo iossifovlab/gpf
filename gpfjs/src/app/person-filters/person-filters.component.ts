@@ -7,6 +7,7 @@ import { IsNotEmpty, ValidateNested } from 'class-validator';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { take } from 'rxjs';
 import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-person-filters',
@@ -39,6 +40,7 @@ export class PersonFiltersComponent extends StatefulComponentNgRx implements OnC
   public ngOnChanges(): void {
     this.store.select(selectPersonFilters).pipe(take(1)).subscribe(state => {
       // set default state
+      const clonedState = cloneDeep(state);
       for (const filter of this.filters) {
         let filterState = null;
         if (filter.sourceType === 'continuous') {
@@ -56,30 +58,30 @@ export class PersonFiltersComponent extends StatefulComponentNgRx implements OnC
         this.personFiltersState.set(filter.name, filterState);
       }
 
-      // // restore state
-      // const filterStates: PersonFilterState[] = this.isFamilyFilters ? state.familyFilters : state.personFilters;
-      // if (filterStates.length) {
-      //   for (const filterState of filterStates) {
-      //     const filterType = filterState.sourceType === 'continuous' ? ContinuousFilterState : CategoricalFilterState;
-      //     let selection = null;
-      //     if (filterState.sourceType === 'continuous') {
-      //       const filterStateSelection = filterState.selection as ContinuousSelection;
-      //       selection = new ContinuousSelection(
-      //         filterStateSelection.min,
-      //         filterStateSelection.max,
-      //         filterStateSelection.domainMin,
-      //         filterStateSelection.domainMax,
-      //       );
-      //     } else {
-      //       selection = new CategoricalSelection((filterState.selection as CategoricalSelection).selection);
-      //     }
-      //     const newFilter = new filterType(
-      //       filterState.id, filterState.sourceType, filterState.role,
-      //       filterState.source, filterState.from, selection
-      //     );
-      //     this.personFiltersState.set(filterState.id, newFilter);
-      //   }
-      // }
+      // restore state
+      const filterStates: PersonFilterState[] = this.isFamilyFilters ? clonedState.familyFilters : clonedState.personFilters;
+      if (filterStates.length) {
+        for (const filterState of filterStates) {
+          const filterType = filterState.sourceType === 'continuous' ? ContinuousFilterState : CategoricalFilterState;
+          let selection = null;
+          if (filterState.sourceType === 'continuous') {
+            // const filterStateSelection = filterState.selection as ContinuousSelection;
+            // selection = new ContinuousSelection(
+            //   filterStateSelection.min,
+            //   filterStateSelection.max,
+            //   filterStateSelection.domainMin,
+            //   filterStateSelection.domainMax,
+            // );
+          } else {
+            // selection = new CategoricalSelection((filterState.selection as CategoricalSelection).selection);
+          }
+          const newFilter = new filterType(
+            filterState.id, filterState.sourceType, filterState.role,
+            filterState.source, filterState.from, selection
+          );
+          this.personFiltersState.set(filterState.id, newFilter);
+        }
+      }
     });
     this.updateFilters();
   }

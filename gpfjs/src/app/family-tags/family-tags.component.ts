@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { selectFamilyTags, setFamilyTags } from './family-tags.state';
+import { initialState, selectFamilyTags, setFamilyTags } from './family-tags.state';
 // import { FamilyTags } from './family-tags';
 import { Store } from '@ngrx/store';
 import { take } from 'rxjs';
@@ -21,7 +21,7 @@ export class FamilyTagsComponent implements OnInit {
   public deselectedTags: string[] = [];
   public filtersButtonsState: Record<string, number> = {};
   public tagIntersection = true; // mode "And"
-  public familyTags: FamilyTags;
+  public familyTags: FamilyTags = cloneDeep(initialState);
 
   public constructor(protected store: Store) { }
 
@@ -34,10 +34,11 @@ export class FamilyTagsComponent implements OnInit {
       .select(selectFamilyTags)
       .pipe(take(1))
       .subscribe((familyTags: FamilyTags) => {
+        const familyTagsClone = cloneDeep(familyTags);
         this.restoreFamilyTags(
-          familyTags.selectedFamilyTags,
-          familyTags.deselectedFamilyTags,
-          familyTags.tagIntersection
+          familyTagsClone.selectedFamilyTags,
+          familyTagsClone.deselectedFamilyTags,
+          familyTagsClone.tagIntersection
         );
       });
   }

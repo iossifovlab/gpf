@@ -58,11 +58,11 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
     }
 
     this.store.select(selectDatasetId).pipe(
+      take(1),
       switchMap(selectDatasetIdState => {
         const selectedDatasetId = selectDatasetIdState;
-        return this.variantReportsService.getVariantReport(selectedDatasetId);
+        return this.variantReportsService.getVariantReport(selectedDatasetId).pipe(take(1));
       }),
-      take(1)
     ).subscribe({
       next: (variantReport: VariantReport) => {
         this.familiesCounters = variantReport.familyReport.familiesCounters;

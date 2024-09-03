@@ -1,5 +1,5 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { Observable, Subscription, zip } from 'rxjs';
+import { combineLatest, Observable, Subscription, zip } from 'rxjs';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
@@ -7,7 +7,7 @@ import { Dataset, PersonSet } from '../datasets/datasets';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { filter, map, switchMap, take } from 'rxjs/operators';
 // import { StudyFiltersState } from 'app/study-filters/study-filters.state';
-import { clone, isEmpty } from 'lodash';
+import { clone } from 'lodash';
 import { NavigationStart, Router } from '@angular/router';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -92,12 +92,6 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
       this.genotypePreviewVariantsArray = null;
     });
 
-    this.store.subscribe(state => {
-      this.genotypeBrowserState['familyIds'] = state['familyIds'];
-      this.genotypePreviewVariantsArray = null;
-    });
-
-
     this.loadingService.interruptEvent.subscribe(_ => {
       this.queryService.cancelStreamPost();
       this.loadingService.setLoadingStop();
@@ -112,7 +106,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   }
 
   private getGenotypeBrowserState(): Observable<object> {
-    return zip(
+    return combineLatest(
       this.store.select(selectVariantTypes),
       this.store.select(selectEffectTypes),
       this.store.select(selectGenders),
@@ -134,7 +128,6 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
       this.store.select(selectUniqueFamilyVariantsFilter),
       this.store.select(selectStudyFilters)
     ).pipe(
-      take(1),
       map(([
         variantTypesState,
         effectTypesState,
@@ -168,28 +161,36 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
             presentInParentRarity['rarity']['maxFreq'] = presentInParentState.rarityIntervalEnd;
           }
         }
-
         const state = {
-          variantTypes: variantTypesState,
-          effectTypes: effectTypesState,
-          genders: gendersState,
-          inheritanceTypes: inheritanceTypesState,
-          presentInChild: presentInChildState,
-          studyTypes: studyTypesState,
-          ...pedigreeSelectorState,
-          familyTypes: familyTypeFilterState,
-          familyIds: familyIdsState,
-          ...familyTagsState,
-          ...personFiltersState,
-          geneSymbols: geneSymbolsState,
-          ...geneSetsState,
-          ...geneScoresState,
-          regionsFilters: regionsFiltersState,
-          genomicScores: genomicScoresState,
-          personIds: personIdsState,
+          ...(variantTypesState?.length && {variantTypes: variantTypesState}),
+          ...(effectTypesState?.length && {effectTypes: effectTypesState}),
+          ...(gendersState?.length && {gender: gendersState}),
+          ...{inheritanceTypeFilter: inheritanceTypesState},
+          ...(presentInChildState?.length && {presentInChild: presentInChildState}),
+          ...(studyTypesState?.length && {studyTypes: studyTypesState}),
+          ...(familyTypeFilterState?.length && {familyTypes: familyTypeFilterState}),
+          ...(familyIdsState?.length && {familyIds: familyIdsState}),
+          ...(geneSymbolsState?.length && {geneSymbols: geneSymbolsState}),
+          ...(regionsFiltersState?.length && {regionsFilters: regionsFiltersState}),
+          ...{genomicScores: genomicScoresState},
+          ...(personIdsState?.length && {personIds: personIdsState}),
+          ...{studyFilters: studyFiltersState},
           uniqueFamilyVariants: uniqueFamilyVariantsFilterState,
-          studyFilters: studyFiltersState,
-          ...presentInParentRarity,
+          personSetCollection: {...pedigreeSelectorState},
+          ...(!familyTagsState?.tagIntersection && {tagIntersection: familyTagsState.tagIntersection}),
+          ...(familyTagsState.selectedFamilyTags?.length && {selectedFamilyTags: familyTagsState.selectedFamilyTags}),
+          ...(familyTagsState.deselectedFamilyTags?.length && {deselectedFamilyTags: familyTagsState.deselectedFamilyTags}),
+          ...(personFiltersState.familyFilters?.length && {familyFilters: personFiltersState.familyFilters}),
+          ...(personFiltersState.personFilters?.length && {personFilters: personFiltersState.personFilters}),
+          ...(geneSetsState.geneSet && {
+            geneSet: geneSetsState.geneSet.name,
+            geneSetsCollection: geneSetsState.geneSetsCollection.name,
+            geneTypes: geneSetsState.geneSetsTypes
+          }),
+          ...(geneScoresState.geneScores && {geneScores: geneScoresState.geneScores}),
+          ...(geneScoresState.rangeStart && {rangeStart: geneScoresState.rangeStart}),
+          ...(geneScoresState.rangeEnd && {rangeEnd: geneScoresState.rangeEnd}),
+          ...(presentInParentRarity.presentInParent?.length && {presentInParent: {presentInParent: presentInParentRarity.presentInParent}}),
         };
         return state;
       })

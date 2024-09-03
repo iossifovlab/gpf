@@ -1,27 +1,31 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
-import { PersonFilterInterface } from './person-filters';
+import { PersonFilterState } from './person-filters';
 import { cloneDeep } from 'lodash';
 export const initialState: {
-  familyFilters: PersonFilterInterface[];
-  personFilters: PersonFilterInterface[];
+  familyFilters: PersonFilterState[];
+  personFilters: PersonFilterState[];
 } = {
   familyFilters: [],
   personFilters: [],
 };
 
 export const selectPersonFilters = createFeatureSelector<{
-  familyFilters: PersonFilterInterface[];
-  personFilters: PersonFilterInterface[];
+  familyFilters: PersonFilterState[];
+  personFilters: PersonFilterState[];
 }>('personFilters');
 
 export const setFamilyFilters = createAction(
   '[Genotype] Set familyFilters values',
-  props<{ familyFilters: PersonFilterInterface[] }>()
+  props<{ familyFilters: PersonFilterState[] }>()
 );
 
 export const setPersonFilters = createAction(
   '[Genotype] Set personFilters values',
-  props<{ personFilters: PersonFilterInterface[] }>()
+  props<{ personFilters: PersonFilterState[] }>()
+);
+
+export const resetPersonFilters = createAction(
+  '[Genotype] Reset personFilters values',
 );
 
 export const personFiltersReducer = createReducer(
@@ -34,5 +38,6 @@ export const personFiltersReducer = createReducer(
     ...state,
     personFilters: personFilters,
   })),
+  on(resetPersonFilters, (state) => cloneDeep(initialState)),
 );
 

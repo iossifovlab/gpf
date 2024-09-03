@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, EventEmitter, Output, ViewChild } from '@angular/core';
 import { ContinuousMeasure } from '../measures/measures';
-import { ContinuousFilterState, PersonFilterState } from '../person-filters/person-filters';
+import { ContinuousFilterState, ContinuousSelection, PersonFilterState } from '../person-filters/person-filters';
 import { PersonFilter } from '../datasets/datasets';
 import { Store } from '@ngrx/store';
 // import { PersonFiltersState } from 'app/person-filters/person-filters.state';
@@ -8,6 +8,7 @@ import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-
 import { selectPersonFilters } from 'app/person-filters/person-filters.state';
 import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
 import { take } from 'rxjs';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-multi-continuous-filter',
@@ -30,9 +31,9 @@ export class MultiContinuousFilterComponent extends StatefulComponentNgRx implem
   }
 
   public ngOnInit(): void {
-    // this.store.select(selectPersonFilters).pipe(take(1)).subscribe(personFiltersState => {
-    //   this.restoreContinuousFilter(personFiltersState);
-    // });
+    this.store.select(selectPersonFilters).pipe(take(1)).subscribe(personFiltersState => {
+      this.restoreContinuousFilter(cloneDeep(personFiltersState));
+    });
   }
 
   public restoreContinuousFilter(

@@ -64,9 +64,9 @@ export class PersonFilterState implements PersonFilterInterface {
   public source: string;
 
   public constructor(
-    public readonly id: string,
-    public readonly sourceType: string,
-    public readonly role: string,
+    public id: string,
+    public sourceType: string,
+    public role: string,
     source: string,
     public from: string,
     selection: Selection

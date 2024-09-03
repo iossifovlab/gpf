@@ -26,6 +26,6 @@ export const gendersReducer = createReducer(
   initialState,
   on(setGenders, (state: string[], {genders}) => [...genders]),
   on(addGender, (state: string[], {gender}) => [...state, gender]),
-  on(addGender, (state: string[], {gender}) => state.filter(gen => gen !== gender)),
+  on(removeGender, (state: string[], {gender}) => state.filter(gen => gen !== gender)),
   on(resetGenders, state => [...initialState]),
 );

@@ -1,4 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { cloneDeep } from 'lodash';
+
 export const initialState: string[] = [];
 
 export const selectFamilyIds = createFeatureSelector<string[]>('familyIds');
@@ -14,6 +16,6 @@ export const resetFamilyIds = createAction(
 
 export const familyIdsReducer = createReducer(
   initialState,
-  on(setFamilyIds, (state, {familyIds}) => familyIds),
+  on(setFamilyIds, (state, {familyIds}) => cloneDeep(familyIds)),
   on(resetFamilyIds, state => []),
 );

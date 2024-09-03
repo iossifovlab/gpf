@@ -23,7 +23,7 @@ export const familyTagsReducer = createReducer(
   initialState,
   on(
     setFamilyTags,
-    (state, { selectedFamilyTags, deselectedFamilyTags, tagIntersection }) => ({
+    (state, { selectedFamilyTags, deselectedFamilyTags, tagIntersection }) => cloneDeep({
       selectedFamilyTags: selectedFamilyTags,
       deselectedFamilyTags: deselectedFamilyTags,
       tagIntersection: tagIntersection,
