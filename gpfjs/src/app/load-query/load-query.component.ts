@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { QueryService } from '../query/query.service';
 import { take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
+import { of } from 'rxjs';
 
 const PAGE_TYPE_TO_NAVIGATE = {
   genotype: (datasetId: string): string[] => ['datasets', datasetId, 'genotype-browser'],
@@ -48,7 +49,7 @@ export class LoadQueryComponent implements OnInit {
   private restoreQuery(state: object, page: string): void {
     if (page in PAGE_TYPE_TO_NAVIGATE) {
       const navigationParams: string[] = PAGE_TYPE_TO_NAVIGATE[page](state['datasetId']);
-      // this.store = state;
+      this.store.source = of(state); // Temporary solution
       this.router.navigate(navigationParams);
     }
   }
