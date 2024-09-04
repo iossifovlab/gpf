@@ -457,7 +457,7 @@ const appRoutes: Routes = [
       genomicScores: genomicScoresReducer,
       uniqueFamilyVariantsFilter: uniqueFamilyVariantsFilterReducer,
       familyTypeFilter: familyTypeFilterReducer,
-      studyTypes: studyTypesReducer,
+      studyTypes: studyTypesReducer
     }),
   ],
   providers: [

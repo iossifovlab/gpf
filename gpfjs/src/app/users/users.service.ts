@@ -3,12 +3,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
-import { Logout, User, UserInfo } from './users';
+import { User, UserInfo } from './users';
 import { LocationStrategy } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { catchError, map, tap, take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
 import { FederationCredential, FederationJson } from 'app/federation-credentials/federation-credentials';
+import { logout } from './actions';
 
 @Injectable()
 export class UsersService {
@@ -46,8 +47,7 @@ export class UsersService {
       take(1),
       switchMap(() => this.http.post(this.config.baseUrl + this.logoutUrl, {}, options)),
       tap(() => {
-        // this.store.dispatch(new StateResetAll());
-        this.store.dispatch(new Logout());
+        this.store.dispatch(logout());
         window.location.href = this.locationStrategy.getBaseHref();
       })
     );

@@ -1,4 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { logout } from 'app/users/actions';
 export const initialState: string[] = [];
 
 export const selectInheritanceTypes = createFeatureSelector<string[]>('inheritanceTypes');
@@ -15,5 +16,5 @@ export const resetInheritanceTypes = createAction(
 export const inheritanceTypesReducer = createReducer(
   initialState,
   on(setInheritanceTypes, (state: string[], {inheritanceTypes}) => [...inheritanceTypes]),
-  on(resetInheritanceTypes, state => [...initialState]),
+  on(logout, resetInheritanceTypes, state => [...initialState]),
 );

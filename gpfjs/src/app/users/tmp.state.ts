@@ -1,4 +1,4 @@
-import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { createReducer, on } from '@ngrx/store';
 import { GeneProfiles, initialState as geneProfilesInitialState } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { GeneScoresState, initialState as geneScoresInitialState } from 'app/gene-scores/gene-scores.state';
 import { PedigreeSelector, initialState as pedigreeSelectorInitialState } from 'app/pedigree-selector/pedigree-selector.state';
@@ -25,6 +25,8 @@ import { initialState as familyIdsInitialState } from 'app/family-ids/family-ids
 import { GenomicScoreInterface } from 'app/genotype-browser/genotype-browser';
 import { PersonFilterInterface } from 'app/person-filters/person-filters';
 import { FamilyTags } from 'app/family-tags/family-tags';
+import { cloneDeep } from 'lodash';
+import { logout } from './actions';
 
 export interface State {
   errors: string[];
@@ -84,3 +86,7 @@ export const initialState: State = {
   studyTypes: studyTypesInitialState,
 };
 
+export const reducer = createReducer(
+  initialState,
+  on(logout, () => cloneDeep(initialState))
+);

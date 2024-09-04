@@ -1,4 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { logout } from 'app/users/actions';
 import { cloneDeep } from 'lodash';
 
 export interface EnrichmentModels {
@@ -29,5 +30,5 @@ export const enrichmentModelsReducer = createReducer(
     enrichmentBackgroundModel: enrichmentBackgroundModel,
     enrichmentCountingModel: enrichmentCountingModel,
   })),
-  on(resetEnrichmentModels, state => cloneDeep(initialState)),
+  on(logout, resetEnrichmentModels, state => cloneDeep(initialState)),
 );

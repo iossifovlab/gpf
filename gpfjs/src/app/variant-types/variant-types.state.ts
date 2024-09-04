@@ -1,4 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { logout } from 'app/users/actions';
+
 export const initialState: string[] = [];
 
 export const selectVariantTypes = createFeatureSelector<string[]>('variantTypes');
@@ -15,5 +17,5 @@ export const resetVariantTypes = createAction(
 export const variantTypesReducer = createReducer(
   initialState,
   on(setVariantTypes, (state, {variantTypes}) => [...variantTypes]),
-  on(resetVariantTypes, state => []),
+  on(logout, resetVariantTypes, state => []),
 );

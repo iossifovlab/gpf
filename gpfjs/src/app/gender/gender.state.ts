@@ -1,4 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { logout } from 'app/users/actions';
+
 export const initialState = ['male', 'female', 'unspecified'];
 
 export const selectGenders = createFeatureSelector<string[]>('genders');
@@ -27,5 +29,5 @@ export const gendersReducer = createReducer(
   on(setGenders, (state: string[], {genders}) => [...genders]),
   on(addGender, (state: string[], {gender}) => [...state, gender]),
   on(removeGender, (state: string[], {gender}) => state.filter(gen => gen !== gender)),
-  on(resetGenders, state => [...initialState]),
+  on(logout, resetGenders, state => [...initialState]),
 );

@@ -1,4 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { logout } from 'app/users/actions';
 export const initialState: string[] = [];
 
 export const selectEffectTypes = createFeatureSelector<string[]>('effectTypes');
@@ -27,5 +28,5 @@ export const effectTypesReducer = createReducer(
   on(setEffectTypes, (state: string[], {effectTypes}) => [...effectTypes]),
   on(addEffectType, (state: string[], {effectType}) => [...state, effectType]),
   on(removeEffectType, (state: string[], {effectType}) => state.filter(eff => eff !== effectType)),
-  on(resetEffectTypes, state => [...initialState]),
+  on(logout, resetEffectTypes, state => [...initialState]),
 );

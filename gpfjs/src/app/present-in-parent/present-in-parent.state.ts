@@ -1,4 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { logout } from 'app/users/actions';
 import { cloneDeep } from 'lodash';
 
 export interface PresentInParent {
@@ -29,5 +30,5 @@ export const resetPresentInParent = createAction(
 export const presentInParentReducer = createReducer(
   initialState,
   on(setPresentInParent, (state: PresentInParent, {presentInParent}) => cloneDeep(presentInParent)),
-  on(resetPresentInParent, state => cloneDeep(initialState)),
+  on(logout, resetPresentInParent, state => cloneDeep(initialState)),
 );

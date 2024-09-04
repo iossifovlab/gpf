@@ -1,4 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { logout } from 'app/users/actions';
 import { cloneDeep } from 'lodash';
 
 export interface PhenoToolMeasureState {
@@ -25,5 +26,5 @@ export const resetPhenoToolMeasure = createAction(
 export const phenoToolMeasureReducer = createReducer(
   initialState,
   on(setPhenoToolMeasure, (state, { phenoToolMeasure }) => cloneDeep(phenoToolMeasure)),
-  on(resetPhenoToolMeasure, state => cloneDeep(initialState)),
+  on(logout, resetPhenoToolMeasure, state => cloneDeep(initialState)),
 );

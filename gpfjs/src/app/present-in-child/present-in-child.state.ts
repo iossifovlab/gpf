@@ -1,4 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { logout } from 'app/users/actions';
+
 export const initialState: string[] = ['proband only', 'proband and sibling'];
 
 export const selectPresentInChild = createFeatureSelector<string[]>('presentInChild');
@@ -15,5 +17,5 @@ export const resetPresentInChild = createAction(
 export const presentInChildReducer = createReducer(
   initialState,
   on(setPresentInChild, (state: string[], {presentInChild}) => [...presentInChild]),
-  on(resetPresentInChild, state => [...initialState]),
+  on(logout, resetPresentInChild, state => [...initialState]),
 );

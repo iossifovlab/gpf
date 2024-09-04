@@ -1,5 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { GenomicScoreInterface } from 'app/genotype-browser/genotype-browser';
+import { logout } from 'app/users/actions';
 import { cloneDeep } from 'lodash';
 
 export const initialState: GenomicScoreInterface[] = [];
@@ -18,5 +19,5 @@ export const resetGenomicScores = createAction(
 export const genomicScoresReducer = createReducer(
   initialState,
   on(setGenomicScores, (state, {genomicScores}) => cloneDeep(genomicScores)),
-  on(resetGenomicScores, state => cloneDeep(initialState)),
+  on(logout, resetGenomicScores, state => cloneDeep(initialState)),
 );

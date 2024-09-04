@@ -8,26 +8,8 @@ import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngrx/store';
 import { selectDatasetId, setDatasetId } from './datasets.state';
 import { StatefulComponent } from 'app/common/stateful-component';
-import { resetAllErrors } from 'app/common/errors.state';
-import { resetFamilyIds } from 'app/family-ids/family-ids.state';
-import {
-  resetExpandedDatasets,
-  selectExpandedDatasets,
-  setExpandedDatasets
-} from 'app/dataset-node/dataset-node.state';
-import { resetPersonIds } from 'app/person-ids/person-ids.state';
-import { resetStudyFilters } from 'app/study-filters/study-filters.state';
-import { resetEffectTypes } from 'app/effect-types/effect-types.state';
-import { resetGenders } from 'app/gender/gender.state';
-import { resetVariantTypes } from 'app/variant-types/variant-types.state';
-import { resetInheritanceTypes } from 'app/inheritancetypes/inheritancetypes.state';
-import { resetEnrichmentModels } from 'app/enrichment-models/enrichment-models.state';
-import { resetGeneScoresValues } from 'app/gene-scores/gene-scores.state';
-import { resetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
-import { resetPresentInChild } from 'app/present-in-child/present-in-child.state';
-import { resetPresentInParent } from 'app/present-in-parent/present-in-parent.state';
-import { resetPhenoToolMeasure } from 'app/pheno-tool-measure/pheno-tool-measure.state';
-import { resetFamilyTags } from 'app/family-tags/family-tags.state';
+import { selectExpandedDatasets, setExpandedDatasets } from 'app/dataset-node/dataset-node.state';
+import { logout } from 'app/users/actions';
 
 @Component({
   selector: 'gpf-datasets',
@@ -216,27 +198,7 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
     /* In order to have state separation between the dataset tools,
     we clear the state if the previous url is from a different dataset tool */
     if (DatasetsComponent.previousUrl !== url && DatasetsComponent.previousUrl.startsWith('/datasets')) {
-      // Do not reset GeneProfiles DatasetNode, Dataset states
-      this.store.dispatch(resetAllErrors());
-      this.store.dispatch(resetFamilyIds());
-      this.store.dispatch(resetExpandedDatasets());
-      this.store.dispatch(resetFamilyTags());
-      this.store.dispatch(resetEffectTypes());
-      this.store.dispatch(resetPersonIds());
-      // this.store.dispatch(resetPersonFilters());
-      this.store.dispatch(resetStudyFilters());
-      this.store.dispatch(resetGenders());
-      this.store.dispatch(resetVariantTypes());
-      this.store.dispatch(resetInheritanceTypes());
-      this.store.dispatch(resetEnrichmentModels());
-      // this.store.dispatch(resetGeneSets());
-      this.store.dispatch(resetGeneScoresValues());
-      this.store.dispatch(resetGeneSymbols());
-      this.store.dispatch(resetPresentInChild());
-      this.store.dispatch(resetPresentInParent());
-      this.store.dispatch(resetPhenoToolMeasure());
-      this.store.dispatch(resetAllErrors());
-      // ...
+      this.store.dispatch(logout());
     }
 
     this.selectedTool = url.split('/').pop();

@@ -1,4 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { logout } from 'app/users/actions';
+
 export const initialState: string[] = [];
 
 export const selectPersonIds = createFeatureSelector<string[]>('personIds');
@@ -15,5 +17,5 @@ export const resetPersonIds = createAction(
 export const personIdsReducer = createReducer(
   initialState,
   on(setPersonIds, (state, {personIds}) => personIds),
-  on(resetPersonIds, state => []),
+  on(logout, resetPersonIds, state => []),
 );

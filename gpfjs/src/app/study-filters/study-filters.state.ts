@@ -1,4 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { logout } from 'app/users/actions';
+
 export const initialState: string[] = [];
 
 export const selectStudyFilters = createFeatureSelector<string[]>('studyFilters');
@@ -15,5 +17,5 @@ export const resetStudyFilters = createAction(
 export const studyFiltersReducer = createReducer(
   initialState,
   on(setStudyFilters, (state, {studyFilters}) => studyFilters),
-  on(resetStudyFilters, state => []),
+  on(logout, resetStudyFilters, state => []),
 );

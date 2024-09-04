@@ -1,4 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { logout } from 'app/users/actions';
 import { cloneDeep } from 'lodash';
 export const initialState: string[] = [];
 
@@ -16,5 +17,5 @@ export const resetGeneSymbols = createAction(
 export const geneSymbolsReducer = createReducer(
   initialState,
   on(setGeneSymbols, (state: string[], { geneSymbols }) => [...geneSymbols]),
-  on(resetGeneSymbols, state => cloneDeep(initialState)),
+  on(logout, resetGeneSymbols, state => cloneDeep(initialState)),
 );

@@ -1,6 +1,7 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { PersonFilterState } from './person-filters';
 import { cloneDeep } from 'lodash';
+import { logout } from 'app/users/actions';
 
 export interface PersonAndFamilyFilters {
   familyFilters: PersonFilterState[];
@@ -38,6 +39,6 @@ export const personFiltersReducer = createReducer(
     ...state,
     personFilters: personFilters,
   })),
-  on(resetPersonFilters, (state) => cloneDeep(initialState)),
+  on(logout, resetPersonFilters, (state) => cloneDeep(initialState)),
 );
 

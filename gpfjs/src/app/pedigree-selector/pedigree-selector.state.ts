@@ -1,4 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { logout } from 'app/users/actions';
 import { cloneDeep } from 'lodash';
 
 export interface PedigreeSelector {
@@ -26,5 +27,5 @@ export const resetPedigreeSelector = createAction(
 export const pedigreeSelectorReducer = createReducer(
   initialState,
   on(setPedigreeSelector, (state: PedigreeSelector, { pedigreeSelector }) => cloneDeep(pedigreeSelector)),
-  on(resetPedigreeSelector, state => cloneDeep(initialState))
+  on(logout, resetPedigreeSelector, state => cloneDeep(initialState))
 );
