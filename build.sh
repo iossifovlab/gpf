@@ -181,24 +181,6 @@ EOT
     build_run_container /wd/integration/local/entrypoint.sh
   }
 
-  build_stage "Run GPF remote instance"
-  {
-
-    local -A ctx_gpf_remote
-    build_run_ctx_init ctx:ctx_gpf_remote "persistent" "container" "${gpf_dev_image_ref}" \
-      ports:21010 \
-      --hostname gpfremote \
-      --network "${ctx_network["network_id"]}" \
-      --env DAE_DB_DIR="/wd/data/data-hg19-remote/" \
-      --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-      --env WDAE_EMAIL_HOST="mailhog"
-    defer_ret build_run_ctx_reset ctx:ctx_gpf_remote
-
-    build_run_container_detached ctx:ctx_gpf_remote /wd/integration/remote/entrypoint.sh
-
-    build_run_ctx_persist ctx:ctx_gpf_remote
-  }
-
   build_stage "Diagnostics"
   {
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
