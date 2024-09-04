@@ -1,11 +1,11 @@
 Annotation Infrastructure
 =========================
 
-Annotation is an essential step in any genomic analysis. It is the process of 
+Annotation is an essential step in any genomic analysis. It is the process of
 assigning attributes or properties to a set of objects that an analyst studies.
-For example, one can annotate the genetic variants identified in a group of 
-case and control individuals in a genetic study with a prediction of 
-pathogenicity of the variants and estimates for the conservation at the 
+For example, one can annotate the genetic variants identified in a group of
+case and control individuals in a genetic study with a prediction of
+pathogenicity of the variants and estimates for the conservation at the
 loci of the variants.
 
 GPF has a well-developed infrastructure for annotation of genetic variants.
@@ -23,7 +23,7 @@ Annotators can be written as so:
 
 .. code:: yaml
 
-    - <annotator type>: 
+    - <annotator type>:
         setting 1: value
         setting 2: other value
         ...
@@ -35,14 +35,14 @@ Syntax shortcuts are available, such as:
 
 .. code:: yaml
 
-    - <annotator type> 
-  
+    - <annotator type>
+
 or
 
-.. code:: yaml 
+.. code:: yaml
 
     - <annotator type>: <resource id>
-    
+
 These short forms however lack the ability to configure the annotator's settings.
 
 Preamble
@@ -78,37 +78,37 @@ Annotators
 This is a list of all available annotators and their settings in the GPF system.
 
 
-Annotator settings
-##################
+Annotator attribute fields
+##########################
 
-=================  ========  ======
-Setting            Purpose   Values
-=================  ========  ======
-resource_id
-genome
-gene_models
-chain
-source_genome
-target_genome
-input_gene_list
-=================  ========  ======
+These are the fields that can be set when configuring an annotator's attributes.
 
-Annotator attributes
-####################
+=================  ================
+Setting            Description
+=================  ================
+source             String. The source from which to take the attribute.
+name               String. How the attribute will be labeled in the output annotation.
+destination        String. Deprecated variation of ``name``.
+internal           Boolean. Whether to discard the attribute when writing the output file. Useful for temporary attributes used to calculate other attributes.
+input_annotatable  String. What annotatable object to use instead of the default one read from the input. Used with liftover and normalize allele annotators.
+value_transform    String. Python function to evaluate on each value of the attribute. Examples: ``len(value)``, ``value / 10``, etc.
+=================  ================
 
-=================  ========  ======
-Setting            Purpose   Values
-=================  ========  ======
-source
-name
-destination
-internal
-input_annotatable
-value_transform
-=================  ========  ======
+Score annotators
+################
+
+The attributes of these annotators generally follow the pattern below:
+
+.. code:: yaml
+
+    - source: <source score ID>
+      name: <destination attribute name>
+
+The available scores are those configured in the resource used with the score annotator.
+``source`` is the ID of the score as it is configured in its resource, and ``name`` is how it will be labeled in the output annotation.
 
 Position score
-##############
+++++++++++++++
 
 Annotate with a position score resource.
 
@@ -123,7 +123,7 @@ Annotate with a position score resource.
 
 
 NP score
-########
+++++++++
 
 Annotate with a nucleotide polymorphism score resource.
 
@@ -137,7 +137,7 @@ Annotate with a nucleotide polymorphism score resource.
           position_aggregator: <aggregator to use for INDELs>
 
 Allele score
-############
+++++++++++++
 
 Annotate with an allele score resource.
 
@@ -154,24 +154,25 @@ Effect annotator
 ################
 
 Predicts the variant's effect on proteins (i.e. missense, synonymous, LGD, etc.).
+The attributes the annotator will output are the following:
+
+worst_effect
+  The worst effect across all transcripts.
+
+
+gene_effects
+  Effect types for each gene.
+
+
+effect_details
+  Effect details for each affected transcript.
+
 
 .. code:: yaml
 
-    - effect_annotator: 
+    - effect_annotator:
         genome: <reference genome resource ID>
         gene_models: <gene models resource ID>
-
-
-Normalize allele annotator
-##########################
-
-Normalize an allele using the algorithm defined here:
-https://genome.sph.umich.edu/wiki/Variant_Normalization
-
-.. code:: yaml
-
-    - normalize_allele_annotator:
-        genome: hg38/genomes/GRCh38-hg38
 
 
 Liftover annotator
@@ -179,7 +180,7 @@ Liftover annotator
 
 Lifts over a variant from one reference genome to another.
 The product is an "annotatable" (an object annotators can work on) in the target reference genome.
-This produced annotatable can then be passed to other annotators using the ``input_annotatable`` setting.
+This produced annotatable is labeled ``liftover_annotatable`` and can be passed to other annotators using the ``input_annotatable`` setting.
 
 .. code:: yaml
 
@@ -193,21 +194,37 @@ This produced annotatable can then be passed to other annotators using the ``inp
           internal: true
 
 
+Normalize allele annotator
+##########################
+
+Normalize an allele using the algorithm defined here:
+https://genome.sph.umich.edu/wiki/Variant_Normalization
+
+Similar to the liftover annotator, produces an "annotatable" object called ``normalized_allele``.
+
+.. code:: yaml
+
+    - normalize_allele_annotator:
+        genome: hg38/genomes/GRCh38-hg38
+
+
 Gene score annotator
 ####################
+
+Annotate a variant with a gene score.
 
 .. code:: yaml
 
   - gene_score_annotator:
     resource_id: <gene score resource ID>
-    input_gene_list: <Gene list to use to match variants (see below)>
+    input_gene_list: <gene list to use to match variants (see below)>
     attributes:
     - source: <source score ID>
       name: <destination attribute name>
       gene_aggregator: <aggregator type>
 
 
-.. note:: 
+.. note::
 
     Input gene list is a list of genes that **must** be present in the annotation context.
 
@@ -220,7 +237,14 @@ Gene score annotator
 Gene set annotator
 ##################
 
-TODO
+Used to annotate whether a variant belongs to a certain gene set.
+
+.. code:: yaml
+
+  - gene_set_annotator:
+      resource_id: <gene set collection resource ID>
+      gene_set_id: <gene set id>
+      input_gene_list: <gene list to use to match variants>
 
 
 Command line tools
@@ -404,8 +428,7 @@ Gene score annotator with changed aggregator
 
     - effect_annotator:
         gene_models: hg38/gene_models/refSeq_v20200330
-        genome: hg38/genomes/GRCh38-hg38       
-    
+        genome: hg38/genomes/GRCh38-hg38
     - gene_score_annotator:
         resource_id: gene_properties/gene_scores/pLI
         input_gene_list: gene_list
