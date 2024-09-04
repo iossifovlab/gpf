@@ -202,6 +202,31 @@ class GeneSetDownloadView(QueryBaseView):
         return self._build_response(data, request.user)
 
 
+class DenovoGeneSetTypesLegendView(QueryBaseView):
+    """View for denovo gene sets types legend method."""
+    @method_decorator(etag(get_instance_timestamp_etag))
+    def get(self, request: Request) -> Response:
+        """GET Request for types legend."""
+        gene_sets_collection_id = request.query_params.get(
+            "geneSetsCollection",
+        )
+
+        if gene_sets_collection_id is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if "denovo" in gene_sets_collection_id:
+            if not self.gpf_instance.has_denovo_gene_sets():
+                return Response(status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(
+            self.gpf_instance.get_denovo_gene_set_collection_types_legend(
+                gene_sets_collection_id,
+            ),
+        )
+
+
 class GeneSetsHasDenovoView(QueryBaseView):
 
     @method_decorator(etag(get_instance_timestamp_etag))

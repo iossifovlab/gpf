@@ -2,8 +2,8 @@
 
 import pytest
 
+from dae.enrichment_tool.enrichment_serializer import EnrichmentSerializer
 from dae.enrichment_tool.event_counters import EnrichmentSingleResult
-from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")

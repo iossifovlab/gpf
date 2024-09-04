@@ -34,18 +34,13 @@ def test_gene_sets_collections(db, admin_client):
     assert local_main["name"] == "main"
     denovo = data[1]
     assert denovo["name"] == "denovo"
-    remote_denovo = data[2]
-    assert remote_denovo["name"] == "TEST_REMOTE_denovo"
-    local_mapping = data[3]
+    local_mapping = data[2]
     assert local_mapping["name"] == "test_mapping"
-    local_gmt = data[4]
+    local_gmt = data[3]
     assert local_gmt["name"] == "test_gmt"
-    remote_main = data[5]
-    assert remote_main["name"] == "TEST_REMOTE_main"
-    # self.assertEquals(8, len(denovo['types']))
 
     print(data)
-    assert len(data) == 12, data
+    assert len(data) == 4, data
 
 
 def test_gene_set_download(db, admin_client):
@@ -249,77 +244,3 @@ def test_gene_sets_missing(db, admin_client):
     assert response.status_code == status.HTTP_404_NOT_FOUND, repr(
         response.content,
     )
-
-
-@pytest.mark.parametrize("name,count", [
-    ("chromatin modifiers", 428),
-    ("autism candidates from Iossifov PNAS 2015", 239),
-    ("CHD8 target genes", 2158),
-])
-def test_gene_sets_remote(db, admin_client, name, count):
-    url = "/api/v3/gene_sets/gene_sets"
-    query = {"geneSetsCollection": "TEST_REMOTE_main"}
-    response = admin_client.post(
-        url, query, content_type="application/json", format="json",
-    )
-
-    assert response.status_code == status.HTTP_200_OK
-    print(response.data)
-    assert len(response.data) == 15
-
-    checked = 0
-    for gs_desc in response.data:
-        if gs_desc["name"] == name:
-            assert gs_desc["count"] == count
-            checked += 1
-            break
-
-    assert checked == 1
-
-
-def test_gene_sets_remote_download(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
-    query = {
-        "geneSetsCollection": "TEST_REMOTE_main",
-        "geneSet": "PSD",
-    }
-    response = admin_client.get(
-        url, query, content_type="application/json", format="json",
-    )
-
-    assert response.status_code == status.HTTP_200_OK
-    print(list(response.streaming_content))
-
-
-def test_denovo_gene_sets_remote(db, admin_client):
-    url = "/api/v3/gene_sets/gene_sets"
-    query = {
-        "geneSetsCollection": "TEST_REMOTE_denovo",
-        "geneSetsTypes": {"iossifov_2014": {"status": ["affected"]}},
-    }
-    response = admin_client.post(
-        url, query, content_type="application/json", format="json",
-    )
-
-    assert response.status_code == status.HTTP_200_OK
-    print(response.data)
-    assert len(response.data) == 6
-    lgds = list(filter(lambda x: x["name"] == "LGDs", response.data))[0]
-    assert lgds["count"] == 10
-
-
-def test_denovo_gene_sets_remote_download(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
-    query = {
-        "geneSetsCollection": "TEST_REMOTE_denovo",
-        "geneSet": "LGDs",
-        "geneSetsTypes": json.dumps(
-            {"iossifov_2014": {"status": ["affected"]}},
-        ),
-    }
-    response = admin_client.get(
-        url, query, content_type="application/json", format="json",
-    )
-
-    assert response.status_code == status.HTTP_200_OK
-    print(list(response.streaming_content))

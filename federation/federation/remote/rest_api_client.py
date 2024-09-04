@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Generator, Iterable
-from typing import Any, Dict, List, Tuple, cast
+from typing import Any, cast
 
 import ijson
 import requests
@@ -94,12 +94,12 @@ class RESTClient:
                 query_url += f"{key}={val}"
                 first = False
         base = self.build_api_base_url()
-        result = f"{base}{query_url}"
-        return result
+        return f"{base}{query_url}"
 
     def _get(
         self, url: str,
         query_values: dict | None = None,
+        *,
         stream: bool = False,
     ) -> requests.Response:
         url = self._build_url(url, query_values)
@@ -119,6 +119,7 @@ class RESTClient:
     def _post(
         self, url: str,
         data: dict | None = None,
+        *,
         stream: bool = False,
     ) -> requests.Response:
         url = self._build_url(url)
@@ -143,6 +144,7 @@ class RESTClient:
     @staticmethod
     def _read_json_list_stream(
         response: requests.Response,
+        *,
         _multiple_values: bool = False,
     ) -> Generator[Any, None, None]:
         assert response.status_code == 200
@@ -154,8 +156,7 @@ class RESTClient:
         for chunk in stream:
             coro.send(chunk)
             if len(objects) > 0:
-                for obj in objects:
-                    yield obj
+                yield from objects
                 del objects[:]
 
     def prefix_remote_identifier(self, value: Any) -> str:
@@ -183,15 +184,14 @@ class RESTClient:
         return None
 
     def get_variants_preview(self, data: dict) -> requests.Response:
-        response = self._post(
+        return self._post(
             "genotype_browser/preview/variants",
             data=data,
             stream=True,
         )
-        return response
 
     def post_query_variants(
-        self, data: dict, reduce_alleles: bool = False,
+        self, data: dict, *, reduce_alleles: bool = False,
     ) -> Generator[Any, None, None]:
         """Post query request for variants preview."""
         assert data.get("download", False) is False
@@ -297,7 +297,7 @@ class RESTClient:
         return response.json()
 
     def get_common_report(
-        self, common_report_id: str, full: bool = False,
+        self, common_report_id: str, *, full: bool = False,
     ) -> Any:
         """Get the commont report for a dataset."""
         if full:
@@ -311,11 +311,10 @@ class RESTClient:
         self, common_report_id: str,
     ) -> Any:
         """Get families part of the common report for a study."""
-        response = self._post(
+        return self._post(
             f"common_reports/families_data/{common_report_id}",
             stream=True,
         )
-        return response
 
     def get_pheno_browser_config(self, db_name: str) -> Any:
         """Get the pheno browser congigruation."""
@@ -533,7 +532,7 @@ class RESTClient:
         if response.status_code != 200:
             return None
 
-        return cast(List[Dict[str, Any]], response.json())
+        return cast(list[dict[str, Any]], response.json())
 
     def get_gene_set_download(
         self, gene_sets_collection: str, gene_set: str,
@@ -554,9 +553,7 @@ class RESTClient:
 
     def has_denovo_gene_sets(self) -> bool:
         response = self._get("gene_sets/has_denovo")
-        if response.status_code != 204:
-            return False
-        return True
+        return response.status_code == 204
 
     def get_denovo_gene_sets(self, gene_set_types: dict) -> Any:
         """Get denovo gene sets."""
@@ -594,6 +591,22 @@ class RESTClient:
 
         return response.content.decode()
 
+    def get_denovo_gene_set_collection_types_legend(
+            self,
+    ) -> Any:
+        """Get a denovo gene set."""
+        response = self._get(
+            "gene_sets/denovo_gene_sets_types_legend",
+            query_values={
+                "geneSetsCollection": "denovo",
+            },
+        )
+
+        if response.status_code != 200:
+            return None
+
+        return response.content.decode()
+
     def get_genomic_scores(self) -> list[dict[str, Any]] | None:
         response = self._get("genomic_scores/score_descs")
         if response.status_code != 200:
@@ -608,7 +621,7 @@ class RESTClient:
 
     def get_pheno_image(
         self, image_path: str,
-    ) -> Tuple[bytes | None, str | None]:
+    ) -> tuple[bytes | None, str | None]:
         """
         Return tuple of image bytes and image type from remote.
 

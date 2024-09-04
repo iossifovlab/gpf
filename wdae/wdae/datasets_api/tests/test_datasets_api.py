@@ -18,7 +18,7 @@ def test_datasets_api_get_all(admin_client: Client) -> None:
     assert response
     assert response.status_code == 200
     data = response.data  # type: ignore
-    assert len(data["data"]) == 39
+    assert len(data["data"]) == 38
 
 
 def test_datasets_api_get_all_studies(admin_client: Client) -> None:
@@ -27,7 +27,7 @@ def test_datasets_api_get_all_studies(admin_client: Client) -> None:
     assert response
     assert response.status_code == 200
     data = response.data  # type: ignore
-    assert len(data["data"]) == 21
+    assert len(data["data"]) == 20
 
 
 def test_datasets_api_get_one(admin_client: Client) -> None:
@@ -223,7 +223,7 @@ def test_datasets_hierarchy(
 
     data = response.data  # type: ignore
     assert data
-    assert len(data["data"]) == 22
+    assert len(data["data"]) == 21
     dataset1 = next(filter(
         lambda x: x["dataset"] == "Dataset1", data["data"],
     ))
@@ -262,7 +262,7 @@ def test_datasets_permissions(
     response = admin_client.get("/api/v3/datasets/permissions?page=2")
 
     data = response.data  # type: ignore
-    assert len(data) == 14
+    assert len(data) == 13
 
     response = admin_client.get("/api/v3/datasets/permissions?page=3")
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -307,13 +307,10 @@ def test_datasets_api_visible_datasets(
     # FIXME This is a temporary hack to mock the
     # dae_config of wdae_gpf_instance since using the mocker
     # fixture does not work.
-    old_conf = wdae_gpf_instance.dae_config
-    edited_conf = old_conf.to_dict()
-    edited_conf["gpfjs"]["visible_datasets"] = [
+    old_visible = wdae_gpf_instance.visible_datasets
+    wdae_gpf_instance.visible_datasets = [
         "quads_f1", "quads_f2", "f1_group", "nonexistent",
     ]
-    wdae_gpf_instance.dae_config = FrozenBox(edited_conf)
-
     try:
         response = admin_client.get("/api/v3/datasets/visible")
         assert response and response.status_code == 200
@@ -321,4 +318,4 @@ def test_datasets_api_visible_datasets(
         data = response.data  # type: ignore
         assert data == ["quads_f1", "quads_f2", "f1_group"]
     finally:
-        wdae_gpf_instance.dae_config = old_conf
+        wdae_gpf_instance.visible_datasets = old_visible

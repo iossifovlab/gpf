@@ -114,7 +114,7 @@ def test_genotype_data_persons_invalid_roles() -> None:
 
 def test_genotype_data_persons_invalid_family_ids() -> None:
     helper = PhenoToolHelper(mocked_study, mocked_pheno)  # type: ignore
-    with pytest.raises(AssertionError):
+    with pytest.raises(KeyError):
         helper.genotype_data_persons(family_ids="fam1")  # type: ignore
 
 

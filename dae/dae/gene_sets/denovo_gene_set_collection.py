@@ -1,5 +1,6 @@
 import logging
 from itertools import chain
+from typing import Any
 
 LOGGER = logging.getLogger(__name__)
 
@@ -23,10 +24,10 @@ class DenovoGeneSetCollection:
         self.cache = {}
         self._gene_sets_types_legend = None
 
-    def get_gene_sets_types_legend(self):
+    def get_gene_sets_types_legend(self) -> list[Any]:
         """Return list of dictionaries for legends for each collection."""
         if self._gene_sets_types_legend is None:
-            name = self.study_name if self.study_name else self.study_id
+            name = self.study_name or self.study_id
             # TODO Rename these dictionary keys accordingly
             self._gene_sets_types_legend = [
                 {

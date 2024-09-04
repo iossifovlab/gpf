@@ -93,7 +93,6 @@ class PhenoToolHelper:
         if roles is None:
             roles = [Role.prb]
 
-        assert isinstance(family_ids, list)
         assert isinstance(roles, list)
         persons = set()
 
@@ -165,28 +164,32 @@ class PhenoTool:
     an empty list
     """
 
-    def __init__(
-        self, phenotype_data: PhenotypeData,
+    def __init__(self, phenotype_data: PhenotypeData) -> None:
+        self.phenotype_data = phenotype_data
+
+    def create_df(
+        self,
         measure_id: str,
         person_ids: list[str] | None = None,
         family_ids: list[str] | None = None,
         normalize_by: list[dict[str, str]] | None = None,
-    ) -> None:
+    ) -> pd.DataFrame:
+        """Create dataframe for given measure."""
+        if not self.phenotype_data.has_measure(measure_id):
+            raise KeyError(
+                f"measure id {measure_id} not found!",
+            )
+        assert self.phenotype_data.get_measure(measure_id).measure_type \
+            in [MeasureType.continuous, MeasureType.ordinal]
+
         if normalize_by is None:
             normalize_by = []
 
-        self.phenotype_data = phenotype_data
-        self.measure_id = measure_id
-
-        assert self.phenotype_data.has_measure(measure_id)
-        assert self.phenotype_data.get_measure(self.measure_id).measure_type \
-            in [MeasureType.continuous, MeasureType.ordinal]
-
-        self.normalize_by = self._init_normalize_measures(normalize_by)
+        normalize_by = self.init_normalize_measures(measure_id, normalize_by)
 
         # currently filtering only for probands, expand with additional
         # options via PeopleGroup
-        all_measures = [self.measure_id, *self.normalize_by]
+        all_measures = [measure_id, *normalize_by]
 
         pheno_df = self.phenotype_data.get_people_measure_values_df(
             all_measures,
@@ -195,20 +198,22 @@ class PhenoTool:
             roles=[Role.prb],
         )
 
-        self.pheno_df = pheno_df.dropna()
+        pheno_df = pheno_df.dropna()
 
-        if not self.pheno_df.empty:
-            self.pheno_df = self._normalize_df(
-                self.pheno_df, self.measure_id, self.normalize_by,
+        if not pheno_df.empty:
+            pheno_df = self._normalize_df(
+                pheno_df, measure_id, normalize_by,
             )
 
-    def _init_normalize_measures(
-        self, normalize_by: list[dict[str, str]],
+        return pheno_df
+
+    def init_normalize_measures(
+        self, measure_id: str, normalize_by: list[dict[str, str]],
     ) -> list[str]:
         result = list(filter(
             None,
             [
-                self._get_normalize_measure_id(normalize_measure)
+                self.get_normalize_measure_id(measure_id, normalize_measure)
                 for normalize_measure in normalize_by
             ]))
 
@@ -219,8 +224,8 @@ class PhenoTool:
         )
         return result
 
-    def _get_normalize_measure_id(
-        self, normalize_measure: dict[str, str],
+    def get_normalize_measure_id(
+        self, measure_id: str, normalize_measure: dict[str, str],
     ) -> str | None:
         assert isinstance(normalize_measure, dict)
         assert "measure_name" in normalize_measure
@@ -228,7 +233,7 @@ class PhenoTool:
 
         if not normalize_measure["instrument_name"]:
             normalize_measure["instrument_name"] = \
-                self.measure_id.split(".")[0]
+                measure_id.split(".")[0]
 
         normalize_id = ".".join(
             [
@@ -237,7 +242,7 @@ class PhenoTool:
             ],
         )
         if self.phenotype_data.has_measure(normalize_id) and \
-                normalize_id != self.measure_id:
+                normalize_id != measure_id:
             return normalize_id
 
         return None
@@ -356,8 +361,13 @@ class PhenoTool:
         return result
 
     def calc(
-        self, variants: Counter, *,
+        self,
+        measure_id: str,
+        variants: Counter, *,
         sex_split: bool = False,
+        person_ids: list[str] | None = None,
+        family_ids: list[str] | None = None,
+        normalize_by: list[dict[str, str]] | None = None,
     ) -> dict[str, PhenoResult] | PhenoResult:
         """Perform calculation.
 
@@ -368,12 +378,17 @@ class PhenoTool:
         is `False`.
 
         """
-        if not self.pheno_df.empty:
+
+        pheno_df = self.create_df(
+            measure_id, person_ids, family_ids, normalize_by,
+        )
+
+        if not pheno_df.empty:
             merged_df = PhenoTool.join_pheno_df_with_variants(
-                self.pheno_df, variants,
+                pheno_df, variants,
             )
         else:
-            merged_df = self.pheno_df
+            merged_df = pheno_df
 
         if not sex_split:
             return self._calc_stats(merged_df, None)

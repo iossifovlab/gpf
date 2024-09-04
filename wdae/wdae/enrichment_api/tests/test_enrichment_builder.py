@@ -2,7 +2,7 @@
 import pytest
 
 from dae.studies.study import GenotypeData
-from enrichment_api.enrichment_builder import EnrichmentBuilder
+from dae.enrichment_tool.enrichment_builder import EnrichmentBuilder
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
@@ -10,7 +10,11 @@ pytestmark = pytest.mark.usefixtures(
 
 def test_build_results(enrichment_builder: EnrichmentBuilder) -> None:
     assert enrichment_builder
-    build = enrichment_builder.build_results()
+    build = enrichment_builder.build_results(
+        gene_syms=["SAMD11", "PLEKHN1", "POGZ"],
+        background_id="enrichment/coding_len_testing",
+        counting_id="enrichment_events_counting",
+    )
     print(build)
 
     assert build
@@ -23,7 +27,11 @@ def test_build_results(enrichment_builder: EnrichmentBuilder) -> None:
 
 def test_build(enrichment_builder: EnrichmentBuilder) -> None:
     assert enrichment_builder
-    build = enrichment_builder.build_results()
+    build = enrichment_builder.build_results(
+        gene_syms=["SAMD11", "PLEKHN1", "POGZ"],
+        background_id="enrichment/coding_len_testing",
+        counting_id="enrichment_events_counting",
+    )
     print(build)
 
     assert build
@@ -43,7 +51,11 @@ def test_build_people_group_selector(
     assert person_set_collection is not None
     assert len(person_set_collection.person_sets) == 2
 
-    results = enrichment_builder.build_results()
+    results = enrichment_builder.build_results(
+        gene_syms=["SAMD11", "PLEKHN1", "POGZ"],
+        background_id="enrichment/coding_len_testing",
+        counting_id="enrichment_events_counting",
+    )
 
     build = None
     for build in results:

@@ -3,7 +3,7 @@
 import logging
 import os
 import pathlib
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from datetime import timedelta
 from typing import Callable
 
@@ -26,7 +26,6 @@ from oauth2_provider.models import (
     get_application_model,
 )
 from pytest_mock import MockerFixture
-from remote.rest_api_client import RESTClient
 from users_api.models import WdaeUser
 
 from dae.common_reports import generate_common_report
@@ -249,12 +248,6 @@ def wgpf_instance(
         grr = GenomicResourceGroupRepo(repositories)
 
         result = WGPFInstance.build(config_filename, grr=grr)
-
-        remote_host = os.environ.get("TEST_REMOTE_HOST", "localhost")
-        if result.dae_config.remotes and \
-                result.dae_config.remotes[0].id == "TEST_REMOTE":
-            result.dae_config.remotes[0].host = remote_host
-        result.load_remotes()
 
         return result
 
@@ -494,40 +487,9 @@ def sample_gp() -> GPStatistic:
 
 
 @pytest.fixture(scope="function")
-def remote_config(fixtures_wgpf_instance: WGPFInstance) -> dict[str, str]:
-    host = os.environ.get("TEST_REMOTE_HOST", "localhost")
-    remote = {
-        "id": "TEST_REMOTE",
-        "host": host,
-        "base_url": "api/v3",
-        "port": "21010",
-        "credentials": "ZmVkZXJhdGlvbjpzZWNyZXQ=",
-    }
-    reload_datasets(fixtures_wgpf_instance)
-
-    return remote
-
-
-@pytest.fixture(scope="function")
-def rest_client(
-    admin_client: Client, remote_config: dict[str, str],
-) -> RESTClient:
-    client = RESTClient(
-        remote_config["id"],
-        remote_config["host"],
-        remote_config["credentials"],
-        base_url=remote_config["base_url"],
-        port=int(remote_config["port"]),
-    )
-
-    assert client.token is not None, \
-        "Failed to get auth token for REST client"
-
-    return client
-
-
-@pytest.fixture(scope="function")
-def use_common_reports(wdae_gpf_instance: WGPFInstance) -> Iterator[None]:
+def use_common_reports(
+    wdae_gpf_instance: WGPFInstance
+) -> Generator[None, None, None]:
     all_configs = wdae_gpf_instance.get_all_common_report_configs()
     temp_files = [config.file_path for config in all_configs]
 

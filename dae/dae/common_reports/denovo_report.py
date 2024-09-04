@@ -4,13 +4,12 @@ import logging
 import time
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Dict, List, cast
+from typing import Any, cast
 
 import numpy as np
 
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.person_sets import PersonSet, PersonSetCollection
-from dae.studies.study import GenotypeData
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 
 logger = logging.getLogger(__name__)
@@ -31,7 +30,7 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
             self.effect_types = set(expanded_effect_types)
 
         self.observed_variants_ids: set[str] = set()
-        self.observed_people_with_event: set[str] = set([])
+        self.observed_people_with_event: set[str] = set()
         self.person_set_persons = set(self.person_set.persons.keys())
 
         self.person_set_children = {
@@ -72,7 +71,7 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
     def column_name(self) -> str:
         return f"{self.person_set.name} ({len(self.person_set_children)})"
 
-    def to_dict(self) -> Dict[str, int | float | str]:
+    def to_dict(self) -> dict[str, int | float | str]:
         return {
             "number_of_observed_events":
             self.number_of_observed_events,
@@ -127,7 +126,7 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
 class EffectRow:
     """Class representing a row in the denovo report table."""
 
-    def __init__(self, effect: str, person_sets: List[PersonSet]) -> None:
+    def __init__(self, effect: str, person_sets: list[PersonSet]) -> None:
         self.person_sets = person_sets
 
         self.effect_type = effect
@@ -139,7 +138,7 @@ class EffectRow:
             "row": [r.to_dict() for r in self.row],
         }
 
-    def _build_row(self) -> List[EffectCell]:
+    def _build_row(self) -> list[EffectCell]:
         return [
             EffectCell(
                 person_set,
@@ -157,7 +156,7 @@ class EffectRow:
     def is_row_empty(self) -> bool:
         return all(value.is_empty() for value in self.row)
 
-    def get_empty(self) -> List[bool]:
+    def get_empty(self) -> list[bool]:
         return [value.is_empty() for value in self.row]
 
     def remove_elements(self, indexes: list[int]) -> None:
@@ -189,10 +188,11 @@ class DenovoReportTable:
         person_set_collection: PersonSetCollection,
     ) -> DenovoReportTable:
         """Construct a denovo report table from variants."""
-        person_sets = []
-        for person_set in person_set_collection.person_sets.values():
-            if len(person_set.persons) > 0:
-                person_sets.append(person_set)
+        person_sets = [
+            person_set
+            for person_set in person_set_collection.person_sets.values()
+            if len(person_set.persons) > 0
+        ]
 
         effect_groups = list(effect_groups)
         effect_types = list(effect_types)
@@ -232,11 +232,17 @@ class DenovoReportTable:
                 try:
                     effect_groups.remove(effect_row.effect_type)
                 except ValueError:
-                    pass
+                    logger.exception(
+                        "Failed to remove effect group %s",
+                        effect_row.effect_type,
+                    )
                 try:
                     effect_types.remove(effect_row.effect_type)
                 except ValueError:
-                    pass
+                    logger.exception(
+                        "Failed to remove effect type %s",
+                        effect_row.effect_type,
+                    )
         effect_rows = list(filter(
             lambda effect_row: not effect_row.is_row_empty(), effect_rows,
         ))
@@ -254,10 +260,10 @@ class DenovoReportTable:
                 else:
                     count = column_children[person_set_id]
                     assert count == len(person_set_children)
-        columns = []
-        for person_set in person_sets:
-            columns.append(
-                f"{person_set.name} ({column_children[person_set.id]})")
+        columns = [
+            f"{person_set.name} ({column_children[person_set.id]})"
+            for person_set in person_sets
+        ]
 
         return DenovoReportTable({
             "rows": [r.to_dict() for r in rows],
@@ -299,8 +305,8 @@ class DenovoReport:
 
     @staticmethod
     def from_genotype_study(
-        genotype_data: GenotypeData,
-        person_set_collections: List[PersonSetCollection],
+        genotype_data: Any,
+        person_set_collections: list[PersonSetCollection],
     ) -> DenovoReport:
         """Create a denovo report JSON from a genotype data study."""
         config = genotype_data.config.common_report

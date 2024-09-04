@@ -13,7 +13,9 @@ pytestmark = pytest.mark.usefixtures(
 
 @pytest.mark.parametrize(
     "wrapper_type",
-    ["local", "remote"],
+    [
+        "local",
+    ],
 )
 def test_query_all_variants(
     iossifov_2014_wrappers: dict[str, StudyWrapperBase],
@@ -30,7 +32,6 @@ def test_query_all_variants(
     "wrapper_type",
     [
         "local",
-        "remote",
     ],
 )
 @pytest.mark.parametrize(
@@ -64,7 +65,9 @@ def test_query_inheritance_variants(
 
 @pytest.mark.parametrize(
     "wrapper_type",
-    ["local", "remote"],
+    [
+        "local",
+    ],
 )
 def test_query_limit_variants(
     iossifov_2014_wrappers: dict[str, StudyWrapperBase],
@@ -81,7 +84,6 @@ def test_query_limit_variants(
     "wrapper_type",
     [
         "local",
-        "remote",
     ],
 )
 @pytest.mark.parametrize(
@@ -114,7 +116,6 @@ def test_query_family_variants(
     "wrapper_type",
     [
         "local",
-        "remote",
     ],
 )
 @pytest.mark.parametrize(
@@ -144,7 +145,6 @@ def test_query_sexes_variants(
     "wrapper_type",
     [
         "local",
-        "remote",
     ],
 )
 @pytest.mark.parametrize(
@@ -175,7 +175,6 @@ def test_query_variant_type_variants(
     "wrapper_type",
     [
         "local",
-        "remote",
     ],
 )
 @pytest.mark.parametrize(
@@ -207,7 +206,6 @@ def test_query_effect_types_variants(
     "wrapper_type",
     [
         "local",
-        "remote",
     ],
 )
 @pytest.mark.parametrize(
@@ -238,7 +236,6 @@ def test_query_regions_variants(
     "wrapper_type",
     [
         "local",
-        "remote",
     ],
 )
 @pytest.mark.parametrize(
@@ -281,7 +278,6 @@ def test_query_present_in_child(
     "wrapper_type",
     [
         "local",
-        "remote",
     ],
 )
 @pytest.mark.parametrize(
@@ -324,7 +320,6 @@ def test_query_present_in_parent(
     "wrapper_type",
     [
         "local",
-        "remote",
     ],
 )
 @pytest.mark.parametrize(
@@ -380,7 +375,6 @@ def test_query_gene_scores(
     "wrapper_type",
     [
         "local",
-        "remote",
     ],
 )
 def test_query_person_filters(
@@ -404,7 +398,7 @@ def test_query_person_filters(
     assert len(variants) == 2
 
 
-@pytest.mark.parametrize("wrapper_type", ["local", "remote"])
+@pytest.mark.parametrize("wrapper_type", ["local"])
 def test_query_family_filters(
     iossifov_2014_wrappers: dict[str, StudyWrapperBase],
     wrapper_type: str,
@@ -427,7 +421,7 @@ def test_query_family_filters(
     assert len(variants) == 15
 
 
-@pytest.mark.parametrize("wrapper_type", ["local", "remote"])
+@pytest.mark.parametrize("wrapper_type", ["local"])
 def test_query_study_filters(
     iossifov_2014_wrappers: dict[str, StudyWrapperBase],
     wrapper_type: str,
@@ -455,7 +449,6 @@ def test_query_study_filters(
     "wrapper_type",
     [
         "local",
-        "remote",
     ],
 )
 def test_query_family_types(
@@ -475,8 +468,6 @@ def test_query_family_types(
 @pytest.mark.parametrize(
     "wrapper_type, float_format, float_val",
     [
-        ("remote", "%.2f", "0.16"),
-        ("remote", "%.4f", "0.1642"),
         ("local", "%.2f", "0.16"),
         ("local", "%.4f", "0.1642"),
     ],
@@ -507,7 +498,6 @@ def test_query_gene_scores_formatting(
 @pytest.mark.parametrize(
     "wrapper_type",
     [
-        "remote",
         "local",
     ],
 )

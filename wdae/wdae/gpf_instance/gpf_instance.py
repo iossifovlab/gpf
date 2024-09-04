@@ -7,20 +7,12 @@ import os
 import pathlib
 import time
 from collections.abc import Callable
-from functools import cached_property
 from threading import Lock
 from typing import Any, cast
 
 from box import Box
-from remote.denovo_gene_sets_db import RemoteDenovoGeneSetsDb
-from remote.gene_sets_db import RemoteGeneSetsDb
-from remote.genomic_scores_registry import RemoteGenomicScoresRegistry
-from remote.rest_api_client import RESTClient
-from studies.remote_study import RemoteGenotypeData
-from studies.remote_study_db import RemoteStudyDB
-from studies.study_wrapper import RemoteStudyWrapper, StudyWrapper
+from studies.study_wrapper import StudyWrapper, StudyWrapperBase
 
-from dae.common_reports.common_report import CommonReport
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.utils.fs_utils import find_directory_with_a_file
@@ -84,6 +76,7 @@ def calc_cacheable_hash(content: str | None) -> str:
         content = ""
     return hashlib.md5(content.encode("utf-8")).hexdigest()  # noqa: S324
 
+
 class WGPFInstance(GPFInstance):
     """GPF instance class for use in wdae."""
 
@@ -92,14 +85,17 @@ class WGPFInstance(GPFInstance):
         dae_dir: str | pathlib.Path,
         **kwargs: dict[str, Any],
     ) -> None:
-        self._remote_study_db: RemoteStudyDB | None = None
-        self._clients: dict[str, RESTClient] = {}
+        self._remote_study_db: None = None
         self._study_wrappers: dict[
-            str, StudyWrapper | RemoteStudyWrapper,
+            str, StudyWrapper,
         ] = {}
         self._gp_configuration: dict[str, Any] | None = None
         self._gp_table_configuration: dict[str, Any] | None = None
         super().__init__(cast(Box, dae_config), dae_dir, **kwargs)
+
+        self.visible_datasets = None
+        if self.dae_config.gpfjs and self.dae_config.gpfjs.visible_datasets:
+            self.visible_datasets = self.dae_config.gpfjs.visible_datasets
         main_description = self.dae_config.gpfjs.main_description_file
         if not os.path.exists(main_description):
             with open(main_description, "w"):
@@ -120,112 +116,46 @@ class WGPFInstance(GPFInstance):
             config_filename)
         return WGPFInstance(dae_config, dae_dir, **kwargs)
 
-    def load_remotes(self) -> None:
-        """Load remote instances for use in GPF federation."""
-        if self._remote_study_db is not None:
-            return
-
-        remotes = self.dae_config.remotes
-
-        if remotes is not None:
-            for remote in remotes:
-                logger.info("Creating remote %s", remote)
-                try:
-                    client = RESTClient(
-                        remote["id"],
-                        remote["host"],
-                        remote["credentials"],
-                        base_url=remote["base_url"],
-                        port=remote.get("port", None),
-                        protocol=remote.get("protocol", None),
-                        gpf_prefix=remote.get("gpf_prefix", None),
-                    )
-                    self._clients[client.remote_id] = client
-
-                except ConnectionError:
-                    logger.exception("Failed to create remote %s", remote["id"])
-
-        self._remote_study_db = RemoteStudyDB(self._clients)
-
     def get_main_description_path(self) -> str:
         return cast(str, self.dae_config.gpfjs.main_description_file)
 
     def get_about_description_path(self) -> str:
         return cast(str, self.dae_config.gpfjs.about_description_file)
 
-    def get_remote_client(self, remote_id: str) -> RESTClient | None:
-        return self._clients.get(remote_id)
-
-    @property
-    def remote_study_clients(self) -> dict[str, RESTClient]:
-        if self._remote_study_db is None:
-            raise ValueError("remote study db not initialized.")
-        return self._remote_study_db.remote_study_clients
-
-    @property
-    def remote_study_ids(self) -> dict[str, str]:
-        """Return remote studies IDs.
-
-        Returns a dictionary mapping local prefixed remote study ids
-        to their real ids on the remote.
-        """
-        if self._remote_study_db is None:
-            raise ValueError("remote study db not initialized.")
-        return self._remote_study_db.remote_study_ids
-
-    @cached_property
-    def gene_sets_db(self) -> RemoteGeneSetsDb:
-        logger.debug("creating new instance of GeneSetsDb")
-        self.load_remotes()
-        gene_sets_db = super().gene_sets_db
-        return RemoteGeneSetsDb(self._clients, gene_sets_db)
-
-    @cached_property
-    def denovo_gene_sets_db(self) -> RemoteDenovoGeneSetsDb:  # type: ignore
-        self.load_remotes()
-        denovo_gene_sets_db = super().denovo_gene_sets_db
-        return RemoteDenovoGeneSetsDb(self._clients, denovo_gene_sets_db)
-
-    @cached_property
-    def genomic_scores(self) -> RemoteGenomicScoresRegistry:
-        self.load_remotes()
-        genomic_scores = super().genomic_scores
-        return RemoteGenomicScoresRegistry(self._clients, genomic_scores)
-
     def register_genotype_data(
         self, genotype_data: GenotypeData,
+        study_wrapper: StudyWrapperBase | None = None,
     ) -> None:
         super().register_genotype_data(genotype_data)
 
         logger.debug("genotype data config; %s", genotype_data.study_id)
 
-        study_wrapper = StudyWrapper(
-            genotype_data,
-            self._pheno_registry,
-            self.gene_scores_db,
-            self,
-        )
+        if study_wrapper is None:
+            study_wrapper = StudyWrapper(
+                genotype_data,
+                self._pheno_registry,
+                self.gene_scores_db,
+                self,
+            )
         self._study_wrappers[genotype_data.study_id] = study_wrapper
 
     def make_wdae_wrapper(
         self, dataset_id: str,
-    ) -> StudyWrapper | RemoteStudyWrapper | None:
+    ) -> StudyWrapper | None:
         """Create and return wdae study wrapper."""
         genotype_data = self.get_genotype_data(dataset_id)
         if genotype_data is None:
             return None
 
-        if genotype_data.is_remote:
-            return RemoteStudyWrapper(cast(RemoteGenotypeData, genotype_data))
         return StudyWrapper(
             genotype_data, self._pheno_registry, self.gene_scores_db, self,
         )
 
     def get_wdae_wrapper(
         self, dataset_id: str,
-    ) -> StudyWrapper | RemoteStudyWrapper | None:
+    ) -> StudyWrapper | None:
         """Return wdae study wrapper."""
-        wrapper: StudyWrapper | RemoteStudyWrapper | None = None
+        wrapper: StudyWrapper | None = None
         if dataset_id not in self._study_wrappers:
             wrapper = self.make_wdae_wrapper(dataset_id)
             if wrapper is not None:
@@ -235,15 +165,12 @@ class WGPFInstance(GPFInstance):
 
         return wrapper
 
-    def get_genotype_data_ids(self, *, local_only: bool = False) -> list[str]:
+    def get_genotype_data_ids(self) -> list[str]:
         result = list(super().get_genotype_data_ids())
-        if not local_only:
-            result.extend(self.remote_studies)
 
-        if self.dae_config.gpfjs is None or \
-                not self.dae_config.gpfjs.visible_datasets:
+        if self.visible_datasets is None:
             return result
-        genotype_data_order = self.dae_config.gpfjs.visible_datasets
+        genotype_data_order = self.visible_datasets
         if genotype_data_order is None:
             genotype_data_order = []
 
@@ -253,43 +180,6 @@ class WGPFInstance(GPFInstance):
             return cast(int, genotype_data_order.index(st))
 
         return sorted(result, key=_ordering)
-
-    def get_genotype_data(
-        self, genotype_data_id: str,
-    ) -> GenotypeData | RemoteGenotypeData:
-        genotype_data = super().get_genotype_data(genotype_data_id)
-        if genotype_data is not None:
-            return genotype_data
-        assert self._remote_study_db is not None
-        return self._remote_study_db\
-            .get_genotype_data(genotype_data_id)
-
-    def get_genotype_data_config(self, genotype_data_id: str) -> Box:
-        genotype_data_config = \
-            super().get_genotype_data_config(genotype_data_id)
-        if genotype_data_config is not None:
-            return genotype_data_config
-        assert self._remote_study_db is not None
-        return cast(
-            Box,
-            self._remote_study_db.get_genotype_data_config(genotype_data_id),
-        )
-
-    def get_common_report(self, study_id: str) -> CommonReport | None:
-        common_report = \
-            super().get_common_report(study_id)
-
-        if common_report is not None:
-            return common_report
-
-        if study_id not in self.remote_study_clients:
-            return None
-
-        client = self.remote_study_clients[study_id]
-        remote_study_id = self.remote_study_ids[study_id]
-        remote_common_report = client.get_common_report(
-            remote_study_id, full=True)
-        return CommonReport(remote_common_report)
 
     @property
     def remote_studies(self) -> list[str]:
@@ -324,14 +214,12 @@ class WGPFInstance(GPFInstance):
         )
 
     def get_visible_datasets(self) -> list[str] | None:
-        if self.dae_config.gpfjs is None:
-            return None
-        if not self.dae_config.gpfjs.visible_datasets:
+        if self.visible_datasets is None:
             return None
         all_datasets = self.get_genotype_data_ids()
         return [
             dataset_id for dataset_id
-            in self.dae_config.gpfjs.visible_datasets
+            in self.visible_datasets
             if dataset_id in all_datasets
         ]
 
@@ -608,7 +496,6 @@ def get_wgpf_instance(
         with _GPF_INSTANCE_LOCK:
             if _GPF_INSTANCE is None:
                 gpf_instance = WGPFInstance.build(config_filename, **kwargs)
-                gpf_instance.load_remotes()
 
                 _GPF_INSTANCE = gpf_instance
 

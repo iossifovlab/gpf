@@ -3,7 +3,7 @@ import pytest
 
 from dae.pheno_tool.tool import PhenoResult
 from dae.variants.attributes import Sex
-from pheno_tool_api.pheno_tool_adapter import PhenoToolAdapter
+from dae.pheno_tool.pheno_tool_adapter import PhenoToolAdapter
 from pheno_tool_api.views import PhenoToolView
 
 pytestmark = pytest.mark.usefixtures(
@@ -69,23 +69,3 @@ def test_pheno_tool_view_get_result_by_sex() -> None:
     results = {Sex.M.name: result, Sex.F.name: PhenoResult()}
     ret_val = PhenoToolView.get_result_by_sex(results, Sex.M.name)
     assert ret_val == expected_result
-
-
-# def test_pheno_tool_view_calc_by_effect() -> None:
-#     class MockPhenoTool:
-#         def calc(self, people_variants: dict, sex_split: bool) -> dict:
-#             pr_m = PhenoResult()
-#             pr_m.set_positive_stats(1, 2, 3)
-#             pr_f = PhenoResult()
-#             pr_f.set_positive_stats(4, 5, 6)
-#             return {Sex.M.name: pr_m, Sex.F.name: pr_f}
-
-#     mocked_tool = MockPhenoTool()
-#     res = PhenoToolView.calc_by_effect("effectName", mocked_tool, {})
-#     assert res["effect"] == "effectName"
-#     assert res["maleResults"]["positive"]["count"] == 1
-#     assert res["maleResults"]["positive"]["mean"] == 2
-#     assert res["maleResults"]["positive"]["deviation"] == 3
-#     assert res["femaleResults"]["positive"]["count"] == 4
-#     assert res["femaleResults"]["positive"]["mean"] == 5
-#     assert res["femaleResults"]["positive"]["deviation"] == 6

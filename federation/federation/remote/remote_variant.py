@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import math
 from copy import copy
-from typing import Any, List, cast
+from typing import Any, cast
 
 from dae.pedigrees.family import Family
 from dae.utils.variant_utils import str2fgt, str2mat
@@ -52,12 +52,12 @@ class RemoteAllele(SummaryAllele):
 
     def __init__(
         self,
-        attributes_list: List,
+        attributes_list: list,
         idx: int,
-        columns: List[str] | None = None,
+        columns: list[str] | None = None,
     ):
         # columns is an ordered list of columns by their source name
-        self.columns = columns if columns else SUMMARY_COLUMNS
+        self.columns = columns or SUMMARY_COLUMNS
         self.attributes_list = attributes_list
         self.idx = idx
 
@@ -76,7 +76,9 @@ class RemoteAllele(SummaryAllele):
             summary_index=self._find_attribute("summary_index"),
             allele_index=int(self._find_attribute("allele_index")),
             effect=self._find_attribute("raw_effects"),
-            attributes={col: self._find_attribute(col) for col in self.columns},
+            attributes={
+                col: self._find_attribute(col) for col in self.columns
+            },
         )
 
     def _find_attribute(self, source: str) -> Any:
@@ -100,12 +102,12 @@ class RemoteFamilyAllele(FamilyAllele):
 
     def __init__(
         self,
-        attributes_list: List,
+        attributes_list: list,
         idx: int,
         family: Family,
-        columns: List[str] | None = None,
+        columns: list[str] | None = None,
     ):
-        self.columns = columns if columns else SUMMARY_COLUMNS
+        self.columns = columns or SUMMARY_COLUMNS
         self.attributes_list = attributes_list
         self.idx = idx
         summary_allele = RemoteAllele(attributes_list, idx, self.columns)
@@ -133,21 +135,20 @@ class RemoteVariant(SummaryVariant):
 
     def __init__(
         self,
-        attributes_list: List,
-        columns: List[str] | None = None,
+        attributes_list: list,
+        columns: list[str] | None = None,
     ):
         # columns is an ordered list of columns by their source name
-        self.columns = columns if columns else SUMMARY_COLUMNS
+        self.columns = columns or SUMMARY_COLUMNS
         self.attributes_list = attributes_list
         allele_count = len(self.attributes_list[0])
-        remote_alleles = []
-        for idx in range(allele_count):
-            remote_alleles.append(
-                RemoteAllele(self.attributes_list, idx, self.columns),
-            )
+        remote_alleles = [
+            RemoteAllele(self.attributes_list, idx, self.columns)
+            for idx in range(allele_count)
+        ]
         ref_allele = RemoteAllele.create_reference_allele(remote_alleles[0])
         remote_alleles.insert(0, ref_allele)
-        super().__init__(cast(List[SummaryAllele], remote_alleles))
+        super().__init__(cast(list[SummaryAllele], remote_alleles))
 
 
 class RemoteFamilyVariant(FamilyVariant):
@@ -155,21 +156,22 @@ class RemoteFamilyVariant(FamilyVariant):
 
     def __init__(
         self,
-        attributes_list: List,
+        attributes_list: list,
         family: Family,
-        columns: List[str] | None = None,
+        columns: list[str] | None = None,
     ):
-        self.columns = columns if columns else SUMMARY_COLUMNS
+        self.columns = columns or SUMMARY_COLUMNS
 
         self.attributes_list = attributes_list
         allele_count = len(self.attributes_list[0])
-        remote_alleles = []
-        for idx in range(allele_count):
-            remote_alleles.append(RemoteFamilyAllele(
-                self.attributes_list, idx, family, self.columns,
-            ))
-        genotype = remote_alleles[0]._find_attribute("genotype")
-        best_state = remote_alleles[0]._find_attribute("best_st")
+        remote_alleles = [
+            RemoteFamilyAllele(self.attributes_list, idx, family, self.columns)
+            for idx in range(allele_count)
+        ]
+        genotype = remote_alleles[0]._find_attribute(  # noqa: SLF001
+            "genotype")
+        best_state = remote_alleles[0]._find_attribute(  # noqa: SLF001
+            "best_st")
         self.summary_variant = RemoteVariant(
             copy(self.attributes_list), self.columns,
         )
@@ -186,7 +188,3 @@ class RemoteFamilyVariant(FamilyVariant):
     @property
     def alt_alleles(self) -> list[RemoteFamilyAllele]:  # type: ignore
         return self._remote_alleles[1:]
-
-    # @property
-    # def family_genotype(self) -> np.ndarray:
-    #     return self.gt.transpose()

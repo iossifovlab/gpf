@@ -15,12 +15,17 @@ from typing import Any, cast
 
 from box import Box
 
+from dae.common_reports.common_report import CommonReport
+from dae.common_reports.denovo_report import DenovoReport
+from dae.common_reports.family_report import FamiliesReport
+from dae.common_reports.people_counter import PeopleReport
 from dae.effect_annotation.effect import expand_effect_types
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import PersonSetCollection
 from dae.query_variants.query_runners import QueryResult
 from dae.utils.regions import Region
+from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
 
@@ -576,6 +581,149 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         if person_set_collection_id is None:
             return None
         return self.person_set_collections[person_set_collection_id]
+
+    def build_report(self) -> CommonReport:
+        """Generate common report JSON from genotpye data study."""
+        config = self.config.common_report
+
+        assert config.enabled, self.study_id
+
+        start = time.time()
+
+        if config.selected_person_set_collections.family_report:
+            families_report_collections = [
+                self.person_set_collections[collection_id]
+                for collection_id in
+                config.selected_person_set_collections.family_report
+            ]
+        else:
+            families_report_collections = \
+                list(self.person_set_collections.values())
+
+        families_report = FamiliesReport.from_genotype_study(
+            self,
+            families_report_collections,
+        )
+
+        people_report = PeopleReport.from_person_set_collections(
+            families_report_collections,
+        )
+
+        elapsed = time.time() - start
+        logger.info(
+            "COMMON REPORTS family report build in %.2f sec", elapsed,
+        )
+
+        start = time.time()
+
+        if config.selected_person_set_collections.denovo_report:
+            denovo_report_collections = [
+                self.person_set_collections[collection_id]
+                for collection_id in
+                config.selected_person_set_collections.denovo_report
+            ]
+        else:
+            denovo_report_collections = \
+                list(self.person_set_collections.values())
+
+        denovo_report = DenovoReport.from_genotype_study(
+            self,
+            denovo_report_collections,
+        )
+        elapsed = time.time() - start
+        logger.info(
+            "COMMON REPORTS denovo report build in %.2f sec", elapsed,
+        )
+
+        person_sets_config = \
+            self.config.person_set_collections
+
+        assert person_sets_config.selected_person_set_collections \
+            is not None, config
+
+        collection = self.get_person_set_collection(
+            person_sets_config.selected_person_set_collections[0],
+        )
+        phenotype: list[str] = []
+        assert collection is not None
+        for person_set in collection.person_sets.values():
+            if len(person_set.persons) > 0:
+                phenotype += person_set.values  # noqa: PD011
+
+        study_type = (
+            ",".join(self.study_type)
+            if self.study_type
+            else None
+        )
+
+        number_of_probands = 0
+        number_of_siblings = 0
+        for family in self.families.values():
+            for person in family.members_in_order:
+                if not person.is_child():
+                    continue
+                if person.role == Role.prb:
+                    number_of_probands += 1
+                if person.role == Role.sib:
+                    number_of_siblings += 1
+
+        return CommonReport({
+            "id": self.study_id,
+            "people_report": people_report.to_dict(),
+            "families_report": families_report.to_dict(full=True),
+            "denovo_report": (
+                denovo_report.to_dict()
+            ),
+            "study_name": self.name,
+            "phenotype": phenotype,
+            "study_type": study_type,
+            "study_year": self.year,
+            "pub_med": self.pub_med,
+            "families": len(self.families.values()),
+            "number_of_probands": number_of_probands,
+            "number_of_siblings": number_of_siblings,
+            "denovo": self.has_denovo,
+            "transmitted": self.has_transmitted,
+            "study_description": self.description,
+        })
+
+    def build_and_save(
+        self,
+        *,
+        force: bool = False,
+    ) -> CommonReport | None:
+        """Build a common report for a study, saves it and returns the report.
+
+        If the common reports are disabled for the study, the function skips
+        building the report and returns None.
+
+        If the report already exists the default behavior is to skip building
+        the report. You can force building the report by
+        passing `force=True` to the function.
+        """
+        if not self.config.common_report.enabled:
+            return None
+        report_filename = self.config.common_report.file_path
+        try:
+            if os.path.exists(report_filename) and not force:
+                return CommonReport.load(report_filename)
+        except Exception:  # noqa: BLE001
+            logger.warning(
+                "unable to load common report for %s", self.study_id,
+                exc_info=True)
+        report = self.build_report()
+        report.save(report_filename)
+        return report
+
+    def get_common_report(self) -> CommonReport | None:
+        """Return a study's common report."""
+        if not self.config.common_report.enabled:
+            return None
+
+        report = CommonReport.load(self.config.common_report.file_path)
+        if report is None:
+            report = self.build_and_save()
+        return report
 
 
 class GenotypeDataGroup(GenotypeData):

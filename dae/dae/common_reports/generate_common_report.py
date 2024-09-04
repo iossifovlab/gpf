@@ -1,11 +1,10 @@
+#!/usr/bin/env python
+
 import argparse
-import json
 import logging
-import os
 import sys
 import time
 
-from dae.common_reports.common_report import CommonReport
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
@@ -46,7 +45,7 @@ def main(
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
 
-    available_studies = gpf_instance.get_genotype_data_ids(local_only=True)
+    available_studies = gpf_instance.get_genotype_data_ids()
 
     if args.show_studies:
         for study_id in available_studies:
@@ -68,17 +67,4 @@ def main(
 
             study = gpf_instance.get_genotype_data(study_id)
 
-            if not study.config.common_report or \
-                    not study.config.common_report.enabled:
-                logger.warning(
-                    "skipping study %s since common report is disabled",
-                    study.study_id)
-                continue
-
-            common_report = CommonReport.build_report(study)
-            file_path = study.config.common_report.file_path
-
-            if not os.path.exists(os.path.dirname(file_path)):
-                os.makedirs(os.path.dirname(file_path))
-            with open(file_path, "w+", encoding="utf8") as crf:
-                json.dump(common_report.to_dict(full=True), crf)
+            study.build_and_save()

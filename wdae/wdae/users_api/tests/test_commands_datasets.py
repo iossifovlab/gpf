@@ -52,7 +52,6 @@ Dataset2,any_dataset;Dataset2
 Dataset3,any_dataset;Dataset3
 Dataset1,any_dataset;Dataset1
 Dataset4,any_dataset;Dataset4
-TEST_REMOTE_iossifov_2014,any_dataset;TEST_REMOTE_iossifov_2014
 """
     with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp:
         command = Command(gpf_instance=fixtures_wgpf_instance)

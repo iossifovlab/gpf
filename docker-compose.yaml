@@ -30,21 +30,3 @@ services:
     volumes:
       - .:/wd
     entrypoint: /wd/integration/local/entrypoint.sh
-
-
-  remote:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    platform: linux/amd64
-    depends_on:
-      - setup
-    ports:
-      - "21010:21010"
-    environment:
-      DAE_DB_DIR: /wd/data/data-hg19-remote
-      GRR_DEFINITION_FILE: /wd/integration/grr_definition.yaml
-    volumes:
-      - .:/wd
-
-    entrypoint: /wd/integration/remote/entrypoint.sh

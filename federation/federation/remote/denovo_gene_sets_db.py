@@ -1,9 +1,8 @@
 import logging
-from typing import Dict, List
 
 from dae.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.gene_sets.gene_sets_db import GeneSet
-from remote.rest_api_client import RESTClient
+from federation.remote.rest_api_client import RESTClient
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +13,8 @@ class RemoteDenovoGeneSetsCollection:
     rest_client: RESTClient
     collection_id: str
     collection_description: str
-    collection_format: List[str]
-    collection_types: List[Dict[str, str]]
+    collection_format: list[str]
+    collection_types: list[dict[str, str]]
 
     def __init__(self, rest_client: RESTClient):
 
@@ -32,14 +31,17 @@ class RemoteDenovoGeneSetsCollection:
         self.collection_types = self.denovo_collection["types"]
 
     # pylint: disable=unused-argument
-    def get_all_gene_sets(self, denovo_gene_set_spec, permitted_datasets=None):
+    def get_all_gene_sets(
+        self, denovo_gene_set_spec, _permitted_datasets=None,
+    ):
         # TODO FIXME Utilise permitted datasets
         return self.rest_client.get_denovo_gene_sets(
             denovo_gene_set_spec,
         )
 
     def get_gene_set(
-            self, gene_set_id, denovo_gene_set_spec, permitted_datasets=None):
+            self, gene_set_id, denovo_gene_set_spec, _permitted_datasets=None,
+        ):
         """Find and return a de Novo gene set."""
         logger.debug(
             "going to ged remote gene set: %s; %s",
@@ -51,26 +53,24 @@ class RemoteDenovoGeneSetsCollection:
         raw_gene_set = [gs.strip() for gs in raw_gene_set]
 
         description = raw_gene_set.pop(0)
-        gene_set = GeneSet(gene_set_id, description, raw_gene_set)
-
-        return gene_set
+        return GeneSet(gene_set_id, description, raw_gene_set)
 
 
 class RemoteDenovoGeneSetsDb:
     """Represents remote de Novo gene sets database."""
 
     _local_dgsdb: DenovoGeneSetsDb
-    remote_clients: List[RESTClient]
-    remote_denovo_gene_set_collections: Dict[
+    remote_clients: list[RESTClient]
+    remote_denovo_gene_set_collections: dict[
         str, RemoteDenovoGeneSetsCollection,
     ]
 
     def __init__(
         self,
-        remote_clients: Dict[str, RESTClient],
+        remote_clients: dict[str, RESTClient],
         local_denovo_gene_sets_db: DenovoGeneSetsDb,
     ):
-        self.remote_denovo_gene_set_collections = dict()
+        self.remote_denovo_gene_set_collections = {}
         self._local_dgsdb = local_denovo_gene_sets_db
         self.remote_clients = list(remote_clients.values())
 
@@ -99,7 +99,7 @@ class RemoteDenovoGeneSetsDb:
         ]
         for collection in self.remote_denovo_gene_set_collections.values():
             # TODO Implement permitted datasets
-            result.append({
+            result.append({  # noqa: PERF401
                 "desc": collection.collection_description,
                 "name": collection.collection_id,
                 "format": collection.collection_format,
