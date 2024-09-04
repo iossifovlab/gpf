@@ -162,10 +162,10 @@ class AnnotateColumnsTool(AnnotationTool):
             help="Filename of the output result",
             default=None)
         parser.add_argument(
-            "-in_sep", "--input-separator", default="\t",
+            "-in-sep", "--input-separator", default="\t",
             help="The column separator in the input")
         parser.add_argument(
-            "-out_sep", "--output-separator", default="\t",
+            "-out-sep", "--output-separator", default="\t",
             help="The column separator in the output")
         parser.add_argument(
             "--reannotate", default=None,
