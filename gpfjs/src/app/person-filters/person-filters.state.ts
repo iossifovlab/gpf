@@ -1,18 +1,18 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { PersonFilterState } from './person-filters';
 import { cloneDeep } from 'lodash';
-export const initialState: {
+
+export interface PersonAndFamilyFilters {
   familyFilters: PersonFilterState[];
   personFilters: PersonFilterState[];
-} = {
+}
+
+export const initialState: PersonAndFamilyFilters = {
   familyFilters: [],
   personFilters: [],
 };
 
-export const selectPersonFilters = createFeatureSelector<{
-  familyFilters: PersonFilterState[];
-  personFilters: PersonFilterState[];
-}>('personFilters');
+export const selectPersonFilters = createFeatureSelector<PersonAndFamilyFilters>('personFilters');
 
 export const setFamilyFilters = createAction(
   '[Genotype] Set familyFilters values',

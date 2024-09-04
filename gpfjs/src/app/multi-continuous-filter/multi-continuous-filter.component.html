@@ -7,6 +7,6 @@
   [datasetId]="datasetId"
   [continuousFilterState]="continuousFilterState"
   [measureName]="selectedMeasure?.name"
-  (updateFilterEvent)="updateFilterEvent.emit()"
+  (updateFilterEvent)="updateFilterEvent.emit($event)"
   id="continuous-filter">
 </gpf-continuous-filter>

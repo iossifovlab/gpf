@@ -5,6 +5,7 @@ import { ContinuousFilterState, ContinuousSelection } from '../person-filters/pe
 import { Observable, Subject } from 'rxjs';
 import { Partitions } from '../gene-scores/gene-scores';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-continuous-filter',
@@ -17,7 +18,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   @Input() public datasetId: string;
   @Input() public measureName: string;
   @Input() public continuousFilterState: ContinuousFilterState;
-  @Output() public updateFilterEvent = new EventEmitter();
+  @Output() public updateFilterEvent = new EventEmitter<ContinuousFilterState>();
   public histogramData: HistogramData;
 
   public rangesCounts: Array<number>;
@@ -57,9 +58,10 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   }
 
   public set rangeStart(value) {
-    const selection = this.continuousFilterState.selection as ContinuousSelection;
+    const updatedState = cloneDeep(this.continuousFilterState);
+    const selection = updatedState.selection as ContinuousSelection;
     selection.min = value;
-    this.updateFilterEvent.emit();
+    this.updateFilterEvent.emit(updatedState);
     this.rangeChanges.next([
       this.datasetId,
       this.measureName,
@@ -73,9 +75,10 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   }
 
   public set rangeEnd(value) {
-    const selection = this.continuousFilterState.selection as ContinuousSelection;
+    const updatedState = cloneDeep(this.continuousFilterState);
+    const selection = updatedState.selection as ContinuousSelection;
     selection.max = value;
-    this.updateFilterEvent.emit();
+    this.updateFilterEvent.emit(updatedState);
     this.rangeChanges.next([
       this.datasetId,
       this.measureName,

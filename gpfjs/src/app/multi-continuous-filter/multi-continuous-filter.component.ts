@@ -19,7 +19,7 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
   @Input() public continuousFilter: PersonFilter;
   @Input() public continuousFilterState: ContinuousFilterState;
   @Input() public isFamilyFilter: boolean;
-  @Output() public updateFilterEvent = new EventEmitter();
+  @Output() public updateFilterEvent = new EventEmitter<ContinuousFilterState>();
 
   @ViewChild(PhenoMeasureSelectorComponent) private measureSelectorComponent: PhenoMeasureSelectorComponent;
   public measures: Array<ContinuousMeasure>;
@@ -76,6 +76,7 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
     } else {
       this.continuousFilterState.source = null;
     }
+    this.continuousFilterState = cloneDeep(this.continuousFilterState);
     this.updateFilterEvent.emit();
   }
 

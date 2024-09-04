@@ -17,7 +17,7 @@
             [continuousFilterState]="continuousFilter"
             [isFamilyFilter]="isFamilyFilters"
             [datasetId]="selectedDatasetId"
-            (updateFilterEvent)="updateFilters()">
+            (updateFilterEvent)="updateSingleFilter($event)">
           </gpf-multi-continuous-filter>
         </div>
       </div>

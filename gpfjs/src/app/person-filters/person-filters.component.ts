@@ -4,10 +4,11 @@ import {
   PersonFilterState,
   CategoricalFilterState,
   ContinuousFilterState,
-  CategoricalSelection,
-  ContinuousSelection } from './person-filters';
+  ContinuousSelection,
+  CategoricalSelection
+} from './person-filters';
 import { Store } from '@ngrx/store';
-import { selectPersonFilters, setFamilyFilters, setPersonFilters } from './person-filters.state';
+import { PersonAndFamilyFilters, selectPersonFilters, setFamilyFilters, setPersonFilters } from './person-filters.state';
 import { IsNotEmpty, ValidateNested } from 'class-validator';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { take } from 'rxjs';
@@ -43,7 +44,7 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
   }
 
   public ngOnChanges(): void {
-    this.store.select(selectPersonFilters).pipe(take(1)).subscribe(state => {
+    this.store.select(selectPersonFilters).pipe(take(1)).subscribe((state: PersonAndFamilyFilters) => {
       // set default state
       const clonedState = cloneDeep(state);
       for (const filter of this.filters) {
@@ -86,6 +87,7 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
           );
           this.personFiltersState.set(filterState.id, newFilter);
         }
+        this.personFiltersState = cloneDeep(this.personFiltersState);
       }
     });
     this.updateFilters();
@@ -105,6 +107,23 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
 
   public getFilter(filterName: string): PersonFilter {
     return this.filters.find(f => f.name === filterName);
+  }
+
+  public updateSingleFilter(filter: PersonFilterState): void {
+    if (filter) {
+      this.updateSelected();
+      const filters = [...this.personFiltersState]
+        .map(([_, personFilter]) => personFilter)
+        .filter(personFilter => personFilter && !personFilter.isEmpty());
+
+      filters[filters.findIndex(f => f.id === filter.id)] = filter;
+
+      if (this.isFamilyFilters) {
+        this.store.dispatch(setFamilyFilters({familyFilters: filters}));
+      } else {
+        this.store.dispatch(setPersonFilters({personFilters: filters}));
+      }
+    }
   }
 
   public updateFilters(): void {
