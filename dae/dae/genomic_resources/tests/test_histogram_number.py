@@ -223,15 +223,17 @@ def test_histogram_serialize_deserialize() -> None:
     serialized = hist1.serialize()
     print(serialized)
 
-    loaded = yaml.load(serialized, yaml.Loader)
+    loaded = yaml.safe_load(serialized)
     print(loaded)
     assert loaded["bins"] == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     assert loaded["bars"] == [0, 0, 0, 1, 0, 0, 0, 1, 0, 2]
 
     hist2 = NumberHistogram.deserialize(serialized)
 
-    assert hist1.bins is not None and hist1.bars is not None
-    assert hist2.bins is not None and hist2.bars is not None
+    assert hist1.bins is not None
+    assert hist1.bars is not None
+    assert hist2.bins is not None
+    assert hist2.bars is not None
     assert np.array_equal(hist2.bins, hist1.bins)
     assert np.array_equal(hist2.bars, hist1.bars)
 
