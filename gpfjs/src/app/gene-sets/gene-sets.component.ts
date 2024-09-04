@@ -12,6 +12,7 @@ import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { selectGeneSets, setGeneSetsValues } from './gene-sets.state';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -61,15 +62,18 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
         this.store.select(selectDatasetId).pipe(take(1)),
       ))
     ).subscribe(([geneSetsCollections, geneSetsState, datasetIdState]) => {
-      this.selectedDatasetId = datasetIdState;
+      let geneSetsCollectionsClone = cloneDeep(geneSetsCollections);
+      const geneSetsStateClone = cloneDeep(geneSetsState);
+      const datasetIdStateClone = cloneDeep(datasetIdState);
+      this.selectedDatasetId = datasetIdStateClone;
 
-      const denovoGeneSetTypes = geneSetsCollections.filter(
+      const denovoGeneSetTypes = geneSetsCollectionsClone.filter(
         geneSetCollection => geneSetCollection.name === 'denovo'
       )[0].types;
 
 
       if (!denovoGeneSetTypes.length) {
-        geneSetsCollections = geneSetsCollections.filter(
+        geneSetsCollectionsClone = geneSetsCollectionsClone.filter(
           (geneSet) => geneSet.name.toLowerCase().trim() !== 'denovo'
         );
       } else {
@@ -85,10 +89,10 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
         }
       }
 
-      this.geneSetsCollections = geneSetsCollections;
-      this.selectedGeneSetsCollection = geneSetsCollections[0];
-      this.restoreState(geneSetsState);
-      this.geneSetsLoaded = geneSetsCollections.length;
+      this.geneSetsCollections = geneSetsCollectionsClone;
+      this.selectedGeneSetsCollection = geneSetsCollectionsClone[0];
+      this.restoreState(geneSetsStateClone);
+      this.geneSetsLoaded = geneSetsCollectionsClone.length;
     });
 
     this.geneSetsResult = this.geneSetsQueryChange$.pipe(
@@ -104,12 +108,13 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     this.geneSetsResult.subscribe(geneSets => {
       this.geneSets = geneSets.sort((a, b) => a.name.localeCompare(b.name));
       this.store.select(selectGeneSets).pipe(take(1)).subscribe(geneSetsState => {
-        if (!geneSetsState || !geneSetsState.geneSet) {
+        const geneSetsStateClone = cloneDeep(geneSetsState);
+        if (!geneSetsStateClone || !geneSetsStateClone.geneSet) {
           this.isLoading = false;
           return;
         }
         for (const geneSet of this.geneSets) {
-          if (geneSet.name === geneSetsState.geneSet.name) {
+          if (geneSet.name === geneSetsStateClone.geneSet.name) {
             this.geneSetsLocalState.geneSet = geneSet;
             this.isLoading = false;
           }
