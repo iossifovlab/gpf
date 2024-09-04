@@ -495,14 +495,13 @@ def test_group_retrieve_alphabetical_order(
 
     assert data["name"] == "any_dataset"
     assert data["users"] == []
-    assert data["datasets"][0]["datasetName"] == "(TEST_REMOTE) iossifov_2014"
-    assert data["datasets"][1]["datasetName"] == "comp"
-    assert data["datasets"][3]["datasetName"] == "Dataset1"
-    assert data["datasets"][3]["datasetName"] == "Dataset1"
-    assert data["datasets"][7]["datasetName"] == "f1_group"
-    assert data["datasets"][8]["datasetName"] == "f1_study"
-    assert data["datasets"][9]["datasetName"] == "f1_trio"
-    assert data["datasets"][14]["datasetName"] == "FAKE_STUDY"
+    assert data["datasets"][0]["datasetName"] == "comp"
+    assert data["datasets"][2]["datasetName"] == "Dataset1"
+    assert data["datasets"][3]["datasetName"] == "Dataset2"
+    assert data["datasets"][6]["datasetName"] == "f1_group"
+    assert data["datasets"][7]["datasetName"] == "f1_study"
+    assert data["datasets"][8]["datasetName"] == "f1_trio"
+    assert data["datasets"][13]["datasetName"] == "FAKE_STUDY"
     assert data["datasets"][-1]["datasetName"] == "TRIO"
 
 
