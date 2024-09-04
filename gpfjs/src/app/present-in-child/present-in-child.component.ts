@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngrx/store';
-import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { StatefulComponent } from 'app/common/stateful-component';
 import { selectPresentInChild, setPresentInChild } from './present-in-child.state';
 import { take } from 'rxjs';
 
@@ -10,7 +10,7 @@ import { take } from 'rxjs';
   selector: 'gpf-present-in-child',
   templateUrl: './present-in-child.component.html',
 })
-export class PresentInChildComponent extends StatefulComponentNgRx implements OnInit {
+export class PresentInChildComponent extends StatefulComponent implements OnInit {
   public presentInChildValues: Set<string> = new Set([
     'proband only', 'sibling only', 'proband and sibling', 'neither'
   ]);

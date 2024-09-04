@@ -1,12 +1,17 @@
 import { Component, OnChanges, Input, OnInit } from '@angular/core';
 import { Dataset, PersonFilter } from '../datasets/datasets';
-import { PersonFilterState, CategoricalFilterState, ContinuousFilterState } from './person-filters';
+import {
+  PersonFilterState,
+  CategoricalFilterState,
+  ContinuousFilterState,
+  CategoricalSelection,
+  ContinuousSelection } from './person-filters';
 import { Store } from '@ngrx/store';
 import { selectPersonFilters, setFamilyFilters, setPersonFilters } from './person-filters.state';
 import { IsNotEmpty, ValidateNested } from 'class-validator';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { take } from 'rxjs';
-import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { StatefulComponent } from 'app/common/stateful-component';
 import { cloneDeep } from 'lodash';
 
 @Component({
@@ -14,7 +19,7 @@ import { cloneDeep } from 'lodash';
   templateUrl: './person-filters.component.html',
   styleUrls: ['./person-filters.component.css'],
 })
-export class PersonFiltersComponent extends StatefulComponentNgRx implements OnChanges, OnInit {
+export class PersonFiltersComponent extends StatefulComponent implements OnChanges, OnInit {
   @Input() public dataset: Dataset;
   @Input() public filters: PersonFilter[];
   @Input() public isFamilyFilters: boolean;

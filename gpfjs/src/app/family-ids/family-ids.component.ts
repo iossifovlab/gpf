@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FamilyIds } from './family-ids';
 import { ValidateNested } from 'class-validator';
-import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { StatefulComponent } from 'app/common/stateful-component';
 import { Store } from '@ngrx/store';
 import { selectFamilyIds, setFamilyIds } from './family-ids.state';
 import { take } from 'rxjs';
@@ -10,7 +10,7 @@ import { take } from 'rxjs';
   selector: 'gpf-family-ids',
   templateUrl: './family-ids.component.html'
 })
-export class FamilyIdsComponent extends StatefulComponentNgRx implements OnInit {
+export class FamilyIdsComponent extends StatefulComponent implements OnInit {
   @ValidateNested()
   public familyIds = new FamilyIds();
   @ViewChild('textArea') private textArea: ElementRef;

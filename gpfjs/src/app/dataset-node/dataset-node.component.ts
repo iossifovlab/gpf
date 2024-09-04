@@ -5,7 +5,7 @@ import { DatasetNode } from './dataset-node';
 import { Store } from '@ngrx/store';
 import { selectExpandedDatasets, setExpandedDatasets } from './dataset-node.state';
 import { selectDatasetId } from 'app/datasets/datasets.state';
-import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { StatefulComponent } from 'app/common/stateful-component';
 import { cloneDeep } from 'lodash';
 
 @Component({
@@ -13,7 +13,7 @@ import { cloneDeep } from 'lodash';
   templateUrl: './dataset-node.component.html',
   styleUrls: ['./dataset-node.component.css']
 })
-export class DatasetNodeComponent extends StatefulComponentNgRx implements OnInit, AfterContentChecked {
+export class DatasetNodeComponent extends StatefulComponent implements OnInit, AfterContentChecked {
   @Input() public datasetNode: DatasetNode;
   @Output() public setExpandabilityEvent = new EventEmitter<boolean>();
   public selectedDatasetId: string;
@@ -88,7 +88,7 @@ export class DatasetNodeComponent extends StatefulComponentNgRx implements OnIni
       const eq = cloneDeep(expandedDatasets);
       if (!expandedDatasets.includes(nodeId)) {
         eq.push(nodeId);
-        this.store.dispatch(setExpandedDatasets({expandedDatasets: eq}))
+        this.store.dispatch(setExpandedDatasets({expandedDatasets: eq}));
       }
     });
   }
@@ -99,7 +99,7 @@ export class DatasetNodeComponent extends StatefulComponentNgRx implements OnIni
       if (expandedDatasets.includes(nodeId)) {
         const index = expandedDatasets.indexOf(nodeId, 0);
         eq.splice(index, 1);
-        this.store.dispatch(setExpandedDatasets({expandedDatasets: eq}))
+        this.store.dispatch(setExpandedDatasets({expandedDatasets: eq}));
       }
     });
   }

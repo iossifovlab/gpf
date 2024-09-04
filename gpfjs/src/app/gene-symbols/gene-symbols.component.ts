@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { IsNotEmpty, ValidateNested } from 'class-validator';
 import { Store } from '@ngrx/store';
 import { selectGeneSymbols, setGeneSymbols } from './gene-symbols.state';
-import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { StatefulComponent } from 'app/common/stateful-component';
 import { take } from 'rxjs';
 
 export class GeneSymbols {
@@ -14,7 +14,7 @@ export class GeneSymbols {
   selector: 'gpf-gene-symbols',
   templateUrl: './gene-symbols.component.html',
 })
-export class GeneSymbolsComponent extends StatefulComponentNgRx implements OnInit {
+export class GeneSymbolsComponent extends StatefulComponent implements OnInit {
   @ValidateNested()
   public geneSymbols: GeneSymbols = new GeneSymbols();
 

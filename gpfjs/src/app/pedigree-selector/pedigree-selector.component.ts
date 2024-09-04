@@ -3,7 +3,7 @@ import { Validate } from 'class-validator';
 import { PersonSet, PersonSetCollection } from '../datasets/datasets';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngrx/store';
-import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { StatefulComponent } from 'app/common/stateful-component';
 import { selectPedigreeSelector, setPedigreeSelector } from './pedigree-selector.state';
 
 @Component({
@@ -12,7 +12,7 @@ import { selectPedigreeSelector, setPedigreeSelector } from './pedigree-selector
   styleUrls: ['./pedigree-selector.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PedigreeSelectorComponent extends StatefulComponentNgRx implements OnInit, OnChanges {
+export class PedigreeSelectorComponent extends StatefulComponent implements OnInit, OnChanges {
   @Input() public collections: PersonSetCollection[];
   public selectedCollection: PersonSetCollection = null;
 

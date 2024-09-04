@@ -6,10 +6,9 @@ import { ActivatedRoute, Params, Router } from '@angular/router';
 import { cloneDeep, isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngrx/store';
-// import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
 import { selectDatasetId, setDatasetId } from './datasets.state';
-import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
-import { resetAllErrors, resetErrors } from 'app/common/errors.state';
+import { StatefulComponent } from 'app/common/stateful-component';
+import { resetAllErrors } from 'app/common/errors.state';
 import { resetFamilyIds } from 'app/family-ids/family-ids.state';
 import {
   resetExpandedDatasets,
@@ -35,7 +34,7 @@ import { resetFamilyTags } from 'app/family-tags/family-tags.state';
   templateUrl: './datasets.component.html',
   styleUrls: ['./datasets.component.css'],
 })
-export class DatasetsComponent extends StatefulComponentNgRx implements OnInit, OnDestroy {
+export class DatasetsComponent extends StatefulComponent implements OnInit, OnDestroy {
   private static previousUrl = '';
   public registerAlertVisible = false;
   public datasetTrees: DatasetNode[];

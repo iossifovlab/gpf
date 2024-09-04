@@ -3,7 +3,7 @@ import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectRegionsFilters, setRegionsFilters } from './regions-filter.state';
 import { ValidateNested } from 'class-validator';
-import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { StatefulComponent } from 'app/common/stateful-component';
 import { take } from 'rxjs';
 import { cloneDeep } from 'lodash';
 
@@ -11,7 +11,7 @@ import { cloneDeep } from 'lodash';
   selector: 'gpf-regions-filter',
   templateUrl: './regions-filter.component.html',
 })
-export class RegionsFilterComponent extends StatefulComponentNgRx implements OnInit {
+export class RegionsFilterComponent extends StatefulComponent implements OnInit {
   @Input() public genome = '';
   @ValidateNested() public regionsFilter = new RegionsFilter();
   @ViewChild('textArea') private textArea: ElementRef;

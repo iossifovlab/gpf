@@ -10,7 +10,7 @@ import { environment } from 'environments/environment';
 import { PersonSet } from 'app/datasets/datasets';
 import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { selectDatasetId } from 'app/datasets/datasets.state';
-import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { StatefulComponent } from 'app/common/stateful-component';
 import { selectGeneSets, setGeneSetsValues } from './gene-sets.state';
 
 @Component({
@@ -18,7 +18,7 @@ import { selectGeneSets, setGeneSetsValues } from './gene-sets.state';
   templateUrl: './gene-sets.component.html',
   styleUrls: ['./gene-sets.component.css']
 })
-export class GeneSetsComponent extends StatefulComponentNgRx implements OnInit {
+export class GeneSetsComponent extends StatefulComponent implements OnInit {
   public geneSetsCollections: Array<GeneSetsCollection>;
   public geneSets: Array<GeneSet>;
   public searchQuery: string;

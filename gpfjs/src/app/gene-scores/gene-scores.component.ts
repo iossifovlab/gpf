@@ -7,7 +7,7 @@ import { ConfigService } from '../config/config.service';
 import { catchError, debounceTime, distinctUntilChanged, map, switchMap, take } from 'rxjs/operators';
 import { ValidateNested } from 'class-validator';
 import { environment } from 'environments/environment';
-import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { StatefulComponent } from 'app/common/stateful-component';
 import { selectGeneScores, setGeneScore, setGeneScoresHistogramValues } from './gene-scores.state';
 
 @Component({
@@ -16,7 +16,7 @@ import { selectGeneScores, setGeneScore, setGeneScoresHistogramValues } from './
   templateUrl: './gene-scores.component.html',
   styleUrls: ['./gene-scores.component.css'],
 })
-export class GeneScoresComponent extends StatefulComponentNgRx implements OnInit {
+export class GeneScoresComponent extends StatefulComponent implements OnInit {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
   private partitions: Observable<Partitions>;
 

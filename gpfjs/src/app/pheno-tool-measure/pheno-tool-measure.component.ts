@@ -11,7 +11,7 @@ import { Dataset } from 'app/datasets/datasets';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { StatefulComponent } from 'app/common/stateful-component';
 
 interface Regression {
   display_name: string;
@@ -24,7 +24,7 @@ interface Regression {
   templateUrl: './pheno-tool-measure.component.html',
   styleUrls: ['./pheno-tool-measure.component.css'],
 })
-export class PhenoToolMeasureComponent extends StatefulComponentNgRx implements OnInit {
+export class PhenoToolMeasureComponent extends StatefulComponent implements OnInit {
   @ViewChildren('checkboxes') public inputs: QueryList<ElementRef>;
 
   @IsNotEmpty({message: 'Please select a measure.'})

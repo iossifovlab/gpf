@@ -3,14 +3,14 @@ import { Store } from '@ngrx/store';
 import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { selectStudyTypes, setStudyTypes } from './study-types.state';
-import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { StatefulComponent } from 'app/common/stateful-component';
 import { take } from 'rxjs';
 
 @Component({
   selector: 'gpf-study-types',
   templateUrl: './study-types.component.html',
 })
-export class StudyTypesComponent extends StatefulComponentNgRx implements OnInit {
+export class StudyTypesComponent extends StatefulComponent implements OnInit {
   public studyTypes: Set<string> = new Set(['we', 'wg', 'tg']);
   public studyTypesDisplayNames: Map<string, string>;
 

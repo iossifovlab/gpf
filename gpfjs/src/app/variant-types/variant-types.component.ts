@@ -3,14 +3,14 @@ import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngrx/store';
 import { selectVariantTypes, setVariantTypes } from './variant-types.state';
-import { StatefulComponentNgRx } from 'app/common/stateful-component_ngrx';
+import { StatefulComponent } from 'app/common/stateful-component';
 import { take } from 'rxjs';
 
 @Component({
   selector: 'gpf-variant-types',
   templateUrl: './variant-types.component.html'
 })
-export class VariantTypesComponent extends StatefulComponentNgRx implements OnChanges {
+export class VariantTypesComponent extends StatefulComponent implements OnChanges {
   @Input() public variantTypes: Set<string> = new Set<string>([]);
 
   @Input()
