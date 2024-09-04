@@ -16,31 +16,33 @@ logger = logging.getLogger(__name__)
 class DenovoGeneSetsDb:
     """Class to manage available de Novo gene sets."""
 
-    def __init__(self, gpf_instance):
+    def __init__(self, gpf_instance: Any):
         self.gpf_instance = gpf_instance
-        self._gene_set_collections_cache = {}
-        self._gene_set_configs_cache = {}
+        self._gene_set_collections_cache: dict[
+            str, DenovoGeneSetCollection] = {}
+        self._gene_set_configs_cache: dict[str, Any] = {}
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._denovo_gene_set_collections)
 
-    def reload(self):
+    def reload(self) -> None:
         self._gene_set_collections_cache = {}
         self._gene_set_configs_cache = {}
 
     @property
-    def _denovo_gene_set_collections(self):
+    def _denovo_gene_set_collections(
+            self) -> dict[str, DenovoGeneSetCollection]:
         if not self._gene_set_collections_cache:
             self._load_cache()
         return self._gene_set_collections_cache
 
     @property
-    def _denovo_gene_set_configs(self):
+    def _denovo_gene_set_configs(self) -> dict[str, Any]:
         if not self._gene_set_configs_cache:
             self._load_cache()
         return self._gene_set_configs_cache
 
-    def _load_cache(self):
+    def _load_cache(self) -> None:
         for study_id in self.get_genotype_data_ids():
             study = self.gpf_instance.get_genotype_data(study_id)
             assert study is not None, study_id
@@ -50,13 +52,15 @@ class DenovoGeneSetsDb:
             self._gene_set_configs_cache[study_id] = gs_collection.config
             self._gene_set_collections_cache[study_id] = gs_collection
 
-    def _build_cache(self, genotype_data_ids):
+    def _build_cache(self, genotype_data_ids: list[str]) -> None:
         for study_id in genotype_data_ids:
             study = self.gpf_instance.get_genotype_data(study_id)
             assert study is not None, study_id
             DenovoGeneSetCollectionFactory.build_collection(study)
 
-    def get_gene_set_descriptions(self, permitted_datasets=None):
+    def get_gene_set_descriptions(
+        self, permitted_datasets: list[str] | None = None,
+    ) -> dict[str, Any]:
         gene_sets_types = []
         for gs_id, gs_collection in self._denovo_gene_set_collections.items():
             if permitted_datasets is None or gs_id in permitted_datasets:
