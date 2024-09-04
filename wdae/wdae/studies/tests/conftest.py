@@ -2,12 +2,9 @@
 from pathlib import Path
 
 import pytest
-from remote.rest_api_client import RESTClient
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from studies.remote_study import RemoteGenotypeData
 from studies.study_wrapper import (
-    RemoteStudyWrapper,
     StudyWrapper,
     StudyWrapperBase,
 )
@@ -31,25 +28,16 @@ def iossifov_2014_local(
 
     return StudyWrapper(
         data_study,
-        local_gpf_instance._pheno_registry,
+        local_gpf_instance._pheno_registry,  # noqa: SLF001
         local_gpf_instance.gene_scores_db,
         local_gpf_instance,
     )
 
 
-@pytest.fixture(scope="function")
-def iossifov_2014_remote(rest_client: RESTClient) -> StudyWrapperBase:
-    return RemoteStudyWrapper(
-        RemoteGenotypeData("iossifov_2014", rest_client),
-    )
-
-
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def iossifov_2014_wrappers(
     iossifov_2014_local: StudyWrapperBase,
-    iossifov_2014_remote: StudyWrapperBase,
 ) -> dict[str, StudyWrapperBase]:
     return {
         "local": iossifov_2014_local,
-        "remote": iossifov_2014_remote,
     }
