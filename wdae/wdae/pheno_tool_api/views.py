@@ -64,7 +64,9 @@ class PhenoToolView(QueryDatasetView):
         """Return pheno tool results based on POST request."""
         data = expand_gene_set(request.data, request.user, self.instance_id)
         study_wrapper = self.gpf_instance.get_wdae_wrapper(data["datasetId"])
-        adapter = self.instance.get_pheno_tool_adapter(study_wrapper)
+        if study_wrapper is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        adapter = self.gpf_instance.get_pheno_tool_adapter(study_wrapper)
 
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)

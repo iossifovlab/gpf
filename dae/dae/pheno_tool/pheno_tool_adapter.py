@@ -92,9 +92,12 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
                     assert res["pValue"] == "NA"
                     res["negative"]["mean"] = res["positive"]["mean"]
 
-    def build_report_description(self) -> str:
-        normalize_by = self.pheno_tool.normalize_by
-        measure_id = self.pheno_tool.measure_id
+    def build_report_description(
+        self, measure_id: str, normalize_by: Any,
+    ) -> str:
+        normalize_by = self.pheno_tool.init_normalize_measures(
+            measure_id, normalize_by,
+        )
         if not normalize_by:
             return measure_id
 
@@ -105,8 +108,11 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
     ) -> dict[str, Any]:
         """Run pheno tool on given data."""
         measure_id = data["measureId"]
-        family_ids = data.get("familyIds", [])
-        person_ids = set(self.helper.genotype_data_persons(family_ids))
+        family_ids = data.get("familyIds")
+        if family_ids is not None:
+            person_ids = set(self.helper.genotype_data_persons(family_ids))
+        else:
+            person_ids = None
         normalize_by = data.get("normalizeBy")
 
         effect_groups = EffectTypesMixin.build_effect_types_list(effect_groups)
@@ -126,6 +132,8 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         self.align_na_results(results)
 
         return {
-            "description": self.build_report_description(),
+            "description": self.build_report_description(
+                measure_id, normalize_by,
+            ),
             "results": results,
         }

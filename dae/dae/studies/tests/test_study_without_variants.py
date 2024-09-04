@@ -45,5 +45,5 @@ def test_study_simple(no_variants_study: GenotypeData) -> None:
 
 def test_common_reports(no_variants_study: GenotypeData) -> None:
     """Test building a common report from a study without variants."""
-    common_report = CommonReport.build_report(no_variants_study)
+    common_report = no_variants_study.build_report()
     assert common_report

@@ -183,7 +183,7 @@ class PhenoTool:
         if normalize_by is None:
             normalize_by = []
 
-        normalize_by = self._init_normalize_measures(normalize_by)
+        normalize_by = self.init_normalize_measures(measure_id, normalize_by)
 
         # currently filtering only for probands, expand with additional
         # options via PeopleGroup
@@ -205,13 +205,13 @@ class PhenoTool:
 
         return pheno_df
 
-    def _init_normalize_measures(
-        self, normalize_by: list[dict[str, str]],
+    def init_normalize_measures(
+        self, measure_id: str, normalize_by: list[dict[str, str]],
     ) -> list[str]:
         result = list(filter(
             None,
             [
-                self._get_normalize_measure_id(normalize_measure)
+                self.get_normalize_measure_id(measure_id, normalize_measure)
                 for normalize_measure in normalize_by
             ]))
 
@@ -222,8 +222,8 @@ class PhenoTool:
         )
         return result
 
-    def _get_normalize_measure_id(
-        self, normalize_measure: dict[str, str],
+    def get_normalize_measure_id(
+        self, measure_id: str, normalize_measure: dict[str, str],
     ) -> str | None:
         assert isinstance(normalize_measure, dict)
         assert "measure_name" in normalize_measure
@@ -231,7 +231,7 @@ class PhenoTool:
 
         if not normalize_measure["instrument_name"]:
             normalize_measure["instrument_name"] = \
-                self.measure_id.split(".")[0]
+                measure_id.split(".")[0]
 
         normalize_id = ".".join(
             [
@@ -240,7 +240,7 @@ class PhenoTool:
             ],
         )
         if self.phenotype_data.has_measure(normalize_id) and \
-                normalize_id != self.measure_id:
+                normalize_id != measure_id:
             return normalize_id
 
         return None

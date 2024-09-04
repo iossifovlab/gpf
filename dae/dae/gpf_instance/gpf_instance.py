@@ -434,6 +434,8 @@ class GPFInstance:
     def get_common_report(self, study_id: str) -> CommonReport | None:
         """Load and return common report (dataset statistics) for a study."""
         study = self.get_genotype_data(study_id)
+        if study is None:
+            return None
         return study.get_common_report()
 
     def get_all_common_report_configs(self) -> list[Box]:
@@ -671,7 +673,7 @@ class GPFInstance:
 
         Will create and register new one if one isn't found.
         """
-        if dataset.study_id not in self._enrichment_builders:
+        if dataset.study_id not in self._pheno_tool_adapters:
             self.register_pheno_tool_adapter(
                 dataset.study_id, self.make_pheno_tool_adapter(dataset),
             )
