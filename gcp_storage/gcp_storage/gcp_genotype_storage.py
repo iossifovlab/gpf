@@ -114,6 +114,9 @@ class GcpGenotypeStorage(GenotypeStorage):
         genome: ReferenceGenome,  # noqa: ARG002
         gene_models: GeneModels,
     ) -> BigQueryVariants:
+        if self.fs is None:
+            self.start()
+
         assert study_config is not None
         tables_layout = self.study_tables(study_config)
         project_id = self.storage_config["project_id"]
@@ -301,6 +304,9 @@ class GcpGenotypeStorage(GenotypeStorage):
             self, study_id: str,
             study_layout: Schema2DatasetLayout) -> Schema2DatasetLayout:
         """Create pedigree and variant tables for a study."""
+        if self.fs is None:
+            self.start()
+
         partition_description = self._load_partition_description(
             study_layout.meta)
         bucket_layout = self._upload_dataset_into_import_bucket(
