@@ -66,7 +66,17 @@ class PhenoToolView(QueryDatasetView):
         study_wrapper = self.gpf_instance.get_wdae_wrapper(data["datasetId"])
         if study_wrapper is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        adapter = self.gpf_instance.get_pheno_tool_adapter(study_wrapper)
+        adapter = self.gpf_instance.get_pheno_tool_adapter(
+            study_wrapper.genotype_data,
+        )
+        data["phenoFilterFamilyIds"] = None
+        if data.get("familyFilters") is not None:
+            data["phenoFilterFamilyIds"] = list(
+                study_wrapper.query_transformer  # noqa: SLF001
+                ._transform_filters_to_ids(
+                    data["familyFilters"],
+                ),
+            )
 
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)

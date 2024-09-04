@@ -108,11 +108,11 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
     ) -> dict[str, Any]:
         """Run pheno tool on given data."""
         measure_id = data["measureId"]
-        family_ids = data.get("familyIds")
-        if family_ids is not None:
-            person_ids = set(self.helper.genotype_data_persons(family_ids))
-        else:
-            person_ids = None
+        family_ids = data.get("phenoFilterFamilyIds")
+        person_ids = self.helper.genotype_data_persons(
+            data.get("familyIds", []),
+        )
+
         normalize_by = data.get("normalizeBy")
 
         effect_groups = EffectTypesMixin.build_effect_types_list(effect_groups)
