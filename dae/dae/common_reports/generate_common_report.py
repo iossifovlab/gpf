@@ -45,7 +45,7 @@ def main(
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
 
-    available_studies = gpf_instance.get_genotype_data_ids(local_only=True)
+    available_studies = gpf_instance.get_genotype_data_ids()
 
     if args.show_studies:
         for study_id in available_studies:

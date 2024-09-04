@@ -1,13 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest_mock
 
-from dae.common_reports.common_report import CommonReport
 from dae.common_reports.denovo_report import DenovoReport
 from dae.studies.study import GenotypeDataStudy
 
 
 def test_common_report(study4: GenotypeDataStudy) -> None:
-    common_report = CommonReport.build_report(study4)
+    common_report = study4.build_report()
 
     assert common_report.study_id == "Study4"
     assert common_report.families_report
@@ -39,7 +38,7 @@ def test_common_report_empty_denovo(
         new=denovo_report_mock,
     )
 
-    common_report = CommonReport.build_report(study4)
+    common_report = study4.build_report()
 
     assert common_report.study_id == "Study4"
     assert common_report.families_report

@@ -121,7 +121,7 @@ class GPFInstance:
         self._pheno_tool_adapters: dict[str, PhenoToolAdapterBase] = {}
         self._annotation_pipeline: AnnotationPipeline | None = None
 
-        self.enrichment_helper = EnrichmentHelper(self.gpf_instance.grr)
+        self.enrichment_helper = EnrichmentHelper(self.grr)
 
     def load(self) -> GPFInstance:
         """Load all GPF instance attributes."""

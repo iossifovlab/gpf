@@ -1,7 +1,7 @@
 import copy
 import logging
 import os
-from typing import Any, Dict, List
+from typing import Any
 
 import toml
 from box import Box
@@ -242,7 +242,7 @@ enabled = true
 
 
 DEFAULT_STUDY_CONFIG = GPFConfigParser.parse_and_interpolate(
-    DEFAULT_STUDY_CONFIG_TOML, parser=toml.loads)  # type: ignore
+    DEFAULT_STUDY_CONFIG_TOML, parser=toml.loads)
 
 
 class VariantsDb:
@@ -289,11 +289,9 @@ class VariantsDb:
         self._load_all_genotype_studies(genotype_study_configs)
         self._load_all_genotype_groups(genotype_group_configs)
         for study in self.get_all_genotype_data():
-            # pylint: disable=import-outside-toplevel
-            from dae.common_reports.common_report import CommonReport
-            CommonReport.build_and_save(study)
+            study.build_and_save()
 
-    def _load_study_configs(self) -> Dict[str, Box]:
+    def _load_study_configs(self) -> dict[str, Box]:
         logger.info("loading study configs: %s", self.dae_config.studies)
         default_config_filename = None
         default_config = None
@@ -335,7 +333,7 @@ class VariantsDb:
                 study_config
         return genotype_study_configs
 
-    def _load_group_configs(self) -> Dict[str, Box]:
+    def _load_group_configs(self) -> dict[str, Box]:
         default_config_filename = None
         default_config = None
 
@@ -376,11 +374,6 @@ class VariantsDb:
         return genotype_group_configs
 
     def get_genotype_study(self, study_id: str) -> GenotypeData | None:
-        # if study_id not in self._genotype_study_cache:
-        #     study_configs = self._load_study_configs()
-        #     if study_id not in study_configs:
-        #         return None
-        #     self._load_genotype_study(study_configs[study_id])
         return self._genotype_study_cache.get(study_id)
 
     def get_genotype_study_config(self, study_id: str) -> Box | None:
@@ -389,7 +382,7 @@ class VariantsDb:
             return None
         return genotype_study.config
 
-    def get_all_genotype_study_ids(self) -> List[str | Any]:
+    def get_all_genotype_study_ids(self) -> list[str | Any]:
         return list(self._genotype_study_cache.keys())
 
     def get_all_genotype_study_configs(self) -> list[Box]:
@@ -398,15 +391,10 @@ class VariantsDb:
             for genotype_study in self._genotype_study_cache.values()
         ]
 
-    def get_all_genotype_studies(self) -> List[GenotypeDataStudy | Any]:
+    def get_all_genotype_studies(self) -> list[GenotypeDataStudy | Any]:
         return list(self._genotype_study_cache.values())
 
     def get_genotype_group(self, group_id: str) -> GenotypeData | None:
-        # if group_id not in self._genotype_group_cache:
-        #     group_configs = self._load_group_configs()
-        #     if group_id not in group_configs:
-        #         return None
-        #     self._load_genotype_group(group_configs[group_id])
         return self._genotype_group_cache.get(group_id)
 
     def get_genotype_group_config(self, group_id: str) -> Box | None:
@@ -440,14 +428,14 @@ class VariantsDb:
         genotype_data_group_config = self.get_genotype_group_config(
             config_id,
         )
-        return study_config if study_config else genotype_data_group_config
+        return study_config or genotype_data_group_config
 
     @deprecated(details="start using GPFInstance methods")
     def get(self, object_id: str) -> GenotypeData | None:
         genotype_data_study = self.get_genotype_study(object_id)
         genotype_data_group = self.get_genotype_group(object_id)
         return (
-            genotype_data_study if genotype_data_study else genotype_data_group
+            genotype_data_study or genotype_data_group
         )
 
     def get_all_genotype_data(self) -> list[GenotypeData]:
@@ -509,9 +497,8 @@ class VariantsDb:
             )
 
             return GenotypeDataStudy(study_config, variants)
-        except Exception as ex:  # pylint: disable=broad-except
-            logger.error("unable to create study %s", study_config.id)
-            logger.exception(ex)
+        except Exception:  # pylint: disable=broad-except
+            logger.exception("unable to create study %s", study_config.id)
             return None
 
     def _load_all_genotype_groups(
@@ -561,13 +548,12 @@ class VariantsDb:
 
             genotype_group = GenotypeDataGroup(group_config, group_studies)
             self._genotype_group_cache[group_config.id] = genotype_group
-            return genotype_group
-
-        except Exception as ex:  # pylint: disable=broad-except
-            logger.error(
+        except Exception:  # pylint: disable=broad-except
+            logger.exception(
                 "unable to create genotype data group %s", group_config.id)
-            logger.exception(ex)
             return None
+
+        return genotype_group
 
     def register_genotype_data(
         self, genotype_data: GenotypeData | GenotypeDataGroup,
