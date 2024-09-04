@@ -22,6 +22,7 @@ describe('PresentInChildComponent', () => {
     component = fixture.componentInstance;
 
     store = TestBed.inject(Store);
+
     jest.spyOn(store, 'select').mockReturnValue(of(['value1', 'value2']));
     jest.spyOn(store, 'dispatch').mockReturnValue();
 
@@ -39,8 +40,8 @@ describe('PresentInChildComponent', () => {
 
 
   it('should update present in child', () => {
+    jest.clearAllMocks();
     component.selectedValues = undefined;
-    component['store'] = { dispatch() {} } as any;
 
     const dispatchSpy = jest.spyOn(store, 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);

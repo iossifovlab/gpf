@@ -3,6 +3,7 @@ import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { PersonFiltersComponent } from './person-filters.component';
 import { personFiltersReducer } from './person-filters.state';
 import { StoreModule } from '@ngrx/store';
+import { datasetIdReducer } from 'app/datasets/datasets.state';
 
 describe('PersonFiltersComponent', () => {
   let component: PersonFiltersComponent;
@@ -11,7 +12,7 @@ describe('PersonFiltersComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [PersonFiltersComponent, ErrorsAlertComponent],
-      imports: [StoreModule.forRoot({personFilters: personFiltersReducer})],
+      imports: [StoreModule.forRoot({personFilters: personFiltersReducer, datasetId: datasetIdReducer})],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PersonFiltersComponent);

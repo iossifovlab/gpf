@@ -93,15 +93,7 @@ describe('PhenoToolComponent', () => {
     fixture = TestBed.createComponent(PhenoToolComponent);
     component = fixture.componentInstance;
 
-    // eslint-disable-next-line max-len
-    // eslint-disable-next-line max-len
-
     store = TestBed.inject(Store);
-
-    // const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
-    // jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
-
-    // component.ngOnInit();
   }));
 
   it('should create', () => {
@@ -169,20 +161,17 @@ describe('PhenoToolComponent', () => {
 
   it('should hide results on a state change', () => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
 
     component.ngOnInit();
     expect(component.phenoToolResults).toBeNull();
     component.submitQuery();
     expect(component.phenoToolResults).toStrictEqual(new PhenoToolResults('asdf', []));
     store.dispatch(setGeneSymbols({geneSymbols: ['POGZ']}));
-    expect(jest.spyOn(store, 'select')).toHaveBeenCalledWith()
     expect(component.phenoToolResults).toBeNull();
   });
 
   it('should test download', () => {
-    // const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
-    // jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
-
     component.ngOnInit();
     const mockEvent = {
       target: document.createElement('form'),

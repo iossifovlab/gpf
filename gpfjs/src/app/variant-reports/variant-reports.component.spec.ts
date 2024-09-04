@@ -14,6 +14,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { StoreModule } from '@ngrx/store';
+import { datasetIdReducer } from 'app/datasets/datasets.state';
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
@@ -307,7 +308,7 @@ describe('VariantReportsComponent', () => {
     const datasetsServiceMock = new MockDatasetsService();
     TestBed.configureTestingModule({
       declarations: [VariantReportsComponent, PeopleCounterRowPipe],
-      imports: [FormsModule, StoreModule.forRoot({}), RouterTestingModule.withRoutes([])],
+      imports: [FormsModule, StoreModule.forRoot({datasetId: datasetIdReducer}), RouterTestingModule.withRoutes([])],
       providers: [
         ConfigService,
         { provide: VariantReportsService, useValue: variantReportsServiceMock },

@@ -1,8 +1,5 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-
 import { GenotypeBlockComponent } from './genotype-block.component';
 import { GenderComponent } from '../gender/gender.component';
 import { VariantTypesComponent } from '../variant-types/variant-types.component';

@@ -6,6 +6,8 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { ConfigService } from 'app/config/config.service';
 import { StoreModule } from '@ngrx/store';
+import { uniqueFamilyVariantsFilterReducer } from './unique-family-variants-filter.state';
+import { datasetIdReducer } from 'app/datasets/datasets.state';
 
 class DatasetsServiceMock {
   public getSelectedDataset(): object {
@@ -21,7 +23,13 @@ describe('UniqueFamilyVariantsFilterComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [UniqueFamilyVariantsFilterComponent],
       providers: [{provide: DatasetsService, useValue: new DatasetsServiceMock()}, DatasetsTreeService, ConfigService],
-      imports: [HttpClientModule, StoreModule.forRoot({}), FormsModule]
+      imports: [
+        HttpClientModule,
+        StoreModule.forRoot({
+          uniqueFamilyVariantsFilter: uniqueFamilyVariantsFilterReducer,
+          datasetId: datasetIdReducer}),
+        FormsModule
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(UniqueFamilyVariantsFilterComponent);

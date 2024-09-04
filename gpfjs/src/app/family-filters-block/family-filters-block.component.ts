@@ -94,11 +94,11 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
       }
     });
 
-    combineLatest(
+    combineLatest([
       this.store.select(selectFamilyIds),
       this.store.select(selectFamilyTags),
       this.store.select(selectPersonFilters),
-    ).pipe(take(1)).subscribe(([familyIdsState, familyTagsState, personFiltersState]) => {
+    ]).pipe(take(1)).subscribe(([familyIdsState, familyTagsState, personFiltersState]) => {
       if (familyIdsState.length) {
         setTimeout(() => {
           this.ngbNav.select('familyIds');

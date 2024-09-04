@@ -1,4 +1,4 @@
-import { ContinuousMeasure, HistogramData } from "./measures";
+import { ContinuousMeasure, HistogramData } from './measures';
 
 describe('ContinuousMeasure', () => {
   it('should create from json', () => {

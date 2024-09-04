@@ -70,15 +70,15 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
           const filterType = filterState.sourceType === 'continuous' ? ContinuousFilterState : CategoricalFilterState;
           let selection = null;
           if (filterState.sourceType === 'continuous') {
-            // const filterStateSelection = filterState.selection as ContinuousSelection;
-            // selection = new ContinuousSelection(
-            //   filterStateSelection.min,
-            //   filterStateSelection.max,
-            //   filterStateSelection.domainMin,
-            //   filterStateSelection.domainMax,
-            // );
+            const filterStateSelection = filterState.selection as ContinuousSelection;
+            selection = new ContinuousSelection(
+              filterStateSelection.min,
+              filterStateSelection.max,
+              filterStateSelection.domainMin,
+              filterStateSelection.domainMax,
+            );
           } else {
-            // selection = new CategoricalSelection((filterState.selection as CategoricalSelection).selection);
+            selection = new CategoricalSelection((filterState.selection as CategoricalSelection).selection);
           }
           const newFilter = new filterType(
             filterState.id, filterState.sourceType, filterState.role,

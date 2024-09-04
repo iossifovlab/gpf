@@ -8,7 +8,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { of } from 'rxjs';
 import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
-import { setVariantTypes } from './variant-types.state';
+import { setVariantTypes, variantTypesReducer } from './variant-types.state';
 import { Store, StoreModule } from '@ngrx/store';
 
 describe('VariantTypesComponent', () => {
@@ -24,7 +24,7 @@ describe('VariantTypesComponent', () => {
         ConfigService,
         UsersService,
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, StoreModule.forRoot({})]
+      imports: [HttpClientTestingModule, RouterTestingModule, StoreModule.forRoot({variantTypes: variantTypesReducer})]
     })
       .compileComponents();
 

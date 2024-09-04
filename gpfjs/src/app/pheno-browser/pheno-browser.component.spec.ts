@@ -33,6 +33,7 @@ import { HttpClient, HttpHandler } from '@angular/common/http';
 import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store, StoreModule } from '@ngrx/store';
+import { datasetIdReducer } from 'app/datasets/datasets.state';
 
 const fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression)) as object;
 fakeJsonMeasurei1['instrument_name'] = 'i1';
@@ -146,7 +147,7 @@ describe('PhenoBrowserComponent', () => {
     };
 
     TestBed.configureTestingModule({
-      imports: [FormsModule, NgbModule, StoreModule.forRoot({})],
+      imports: [FormsModule, NgbModule, StoreModule.forRoot({datasetId: datasetIdReducer})],
       declarations: [GpfTableHeaderComponent, GpfTableHeaderCellComponent,
         GpfTableComponent, GpfTableCellComponent,
         GpfTableEmptyCellComponent, PhenoBrowserTableComponent,

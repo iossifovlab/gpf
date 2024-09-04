@@ -2,7 +2,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { PresentInParentComponent } from './present-in-parent.component';
-import { setPresentInParent } from './present-in-parent.state';
+import { presentInParentReducer, setPresentInParent } from './present-in-parent.state';
 import { Store, StoreModule } from '@ngrx/store';
 
 describe('PresentInParentComponent', () => {
@@ -13,7 +13,7 @@ describe('PresentInParentComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [PresentInParentComponent],
-      imports: [StoreModule.forRoot({})],
+      imports: [StoreModule.forRoot({presentInParent: presentInParentReducer})],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
     fixture = TestBed.createComponent(PresentInParentComponent);

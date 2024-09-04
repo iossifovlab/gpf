@@ -12,7 +12,11 @@ import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 import { Dataset, GenotypeBrowser } from 'app/datasets/datasets';
-import { Store, StoreModule } from '@ngrx/store';
+import { StoreModule } from '@ngrx/store';
+import { datasetIdReducer } from 'app/datasets/datasets.state';
+import { familyIdsReducer } from 'app/family-ids/family-ids.state';
+import { familyTagsReducer } from 'app/family-tags/family-tags.state';
+import { personFiltersReducer } from 'app/person-filters/person-filters.state';
 
 class VariantReportsServiceMock {
   private variantsUrl = 'common_reports/studies/';
@@ -240,12 +244,19 @@ describe('FamilyFiltersBlockComponent', () => {
   let component: FamilyFiltersBlockComponent;
   let fixture: ComponentFixture<FamilyFiltersBlockComponent>;
   const variantReportsServiceMock = new VariantReportsServiceMock();
-  let store: Store;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [FamilyFiltersBlockComponent],
-      imports: [NgbNavModule, StoreModule.forRoot({}), HttpClientTestingModule],
+      imports: [
+        NgbNavModule,
+        StoreModule.forRoot({
+          datasetId: datasetIdReducer,
+          familyIds: familyIdsReducer,
+          familyTags: familyTagsReducer,
+          personFilters: personFiltersReducer
+        }),
+        HttpClientTestingModule],
       providers: [
         DatasetsService,
         ConfigService,
@@ -262,12 +273,6 @@ describe('FamilyFiltersBlockComponent', () => {
     // eslint-disable-next-line max-len
     const datasetMock = new Dataset('datasetId', 'dataset', [], true, [], [], [], '', true, true, true, true, {enabled: true}, genotypeBrowserMock, null, null, null, true, null, false);
     component.dataset = datasetMock;
-
-    // eslint-disable-next-line max-len
-    const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
-
-    store = TestBed.inject(Store);
-    jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
 
     fixture.detectChanges();
   }));

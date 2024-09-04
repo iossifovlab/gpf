@@ -72,6 +72,7 @@ class MockGeneSetsService {
 describe('GeneSetsComponent', () => {
   let component: GeneSetsComponent;
   let fixture: ComponentFixture<GeneSetsComponent>;
+  let store: Store;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -92,6 +93,11 @@ describe('GeneSetsComponent', () => {
 
     fixture = TestBed.createComponent(GeneSetsComponent);
     component = fixture.componentInstance;
+
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'select').mockReturnValue(of());
+    jest.spyOn(store, 'dispatch').mockReturnValue(null);
+
     fixture.detectChanges();
   });
 
@@ -243,7 +249,6 @@ describe('GeneSetsComponent MockedGeneSetsService', () => {
     fixture = TestBed.createComponent(GeneSetsComponent);
     component = fixture.componentInstance;
 
-    // eslint-disable-next-line max-len
     const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
 
     store = TestBed.inject(Store);

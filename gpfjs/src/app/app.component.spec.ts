@@ -21,7 +21,8 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 import { FormsModule } from '@angular/forms';
 import { APP_BASE_HREF } from '@angular/common';
 import { UserInfoPipe } from './users/user-info.pipe';
-import { Store, StoreModule } from '@ngrx/store';
+import { StoreModule } from '@ngrx/store';
+import { datasetIdReducer } from './datasets/datasets.state';
 
 
 class MockDatasetsService {
@@ -55,7 +56,7 @@ describe('AppComponent', () => {
         HttpClientTestingModule,
         RouterTestingModule,
         FormsModule,
-        StoreModule.forRoot({})
+        StoreModule.forRoot({datasetId: datasetIdReducer})
       ],
       providers: [
         { provide: DatasetsService, useValue: datasetsServiceMock },

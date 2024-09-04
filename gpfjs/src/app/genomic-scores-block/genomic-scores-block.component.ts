@@ -30,10 +30,10 @@ export class GenomicScoresBlockComponent extends StatefulComponent implements On
     super.ngOnInit();
     this.genomicScoresBlockService.getGenomicScores().pipe(
       take(1),
-      switchMap(genomicScores => combineLatest(
+      switchMap(genomicScores => combineLatest([
         of(genomicScores),
         this.store.select(selectGenomicScores)
-      ))
+      ]))
     ).pipe(take(1)).subscribe(([genomicScores, genomicScoresState]) => {
       this.genomicScoresArray = genomicScores;
       if (genomicScoresState.length > 0) {

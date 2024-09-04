@@ -15,6 +15,7 @@ import { Observable } from 'rxjs/internal/Observable';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { RouterTestingModule } from '@angular/router/testing';
 import { StoreModule } from '@ngrx/store';
+import { expandedDatasetsReducer } from 'app/dataset-node/dataset-node.state';
 
 class MockDatasetService {
   public getDatasetsObservable(): Observable<Dataset[]> {
@@ -82,7 +83,7 @@ describe('DatasetComponent', () => {
     TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
-        StoreModule.forRoot({}),
+        StoreModule.forRoot({expandedDatasets: expandedDatasetsReducer}),
         RouterTestingModule
       ],
       providers: [

@@ -1,13 +1,8 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-
 import { MarkdownModule } from 'ngx-markdown';
-
-// eslint-disable-next-line no-restricted-imports
 import { Observable, of } from 'rxjs';
-
 import { GenomicScoresBlockComponent } from './genomic-scores-block.component';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
 import { GenomicScores } from './genomic-scores-block';

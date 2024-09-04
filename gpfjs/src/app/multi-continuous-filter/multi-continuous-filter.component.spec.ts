@@ -15,7 +15,8 @@ import {
   MatAutocomplete,
   MAT_AUTOCOMPLETE_SCROLL_STRATEGY,
   MatAutocompleteTrigger } from '@angular/material/autocomplete';
-import { StoreModule } from '@ngrx/store';
+import { Store, StoreModule } from '@ngrx/store';
+import { personFiltersReducer } from 'app/person-filters/person-filters.state';
 
 const SelectionMock = {
   isEmpty: (): boolean => true,
@@ -56,6 +57,7 @@ describe('MultiContinuousFilterComponent', () => {
   let component: MultiContinuousFilterComponent;
   let fixture: ComponentFixture<MultiContinuousFilterComponent>;
   const mockDatasetsService = new MockDatasetsService();
+  let store: Store;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -77,7 +79,7 @@ describe('MultiContinuousFilterComponent', () => {
       ],
       imports: [
         RouterTestingModule,
-        StoreModule.forRoot({}),
+        StoreModule.forRoot({personFilters: personFiltersReducer}),
         FormsModule
       ]
     }).compileComponents();
@@ -88,6 +90,13 @@ describe('MultiContinuousFilterComponent', () => {
     component.datasetId = '';
     component.continuousFilterState = ContinuousFilterStateMock;
     fixture.detectChanges();
+
+    store = TestBed.inject(Store);
+
+    jest.spyOn(store, 'select').mockReturnValue(of({
+      familyFilters: [],
+      personFilters: [],
+    }));
   }));
 
   it('should create', () => {

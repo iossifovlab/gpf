@@ -2,11 +2,7 @@ import { createReducer, createAction, on, props, createFeatureSelector } from '@
 import { GenomicScoreInterface } from 'app/genotype-browser/genotype-browser';
 import { cloneDeep } from 'lodash';
 
-export const initialState: GenomicScoreInterface[] = [{
-  metric: '',
-  rangeStart: null,
-  rangeEnd: null,
-}];
+export const initialState: GenomicScoreInterface[] = [];
 
 export const selectGenomicScores = createFeatureSelector<GenomicScoreInterface[]>('genomicScores');
 
