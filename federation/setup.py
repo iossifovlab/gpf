@@ -1,4 +1,4 @@
-"""Setup for GPF schema1 genotype storage on the Apache Impala v3.x."""
+"""Setup for GPF remote extension."""
 
 import setuptools
 import versioneer

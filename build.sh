@@ -489,11 +489,6 @@ EOT
         done
 
         build_run_container ctx:ctx_wdae bash -c '
-          /opt/conda/bin/conda run --no-capture-output -n gpf \
-              /wd/scripts/wait-for-it.sh -h gpfremote -p 21010 -t 300
-        '
-
-        build_run_container ctx:ctx_wdae bash -c '
             cd /wd/wdae;
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
