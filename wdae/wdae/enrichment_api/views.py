@@ -183,6 +183,7 @@ class EnrichmentTestView(QueryDatasetView):
 
         desc = self.enrichment_description(query)
         desc = f"{desc} ({len(gene_syms)})"
+        print(query)
 
         background_name = query.get("enrichmentBackgroundModel", None)
         counting_name = query.get("enrichmentCountingModel", None)
@@ -194,7 +195,7 @@ class EnrichmentTestView(QueryDatasetView):
         if builder is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        results = builder.build(background_name, counting_name, gene_syms)
+        results = builder.build(gene_syms, background_name, counting_name)
 
         enrichment = {"desc": desc, "result": results}
         return Response(enrichment)

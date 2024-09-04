@@ -62,8 +62,8 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
             person_set_collection.id,
             gene_syms,
             effect_types,
-            background_id,
-            counting_id,
+            background_id=background_id,
+            counter_id=counting_id,
         )
         for ps_id, effect_res in enrichment_result.items():
             res: dict[str, Any] = {}

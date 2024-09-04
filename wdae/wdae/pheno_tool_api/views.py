@@ -85,7 +85,10 @@ class PhenoToolView(QueryDatasetView):
 
         data = study_wrapper.transform_request(data)
 
-        result = adapter.calc_variants(data, effect_groups)
+        try:
+            result = adapter.calc_variants(data, effect_groups)
+        except KeyError:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         return Response(result)
 

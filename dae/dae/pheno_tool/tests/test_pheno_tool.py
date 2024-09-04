@@ -47,7 +47,7 @@ def test_init_empty_person_ids_normalize(
 
 def test_init_nonexistent_measure(fake_phenotype_data: PhenotypeStudy) -> None:
     pheno_tool = PhenoTool(fake_phenotype_data)
-    with pytest.raises(AssertionError):
+    with pytest.raises(KeyError):
         pheno_tool.create_df("i1.??")
 
 

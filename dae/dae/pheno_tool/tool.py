@@ -93,7 +93,6 @@ class PhenoToolHelper:
         if roles is None:
             roles = [Role.prb]
 
-        assert isinstance(family_ids, list)
         assert isinstance(roles, list)
         persons = set()
 
@@ -176,7 +175,10 @@ class PhenoTool:
         normalize_by: list[dict[str, str]] | None = None,
     ) -> pd.DataFrame:
         """Create dataframe for given measure."""
-        assert self.phenotype_data.has_measure(measure_id)
+        if not self.phenotype_data.has_measure(measure_id):
+            raise KeyError(
+                f"measure id {measure_id} not found!",
+            )
         assert self.phenotype_data.get_measure(measure_id).measure_type \
             in [MeasureType.continuous, MeasureType.ordinal]
 

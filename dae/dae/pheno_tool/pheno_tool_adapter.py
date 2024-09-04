@@ -109,8 +109,9 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         """Run pheno tool on given data."""
         measure_id = data["measureId"]
         family_ids = data.get("phenoFilterFamilyIds")
+        print(data)
         person_ids = self.helper.genotype_data_persons(
-            data.get("familyIds", []),
+            data.get("family_ids", []),
         )
 
         normalize_by = data.get("normalizeBy")
