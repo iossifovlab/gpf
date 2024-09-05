@@ -11,7 +11,7 @@ export const setRegionsFilters = createAction(
 );
 
 export const resetRegionsFilters = createAction(
-  '[Genotype] Reset family ids'
+  '[Genotype] Reset region filters'
 );
 
 export const regionsFiltersReducer = createReducer(

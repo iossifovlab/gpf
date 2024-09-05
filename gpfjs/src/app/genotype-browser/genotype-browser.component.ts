@@ -171,7 +171,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
           ...(familyTypeFilterState?.length && {familyTypes: familyTypeFilterState}),
           ...(familyIdsState?.length && {familyIds: familyIdsState}),
           ...(geneSymbolsState?.length && {geneSymbols: geneSymbolsState}),
-          ...(regionsFiltersState?.length && {regionsFilters: regionsFiltersState}),
+          ...(regionsFiltersState?.length && {regionsFilter: regionsFiltersState}),
           ...{genomicScores: genomicScoresState},
           ...(personIdsState?.length && {personIds: personIdsState}),
           ...{studyFilters: studyFiltersState},
