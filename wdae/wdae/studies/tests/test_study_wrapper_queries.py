@@ -11,48 +11,30 @@ pytestmark = pytest.mark.usefixtures(
 )
 
 
-@pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-    ],
-)
 def test_query_all_variants(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    t4c8_study_2: StudyWrapperBase,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = t4c8_study_2
     variants = list(study_wrapper.query_variants_wdae(
         {}, [{"source": "location"}]))
 
-    assert len(variants) == 16, variants
+    assert len(variants) == 12, variants
 
 
-@pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-    ],
-)
 @pytest.mark.parametrize(
     "inheritance_type,count",
     [
-        ("denovo", 16),
+        ("unknown", 12),  # matches all variants
         ("omission", 0),
-        ("unknown", 16),  # matches all variants
-        ("mendelian", 0),
-        (
-            "reference",
-            0,
-        ),  # not returned unless return_reference is set to true
+        ("denovo", 2),
+        ("mendelian", 7),
     ],
 )
-def test_query_inheritance_variants(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+def test_study_2_query_inheritance_variants(
+    t4c8_study_2: StudyWrapperBase,
     inheritance_type: str, count: int,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = t4c8_study_2
     query = {
         "inheritance": inheritance_type,
     }
@@ -64,44 +46,42 @@ def test_query_inheritance_variants(
 
 
 @pytest.mark.parametrize(
-    "wrapper_type",
+    "max_variants_count,count",
     [
-        "local",
+        (None, 12),  # matches all variants
+        (1, 1),
+        (2, 2),
+        (50, 12),
     ],
 )
 def test_query_limit_variants(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    t4c8_study_2: StudyWrapperBase,
+    max_variants_count: int | None,
+    count: int,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = t4c8_study_2
     variants = list(study_wrapper.query_variants_wdae(
-        {}, [{"source": "location"}], max_variants_count=1,
+        {}, [{"source": "location"}],
+        max_variants_count=max_variants_count,
     ))
-    assert len(variants) == 1
+    assert len(variants) == count
 
 
-@pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-    ],
-)
 @pytest.mark.parametrize(
     "family_ids,count",
     [
-        (["12628"], 6),
-        (["13590"], 1),
-        (["12628", "13590"], 7),
+        (["f1.1"], 6),
+        (["f1.3"], 6),
+        (["f1.1", "f1.3"], 12),
         ([], 0),
-        (None, 16),
+        (None, 12),
     ],
 )
 def test_query_family_variants(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    t4c8_study_2: StudyWrapperBase,
     family_ids: list[str] | None, count: int,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = t4c8_study_2
     query = {
         "family_ids": family_ids,
     }
@@ -113,24 +93,18 @@ def test_query_family_variants(
 
 
 @pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-    ],
-)
-@pytest.mark.parametrize(
     "sexes,count",
     [
-        (["M"], 13),
-        (["F"], 3),
+        (["M"], 10),
+        (["F"], 12),
+        (["M", "F"], 12),
     ],
 )
 def test_query_sexes_variants(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    t4c8_study_2: StudyWrapperBase,
     sexes: list[str], count: int,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = t4c8_study_2
     query = {
         "gender": sexes,
     }
@@ -142,25 +116,19 @@ def test_query_sexes_variants(
 
 
 @pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-    ],
-)
-@pytest.mark.parametrize(
     "variant_type,count",
     [
-        (["ins"], 3),
-        (["sub"], 4),
-        (["del"], 9),
+        (["ins"], 5),
+        (["sub"], 10),
+        (["del"], 0),
+        (["ins", "sub"], 12),
     ],
 )
 def test_query_variant_type_variants(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    t4c8_study_2: StudyWrapperBase,
     variant_type: list[str], count: int,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = t4c8_study_2
     query = {
         "variantTypes": variant_type,
     }
@@ -172,26 +140,19 @@ def test_query_variant_type_variants(
 
 
 @pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-    ],
-)
-@pytest.mark.parametrize(
     "effect_types,count",
     [
-        (["Intergenic"], 0),
+        (["Intergenic"], 5),
         (["Missense"], 2),
-        (["Missense", "Intergenic"], 2),
+        (["Missense", "Intergenic"], 7),
         (["CNV"], 0),
     ],
 )
 def test_query_effect_types_variants(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    t4c8_study_2: StudyWrapperBase,
     effect_types: list[str], count: int,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = t4c8_study_2
     query = {
         "effect_types": effect_types,
     }
@@ -203,25 +164,18 @@ def test_query_effect_types_variants(
 
 
 @pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-    ],
-)
-@pytest.mark.parametrize(
     "regions,count",
     [
-        (["3:0-100000000"], 2),
-        (["2:0-100000000"], 2),
-        (["1:11539-11539"], 0),
+        (["chr1:1-60"], 4),
+        (["chr1:1-99"], 6),
+        (["chr1:100-150"], 6),
     ],
 )
 def test_query_regions_variants(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    t4c8_study_2: StudyWrapperBase,
     regions: list[str], count: int,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = t4c8_study_2
     query = {
         "regions": regions,
     }
@@ -233,32 +187,23 @@ def test_query_regions_variants(
 
 
 @pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-    ],
-)
-@pytest.mark.parametrize(
     "options,count",
     [
-        (["proband only"], 14),
-        (["sibling only"], 2),
+        (["proband only"], 9),
+        (["sibling only"], 0),
         (["proband and sibling"], 0),
-        (["neither"], 0),
-        (["proband and sibling", "proband only"], 14),
-        (["proband only", "neither"], 14),
-        (
-            ["proband only", "sibling only", "proband and sibling", "neither"],
-            16,
-        ),
+        (["neither"], 7),
+        (["proband and sibling", "proband only"], 9),
+        (["proband only", "neither"], 12),
+        (["proband only", "sibling only", "proband and sibling", "neither"],
+         12),
     ],
 )
 def test_query_present_in_child(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    t4c8_study_2: StudyWrapperBase,
     options: list[str], count: int,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = t4c8_study_2
     query = {
         "presentInChild": options,
         "presentInParent": {
@@ -275,34 +220,27 @@ def test_query_present_in_child(
 
 
 @pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-    ],
-)
-@pytest.mark.parametrize(
     "options,count",
     [
-        ({"presentInParent": ["mother only"]}, 0),
-        ({"presentInParent": ["father only"]}, 0),
-        ({"presentInParent": ["mother and father"]}, 0),
-        ({"presentInParent": ["neither"]}, 16),
-        ({"presentInParent": ["mother and father", "mother only"]}, 0),
-        ({"presentInParent": ["mother only", "neither"]}, 16),
+        ({"presentInParent": ["mother only"]}, 4),
+        ({"presentInParent": ["father only"]}, 4),
+        ({"presentInParent": ["mother and father"]}, 6),
+        ({"presentInParent": ["neither"]}, 2),
+        ({"presentInParent": ["mother and father", "mother only"]}, 10),
+        ({"presentInParent": ["mother only", "neither"]}, 6),
         ({"presentInParent": [
             "mother only",
             "father only",
             "mother and father",
             "neither",
-        ]}, 16),
+        ]}, 12),
     ],
 )
 def test_query_present_in_parent(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    t4c8_study_2: StudyWrapperBase,
     options: dict, count: int,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = t4c8_study_2
     query = {
         "presentInParent": options,
         "presentInChild": [
@@ -316,12 +254,6 @@ def test_query_present_in_parent(
     assert len(variants) == count
 
 
-@pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-    ],
-)
 @pytest.mark.parametrize(
     "option,count",
     [
@@ -356,11 +288,10 @@ def test_query_present_in_parent(
     ],
 )
 def test_query_gene_scores(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    iossifov_2014_local: StudyWrapperBase,
     option: dict, count: int,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = iossifov_2014_local
     query = {
         "geneScores": option,
     }
@@ -371,17 +302,10 @@ def test_query_gene_scores(
     assert len(variants) == count
 
 
-@pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-    ],
-)
 def test_query_person_filters(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    iossifov_2014_local: StudyWrapperBase,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = iossifov_2014_local
     query = {
         "personFilters": [
             {
@@ -398,12 +322,10 @@ def test_query_person_filters(
     assert len(variants) == 2
 
 
-@pytest.mark.parametrize("wrapper_type", ["local"])
 def test_query_family_filters(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    iossifov_2014_local: StudyWrapperBase,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = iossifov_2014_local
     query = {
         "familyFilters": [
             {
@@ -421,12 +343,10 @@ def test_query_family_filters(
     assert len(variants) == 15
 
 
-@pytest.mark.parametrize("wrapper_type", ["local"])
 def test_query_study_filters(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    iossifov_2014_local: StudyWrapperBase,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = iossifov_2014_local
     query = {
         "studyFilters": ["iossifov_2014"],
         "regions": ["12"],
@@ -445,17 +365,10 @@ def test_query_study_filters(
     assert len(variants) == 16
 
 
-@pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-    ],
-)
 def test_query_family_types(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    iossifov_2014_local: StudyWrapperBase,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = iossifov_2014_local
     query = {
         "familyTypes": ["trio"],
     }
@@ -466,19 +379,18 @@ def test_query_family_types(
 
 
 @pytest.mark.parametrize(
-    "wrapper_type, float_format, float_val",
+    "float_format, float_val",
     [
-        ("local", "%.2f", "0.16"),
-        ("local", "%.4f", "0.1642"),
+        ("%.2f", "0.16"),
+        ("%.4f", "0.1642"),
     ],
 )
 def test_query_gene_scores_formatting(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    iossifov_2014_local: StudyWrapperBase,
     float_format: str,
     float_val: str,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = iossifov_2014_local
 
     columns = [{"name": "pLI", "source": "pLI", "format": float_format}]
     query = {
@@ -489,23 +401,15 @@ def test_query_gene_scores_formatting(
     )
     v = variants[0]
     source_pli = {"name": "pLI", "source": "pLI"}
-    if wrapper_type == "local":
-        source_pli.update({"format": float_format})
+    source_pli.update({"format": float_format})
     assert source_pli in columns
     assert v[0] == [float_val]
 
 
-@pytest.mark.parametrize(
-    "wrapper_type",
-    [
-        "local",
-    ],
-)
 def test_query_complex_query(
-    iossifov_2014_wrappers: dict[str, StudyWrapperBase],
-    wrapper_type: str,
+    iossifov_2014_local: StudyWrapperBase,
 ) -> None:
-    study_wrapper = iossifov_2014_wrappers[wrapper_type]
+    study_wrapper = iossifov_2014_local
 
     query = {
         "variantTypes": ["sub", "ins", "del"],

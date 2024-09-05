@@ -1,9 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from pathlib import Path
+import pathlib
 
 import pytest
 
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.testing import setup_pedigree, setup_vcf, vcf_study
+from dae.testing.t4c8_import import t4c8_gpf
 from studies.study_wrapper import (
     StudyWrapper,
     StudyWrapperBase,
@@ -11,12 +13,12 @@ from studies.study_wrapper import (
 
 
 @pytest.fixture(scope="session")
-def local_dir() -> Path:
-    return Path(__file__).parents[4].joinpath("data/data-hg19-local")
+def local_dir() -> pathlib.Path:
+    return pathlib.Path(__file__).parents[4].joinpath("data/data-hg19-local")
 
 
 @pytest.fixture(scope="session")
-def local_gpf_instance(local_dir: Path) -> GPFInstance:
+def local_gpf_instance(local_dir: pathlib.Path) -> GPFInstance:
     return GPFInstance.build(local_dir / "gpf_instance.yaml")
 
 
@@ -34,10 +36,75 @@ def iossifov_2014_local(
     )
 
 
-@pytest.fixture()
-def iossifov_2014_wrappers(
-    iossifov_2014_local: StudyWrapperBase,
-) -> dict[str, StudyWrapperBase]:
-    return {
-        "local": iossifov_2014_local,
+@pytest.fixture(scope="module")
+def t4c8_instance(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> GPFInstance:
+    root_path = tmp_path_factory.mktemp("t4c8_wgpf_instance")
+    gpf_instance = t4c8_gpf(root_path)
+
+    storage_path = root_path / "duckdb_storage"
+    storage_config = {
+        "id": "duckdb_wgpf_test",
+        "storage_type": "duckdb_parquet",
+        "base_dir": str(storage_path),
     }
+    gpf_instance.genotype_storages.register_storage_config(storage_config)
+    _t4c8_study_2(gpf_instance)
+
+    gpf_instance.reload()
+
+    return gpf_instance
+
+
+def _t4c8_study_2(
+    t4c8_instance: GPFInstance,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir)
+    ped_path = setup_pedigree(
+        root_path / "study_2" / "pedigree" / "in.ped",
+        """
+familyId personId dadId momId sex status role
+f1.1     mom1     0     0     2   1      mom
+f1.1     dad1     0     0     1   1      dad
+f1.1     ch1      dad1  mom1  2   2      prb
+f1.3     mom3     0     0     2   1      mom
+f1.3     dad3     0     0     1   1      dad
+f1.3     ch3      dad3  mom3  2   2      prb
+        """)
+    vcf_path1 = setup_vcf(
+        root_path / "study_2" / "vcf" / "in.vcf.gz",
+        """
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chr1>
+##contig=<ID=chr2>
+##contig=<ID=chr3>
+#CHROM POS  ID REF ALT  QUAL FILTER INFO FORMAT mom1 dad1 ch1 mom3 dad3 ch3
+chr1   4    .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/1  0/2  0/2
+chr1   54   .  T   C    .    .      .    GT     0/1  0/1  0/1 0/0  0/0  0/1
+chr1   90   .  G   C,GA .    .      .    GT     0/1  0/2  0/2 0/1  0/2  0/1
+chr1   100  .  T   G,TA .    .      .    GT     0/1  0/1  0/0 0/2  0/2  0/0
+chr1   119  .  A   G,C  .    .      .    GT     0/0  0/0  0/2 0/1  0/2  0/1
+chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
+        """)
+
+    vcf_study(
+        root_path,
+        "study_2", ped_path, [vcf_path1],
+        t4c8_instance,
+    )
+
+
+@pytest.fixture(scope="module")
+def t4c8_study_2(
+    t4c8_instance: GPFInstance,
+) -> StudyWrapperBase:
+
+    data_study = t4c8_instance.get_genotype_data("study_2")
+    return StudyWrapper(
+        data_study,
+        t4c8_instance._pheno_registry,  # noqa: SLF001
+        t4c8_instance.gene_scores_db,
+        t4c8_instance,
+    )

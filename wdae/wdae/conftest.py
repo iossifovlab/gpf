@@ -3,9 +3,8 @@
 import logging
 import os
 import pathlib
-from collections.abc import Generator, Iterator
+from collections.abc import Callable, Generator, Iterator
 from datetime import timedelta
-from typing import Callable
 
 import pytest
 from box import Box

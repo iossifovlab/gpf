@@ -201,7 +201,7 @@ class StudyWrapperBase:
     def query_variants_wdae(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
-        max_variants_count: int = 10000,
+        max_variants_count: int | None = 10000,
         *,
         max_variants_message: bool = False,
     ) -> Iterable[list]:
@@ -215,7 +215,7 @@ class StudyWrapperBase:
     def query_variants_wdae_streaming(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
-        max_variants_count: int = 10000,
+        max_variants_count: int | None = 10000,
         *,
         max_variants_message: bool = False,
     ) -> Generator[list | None, None, None]:
@@ -351,7 +351,7 @@ class StudyWrapper(StudyWrapperBase):
     def query_variants_wdae_streaming(
         self, kwargs: dict[str, Any],
         sources: list[dict[str, Any]],
-        max_variants_count: int = 10000,
+        max_variants_count: int | None = 10000,
         *,
         max_variants_message: bool = False,
     ) -> Generator[list | None, None, None]:
@@ -362,8 +362,9 @@ class StudyWrapper(StudyWrapperBase):
         kwargs = self.query_transformer.transform_kwargs(**kwargs)
 
         if summary_variant_ids is None:
+            # pylint: disable=unused-argument
             def filter_allele(
-                _allele: FamilyAllele,  # pylint: disable=unused-argument
+                allele: FamilyAllele,  # noqa: ARG001
             ) -> bool:
                 return True
 
