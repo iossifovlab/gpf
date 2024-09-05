@@ -26,7 +26,7 @@ def test_query_all_variants(
     [
         ("unknown", 12),  # matches all variants
         ("omission", 0),
-        ("denovo", 2),
+        ("denovo", 3),
         ("mendelian", 7),
     ],
 )
@@ -119,7 +119,7 @@ def test_query_sexes_variants(
     "variant_type,count",
     [
         (["ins"], 5),
-        (["sub"], 10),
+        (["sub"], 11),
         (["del"], 0),
         (["ins", "sub"], 12),
     ],
@@ -189,12 +189,12 @@ def test_query_regions_variants(
 @pytest.mark.parametrize(
     "options,count",
     [
-        (["proband only"], 9),
-        (["sibling only"], 0),
-        (["proband and sibling"], 0),
-        (["neither"], 7),
+        (["proband only"], 4),
+        (["sibling only"], 3),
+        (["proband and sibling"], 5),
+        (["neither"], 5),
         (["proband and sibling", "proband only"], 9),
-        (["proband only", "neither"], 12),
+        (["proband only", "neither"], 8),
         (["proband only", "sibling only", "proband and sibling", "neither"],
          12),
     ],
@@ -222,12 +222,12 @@ def test_query_present_in_child(
 @pytest.mark.parametrize(
     "options,count",
     [
-        ({"presentInParent": ["mother only"]}, 4),
+        ({"presentInParent": ["mother only"]}, 5),
         ({"presentInParent": ["father only"]}, 4),
-        ({"presentInParent": ["mother and father"]}, 6),
-        ({"presentInParent": ["neither"]}, 2),
+        ({"presentInParent": ["mother and father"]}, 5),
+        ({"presentInParent": ["neither"]}, 3),
         ({"presentInParent": ["mother and father", "mother only"]}, 10),
-        ({"presentInParent": ["mother only", "neither"]}, 6),
+        ({"presentInParent": ["mother only", "neither"]}, 8),
         ({"presentInParent": [
             "mother only",
             "father only",
@@ -258,40 +258,32 @@ def test_query_present_in_parent(
     "option,count",
     [
         (
-            {"score": "LGD_rank", "rangeStart": None, "rangeEnd": None},
-            16,
+            {"score": "t4c8_score", "rangeStart": None, "rangeEnd": None},
+            7,
         ),
         (
-            {"score": "LGD_rank", "rangeStart": 10.5, "rangeEnd": None},
-            16,
+            {"score": "t4c8_score", "rangeStart": 15.0, "rangeEnd": None},
+            5,
         ),
         (
-            {"score": "LGD_rank", "rangeStart": None, "rangeEnd": 20000.0},
-            16,
-        ),
-        (
-            {"score": "LGD_rank", "rangeStart": 2000.0, "rangeEnd": 4000.0},
-            0,
-        ),
-        (
-            {"score": "LGD_rank", "rangeStart": 9000.0, "rangeEnd": 11000.0},
+            {"score": "t4c8_score", "rangeStart": None, "rangeEnd": 15.0},
             2,
         ),
         (
-            {"score": "LGD_rank", "rangeStart": 1000.0, "rangeEnd": 2000.0},
-            0,
+            {"score": "t4c8_score", "rangeStart": None, "rangeEnd": 20.0},
+            7,
         ),
         (
-            {"score": "ala bala", "rangeStart": 1000.0, "rangeEnd": 2000.0},
-            16,
+            {"score": "t4c8_score", "rangeStart": 1.0, "rangeEnd": 9.0},
+            0,
         ),
     ],
 )
 def test_query_gene_scores(
-    iossifov_2014_local: StudyWrapperBase,
+    t4c8_study_2: StudyWrapperBase,
     option: dict, count: int,
 ) -> None:
-    study_wrapper = iossifov_2014_local
+    study_wrapper = t4c8_study_2
     query = {
         "geneScores": option,
     }

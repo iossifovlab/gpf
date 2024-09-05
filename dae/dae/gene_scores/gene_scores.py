@@ -151,19 +151,21 @@ class GeneScore(
         return "linear"
 
     def get_genes(
-            self, score_id: str,
-            score_min: float | None = None,
-            score_max: float | None = None) -> set[str]:
+        self, score_id: str,
+        score_min: float | None = None,
+        score_max: float | None = None,
+    ) -> set[str]:
         """Return set of genes for a score between a min and max value."""
         score_value_df = self.get_score_df(score_id)
         df = score_value_df[score_id]
-        if score_min is None or score_min < df.min() or score_min > df.max():
+        if score_min is None:
             score_min = float("-inf")
-        if score_max is None or score_max < df.min() or score_max > df.max():
+        if score_max is None:
             score_max = float("inf")
 
         index = np.logical_and(
-            df.to_numpy() >= score_min, df.to_numpy() < score_max)  # type: ignore
+            df.to_numpy() >= score_min,
+            df.to_numpy() <= score_max)  # type: ignore
         index = np.logical_and(index, df.notna())
         genes = score_value_df[index].gene
         return set(genes.values)

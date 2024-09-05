@@ -5,7 +5,7 @@ import pathlib
 from django.apps import AppConfig
 from django.conf import settings
 
-from gpf_instance.gpf_instance import get_wgpf_instance, WGPFInstance
+from gpf_instance.gpf_instance import WGPFInstance, get_wgpf_instance
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,9 @@ class WDAEConfig(AppConfig):
 
     name = "gpf_instance"
 
-    def load_extensions(self, instance: WGPFInstance):
+    def load_extensions(self, instance: WGPFInstance) -> None:
+        """Load WDAE GPF instance extensions."""
+        # pylint: disable=import-outside-toplevel
         logger.info("Loading extensions")
         from importlib_metadata import entry_points
         discovered_entries = entry_points(group="wdae.gpf_instance.extensions")
@@ -52,7 +54,7 @@ class WDAEConfig(AppConfig):
             gpf_instance.prepare_gp_configuration()
 
         except Exception:  # pylint: disable=broad-except
-            logger.error(
-                "problem while eager loading of studies", exc_info=True)
+            logger.exception(
+                "problem while eager loading of studies")
         logger.info("Eager loading DONE")
         self.load_extensions(gpf_instance)
