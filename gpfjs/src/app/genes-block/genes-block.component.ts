@@ -34,8 +34,8 @@ export class GenesBlockComponent implements AfterViewInit {
   }
 
   public onNavChange(): void {
-    // this.store.dispatch(resetGeneSymbols());
-    // this.store.dispatch(resetGeneSetsValues());
-    // this.store.dispatch(resetGeneScoresValues());
+    this.store.dispatch(resetGeneSymbols());
+    this.store.dispatch(resetGeneSetsValues());
+    this.store.dispatch(resetGeneScoresValues());
   }
 }
