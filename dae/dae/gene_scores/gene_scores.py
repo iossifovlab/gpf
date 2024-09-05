@@ -265,6 +265,14 @@ class GeneScore(
                             "schema": {"type": ["string", "integer"]},
                             "dependencies": {"type": "categorical"},
                         },
+                        "displayed_values_count": {
+                            "type": "integer",
+                            "dependencies": {"type": "categorical"},
+                        },
+                        "displayed_values_percent": {
+                            "type": "number",
+                            "dependencies": {"type": "categorical"},
+                        },
                         "reason": {
                             "type": "string",
                             "dependencies": {"type": "null"},

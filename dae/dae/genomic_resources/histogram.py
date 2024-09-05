@@ -108,7 +108,7 @@ DEFAULT_DISPLAYED_VALUES_COUNT = 20
 class CategoricalHistogramConfig:
     """Configuration class for categorical histograms."""
     displayed_values_count: int | None = 20
-    displayed_values_percentile: float | None = None
+    displayed_values_percent: float | None = None
     value_order: list[str | int] | None = None
     y_log_scale: bool = False
 
@@ -121,9 +121,9 @@ class CategoricalHistogramConfig:
         }
         if self.displayed_values_count != DEFAULT_DISPLAYED_VALUES_COUNT:
             result["displayed_values_count"] = self.displayed_values_count
-        if self.displayed_values_percentile is not None:
-            result["displayed_values_percentile"] = \
-                self.displayed_values_percentile
+        if self.displayed_values_percent is not None:
+            result["displayed_values_percent"] = \
+                self.displayed_values_percent
         return result
 
     @staticmethod
@@ -141,14 +141,23 @@ class CategoricalHistogramConfig:
             )
         displayed_values_count = parsed.get(
             "displayed_values_count", DEFAULT_DISPLAYED_VALUES_COUNT)
-        displayed_values_percentile = parsed.get(
-            "displayed_values_percentile")
+        displayed_values_percent = parsed.get(
+            "displayed_values_percen")
+        if displayed_values_count is not None \
+                and displayed_values_percent is not None:
+            raise ValueError(
+                "Invalid configuration for categorical histogram: "
+                "displayed_values_count and displayed_values_percent "
+                "cannot be both set\n"
+                f"{parsed}",
+            )
+
         value_order = parsed.get("value_order", [])
         y_log_scale = parsed.get("y_log_scale", False)
 
         return CategoricalHistogramConfig(
             displayed_values_count=displayed_values_count,
-            displayed_values_percentile=displayed_values_percentile,
+            displayed_values_percent=displayed_values_percent,
             value_order=value_order,
             y_log_scale=y_log_scale,
         )
@@ -508,20 +517,19 @@ class CategoricalHistogram(Statistic):
     def __init__(
         self,
         config: CategoricalHistogramConfig,
-        values: dict[str | int, int] | None = None,
+        counter: dict[str | int, int] | None = None,
     ):
         super().__init__(
             "categorical_histogram",
             "Collects values for categorical histogram.",
         )
         self.config = config
-        if values is not None:
-            self._values = Counter(values)
+        if counter is not None:
+            self._counter = Counter(counter)
         else:
-            self._values = Counter()
+            self._counter = Counter()
 
         self.y_log_scale = config.y_log_scale
-        self._bars: dict[str | int, int] | None = None
 
     def add_value(self, value: str | int | None) -> None:
         """Add a value to the categorical histogram.
@@ -529,7 +537,6 @@ class CategoricalHistogram(Statistic):
         Returns true if successfully added and false if failed.
         Will fail if too many values are accumulated.
         """
-        self._bars = None
         if value is None:
             return
         if not isinstance(value, str | int):
@@ -537,10 +544,10 @@ class CategoricalHistogram(Statistic):
                 "Only string or int values can be added categorical histogram; "
                 f"bad <{value}>",
             )
-        self._values[value] += 1
-        if len(self._values) > CategoricalHistogram.UNIQUE_VALUES_HADR_LIMIT:
+        self._counter[value] += 1
+        if len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_HADR_LIMIT:
             raise HistogramError(
-                f"Too many unique values {len(self._values)} "
+                f"Too many unique values {len(self._counter)} "
                 f"for categorical histogram.",
             )
 
@@ -548,43 +555,61 @@ class CategoricalHistogram(Statistic):
         """Merge with other histogram."""
         assert isinstance(other, CategoricalHistogram)
         assert self.config == other.config
-        self._bars = None
         # pylint: disable=protected-access
-        self._values += other._values  # noqa: SLF001
-        if len(self._values) > CategoricalHistogram.UNIQUE_VALUES_HADR_LIMIT:
+        self._counter += other._counter  # noqa: SLF001
+        if len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_HADR_LIMIT:
             raise HistogramError(
                 f"Can not merge categorical histograms; "
-                f"too many unique values {len(self._values)}")
+                f"too many unique values {len(self._counter)}")
 
     @property
-    def bars(self) -> dict[str | int, int]:
-        """Return categorical histogram bars in order."""
-        if self._bars is None:
-            values = {}
-            if self.config.value_order:
-                for key in self.config.value_order:
-                    values[key] = self._values[key]
-            for key, count in self._values.most_common(
-                    n=self.config.displayed_values_count):
-                if key not in values:
+    def display_values(self) -> dict[str | int, int]:
+        """Return categorical histogram display values in order."""
+        values = {}
+        if self.config.value_order:
+            for key in self.config.value_order:
+                values[key] = self._counter[key]
+            if len(values) < len(self._counter):
+                raise ValueError(
+                    "misconfigured categorical histogram value_order",
+                    f"{self.config.value_order} < {self._counter.keys()}")
+            return values
+
+        if self.config.displayed_values_percent is not None:
+            total = sum(self._counter.values())
+            displayed = 0
+            other = 0
+            displayed_percent = self.config.displayed_values_percent
+            for key, count in self._counter.most_common():
+                if 100.0 * displayed / total < displayed_percent:
                     values[key] = count
-            if self.config.displayed_values_count is not None and \
-                    len(self._values) > self.config.displayed_values_count:
-                other = 0
-                for key, count in self._values.items():
-                    if key not in values:
-                        other += count
-                values["other"] = other
-            self._bars = values
-        return self._bars
+                    displayed += count
+                else:
+                    other += count
+
+            values["Other Values"] = other
+            return values
+
+        for key, count in self._counter.most_common(
+                n=self.config.displayed_values_count):
+            if key not in values:
+                values[key] = count
+        if self.config.displayed_values_count is not None and \
+                len(self._counter) > self.config.displayed_values_count:
+            other = 0
+            for key, count in self._counter.items():
+                if key not in values:
+                    other += count
+            values["Other Values"] = other
+        return values
 
     def values_domain(self) -> str:
-        return ", ".join(str(k) for k in self.bars)
+        return ", ".join(str(k) for k in self.display_values)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "config": self.config.to_dict(),
-            "values": self.bars,
+            "values": dict(self._counter),
         }
 
     def serialize(self) -> str:
@@ -612,8 +637,9 @@ class CategoricalHistogram(Statistic):
         import matplotlib
         matplotlib.use("agg")
         import matplotlib.pyplot as plt
-        values = list(self.bars.keys())
-        counts = list(self.bars.values())
+        display_values = self.display_values
+        values = list(display_values.keys())
+        counts = list(display_values.values())
 
         plt.figure(figsize=(15, 10), tight_layout=True)
 
