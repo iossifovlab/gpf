@@ -90,7 +90,7 @@ def test_vcf_info_config_annotation(
     (
         VCFAllele("chrA", 1, "A", "T"),
         {"score1_a": 1, "score1_b": None,
-         "score1_c": "c11,c12", "score1_d": "d11"},
+         "score1_c": "c11|c12", "score1_d": "d11"},
     ),
     (
         VCFAllele("chrA", 1, "A", "C"),
@@ -100,7 +100,7 @@ def test_vcf_info_config_annotation(
     (
         VCFAllele("chrA", 2, "A", "T"),
         {"score1_a": 2, "score1_b": 21,
-         "score1_c": "c21", "score1_d": "d21,d22"},
+         "score1_c": "c21", "score1_d": "d21|d22"},
     ),
     (
         VCFAllele("chrA", 2, "A", "C"),

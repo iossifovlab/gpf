@@ -34,6 +34,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
 
     def _transform_vcf_result(self, line: VCFLine) -> None:
         rchrom = self._map_result_chrom(line.chrom)
+        assert rchrom is not None
         line.chrom = rchrom
 
     def _make_vcf_line(
@@ -54,7 +55,7 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         self._build_chrom_mapping()
         return self
 
-    @cache  # noqa B019 pylint: disable=method-cache-max-size-none
+    @cache  # pylint: disable=method-cache-max-size-none
     def get_file_chromosomes(self) -> list[str]:
         with self.genomic_resource.open_tabix_file(
                 self.definition.filename) as pysam_file_tabix:

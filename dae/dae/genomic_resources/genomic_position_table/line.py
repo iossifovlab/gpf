@@ -103,11 +103,13 @@ class VCFLine(LineBase):
             if meta.number == "A" and self.allele_index is not None:
                 value = value[self.allele_index]
             elif meta.number == "R":
-                value = value[
+                return value[
                     self.allele_index + 1
                     if self.allele_index is not None
                     else 0  # Get reference allele value if ALT is '.'
                 ]
+            elif meta.number == "." and meta.type == "String":
+                return "|".join(value)
         return value
 
     def row(self) -> tuple:
@@ -119,7 +121,7 @@ class BigWigLine(LineBase):
 
     def __init__(self, raw_line: tuple):
         super().__init__()
-        self._data: tuple[str, int, int, float] = raw_line
+        self._data: tuple[str, int, int, float] = raw_line  # type: ignore
         self.chrom: str = self._data[0]
         self.fchrom: str = self._data[0]
         self.pos_begin: int = self._data[1]

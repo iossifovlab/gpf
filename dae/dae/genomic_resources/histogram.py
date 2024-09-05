@@ -5,7 +5,10 @@ Currently we support only genomic scores histograms.
 from __future__ import annotations
 
 import copy
+import importlib
 import logging
+import pathlib
+import sys
 from collections import Counter
 from dataclasses import dataclass
 from typing import IO, Any
@@ -37,13 +40,15 @@ class NumberHistogramConfig:
     x_log_scale: bool = False
     y_log_scale: bool = False
     x_min_log: float | None = None
+    plot_function: str | None = None
 
     def has_view_range(self) -> bool:
         return self.view_range[0] is not None and \
             self.view_range[1] is not None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        """Transform number histogram config to dict."""
+        result = {
             "type": "number",
             "view_range": {
                 "min": self.view_range[0],
@@ -54,6 +59,10 @@ class NumberHistogramConfig:
             "y_log_scale": self.y_log_scale,
             "x_min_log": self.x_min_log,
         }
+        if self.plot_function is not None:
+            result["plot_function"] = self.plot_function
+
+        return result
 
     @staticmethod
     def from_dict(parsed: dict[str, Any]) -> NumberHistogramConfig:
@@ -77,10 +86,13 @@ class NumberHistogramConfig:
         x_log_scale = parsed.get("x_log_scale", False)
         y_log_scale = parsed.get("y_log_scale", False)
         x_min_log = parsed.get("x_min_log")
+        plot_function = parsed.get("plot_function")
+
         return NumberHistogramConfig(
             view_range, number_of_bins,
             x_log_scale, y_log_scale,
             x_min_log,
+            plot_function=plot_function,
         )
 
     @staticmethod
@@ -101,23 +113,37 @@ class NumberHistogramConfig:
             view_range, number_of_bins, x_log_scale, y_log_scale)
 
 
+DEFAULT_DISPLAYED_VALUES_COUNT = 20
+
+
 @dataclass
 class CategoricalHistogramConfig:
     """Configuration class for categorical histograms."""
-
-    value_order: list[str] | None = None
+    displayed_values_count: int | None = 20
+    displayed_values_percent: float | None = None
+    value_order: list[str | int] | None = None
     y_log_scale: bool = False
+    plot_function: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        """Transform categorical histogram config to dict."""
+        result: dict[str, Any] = {
             "type": "categorical",
             "value_order": self.value_order,
             "y_log_scale": self.y_log_scale,
         }
+        if self.displayed_values_count != DEFAULT_DISPLAYED_VALUES_COUNT:
+            result["displayed_values_count"] = self.displayed_values_count
+        if self.displayed_values_percent is not None:
+            result["displayed_values_percent"] = \
+                self.displayed_values_percent
+        if self.plot_function is not None:
+            result["plot_function"] = self.plot_function
+        return result
 
     @staticmethod
     def default_config() -> CategoricalHistogramConfig:
-        return CategoricalHistogramConfig([])
+        return CategoricalHistogramConfig()
 
     @staticmethod
     def from_dict(parsed: dict[str, Any]) -> CategoricalHistogramConfig:
@@ -128,12 +154,29 @@ class CategoricalHistogramConfig:
                 "Invalid configuration type for categorical histogram!\n"
                 f"{parsed}",
             )
+        displayed_values_count = parsed.get(
+            "displayed_values_count", DEFAULT_DISPLAYED_VALUES_COUNT)
+        displayed_values_percent = parsed.get(
+            "displayed_values_percen")
+        if displayed_values_count is not None \
+                and displayed_values_percent is not None:
+            raise ValueError(
+                "Invalid configuration for categorical histogram: "
+                "displayed_values_count and displayed_values_percent "
+                "cannot be both set\n"
+                f"{parsed}",
+            )
+
         value_order = parsed.get("value_order", [])
         y_log_scale = parsed.get("y_log_scale", False)
+        plot_function = parsed.get("plot_function")
 
         return CategoricalHistogramConfig(
+            displayed_values_count=displayed_values_count,
+            displayed_values_percent=displayed_values_percent,
             value_order=value_order,
             y_log_scale=y_log_scale,
+            plot_function=plot_function,
         )
 
 
@@ -376,6 +419,8 @@ class NumberHistogram(Statistic):
                     f"\n{large_values_description}",
                 ],
                 wrap=True,
+                color="gray",
+                style="italic",
             )
 
         plt.xlabel(f"\n{score_id}")
@@ -483,80 +528,109 @@ class CategoricalHistogram(Statistic):
 
     type = "categorical_histogram"
 
-    VALUES_LIMIT = 100
+    UNIQUE_VALUES_HADR_LIMIT = 100
 
     # pylint: disable=too-few-public-methods
     def __init__(
         self,
         config: CategoricalHistogramConfig,
-        values: dict[str, int] | None = None,
+        counter: dict[str | int, int] | None = None,
     ):
         super().__init__(
             "categorical_histogram",
             "Collects values for categorical histogram.",
         )
         self.config = config
-        if values is not None:
-            self._values = Counter(values)
+        if counter is not None:
+            self._counter = Counter(counter)
         else:
-            self._values = Counter()
+            self._counter = Counter()
 
         self.y_log_scale = config.y_log_scale
-        self._bars: dict[str, int] | None = None
 
-    def add_value(self, value: str | None) -> None:
+    def add_value(self, value: str | int | None) -> None:
         """Add a value to the categorical histogram.
 
         Returns true if successfully added and false if failed.
         Will fail if too many values are accumulated.
         """
-        self._bars = None
         if value is None:
             return
-        if not isinstance(value, str):
+        if not isinstance(value, str | int):
             raise TypeError(
-                "Cannot add non string value "
-                f"{value} to categorical histogram",
+                "Only string or int values can be added categorical histogram; "
+                f"bad <{value}>",
             )
-        self._values[value] += 1
-        if len(self._values) > CategoricalHistogram.VALUES_LIMIT:
+        self._counter[value] += 1
+        if len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_HADR_LIMIT:
             raise HistogramError(
-                f"Too many values already present to add {value}"
-                " to categorical histogram.",
+                f"Too many unique values {len(self._counter)} "
+                f"for categorical histogram.",
             )
 
     def merge(self, other: Statistic) -> None:
         """Merge with other histogram."""
         assert isinstance(other, CategoricalHistogram)
         assert self.config == other.config
-        self._bars = None
         # pylint: disable=protected-access
-        self._values += other._values  # noqa: SLF001
-        if len(self._values) > CategoricalHistogram.VALUES_LIMIT:
+        self._counter += other._counter  # noqa: SLF001
+        if len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_HADR_LIMIT:
             raise HistogramError(
-                "Can not merge categorical histograms; too many unique values")
+                f"Can not merge categorical histograms; "
+                f"too many unique values {len(self._counter)}")
 
     @property
-    def bars(self) -> dict[str, int]:
-        """Return categorical histogram bars in order."""
-        if self._bars is None:
-            values = {}
-            if self.config.value_order:
-                for key in self.config.value_order:
-                    values[key] = self._values[key]
-            for key, count in self._values.most_common():
-                if key not in values:
+    def raw_values(self) -> dict[str | int, int]:
+        return dict(self._counter)
+
+    @property
+    def display_values(self) -> dict[str | int, int]:
+        """Return categorical histogram display values in order."""
+        values = {}
+        if self.config.value_order:
+            for key in self.config.value_order:
+                values[key] = self._counter[key]
+            if len(values) < len(self._counter):
+                raise ValueError(
+                    "misconfigured categorical histogram value_order",
+                    f"{self.config.value_order} < {self._counter.keys()}")
+            return values
+
+        if self.config.displayed_values_percent is not None:
+            total = sum(self._counter.values())
+            displayed = 0
+            other = 0
+            displayed_percent = self.config.displayed_values_percent
+            for key, count in self._counter.most_common():
+                if 100.0 * displayed / total < displayed_percent:
                     values[key] = count
-            self._bars = values
-        return self._bars
+                    displayed += count
+                else:
+                    other += count
+
+            values["Other Values"] = other
+            return values
+
+        for key, count in self._counter.most_common(
+                n=self.config.displayed_values_count):
+            if key not in values:
+                values[key] = count
+        if self.config.displayed_values_count is not None and \
+                len(self._counter) > self.config.displayed_values_count:
+            other = 0
+            for key, count in self._counter.items():
+                if key not in values:
+                    other += count
+            values["Other Values"] = other
+        return values
 
     def values_domain(self) -> str:
-        return ", ".join(self.bars.keys())
+        return ", ".join(str(k) for k in self.display_values)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "config": self.config.to_dict(),
-            "values": self.bars,
+            "values": dict(self._counter),
         }
 
     def serialize(self) -> str:
@@ -584,14 +658,17 @@ class CategoricalHistogram(Statistic):
         import matplotlib
         matplotlib.use("agg")
         import matplotlib.pyplot as plt
-        values = list(self.bars.keys())
-        counts = list(self.bars.values())
+        display_values = self.display_values
+        values = list(display_values.keys())
+        counts = list(display_values.values())
 
         plt.figure(figsize=(15, 10), tight_layout=True)
 
         _, ax = plt.subplots()
         ax.bar(
-            x=values, height=counts,
+            x=values,
+            height=counts,
+            tick_label=[str(v) for v in values],
             log=self.config.y_log_scale,
             align="center",
         )
@@ -611,12 +688,16 @@ class CategoricalHistogram(Statistic):
                     f"\n{large_values_description}",
                 ],
                 wrap=True,
+                color="gray",
+                style="italic",
             )
 
         plt.xlabel(f"\n{score_id}")
         plt.ylabel("count")
 
         plt.tick_params(axis="x", labelrotation=90)
+
+        plt.tight_layout()
 
         plt.savefig(outfile)
         plt.clf()
@@ -736,3 +817,62 @@ def load_histogram(
 HistogramConfig = \
     NullHistogramConfig | CategoricalHistogramConfig | NumberHistogramConfig
 Histogram = NullHistogram | CategoricalHistogram | NumberHistogram
+
+
+def _import_from_string(module_name: str, source_code: str) -> Any:
+    spec = importlib.util.spec_from_loader(module_name, loader=None)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    exec(source_code, module.__dict__)  # noqa: S102 pylint: disable=exec-used
+    sys.modules[spec.name] = module
+    return module
+
+
+def plot_histogram(
+    res: GenomicResource,
+    image_filename: str,
+    hist: Histogram,
+    score_id: str,
+    small_values_desc: str | None = None,
+    large_values_desc: str | None = None,
+) -> None:
+    """Plot histogram and save it into the resource."""
+    if isinstance(hist, NullHistogram):
+        return
+
+    if hist.config.plot_function is None:
+        with res.open_raw_file(image_filename, mode="wb") as outfile:
+            hist.plot(
+                outfile,
+                score_id,
+                small_values_desc,
+                large_values_desc,
+            )
+        return
+
+    plot_file, plot_function_name = hist.config.plot_function.split(":")
+    with res.open_raw_file(
+        plot_file,
+        mode="rt",
+    ) as srcfile:
+        source_code = srcfile.read()
+        plot_module_name = str(
+            pathlib.Path(res.resource_id) /
+            pathlib.Path(plot_file).with_suffix("")).replace("/", ".")
+        plot_module = _import_from_string(
+            plot_module_name, source_code)
+        func = getattr(plot_module, plot_function_name)
+
+    with res.open_raw_file(
+        image_filename,
+        mode="wb",
+    ) as outfile:
+        func(
+            outfile,
+            hist,
+            score_id,
+            small_values_desc,
+            large_values_desc,
+        )
+
+    return

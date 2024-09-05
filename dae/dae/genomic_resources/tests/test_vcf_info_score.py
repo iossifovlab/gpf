@@ -12,7 +12,7 @@ from dae.genomic_resources.testing import (
 
 
 @pytest.fixture()
-def vcf_info_clinvar(tmp_path_factory):
+def vcf_info_clinvar(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
     root_path = tmp_path_factory.mktemp("vcf_info_clinvar")
     setup_directories(
         root_path, {
@@ -64,7 +64,7 @@ chrA   3   .  A   T   .    .       ALLELEID=1600580;CLNDISDB=MedGen:CN517202;CLN
     return AlleleScore(res)
 
 
-def test_clinvar_vcf_resource(vcf_info_clinvar):
+def test_clinvar_vcf_resource(vcf_info_clinvar: AlleleScore) -> None:
     vcf_info_clinvar.open()
     scores = vcf_info_clinvar.score_definitions
     assert "CLNDN" in scores
@@ -74,12 +74,14 @@ def test_clinvar_vcf_resource(vcf_info_clinvar):
                                     " in CLNDISDB")
 
 
-def test_clinvar_get_all_chromosomes(vcf_info_clinvar):
+def test_clinvar_get_all_chromosomes(
+    vcf_info_clinvar: AlleleScore,
+) -> None:
     vcf_info_clinvar.open()
     assert vcf_info_clinvar.get_all_chromosomes() == ["chrA"]
 
 
-def test_clinvar_score_columns(vcf_info_clinvar):
+def test_clinvar_score_columns(vcf_info_clinvar: AlleleScore) -> None:
     vcf_info_clinvar.open()
     assert len(vcf_info_clinvar.get_all_scores()) == 22
     for score_def in vcf_info_clinvar.score_definitions.values():
@@ -98,8 +100,13 @@ def test_clinvar_score_columns(vcf_info_clinvar):
 
 ])
 def test_clinvar_fetch_region(
-    vcf_info_clinvar, chrom, begin, end, scores, expected,
-):
+    vcf_info_clinvar: AlleleScore,
+    chrom: str,
+    begin: int,
+    end: int,
+    scores: list[str],
+    expected: list[dict[str, str | int | None]],
+) -> None:
     vcf_info_clinvar.open()
     result = vcf_info_clinvar.fetch_region(chrom, begin, end, scores)
     assert list(result) == expected
@@ -125,7 +132,14 @@ def test_clinvar_fetch_region(
     ),
 ])
 def test_clinvar_fetch_scores(
-        vcf_info_clinvar, chrom, pos, ref, alt, scores, expected):
+    vcf_info_clinvar: AlleleScore,
+    chrom: str,
+    pos: int,
+    ref: str,
+    alt: str,
+    scores: list[str],
+    expected: list[str | int | None],
+) -> None:
     result = vcf_info_clinvar\
         .open()\
         .fetch_scores(chrom, pos, ref, alt, scores)
@@ -133,7 +147,7 @@ def test_clinvar_fetch_scores(
 
 
 @pytest.fixture()
-def vcf_info_gnomad(tmp_path_factory):
+def vcf_info_gnomad(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
     root_path = tmp_path_factory.mktemp("vcf_info_gnomad")
     setup_directories(
         root_path, {
@@ -324,7 +338,9 @@ chrA   5   .  A   C   264.00 AS_VQSR     AC=3;AN=107374;AF=2.79397e-05;lcr;varia
     return AlleleScore(res).open()
 
 
-def test_gnomad_vcf_resource(vcf_info_gnomad):
+def test_gnomad_vcf_resource(
+    vcf_info_gnomad: AlleleScore,
+) -> None:
     vcf_info_gnomad.open()
     scores = vcf_info_gnomad.score_definitions
 
@@ -373,13 +389,19 @@ def test_gnomad_vcf_resource(vcf_info_gnomad):
     (
         "chrA", 4, 5, ["SB"],
         [
-            {"SB": "47,22,6,7"},
-            {"SB": "97,29,13,19"},
+            {"SB": "47|22|6|7"},
+            {"SB": "97|29|13|19"},
         ],
     ),
 ])
 def test_gnomad_vcf_fetch_region(
-        vcf_info_gnomad, chrom, start, end, scores, expected):
+    vcf_info_gnomad: AlleleScore,
+    chrom: str,
+    start: int,
+    end: int,
+    scores: list[str],
+    expected: list[dict],
+) -> None:
     result = list(vcf_info_gnomad.fetch_region(chrom, start, end, scores))
     assert result == expected
 
@@ -399,6 +421,13 @@ def test_gnomad_vcf_fetch_region(
     ),
 ])
 def test_gnomad_vcf_fetch_rscores(
-        vcf_info_gnomad, chrom, pos, ref, alt, scores, expected):
+    vcf_info_gnomad: AlleleScore,
+    chrom: str,
+    pos: int,
+    ref: str,
+    alt: str,
+    scores: list[str],
+    expected: list | None,
+) -> None:
     result = vcf_info_gnomad.fetch_scores(chrom, pos, ref, alt, scores)
     assert result == expected

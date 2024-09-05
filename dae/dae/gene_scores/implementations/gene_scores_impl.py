@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 from dataclasses import asdict
 from typing import Any
 
@@ -14,9 +15,12 @@ from dae.gene_scores.gene_scores import (
 )
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.histogram import (
+    CategoricalHistogram,
+    CategoricalHistogramConfig,
     NullHistogramConfig,
     NumberHistogram,
     NumberHistogramConfig,
+    plot_histogram,
 )
 from dae.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
@@ -80,20 +84,32 @@ class GeneScoreImplementation(
 
     @staticmethod
     def _calc_histogram(
-            resource: GenomicResource, score_id: str) -> NumberHistogram:
+        resource: GenomicResource, score_id: str,
+    ) -> NumberHistogram | CategoricalHistogram:
         score = build_gene_score_from_resource(resource)
         hist_conf = score.score_definitions[score_id].hist_conf
-        assert isinstance(hist_conf, NumberHistogramConfig)
 
-        histogram = NumberHistogram(hist_conf)
-        for value in score.get_values(score_id):
-            histogram.add_value(value)
+        histogram: NumberHistogram | CategoricalHistogram
+
+        if isinstance(hist_conf, NumberHistogramConfig):
+            histogram = NumberHistogram(hist_conf)
+            for value in score.get_values(score_id):
+                histogram.add_value(value)
+        elif isinstance(hist_conf, CategoricalHistogramConfig):
+            histogram = CategoricalHistogram(hist_conf)
+            for value in score.get_values(score_id):
+                if math.isnan(value):
+                    continue
+                histogram.add_value(int(value))
+
         return histogram
 
     @staticmethod
     def _save_histogram(
-            histogram: NumberHistogram, resource: GenomicResource,
-            score_id: str) -> NumberHistogram:
+        histogram: NumberHistogram | CategoricalHistogram,
+        resource: GenomicResource,
+        score_id: str,
+    ) -> NumberHistogram | CategoricalHistogram:
         proto = resource.proto
         gene_score = build_gene_score_from_resource(resource)
 
@@ -103,24 +119,22 @@ class GeneScoreImplementation(
             mode="wt",
         ) as outfile:
             outfile.write(histogram.serialize())
-        with proto.open_raw_file(
+
+        scores_db = GeneScoresDb([gene_score])
+        score_desc = scores_db.get_score_desc(score_id)
+        small_values_desc = None
+        large_values_desc = None
+        if score_desc is not None:
+            small_values_desc = score_desc.small_values_desc
+            large_values_desc = score_desc.large_values_desc
+        plot_histogram(
             resource,
             gene_score.get_histogram_image_filename(score_id),
-            mode="wb",
-        ) as outfile:
-            scores_db = GeneScoresDb([gene_score])
-            score_desc = scores_db.get_score_desc(score_id)
-            small_values_desc = None
-            large_values_desc = None
-            if score_desc is not None:
-                small_values_desc = score_desc.small_values_desc
-                large_values_desc = score_desc.large_values_desc
-            histogram.plot(
-                outfile,
-                score_id,
-                small_values_desc,
-                large_values_desc,
-            )
+            histogram,
+            score_id,
+            small_values_desc,
+            large_values_desc,
+        )
         return histogram
 
     def calc_info_hash(self) -> bytes:

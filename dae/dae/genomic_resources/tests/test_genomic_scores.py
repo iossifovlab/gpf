@@ -480,10 +480,10 @@ def test_vcf_tuple_scores_autoconcat_to_string(vcf_score: AlleleScore) -> None:
         for r in vcf_score._fetch_lines("chr1", 2, 30)
     )
     assert results == (
-        ("chr1", 2, 2, "1,2,3"),
-        ("chr1", 5, 5, "11,12,13"),
-        ("chr1", 15, 15, "21,22"),
-        ("chr1", 15, 15, "21,22"),
+        ("chr1", 2, 2, "1|2|3"),
+        ("chr1", 5, 5, "11|12|13"),
+        ("chr1", 15, 15, "21|22"),
+        ("chr1", 15, 15, "21|22"),
         ("chr1", 30, 30, "31"),
         ("chr1", 30, 30, "31"),
         ("chr1", 30, 30, "31"),

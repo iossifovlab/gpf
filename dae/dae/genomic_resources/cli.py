@@ -338,7 +338,7 @@ def _do_resource_manifest_command(
 
     manifest_update = proto.check_update_manifest(res, prebuild_entries)
     if not bool(manifest_update):
-        logger.info(
+        logger.debug(
             "manifest of <%s> is up to date",
             res.get_genomic_resource_id_version())
     else:
@@ -552,19 +552,19 @@ def _stats_need_rebuild(
 
     if stored_hash is None:
         logger.info(
-            "No hash stored for <%s>, need update",
+            "No hash stored for <%s>; needs update",
             impl.resource.get_full_id(),
         )
         return True
 
     if stored_hash != current_hash:
         logger.info(
-            "Stored hash for <%s> is outdated, need update",
+            "Stored hash for <%s> is outdated; needs update",
             impl.resource.get_full_id(),
         )
         return True
 
-    logger.info(
+    logger.debug(
         "<%s> statistics hash is up to date", impl.resource.get_full_id(),
     )
     return False
@@ -606,7 +606,7 @@ def _run_repo_stats_command(
                 use_dvc=use_dvc,
                 region_size=region_size)
         elif dry_run and needs_rebuild:
-            logger.info("Statistics of <%s> need update", res.resource_id)
+            logger.info("Statistics of <%s> needs update", res.resource_id)
             status += 1
 
     if dry_run:
@@ -662,7 +662,7 @@ def _run_resource_stats_command(
     needs_rebuild = _stats_need_rebuild(proto, impl)
 
     if dry_run and needs_rebuild:
-        logger.info("Statistics of <%s> need update", res.resource_id)
+        logger.info("Statistics of <%s> needs update", res.resource_id)
         return 1
 
     if (force or needs_rebuild) and not dry_run:

@@ -313,7 +313,8 @@ class GenomicScore(ResourceConfigValidationMixin):
                             "type": "boolean",
                         },
                         "value_order": {
-                            "type": "list", "schema": {"type": "string"},
+                            "type": "list",
+                            "schema": {"type": ["string", "integer"]},
                         },
                     }},
                     "null_hist": {"type": "dict", "schema": {
@@ -323,6 +324,7 @@ class GenomicScore(ResourceConfigValidationMixin):
                     }},
                     "histogram": {"type": "dict", "schema": {
                         "type": {"type": "string"},
+                        "plot_function": {"type": "string"},
                         "number_of_bins": {
                             "type": "number",
                             "dependencies": {"type": "number"},
@@ -344,7 +346,16 @@ class GenomicScore(ResourceConfigValidationMixin):
                             "dependencies": {"type": ["number", "categorical"]},
                         },
                         "value_order": {
-                            "type": "list", "schema": {"type": "string"},
+                            "type": "list",
+                            "schema": {"type": ["string", "integer"]},
+                            "dependencies": {"type": "categorical"},
+                        },
+                        "displayed_values_count": {
+                            "type": "integer",
+                            "dependencies": {"type": "categorical"},
+                        },
+                        "displayed_values_percent": {
+                            "type": "number",
                             "dependencies": {"type": "categorical"},
                         },
                         "reason": {
@@ -472,9 +483,12 @@ class GenomicScore(ResourceConfigValidationMixin):
     ) -> dict[str, _ScoreDef]:
         def converter(val: Any) -> Any:
             try:
-                return ",".join(map(str, val))
+                if isinstance(val, tuple):
+                    return "|".join(map(str, val))
             except TypeError:
-                return val
+                pass
+
+            return val
 
         vcf_scoredefs = {}
 
@@ -1032,6 +1046,7 @@ class AlleleScore(GenomicScore):
             return None
 
         requested_scores = scores or self.get_all_scores()
+
         return [
             selected_line.get_score(sc)
             for sc in requested_scores]

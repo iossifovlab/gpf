@@ -435,7 +435,8 @@ class ReferenceGenomeImplementation(
 
     def _get_template_data(self) -> dict[str, Any]:
         info = copy.deepcopy(self.config)
-        info["chromosomes"] = self.reference_genome.get_all_chrom_lengths()
+        info["chromosomes"] = list(
+            self.reference_genome.get_all_chrom_lengths().items())
         info["global_statistic"] = {}
         info["chrom_statistics"] = {}
         statistics = self.get_statistics()
