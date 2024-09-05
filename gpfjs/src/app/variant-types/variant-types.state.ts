@@ -11,7 +11,7 @@ export const setVariantTypes = createAction(
 );
 
 export const resetVariantTypes = createAction(
-  '[Genotype] Reset family ids'
+  '[Genotype] Reset variant types'
 );
 
 export const variantTypesReducer = createReducer(
