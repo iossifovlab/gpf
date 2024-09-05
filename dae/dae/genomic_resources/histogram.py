@@ -393,6 +393,8 @@ class NumberHistogram(Statistic):
                     f"\n{large_values_description}",
                 ],
                 wrap=True,
+                color="gray",
+                style="italic",
             )
 
         plt.xlabel(f"\n{score_id}")
@@ -617,7 +619,9 @@ class CategoricalHistogram(Statistic):
 
         _, ax = plt.subplots()
         ax.bar(
-            x=values, height=counts,
+            x=values,
+            height=counts,
+            tick_label=[str(v) for v in values],
             log=self.config.y_log_scale,
             align="center",
         )
@@ -637,6 +641,8 @@ class CategoricalHistogram(Statistic):
                     f"\n{large_values_description}",
                 ],
                 wrap=True,
+                color="gray",
+                style="italic",
             )
 
         plt.xlabel(f"\n{score_id}")

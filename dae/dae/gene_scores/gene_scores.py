@@ -13,6 +13,7 @@ from jinja2 import Template
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.histogram import (
+    CategoricalHistogramConfig,
     NumberHistogram,
     NumberHistogramConfig,
     build_histogram_config,
@@ -35,7 +36,7 @@ class ScoreDef:
     name: str
     desc: str
 
-    hist_conf: NumberHistogramConfig | None
+    hist_conf: NumberHistogramConfig | CategoricalHistogramConfig | None
     small_values_desc: str | None
     large_values_desc: str | None
 
@@ -81,12 +82,15 @@ class GeneScore(
             score_name = score_conf.get("name", score_id)
             hist_conf = build_histogram_config(score_conf)
 
-            if not isinstance(hist_conf, NumberHistogramConfig):
+            if not isinstance(
+                    hist_conf,
+                    NumberHistogramConfig | CategoricalHistogramConfig):
                 raise TypeError(
                     f"Missing histogram config for {score_id} in "
                     f"{self.resource.resource_id}")
 
-            if not hist_conf.has_view_range():
+            if isinstance(hist_conf, NumberHistogramConfig) and \
+                    not hist_conf.has_view_range():
                 min_value = self.get_min(score_id)
                 max_value = self.get_max(score_id)
                 hist_conf.view_range = (min_value, max_value)
@@ -257,7 +261,8 @@ class GeneScore(
                             "dependencies": {"type": ["number", "categorical"]},
                         },
                         "value_order": {
-                            "type": "list", "schema": {"type": "string"},
+                            "type": "list",
+                            "schema": {"type": ["string", "integer"]},
                             "dependencies": {"type": "categorical"},
                         },
                         "reason": {

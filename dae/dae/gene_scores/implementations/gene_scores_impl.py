@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 from dataclasses import asdict
 from typing import Any
 
@@ -14,6 +15,8 @@ from dae.gene_scores.gene_scores import (
 )
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.histogram import (
+    CategoricalHistogram,
+    CategoricalHistogramConfig,
     NullHistogramConfig,
     NumberHistogram,
     NumberHistogramConfig,
@@ -80,20 +83,32 @@ class GeneScoreImplementation(
 
     @staticmethod
     def _calc_histogram(
-            resource: GenomicResource, score_id: str) -> NumberHistogram:
+        resource: GenomicResource, score_id: str,
+    ) -> NumberHistogram | CategoricalHistogram:
         score = build_gene_score_from_resource(resource)
         hist_conf = score.score_definitions[score_id].hist_conf
-        assert isinstance(hist_conf, NumberHistogramConfig)
 
-        histogram = NumberHistogram(hist_conf)
-        for value in score.get_values(score_id):
-            histogram.add_value(value)
+        histogram: NumberHistogram | CategoricalHistogram
+
+        if isinstance(hist_conf, NumberHistogramConfig):
+            histogram = NumberHistogram(hist_conf)
+            for value in score.get_values(score_id):
+                histogram.add_value(value)
+        elif isinstance(hist_conf, CategoricalHistogramConfig):
+            histogram = CategoricalHistogram(hist_conf)
+            for value in score.get_values(score_id):
+                if math.isnan(value):
+                    continue
+                histogram.add_value(int(value))
+
         return histogram
 
     @staticmethod
     def _save_histogram(
-            histogram: NumberHistogram, resource: GenomicResource,
-            score_id: str) -> NumberHistogram:
+        histogram: NumberHistogram | CategoricalHistogram,
+        resource: GenomicResource,
+        score_id: str,
+    ) -> NumberHistogram | CategoricalHistogram:
         proto = resource.proto
         gene_score = build_gene_score_from_resource(resource)
 
