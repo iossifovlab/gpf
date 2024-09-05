@@ -52,7 +52,7 @@ export class GenderComponent extends StatefulComponent implements OnInit {
     if (value) {
       this.store.dispatch(addGender({gender: gender}));
     } else {
-      this.store.dispatch(addGender({gender: gender}));
+      this.store.dispatch(removeGender({gender: gender}));
     }
   }
 }

@@ -1,5 +1,5 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { combineLatest, Observable, Subscription, zip } from 'rxjs';
+import { combineLatest, Observable, Subscription } from 'rxjs';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
@@ -164,7 +164,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
         const state = {
           ...(variantTypesState?.length && {variantTypes: variantTypesState}),
           ...(effectTypesState?.length && {effectTypes: effectTypesState}),
-          ...(gendersState?.length && {gender: gendersState}),
+          ...(gendersState?.length && {genders: gendersState}),
           ...{inheritanceTypeFilter: inheritanceTypesState},
           ...(presentInChildState?.length && {presentInChild: presentInChildState}),
           ...(studyTypesState?.length && {studyTypes: studyTypesState}),
@@ -196,8 +196,6 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
       })
     );
   }
-
-
 
   public ngOnDestroy(): void {
     this.loadingService.setLoadingStop();
