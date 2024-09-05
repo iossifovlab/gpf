@@ -315,24 +315,27 @@ def test_query_person_filters(
 
 
 def test_query_family_filters(
-    iossifov_2014_local: StudyWrapperBase,
+    t4c8_study_2: StudyWrapperBase,
 ) -> None:
-    study_wrapper = iossifov_2014_local
+    study_wrapper = t4c8_study_2
     query = {
+        # this selects families in which the sibling has sex "F";
+        # i.e. [f1.3]
         "familyFilters": [
             {
                 "source": "sex",
                 "sourceType": "categorical",
-                "selection": {"selection": ["M"]},
+                "selection": {"selection": ["F"]},
                 "from": "pedigree",
-                "role": ["prb"],
+                "role": ["sib"],
             },
         ],
     }
     variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}]),
     )
-    assert len(variants) == 15
+
+    assert len(variants) == 6
 
 
 def test_query_study_filters(

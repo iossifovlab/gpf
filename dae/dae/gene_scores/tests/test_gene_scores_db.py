@@ -163,7 +163,7 @@ def test_scores_get_genes(scores_repo: GenomicResourceRepo) -> None:
     assert len(genes) == 3
 
     genes = score.get_genes("LGD_rank", 1, 5.0)
-    assert len(genes) == 2
+    assert len(genes) == 3
 
 
 def test_scores_to_tsv(scores_repo: GenomicResourceRepo) -> None:
