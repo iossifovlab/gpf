@@ -20,6 +20,7 @@ from dae.genomic_resources.histogram import (
     NullHistogramConfig,
     NumberHistogram,
     NumberHistogramConfig,
+    plot_histogram,
 )
 from dae.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
@@ -118,24 +119,22 @@ class GeneScoreImplementation(
             mode="wt",
         ) as outfile:
             outfile.write(histogram.serialize())
-        with proto.open_raw_file(
+
+        scores_db = GeneScoresDb([gene_score])
+        score_desc = scores_db.get_score_desc(score_id)
+        small_values_desc = None
+        large_values_desc = None
+        if score_desc is not None:
+            small_values_desc = score_desc.small_values_desc
+            large_values_desc = score_desc.large_values_desc
+        plot_histogram(
             resource,
             gene_score.get_histogram_image_filename(score_id),
-            mode="wb",
-        ) as outfile:
-            scores_db = GeneScoresDb([gene_score])
-            score_desc = scores_db.get_score_desc(score_id)
-            small_values_desc = None
-            large_values_desc = None
-            if score_desc is not None:
-                small_values_desc = score_desc.small_values_desc
-                large_values_desc = score_desc.large_values_desc
-            histogram.plot(
-                outfile,
-                score_id,
-                small_values_desc,
-                large_values_desc,
-            )
+            histogram,
+            score_id,
+            small_values_desc,
+            large_values_desc,
+        )
         return histogram
 
     def calc_info_hash(self) -> bytes:

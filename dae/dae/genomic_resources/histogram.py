@@ -5,7 +5,10 @@ Currently we support only genomic scores histograms.
 from __future__ import annotations
 
 import copy
+import importlib
 import logging
+import pathlib
+import sys
 from collections import Counter
 from dataclasses import dataclass
 from typing import IO, Any
@@ -37,13 +40,15 @@ class NumberHistogramConfig:
     x_log_scale: bool = False
     y_log_scale: bool = False
     x_min_log: float | None = None
+    plot_function: str | None = None
 
     def has_view_range(self) -> bool:
         return self.view_range[0] is not None and \
             self.view_range[1] is not None
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        """Transform number histogram config to dict."""
+        result = {
             "type": "number",
             "view_range": {
                 "min": self.view_range[0],
@@ -54,6 +59,10 @@ class NumberHistogramConfig:
             "y_log_scale": self.y_log_scale,
             "x_min_log": self.x_min_log,
         }
+        if self.plot_function is not None:
+            result["plot_function"] = self.plot_function
+
+        return result
 
     @staticmethod
     def from_dict(parsed: dict[str, Any]) -> NumberHistogramConfig:
@@ -77,10 +86,13 @@ class NumberHistogramConfig:
         x_log_scale = parsed.get("x_log_scale", False)
         y_log_scale = parsed.get("y_log_scale", False)
         x_min_log = parsed.get("x_min_log")
+        plot_function = parsed.get("plot_function")
+
         return NumberHistogramConfig(
             view_range, number_of_bins,
             x_log_scale, y_log_scale,
             x_min_log,
+            plot_function=plot_function,
         )
 
     @staticmethod
@@ -111,6 +123,7 @@ class CategoricalHistogramConfig:
     displayed_values_percent: float | None = None
     value_order: list[str | int] | None = None
     y_log_scale: bool = False
+    plot_function: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Transform categorical histogram config to dict."""
@@ -124,6 +137,8 @@ class CategoricalHistogramConfig:
         if self.displayed_values_percent is not None:
             result["displayed_values_percent"] = \
                 self.displayed_values_percent
+        if self.plot_function is not None:
+            result["plot_function"] = self.plot_function
         return result
 
     @staticmethod
@@ -154,12 +169,14 @@ class CategoricalHistogramConfig:
 
         value_order = parsed.get("value_order", [])
         y_log_scale = parsed.get("y_log_scale", False)
+        plot_function = parsed.get("plot_function")
 
         return CategoricalHistogramConfig(
             displayed_values_count=displayed_values_count,
             displayed_values_percent=displayed_values_percent,
             value_order=value_order,
             y_log_scale=y_log_scale,
+            plot_function=plot_function,
         )
 
 
@@ -563,6 +580,10 @@ class CategoricalHistogram(Statistic):
                 f"too many unique values {len(self._counter)}")
 
     @property
+    def raw_values(self) -> dict[str | int, int]:
+        return dict(self._counter)
+
+    @property
     def display_values(self) -> dict[str | int, int]:
         """Return categorical histogram display values in order."""
         values = {}
@@ -796,3 +817,62 @@ def load_histogram(
 HistogramConfig = \
     NullHistogramConfig | CategoricalHistogramConfig | NumberHistogramConfig
 Histogram = NullHistogram | CategoricalHistogram | NumberHistogram
+
+
+def _import_from_string(module_name: str, source_code: str) -> Any:
+    spec = importlib.util.spec_from_loader(module_name, loader=None)
+    assert spec is not None
+    module = importlib.util.module_from_spec(spec)
+    exec(source_code, module.__dict__)  # noqa: S102 pylint: disable=exec-used
+    sys.modules[spec.name] = module
+    return module
+
+
+def plot_histogram(
+    res: GenomicResource,
+    image_filename: str,
+    hist: Histogram,
+    score_id: str,
+    small_values_desc: str | None = None,
+    large_values_desc: str | None = None,
+) -> None:
+    """Plot histogram and save it into the resource."""
+    if isinstance(hist, NullHistogram):
+        return
+
+    if hist.config.plot_function is None:
+        with res.open_raw_file(image_filename, mode="wb") as outfile:
+            hist.plot(
+                outfile,
+                score_id,
+                small_values_desc,
+                large_values_desc,
+            )
+        return
+
+    plot_file, plot_function_name = hist.config.plot_function.split(":")
+    with res.open_raw_file(
+        plot_file,
+        mode="rt",
+    ) as srcfile:
+        source_code = srcfile.read()
+        plot_module_name = str(
+            pathlib.Path(res.resource_id) /
+            pathlib.Path(plot_file).with_suffix("")).replace("/", ".")
+        plot_module = _import_from_string(
+            plot_module_name, source_code)
+        func = getattr(plot_module, plot_function_name)
+
+    with res.open_raw_file(
+        image_filename,
+        mode="wb",
+    ) as outfile:
+        func(
+            outfile,
+            hist,
+            score_id,
+            small_values_desc,
+            large_values_desc,
+        )
+
+    return

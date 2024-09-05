@@ -240,6 +240,7 @@ class GeneScore(
                     }},
                     "histogram": {"type": "dict", "schema": {
                         "type": {"type": "string"},
+                        "plot_function": {"type": "string"},
                         "number_of_bins": {
                             "type": "number",
                             "dependencies": {"type": "number"},

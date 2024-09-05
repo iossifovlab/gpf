@@ -13,6 +13,7 @@ from dae.genomic_resources.cli import (
 from dae.genomic_resources.genomic_scores import build_score_from_resource
 from dae.genomic_resources.histogram import (
     NullHistogram,
+    plot_histogram,
 )
 from dae.genomic_resources.repository import (
     GR_CONTENTS_FILE_NAME,
@@ -88,33 +89,34 @@ def main(
         score_descs = GeneScoresDb.build_descs_from_score(gene_score)
 
         for score_desc in score_descs:
-            with proto.open_raw_file(
+            image_filename = gene_score.get_histogram_image_filename(
+                score_desc.score_id)
+            plot_histogram(
                 res,
-                gene_score.get_histogram_image_filename(score_desc.score_id),
-                mode="wb",
-            ) as outfile:
-                score_desc.hist.plot(
-                    outfile,
-                    score_desc.score_id,
-                    score_desc.small_values_desc,
-                    score_desc.large_values_desc,
-                )
+                image_filename,
+                score_desc.hist,
+                score_desc.score_id,
+                score_desc.small_values_desc,
+                score_desc.large_values_desc,
+            )
     else:
         genomic_score = build_score_from_resource(res)
         score_ids = genomic_score.get_all_scores()
 
         for score_id in score_ids:
             hist = genomic_score.get_score_histogram(score_id)
-
-            if not isinstance(hist, NullHistogram):
-                with proto.open_raw_file(
-                    res,
-                    genomic_score.get_histogram_image_filename(score_id),
-                    mode="wb",
-                ) as outfile:
-                    hist.plot(
-                        outfile,
-                        score_id,
-                        genomic_score.score_definitions[score_id].small_values_desc,
-                        genomic_score.score_definitions[score_id].large_values_desc,
-                    )
+            if isinstance(hist, NullHistogram):
+                continue
+            image_filename = genomic_score.get_histogram_image_filename(
+                score_id)
+            score_def = genomic_score.score_definitions[score_id]
+            small_values_desc = score_def.small_values_desc
+            large_values_desc = score_def.large_values_desc
+            plot_histogram(
+                res,
+                image_filename,
+                hist,
+                score_id,
+                small_values_desc,
+                large_values_desc,
+            )

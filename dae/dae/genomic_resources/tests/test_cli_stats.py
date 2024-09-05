@@ -547,7 +547,7 @@ def test_stats_categorical(tmp_path: pathlib.Path) -> None:
         pathlib.Path(histogram_statistic_path).read_text(),
     )
 
-    assert len(stat_hist.bars) == 3
-    assert stat_hist.bars["value1"] == 2
-    assert stat_hist.bars["value2"] == 2
-    assert stat_hist.bars["value3"] == 1
+    assert len(stat_hist.display_values) == 3
+    assert stat_hist.display_values["value1"] == 2
+    assert stat_hist.display_values["value2"] == 2
+    assert stat_hist.display_values["value3"] == 1

@@ -32,6 +32,7 @@ from dae.genomic_resources.histogram import (
     NumberHistogramConfig,
     build_default_histogram_conf,
     build_empty_histogram,
+    plot_histogram,
 )
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
@@ -410,8 +411,8 @@ class GenomicScoreImplementation(
                         continue
                     if isinstance(hist, NullHistogram):
                         result[score_id] = NullHistogram(NullHistogramConfig(
-                            f"Histogram for {score_id} nullified for a "
-                            f"region"))
+                            f"Empty histogram for {score_id} in a region: "
+                            f"{hist.reason}"))
                     else:
                         result[score_id].merge(hist)
 
@@ -439,17 +440,14 @@ class GenomicScoreImplementation(
                 outfile.write(score_histogram.serialize())
 
             if not isinstance(score_histogram, NullHistogram):
-                with proto.open_raw_file(
+                plot_histogram(
                     resource,
                     impl.score.get_histogram_image_filename(score_id),
-                    mode="wb",
-                ) as outfile:
-                    score_histogram.plot(
-                        outfile,
-                        score_id,
-                        impl.score.score_definitions[score_id].small_values_desc,
-                        impl.score.score_definitions[score_id].large_values_desc,
-                    )
+                    score_histogram,
+                    score_id,
+                    impl.score.score_definitions[score_id].small_values_desc,
+                    impl.score.score_definitions[score_id].large_values_desc,
+                )
         return merged_histograms
 
     def calc_info_hash(self) -> bytes:
