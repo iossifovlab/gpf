@@ -342,6 +342,26 @@ def setup_dataset(
     return dataset
 
 
+def setup_dataset_config(
+    gpf_instance: GPFInstance,
+    dataset_id: str,
+    study_ids: list[str],
+    dataset_config_update: str = "",
+) -> None:
+    """Create and register a dataset dataset_id with studies."""
+    root_path = pathlib.Path(gpf_instance.dae_dir)
+    (root_path / "datasets" / dataset_id).mkdir(exist_ok=True)
+    dataset_config = {
+        "id": dataset_id,
+        "studies": study_ids,
+    }
+    if dataset_config_update:
+        config_update = yaml.safe_load(dataset_config_update)
+        dataset_config.update(config_update)
+    (root_path / "datasets" / dataset_id / f"{dataset_id}.yaml").write_text(
+        yaml.dump(dataset_config, default_flow_style=False))
+
+
 def study_update(
     gpf_instance: GPFInstance,
     study: GenotypeData, study_config_update: dict[str, Any],

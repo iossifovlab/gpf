@@ -137,7 +137,8 @@ class WGPFInstance(GPFInstance):
                 self.gene_scores_db,
                 self,
             )
-        self._study_wrappers[genotype_data.study_id] = study_wrapper
+        self._study_wrappers[
+            genotype_data.study_id] = study_wrapper  # type: ignore
 
     def make_wdae_wrapper(
         self, dataset_id: str,

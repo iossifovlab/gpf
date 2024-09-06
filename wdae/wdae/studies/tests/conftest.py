@@ -3,6 +3,7 @@ import pathlib
 import textwrap
 
 import pytest
+from gpf_instance.gpf_instance import WGPFInstance
 
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
@@ -20,6 +21,7 @@ from dae.testing import (
     setup_vcf,
     vcf_study,
 )
+from dae.testing.import_helpers import setup_dataset_config
 from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
 from studies.study_wrapper import (
     StudyWrapper,
@@ -77,7 +79,11 @@ def t4c8_instance(
     setup_directories(
         instance_path, {
             "gpf_instance.yaml": textwrap.dedent("""
-                instance_id: test_instance
+                instance_id: t4c8_instance
+                reference_genome:
+                    resource_id: t4c8_genome
+                gene_models:
+                    resource_id: t4c8_genes
                 gene_scores_db:
                     gene_scores:
                     - "gene_scores/t4c8_score"
@@ -90,8 +96,6 @@ def t4c8_instance(
 
     gpf_instance = setup_gpf_instance(
         instance_path,
-        reference_genome_id="t4c8_genome",
-        gene_models_id="t4c8_genes",
         grr=t4c8_grr,
     )
 
@@ -103,6 +107,8 @@ def t4c8_instance(
     }
     gpf_instance.genotype_storages.register_storage_config(storage_config)
     _t4c8_study_1(gpf_instance)
+    _t4c8_study_2(gpf_instance)
+    _t4c8_dataset(gpf_instance)
 
     gpf_instance.reload()
 
@@ -158,9 +164,141 @@ chr1   122 .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/1 0/2  0/2  0/2 0
     )
 
 
+def _t4c8_study_2(t4c8_instance: GPFInstance) -> GenotypeData:
+    root_path = pathlib.Path(t4c8_instance.dae_dir)
+    ped_path = setup_pedigree(
+        root_path / "t4c8_study_2" / "pedigree" / "in.ped",
+        """
+familyId personId dadId momId sex status role
+f2.1     mom1     0     0     2   1      mom
+f2.1     dad1     0     0     1   1      dad
+f2.1     ch1      dad1  mom1  2   2      prb
+f2.3     mom3     0     0     2   1      mom
+f2.3     dad3     0     0     1   1      dad
+f2.3     ch3      dad3  mom3  2   2      prb
+f2.3     ch4      dad3  mom3  2   0      prb
+        """)
+    vcf_path1 = setup_vcf(
+        root_path / "t4c8_study_2" / "vcf" / "in.vcf.gz",
+        """
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chr1>
+##contig=<ID=chr2>
+##contig=<ID=chr3>
+#CHROM POS ID REF ALT QUAL FILTER INFO FORMAT mom1 dad1 ch1 mom3 dad3 ch3 ch4
+chr1   5   .  A   C   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0 0/1
+chr1   6   .  C   G   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/1 0/0
+chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
+        """)
+
+    project_config_update = {
+        "input": {
+            "vcf": {
+                "denovo_mode": "denovo",
+                "omission_mode": "omission",
+            },
+        },
+    }
+    return vcf_study(
+        root_path,
+        "t4c8_study_2", ped_path, [vcf_path1],
+        t4c8_instance,
+        project_config_update=project_config_update,
+        study_config_update={
+            "conf_dir": str(root_path / "t4c8_study_2"),
+            "person_set_collections": {
+                "phenotype": {
+                    "id": "phenotype",
+                    "name": "Phenotype",
+                    "sources": [
+                        {
+                            "from": "pedigree",
+                            "source": "status",
+                        },
+                    ],
+                    "default": {
+                        "color": "#aaaaaa",
+                        "id": "unspecified",
+                        "name": "unspecified",
+                    },
+                    "domain": [
+                        {
+                            "color": "#bbbbbb",
+                            "id": "epilepsy",
+                            "name": "epilepsy",
+                            "values": [
+                                "affected",
+                            ],
+                        },
+                        {
+                            "color": "#00ff00",
+                            "id": "unaffected",
+                            "name": "unaffected",
+                            "values": [
+                                "unaffected",
+                            ],
+                        },
+                    ],
+                },
+                "selected_person_set_collections": [
+                    "phenotype",
+                ],
+            },
+        })
+
+
+def _t4c8_dataset(
+    t4c8_instance: GPFInstance,
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir)
+    (root_path / "datasets").mkdir(exist_ok=True)
+
+    setup_dataset_config(
+        t4c8_instance,
+        "t4c8_dataset",
+        ["t4c8_study_1", "t4c8_study_2"],
+        dataset_config_update=textwrap.dedent(f"""
+            conf_dir: { root_path / "dataset "}
+            person_set_collections:
+                phenotype:
+                  id: phenotype
+                  name: Phenotype
+                  sources:
+                  - from: pedigree
+                    source: status
+                  domain:
+                  - color: '#4b2626'
+                    id: developmental_disorder
+                    name: developmental disorder
+                    values:
+                    - affected
+                  - color: '#ffffff'
+                    id: unaffected
+                    name: unaffected
+                    values:
+                    - unaffected
+                  default:
+                    color: '#aaaaaa'
+                    id: unspecified
+                    name: unspecified
+                selected_person_set_collections:
+                - phenotype"""))
+
+
 @pytest.fixture(scope="module")
 def t4c8_study_1(t4c8_instance: GPFInstance) -> GenotypeData:
     return t4c8_instance.get_genotype_data("t4c8_study_1")
+
+
+@pytest.fixture(scope="module")
+def t4c8_study_2(t4c8_instance: GPFInstance) -> GenotypeData:
+    return t4c8_instance.get_genotype_data("t4c8_study_2")
+
+
+@pytest.fixture(scope="module")
+def t4c8_dataset(t4c8_instance: GPFInstance) -> GenotypeData:
+    return t4c8_instance.get_genotype_data("t4c8_dataset")
 
 
 @pytest.fixture(scope="module")
@@ -176,6 +314,16 @@ def t4c8_study_1_wrapper(
         t4c8_instance.gene_scores_db,
         t4c8_instance,
     )
+
+
+@pytest.fixture()
+def t4c8_wgpf_instance(
+    t4c8_instance: GPFInstance,
+    t4c8_grr: GenomicResourceRepo,
+) -> WGPFInstance:
+    root_path = pathlib.Path(t4c8_instance.dae_dir)
+    instance_filename = str(root_path / "gpf_instance.yaml")
+    return WGPFInstance.build(instance_filename, grr=t4c8_grr)
 
 
 def _t4c8_default_study_config(instance_path: pathlib.Path) -> None:
