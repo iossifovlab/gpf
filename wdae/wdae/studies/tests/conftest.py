@@ -12,6 +12,7 @@ from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.studies.study import GenotypeData
 from dae.testing import (
     setup_directories,
     setup_gpf_instance,
@@ -140,15 +141,15 @@ def _t4c8_study_2(
     ped_path = setup_pedigree(
         root_path / "t4c8_study_2" / "pedigree" / "in.ped",
         """
-familyId personId dadId momId sex status role
-f1.1     mom1     0     0     2   1      mom
-f1.1     dad1     0     0     1   1      dad
-f1.1     p1       dad1  mom1  2   2      prb
-f1.1     s1       dad1  mom1  1   1      sib
-f1.3     mom3     0     0     2   1      mom
-f1.3     dad3     0     0     1   1      dad
-f1.3     p3       dad3  mom3  2   2      prb
-f1.3     s3       dad3  mom3  2   1      sib
+familyId personId dadId momId sex status role phenotype
+f1.1     mom1     0     0     2   1      mom  unaffected
+f1.1     dad1     0     0     1   1      dad  unaffected
+f1.1     p1       dad1  mom1  2   2      prb  autism
+f1.1     s1       dad1  mom1  1   1      sib  unaffected
+f1.3     mom3     0     0     2   1      mom  unaffected
+f1.3     dad3     0     0     1   1      dad  unaffected
+f1.3     p3       dad3  mom3  2   2      prb  autism
+f1.3     s3       dad3  mom3  2   1      sib  unaffected
         """)
     vcf_path1 = setup_vcf(
         root_path / "t4c8_study_2" / "vcf" / "in.vcf.gz",
@@ -179,54 +180,18 @@ chr1   122 .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/1 0/2  0/2  0/2 0
                 },
             },
         },
-        study_config_update={
-            "conf_dir": str(root_path / "t4c8_study_2"),
-            "person_set_collections": {
-                "phenotype": {
-                    "id": "phenotype",
-                    "name": "Phenotype",
-                    "sources": [
-                        {
-                            "from": "pedigree",
-                            "source": "status",
-                        },
-                    ],
-                    "default": {
-                        "color": "#aaaaaa",
-                        "id": "unspecified",
-                        "name": "unspecified",
-                    },
-                    "domain": [
-                        {
-                            "color": "#bbbbbb",
-                            "id": "autism",
-                            "name": "autism",
-                            "values": [
-                                "affected",
-                            ],
-                        },
-                        {
-                            "color": "#00ff00",
-                            "id": "unaffected",
-                            "name": "unaffected",
-                            "values": [
-                                "unaffected",
-                            ],
-                        },
-                    ],
-                },
-                "selected_person_set_collections": [
-                    "phenotype",
-                ],
-            },
-        },
     )
 
 
 @pytest.fixture(scope="module")
-def t4c8_study_2(
+def t4c8_study_2(t4c8_instance: GPFInstance) -> GenotypeData:
+    return t4c8_instance.get_genotype_data("t4c8_study_2")
+
+
+@pytest.fixture(scope="module")
+def t4c8_study_2_wrapper(
     t4c8_instance: GPFInstance,
-) -> StudyWrapperBase:
+) -> StudyWrapper:
 
     data_study = t4c8_instance.get_genotype_data("t4c8_study_2")
 

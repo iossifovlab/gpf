@@ -75,46 +75,37 @@ class ResponseTransformer:
             v.members_in_order)],
 
         "family_person_ids":
-        lambda v: [";".join(list(map(
-            lambda m: m.person_id, v.members_in_order,
-        )))],
+        lambda v: [";".join([m.person_id for m in v.members_in_order])],
 
         "carrier_person_ids":
-        lambda v: list(
-            map(
-                lambda aa: ";".join(list(filter(None, aa.variant_in_members))),
-                v.alt_alleles,
-            )),
+        lambda v: [
+            ";".join(m for m in aa.variant_in_members if m is not None)
+            for aa in v.alt_alleles
+        ],
 
         "carrier_person_attributes":
-        lambda v: list(
-            map(
-                lambda aa:
-                members_in_order_get_family_structure(
-                    list(filter(None, aa.variant_in_members_objects)),
-                ),
-                v.alt_alleles,
-            )),
+        lambda v: [
+                members_in_order_get_family_structure([
+                    m for m in aa.variant_in_members_objects if m is not None])
+            for aa in v.alt_alleles
+        ],
 
         "inheritance_type":
-        lambda v: list(map(
-            lambda aa:
+        lambda v: [
             "denovo"
             if Inheritance.denovo in aa.inheritance_in_members
             else "-"
             if {Inheritance.possible_denovo, Inheritance.possible_omission}
                 & set(aa.inheritance_in_members)
-            else "mendelian",
-            v.alt_alleles),
-        ),
+            else "mendelian"
+            for aa in v.alt_alleles
+        ],
 
         "is_denovo":
-        lambda v: list(
-            map(
-                lambda aa:
-                Inheritance.denovo in aa.inheritance_in_members,
-                v.alt_alleles),
-        ),
+        lambda v: [
+            Inheritance.denovo in aa.inheritance_in_members
+            for aa in v.alt_alleles
+        ],
 
         "effects":
         lambda v: [ge2str(e) for e in v.effects],
@@ -183,9 +174,8 @@ class ResponseTransformer:
                 )
                 if gene_score is None:
                     continue
-                self.gene_scores_dicts[score_id] = gene_score._to_dict(
-                    score_id,
-                )
+                self.gene_scores_dicts[score_id] = \
+                    gene_score._to_dict(score_id)  # noqa: SLF001
             self._get_all_pheno_values()
 
     @property
@@ -283,7 +273,6 @@ class ResponseTransformer:
         self, variant: FamilyVariant, collection_id: str,
     ) -> list:
         result = []
-        # best_st = np.sum(allele.gt == allele.allele_index, axis=0)
         person_set_collection = self.study_wrapper.get_person_set_collection(
             collection_id,
         )
@@ -308,12 +297,13 @@ class ResponseTransformer:
                     "problems generating pedigree: %s, %s, %s",
                     genotype, index, member)
 
-        for member in variant.family.full_members:
-            if (member.generated or member.not_sequenced) \
-                    or (member.person_id in missing_members):
-                result.append(ResponseTransformer._get_wdae_member(
-                    member, person_set_collection, 0),
-                )
+        result.extend([
+            ResponseTransformer._get_wdae_member(
+                    member, person_set_collection, 0)
+            for member in variant.family.full_members
+            if (member.generated or member.not_sequenced) or (
+                member.person_id in missing_members)
+        ])
 
         return result
 
@@ -346,23 +336,31 @@ class ResponseTransformer:
 
                 if col_format is None:
                     # pylint: disable=unused-argument
-                    def col_formatter(val, col_format):  # type: ignore
+                    def col_formatter(
+                        val: Any,
+                        col_format: str | None,  # noqa: ARG001
+                    ) -> str:
                         if val is None:
                             return "-"
                         return str(val)
                 else:
-                    def col_formatter(val, col_format):  # type: ignore
+                    def col_formatter(
+                        val: Any,
+                        col_format: str | None,
+                    ) -> str:
+                        # pylint: disable=broad-except
                         if val is None:
                             return "-"
                         try:
-                            return col_format % val
-                        except Exception:  # pylint: disable=broad-except
+                            assert col_format is not None
+                            return str(col_format % val)
+                        except Exception:  # noqa: BLE001
                             logging.warning(
                                 "error formatting variant: %s (%s) (%s)",
                                 v, col_format, val, exc_info=True)
                             if math.isnan(val):
-                                return None
-                            return val
+                                return "-"
+                        return str(val)
 
                 if col_role is not None:
                     col_source = f"{col_source}.{col_role}"
@@ -394,9 +392,9 @@ class ResponseTransformer:
                     else:
                         attribute = v.get_attribute(col_source)
 
-                    if kwargs.get("reduceAlleles", True):
-                        if all(a == attribute[0] for a in attribute):
-                            attribute = [attribute[0]]
+                    if kwargs.get("reduceAlleles", True) and \
+                            all(a == attribute[0] for a in attribute):
+                        attribute = [attribute[0]]
                     attribute = list(
                         map(
                             partial(col_formatter, col_format=col_format),
@@ -439,9 +437,8 @@ class ResponseTransformer:
         out: dict[str, Any] = {
             "svuid": variant.svuid,
         }
-        alleles = []
-        for aa in variant.alt_alleles:
-            alleles.append({
+        alleles = [
+            {
                 "location": aa.cshl_location,
                 "position": aa.position,
                 "end_position": aa.end_position,
@@ -456,7 +453,9 @@ class ResponseTransformer:
                     aa.get_attribute("seen_in_status") in {2, 3},
                 "seen_in_unaffected":
                     aa.get_attribute("seen_in_status") in {1, 3},
-            })
+            }
+            for aa in variant.alt_alleles
+        ]
         out["alleles"] = alleles
         yield out
 

@@ -2,19 +2,13 @@
 
 import pytest
 
-from studies.study_wrapper import StudyWrapperBase
-
-pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance",
-    "dae_calc_gene_sets",
-    # "agp_gpf_instance",
-)
+from studies.study_wrapper import StudyWrapper
 
 
 def test_query_all_variants(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
     variants = list(study_wrapper.query_variants_wdae(
         {}, [{"source": "location"}]))
 
@@ -31,10 +25,10 @@ def test_query_all_variants(
     ],
 )
 def test_study_2_query_inheritance_variants(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
     inheritance_type: str, count: int,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
     query = {
         "inheritance": inheritance_type,
     }
@@ -55,11 +49,11 @@ def test_study_2_query_inheritance_variants(
     ],
 )
 def test_query_limit_variants(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
     max_variants_count: int | None,
     count: int,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
     variants = list(study_wrapper.query_variants_wdae(
         {}, [{"source": "location"}],
         max_variants_count=max_variants_count,
@@ -78,10 +72,10 @@ def test_query_limit_variants(
     ],
 )
 def test_query_family_variants(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
     family_ids: list[str] | None, count: int,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
     query = {
         "family_ids": family_ids,
     }
@@ -101,10 +95,10 @@ def test_query_family_variants(
     ],
 )
 def test_query_sexes_variants(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
     sexes: list[str], count: int,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
     query = {
         "gender": sexes,
     }
@@ -125,10 +119,10 @@ def test_query_sexes_variants(
     ],
 )
 def test_query_variant_type_variants(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
     variant_type: list[str], count: int,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
     query = {
         "variantTypes": variant_type,
     }
@@ -149,10 +143,10 @@ def test_query_variant_type_variants(
     ],
 )
 def test_query_effect_types_variants(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
     effect_types: list[str], count: int,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
     query = {
         "effect_types": effect_types,
     }
@@ -172,10 +166,10 @@ def test_query_effect_types_variants(
     ],
 )
 def test_query_regions_variants(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
     regions: list[str], count: int,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
     query = {
         "regions": regions,
     }
@@ -200,10 +194,10 @@ def test_query_regions_variants(
     ],
 )
 def test_query_present_in_child(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
     options: list[str], count: int,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
     query = {
         "presentInChild": options,
         "presentInParent": {
@@ -237,10 +231,10 @@ def test_query_present_in_child(
     ],
 )
 def test_query_present_in_parent(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
     options: dict, count: int,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
     query = {
         "presentInParent": options,
         "presentInChild": [
@@ -280,10 +274,10 @@ def test_query_present_in_parent(
     ],
 )
 def test_query_gene_scores(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
     option: dict, count: int,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
     query = {
         "geneScores": option,
     }
@@ -295,9 +289,9 @@ def test_query_gene_scores(
 
 
 def test_query_person_filters(
-    iossifov_2014_local: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
 ) -> None:
-    study_wrapper = iossifov_2014_local
+    study_wrapper = t4c8_study_2_wrapper
     query = {
         "personFilters": [
             {
@@ -311,13 +305,13 @@ def test_query_person_filters(
     variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}]),
     )
-    assert len(variants) == 2
+    assert len(variants) == 12
 
 
 def test_query_family_filters(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
     query = {
         # this selects families in which the sibling has sex "F";
         # i.e. [f1.3]
@@ -360,10 +354,10 @@ def test_query_family_filters(
     ],
 )
 def test_query_study_filters(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
     query: dict, count: int,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
     variants = list(study_wrapper.query_variants_wdae(
         query,
         [{"source": "location"}]),
@@ -381,11 +375,11 @@ def test_query_study_filters(
     ],
 )
 def test_query_gene_scores_formatting(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
     float_format: str,
     float_val: str,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
 
     columns = [{
         "name": "t4c8_score",
@@ -404,9 +398,9 @@ def test_query_gene_scores_formatting(
 
 
 def test_query_complex_query(
-    t4c8_study_2: StudyWrapperBase,
+    t4c8_study_2_wrapper: StudyWrapper,
 ) -> None:
-    study_wrapper = t4c8_study_2
+    study_wrapper = t4c8_study_2_wrapper
 
     query = {
         "variantTypes": ["sub", "ins", "del"],
