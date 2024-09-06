@@ -49,6 +49,8 @@ def test_special_attrs_formatting(
         ["intergenic:intergenic"],
         ["intergenic:intergenic:intergenic:intergenic"],
         ["-"],
+        ["166.340"],  # f1.1 p1 age
+        ["104.912"],  # f1.1 p1 IQ
     ]
 
 

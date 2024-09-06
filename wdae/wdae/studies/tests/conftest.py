@@ -5,6 +5,7 @@ import textwrap
 import pytest
 from gpf_instance.gpf_instance import WGPFInstance
 
+from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
@@ -23,6 +24,7 @@ from dae.testing import (
 )
 from dae.testing.import_helpers import setup_dataset_config
 from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
+from dae.tools.pheno_import import main as pheno_import
 from studies.study_wrapper import (
     StudyWrapper,
 )
@@ -59,6 +61,10 @@ def t4c8_grr(
             """),
         },
     )
+
+    cli_manage([
+        "repo-repair", "-R", str(repo_path), "-j", "1"])
+
     return build_genomic_resource_repository({
         "id": "t4c8_local",
         "type": "directory",
@@ -89,9 +95,20 @@ def t4c8_instance(
                     - "gene_scores/t4c8_score"
                 default_study_config:
                   conf_file: default_study_configuration.yaml
-
+                genotype_storage:
+                  default: duckdb_wgpf_test
+                  storages:
+                  - id: duckdb_wgpf_test
+                    storage_type: duckdb_parquet
+                    memory_limit: 16GB
+                    base_dir: '%(wd)s/duckdb_storage'
             """),
         },
+    )
+
+    _study_1_pheno(
+        root_path,
+        instance_path,
     )
 
     gpf_instance = setup_gpf_instance(
@@ -99,13 +116,6 @@ def t4c8_instance(
         grr=t4c8_grr,
     )
 
-    storage_path = root_path / "duckdb_storage"
-    storage_config = {
-        "id": "duckdb_wgpf_test",
-        "storage_type": "duckdb_parquet",
-        "base_dir": str(storage_path),
-    }
-    gpf_instance.genotype_storages.register_storage_config(storage_config)
     _t4c8_study_1(gpf_instance)
     _t4c8_study_2(gpf_instance)
     _t4c8_dataset(gpf_instance)
@@ -160,6 +170,9 @@ chr1   122 .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/1 0/2  0/2  0/2 0
                     "omission_mode": "omission",
                 },
             },
+        },
+        study_config_update={
+            "phenotype_data": "study_1_pheno",
         },
     )
 
@@ -384,6 +397,7 @@ genotype_browser:
   - gene_scores
   - phylop
   - freq
+  - pheno_measures
   download_columns:
   - family
   - study_phenotype
@@ -402,6 +416,7 @@ genotype_browser:
   - geneeffect
   - effectdetails
   - gene_scores
+  - pheno_measures
 
   summary_preview_columns:
   - variant
@@ -476,6 +491,12 @@ genotype_browser:
       - freq_ssc
       - freq_exome_gnomad
       - freq_genome_gnomad
+    pheno_measures:
+      name: pheno measures
+      columns:
+      - pheno_age
+      - pheno_iq
+
   columns:
     genotype:
       pedigree:
@@ -573,6 +594,18 @@ genotype_browser:
         name: seen_in_unaffected
         source: seen_in_unaffected
 
+    phenotype:
+      pheno_age:
+        role: prb
+        source: "i1.age"
+        format: "%%.3f"
+        name: Age
+      pheno_iq:
+        role: prb
+        source: "i1.iq"
+        format: "%%.3f"
+        name: IQ
+
 common_report:
   enabled: true
   effect_groups:
@@ -642,3 +675,64 @@ enrichment:
             """),
         },
     )
+
+
+def _study_1_pheno(
+    root_path: pathlib.Path,
+    instance_path: pathlib.Path,
+) -> None:
+    pheno_path = root_path / "study_1_pheno_import"
+    ped_path = setup_pedigree(
+        pheno_path / "pedigree" / "study_1_pheno.ped", textwrap.dedent("""
+familyId personId dadId momId sex status role phenotype
+f1.1     mom1     0     0     2   1      mom  unaffected
+f1.1     dad1     0     0     1   1      dad  unaffected
+f1.1     p1       dad1  mom1  2   2      prb  autism
+f1.1     s1       dad1  mom1  1   1      sib  unaffected
+f1.2     mom2     0     0     2   1      mom  unaffected
+f1.2     dad2     0     0     1   1      dad  unaffected
+f1.2     p2       dad2  mom2  2   2      prb  autism
+f1.2     s2       dad2  mom2  1   1      sib  unaffected
+f1.3     mom3     0     0     2   1      mom  unaffected
+f1.3     dad3     0     0     1   1      dad  unaffected
+f1.3     p3       dad3  mom3  2   2      prb  autism
+f1.3     s3       dad3  mom3  2   1      sib  unaffected
+f1.4     mom4     0     0     2   1      mom  unaffected
+f1.4     dad4     0     0     1   1      dad  unaffected
+f1.4     p4       dad4  mom4  2   2      prb  autism
+f1.4     s4       dad4  mom4  2   1      sib  unaffected
+        """),
+    )
+    setup_directories(
+        pheno_path / "instruments", {
+        "i1.csv": textwrap.dedent("""
+personId,age,iq,m1,m2,m3,m4,m5
+mom1,495.85101568044115,97.50432405604393,52.81283557677513,30.02770124013255,71.37577329050546,7,val3
+dad1,455.7415088310677,95.69209763066596,30.17069676417365,46.09107120958192,80.80918132613797,6,val5
+p1,166.33975600961486,104.91189182223437,110.71113119414974,28.525899172698242,35.91763476048754,0,val3
+s1,171.7517126432528,38.666056616173776,89.98648478019244,45.48364527683189,36.402944728465634,1,val2
+mom2,538.9804553566523,77.21819916001459,54.140552015763305,46.634514570013124,57.885493130264315,5,val3
+dad2,565.9100943623504,74.26681832043354,63.03565166617398,36.205901443513405,88.42665767730243,8,val4
+p2,111.53800328766471,66.69411560428445,75.83138674585497,43.482874849182046,42.4619179257155,0,val2
+s2,112.55713299362333,103.40031120687064,81.23597041806396,26.159521971641645,34.43553369099789,0,val3
+mom3,484.44595137123844,65.76732558306583,91.03624223708377,60.66214100006954,82.3034749091715,6,val3
+dad3,529.0340708815538,102.32942897750618,102.99152655929812,49.50549744685827,74.83036326691582,2,val1
+p3,68.00148724003327,69.33300891928155,96.6345202846831,39.854725276645524,41.07164247649136,2,val1
+s3,82.79666720433862,14.497397082398294,70.28387304358455,36.733060149749015,32.979273050187054,0,val3
+mom4,413.46229185729595,100.18402999912475,80.87413378193011,56.58170217214086,52.756604936750776,2,val4
+dad4,519.696209236225,95.17277547237524,50.73287772082178,34.58584942696778,63.241999271724694,2,val3
+p4,157.61834502034586,103.07449426952655,99.54884909890457,37.31662520714209,50.87487739184816,2,val1
+s4,121.0199895975403,39.74107684421966,77.32212831797972,51.37116746952451,36.558215318085175,1,val4
+        """),
+    })
+
+    pheno_import([
+        "--pheno-id", "study_1_pheno",
+        "-p", str(ped_path),
+        "-i", str(pheno_path / "instruments"),
+        "--force",
+        "-j", "1",
+        "--person-column", "personId",
+        "-o", str(instance_path / "pheno" / "study_1_pheno"),
+        "--task-status-dir", str(pheno_path / "status"),
+    ])

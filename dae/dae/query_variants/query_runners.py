@@ -171,6 +171,7 @@ class QueryResult:
         while True:
             try:
                 item = self.result_queue.get(timeout=0.1)
+
                 if isinstance(item, Exception):
                     self._exceptions.append(item)
                     continue

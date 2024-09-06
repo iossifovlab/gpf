@@ -29,6 +29,7 @@ class WDAEConfig(AppConfig):
         logger.info("WGPConfig application starting...")
         AppConfig.ready(self)
         config_filename = None
+
         if getattr(settings, "GPF_INSTANCE_CONFIG", None):
             config_filename = pathlib.Path(__file__).parent.joinpath(
                 settings.GPF_INSTANCE_CONFIG)
