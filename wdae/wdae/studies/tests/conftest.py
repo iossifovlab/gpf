@@ -94,18 +94,26 @@ def t4c8_instance(
     t4c8_grr: GenomicResourceRepo,
 ) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("t4c8_wgpf_instance")
+    instance_path = root_path / "gpf_instance"
+
+    _t4c8_default_study_config(instance_path)
+
     setup_directories(
-        root_path / "gpf_instance", {
+        instance_path, {
             "gpf_instance.yaml": textwrap.dedent("""
                 instance_id: test_instance
                 gene_scores_db:
                     gene_scores:
                     - "gene_scores/t4c8_score"
+                default_study_config:
+                  conf_file: default_study_configuration.yaml
+
             """),
         },
     )
+
     gpf_instance = setup_gpf_instance(
-        root_path / "gpf_instance",
+        instance_path,
         reference_genome_id="t4c8_genome",
         gene_models_id="t4c8_genes",
         grr=t4c8_grr,
@@ -227,4 +235,322 @@ def t4c8_study_2(
         t4c8_instance._pheno_registry,  # noqa: SLF001
         t4c8_instance.gene_scores_db,
         t4c8_instance,
+    )
+
+
+def _t4c8_default_study_config(instance_path: pathlib.Path) -> None:
+    setup_directories(
+        instance_path, {
+            "default_study_configuration.yaml": textwrap.dedent("""
+phenotype_browser: false
+phenotype_tool: false
+study_type:
+- WE
+study_phenotype: autism
+has_transmitted: true
+has_denovo: true
+has_complex: true
+has_cnv: false
+genome: hg38
+chr_prefix: true
+
+person_set_collections:
+  selected_person_set_collections:
+  - phenotype
+  phenotype:
+    id: phenotype
+    name: Phenotype
+    sources:
+    - from: pedigree
+      source: status
+    domain:
+    - id: autism
+      name: autism
+      values:
+      - affected
+      color: '#ff2121'
+    - id: unaffected
+      name: unaffected
+      values:
+      - unaffected
+      color: '#ffffff'
+    default:
+      id: unspecified
+      name: unspecified
+      values:
+      - unspecified
+      color: '#aaaaaa'
+genotype_browser:
+  enabled: true
+  has_family_filters: true
+  has_person_filters: true
+  has_study_filters: false
+  has_present_in_child: true
+  has_present_in_parent: true
+  has_pedigree_selector: true
+  preview_columns:
+  - family
+  - variant
+  - genotype
+  - effect
+  - gene_scores
+  - phylop
+  - freq
+  download_columns:
+  - family
+  - study_phenotype
+  - variant
+  - variant_extra
+  - family_person_ids
+  - family_structure
+  - best
+  - family_genotype
+  - carriers
+  - inheritance
+  - phenotypes
+  - par_called
+  - allele_freq
+  - effect
+  - geneeffect
+  - effectdetails
+  - gene_scores
+
+  summary_preview_columns:
+  - variant
+  - seen_as_denovo
+  - seen_in_affected
+  - seen_in_unaffected
+  - par_called
+  - allele_freq
+  - effect
+  - count
+  - geneeffect
+  - effectdetails
+  - gene_scores
+  summary_download_columns:
+  - variant
+  - seen_as_denovo
+  - seen_in_affected
+  - seen_in_unaffected
+  - par_called
+  - allele_freq
+  - effect
+  - count
+  - geneeffect
+  - effectdetails
+  - gene_scores
+  column_groups:
+    genotype:
+      name: genotype
+      columns:
+      - pedigree
+      - carrier_person_attributes
+      - family_person_attributes
+    effect:
+      name: effect
+      columns:
+      - worst_effect
+      - genes
+    gene_scores:
+      name: vulnerability/intolerance
+      columns:
+      - t4c8_score
+    family:
+      name: family
+      columns:
+      - family_id
+      - study
+    variant:
+      name: variant
+      columns:
+      - location
+      - variant
+    variant_extra:
+      name: variant
+      columns:
+      - chrom
+      - position
+      - reference
+      - alternative
+    carriers:
+      name: carriers
+      columns:
+      - carrier_person_ids
+      - carrier_person_attributes
+    phenotypes:
+      name: phenotypes
+      columns:
+      - family_phenotypes
+      - carrier_phenotypes
+    freq:
+      name: Frequency
+      columns:
+      - freq_ssc
+      - freq_exome_gnomad
+      - freq_genome_gnomad
+  columns:
+    genotype:
+      pedigree:
+        name: pedigree
+        source: pedigree
+      worst_effect:
+        name: worst effect
+        source: worst_effect
+      genes:
+        name: genes
+        source: genes
+      t4c8_score:
+        name: t4c8 score
+        source: t4c8_score
+        format: '%%f'
+      family_id:
+        name: family id
+        source: family
+      study:
+        name: study
+        source: study_name
+      family_person_ids:
+        name: family person ids
+        source: family_person_ids
+      location:
+        name: location
+        source: location
+      variant:
+        name: variant
+        source: variant
+      chrom:
+        name: CHROM
+        source: chrom
+      position:
+        name: POS
+        source: position
+      reference:
+        name: REF
+        source: reference
+      alternative:
+        name: ALT
+        source: alternative
+      carrier_person_ids:
+        name: carrier person ids
+        source: carrier_person_ids
+      carrier_person_attributes:
+        name: carrier person attributes
+        source: carrier_person_attributes
+      family_person_attributes:
+        name: family person attributes
+        source: family_person_attributes
+      family_phenotypes:
+        name: family phenotypes
+        source: family_phenotypes
+      carrier_phenotypes:
+        name: carrier phenotypes
+        source: carrier_phenotypes
+      inheritance:
+        name: inheritance type
+        source: inheritance_type
+      study_phenotype:
+        name: study phenotype
+        source: study_phenotype
+      best:
+        name: family best state
+        source: best_st
+      family_genotype:
+        name: family genotype
+        source: genotype
+      family_structure:
+        name: family structure
+        source: family_structure
+      geneeffect:
+        name: all effects
+        source: effects
+      effectdetails:
+        name: effect details
+        source: effect_details
+      alt_alleles:
+        name: alt alleles
+        source: af_allele_count
+      par_called:
+        name: parents called
+        source: af_parents_called_count
+      allele_freq:
+        name: allele frequency
+        source: af_allele_freq
+      seen_as_denovo:
+        name: seen_as_denovo
+        source: seen_as_denovo
+      seen_in_affected:
+        name: seen_in_affected
+        source: seen_in_affected
+      seen_in_unaffected:
+        name: seen_in_unaffected
+        source: seen_in_unaffected
+
+common_report:
+  enabled: true
+  effect_groups:
+  - LGDs
+  - nonsynonymous
+  - UTRs
+  - CNV
+  effect_types:
+  - Nonsense
+  - Frame-shift
+  - Splice-site
+  - Missense
+  - No-frame-shift
+  - noStart
+  - noEnd
+  - Synonymous
+  - Non coding
+  - Intron
+  - Intergenic
+  - 3'-UTR
+  - 5'-UTR
+denovo_gene_sets:
+  enabled: true
+  selected_person_set_collections:
+  - phenotype
+  standard_criterias:
+    effect_types:
+      segments:
+        LGDs: LGDs
+        Missense: missense
+        Synonymous: synonymous
+    sexes:
+      segments:
+        Female: F
+        Male: M
+        Unspecified: U
+  recurrency_criteria:
+    segments:
+      Single:
+          start: 1
+          end: 2
+      Triple:
+          start: 3
+          end: -1
+      Recurrent:
+          start: 2
+          end: -1
+  gene_sets_names:
+  - LGDs
+  - LGDs.Male
+  - LGDs.Female
+  - LGDs.Recurrent
+  - LGDs.Single
+  - LGDs.Triple
+  - Missense
+  - Missense.Male
+  - Missense.Female
+  - Missense.Recurrent
+  - Missense.Triple
+  - Synonymous
+  - Synonymous.Male
+  - Synonymous.Female
+  - Synonymous.Recurrent
+  - Synonymous.Triple
+enrichment:
+  enabled: false
+            """),
+        },
     )

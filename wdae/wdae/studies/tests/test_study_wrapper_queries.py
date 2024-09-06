@@ -375,41 +375,44 @@ def test_query_study_filters(
 @pytest.mark.parametrize(
     "float_format, float_val",
     [
-        ("%.2f", "0.16"),
-        ("%.4f", "0.1642"),
+        ("%.2f", "10.12"),
+        ("%.4f", "10.1235"),
+        ("%.6f", "10.123457"),
     ],
 )
 def test_query_gene_scores_formatting(
-    iossifov_2014_local: StudyWrapperBase,
+    t4c8_study_2: StudyWrapperBase,
     float_format: str,
     float_val: str,
 ) -> None:
-    study_wrapper = iossifov_2014_local
+    study_wrapper = t4c8_study_2
 
-    columns = [{"name": "pLI", "source": "pLI", "format": float_format}]
+    columns = [{
+        "name": "t4c8_score",
+        "source": "t4c8_score",
+        "format": float_format,
+    }]
     query = {
-        "family_ids": ["13943"],
+        "genes": ["t4"],
     }
     variants = list(study_wrapper.query_variants_wdae(
         query, columns),
     )
     v = variants[0]
-    source_pli = {"name": "pLI", "source": "pLI"}
-    source_pli.update({"format": float_format})
-    assert source_pli in columns
+
     assert v[0] == [float_val]
 
 
 def test_query_complex_query(
-    iossifov_2014_local: StudyWrapperBase,
+    t4c8_study_2: StudyWrapperBase,
 ) -> None:
-    study_wrapper = iossifov_2014_local
+    study_wrapper = t4c8_study_2
 
     query = {
         "variantTypes": ["sub", "ins", "del"],
         "effectTypes": [
             "frame-shift", "nonsense", "splice-site",
-            "no-frame-shift-newStop",
+            "no-frame-shift-newStop", "missense", "synonymous",
         ],
         "gender": [
             "female", "male",
@@ -426,25 +429,16 @@ def test_query_complex_query(
             "id": "phenotype",
             "checkedValues": [
                 "autism",
-                "congenital_heart_disease",
-                "developmental_disorder",
-                "epilepsy",
-                "intellectual_disability",
-                "schizophrenia",
                 "unaffected",
             ],
         },
-        "familyTypes": [
-            "trio", "quad", "multigenerational", "simplex",
-            "multiplex", "other",
-        ],
         "genomicScores": [],
         "frequencyScores": [],
         "uniqueFamilyVariants": False,
-        "studyFilters": [],
-        "datasetId": "sequencing_de_novo",
+        "studyFilters": ["t4c8_study_2"],
+        "datasetId": "t4c8_study_2",
         "maxVariantsCount": 1001,
     }
     vs = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}]))
-    assert len(vs) == 9
+    assert len(vs) == 2

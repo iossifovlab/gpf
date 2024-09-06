@@ -2,11 +2,11 @@ import itertools
 import logging
 import math
 import traceback
-from collections.abc import Generator, Iterable, Iterator
+from collections.abc import Callable, Generator, Iterable, Iterator
 from functools import partial
 from typing import (
     Any,
-    Callable,
+    ClassVar,
     cast,
 )
 
@@ -40,7 +40,7 @@ class ResponseTransformer:
 
     STREAMING_CHUNK_SIZE = 20
 
-    SPECIAL_ATTRS = {
+    SPECIAL_ATTRS: ClassVar[dict[str, Callable]] = {
         "family":
         lambda v: [v.family_id],
 
@@ -102,8 +102,7 @@ class ResponseTransformer:
             "denovo"
             if Inheritance.denovo in aa.inheritance_in_members
             else "-"
-            if set([
-                Inheritance.possible_denovo, Inheritance.possible_omission])
+            if {Inheritance.possible_denovo, Inheritance.possible_omission}
                 & set(aa.inheritance_in_members)
             else "mendelian",
             v.alt_alleles),
@@ -147,7 +146,7 @@ class ResponseTransformer:
         lambda v: bool(v.get_attribute("seen_in_status") in {1, 3}),
     }
 
-    PHENOTYPE_ATTRS = {
+    PHENOTYPE_ATTRS: ClassVar[dict[str, Callable]] = {
         "family_phenotypes":
         lambda v, phenotype_person_sets:
         [
@@ -267,8 +266,8 @@ class ResponseTransformer:
         return [
             member.family_id,
             member.person_id,
-            member.mom_id if member.mom_id else "0",
-            member.dad_id if member.dad_id else "0",
+            member.mom_id or "0",
+            member.dad_id or "0",
             member.sex.short(),
             str(member.role),
             PersonSetCollection.get_person_color(
@@ -305,9 +304,9 @@ class ResponseTransformer:
                 )
             except IndexError:
                 missing_members.add(member.person_id)
-                logger.error(
+                logger.exception(
                     "problems generating pedigree: %s, %s, %s",
-                    genotype, index, member, exc_info=True)
+                    genotype, index, member)
 
         for member in variant.family.full_members:
             if (member.generated or member.not_sequenced) \

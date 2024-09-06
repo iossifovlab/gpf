@@ -18,7 +18,7 @@ def test_special_attrs_formatting(
     assert genotype_data is not None
 
     download_sources = genotype_data.get_columns_as_sources(
-        genotype_data.config, genotype_data.download_columns,  # type: ignore
+        genotype_data.config, genotype_data.download_columns,
     )
     vs = genotype_data.query_variants_wdae({}, download_sources)
     vs = list(vs)
