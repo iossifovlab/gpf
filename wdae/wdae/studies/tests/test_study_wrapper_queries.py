@@ -338,26 +338,38 @@ def test_query_family_filters(
     assert len(variants) == 6
 
 
+@pytest.mark.parametrize(
+    "query,count",
+    [
+        (
+            {
+                "studyFilters": ["t4c8_study_2"],
+                "regions": ["chr1:1-60"],
+            }, 4,
+        ),
+        (
+            {
+                "studyFilters": ["t4c8_study_2"],
+            }, 12,
+        ),
+        (
+            {
+                "studyFilters": ["ala_bala_study"],
+            }, 0,
+        ),
+    ],
+)
 def test_query_study_filters(
-    iossifov_2014_local: StudyWrapperBase,
+    t4c8_study_2: StudyWrapperBase,
+    query: dict, count: int,
 ) -> None:
-    study_wrapper = iossifov_2014_local
-    query = {
-        "studyFilters": ["iossifov_2014"],
-        "regions": ["12"],
-    }
-
+    study_wrapper = t4c8_study_2
     variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
+        query,
+        [{"source": "location"}]),
     )
 
-    assert len(variants) == 2
-
-    variants = list(study_wrapper.query_variants_wdae(
-        {"studyFilters": ["iossifov_2014"]}, [{"source": "location"}]),
-    )
-
-    assert len(variants) == 16
+    assert len(variants) == count
 
 
 def test_query_family_types(

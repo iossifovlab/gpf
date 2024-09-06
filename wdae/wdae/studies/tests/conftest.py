@@ -76,7 +76,7 @@ def t4c8_grr(
                 """,
             "t4c8_gene_score.csv": textwrap.dedent("""
                 gene,t4c8_score
-                t4,10.0
+                t4,10.123456789
                 c8,20.0
             """),
         },
@@ -130,7 +130,7 @@ def _t4c8_study_2(
 ) -> None:
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
-        root_path / "study_2" / "pedigree" / "in.ped",
+        root_path / "t4c8_study_2" / "pedigree" / "in.ped",
         """
 familyId personId dadId momId sex status role
 f1.1     mom1     0     0     2   1      mom
@@ -143,7 +143,7 @@ f1.3     p3       dad3  mom3  2   2      prb
 f1.3     s3       dad3  mom3  2   1      sib
         """)
     vcf_path1 = setup_vcf(
-        root_path / "study_2" / "vcf" / "in.vcf.gz",
+        root_path / "t4c8_study_2" / "vcf" / "in.vcf.gz",
         """
 ##fileformat=VCFv4.2
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
@@ -161,7 +161,7 @@ chr1   122 .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/1 0/2  0/2  0/2 0
 
     vcf_study(
         root_path,
-        "study_2", ped_path, [vcf_path1],
+        "t4c8_study_2", ped_path, [vcf_path1],
         t4c8_instance,
         project_config_update={
             "input": {
@@ -172,7 +172,7 @@ chr1   122 .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/1 0/2  0/2  0/2 0
             },
         },
         study_config_update={
-            "conf_dir": str(root_path / "study_2"),
+            "conf_dir": str(root_path / "t4c8_study_2"),
             "person_set_collections": {
                 "phenotype": {
                     "id": "phenotype",
@@ -220,7 +220,7 @@ def t4c8_study_2(
     t4c8_instance: GPFInstance,
 ) -> StudyWrapperBase:
 
-    data_study = t4c8_instance.get_genotype_data("study_2")
+    data_study = t4c8_instance.get_genotype_data("t4c8_study_2")
 
     return StudyWrapper(
         data_study,
