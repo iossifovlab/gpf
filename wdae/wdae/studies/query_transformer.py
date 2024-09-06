@@ -1,10 +1,10 @@
 import logging
 import time
 from functools import reduce
-from typing import Any, cast
+from typing import Any, ClassVar, cast
 
 from dae.effect_annotation.effect import EffectTypesMixin
-from dae.pedigrees.family import ALL_FAMILY_TYPES, FamilyTag, FamilyType
+from dae.pedigrees.family import FamilyTag
 from dae.pedigrees.family_tag_builder import check_family_tags_query
 from dae.person_filters import make_pedigree_filter, make_pheno_filter
 from dae.query_variants.attributes_query import role_query
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class QueryTransformer:
     """Transform genotype data query WEB parameters into query variants."""
 
-    FILTER_RENAMES_MAP = {
+    FILTER_RENAMES_MAP: ClassVar[dict[str, str]] = {
         "familyIds": "family_ids",
         "personIds": "person_ids",
         "gender": "sexes",
@@ -35,13 +35,10 @@ class QueryTransformer:
     def _transform_genomic_scores(
         self, genomic_scores: list[dict],
     ) -> list[tuple[str, tuple[int | None, int | None]]]:
-        genomic_scores_filter = [
+        return [
             (score["metric"], (score["rangeStart"], score["rangeEnd"]))
             for score in genomic_scores
-            # if score["rangeStart"] or score["rangeEnd"]
         ]
-
-        return genomic_scores_filter
 
     def _transform_gene_scores(self, gene_scores: dict) -> list[str] | None:
         if not self.study_wrapper.gene_scores_db:
@@ -92,13 +89,13 @@ class QueryTransformer:
 
     @staticmethod
     def _transform_present_in_child_and_parent_roles(
-        present_in_child: set[str], present_in_parent: set[str],
+        present_in_child: set[str],
+        present_in_parent: set[str],
     ) -> str | None:
-        roles_query = []
-        roles_query.append(
-            QueryTransformer._present_in_child_to_roles(present_in_child))
-        roles_query.append(
-            QueryTransformer._present_in_parent_to_roles(present_in_parent))
+        roles_query = [
+            QueryTransformer._present_in_child_to_roles(present_in_child),
+            QueryTransformer._present_in_parent_to_roles(present_in_parent),
+        ]
         result = [role for role in roles_query if role is not None]
 
         if len(result) == 2:
@@ -111,15 +108,17 @@ class QueryTransformer:
 
     @staticmethod
     def _transform_present_in_child_and_parent_inheritance(
-            present_in_child: set[str], present_in_parent: set[str],
-            show_all_unknown: bool = False) -> str:
+        present_in_child: set[str],
+        present_in_parent: set[str], *,
+        show_all_unknown: bool = False,
+    ) -> str:
 
         inheritance = None
-        if present_in_child == set(["neither"]) and \
-                present_in_parent != set(["neither"]):
+        if present_in_child == {"neither"} and \
+                present_in_parent != {"neither"}:
             inheritance = [Inheritance.mendelian, Inheritance.missing]
-        elif present_in_child != set(["neither"]) and \
-                present_in_parent == set(["neither"]):
+        elif present_in_child != {"neither"} and \
+                present_in_parent == {"neither"}:
             inheritance = [Inheritance.denovo]
         else:
             inheritance = [
@@ -229,7 +228,7 @@ class QueryTransformer:
             inheritance = [inheritance]
             inheritance.append(query)
         else:
-            raise ValueError(f"unexpected inheritance query {inheritance}")
+            raise TypeError(f"unexpected inheritance query {inheritance}")
         kwargs["inheritance"] = inheritance
 
     @staticmethod
@@ -389,7 +388,8 @@ class QueryTransformer:
         else:
             inheritance = \
                 self._transform_present_in_child_and_parent_inheritance(
-                    present_in_child, present_in_parent, show_all_unknown)
+                    present_in_child, present_in_parent,
+                    show_all_unknown=show_all_unknown)
 
             self._add_inheritance_to_query(inheritance, kwargs)
 
@@ -417,7 +417,7 @@ class QueryTransformer:
 
         if "gender" in kwargs:
             sexes = set(kwargs["gender"])
-            if sexes != set(["female", "male", "unspecified"]):
+            if sexes != {"female", "male", "unspecified"}:
                 sexes_query = f"any({','.join(sexes)})"
                 kwargs["gender"] = sexes_query
             else:
@@ -479,25 +479,6 @@ class QueryTransformer:
 
         if "personIds" in kwargs:
             kwargs["personIds"] = list(kwargs["personIds"])
-
-        if "familyTypes" in kwargs:
-            family_ids_with_types: set[str] = set()
-            family_types = set(
-                FamilyType.from_name(ft) for ft in kwargs["familyTypes"])
-
-            if family_types != ALL_FAMILY_TYPES:
-                for family_type in family_types:
-                    family_ids_with_types = set.union(
-                        family_ids_with_types,
-                        self.study_wrapper.families.families_by_type.get(
-                            family_type, set(),
-                        ),
-                    )
-                if "familyIds" in kwargs:
-                    family_ids_with_types = set.intersection(
-                        family_ids_with_types, set(kwargs.pop("familyIds")),
-                    )
-                kwargs["familyIds"] = family_ids_with_types
 
         if "affectedStatus" in kwargs:
             statuses = kwargs.pop("affectedStatus")

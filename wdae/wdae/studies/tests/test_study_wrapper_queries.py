@@ -372,19 +372,6 @@ def test_query_study_filters(
     assert len(variants) == count
 
 
-def test_query_family_types(
-    iossifov_2014_local: StudyWrapperBase,
-) -> None:
-    study_wrapper = iossifov_2014_local
-    query = {
-        "familyTypes": ["trio"],
-    }
-    variants = list(study_wrapper.query_variants_wdae(
-        query, [{"source": "location"}]),
-    )
-    assert len(variants) == 1
-
-
 @pytest.mark.parametrize(
     "float_format, float_val",
     [
