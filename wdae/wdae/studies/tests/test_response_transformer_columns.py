@@ -12,9 +12,9 @@ from studies.study_wrapper import StudyWrapper
 
 
 def test_special_attrs_formatting(
-    t4c8_study_2_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: StudyWrapper,
 ) -> None:
-    study_wrapper = t4c8_study_2_wrapper
+    study_wrapper = t4c8_study_1_wrapper
     assert study_wrapper is not None
 
     download_sources = study_wrapper.get_columns_as_sources(
@@ -25,7 +25,7 @@ def test_special_attrs_formatting(
     row = vs[0]
     assert row == [
         ["f1.1"],
-        ["t4c8_study_2"],
+        ["t4c8_study_1"],
         "autism",
         ["chr1:4"],
         ["sub(T->G)"],
@@ -53,8 +53,8 @@ def test_special_attrs_formatting(
 
 
 @pytest.fixture(scope="module")
-def fv1(t4c8_study_2: GenotypeData) -> FamilyVariant:
-    vs = list(t4c8_study_2.query_variants(
+def fv1(t4c8_study_1: GenotypeData) -> FamilyVariant:
+    vs = list(t4c8_study_1.query_variants(
         regions=[Region("chr1", 90, 90)],
         family_ids=["f1.3"],
     ))
@@ -64,8 +64,8 @@ def fv1(t4c8_study_2: GenotypeData) -> FamilyVariant:
 
 
 @pytest.fixture(scope="module")
-def fv2(t4c8_study_2: GenotypeData) -> FamilyVariant:
-    vs = list(t4c8_study_2.query_variants(
+def fv2(t4c8_study_1: GenotypeData) -> FamilyVariant:
+    vs = list(t4c8_study_1.query_variants(
         regions=[Region("chr1", 122, 200)],
         family_ids=["f1.3"],
     ))
@@ -75,8 +75,8 @@ def fv2(t4c8_study_2: GenotypeData) -> FamilyVariant:
 
 
 @pytest.fixture(scope="module")
-def phenotype_person_sets(t4c8_study_2: GenotypeData) -> PersonSetCollection:
-    return t4c8_study_2.person_set_collections["phenotype"]
+def phenotype_person_sets(t4c8_study_1: GenotypeData) -> PersonSetCollection:
+    return t4c8_study_1.person_set_collections["phenotype"]
 
 
 @pytest.mark.parametrize(

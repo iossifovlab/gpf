@@ -4,10 +4,10 @@ from studies.study_wrapper import StudyWrapper
 
 
 def test_transform_selected_family_tags_kwargs(
-    t4c8_study_2_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: StudyWrapper,
 ) -> None:
     query_transformer = QueryTransformer(
-        t4c8_study_2_wrapper,
+        t4c8_study_1_wrapper,
     )
 
     # Test simple select tag filer
@@ -27,10 +27,10 @@ def test_transform_selected_family_tags_kwargs(
 
 
 def test_transform_deselected_family_tags_kwargs(
-    t4c8_study_2_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: StudyWrapper,
 ) -> None:
     query_transformer = QueryTransformer(
-        t4c8_study_2_wrapper,
+        t4c8_study_1_wrapper,
     )
     # Test simple deselect tag filer
     kwargs = query_transformer.transform_kwargs(
@@ -59,10 +59,10 @@ def test_transform_deselected_family_tags_kwargs(
 
 
 def test_transform_or_mode_family_tags_kwargs(
-    t4c8_study_2_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: StudyWrapper,
 ) -> None:
     query_transformer = QueryTransformer(
-        t4c8_study_2_wrapper,
+        t4c8_study_1_wrapper,
     )
     # Test or mode between two filters
     kwargs = query_transformer.transform_kwargs(
@@ -79,10 +79,10 @@ def test_transform_or_mode_family_tags_kwargs(
 
 
 def test_transform_and_mode_family_tags_kwargs(
-    t4c8_study_2_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: StudyWrapper,
 ) -> None:
     query_transformer = QueryTransformer(
-        t4c8_study_2_wrapper,
+        t4c8_study_1_wrapper,
     )
     # Test and mode between two filters
     kwargs = query_transformer.transform_kwargs(
@@ -103,10 +103,10 @@ def test_transform_and_mode_family_tags_kwargs(
 
 
 def test_transform_complex_family_tags_kwargs(
-    t4c8_study_2_wrapper: StudyWrapper,
+    t4c8_study_1_wrapper: StudyWrapper,
 ) -> None:
     query_transformer = QueryTransformer(
-        t4c8_study_2_wrapper,
+        t4c8_study_1_wrapper,
     )
     # Test selection with deselection
     kwargs = query_transformer.transform_kwargs(
