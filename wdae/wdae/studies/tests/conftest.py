@@ -23,32 +23,7 @@ from dae.testing import (
 from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
 from studies.study_wrapper import (
     StudyWrapper,
-    StudyWrapperBase,
 )
-
-
-@pytest.fixture(scope="session")
-def local_dir() -> pathlib.Path:
-    return pathlib.Path(__file__).parents[4].joinpath("data/data-hg19-local")
-
-
-@pytest.fixture(scope="session")
-def local_gpf_instance(local_dir: pathlib.Path) -> GPFInstance:
-    return GPFInstance.build(local_dir / "gpf_instance.yaml")
-
-
-@pytest.fixture(scope="session")
-def iossifov_2014_local(
-        local_gpf_instance: GPFInstance) -> StudyWrapperBase:
-
-    data_study = local_gpf_instance.get_genotype_data("iossifov_2014")
-
-    return StudyWrapper(
-        data_study,
-        local_gpf_instance._pheno_registry,  # noqa: SLF001
-        local_gpf_instance.gene_scores_db,
-        local_gpf_instance,
-    )
 
 
 @pytest.fixture(scope="module")
