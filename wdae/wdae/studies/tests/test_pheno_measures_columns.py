@@ -2,7 +2,6 @@
 import json
 from typing import cast
 
-import pytest_mock
 from django.http import StreamingHttpResponse
 from django.test import Client
 from gpf_instance.gpf_instance import WGPFInstance
@@ -20,21 +19,8 @@ def test_study_with_phenotype_data(
 
 def test_pheno_measure_genotype_browser_columns(
     admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,
-    mocker: pytest_mock.MockFixture,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
-    mocker.patch(
-        "gpf_instance.gpf_instance.get_wgpf_instance",
-        return_value=t4c8_wgpf_instance,
-    )
-    mocker.patch(
-        "datasets_api.permissions.get_wgpf_instance",
-        return_value=t4c8_wgpf_instance,
-    )
-    mocker.patch(
-        "query_base.query_base.get_wgpf_instance",
-        return_value=t4c8_wgpf_instance,
-    )
 
     data = {
         "datasetId": "t4c8_study_1",
