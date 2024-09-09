@@ -10,7 +10,7 @@ import { selectDatasetId } from 'app/datasets/datasets.state';
 import { resetFamilyIds, selectFamilyIds } from 'app/family-ids/family-ids.state';
 import { resetFamilyTypeFilter } from 'app/family-type-filter/family-type-filter.state';
 import { resetFamilyTags, selectFamilyTags } from 'app/family-tags/family-tags.state';
-import { selectPersonFilters } from 'app/person-filters/person-filters.state';
+import { selectPersonFilters, setFamilyFilters } from 'app/person-filters/person-filters.state';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -124,6 +124,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
 
   public onNavChange(): void {
     this.store.dispatch(resetFamilyTypeFilter());
+    this.store.dispatch(setFamilyFilters({familyFilters: []}));
     this.store.dispatch(resetFamilyTags());
     this.store.dispatch(resetFamilyIds());
   }

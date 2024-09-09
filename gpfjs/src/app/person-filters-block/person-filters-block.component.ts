@@ -4,7 +4,7 @@ import { Dataset } from '../datasets/datasets';
 // import { PersonFiltersModel, PersonFiltersState, SetPersonFilters } from 'app/person-filters/person-filters.state';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
-import { resetPersonFilters, selectPersonFilters } from 'app/person-filters/person-filters.state';
+import { selectPersonFilters, setPersonFilters } from 'app/person-filters/person-filters.state';
 import { combineLatest, take } from 'rxjs';
 import { resetPersonIds, selectPersonIds } from 'app/person-ids/person-ids.state';
 
@@ -39,7 +39,7 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
   }
 
   public onNavChange(): void {
-    this.store.dispatch(resetPersonFilters());
+    this.store.dispatch(setPersonFilters({personFilters: []}));
     this.store.dispatch(resetPersonIds());
   }
 }

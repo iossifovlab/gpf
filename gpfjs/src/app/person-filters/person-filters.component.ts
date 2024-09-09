@@ -44,6 +44,11 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
   }
 
   public ngOnChanges(): void {
+    this.readState();
+    this.updateFilters();
+  }
+
+  private readState(): void {
     this.store.select(selectPersonFilters).pipe(take(1)).subscribe((state: PersonAndFamilyFilters) => {
       // set default state
       const clonedState = cloneDeep(state);
@@ -90,7 +95,6 @@ export class PersonFiltersComponent extends StatefulComponent implements OnChang
         this.personFiltersState = cloneDeep(this.personFiltersState);
       }
     });
-    this.updateFilters();
   }
 
   public get categoricalFilters(): PersonFilterState[] {

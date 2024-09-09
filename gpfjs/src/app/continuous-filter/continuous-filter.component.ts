@@ -26,6 +26,20 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   public constructor(private measuresService: MeasuresService) { }
 
   public ngOnInit(): void {
+    this.continuousFilterState = new ContinuousFilterState(
+      this.continuousFilterState.id,
+      this.continuousFilterState.sourceType,
+      this.continuousFilterState.role,
+      this.continuousFilterState.source,
+      this.continuousFilterState.from,
+      new ContinuousSelection(
+        (this.continuousFilterState.selection as ContinuousSelection).min,
+        (this.continuousFilterState.selection as ContinuousSelection).max,
+        (this.continuousFilterState.selection as ContinuousSelection).domainMin,
+        (this.continuousFilterState.selection as ContinuousSelection).domainMax,
+      )
+    );
+
     this.partitions = this.rangeChanges.pipe(
       debounceTime(100),
       distinctUntilChanged(),
@@ -43,6 +57,20 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
 
   public ngOnChanges(): void {
     if (this.datasetId && this.measureName) {
+      this.continuousFilterState = new ContinuousFilterState(
+        this.continuousFilterState.id,
+        this.continuousFilterState.sourceType,
+        this.continuousFilterState.role,
+        this.continuousFilterState.source,
+        this.continuousFilterState.from,
+        new ContinuousSelection(
+          (this.continuousFilterState.selection as ContinuousSelection).min,
+          (this.continuousFilterState.selection as ContinuousSelection).max,
+          (this.continuousFilterState.selection as ContinuousSelection).domainMin,
+          (this.continuousFilterState.selection as ContinuousSelection).domainMax,
+        )
+      );
+
       this.measuresService.getMeasureHistogram(this.datasetId, this.measureName)
         .subscribe(histogramData => {
           const selection = this.continuousFilterState.selection as ContinuousSelection;
@@ -61,7 +89,8 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     const updatedState = cloneDeep(this.continuousFilterState);
     const selection = updatedState.selection as ContinuousSelection;
     selection.min = value;
-    this.updateFilterEvent.emit(updatedState);
+    this.continuousFilterState = updatedState;
+    this.updateFilterEvent.emit(this.continuousFilterState);
     this.rangeChanges.next([
       this.datasetId,
       this.measureName,
@@ -78,7 +107,8 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     const updatedState = cloneDeep(this.continuousFilterState);
     const selection = updatedState.selection as ContinuousSelection;
     selection.max = value;
-    this.updateFilterEvent.emit(updatedState);
+    this.continuousFilterState = updatedState;
+    this.updateFilterEvent.emit(this.continuousFilterState);
     this.rangeChanges.next([
       this.datasetId,
       this.measureName,
