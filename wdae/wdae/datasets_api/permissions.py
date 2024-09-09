@@ -27,7 +27,7 @@ def get_instance_timestamp_etag(
     _request: Request, **_kwargs: dict[str, Any],
 ) -> str:
     etag = f"{get_instance_timestamp()}"
-    return hashlib.md5(etag.encode()).hexdigest()
+    return hashlib.md5(etag.encode()).hexdigest()  # noqa: S324
 
 
 def get_permissions_etag(
@@ -39,7 +39,7 @@ def get_permissions_etag(
         f"{get_permission_timestamp()}"
         f"{request.user.id}"
     )
-    return hashlib.md5(etag.encode()).hexdigest()
+    return hashlib.md5(etag.encode()).hexdigest()  # noqa: S324
 
 
 class IsDatasetAllowed(permissions.BasePermission):
@@ -266,7 +266,8 @@ def get_wdae_dataset(
 
 
 def get_wdae_parents(
-    instance_id: str, dataset_id: str, direct: bool = False,
+    instance_id: str, dataset_id: str, *,
+    direct: bool = False,
 ) -> list[Dataset]:
     """
     Return list of parent wdae dataset objects.
@@ -278,7 +279,8 @@ def get_wdae_parents(
     if dataset is None:
         return []
     if direct:
-        return DatasetHierarchy.get_parents(instance_id, dataset, True)
+        return DatasetHierarchy.get_parents(
+            instance_id, dataset, direct=True)
 
     return DatasetHierarchy.get_parents(instance_id, dataset)
 
@@ -390,7 +392,7 @@ def check_permissions(
 
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT COUNT(gr.name) "
+            "SELECT COUNT(gr.name) "  # noqa: S608
             "FROM datasets_api_datasethierarchy as hr "
             "JOIN datasets_api_dataset_groups as dsgr "
             "ON hr.ancestor_id = dsgr.dataset_id "
@@ -424,7 +426,7 @@ def check_permissions_up(
 
     with connection.cursor() as cursor:
         cursor.execute(
-            "SELECT COUNT(gr.name) "
+            "SELECT COUNT(gr.name) "  # noqa: S608
             "FROM datasets_api_datasethierarchy as hr "
             "JOIN datasets_api_dataset_groups as dsgr "
             "ON hr.ancestor_id = dsgr.dataset_id "
@@ -482,11 +484,11 @@ def get_allowed_genotype_studies(
         return allowed_studies
 
     for child in get_wdae_children(instance_id, dataset.dataset_id):
-        if DatasetHierarchy.is_study(instance_id, child):
-            if skip_check or check_permissions_up(
-                instance_id, child, user_groups,
-            ):
-                allowed_studies.add(child.dataset_id)
+        if DatasetHierarchy.is_study(instance_id, child) and (
+                skip_check or check_permissions_up(
+                    instance_id, child, user_groups,
+                )):
+            allowed_studies.add(child.dataset_id)
 
     return set(allowed_studies)
 
@@ -504,7 +506,7 @@ def get_allowed_genotype_data(
             _user_has_permission_strict(user, child.dataset_id)
             or _user_has_permission_up(instance_id, user, child.dataset_id)
         ):
-            allowed_genotype_data.append(child.dataset_id)
+            allowed_genotype_data.append(child.dataset_id)  # noqa: PERF401
     if len(allowed_genotype_data) > 0:
         allowed_genotype_data.append(dataset.dataset_id)
     return set(allowed_genotype_data)

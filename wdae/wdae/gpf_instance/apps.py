@@ -15,7 +15,8 @@ class WDAEConfig(AppConfig):
 
     name = "gpf_instance"
 
-    def load_extensions(self, instance: WGPFInstance) -> None:
+    @staticmethod
+    def load_extensions(gpf_instance: WGPFInstance) -> None:
         """Load WDAE GPF instance extensions."""
         # pylint: disable=import-outside-toplevel
         logger.info("Loading extensions")
@@ -23,7 +24,7 @@ class WDAEConfig(AppConfig):
         discovered_entries = entry_points(group="wdae.gpf_instance.extensions")
         for entry in discovered_entries:
             extension_loader = entry.load()
-            extension_loader(instance)
+            extension_loader(gpf_instance)
 
     def ready(self) -> None:
         logger.info("WGPConfig application starting...")
@@ -37,6 +38,9 @@ class WDAEConfig(AppConfig):
             logger.info("GPF instance config: %s", config_filename)
 
         gpf_instance = get_wgpf_instance(config_filename)
+        if gpf_instance is None:
+            logger.warning("GPF instance is not loaded")
+            return
 
         if not settings.STUDIES_EAGER_LOADING:
             logger.info("skip preloading gpf instance...")

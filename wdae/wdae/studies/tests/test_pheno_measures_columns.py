@@ -1,7 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+from typing import cast
 
 import pytest_mock
+from django.http import StreamingHttpResponse
 from django.test import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
@@ -25,6 +27,14 @@ def test_pheno_measure_genotype_browser_columns(
         "gpf_instance.gpf_instance.get_wgpf_instance",
         return_value=t4c8_wgpf_instance,
     )
+    mocker.patch(
+        "datasets_api.permissions.get_wgpf_instance",
+        return_value=t4c8_wgpf_instance,
+    )
+    mocker.patch(
+        "query_base.query_base.get_wgpf_instance",
+        return_value=t4c8_wgpf_instance,
+    )
 
     data = {
         "datasetId": "t4c8_study_1",
@@ -35,8 +45,13 @@ def test_pheno_measure_genotype_browser_columns(
         json.dumps(data), content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    lines = json.loads(
-        "".join(ln.decode("utf-8") for ln in response.streaming_content))
+    assert response.streaming
+    assert isinstance(response, StreamingHttpResponse)
+    streaming_response = cast(StreamingHttpResponse, response)
+
+    content = streaming_response.getvalue()
+    lines = json.loads(content.decode("utf-8"))
+
     assert len(lines) == 6
 
     for ln in lines:

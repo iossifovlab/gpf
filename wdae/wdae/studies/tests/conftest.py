@@ -3,7 +3,7 @@ import pathlib
 import textwrap
 
 import pytest
-from gpf_instance.gpf_instance import WGPFInstance
+from gpf_instance.gpf_instance import WGPFInstance, reload_datasets
 
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.repository import (
@@ -30,7 +30,7 @@ from studies.study_wrapper import (
 )
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def t4c8_grr(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> GenomicResourceRepo:
@@ -72,7 +72,7 @@ def t4c8_grr(
     })
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def t4c8_instance(
     tmp_path_factory: pytest.TempPathFactory,
     t4c8_grr: GenomicResourceRepo,
@@ -299,22 +299,22 @@ def _t4c8_dataset(
                 - phenotype"""))
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def t4c8_study_1(t4c8_instance: GPFInstance) -> GenotypeData:
     return t4c8_instance.get_genotype_data("t4c8_study_1")
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def t4c8_study_2(t4c8_instance: GPFInstance) -> GenotypeData:
     return t4c8_instance.get_genotype_data("t4c8_study_2")
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def t4c8_dataset(t4c8_instance: GPFInstance) -> GenotypeData:
     return t4c8_instance.get_genotype_data("t4c8_dataset")
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def t4c8_study_1_wrapper(
     t4c8_instance: GPFInstance,
 ) -> StudyWrapper:
@@ -329,14 +329,23 @@ def t4c8_study_1_wrapper(
     )
 
 
-@pytest.fixture()
-def t4c8_wgpf_instance(
+@pytest.fixture(scope="session")
+def t4c8_wgpf_instance_session(
     t4c8_instance: GPFInstance,
     t4c8_grr: GenomicResourceRepo,
 ) -> WGPFInstance:
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     instance_filename = str(root_path / "gpf_instance.yaml")
     return WGPFInstance.build(instance_filename, grr=t4c8_grr)
+
+
+@pytest.fixture()
+def t4c8_wgpf_instance(
+    t4c8_wgpf_instance_session: WGPFInstance,
+    db: None,  # noqa: ARG001
+) -> WGPFInstance:
+    reload_datasets(t4c8_wgpf_instance_session)
+    return t4c8_wgpf_instance_session
 
 
 def _t4c8_default_study_config(instance_path: pathlib.Path) -> None:

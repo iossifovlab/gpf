@@ -27,7 +27,7 @@ CORS_ALLOW_CREDENTIALS = True
 OPEN_REGISTRATION = False
 
 ########################################################
-
+GPF_TESTING = True
 GPF_INSTANCE_CONFIG = "../../../data/data-hg19-local/gpf_instance.yaml"
 
 DEFAULT_WDAE_DIR = tempfile.mkdtemp(prefix="wdae")

@@ -4,7 +4,10 @@ from typing import ClassVar
 
 from datasets_api.permissions import IsDatasetAllowed
 from django.contrib.auth.models import User
-from gpf_instance.gpf_instance import get_wgpf_instance, recreated_dataset_perm
+from gpf_instance.gpf_instance import (
+    get_wgpf_instance,
+    recreated_dataset_perm,
+)
 from rest_framework import views
 from utils.authentication import GPFOAuth2Authentication
 

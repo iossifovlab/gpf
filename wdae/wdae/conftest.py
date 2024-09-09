@@ -1,3 +1,4 @@
+# noqa: INP001
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import logging
@@ -47,7 +48,9 @@ pytest_plugins = ["dae_conftests.dae_conftests"]
 
 
 @pytest.fixture()
-def user(db: None) -> WdaeUser:
+def user(
+    db: None,  # noqa: ARG001
+) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
         email="user@example.com",
@@ -63,23 +66,27 @@ def user(db: None) -> WdaeUser:
 
 
 @pytest.fixture()
-def hundred_users(db: None, user: WdaeUser) -> list[WdaeUser]:
+def hundred_users(
+    db: None,  # noqa: ARG001
+    user: WdaeUser,  # noqa: ARG001
+) -> list[WdaeUser]:
     user_model = get_user_model()
-    users_data = []
-    for i in range(100):
-        users_data.append(user_model(
+    users_data = [
+        user_model(
             email=f"user{i + 1}@example.com",
             name=f"User{i + 1}",
             is_staff=False,
             is_active=True,
             is_superuser=False,
-        ))
-    users = user_model.objects.bulk_create(users_data)
-    return users
+        ) for i in range(100)
+    ]
+    return user_model.objects.bulk_create(users_data)
 
 
 @pytest.fixture()
-def user_without_password(db: None) -> WdaeUser:
+def user_without_password(
+    db: None,  # noqa: ARG001
+) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
         email="user_without_password@example.com",
@@ -94,7 +101,9 @@ def user_without_password(db: None) -> WdaeUser:
 
 
 @pytest.fixture()
-def admin(db: None) -> WdaeUser:
+def admin(
+    db: None,  # noqa: ARG001
+) -> WdaeUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
         email="admin@example.com",
@@ -115,7 +124,15 @@ def admin(db: None) -> WdaeUser:
 @pytest.fixture()
 def oauth_app(admin: WdaeUser) -> Application:
     application = get_application_model()
-    new_application = application(name="testing client app", user_id=admin.id, client_type="confidential", authorization_grant_type="authorization-code", redirect_uris="http://localhost:4200/datasets", client_id="admin", client_secret="secret")
+    new_application = application(
+        name="testing client app",
+        user_id=admin.id,
+        client_type="confidential",
+        authorization_grant_type="authorization-code",
+        redirect_uris="http://localhost:4200/datasets",
+        client_id="admin",
+        client_secret="secret",  # noqa: S106
+    )
     new_application.save()
     return new_application
 
@@ -129,14 +146,14 @@ def tokens(
         user=user,
         scope="read write",
         expires=timezone.now() + timedelta(seconds=300),
-        token="user-token",
+        token="user-token",  # noqa: S106
         application=oauth_app,
     )
     admin_access_token = access_token(
         user=admin,
         scope="read write",
         expires=timezone.now() + timedelta(seconds=300),
-        token="admin-token",
+        token="admin-token",  # noqa: S106
         application=oauth_app,
     )
     user_access_token.save()
@@ -146,15 +163,16 @@ def tokens(
 
 @pytest.fixture()
 def user_client(
-    user: WdaeUser, tokens: tuple[AccessToken, AccessToken],
+    user: WdaeUser,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> Client:
-    client = Client(HTTP_AUTHORIZATION="Bearer user-token")
-    return client
+    return Client(HTTP_AUTHORIZATION="Bearer user-token")
 
 
 @pytest.fixture()
 def anonymous_client(
-    client: Client, db: None,
+    client: Client,
+    db: None,  # noqa: ARG001
 ) -> Client:
     client.logout()
     return client
@@ -162,14 +180,16 @@ def anonymous_client(
 
 @pytest.fixture()
 def admin_client(
-    admin: WdaeUser, tokens: tuple[AccessToken, AccessToken],
+    admin: WdaeUser,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> Client:
-    client = Client(HTTP_AUTHORIZATION="Bearer admin-token")
-    return client
+    return Client(HTTP_AUTHORIZATION="Bearer admin-token")
 
 
 @pytest.fixture()
-def datasets(db: None) -> None:
+def datasets(  # noqa: PT004
+    db: None,  # noqa: ARG001
+) -> None:
     reload_datasets(get_wgpf_instance())
 
 
@@ -219,7 +239,7 @@ def enrichment_grr() -> GenomicResourceRepo:
 
 @pytest.fixture(scope="session")
 def wgpf_instance(
-    default_dae_config: Box,
+    default_dae_config: Box,  # noqa: ARG001
     fixture_dirname: Callable,
     enrichment_grr: GenomicResourceRepo,
 ) -> Callable[[str | None], WGPFInstance]:
@@ -246,19 +266,9 @@ def wgpf_instance(
         ]
         grr = GenomicResourceGroupRepo(repositories)
 
-        result = WGPFInstance.build(config_filename, grr=grr)
-
-        return result
+        return WGPFInstance.build(config_filename, grr=grr)
 
     return build
-
-
-# @pytest.fixture(autouse=True)
-# def switch_to_local_dae_db_dir(settings):
-#     if getattr(settings, "TESTING", None):
-#         print(100 * "+")
-#         logger.error("testing environment...")
-#         print(100 * "+")
 
 
 @pytest.fixture(scope="session")
@@ -270,12 +280,13 @@ def fixtures_wgpf_instance(
         os.path.join(global_dae_fixtures_dir, "gpf_instance.yaml"))
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def wdae_gpf_instance(
-    db: None, mocker: MockerFixture,
-    admin_client: Client,
+    db: None,  # noqa: ARG001
+    mocker: MockerFixture,
+    admin_client: Client,  # noqa: ARG001
     fixtures_wgpf_instance: WGPFInstance,
-    fixture_dirname: Callable,
+    fixture_dirname: Callable,  # noqa: ARG001
 ) -> WGPFInstance:
     reload_datasets(fixtures_wgpf_instance)
     mocker.patch(
@@ -294,16 +305,17 @@ def wdae_gpf_instance(
         "datasets_api.permissions.get_wgpf_instance",
         return_value=fixtures_wgpf_instance,
     )
-    fixtures_wgpf_instance._gene_profile_config = None
+    fixtures_wgpf_instance._gene_profile_config = None  # noqa: SLF001
     fixtures_wgpf_instance.prepare_gp_configuration()
 
     return fixtures_wgpf_instance
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def gp_wgpf_instance(  # pylint: disable=too-many-arguments
-    db: None, mocker: MockerFixture,
-    admin_client: Client,
+    db: None,  # noqa: ARG001
+    mocker: MockerFixture,
+    admin_client: Client,  # noqa: ARG001
     wgpf_instance: Callable,
     sample_gp: GPStatistic,
     gp_config: Box,
@@ -334,7 +346,7 @@ def gp_wgpf_instance(  # pylint: disable=too-many-arguments
         return_value=wdae_gpf_instance,
     )
 
-    wdae_gpf_instance._gene_profile_config = gp_config
+    wdae_gpf_instance._gene_profile_config = gp_config  # noqa: SLF001
     main_gene_sets = {
         "CHD8 target genes",
         "FMRP Darnell",
@@ -357,22 +369,21 @@ def gp_wgpf_instance(  # pylint: disable=too-many-arguments
         "get_gene_set_ids",
         return_value=main_gene_sets,
     )
-    wdae_gpf_instance._gene_profile_db = \
-        GeneProfileDB(
-            gp_config,
-            str(tmp_path / "gpdb"),
-            clear=True,
-        )
-    wdae_gpf_instance._gene_profile_db.insert_gp(sample_gp)
+    wdae_gpf_instance._gene_profile_db = GeneProfileDB(  # noqa: SLF001
+        gp_config,
+        str(tmp_path / "gpdb"),
+        clear=True,
+    )
+    wdae_gpf_instance._gene_profile_db.insert_gp(sample_gp)  # noqa: SLF001
     wdae_gpf_instance.prepare_gp_configuration()
 
     yield wdae_gpf_instance
 
-    wdae_gpf_instance._gp_configuration = {}
-    wdae_gpf_instance._gp_table_configuration = {}
+    wdae_gpf_instance._gp_configuration = {}  # noqa: SLF001
+    wdae_gpf_instance._gp_table_configuration = {}  # noqa: SLF001
 
-    wdae_gpf_instance.__gene_profile_config = None
-    wdae_gpf_instance.__gene_profile_db = None
+    wdae_gpf_instance.__gene_profile_config = None  # noqa: SLF001
+    wdae_gpf_instance.__gene_profile_db = None  # noqa: SLF001
 
 
 @pytest.fixture()
@@ -485,9 +496,9 @@ def sample_gp() -> GPStatistic:
     )
 
 
-@pytest.fixture(scope="function")
-def use_common_reports(
-    wdae_gpf_instance: WGPFInstance
+@pytest.fixture()
+def use_common_reports(  # noqa: PT004
+    wdae_gpf_instance: WGPFInstance,
 ) -> Generator[None, None, None]:
     all_configs = wdae_gpf_instance.get_all_common_report_configs()
     temp_files = [config.file_path for config in all_configs]
@@ -508,19 +519,23 @@ def use_common_reports(
 
 
 @pytest.fixture()
-def sample_dataset(db: None, wdae_gpf_instance: WGPFInstance) -> Dataset:
+def sample_dataset(
+    db: None,  # noqa: ARG001
+    wdae_gpf_instance: WGPFInstance,  # noqa: ARG001
+) -> Dataset:
     return Dataset.objects.get(dataset_id="Dataset1")
 
 
 @pytest.fixture()
 def hundred_groups(
-    db: None, sample_dataset: Dataset, user: WdaeUser,
+    db: None,  # noqa: ARG001
+    sample_dataset: Dataset, user: WdaeUser,
 ) -> list[Group]:
-    groups_data = []
-    for i in range(100):
-        groups_data.append(Group(
+    groups_data = [
+        Group(
             name=f"Group{i + 1}",
-        ))
+        ) for i in range(100)
+    ]
     groups = Group.objects.bulk_create(groups_data)
     for group in groups:
         sample_dataset.groups.add(group)
