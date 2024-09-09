@@ -565,11 +565,10 @@ def hundred_groups(
 # New style fixtures
 ###############################################################################
 
-@pytest.fixture(scope="session")
-def t4c8_grr(
-    tmp_path_factory: pytest.TempPathFactory,
+def setup_t4c8_grr(
+    root_path: pathlib.Path,
 ) -> GenomicResourceRepo:
-    repo_path = tmp_path_factory.mktemp("t4c8_grr")
+    repo_path = root_path / "t4c8_grr"
     t4c8_genome(repo_path)
     t4c8_genes(repo_path)
 
@@ -607,12 +606,11 @@ def t4c8_grr(
     })
 
 
-@pytest.fixture(scope="session")
-def t4c8_instance(
-    tmp_path_factory: pytest.TempPathFactory,
-    t4c8_grr: GenomicResourceRepo,
+def setup_t4c8_instance(
+    root_path: pathlib.Path,
 ) -> GPFInstance:
-    root_path = tmp_path_factory.mktemp("t4c8_wgpf_instance")
+    t4c8_grr = setup_t4c8_grr(root_path)
+
     instance_path = root_path / "gpf_instance"
 
     _t4c8_default_study_config(instance_path)
@@ -651,8 +649,8 @@ def t4c8_instance(
         grr=t4c8_grr,
     )
 
-    _t4c8_study_1(gpf_instance)
-    _t4c8_study_2(gpf_instance)
+    _t4c8_study_1(root_path, gpf_instance)
+    _t4c8_study_2(root_path, gpf_instance)
     _t4c8_dataset(gpf_instance)
 
     gpf_instance.reload()
@@ -660,10 +658,18 @@ def t4c8_instance(
     return gpf_instance
 
 
+@pytest.fixture(scope="session")
+def t4c8_instance(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> GPFInstance:
+    root_path = tmp_path_factory.mktemp("t4c8_wgpf_instance")
+    return setup_t4c8_instance(root_path)
+
+
 def _t4c8_study_1(
+    root_path: pathlib.Path,
     t4c8_instance: GPFInstance,
 ) -> None:
-    root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
         root_path / "t4c8_study_1" / "pedigree" / "in.ped",
         """
@@ -712,8 +718,10 @@ chr1   122 .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/1 0/2  0/2  0/2 0
     )
 
 
-def _t4c8_study_2(t4c8_instance: GPFInstance) -> GenotypeData:
-    root_path = pathlib.Path(t4c8_instance.dae_dir)
+def _t4c8_study_2(
+    root_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+) -> GenotypeData:
     ped_path = setup_pedigree(
         root_path / "t4c8_study_2" / "pedigree" / "in.ped",
         """
@@ -864,14 +872,20 @@ def t4c8_study_1_wrapper(
     )
 
 
-@pytest.fixture(scope="session")
-def session_t4c8_wgpf_instance(
-    t4c8_instance: GPFInstance,
-    t4c8_grr: GenomicResourceRepo,
-) -> WGPFInstance:
+def setup_wgpf_intance(root_path: pathlib.Path) -> WGPFInstance:
+    t4c8_instance = setup_t4c8_instance(root_path)
+    t4c8_grr = t4c8_instance.grr
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     instance_filename = str(root_path / "gpf_instance.yaml")
     return WGPFInstance.build(instance_filename, grr=t4c8_grr)
+
+
+@pytest.fixture(scope="session")
+def session_t4c8_wgpf_instance(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> WGPFInstance:
+    root_path = tmp_path_factory.mktemp("session_t4c8_wgpf_instance")
+    return setup_wgpf_intance(root_path)
 
 
 @pytest.fixture()
@@ -895,6 +909,31 @@ def t4c8_wgpf_instance(
     )
 
     return session_t4c8_wgpf_instance
+
+
+@pytest.fixture()
+def t4c8_wgpf(
+    tmp_path: pathlib.Path,
+    db: None,  # noqa: ARG001
+    mocker: pytest_mock.MockFixture,
+) -> WGPFInstance:
+    wgpf_instance = setup_wgpf_intance(tmp_path)
+
+    reload_datasets(wgpf_instance)
+    mocker.patch(
+        "gpf_instance.gpf_instance.get_wgpf_instance",
+        return_value=wgpf_instance,
+    )
+    mocker.patch(
+        "datasets_api.permissions.get_wgpf_instance",
+        return_value=wgpf_instance,
+    )
+    mocker.patch(
+        "query_base.query_base.get_wgpf_instance",
+        return_value=wgpf_instance,
+    )
+
+    return wgpf_instance
 
 
 def _t4c8_default_study_config(instance_path: pathlib.Path) -> None:
@@ -953,7 +992,6 @@ genotype_browser:
   - genotype
   - effect
   - gene_scores
-  - phylop
   - freq
   - pheno_measures
   download_columns:
