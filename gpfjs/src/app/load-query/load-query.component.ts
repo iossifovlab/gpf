@@ -3,7 +3,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { QueryService } from '../query/query.service';
 import { take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
-import { of } from 'rxjs';
+import { setEffectTypes } from 'app/effect-types/effect-types.state';
+import { logout } from 'app/users/actions';
 
 const PAGE_TYPE_TO_NAVIGATE = {
   genotype: (datasetId: string): string[] => ['datasets', datasetId, 'genotype-browser'],
@@ -49,7 +50,9 @@ export class LoadQueryComponent implements OnInit {
   private restoreQuery(state: object, page: string): void {
     if (page in PAGE_TYPE_TO_NAVIGATE) {
       const navigationParams: string[] = PAGE_TYPE_TO_NAVIGATE[page](state['datasetId']);
-      this.store.source = of(state); // Temporary solution
+      // this.store.source = of(state); // Temporary solution
+      this.store.dispatch(logout());
+      this.store.dispatch(setEffectTypes({effectTypes: state['effectTypes']}));
       this.router.navigate(navigationParams);
     }
   }

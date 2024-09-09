@@ -1,6 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { logout } from 'app/users/actions';
-export const initialState: string[] = [];
+export const initialState: string[] = ['frame-shift', 'nonsense', 'splice-site', 'no-frame-shift-newStop'];
 
 export const selectEffectTypes = createFeatureSelector<string[]>('effectTypes');
 

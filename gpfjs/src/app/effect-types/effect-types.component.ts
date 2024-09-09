@@ -29,16 +29,10 @@ export class EffectTypesComponent extends StatefulComponent implements OnInit {
   }
 
   public ngOnInit(): void {
-    super.ngOnInit();
     this.store.select(selectEffectTypes).pipe(take(1)).subscribe(effectTypesState => {
-      const effectTypes = effectTypesState;
-      if (effectTypes.length) {
-        for (const effectType of effectTypes) {
-          this.onEffectTypeChange({checked: true, effectType: effectType});
-        }
-      } else {
-        this.selectInitialValues();
-      }
+      this.effectTypes = new EffectTypes();
+      this.effectTypes.selected = new Set(effectTypesState);
+      super.ngOnInit();
     });
   }
 
