@@ -1,7 +1,7 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { logout } from 'app/users/actions';
 
-export const initialState: string[] = ['sub', 'ins', 'del'];
+export const initialState: string[] = null;
 
 export const selectVariantTypes = createFeatureSelector<string[]>('variantTypes');
 

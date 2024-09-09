@@ -21,14 +21,11 @@ export class GenderComponent extends StatefulComponent implements OnInit {
   }
 
   public ngOnInit(): void {
-    super.ngOnInit();
     this.store.select(selectGenders).pipe(take(1)).subscribe(gendersState => {
-      if (gendersState) {
-        this.selectNone();
-        for (const gender of gendersState) {
-          this.genderCheckValue(gender, true);
-        }
+      for (const gender of gendersState) {
+        this.gender[gender] = true;
       }
+      super.ngOnInit();
     });
   }
 

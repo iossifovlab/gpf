@@ -5,6 +5,10 @@ import { take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
 import { logout } from 'app/users/actions';
+import { setGenders } from 'app/gender/gender.state';
+import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
+import { setVariantTypes } from 'app/variant-types/variant-types.state';
+import { State } from 'app/users/tmp.state';
 
 const PAGE_TYPE_TO_NAVIGATE = {
   genotype: (datasetId: string): string[] => ['datasets', datasetId, 'genotype-browser'],
@@ -41,18 +45,23 @@ export class LoadQueryComponent implements OnInit {
     this.queryService.loadQuery(uuid)
       .pipe(take(1))
       .subscribe(response => {
-        const queryData = response['data'] as object;
+        const queryData = response['data'] as State;
         const page = response['page'] as string;
         this.restoreQuery(queryData, page);
       });
   }
 
-  private restoreQuery(state: object, page: string): void {
+  private restoreQuery(state: State, page: string): void {
     if (page in PAGE_TYPE_TO_NAVIGATE) {
+      console.log(state);
       const navigationParams: string[] = PAGE_TYPE_TO_NAVIGATE[page](state['datasetId']);
-      // this.store.source = of(state); // Temporary solution
       this.store.dispatch(logout());
-      this.store.dispatch(setEffectTypes({effectTypes: state['effectTypes']}));
+
+      this.store.dispatch(setEffectTypes({effectTypes: state.effectTypes}));
+      this.store.dispatch(setGenders({genders: state.genders}));
+      this.store.dispatch(setPedigreeSelector({pedigreeSelector: state.pedigreeSelector}))
+      this.store.dispatch(setVariantTypes({variantTypes: state.variantTypes}));
+
       this.router.navigate(navigationParams);
     }
   }

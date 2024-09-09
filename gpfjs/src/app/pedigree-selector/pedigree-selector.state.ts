@@ -7,10 +7,7 @@ export interface PedigreeSelector {
   checkedValues: string[];
 }
 
-export const initialState: PedigreeSelector = {
-  id: '',
-  checkedValues: []
-};
+export const initialState: PedigreeSelector = null;
 
 export const selectPedigreeSelector =
   createFeatureSelector<PedigreeSelector>('pedigreeSelector');
