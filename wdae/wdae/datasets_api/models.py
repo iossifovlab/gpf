@@ -1,5 +1,5 @@
 import logging
-from typing import List, Iterable
+from collections.abc import Iterable
 
 from django.contrib.auth.models import Group
 from django.db import models
@@ -19,7 +19,7 @@ class Dataset(models.Model):
         return str(self.dataset_id)
 
     @property
-    def default_groups(self) -> List[str]:
+    def default_groups(self) -> list[str]:
         return ["any_dataset", self.dataset_id]
 
     @classmethod
@@ -45,7 +45,7 @@ class Dataset(models.Model):
             # pylint: disable=no-member
             dataset_object = cls.objects.get(dataset_id=dataset_id)
         except Dataset.DoesNotExist:
-            logger.error("Failed validating %s", dataset_id)
+            logger.exception("Failed validating %s", dataset_id)
             return
         dataset_object.broken = broken
         dataset_object.save()
@@ -57,7 +57,7 @@ class Dataset(models.Model):
             # pylint: disable=no-member
             dataset_object = cls.objects.get(dataset_id=dataset_id)
         except Dataset.DoesNotExist:
-            logger.error("Failed updating %s", dataset_id)
+            logger.exception("Failed updating %s", dataset_id)
             return
         dataset_object.dataset_name = dataset_name
         dataset_object.save()
@@ -83,7 +83,8 @@ class DatasetHierarchy(models.Model):
     @classmethod
     def add_relation(
         cls, instance_id: str, ancestor_id: str,
-        descendant_id: str, direct: bool = False,
+        descendant_id: str, *,
+        direct: bool = False,
     ) -> None:
         """Add a relation to the hierarchy with provided dataset IDs."""
         ancestor = Dataset.objects.get(dataset_id=ancestor_id)
@@ -107,8 +108,9 @@ class DatasetHierarchy(models.Model):
 
     @classmethod
     def get_parents(
-        cls, instance_id: str, dataset: Dataset, direct: bool | None = None,
-    ) -> List[Dataset]:
+        cls, instance_id: str, dataset: Dataset, *,
+        direct: bool | None = None,
+    ) -> list[Dataset]:
         """Return all parents of a given dataset."""
         if direct is True:
             relations = cls.objects.filter(
@@ -140,8 +142,9 @@ class DatasetHierarchy(models.Model):
 
     @classmethod
     def get_children(
-        cls, instance_id: str, dataset: Dataset, direct: bool | None = None,
-    ) -> List[Dataset]:
+        cls, instance_id: str, dataset: Dataset, *,
+        direct: bool | None = None,
+    ) -> list[Dataset]:
         """Return all children of a given dataset."""
         if direct is True:
             relations = cls.objects.filter(

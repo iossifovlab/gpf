@@ -46,18 +46,18 @@ def test_list_families_view_tag_filter(admin_client: Client) -> None:
     url = "/api/v3/families/Study1?tags=tag_male_prb_family"
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
-    assert set(response.data) == set([  # type: ignore
+    assert set(response.data) == {  # type: ignore
         "f6", "f9", "f10",
-    ])
+    }
 
 
 def test_list_families_view_tag_filter_multiple(admin_client: Client) -> None:
     url = "/api/v3/families/Study1?tags=tag_nuclear_family,tag_trio_family"
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
-    assert set(response.data) == set([  # type: ignore
+    assert set(response.data) == {  # type: ignore
         "f1", "f3", "f5", "f6", "f7", "f8", "f11",
-    ])
+    }
 
 
 def test_list_families_view_nonexistent(admin_client: Client) -> None:
@@ -70,7 +70,7 @@ def test_list_tags_view(admin_client: Client) -> None:
     url = "/api/v3/families/tags"
     response = admin_client.get(url)
     assert response.status_code == status.HTTP_200_OK
-    assert set(response.data) == set([  # type: ignore
+    assert set(response.data) == {  # type: ignore
         "tag_nuclear_family",
         "tag_quad_family",
         "tag_trio_family",
@@ -89,7 +89,7 @@ def test_list_tags_view(admin_client: Client) -> None:
         "tag_female_prb_family",
         "tag_missing_mom_family",
         "tag_missing_dad_family",
-    ])
+    }
 
 
 def test_family_details_view(admin_client: Client) -> None:
@@ -98,10 +98,10 @@ def test_family_details_view(admin_client: Client) -> None:
     assert response.status_code == status.HTTP_200_OK
     assert response.data == {  # type: ignore
         "family_id": "f6",
-        "family_type": "TRIO",
+        "family_type": "other",
         "person_ids": ["mom6", "dad6", "ch6"],
         "samples_index": None,
-        "tags": set([
+        "tags": {
             "tag_affected_prb_family",
             # "tag_family_type:type#3",
             "tag_male_prb_family",
@@ -110,7 +110,7 @@ def test_family_details_view(admin_client: Client) -> None:
             "tag_trio_family",
             "tag_unaffected_dad_family",
             "tag_unaffected_mom_family",
-        ]),
+        },
     }
 
 
@@ -230,7 +230,7 @@ def test_full_study_families_view(admin_client: Client) -> None:
             break
     family = response.data[f6_idx]  # type: ignore
     assert family["family_id"] == "f6"
-    assert family["family_type"] == "TRIO"
+    assert family["family_type"] == "other"
     assert family["person_ids"] == ["mom6", "dad6", "ch6"]
     assert len(family["members"]) == 3
     assert family["members"][2] == {

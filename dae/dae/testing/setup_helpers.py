@@ -15,8 +15,6 @@ def setup_gpf_instance(
         gene_models_id: str | None = None,
         grr: GenomicResourceRepo | None = None) -> GPFInstance:
     """Set up a GPF instance using prebuild genome, gene models, etc."""
-    # from dae.gpf_instance import GPFInstance
-
     if not (out_path / "gpf_instance.yaml").exists():
         setup_directories(
             out_path, {"gpf_instance.yaml": 'instance_id: "test_instance"'},

@@ -30,46 +30,6 @@ PEDIGREE_COLUMN_NAMES = {
 }
 
 
-class FamilyType(enum.Enum):
-    """Family types used in family structure filters."""
-
-    TRIO = enum.auto()
-    QUAD = enum.auto()
-    MULTIGENERATIONAL = enum.auto()
-    SIMPLEX = enum.auto()
-    MULTIPLEX = enum.auto()
-    OTHER = enum.auto()
-
-    @staticmethod
-    def from_name(name: str) -> FamilyType:
-        """Construct family type from string."""
-        assert isinstance(name, str)
-        name = name.lower()
-        if name == "trio":
-            return FamilyType.TRIO
-        if name == "quad":
-            return FamilyType.QUAD
-        if name == "multigenerational":
-            return FamilyType.MULTIGENERATIONAL
-        if name == "simplex":
-            return FamilyType.SIMPLEX
-        if name == "multiplex":
-            return FamilyType.MULTIPLEX
-        if name == "other":
-            return FamilyType.OTHER
-        raise ValueError(f"unexpected family type name: {name}")
-
-
-ALL_FAMILY_TYPES = set([
-    FamilyType.TRIO,
-    FamilyType.QUAD,
-    FamilyType.MULTIGENERATIONAL,
-    FamilyType.SIMPLEX,
-    FamilyType.MULTIPLEX,
-    FamilyType.OTHER,
-])
-
-
 class FamilyTag(enum.IntEnum):
     """Enumeration of all available family tags."""
 
@@ -177,9 +137,6 @@ class Person:
         }
         self._tags: set[FamilyTag] = set()
         for tag, tag_value in tags.items():
-            # logger.debug(
-            #     "person tag <%s> value <%s> (<%s>)",
-            #     tag, tag_value, type(tag_value))
             if isinstance(tag_value, bool) and tag_value:
                 self.set_tag(tag)
                 continue
@@ -250,8 +207,10 @@ class Person:
             decorator = "[G] "
         elif self.not_sequenced:
             decorator = "[N] "
-        return f"Person({decorator}{self.person_id} ({self.family_id}); " \
+        return (
+            f"Person({decorator}{self.person_id} ({self.family_id}); "
             f"{self.role}; {self.sex}, {self.status})"
+        )
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -434,7 +393,7 @@ def get_pedigree_column_names(column_names: set[str]) -> list[str]:
     )
     extention_columns = column_names.difference(set(columns))
     extention_columns = extention_columns.difference(
-        set(["sample_index"]),
+        {"sample_index"},
     )
     columns.extend(sorted(extention_columns))
     return columns
@@ -493,9 +452,10 @@ class Family:
                     f"multiple person with the same person id "
                     f"{person.person_id} in family {family_id}")
             family.persons[person.person_id] = person
-            family._tags |= person.tags
+            family._tags |= person.tags  # noqa: SLF001
 
-        family._connect_family()  # pylint: disable=protected-access
+        # pylint: disable=protected-access
+        family._connect_family()  # noqa: SLF001
         assert all(p.family is not None for p in family.persons.values())
 
         return family
@@ -519,14 +479,14 @@ class Family:
             "family_id": self.family_id,
             "person_ids": self.members_ids,
             "samples_index": self._samples_index,
-            "family_type": self.family_type.name,
+            "family_type": "other",  # deprecated
             "tags": {tag.label for tag in self.tags},
         }
 
     def get_columns(self) -> list[str]:
         """Collect list of columns for representing a family as data frame."""
         column_names = set(
-            self.members_in_order[0]  # pylint: disable=protected-access
+            self.members_in_order[0]  # noqa: SLF001
                 ._attributes.keys())
         return get_pedigree_column_names(column_names)
 
@@ -595,48 +555,12 @@ class Family:
                 m.sample_index for m in self.members_in_order)
         return self._samples_index
 
-    @property
-    def family_type(self) -> FamilyType:
-        """Calculate the type of the family."""
-        # pylint: disable=too-many-return-statements
-        has_grandparent = any(
-            person.role in (
-                Role.maternal_grandfather,
-                Role.maternal_grandmother,
-                Role.paternal_grandfather,
-                Role.paternal_grandmother,
-            ) for person in self.persons.values())
-
-        unaffected_parents = all(
-            person.status is Status.unaffected
-            for person in self.get_members_with_roles([Role.mom, Role.dad]))
-
-        affected_siblings = any(
-            person.status is Status.affected
-            for person in self.get_members_with_roles([Role.sib]))
-
-        if has_grandparent:
-            return FamilyType.MULTIGENERATIONAL
-        if unaffected_parents:
-            if len(self.persons) == 3:
-                return FamilyType.TRIO
-            if len(self.persons) == 4 and not affected_siblings:
-                return FamilyType.QUAD
-            if affected_siblings:
-                return FamilyType.MULTIPLEX
-        else:
-            if affected_siblings:
-                return FamilyType.MULTIPLEX
-            return FamilyType.SIMPLEX
-        return FamilyType.OTHER
-
     def members_index(
         self, person_ids: Iterable[str],
     ) -> list[int]:
-        index = []
-        for pid in person_ids:
-            index.append(self.persons[pid].member_index)
-        return index
+        return [
+            self.persons[pid].member_index
+            for pid in person_ids]
 
     def get_member(
         self, person_id: str,

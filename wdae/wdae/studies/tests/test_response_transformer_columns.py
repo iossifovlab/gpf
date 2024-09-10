@@ -1,146 +1,118 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Any, cast
+from typing import Any
 
 import pytest
-from gpf_instance.gpf_instance import WGPFInstance
 
-from dae.configuration.gpf_config_parser import FrozenBox
 from dae.person_sets import PersonSetCollection
+from dae.studies.study import GenotypeData
 from dae.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
 from studies.response_transformer import ResponseTransformer
+from studies.study_wrapper import StudyWrapper
 
 
 def test_special_attrs_formatting(
-    fixtures_wgpf_instance: WGPFInstance,
+    t4c8_study_1_wrapper: StudyWrapper,
 ) -> None:
-    genotype_data = fixtures_wgpf_instance.make_wdae_wrapper("f1_study")
-    assert genotype_data is not None
+    study_wrapper = t4c8_study_1_wrapper
+    assert study_wrapper is not None
 
-    download_sources = genotype_data.get_columns_as_sources(
-        genotype_data.config, genotype_data.download_columns,  # type: ignore
+    download_sources = study_wrapper.get_columns_as_sources(
+        study_wrapper.config, study_wrapper.download_columns,
     )
-    vs = genotype_data.query_variants_wdae({}, download_sources)
+    vs = study_wrapper.query_variants_wdae({}, download_sources)
     vs = list(vs)
     row = vs[0]
     assert row == [
-        ["f1"],
-        ["f1_study"],
-        ["1:878152"],
-        ["sub(C->T,A)"],
-        ["1"],
-        ["878152"],
-        ["C"],
-        ["T", "A"],
-        ["2111/0110/0001"],
-        ["mom1;dad1;ch1;ch2"],
+        ["f1.1"],
+        ["t4c8_study_1"],
+        "autism",
+        ["chr1:4"],
+        ["sub(T->G)"],
+        ["chr1"],
+        ["4"],
+        ["T"],
+        ["G"],
+        ["mom1;dad1;p1;s1"],
         ["mom:F:unaffected;dad:M:unaffected;prb:F:affected;sib:M:unaffected"],
-        ["dad1;ch1", "ch2"],
-        ["dad:M:unaffected;prb:F:affected", "sib:M:unaffected"],
-        ["mendelian", "denovo"],
-        "phenotype 1:unaffected:phenotype 1:unaffected",
-        "unaffected:phenotype 1,unaffected",
-        "test_phenotype",
+        ["1122/1100"],
+        ["0/1;0/1;0/0;0/0"],
+        ["mom1;dad1"],
+        ["mom:F:unaffected;dad:M:unaffected"],
+        ["mendelian"],
+        "unaffected:unaffected:autism:unaffected",
+        "unaffected:unaffected",
+        ["4"],  # par_called
+        ["37.5"],  # allele_freq
+        ["intergenic"],
+        ["intergenic"],
+        ["intergenic:intergenic"],
+        ["intergenic:intergenic:intergenic:intergenic"],
+        ["-"],
+        ["166.340"],  # f1.1 p1 age
+        ["104.912"],  # f1.1 p1 IQ
     ]
 
 
-@pytest.fixture()
-def v_vcf(variants_impl: Any) -> FamilyVariant:
-    vvars = variants_impl("variants_vcf")("backends/a")
-    vs = list(vvars.query_variants(regions=[Region("1", 11548, 11548)]))
+@pytest.fixture(scope="module")
+def fv1(t4c8_study_1: GenotypeData) -> FamilyVariant:
+    vs = list(t4c8_study_1.query_variants(
+        regions=[Region("chr1", 90, 90)],
+        family_ids=["f1.3"],
+    ))
+
     assert len(vs) == 1
-
-    v = vs[0]
-    return cast(FamilyVariant, v)
+    return vs[0]
 
 
-@pytest.fixture()
-def phenotype_person_sets(variants_impl: Any) -> PersonSetCollection:
-    vvars = variants_impl("variants_vcf")("backends/a")
-    families = vvars.families
-    person_sets_config = FrozenBox({
-        "id": "phenotype",
-        "sources": [
-            {
-                "from": "pedigree",
-                "source": "status",
-            }],
-        "default": {
-            "id": "unknown",
-            "name": "Unknown",
-            "color": "#aaaaaa",
-        },
-        "domain": [
-            {
-                "id": "autism",
-                "name": "Autism",
-                "values": ["affected"],
-                "color": "#ff0000",
-            },
-            {
-                "id": "unaffected",
-                "name": "Unaffected",
-                "values": ["unaffected"],
-                "color": "#0000ff",
-            },
-        ],
-    })
-    person_sets = PersonSetCollection.from_families(
-        person_sets_config, families)
-    assert person_sets is not None
-    return person_sets
+@pytest.fixture(scope="module")
+def fv2(t4c8_study_1: GenotypeData) -> FamilyVariant:
+    vs = list(t4c8_study_1.query_variants(
+        regions=[Region("chr1", 122, 200)],
+        family_ids=["f1.3"],
+    ))
+
+    assert len(vs) == 1
+    return vs[0]
+
+
+@pytest.fixture(scope="module")
+def phenotype_person_sets(t4c8_study_1: GenotypeData) -> PersonSetCollection:
+    return t4c8_study_1.person_set_collections["phenotype"]
 
 
 @pytest.mark.parametrize(
     "column,expected",
     [
-        ("family", ["f"]),
-        ("location", ["1:11548", "1:11548"]),
-        ("variant", ["comp(T->AA,CA)"]),
-        ("position", [11548, 11548]),
-        ("reference", ["T", "T"]),
-        ("alternative", ["AA", "CA"]),
+        ("family", ["f1.3"]),
+        ("location", ["chr1:90", "chr1:91"]),
+        ("variant", ["sub(G->C)", "ins(A)"]),
+        ("position", [90, 90]),
+        ("reference", ["G", "G"]),
+        ("alternative", ["C", "GA"]),
         ("family_person_attributes", [
-            "paternal_grandfather:M:unaffected;"
-            "paternal_grandmother:F:unaffected;"
             "mom:F:unaffected;"
             "dad:M:unaffected;"
             "prb:F:affected;"
-            "sib:F:unaffected;"
             "sib:F:unaffected"]),
-        ("family_person_ids", ["gpa;gma;mom;dad;ch1;ch2;ch3"]),
-        ("carrier_person_ids", ["gpa;gma;mom;dad;ch1;ch2;ch3", "mom"]),
+        ("family_person_ids", ["mom3;dad3;p3;s3"]),
+        ("carrier_person_ids", ["mom3;p3", "dad3;s3"]),
         ("carrier_person_attributes", [
-            "paternal_grandfather:M:unaffected;"
-            "paternal_grandmother:F:unaffected;"
-            "mom:F:unaffected;"
-            "dad:M:unaffected;"
-            "prb:F:affected;"
-            "sib:F:unaffected;"
-            "sib:F:unaffected",
-            "mom:F:unaffected"]),
-        ("genotype", ["1/1;1/1;1/2;1/1;1/1;1/1;1/1"]),
-        ("best_st", ["0000000/2212222/0010000"]),
+            "mom:F:unaffected;prb:F:affected",
+            "dad:M:unaffected;sib:F:unaffected"]),
+        ("genotype", ["0/1;0/2;0/1;0/2"]),
+        ("best_st", ["1111/1010/0101"]),
         ("inheritance_type", ["mendelian", "mendelian"]),
         ("is_denovo", [False, False]),
     ],
 )
 def test_special_attr_columns(
-    v_vcf: FamilyVariant, column: str, expected: Any,
+    fv1: FamilyVariant, column: str, expected: Any,
 ) -> None:
 
     transformer = ResponseTransformer.SPECIAL_ATTRS[column]
 
-    result = transformer(v_vcf)
-    assert result == expected
-
-
-def test_reference_column(v_vcf: FamilyVariant) -> None:
-
-    transformer = ResponseTransformer.SPECIAL_ATTRS["reference"]
-    expected = ["T", "T"]
-
-    result = transformer(v_vcf)
+    result = transformer(fv1)
     assert result == expected
 
 
@@ -148,23 +120,33 @@ def test_reference_column(v_vcf: FamilyVariant) -> None:
     "column,expected",
     [
         ("family_phenotypes", [
-            "Unaffected:Unaffected:Unaffected:Unaffected:"
-            "Autism:Unaffected:Unaffected"]),
+            "unaffected:unaffected:autism:unaffected"]),
         ("carrier_phenotypes", [
-            "Unaffected:Unaffected:Unaffected:Unaffected:Autism:"
-            "Unaffected:Unaffected",
-            "Unaffected"]),
+            "unaffected:autism",
+            "unaffected:unaffected"]),
     ],
 )
 def test_phenotype_attr_columns(
-    v_vcf: FamilyVariant,
+    fv1: FamilyVariant,
     phenotype_person_sets: PersonSetCollection,
-    column: str, expected: Any,
+    column: str, expected: list[str],
 ) -> None:
-
-    print(phenotype_person_sets)
 
     transformer = ResponseTransformer.PHENOTYPE_ATTRS[column]
 
-    result = transformer(v_vcf, phenotype_person_sets)
+    result = transformer(fv1, phenotype_person_sets)
     assert result == expected
+
+
+def test_inheritance_type_column(fv2: FamilyVariant) -> None:
+    transformer = ResponseTransformer.SPECIAL_ATTRS["inheritance_type"]
+    result = transformer(fv2)
+    print(result)
+    assert result == ["denovo", "mendelian"]
+
+
+def test_is_denovo(fv2: FamilyVariant) -> None:
+    transformer = ResponseTransformer.SPECIAL_ATTRS["is_denovo"]
+    result = transformer(fv2)
+    print(result)
+    assert result == [True, False]

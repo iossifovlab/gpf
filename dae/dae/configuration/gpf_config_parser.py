@@ -3,8 +3,9 @@ from __future__ import annotations
 import glob
 import logging
 import os
+from collections.abc import Callable
 from copy import deepcopy
-from typing import Any, Callable, Dict, List, cast
+from typing import Any, ClassVar, cast
 
 import fsspec
 import toml
@@ -89,17 +90,18 @@ class GPFConfigParser:
 
     """
 
-    filetype_parsers: dict = {
+    filetype_parsers: ClassVar[dict[str, Any]] = {
         ".yaml": yaml.safe_load,
         ".yml": yaml.safe_load,
         # ".json": json.loads,
         ".toml": toml.loads,
-        ".conf": toml.loads,  # TODO FIXME Rename all .conf to .toml
+        ".conf": toml.loads,
     }
 
     @classmethod
-    def collect_directory_configs(cls, dirname: str) -> List[str]:
-        config_files: List[str] = []
+    def collect_directory_configs(cls, dirname: str) -> list[str]:
+        """Collect all config files in a directory."""
+        config_files: list[str] = []
         for filetype in cls.filetype_parsers:
             config_files += glob.glob(
                 os.path.join(dirname, f"**/*{filetype}"), recursive=True,
@@ -149,7 +151,8 @@ class GPFConfigParser:
         try:
             ext = os.path.splitext(filename)[1]
             if ext not in cls.filetype_parsers:
-                raise ValueError(f"unsupported file type: {filename}")
+                raise ValueError(  # noqa: TRY301
+                    f"unsupported file type: {filename}")
             parser = cls.filetype_parsers[ext]
 
             file_contents = cls._get_file_contents(filename)
@@ -158,22 +161,21 @@ class GPFConfigParser:
             return cls.parse_and_interpolate(
                 file_contents, parser, conf_dir=conf_dir)
 
-        except Exception as ex:
-            logger.error("problems parsing config file <%s>", filename)
-            logger.error(ex)
-            raise ex
+        except Exception:
+            logger.exception("problems parsing config file <%s>", filename)
+            raise
 
     @staticmethod
     def merge_config(
-            config: Dict[str, Any],
-            default_config: Dict[str, Any] | None = None) -> Dict[str, Any]:
+            config: dict[str, Any],
+            default_config: dict[str, Any] | None = None) -> dict[str, Any]:
         if default_config is not None:
             config = recursive_dict_update(default_config, config)
         return config
 
     @staticmethod
     def validate_config(
-        config: Dict[str, Any],
+        config: dict[str, Any],
         schema: dict,
         conf_dir: str | None = None,
     ) -> dict:
@@ -198,9 +200,9 @@ class GPFConfigParser:
 
     @staticmethod
     def process_config(
-        config: Dict[str, Any],
+        config: dict[str, Any],
         schema: dict,
-        default_config: Dict[str, Any] | None = None,
+        default_config: dict[str, Any] | None = None,
         conf_dir: str | None = None,
     ) -> Box:
         """
@@ -215,7 +217,7 @@ class GPFConfigParser:
         return cast(Box, DefaultBox(config))
 
     @classmethod
-    def load_config_raw(cls, filename: str) -> Dict[str, Any]:
+    def load_config_raw(cls, filename: str) -> dict[str, Any]:
         ext = os.path.splitext(filename)[1]
         assert ext in cls.filetype_parsers, f"Unsupported filetype {filename}!"
         file_contents = cls._get_file_contents(filename)
@@ -246,22 +248,22 @@ class GPFConfigParser:
             conf_dir = os.path.dirname(filename)
             return cls.process_config(
                 config, schema, default_config, conf_dir)
-        except ValueError as ex:
-            logger.error(
+        except ValueError:
+            logger.exception(
                 "unable to parse configuration: %s with default config %s "
                 "(%s) and schema %s", filename,
                 default_config_filename, default_config, schema)
-            raise ex
+            raise
 
     @classmethod
     def load_directory_configs(
             cls, dirname: str, schema: dict,
             default_config_filename: str | None = None,
-            default_config: dict | None = None) -> List[Box]:
+            default_config: dict | None = None) -> list[Box]:
         """Find and load all configs in a given root directory."""
         result = []
         for config_path in cls.collect_directory_configs(dirname):
-            if config_path.endswith(".conf") or config_path.endswith(".toml"):
+            if config_path.endswith((".conf", ".toml")):
                 logger.warning(
                     "TOML configurations have been deprecated - %s",
                     config_path,
@@ -275,14 +277,14 @@ class GPFConfigParser:
                 result.append(config)
 
             except ValueError:
-                logger.error(
+                logger.exception(
                     "unable to parse configuration file %s; skipped",
-                    config_path, exc_info=True)
+                    config_path)
 
         return result
 
     @classmethod
     def modify_tuple(
-            cls, tup: Box, new_values: Dict[str, Any]) -> Box:
+            cls, tup: Box, new_values: dict[str, Any]) -> Box:
 
         return FrozenBox(recursive_dict_update(tup.to_dict(), new_values))

@@ -19,7 +19,6 @@ import pandas as pd
 
 from dae.pedigrees.family import (
     Family,
-    FamilyType,
     Person,
     get_pedigree_column_names,
 )
@@ -32,7 +31,8 @@ logger = logging.getLogger(__name__)
 
 def merge_families(
     l_fam: Family,
-    r_fam: Family, forced: bool = True,
+    r_fam: Family, *,
+    forced: bool = True,
 ) -> Family:
     """Merge two families into one."""
     assert l_fam.family_id == r_fam.family_id, \
@@ -99,8 +99,9 @@ def merge_families(
 
     # Construct new instances of Person to avoid
     # modifying the original family's Person instances
+    # pylint: disable=protected-access
     merged = Family.from_persons([
-        Person(**person._attributes)  # pylint: disable=protected-access
+        Person(**person._attributes)  # noqa: SLF001
         for person in merged_persons.values()
     ])
     layouts = Layout.from_family(merged)
@@ -124,7 +125,6 @@ class FamiliesData(Mapping[str, Family]):
         self._broken: dict[str, Family] = {}
         self._person_ids_with_parents = None
         self._real_persons: dict[tuple[str, str], Person] | None = None
-        self._families_by_type: dict[FamilyType, set[str]] = {}
 
     def redefine(self) -> None:
         """Rebuild all families."""
@@ -198,16 +198,6 @@ class FamiliesData(Mapping[str, Family]):
                     self._real_persons[person.fpid] = person
         return self._real_persons
 
-    @property
-    def families_by_type(self) -> dict[FamilyType, set[str]]:
-        """Build a dictionary of families by type."""
-        if not self._families_by_type:
-            for family_id, family in self._families.items():
-                self._families_by_type.setdefault(
-                    family.family_type, set(),
-                ).add(family_id)
-        return self._families_by_type
-
     @staticmethod
     def from_family_persons(
             family_persons: dict[str, list[Person]]) -> FamiliesData:
@@ -218,7 +208,7 @@ class FamiliesData(Mapping[str, Family]):
 
             family = Family.from_persons(persons)
             # pylint: disable=protected-access
-            families_data._families[family_id] = family
+            families_data._families[family_id] = family  # noqa: SLF001
         families_data.redefine()
         return families_data
 
@@ -228,29 +218,26 @@ class FamiliesData(Mapping[str, Family]):
         persons = defaultdict(list)
         columns = ped_df.columns.tolist()
         for rec in [
-            dict(zip(columns, data)) for data in ped_df.to_numpy()
+            dict(zip(columns, data, strict=True)) for data in ped_df.to_numpy()
         ]:
             person = Person(**rec)
             persons[person.family_id].append(person)
 
-        fams = FamiliesData.from_family_persons(persons)
-        return fams
+        return FamiliesData.from_family_persons(persons)
 
     @staticmethod
     def from_families(families: dict[str, Family]) -> FamiliesData:
         """Build families data from dictionary of families."""
-        families_data = FamiliesData.from_family_persons(
+        return FamiliesData.from_family_persons(
             {fam.family_id: fam.full_members for fam in families.values()},
         )
 
-        return families_data
-
     def pedigree_samples(self) -> list[str]:
-        result = []
-        for family in self.values():
-            for member in family.members_in_order:
-                result.append(member.sample_id)
-        return result
+        return [
+            member.sample_id
+            for family in self.values()
+            for member in family.members_in_order
+        ]
 
     @property
     def ped_df(self) -> pd.DataFrame:
@@ -262,13 +249,11 @@ class FamiliesData(Mapping[str, Family]):
             for family in self.values():
                 for person in family.full_members:
                     # pylint: disable=protected-access
-                    rec = copy.deepcopy(person._attributes)
-                    rec["mom_id"] = person.mom_id if person.mom_id else "0"
-                    rec["dad_id"] = person.dad_id if person.dad_id else "0"
-                    rec["generated"] = person.generated \
-                        if person.generated else False
-                    rec["not_sequenced"] = person.not_sequenced \
-                        if person.not_sequenced else False
+                    rec = copy.deepcopy(person._attributes)  # noqa: SLF001
+                    rec["mom_id"] = person.mom_id or "0"
+                    rec["dad_id"] = person.dad_id or "0"
+                    rec["generated"] = person.generated or False
+                    rec["not_sequenced"] = person.not_sequenced or False
                     tags = person.all_tag_labels()
                     rec.update(tags)
                     column_names = column_names.union(set(rec.keys()))
@@ -312,36 +297,23 @@ class FamiliesData(Mapping[str, Family]):
     ) -> Family | None:
         return self._families.get(key, default)
 
-    # def families_query_by_person_ids(self, person_ids):
-    #     res = {}
-    #     for person_id in person_ids:
-    #         person = self.persons.get(person_id)
-    #         if person is None:
-    #             continue
-    #         if person.family_id in res:
-    #             continue
-    #         family = self._families[person.family_id]
-    #         res[family.family_id] = family
-    #     return res
-
     def persons_without_parents(self) -> list[Person]:
         """Return list of persons without parents."""
-        result: list[Person] = []
-        for fam in list(self._families.values()):
-            for person in fam.members_in_order:
-                if person.is_parent():
-                    result.append(person)
-        return result
+        return [
+            person
+            for fam in self._families.values()
+            for person in fam.members_in_order
+            if person.is_parent()
+        ]
 
     def persons_with_parents(self) -> list[Person]:
         """Return list of persons with both parents."""
-        result: list[Person] = []
-        for fam in list(self._families.values()):
-            for person in fam.members_in_order:
-                if person.has_both_parents() and \
-                        not person.has_missing_parent():
-                    result.append(person)
-        return result
+        return [
+            person
+            for fam in self._families.values()
+            for person in fam.members_in_order
+            if person.has_both_parents() and not person.has_missing_parent()
+        ]
 
     def persons_with_roles(
         self,
@@ -360,7 +332,7 @@ class FamiliesData(Mapping[str, Family]):
             return list(persons)
 
         if not isinstance(roles[0], Role):
-            roles_q = set(Role.from_name(role) for role in roles)
+            roles_q = {Role.from_name(role) for role in roles}
         else:
             roles_q = set(roles)
 
@@ -371,12 +343,12 @@ class FamiliesData(Mapping[str, Family]):
         family_ids: set[str] = set()
         for person_id in person_ids:
             family_ids = family_ids.union(
-                set(p.family_id for p in self.persons_by_person_id[person_id]))
+                {p.family_id for p in self.persons_by_person_id[person_id]})
         return family_ids
 
     @staticmethod
     def combine(
-            first: FamiliesData, second: FamiliesData,
+            first: FamiliesData, second: FamiliesData, *,
             forced: bool = True) -> FamiliesData:
         """Combine families from two families data objects."""
         all_families = set(first.keys()) | set(second.keys())
@@ -388,9 +360,9 @@ class FamiliesData(Mapping[str, Family]):
                     combined_dict[fid] = merge_families(
                         first[fid], second[fid], forced=forced)
                 except AssertionError:
-                    logger.error(
+                    logger.exception(
                         "mismatched families: %s, %s",
-                        first[fid], second[fid], exc_info=True)
+                        first[fid], second[fid])
                     mismatched_families.append(fid)
             elif fid in first:
                 combined_dict[fid] = first[fid]

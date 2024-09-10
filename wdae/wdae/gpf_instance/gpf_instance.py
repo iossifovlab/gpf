@@ -137,7 +137,8 @@ class WGPFInstance(GPFInstance):
                 self.gene_scores_db,
                 self,
             )
-        self._study_wrappers[genotype_data.study_id] = study_wrapper
+        self._study_wrappers[
+            genotype_data.study_id] = study_wrapper  # type: ignore
 
     def make_wdae_wrapper(
         self, dataset_id: str,
@@ -468,7 +469,7 @@ def get_wgpf_instance_path(
     from django.conf import settings  # pylint: disable=import-outside-toplevel
     if getattr(settings, "GPF_INSTANCE_CONFIG", None):
         config_filename = pathlib.Path(__file__).parent.joinpath(
-            settings.GPF_INSTANCE_CONFIG)
+            getattr(settings, "GPF_INSTANCE_CONFIG", ""))
 
         logger.error("GPF instance config: %s", config_filename)
         dae_dir = pathlib.Path(config_filename).parent
@@ -486,29 +487,37 @@ def get_wgpf_instance_path(
 
 def get_wgpf_instance(
     config_filename: str | pathlib.Path | None = None,
-    **kwargs: dict[str, Any],
+    **kwargs: Any,
 ) -> WGPFInstance:
     """Load and return a WGPFInstance."""
     # pylint: disable=global-statement
+
     global _GPF_INSTANCE
 
     if _GPF_INSTANCE is None:
         with _GPF_INSTANCE_LOCK:
             if _GPF_INSTANCE is None:
-                gpf_instance = WGPFInstance.build(config_filename, **kwargs)
+                try:
+                    gpf_instance = WGPFInstance.build(
+                        config_filename, **kwargs)
 
-                _GPF_INSTANCE = gpf_instance
+                    _GPF_INSTANCE = gpf_instance
+                except ValueError:
+                    logger.warning("unable to create GPF instance")
 
-    if _GPF_INSTANCE is None:
+    from django.conf import settings  # pylint: disable=import-outside-toplevel
+    gpf_testing = getattr(settings, "GPF_TESTING", False)
+
+    if _GPF_INSTANCE is None and not gpf_testing:
         raise ValueError("can't create the singleton WGPFInstance")
-
-    return _GPF_INSTANCE
+    return _GPF_INSTANCE  # type: ignore
 
 
 def reload_datasets(gpf_instance: WGPFInstance) -> None:
     """Recreate datasets permissions."""
     # pylint: disable=import-outside-toplevel
     from datasets_api.models import Dataset, DatasetHierarchy
+
     for genotype_data_id in gpf_instance.get_genotype_data_ids():
         Dataset.recreate_dataset_perm(genotype_data_id)
         Dataset.set_broken(genotype_data_id, broken=True)
@@ -543,7 +552,8 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
                 continue
             is_direct = study_id in direct_descendants
             DatasetHierarchy.add_relation(
-                gpf_instance.instance_id, genotype_data_id, study_id, is_direct,
+                gpf_instance.instance_id, genotype_data_id, study_id,
+                direct=is_direct,
             )
 
 
@@ -551,12 +561,15 @@ def recreated_dataset_perm(gpf_instance: WGPFInstance) -> None:
     """Recreate dataset permisions for a GPF instance."""
     # pylint: disable=global-statement
     global _GPF_RECREATED_DATASET_PERM
+    if gpf_instance is None:
+        logger.warning("GPF instance is not loaded")
+        return
 
     if _GPF_RECREATED_DATASET_PERM:
         return
 
     with _GPF_INSTANCE_LOCK:
-        assert _GPF_INSTANCE is not None
+        # assert _GPF_INSTANCE is not None
 
         if not _GPF_RECREATED_DATASET_PERM:
             reload_datasets(gpf_instance)

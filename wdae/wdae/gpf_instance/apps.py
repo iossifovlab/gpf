@@ -5,7 +5,7 @@ import pathlib
 from django.apps import AppConfig
 from django.conf import settings
 
-from gpf_instance.gpf_instance import get_wgpf_instance, WGPFInstance
+from gpf_instance.gpf_instance import WGPFInstance, get_wgpf_instance
 
 logger = logging.getLogger(__name__)
 
@@ -15,18 +15,22 @@ class WDAEConfig(AppConfig):
 
     name = "gpf_instance"
 
-    def load_extensions(self, instance: WGPFInstance):
+    @staticmethod
+    def load_extensions(gpf_instance: WGPFInstance) -> None:
+        """Load WDAE GPF instance extensions."""
+        # pylint: disable=import-outside-toplevel
         logger.info("Loading extensions")
         from importlib_metadata import entry_points
         discovered_entries = entry_points(group="wdae.gpf_instance.extensions")
         for entry in discovered_entries:
             extension_loader = entry.load()
-            extension_loader(instance)
+            extension_loader(gpf_instance)
 
     def ready(self) -> None:
         logger.info("WGPConfig application starting...")
         AppConfig.ready(self)
         config_filename = None
+
         if getattr(settings, "GPF_INSTANCE_CONFIG", None):
             config_filename = pathlib.Path(__file__).parent.joinpath(
                 settings.GPF_INSTANCE_CONFIG)
@@ -34,6 +38,9 @@ class WDAEConfig(AppConfig):
             logger.info("GPF instance config: %s", config_filename)
 
         gpf_instance = get_wgpf_instance(config_filename)
+        if gpf_instance is None:
+            logger.warning("GPF instance is not loaded")
+            return
 
         if not settings.STUDIES_EAGER_LOADING:
             logger.info("skip preloading gpf instance...")
@@ -52,7 +59,7 @@ class WDAEConfig(AppConfig):
             gpf_instance.prepare_gp_configuration()
 
         except Exception:  # pylint: disable=broad-except
-            logger.error(
-                "problem while eager loading of studies", exc_info=True)
+            logger.exception(
+                "problem while eager loading of studies")
         logger.info("Eager loading DONE")
         self.load_extensions(gpf_instance)

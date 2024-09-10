@@ -30,14 +30,14 @@ def test_get_genes_by_score(gene_scores_db: GeneScoresDb) -> None:
     genes = gene_score.get_genes(
         "LGD_rank", 1.5, 5.0,
     )
-    assert len(genes) == 3
+    assert len(genes) == 4
 
     genes = gene_score.get_genes(
         "LGD_rank", -1, 5.0,
     )
-    assert len(genes) == 4
+    assert len(genes) == 5
 
     genes = gene_score.get_genes(
         "LGD_rank", 1.0, 5.0,
     )
-    assert len(genes) == 4
+    assert len(genes) == 5

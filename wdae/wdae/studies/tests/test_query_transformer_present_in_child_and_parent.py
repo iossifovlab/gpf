@@ -14,58 +14,61 @@ from studies.query_transformer import QueryTransformer
     "present_in_child,present_in_parent,inheritance,roles,accepted",
     [
         (
-            set(["proband only"]),
-            set(["neither"]),
+            {"proband only"},
+            {"neither"},
             [Inheritance.denovo], [Role.prb], True),
         (
-            set(["proband only"]),
-            set(["neither"]),
+            {"proband only"},
+            {"neither"},
             [Inheritance.denovo], [Role.sib], False),
         (
-            set(["proband only"]),
-            set(["neither"]),
+            {"proband only"},
+            {"neither"},
             [Inheritance.mendelian], [Role.prb], False),
         (
-            set(["proband only", "sibling only"]),
-            set(["neither"]),
+            {"proband only", "sibling only"},
+            {"neither"},
             [Inheritance.denovo], [Role.prb], True),
         (
-            set(["proband only", "sibling only"]),
-            set(["neither"]),
+            {"proband only", "sibling only"},
+            {"neither"},
             [Inheritance.denovo], [Role.sib], True),
         (
-            set(["proband only", "sibling only"]),
-            set(["neither"]),
+            {"proband only", "sibling only"},
+            {"neither"},
             [Inheritance.denovo], [Role.prb, Role.sib], False),
         (
-            set(["proband only", "sibling only", "proband and sibling"]),
-            set(["neither"]),
+            {"proband only", "sibling only", "proband and sibling"},
+            {"neither"},
             [Inheritance.denovo], [Role.prb, Role.sib], True),
         (
-            set(["proband only"]),
-            set(["mother only"]),
+            {"proband only"},
+            {"mother only"},
             [Inheritance.mendelian], [Role.prb, Role.mom], True),
         (
-            set(["proband only"]),
-            set(["mother only"]),
+            {"proband only"},
+            {"mother only"},
             [Inheritance.denovo, Inheritance.mendelian],
             [Role.prb, Role.mom], True),
         (
-            set(["neither"]),
-            set(["mother only"]),
+            {"neither"},
+            {"mother only"},
             [Inheritance.missing],
             [Role.mom], True),
         (
-            set(["proband only", "proband and sibling", "neither"]),
-            set(["mother only", "neither"]),
+            {"proband only", "proband and sibling", "neither"},
+            {"mother only", "neither"},
             [Inheritance.denovo, Inheritance.mendelian, Inheritance.missing],
             [Role.prb, Role.sib, Role.mom], True),
     ],
 )
 def test_transform_present_in_child_and_present_in_parent(
-        present_in_child: set[str], present_in_parent: set[str],
-        inheritance: list[Inheritance],
-        roles: list[Role], accepted: bool) -> None:
+    present_in_child: set[str],
+    present_in_parent: set[str],
+    inheritance: list[Inheritance],
+    roles: list[Role],
+    accepted: bool,  # noqa: FBT001
+) -> None:
 
     roles_q = QueryTransformer._transform_present_in_child_and_parent_roles(
         present_in_child, present_in_parent)
