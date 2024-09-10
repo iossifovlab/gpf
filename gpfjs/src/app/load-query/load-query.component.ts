@@ -13,6 +13,9 @@ import { setFamilyTags } from 'app/family-tags/family-tags.state';
 import { setPresentInChild } from 'app/present-in-child/present-in-child.state';
 import { setPresentInParent } from 'app/present-in-parent/present-in-parent.state';
 import { setGeneSetsValues } from 'app/gene-sets/gene-sets.state';
+import { setGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { setGeneScore } from 'app/gene-scores/gene-scores.state';
+import { setRegionsFilters } from 'app/regions-filter/regions-filter.state';
 
 const PAGE_TYPE_TO_NAVIGATE = {
   genotype: (datasetId: string): string[] => ['datasets', datasetId, 'genotype-browser'],
@@ -77,6 +80,13 @@ export class LoadQueryComponent implements OnInit {
         geneSetsCollection: state.geneSets.geneSetsCollection,
         geneSetsTypes: state.geneSets.geneSetsTypes
       }));
+      this.store.dispatch(setGeneSymbols({geneSymbols: state.geneSymbols}));
+      this.store.dispatch(setGeneScore({
+        geneScores: state.geneScores.geneScores,
+        rangeEnd: state.geneScores.rangeEnd,
+        rangeStart: state.geneScores.rangeStart,
+      }));
+      this.store.dispatch(setRegionsFilters({regionsFilter: state.regionsFilter}));
 
       this.router.navigate(navigationParams);
     }
