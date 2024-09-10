@@ -1,30 +1,39 @@
 import json
 import os
 from itertools import product
+from typing import Any
+
+import box
 
 from dae.effect_annotation.effect import expand_effect_types
 from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
+from dae.studies.study import GenotypeData
 from dae.variants.attributes import Inheritance, Sex
+from dae.variants.family_variant import FamilyVariant
 
 
-class DenovoGeneSetCollectionFactory:
-    """Class for creating and loading created denovo gene sets."""
+class DenovoGeneSetHelpers:
+    """Helper functions for creation of denovo gene sets."""
 
     @staticmethod
-    def denovo_gene_set_cache_file(config, person_set_collection_id=""):
+    def denovo_gene_set_cache_file(
+        config: box.Box,
+        person_set_collection_id: str = "",
+    ) -> str:
         """Return the path to the cache file for a person set collection."""
-        cache_path = os.path.join(
+        return os.path.join(
             config.conf_dir,
             "denovo-cache-" + person_set_collection_id + ".json",
         )
 
-        return cache_path
-
     @classmethod
-    def load_collection(cls, genotype_data_study):
+    def load_collection(
+        cls,
+        genotype_data_study: GenotypeData,
+    ) -> DenovoGeneSetCollection:
         """Load a denovo gene set collection for a given study."""
         config = genotype_data_study.config
-        assert config is not None, genotype_data_study.id
+        assert config is not None, genotype_data_study.study_id
         selected_person_set_collections = \
             config.denovo_gene_sets.selected_person_set_collections
         person_set_collection_configs = {
@@ -56,10 +65,12 @@ class DenovoGeneSetCollectionFactory:
         return collection
 
     @classmethod
-    def build_collection(cls, genotype_data_study):
+    def build_collection(
+        cls, genotype_data_study: GenotypeData,
+    ) -> None:
         """Build a denovo gene set collection for a study and save it."""
         config = genotype_data_study.config
-        assert config is not None, genotype_data_study.id
+        assert config is not None, genotype_data_study.study_id
 
         denovo_person_set_collections = \
             config.denovo_gene_sets.selected_person_set_collections
@@ -75,7 +86,12 @@ class DenovoGeneSetCollectionFactory:
             cls._save_cache(gene_set_cache, cache_path)
 
     @classmethod
-    def _format_criterias(cls, standard_criterias):
+    def _format_criterias(
+        cls, standard_criterias: box.Box,
+    ) -> tuple[
+        list[dict[str, Any]],
+        list[dict[str, Any]],
+    ]:
         """
         Replicates functionality from denovo gene set config parser.
 
@@ -100,6 +116,7 @@ class DenovoGeneSetCollectionFactory:
                     "value": [Sex.from_name(criteria)],
                 },
             )
+
         return (effect_type_criterias, sex_criterias)
 
     @classmethod
@@ -107,7 +124,6 @@ class DenovoGeneSetCollectionFactory:
         cls, input_cache: dict, updater_cache: dict,
     ) -> None:
         """Recursively update a dictionary with another dictionary."""
-        # FIXME !
         # This method cannot handle nested dictionaries
         # that hold a reference to the dictionary that
         # contains them. If such a dictionary is given
@@ -127,7 +143,10 @@ class DenovoGeneSetCollectionFactory:
 
     @classmethod
     def _generate_gene_set_for(
-            cls, genotype_data, config, person_set_collection_id):
+        cls, genotype_data: GenotypeData,
+        config: box.Box,
+        person_set_collection_id: str,
+    ) -> dict[str, dict]:
         """
         Produce a nested dictionary which represents a denovo gene set.
 
@@ -137,9 +156,16 @@ class DenovoGeneSetCollectionFactory:
         person_set_collection = genotype_data.get_person_set_collection(
             person_set_collection_id,
         )
+        if person_set_collection is None:
+            raise ValueError(
+                f"Person set collection '{person_set_collection_id}' "
+                "not found in study",
+            )
+        assert person_set_collection is not None
 
-        cache = {
-            set_id: {} for set_id in person_set_collection.person_sets.keys()
+        cache: dict[str, dict[str, Any]] = {
+            set_id: {}
+            for set_id in person_set_collection.person_sets
         }
 
         variants = genotype_data.query_variants(inheritance=["denovo"])
@@ -172,9 +198,14 @@ class DenovoGeneSetCollectionFactory:
         return cache
 
     @classmethod
-    def _save_cache(cls, cache, cache_path):
+    def _save_cache(
+        cls,
+        cache: dict[str, dict[str, Any]],
+        cache_path: str,
+    ) -> None:
         """Write a denovo gene set cache to the filesystem in JSON format."""
         # change all sets to lists so they can be saved in json
+
         cache = cls._convert_cache_innermost_types(
             cache, set, list, sort_values=True,
         )
@@ -188,8 +219,11 @@ class DenovoGeneSetCollectionFactory:
 
     @classmethod
     def _convert_cache_innermost_types(
-        cls, cache, from_type, to_type, sort_values=False,
-    ):
+        cls, cache: Any,
+        from_type: type,
+        to_type: type, *,
+        sort_values: bool = False,
+    ) -> Any:
         """
         Coerce the types of all values in a dictionary matching a given type.
 
@@ -209,11 +243,14 @@ class DenovoGeneSetCollectionFactory:
             res[key] = cls._convert_cache_innermost_types(
                 value, from_type, to_type, sort_values=sort_values,
             )
-
         return res
 
     @staticmethod
-    def _add_genes_families(variant, persons_in_set, search_args):
+    def _add_genes_families(
+        variant: FamilyVariant,
+        persons_in_set: set[tuple[str, str]],
+        search_args: dict[str, Any],
+    ) -> dict:
         """
         Return a map of gene symbols in variants to family IDs.
 
@@ -222,38 +259,38 @@ class DenovoGeneSetCollectionFactory:
         matching the given search_args to the IDs of the families in which
         those variants are found.
         """
-        cache = {}
+        cache: dict[str, set[str]] = {}
 
         family_id = variant.family_id
-        for aa in variant.alt_alleles:
+        for aa in variant.family_alt_alleles:
             if Inheritance.denovo not in aa.inheritance_in_members:
                 continue
             if not set(aa.variant_in_members_fpid) & persons_in_set:
                 continue
+            effect = aa.effects
+            if effect is None:
+                continue
 
             filter_flag = False
             for search_arg_name, search_arg_value in search_args.items():
-                if search_arg_name == "effect_types":
-                    # FIXME: Avoid conversion of effect types to set
-                    if not (
-                        aa.effects
-                        and set(aa.effects.types) & set(search_arg_value)
-                    ):
-                        filter_flag = True
-                        break
-                elif search_arg_name == "sexes":
-                    if not (
-                        set(aa.variant_in_sexes) & set(search_arg_value)
-                    ):
-                        filter_flag = True
-                        break
+                if search_arg_name == "effect_types" and not (
+                            aa.effects
+                            and set(aa.effects.types) & set(search_arg_value)
+                        ):
+                    filter_flag = True
+                    break
+                if search_arg_name == "sexes" and not (
+                            set(aa.variant_in_sexes) & set(search_arg_value)
+                        ):
+                    filter_flag = True
+                    break
 
             if filter_flag:
                 continue
 
-            effect = aa.effects
             for gene in effect.genes:
                 if gene.effect in search_args.get("effect_types", set()):
+                    assert gene.symbol is not None
                     cache.setdefault(gene.symbol, set()).add(family_id)
 
         return cache

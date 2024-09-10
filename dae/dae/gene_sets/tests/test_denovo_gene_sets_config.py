@@ -1,6 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from dae.studies.study import GenotypeData
 
-def test_trios2_study_simple(trios2_study):
+
+def test_trios2_study_simple(
+    trios2_study: GenotypeData,
+) -> None:
     config = trios2_study.config
 
     assert config is not None
@@ -9,14 +13,18 @@ def test_trios2_study_simple(trios2_study):
     assert config.denovo_gene_sets.enabled
 
 
-def test_default_dgs_config_selected_person_sets(trios2_study):
+def test_default_dgs_config_selected_person_sets(
+    trios2_study: GenotypeData,
+) -> None:
     config = trios2_study.config
 
     assert config.denovo_gene_sets.selected_person_set_collections == \
         ["status"]
 
 
-def test_default_dgs_config_standard_criterias_effect_types(trios2_study):
+def test_default_dgs_config_standard_criterias_effect_types(
+    trios2_study: GenotypeData,
+) -> None:
     config = trios2_study.config
 
     assert "effect_types" in config.denovo_gene_sets.standard_criterias
@@ -31,7 +39,9 @@ def test_default_dgs_config_standard_criterias_effect_types(trios2_study):
     }
 
 
-def test_default_dgs_config_standard_criterias_sexes(trios2_study):
+def test_default_dgs_config_standard_criterias_sexes(
+    trios2_study: GenotypeData,
+) -> None:
     config = trios2_study.config
 
     assert "sexes" in config.denovo_gene_sets.standard_criterias
@@ -46,7 +56,9 @@ def test_default_dgs_config_standard_criterias_sexes(trios2_study):
     }
 
 
-def test_default_dgs_config_recurrency_criteria(trios2_study):
+def test_default_dgs_config_recurrency_criteria(
+    trios2_study: GenotypeData,
+) -> None:
     config = trios2_study.config
 
     assert "segments" in config.denovo_gene_sets.recurrency_criteria

@@ -117,7 +117,7 @@ class GPFInstance:
             GeneModels,
             kwargs.get("gene_models"),
         )
-        self._enrichment_builders: dict[str, EnrichmentBuilder] = {}
+        self._enrichment_builders: dict[str, BaseEnrichmentBuilder] = {}
         self._pheno_tool_adapters: dict[str, PhenoToolAdapterBase] = {}
         self._annotation_pipeline: AnnotationPipeline | None = None
 
@@ -465,12 +465,10 @@ class GPFInstance:
         )
 
     def get_denovo_gene_sets(
-        self, datasets: list[GenotypeData],
+        self, datasets: list[str],
     ) -> list[dict[str, Any]]:
-        return cast(
-            list[dict[str, Any]],
-            [self.denovo_gene_sets_db.get_gene_set_descriptions(datasets)],
-        )
+        return [
+            self.denovo_gene_sets_db.get_gene_set_descriptions(datasets)]
 
     def has_denovo_gene_sets(self) -> bool:
         return len(self.denovo_gene_sets_db) > 0
@@ -480,22 +478,16 @@ class GPFInstance:
         datasets: list[Any],
         collection_id: str,  # noqa: ARG002
     ) -> list[dict[str, Any]]:
-        return cast(
-            list[dict[str, Any]],
-            self.denovo_gene_sets_db.get_all_gene_sets(types, datasets),
-        )
+        return self.denovo_gene_sets_db.get_all_gene_sets(types, datasets)
 
     def get_denovo_gene_set(
         self, gene_set_id: str,
         types: dict[str, Any],
-        datasets: list[GenotypeData],
+        datasets: list[str],
         collection_id: str,  # noqa: ARG002
-    ) -> dict[str, Any]:
-        return cast(
-            dict[str, Any],
-            self.denovo_gene_sets_db.get_gene_set(
-                gene_set_id, types, datasets,
-            ),
+    ) -> dict[str, Any] | None:
+        return self.denovo_gene_sets_db.get_gene_set(
+            gene_set_id, types, datasets,
         )
 
     def get_denovo_gene_set_collection_types_legend(
@@ -596,7 +588,7 @@ class GPFInstance:
 
     def register_enrichment_builder(
         self, dataset_id: str, builder: BaseEnrichmentBuilder,
-    ):
+    ) -> None:
         """Register a new enrichment builder to a given dataset ID."""
         if dataset_id in self._enrichment_builders:
             raise ValueError(
@@ -611,7 +603,7 @@ class GPFInstance:
 
     def get_enrichment_builder(
         self, dataset: GenotypeData,
-    ) -> EnrichmentBuilder:
+    ) -> BaseEnrichmentBuilder:
         """
         Get enrichment builder for specific dataset.
 
@@ -626,7 +618,7 @@ class GPFInstance:
 
     def register_pheno_tool_adapter(
         self, dataset_id: str, adapter: PhenoToolAdapterBase,
-    ):
+    ) -> None:
         """Register a new enrichment builder to a given dataset ID."""
         if dataset_id in self._pheno_tool_adapters:
             raise ValueError(

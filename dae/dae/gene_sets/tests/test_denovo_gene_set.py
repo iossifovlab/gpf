@@ -1,11 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import cast
 
 import pytest
 
 from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
-from dae.gene_sets.denovo_gene_set_collection_factory import (
-    DenovoGeneSetCollectionFactory,
+from dae.gene_sets.denovo_gene_set_helpers import (
+    DenovoGeneSetHelpers,
 )
 from dae.studies.study import GenotypeData
 
@@ -40,9 +39,8 @@ def test_get_gene_sets_types_legend(
 
 @pytest.fixture()
 def trios2_dgsc(trios2_study: GenotypeData) -> DenovoGeneSetCollection:
-    DenovoGeneSetCollectionFactory.build_collection(trios2_study)
-    dgsc = DenovoGeneSetCollectionFactory.load_collection(trios2_study)
-    return cast(DenovoGeneSetCollection, dgsc)
+    DenovoGeneSetHelpers.build_collection(trios2_study)
+    return DenovoGeneSetHelpers.load_collection(trios2_study)
 
 
 def test_denovo_gene_sets_legend(trios2_dgsc: DenovoGeneSetCollection) -> None:

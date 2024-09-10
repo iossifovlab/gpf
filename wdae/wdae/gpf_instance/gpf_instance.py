@@ -193,11 +193,8 @@ class WGPFInstance(GPFInstance):
         datasets: list[Any], collection_id: str,
     ) -> list[dict[str, Any]]:
         # pylint: disable=arguments-differ
-        return cast(
-            list[dict[str, Any]],
-            self.denovo_gene_sets_db.get_all_gene_sets(
-                types, datasets, collection_id,
-            ),
+        return self.denovo_gene_sets_db.get_all_gene_sets(
+            types, datasets, collection_id,
         )
 
     def get_denovo_gene_set(
@@ -205,13 +202,10 @@ class WGPFInstance(GPFInstance):
         types: dict[str, Any],
         datasets: list[Any],
         collection_id: str,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | None:
         # pylint: disable=arguments-differ
-        return cast(
-            dict[str, Any],
-            self.denovo_gene_sets_db.get_gene_set(
-                gene_set_id, types, datasets, collection_id,
-            ),
+        return self.denovo_gene_sets_db.get_gene_set(
+            gene_set_id, types, datasets, collection_id,
         )
 
     def get_visible_datasets(self) -> list[str] | None:

@@ -19,8 +19,8 @@ from dae.configuration.gpf_config_parser import (
     GPFConfigParser,
 )
 from dae.configuration.schemas.dae_conf import dae_conf_schema
-from dae.gene_sets.denovo_gene_set_collection_factory import (
-    DenovoGeneSetCollectionFactory,
+from dae.gene_sets.denovo_gene_set_helpers import (
+    DenovoGeneSetHelpers,
 )
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.gene_models import build_gene_models_from_resource
@@ -707,14 +707,14 @@ def dae_calc_gene_sets(request, fixtures_gpf_instance):
         genotype_data = fixtures_gpf_instance.get_genotype_data(dgs)
         assert genotype_data is not None
 
-        DenovoGeneSetCollectionFactory.build_collection(genotype_data)
+        DenovoGeneSetHelpers.build_collection(genotype_data)
 
     def remove_gene_sets():
         for dgs in genotype_data_names:
             genotype_data = fixtures_gpf_instance.get_genotype_data(dgs)
             # fmt:off
             cache_file = \
-                DenovoGeneSetCollectionFactory.denovo_gene_set_cache_file(
+                DenovoGeneSetHelpers.denovo_gene_set_cache_file(
                     genotype_data.config, "phenotype",
                 )
             # fmt:on
