@@ -37,6 +37,7 @@ export class PedigreeSelectorComponent extends StatefulComponent implements OnIn
       if (pedigreeSelectorState.id && pedigreeSelectorState.checkedValues.length) {
         this.selectedCollection = this.collections.filter(p => p.id === pedigreeSelectorState.id)[0];
         this.selectedValues = new Set(pedigreeSelectorState.checkedValues);
+        this.dispatchState();
       }
     });
   }
@@ -69,22 +70,12 @@ export class PedigreeSelectorComponent extends StatefulComponent implements OnIn
     }
 
     this.selectedValues = new Set(this.selectedCollection.domain.map(sv => sv.id));
-    this.store.dispatch(setPedigreeSelector({
-      pedigreeSelector: {
-        id: this.selectedCollection.id,
-        checkedValues: [...this.selectedValues]
-      }
-    }));
+    this.dispatchState();
   }
 
   public selectNone(): void {
     this.selectedValues = new Set();
-    this.store.dispatch(setPedigreeSelector({
-      pedigreeSelector: {
-        id: this.selectedCollection.id,
-        checkedValues: [...this.selectedValues]
-      }
-    }));
+    this.dispatchState();
   }
 
   public pedigreeCheckValue(pedigreeSelector: PersonSet, value: boolean): void {
@@ -93,6 +84,10 @@ export class PedigreeSelectorComponent extends StatefulComponent implements OnIn
     } else {
       this.selectedValues.delete(pedigreeSelector.id);
     }
+    this.dispatchState();
+  }
+
+  public dispatchState(): void {
     this.store.dispatch(setPedigreeSelector({
       pedigreeSelector: {
         id: this.selectedCollection.id,
