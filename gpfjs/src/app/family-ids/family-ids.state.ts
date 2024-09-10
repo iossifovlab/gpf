@@ -18,5 +18,5 @@ export const resetFamilyIds = createAction(
 export const familyIdsReducer = createReducer(
   initialState,
   on(setFamilyIds, (state, {familyIds}) => cloneDeep(familyIds)),
-  on(logout, resetFamilyIds, state => []),
+  on(logout, resetFamilyIds, state => cloneDeep(initialState)),
 );

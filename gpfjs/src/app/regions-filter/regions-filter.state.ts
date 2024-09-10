@@ -1,5 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { logout } from 'app/users/actions';
+import { cloneDeep } from 'lodash';
 
 export const initialState: string[] = [];
 
@@ -17,5 +18,5 @@ export const resetRegionsFilters = createAction(
 export const regionsFiltersReducer = createReducer(
   initialState,
   on(setRegionsFilters, (state, {regionsFilter}) => regionsFilter),
-  on(logout, resetRegionsFilters, state => []),
+  on(logout, resetRegionsFilters, state => cloneDeep(initialState)),
 );
