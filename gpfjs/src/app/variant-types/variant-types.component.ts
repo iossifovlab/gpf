@@ -1,4 +1,4 @@
-import { Input, Component, OnChanges, OnInit } from '@angular/core';
+import { Input, Component, OnInit } from '@angular/core';
 import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngrx/store';
@@ -24,8 +24,6 @@ export class VariantTypesComponent extends StatefulComponent implements OnInit {
 
   public ngOnInit(): void {
     super.ngOnInit();
-
-    // this.store.select(selectVariantTypes).pipe(take(1)).subscribe(variantTypes => {
     this.store.select(selectVariantTypes).pipe(take(1)).subscribe(variantTypesState => {
       if (!variantTypesState) {
         this.selectedVariantTypes = cloneDeep(this.variantTypes);

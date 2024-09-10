@@ -17,5 +17,5 @@ export const resetVariantTypes = createAction(
 export const variantTypesReducer = createReducer(
   initialState,
   on(setVariantTypes, (state, {variantTypes}) => [...variantTypes]),
-  on(logout, resetVariantTypes, state => []),
+  on(logout, resetVariantTypes, state => initialState),
 );
