@@ -84,36 +84,36 @@ export class DatasetNodeComponent extends StatefulComponent implements OnInit, A
   }
 
   private addToState(nodeId: string): void {
-    this.store.select(selectExpandedDatasets).pipe(take(1)).subscribe((expandedDatasets: string[]) => {
-      const eq = cloneDeep(expandedDatasets);
+    this.store.select(selectExpandedDatasets).pipe(take(1)).subscribe((expandedDatasetsState: string[]) => {
+      const expandedDatasets = cloneDeep(expandedDatasetsState);
       if (!expandedDatasets.includes(nodeId)) {
-        eq.push(nodeId);
-        this.store.dispatch(setExpandedDatasets({expandedDatasets: eq}));
+        expandedDatasets.push(nodeId);
+        this.store.dispatch(setExpandedDatasets({expandedDatasets: expandedDatasets}));
       }
     });
   }
 
   private removeFromState(nodeId: string): void {
-    this.store.select(selectExpandedDatasets).pipe(take(1)).subscribe((expandedDatasets: string[]) => {
-      const eq = cloneDeep(expandedDatasets);
+    this.store.select(selectExpandedDatasets).pipe(take(1)).subscribe((expandedDatasetsState: string[]) => {
+      const expandedDatasets = cloneDeep(expandedDatasetsState);
       if (expandedDatasets.includes(nodeId)) {
         const index = expandedDatasets.indexOf(nodeId, 0);
-        eq.splice(index, 1);
-        this.store.dispatch(setExpandedDatasets({expandedDatasets: eq}));
+        expandedDatasets.splice(index, 1);
+        this.store.dispatch(setExpandedDatasets({expandedDatasets: expandedDatasets}));
       }
     });
   }
 
   private updateState(nodeId: string): void {
-    this.store.select(selectExpandedDatasets).pipe(take(1)).subscribe((expandedDatasets: string[]) => {
-      const eq = cloneDeep(expandedDatasets);
+    this.store.select(selectExpandedDatasets).pipe(take(1)).subscribe((expandedDatasetsState: string[]) => {
+      const expandedDatasets = cloneDeep(expandedDatasetsState);
       if (expandedDatasets.includes(nodeId)) {
         const index = expandedDatasets.indexOf(nodeId, 0);
-        eq.splice(index, 1);
+        expandedDatasets.splice(index, 1);
       } else {
-        eq.push(nodeId);
+        expandedDatasets.push(nodeId);
       }
-      this.store.dispatch(setExpandedDatasets({expandedDatasets: eq}));
+      this.store.dispatch(setExpandedDatasets({expandedDatasets: expandedDatasets}));
     });
   }
 
