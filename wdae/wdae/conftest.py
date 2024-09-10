@@ -635,6 +635,11 @@ def setup_t4c8_instance(
                     storage_type: duckdb_parquet
                     memory_limit: 16GB
                     base_dir: '%(wd)s/duckdb_storage'
+                gpfjs:
+                  visible_datasets:
+                    - t4c8_dataset
+                    - t4c8_study_1
+                    - nonexistend_dataset
             """),
         },
     )

@@ -1,13 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 
-import pytest
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
-
-pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
 def test_datasets_api_get_all(
@@ -279,12 +275,13 @@ def test_datasets_hierarchy(
 
 def test_datasets_permissions(
     admin_client: Client,
-    wdae_gpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/permissions")
 
     data = response.json()
-    assert len(data) == 25
+
+    assert len(data) == 3
     assert set(data[0].keys()) == {
         "dataset_id",
         "dataset_name",
@@ -294,19 +291,14 @@ def test_datasets_permissions(
     }
 
     response = admin_client.get("/api/v3/datasets/permissions?page=2")
-
-    data = response.json()
-    assert len(data) == 13
-
-    response = admin_client.get("/api/v3/datasets/permissions?page=3")
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
 def test_datasets_permissions_single(
     admin_client: Client,
-    wdae_gpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
-    response = admin_client.get("/api/v3/datasets/permissions/Dataset1")
+    response = admin_client.get("/api/v3/datasets/permissions/t4c8_study_1")
     assert response.status_code == status.HTTP_200_OK
 
     data = response.json()
@@ -321,7 +313,7 @@ def test_datasets_permissions_single(
 
 def test_datasets_permissions_single_missing(
     admin_client: Client,
-    wdae_gpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     response = admin_client.get("/api/v3/datasets/permissions/alabala")
     assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -329,32 +321,30 @@ def test_datasets_permissions_single_missing(
 
 def test_datasets_permissions_search(
     admin_client: Client,
-    wdae_gpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
-    response = admin_client.get("/api/v3/datasets/permissions?search=set1")
-
+    response = admin_client.get("/api/v3/datasets/permissions?search=set")
+    assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert len(data) == 1
-    assert data[0]["dataset_id"] == "Dataset1"
+    assert data[0]["dataset_id"] == "t4c8_dataset"
+
+
+def test_datasets_permissions_search_nonexistent(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    response = admin_client.get("/api/v3/datasets/permissions?search=alabala")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
 
 
 def test_datasets_api_visible_datasets(
     admin_client: Client,
-    wdae_gpf_instance: WGPFInstance,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
-    # FIXME This is a temporary hack to mock the
-    # dae_config of wdae_gpf_instance since using the mocker
-    # fixture does not work.
-    old_visible = wdae_gpf_instance.visible_datasets
-    wdae_gpf_instance.visible_datasets = [
-        "quads_f1", "quads_f2", "f1_group", "nonexistent",
-    ]
-    try:
-        response = admin_client.get("/api/v3/datasets/visible")
-        assert response
-        assert response.status_code == 200
+    response = admin_client.get("/api/v3/datasets/visible")
+    assert response
+    assert response.status_code == 200
 
-        data = response.json()
-        assert data == ["quads_f1", "quads_f2", "f1_group"]
-    finally:
-        wdae_gpf_instance.visible_datasets = old_visible
+    data = response.json()
+    assert data == ["t4c8_dataset", "t4c8_study_1"]
