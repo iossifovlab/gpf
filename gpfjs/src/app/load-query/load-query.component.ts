@@ -9,6 +9,7 @@ import { setGenders } from 'app/gender/gender.state';
 import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { setVariantTypes } from 'app/variant-types/variant-types.state';
 import { State } from 'app/users/tmp.state';
+import { setFamilyTags } from 'app/family-tags/family-tags.state';
 
 const PAGE_TYPE_TO_NAVIGATE = {
   genotype: (datasetId: string): string[] => ['datasets', datasetId, 'genotype-browser'],
@@ -59,8 +60,13 @@ export class LoadQueryComponent implements OnInit {
 
       this.store.dispatch(setEffectTypes({effectTypes: state.effectTypes}));
       this.store.dispatch(setGenders({genders: state.genders}));
-      this.store.dispatch(setPedigreeSelector({pedigreeSelector: state.pedigreeSelector}))
+      this.store.dispatch(setPedigreeSelector({pedigreeSelector: state.pedigreeSelector}));
       this.store.dispatch(setVariantTypes({variantTypes: state.variantTypes}));
+      this.store.dispatch(setFamilyTags({
+        selectedFamilyTags: state.familyTags.selectedFamilyTags,
+        deselectedFamilyTags: state.familyTags.deselectedFamilyTags,
+        tagIntersection: state.familyTags.tagIntersection,
+      }));
 
       this.router.navigate(navigationParams);
     }
