@@ -91,7 +91,9 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
       this.geneSetsCollections = geneSetsCollectionsClone;
       this.selectedGeneSetsCollection = geneSetsCollectionsClone[0];
-      this.restoreState(geneSetsStateClone);
+      if (geneSetsStateClone.geneSet) {
+        this.restoreState(geneSetsStateClone);
+      }
       this.geneSetsLoaded = geneSetsCollectionsClone.length;
     });
 
@@ -193,7 +195,7 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
     }
   }
 
-  public onSearch(): number {
+  public onSearch(): void {
     if (!this.selectedGeneSetsCollection) {
       return;
     }
@@ -225,14 +227,12 @@ export class GeneSetsComponent extends StatefulComponent implements OnInit {
 
   public setSelectedGeneType(datasetId: string, personSetCollectionId: string, geneType: string, value: boolean): void {
     this.selectedGeneSet = null;
-    const intervalId = setInterval(() => {
-      if (value) {
-        this.geneSetsLocalState.select(datasetId, personSetCollectionId, geneType);
-      } else {
-        this.geneSetsLocalState.deselect(datasetId, personSetCollectionId, geneType);
-      }
-      clearInterval(intervalId);
-    }, 50);
+    this.searchQuery = '';
+    if (value) {
+      this.geneSetsLocalState.select(datasetId, personSetCollectionId, geneType);
+    } else {
+      this.geneSetsLocalState.deselect(datasetId, personSetCollectionId, geneType);
+    }
   }
 
   public get selectedGeneSetsCollection(): GeneSetsCollection {
