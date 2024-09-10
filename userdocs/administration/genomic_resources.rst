@@ -1,27 +1,155 @@
-Genomic resources repository (GRR)
-==================================
+=============================================
+ Genomic resources and resource repositories
+=============================================
+
+The GPF system uses genomic resources such as reference genomes, gene models, genomic scores, etc.
+These resources are provided by resource repositories which can be accessed remotely or locally.
+The system can use multiple repositories at a time.
+
+Genomic resources and resource repositories are fundamentally a collection of directories and files with special YAML configurations.
+
+The following documentation will explain what genomic resources are available and how they can be configured,
+how resource repositories are configured and discovered by the system, and a short tutorial on creating a local repository
+with a custom resource.
+
+Genomic resources
+=================
+
+A genomic resource is a directory containing a special ``genomic_resource.yaml`` configuration and an arbitrary number of files.
+Additionally, GPF will create additional files (``.MANIFEST``, the ``.grr`` subdirectory) which are used internally to track changes to the resource.
+
+genomic_resource.yaml
+---------------------
+
+.. code:: yaml
+
+    type: <genomic resource type>
+    # ...
+    meta:
+        description: <resource description>
+        summary: <resource summary>
+        labels:
+            <custom label>: <custom label value>
+            # ...
+
+This is the configuration file for a genomic resource. Directories containing this file will be treated as genomic resources by the system.
+It **must** be named ``genomic_resource.yaml``, as this is how the system will search for it.
+
+Below are some the common fields that can be found in every config. Depending on the resource type, other fields may be present.
+
+=================  ================
+Field              Description
+=================  ================
+type               String. Sets the type of the resource.
+meta               Subsection. Contains fields with information about the resource.
+labels             Dictionary. Can contain arbitrary key/values.
+=================  ================
 
 
-Introduction to GRR
-*******************
+Below are the fields in the ``meta`` section:
 
-Genomic Resource Repository (GRR) is a collection of genomic resources, 
-like reference genomes, gene models, etc. One can use one or more GRRs at the 
-same time. By default (or without any configuration), you will use the 
-public GRR build by Iossifov lab and accessible through  
-https://storage.googleapis.com/iossifovlab-grr/.
+=================  ================
+Field              Description
+=================  ================
+description        String. Description of the resource.
+summary            String. Short summary of the resource.
+=================  ================
 
-.. note::
+Types of genomic resources and their configurations
+---------------------------------------------------
 
-    To browse the content of the default GRR follow this link:
-    https://storage.googleapis.com/iossifovlab-grr/index.html
+Genomic scores
+^^^^^^^^^^^^^^
 
-If you want to use additional genomic resources, you can build your own GRR 
-(see Management of GRR below) and add it to the GRRs you use. The set of GRR 
-that are accessible can be configured in several ways. 
+==================  ================
+Field               Description
+==================  ================
+type                One of ``position_score``, ``np_score``, ``allele_score``.
+table               Subsection. :ref:`Describes the file containing the scores, what columns/fields are present in it, etc.<Genomic position table configuration>`
+scores              :ref:`List of dictionaries that describes each score column available in the resource.<Score configuration fields>`
+default_annotation  Subsection. The default :ref:`annotation configuration<Annotation Infrastructure>` to use with this resource.
+==================  ================
 
-To configure the GRRs to be used by default for your user you can create 
-the file ~/.grr_definition.yaml. An example of what the contents of this file 
+
+Gene models
+^^^^^^^^^^^
+
+=================  ================
+Field              Description
+=================  ================
+type               ``gene_models``
+filename           String. Path to the models file. Relative to the resource directory.
+format             String. Sets the expected format of the gene models. One of ``default``, ``refflat``, ``refseq``, ``ccds``, ``knowngene``, ``gtf``, ``ucscgenepred``.
+=================  ================
+
+Reference genome
+^^^^^^^^^^^^^^^^
+
+=================  ================
+Field              Description
+=================  ================
+type               ``genome``
+filename           String. Path to the genome file. Relative to the resource directory.
+PARS               Subsection. Configures the pseudoautosomal regions of the genome.
+chrom_prefix       String. Configures the prefix contig names are **expected to have** in the genome.
+=================  ================
+
+The format for the ``PARS`` subsection is as follows:
+
+.. code:: yaml
+
+    PARS:
+      "X":
+          - "chrX:10000-2781479"
+          - "chrX:155701382-156030895"
+      "Y":
+          - "chrY:10000-2781479"
+          - "chrY:56887902-57217415"
+
+
+Liftover chain
+^^^^^^^^^^^^^^
+
+=================  ================
+Field              Description
+=================  ================
+type               ``liftover_chain``
+filename           String. Path to the chain file. Relative to the resource directory.
+=================  ================
+
+Annotation pipeline
+^^^^^^^^^^^^^^^^^^^
+
+=================  ================
+Field              Description
+=================  ================
+type               ``annotation_pipeline``
+filename           String. Path to the annotation configuration file. Relative to the resource directory.
+=================  ================
+
+Histograms and statistics
+-------------------------
+
+# TODO
+
+Resource repositories
+=====================
+
+Resource repositories are collections of genomic resources hosted either locally or remotely.
+
+Repository discovery
+--------------------
+
+The GPF system will by default look for a ``.grr_definition.yaml`` file in the home directory of your user.
+
+Alternatively, the system will use a repository configuration file pointed to by
+the ``GRR_DEFINITION_FILE`` environment variable if it has been set.
+
+Finally, most CLI tools that use GRRs have a ``--grr <filename>`` argument
+that overrides the defaults.
+
+To configure the GRRs to be used by default for your user, you can create
+the file ``~/.grr_definition.yaml``. An example of what the contents of this file
 can be is:
 
 .. code:: yaml
@@ -35,84 +163,67 @@ can be is:
 
     - id: "default"
       type: "url"
-      url: "https://storage.googleapis.com/iossifovlab-grr/"
+      url: "https://grr.iossifovlab.com"
       cache_dir: "~/default_grr_cache"
 
-This configures a group of two repositories with ids the 'grr_local' and 
-the 'default'. When you search for a resource, the system will first try 
-to find in the grr_local repository, because it is listed first and, if 
-it doesn't find it there, it will try the default GRR. The default GRR is  
-a remote GRR at the given URL and its configuration specified that resources 
-used from it will be cached in the "~/default_grr_cache" directory. It is 
-significantly faster to use cached resources, but it takes some time to cache
-them the first time they are used and they occupy substantial disk space.
+Repository configuration
+------------------------
 
-Alternatively, the system will use GRR configuration file pointed to by 
-the GRR_DEFINITION_FILE environment variable.
+=================  ================
+Field              Description
+=================  ================
+id                 String. The id of the repository.
+type               String. One of ``directory``, ``http``, ``url``, ``embedded`` or ``group``. These values are explained below.
+children           List of repository configurations for ``group`` type repositories' children.
+url                String. URL of the remote repository for ``http`` and ``url`` type repositories.
+directory          String. Path to the directory of resources for ``directory`` type repositories.
+content            Dictionary describing files and directories for ``embedded`` type repositories. Directories' values are further nested dictionaries, while files' values are the file contents.
+cache_dir          String. Path to a directory in which the resources from this repository will be cached. 
+=================  ================
 
-Finally, most command line tools that use GRRs have a --grr <file name> argument 
-that overrides the defaults.
+``directory``
+  A local filesystem repository.
 
-Configuration
-*************
+``http``
+  A remote HTTP repository.
 
-Genomic resources repository could be accessed via different protocols.
-Currently supported protocols for GRR access are:
+``url``
+  A remote S3 repository.
 
-* File system (directory) protocol.
+``embedded``
+  An in-memory repository.
 
-  .. code:: yaml
-
-    id: <repo id>
-    type: directory
-    directory: <path to the local file system>
-
-* HTTP/HTTPS protocol.
-
-  .. code:: yaml
-
-    id: <repo id>
-    type: http
-    url: <http:// or https:// url>
-
-  
-  .. code:: yaml
-
-    id: <repo id>
-    type: url
-    url: <http(s) url>
-
-* S3 protocol.
-  
-  .. code:: yaml
-
-    id: <repo id>
-    type: url
-    url: <S3 url>
-    endpoint_url: <endpoint url>
-
-* In-memory (embedded) protocol.
-
-  .. code:: yaml
-
-    id: <repo id>
-    type: embedded
-    content:
+``group``
+  A group of a number of repositories.
 
 
-Browse available resources
-**************************
+Caching of repositories
+-----------------------
 
-.. code:: bash
+When a repository is configured with a ``cache_dir`` option, it will cache resources locally before using them.
+It is significantly faster to use cached resources, but it takes some time to cache them the first time they are used and they occupy substantial disk space.
 
-    grr_browse [--grr grr_definition.yaml]
+Management of resources and repositories with CLI tools
+-------------------------------------------------------
 
+The GPF system provides two CLI tools for management of genomic resources and repositories. Their usage is outlined below:
 
-Management of genomic resources repository (GRR)
-************************************************
+grr_manage
+^^^^^^^^^^
 
-Genomic resources and genomic resources repository
-##################################################
+.. runblock:: console
+
+    $ grr_manage --help
+
+grr_browse
+^^^^^^^^^^
+
+.. runblock:: console
+
+    $ grr_browse --help
+
+Tutorial: Create a local repository with a custom resource
+==========================================================
 
 The genomic resource is a set of files stored in a directory. To make given
 directory a genomic resource, it should contain ``genomic_resource.yaml``
@@ -122,9 +233,8 @@ A genomic resources repository is a directory that contains genomic resources.
 To make a given directory into a repository, it should have a ``.CONTENTS``
 file.
 
-
 Create an empty GRR
-###################
+-------------------
 
 To create and empty GRR first create an empty directory. For example let us
 create an empty directory named ``grr_test``, enter inside that directory and
@@ -152,7 +262,7 @@ If we try to list all resources in this repository we should get an empty list:
 
 
 Create an empty genomic resource
-################################
+--------------------------------
 
 Let us create our first genomic resource. Create a directory
 ``hg38/scores/score9`` inside
@@ -188,9 +298,8 @@ This command will create a ``.MANIFEST`` file for our new resource
 ``hg38/scores/score9`` and will update the repository ``.CONTENTS`` to include
 the resource.
 
-
 Add genomic score resources
-+++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Add all score resource files (score file and Tabix index) inside
 the created directory ``hg38/scores/score9``. Let's say these files are:
@@ -246,497 +355,11 @@ directory:
     cd hg38/scores/score9
     grr_manage resource-repair
 
-This command is going to calculate histograms for the score (if histograms
+This command is going to calculate histograms for the score (if they
 are configured) and create or update the resource manifest.
 
-Once the resource is ready we need to regenerated the repository contents:
+Once the resource is ready we need to regenerate the repository contents:
 
 .. code-block:: bash
 
     grr_manage repo-repair
-
-
-Usage of genomic resources repositories (GRRs)
-++++++++++++++++++++++++++++++++++++++++++++++
-
-The GPF system can use genomic resources from different repositories. The
-default genomic resources repository used by GPF system is located at
-`https://www.iossifovlab.com/distribution/public/genomic-resources-repository/ 
-<https://www.iossifovlab.com/distribution/public/genomic-resources-repository/>`_.
-You can browse the content of the repository using the ``grr_manage list``
-command:
-
-.. code-block::
-
-    grr_manage list -R https://www.iossifovlab.com/distribution/public/genomic-resources-repository
-
-
-If you have a repository on your local filesytem you can browse it by
-providing the path to the root directory:
-
-.. code-block::
-
-    grr_manage list -R <path to the local repo>
-
-You can store a genomic resource repository in an S3 storage and you can browse
-its content with:
-
-.. code-block::
-
-    grr_manage list -R s3://grr-bucket-test/grr \
-        --extra-args "endpoint_url=http://piglet.seqpipe.org:7480"
-
-where ``grr-bucket-test`` is the bucket where you store the repository and
-``--extra-args`` are used to specify the S3 endpoint.
-
-Genomic Resource types
-**********************
-
-position_score
-##############
-
-Two formats are accepted in GPF
-
-Format A
-
-.. code-block::
-
-  chr1   pos    score1 score2
-  # pos is assumed to be 1-based
-
-  # how do we index with tabix!!!!
-  Tabix -s 1 -b 2 -e 2
-
-Format B
-
-.. code-block::
-
-  chr1 beg end score1 score2
-  # all positions in [beg, end] are assigned the same scores
-  # beg and end are  assumed to be 1-based
-  # end is included (the interval is closed on both end)
-  tabix -s 1 -b 2 -e 3
-
-NOTE: We should never use tabix -p bed!!
-
-np_score
-########
-
-allele_score
-############
-
-gene_models
-###########
-
-Example genomic_resource.yaml:
-
-.. code:: yaml
-
-    type: gene_models 
-    filename: refGeneMito-201309.gz
-    format: "default"
-
-The available formats are:
-
-* default  -- this is a GPF internal format
-* refflat
-* refseq
-* ccds
-* knowngene
-* gtf
-* ucscgenepred
-
-reference_genome
-################
-
-liftover
-########
-
-annotation_pipeline
-###################
-
-Example genomic_resource.yaml:
-
-.. code:: yaml
-
-    type: annotation_pipeline
-    filename: annotation.yaml
-
-The ``annotation.yaml`` config must be placed inside the resource's directory.
-
-
-Aggregators
-***********
-
-- mean
-- median
-- max
-- min
-- mode
-- join (i.e., join(;))
-- list
-- dict
-- concatenate
-
-
-Genomic position table
-**********************
-
-Table configuration fields
-##########################
-
-filename
-  Path to the file containing the data, relative to the genomic resource's directory.
-
-
-format
-  Format of the file configured in ``filename``. Currently supported formats are ``tabix``, ``vcf_info``, ``tsv``, ``csv`` and ``bw``.
-  Auto-detection of the format works for the following filename extensions:
-
-  ============================  ======
-  Extension                     Format
-  ============================  ======
-  .bgz                          tabix
-  .vcf.gz                       vcf_info
-  .txt, .txt.gz, .tsv, .tsv.gz  tsv
-  .csv, .csv.gz                 csv
-  .bw                           bw
-  ============================  ======
-
-header_mode
-  The default value is ``file``.
-
-  =====  ======
-  Value  Effect
-  =====  ======
-  file   Will attempt to extract a header from the provided file.
-  list   Will take the list of strings provided with the configuration field ``header`` as header.
-  none   No header. Columns will only be able to be configured via index.
-  =====  ======
-
-header
-  Used for providing a header when ``header_mode`` is set to ``list``. Example:
-
-  .. code:: yaml
-
-      header_mode: list
-      header: ["chrom", "start", "end", "score_value"]
-
-chrom_mapping
-  Allows transformation of the values in the chromosome column. Three options are available:
-
-  add_prefix
-    Takes a string value and adds it as a prefix.
-
-  del_prefix
-    Takes a string value to remove from the start of each chromosome.
-
-  filename
-    Takes a filepath, relative to the genomic resource's directory.
-    The file's contents must contain two columns delimited by whitespace.
-    The first line must be the header, containing ``chrom`` and ``file_chrom`` as values.
-    The ``file_chrom`` column contains values that will be found in the file, while the ``chrom`` column contains what they will be mapped to.
-    An example is given below:
-
-    .. code::
-
-        chrom           file_chrom
-        Chromosome_1    1
-        Chromosome_22   22
-
-
-{column}
-  Generic configuration for a column in the genomic position table.
-
-  column_name
-    Takes a string value. The name of the column as it appears in the file's header. Cannot be used if no header has been provided for the table.
-
-  column_index
-    Takes an integer value. The index of the column in the file.
-
-  name
-    Deprecated version of ``column_name``.
-
-  index
-    Deprecated version of ``column_index``.
-
-
-chrom
-  Column configuration for the chromosome column. See explanation for {column} above.
-
-
-pos_begin
-  Column configuration for the start position column. See explanation for {column} above.
-
-
-pos_end
-  Column configuration for the end position column. See explanation for {column} above.
-
-
-reference
-  Column configuration for the reference column. See explanation for {column} above.
-
-
-alternative
-  Column configuration for the alternative column. See explanation for {column} above.
-
-
-Score configuration fields
-##########################
-
-id
-  Takes a string value. The identifier the system will use to refer to this score column in annotation configurations.
-
-
-type
-  Type of the column's values. Takes one of the following values - ``str``, ``float``, ``int``.
-
-
-column_name
-  Takes a string value. The name of the column as it appears in the file's header. Cannot be used if no header has been provided for the table.
-
-
-column_index
-  Takes an integer value. The index of the column in the file.
-
-
-name
-  Deprecated version of ``column_name``.
-
-
-index
-  Deprecated version of ``column_index``.
-
-
-desc
-  A string describing the score column.
-
-
-na_values
-  Takes a string or list of strings value. Which score values to consider as ``na``.
-
-
-histogram
-  type
-    The type of histogram to build. Takes one of the following valeus - ``number``, ``categorical``, ``null``.
-
-
-  number_of_bins
-    The amount of bins to create. The default value is 100.
-
-
-  view_range
-    Restricts which score values to use for the histogram.
-
-    min
-      The minimum value.
-
-    max
-      The maximum value.
-
-
-  x_log_scale
-    Boolean. If true, the X scale will be logarithmic.
-
-
-  y_log_scale
-    Boolean. If true, the Y scale will be logarithmic.
-
-
-  x_min_log
-    Takes a float value. Values less than this will not be included in logarithmic scales, and will instead be separated into their own bin.
-
-
-  value_order
-    The ordering of values for categorical histograms.
-
-
-  reason
-    Used when type is ``null``. Explanation why no histogram has been constructed.
-
-
-number_hist
-  Specific configuration for ``number`` type histograms.
-
-  number_of_bins
-    See above, under ``histogram``.
-
-
-  view_range
-    See above, under ``histogram``.
-
-
-  x_log_scale
-    See above, under ``histogram``.
-
-
-  y_log_scale
-    See above, under ``histogram``.
-
-
-  x_min_log
-    See above, under ``histogram``.
-
-
-categorical_hist
-  Specific configuration for ``categorical`` type histograms.
-
-  y_log_scale
-    See above, under ``histogram``.
-
-
-  value_order
-    See above, under ``histogram``.
-
-
-null_hist
-  Specific configuration for skipping the calculation of a histogram.
-
-  reason
-    See above, under ``histogram``.
-
-
-large_values_desc
-  Text that will be included in the histogram image as description for large values.
-
-
-small_values_desc
-  Text that will be included in the histogram image as description for small values.
-
-
-Zero-based / BED format scores
-##############################
-
-.. code:: yaml
-
-    table:
-      filename: data.txt.gz
-      format: tabix
-      zero_based: True
-    scores:
-    - id: score_1
-      name: score 1
-      type: float
-
-The ``zero_based`` argument controls how the score file will be read.
-
-| Setting it to true will read the score as a BED-style format - with 0-based, half-open intervals.
-| By default it is set to false, which will read the score in GPF's internal format - with 1-based, closed intervals.
-
-
-Example configurations
-######################
-
-Example table configuration for a genomic score resource.
-This configuration is embedded in the score's ``genomic_resource.yaml`` config.
-
-.. code:: yaml
-
-    # Example genomic_resource.yaml for an NP score resource.
-
-    table:
-      filename: whole_genome_SNVs.tsv.gz
-      format: tabix
-
-      # how to modify the values found when reading the chromosome column
-      chrom_mapping:
-        add_prefix: chr
-
-      # configuration for essential columns
-      chrom:
-        name: Chrom
-      pos_begin:
-        name: Pos
-      reference:
-        name: Ref
-      alternative:
-        name: Alt
-
-    # score values
-    scores:
-      - id: cadd_raw
-        type: float
-        name: RawScore
-        desc: |
-          CADD raw score for functional prediction of a SNP. The larger the score
-          the more likely the SNP has damaging effect
-        large_values_desc: "more damaging"
-        small_values_desc: "less damaging"
-        histogram:
-          type: number
-          number_of_bins: 100
-          view_range:
-            min: -8.0
-            max: 36.0
-          y_log_scale: True
-
-.. code:: yaml
-
-    # Example genomic_resource.yaml for a position score resource with multiple scores
-    # with different histogram configurations.
-
-    table:
-      filename: scorefile.tsv.gz
-      format: tabix
-
-      # configuration for essential columns
-      chrom:
-        name: chromosome
-      pos_begin:
-        name: start
-      pos_end:
-        name: stop
-
-    # score values
-    scores:
-      # float score
-      - id: score_A
-        type: float
-        name: NumericScore
-        number_hist:
-          number_of_bins: 120
-          view_range:
-            min: -10.0
-            max: 225.0
-          x_log_scale: True
-          x_min_log: 0.05
-      # integer score
-      - id: score_B
-        type: int
-        name: IntegerScore
-        number_hist:
-          number_of_bins: 10
-      # string score with categorical histogram
-      - id: score_C
-        type: str
-        name: CategoricalScore
-        categorical_hist:
-          value_order: ["alpha", "beta", "gamma", "delta"]
-      # string score with no histogram
-      - id: score_D
-        type: str
-        name: WeirdScore
-        null_hist:
-          reason: "Don't care about this score"
-
-
-.. code:: yaml
-
-    # Example bigWig score configuration.
-
-    type: position_score
-
-    table:
-      filename: hg38.phyloP7way.bw
-      # header mode must be set to none for bigWig scores
-      header_mode: none
-
-    # currently, it's necessary to explicitly configure the score with its index set to 3
-    scores:
-      - id: phyloP7way
-        type: float
-        column_index: 3
-
-    default_annotation:
-      - source: phyloP7way
-        name: phylop7way

@@ -107,6 +107,21 @@ The attributes of these annotators generally follow the pattern below:
 The available scores are those configured in the resource used with the score annotator.
 ``source`` is the ID of the score as it is configured in its resource, and ``name`` is how it will be labeled in the output annotation.
 
+
+Aggregators
++++++++++++
+
+- mean
+- median
+- max
+- min
+- mode
+- join (i.e., join(;))
+- list
+- dict
+- concatenate
+
+
 Position score
 ++++++++++++++
 
