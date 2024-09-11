@@ -155,7 +155,13 @@ class PhenoToolDownload(PhenoToolView):
         ):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        adapter = self.prepare_pheno_tool_adapter(data)
+        study_wrapper = self.gpf_instance.get_wdae_wrapper(data["datasetId"])
+        if study_wrapper is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        adapter = self.gpf_instance.get_pheno_tool_adapter(
+            study_wrapper.genotype_data,
+        )
         print("adapter finished")
 
         if not adapter:
