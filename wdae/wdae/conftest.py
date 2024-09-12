@@ -581,17 +581,42 @@ def setup_t4c8_grr(
                 filename: t4c8_gene_score.csv
                 scores:
                 - id: t4c8_score
-                  desc: t4c8 gene score
                   histogram:
                     type: number
                     number_of_bins: 3
                     x_log_scale: false
                     y_log_scale: false
+                meta:
+                  description: t4c8 gene score
                 """,
             "t4c8_gene_score.csv": textwrap.dedent("""
                 gene,t4c8_score
                 t4,10.123456789
                 c8,20.0
+            """),
+        },
+    )
+
+    setup_directories(
+        repo_path / "genomic_scores" / "score_one",
+        {
+            GR_CONF_FILE_NAME: textwrap.dedent("""
+                type: position_score
+                table:
+                  filename: data.txt
+                scores:
+                - id: score_one
+                  type: float
+                  name: score
+            """),
+            "data.txt": textwrap.dedent("""
+                chrom\tpos_begin\tscore
+                chr1\t4\t0.01
+                chr1\t54\t0.02
+                chr1\t90\t0.03
+                chr1\t100\t0.04
+                chr1\t119\t0.05
+                chr1\t122\t0.06
             """),
         },
     )
@@ -619,6 +644,8 @@ def setup_t4c8_instance(
         instance_path, {
             "gpf_instance.yaml": textwrap.dedent("""
                 instance_id: t4c8_instance
+                annotation:
+                  conf_file: annotation.yaml
                 reference_genome:
                     resource_id: t4c8_genome
                 gene_models:
@@ -640,6 +667,9 @@ def setup_t4c8_instance(
                     - t4c8_dataset
                     - t4c8_study_1
                     - nonexistend_dataset
+            """),
+            "annotation.yaml": textwrap.dedent("""
+               - position_score: genomic_scores/score_one
             """),
         },
     )
