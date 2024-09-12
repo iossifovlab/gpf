@@ -6,7 +6,7 @@ import { Observable, pipe, switchMap, take } from 'rxjs';
 import { environment } from 'environments/environment';
 import { Store } from '@ngrx/store';
 import { selectDatasetId } from 'app/datasets/datasets.state';
-import { selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app/person-filters/person-filters.state';
+import { removeFamilyFilter, removePersonFilter, selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app/person-filters/person-filters.state';
 import { cloneDeep } from 'lodash';
 
 @Component({
@@ -18,7 +18,6 @@ export class CategoricalFilterComponent implements OnInit {
   @Input() public categoricalFilter: PersonFilterState;
   @Input() public isFamilyFilters: boolean;
   public categoricalFilterState: CategoricalFilterState;
-  @Output() public updateFilterEvent = new EventEmitter();
   public sourceDescription$: Observable<object>;
   public valuesDomain: any = [];
   public imgPathPrefix = environment.imgPathPrefix;
@@ -83,6 +82,10 @@ export class CategoricalFilterComponent implements OnInit {
 
   public clear(): void {
     (this.categoricalFilterState.selection as CategoricalSelection).selection = null;
-    this.updateFilterEvent.emit();
+    if (this.isFamilyFilters) {
+      this.store.dispatch(removeFamilyFilter({familyFilter: cloneDeep(this.categoricalFilterState)}));
+    } else {
+      this.store.dispatch(removePersonFilter({personFilter: cloneDeep(this.categoricalFilterState)}));
+    }
   }
 }

@@ -4,7 +4,7 @@ import { ContinuousFilterState, PersonFilterState } from '../person-filters/pers
 import { PersonFilter } from '../datasets/datasets';
 import { Store } from '@ngrx/store';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
-import { selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app/person-filters/person-filters.state';
+import { removeFamilyFilter, removePersonFilter, selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app/person-filters/person-filters.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { take } from 'rxjs';
 import { cloneDeep } from 'lodash';
@@ -53,14 +53,16 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
       this.continuousFilterState.source = measure.name;
       this.continuousFilterState.selection['min'] = measure.min;
       this.continuousFilterState.selection['max'] = measure.max;
-    } else {
-      this.continuousFilterState.source = null;
-    }
 
-    if (this.isFamilyFilters) {
-      this.store.dispatch(updateFamilyFilter({familyFilter: cloneDeep(this.continuousFilterState)}));
+      if (this.isFamilyFilters) {
+        this.store.dispatch(updateFamilyFilter({familyFilter: cloneDeep(this.continuousFilterState)}));
+      } else {
+        this.store.dispatch(updatePersonFilter({personFilter: cloneDeep(this.continuousFilterState)}));
+      }
+    } else if (this.isFamilyFilters) {
+      this.store.dispatch(removeFamilyFilter({familyFilter: cloneDeep(this.continuousFilterState)}));
     } else {
-      this.store.dispatch(updatePersonFilter({personFilter: cloneDeep(this.continuousFilterState)}));
+      this.store.dispatch(removePersonFilter({personFilter: cloneDeep(this.continuousFilterState)}));
     }
   }
 

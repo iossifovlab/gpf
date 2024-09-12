@@ -36,6 +36,16 @@ export const updatePersonFilter = createAction(
   props<{ personFilter: PersonFilterState }>()
 );
 
+export const removeFamilyFilter = createAction(
+  '[Genotype] Remove familyFilter value',
+  props<{ familyFilter: PersonFilterState }>()
+);
+
+export const removePersonFilter = createAction(
+  '[Genotype] Remove personFilter value',
+  props<{ personFilter: PersonFilterState }>()
+);
+
 export const resetFamilyFilterStates = createAction(
   '[Genotype] Reset familyFilter states',
 );
@@ -89,6 +99,26 @@ export const personFiltersReducer = createReducer(
     } else {
       newPersonFilters.push(personFilter);
     }
+    return {
+      ...stateClone,
+      personFilters: newPersonFilters,
+    };
+  }),
+  on(removeFamilyFilter, (state, {familyFilter}) => {
+    const stateClone = cloneDeep(state);
+    const newFamilyFilters = stateClone.familyFilters;
+    newFamilyFilters?.splice(newFamilyFilters.findIndex(filter => filter.id === familyFilter.id), 1);
+
+    return {
+      ...stateClone,
+      familyFilters: newFamilyFilters,
+    };
+  }),
+  on(removePersonFilter, (state, {personFilter}) => {
+    const stateClone = cloneDeep(state);
+    const newPersonFilters = stateClone.personFilters;
+    newPersonFilters?.splice(newPersonFilters.findIndex(filter => filter.id === personFilter.id), 1);
+
     return {
       ...stateClone,
       personFilters: newPersonFilters,
