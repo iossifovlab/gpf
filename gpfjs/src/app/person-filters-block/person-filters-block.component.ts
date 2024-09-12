@@ -4,7 +4,7 @@ import { Dataset } from '../datasets/datasets';
 // import { PersonFiltersModel, PersonFiltersState, SetPersonFilters } from 'app/person-filters/person-filters.state';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
-import { selectPersonFilters, setPersonFilters } from 'app/person-filters/person-filters.state';
+import { resetPersonFilterStates, selectPersonFilters } from 'app/person-filters/person-filters.state';
 import { combineLatest, take } from 'rxjs';
 import { resetPersonIds, selectPersonIds } from 'app/person-ids/person-ids.state';
 
@@ -15,7 +15,6 @@ import { resetPersonIds, selectPersonIds } from 'app/person-ids/person-ids.state
 })
 export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() public dataset: Dataset;
-  @Input() public genotypeBrowserState: object;
   @ViewChild('nav') public ngbNav: NgbNav;
   public showAdvancedButton: boolean;
 
@@ -32,14 +31,14 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
     ).pipe(take(1)).subscribe(([personFiltersState, personIdsState]) => {
       if (personIdsState.length) {
         setTimeout(() => this.ngbNav.select('personIds'));
-      } else if (personFiltersState.personFilters.length) {
+      } else if (personFiltersState?.personFilters?.length) {
         setTimeout(() => this.ngbNav.select('advanced'));
       }
     });
   }
 
   public onNavChange(): void {
-    this.store.dispatch(setPersonFilters({personFilters: []}));
     this.store.dispatch(resetPersonIds());
+    this.store.dispatch(resetPersonFilterStates());
   }
 }

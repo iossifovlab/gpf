@@ -1,12 +1,13 @@
 import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
-import { CategoricalFilterState, CategoricalSelection } from '../person-filters/person-filters';
-import { PersonFilter } from '../datasets/datasets';
+import { CategoricalFilterState, CategoricalSelection, PersonFilterState } from '../person-filters/person-filters';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Observable, pipe, switchMap, take } from 'rxjs';
 import { environment } from 'environments/environment';
 import { Store } from '@ngrx/store';
 import { selectDatasetId } from 'app/datasets/datasets.state';
+import { selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app/person-filters/person-filters.state';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-categorical-filter',
@@ -14,8 +15,9 @@ import { selectDatasetId } from 'app/datasets/datasets.state';
   styleUrls: ['./categorical-filter.component.css']
 })
 export class CategoricalFilterComponent implements OnInit {
-  @Input() public categoricalFilter: PersonFilter;
-  @Input() public categoricalFilterState: CategoricalFilterState;
+  @Input() public categoricalFilter: PersonFilterState;
+  @Input() public isFamilyFilters: boolean;
+  public categoricalFilterState: CategoricalFilterState;
   @Output() public updateFilterEvent = new EventEmitter();
   public sourceDescription$: Observable<object>;
   public valuesDomain: any = [];
@@ -28,36 +30,35 @@ export class CategoricalFilterComponent implements OnInit {
   ) {}
 
   public ngOnInit(): void {
-    this.store.select(selectDatasetId).pipe(take(1)).subscribe(datasetId => {
-      const selectedDatasetId = datasetId;
-
-      if (this.categoricalFilter.from === 'phenodb') {
-        this.sourceDescription$ = this.phenoBrowserService.getMeasureDescription(
-          selectedDatasetId, this.categoricalFilter.source
-        );
-      } else if (this.categoricalFilter.from === 'pedigree') {
-        this.sourceDescription$ = this.datasetsService.getDatasetPedigreeColumnDetails(
-          selectedDatasetId, this.categoricalFilter.source
-        );
-      }
-
-      this.sourceDescription$.pipe(take(1)).subscribe(res => {
-        this.valuesDomain = res['values_domain'];
-      });
-    });
-
-    this.store.select(selectDatasetId).pipe(
+    this.store.select(selectPersonFilters).pipe(
       take(1),
+      switchMap(state => {
+        let stateFilter: CategoricalFilterState;
+
+        if (this.isFamilyFilters) {
+          stateFilter = state.familyFilters?.find(filter => filter.id === this.categoricalFilter.id);
+        } else {
+          stateFilter = state.personFilters?.find(filter => filter.id === this.categoricalFilter.id);
+        }
+
+        if (stateFilter) {
+          this.categoricalFilterState = cloneDeep(stateFilter);
+        } else {
+          this.categoricalFilterState = cloneDeep(this.categoricalFilter);
+        }
+
+        return this.store.select(selectDatasetId).pipe(take(1));
+      }),
       switchMap((datasetIdState: string) => {
         const selectedDatasetId = datasetIdState;
 
-        if (this.categoricalFilter.from === 'phenodb') {
+        if (this.categoricalFilterState.from === 'phenodb') {
           this.sourceDescription$ = this.phenoBrowserService.getMeasureDescription(
-            selectedDatasetId, this.categoricalFilter.source
+            selectedDatasetId, this.categoricalFilterState.source
           );
-        } else if (this.categoricalFilter.from === 'pedigree') {
+        } else if (this.categoricalFilterState.from === 'pedigree') {
           this.sourceDescription$ = this.datasetsService.getDatasetPedigreeColumnDetails(
-            selectedDatasetId, this.categoricalFilter.source
+            selectedDatasetId, this.categoricalFilterState.source
           );
         }
         return this.sourceDescription$;
@@ -68,16 +69,20 @@ export class CategoricalFilterComponent implements OnInit {
   }
 
   public set selectedValue(value) {
-    (this.categoricalFilterState.selection as CategoricalSelection).selection = [value];
-    this.updateFilterEvent.emit();
+    (this.categoricalFilterState.selection as CategoricalSelection).selection = value;
+    if (this.isFamilyFilters) {
+      this.store.dispatch(updateFamilyFilter({familyFilter: cloneDeep(this.categoricalFilterState)}));
+    } else {
+      this.store.dispatch(updatePersonFilter({personFilter: cloneDeep(this.categoricalFilterState)}));
+    }
   }
 
   public get selectedValue(): string {
-    return (this.categoricalFilterState.selection as CategoricalSelection).selection[0];
+    return (this.categoricalFilterState.selection as CategoricalSelection).selection;
   }
 
   public clear(): void {
-    (this.categoricalFilterState.selection as CategoricalSelection).selection = [];
+    (this.categoricalFilterState.selection as CategoricalSelection).selection = null;
     this.updateFilterEvent.emit();
   }
 }

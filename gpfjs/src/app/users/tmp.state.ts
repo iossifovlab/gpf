@@ -23,7 +23,7 @@ import { initialState as familyTypeFilterInitialState } from 'app/family-type-fi
 import { initialState as studyTypesInitialState } from 'app/study-types/study-types.state';
 import { initialState as familyIdsInitialState } from 'app/family-ids/family-ids.state';
 import { GenomicScoreInterface } from 'app/genotype-browser/genotype-browser';
-import { PersonFilterInterface } from 'app/person-filters/person-filters';
+import { PersonFilterState } from 'app/person-filters/person-filters';
 import { FamilyTags } from 'app/family-tags/family-tags';
 import { cloneDeep } from 'lodash';
 import { logout } from './actions';
@@ -35,7 +35,7 @@ export interface State {
   // expandedDatasets: string[];
   familyTags: FamilyTags;
   personIds: string[];
-  personFilters: { familyFilters: PersonFilterInterface[]; personFilters: PersonFilterInterface[] };
+  personFilters: { familyFilters: PersonFilterState[]; personFilters: PersonFilterState[] };
   studyFilters: string[];
   effectTypes: string[];
   genders: string[];

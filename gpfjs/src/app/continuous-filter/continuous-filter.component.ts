@@ -4,42 +4,38 @@ import { HistogramData } from '../measures/measures';
 import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
 import { Observable, Subject } from 'rxjs';
 import { Partitions } from '../gene-scores/gene-scores';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs/operators';
 import { cloneDeep } from 'lodash';
+import { Store } from '@ngrx/store';
+import { StatefulComponent } from 'app/common/stateful-component';
+import { selectPersonFilters, setFamilyFilters, setPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app/person-filters/person-filters.state';
 
 @Component({
   selector: 'gpf-continuous-filter',
   templateUrl: './continuous-filter.component.html'
 })
-export class ContinuousFilterComponent implements OnInit, OnChanges {
+export class ContinuousFilterComponent extends StatefulComponent implements OnInit, OnChanges {
   private rangeChanges = new Subject<[string, string, number, number]>();
   private partitions: Observable<Partitions>;
 
   @Input() public datasetId: string;
   @Input() public measureName: string;
-  @Input() public continuousFilterState: ContinuousFilterState;
-  @Output() public updateFilterEvent = new EventEmitter<ContinuousFilterState>();
+  @Input() public continuousFilter: ContinuousFilterState;
+  @Input() public isFamilyFilters: boolean;
+
+  private continuousFilterState: ContinuousFilterState;
   public histogramData: HistogramData;
 
   public rangesCounts: Array<number>;
 
-  public constructor(private measuresService: MeasuresService) { }
+  public constructor(
+    private measuresService: MeasuresService,
+    protected store: Store,
+  ) {
+    super(store, 'personFilters', selectPersonFilters);
+  }
 
   public ngOnInit(): void {
-    this.continuousFilterState = new ContinuousFilterState(
-      this.continuousFilterState.id,
-      this.continuousFilterState.sourceType,
-      this.continuousFilterState.role,
-      this.continuousFilterState.source,
-      this.continuousFilterState.from,
-      new ContinuousSelection(
-        (this.continuousFilterState.selection as ContinuousSelection).min,
-        (this.continuousFilterState.selection as ContinuousSelection).max,
-        (this.continuousFilterState.selection as ContinuousSelection).domainMin,
-        (this.continuousFilterState.selection as ContinuousSelection).domainMax,
-      )
-    );
-
     this.partitions = this.rangeChanges.pipe(
       debounceTime(100),
       distinctUntilChanged(),
@@ -50,27 +46,30 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     this.partitions.subscribe(partitions => {
       this.rangesCounts = [partitions.leftCount, partitions.midCount, partitions.rightCount];
     });
+
     if (this.continuousFilterState !== undefined) {
       this.continuousFilterState.selection = new ContinuousSelection(null, null, null, null);
     }
+
+    this.store.select(selectPersonFilters).pipe(take(1)).subscribe(state => {
+      let stateFilter: ContinuousFilterState;
+
+      if (this.isFamilyFilters) {
+        stateFilter = state.familyFilters?.find(filter => filter.id === this.continuousFilter.id);
+      } else {
+        stateFilter = state.personFilters?.find(filter => filter.id === this.continuousFilter.id);
+      }
+
+      if (stateFilter) {
+        this.continuousFilterState = cloneDeep(stateFilter);
+      } else {
+        this.continuousFilterState = cloneDeep(this.continuousFilter);
+      }
+    });
   }
 
   public ngOnChanges(): void {
     if (this.datasetId && this.measureName) {
-      this.continuousFilterState = new ContinuousFilterState(
-        this.continuousFilterState.id,
-        this.continuousFilterState.sourceType,
-        this.continuousFilterState.role,
-        this.continuousFilterState.source,
-        this.continuousFilterState.from,
-        new ContinuousSelection(
-          (this.continuousFilterState.selection as ContinuousSelection).min,
-          (this.continuousFilterState.selection as ContinuousSelection).max,
-          (this.continuousFilterState.selection as ContinuousSelection).domainMin,
-          (this.continuousFilterState.selection as ContinuousSelection).domainMax,
-        )
-      );
-
       this.measuresService.getMeasureHistogram(this.datasetId, this.measureName)
         .subscribe(histogramData => {
           const selection = this.continuousFilterState.selection as ContinuousSelection;
@@ -86,16 +85,19 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   }
 
   public set rangeStart(value) {
-    const updatedState = cloneDeep(this.continuousFilterState);
-    const selection = updatedState.selection as ContinuousSelection;
-    selection.min = value;
-    this.continuousFilterState = updatedState;
-    this.updateFilterEvent.emit(this.continuousFilterState);
+    (this.continuousFilterState.selection as ContinuousSelection).min = value;
+
+    if (this.isFamilyFilters) {
+      this.store.dispatch(updateFamilyFilter({familyFilter: cloneDeep(this.continuousFilterState)}));
+    } else {
+      this.store.dispatch(updatePersonFilter({personFilter: cloneDeep(this.continuousFilterState)}));
+    }
+
     this.rangeChanges.next([
       this.datasetId,
       this.measureName,
-      selection.min,
-      selection.max
+      (this.continuousFilterState.selection as ContinuousSelection).min,
+      (this.continuousFilterState.selection as ContinuousSelection).max
     ]);
   }
 
@@ -104,16 +106,19 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   }
 
   public set rangeEnd(value) {
-    const updatedState = cloneDeep(this.continuousFilterState);
-    const selection = updatedState.selection as ContinuousSelection;
-    selection.max = value;
-    this.continuousFilterState = updatedState;
-    this.updateFilterEvent.emit(this.continuousFilterState);
+    (this.continuousFilterState.selection as ContinuousSelection).max = value;
+
+    if (this.isFamilyFilters) {
+      this.store.dispatch(updateFamilyFilter({familyFilter: cloneDeep(this.continuousFilterState)}));
+    } else {
+      this.store.dispatch(updatePersonFilter({personFilter: cloneDeep(this.continuousFilterState)}));
+    }
+
     this.rangeChanges.next([
       this.datasetId,
       this.measureName,
-      selection.min,
-      selection.max
+      (this.continuousFilterState.selection as ContinuousSelection).min,
+      (this.continuousFilterState.selection as ContinuousSelection).max
     ]);
   }
 

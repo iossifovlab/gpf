@@ -33,11 +33,7 @@
         <ng-template ngbNavContent>
           <div id="filters">
             <gpf-family-type-filter *ngIf="showFamilyTypeFilter" id="family-filter"></gpf-family-type-filter>
-            <gpf-person-filters
-              [dataset]="dataset"
-              [filters]="dataset?.genotypeBrowserConfig?.familyFilters"
-              [isFamilyFilters]="true">
-            </gpf-person-filters>
+            <gpf-person-filters [dataset]="dataset" [isFamilyFilters]="true"> </gpf-person-filters>
           </div>
         </ng-template>
       </li>

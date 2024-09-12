@@ -4,7 +4,7 @@ import { ContinuousFilterState, PersonFilterState } from '../person-filters/pers
 import { PersonFilter } from '../datasets/datasets';
 import { Store } from '@ngrx/store';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
-import { selectPersonFilters } from 'app/person-filters/person-filters.state';
+import { selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app/person-filters/person-filters.state';
 import { StatefulComponent } from 'app/common/stateful-component';
 import { take } from 'rxjs';
 import { cloneDeep } from 'lodash';
@@ -16,10 +16,10 @@ import { cloneDeep } from 'lodash';
 })
 export class MultiContinuousFilterComponent extends StatefulComponent implements OnInit {
   @Input() public datasetId: string;
-  @Input() public continuousFilter: PersonFilter;
-  @Input() public continuousFilterState: ContinuousFilterState;
-  @Input() public isFamilyFilter: boolean;
-  @Output() public updateFilterEvent = new EventEmitter<ContinuousFilterState>();
+  @Input() public continuousFilter: ContinuousFilterState;
+  @Input() public isFamilyFilters: boolean;
+  public continuousFilterState: ContinuousFilterState;
+
 
   @ViewChild(PhenoMeasureSelectorComponent) private measureSelectorComponent: PhenoMeasureSelectorComponent;
   public measures: Array<ContinuousMeasure>;
@@ -30,40 +30,20 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
   }
 
   public ngOnInit(): void {
-    this.store.select(selectPersonFilters).pipe(take(1)).subscribe(personFiltersState => {
-      this.restoreContinuousFilter(cloneDeep(personFiltersState));
-    });
-  }
+    this.store.select(selectPersonFilters).pipe(take(1)).subscribe(state => {
+      let stateFilter: ContinuousFilterState;
 
-  public restoreContinuousFilter(
-    state: {
-      familyFilters: PersonFilterState[];
-      personFilters: PersonFilterState[];
-    }
-  ): void {
-    const filters = state[this.isFamilyFilter ? 'familyFilters' : 'personFilters'];
-    filters.forEach(async(filter) => {
-      if (filter.sourceType === 'continuous') {
-        const selection = {
-          name: filter.source,
-          min: filter['selection']['min'],
-          max: filter['selection']['max']
-        };
-        this.selectedMeasure = selection;
-        await this.waitForSelectorComponent();
-        this.measureSelectorComponent.selectMeasure(this.selectedMeasure);
+      if (this.isFamilyFilters) {
+        stateFilter = state.familyFilters?.find(filter => filter.id === this.continuousFilter.id);
+      } else {
+        stateFilter = state.personFilters?.find(filter => filter.id === this.continuousFilter.id);
       }
-    });
-  }
 
-  private async waitForSelectorComponent(): Promise<void> {
-    return new Promise<void>(resolve => {
-      const timer = setInterval(() => {
-        if (this.measureSelectorComponent !== undefined) {
-          resolve();
-          clearInterval(timer);
-        }
-      }, 50);
+      if (stateFilter) {
+        this.continuousFilterState = cloneDeep(stateFilter);
+      } else {
+        this.continuousFilterState = cloneDeep(this.continuousFilter);
+      }
     });
   }
 
@@ -76,8 +56,12 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
     } else {
       this.continuousFilterState.source = null;
     }
-    this.continuousFilterState = cloneDeep(this.continuousFilterState);
-    this.updateFilterEvent.emit();
+
+    if (this.isFamilyFilters) {
+      this.store.dispatch(updateFamilyFilter({familyFilter: cloneDeep(this.continuousFilterState)}));
+    } else {
+      this.store.dispatch(updatePersonFilter({personFilter: cloneDeep(this.continuousFilterState)}));
+    }
   }
 
   public get selectedMeasure(): ContinuousMeasure {

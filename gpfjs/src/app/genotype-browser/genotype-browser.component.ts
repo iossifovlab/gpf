@@ -180,8 +180,8 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
           ...(!familyTagsState?.tagIntersection && {tagIntersection: familyTagsState.tagIntersection}),
           ...(familyTagsState.selectedFamilyTags?.length && {selectedFamilyTags: familyTagsState.selectedFamilyTags}),
           ...(familyTagsState.deselectedFamilyTags?.length && {deselectedFamilyTags: familyTagsState.deselectedFamilyTags}),
-          ...(personFiltersState.familyFilters?.length && {familyFilters: personFiltersState.familyFilters}),
-          ...(personFiltersState.personFilters?.length && {personFilters: personFiltersState.personFilters}),
+          ...(personFiltersState?.familyFilters?.length && {familyFilters: personFiltersState.familyFilters}),
+          ...(personFiltersState?.personFilters?.length && {personFilters: personFiltersState.personFilters}),
           ...(geneSetsState.geneSet && {
             geneSet: geneSetsState.geneSet.name,
             geneSetsCollection: geneSetsState.geneSetsCollection.name,
