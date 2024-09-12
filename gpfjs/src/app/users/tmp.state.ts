@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { createReducer, on } from '@ngrx/store';
 import { GeneProfiles, initialState as geneProfilesInitialState } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { GeneScoresState, initialState as geneScoresInitialState } from 'app/gene-scores/gene-scores.state';
@@ -31,8 +32,6 @@ import { logout } from './actions';
 export interface State {
   errors: string[];
   familyIds: string[];
-  // datasetId: string;
-  // expandedDatasets: string[];
   familyTags: FamilyTags;
   personIds: string[];
   personFilters: { familyFilters: PersonFilterState[]; personFilters: PersonFilterState[] };
@@ -58,10 +57,8 @@ export interface State {
 }
 
 export const initialState: State = {
-  errors: [], //update me
+  errors: [],
   familyIds: familyIdsInitialState,
-  // datasetId: string,
-  // expandedDatasets: string[],
   familyTags: familyTagsInitialState,
   personIds: personIdsInitialState,
   personFilters: personFiltersInitialState,
