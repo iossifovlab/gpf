@@ -16,6 +16,7 @@ import { setGeneSetsValues } from 'app/gene-sets/gene-sets.state';
 import { setGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { setGeneScore } from 'app/gene-scores/gene-scores.state';
 import { setRegionsFilters } from 'app/regions-filter/regions-filter.state';
+import { setStudyFilters } from 'app/study-filters/study-filters.state';
 
 const PAGE_TYPE_TO_NAVIGATE = {
   genotype: (datasetId: string): string[] => ['datasets', datasetId, 'genotype-browser'],
@@ -87,6 +88,7 @@ export class LoadQueryComponent implements OnInit {
         rangeStart: state.geneScores.rangeStart,
       }));
       this.store.dispatch(setRegionsFilters({regionsFilter: state.regionsFilter}));
+      this.store.dispatch(setStudyFilters({studyFilters: state.studyFilters}));
 
       this.router.navigate(navigationParams);
     }
