@@ -380,7 +380,8 @@ class PhenoTool:
         """
 
         pheno_df = self.create_df(
-            measure_id, person_ids, family_ids, normalize_by,
+            measure_id, person_ids=person_ids,
+            family_ids=family_ids, normalize_by=normalize_by,
         )
 
         if not pheno_df.empty:

@@ -15,7 +15,6 @@ from query_base.query_base import QueryDatasetView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import StudyWrapper
 from utils.expand_gene_set import expand_gene_set
 from utils.query_params import parse_query_params
 
@@ -99,22 +98,28 @@ class PhenoToolDownload(PhenoToolView):
     def generate_columns(
             self,
             adapter: PhenoToolAdapter,
+            effect_groups: list[Any],
             data: dict,
     ) -> Generator[str, None, None]:
         """Pheno tool download generator function."""
         # Return a response instantly and make download more responsive
         yield ""
 
-        data["effectTypes"] = EffectTypesMixin.build_effect_types_list(
-            data["effectTypes"],
+        measure_id = data["measureId"]
+        family_ids = data.get("phenoFilterFamilyIds")
+        person_ids = adapter.helper.genotype_data_persons(
+            data.get("family_ids", []),
         )
-        effect_groups = list(data["effectTypes"])
 
-        data = cast(StudyWrapper, adapter.helper.genotype_data) \
-            .transform_request(data)
+        normalize_by = data.get("normalizeBy")
+
         tool = adapter.pheno_tool
 
-        result_df = tool.pheno_df.copy()
+        result_df = tool.create_df(
+            measure_id, person_ids=cast(list[str], person_ids),
+            family_ids=family_ids, normalize_by=normalize_by,
+        )
+
         variants = adapter.helper.genotype_data_variants(data, effect_groups)
 
         for effect in effect_groups:
@@ -123,15 +128,18 @@ class PhenoToolDownload(PhenoToolView):
             )
             result_df = result_df.rename(columns={"variant_count": effect})
 
-        if tool.normalize_by:
+        if normalize_by:
+            normalize_by = tool.init_normalize_measures(
+                measure_id, normalize_by,
+            )
             column_name = self._build_report_description(
-                tool.measure_id, tool.normalize_by,
+                measure_id, normalize_by,
             )
             result_df = result_df.rename(columns={"normalized": column_name})
             result_df[column_name] = result_df[column_name].round(decimals=5)
 
-        result_df[tool.measure_id] = \
-            result_df[tool.measure_id].round(decimals=5)
+        result_df[measure_id] = \
+            result_df[measure_id].round(decimals=5)
 
         columns = [
             col
@@ -159,6 +167,22 @@ class PhenoToolDownload(PhenoToolView):
         if study_wrapper is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        data["effectTypes"] = EffectTypesMixin.build_effect_types_list(
+            data["effectTypes"],
+        )
+        effect_groups = list(data["effectTypes"])
+
+        data["phenoFilterFamilyIds"] = None
+        if data.get("familyFilters") is not None:
+            data["phenoFilterFamilyIds"] = list(
+                study_wrapper.query_transformer  # noqa: SLF001
+                ._transform_filters_to_ids(
+                    data["familyFilters"],
+                ),
+            )
+
+        data = study_wrapper.transform_request(data)
+
         adapter = self.gpf_instance.get_pheno_tool_adapter(
             study_wrapper.genotype_data,
         )
@@ -168,8 +192,9 @@ class PhenoToolDownload(PhenoToolView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         response = StreamingHttpResponse(
-
-                self.generate_columns(cast(PhenoToolAdapter, adapter), data),
+            self.generate_columns(
+                cast(PhenoToolAdapter, adapter), effect_groups, data,
+            ),
             content_type="text/csv",
         )
         response[

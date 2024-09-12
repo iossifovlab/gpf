@@ -298,37 +298,24 @@ def test_pheno_tool_download_valid_request(admin_client: Client) -> None:
     query["normalizeBy"] = [
         {"measure_name": "age", "instrument_name": "i1"}]  # type: ignore
 
+    query = {"queryData": json.dumps(query)}
     response = admin_client.post(
-        TOOL_URL,
+        TOOL_DOWNLOAD_URL,
         json.dumps(query),
         format="json",
         content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    assert response.json()["description"] == "i1.m1 ~ i1.age"
-    assert response.json()["results"]
-    assert len(response.json()["results"]) == 1
-
-    result = response.json()["results"][0]
-    assert result["effect"] == "missense"
-    assert result["maleResults"]["positive"]["count"] == 0
-    assert result["maleResults"]["positive"]["deviation"] == 0
-    assert result["maleResults"]["positive"]["mean"] == \
-        pytest.approx(-6.0038, 1e-3)
-
-    assert result["maleResults"]["negative"]["count"] == 2
-    assert result["maleResults"]["negative"]["deviation"] == \
-        pytest.approx(31.3010, 1e-3)
-    assert result["maleResults"]["negative"]["mean"] == \
-        pytest.approx(-6.0038, 1e-3)
-
-    assert result["femaleResults"]["positive"]["count"] == 0
-    assert result["femaleResults"]["positive"]["deviation"] == 0
-    assert result["femaleResults"]["positive"]["mean"] == \
-        pytest.approx(6.0038, 1e-3)
-
-    assert result["femaleResults"]["negative"]["count"] == 2
-    assert result["femaleResults"]["negative"]["deviation"] == \
-        pytest.approx(12.5952, 1e-3)
-    assert result["femaleResults"]["negative"]["mean"] == \
-        pytest.approx(6.0038, 1e-3)
+    content = list(response.streaming_content)  # type: ignore
+    print(content)
+    assert content == [
+        b"",
+        (
+            b"person_id,family_id,status,sex,"
+            b"i1.m1,i1.age,i1.m1 ~ i1.age,missense\n"
+        ),
+        b"f1.p1,f1,affected,M,34.76286,125.90605,-28.58866,0\n",
+        b"f2.p1,f2,affected,F,74.8207,70.6014,15.09174,0\n",
+        b"f3.p1,f3,affected,M,83.80771,185.06656,16.58106,0\n",
+        b"f4.p1,f4,affected,F,63.37458,173.3426,-3.08413,0\n",
+    ]
