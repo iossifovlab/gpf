@@ -168,7 +168,8 @@ class PhenoToolDownload(PhenoToolView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         response = StreamingHttpResponse(
-            self.generate_columns(adapter, data),
+
+                self.generate_columns(cast(PhenoToolAdapter, adapter), data),
             content_type="text/csv",
         )
         response[
