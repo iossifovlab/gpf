@@ -1,5 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
-import { logout } from 'app/users/actions';
+import { reset } from 'app/users/state-actions';
 import { cloneDeep } from 'lodash';
 
 export const initialState: Errors[] = [];
@@ -43,5 +43,5 @@ export const errorsReducer = createReducer(
     return updatedState;
   }),
   on(resetErrors, (state, { componentId }) => state.filter(s => s.componentId !== componentId)),
-  on(logout, resetAllErrors, (state) => cloneDeep(initialState)),
+  on(reset, resetAllErrors, (state) => cloneDeep(initialState)),
 );

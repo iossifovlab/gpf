@@ -4,7 +4,7 @@ import { QueryService } from '../query/query.service';
 import { take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
-import { logout } from 'app/users/actions';
+import { reset } from 'app/users/state-actions';
 import { setGenders } from 'app/gender/gender.state';
 import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { setVariantTypes } from 'app/variant-types/variant-types.state';
@@ -65,7 +65,7 @@ export class LoadQueryComponent implements OnInit {
   private restoreQuery(state: State, page: string): void {
     if (page in PAGE_TYPE_TO_NAVIGATE) {
       const navigationParams: string[] = PAGE_TYPE_TO_NAVIGATE[page](state['datasetId']);
-      this.store.dispatch(logout());
+      this.store.dispatch(reset());
 
       this.store.dispatch(setEffectTypes({effectTypes: state.effectTypes}));
       this.store.dispatch(setGenders({genders: state.genders}));

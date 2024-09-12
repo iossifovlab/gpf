@@ -1,5 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
-import { logout } from 'app/users/actions';
+import { reset } from 'app/users/state-actions';
 import { cloneDeep } from 'lodash';
 
 export const initialState: string[] = ['trio', 'quad', 'multigenerational', 'simplex', 'multiplex', 'other'];
@@ -18,5 +18,5 @@ export const resetFamilyTypeFilter = createAction(
 export const familyTypeFilterReducer = createReducer(
   initialState,
   on(setFamilyTypeFilter, (state: string[], {familyTypeFilter}) => cloneDeep(familyTypeFilter)),
-  on(logout, resetFamilyTypeFilter, state => cloneDeep(initialState)),
+  on(reset, resetFamilyTypeFilter, state => cloneDeep(initialState)),
 );

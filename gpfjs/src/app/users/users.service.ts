@@ -9,7 +9,7 @@ import { Store } from '@ngrx/store';
 import { catchError, map, tap, take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
 import { FederationCredential, FederationJson } from 'app/federation-credentials/federation-credentials';
-import { logout } from './actions';
+import { reset } from './state-actions';
 
 @Injectable()
 export class UsersService {
@@ -47,7 +47,7 @@ export class UsersService {
       take(1),
       switchMap(() => this.http.post(this.config.baseUrl + this.logoutUrl, {}, options)),
       tap(() => {
-        this.store.dispatch(logout());
+        this.store.dispatch(reset());
         window.location.href = this.locationStrategy.getBaseHref();
       })
     );

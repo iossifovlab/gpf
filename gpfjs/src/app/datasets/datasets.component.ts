@@ -9,7 +9,7 @@ import { Store } from '@ngrx/store';
 import { selectDatasetId, setDatasetId } from './datasets.state';
 import { ComponentValidator } from 'app/common/component-validator';
 import { selectExpandedDatasets, setExpandedDatasets } from 'app/dataset-node/dataset-node.state';
-import { logout } from 'app/users/actions';
+import { reset } from 'app/users/state-actions';
 
 @Component({
   selector: 'gpf-datasets',
@@ -198,7 +198,7 @@ export class DatasetsComponent extends ComponentValidator implements OnInit, OnD
     /* In order to have state separation between the dataset tools,
     we clear the state if the previous url is from a different dataset tool */
     if (DatasetsComponent.previousUrl !== url && DatasetsComponent.previousUrl.startsWith('/datasets')) {
-      this.store.dispatch(logout());
+      this.store.dispatch(reset());
     }
 
     this.selectedTool = url.split('/').pop();

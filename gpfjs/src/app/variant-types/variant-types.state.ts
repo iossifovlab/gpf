@@ -1,5 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
-import { logout } from 'app/users/actions';
+import { reset } from 'app/users/state-actions';
 import { cloneDeep } from 'lodash';
 
 export const initialState: string[] = null;
@@ -18,5 +18,5 @@ export const resetVariantTypes = createAction(
 export const variantTypesReducer = createReducer(
   initialState,
   on(setVariantTypes, (state, {variantTypes}) => [...variantTypes]),
-  on(logout, resetVariantTypes, state => cloneDeep(initialState)),
+  on(reset, resetVariantTypes, state => cloneDeep(initialState)),
 );

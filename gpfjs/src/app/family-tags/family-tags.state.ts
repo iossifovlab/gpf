@@ -1,7 +1,7 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { FamilyTags } from './family-tags';
 import { cloneDeep } from 'lodash';
-import { logout } from 'app/users/actions';
+import { reset } from 'app/users/state-actions';
 
 export const initialState: FamilyTags = {
   selectedFamilyTags: [],
@@ -30,5 +30,5 @@ export const familyTagsReducer = createReducer(
       tagIntersection: tagIntersection,
     })
   ),
-  on(logout, resetFamilyTags, state => cloneDeep(initialState)),
+  on(reset, resetFamilyTags, state => cloneDeep(initialState)),
 );

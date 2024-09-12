@@ -27,7 +27,7 @@ import { GenomicScoreInterface } from 'app/genotype-browser/genotype-browser';
 import { PersonFilterState } from 'app/person-filters/person-filters';
 import { FamilyTags } from 'app/family-tags/family-tags';
 import { cloneDeep } from 'lodash';
-import { logout } from './actions';
+import { reset } from './state-actions';
 
 export interface State {
   errors: string[];
@@ -85,5 +85,5 @@ export const initialState: State = {
 
 export const reducer = createReducer(
   initialState,
-  on(logout, () => cloneDeep(initialState))
+  on(reset, () => cloneDeep(initialState))
 );

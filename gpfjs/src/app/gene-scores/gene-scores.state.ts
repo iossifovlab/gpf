@@ -1,7 +1,7 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
 import { GeneScores } from './gene-scores';
-import { logout } from 'app/users/actions';
+import { reset } from 'app/users/state-actions';
 
 export interface GeneScoresState {
   geneScores: GeneScores;
@@ -44,5 +44,5 @@ export const geneScoresReducer = createReducer(
     rangeStart: rangeStart,
     rangeEnd: rangeEnd
   })),
-  on(logout, resetGeneScoresValues, state => cloneDeep(initialState))
+  on(reset, resetGeneScoresValues, state => cloneDeep(initialState))
 );

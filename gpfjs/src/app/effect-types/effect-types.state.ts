@@ -1,5 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
-import { logout } from 'app/users/actions';
+import { reset } from 'app/users/state-actions';
 export const initialState: string[] = ['frame-shift', 'nonsense', 'splice-site', 'no-frame-shift-newStop'];
 
 export const selectEffectTypes = createFeatureSelector<string[]>('effectTypes');
@@ -28,5 +28,5 @@ export const effectTypesReducer = createReducer(
   on(setEffectTypes, (state: string[], {effectTypes}) => [...effectTypes]),
   on(addEffectType, (state: string[], {effectType}) => [...state, effectType]),
   on(removeEffectType, (state: string[], {effectType}) => state.filter(eff => eff !== effectType)),
-  on(logout, resetEffectTypes, state => [...initialState]),
+  on(reset, resetEffectTypes, state => [...initialState]),
 );

@@ -1,5 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
-import { logout } from 'app/users/actions';
+import { reset } from 'app/users/state-actions';
 
 export const initialState = false;
 
@@ -17,5 +17,5 @@ export const resetUniqueFamilyVariantsFilter = createAction(
 export const uniqueFamilyVariantsFilterReducer = createReducer(
   initialState,
   on(setUniqueFamilyVariantsFilter, (state, {uniqueFamilyVariantsFilter}) => uniqueFamilyVariantsFilter),
-  on(logout, resetUniqueFamilyVariantsFilter, state => initialState),
+  on(reset, resetUniqueFamilyVariantsFilter, state => initialState),
 );

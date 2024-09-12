@@ -1,7 +1,7 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
 import { GeneSet, GeneSetsCollection, GeneSetType } from './gene-sets';
-import { logout } from 'app/users/actions';
+import { reset } from 'app/users/state-actions';
 
 export interface GeneSetsState {
   geneSetsTypes: GeneSetType[];
@@ -38,5 +38,5 @@ export const geneSetsReducer = createReducer(
     geneSet: cloneDeep(geneSet)
   })),
   on(getGeneSetsValues, (state) => cloneDeep(state)),
-  on(logout, resetGeneSetsValues, state => cloneDeep(initialState)),
+  on(reset, resetGeneSetsValues, state => cloneDeep(initialState)),
 );

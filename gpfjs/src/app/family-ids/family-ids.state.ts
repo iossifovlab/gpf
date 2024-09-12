@@ -1,5 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
-import { logout } from 'app/users/actions';
+import { reset } from 'app/users/state-actions';
 import { cloneDeep } from 'lodash';
 
 export const initialState: string[] = [];
@@ -18,5 +18,5 @@ export const resetFamilyIds = createAction(
 export const familyIdsReducer = createReducer(
   initialState,
   on(setFamilyIds, (state, {familyIds}) => cloneDeep(familyIds)),
-  on(logout, resetFamilyIds, state => cloneDeep(initialState)),
+  on(reset, resetFamilyIds, state => cloneDeep(initialState)),
 );
