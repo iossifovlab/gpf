@@ -1,6 +1,9 @@
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 
 import pytest
+from django.test import Client
+from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 
 pytestmark = pytest.mark.usefixtures(
@@ -80,11 +83,15 @@ SOURCE_RAW = {
     ],
 )
 def test_query_with_pheno_filters(
-    db, admin_client, pheno_filters, variants_count,
-    pheno_values, preview_sources,
-):
+    admin_client: Client,
+    pheno_filters: list[dict],
+    variants_count: int,
+    pheno_values: list[list[str]],
+    preview_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
     data = {
-        "datasetId": "quads_f1",
+        "datasetId": "t4c8_study_1",
         "familyFilters": pheno_filters,
         "sources": preview_sources,
     }
@@ -93,9 +100,7 @@ def test_query_with_pheno_filters(
         QUERY_URL, json.dumps(data), content_type="application/json",
     )
     assert response.status_code == status.HTTP_200_OK
-    variants = response.streaming_content
-    variants = json.loads("".join(map(lambda x: x.decode("utf-8"), variants)))
-    assert variants_count == len(variants)
-    variants = list(variants)
-    print(variants)
+    variants = list(response.streaming_content)  # type: ignore
+    variants = json.loads("".join(x.decode("utf-8") for x in variants))
+    assert len(variants) == variants_count
     assert variants == pheno_values

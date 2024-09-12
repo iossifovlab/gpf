@@ -1,18 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 import operator
-from typing import Any
 
 from django.test import Client
+from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 
 
 def test_effect_details_download(
     admin_client: Client,
-    datasets: Any,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     data = {
-        "datasetId": "iossifov_2014",
+        "datasetId": "t4c8_dataset",
         "effectTypes": ["missense"],
         "download": True,
     }
@@ -32,35 +32,8 @@ def test_effect_details_download(
     assert len(res) == 3
 
     expected = [
-        "NM_001348758:C2orf42:missense:439/574(Asn->Ser)|"
-        "NM_001348763:C2orf42:missense:439/574(Asn->Ser)|"
-        "NM_001348764:C2orf42:missense:439/574(Asn->Ser)|"
-        "NR_145971:C2orf42:non-coding-intron:None/None[None]|"
-        "NR_145972:C2orf42:non-coding:None|"
-        "NM_001348759:C2orf42:missense:439/574(Asn->Ser)|"
-        "NM_017880:C2orf42:missense:439/574(Asn->Ser)|"
-        "NR_145967:C2orf42:non-coding-intron:None/None[None]|"
-        "NR_145968:C2orf42:non-coding:None|"
-        "NR_145969:C2orf42:non-coding-intron:None/None[None]|"
-        "NM_001348760:C2orf42:missense:439/574(Asn->Ser)|"
-        "NM_001348761:C2orf42:missense:439/574(Asn->Ser)|"
-        "NM_001348762:C2orf42:missense:439/574(Asn->Ser)|"
-        "NR_145970:C2orf42:non-coding:None",
-
-        "NM_001348758:C2orf42:missense:557/574(Pro->Ser)|"
-        "NM_001348763:C2orf42:missense:557/574(Pro->Ser)|"
-        "NM_001348764:C2orf42:missense:557/574(Pro->Ser)|"
-        "NR_145971:C2orf42:non-coding:None|"
-        "NR_145972:C2orf42:non-coding:None|"
-        "NM_001348759:C2orf42:missense:557/574(Pro->Ser)|"
-        "NM_017880:C2orf42:missense:557/574(Pro->Ser)|"
-        "NR_145967:C2orf42:non-coding:None|"
-        "NR_145968:C2orf42:non-coding:None|"
-        "NR_145969:C2orf42:non-coding:None|"
-        "NM_001348760:C2orf42:missense:557/574(Pro->Ser)|"
-        "NM_001348761:C2orf42:missense:557/574(Pro->Ser)|"
-        "NM_001348762:C2orf42:missense:557/574(Pro->Ser)|"
-        "NR_145970:C2orf42:non-coding:None",
+        "tx1:c8:missense:13/14(Asp->Glu)",
+        "tx1:c8:synonymous:13/14; tx1:c8:missense:13/14(Asp->Glu)",
     ]
     results = []
     for row in res[1:]:
