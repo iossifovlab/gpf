@@ -8,7 +8,7 @@ import { debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs/operat
 import { cloneDeep } from 'lodash';
 import { Store } from '@ngrx/store';
 import { StatefulComponent } from 'app/common/stateful-component';
-import { selectPersonFilters, setFamilyFilters, setPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app/person-filters/person-filters.state';
+import { selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app/person-filters/person-filters.state';
 
 @Component({
   selector: 'gpf-continuous-filter',
@@ -46,10 +46,6 @@ export class ContinuousFilterComponent extends StatefulComponent implements OnIn
     this.partitions.subscribe(partitions => {
       this.rangesCounts = [partitions.leftCount, partitions.midCount, partitions.rightCount];
     });
-
-    if (this.continuousFilterState !== undefined) {
-      this.continuousFilterState.selection = new ContinuousSelection(null, null, null, null);
-    }
 
     this.store.select(selectPersonFilters).pipe(take(1)).subscribe(state => {
       let stateFilter: ContinuousFilterState;

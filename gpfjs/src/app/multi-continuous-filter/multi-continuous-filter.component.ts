@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, EventEmitter, Output, ViewChild } from '@angular/core';
 import { ContinuousMeasure } from '../measures/measures';
-import { ContinuousFilterState, PersonFilterState } from '../person-filters/person-filters';
+import { ContinuousFilterState, ContinuousSelection, PersonFilterState } from '../person-filters/person-filters';
 import { PersonFilter } from '../datasets/datasets';
 import { Store } from '@ngrx/store';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
@@ -30,7 +30,7 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
   }
 
   public ngOnInit(): void {
-    this.store.select(selectPersonFilters).pipe(take(1)).subscribe(state => {
+    this.store.select(selectPersonFilters).pipe(take(1)).subscribe((state) => {
       let stateFilter: ContinuousFilterState;
 
       if (this.isFamilyFilters) {
@@ -41,9 +41,32 @@ export class MultiContinuousFilterComponent extends StatefulComponent implements
 
       if (stateFilter) {
         this.continuousFilterState = cloneDeep(stateFilter);
+
+        this.loadMeasureFromState(stateFilter);
       } else {
         this.continuousFilterState = cloneDeep(this.continuousFilter);
       }
+    });
+  }
+
+  private async loadMeasureFromState(stateFilter: ContinuousFilterState): Promise<void> {
+    await this.waitForSelectorComponent();
+    this.measureSelectorComponent.selectMeasure(
+      new ContinuousMeasure(
+        stateFilter.source,
+        (stateFilter.selection as ContinuousSelection).min,
+        (stateFilter.selection as ContinuousSelection).max
+      ));
+  }
+
+  private async waitForSelectorComponent(): Promise<void> {
+    return new Promise<void>(resolve => {
+      const timer = setInterval(() => {
+        if (this.measureSelectorComponent !== undefined) {
+          resolve();
+          clearInterval(timer);
+        }
+      }, 50);
     });
   }
 

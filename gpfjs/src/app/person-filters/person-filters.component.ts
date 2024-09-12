@@ -46,10 +46,7 @@ export class PersonFiltersComponent extends StatefulComponent implements OnInit 
 
     this.store.select(selectPersonFilters).pipe(take(1)).subscribe((state: PersonAndFamilyFilters) => {
       const clonedState = cloneDeep(state);
-      if (!clonedState.familyFilters || !clonedState.personFilters) {
-        this.setDefaultFilters();
-        return;
-      }
+      this.setDefaultFilters();
       this.setFiltersFromState(clonedState);
     });
   }
@@ -87,11 +84,24 @@ export class PersonFiltersComponent extends StatefulComponent implements OnInit 
 
   private setFiltersFromState(state: PersonAndFamilyFilters): void {
     const filters: PersonFilterState[] = this.isFamilyFilters ? state.familyFilters : state.personFilters;
+    if (!filters) {
+      return;
+    }
     for (const filter of filters) {
       if (filter.sourceType === 'continuous') {
-        this.continuousFilters.push(filter);
+        const existingIndex = this.continuousFilters.findIndex(f => f.id ===filter.id);
+        if (existingIndex !== -1) {
+          this.continuousFilters[existingIndex] = filter;
+        } else {
+          this.continuousFilters.push(filter);
+        }
       } else if (filter.sourceType === 'categorical') {
-        this.categoricalFilters.push(filter);
+        const existingIndex = this.categoricalFilters.findIndex(f => f.id ===filter.id);
+        if (existingIndex !== -1) {
+          this.categoricalFilters[existingIndex] = filter;
+        } else {
+          this.categoricalFilters.push(filter);
+        }
       } else {
         console.error(`Unexpected filter type:${filter.sourceType} in ${filter.id}`);
       }
