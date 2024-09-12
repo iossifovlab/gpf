@@ -5,7 +5,7 @@ import { DatasetNode } from './dataset-node';
 import { Store } from '@ngrx/store';
 import { selectExpandedDatasets, setExpandedDatasets } from './dataset-node.state';
 import { selectDatasetId } from 'app/datasets/datasets.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 import { cloneDeep } from 'lodash';
 
 @Component({
@@ -13,7 +13,7 @@ import { cloneDeep } from 'lodash';
   templateUrl: './dataset-node.component.html',
   styleUrls: ['./dataset-node.component.css']
 })
-export class DatasetNodeComponent extends StatefulComponent implements OnInit, AfterContentChecked {
+export class DatasetNodeComponent extends ComponentValidator implements OnInit, AfterContentChecked {
   @Input() public datasetNode: DatasetNode;
   @Output() public setExpandabilityEvent = new EventEmitter<boolean>();
   public selectedDatasetId: string;

@@ -7,7 +7,7 @@ import { cloneDeep, isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { Store } from '@ngrx/store';
 import { selectDatasetId, setDatasetId } from './datasets.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 import { selectExpandedDatasets, setExpandedDatasets } from 'app/dataset-node/dataset-node.state';
 import { logout } from 'app/users/actions';
 
@@ -16,7 +16,7 @@ import { logout } from 'app/users/actions';
   templateUrl: './datasets.component.html',
   styleUrls: ['./datasets.component.css'],
 })
-export class DatasetsComponent extends StatefulComponent implements OnInit, OnDestroy {
+export class DatasetsComponent extends ComponentValidator implements OnInit, OnDestroy {
   private static previousUrl = '';
   public registerAlertVisible = false;
   public datasetTrees: DatasetNode[];

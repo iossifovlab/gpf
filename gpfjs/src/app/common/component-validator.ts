@@ -5,7 +5,7 @@ import { Selector, Store } from '@ngrx/store';
 import { resetErrors, selectErrors, setErrors } from './errors.state';
 
 @Directive()
-export abstract class StatefulComponent implements OnInit, OnDestroy {
+export abstract class ComponentValidator implements OnInit, OnDestroy {
   protected componentStateSubscription: Subscription;
   protected errorsState$: Observable<object>;
   protected componentState$: Observable<unknown>;

@@ -5,7 +5,7 @@ import { PersonFilter } from '../datasets/datasets';
 import { Store } from '@ngrx/store';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
 import { removeFamilyFilter, removePersonFilter, selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app/person-filters/person-filters.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 import { take } from 'rxjs';
 import { cloneDeep } from 'lodash';
 
@@ -14,7 +14,7 @@ import { cloneDeep } from 'lodash';
   templateUrl: './multi-continuous-filter.component.html',
   styleUrls: ['./multi-continuous-filter.component.css'],
 })
-export class MultiContinuousFilterComponent extends StatefulComponent implements OnInit {
+export class MultiContinuousFilterComponent extends ComponentValidator implements OnInit {
   @Input() public datasetId: string;
   @Input() public continuousFilter: ContinuousFilterState;
   @Input() public isFamilyFilters: boolean;

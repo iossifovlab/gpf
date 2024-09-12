@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { IsNotEmpty, ValidateNested } from 'class-validator';
 import { Store } from '@ngrx/store';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 import { selectPersonIds, setPersonIds } from './person-ids.state';
 import { take } from 'rxjs';
 
@@ -15,7 +15,7 @@ export class PersonIds {
   templateUrl: './person-ids.component.html',
   styleUrls: ['./person-ids.component.css'],
 })
-export class PersonIdsComponent extends StatefulComponent implements OnInit {
+export class PersonIdsComponent extends ComponentValidator implements OnInit {
   @ValidateNested()
   public personIds = new PersonIds();
   @ViewChild('textArea') private textArea: ElementRef;

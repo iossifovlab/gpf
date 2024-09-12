@@ -7,13 +7,13 @@ import { Store } from '@ngrx/store';
 import { switchMap, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { selectEnrichmentModels, setEnrichmentModels } from './enrichment-models.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 
 @Component({
   selector: 'gpf-enrichment-models',
   templateUrl: './enrichment-models.component.html',
 })
-export class EnrichmentModelsComponent extends StatefulComponent implements OnInit {
+export class EnrichmentModelsComponent extends ComponentValidator implements OnInit {
   @Input() private selectedDatasetId: string;
 
   @Allow() public background: IdDescriptionName;

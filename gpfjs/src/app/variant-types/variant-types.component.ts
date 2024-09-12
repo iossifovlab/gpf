@@ -3,7 +3,7 @@ import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngrx/store';
 import { selectVariantTypes, setVariantTypes } from './variant-types.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 import { take } from 'rxjs';
 import { cloneDeep } from 'lodash';
 
@@ -11,7 +11,7 @@ import { cloneDeep } from 'lodash';
   selector: 'gpf-variant-types',
   templateUrl: './variant-types.component.html'
 })
-export class VariantTypesComponent extends StatefulComponent implements OnInit {
+export class VariantTypesComponent extends ComponentValidator implements OnInit {
   @Input() public variantTypes: Set<string> = new Set<string>([]);
 
   @Input()

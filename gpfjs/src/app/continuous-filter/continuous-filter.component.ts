@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnChanges, Input } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service';
 import { HistogramData } from '../measures/measures';
 import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
@@ -7,14 +7,14 @@ import { Partitions } from '../gene-scores/gene-scores';
 import { debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs/operators';
 import { cloneDeep } from 'lodash';
 import { Store } from '@ngrx/store';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 import { selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app/person-filters/person-filters.state';
 
 @Component({
   selector: 'gpf-continuous-filter',
   templateUrl: './continuous-filter.component.html'
 })
-export class ContinuousFilterComponent extends StatefulComponent implements OnInit, OnChanges {
+export class ContinuousFilterComponent extends ComponentValidator implements OnInit, OnChanges {
   private rangeChanges = new Subject<[string, string, number, number]>();
   private partitions: Observable<Partitions>;
 

@@ -6,13 +6,13 @@ import * as lodash from 'lodash';
 import { addEffectType, removeEffectType, selectEffectTypes, setEffectTypes } from './effect-types.state';
 import { take } from 'rxjs';
 import { Store } from '@ngrx/store';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 
 @Component({
   selector: 'gpf-effect-types',
   templateUrl: './effect-types.component.html'
 })
-export class EffectTypesComponent extends StatefulComponent implements OnInit {
+export class EffectTypesComponent extends ComponentValidator implements OnInit {
   @Input() public variantTypes: Set<string> = new Set();
 
   public codingColumn: Set<string> = CODING;

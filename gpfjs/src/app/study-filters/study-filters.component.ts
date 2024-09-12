@@ -9,7 +9,7 @@ import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Subscription } from 'rxjs/internal/Subscription';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 import { take } from 'rxjs';
 
 @Component({
@@ -17,7 +17,7 @@ import { take } from 'rxjs';
   templateUrl: './study-filters.component.html',
   styleUrls: ['./study-filters.component.css']
 })
-export class StudyFiltersComponent extends StatefulComponent implements OnInit, OnDestroy {
+export class StudyFiltersComponent extends ComponentValidator implements OnInit, OnDestroy {
   @Input() public dataset: Dataset;
 
   @Validate(SetNotEmpty, {message: 'Select at least one.'})

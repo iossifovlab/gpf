@@ -3,14 +3,14 @@ import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngrx/store';
 import { selectInheritanceTypes, setInheritanceTypes } from './inheritancetypes.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 import { take } from 'rxjs';
 
 @Component({
   selector: 'gpf-inheritancetypes',
   templateUrl: './inheritancetypes.component.html'
 })
-export class InheritancetypesComponent extends StatefulComponent implements OnChanges {
+export class InheritancetypesComponent extends ComponentValidator implements OnChanges {
   @Input()
   public inheritanceTypes: Set<string>;
   public inheritanceTypeDisplayNames: Map<string, string>;

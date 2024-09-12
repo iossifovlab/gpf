@@ -3,7 +3,7 @@ import { selectFamilyTypeFilter, setFamilyTypeFilter } from './family-type-filte
 import { SetNotEmpty } from 'app/utils/set.validators';
 import { Validate } from 'class-validator';
 import { Store } from '@ngrx/store';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 import { take } from 'rxjs';
 
 @Component({
@@ -11,7 +11,7 @@ import { take } from 'rxjs';
   templateUrl: './family-type-filter.component.html',
   styleUrls: ['./family-type-filter.component.css'],
 })
-export class FamilyTypeFilterComponent extends StatefulComponent implements OnInit {
+export class FamilyTypeFilterComponent extends ComponentValidator implements OnInit {
   public allFamilyTypes: Set<string> = new Set(['trio', 'quad', 'multigenerational', 'simplex', 'multiplex', 'other']);
   @Validate(SetNotEmpty, {message: 'Select at least one.'}) public selectedFamilyTypes: Set<string> = new Set();
 

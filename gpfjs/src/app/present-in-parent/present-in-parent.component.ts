@@ -4,7 +4,7 @@ import { Validate, ValidateIf, Min, Max } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 import { SetNotEmpty } from '../utils/set.validators';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 import { selectPresentInParent, setPresentInParent } from './present-in-parent.state';
 import { take } from 'rxjs';
 
@@ -14,7 +14,7 @@ import { take } from 'rxjs';
   styleUrls: ['./present-in-parent.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PresentInParentComponent extends StatefulComponent implements OnInit {
+export class PresentInParentComponent extends ComponentValidator implements OnInit {
   @ValidateIf(o => o.selectedRarityType !== 'ultraRare' && o.rarityIntervalStart !== null)
   @Min(0) @Max(100)
   @IsLessThanOrEqual('rarityIntervalEnd')

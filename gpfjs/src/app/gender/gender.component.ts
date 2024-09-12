@@ -1,7 +1,7 @@
 import { Gender } from './gender';
 import { Component, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 import { ValidateNested } from 'class-validator';
 import { addGender, removeGender, selectGenders } from './gender.state';
 import { take } from 'rxjs';
@@ -11,7 +11,7 @@ import { take } from 'rxjs';
   templateUrl: './gender.component.html',
   styleUrls: ['./gender.component.css'],
 })
-export class GenderComponent extends StatefulComponent implements OnInit {
+export class GenderComponent extends ComponentValidator implements OnInit {
   @ValidateNested()
   public gender = new Gender();
   public supportedGenders = ['male', 'female', 'unspecified'];

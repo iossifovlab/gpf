@@ -7,14 +7,14 @@ import { selectGenomicScores, setGenomicScores } from './genomic-scores-block.st
 import { combineLatest, of } from 'rxjs';
 import { switchMap, take } from 'rxjs/operators';
 import { ValidateNested } from 'class-validator';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 
 @Component({
   selector: 'gpf-genomic-scores-block',
   templateUrl: './genomic-scores-block.component.html',
   styleUrls: ['./genomic-scores-block.component.css'],
 })
-export class GenomicScoresBlockComponent extends StatefulComponent implements OnInit {
+export class GenomicScoresBlockComponent extends ComponentValidator implements OnInit {
   @ValidateNested()
   public genomicScoresState = new GenomicScoresState();
   public genomicScoresArray: GenomicScores[];

@@ -13,7 +13,7 @@ import { environment } from 'environments/environment';
 import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 import {
   resetGeneProfilesValues,
   selectGeneProfiles,
@@ -30,7 +30,7 @@ import {
   templateUrl: './gene-profiles-table.component.html',
   styleUrls: ['./gene-profiles-table.component.css']
 })
-export class GeneProfilesTableComponent extends StatefulComponent implements OnInit, OnChanges, OnDestroy {
+export class GeneProfilesTableComponent extends ComponentValidator implements OnInit, OnChanges, OnDestroy {
   private subscription: Subscription = new Subscription();
 
   @Input() public config: GeneProfilesTableConfig;

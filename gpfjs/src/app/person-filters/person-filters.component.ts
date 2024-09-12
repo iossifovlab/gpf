@@ -8,7 +8,7 @@ import {
 import { Store } from '@ngrx/store';
 import { PersonAndFamilyFilters, selectPersonFilters } from './person-filters.state';
 import { Equals } from 'class-validator';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
 import { cloneDeep } from 'lodash';
 import { take } from 'rxjs';
 
@@ -17,7 +17,7 @@ import { take } from 'rxjs';
   templateUrl: './person-filters.component.html',
   styleUrls: ['./person-filters.component.css'],
 })
-export class PersonFiltersComponent extends StatefulComponent implements OnInit {
+export class PersonFiltersComponent extends ComponentValidator implements OnInit {
   @Input() public dataset: Dataset;
   @Input() public isFamilyFilters: boolean;
 
