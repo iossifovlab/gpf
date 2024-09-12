@@ -17,6 +17,8 @@ import { setGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { setGeneScore } from 'app/gene-scores/gene-scores.state';
 import { setRegionsFilters } from 'app/regions-filter/regions-filter.state';
 import { setStudyFilters } from 'app/study-filters/study-filters.state';
+import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { setUniqueFamilyVariantsFilter } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
 
 const PAGE_TYPE_TO_NAVIGATE = {
   genotype: (datasetId: string): string[] => ['datasets', datasetId, 'genotype-browser'],
@@ -89,6 +91,10 @@ export class LoadQueryComponent implements OnInit {
       }));
       this.store.dispatch(setRegionsFilters({regionsFilter: state.regionsFilter}));
       this.store.dispatch(setStudyFilters({studyFilters: state.studyFilters}));
+      this.store.dispatch(setGenomicScores({genomicScores: state.genomicScores}));
+      this.store.dispatch(
+        setUniqueFamilyVariantsFilter({uniqueFamilyVariantsFilter: state.uniqueFamilyVariantsFilter})
+      );
 
       this.router.navigate(navigationParams);
     }
