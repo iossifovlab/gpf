@@ -16,7 +16,7 @@ setuptools.setup(
             "tests.*", "*.tests.*", "*.tests"],
     ),
     package_data={
-        "impala_storage": ["py.typed"],
+        "federation": ["py.typed"],
     },
     scripts=[],
     entry_points="""
