@@ -84,7 +84,7 @@ class GenotypeBrowserQueryView(QueryDatasetView):
             presentInParent (json): Roles object to filter with.
             inheritanceTypeFilter (list): Inheritance filtering.
             geneScores (list): Gene score range filter.
-            gender (list): Gender filter.
+            genders (list): Gender filter.
             variantTypes (list): Filter by variant type.
             effectTypes (list): Filter by effect type.
             studyFilters (list): Filter by study ID (dataset only).

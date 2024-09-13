@@ -1,5 +1,4 @@
 from collections.abc import Collection
-from typing import List, Set
 
 import numpy as np
 import pandas as pd
@@ -172,7 +171,7 @@ def make_pheno_filter(
     result_filter: PhenoFilter
     if pheno_filter_type == MeasureType.categorical:
         result_filter = PhenoFilterSet(
-            measure, set(selection["selection"]), phenotype_data,
+            measure, {selection["selection"]}, phenotype_data,
         )
     else:
         result_filter = PhenoFilterRange(
