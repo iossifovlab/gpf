@@ -47,9 +47,9 @@ export class PresentInParentComponent extends ComponentValidator implements OnIn
     this.store.select(selectPresentInParent).pipe(take(1)).subscribe(state => {
       // restore state
       this.selectedValues = new Set([...state.presentInParent]);
-      this.selectedRarityType = state.rarityType;
-      this.rarityIntervalStart = state.rarityIntervalStart;
-      this.rarityIntervalEnd = state.rarityIntervalEnd;
+      this.selectedRarityType = state.rarity.rarityType;
+      this.rarityIntervalStart = state.rarity.rarityIntervalStart;
+      this.rarityIntervalEnd = state.rarity.rarityIntervalEnd;
       this.updateState();
     });
   }
@@ -92,9 +92,11 @@ export class PresentInParentComponent extends ComponentValidator implements OnIn
     this.store.dispatch(setPresentInParent({
       presentInParent: {
         presentInParent: [...this.selectedValues],
-        rarityType: this.selectedRarityType,
-        rarityIntervalStart: this.rarityIntervalStart,
-        rarityIntervalEnd: this.rarityIntervalEnd,
+        rarity: {
+          rarityType: this.selectedRarityType,
+          rarityIntervalStart: this.rarityIntervalStart,
+          rarityIntervalEnd: this.rarityIntervalEnd,
+        }
       }
     }));
   }

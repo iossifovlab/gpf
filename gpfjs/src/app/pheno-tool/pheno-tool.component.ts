@@ -83,10 +83,10 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       };
       if (presentInParentState.presentInParent.length !== 1
         || presentInParentState.presentInParent[0] !== 'neither') {
-        presentInParentRarity['rarity'] = { ultraRare: presentInParentState.rarityType === 'ultraRare' };
-        if (presentInParentState.rarityType !== 'ultraRare' && presentInParentState.rarityType !== 'all') {
-          presentInParentRarity['rarity']['minFreq'] = presentInParentState.rarityIntervalStart;
-          presentInParentRarity['rarity']['maxFreq'] = presentInParentState.rarityIntervalEnd;
+        presentInParentRarity['rarity'] = { ultraRare: presentInParentState.rarity.rarityType === 'ultraRare' };
+        if (presentInParentState.rarity.rarityType !== 'ultraRare' && presentInParentState.rarity.rarityType !== 'all') {
+          presentInParentRarity['rarity']['minFreq'] = presentInParentState.rarity.rarityIntervalStart;
+          presentInParentRarity['rarity']['maxFreq'] = presentInParentState.rarity.rarityIntervalEnd;
         }
       }
 

@@ -2,18 +2,26 @@ import { createReducer, createAction, on, props, createFeatureSelector } from '@
 import { reset } from 'app/users/state-actions';
 import { cloneDeep } from 'lodash';
 
-export interface PresentInParent {
-  presentInParent: string[];
+export interface PresentInParentRarity {
   rarityType: string;
   rarityIntervalStart: number;
   rarityIntervalEnd: number;
 }
 
-export const initialState: PresentInParent = {
-  presentInParent: ['neither'],
+export interface PresentInParent {
+  presentInParent: string[];
+  rarity: PresentInParentRarity;
+}
+
+const initialRarityState: PresentInParentRarity = {
   rarityType: '',
   rarityIntervalStart: 0,
   rarityIntervalEnd: 1,
+};
+
+export const initialState: PresentInParent = {
+  presentInParent: ['neither'],
+  rarity: initialRarityState
 };
 
 export const selectPresentInParent = createFeatureSelector<PresentInParent>('presentInParent');

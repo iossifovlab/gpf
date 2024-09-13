@@ -214,9 +214,11 @@ export class GeneProfileSingleViewComponent implements OnInit {
     store.dispatch(setPresentInChild({presentInChild: presentInChildValues}));
     store.dispatch(setPresentInParent({presentInParent: {
       presentInParent: presentInParent,
-      rarityType: rarityType,
-      rarityIntervalStart: 0,
-      rarityIntervalEnd: 1
+      rarity: {
+        rarityType: rarityType,
+        rarityIntervalStart: 0,
+        rarityIntervalEnd: 1
+      }
     }}));
     store.dispatch(setPedigreeSelector({
       pedigreeSelector: {
@@ -230,9 +232,11 @@ export class GeneProfileSingleViewComponent implements OnInit {
     store.dispatch(setPresentInParent({
       presentInParent: {
         presentInParent: presentInParent,
-        rarityType: rarityType,
-        rarityIntervalStart: 0,
-        rarityIntervalEnd: 1,
+        rarity: {
+          rarityType: rarityType,
+          rarityIntervalStart: 0,
+          rarityIntervalEnd: 1,
+        }
       }
     }));
     store.dispatch(setPedigreeSelector({

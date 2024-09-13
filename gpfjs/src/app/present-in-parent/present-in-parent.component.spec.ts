@@ -94,9 +94,11 @@ describe('PresentInParentComponent', () => {
     expect(dispatchSpy).toHaveBeenCalledWith(setPresentInParent({
       presentInParent: {
         presentInParent: ['value1', 'value2'],
-        rarityType: 'rarityType',
-        rarityIntervalStart: -12,
-        rarityIntervalEnd: -11
+        rarity: {
+          rarityType: 'rarityType',
+          rarityIntervalStart: -12,
+          rarityIntervalEnd: -11
+        }
       }
     }));
   });
