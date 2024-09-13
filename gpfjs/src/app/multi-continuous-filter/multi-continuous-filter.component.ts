@@ -1,10 +1,15 @@
-import { Component, OnInit, Input, EventEmitter, Output, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, ViewChild } from '@angular/core';
 import { ContinuousMeasure } from '../measures/measures';
-import { ContinuousFilterState, ContinuousSelection, PersonFilterState } from '../person-filters/person-filters';
-import { PersonFilter } from '../datasets/datasets';
+import { ContinuousFilterState, ContinuousSelection} from '../person-filters/person-filters';
 import { Store } from '@ngrx/store';
 import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-measure-selector.component';
-import { removeFamilyFilter, removePersonFilter, selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app/person-filters/person-filters.state';
+import {
+  removeFamilyFilter,
+  removePersonFilter,
+  selectPersonFilters,
+  updateFamilyFilter,
+  updatePersonFilter
+} from 'app/person-filters/person-filters.state';
 import { ComponentValidator } from 'app/common/component-validator';
 import { take } from 'rxjs';
 import { cloneDeep } from 'lodash';

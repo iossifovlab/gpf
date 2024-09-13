@@ -36,10 +36,6 @@ export class EffectTypesComponent extends ComponentValidator implements OnInit {
     });
   }
 
-  public selectInitialValues(): void {
-    this.selectButtonGroup('LGDS');
-  }
-
   private initButtonGroups(): void {
     this.effectTypesButtons = new Map<string, Set<string>>();
     this.effectTypesButtons.set('ALL', new Set(ALL));

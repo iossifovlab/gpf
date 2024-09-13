@@ -18,7 +18,7 @@ import {
 import { Store, StoreModule } from '@ngrx/store';
 import { personFiltersReducer } from 'app/person-filters/person-filters.state';
 
-const SelectionMock = {
+const selectionMock = {
   isEmpty: (): boolean => true,
 };
 
@@ -29,7 +29,7 @@ const ContinuousFilterStateMock = {
   from: '',
   source: '',
   sourceType: '',
-  selection: SelectionMock,
+  selection: selectionMock,
   isEmpty: (): boolean => true,
   min: 0,
   max: 0,
@@ -37,14 +37,18 @@ const ContinuousFilterStateMock = {
   domainMax: 0
 };
 
-const PersonFilterMock = {
+const personFilterMock = {
+  id: '',
   name: '',
   from: '',
   source: '',
   sourceType: '',
   role: '',
   filterType: '',
-  domain: ['']
+  domain: [''],
+  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/explicit-function-return-type
+  isEmpty: (): boolean => true,
+  selection: selectionMock
 };
 
 class MockDatasetsService {
@@ -86,7 +90,7 @@ describe('MultiContinuousFilterComponent', () => {
 
     fixture = TestBed.createComponent(MultiContinuousFilterComponent);
     component = fixture.componentInstance;
-    component.continuousFilter = PersonFilterMock;
+    component.continuousFilter = personFilterMock;
     component.datasetId = '';
     component.continuousFilterState = ContinuousFilterStateMock;
     fixture.detectChanges();

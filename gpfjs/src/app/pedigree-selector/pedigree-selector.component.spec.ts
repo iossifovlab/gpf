@@ -24,6 +24,11 @@ describe('PedigreeSelectorComponent', () => {
       id: 'collectionId',
       checkedValues: ['autism']
     }));
+    component.collections = [{
+      id: 'collectionId',
+      name: '',
+      domain: [],
+    }];
 
     fixture.detectChanges();
   }));

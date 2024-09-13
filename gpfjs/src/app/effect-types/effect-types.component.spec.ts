@@ -3,7 +3,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 import { EffectTypesComponent } from './effect-types.component';
 import { EffecttypesColumnComponent } from './effect-types-column.component';
-import { ALL, CODING, LGDS, NONSYNONYMOUS, UTRS } from './effect-types';
+import { ALL, CODING, EffectTypes, LGDS, NONSYNONYMOUS, UTRS } from './effect-types';
 import { of } from 'rxjs';
 import { addEffectType, effectTypesReducer, removeEffectType, setEffectTypes } from './effect-types.state';
 import { Store, StoreModule } from '@ngrx/store';
@@ -38,23 +38,13 @@ describe('EffectTypesComponent', () => {
   });
 
   it('should initialize', () => {
-    const onEffectTypeChangeSpy = jest.spyOn(component, 'onEffectTypeChange');
-    const selectInitialValuesSpy = jest.spyOn(component, 'selectInitialValues');
+    component.ngOnInit();
+
+    const expectedEffectTypes = new EffectTypes();
+    expectedEffectTypes.selected = new Set(['value1', 'value2', 'value3']);
+    expect(component.effectTypes).toStrictEqual(expectedEffectTypes);
 
     component.ngOnInit();
-    expect(onEffectTypeChangeSpy.mock.calls).toEqual([
-      [{ checked: true, effectType: 'value1' }],
-      [{ checked: true, effectType: 'value2' }],
-      [{ checked: true, effectType: 'value3' }]
-    ]);
-    expect(selectInitialValuesSpy).not.toHaveBeenCalled();
-
-    jest.spyOn(store, 'select').mockReturnValue(of([]));
-    jest.spyOn(store, 'dispatch').mockReturnValue(null);
-
-    component.ngOnInit();
-    expect(onEffectTypeChangeSpy).toHaveBeenCalledTimes(3);
-    expect(selectInitialValuesSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should initialize button groups', () => {
