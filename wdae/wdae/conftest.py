@@ -1364,6 +1364,23 @@ s4,121.0199895975403,39.74107684421966,77.32212831797972,51.37116746952451,36.55
         """),
     })
 
+    setup_directories(
+        pheno_path, {
+        "regressions.yaml": textwrap.dedent("""
+        regression:
+          age:
+            instrument_name: "i1"
+            measure_name: "age"
+            display_name: "Age"
+            jitter: 0.1
+          iq:
+            instrument_name: "i1"
+            measure_name: "iq"
+            display_name: "Non verbal IQ"
+            jitter: 0.1
+        """),
+    })
+
     pheno_import([
         "--pheno-id", "study_1_pheno",
         "-p", str(ped_path),
@@ -1373,4 +1390,5 @@ s4,121.0199895975403,39.74107684421966,77.32212831797972,51.37116746952451,36.55
         "--person-column", "personId",
         "-o", str(instance_path / "pheno" / "study_1_pheno"),
         "--task-status-dir", str(pheno_path / "status"),
+        "--regression", str(pheno_path / "regressions.yaml"),
     ])
