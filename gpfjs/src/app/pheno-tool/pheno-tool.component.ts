@@ -78,25 +78,32 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       effectTypesState,
       presentInParentState,
     ]) => {
-      const presentInParentRarity = {
-        presentInParent: presentInParentState.presentInParent
+      const presentInParent = {
+        presentInParent: presentInParentState.presentInParent,
+        rarity: {}
       };
-      if (presentInParentState.presentInParent.length !== 1
-        || presentInParentState.presentInParent[0] !== 'neither') {
-        presentInParentRarity['rarity'] = { ultraRare: presentInParentState.rarity.rarityType === 'ultraRare' };
-        if (presentInParentState.rarity.rarityType !== 'ultraRare' && presentInParentState.rarity.rarityType !== 'all') {
-          presentInParentRarity['rarity']['minFreq'] = presentInParentState.rarity.rarityIntervalStart;
-          presentInParentRarity['rarity']['maxFreq'] = presentInParentState.rarity.rarityIntervalEnd;
-        }
+
+      if (presentInParentState.rarity.rarityType === 'ultraRare') {
+        presentInParent['rarity']['ultraRare'] = true;
+      } else {
+        presentInParent['rarity']['ultraRare'] = false;
+      }
+
+      if (
+        presentInParentState.rarity.rarityType === 'rare'
+        || presentInParentState.rarity.rarityType === 'interval'
+      ) {
+        presentInParent['rarity']['minFreq'] = presentInParentState.rarity.rarityIntervalStart;
+        presentInParent['rarity']['maxFreq'] = presentInParentState.rarity.rarityIntervalEnd;
       }
 
       this.phenoToolState = {
         ...geneSymbolsState.length && geneSymbolsState,
         ...geneSetsState.geneSet && geneSetsState,
-        ...geneScoresState.geneScores && geneScoresState,
+        ...geneScoresState.geneScore && geneScoresState,
         ...phenoToolMeasureState,
         effectTypes: effectTypesState,
-        presentInParent: presentInParentRarity
+        presentInParent: presentInParent
       };
 
       this.phenoToolResults = null;
