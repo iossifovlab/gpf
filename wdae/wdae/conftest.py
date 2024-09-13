@@ -1303,6 +1303,13 @@ denovo_gene_sets:
   - Synonymous.Triple
 enrichment:
   enabled: false
+gene_browser:
+  enabled: true
+  frequency_column: "score_one"
+  effect_column: "effect.worst effect type"
+  location_column: "variant.location"
+  domain_min: 0.01
+  domain_max: 100
             """),
         },
     )

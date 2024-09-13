@@ -1,6 +1,5 @@
 import logging
 from collections.abc import Generator
-from typing import cast
 
 from datasets_api.permissions import (
     get_permissions_etag,
@@ -26,7 +25,7 @@ class ConfigView(QueryDatasetView):
 
     @request_logging(LOGGER)
     @method_decorator(etag(get_permissions_etag))
-    def get(self, request):
+    def get(self, request: Request) -> Response:
         data = expand_gene_set(
             request.query_params, request.user, self.instance_id)
         dataset_id = data["datasetId"]
@@ -38,10 +37,7 @@ class ConfigView(QueryDatasetView):
         if dataset is None:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # LOGGER.info('dataset ' + str(dataset))
-        config = dataset.config.gene_browser
-
-        return Response(config, status=status.HTTP_200_OK)
+        return Response(dataset.config.gene_browser, status=status.HTTP_200_OK)
 
 
 class QueryVariantsView(QueryDatasetView):
@@ -63,13 +59,10 @@ class QueryVariantsView(QueryDatasetView):
         if dataset.is_remote:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        dataset = cast(StudyWrapper, dataset)
-
         user = request.user
         handle_partial_permissions(self.instance_id, user, dataset_id, data)
 
-        config = dataset.config.gene_browser
-        freq_col = config.frequency_column
+        freq_col = dataset.config.gene_browser.frequency_column
 
         return Response(
             list(dataset.get_gene_view_summary_variants(freq_col, **data)),
@@ -101,13 +94,9 @@ class DownloadSummaryVariantsView(QueryDatasetView):
             download_limit = self.DOWNLOAD_LIMIT
         data.update({"limit": download_limit})
 
-        config = dataset.config.gene_browser
-        freq_col = config.frequency_column
-
-        variants = dataset.get_gene_view_summary_variants_download(
+        freq_col = dataset.config.gene_browser.frequency_column
+        yield from dataset.get_gene_view_summary_variants_download(
             freq_col, **data)
-
-        yield from variants
 
     @request_logging(LOGGER)
     def post(self, request: Request) -> Response:
@@ -125,8 +114,6 @@ class DownloadSummaryVariantsView(QueryDatasetView):
 
         if dataset.is_remote:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        dataset = cast(StudyWrapper, dataset)
 
         response = FileResponse(
             self.generate_variants(data, request.user, dataset, dataset_id),
