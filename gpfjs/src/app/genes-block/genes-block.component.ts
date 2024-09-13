@@ -27,7 +27,7 @@ export class GenesBlockComponent implements AfterViewInit {
         setTimeout(() => this.ngbNav.select('geneSymbols'));
       } else if (geneSets.geneSet) {
         setTimeout(() => this.ngbNav.select('geneSets'));
-      } else if (geneScores.geneScores) {
+      } else if (geneScores.geneScore) {
         setTimeout(() => this.ngbNav.select('geneScores'));
       }
     });

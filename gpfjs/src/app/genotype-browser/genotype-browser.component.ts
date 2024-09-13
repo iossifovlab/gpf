@@ -195,7 +195,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
             geneSetsCollection: geneSetsState.geneSetsCollection.name,
             geneTypes: geneSetsState.geneSetsTypes
           }),
-          ...(geneScoresState.geneScores && {geneScores: geneScoresState.geneScores}),
+          ...(geneScoresState.geneScore && {geneScores: geneScoresState}),
           ...(geneScoresState.rangeStart && {rangeStart: geneScoresState.rangeStart}),
           ...(geneScoresState.rangeEnd && {rangeEnd: geneScoresState.rangeEnd}),
           ...(presentInParent.presentInParent?.length && {presentInParent: presentInParent}),

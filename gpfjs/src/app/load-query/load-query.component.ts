@@ -85,7 +85,7 @@ export class LoadQueryComponent implements OnInit {
       }));
       this.store.dispatch(setGeneSymbols({geneSymbols: state.geneSymbols}));
       this.store.dispatch(setGeneScore({
-        geneScores: state.geneScores.geneScores,
+        geneScore: state.geneScores.geneScore,
         rangeEnd: state.geneScores.rangeEnd,
         rangeStart: state.geneScores.rangeStart,
       }));

@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { combineLatest, Observable, Subscription, take } from 'rxjs';
+import { combineLatest, Observable, Subscription } from 'rxjs';
 import { EnrichmentResults } from '../enrichment-query/enrichment-result';
 import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
@@ -10,7 +10,6 @@ import { selectGeneScores } from 'app/gene-scores/gene-scores.state';
 import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
 import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { selectErrors } from 'app/common/errors.state';
-import { GeneSetsCollection } from 'app/gene-sets/gene-sets';
 
 @Component({
   selector: 'gpf-enrichment-tool',
@@ -59,8 +58,8 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
           geneSetsCollection: geneSets.geneSetsCollection.name,
           geneTypes: geneSets.geneSetsTypes
         };
-      } else if (geneScores.geneScores) {
-        this.enrichmentToolState['geneSymbols'] = geneScores.geneScores;
+      } else if (geneScores.geneScore) {
+        this.enrichmentToolState['geneSymbols'] = geneScores.geneScore;
       }
       this.enrichmentResults = null;
     });
