@@ -16,5 +16,6 @@ export const resetExpandedDatasets = createAction(
 export const expandedDatasetsReducer = createReducer(
   initialState,
   on(setExpandedDatasets, (state, {expandedDatasets}) => cloneDeep(expandedDatasets)),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   on(resetExpandedDatasets, (state) => cloneDeep(initialState)),
 );

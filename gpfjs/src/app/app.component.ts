@@ -21,13 +21,6 @@ export class AppComponent implements OnInit {
   public geneProfilesConfig: GeneProfilesSingleViewConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
-  @HostListener('window:keydown.s')
-  public printState(): void {
-    this.store.pipe(take(1)).subscribe(state => {
-      console.log(state);
-    });
-  }
-
   @HostListener('window:keydown.home')
   public scrollToTop(): void {
     window.scrollTo(0, 0);

@@ -30,5 +30,6 @@ export const enrichmentModelsReducer = createReducer(
     enrichmentBackgroundModel: enrichmentBackgroundModel,
     enrichmentCountingModel: enrichmentCountingModel,
   })),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   on(reset, resetEnrichmentModels, state => cloneDeep(initialState)),
 );

@@ -26,6 +26,7 @@ describe('EffectTypesComponent', () => {
     fixture = TestBed.createComponent(EffectTypesComponent);
     component = fixture.componentInstance;
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     jest.spyOn(store, 'select').mockReturnValue(of(['value1', 'value2', 'value3']));
     jest.spyOn(store, 'dispatch').mockReturnValue();

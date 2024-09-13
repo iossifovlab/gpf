@@ -1,12 +1,18 @@
-import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CategoricalFilterState, CategoricalSelection, PersonFilterState } from '../person-filters/person-filters';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { Observable, pipe, switchMap, take } from 'rxjs';
+import { Observable, switchMap, take } from 'rxjs';
 import { environment } from 'environments/environment';
 import { Store } from '@ngrx/store';
 import { selectDatasetId } from 'app/datasets/datasets.state';
-import { removeFamilyFilter, removePersonFilter, selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app/person-filters/person-filters.state';
+import {
+  removeFamilyFilter,
+  removePersonFilter,
+  selectPersonFilters,
+  updateFamilyFilter,
+  updatePersonFilter
+} from 'app/person-filters/person-filters.state';
 import { cloneDeep } from 'lodash';
 
 @Component({

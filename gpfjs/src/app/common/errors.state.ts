@@ -43,5 +43,6 @@ export const errorsReducer = createReducer(
     return updatedState;
   }),
   on(resetErrors, (state, { componentId }) => state.filter(s => s.componentId !== componentId)),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   on(reset, resetAllErrors, (state) => cloneDeep(initialState)),
 );

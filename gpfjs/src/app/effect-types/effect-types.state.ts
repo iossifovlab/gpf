@@ -28,5 +28,6 @@ export const effectTypesReducer = createReducer(
   on(setEffectTypes, (state: string[], {effectTypes}) => effectTypes ? [...effectTypes] : initialState),
   on(addEffectType, (state: string[], {effectType}) => [...state, effectType]),
   on(removeEffectType, (state: string[], {effectType}) => state.filter(eff => eff !== effectType)),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   on(reset, resetEffectTypes, state => [...initialState]),
 );

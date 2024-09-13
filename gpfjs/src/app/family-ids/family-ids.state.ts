@@ -18,5 +18,6 @@ export const resetFamilyIds = createAction(
 export const familyIdsReducer = createReducer(
   initialState,
   on(setFamilyIds, (state, {familyIds}) => cloneDeep(familyIds)),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   on(reset, resetFamilyIds, state => cloneDeep(initialState)),
 );
