@@ -28,14 +28,14 @@ class GeneModels(QueryBaseView):
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, _request: Request, gene_symbol: str) -> Response:
         """Return gene mode corresponding to a gene symbol."""
-        gene_symbol, transcript_models = \
+        canonical_gene_symbol, transcript_models = \
             self.gpf_instance.get_transcript_models(gene_symbol)
 
         if not transcript_models:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        response_data = {
-            "gene": gene_symbol,
+        response_data: dict = {
+            "gene": canonical_gene_symbol,
             "transcripts": [],
         }
         for transcript in transcript_models:
