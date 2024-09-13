@@ -190,11 +190,11 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
           ...(familyTagsState.deselectedFamilyTags?.length && {deselectedFamilyTags: familyTagsState.deselectedFamilyTags}),
           ...(personFiltersState?.familyFilters?.length && {familyFilters: personFiltersState.familyFilters}),
           ...(personFiltersState?.personFilters?.length && {personFilters: personFiltersState.personFilters}),
-          ...(geneSetsState.geneSet && {
+          ...(geneSetsState.geneSet && { geneSet: {
             geneSet: geneSetsState.geneSet.name,
             geneSetsCollection: geneSetsState.geneSetsCollection.name,
             geneTypes: geneSetsState.geneSetsTypes
-          }),
+          }}),
           ...(geneScoresState.geneScore && {geneScores: geneScoresState}),
           ...(geneScoresState.rangeStart && {rangeStart: geneScoresState.rangeStart}),
           ...(geneScoresState.rangeEnd && {rangeEnd: geneScoresState.rangeEnd}),
