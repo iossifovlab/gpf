@@ -17,6 +17,6 @@ export const resetVariantTypes = createAction(
 
 export const variantTypesReducer = createReducer(
   initialState,
-  on(setVariantTypes, (state, {variantTypes}) => [...variantTypes]),
+  on(setVariantTypes, (state, {variantTypes}) => variantTypes ? [...variantTypes] : initialState),
   on(reset, resetVariantTypes, state => cloneDeep(initialState)),
 );

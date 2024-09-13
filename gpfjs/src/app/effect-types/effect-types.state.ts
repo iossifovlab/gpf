@@ -25,7 +25,7 @@ export const resetEffectTypes = createAction(
 
 export const effectTypesReducer = createReducer(
   initialState,
-  on(setEffectTypes, (state: string[], {effectTypes}) => [...effectTypes]),
+  on(setEffectTypes, (state: string[], {effectTypes}) => effectTypes ? [...effectTypes] : initialState),
   on(addEffectType, (state: string[], {effectType}) => [...state, effectType]),
   on(removeEffectType, (state: string[], {effectType}) => state.filter(eff => eff !== effectType)),
   on(reset, resetEffectTypes, state => [...initialState]),

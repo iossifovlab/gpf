@@ -22,6 +22,7 @@ import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.sta
 import { selectGeneProfiles, setGeneProfilesOpenedTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { setStudyTypes } from 'app/study-types/study-types.state';
 import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -178,7 +179,8 @@ export class GeneProfileSingleViewComponent implements OnInit {
     newTab: boolean = true
   ): void {
     const effectTypes = {
-      lgds: LGDS,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      LGDs: LGDS,
       intron: ['intron'],
       missense: ['missense'],
       synonymous: ['synonymous'],
@@ -202,9 +204,12 @@ export class GeneProfileSingleViewComponent implements OnInit {
       rarityType = 'rare';
       presentInParent = presentInParentRareValues;
     }
-
-    store.dispatch(setEffectTypes({effectTypes: effectTypes[statistic['effects'][0]] as string[]}));
-    store.dispatch(setVariantTypes({variantTypes: statistic['variantTypes']}));
+    if (statistic.effects) {
+      store.dispatch(setEffectTypes({effectTypes: effectTypes[statistic['effects'][0]] as string[]}));
+    }
+    if (statistic.variantTypes) {
+      store.dispatch(setVariantTypes({variantTypes: statistic.variantTypes}));
+    }
     store.dispatch(setGeneSymbols({geneSymbols: [geneSymbol]}));
     store.dispatch(setPresentInChild({presentInChild: presentInChildValues}));
     store.dispatch(setPresentInParent({presentInParent: {
@@ -237,9 +242,10 @@ export class GeneProfileSingleViewComponent implements OnInit {
       }
     }));
 
-    store.subscribe(state => {
-      state['datasetState'].selectedDatasetId = datasetId;
-      queryService.saveQuery(state, 'genotype')
+    store.pipe(take(1)).subscribe(state => {
+      const clonedState = cloneDeep(state);
+      clonedState['datasetId'] = datasetId;
+      queryService.saveQuery(clonedState, 'genotype')
         .pipe(take(1))
         .subscribe(urlObject => {
           const url = queryService.getLoadUrlFromResponse(urlObject);
