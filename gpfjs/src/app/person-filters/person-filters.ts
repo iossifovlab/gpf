@@ -8,14 +8,14 @@ export interface Selection {
 
 export class CategoricalSelection implements Selection {
   @IsNotEmpty()
-  public selection: string;
+  public selection: string[];
 
-  public constructor(selection: string = null) {
+  public constructor(selection: string[] = []) {
     this.selection = selection;
   }
 
   public isEmpty(): boolean {
-    return this.selection === null;
+    return this.selection.length === 0;
   }
 }
 

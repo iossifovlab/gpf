@@ -74,7 +74,7 @@ export class CategoricalFilterComponent implements OnInit {
   }
 
   public set selectedValue(value) {
-    (this.categoricalFilterState.selection as CategoricalSelection).selection = value;
+    (this.categoricalFilterState.selection as CategoricalSelection).selection = [value];
     if (this.isFamilyFilters) {
       this.store.dispatch(updateFamilyFilter({familyFilter: cloneDeep(this.categoricalFilterState)}));
     } else {
@@ -83,11 +83,11 @@ export class CategoricalFilterComponent implements OnInit {
   }
 
   public get selectedValue(): string {
-    return (this.categoricalFilterState.selection as CategoricalSelection).selection;
+    return (this.categoricalFilterState.selection as CategoricalSelection).selection[0];
   }
 
   public clear(): void {
-    (this.categoricalFilterState.selection as CategoricalSelection).selection = null;
+    (this.categoricalFilterState.selection as CategoricalSelection).selection = [];
     if (this.isFamilyFilters) {
       this.store.dispatch(removeFamilyFilter({familyFilter: cloneDeep(this.categoricalFilterState)}));
     } else {
