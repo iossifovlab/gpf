@@ -44,9 +44,6 @@ def denovo_gene_sets_db(local_gpf_instance: GPFInstance) -> DenovoGeneSetsDb:
 @pytest.fixture(scope="module")
 def gene_info_cache_dir() -> Iterator[None]:
     cache_dir = path_to_fixtures("geneInfo", "cache")
-    # assert not os.path.exists(
-    #     cache_dir
-    # ), 'Cache dir "{}" already  exists..'.format(cache_dir)
     os.makedirs(cache_dir, exist_ok=True)
 
     new_envs = {
@@ -67,7 +64,7 @@ def genotype_data_names() -> list[str]:
 
 
 @pytest.fixture(scope="session")
-def calc_gene_sets(
+def calc_gene_sets(  # noqa: PT004
     request: pytest.FixtureRequest,
     local_gpf_instance: GPFInstance,
     genotype_data_names: list[str],
@@ -88,7 +85,7 @@ def calc_gene_sets(
             if os.path.exists(cache_file):
                 os.remove(cache_file)
 
-    request.addfinalizer(remove_gene_sets)
+    request.addfinalizer(remove_gene_sets)  # noqa: PT021
 
 
 @pytest.fixture(scope="session")
@@ -157,3 +154,10 @@ def trios2_study(
                 "enabled": True,
             },
         })
+
+
+@pytest.fixture(scope="session")
+def t4c8_denovo_gene_sets_db(
+    t4c8_instance: GPFInstance,
+) -> DenovoGeneSetsDb:
+    return t4c8_instance.denovo_gene_sets_db
