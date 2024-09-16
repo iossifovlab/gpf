@@ -20,7 +20,6 @@ import { resetFamilyFilterStates, selectPersonFilters } from 'app/person-filters
 export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() public dataset: Dataset;
   @ViewChild('nav') public ngbNav: NgbNav;
-  public showFamilyTypeFilter: boolean;
   public showAdvancedButton: boolean;
   public hasContent = false;
 
@@ -40,7 +39,6 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   ) { }
 
   public ngOnInit(): void {
-    this.showFamilyTypeFilter = this.dataset.genotypeBrowserConfig.hasFamilyStructureFilter;
     this.showAdvancedButton =
       this.dataset.genotypeBrowserConfig.familyFilters.length !== 0 ||
       this.dataset.genotypeBrowserConfig.hasFamilyStructureFilter;

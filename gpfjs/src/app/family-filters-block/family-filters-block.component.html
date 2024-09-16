@@ -32,7 +32,6 @@
         <a ngbNavLink (click)="hasContent = true">Advanced</a>
         <ng-template ngbNavContent>
           <div id="filters">
-            <gpf-family-type-filter *ngIf="showFamilyTypeFilter" id="family-filter"></gpf-family-type-filter>
             <gpf-person-filters [dataset]="dataset" [isFamilyFilters]="true"> </gpf-person-filters>
           </div>
         </ng-template>

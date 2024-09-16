@@ -121,7 +121,6 @@ import { GeneProfileSingleViewComponent } from './gene-profiles-single-view/gene
 import { PersonFiltersBlockComponent } from './person-filters-block/person-filters-block.component';
 import { PersonIdsComponent } from './person-ids/person-ids.component';
 import { personIdsReducer } from './person-ids/person-ids.state';
-import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filter.component';
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
 import { BnNgIdleService } from 'bn-ng-idle';
 import { variantTypesReducer } from './variant-types/variant-types.state';
@@ -376,7 +375,6 @@ const appRoutes: Routes = [
     MiddleClickDirective,
     PersonFiltersBlockComponent,
     PersonIdsComponent,
-    FamilyTypeFilterComponent,
     SortingButtonsComponent,
     GeneProfileSingleViewWrapperComponent,
     CheckboxListComponent,
