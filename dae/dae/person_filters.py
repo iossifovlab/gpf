@@ -171,7 +171,7 @@ def make_pheno_filter(
     result_filter: PhenoFilter
     if pheno_filter_type == MeasureType.categorical:
         result_filter = PhenoFilterSet(
-            measure, {selection["selection"]}, phenotype_data,
+            measure, set(selection["selection"]), phenotype_data,
         )
     else:
         result_filter = PhenoFilterRange(
