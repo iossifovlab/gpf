@@ -12,7 +12,6 @@ export class EffecttypesColumnComponent {
   @Output() public effectTypeEvent = new EventEmitter<{effectType: string; checked: boolean}>();
 
   public checkEffectType(effectType: string, value: boolean): void {
-    console.log(this.effectTypesLabels)
     if (!this.effectTypesLabels.has(effectType)) {
       return;
     }
