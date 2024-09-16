@@ -48,7 +48,7 @@ describe('GeneScoresComponent', () => {
     }).compileComponents();
 
     store = TestBed.inject(Store);
-    jest.spyOn(store, 'select').mockReturnValue(of({geneScore: 'score1'}));
+    jest.spyOn(store, 'select').mockReturnValue(of({score: 'score1'}));
 
     fixture = TestBed.createComponent(GeneScoresComponent);
     component = fixture.componentInstance;
@@ -59,12 +59,12 @@ describe('GeneScoresComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should test visible gene sets', () => {
+  it('should test setting gene scores', () => {
     fixture.detectChanges();
-    expect(fixture.debugElement.query(By.css('div > div#gene-scores-panel'))).toBeTruthy();
+    expect(component.selectedGeneScores.score).toBe('score1');
   });
 
-  it('should test empty gene sets', () => {
+  it('should test empty gene scores', () => {
     mockGeneScoresService.provide = false;
     fixture.detectChanges();
 

@@ -23,9 +23,11 @@ describe('PresentInParentComponent', () => {
 
     jest.spyOn(store, 'select').mockReturnValue(of({
       presentInParent: ['value1', 'value2'],
-      rarityType: 'rarityType',
-      rarityIntervalStart: -12,
-      rarityIntervalEnd: -11,
+      rarity: {
+        rarityType: 'rarityType',
+        rarityIntervalStart: -12,
+        rarityIntervalEnd: -11,
+      }
     }));
 
     jest.spyOn(store, 'dispatch').mockReturnValue();

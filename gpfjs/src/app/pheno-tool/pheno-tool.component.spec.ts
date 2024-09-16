@@ -111,7 +111,7 @@ describe('PhenoToolComponent', () => {
     };
 
     const geneScoresMock: GeneScoresState = {
-      geneScores: null,
+      score: null,
       rangeStart: 0,
       rangeEnd: 0
     };
@@ -123,9 +123,11 @@ describe('PhenoToolComponent', () => {
 
     const presentInParentMock: PresentInParent = {
       presentInParent: ['neither'],
-      rarityType: '',
-      rarityIntervalStart: 0,
-      rarityIntervalEnd: 1,
+      rarity: {
+        rarityType: '',
+        rarityIntervalStart: 0,
+        rarityIntervalEnd: 1,
+      }
     };
 
 
@@ -148,6 +150,7 @@ describe('PhenoToolComponent', () => {
         normalizeBy: [],
         presentInParent: {
           presentInParent: ['neither'],
+          rarity: { ultraRare: false },
         }
       }
     );
