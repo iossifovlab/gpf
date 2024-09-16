@@ -20,6 +20,7 @@ import { setStudyFilters } from 'app/study-filters/study-filters.state';
 import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { setUniqueFamilyVariantsFilter } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
 import { setFamilyFilters, setPersonFilters } from 'app/person-filters/person-filters.state';
+import { setPhenoToolMeasure } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 
 const PAGE_TYPE_TO_NAVIGATE = {
   genotype: (datasetId: string): string[] => ['datasets', datasetId, 'genotype-browser'],
@@ -97,7 +98,7 @@ export class LoadQueryComponent implements OnInit {
       );
       this.store.dispatch(setFamilyFilters({familyFilters: state.personFilters.familyFilters}));
       this.store.dispatch(setPersonFilters({personFilters: state.personFilters.personFilters}));
-
+      this.store.dispatch(setPhenoToolMeasure({phenoToolMeasure: state.phenoToolMeasure}));
       this.router.navigate(navigationParams);
     }
   }
