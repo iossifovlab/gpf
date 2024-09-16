@@ -229,20 +229,11 @@ class DenovoReportTable:
         for effect_row in effect_rows:
             effect_row.remove_elements(effect_rows_empty_columns_index)
             if effect_row.is_row_empty():
-                try:
+                if effect_row.effect_type in effect_groups:
                     effect_groups.remove(effect_row.effect_type)
-                except ValueError:
-                    logger.exception(
-                        "Failed to remove effect group %s",
-                        effect_row.effect_type,
-                    )
-                try:
+                elif effect_row.effect_type in effect_types:
                     effect_types.remove(effect_row.effect_type)
-                except ValueError:
-                    logger.exception(
-                        "Failed to remove effect type %s",
-                        effect_row.effect_type,
-                    )
+
         effect_rows = list(filter(
             lambda effect_row: not effect_row.is_row_empty(), effect_rows,
         ))
