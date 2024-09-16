@@ -36,7 +36,6 @@ export class PersonFiltersComponent extends ComponentValidator implements OnInit
     this.selectedDatasetId = this.dataset.id;
 
     this.store.select(selectPersonFilters).subscribe((state: PersonAndFamilyFilters) => {
-      console.log(state);
       if (this.isFamilyFilters) {
         this.areFiltersSelected = Boolean(state.familyFilters?.filter(f => f.sourceType === 'continuous').length);
       } else {
