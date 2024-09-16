@@ -1,6 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { reset } from 'app/users/state-actions';
-export const initialState: string[] = ['frame-shift', 'nonsense', 'splice-site', 'no-frame-shift-newStop'];
+export const initialState: string[] = null;
 
 export const selectEffectTypes = createFeatureSelector<string[]>('effectTypes');
 
@@ -29,5 +29,5 @@ export const effectTypesReducer = createReducer(
   on(addEffectType, (state: string[], {effectType}) => [...state, effectType]),
   on(removeEffectType, (state: string[], {effectType}) => state.filter(eff => eff !== effectType)),
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  on(reset, resetEffectTypes, state => [...initialState]),
+  on(reset, resetEffectTypes, state => initialState),
 );

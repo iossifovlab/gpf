@@ -1,5 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { EffectTypes, CODING, NONCODING, CNV, ALL, LGDS, NONSYNONYMOUS, UTRS } from './effect-types';
+import {
+  EffectTypes, CODING, NONCODING, CNV, ALL, LGDS,
+  NONSYNONYMOUS, UTRS, GENOTYPE_BROWSER_INITIAL_VALUES
+} from './effect-types';
 import { ValidateNested } from 'class-validator';
 import { PHENO_TOOL_CNV } from 'app/pheno-tool-effect-types/pheno-tool-effect-types';
 import * as lodash from 'lodash';
@@ -30,8 +33,14 @@ export class EffectTypesComponent extends ComponentValidator implements OnInit {
 
   public ngOnInit(): void {
     this.store.select(selectEffectTypes).pipe(take(1)).subscribe(effectTypesState => {
-      this.effectTypes = new EffectTypes();
-      this.effectTypes.selected = new Set(effectTypesState);
+      if (!effectTypesState) {
+        this.effectTypes.selected = GENOTYPE_BROWSER_INITIAL_VALUES;
+        this.store.dispatch(
+          setEffectTypes({effectTypes: [...GENOTYPE_BROWSER_INITIAL_VALUES.values()]})
+        );
+      } else {
+        this.effectTypes.selected = new Set(effectTypesState);
+      }
       super.ngOnInit();
     });
   }
