@@ -27,7 +27,7 @@ export class VariantTypesComponent extends ComponentValidator implements OnInit 
     this.store.select(selectVariantTypes).pipe(take(1)).subscribe(variantTypesState => {
       if (!variantTypesState) {
         this.selectedVariantTypes = cloneDeep(this.variantTypes);
-        this.store.dispatch(setVariantTypes({variantTypes: [...this.selectedVariantTypes]}))
+        this.store.dispatch(setVariantTypes({variantTypes: [...this.selectedVariantTypes]}));
         return;
       }
       this.selectedVariantTypes = new Set(variantTypesState);
