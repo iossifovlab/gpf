@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import logging
 import math
-from dataclasses import asdict
 from typing import Any
 
 from jinja2 import Template
@@ -148,7 +147,7 @@ class GeneScoreImplementation(
             "score_config": [
                 {
                     "id": score_def.score_id,
-                    "hist_conf": asdict(score_def.hist_conf)
+                    "hist_conf": score_def.hist_conf.to_dict()
                     if score_def.hist_conf else "null",
                 }
                 for score_def in self.gene_score.score_definitions.values()

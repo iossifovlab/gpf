@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import Iterable
-from dataclasses import asdict
 from typing import Any, ClassVar, cast
 
 import numpy as np
@@ -465,7 +464,7 @@ class GenomicScoreImplementation(
         return json.dumps({
             "config": {
                 "histograms": [
-                    asdict(hist_conf)
+                    hist_conf.to_dict()
                     for hist_conf in self.get_config_histograms().values()
                     if hist_conf is not None
                 ],
