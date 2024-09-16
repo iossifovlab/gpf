@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Any
+from typing import Any, cast
 
 from dae.effect_annotation.effect import EffectTypesMixin
 from dae.pheno_tool.tool import PhenoResult, PhenoTool, PhenoToolHelper
@@ -109,7 +109,6 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         """Run pheno tool on given data."""
         measure_id = data["measureId"]
         family_ids = data.get("phenoFilterFamilyIds")
-        print(data)
         person_ids = self.helper.genotype_data_persons(
             data.get("family_ids", []),
         )
@@ -124,7 +123,7 @@ class PhenoToolAdapter(PhenoToolAdapterBase):
         results = [
             self.calc_by_effect(
                 measure_id, effect, people_variants.get(effect, Counter()),
-                person_ids=person_ids,
+                person_ids=cast(list[str], person_ids),
                 family_ids=family_ids,
                 normalize_by=normalize_by,
             )

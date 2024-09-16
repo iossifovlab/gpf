@@ -3,9 +3,9 @@
 import logging
 
 from box import Box
+from remote.rest_api_client import RESTClient, RESTClientRequestError
 
 from federation.remote.remote_study import RemoteGenotypeData
-from remote.rest_api_client import RESTClient, RESTClientRequestError
 
 logger = logging.getLogger(__name__)
 
