@@ -6,7 +6,6 @@ import { ConfigService } from '../config/config.service';
 import { Dataset, PersonSet } from '../datasets/datasets';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { filter, map, switchMap, take } from 'rxjs/operators';
-// import { StudyFiltersState } from 'app/study-filters/study-filters.state';
 import { clone } from 'lodash';
 import { NavigationStart, Router } from '@angular/router';
 import { selectDatasetId } from 'app/datasets/datasets.state';
@@ -92,7 +91,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
       this.genotypePreviewVariantsArray = null;
     });
 
-    this.loadingService.interruptEvent.subscribe(_ => {
+    this.loadingService.interruptEvent.subscribe(() => {
       this.queryService.cancelStreamPost();
       this.loadingService.setLoadingStop();
       this.showTable = false;
@@ -101,7 +100,9 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     });
 
     this.store.select(selectErrors).subscribe(errorState => {
-      setTimeout(() => this.disableQueryButtons = errorState.length > 0);
+      setTimeout(() => {
+        this.disableQueryButtons = errorState.length > 0;
+      });
     });
   }
 
@@ -170,35 +171,36 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
         }
 
         const state = {
-          ...(variantTypesState?.length && {variantTypes: variantTypesState}),
-          ...(effectTypesState?.length && {effectTypes: effectTypesState}),
-          ...(gendersState?.length && {genders: gendersState}),
+          ...variantTypesState?.length && {variantTypes: variantTypesState},
+          ...effectTypesState?.length && {effectTypes: effectTypesState},
+          ...gendersState?.length && {genders: gendersState},
           ...{inheritanceTypeFilter: inheritanceTypesState},
-          ...(presentInChildState?.length && {presentInChild: presentInChildState}),
-          ...(studyTypesState?.length && {studyTypes: studyTypesState}),
-          ...(familyTypeFilterState?.length && {familyTypes: familyTypeFilterState}),
-          ...(familyIdsState?.length && {familyIds: familyIdsState}),
-          ...(geneSymbolsState?.length && {geneSymbols: geneSymbolsState}),
-          ...(regionsFiltersState?.length && {regionsFilter: regionsFiltersState}),
+          ...presentInChildState?.length && {presentInChild: presentInChildState},
+          ...studyTypesState?.length && {studyTypes: studyTypesState},
+          ...familyTypeFilterState?.length && {familyTypes: familyTypeFilterState},
+          ...familyIdsState?.length && {familyIds: familyIdsState},
+          ...geneSymbolsState?.length && {geneSymbols: geneSymbolsState},
+          ...regionsFiltersState?.length && {regions: regionsFiltersState},
           ...{genomicScores: genomicScoresState},
-          ...(personIdsState?.length && {personIds: personIdsState}),
+          ...personIdsState?.length && {personIds: personIdsState},
           ...{studyFilters: studyFiltersState},
           uniqueFamilyVariants: uniqueFamilyVariantsFilterState,
           personSetCollection: {...pedigreeSelectorState},
-          ...(!familyTagsState?.tagIntersection && {tagIntersection: familyTagsState.tagIntersection}),
-          ...(familyTagsState.selectedFamilyTags?.length && {selectedFamilyTags: familyTagsState.selectedFamilyTags}),
-          ...(familyTagsState.deselectedFamilyTags?.length && {deselectedFamilyTags: familyTagsState.deselectedFamilyTags}),
-          ...(personFiltersState?.familyFilters?.length && {familyFilters: personFiltersState.familyFilters}),
-          ...(personFiltersState?.personFilters?.length && {personFilters: personFiltersState.personFilters}),
-          ...(geneSetsState.geneSet && { geneSet: {
+          ...!familyTagsState?.tagIntersection && {tagIntersection: familyTagsState.tagIntersection},
+          ...familyTagsState.selectedFamilyTags?.length && {selectedFamilyTags: familyTagsState.selectedFamilyTags},
+          ...familyTagsState.deselectedFamilyTags?.length
+              && {deselectedFamilyTags: familyTagsState.deselectedFamilyTags},
+          ...personFiltersState?.familyFilters?.length && {familyFilters: personFiltersState.familyFilters},
+          ...personFiltersState?.personFilters?.length && {personFilters: personFiltersState.personFilters},
+          ...geneSetsState.geneSet && { geneSet: {
             geneSet: geneSetsState.geneSet.name,
             geneSetsCollection: geneSetsState.geneSetsCollection.name,
             geneTypes: geneSetsState.geneSetsTypes
-          }}),
-          ...(geneScoresState.geneScore && {geneScores: geneScoresState}),
-          ...(geneScoresState.rangeStart && {rangeStart: geneScoresState.rangeStart}),
-          ...(geneScoresState.rangeEnd && {rangeEnd: geneScoresState.rangeEnd}),
-          ...(presentInParent.presentInParent?.length && {presentInParent: presentInParent}),
+          }},
+          ...geneScoresState.score && {geneScores: geneScoresState},
+          ...geneScoresState.rangeStart && {rangeStart: geneScoresState.rangeStart},
+          ...geneScoresState.rangeEnd && {rangeEnd: geneScoresState.rangeEnd},
+          ...presentInParent.presentInParent?.length && {presentInParent: presentInParent},
         };
         return state;
       })

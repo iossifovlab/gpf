@@ -62,10 +62,10 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
     ).subscribe(([geneScores, state]) => {
       this.geneScoresArray = geneScores;
 
-      if (state.geneScore !== null) {
-        for (const geneScore of this.geneScoresArray) {
-          if (geneScore.score === state.geneScore) {
-            this.selectedGeneScores = geneScore;
+      if (state.score !== null) {
+        for (const score of this.geneScoresArray) {
+          if (score.score === state.score) {
+            this.selectedGeneScores = score;
             this.rangeStart = state.rangeStart;
             this.rangeEnd = state.rangeEnd;
             break;
@@ -91,7 +91,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   private updateHistogramState(): void {
     this.updateLabels();
     this.store.dispatch(setGeneScoresHistogramValues({
-      geneScore: this.selectedGeneScores.score,
+      score: this.selectedGeneScores.score,
       rangeStart: this.geneScoresLocalState.rangeStart,
       rangeEnd: this.geneScoresLocalState.rangeEnd,
     }));
@@ -109,7 +109,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
     this.updateLabels();
     this.downloadUrl = this.getDownloadUrl();
     this.store.dispatch(setGeneScore({
-      geneScore: this.geneScoresLocalState.score.score,
+      score: this.geneScoresLocalState.score.score,
       rangeStart: this.geneScoresLocalState.rangeStart,
       rangeEnd: this.geneScoresLocalState.rangeEnd,
     }));

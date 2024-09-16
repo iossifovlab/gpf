@@ -98,13 +98,13 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       }
 
       this.phenoToolState = {
-        ...geneSymbolsState.length && geneSymbolsState,
-        ...(geneSetsState.geneSet && { geneSet: {
+        ...geneSymbolsState.length && {geneSymbols: geneSymbolsState},
+        ...geneSetsState.geneSet && { geneSet: {
           geneSet: geneSetsState.geneSet.name,
           geneSetsCollection: geneSetsState.geneSetsCollection.name,
           geneTypes: geneSetsState.geneSetsTypes
-        }}),
-        ...geneScoresState.geneScore && geneScoresState,
+        }},
+        ...geneScoresState.score && geneScoresState,
         ...phenoToolMeasureState,
         effectTypes: effectTypesState,
         presentInParent: presentInParent

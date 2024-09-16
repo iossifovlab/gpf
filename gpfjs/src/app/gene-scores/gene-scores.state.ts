@@ -3,13 +3,13 @@ import { cloneDeep } from 'lodash';
 import { reset } from 'app/users/state-actions';
 
 export interface GeneScoresState {
-  geneScore: string;
+  score: string;
   rangeStart: number;
   rangeEnd: number;
 }
 
 export const initialState: GeneScoresState = {
-  geneScore: null,
+  score: null,
   rangeStart: 0,
   rangeEnd: 0
 };
@@ -19,11 +19,11 @@ export const selectGeneScores =
 
 export const setGeneScoresHistogramValues = createAction(
   '[Genotype] Set geneScores histogram values',
-  props<{ geneScore: string; rangeStart: number; rangeEnd: number }>()
+  props<{ score: string; rangeStart: number; rangeEnd: number }>()
 );
 
 export const setGeneScore = createAction(
-  '[Genotype] Set geneScore',
+  '[Genotype] Set score',
   props<GeneScoresState>()
 );
 
@@ -33,13 +33,13 @@ export const resetGeneScoresValues = createAction(
 
 export const geneScoresReducer = createReducer(
   initialState,
-  on(setGeneScoresHistogramValues, (state, { geneScore, rangeStart, rangeEnd }) => ({
-    geneScore: geneScore,
+  on(setGeneScoresHistogramValues, (state, { score, rangeStart, rangeEnd }) => ({
+    score: score,
     rangeStart: rangeStart,
     rangeEnd: rangeEnd
   })),
-  on(setGeneScore, (state, { geneScore, rangeStart, rangeEnd }) => ({
-    geneScore: geneScore,
+  on(setGeneScore, (state, { score, rangeStart, rangeEnd }) => ({
+    score: score,
     rangeStart: rangeStart,
     rangeEnd: rangeEnd
   })),
