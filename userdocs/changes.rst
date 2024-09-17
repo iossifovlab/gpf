@@ -1,5 +1,22 @@
 Release Notes
 =============
+
+* 2024.9.0
+    * Performance improvements in annotation with bigWig scores resources
+    * Bug fixing in wdae datasets API hierarchy
+    * Phenotype data import type inference improvements
+    * GPF validation runner error reporting improvements
+    * BigWig genomic resources buffering Improvments
+    * Phenotype data import of browser data improvements
+    * Phenotype browser table improvements
+    * Support for integer region bins in schema2 genotype storages
+    * Schema2 Parquet loader fixes in hadling of regions
+    * DuckDb genotype storage reorganization
+    * Support for DuckDb genotype storage over S3
+    * Separate GPF federation into a package ``gpf_federation``
+    * Revisit histogram configuration and support for user defined plot functions
+    * Improvements in ``gpf_wdae`` unit testing
+
 * 2024.8.2
     * Improvement of SQL query builder for family and summary variants in
       DuckDb genotype storage
