@@ -130,12 +130,319 @@ filename           String. Path to the annotation configuration file. Relative t
 Histograms and statistics
 -------------------------
 
-# TODO
+Each resource type defines a set of statistics that can be calculated for the 
+resource. These statistics are calculated by the ``grr_manage`` command line tools
+and stored in the resource directory under ``statistics`` subdirectory.
+
+For genomic and gene score resources the ``grr_manage`` command line tool 
+calculates and
+draws histograms for each of the scrores defined in the resource.
+
+Here were are going to describe the common behavior for calculation and drawing
+of histograms for genomic and gene score resources. Other statistics are specific
+for the resource type and should be described in the resource type documentation.
+
+Histograms
+^^^^^^^^^^
+
+Histograms are calculated for each of the scores defined in a gene score or
+genomic score resource. The GPF supports three types of histograms:
+
+* ``NumberHistogram`` - supported for scores of type ``int`` and ``float``. By default
+  the histogram is calculated with 100 bins and is linear on both axes.
+
+* ``CategoricalHistogram`` - supported for scores of type ``str`` and ``int``. This is a
+  histogram that shows the distribution of the unique values in the score. It
+  is supported only for scores with less than 100 unique values.
+    
+* ``NullHistogram`` - this histogram type defines a missing histogram. It is used
+  when calculating a histogram is not possible or does not make sense.
+
+Number Histograms Configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For each score defined in a genomic or gene score resource ``genomic_resource.yaml``
+file a histogram configuration can be defined. The number histogram configuration
+supports the following fields:
+
+* ``type`` - the type of the histogram. This should be set to ``number``.
+* ``number_of_bins`` - the number of bins in the histogram. By default this is set
+  to 100.
+* ``view_range`` - the range of values that areshown in the histogram. This range
+  could differ from the actual range of the score values. This is useful for
+  adjustements of the histogram view.
+* ``y_log_scale`` - if set to ``True`` the y axis of the histogram will be 
+  logarithmic.
+* ``x_log_scale`` - if set to ``True`` the x axis of the histogram will be 
+  logarithmic.
+* ``x_min_log`` - when ``x_log_scale`` is set to ``True`` this value defines the
+  minimum value of the x axis.
+* ``plot_function`` - user defined plot function. When the default plot function is
+  not suitable for the score, a user defined function can be used.
+
+
+Example 1: Number histogram configuration
+"""""""""""""""""""""""""""""""""""""""""
+
+Here is a full example of a number histogram configuration comming from
+the 
+`hg38/score/phyloP100way <https://grr.seqpipe.org/hg38/scores/phyloP100way/index.html>`_ 
+genomic score resource:
+
+.. code:: yaml
+
+    type: position_score
+
+    table:
+    filename: hg38.phyloP100way.bw 
+    header_mode: none   # this makes no sense and should be removed
+
+    # score values
+    scores:
+    - id: phyloP100way
+      type: float
+      desc: "The score is a number that reflects the conservation at a position."
+      large_values_desc: "more conserved"
+      small_values_desc: "less conserved"
+      index: 3    # this makes no sense and should be removed
+      histogram:
+        type: number
+        number_of_bins: 100
+        view_range:
+            min: -20.0
+            max: 10.0
+        y_log_scale: True
+
+
+Example 2: Number histogram configuration
+"""""""""""""""""""""""""""""""""""""""""
+
+Here is a full example of a number histogram configuration comming from
+the 
+`hg38/variant_frequencies/gnomAD_v3 <https://grr.seqpipe.org/hg38/variant_frequencies/gnomAD_v3/genomes/index.html>`_ 
+genomic score resource:
+
+
+.. code:: yaml
+
+  type: allele_score
+  
+  table:
+    filename: gnomad.genomes.r3.0.extract.tsv.gz
+    format: tabix
+  
+    chrom:
+      name: CHROM
+    pos_begin:
+      name: POS
+    pos_end:
+      name: POS
+    reference:
+      name: REF
+    alternative:
+      name: ALT
+  
+  scores:
+    ...
+
+    - id: AF
+      name: AF
+      type: float
+      desc: "Alternative allele frequency in the all gnomAD v3.0 genome samples."
+      histogram:
+        type: number
+        number_of_bins: 126
+        view_range:
+          min: 0.0
+          max: 1.0
+        y_log_scale: True
+        x_log_scale: True
+        x_min_log: 0.00001
+  
+    ...
+
+
+Categorical Histograms Configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Categorical histograms are suitable for scores that have limited (less than 100)
+number of unique values. By default the values are displayed in the order of 
+their frequency. By default the top 20 values are displayed in the histogram. 
+Other values are grouped into the ``Other`` category.
+
+The categorical histogram configuration supports the following fields:
+
+* ``type`` - the type of the histogram. This should be set to ``categorical``.
+* ``number_of_bins`` - the number of bins in the histogram. By default this is set
+  to 100.
+* ``y_log_scale`` - if set to ``True`` the y axis of the histogram will be 
+  logarithmic.
+* ``display_values_count`` - the number of unique values that will be displayed in
+  the histogram. Default value for this field is 20. The rest of the values
+    are grouped into the ``Other`` category.
+* ``display_values_percent`` - the percentage of total mass of unique values 
+  that will be displayed. Other values are grouped into the ``Other`` category.
+  **Only one of** ``display_values_count`` and ``display_values_percent`` can be set.
+* ``values_order`` - the order in which the unique values are displayed in the 
+  histogram.
+* ``plot_function`` - user defined plot function. When the default plot function is
+  not suitable for the score, a user defined function can be used.
+
+
+Example 1: Categorical histogram configuration
+""""""""""""""""""""""""""""""""""""""""""""""
+
+Here is a full example of a number and categorical histogram configuration 
+comming from the 
+`hg38/scores/AlphaMissense <https://grr.seqpipe.org/hg38/scores/AlphaMissense/index.html>`_ 
+genomic score resource:
+
+.. code:: yaml
+
+  type: np_score
+  
+  table:
+    filename: AlphaMissense_hg38_modified.tsv.gz
+    format: tabix
+  
+    chrom:
+      name: chrom
+    pos_begin:
+      name: pos
+    pos_end:
+      name: pos
+    reference:
+      name: ref
+    alternative:
+      name: alt
+  
+  scores:
+    - id: am_pathogenicity
+      name: am_pathogenicity
+      type: float
+      desc: |
+        AlphaMissense Pathogenicity score is a deleteriousness score for missense variants
+      large_values_desc: "more pathogenic"
+      small_values_desc: "less pathogenic"
+      histogram:
+        type: number
+        number_of_bins: 100
+        view_range:
+          min: 0.0
+          max: 1.0
+        y_log_scale: True
+        
+    - id: am_class
+      name: am_class
+      type: str
+      desc: |
+        AlphaMissense Class is a deleteriousness category for missense variants
+      histogram:
+        type: categorical
+        y_log_scale: True
+  
+
+Example 2: Categorical histogram configuration
+""""""""""""""""""""""""""""""""""""""""""""""
+
+Here is an example of a categorical histogram configuration displaying usage
+of `plot_function`, `display_values_count`, and `display_values_percent` fields.
+Note that `plot_function` uses the following format: 
+``<python module>:<python function>``. The path to the python module should be
+relative to the resource directory.
+
+.. code:: yaml
+
+	type: allele_score 
+	table:
+	  filename: clinvar_20221105_chr.vcf.gz
+	  index_filename: clinvar_20221105_chr.vcf.gz.tbi
+	scores:
+	  - id: CLNSIG
+	    name: CLNSIG
+	    type: str
+	    desc: |
+	      Clinical significance for this single variant; multiple values 
+          are separated by a vertical bar
+	    histogram:
+	      type: categorical
+	      y_log_scale: True
+	      plot_function: "clinvar_plots.py:plot_clnsig"
+	  - id: CLNREVSTAT
+	    name: CLNREVSTAT
+	    type: str
+	    desc: |
+	      ClinVar review status for the Variation ID
+	    histogram:
+	      type: categorical
+	      y_log_scale: True      
+	      display_values_count: 35
+	  - id: CLNVC
+	    name: CLNVC
+	    type: str
+	    desc: |
+	      Variant type
+	    histogram:
+	      type: categorical
+	      y_log_scale: True
+	      display_values_percent: 85.0
+
+Here is the content of the `clinvar_plots.py` file:
+
+.. code:: python
+
+  from typing import IO
+  from dae.genomic_resources.histogram import CategoricalHistogram
+  import matplotlib
+  import matplotlib.pyplot as plt
+  matplotlib.use("agg")
+
+
+  def plot_clnsig(
+      outfile: IO,
+      histogram: CategoricalHistogram,
+      xlabel: str,
+      _small_values_description: str | None = None,
+      _large_values_description: str | None = None,
+  ) -> None:
+      """Plot histogram and save it into outfile."""
+      # pylint: disable=import-outside-toplevel
+      values = list(sorted(histogram.raw_values.items(), key=lambda x: -x[1]))
+      values = [v for v in values if "|" not in v[0]]
+      labels = [v[0] for v in values]
+      counts = [v[1] for v in values]
+   
+      plt.figure(figsize=(40, 80), tight_layout=True)
+      _, ax = plt.subplots()
+      ax.bar(
+          x=labels,
+          height=counts,
+          tick_label=[str(v) for v in labels],
+          log=histogram.config.y_log_scale,
+          align="center",
+      )
+      plt.xlabel(f"\n{xlabel}")
+      plt.ylabel("count")
+      plt.tick_params(axis="x", labelrotation=90, direction="out")
+      plt.tight_layout()
+      plt.savefig(outfile)
+      plt.clf()
+
+Null Histograms Configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Null histograms are used when calculating a histogram is not possible or does not
+make sense. The null histogram configuration supports the following fields:
+
+* ``type`` - the type of the histogram. This should be set to ``null``.
+* ``reason`` - the reason why the histogram is disabled. This field is required.
+
 
 Resource repositories
 =====================
 
-Resource repositories are collections of genomic resources hosted either locally or remotely.
+Resource repositories are collections of genomic resources hosted either 
+locally or remotely.
 
 Repository discovery
 --------------------
