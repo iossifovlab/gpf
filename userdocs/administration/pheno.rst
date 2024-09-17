@@ -180,3 +180,65 @@ How The Tool Works
 * As a final step, the tool generates a phenotype study configuration.
 
 * The phenotype study is now fully prepared and ready in the output directory.
+
+How Measure Classification Works
+################################
+
+* When creating a measure classification task, a classification and inference configuration is merged if
+  an inference configuration file is provided, otherwise, the tool will work with the default configuration.
+
+* Every measure classification task starts with creating a read-only connection to a temporary
+  dbfile, provided by the previous steps in the import.
+
+* If the inference configuration provides the exact measure type, then the import will collect
+  min and max values for numeric types and all unique values for string types. String types
+  have null min and max values. Once min, max and values_domain are collected,
+  the classification is complete.
+
+* If an exact measure type is not provided, a classification report is constructed.
+  This report contains a bunch of different statistics for determining the measure type.
+
+* First, the total amount of measure values is collected.
+
+* Then, the total amount of non-null measure values is collected and with it,
+  the amount of null values is calculated by subtracting from the total.
+
+* Afterwards, we get the column's DB datatype and determine whether it is a text
+  or numeric measure stored in the DB.
+
+  * In the case of numeric measures, we collect the total count and the total
+    non-null count to determine the total count with values, total count with numeric values,
+    total count with non-numeric values and the total count without values. In this case, the
+    total count of non-numeric values is always 0.
+
+  * After this, we count the total amount of unique values and total amount of unique numeric values,
+    both the same in this case.
+
+  * We also collect a list of every unique and and a list of every real numeric value.
+
+  * In the case of text measures, we collect the total count of null values. Then we count the
+    amount of numeric values and then the count of non-numeric values. After this we count
+    and collect all unique values. And after this, we collect all numeric values and
+    from the list of numeric values we get the count of all of the unique numeric values too.
+
+* Once this is done, we proceed with classification.
+
+* First, if the amount of values in the measure table is less than the minimum individuals
+  in the inference configuration, we determine the measure type as `raw`.
+
+* Next, we get the percentage of non-numeric values in the table.
+
+  * If this percentage is less than the non-numeric cutoff in the configuration, we look at the amount
+    of unique numeric values in the table. If it is more than the minimum for continuous measures,
+    we determine the measure type to be `continuous`. Otherwise if it is more than the minimum 
+    for ordinal measures, we determine it as `ordinal`. Otherwise, we determine the measure as `raw`.
+
+  * If the percentage is more than the non-numeric cutoff, we look if the amount of unique values
+    falls within the range defined in the configuration for categorical measures. If it does,
+    then we determine the measure as `categorical`, otherwise the measure will be determined as `raw`.
+
+* If a range is not defined for categorical measures in the configuration, 
+  then all text measures will be classified as `raw`. The default configuration has a default range.
+
+* If minimums are not defined for continuous and ordinal measures, then the respective type
+  will be skipped to the next one until `raw`.
