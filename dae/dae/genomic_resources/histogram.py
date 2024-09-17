@@ -36,7 +36,7 @@ class NumberHistogramConfig:
     """Configuration class for number histograms."""
 
     view_range: tuple[float | None, float | None]
-    number_of_bins: int = 30
+    number_of_bins: int = 100
     x_log_scale: bool = False
     y_log_scale: bool = False
     x_min_log: float | None = None
