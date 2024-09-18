@@ -250,7 +250,7 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
 Annotator to use with genomic scores depending on genomic position like
 phastCons, phyloP, FitCons2, etc.
 
-<a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#position-score" target="_blank">More info</a>
+<a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation.html#position-score" target="_blank">More info</a>
 
 """)  # noqa
 
@@ -307,7 +307,7 @@ class NPScoreAnnotator(PositionScoreAnnotatorBase):
 Annotator to use with genomic scores depending on genomic position and
 nucleotide change like CADD, MPC, etc.
 
-<a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#np-score" target="_blank">More info</a>
+<a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation.html#np-score" target="_blank">More info</a>
 
 """)  # noqa
 
@@ -371,7 +371,7 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
 Annotator to use with scores that depend on allele like
 variant frequencies, etc.
 
-<a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#allele-score" target="_blank">More info</a>
+<a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation.html#allele-score" target="_blank">More info</a>
 
 """)  # noqa
 

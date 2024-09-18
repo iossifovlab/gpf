@@ -85,7 +85,7 @@ def test_annotate_doc(
     assert f"""src=\"file://{tmp_path}/one/statistics/histogram_score_one.png\"""" in output_template  # noqa: E501
     assert "<strong>position_aggregator</strong>" in output_template
     assert f"""href=\"file://{tmp_path}/one/index.html\"""" in output_template
-    assert 'href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation_tools.html#position-score"' in output_template  # noqa: E501
+    assert 'href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation.html#position-score"' in output_template  # noqa: E501
     assert "Annotator to use with genomic scores depending on genomic position" in output_template  # noqa: E501
 
     assert "preamble" in output_template
