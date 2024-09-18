@@ -279,7 +279,7 @@ The categorical histogram configuration supports the following fields:
   logarithmic.
 * ``display_values_count`` - the number of unique values that will be displayed in
   the histogram. Default value for this field is 20. The rest of the values
-    are grouped into the ``Other`` category.
+  are grouped into the ``Other`` category.
 * ``display_values_percent`` - the percentage of total mass of unique values 
   that will be displayed. Other values are grouped into the ``Other`` category.
   **Only one of** ``display_values_count`` and ``display_values_percent`` can be set.
