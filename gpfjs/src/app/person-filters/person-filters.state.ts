@@ -2,7 +2,6 @@ import { createReducer, createAction, on, props, createFeatureSelector } from '@
 import { PersonFilterState } from './person-filters';
 import { cloneDeep } from 'lodash';
 import { reset } from 'app/users/state-actions';
-import { state } from '@angular/animations';
 
 export interface PersonAndFamilyFilters {
   familyFilters: PersonFilterState[];
