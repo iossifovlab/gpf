@@ -15,9 +15,9 @@
     <div class="single-sorting-button">
       <span>Instrument</span>
       <gpf-sorting-buttons
-        [id]="'instrument'"
+        [id]="'instrumentName'"
         class="header-button sorting-button"
-        [sortState]="'instrument' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
+        [sortState]="'instrumentName' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
       </gpf-sorting-buttons>
     </div>
   </div>
@@ -28,9 +28,9 @@
     <div class="single-sorting-button">
       <span>Proband Pheno Measure</span>
       <gpf-sorting-buttons
-        [id]="'measure'"
+        [id]="'measureName'"
         class="header-button sorting-button"
-        [sortState]="'measure' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
+        [sortState]="'measureName' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
       </gpf-sorting-buttons>
     </div>
   </div>
@@ -45,9 +45,9 @@
       (click)="sort('measureType', 'measureType' === sortBy && orderBy === 'desc' ? 'asc' : 'desc')">
       Measure Type
       <gpf-sorting-buttons
-        [id]="'measure_type'"
+        [id]="'measureType'"
         class="header-button sorting-button"
-        [sortState]="'measure_type' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
+        [sortState]="'measureType' !== sortBy ? 0 : orderBy === 'asc' ? -1 : 1">
       </gpf-sorting-buttons>
     </div>
     <div id="values-domain">Values Domain</div>
