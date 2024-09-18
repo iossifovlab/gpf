@@ -11,7 +11,6 @@ import sqlglot
 from duckdb import ConstraintException
 from sqlglot import column, expressions, select, table
 from sqlglot.expressions import delete, insert, update, values
-from sqlglot.parser import build_like
 
 from dae.pheno.common import MeasureType
 from dae.utils.sql_utils import glot_and, to_duckdb_transpile
@@ -164,6 +163,11 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 return rows.to_dict("records")[0]
             return None
 
+    def _build_ilike(
+            self,
+            keyword: str, col: expressions.Column) -> expressions.Escape:
+        return expressions.Escape(this=col.ilike(keyword), expression="'/'")
+
     def build_measures_query(
         self,
         instrument_name: str | None = None,
@@ -220,31 +224,27 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             column_filters = []
             keyword = keyword.replace("/", "//")\
                 .replace("%", r"/%").replace("_", r"/_")
-            keyword = f"'%{keyword}%'"
+            keyword = f"%{keyword}%"
             if not instrument_name:
                 column_filters.append(
-                    build_like([
+                    self._build_ilike(
                         keyword,
                         column("instrument_name", table="variable_browser"),
-                        "'/'",
-                    ]),
+                    ),
                 )
             column_filters.extend((
-                build_like([
+                self._build_ilike(
                     keyword,
                     column("measure_id", table="variable_browser"),
-                    "'/'",
-                ]),
-                build_like([
+                ),
+                self._build_ilike(
                     keyword,
                     column("measure_name", table="variable_browser"),
-                    "'/'",
-                ]),
-                build_like([
+                ),
+                self._build_ilike(
                     keyword,
                     column("description", table="variable_browser"),
-                    "'/'",
-                ]),
+                ),
             ))
             query = query.where(reduce(
                 lambda left, right: left.or_(right),  # type: ignore
