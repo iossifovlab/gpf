@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pytest_mock
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 
@@ -58,9 +59,28 @@ def test_get_case_insensitive_gene(
 
 def test_search_gene_symbols(
     anonymous_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+    t4c8_wgpf_instance: WGPFInstance,
+    mocker: pytest_mock.MockFixture,
 ) -> None:
-    response = anonymous_client.get("/api/v3/genome/gene_models/search/t4")
-    assert response.data["gene_symbols"] == ["t4"]  # type: ignore
-    response = anonymous_client.get("/api/v3/genome/gene_models/search/t")
-    assert response.data["gene_symbols"] == ["t4"]  # type: ignore
+
+    mocker.patch.object(
+        t4c8_wgpf_instance.gene_models,
+        "gene_models",
+        {
+            "CHD3": [], "CHD2": [], "CHD8": [], "CHD1L": [], "CHD1": [],
+            "CHD4": [], "CHD9": [], "CHD7": [], "CHD5": [], "CHDH": [],
+            "CHD6": [], "CTEST": [], "CTEST2": [], "CTEST3": [], "CTEST4": [],
+        },
+    )
+
+    response = anonymous_client.get("/api/v3/genome/gene_models/search/CHD8")
+    assert response.data["gene_symbols"] == ["CHD8"]  # type: ignore
+
+    response = anonymous_client.get("/api/v3/genome/gene_models/search/CHD")
+    assert set(response.data["gene_symbols"]) == {  # type: ignore
+        "CHD3", "CHD2", "CHD8", "CHD1L", "CHD1",
+        "CHD4", "CHD9", "CHD7", "CHD5", "CHDH", "CHD6",
+    }
+
+    response = anonymous_client.get("/api/v3/genome/gene_models/search/C")
+    assert len(response.data["gene_symbols"]) == 15  # type: ignore
