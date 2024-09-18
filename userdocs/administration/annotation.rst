@@ -150,6 +150,7 @@ Annotate with a nucleotide polymorphism score resource.
         - source: <source score ID>
           name: <destination attribute name>
           position_aggregator: <aggregator to use for INDELs>
+          nucleotide_aggregator: <aggregator to use for NPs>
 
 Allele score
 ++++++++++++
@@ -163,6 +164,8 @@ Annotate with an allele score resource.
         attributes:
         - source: <source score ID>
           name: <destination attribute name>
+          position_aggregator: <aggregator to use for INDELs>
+          allele_aggregator: <aggregator to use for alleles>
 
 
 Effect annotator
@@ -181,6 +184,14 @@ gene_effects
 
 effect_details
   Effect details for each affected transcript.
+
+
+gene_list
+  List of all genes
+
+
+LGD_gene_list
+  List of all LGD genes
 
 
 .. code:: yaml
@@ -281,6 +292,9 @@ Notes on usage
 - When parallelizing is used, a directory for storing task flags and task logs will be created in your working directory. If you wish to re-run the annotation, it is necessary to remove this directory as the flags inside it will prevent the tasks from running.
 - The option to reannotate data is provided. This is useful when you wish to modify only specific columns of an already annotated piece of data - for example to update a score column whose score resource has received a new version.
   To carry this out in the ``annotate_columns`` and ``annotate_vcf`` tools, you will have to use to provide the old annotation pipeline through the ``--reannotate`` flag. For ``annotate_schema2_parquet``, this is done automatically, as the annotation pipeline is stored in its metadata.
+- The option to allow repeated attributes is provided with the ``--allow-repeated-attributes`` (short form ``-ar``) flag.
+  With this flag, the annotation pipeline will append the annotator ID (typically ``A<index of annotator in the pipeline config>)``, e.g. ``A0``, ``A1``) to the attribute's name.
+  For example, a repeating attribute called ``my_score`` will appear in the output as ``my_score_A0``, ``my_score_A1``, and so on.
 
 annotate_columns
 ################
@@ -450,6 +464,20 @@ Gene score annotator with changed aggregator
         attributes:
         - source: pLI
           gene_aggregator: max
+
+
+How to annotate with gene set annotators
+########################################
+
+.. code:: yaml
+
+    - effect_annotator:
+        gene_models: hg38/gene_models/refSeq_v20200330
+        genome: hg38/genomes/GRCh38-hg38
+    - gene_set_annotator:
+        resource_id: gene_properties/gene_sets/autism
+        gene_set_id: autism candidates from Iossifov PNAS 2015
+        input_gene_list: gene_list
 
 
 Simple position score annotation

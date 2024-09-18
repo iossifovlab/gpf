@@ -276,3 +276,44 @@ This configuration is embedded in the score's ``genomic_resource.yaml`` config.
     default_annotation:
       - source: phyloP7way
         name: phylop7way
+
+
+How to generate tabix files
+===========================
+
+Note - in order to use tabix, the score file must already be compressed using ``bgzip``.
+
+.. runblock:: console
+
+    $ tabix --help
+
+.. runblock:: console
+
+    $ bgzip --help
+
+Example usage of ``tabix``
+--------------------------
+
+For a VCF-format score:
+
+.. code:: bash
+
+    $ tabix -p vcf score.vcf.gz
+
+For a 1-based TSV score with a single position column:
+
+.. code:: bash
+
+    $ tabix -s 1 -b 2 score.tsv.gz
+
+For a 1-based TSV score with start and stop position columns:
+
+.. code:: bash
+
+    $ tabix -s 1 -b 2 -e 3 score.tsv.gz
+
+For a 0-based TSV score with start and stop position columns:
+
+.. code:: bash
+
+    $ tabix -0 -s 1 -b 2 -e 3 score.tsv.gz
