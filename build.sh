@@ -129,7 +129,7 @@ function main() {
 
         local -A ctx_localstack
 
-        build_run_local docker pull localstack/localstack
+        # build_run_local docker pull localstack/localstack
 
         build_run_ctx_init ctx:ctx_localstack "persistent" "container" "localstack/localstack" \
            "cmd-from-image" "no-def-mounts" \
