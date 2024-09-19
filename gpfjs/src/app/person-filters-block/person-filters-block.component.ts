@@ -1,7 +1,5 @@
 import { Component, AfterViewInit, Input, ViewChild, OnInit } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
-// import { PersonIdsModel, PersonIdsState } from 'app/person-ids/person-ids.state';
-// import { PersonFiltersModel, PersonFiltersState, SetPersonFilters } from 'app/person-filters/person-filters.state';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
 import { resetPersonFilterStates, selectPersonFilters } from 'app/person-filters/person-filters.state';

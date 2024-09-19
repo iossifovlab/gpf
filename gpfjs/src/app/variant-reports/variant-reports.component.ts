@@ -9,9 +9,7 @@ import { Dictionary } from 'lodash';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 import { Store } from '@ngrx/store';
-// import { SetFamilyTags } from 'app/family-tags/family-tags.state';
 import { Router } from '@angular/router';
-import { DatasetsService } from 'app/datasets/datasets.service';
 import { resetFamilyTags } from 'app/family-tags/family-tags.state';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 
@@ -66,9 +64,8 @@ export class VariantReportsComponent implements OnInit {
     private variantReportsService: VariantReportsService,
     protected store: Store,
     private router: Router,
-    private datasetsService: DatasetsService,
   ) {
-    router.events.subscribe(() => {
+    this.router.events.subscribe(() => {
       this.store.dispatch(
         resetFamilyTags()
       );

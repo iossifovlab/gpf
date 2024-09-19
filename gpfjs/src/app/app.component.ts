@@ -38,7 +38,7 @@ export class AppComponent implements OnInit {
     private ngbConfig: NgbConfig,
     protected store: Store,
   ) {
-    ngbConfig.animation = false;
+    this.ngbConfig.animation = false;
   }
 
   public ngOnInit(): void {

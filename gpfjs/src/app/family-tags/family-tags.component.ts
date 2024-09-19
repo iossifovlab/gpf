@@ -1,6 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { initialState, selectFamilyTags, setFamilyTags } from './family-tags.state';
-// import { FamilyTags } from './family-tags';
 import { Store } from '@ngrx/store';
 import { take } from 'rxjs';
 import { cloneDeep } from 'lodash';
