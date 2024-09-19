@@ -59,11 +59,11 @@ export const resetPersonFilters = createAction(
 
 export const personFiltersReducer = createReducer(
   initialState,
-  on(setFamilyFilters, (state, {familyFilters}) => cloneDeep({
+  on(setFamilyFilters, (state, {familyFilters}) => ({
     ...state,
     familyFilters: familyFilters,
   })),
-  on(setPersonFilters, (state, {personFilters}) => cloneDeep({
+  on(setPersonFilters, (state, {personFilters}) => ({
     ...state,
     personFilters: personFilters,
   })),
@@ -104,22 +104,20 @@ export const personFiltersReducer = createReducer(
     };
   }),
   on(removeFamilyFilter, (state, {familyFilter}) => {
-    const stateClone = cloneDeep(state);
-    const newFamilyFilters = stateClone.familyFilters;
+    const newFamilyFilters = state.familyFilters;
     newFamilyFilters?.splice(newFamilyFilters.findIndex(filter => filter.id === familyFilter.id), 1);
 
     return {
-      ...stateClone,
+      ...state,
       familyFilters: newFamilyFilters,
     };
   }),
   on(removePersonFilter, (state, {personFilter}) => {
-    const stateClone = cloneDeep(state);
-    const newPersonFilters = stateClone.personFilters;
+    const newPersonFilters = state.personFilters;
     newPersonFilters?.splice(newPersonFilters.findIndex(filter => filter.id === personFilter.id), 1);
 
     return {
-      ...stateClone,
+      ...state,
       personFilters: newPersonFilters,
     };
   }),
