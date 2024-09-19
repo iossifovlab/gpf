@@ -128,7 +128,10 @@ def test_get_gene_set_collection_ids(gene_sets_db: GeneSetsDb) -> None:
 
 
 def test_get_gene_set_ids(gene_sets_db: GeneSetsDb) -> None:
-    assert gene_sets_db.get_gene_set_ids("main") == {"main_candidates"}
+    assert gene_sets_db.get_gene_set_ids("main") == {
+        "main_candidates",
+         "alt_candidates",
+    }
 
 
 def test_get_collections_descriptions(gene_sets_db: GeneSetsDb) -> None:
@@ -164,13 +167,21 @@ def test_has_gene_set_collection(gene_sets_db: GeneSetsDb) -> None:
 def test_get_all_gene_sets(gene_sets_db: GeneSetsDb) -> None:
     gene_sets = gene_sets_db.get_all_gene_sets("main")
 
-    assert len(gene_sets) == 1
-    gene_set = gene_sets[0]
+    assert len(gene_sets) == 2
 
-    assert gene_set is not None
-    assert gene_set["name"] == "main_candidates"
-    assert gene_set["count"] == 9
-    assert gene_set["desc"] == "Main Candidates"
+    alt_gene_set = gene_sets[0]
+
+    assert alt_gene_set is not None
+    assert alt_gene_set["name"] == "alt_candidates"
+    assert alt_gene_set["count"] == 1
+    assert alt_gene_set["desc"] == "Alt Candidates"
+
+    main_gene_set = gene_sets[1]
+
+    assert main_gene_set is not None
+    assert main_gene_set["name"] == "main_candidates"
+    assert main_gene_set["count"] == 9
+    assert main_gene_set["desc"] == "Main Candidates"
 
 
 def test_get_all_gene_sets_gmt(gene_sets_db: GeneSetsDb) -> None:
