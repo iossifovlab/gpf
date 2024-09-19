@@ -27,6 +27,9 @@ import { geneScoresReducer, GeneScoresState } from 'app/gene-scores/gene-scores.
 import { phenoToolMeasureReducer, PhenoToolMeasureState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 import { PresentInParent, presentInParentReducer } from 'app/present-in-parent/present-in-parent.state';
 import { effectTypesReducer } from 'app/effect-types/effect-types.state';
+import { personFiltersReducer } from 'app/person-filters/person-filters.state';
+import { familyIdsReducer } from 'app/family-ids/family-ids.state';
+import { familyTagsReducer } from 'app/family-tags/family-tags.state';
 
 class PhenoToolServiceMock {
   public getPhenoToolResults(): Observable<PhenoToolResults> {
@@ -83,7 +86,10 @@ describe('PhenoToolComponent', () => {
           geneScores: geneScoresReducer,
           phenoToolMeasure: phenoToolMeasureReducer,
           effectTypes: effectTypesReducer,
-          presentInParent: presentInParentReducer
+          presentInParent: presentInParentReducer,
+          personFilters: personFiltersReducer,
+          familyIds: familyIdsReducer,
+          familyTags: familyTagsReducer,
         }),
         NgbNavModule
       ],
@@ -138,7 +144,17 @@ describe('PhenoToolComponent', () => {
         geneScoresMock,
         phenoToolMeasureMock,
         ['missense', 'splice-site'],
-        presentInParentMock
+        presentInParentMock,
+        {
+          selectedFamilyTags: [],
+          deselectedFamilyTags: [],
+          tagIntersection: true,
+        },
+        [],
+        {
+          familyFilters: null,
+          personFilters: null,
+        }
       ]));
 
     component.ngOnInit();

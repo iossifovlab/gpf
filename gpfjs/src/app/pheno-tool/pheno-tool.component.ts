@@ -18,6 +18,9 @@ import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { selectPresentInParent } from 'app/present-in-parent/present-in-parent.state';
 import { selectEffectTypes } from 'app/effect-types/effect-types.state';
 import { selectErrors } from 'app/common/errors.state';
+import { selectFamilyTags } from 'app/family-tags/family-tags.state';
+import { selectFamilyIds } from 'app/family-ids/family-ids.state';
+import { selectPersonFilters } from 'app/person-filters/person-filters.state';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -70,6 +73,9 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       this.store.select(selectPhenoToolMeasure),
       this.store.select(selectEffectTypes),
       this.store.select(selectPresentInParent),
+      this.store.select(selectFamilyTags),
+      this.store.select(selectFamilyIds),
+      this.store.select(selectPersonFilters),
     ]).subscribe(([
       geneSymbolsState,
       geneSetsState,
@@ -77,6 +83,9 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       phenoToolMeasureState,
       effectTypesState,
       presentInParentState,
+      familyTagsState,
+      familyIdsState,
+      personFiltersState
     ]) => {
       const presentInParent = {
         presentInParent: presentInParentState.presentInParent,
@@ -104,10 +113,16 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
           geneSetsCollection: geneSetsState.geneSetsCollection.name,
           geneTypes: geneSetsState.geneSetsTypes
         }},
-        ...geneScoresState.score && geneScoresState,
+        ...geneScoresState.score && {geneScores: geneScoresState},
         ...phenoToolMeasureState,
         effectTypes: effectTypesState,
-        presentInParent: presentInParent
+        presentInParent: presentInParent,
+        ...!familyTagsState?.tagIntersection && {tagIntersection: familyTagsState.tagIntersection},
+        ...familyTagsState.selectedFamilyTags?.length && {selectedFamilyTags: familyTagsState.selectedFamilyTags},
+        ...familyTagsState.deselectedFamilyTags?.length
+            && {deselectedFamilyTags: familyTagsState.deselectedFamilyTags},
+        ...familyIdsState?.length && {familyIds: familyIdsState},
+        ...personFiltersState?.familyFilters?.length && {familyFilters: personFiltersState.familyFilters},
       };
 
       this.phenoToolResults = null;
