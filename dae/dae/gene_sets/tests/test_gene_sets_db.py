@@ -1,16 +1,20 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
 import textwrap
 
 import pytest
 
 from dae.gene_sets.gene_sets_db import GeneSetCollection, GeneSetsDb
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GenomicResourceProtocolRepo,
+)
 from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
 @pytest.fixture()
-def gene_sets_repo(tmp_path):
-    sets_repo = build_inmemory_test_repository({
+def gene_sets_repo(tmp_path: pathlib.Path) -> GenomicResourceProtocolRepo:  # noqa: ARG001
+    return build_inmemory_test_repository({
         "main": {
             GR_CONF_FILE_NAME: textwrap.dedent("""
                 type: gene_set
@@ -33,6 +37,11 @@ def gene_sets_repo(tmp_path):
                     "USP7\n"
                     "GOLGA5\n"
                     "PCSK2\n"
+                ),
+                "alt_candidates.txt": (
+                    "alt_candidates\n"
+                    "Alt Candidates\n"
+                    "DIABLO\n"
                 ),
             },
         },
@@ -72,11 +81,10 @@ def gene_sets_repo(tmp_path):
             ),
         },
     })
-    return sets_repo
 
 
 @pytest.fixture()
-def gene_sets_db(gene_sets_repo):
+def gene_sets_db(gene_sets_repo: GenomicResourceProtocolRepo) -> None:
     resources = [
         gene_sets_repo.get_resource("main"),
         gene_sets_repo.get_resource("test_mapping"),
@@ -88,7 +96,9 @@ def gene_sets_db(gene_sets_repo):
     return GeneSetsDb(gene_set_collections)
 
 
-def test_gene_set_collection_main(gene_sets_repo):
+def test_gene_set_collection_main(
+    gene_sets_repo: GenomicResourceProtocolRepo,
+) -> None:
     resource = gene_sets_repo.get_resource("main")
     gsc = GeneSetCollection(resource)
     gene_set = gsc.get_gene_set("main_candidates")
@@ -109,7 +119,7 @@ def test_gene_set_collection_main(gene_sets_repo):
     assert gene_set["desc"] == "Main Candidates"
 
 
-def test_get_gene_set_collection_ids(gene_sets_db):
+def test_get_gene_set_collection_ids(gene_sets_db: GeneSetsDb) -> None:
     assert gene_sets_db.get_gene_set_collection_ids() == {
         "main",
         "test_mapping",
@@ -117,11 +127,11 @@ def test_get_gene_set_collection_ids(gene_sets_db):
     }
 
 
-def test_get_gene_set_ids(gene_sets_db):
+def test_get_gene_set_ids(gene_sets_db: GeneSetsDb) -> None:
     assert gene_sets_db.get_gene_set_ids("main") == {"main_candidates"}
 
 
-def test_get_collections_descriptions(gene_sets_db):
+def test_get_collections_descriptions(gene_sets_db: GeneSetsDb) -> None:
     assert gene_sets_db.collections_descriptions == [
         {
             "desc": "Main",
@@ -144,14 +154,14 @@ def test_get_collections_descriptions(gene_sets_db):
     ]
 
 
-def test_has_gene_set_collection(gene_sets_db):
+def test_has_gene_set_collection(gene_sets_db: GeneSetsDb) -> None:
     assert gene_sets_db.has_gene_set_collection("main")
     assert gene_sets_db.has_gene_set_collection("test_mapping")
     assert gene_sets_db.has_gene_set_collection("test_gmt")
     assert not gene_sets_db.has_gene_set_collection("nonexistent_gsc")
 
 
-def test_get_all_gene_sets(gene_sets_db):
+def test_get_all_gene_sets(gene_sets_db: GeneSetsDb) -> None:
     gene_sets = gene_sets_db.get_all_gene_sets("main")
 
     assert len(gene_sets) == 1
@@ -163,7 +173,7 @@ def test_get_all_gene_sets(gene_sets_db):
     assert gene_set["desc"] == "Main Candidates"
 
 
-def test_get_all_gene_sets_gmt(gene_sets_db):
+def test_get_all_gene_sets_gmt(gene_sets_db: GeneSetsDb) -> None:
     gene_sets = gene_sets_db.get_all_gene_sets("test_gmt")
 
     assert len(gene_sets) == 3
@@ -184,7 +194,7 @@ def test_get_all_gene_sets_gmt(gene_sets_db):
     assert gene_sets[2]["desc"] == "somedescription"
 
 
-def test_get_all_gene_sets_mapping(gene_sets_db):
+def test_get_all_gene_sets_mapping(gene_sets_db: GeneSetsDb) -> None:
     gene_sets = gene_sets_db.get_all_gene_sets("test_mapping")
 
     assert len(gene_sets) == 3
@@ -205,7 +215,7 @@ def test_get_all_gene_sets_mapping(gene_sets_db):
     assert gene_sets[2]["desc"] == "test_third"
 
 
-def test_get_gene_set(gene_sets_db):
+def test_get_gene_set(gene_sets_db: GeneSetsDb) -> None:
     gene_set = gene_sets_db.get_gene_set("main", "main_candidates")
 
     assert gene_set is not None
@@ -225,7 +235,7 @@ def test_get_gene_set(gene_sets_db):
     assert gene_set["desc"] == "Main Candidates"
 
 
-def test_get_gene_set_gmt(gene_sets_db):
+def test_get_gene_set_gmt(gene_sets_db: GeneSetsDb) -> None:
     gene_set = gene_sets_db.get_gene_set("test_gmt", "TEST_GENE_SET1")
     assert gene_set["name"] == "TEST_GENE_SET1"
     assert gene_set["count"] == 2
@@ -233,9 +243,28 @@ def test_get_gene_set_gmt(gene_sets_db):
     assert set(gene_set["syms"]) == {"POGZ", "CHD8"}
 
 
-def test_get_gene_set_mapping(gene_sets_db):
+def test_get_gene_set_mapping(gene_sets_db: GeneSetsDb) -> None:
     gene_set = gene_sets_db.get_gene_set("test_mapping", "test:01")
     assert gene_set["name"] == "test:01"
     assert gene_set["count"] == 1
     assert gene_set["desc"] == "test_first"
     assert set(gene_set["syms"]) == {"POGZ"}
+
+
+def test_get_gene_set_collection_files(gene_sets_db: GeneSetsDb) -> None:
+    """Get a collection list of files"""
+    gene_set_collections = gene_sets_db.gene_set_collections
+
+    assert gene_set_collections["main"].files == {
+        "GeneSets/main_candidates.txt",
+        "GeneSets/alt_candidates.txt",
+    }
+
+    assert gene_set_collections["test_mapping"].files == {
+        "test-map.txt",
+        "test-mapnames.txt",
+    }
+
+    assert gene_set_collections["test_gmt"].files == {
+        "test-gmt.gmt",
+    }

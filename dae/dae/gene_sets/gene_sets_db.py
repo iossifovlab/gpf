@@ -100,7 +100,30 @@ class GeneSetCollection(
 
     @property
     def files(self) -> set[str]:
-        raise NotImplementedError
+        res = set()
+        config = self.resource.get_config()
+        collection_format = config["format"]
+
+        if collection_format == "map":
+            filename = self.config["filename"]
+            res.add(filename)
+            names_filename = filename[:-4] + "names.txt"
+            if self.resource.file_exists(names_filename):
+                res.add(names_filename)
+        elif collection_format == "gmt":
+            res.add(config["filename"])
+        elif collection_format == "directory":
+            directory = config["directory"]
+            if directory == ".":
+                directory = ""
+            for filepath, _ in self.resource.get_manifest().get_files():
+                if filepath.startswith(directory) and \
+                        filepath.endswith(".txt"):
+                    res.add(filepath)
+        else:
+            raise ValueError("Invalid collection format type")
+
+        return res
 
     def load_gene_sets(self) -> dict[str, GeneSet]:
         """Build a gene set collection from a given GenomicResource."""
