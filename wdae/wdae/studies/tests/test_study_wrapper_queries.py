@@ -100,7 +100,7 @@ def test_query_sexes_variants(
 ) -> None:
     study_wrapper = t4c8_study_1_wrapper
     query = {
-        "gender": sexes,
+        "genders": sexes,
     }
     variants = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}]),
@@ -408,7 +408,7 @@ def test_query_complex_query(
             "frame-shift", "nonsense", "splice-site",
             "no-frame-shift-newStop", "missense", "synonymous",
         ],
-        "gender": [
+        "genders": [
             "female", "male",
         ],
         "inheritanceTypeFilter": [],

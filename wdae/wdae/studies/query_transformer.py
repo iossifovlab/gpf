@@ -20,7 +20,7 @@ class QueryTransformer:
     FILTER_RENAMES_MAP: ClassVar[dict[str, str]] = {
         "familyIds": "family_ids",
         "personIds": "person_ids",
-        "gender": "sexes",
+        "genders": "sexes",
         "geneSymbols": "genes",
         "variantTypes": "variant_type",
         "effectTypes": "effect_types",
@@ -415,13 +415,13 @@ class QueryTransformer:
                     kwargs["genes"] = []
                 kwargs["genes"] += genes
 
-        if "gender" in kwargs:
-            sexes = set(kwargs["gender"])
+        if "genders" in kwargs:
+            sexes = set(kwargs["genders"])
             if sexes != {"female", "male", "unspecified"}:
                 sexes_query = f"any({','.join(sexes)})"
-                kwargs["gender"] = sexes_query
+                kwargs["genders"] = sexes_query
             else:
-                kwargs["gender"] = None
+                kwargs["genders"] = None
 
         if "variantTypes" in kwargs:
             variant_types = set(kwargs["variantTypes"])

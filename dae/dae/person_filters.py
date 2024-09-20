@@ -1,5 +1,4 @@
 from collections.abc import Collection
-from typing import List, Set
 
 import numpy as np
 import pandas as pd
@@ -16,8 +15,8 @@ class PersonFilter:
         raise NotImplementedError
 
     def apply(
-        self, families: FamiliesData, roles: List[str] | None = None,
-    ) -> Set[str]:
+        self, families: FamiliesData, roles: list[str] | None = None,
+    ) -> set[str]:
         raise NotImplementedError
 
 
@@ -29,8 +28,8 @@ class CriteriaFilter(PersonFilter):  # pylint: disable=abstract-method
         self.values: Collection = values
 
     def apply(
-        self, families: FamiliesData, roles: List[str] | None = None,
-    ) -> Set[str]:
+        self, families: FamiliesData, roles: list[str] | None = None,
+    ) -> set[str]:
         """Return a set of person ids for individuals matching the filter."""
         ped_df = families.ped_df.copy()
         if roles is not None:
@@ -88,8 +87,8 @@ class PhenoFilter(CriteriaFilter):  # pylint: disable=abstract-method
         )
 
     def apply(
-        self, families: FamiliesData, roles: List[str] | None = None,
-    ) -> Set[str]:
+        self, families: FamiliesData, roles: list[str] | None = None,
+    ) -> set[str]:
         ids = set()
         for person_id in self.measure_df["person_id"]:
             if person_id not in families.persons_by_person_id:
@@ -143,7 +142,7 @@ class FamilyFilter(PersonFilter):
     def apply_to_df(self, df: pd.DataFrame) -> pd.DataFrame:
         return self.person_filter.apply_to_df(df)
 
-    def apply(self, *args, **kwargs) -> Set[str]:
+    def apply(self, *args, **kwargs) -> set[str]:
         families: FamiliesData = args[0]
         return families.families_of_persons(
             self.person_filter.apply(*args, **kwargs),
