@@ -6,11 +6,10 @@ from box import Box
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, User
 from django.test import override_settings
-from django.test.client import Client
-from gpf_instance.gpf_instance import WGPFInstance, reload_datasets
+from gpf_instance.gpf_instance import WGPFInstance
 from studies.study_wrapper import StudyWrapper
 
-from dae.studies.study import GenotypeDataGroup
+from dae.studies.study import GenotypeData, GenotypeDataGroup
 from datasets_api.models import Dataset
 from datasets_api.permissions import (
     _user_has_permission_strict,
@@ -24,300 +23,17 @@ from datasets_api.permissions import (
     user_has_permission,
 )
 
-pytestmark = pytest.mark.usefixtures("db")
+
+@pytest.fixture()
+def omni_dataset(custom_wgpf: WGPFInstance) -> GenotypeData:
+    """Easy-access fixture for the dataset containing all genotype data."""
+    return custom_wgpf.get_genotype_data("omni_dataset")
 
 
 @pytest.fixture()
-def dataset_wrapper(
-    request: pytest.FixtureRequest,
-    wdae_gpf_instance: WGPFInstance,
-) -> StudyWrapper:
-    dataset1_wrapper = cast(
-        StudyWrapper, wdae_gpf_instance.get_wdae_wrapper("Dataset1"))
-    assert dataset1_wrapper is not None
-    assert dataset1_wrapper.is_group
-
-    dataset2_wrapper = cast(
-        StudyWrapper, wdae_gpf_instance.get_wdae_wrapper("Dataset2"))
-    assert dataset2_wrapper is not None
-    assert dataset2_wrapper.is_group
-
-    ds_config = Box(dataset1_wrapper.config.to_dict())
-    ds_config.studies = (
-        "Dataset1",
-        "Dataset2",
-    )
-    ds_config.id = "Dataset"
-
-    dataset = GenotypeDataGroup(
-        ds_config,
-        [
-            dataset1_wrapper.genotype_data_study,
-            dataset2_wrapper.genotype_data_study,
-        ])
-    assert dataset is not None
-    assert dataset.study_id == "Dataset"
-
-    dataset_wrapper = StudyWrapper(
-        dataset, None, None, wdae_gpf_instance)  # type: ignore
-    assert dataset_wrapper is not None
-    assert dataset_wrapper.is_group
-
-    Dataset.recreate_dataset_perm("Dataset")
-
-    wdae_gpf_instance.register_genotype_data(dataset)
-
-    # wdae_gpf_instance\
-    #     ._variants_db\
-    #     ._genotype_data_group_wrapper_cache["Dataset"] = dataset_wrapper
-    # wdae_gpf_instance\
-    #     ._variants_db\
-    #     .genotype_data_group_configs["Dataset"] = ds_config
-
-    assert "Dataset" in wdae_gpf_instance.get_genotype_data_ids()
-    assert wdae_gpf_instance.get_genotype_data("Dataset") is not None
-
-    def fin() -> None:
-        wdae_gpf_instance.unregister_genotype_data(dataset)
-
-    request.addfinalizer(fin)
-
-    reload_datasets(wdae_gpf_instance)
-
-    return dataset_wrapper
-
-
-def test_parents(
-    admin_client: Client,
-    wdae_gpf_instance: WGPFInstance,
-    dataset_wrapper: StudyWrapper,
-) -> None:
-    assert dataset_wrapper.parents == set()
-
-    dataset1 = wdae_gpf_instance.get_genotype_data("Dataset1")
-    assert dataset1.parents == set(["Dataset"])
-
-    dataset2 = wdae_gpf_instance.get_genotype_data("Dataset2")
-    assert "Dataset" in dataset2.parents
-
-    study1 = wdae_gpf_instance.get_genotype_data("Study1")
-    assert "Dataset1" in study1.parents
-
-    study2 = wdae_gpf_instance.get_genotype_data("Study2")
-    assert "Dataset2" in study2.parents
-
-    study3 = wdae_gpf_instance.get_genotype_data("Study3")
-    assert "Dataset1" in study3.parents
-
-
-def test_datasets_studies_ids(
-    admin_client: Client,
-    wdae_gpf_instance: WGPFInstance,
-    dataset_wrapper: StudyWrapper,
-) -> None:
-
-    study_ids = dataset_wrapper.get_studies_ids()
-    assert set(study_ids) == set(
-        ["Dataset", "Dataset1", "Dataset2", "Study1", "Study2", "Study3"],
-    )
-
-    study_ids = dataset_wrapper.get_studies_ids(leaves=False)
-    assert set(study_ids) == set(["Dataset", "Dataset1", "Dataset2"])
-
-
-def test_dataset_rights(
-    user: User, dataset_wrapper: StudyWrapper,
-) -> None:
-    add_group_perm_to_user(dataset_wrapper.study_id, user)
-    assert user_has_permission("test_data", user, dataset_wrapper.study_id)
-
-
-def test_dataset1_rights(
-    user: User, dataset_wrapper: StudyWrapper,
-) -> None:
-    add_group_perm_to_user("Dataset1", user)
-    assert user_has_permission("test_data", user, dataset_wrapper.study_id)
-
-
-def test_dataset_rights_any_user(
-    dataset_wrapper: StudyWrapper,
-) -> None:
-    user = cast(User, AnonymousUser())
-    assert not user_has_permission("test_data", user, dataset_wrapper.study_id)
-    add_group_perm_to_dataset("any_user", dataset_wrapper.study_id)
-    assert user_has_permission("test_data", user, dataset_wrapper.study_id)
-
-
-def test_dataset1_rights_allowed_datasets(
-    user: User, dataset_wrapper: StudyWrapper,
-) -> None:
-    add_group_perm_to_user("Dataset1", user)
-    result = get_allowed_genotype_data(
-        "test_data", user, dataset_wrapper.study_id)
-    assert result == set(["Dataset", "Dataset1", "Study1", "Study3"])
-
-    result = get_allowed_genotype_studies(
-        "test_data", user, dataset_wrapper.study_id)
-    assert result == set(["Study1", "Study3"])
-
-
-def test_dataset2_rights_allowed_datasets(
-    user: User,
-    dataset_wrapper: StudyWrapper,
-) -> None:
-    add_group_perm_to_user("Dataset2", user)
-    result = get_allowed_genotype_data(
-        "test_data", user, dataset_wrapper.study_id)
-    assert result == set(["Dataset", "Dataset2", "Study2"])
-
-    result = get_allowed_genotype_studies(
-        "test_data", user, dataset_wrapper.study_id)
-    assert result == set(["Study2"])
-
-
-def test_study1_and_dataset2_rights_allowed_datasets(
-    user: User, dataset_wrapper: StudyWrapper,
-) -> None:
-
-    add_group_perm_to_user("Dataset2", user)
-    add_group_perm_to_user("Study1", user)
-
-    result = get_allowed_genotype_data(
-        "test_data", user, dataset_wrapper.study_id)
-    assert result == set(["Dataset", "Study1", "Dataset2", "Study2"])
-
-    result = get_allowed_genotype_studies(
-        "test_data", user, dataset_wrapper.study_id)
-    assert result == set(["Study1", "Study2"])
-
-
-def test_top_level_study_access(
-    user: User,
-    wdae_gpf_instance: WGPFInstance,
-) -> None:
-    assert not user_has_permission("test_data", user, "comp")
-    add_group_perm_to_user("comp", user)
-    assert user_has_permission("test_data", user, "comp")
-
-
-def test_dataset_group_rights(
-    user: User, dataset_wrapper: StudyWrapper,
-) -> None:
-    add_group_perm_to_user("A", user)
-    add_group_perm_to_dataset("A", dataset_wrapper.study_id)
-
-    assert user_has_permission("test_data", user, dataset_wrapper.study_id)
-
-
-def test_dataset_group_rights_gives_access_to_all_studies(
-    user: User, dataset_wrapper: StudyWrapper,
-) -> None:
-    add_group_perm_to_user("A", user)
-    add_group_perm_to_dataset("A", dataset_wrapper.study_id)
-
-    assert user_has_permission("test_data", user, "Study1")
-    assert user_has_permission("test_data", user, "Study2")
-    assert user_has_permission("test_data", user, "Study3")
-
-
-def test_dataset_group_rights_gives_access_to_all_datasets(
-    user: User, dataset_wrapper: StudyWrapper,
-) -> None:
-    add_group_perm_to_user("A", user)
-    add_group_perm_to_dataset("A", dataset_wrapper.study_id)
-
-    assert user_has_permission("test_data", user, "Dataset1")
-    assert user_has_permission("test_data", user, "Dataset2")
-    assert user_has_permission("test_data", user, "Dataset")
-
-
-def test_dataset1_group_rights(
-    user: User, dataset_wrapper: StudyWrapper,
-) -> None:
-    add_group_perm_to_user("A", user)
-    add_group_perm_to_dataset("A", "Dataset1")
-
-    assert user_has_permission("test_data", user, dataset_wrapper.study_id)
-
-
-def test_dataset1_group_rights_gives_access_to_study1_and_study3(
-    user: User, dataset_wrapper: StudyWrapper,
-) -> None:
-    add_group_perm_to_user("A", user)
-    add_group_perm_to_dataset("A", "Dataset1")
-
-    assert user_has_permission("test_data", user, "Study1")
-    assert user_has_permission("test_data", user, "Study3")
-
-    assert not user_has_permission("test_data", user, "Study2")
-
-
-def test_study1_and_dataset2_group_rights_allowed_datasets(
-    user: User, dataset_wrapper: StudyWrapper,
-) -> None:
-
-    add_group_perm_to_user("A", user)
-    add_group_perm_to_dataset("A", "Dataset2")
-    add_group_perm_to_dataset("A", "Study1")
-
-    result = get_allowed_genotype_data(
-        "test_data", user, dataset_wrapper.study_id)
-    assert result == set(["Dataset", "Study1", "Dataset2", "Study2"])
-
-    result = get_allowed_genotype_studies(
-        "test_data", user, dataset_wrapper.study_id)
-    assert result == set(["Study1", "Study2"])
-
-
-def test_dataset_any_dataset_group_rights(
-    user: User, dataset_wrapper: StudyWrapper,
-) -> None:
-    add_group_perm_to_user("any_dataset", user)
-
-    assert user_has_permission("test_data", user, dataset_wrapper.study_id)
-
-    result = get_allowed_genotype_data(
-        "test_data", user, dataset_wrapper.study_id)
-    assert result == set([
-        "Dataset", "Dataset1", "Dataset2", "Study1", "Study2", "Study3",
-    ])
-
-    result = get_allowed_genotype_studies(
-        "test_data", user, dataset_wrapper.study_id)
-    assert result == set(["Study1", "Study2", "Study3"])
-
-
-def test_dataset_admin_group_rights(
-    user: User, dataset_wrapper: StudyWrapper,
-) -> None:
-    add_group_perm_to_user("admin", user)
-
-    assert user_has_permission("test_data", user, dataset_wrapper.study_id)
-
-    result = get_allowed_genotype_data(
-        "test_data", user, dataset_wrapper.study_id)
-    assert result == set([
-        "Dataset", "Dataset1", "Dataset2", "Study1", "Study2", "Study3",
-    ])
-
-    result = get_allowed_genotype_studies(
-        "test_data", user, dataset_wrapper.study_id)
-    assert result == set(["Study1", "Study2", "Study3"])
-
-
-def test_explore_datasets_users_and_groups(
-    user: User, dataset_wrapper: StudyWrapper,
-) -> None:
-    add_group_perm_to_user("A", user)
-    add_group_perm_to_dataset("A", "Dataset")
-    # pylint: disable=no-member
-    dataset = Dataset.objects.get(dataset_id="Dataset")
-
-    assert get_user_groups(user) & get_dataset_groups(dataset)
-
-
-@pytest.fixture()
-def na_user() -> User:
+def na_user(
+    db: None,  # noqa: ARG001
+) -> User:
     user_ctr = get_user_model()
     user = user_ctr.objects.create(
         email="nauser@example.com",
@@ -327,68 +43,187 @@ def na_user() -> User:
         is_superuser=False,
     )
     user.save()
-
     return cast(User, user)
 
 
-def test_explore_datasets_nauser_and_groups(
-    na_user: User, dataset_wrapper: StudyWrapper,
+def test_parents(custom_wgpf: WGPFInstance) -> None:
+    omni_dataset = custom_wgpf.get_genotype_data("omni_dataset")
+    assert omni_dataset.parents == set()
+
+    dataset1 = custom_wgpf.get_genotype_data("dataset_1")
+    assert dataset1.parents == {"omni_dataset"}
+
+    dataset2 = custom_wgpf.get_genotype_data("dataset_2")
+    assert dataset2.parents == {"omni_dataset"}
+
+    study1 = custom_wgpf.get_genotype_data("t4c8_study_1")
+    assert study1.parents == {"t4c8_dataset", "dataset_1"}
+
+    study2 = custom_wgpf.get_genotype_data("t4c8_study_2")
+    assert study2.parents == {"t4c8_dataset", "dataset_2"}
+
+
+def test_datasets_studies_ids(omni_dataset: GenotypeData) -> None:
+    study_ids = omni_dataset.get_studies_ids()
+    assert set(study_ids) == {"omni_dataset",
+                              "dataset_1", "dataset_2",
+                              "t4c8_study_1", "t4c8_study_2"}
+
+    study_ids = omni_dataset.get_studies_ids(leaves=False)
+    assert set(study_ids) == {"omni_dataset",
+                              "dataset_1", "dataset_2"}
+
+
+def test_basic_rights(user: User, omni_dataset: GenotypeData) -> None:
+    assert not user_has_permission("t4c8_instance", user, omni_dataset.study_id)
+    add_group_perm_to_user(omni_dataset.study_id, user)
+    assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
+
+
+def test_permissions_give_access_to_parent(
+    user: User, omni_dataset: GenotypeData,
 ) -> None:
-    add_group_perm_to_user("A", na_user)
-    add_group_perm_to_dataset("A", "Dataset")
-
-    print(get_user_groups(na_user))
-    print(get_dataset_groups("Dataset"))
-
-    assert get_user_groups(na_user) & get_dataset_groups("Dataset")
+    add_group_perm_to_user("dataset_1", user)
+    assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
 
 
-def test_get_allowed_datasets_for_na_user_strict(
-    na_user: User, dataset_wrapper: StudyWrapper,
+def test_get_allowed_genotype_data_and_studies(
+    user: User, omni_dataset: GenotypeData,
 ) -> None:
-    add_group_perm_to_user("A", na_user)
-    add_group_perm_to_dataset("A", "Dataset")
+    add_group_perm_to_user("dataset_1", user)
+    result = get_allowed_genotype_data(
+        "t4c8_instance", user, omni_dataset.study_id)
+    assert result == {"omni_dataset", "dataset_1", "t4c8_study_1"}
 
-    allowed_datasets = get_directly_allowed_genotype_data(na_user)
-    print(allowed_datasets)
-    assert any([ds["datasetId"] == "Dataset"] for ds in allowed_datasets)
-    assert not _user_has_permission_strict(na_user, "Dataset")
+    result = get_allowed_genotype_studies(
+        "t4c8_instance", user, omni_dataset.study_id)
+    assert result == {"t4c8_study_1"}
 
 
-def test_get_directly_allowed_genotype_data(
-    user: User, dataset_wrapper: StudyWrapper,
+def test_get_allowed_genotype_data_and_studies_mixed(
+    user: User, omni_dataset: GenotypeData,
 ) -> None:
-    add_group_perm_to_user("A", user)
-    add_group_perm_to_dataset("A", "Dataset")
+    add_group_perm_to_user("dataset_2", user)
+    add_group_perm_to_user("t4c8_study_1", user)
 
-    allowed_datasets = get_directly_allowed_genotype_data(user)
-    print(allowed_datasets)
-    assert any([ds["datasetId"] == "Dataset"] for ds in allowed_datasets)
-    assert _user_has_permission_strict(user, "Dataset")
+    result = get_allowed_genotype_data(
+        "t4c8_instance", user, omni_dataset.study_id)
+    assert result == {"omni_dataset", "dataset_2",
+                      "t4c8_study_1", "t4c8_study_2"}
+
+    result = get_allowed_genotype_studies(
+        "t4c8_instance", user, omni_dataset.study_id)
+    assert result == {"t4c8_study_1", "t4c8_study_2"}
 
 
 def test_get_allowed_dataset_from_parent(
-    user: User, dataset_wrapper: StudyWrapper,
+    user: User,
+    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
-    add_group_perm_to_user("A", user)
-    add_group_perm_to_dataset("A", "Dataset")
+    add_group_perm_to_user("test_group", user)
+    add_group_perm_to_dataset("test_group", "omni_dataset")
+    allowed_datasets = get_allowed_genotype_data(
+        "t4c8_instance", user, "dataset_1")
+    assert "dataset_1" in allowed_datasets
 
-    allowed_datasets = get_allowed_genotype_data("test_data", user, "Dataset1")
-    assert "Dataset1" in allowed_datasets
+
+def test_dataset_group_rights(user: User, omni_dataset: GenotypeData) -> None:
+    add_group_perm_to_user("test_group", user)
+    add_group_perm_to_dataset("test_group", omni_dataset.study_id)
+    assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
 
 
-@override_settings(DISABLE_PERMISSIONS=True)
-def test_disable_permissions_flag_allows_all(
-    na_user: User, dataset_wrapper: StudyWrapper,
+def test_dataset_group_rights_gives_access_to_all_descendants(
+    user: User, omni_dataset: GenotypeData,
 ) -> None:
-    data_ids = {*dataset_wrapper.get_studies_ids(),
-                *dataset_wrapper.get_studies_ids(leaves=False)}
-    for data_id in data_ids:
-        assert user_has_permission("test_data", na_user, data_id)
+    add_group_perm_to_user("test_group", user)
+    add_group_perm_to_dataset("test_group", omni_dataset.study_id)
+    assert user_has_permission("t4c8_instance", user, "dataset_1")
+    assert user_has_permission("t4c8_instance", user, "dataset_2")
+    assert user_has_permission("t4c8_instance", user, "t4c8_study_1")
+    assert user_has_permission("t4c8_instance", user, "t4c8_study_2")
+
+
+def test_dataset_group_rights_gives_access_to_parent_dataset(
+    user: User, omni_dataset: GenotypeData,
+) -> None:
+    add_group_perm_to_user("test_group", user)
+    add_group_perm_to_dataset("test_group", "dataset_1")
+    assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
+
+
+def test_dataset_group_rights_mixed(
+    user: User,
+    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    add_group_perm_to_user("test_group", user)
+    add_group_perm_to_dataset("test_group", "dataset_1")
+    assert user_has_permission("t4c8_instance", user, "t4c8_study_1")
+    assert not user_has_permission("t4c8_instance", user, "t4c8_study_2")
+
+
+def test_any_user_group_rights(omni_dataset: GenotypeData) -> None:
+    user = cast(User, AnonymousUser())
+    assert not user_has_permission("t4c8_instance", user, omni_dataset.study_id)
+    add_group_perm_to_dataset("any_user", omni_dataset.study_id)
+    assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
+
+    result = get_allowed_genotype_data(
+        "t4c8_instance", user, omni_dataset.study_id)
+    assert result == {"omni_dataset", "dataset_1", "dataset_2",
+                      "t4c8_study_1", "t4c8_study_2"}
+
+    result = get_allowed_genotype_studies(
+        "t4c8_instance", user, omni_dataset.study_id)
+    assert result == {"t4c8_study_1", "t4c8_study_2"}
+
+
+def test_any_dataset_group_rights(
+    user: User, omni_dataset: GenotypeData,
+) -> None:
+    assert not user_has_permission("t4c8_instance", user, omni_dataset.study_id)
+    add_group_perm_to_user("any_dataset", user)
+    assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
+
+    result = get_allowed_genotype_data(
+        "t4c8_instance", user, omni_dataset.study_id)
+    assert result == {"omni_dataset", "dataset_1", "dataset_2",
+                      "t4c8_study_1", "t4c8_study_2"}
+
+    result = get_allowed_genotype_studies(
+        "t4c8_instance", user, omni_dataset.study_id)
+    assert result == {"t4c8_study_1", "t4c8_study_2"}
+
+
+def test_admin_group_rights(
+    user: User, omni_dataset: GenotypeData,
+) -> None:
+    assert not user_has_permission("t4c8_instance", user, omni_dataset.study_id)
+    add_group_perm_to_user("admin", user)
+    assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
+
+    result = get_allowed_genotype_data(
+        "t4c8_instance", user, omni_dataset.study_id)
+    assert result == {"omni_dataset", "dataset_1", "dataset_2",
+                      "t4c8_study_1", "t4c8_study_2"}
+
+    result = get_allowed_genotype_studies(
+        "t4c8_instance", user, omni_dataset.study_id)
+    assert result == {"t4c8_study_1", "t4c8_study_2"}
+
+
+def test_user_and_dataset_groups_getter_methods(
+    user: User,
+    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    add_group_perm_to_user("test_group", user)
+    add_group_perm_to_dataset("test_group", "omni_dataset")
+    dataset = Dataset.objects.get(dataset_id="omni_dataset")
+    assert get_user_groups(user) & get_dataset_groups(dataset)
 
 
 def test_unregistered_dataset_does_not_propagate_permissions(
-    wdae_gpf_instance: WGPFInstance,
+    custom_wgpf: WGPFInstance,
 ) -> None:
     """
     Test for faulty permissions propagations.
@@ -397,51 +232,86 @@ def test_unregistered_dataset_does_not_propagate_permissions(
     resulted in a bug where checking parent/child permissions would return
     True when it shouldn't when a parent dataset suddenly disappears.
     """
-    dataset1_wrapper = wdae_gpf_instance.get_wdae_wrapper("Dataset1")
+    dataset1_wrapper = custom_wgpf.get_wdae_wrapper("dataset_1")
     assert dataset1_wrapper is not None
     assert dataset1_wrapper.is_group
 
-    dataset2_wrapper = wdae_gpf_instance.get_wdae_wrapper("Dataset2")
+    dataset2_wrapper = custom_wgpf.get_wdae_wrapper("dataset_2")
     assert dataset2_wrapper is not None
     assert dataset2_wrapper.is_group
 
     ds_config = Box(dataset1_wrapper.config.to_dict())
-    ds_config.studies = (
-        "Dataset1",
-        "Dataset2",
-    )
-    ds_config.id = "Dataset"
+    ds_config.studies = ("dataset_1", "dataset_2")
+    ds_config.id = "big_dataset"
 
     dataset = GenotypeDataGroup(
-        ds_config,
-        [
-            cast(StudyWrapper, dataset1_wrapper).genotype_data_study,
-            cast(StudyWrapper, dataset2_wrapper).genotype_data_study,
-        ])
+        ds_config, [dataset1_wrapper.genotype_data_study,
+                    dataset2_wrapper.genotype_data_study],
+    )
     assert dataset is not None
-    assert dataset.study_id == "Dataset"
+    assert dataset.study_id == "big_dataset"
 
-    dataset_wrapper = StudyWrapper(
-        dataset, None, None, wdae_gpf_instance)  # type: ignore
+    dataset_wrapper = StudyWrapper(dataset, None, None, custom_wgpf)  # type: ignore
     assert dataset_wrapper is not None
     assert dataset_wrapper.is_group
 
-    Dataset.recreate_dataset_perm("Dataset")
+    Dataset.recreate_dataset_perm("big_dataset")
 
-    wdae_gpf_instance.register_genotype_data(dataset)
+    custom_wgpf.register_genotype_data(dataset)
 
-    assert "Dataset" in wdae_gpf_instance.get_genotype_data_ids()
-    assert wdae_gpf_instance.get_genotype_data("Dataset") is not None
+    assert "big_dataset" in custom_wgpf.get_genotype_data_ids()
+    assert custom_wgpf.get_genotype_data("big_dataset") is not None
 
-    wdae_gpf_instance.unregister_genotype_data(dataset)
-    wdae_gpf_instance.get_genotype_data("Dataset1")._parents = set()
-    wdae_gpf_instance.get_genotype_data("Dataset2")._parents = set()
+    custom_wgpf.unregister_genotype_data(dataset)
+    custom_wgpf.get_genotype_data("dataset_1")._parents = set()
+    custom_wgpf.get_genotype_data("dataset_2")._parents = set()
 
-    study1 = wdae_gpf_instance.get_genotype_data("Study1")
+    study1 = custom_wgpf.get_genotype_data("t4c8_study_1")
     assert study1 is not None
 
-    user = AnonymousUser()
+    assert not user_has_permission(
+        "t4c8_instance",
+        cast(User, AnonymousUser()),
+        study1.study_id,
+    )
 
-    assert user_has_permission(
-        "test_data", cast(User, user), study1.study_id,
-    ) is False
+
+def test_get_directly_allowed_genotype_data(
+    user: User,
+    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    add_group_perm_to_user("test_group", user)
+    add_group_perm_to_dataset("test_group", "omni_dataset")
+    allowed_datasets = get_directly_allowed_genotype_data(user)
+    assert any([ds["datasetId"] == "omni_dataset"] for ds in allowed_datasets)
+    assert _user_has_permission_strict(user, "omni_dataset")
+
+
+def test_nauser_user_and_dataset_groups_getter_methods(
+    na_user: User,
+    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    add_group_perm_to_user("test_group", na_user)
+    add_group_perm_to_dataset("test_group", "omni_dataset")
+    assert get_user_groups(na_user) & get_dataset_groups("omni_dataset")
+
+
+def test_nauser_get_directly_allowed_datasets(
+    na_user: User,
+    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    add_group_perm_to_user("test_group", na_user)
+    add_group_perm_to_dataset("test_group", "omni_dataset")
+    allowed_datasets = get_directly_allowed_genotype_data(na_user)
+    assert any([ds["datasetId"] == "omni_dataset"] for ds in allowed_datasets)
+    assert not _user_has_permission_strict(na_user, "omni_dataset")
+
+
+@override_settings(DISABLE_PERMISSIONS=True)
+def test_disable_permissions_flag_allows_all(
+    na_user: User, omni_dataset: GenotypeData,
+) -> None:
+    data_ids = {*omni_dataset.get_studies_ids(),
+                *omni_dataset.get_studies_ids(leaves=False)}
+    for data_id in data_ids:
+        assert user_has_permission("t4c8_instance", na_user, data_id)

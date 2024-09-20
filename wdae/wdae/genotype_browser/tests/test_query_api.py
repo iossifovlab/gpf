@@ -8,14 +8,17 @@ from datasets_api.permissions import (
     add_group_perm_to_dataset,
     add_group_perm_to_user,
 )
-from rest_framework import status  # type: ignore
+from django.contrib.auth.models import User
+from django.test import Client
+from gpf_instance.gpf_instance import WGPFInstance
+from rest_framework import status
 
 pytestmark = pytest.mark.usefixtures(
     "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
-EXAMPLE_REQUEST_F1 = {
-    "datasetId": "quads_f1",
+EXAMPLE_REQUEST: dict = {
+    "datasetId": "t4c8_study_1",
 }
 
 
@@ -23,8 +26,12 @@ QUERY_VARIANTS_URL = "/api/v3/genotype_browser/query"
 JSON_CONTENT_TYPE = "application/json"
 
 
-def test_simple_query(db, admin_client, preview_sources):
-    data = copy.deepcopy(EXAMPLE_REQUEST_F1)
+def test_simple_query(
+    admin_client: Client,
+    preview_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    data = copy.deepcopy(EXAMPLE_REQUEST)
     data["sources"] = list(preview_sources)
 
     response = admin_client.post(
@@ -32,16 +39,19 @@ def test_simple_query(db, admin_client, preview_sources):
     )
 
     assert response.status_code == status.HTTP_200_OK
-    res = response.streaming_content
-    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+    res = json.loads(
+        "".join(x.decode("utf-8") for x in response.streaming_content))  # type: ignore
 
-    assert len(res) == 3
+    assert len(res) == 12
 
 
 def test_simple_query_download_anonymous(
-        db, anonymous_client, download_sources):
+    anonymous_client: Client,
+    download_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
     data = {
-        **EXAMPLE_REQUEST_F1,
+        **EXAMPLE_REQUEST,
         "download": True,
         "sources": download_sources,
     }
@@ -51,9 +61,13 @@ def test_simple_query_download_anonymous(
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_simple_query_download(db, admin_client, download_sources):
+def test_simple_query_download(
+    admin_client: Client,
+    download_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
     data = {
-        **EXAMPLE_REQUEST_F1,
+        **EXAMPLE_REQUEST,
         "download": True,
         "sources": download_sources,
     }
@@ -62,12 +76,12 @@ def test_simple_query_download(db, admin_client, download_sources):
         QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
-    res = list(response.streaming_content)
+    res = list(response.streaming_content)  # type: ignore
     assert res
     assert res[0]
     header = res[0].decode("utf-8")[:-1].split("\t")
 
-    assert len(res) == 4
+    assert len(res) == 13
 
     assert set(header) == {
         "family id",
@@ -97,9 +111,11 @@ def test_simple_query_download(db, admin_client, download_sources):
 
 
 def test_simple_query_summary_variants(
-    db, admin_client, summary_preview_sources,
-):
-    data = copy.deepcopy(EXAMPLE_REQUEST_F1)
+    admin_client: Client,
+    summary_preview_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    data = copy.deepcopy(EXAMPLE_REQUEST)
     data["sources"] = list(summary_preview_sources)
 
     response = admin_client.post(
@@ -108,17 +124,19 @@ def test_simple_query_summary_variants(
         content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
-    res = response.streaming_content
-    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+    res = response.streaming_content  # type: ignore
+    res = json.loads("".join(x.decode("utf-8") for x in res))
 
-    assert len(res) == 3
+    assert len(res) == 12
 
 
 def test_simple_query_summary_variants_download(
-    db, admin_client, summary_download_sources,
-):
+    admin_client: Client,
+    summary_download_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
     data = {
-        **EXAMPLE_REQUEST_F1,
+        **EXAMPLE_REQUEST,
         "download": True,
         "sources": summary_download_sources,
     }
@@ -127,12 +145,12 @@ def test_simple_query_summary_variants_download(
         QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
-    res = list(response.streaming_content)
+    res = list(response.streaming_content)  # type: ignore
     assert res
     assert res[0]
     header = res[0].decode("utf-8")[:-1].split("\t")
 
-    assert len(res) == 4
+    assert len(res) == 13
 
     assert set(header) == {
         "location",
@@ -154,171 +172,200 @@ def test_simple_query_summary_variants_download(
     }
 
 
-@pytest.mark.parametrize("url", [QUERY_VARIANTS_URL])
-def test_missing_dataset(db, user_client, url, preview_sources):
-    data = copy.deepcopy(EXAMPLE_REQUEST_F1)
+def test_missing_dataset(
+    user_client: Client,
+    preview_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    data = copy.deepcopy(EXAMPLE_REQUEST)
     data["sources"] = list(preview_sources)
     del data["datasetId"]
 
     response = user_client.post(
-        url, json.dumps(data), content_type=JSON_CONTENT_TYPE,
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
     )
     assert status.HTTP_400_BAD_REQUEST, response.status_code
 
 
-@pytest.mark.parametrize("url", [QUERY_VARIANTS_URL])
-def test_bad_dataset(db, user_client, url, preview_sources):
-    data = copy.deepcopy(EXAMPLE_REQUEST_F1)
+def test_bad_dataset(
+    user_client: Client,
+    preview_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    data = copy.deepcopy(EXAMPLE_REQUEST)
     data["sources"] = list(preview_sources)
     data["datasetId"] = "ala bala portokala"
 
     response = user_client.post(
-        url, json.dumps(data), content_type=JSON_CONTENT_TYPE,
+        QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
     )
     assert status.HTTP_400_BAD_REQUEST, response.status_code
 
 
 # START: Adaptive datasets rights
-def test_normal_dataset_rights_query(db, user, user_client, preview_sources):
+def test_normal_dataset_rights_query(
+    user: User,
+    user_client: Client,
+    preview_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
     data = {
-        "datasetId": "composite_dataset_ds",
+        "datasetId": "t4c8_dataset",
         "sources": list(preview_sources),
     }
 
-    add_group_perm_to_user("composite_dataset_ds", user)
+    add_group_perm_to_user("t4c8_dataset", user)
 
     response = user_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
-    res = response.streaming_content
-    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+    res = response.streaming_content  # type: ignore
+    res = json.loads("".join(x.decode("utf-8") for x in res))
 
     assert len(res) == 17
 
 
-def test_mixed_dataset_rights_query(db, user, user_client, preview_sources):
+def test_mixed_dataset_rights_query(
+    user: User,
+    user_client: Client,
+    preview_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
     data = {
-        "datasetId": "composite_dataset_ds",
+        "datasetId": "t4c8_dataset",
         "sources": list(preview_sources),
     }
 
-    add_group_perm_to_user("inheritance_trio", user)
+    add_group_perm_to_user("t4c8_study_1", user)
 
     response = user_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
-    res = response.streaming_content
-    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+    res = response.streaming_content  # type: ignore
+    res = json.loads("".join(x.decode("utf-8") for x in res))
 
-    assert len(res) == 14
+    assert len(res) == 12
 
 
 def test_mixed_layered_dataset_rights_query(
-    db, user, user_client, preview_sources,
-):
+    user: User,
+    user_client: Client,
+    preview_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
     data = {
-        "datasetId": "composite_dataset_ds",
+        "datasetId": "t4c8_dataset",
         "sources": list(preview_sources),
     }
 
-    add_group_perm_to_user("inheritance_trio", user)
-    add_group_perm_to_user("composite_dataset_ds", user)
+    add_group_perm_to_user("t4c8_study_1", user)
+    add_group_perm_to_user("t4c8_dataset", user)
 
     response = user_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
-    res = response.streaming_content
-    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+    res = response.streaming_content  # type: ignore
+    res = json.loads("".join(x.decode("utf-8") for x in res))
 
     assert len(res) == 17
 
 
 def test_mixed_layered_diff_group_dataset_rights_query(
-    db, user, user_client, preview_sources,
-):
+    user: User,
+    user_client: Client,
+    preview_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
     data = {
-        "datasetId": "composite_dataset_ds",
+        "datasetId": "t4c8_dataset",
         "sources": list(preview_sources),
     }
 
-    add_group_perm_to_dataset("new_custom_group", "composite_dataset_ds")
-    add_group_perm_to_dataset("new_custom_group", "inheritance_trio")
+    add_group_perm_to_dataset("new_custom_group", "t4c8_dataset")
+    add_group_perm_to_dataset("new_custom_group", "t4c8_study_1")
     add_group_perm_to_user("new_custom_group", user)
 
     response = user_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
-    res = response.streaming_content
-    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+    res = response.streaming_content  # type: ignore
+    res = json.loads("".join(x.decode("utf-8") for x in res))
 
     assert len(res) == 17
 
 
 def test_mixed_dataset_rights_download(
-    db, user, user_client, download_sources,
-):
+    user: User,
+    user_client: Client,
+    download_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
     data = {
-        "datasetId": "composite_dataset_ds",
+        "datasetId": "t4c8_dataset",
         "sources": list(download_sources),
         "download": True,
     }
 
-    add_group_perm_to_dataset("new_custom_group", "inheritance_trio")
+    add_group_perm_to_dataset("new_custom_group", "t4c8_study_1")
     add_group_perm_to_user("new_custom_group", user)
 
     response = user_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
-    res = list(response.streaming_content)
-    assert len(res) == 15
+    res = list(response.streaming_content)  # type: ignore
+    assert len(res) == 13
 
 
 def test_mixed_dataset_rights_third_party_group(
-    db, user, user_client, preview_sources,
-):
+    user: User,
+    user_client: Client,
+    preview_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
     data = {
-        "datasetId": "composite_dataset_ds",
+        "datasetId": "t4c8_dataset",
         "sources": list(preview_sources),
     }
 
-    add_group_perm_to_dataset("new_custom_group", "inheritance_trio")
+    add_group_perm_to_dataset("new_custom_group", "t4c8_study_1")
     add_group_perm_to_user("new_custom_group", user)
 
     response = user_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
-    res = response.streaming_content
-    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
+    res = response.streaming_content  # type: ignore
+    res = json.loads("".join(x.decode("utf-8") for x in res))
 
-    assert len(res) == 14
+    assert len(res) == 12
 
 
 def test_mixed_dataset_rights_with_study_filters(
-    db, user, user_client, preview_sources,
-):
+    user: User,
+    user_client: Client,
+    preview_sources: list[dict],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
     data = {
-        "datasetId": "composite_dataset_ds",
-        "studyFilters": [{"studyId": "quads_f1"}],
+        "datasetId": "t4c8_dataset",
+        "studyFilters": [{"studyId": "t4c8_study_2"}],
         "sources": list(preview_sources),
     }
 
-    add_group_perm_to_dataset("new_custom_group", "inheritance_trio")
+    add_group_perm_to_dataset("new_custom_group", "t4c8_study_1")
     add_group_perm_to_user("new_custom_group", user)
 
     response = user_client.post(
         QUERY_VARIANTS_URL, json.dumps(data), content_type=JSON_CONTENT_TYPE,
     )
     assert response.status_code == status.HTTP_200_OK
-    res = response.streaming_content
-    res = json.loads("".join(map(lambda x: x.decode("utf-8"), res)))
-
-    print(res)
+    res = response.streaming_content  # type: ignore
+    res = json.loads("".join(x.decode("utf-8") for x in res))
 
     assert len(res) == 0
 

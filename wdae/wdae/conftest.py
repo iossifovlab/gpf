@@ -581,17 +581,42 @@ def setup_t4c8_grr(
                 filename: t4c8_gene_score.csv
                 scores:
                 - id: t4c8_score
-                  desc: t4c8 gene score
                   histogram:
                     type: number
                     number_of_bins: 3
                     x_log_scale: false
                     y_log_scale: false
+                meta:
+                  description: t4c8 gene score
                 """,
             "t4c8_gene_score.csv": textwrap.dedent("""
                 gene,t4c8_score
                 t4,10.123456789
                 c8,20.0
+            """),
+        },
+    )
+
+    setup_directories(
+        repo_path / "genomic_scores" / "score_one",
+        {
+            GR_CONF_FILE_NAME: textwrap.dedent("""
+                type: position_score
+                table:
+                  filename: data.txt
+                scores:
+                - id: score_one
+                  type: float
+                  name: score
+            """),
+            "data.txt": textwrap.dedent("""
+                chrom\tpos_begin\tscore
+                chr1\t4\t0.01
+                chr1\t54\t0.02
+                chr1\t90\t0.03
+                chr1\t100\t0.04
+                chr1\t119\t0.05
+                chr1\t122\t0.06
             """),
         },
     )
@@ -619,6 +644,8 @@ def setup_t4c8_instance(
         instance_path, {
             "gpf_instance.yaml": textwrap.dedent("""
                 instance_id: t4c8_instance
+                annotation:
+                  conf_file: annotation.yaml
                 reference_genome:
                     resource_id: t4c8_genome
                 gene_models:
@@ -640,6 +667,9 @@ def setup_t4c8_instance(
                     - t4c8_dataset
                     - t4c8_study_1
                     - nonexistend_dataset
+            """),
+            "annotation.yaml": textwrap.dedent("""
+               - position_score: genomic_scores/score_one
             """),
         },
     )
@@ -1273,6 +1303,13 @@ denovo_gene_sets:
   - Synonymous.Triple
 enrichment:
   enabled: false
+gene_browser:
+  enabled: true
+  frequency_column: "score_one"
+  effect_column: "effect.worst effect type"
+  location_column: "variant.location"
+  domain_min: 0.01
+  domain_max: 100
             """),
         },
     )
@@ -1327,6 +1364,23 @@ s4,121.0199895975403,39.74107684421966,77.32212831797972,51.37116746952451,36.55
         """),
     })
 
+    setup_directories(
+        pheno_path, {
+        "regressions.yaml": textwrap.dedent("""
+        regression:
+          age:
+            instrument_name: "i1"
+            measure_name: "age"
+            display_name: "Age"
+            jitter: 0.1
+          iq:
+            instrument_name: "i1"
+            measure_name: "iq"
+            display_name: "Non verbal IQ"
+            jitter: 0.1
+        """),
+    })
+
     pheno_import([
         "--pheno-id", "study_1_pheno",
         "-p", str(ped_path),
@@ -1336,4 +1390,5 @@ s4,121.0199895975403,39.74107684421966,77.32212831797972,51.37116746952451,36.55
         "--person-column", "personId",
         "-o", str(instance_path / "pheno" / "study_1_pheno"),
         "--task-status-dir", str(pheno_path / "status"),
+        "--regression", str(pheno_path / "regressions.yaml"),
     ])
