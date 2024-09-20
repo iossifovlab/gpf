@@ -98,18 +98,18 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "gpfjs:build"
+            "buildTarget": "gpfjs:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "gpfjs:build:production"
+              "buildTarget": "gpfjs:build:production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "gpfjs:build"
+            "buildTarget": "gpfjs:build"
           }
         },
         "lint": {
