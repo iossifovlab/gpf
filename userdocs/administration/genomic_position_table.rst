@@ -246,13 +246,15 @@ This configuration is embedded in the score's ``genomic_resource.yaml`` config.
       - id: score_C
         type: str
         name: CategoricalScore
-        categorical_hist:
+        histogram:
+          type: categorical
           value_order: ["alpha", "beta", "gamma", "delta"]
       # string score with no histogram
       - id: score_D
         type: str
         name: WeirdScore
-        null_hist:
+        histogram:
+          type: null
           reason: "Don't care about this score"
 
 
