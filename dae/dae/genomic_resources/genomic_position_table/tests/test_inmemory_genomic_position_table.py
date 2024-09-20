@@ -128,3 +128,35 @@ def test_inmemory_genomic_position_table_csv_compressed(
         res, res.config["table"])
     tab.open()
     assert len(list(tab.get_all_records())) == 2
+
+
+def test_inmemory_genomic_position_table_zero_based_no_header(
+    tmp_path: pathlib.Path,
+) -> None:
+    setup_directories(tmp_path, {
+        "genomic_resource.yaml": """
+            table:
+              filename: data.tsv
+              header_mode: none
+              zero_based: True
+              chrom:
+                index: 0
+              pos_begin:
+                index: 1
+              pos_end:
+                index: 1
+
+        """,
+        "data.tsv": convert_to_tab_separated("""
+            chr1  0   0.1
+            chr1  1   0.2
+            chr1  2   0.3
+            chr2  0   0.1
+            chr2  1   0.2
+            chr2  2   0.3
+        """)})
+    res = build_filesystem_test_resource(tmp_path)
+    assert res.config is not None
+    table = build_genomic_position_table(res, res.config["table"])
+    table.open()
+    assert len(list(table.get_all_records())) == 6

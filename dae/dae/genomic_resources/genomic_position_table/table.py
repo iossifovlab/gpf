@@ -245,7 +245,7 @@ class GenomicPositionTable(abc.ABC):
         """
 
 
-def get_idx(key: Key, header: tuple) -> int:
+def get_idx(key: Key, header: tuple | None) -> int:
     if isinstance(key, int):
         return key
     assert header is not None
@@ -256,7 +256,7 @@ def zero_based_adjust(
     raw: tuple,
     pos_begin_key: Key,
     pos_end_key: Key,
-    header: tuple,
+    header: tuple | None,
 ) -> tuple:
     """Adjust a zero-based record."""
     rec = list(raw)
