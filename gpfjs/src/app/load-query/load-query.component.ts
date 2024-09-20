@@ -8,7 +8,7 @@ import { reset } from 'app/users/state-actions';
 import { setGenders } from 'app/gender/gender.state';
 import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { setVariantTypes } from 'app/variant-types/variant-types.state';
-import { State } from 'app/users/tmp.state';
+import { State } from 'app/utils/gpf.state';
 import { setFamilyTags } from 'app/family-tags/family-tags.state';
 import { setPresentInChild } from 'app/present-in-child/present-in-child.state';
 import { setPresentInParent } from 'app/present-in-parent/present-in-parent.state';

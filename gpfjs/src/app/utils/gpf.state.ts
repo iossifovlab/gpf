@@ -27,7 +27,7 @@ import { GenomicScoreInterface } from 'app/genotype-browser/genotype-browser';
 import { PersonFilterState } from 'app/person-filters/person-filters';
 import { FamilyTags } from 'app/family-tags/family-tags';
 import { cloneDeep } from 'lodash';
-import { reset } from './state-actions';
+import { reset } from '../users/state-actions';
 
 export interface State {
   errors: string[];
