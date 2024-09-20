@@ -111,7 +111,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
         ...geneSetsState.geneSet && { geneSet: {
           geneSet: geneSetsState.geneSet.name,
           geneSetsCollection: geneSetsState.geneSetsCollection.name,
-          geneTypes: geneSetsState.geneSetsTypes
+          geneSetsTypes: geneSetsState.geneSetsTypes
         }},
         ...geneScoresState.score && {geneScores: geneScoresState},
         ...phenoToolMeasureState,

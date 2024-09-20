@@ -56,7 +56,7 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
         this.enrichmentToolState['geneSet'] = {
           geneSet: geneSets.geneSet.name,
           geneSetsCollection: geneSets.geneSetsCollection.name,
-          geneTypes: geneSets.geneSetsTypes
+          geneSetsTypes: geneSets.geneSetsTypes
         };
       } else if (geneScores.score) {
         this.enrichmentToolState['geneScores'] = geneScores;
