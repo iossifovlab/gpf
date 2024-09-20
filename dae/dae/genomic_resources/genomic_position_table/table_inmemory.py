@@ -78,7 +78,6 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
                 columns = tuple("" if v == "EMPTY" else v for v in columns)
 
             if self.zero_based:
-                assert self.header is not None
                 columns = zero_based_adjust(
                     columns, self.pos_begin_key,
                     self.pos_end_key, self.header,

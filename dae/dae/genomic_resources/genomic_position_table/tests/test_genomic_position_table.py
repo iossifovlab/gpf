@@ -1678,9 +1678,7 @@ def test_tabix_table_zero_based(tmp_path: pathlib.Path) -> None:
                 - id: c1
                   name: c1
                   type: float
-                - id: c2
-                  name: c2
-                  type: str"""),
+            """),
         })
 
     setup_tabix(
@@ -1727,6 +1725,41 @@ def test_tabix_table_zero_based(tmp_path: pathlib.Path) -> None:
         ] == [
             ("1", 4, 4, "3.14"),
         ]
+
+
+def test_tabix_table_zero_based_headerless(tmp_path: pathlib.Path) -> None:
+    setup_directories(
+        tmp_path, {
+            "genomic_resource.yaml": textwrap.dedent("""
+                table:
+                  filename: data.txt.gz
+                  format: tabix
+                  header_mode: none
+                  zero_based: True
+                  chrom:
+                    index: 0
+                  pos_begin:
+                    index: 1
+                  pos_end:
+                    index: 1
+            """),
+        })
+
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom pos_begin c1
+        1      3         3.14
+        1      4         4.14
+        1      4         5.14
+        1      5         6.14
+        1      8         7.14
+        """, seq_col=0, start_col=1, end_col=1, zerobased=True)
+    res = build_filesystem_test_resource(tmp_path)
+    assert res.config is not None
+
+    with build_genomic_position_table(res, res.config["table"]) as table:
+        assert len(list(table.get_all_records())) == 5
 
 
 def test_new_score_configuration_fields() -> None:
