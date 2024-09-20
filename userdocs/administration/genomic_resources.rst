@@ -346,7 +346,7 @@ Example 2: Categorical histogram configuration
 """"""""""""""""""""""""""""""""""""""""""""""
 
 Here is an example of a categorical histogram configuration displaying usage
-of `plot_function`, `display_values_count`, and `display_values_percent` fields.
+of `plot_function`, `displayed_values_count`, and `displayed_values_percent` fields.
 Note that `plot_function` uses the following format: 
 ``<python module>:<python function>``. The path to the python module should be
 relative to the resource directory.
@@ -436,6 +436,26 @@ make sense. The null histogram configuration supports the following fields:
 
 * ``type`` - the type of the histogram. This should be set to ``null``.
 * ``reason`` - the reason why the histogram is disabled. This field is required.
+
+Example: Null histogram configuration
+"""""""""""""""""""""""""""""""""""""
+
+.. code:: yaml
+
+  type: allele_score 
+  
+  table:
+    filename: clinvar_20221105_chr.vcf.gz
+    index_filename: clinvar_20221105_chr.vcf.gz.tbi
+  
+  scores:
+  - id: RS
+    name: RS
+    type: str	
+    desc: dbSNP ID (i.e. rs number)
+    histogram:
+      type: null
+      reason: "Histogram is not available for this score."
 
 
 Resource repositories
