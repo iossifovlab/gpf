@@ -277,12 +277,12 @@ The categorical histogram configuration supports the following fields:
   to 100.
 * ``y_log_scale`` - if set to ``True`` the y axis of the histogram will be 
   logarithmic.
-* ``display_values_count`` - the number of unique values that will be displayed in
+* ``displayed_values_count`` - the number of unique values that will be displayed in
   the histogram. Default value for this field is 20. The rest of the values
-  are grouped into the ``Other`` category.
-* ``display_values_percent`` - the percentage of total mass of unique values 
+    are grouped into the ``Other`` category.
+* ``displayed_values_percent`` - the percentage of total mass of unique values 
   that will be displayed. Other values are grouped into the ``Other`` category.
-  **Only one of** ``display_values_count`` and ``display_values_percent`` can be set.
+  **Only one of** ``displayed_values_count`` and ``displayed_values_percent`` can be set.
 * ``values_order`` - the order in which the unique values are displayed in the 
   histogram.
 * ``plot_function`` - user defined plot function. When the default plot function is
@@ -376,7 +376,7 @@ relative to the resource directory.
 	    histogram:
 	      type: categorical
 	      y_log_scale: True      
-	      display_values_count: 35
+	      displayed_values_count: 35
 	  - id: CLNVC
 	    name: CLNVC
 	    type: str
@@ -385,7 +385,7 @@ relative to the resource directory.
 	    histogram:
 	      type: categorical
 	      y_log_scale: True
-	      display_values_percent: 85.0
+	      displayed_values_percent: 85.0
 
 Here is the content of the `clinvar_plots.py` file:
 
