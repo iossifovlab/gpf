@@ -466,7 +466,7 @@ class QueryBuilderBase:
 
         if heuristics.frequency_bins:
             # single batch if we dont search for rare and common variants
-            rare_and_common_bins = {"2", "3"}
+            rare_and_common_bins = {"1", "2", "3"}
             if not rare_and_common_bins & set(heuristics.frequency_bins):
                 return [heuristics]
 
