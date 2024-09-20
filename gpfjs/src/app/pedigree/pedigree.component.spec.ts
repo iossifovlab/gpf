@@ -4,8 +4,7 @@ import { ConfigService } from 'app/config/config.service';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { Observable, of } from 'rxjs';
 import { PedigreeComponent } from './pedigree.component';
-import { NgxsModule } from '@ngxs/store';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { Store, StoreModule } from '@ngrx/store';
 
 class MockVariantReportsService {
   public getFamilies(): Observable<string[]> {
@@ -18,6 +17,7 @@ describe('PedigreeComponent', () => {
   let component: PedigreeComponent;
   let fixture: ComponentFixture<PedigreeComponent>;
   let modalService: NgbModal;
+  let store: Store;
   const mockVariantReportsService = new MockVariantReportsService();
 
   beforeEach(async() => {
@@ -27,18 +27,17 @@ describe('PedigreeComponent', () => {
         {provide: VariantReportsService, useValue: mockVariantReportsService},
         ConfigService,
       ],
-      imports: [NgxsModule.forRoot([], {developmentMode: true})]
+      imports: [StoreModule.forRoot({})]
     }).compileComponents();
 
     modalService = TestBed.inject(NgbModal);
     fixture = TestBed.createComponent(PedigreeComponent);
     component = fixture.componentInstance;
 
-    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
+    const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
 
-    component['store'] = {
-      selectOnce: () => of(selectedDatasetMockModel)
-    } as never;
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
 
     fixture.detectChanges();
   });

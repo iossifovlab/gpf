@@ -1,32 +1,21 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { cloneDeep } from 'lodash';
+export const initialState: string[] = [];
 
-export class SetExpandedDatasets {
-  public static readonly type = '[Genotype] Set expanded datasets';
-  public constructor(
-    public expandedDatasets: string[]
-  ) {}
-}
+export const selectExpandedDatasets = createFeatureSelector<string[]>('expandedDatasets');
 
-export interface DatasetNodeModel {
-    expandedDatasets: string[];
-}
+export const setExpandedDatasets = createAction(
+  '[Genotype] Set expanded datasets',
+  props<{ expandedDatasets: string[] }>()
+);
 
-@State<DatasetNodeModel>({
-  name: 'datasetNodeState',
-  defaults: {
-    expandedDatasets: []
-  },
-})
-@Injectable()
-export class DatasetNodeState {
-  @Action(SetExpandedDatasets)
-  public setExpandedDatasets(
-    ctx: StateContext<DatasetNodeModel>,
-    action: SetExpandedDatasets
-  ): void {
-    ctx.patchState({
-      expandedDatasets: action.expandedDatasets
-    });
-  }
-}
+export const resetExpandedDatasets = createAction(
+  '[Errors] Reset expanded datasets',
+);
+
+export const expandedDatasetsReducer = createReducer(
+  initialState,
+  on(setExpandedDatasets, (state, {expandedDatasets}) => cloneDeep(expandedDatasets)),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  on(resetExpandedDatasets, (state) => cloneDeep(initialState)),
+);

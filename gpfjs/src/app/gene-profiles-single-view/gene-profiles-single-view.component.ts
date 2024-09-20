@@ -3,27 +3,26 @@ import {
   GeneProfilesDatasetPersonSet, GeneProfilesDatasetStatistic, GeneProfilesGene,
   GeneProfilesGenomicScores, GeneProfilesSingleViewConfig, GeneProfilesEffectType
 } from 'app/gene-profiles-single-view/gene-profiles-single-view';
-// eslint-disable-next-line no-restricted-imports
 import { Observable, of, zip } from 'rxjs';
 import { GeneScoresService } from '../gene-scores/gene-scores.service';
 import { GeneScores } from 'app/gene-scores/gene-scores';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { switchMap, take } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { Store } from '@ngxs/store';
+import { Store } from '@ngrx/store';
 import { QueryService } from 'app/query/query.service';
 import { GenomicScore } from 'app/genotype-browser/genotype-browser';
-import { SetEffectTypes } from 'app/effect-types/effect-types.state';
-import { SetGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
-import { SetGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
-import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
-import { SetPresentInChildValues } from 'app/present-in-child/present-in-child.state';
-import { SetPresentInParentValues } from 'app/present-in-parent/present-in-parent.state';
-import { SetStudyTypes } from 'app/study-types/study-types.state';
-import { SetVariantTypes } from 'app/variant-types/variant-types.state';
 import { LGDS } from 'app/effect-types/effect-types';
-import { GeneProfilesModel, SetGeneProfilesTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { setEffectTypes } from 'app/effect-types/effect-types.state';
+import { setVariantTypes } from 'app/variant-types/variant-types.state';
+import { setGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { setPresentInChild } from 'app/present-in-child/present-in-child.state';
+import { setPresentInParent } from 'app/present-in-parent/present-in-parent.state';
+import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
+import { selectGeneProfiles, setGeneProfilesOpenedTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
+import { setStudyTypes } from 'app/study-types/study-types.state';
+import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -180,7 +179,8 @@ export class GeneProfileSingleViewComponent implements OnInit {
     newTab: boolean = true
   ): void {
     const effectTypes = {
-      lgds: LGDS,
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      LGDs: LGDS,
       intron: ['intron'],
       missense: ['missense'],
       synonymous: ['synonymous'],
@@ -204,22 +204,52 @@ export class GeneProfileSingleViewComponent implements OnInit {
       rarityType = 'rare';
       presentInParent = presentInParentRareValues;
     }
+    if (statistic.effects) {
+      store.dispatch(setEffectTypes({effectTypes: effectTypes[statistic['effects'][0]] as string[]}));
+    }
+    if (statistic.variantTypes) {
+      store.dispatch(setVariantTypes({variantTypes: statistic.variantTypes}));
+    }
+    store.dispatch(setGeneSymbols({geneSymbols: [geneSymbol]}));
+    store.dispatch(setPresentInChild({presentInChild: presentInChildValues}));
+    store.dispatch(setPresentInParent({presentInParent: {
+      presentInParent: presentInParent,
+      rarity: {
+        rarityType: rarityType,
+        rarityIntervalStart: 0,
+        rarityIntervalEnd: 1
+      }
+    }}));
+    store.dispatch(setPedigreeSelector({
+      pedigreeSelector: {
+        id: personSet.collectionId,
+        checkedValues: [personSet.id]
+      }
+    }));
+    store.dispatch(setStudyTypes({studyTypes: ['we']}));
+    store.dispatch(setGenomicScores({genomicScores: genomicScores}));
+    store.dispatch(setPresentInChild({presentInChild: presentInChildValues}));
+    store.dispatch(setPresentInParent({
+      presentInParent: {
+        presentInParent: presentInParent,
+        rarity: {
+          rarityType: rarityType,
+          rarityIntervalStart: 0,
+          rarityIntervalEnd: 1,
+        }
+      }
+    }));
+    store.dispatch(setPedigreeSelector({
+      pedigreeSelector: {
+        id: personSet.collectionId,
+        checkedValues: [personSet.id],
+      }
+    }));
 
-    store.dispatch([
-      new SetGeneSymbols([geneSymbol]),
-      new SetEffectTypes(new Set(effectTypes[statistic['effects'][0]])),
-      new SetStudyTypes(new Set(['we'])),
-      new SetVariantTypes(new Set(statistic['variantTypes'])),
-      new SetGenomicScores(genomicScores),
-      new SetPresentInChildValues(new Set(presentInChildValues)),
-      new SetPresentInParentValues(new Set(presentInParent), rarityType, 0, 1),
-      new SetPedigreeSelector(personSet.collectionId, new Set([personSet.id])),
-    ]);
-
-
-    store.selectOnce((state: object) => state).subscribe((state) => {
-      (state['datasetState'] as DatasetModel).selectedDatasetId = datasetId;
-      queryService.saveQuery(state, 'genotype')
+    store.pipe(take(1)).subscribe(state => {
+      const clonedState = cloneDeep(state);
+      clonedState['datasetId'] = datasetId;
+      queryService.saveQuery(clonedState, 'genotype')
         .pipe(take(1))
         .subscribe(urlObject => {
           const url = queryService.getLoadUrlFromResponse(urlObject);
@@ -238,16 +268,14 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
     let tabs = [] as string[];
 
-    this.store.selectOnce(
-      (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
-      .subscribe(state => {
-        tabs = state.openedTabs;
-      });
+    this.store.select(selectGeneProfiles).pipe(take(1)).subscribe(state => {
+      tabs = state.openedTabs;
+    });
 
     const index = tabs.indexOf(this.geneSymbol, 0);
     tabs.splice(index, 1);
 
-    this.store.dispatch(new SetGeneProfilesTabs(tabs));
+    this.store.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
     this.router.navigate(['/gene-profiles']);
   }
 }

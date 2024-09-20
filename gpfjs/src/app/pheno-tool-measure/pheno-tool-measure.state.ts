@@ -1,30 +1,30 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { reset } from 'app/users/state-actions';
+import { cloneDeep } from 'lodash';
 
-export class SetPhenoToolMeasure {
-  public static readonly type = '[Phenotype] Set phenoToolMeasure values';
-  public constructor(public measureId: string, public normalizeBy: object[]) {}
-}
-
-export interface PhenoToolMeasureModel {
+export interface PhenoToolMeasureState {
   measureId: string;
   normalizeBy: object[];
 }
 
-@State<PhenoToolMeasureModel>({
-  name: 'phenoToolMeasureState',
-  defaults: {
-    measureId: '',
-    normalizeBy: [],
-  },
-})
-@Injectable()
-export class PhenoToolMeasureState {
-  @Action(SetPhenoToolMeasure)
-  public setPhenoToolMeasure(ctx: StateContext<PhenoToolMeasureModel>, action: SetPhenoToolMeasure): void {
-    ctx.patchState({
-      measureId: action.measureId,
-      normalizeBy: [...action.normalizeBy],
-    });
-  }
-}
+export const initialState: PhenoToolMeasureState = {
+  measureId: '',
+  normalizeBy: []
+};
+
+export const selectPhenoToolMeasure = createFeatureSelector<PhenoToolMeasureState>('phenoToolMeasure');
+
+export const setPhenoToolMeasure = createAction(
+  '[Phenotype] Set phenoToolMeasure values',
+  props<{ phenoToolMeasure: PhenoToolMeasureState }>()
+);
+
+export const resetPhenoToolMeasure = createAction(
+  '[Phenotype] Reset phenoToolMeasure values'
+);
+
+export const phenoToolMeasureReducer = createReducer(
+  initialState,
+  on(setPhenoToolMeasure, (state, { phenoToolMeasure }) => cloneDeep(phenoToolMeasure)),
+  on(reset, resetPhenoToolMeasure, state => cloneDeep(initialState)),
+);

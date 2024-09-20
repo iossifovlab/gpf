@@ -4,18 +4,23 @@ import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loadi
 import { PhenoToolService } from './pheno-tool.service';
 import { PhenoToolResults } from './pheno-tool-results';
 import { ConfigService } from '../config/config.service';
-import { Observable, Subscription, switchMap } from 'rxjs';
-import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
-import { PhenoToolGenotypeBlockComponent } from 'app/pheno-tool-genotype-block/pheno-tool-genotype-block.component';
-import { FamilyFiltersBlockComponent } from 'app/family-filters-block/family-filters-block.component';
-import { PhenoToolMeasureState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
-import { Select, Selector, Store } from '@ngxs/store';
-import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
+import { combineLatest, Subscription, switchMap, take } from 'rxjs';
+import { selectPhenoToolMeasure } from 'app/pheno-tool-measure/pheno-tool-measure.state';
+import { Store } from '@ngrx/store';
 import {
   PHENO_TOOL_CNV, PHENO_TOOL_LGDS, PHENO_TOOL_OTHERS
 } from 'app/pheno-tool-effect-types/pheno-tool-effect-types';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
+import { selectGeneScores } from 'app/gene-scores/gene-scores.state';
+import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
+import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { selectPresentInParent } from 'app/present-in-parent/present-in-parent.state';
+import { selectEffectTypes } from 'app/effect-types/effect-types.state';
+import { selectErrors } from 'app/common/errors.state';
+import { selectFamilyTags } from 'app/family-tags/family-tags.state';
+import { selectFamilyIds } from 'app/family-ids/family-ids.state';
+import { selectPersonFilters } from 'app/person-filters/person-filters.state';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -23,9 +28,6 @@ import { DatasetsService } from 'app/datasets/datasets.service';
   styleUrls: ['./pheno-tool.component.css'],
 })
 export class PhenoToolComponent implements OnInit, OnDestroy {
-  @Select(PhenoToolComponent.phenoToolStateSelector) public state$: Observable<object[]>;
-  @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
-
   public selectedDataset: Dataset;
   public variantTypesSet: Set<string>;
 
@@ -52,26 +54,10 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
     }
   }
 
-  @Selector([
-    GenesBlockComponent.genesBlockState,
-    PhenoToolMeasureState,
-    PhenoToolGenotypeBlockComponent.phenoToolGenotypeBlockQueryState,
-    FamilyFiltersBlockComponent.familyFiltersBlockState,
-  ])
-  public static phenoToolStateSelector(
-    genesBlockState: object, measureState: object, genotypeState: object, familyFiltersState: object
-  ): object {
-    return {
-      ...genesBlockState,
-      ...measureState,
-      ...genotypeState,
-      ...familyFiltersState,
-    };
-  }
-
   public ngOnInit(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
+    this.store.select(selectDatasetId).pipe(
+      take(1),
+      switchMap(datasetId => this.datasetsService.getDataset(datasetId))
     ).subscribe(dataset => {
       if (!dataset) {
         return;
@@ -80,8 +66,65 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       this.variantTypesSet = new Set(this.selectedDataset.genotypeBrowserConfig.variantTypes);
     });
 
-    this.state$.subscribe(state => {
-      this.phenoToolState = state;
+    combineLatest([
+      this.store.select(selectGeneSymbols),
+      this.store.select(selectGeneSets),
+      this.store.select(selectGeneScores),
+      this.store.select(selectPhenoToolMeasure),
+      this.store.select(selectEffectTypes),
+      this.store.select(selectPresentInParent),
+      this.store.select(selectFamilyTags),
+      this.store.select(selectFamilyIds),
+      this.store.select(selectPersonFilters),
+    ]).subscribe(([
+      geneSymbolsState,
+      geneSetsState,
+      geneScoresState,
+      phenoToolMeasureState,
+      effectTypesState,
+      presentInParentState,
+      familyTagsState,
+      familyIdsState,
+      personFiltersState
+    ]) => {
+      const presentInParent = {
+        presentInParent: presentInParentState.presentInParent,
+        rarity: {}
+      };
+
+      if (presentInParentState.rarity.rarityType === 'ultraRare') {
+        presentInParent['rarity']['ultraRare'] = true;
+      } else {
+        presentInParent['rarity']['ultraRare'] = false;
+      }
+
+      if (
+        presentInParentState.rarity.rarityType === 'rare'
+        || presentInParentState.rarity.rarityType === 'interval'
+      ) {
+        presentInParent['rarity']['minFreq'] = presentInParentState.rarity.rarityIntervalStart;
+        presentInParent['rarity']['maxFreq'] = presentInParentState.rarity.rarityIntervalEnd;
+      }
+
+      this.phenoToolState = {
+        ...geneSymbolsState.length && {geneSymbols: geneSymbolsState},
+        ...geneSetsState.geneSet && { geneSet: {
+          geneSet: geneSetsState.geneSet.name,
+          geneSetsCollection: geneSetsState.geneSetsCollection.name,
+          geneSetsTypes: geneSetsState.geneSetsTypes
+        }},
+        ...geneScoresState.score && {geneScores: geneScoresState},
+        ...phenoToolMeasureState,
+        effectTypes: effectTypesState,
+        presentInParent: presentInParent,
+        ...!familyTagsState?.tagIntersection && {tagIntersection: familyTagsState.tagIntersection},
+        ...familyTagsState.selectedFamilyTags?.length && {selectedFamilyTags: familyTagsState.selectedFamilyTags},
+        ...familyTagsState.deselectedFamilyTags?.length
+            && {deselectedFamilyTags: familyTagsState.deselectedFamilyTags},
+        ...familyIdsState?.length && {familyIds: familyIdsState},
+        ...personFiltersState?.familyFilters?.length && {familyFilters: personFiltersState.familyFilters},
+      };
+
       this.phenoToolResults = null;
     });
 
@@ -94,9 +137,9 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       this.phenoToolResults = null;
     });
 
-    this.errorsState$.subscribe(state => {
+    this.store.select(selectErrors).subscribe(errorsState => {
       setTimeout(() => {
-        this.disableQueryButtons = state.componentErrors.size > 0;
+        this.disableQueryButtons = errorsState.length > 0;
       });
     });
   }

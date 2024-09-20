@@ -1,18 +1,18 @@
 import { Component, OnChanges, OnInit } from '@angular/core';
-import { Store } from '@ngxs/store';
-import { UniqueFamilyVariantsFilterState, SetUniqueFamilyVariantsFilter } from './unique-family-variants-filter.state';
+import { Store } from '@ngrx/store';
+import { selectUniqueFamilyVariantsFilter, setUniqueFamilyVariantsFilter } from './unique-family-variants-filter.state';
 import { Validate, IsDefined } from 'class-validator';
-import { StatefulComponent } from '../common/stateful-component';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'gpf-unique-family-variants-filter',
   templateUrl: './unique-family-variants-filter.component.html',
   styleUrls: ['./unique-family-variants-filter.component.css']
 })
-export class UniqueFamilyVariantsFilterComponent extends StatefulComponent implements OnChanges, OnInit {
+export class UniqueFamilyVariantsFilterComponent implements OnChanges, OnInit {
   @Validate(IsDefined, {message: 'Must have a boolean value.'})
   private enabled = false;
   public isVisible = false;
@@ -22,24 +22,23 @@ export class UniqueFamilyVariantsFilterComponent extends StatefulComponent imple
     public datasetService: DatasetsService,
     private datasetsTreeService: DatasetsTreeService
   ) {
-    super(store, UniqueFamilyVariantsFilterState, 'uniqueFamilyVariantsFilter');
   }
 
   public ngOnChanges(): void {
-    this.store.selectOnce(UniqueFamilyVariantsFilterState).subscribe(state => {
-      this.enabled = state.uniqueFamilyVariantsFilter;
+    this.store.select(selectUniqueFamilyVariantsFilter).pipe(take(1)).subscribe(uniqueFamilyVariantsFilter => {
+      this.enabled = uniqueFamilyVariantsFilter;
     });
   }
 
-  public async ngOnInit(): Promise<void> {
+  public ngOnInit(): void {
     // restore state
-    this.store.selectOnce(UniqueFamilyVariantsFilterState).subscribe(state => {
-      this.filterValue = state.uniqueFamilyVariants;
+    this.store.select(selectUniqueFamilyVariantsFilter).subscribe(state => {
+      this.filterValue = state;
     });
 
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(async state => {
-      const selectedDatasetId = state.selectedDatasetId;
-      const childLeaves = await this.datasetsTreeService.getUniqueLeafNodes(selectedDatasetId);
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    this.store.select(selectDatasetId).subscribe(async datasetId => {
+      const childLeaves = await this.datasetsTreeService.getUniqueLeafNodes(datasetId);
       if (childLeaves.size > 1) {
         this.isVisible = true;
       }
@@ -52,6 +51,6 @@ export class UniqueFamilyVariantsFilterComponent extends StatefulComponent imple
 
   public set filterValue(value: boolean) {
     this.enabled = value;
-    this.store.dispatch(new SetUniqueFamilyVariantsFilter(this.enabled));
+    this.store.dispatch(setUniqueFamilyVariantsFilter({ uniqueFamilyVariantsFilter: this.enabled }));
   }
 }

@@ -1,15 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
-import { Store } from '@ngxs/store';
-import { SetPresentInChildValues, PresentInChildState } from './present-in-child.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { Store } from '@ngrx/store';
+import { ComponentValidator } from 'app/common/component-validator';
+import { selectPresentInChild, setPresentInChild } from './present-in-child.state';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'gpf-present-in-child',
   templateUrl: './present-in-child.component.html',
 })
-export class PresentInChildComponent extends StatefulComponent implements OnInit {
+export class PresentInChildComponent extends ComponentValidator implements OnInit {
   public presentInChildValues: Set<string> = new Set([
     'proband only', 'sibling only', 'proband and sibling', 'neither'
   ]);
@@ -18,19 +19,19 @@ export class PresentInChildComponent extends StatefulComponent implements OnInit
   public selectedValues = new Set<string>();
 
   public constructor(protected store: Store) {
-    super(store, PresentInChildState, 'presentInChild');
+    super(store, 'presentInChild', selectPresentInChild);
   }
 
   public ngOnInit(): void {
     super.ngOnInit();
-    this.store.selectOnce(state => state.presentInChildState).subscribe(state => {
+    this.store.select(selectPresentInChild).pipe(take(1)).subscribe(presentInChildState => {
       // restore state
-      this.updatePresentInChild(new Set([...state.presentInChild]));
+      this.updatePresentInChild(new Set([...presentInChildState]));
     });
   }
 
   public updatePresentInChild(newValues: Set<string>): void {
     this.selectedValues = newValues;
-    this.store.dispatch(new SetPresentInChildValues(newValues));
+    this.store.dispatch(setPresentInChild({presentInChild: [...newValues]}));
   }
 }

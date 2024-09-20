@@ -1,15 +1,16 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
-import { Store } from '@ngxs/store';
-import { SetInheritanceTypes, InheritancetypesState, InheritancetypesModel } from './inheritancetypes.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { Store } from '@ngrx/store';
+import { selectInheritanceTypes, setInheritanceTypes } from './inheritancetypes.state';
+import { ComponentValidator } from 'app/common/component-validator';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'gpf-inheritancetypes',
   templateUrl: './inheritancetypes.component.html'
 })
-export class InheritancetypesComponent extends StatefulComponent implements OnChanges {
+export class InheritancetypesComponent extends ComponentValidator implements OnChanges {
   @Input()
   public inheritanceTypes: Set<string>;
   public inheritanceTypeDisplayNames: Map<string, string>;
@@ -19,7 +20,7 @@ export class InheritancetypesComponent extends StatefulComponent implements OnCh
   public selectedValues: Set<string> = new Set();
 
   public constructor(protected store: Store) {
-    super(store, InheritancetypesState, 'inheritanceTypes');
+    super(store, 'inheritanceTypes', selectInheritanceTypes);
     this.inheritanceTypeDisplayNames = new Map();
     this.inheritanceTypeDisplayNames.set('reference', 'Reference');
     this.inheritanceTypeDisplayNames.set('mendelian', 'Mendelian');
@@ -33,18 +34,18 @@ export class InheritancetypesComponent extends StatefulComponent implements OnCh
   }
 
   public ngOnChanges(): void {
-    this.store.selectOnce(state => state.inheritancetypesState as InheritancetypesModel).subscribe(state => {
+    this.store.select(selectInheritanceTypes).pipe(take(1)).subscribe(inheritanceTypesState => {
       // handle selected values input and/or restore state
-      if (state.inheritanceTypes.length) {
-        this.selectedValues = new Set(state.inheritanceTypes);
+      if (inheritanceTypesState.length) {
+        this.selectedValues = new Set(inheritanceTypesState);
       } else {
-        this.store.dispatch(new SetInheritanceTypes(this.selectedValues));
+        this.store.dispatch(setInheritanceTypes({inheritanceTypes: [...this.selectedValues]}));
       }
     });
   }
 
   public updateInheritanceTypes(newValues: Set<string>): void {
     this.selectedValues = newValues;
-    this.store.dispatch(new SetInheritanceTypes(newValues));
+    this.store.dispatch(setInheritanceTypes({inheritanceTypes: [...newValues]}));
   }
 }

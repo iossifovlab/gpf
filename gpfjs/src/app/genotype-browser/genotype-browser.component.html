@@ -7,13 +7,11 @@
   <gpf-genomic-scores-block></gpf-genomic-scores-block>
   <gpf-family-filters-block
     *ngIf="selectedDataset?.genotypeBrowserConfig?.hasFamilyFilters"
-    [dataset]="selectedDataset"
-    [genotypeBrowserState]="genotypeBrowserState">
+    [dataset]="selectedDataset">
   </gpf-family-filters-block>
   <gpf-person-filters-block
     *ngIf="selectedDataset?.genotypeBrowserConfig?.hasPersonFilters"
-    [dataset]="selectedDataset"
-    [genotypeBrowserState]="genotypeBrowserState">
+    [dataset]="selectedDataset">
   </gpf-person-filters-block>
 
   <gpf-unique-family-variants-filter></gpf-unique-family-variants-filter>

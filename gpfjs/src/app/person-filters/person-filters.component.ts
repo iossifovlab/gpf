@@ -1,113 +1,110 @@
-import { Component, OnChanges, Input } from '@angular/core';
-import { Dataset, PersonFilter } from '../datasets/datasets';
-import { PersonFilterState, CategoricalFilterState, ContinuousFilterState, ContinuousSelection, CategoricalSelection } from './person-filters';
-import { Store } from '@ngxs/store';
-import { SetFamilyFilters, SetPersonFilters, PersonFiltersState } from './person-filters.state';
-import { StatefulComponent } from 'app/common/stateful-component';
-import { IsNotEmpty, ValidateNested } from 'class-validator';
+import { Component, Input, OnInit } from '@angular/core';
+import { Dataset } from '../datasets/datasets';
+import {
+  CategoricalFilterState,
+  ContinuousFilterState,
+  PersonFilterState,
+} from './person-filters';
+import { Store } from '@ngrx/store';
+import { PersonAndFamilyFilters, selectPersonFilters } from './person-filters.state';
+import { Equals } from 'class-validator';
+import { ComponentValidator } from 'app/common/component-validator';
+import { cloneDeep } from 'lodash';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'gpf-person-filters',
   templateUrl: './person-filters.component.html',
   styleUrls: ['./person-filters.component.css'],
 })
-export class PersonFiltersComponent extends StatefulComponent implements OnChanges {
+export class PersonFiltersComponent extends ComponentValidator implements OnInit {
   @Input() public dataset: Dataset;
-  @Input() public filters: PersonFilter[];
   @Input() public isFamilyFilters: boolean;
 
-  @IsNotEmpty({message: 'Select at least one continuous filter.'})
-  public selected = false;
+  public selectedDatasetId: string;
+  public categoricalFilters: PersonFilterState[] = [];
+  public continuousFilters: PersonFilterState[] = [];
 
-  @ValidateNested({each: true})
-  private personFiltersState = new Map<string, PersonFilterState>();
+  @Equals(true, {message: 'Select at least one continuous filter.'})
+  public areFiltersSelected = false;
 
   public constructor(protected store: Store) {
-    super(store, PersonFiltersState, 'personFilters');
+    super(store, 'personFilters', selectPersonFilters);
   }
 
-  public ngOnChanges(changes): void {
-    this.store.selectOnce(PersonFiltersState).subscribe(state => {
-      // set default state
-      for (const filter of this.filters) {
-        let filterState = null;
-        if (filter.sourceType === 'continuous') {
-          if (filter.from === 'pedigree') {
-            throw new Error('Continuous filters with pedigree sources are not supported!');
-          }
-          filterState = new ContinuousFilterState(
-            filter.name, filter.sourceType, filter.role, filter.source, filter.from,
-          );
-        } else if (filter.sourceType === 'categorical') {
-          filterState = new CategoricalFilterState(
-            filter.name, filter.sourceType, filter.role, filter.source, filter.from,
-          );
-        }
-        this.personFiltersState.set(filter.name, filterState);
-      }
+  public ngOnInit(): void {
+    this.selectedDatasetId = this.dataset.id;
 
-      // restore state
-      const filterStates: PersonFilterState[] = this.isFamilyFilters ? state.familyFilters : state.personFilters;
-      if (filterStates.length) {
-        for (const filterState of filterStates) {
-          const filterType = filterState.sourceType === 'continuous' ? ContinuousFilterState : CategoricalFilterState;
-          let selection = null;
-          if (filterState.sourceType === 'continuous') {
-            const filterStateSelection = filterState.selection as ContinuousSelection;
-            selection = new ContinuousSelection(
-              filterStateSelection.min,
-              filterStateSelection.max,
-              filterStateSelection.domainMin,
-              filterStateSelection.domainMax,
-            );
-          } else {
-            selection = new CategoricalSelection((filterState.selection as CategoricalSelection).selection);
-          }
-          const newFilter = new filterType(
-            filterState.id, filterState.sourceType, filterState.role,
-            filterState.source, filterState.from, selection
-          );
-          this.personFiltersState.set(filterState.id, newFilter);
-        }
+    this.store.select(selectPersonFilters).subscribe((state: PersonAndFamilyFilters) => {
+      if (this.isFamilyFilters) {
+        this.areFiltersSelected = Boolean(state.familyFilters?.filter(f => f.sourceType === 'continuous').length);
+      } else {
+        this.areFiltersSelected = Boolean(state.personFilters?.filter(f => f.sourceType === 'continuous').length);
       }
+      super.ngOnInit();
     });
-    this.updateFilters();
+
+    this.store.select(selectPersonFilters).pipe(take(1)).subscribe((state: PersonAndFamilyFilters) => {
+      const clonedState = cloneDeep(state);
+      this.setDefaultFilters();
+      this.setFiltersFromState(clonedState);
+    });
   }
 
-  public get categoricalFilters(): PersonFilterState[] {
-    return [...this.personFiltersState]
-      .map(([_, personFilter]) => personFilter)
-      .filter(personFilter => personFilter && personFilter.sourceType === 'categorical');
-  }
+  private setDefaultFilters(): void {
+    const defaultFilters = this.isFamilyFilters ?
+      this.dataset.genotypeBrowserConfig.familyFilters : this.dataset.genotypeBrowserConfig.personFilters;
 
-  public get continuousFilters(): PersonFilterState[] {
-    return [...this.personFiltersState]
-      .map(([_, personFilter]) => personFilter)
-      .filter(personFilter => personFilter && personFilter.sourceType === 'continuous');
-  }
-
-  public getFilter(filterName: string): PersonFilter {
-    return this.filters.find(f => f.name === filterName);
-  }
-
-  public updateFilters(): void {
-    this.updateSelected();
-    const filters = [...this.personFiltersState]
-      .map(([_, personFilter]) => personFilter)
-      .filter(personFilter => personFilter && !personFilter.isEmpty());
-    if (this.isFamilyFilters) {
-      this.store.dispatch(new SetFamilyFilters(filters));
-    } else {
-      this.store.dispatch(new SetPersonFilters(filters));
+    for (const defaultFilter of defaultFilters) {
+      if (defaultFilter.sourceType === 'continuous') {
+        this.continuousFilters.push(
+          new ContinuousFilterState(
+            defaultFilter.name,
+            defaultFilter.sourceType,
+            defaultFilter.role,
+            defaultFilter.source,
+            defaultFilter.from,
+          )
+        );
+      } else if (defaultFilter.sourceType === 'categorical') {
+        this.categoricalFilters.push(
+          new CategoricalFilterState(
+            defaultFilter.name,
+            defaultFilter.sourceType,
+            defaultFilter.role,
+            defaultFilter.source,
+            defaultFilter.from,
+          )
+        );
+      } else {
+        console.error(`Unexpected filter type:${defaultFilter.sourceType} in ${defaultFilter.name}`);
+      }
     }
   }
 
-  public updateSelected(): void {
-    this.selected = null;
-    this.personFiltersState.forEach(el => {
-      if (!el.isEmpty()) {
-        this.selected = true;
+  private setFiltersFromState(state: PersonAndFamilyFilters): void {
+    const filters: PersonFilterState[] = this.isFamilyFilters ? state.familyFilters : state.personFilters;
+    if (!filters) {
+      return;
+    }
+    for (const filter of filters) {
+      if (filter.sourceType === 'continuous') {
+        const existingIndex = this.continuousFilters.findIndex(f => f.id ===filter.id);
+        if (existingIndex !== -1) {
+          this.continuousFilters[existingIndex] = filter;
+        } else {
+          this.continuousFilters.push(filter);
+        }
+      } else if (filter.sourceType === 'categorical') {
+        const existingIndex = this.categoricalFilters.findIndex(f => f.id ===filter.id);
+        if (existingIndex !== -1) {
+          this.categoricalFilters[existingIndex] = filter;
+        } else {
+          this.categoricalFilters.push(filter);
+        }
+      } else {
+        console.error(`Unexpected filter type:${filter.sourceType} in ${filter.id}`);
       }
-    });
+    }
   }
 }

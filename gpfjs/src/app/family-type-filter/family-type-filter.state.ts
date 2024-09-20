@@ -1,27 +1,22 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { reset } from 'app/users/state-actions';
+import { cloneDeep } from 'lodash';
 
-export class SetFamilyTypeFilter {
-  public static readonly type = '[Genotype] Set FamilyTypes';
-  public constructor(public familyTypes: Set<string>) {}
-}
+export const initialState: string[] = ['trio', 'quad', 'multigenerational', 'simplex', 'multiplex', 'other'];
 
-export interface FamilyTypeFilterModel {
-  familyTypes: string[];
-}
+export const selectFamilyTypeFilter = createFeatureSelector<string[]>('familyTypeFilter');
 
-@State<FamilyTypeFilterModel>({
-  name: 'familyTypeFilterState',
-  defaults: {
-    familyTypes: ['trio', 'quad', 'multigenerational', 'simplex', 'multiplex', 'other']
-  },
-})
-@Injectable()
-export class FamilyTypeFilterState {
-  @Action(SetFamilyTypeFilter)
-  public setVariantTypes(ctx: StateContext<FamilyTypeFilterModel>, action: SetFamilyTypeFilter): void {
-    ctx.patchState({
-      familyTypes: [...action.familyTypes]
-    });
-  }
-}
+export const setFamilyTypeFilter = createAction(
+  '[Genotype] Set family type filter',
+  props<{ familyTypeFilter: string[] }>()
+);
+
+export const resetFamilyTypeFilter = createAction(
+  '[Genotype] Reset family type filter'
+);
+
+export const familyTypeFilterReducer = createReducer(
+  initialState,
+  on(setFamilyTypeFilter, (state: string[], {familyTypeFilter}) => cloneDeep(familyTypeFilter)),
+  on(reset, resetFamilyTypeFilter, state => cloneDeep(initialState)),
+);

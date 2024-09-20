@@ -1,16 +1,16 @@
 import { Component, AfterViewInit, Input, ViewChild, OnInit, HostListener } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
-import { Store, Selector } from '@ngxs/store';
-import { FamilyIdsModel, FamilyIdsState } from 'app/family-ids/family-ids.state';
-import { PersonFiltersModel, PersonFiltersState, SetFamilyFilters } from 'app/person-filters/person-filters.state';
-import { StateReset } from 'ngxs-reset-plugin';
+import { Store } from '@ngrx/store';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
-import { FamilyTagsModel, FamilyTagsState, SetFamilyTags } from 'app/family-tags/family-tags.state';
 import { FamilyCounter, PedigreeCounter, VariantReport } from 'app/variant-reports/variant-reports';
-import { switchMap, take } from 'rxjs';
+import { combineLatest, switchMap, take } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
+import { resetFamilyIds, selectFamilyIds } from 'app/family-ids/family-ids.state';
+import { resetFamilyTypeFilter } from 'app/family-type-filter/family-type-filter.state';
+import { resetFamilyTags, selectFamilyTags } from 'app/family-tags/family-tags.state';
+import { resetFamilyFilterStates, selectPersonFilters } from 'app/person-filters/person-filters.state';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -19,7 +19,6 @@ import { DatasetModel } from 'app/datasets/datasets.state';
 })
 export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() public dataset: Dataset;
-  @Input() public genotypeBrowserState: object;
   @ViewChild('nav') public ngbNav: NgbNav;
   public showFamilyTypeFilter: boolean;
   public showAdvancedButton: boolean;
@@ -57,12 +56,12 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
       });
     }
 
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => {
-        const selectedDatasetId = state.selectedDatasetId;
-        return this.variantReportsService.getVariantReport(selectedDatasetId);
+    this.store.select(selectDatasetId).pipe(
+      take(1),
+      switchMap(selectDatasetIdState => {
+        const selectedDatasetId = selectDatasetIdState;
+        return this.variantReportsService.getVariantReport(selectedDatasetId).pipe(take(1));
       }),
-      take(1)
     ).subscribe({
       next: (variantReport: VariantReport) => {
         this.familiesCounters = variantReport.familyReport.familiesCounters;
@@ -85,18 +84,35 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   }
 
   public ngAfterViewInit(): void {
-    this.store.selectOnce(FamilyFiltersBlockComponent.familyFiltersBlockState).subscribe(state => {
-      if (state['familyIds']) {
+    this.store.select(selectFamilyIds).pipe(take(1)).subscribe(familyIds => {
+      if (familyIds.length !== 0) {
         setTimeout(() => {
           this.ngbNav.select('familyIds');
           this.hasContent = true;
         });
-      } else if (state['selectedFamilyTags'] || state['deselectedFamilyTags'] || state['tagIntersection']) {
+      }
+    });
+
+    combineLatest([
+      this.store.select(selectFamilyIds),
+      this.store.select(selectFamilyTags),
+      this.store.select(selectPersonFilters),
+    ]).pipe(take(1)).subscribe(([familyIdsState, familyTagsState, personFiltersState]) => {
+      if (familyIdsState.length) {
+        setTimeout(() => {
+          this.ngbNav.select('familyIds');
+          this.hasContent = true;
+        });
+      } else if (
+        familyTagsState.selectedFamilyTags.length
+        || familyTagsState.deselectedFamilyTags.length
+        || !familyTagsState.tagIntersection
+      ) {
         setTimeout(() => {
           this.ngbNav.select('familyTags');
           this.hasContent = true;
         });
-      } else if (state['familyFilters']) {
+      } else if (personFiltersState?.familyFilters?.length) {
         setTimeout(() => {
           this.ngbNav.select('advanced');
           this.hasContent = true;
@@ -106,9 +122,10 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   }
 
   public onNavChange(): void {
-    this.store.dispatch(new SetFamilyFilters([]));
-    this.store.dispatch(new StateReset(FamilyIdsState));
-    this.store.dispatch(new SetFamilyTags([], [], true));
+    this.store.dispatch(resetFamilyTypeFilter());
+    this.store.dispatch(resetFamilyTags());
+    this.store.dispatch(resetFamilyIds());
+    this.store.dispatch(resetFamilyFilterStates());
   }
 
   public updateTags(tags: {selected: string[]; deselected: string[]}): void {
@@ -144,28 +161,5 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
         this.selectedFamiliesCount += Number(counter.count);
       });
     }
-  }
-
-  @Selector([FamilyIdsState, FamilyTagsState, PersonFiltersState])
-  public static familyFiltersBlockState(
-    familyIdsState: FamilyIdsModel, familyTagsState: FamilyTagsModel, personFiltersState: PersonFiltersModel
-  ): object {
-    const res = {};
-    if (familyIdsState.familyIds.length) {
-      res['familyIds'] = familyIdsState.familyIds;
-    }
-    if (familyTagsState.selectedFamilyTags.length) {
-      res['selectedFamilyTags'] = familyTagsState.selectedFamilyTags;
-    }
-    if (familyTagsState.deselectedFamilyTags.length) {
-      res['deselectedFamilyTags'] = familyTagsState.deselectedFamilyTags;
-    }
-    if (!familyTagsState.tagIntersection) {
-      res['tagIntersection'] = familyTagsState.tagIntersection;
-    }
-    if (personFiltersState.familyFilters.length) {
-      res['familyFilters'] = personFiltersState.familyFilters;
-    }
-    return res;
   }
 }

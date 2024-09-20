@@ -3,17 +3,15 @@ import { VariantReportsService } from './variant-reports.service';
 import {
   VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
 } from './variant-reports';
-import { Dataset } from 'app/datasets/datasets';
 import { switchMap, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { Dictionary } from 'lodash';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
-import { Store } from '@ngxs/store';
-import { SetFamilyTags } from 'app/family-tags/family-tags.state';
+import { Store } from '@ngrx/store';
 import { Router } from '@angular/router';
-import { DatasetModel } from 'app/datasets/datasets.state';
-import { DatasetsService } from 'app/datasets/datasets.service';
+import { resetFamilyTags } from 'app/family-tags/family-tags.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -66,10 +64,11 @@ export class VariantReportsComponent implements OnInit {
     private variantReportsService: VariantReportsService,
     protected store: Store,
     private router: Router,
-    private datasetsService: DatasetsService,
   ) {
-    router.events.subscribe(() => {
-      this.store.dispatch(new SetFamilyTags([], [], true));
+    this.router.events.subscribe(() => {
+      this.store.dispatch(
+        resetFamilyTags()
+      );
     });
   }
 
@@ -79,9 +78,9 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public ngOnInit(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => {
-        this.selectedDatasetId = state.selectedDatasetId;
+    this.store.select(selectDatasetId).pipe(
+      switchMap(datasetId => {
+        this.selectedDatasetId = datasetId;
         return this.variantReportsService.getVariantReport(this.selectedDatasetId);
       }),
       take(1)

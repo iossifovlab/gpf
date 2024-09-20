@@ -2,14 +2,14 @@ import { Component, Input } from '@angular/core';
 import { EnrichmentEffectResult } from '../enrichment-query/enrichment-result';
 import { QueryService } from '../query/query.service';
 import { BrowserQueryFilter } from 'app/genotype-browser/genotype-browser';
-import { Store } from '@ngxs/store';
-import { SetEffectTypes } from 'app/effect-types/effect-types.state';
-import { SetGender } from 'app/gender/gender.state';
-import { SetPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
-import { SetStudyTypes } from 'app/study-types/study-types.state';
-import { SetVariantTypes } from 'app/variant-types/variant-types.state';
+import { Store } from '@ngrx/store';
+import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { take } from 'rxjs/operators';
 import { cloneDeep } from 'lodash';
+import { setEffectTypes } from 'app/effect-types/effect-types.state';
+import { setGenders } from 'app/gender/gender.state';
+import { setVariantTypes } from 'app/variant-types/variant-types.state';
+import { setStudyTypes } from 'app/study-types/study-types.state';
 
 @Component({
   selector: '[gpf-enrichment-table-row]',
@@ -32,18 +32,18 @@ export class EnrichmentTableRowComponent {
     // https://stackoverflow.com/a/22470171/2316754
     const newWindow = window.open('', '_blank');
 
-    this.store.dispatch([
-      new SetEffectTypes(new Set(browserQueryFilter['effectTypes'])),
-      new SetGender(browserQueryFilter['gender']),
-      new SetPedigreeSelector(
-        browserQueryFilter.personSetCollection.id,
-        new Set(browserQueryFilter.personSetCollection.checkedValues)
-      ),
-      new SetStudyTypes(new Set(browserQueryFilter['studyTypes'])),
-      new SetVariantTypes(new Set(browserQueryFilter['variantTypes'])),
-    ]);
+    this.store.dispatch(setEffectTypes({effectTypes: browserQueryFilter.effectTypes}));
+    this.store.dispatch(setGenders({genders: browserQueryFilter.gender}));
+    this.store.dispatch(setVariantTypes({variantTypes: browserQueryFilter.variantTypes}));
+    this.store.dispatch(setPedigreeSelector({
+      pedigreeSelector: {
+        id: browserQueryFilter.personSetCollection.id,
+        checkedValues: browserQueryFilter.personSetCollection.checkedValues
+      }
+    }));
+    this.store.dispatch(setStudyTypes({studyTypes: browserQueryFilter['studyTypes']}));
 
-    this.store.selectOnce(state => state as object).subscribe(state => {
+    this.store.subscribe(state => {
       const queryData = cloneDeep(state);
 
       const datasetId = browserQueryFilter['datasetId'];

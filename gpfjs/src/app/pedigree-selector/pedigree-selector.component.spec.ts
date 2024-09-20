@@ -1,21 +1,35 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { NgxsModule } from '@ngxs/store';
 import { PedigreeSelectorComponent } from './pedigree-selector.component';
-import { PedigreeSelectorState } from './pedigree-selector.state';
+import { pedigreeSelectorReducer } from './pedigree-selector.state';
+import { Store, StoreModule } from '@ngrx/store';
+import { of } from 'rxjs';
 
 describe('PedigreeSelectorComponent', () => {
   let component: PedigreeSelectorComponent;
   let fixture: ComponentFixture<PedigreeSelectorComponent>;
+  let store: Store;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [PedigreeSelectorComponent],
-      imports: [NgxsModule.forRoot([PedigreeSelectorState], {developmentMode: true})],
+      imports: [StoreModule.forRoot({pedigreeSelector: pedigreeSelectorReducer})],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PedigreeSelectorComponent);
     component = fixture.componentInstance;
     component.collections = [];
+
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'select').mockReturnValue(of({
+      id: 'collectionId',
+      checkedValues: ['autism']
+    }));
+    component.collections = [{
+      id: 'collectionId',
+      name: '',
+      domain: [],
+    }];
+
     fixture.detectChanges();
   }));
 

@@ -1,37 +1,34 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { FamilyTags } from './family-tags';
+import { cloneDeep } from 'lodash';
+import { reset } from 'app/users/state-actions';
 
-export class SetFamilyTags {
-  public static readonly type = '[Genotype] Set family tags';
-  public constructor(
-    public selectedFamilyTags: string[],
-    public deselectedFamilyTags: string[],
-    public tagIntersection: boolean
-  ) {}
-}
+export const initialState: FamilyTags = {
+  selectedFamilyTags: [],
+  deselectedFamilyTags: [],
+  tagIntersection: true,
+};
 
-export interface FamilyTagsModel {
-  selectedFamilyTags: string[];
-  deselectedFamilyTags: string[];
-  tagIntersection: boolean;
-}
+export const selectFamilyTags = createFeatureSelector<FamilyTags>('familyTags');
 
-@State<FamilyTagsModel>({
-  name: 'familyTagsState',
-  defaults: {
-    selectedFamilyTags: [],
-    deselectedFamilyTags: [],
-    tagIntersection: true
-  },
-})
-@Injectable()
-export class FamilyTagsState {
-  @Action(SetFamilyTags)
-  public changeFamilyTags(ctx: StateContext<FamilyTagsModel>, action: SetFamilyTags): void {
-    ctx.patchState({
-      selectedFamilyTags: action.selectedFamilyTags,
-      deselectedFamilyTags: action.deselectedFamilyTags,
-      tagIntersection: action.tagIntersection
-    });
-  }
-}
+export const setFamilyTags = createAction(
+  '[Genotype] Set family tags',
+  props<FamilyTags>()
+);
+
+export const resetFamilyTags = createAction(
+  '[Genotype] Reset family tags'
+);
+
+export const familyTagsReducer = createReducer(
+  initialState,
+  on(
+    setFamilyTags,
+    (state, { selectedFamilyTags, deselectedFamilyTags, tagIntersection }) => cloneDeep({
+      selectedFamilyTags: selectedFamilyTags,
+      deselectedFamilyTags: deselectedFamilyTags,
+      tagIntersection: tagIntersection,
+    })
+  ),
+  on(reset, resetFamilyTags, state => cloneDeep(initialState)),
+);

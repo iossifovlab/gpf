@@ -6,7 +6,7 @@ import {
   GeneProfilesSingleViewConfig} from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { map, take } from 'rxjs/operators';
-import { Store } from '@ngxs/store';
+import { Store } from '@ngrx/store';
 import { QueryService } from 'app/query/query.service';
 import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-table/gene-profiles-table';
 import {
@@ -26,7 +26,7 @@ export class GeneProfilesBlockComponent implements OnInit {
   public constructor(
     private geneProfilesService: GeneProfilesService,
     private queryService: QueryService,
-    private store: Store
+    private store: Store,
   ) { }
 
   public ngOnInit(): void {

@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-import { NgxsModule } from '@ngxs/store';
 import { RegionsBlockComponent } from './regions-block.component';
-import { RegionsFilterState } from 'app/regions-filter/regions-filter.state';
+import { regionsFiltersReducer } from 'app/regions-filter/regions-filter.state';
+import { StoreModule } from '@ngrx/store';
 
 describe('RegionsBlockComponent', () => {
   let component: RegionsBlockComponent;
@@ -12,7 +12,7 @@ describe('RegionsBlockComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [RegionsBlockComponent],
-      imports: [NgbModule, RouterTestingModule, NgxsModule.forRoot([RegionsFilterState], {developmentMode: true})],
+      imports: [NgbModule, RouterTestingModule, StoreModule.forRoot({ regionsFilter: regionsFiltersReducer })],
     }).compileComponents();
 
     fixture = TestBed.createComponent(RegionsBlockComponent);

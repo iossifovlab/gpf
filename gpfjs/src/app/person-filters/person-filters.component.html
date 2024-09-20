@@ -1,23 +1,17 @@
 <div style="padding: 20px" id="pheno-filters-panel">
   <div class="row">
-    <div *ngIf="categoricalFilters.length !== 0" class="col-sm-3">
+    <div *ngIf="categoricalFilters?.length !== 0" class="col-sm-3">
       <div *ngFor="let categoricalFilter of categoricalFilters" class="categorical-filter">
-        <gpf-categorical-filter
-          [categoricalFilter]="getFilter(categoricalFilter.id)"
-          [categoricalFilterState]="categoricalFilter"
-          (updateFilterEvent)="updateFilters()">
-        </gpf-categorical-filter>
+        <gpf-categorical-filter [isFamilyFilters]="isFamilyFilters" [categoricalFilter]="categoricalFilter"> </gpf-categorical-filter>
       </div>
     </div>
     <div style="margin: auto" class="col-sm-9">
       <div>
         <div *ngFor="let continuousFilter of continuousFilters">
           <gpf-multi-continuous-filter
-            [continuousFilter]="getFilter(continuousFilter.id)"
-            [continuousFilterState]="continuousFilter"
-            [isFamilyFilter]="isFamilyFilters"
-            [datasetId]="dataset.id"
-            (updateFilterEvent)="updateFilters()">
+            [continuousFilter]="continuousFilter"
+            [isFamilyFilters]="isFamilyFilters"
+            [datasetId]="selectedDatasetId">
           </gpf-multi-continuous-filter>
         </div>
       </div>

@@ -1,47 +1,42 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext, Selector } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { cloneDeep } from 'lodash';
+import { GeneSet, GeneSetsCollection, GeneSetType } from './gene-sets';
+import { reset } from 'app/users/state-actions';
 
-export class SetGeneSetsValues {
-  public static readonly type = '[Genotype] Set geneSets values';
-  public constructor(public geneSetsValues: object) {}
+export interface GeneSetsState {
+  geneSetsTypes: GeneSetType[];
+  geneSetsCollection: GeneSetsCollection;
+  geneSet: GeneSet;
 }
 
-export interface GeneSetsModel {
-  geneSetsTypes: object;
-  geneSetsCollection: object;
-  geneSet: object;
-}
+export const initialState: GeneSetsState = {
+  geneSet: null,
+  geneSetsCollection: null,
+  geneSetsTypes: null,
+};
 
-@State<GeneSetsModel>({
-  name: 'geneSetsState',
-  defaults: {
-    geneSetsTypes: null,
-    geneSetsCollection: null,
-    geneSet: null,
-  },
-})
-@Injectable()
-export class GeneSetsState {
-  @Selector([GeneSetsState])
-  public static queryStateSelector(geneSetsState: GeneSetsModel): object {
-    if (geneSetsState.geneSet) {
-      return {
-        geneSet: {
-          geneSet: geneSetsState.geneSet['name'],
-          geneSetsCollection: geneSetsState.geneSetsCollection['name'],
-          geneSetsTypes: geneSetsState.geneSetsTypes,
-        }
-      };
-    }
-    return null;
-  }
+export const selectGeneSets =
+  createFeatureSelector<GeneSetsState>('geneSets');
 
-  @Action(SetGeneSetsValues)
-  public setGeneSets(ctx: StateContext<GeneSetsModel>, action: SetGeneSetsValues): void {
-    ctx.patchState({
-      geneSetsTypes: action.geneSetsValues['geneSetsTypes'],
-      geneSetsCollection: action.geneSetsValues['geneSetsCollection'],
-      geneSet: action.geneSetsValues['geneSet'],
-    });
-  }
-}
+export const setGeneSetsValues = createAction(
+  '[Genotype] Set geneSets values',
+  props<GeneSetsState>()
+);
+
+export const getGeneSetsValues = createAction(
+  '[Genotype] Set geneSets values');
+
+export const resetGeneSetsValues = createAction(
+  '[Genotype] Reset geneSets values'
+);
+
+export const geneSetsReducer = createReducer(
+  initialState,
+  on(setGeneSetsValues, (state, { geneSetsTypes, geneSetsCollection, geneSet }) => ({
+    geneSetsTypes: cloneDeep(geneSetsTypes),
+    geneSetsCollection: cloneDeep(geneSetsCollection),
+    geneSet: cloneDeep(geneSet)
+  })),
+  on(getGeneSetsValues, (state) => cloneDeep(state)),
+  on(reset, resetGeneSetsValues, state => cloneDeep(initialState)),
+);

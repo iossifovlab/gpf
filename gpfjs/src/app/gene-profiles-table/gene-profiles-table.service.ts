@@ -3,10 +3,10 @@ import { Injectable } from '@angular/core';
 import { ConfigService } from 'app/config/config.service';
 // eslint-disable-next-line no-restricted-imports
 import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { GeneProfilesModel } from 'app/gene-profiles-table/gene-profiles-table.state';
-import { Store } from '@ngxs/store';
+import { map, take } from 'rxjs/operators';
+import { Store } from '@ngrx/store';
 import { UsersService } from 'app/users/users.service';
+import { GeneProfiles, selectGeneProfiles } from './gene-profiles-table.state';
 
 @Injectable({
   providedIn: 'root'
@@ -25,11 +25,11 @@ export class GeneProfilesTableService {
 
   ) {}
 
-  public getUserGeneProfilesState(): Observable<GeneProfilesModel> {
+  public getUserGeneProfilesState(): Observable<GeneProfiles> {
     if (!this.user.cachedUserInfo()?.loggedIn) {
       return of(null);
     }
-    return this.http.get<GeneProfilesModel>(this.config.baseUrl + this.usersUrl, { withCredentials: true });
+    return this.http.get<GeneProfiles>(this.config.baseUrl + this.usersUrl, { withCredentials: true });
   }
 
   public saveUserGeneProfilesState(): void {
@@ -41,10 +41,9 @@ export class GeneProfilesTableService {
       clearTimeout(this.saveStateDebouncer);
     }
     this.saveStateDebouncer = setTimeout(() => {
-      this.store.selectOnce(
-        (state: { geneProfilesState: GeneProfilesModel}) => state.geneProfilesState)
-        .subscribe(state => {
-          this.http.post(this.config.baseUrl + this.usersUrl, state, { withCredentials: true }).subscribe();
+      this.store.select(selectGeneProfiles).pipe(take(1))
+        .subscribe(geneProfilesState => {
+          this.http.post(this.config.baseUrl + this.usersUrl, geneProfilesState, { withCredentials: true }).subscribe();
           this.saveStateDebouncer = null;
         });
     }, 1000);

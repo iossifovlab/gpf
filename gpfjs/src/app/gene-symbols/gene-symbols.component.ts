@@ -1,8 +1,9 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { IsNotEmpty, ValidateNested } from 'class-validator';
-import { Store } from '@ngxs/store';
-import { SetGeneSymbols, GeneSymbolsState } from './gene-symbols.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { Store } from '@ngrx/store';
+import { selectGeneSymbols, setGeneSymbols } from './gene-symbols.state';
+import { ComponentValidator } from 'app/common/component-validator';
+import { take } from 'rxjs';
 
 export class GeneSymbols {
   @IsNotEmpty()
@@ -13,26 +14,26 @@ export class GeneSymbols {
   selector: 'gpf-gene-symbols',
   templateUrl: './gene-symbols.component.html',
 })
-export class GeneSymbolsComponent extends StatefulComponent implements OnInit {
+export class GeneSymbolsComponent extends ComponentValidator implements OnInit {
   @ValidateNested()
   public geneSymbols: GeneSymbols = new GeneSymbols();
 
   @ViewChild('textArea') private textArea: ElementRef;
 
   public constructor(protected store: Store) {
-    super(store, GeneSymbolsState, 'geneSymbols');
+    super(store, 'geneSymbols', selectGeneSymbols);
   }
 
   public ngOnInit(): void {
     super.ngOnInit();
     this.focusGeneTextArea();
-    this.store.selectOnce(GeneSymbolsState).subscribe(state => {
+    this.store.select(selectGeneSymbols).pipe(take(1)).subscribe(geneSymbolsState => {
       // restore state
       let separator = '\n';
-      if (state.geneSymbols.length >= 3) {
+      if (geneSymbolsState.length >= 3) {
         separator = ', ';
       }
-      this.setGeneSymbols(state.geneSymbols.join(separator));
+      this.setGeneSymbols(geneSymbolsState.join(separator));
     });
   }
 
@@ -41,7 +42,7 @@ export class GeneSymbolsComponent extends StatefulComponent implements OnInit {
       .split(/[,\s]/)
       .filter(s => s !== '');
     this.geneSymbols.geneSymbols = geneSymbols;
-    this.store.dispatch(new SetGeneSymbols(result));
+    this.store.dispatch(setGeneSymbols({geneSymbols: result}));
   }
 
   /**

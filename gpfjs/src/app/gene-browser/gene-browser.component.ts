@@ -16,8 +16,8 @@ import * as draw from 'app/utils/svg-drawing';
 import { LGDS, CNV, OTHER, CODING } from 'app/effect-types/effect-types';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
-import { Store } from '@ngxs/store';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { Store } from '@ngrx/store';
+import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
@@ -81,8 +81,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   public variantsCount = -1;
 
   public ngOnInit(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
+    this.store.select(selectDatasetId).pipe(
+      take(1),
+      switchMap(selectedDatasetIdState => this.datasetsService.getDataset(selectedDatasetIdState))
     ).subscribe(dataset => {
       if (!dataset) {
         return;

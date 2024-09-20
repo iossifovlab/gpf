@@ -1,53 +1,32 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { reset } from 'app/users/state-actions';
+export const initialState = ['male', 'female', 'unspecified'];
 
-export class AddGender {
-  public static readonly type = '[Genotype] Add Gender';
-  public constructor(public gender: string) {}
-}
+export const selectGenders = createFeatureSelector<string[]>('genders');
 
-export class RemoveGender {
-  public static readonly type = '[Genotype] Remove Gender';
-  public constructor(public gender: string) {}
-}
+export const setGenders = createAction(
+  '[Genotype] Set gedners',
+  props<{ genders: string[] }>()
+);
 
-export class SetGender {
-  public static readonly type = '[Genotype] Set Gender';
-  public constructor(public gender: string[]) {}
-}
+export const addGender = createAction(
+  '[Genotype] Add gender',
+  props<{ gender: string }>()
+);
 
-export interface GenderModel {
-  genders: string[];
-}
+export const removeGender = createAction(
+  '[Genotype] Remove gender',
+  props<{ gender: string }>()
+);
 
-@State<GenderModel>({
-  name: 'genderState',
-  defaults: {
-    genders: ['male', 'female', 'unspecified']
-  },
-})
-@Injectable()
-export class GenderState {
-  @Action(AddGender)
-  public addGender(ctx: StateContext<GenderModel>, action: AddGender): void {
-    const state = ctx.getState();
-    ctx.patchState({
-      genders: [...state.genders, action.gender]
-    });
-  }
+export const resetGenders = createAction(
+  '[Genotype] Reset genders'
+);
 
-  @Action(RemoveGender)
-  public removeGender(ctx: StateContext<GenderModel>, action: RemoveGender): void {
-    const state = ctx.getState();
-    ctx.patchState({
-      genders: state.genders.filter(gender => gender !== action.gender)
-    });
-  }
-
-  @Action(SetGender)
-  public setGender(ctx: StateContext<GenderModel>, action: SetGender): void {
-    ctx.patchState({
-      genders: Array.from(action.gender)
-    });
-  }
-}
+export const gendersReducer = createReducer(
+  initialState,
+  on(setGenders, (state: string[], {genders}) => [...genders]),
+  on(addGender, (state: string[], {gender}) => [...state, gender]),
+  on(removeGender, (state: string[], {gender}) => state.filter(gen => gen !== gender)),
+  on(reset, resetGenders, state => [...initialState]),
+);

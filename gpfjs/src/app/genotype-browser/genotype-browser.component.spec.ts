@@ -5,7 +5,6 @@ import { ConfigService } from 'app/config/config.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { APP_BASE_HREF } from '@angular/common';
-import { NgxsModule } from '@ngxs/store';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
@@ -37,8 +36,8 @@ import { Observable } from 'rxjs/internal/Observable';
 import { NavigationStart, Router, RouterEvent } from '@angular/router';
 import { Subject } from 'rxjs/internal/Subject';
 import { Dataset, GenotypeBrowser } from 'app/datasets/datasets';
-import { DatasetModel } from 'app/datasets/datasets.state';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
+import { Store, StoreModule } from '@ngrx/store';
 
 
 const genotypeBrowserConfigMock = {
@@ -136,6 +135,7 @@ describe('GenotypeBrowserComponent', () => {
   let fixture: ComponentFixture<GenotypeBrowserComponent>;
   const queryService = new MockQueryService();
   let loadingService: FullscreenLoadingService;
+  let store: Store;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -171,7 +171,7 @@ describe('GenotypeBrowserComponent', () => {
       ],
       imports: [
         HttpClientTestingModule, RouterTestingModule, NgbNavModule, FormsModule,
-        NgxsModule.forRoot([], {developmentMode: true}),
+        StoreModule.forRoot({}),
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
@@ -180,11 +180,10 @@ describe('GenotypeBrowserComponent', () => {
     loadingService = TestBed.inject(FullscreenLoadingService);
 
     // eslint-disable-next-line max-len
-    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
+    const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
 
-    component['store'] = {
-      selectOnce: () => of(selectedDatasetMockModel)
-    } as never;
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
 
     fixture.detectChanges();
   });

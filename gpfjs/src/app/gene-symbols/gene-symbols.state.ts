@@ -1,27 +1,21 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { reset } from 'app/users/state-actions';
+import { cloneDeep } from 'lodash';
+export const initialState: string[] = [];
 
-export class SetGeneSymbols {
-  public static readonly type = '[Genotype] Set gene symbols';
-  public constructor(public geneSymbols: string[]) {}
-}
+export const selectGeneSymbols = createFeatureSelector<string[]>('geneSymbols');
 
-export interface GeneSymbolsModel {
-  geneSymbols: string[];
-}
+export const setGeneSymbols = createAction(
+  '[Genotype] Set gene symbols',
+  props<{ geneSymbols: string[] }>()
+);
 
-@State<GeneSymbolsModel>({
-  name: 'geneSymbolsState',
-  defaults: {
-    geneSymbols: []
-  },
-})
-@Injectable()
-export class GeneSymbolsState {
-  @Action(SetGeneSymbols)
-  public setGeneSymbols(ctx: StateContext<GeneSymbolsModel>, action: SetGeneSymbols): void {
-    ctx.patchState({
-      geneSymbols: action.geneSymbols
-    });
-  }
-}
+export const resetGeneSymbols = createAction(
+  '[Genotype] Reset gene symbols'
+);
+
+export const geneSymbolsReducer = createReducer(
+  initialState,
+  on(setGeneSymbols, (state: string[], { geneSymbols }) => [...geneSymbols]),
+  on(reset, resetGeneSymbols, state => cloneDeep(initialState)),
+);

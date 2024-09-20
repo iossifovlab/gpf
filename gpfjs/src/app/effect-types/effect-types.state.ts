@@ -1,53 +1,33 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { reset } from 'app/users/state-actions';
+export const initialState: string[] = null;
 
-export class AddEffectType {
-  public static readonly type = '[Genotype] Add EffectType';
-  public constructor(public effectType: string) {}
-}
+export const selectEffectTypes = createFeatureSelector<string[]>('effectTypes');
 
-export class RemoveEffectType {
-  public static readonly type = '[Genotype] Remove EffectType';
-  public constructor(public effectType: string) {}
-}
+export const setEffectTypes = createAction(
+  '[Genotype] Set effect types',
+  props<{ effectTypes: string[] }>()
+);
 
-export class SetEffectTypes {
-  public static readonly type = '[Genotype] Set effect types';
-  public constructor(public effectTypes: Set<string>) {}
-}
+export const addEffectType = createAction(
+  '[Genotype] Add EffectType',
+  props<{ effectType: string }>()
+);
 
-export interface EffectTypeModel {
-  effectTypes: string[];
-}
+export const removeEffectType = createAction(
+  '[Genotype] Remove EffectType',
+  props<{ effectType: string }>()
+);
 
-@State<EffectTypeModel>({
-  name: 'effecttypesState',
-  defaults: {
-    effectTypes: []
-  },
-})
-@Injectable()
-export class EffecttypesState {
-  @Action(AddEffectType)
-  public addEffectType(ctx: StateContext<EffectTypeModel>, action: AddEffectType): void {
-    const state = ctx.getState();
-    ctx.patchState({
-      effectTypes: [...state.effectTypes, action.effectType]
-    });
-  }
+export const resetEffectTypes = createAction(
+  '[Genotype] Reset effect types'
+);
 
-  @Action(RemoveEffectType)
-  public removeEffectType(ctx: StateContext<EffectTypeModel>, action: RemoveEffectType): void {
-    const state = ctx.getState();
-    ctx.patchState({
-      effectTypes: state.effectTypes.filter(eff => eff !== action.effectType)
-    });
-  }
-
-  @Action(SetEffectTypes)
-  public setEffectTypes(ctx: StateContext<EffectTypeModel>, action: SetEffectTypes): void {
-    ctx.patchState({
-      effectTypes: Array.from(action.effectTypes)
-    });
-  }
-}
+export const effectTypesReducer = createReducer(
+  initialState,
+  on(setEffectTypes, (state: string[], {effectTypes}) => effectTypes ? [...effectTypes] : initialState),
+  on(addEffectType, (state: string[], {effectType}) => [...state, effectType]),
+  on(removeEffectType, (state: string[], {effectType}) => state.filter(eff => eff !== effectType)),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  on(reset, resetEffectTypes, state => initialState),
+);

@@ -1,12 +1,19 @@
-import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
-import { CategoricalFilterState, CategoricalSelection } from '../person-filters/person-filters';
-import { PersonFilter } from '../datasets/datasets';
+import { Component, Input, OnInit } from '@angular/core';
+import { CategoricalFilterState, CategoricalSelection, PersonFilterState } from '../person-filters/person-filters';
 import { PhenoBrowserService } from 'app/pheno-browser/pheno-browser.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { Observable, switchMap } from 'rxjs';
+import { Observable, switchMap, take } from 'rxjs';
 import { environment } from 'environments/environment';
-import { Store } from '@ngxs/store';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { Store } from '@ngrx/store';
+import { selectDatasetId } from 'app/datasets/datasets.state';
+import {
+  removeFamilyFilter,
+  removePersonFilter,
+  selectPersonFilters,
+  updateFamilyFilter,
+  updatePersonFilter
+} from 'app/person-filters/person-filters.state';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-categorical-filter',
@@ -14,9 +21,9 @@ import { DatasetModel } from 'app/datasets/datasets.state';
   styleUrls: ['./categorical-filter.component.css']
 })
 export class CategoricalFilterComponent implements OnInit {
-  @Input() public categoricalFilter: PersonFilter;
-  @Input() public categoricalFilterState: CategoricalFilterState;
-  @Output() public updateFilterEvent = new EventEmitter();
+  @Input() public categoricalFilter: PersonFilterState;
+  @Input() public isFamilyFilters: boolean;
+  public categoricalFilterState: CategoricalFilterState;
   public sourceDescription$: Observable<object>;
   public valuesDomain: any = [];
   public imgPathPrefix = environment.imgPathPrefix;
@@ -28,17 +35,35 @@ export class CategoricalFilterComponent implements OnInit {
   ) {}
 
   public ngOnInit(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => {
-        const selectedDatasetId = state.selectedDatasetId;
+    this.store.select(selectPersonFilters).pipe(
+      take(1),
+      switchMap(state => {
+        let stateFilter: CategoricalFilterState;
 
-        if (this.categoricalFilter.from === 'phenodb') {
+        if (this.isFamilyFilters) {
+          stateFilter = state.familyFilters?.find(filter => filter.id === this.categoricalFilter.id);
+        } else {
+          stateFilter = state.personFilters?.find(filter => filter.id === this.categoricalFilter.id);
+        }
+
+        if (stateFilter) {
+          this.categoricalFilterState = cloneDeep(stateFilter);
+        } else {
+          this.categoricalFilterState = cloneDeep(this.categoricalFilter);
+        }
+
+        return this.store.select(selectDatasetId).pipe(take(1));
+      }),
+      switchMap((datasetIdState: string) => {
+        const selectedDatasetId = datasetIdState;
+
+        if (this.categoricalFilterState.from === 'phenodb') {
           this.sourceDescription$ = this.phenoBrowserService.getMeasureDescription(
-            selectedDatasetId, this.categoricalFilter.source
+            selectedDatasetId, this.categoricalFilterState.source
           );
-        } else if (this.categoricalFilter.from === 'pedigree') {
+        } else if (this.categoricalFilterState.from === 'pedigree') {
           this.sourceDescription$ = this.datasetsService.getDatasetPedigreeColumnDetails(
-            selectedDatasetId, this.categoricalFilter.source
+            selectedDatasetId, this.categoricalFilterState.source
           );
         }
         return this.sourceDescription$;
@@ -50,7 +75,11 @@ export class CategoricalFilterComponent implements OnInit {
 
   public set selectedValue(value) {
     (this.categoricalFilterState.selection as CategoricalSelection).selection = [value];
-    this.updateFilterEvent.emit();
+    if (this.isFamilyFilters) {
+      this.store.dispatch(updateFamilyFilter({familyFilter: cloneDeep(this.categoricalFilterState)}));
+    } else {
+      this.store.dispatch(updatePersonFilter({personFilter: cloneDeep(this.categoricalFilterState)}));
+    }
   }
 
   public get selectedValue(): string {
@@ -59,6 +88,10 @@ export class CategoricalFilterComponent implements OnInit {
 
   public clear(): void {
     (this.categoricalFilterState.selection as CategoricalSelection).selection = [];
-    this.updateFilterEvent.emit();
+    if (this.isFamilyFilters) {
+      this.store.dispatch(removeFamilyFilter({familyFilter: cloneDeep(this.categoricalFilterState)}));
+    } else {
+      this.store.dispatch(removePersonFilter({personFilter: cloneDeep(this.categoricalFilterState)}));
+    }
   }
 }

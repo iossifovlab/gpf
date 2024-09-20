@@ -91,3 +91,10 @@ export const OTHER: Set<string> = new Set([
   'non-coding-intron',
   'CDS',
 ]);
+
+export const GENOTYPE_BROWSER_INITIAL_VALUES: Set<string> = new Set([
+  'nonsense',
+  'frame-shift',
+  'splice-site',
+  'no-frame-shift-newStop',
+]);

@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { IsNotEmpty } from 'class-validator';
 
@@ -9,6 +10,8 @@ export class GeneSetsLocalState {
   public geneSet: GeneSet;
 
   public select(datasetId: string, personSetCollectionId: string, phenotype: string): void {
+    this.geneSetsTypes = cloneDeep(this.geneSetsTypes);
+
     if (datasetId in this.geneSetsTypes && personSetCollectionId in this.geneSetsTypes[datasetId]) {
       this.geneSetsTypes[datasetId][personSetCollectionId].push(phenotype);
     } else if (datasetId in this.geneSetsTypes) {
@@ -19,6 +22,8 @@ export class GeneSetsLocalState {
   }
 
   public deselect(datasetId: string, personSetCollectionId: string, phenotype: string): void {
+    this.geneSetsTypes = cloneDeep(this.geneSetsTypes);
+
     if (datasetId in this.geneSetsTypes && personSetCollectionId in this.geneSetsTypes[datasetId]) {
       const index = this.geneSetsTypes[datasetId][personSetCollectionId].indexOf(phenotype);
       if (index > -1) {

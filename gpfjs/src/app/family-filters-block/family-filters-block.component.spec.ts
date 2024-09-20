@@ -6,14 +6,17 @@ import { Observable, of } from 'rxjs';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { HttpResponse } from '@angular/common/http';
-import { NgxsModule } from '@ngxs/store';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 import { Dataset, GenotypeBrowser } from 'app/datasets/datasets';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { StoreModule } from '@ngrx/store';
+import { datasetIdReducer } from 'app/datasets/datasets.state';
+import { familyIdsReducer } from 'app/family-ids/family-ids.state';
+import { familyTagsReducer } from 'app/family-tags/family-tags.state';
+import { personFiltersReducer } from 'app/person-filters/person-filters.state';
 
 class VariantReportsServiceMock {
   private variantsUrl = 'common_reports/studies/';
@@ -245,7 +248,15 @@ describe('FamilyFiltersBlockComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [FamilyFiltersBlockComponent],
-      imports: [NgbNavModule, NgxsModule.forRoot([], {developmentMode: true}), HttpClientTestingModule],
+      imports: [
+        NgbNavModule,
+        StoreModule.forRoot({
+          datasetId: datasetIdReducer,
+          familyIds: familyIdsReducer,
+          familyTags: familyTagsReducer,
+          personFilters: personFiltersReducer
+        }),
+        HttpClientTestingModule],
       providers: [
         DatasetsService,
         ConfigService,
@@ -262,13 +273,6 @@ describe('FamilyFiltersBlockComponent', () => {
     // eslint-disable-next-line max-len
     const datasetMock = new Dataset('datasetId', 'dataset', [], true, [], [], [], '', true, true, true, true, {enabled: true}, genotypeBrowserMock, null, null, null, true, null, false);
     component.dataset = datasetMock;
-
-    // eslint-disable-next-line max-len
-    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
-
-    component['store'] = {
-      selectOnce: () => of(selectedDatasetMockModel)
-    } as never;
 
     fixture.detectChanges();
   }));

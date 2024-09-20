@@ -1,8 +1,5 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-
 import { GenotypeBlockComponent } from './genotype-block.component';
 import { GenderComponent } from '../gender/gender.component';
 import { VariantTypesComponent } from '../variant-types/variant-types.component';
@@ -15,11 +12,11 @@ import { ConfigService } from 'app/config/config.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { EffecttypesColumnComponent } from 'app/effect-types/effect-types-column.component';
-import { NgxsModule } from '@ngxs/store';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { EffecttypesState } from 'app/effect-types/effect-types.state';
-import { GenderState } from 'app/gender/gender.state';
-import { VarianttypesState } from 'app/variant-types/variant-types.state';
+import { effectTypesReducer } from 'app/effect-types/effect-types.state';
+import { StoreModule } from '@ngrx/store';
+import { variantTypesReducer } from 'app/variant-types/variant-types.state';
+import { gendersReducer } from 'app/gender/gender.state';
 
 describe('GenotypeBlockComponent', () => {
   let component: GenotypeBlockComponent;
@@ -46,7 +43,11 @@ describe('GenotypeBlockComponent', () => {
         NgbModule,
         HttpClientTestingModule,
         RouterTestingModule,
-        NgxsModule.forRoot([EffecttypesState, GenderState, VarianttypesState], {developmentMode: true})
+        StoreModule.forRoot({
+          variantTypes: variantTypesReducer,
+          effectTypes: effectTypesReducer,
+          genders: gendersReducer
+        })
       ],
       schemas: [
         NO_ERRORS_SCHEMA

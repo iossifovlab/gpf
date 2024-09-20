@@ -1,11 +1,11 @@
 import { Component, Input, ViewChild } from '@angular/core';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-import { Store } from '@ngxs/store';
+import { Store } from '@ngrx/store';
 import { ConfigService } from 'app/config/config.service';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { selectDatasetId } from 'app/datasets/datasets.state';
 import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
-import { switchMap } from 'rxjs';
+import { switchMap, take } from 'rxjs';
 
 @Component({
   selector: 'gpf-pedigree',
@@ -38,9 +38,10 @@ export class PedigreeComponent {
       return;
     }
 
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => {
-        this.selectedDatasetId = state.selectedDatasetId;
+    this.store.select(selectDatasetId).pipe(
+      take(1),
+      switchMap(selectwsDatasetIdState => {
+        this.selectedDatasetId = selectwsDatasetIdState;
         return this.variantReportsService.getFamilies(
           this.selectedDatasetId,
           this.groupName,
@@ -73,8 +74,8 @@ export class PedigreeComponent {
   }
 
   public onSubmit(event): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).subscribe(state => {
-      const selectedDatasetId = state.selectedDatasetId;
+    this.store.select(selectDatasetId).pipe(take(1)).subscribe(selectwsDatasetIdState => {
+      const selectedDatasetId = selectwsDatasetIdState;
       const args = {
         study_id: selectedDatasetId,
         group_name: this.groupName,

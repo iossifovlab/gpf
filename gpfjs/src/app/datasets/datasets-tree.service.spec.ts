@@ -4,10 +4,10 @@ import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { UsersService } from 'app/users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { APP_BASE_HREF } from '@angular/common';
 import { Dataset } from './datasets';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
+import { StoreModule } from '@ngrx/store';
 
 const datasetNodeMock1 = new DatasetNode(new Dataset('id1',
   null, ['id11', 'id12'], null, null, null, null, null,
@@ -35,7 +35,7 @@ describe('DatasetService', () => {
   beforeEach(waitForAsync(() => {
     const configMock = { baseUrl: 'testUrl/' };
     TestBed.configureTestingModule({
-      imports: [NgxsModule.forRoot([], {developmentMode: true}), RouterTestingModule, HttpClientTestingModule],
+      imports: [StoreModule.forRoot({}), RouterTestingModule, HttpClientTestingModule],
       providers: [
         DatasetsTreeService,
         UsersService,

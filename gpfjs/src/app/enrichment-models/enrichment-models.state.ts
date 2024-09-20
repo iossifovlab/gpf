@@ -1,33 +1,35 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { reset } from 'app/users/state-actions';
+import { cloneDeep } from 'lodash';
 
-export class SetEnrichmentModels {
-  public static readonly type = '[Genotype] Set enrichmentModel values';
-  public constructor(
-    public enrichmentBackgroundModel: string,
-    public enrichmentCountingModel: string,
-  ) {}
-}
-
-export interface EnrichmentModelsModel {
+export interface EnrichmentModels {
   enrichmentBackgroundModel: string;
   enrichmentCountingModel: string;
 }
 
-@State<EnrichmentModelsModel>({
-  name: 'enrichmentModelsState',
-  defaults: {
-    enrichmentBackgroundModel: '',
-    enrichmentCountingModel: '',
-  },
-})
-@Injectable()
-export class EnrichmentModelsState {
-  @Action(SetEnrichmentModels)
-  public setEnrichmentModels(ctx: StateContext<EnrichmentModelsModel>, action: SetEnrichmentModels): void {
-    ctx.patchState({
-      enrichmentBackgroundModel: action.enrichmentBackgroundModel,
-      enrichmentCountingModel: action.enrichmentCountingModel,
-    });
-  }
-}
+export const initialState: EnrichmentModels = {
+  enrichmentBackgroundModel: '',
+  enrichmentCountingModel: ''
+};
+
+export const selectEnrichmentModels =
+  createFeatureSelector<EnrichmentModels>('enrichmentModels');
+
+export const setEnrichmentModels = createAction(
+  '[Genotype] Set enrichmentModel values',
+  props<EnrichmentModels>()
+);
+
+export const resetEnrichmentModels = createAction(
+  '[Genotype] Reset enrichmentModel values'
+);
+
+export const enrichmentModelsReducer = createReducer(
+  initialState,
+  on(setEnrichmentModels, (state, {enrichmentBackgroundModel, enrichmentCountingModel}) => ({
+    enrichmentBackgroundModel: enrichmentBackgroundModel,
+    enrichmentCountingModel: enrichmentCountingModel,
+  })),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  on(reset, resetEnrichmentModels, state => cloneDeep(initialState)),
+);

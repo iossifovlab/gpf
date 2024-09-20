@@ -1,29 +1,31 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FamilyIds } from './family-ids';
 import { ValidateNested } from 'class-validator';
-import { Store } from '@ngxs/store';
-import { SetFamilyIds, FamilyIdsState} from './family-ids.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { ComponentValidator } from 'app/common/component-validator';
+import { Store } from '@ngrx/store';
+import { selectFamilyIds, setFamilyIds } from './family-ids.state';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'gpf-family-ids',
   templateUrl: './family-ids.component.html'
 })
-export class FamilyIdsComponent extends StatefulComponent implements OnInit {
+export class FamilyIdsComponent extends ComponentValidator implements OnInit {
   @ValidateNested()
   public familyIds = new FamilyIds();
   @ViewChild('textArea') private textArea: ElementRef;
 
   public constructor(protected store: Store) {
-    super(store, FamilyIdsState, 'familyIds');
+    super(store, 'familyIds', selectFamilyIds);
   }
 
   public ngOnInit(): void {
     super.ngOnInit();
+
     this.focusTextInputArea();
-    this.store.selectOnce(state => state.familyIdsState).subscribe((state: SetFamilyIds) => {
+    this.store.select(selectFamilyIds).pipe(take(1)).subscribe((familyIds: string[]) => {
       // restore state
-      this.setFamilyIds(state.familyIds.join('\n'));
+      this.setFamilyIds(familyIds.join('\n')); // must join on more conditions most likely
     });
   }
 
@@ -32,14 +34,9 @@ export class FamilyIdsComponent extends StatefulComponent implements OnInit {
       .split(/[,\s]/)
       .filter(s => s !== '');
     this.familyIds.familyIds = familyIds;
-    this.store.dispatch(new SetFamilyIds(result));
+    this.store.dispatch(setFamilyIds({familyIds: result}));
   }
 
-  /**
-   * Waits text input area element to load.
-   *
-   * @returns promise
-   */
   private async waitForTextInputAreaToLoad(): Promise<void> {
     return new Promise<void>(resolve => {
       const timer = setInterval(() => {

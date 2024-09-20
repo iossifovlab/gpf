@@ -1,47 +1,45 @@
 import { Gender } from './gender';
 import { Component, OnInit } from '@angular/core';
-import { Store } from '@ngxs/store';
-import { AddGender, GenderModel, GenderState, RemoveGender } from './gender.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { Store } from '@ngrx/store';
+import { ComponentValidator } from 'app/common/component-validator';
 import { ValidateNested } from 'class-validator';
+import { addGender, removeGender, selectGenders } from './gender.state';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'gpf-gender',
   templateUrl: './gender.component.html',
   styleUrls: ['./gender.component.css'],
 })
-export class GenderComponent extends StatefulComponent implements OnInit {
+export class GenderComponent extends ComponentValidator implements OnInit {
   @ValidateNested()
   public gender = new Gender();
   public supportedGenders = ['male', 'female', 'unspecified'];
 
   public constructor(protected store: Store) {
-    super(store, GenderState, 'gender');
+    super(store, 'genders', selectGenders);
   }
 
   public ngOnInit(): void {
-    super.ngOnInit();
-    this.store.selectOnce(state => (state.genderState as GenderModel)).subscribe(state => {
-      if (state.genders) {
-        this.selectNone();
-        for (const gender of state.genders) {
-          this.genderCheckValue(gender, true);
-        }
+    this.store.select(selectGenders).pipe(take(1)).subscribe(gendersState => {
+      for (const gender of gendersState) {
+        this.gender[gender] = true;
       }
+      super.ngOnInit();
     });
   }
 
   public selectAll(): void {
     for (const gender of this.supportedGenders) {
       this.gender[gender] = true;
-      this.store.dispatch(new AddGender(gender));
+      this.store.dispatch(addGender({gender: gender}));
     }
   }
 
   public selectNone(): void {
     for (const gender of this.supportedGenders) {
       this.gender[gender] = false;
-      this.store.dispatch(new RemoveGender(gender));
+      this.store.dispatch(removeGender({gender: gender}));
     }
   }
 
@@ -49,9 +47,9 @@ export class GenderComponent extends StatefulComponent implements OnInit {
     this.gender[gender] = value;
 
     if (value) {
-      this.store.dispatch(new AddGender(gender));
+      this.store.dispatch(addGender({gender: gender}));
     } else {
-      this.store.dispatch(new RemoveGender(gender));
+      this.store.dispatch(removeGender({gender: gender}));
     }
   }
 }

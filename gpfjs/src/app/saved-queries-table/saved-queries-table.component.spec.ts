@@ -1,7 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { QueryService } from 'app/query/query.service';
@@ -11,6 +10,7 @@ import { APP_BASE_HREF } from '@angular/common';
 
 import { SavedQueriesTableComponent } from './saved-queries-table.component';
 import { Observable, of } from 'rxjs';
+import { StoreModule } from '@ngrx/store';
 
 class MockQueryService {
   public deleteQuery(uuid: string): Observable<void> {
@@ -58,7 +58,7 @@ describe('SavedQueriesTableComponent', () => {
         UsersService,
         { provide: APP_BASE_HREF, useValue: '' }
       ],
-      imports: [RouterTestingModule, HttpClientTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
+      imports: [RouterTestingModule, HttpClientTestingModule, StoreModule.forRoot()]
     }).compileComponents();
 
     fixture = TestBed.createComponent(SavedQueriesTableComponent);

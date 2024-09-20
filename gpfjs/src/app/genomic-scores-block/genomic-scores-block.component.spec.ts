@@ -1,16 +1,10 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-
 import { MarkdownModule } from 'ngx-markdown';
-
-// eslint-disable-next-line no-restricted-imports
 import { Observable, of } from 'rxjs';
-
 import { GenomicScoresBlockComponent } from './genomic-scores-block.component';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
-import { GenomicScoresBlockState } from './genomic-scores-block.state';
 import { GenomicScores } from './genomic-scores-block';
 import { GenomicScoresComponent } from 'app/genomic-scores/genomic-scores.component';
 import { GenomicScoreState, GenomicScoresState } from 'app/genomic-scores/genomic-scores-store';
@@ -20,7 +14,8 @@ import { HistogramRangeSelectorLineComponent } from 'app/histogram/histogram-ran
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { AddButtonComponent } from 'app/add-button/add-button.component';
 import { RemoveButtonComponent } from 'app/remove-button/remove-button.component';
-import { NgxsModule } from '@ngxs/store';
+import { StoreModule } from '@ngrx/store';
+import { genomicScoresReducer } from './genomic-scores-block.state';
 
 const GENOMIC_SCORES_OBJECTS: GenomicScores[] = [GenomicScores.fromJson({
   bars: [1, 2, 3], score: 'GenomicScores', bins: [4, 5, 6], range: [1, 3],
@@ -53,7 +48,7 @@ describe('GenomicScoresBlockComponent', () => {
         NgbModule,
         FormsModule,
         MarkdownModule,
-        NgxsModule.forRoot([GenomicScoresBlockState], {developmentMode: true}),
+        StoreModule.forRoot({genomicScores: genomicScoresReducer})
       ],
       providers: [
         { provide: GenomicScoresBlockService, useClass: MockGenomicScoresBlockService },

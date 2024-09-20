@@ -3,14 +3,15 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 import { EffectTypesComponent } from './effect-types.component';
 import { EffecttypesColumnComponent } from './effect-types-column.component';
-import { ALL, CODING, LGDS, NONSYNONYMOUS, UTRS } from './effect-types';
-import { NgxsModule } from '@ngxs/store';
+import { ALL, CODING, EffectTypes, LGDS, NONSYNONYMOUS, UTRS } from './effect-types';
 import { of } from 'rxjs';
-import { AddEffectType, RemoveEffectType, SetEffectTypes, EffecttypesState } from './effect-types.state';
+import { addEffectType, effectTypesReducer, removeEffectType, setEffectTypes } from './effect-types.state';
+import { Store, StoreModule } from '@ngrx/store';
 
 describe('EffectTypesComponent', () => {
   let component: EffectTypesComponent;
   let fixture: ComponentFixture<EffectTypesComponent>;
+  let store: Store;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -18,17 +19,17 @@ describe('EffectTypesComponent', () => {
         EffectTypesComponent,
         EffecttypesColumnComponent,
       ],
-      imports: [NgxsModule.forRoot([EffecttypesState], {developmentMode: true})],
+      imports: [StoreModule.forRoot({effectTypes: effectTypesReducer})],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
     fixture = TestBed.createComponent(EffectTypesComponent);
     component = fixture.componentInstance;
 
-    component['store'] = {
-      selectOnce: () => of({effectTypes: ['value1', 'value2', 'value3']}),
-      dispatch: () => null
-    } as never;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'select').mockReturnValue(of(['value1', 'value2', 'value3']));
+    jest.spyOn(store, 'dispatch').mockReturnValue();
 
     fixture.detectChanges();
   }));
@@ -38,25 +39,13 @@ describe('EffectTypesComponent', () => {
   });
 
   it('should initialize', () => {
-    const onEffectTypeChangeSpy = jest.spyOn(component, 'onEffectTypeChange');
-    const selectInitialValuesSpy = jest.spyOn(component, 'selectInitialValues');
+    component.ngOnInit();
+
+    const expectedEffectTypes = new EffectTypes();
+    expectedEffectTypes.selected = new Set(['value1', 'value2', 'value3']);
+    expect(component.effectTypes).toStrictEqual(expectedEffectTypes);
 
     component.ngOnInit();
-    expect(onEffectTypeChangeSpy.mock.calls).toEqual([
-      [{ checked: true, effectType: 'value1' }],
-      [{ checked: true, effectType: 'value2' }],
-      [{ checked: true, effectType: 'value3' }]
-    ]);
-    expect(selectInitialValuesSpy).not.toHaveBeenCalled();
-
-    component['store'] = {
-      selectOnce: () => of({effectTypes: []}),
-      dispatch: () => null
-    } as never;
-
-    component.ngOnInit();
-    expect(onEffectTypeChangeSpy).toHaveBeenCalledTimes(3);
-    expect(selectInitialValuesSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should initialize button groups', () => {
@@ -82,40 +71,45 @@ describe('EffectTypesComponent', () => {
     component.setEffectTypes(mockSet);
 
     expect(component.effectTypes.selected).toStrictEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetEffectTypes(mockSet));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(1, setEffectTypes({ effectTypes: [...mockSet]}));
   });
 
   it('should effect type change', () => {
-    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
     component.effectTypes.selected = new Set();
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType1'});
     expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType1']));
+    expect(dispatchSpy).toHaveBeenCalledWith(addEffectType({effectType: 'effectType1'}));
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType2'});
     expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType1', 'effectType2']));
+    expect(dispatchSpy).toHaveBeenCalledWith(addEffectType({effectType: 'effectType2'}));
+
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType1'});
     expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType2']));
+    expect(dispatchSpy).toHaveBeenCalledWith(removeEffectType({effectType: 'effectType1'}));
+
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType1'});
     expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType2']));
+    expect(dispatchSpy).toHaveBeenCalledWith(removeEffectType({effectType: 'effectType1'}));
+
 
     component.onEffectTypeChange({checked: true, effectType: 'effectType2'});
     expect(component.effectTypes.selected).toStrictEqual(new Set(['effectType2']));
+    expect(dispatchSpy).toHaveBeenCalledWith(addEffectType({effectType: 'effectType2'}));
+
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
     expect(component.effectTypes.selected).toStrictEqual(new Set([]));
+    expect(dispatchSpy).toHaveBeenCalledWith(removeEffectType({effectType: 'effectType2'}));
+
 
     component.onEffectTypeChange({checked: false, effectType: 'effectType2'});
     expect(component.effectTypes.selected).toStrictEqual(new Set([]));
-
-    expect(dispatchSpy.mock.calls).toEqual([
-      [new AddEffectType('effectType1')],
-      [new AddEffectType('effectType2')],
-      [new RemoveEffectType('effectType1')],
-      [new RemoveEffectType('effectType2')]
-    ]);
+    expect(dispatchSpy).toHaveBeenCalledWith(removeEffectType({effectType: 'effectType2'}));
   });
 
   it('should not modify original effect group values', () => {

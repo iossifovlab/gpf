@@ -6,8 +6,8 @@ import { cloneDeep } from 'lodash';
 import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { NgxsModule, Store } from '@ngxs/store';
-import { GeneProfilesModel } from './gene-profiles-table.state';
+import { Store, StoreModule } from '@ngrx/store';
+import { GeneProfiles } from './gene-profiles-table.state';
 import { TruncatePipe } from 'app/utils/truncate.pipe';
 
 const column1 = {
@@ -271,7 +271,7 @@ describe('GeneProfilesTableComponent', () => {
         {provide: ActivatedRoute, useValue: mockActivatedRoute},
         {provide: GeneProfilesTableService, useValue: geneProfilesTableServiceMock}
       ],
-      imports: [NgxsModule.forRoot([], {developmentMode: true})]
+      imports: [StoreModule.forRoot({})]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GeneProfilesTableComponent);
@@ -280,14 +280,14 @@ describe('GeneProfilesTableComponent', () => {
     component.sortingButtonsComponents = [];
     component.config = configMock;
     store = TestBed.inject(Store);
-    jest.spyOn(store, 'selectOnce').mockReturnValue(of({
+    jest.spyOn(store, 'select').mockReturnValue(of({
       openedTabs: ['POGZ'],
       searchValue: 'chd',
       highlightedRows: ['CHD8'],
       sortBy: 'column1',
       orderBy: 'desc',
       headerLeaves: []
-    } as GeneProfilesModel));
+    } as GeneProfiles));
     fixture.detectChanges();
   });
 

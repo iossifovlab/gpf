@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NgxsModule } from '@ngxs/store';
 import { CheckboxListComponent, DisplayNamePipe } from 'app/checkbox-list/checkbox-list.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { FamilyTypeFilterComponent } from './family-type-filter.component';
+import { StoreModule } from '@ngrx/store';
+import { familyIdsReducer } from 'app/family-ids/family-ids.state';
 
 describe('FamilyTypeFilterComponent', () => {
   let component: FamilyTypeFilterComponent;
@@ -11,7 +12,7 @@ describe('FamilyTypeFilterComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [FamilyTypeFilterComponent, CheckboxListComponent, ErrorsAlertComponent, DisplayNamePipe],
-      imports: [NgxsModule.forRoot([], {developmentMode: true})]
+      imports: [StoreModule.forRoot({familyTypeFilter: familyIdsReducer})]
     }).compileComponents();
 
     fixture = TestBed.createComponent(FamilyTypeFilterComponent);

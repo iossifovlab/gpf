@@ -1,15 +1,14 @@
 import { HttpClient, HttpHandler } from '@angular/common/http';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { QueryService } from 'app/query/query.service';
 import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
-
 import { LoadQueryComponent } from './load-query.component';
-import { ErrorsState } from 'app/common/errors.state';
+import { StoreModule } from '@ngrx/store';
+import { errorsReducer } from 'app/common/errors.state';
 
 describe('LoadQueryComponent', () => {
   let component: LoadQueryComponent;
@@ -29,7 +28,7 @@ describe('LoadQueryComponent', () => {
       ],
       imports: [
         RouterTestingModule,
-        NgxsModule.forRoot([ErrorsState], {developmentMode: true})
+        StoreModule.forRoot({errors: errorsReducer})
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(LoadQueryComponent);

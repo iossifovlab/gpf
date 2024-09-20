@@ -1,23 +1,22 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset, toolPageLinks } from './datasets';
-import { Subscription, combineLatest, of, switchMap } from 'rxjs';
+import { Subscription, combineLatest, of, switchMap, take } from 'rxjs';
 import { ActivatedRoute, Params, Router } from '@angular/router';
-import { isEmpty } from 'lodash';
+import { cloneDeep, isEmpty } from 'lodash';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
-import { Store } from '@ngxs/store';
-import { StateResetAll } from 'ngxs-reset-plugin';
-import { GeneProfilesState } from 'app/gene-profiles-table/gene-profiles-table.state';
-import { DatasetNodeModel, DatasetNodeState, SetExpandedDatasets } from 'app/dataset-node/dataset-node.state';
-import { DatasetState, SetDatasetId } from './datasets.state';
-import { StatefulComponent } from 'app/common/stateful-component';
+import { Store } from '@ngrx/store';
+import { selectDatasetId, setDatasetId } from './datasets.state';
+import { ComponentValidator } from 'app/common/component-validator';
+import { selectExpandedDatasets, setExpandedDatasets } from 'app/dataset-node/dataset-node.state';
+import { reset } from 'app/users/state-actions';
 
 @Component({
   selector: 'gpf-datasets',
   templateUrl: './datasets.component.html',
   styleUrls: ['./datasets.component.css'],
 })
-export class DatasetsComponent extends StatefulComponent implements OnInit, OnDestroy {
+export class DatasetsComponent extends ComponentValidator implements OnInit, OnDestroy {
   private static previousUrl = '';
   public registerAlertVisible = false;
   public datasetTrees: DatasetNode[];
@@ -35,7 +34,7 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
     private router: Router,
     protected store: Store,
   ) {
-    super(store, DatasetState, 'dataset');
+    super(store, 'dataset', selectDatasetId);
   }
 
   public ngOnInit(): void {
@@ -53,7 +52,7 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
       ).subscribe({
         next: dataset => {
           if (dataset) {
-            this.store.dispatch(new SetDatasetId(dataset.id));
+            this.store.dispatch(setDatasetId({datasetId: dataset.id}));
             this.selectedDataset = dataset;
             this.setupSelectedDataset();
           }
@@ -67,7 +66,7 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
         datasets: this.datasetsService.getDatasetsObservable(),
         visibleDatasets: this.datasetsService.getVisibleDatasets()
       }).subscribe(({datasets, visibleDatasets}) => {
-        this.visibleDatasets = visibleDatasets as string[];
+        this.visibleDatasets = visibleDatasets;
         this.datasetTrees = new Array<DatasetNode>();
         datasets = datasets
           .filter(d => d.groups.find((g) => g.name === 'hidden') === undefined || d.accessRights)
@@ -90,13 +89,13 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
   }
 
   private saveTopLevelDatasetsToState(): void {
-    this.store.selectOnce(
-      (state: { datasetNodeState: DatasetNodeModel}) => state.datasetNodeState)
-      .subscribe(state => {
+    this.store.select(selectExpandedDatasets).pipe(take(1))
+      .subscribe(expandedDatasetsState => {
+        const expandedDatasets = cloneDeep(expandedDatasetsState);
         this.datasetTrees.forEach(node => {
-          state.expandedDatasets.push(node.dataset.id);
+          expandedDatasets.push(node.dataset.id);
         });
-        this.store.dispatch(new SetExpandedDatasets(state.expandedDatasets));
+        this.store.dispatch(setExpandedDatasets({expandedDatasets: expandedDatasets}));
       });
   }
 
@@ -199,7 +198,7 @@ export class DatasetsComponent extends StatefulComponent implements OnInit, OnDe
     /* In order to have state separation between the dataset tools,
     we clear the state if the previous url is from a different dataset tool */
     if (DatasetsComponent.previousUrl !== url && DatasetsComponent.previousUrl.startsWith('/datasets')) {
-      this.store.dispatch(new StateResetAll(GeneProfilesState, DatasetNodeState, DatasetState));
+      this.store.dispatch(reset());
     }
 
     this.selectedTool = url.split('/').pop();

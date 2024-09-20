@@ -1,28 +1,21 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { reset } from 'app/users/state-actions';
 
-export class SetUniqueFamilyVariantsFilter {
-  public static readonly type = '[Genotype] Set Unique Family Variants Filter';
-  public constructor(
-    public uniqueFamilyVariants: boolean
-  ) {}
-}
+export const initialState = false;
 
-export interface UniqueFamilyVariantsFilterModel {
-  uniqueFamilyVariants: boolean;
-}
+export const selectUniqueFamilyVariantsFilter = createFeatureSelector<boolean>('uniqueFamilyVariantsFilter');
 
-@State<UniqueFamilyVariantsFilterModel >({
-  name: 'uniqueFamilyVariantsFilterState',
-  defaults: { uniqueFamilyVariants: false },
-})
-@Injectable()
-export class UniqueFamilyVariantsFilterState {
-  @Action(SetUniqueFamilyVariantsFilter)
-  public setUniqueFamilyVariantsFilter(
-    ctx: StateContext<UniqueFamilyVariantsFilterModel>,
-    action: SetUniqueFamilyVariantsFilter
-  ): void {
-    ctx.patchState({ uniqueFamilyVariants: action.uniqueFamilyVariants });
-  }
-}
+export const setUniqueFamilyVariantsFilter = createAction(
+  '[Genotype] Set unique family variants filter',
+  props<{ uniqueFamilyVariantsFilter: boolean }>()
+);
+
+export const resetUniqueFamilyVariantsFilter = createAction(
+  '[Genotype] Reset unique family variants filter'
+);
+
+export const uniqueFamilyVariantsFilterReducer = createReducer(
+  initialState,
+  on(setUniqueFamilyVariantsFilter, (state, {uniqueFamilyVariantsFilter}) => uniqueFamilyVariantsFilter),
+  on(reset, resetUniqueFamilyVariantsFilter, state => initialState),
+);

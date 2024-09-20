@@ -1,7 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NgxsModule } from '@ngxs/store';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 import { GeneSetsComponent } from './gene-sets.component';
@@ -13,13 +12,13 @@ import { GeneSet, GeneSetsCollection, GeneSetType } from './gene-sets';
 import { Observable } from 'rxjs/internal/Observable';
 import { of } from 'rxjs';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { GeneSetsState } from './gene-sets.state';
+import { geneSetsReducer } from './gene-sets.state';
 import {
   MatAutocompleteOrigin,
   MatAutocomplete,
   MatAutocompleteTrigger,
   MAT_AUTOCOMPLETE_SCROLL_STRATEGY } from '@angular/material/autocomplete';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { StoreModule, Store } from '@ngrx/store';
 
 class MockGeneSetsService {
   public provide = true;
@@ -73,12 +72,13 @@ class MockGeneSetsService {
 describe('GeneSetsComponent', () => {
   let component: GeneSetsComponent;
   let fixture: ComponentFixture<GeneSetsComponent>;
+  let store: Store;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [GeneSetsComponent, MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger],
       imports: [
-        NgxsModule.forRoot([], {developmentMode: true}),
+        StoreModule.forRoot({geneSets: geneSetsReducer}),
         HttpClientTestingModule, RouterTestingModule,
         NgbAccordionModule, NgbNavModule,
         CommonModule,
@@ -93,6 +93,11 @@ describe('GeneSetsComponent', () => {
 
     fixture = TestBed.createComponent(GeneSetsComponent);
     component = fixture.componentInstance;
+
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'select').mockReturnValue(of());
+    jest.spyOn(store, 'dispatch').mockReturnValue(null);
+
     fixture.detectChanges();
   });
 
@@ -221,12 +226,13 @@ describe('GeneSetsComponent MockedGeneSetsService', () => {
   let component: GeneSetsComponent;
   let fixture: ComponentFixture<GeneSetsComponent>;
   const mockGeneSetsService = new MockGeneSetsService();
+  let store: Store;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [GeneSetsComponent, MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger],
       imports: [
-        NgxsModule.forRoot([GeneSetsState], {developmentMode: true}),
+        StoreModule.forRoot({geneSets: geneSetsReducer}),
         HttpClientTestingModule, RouterTestingModule,
         NgbAccordionModule, NgbNavModule,
         CommonModule,
@@ -243,13 +249,11 @@ describe('GeneSetsComponent MockedGeneSetsService', () => {
     fixture = TestBed.createComponent(GeneSetsComponent);
     component = fixture.componentInstance;
 
-    // eslint-disable-next-line max-len
-    const selectedDatasetMockModel: DatasetModel = {selectedDatasetId: 'testId'};
+    const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
 
-    component['store'] = {
-      selectOnce: () => of(selectedDatasetMockModel),
-      dispatch: () => null
-    } as never;
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
+    jest.spyOn(store, 'dispatch').mockReturnValue(null);
 
     fixture.detectChanges();
   });

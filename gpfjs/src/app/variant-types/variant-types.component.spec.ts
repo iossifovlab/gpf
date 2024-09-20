@@ -7,13 +7,14 @@ import { UsersService } from 'app/users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { of } from 'rxjs';
-import { NgxsModule } from '@ngxs/store';
 import { CheckboxListComponent } from 'app/checkbox-list/checkbox-list.component';
-import { SetVariantTypes, VarianttypesState } from './variant-types.state';
+import { initialState, setVariantTypes, variantTypesReducer } from './variant-types.state';
+import { Store, StoreModule } from '@ngrx/store';
 
 describe('VariantTypesComponent', () => {
   let component: VariantTypesComponent;
   let fixture: ComponentFixture<VariantTypesComponent>;
+  let store: Store;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -23,7 +24,7 @@ describe('VariantTypesComponent', () => {
         ConfigService,
         UsersService,
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, NgxsModule.forRoot([], {developmentMode: true})]
+      imports: [HttpClientTestingModule, RouterTestingModule, StoreModule.forRoot({variantTypes: variantTypesReducer})]
     })
       .compileComponents();
 
@@ -38,40 +39,41 @@ describe('VariantTypesComponent', () => {
 
   it('should handle selected values input and/or restore state', () => {
     let dispatchSpy;
+    store = TestBed.inject(Store);
 
-    component['store'] = {
-      selectOnce(f: VarianttypesState) {
-        return of({variantTypes: ['value1', 'value2']});
-      },
-      dispatch(set: SetVariantTypes) {}
-    } as any;
-    dispatchSpy = jest.spyOn(component['store'], 'dispatch');
-    component.ngOnChanges();
+    jest.spyOn(store, 'select').mockReturnValue(of(['value1', 'value2']));
+    jest.spyOn(store, 'dispatch').mockReturnValue();
+
+    dispatchSpy = jest.spyOn(store, 'dispatch');
+
+    component.ngOnInit();
     expect(component.selectedVariantTypes).toStrictEqual(new Set(['value1', 'value2']));
     expect(dispatchSpy).not.toHaveBeenCalled();
 
-    component.selectedVariantTypes = new Set(['value3']);
-    component['store'] = {
-      selectOnce(f: VarianttypesState) {
-        return of({variantTypes: []});
-      },
-      dispatch(set: SetVariantTypes) {}
-    } as any;
+    component.variantTypes = new Set(['value3']);
+
+    jest.spyOn(store, 'select').mockReturnValue(of(initialState));
     dispatchSpy = jest.spyOn(component['store'], 'dispatch');
-    component.ngOnChanges();
+
+    component.ngOnInit();
     expect(component.selectedVariantTypes).toStrictEqual(new Set(['value3']));
-    expect(dispatchSpy).toHaveBeenCalled();
+    expect(dispatchSpy).toHaveBeenCalledWith({
+      type: '[Genotype] Set variant types',
+      variantTypes: ['value3']
+    });
   });
 
   it('should update variant types', () => {
     component.selectedVariantTypes = undefined;
-    component['store'] = { dispatch(set: SetVariantTypes) {} } as any;
+    store = TestBed.inject(Store);
+    jest.spyOn(store, 'dispatch').mockReturnValue();
+
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
     const mockSet = new Set(['value1', 'value2', 'value3']);
 
     component.updateVariantTypes(mockSet);
 
     expect(component.selectedVariantTypes).toStrictEqual(mockSet);
-    expect(dispatchSpy).toHaveBeenNthCalledWith(1, new SetVariantTypes(mockSet));
+    expect(dispatchSpy).toHaveBeenNthCalledWith(1, setVariantTypes({variantTypes: [...mockSet]}));
   });
 });

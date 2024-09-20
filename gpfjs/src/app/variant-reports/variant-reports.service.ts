@@ -5,7 +5,6 @@ import { Observable } from 'rxjs';
 import { VariantReport } from './variant-reports';
 import { environment } from '../../environments/environment';
 import { map } from 'rxjs/operators';
-import { Store } from '@ngxs/store';
 
 @Injectable()
 export class VariantReportsService {
@@ -17,7 +16,6 @@ export class VariantReportsService {
   public constructor(
     private http: HttpClient,
     private config: ConfigService,
-    private store: Store
   ) { }
 
   public getVariantReport(datasetId: string): Observable<VariantReport> {

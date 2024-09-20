@@ -1,27 +1,22 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { reset } from 'app/users/state-actions';
+import { cloneDeep } from 'lodash';
 
-export class SetStudyTypes {
-  public static readonly type = '[Genotype] Set studyTypes values';
-  public constructor(public studyTypes: Set<string>) {}
-}
+export const initialState: string[] = ['we', 'wg', 'tg'];
 
-export interface StudyTypesModel {
-  studyTypes: string[];
-}
+export const selectStudyTypes = createFeatureSelector<string[]>('studyTypes');
 
-@State<StudyTypesModel>({
-  name: 'studyTypesState',
-  defaults: {
-    studyTypes: ['we', 'wg', 'tg']
-  },
-})
-@Injectable()
-export class StudyTypesState {
-  @Action(SetStudyTypes)
-  public setStudyTypesValue(ctx: StateContext<StudyTypesModel>, action: SetStudyTypes): void {
-    ctx.patchState({
-      studyTypes: [...action.studyTypes]
-    });
-  }
-}
+export const setStudyTypes = createAction(
+  '[Genotype] Set study type',
+  props<{ studyTypes: string[] }>()
+);
+
+export const resetStudyTypes = createAction(
+  '[Genotype] Reset study type'
+);
+
+export const studyTypesReducer = createReducer(
+  initialState,
+  on(setStudyTypes, (state: string[], {studyTypes}) => cloneDeep(studyTypes)),
+  on(reset, resetStudyTypes, state => cloneDeep(initialState)),
+);

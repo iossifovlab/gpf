@@ -1,27 +1,22 @@
-import { Injectable } from '@angular/core';
-import { State, Action, StateContext } from '@ngxs/store';
+import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { reset } from 'app/users/state-actions';
+import { cloneDeep } from 'lodash';
 
-export class SetRegionsFilter {
-  public static readonly type = '[Genotype] Set regions filter';
-  public constructor(public regionsFilters: string[]) {}
-}
+export const initialState: string[] = [];
 
-export interface RegionsFilterModel {
-  regionsFilters: string[];
-}
+export const selectRegionsFilters = createFeatureSelector<string[]>('regionsFilter');
 
-@State<RegionsFilterModel>({
-  name: 'regionsFiltersState',
-  defaults: {
-    regionsFilters: []
-  },
-})
-@Injectable()
-export class RegionsFilterState {
-  @Action(SetRegionsFilter)
-  public addEffectType(ctx: StateContext<RegionsFilterModel>, action: SetRegionsFilter): void {
-    ctx.patchState({
-      regionsFilters: action.regionsFilters
-    });
-  }
-}
+export const setRegionsFilters = createAction(
+  '[Genotype] Set region filters',
+  props<{ regionsFilter: string[] }>()
+);
+
+export const resetRegionsFilters = createAction(
+  '[Genotype] Reset region filters'
+);
+
+export const regionsFiltersReducer = createReducer(
+  initialState,
+  on(setRegionsFilters, (state, {regionsFilter}) => regionsFilter),
+  on(reset, resetRegionsFilters, state => cloneDeep(initialState)),
+);

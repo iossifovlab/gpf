@@ -9,9 +9,8 @@ import { DatasetsService } from './datasets/datasets.service';
 import { ConfigService } from './config/config.service';
 import { GenderComponent } from './gender/gender.component';
 import { PresentInChildComponent } from './present-in-child/present-in-child.component';
-import { PresentInChildState } from './present-in-child/present-in-child.state';
+import { presentInChildReducer } from './present-in-child/present-in-child.state';
 import { PresentInParentComponent } from './present-in-parent/present-in-parent.component';
-import { PresentInParentState } from './present-in-parent/present-in-parent.state';
 import { VariantTypesComponent } from './variant-types/variant-types.component';
 import { EffectTypesComponent } from './effect-types/effect-types.component';
 import { EffecttypesColumnComponent } from './effect-types/effect-types-column.component';
@@ -20,33 +19,28 @@ import { QueryService } from './query/query.service';
 import { GpfTableModule } from './table/table.module';
 import { DatasetsComponent } from './datasets/datasets.component';
 import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector.component';
-import { PedigreeSelectorState } from './pedigree-selector/pedigree-selector.state';
 import { GenotypeBlockComponent } from './genotype-block/genotype-block.component';
 import { GenesBlockComponent } from './genes-block/genes-block.component';
 import { GeneSymbolsComponent } from './gene-symbols/gene-symbols.component';
-import { GeneSymbolsState } from './gene-symbols/gene-symbols.state';
 import { RegionsFilterComponent } from './regions-filter/regions-filter.component';
 import { RegionsBlockComponent } from './regions-block/regions-block.component';
 import { HistogramModule } from './histogram/histogram.module';
 import { GeneScoresComponent } from './gene-scores/gene-scores.component';
 import { GeneScoresService } from './gene-scores/gene-scores.service';
-import { GeneScoresState } from './gene-scores/gene-scores.state';
 import { GeneSetsComponent } from './gene-sets/gene-sets.component';
-import { GeneSetsState } from './gene-sets/gene-sets.state';
 import { GeneSetsService } from './gene-sets/gene-sets.service';
 import { UsersComponent } from './users/users.component';
 import { UsersService } from './users/users.service';
 import { BoldMatchingPipe } from './utils/bold-matching.pipe';
 import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.validator';
 import { StudyTypesComponent } from './study-types/study-types.component';
-import { StudyTypesState } from './study-types/study-types.state';
+import { studyTypesReducer } from './study-types/study-types.state';
 import { CookieService} from 'ngx-cookie-service';
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component';
 import { EnrichmentToolComponent } from './enrichment-tool/enrichment-tool.component';
 import { EnrichmentModelsBlockComponent } from './enrichment-models-block/enrichment-models-block.component';
 import { EnrichmentModelsComponent } from './enrichment-models/enrichment-models.component';
 import { EnrichmentModelsService } from './enrichment-models/enrichment-models.service';
-import { EnrichmentModelsState } from './enrichment-models/enrichment-models.state';
 import { EnrichmentQueryService } from './enrichment-query/enrichment-query.service';
 import { EnrichmentTableComponent } from './enrichment-table/enrichment-table.component';
 import { EnrichmentTableRowComponent } from './enrichment-table/enrichment-table-row.component';
@@ -55,19 +49,18 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 import { Router, RouterModule, Routes, UrlSerializer } from '@angular/router';
 import { PersonFiltersComponent } from './person-filters/person-filters.component';
-import { PersonFiltersState } from './person-filters/person-filters.state';
+import { personFiltersReducer } from './person-filters/person-filters.state';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
 import { ContinuousFilterComponent } from './continuous-filter/continuous-filter.component';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter/multi-continuous-filter.component';
 import { CategoricalFilterComponent } from './categorical-filter/categorical-filter.component';
 import { MeasuresService } from './measures/measures.service';
 import { FamilyIdsComponent } from './family-ids/family-ids.component';
-import { FamilyIdsState } from './family-ids/family-ids.state';
 import { NumberWithExpPipe } from './utils/number-with-exp.pipe';
 import { PhenoToolComponent } from './pheno-tool/pheno-tool.component';
 import { PhenoMeasureSelectorComponent } from './pheno-measure-selector/pheno-measure-selector.component';
 import { PhenoToolMeasureComponent } from './pheno-tool-measure/pheno-tool-measure.component';
-import { PhenoToolMeasureState } from './pheno-tool-measure/pheno-tool-measure.state';
+import { phenoToolMeasureReducer } from './pheno-tool-measure/pheno-tool-measure.state';
 import { PhenoToolGenotypeBlockComponent } from './pheno-tool-genotype-block/pheno-tool-genotype-block.component';
 import { PhenoToolService } from './pheno-tool/pheno-tool.service';
 import { PhenoToolResultsChartComponent } from './pheno-tool-results-chart/pheno-tool-results-chart.component';
@@ -85,7 +78,7 @@ import { VariantReportsService } from './variant-reports/variant-reports.service
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
 import { GenomicScoresComponent } from './genomic-scores/genomic-scores.component';
 import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component';
-import { GenomicScoresBlockState } from './genomic-scores-block/genomic-scores-block.state';
+import { genomicScoresReducer } from './genomic-scores-block/genomic-scores-block.state';
 import { GenomicScoresBlockService } from './genomic-scores-block/genomic-scores-block.service';
 import { MarkdownModule } from 'ngx-markdown';
 import { UserManagementComponent } from './user-management/user-management.component';
@@ -106,7 +99,6 @@ import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock
 import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.component';
 import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { StudyFiltersComponent } from './study-filters/study-filters.component';
-import { StudyFiltersState } from './study-filters/study-filters.state';
 import { AddButtonComponent } from './add-button/add-button.component';
 import { RemoveButtonComponent } from './remove-button/remove-button.component';
 import { PopupComponent } from './popup/popup.component';
@@ -114,7 +106,7 @@ import { SaveQueryComponent } from './save-query/save-query.component';
 import { SavedQueriesTableComponent } from './saved-queries-table/saved-queries-table.component';
 import { UserProfileComponent } from './user-profile/user-profile.component';
 import { InheritancetypesComponent } from './inheritancetypes/inheritancetypes.component';
-import { InheritancetypesState } from './inheritancetypes/inheritancetypes.state';
+import { inheritanceTypesReducer } from './inheritancetypes/inheritancetypes.state';
 import { GeneBrowserComponent } from './gene-browser/gene-browser.component';
 import { GlobalErrorHandler } from './global-error-handler/global-error-handler';
 import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
@@ -128,19 +120,13 @@ import { GeneProfilesBlockComponent } from './gene-profiles-block/gene-profiles-
 import { GeneProfileSingleViewComponent } from './gene-profiles-single-view/gene-profiles-single-view.component';
 import { PersonFiltersBlockComponent } from './person-filters-block/person-filters-block.component';
 import { PersonIdsComponent } from './person-ids/person-ids.component';
-import { PersonIdsState } from './person-ids/person-ids.state';
+import { personIdsReducer } from './person-ids/person-ids.state';
 import { FamilyTypeFilterComponent } from './family-type-filter/family-type-filter.component';
-import { FamilyTypeFilterState } from './family-type-filter/family-type-filter.state';
 import { SortingButtonsComponent } from './sorting-buttons/sorting-buttons.component';
 import { BnNgIdleService } from 'bn-ng-idle';
-import { NgxsModule } from '@ngxs/store';
-import { NgxsResetPluginModule } from 'ngxs-reset-plugin';
-import { VarianttypesState } from './variant-types/variant-types.state';
-import { EffecttypesState } from './effect-types/effect-types.state';
-import { GenderState } from './gender/gender.state';
-import { RegionsFilterState } from './regions-filter/regions-filter.state';
+import { variantTypesReducer } from './variant-types/variant-types.state';
+import { effectTypesReducer } from './effect-types/effect-types.state';
 import { CheckboxListComponent, DisplayNamePipe } from './checkbox-list/checkbox-list.component';
-import { ErrorsState } from './common/errors.state';
 import { toolPageLinks } from './datasets/datasets';
 import { GenePlotComponent } from './gene-plot/gene-plot.component';
 import { DragDropModule } from '@angular/cdk/drag-drop';
@@ -152,7 +138,6 @@ import { GeneProfilesTableComponent } from './gene-profiles-table/gene-profiles-
 import { GeneProfileSingleViewWrapperComponent } from './gene-profiles-single-view-wrapper/gene-profiles-single-view-wrapper.component';
 import { TruncatePipe } from './utils/truncate.pipe';
 import { UniqueFamilyVariantsFilterComponent } from './unique-family-variants-filter/unique-family-variants-filter.component';
-import { UniqueFamilyVariantsFilterState } from './unique-family-variants-filter/unique-family-variants-filter.state';
 import { AngularMarkdownEditorModule } from 'angular-markdown-editor';
 import { PedigreeChartComponent } from './pedigree-chart/pedigree-chart.component';
 import { PedigreeChartMemberComponent } from './pedigree-chart/pedigree-chart-member.component';
@@ -183,12 +168,26 @@ import { HomeComponent } from './home/home.component';
 import { AboutComponent } from './about/about.component';
 import { MarkdownEditorComponent } from './markdown-editor/markdown-editor.component';
 import { FamilyTagsComponent } from './family-tags/family-tags.component';
-import { FamilyTagsState } from './family-tags/family-tags.state';
-import { GeneProfilesState } from './gene-profiles-table/gene-profiles-table.state';
-import { DatasetNodeState } from './dataset-node/dataset-node.state';
+import { familyTagsReducer } from './family-tags/family-tags.state';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
-import { DatasetState } from './datasets/datasets.state';
+import { datasetIdReducer } from './datasets/datasets.state';
+import { StoreModule } from '@ngrx/store';
+import { errorsReducer } from './common/errors.state';
+import { familyIdsReducer } from './family-ids/family-ids.state';
+import { expandedDatasetsReducer } from './dataset-node/dataset-node.state';
+import { studyFiltersReducer } from './study-filters/study-filters.state';
+import { gendersReducer } from './gender/gender.state';
+import { enrichmentModelsReducer } from './enrichment-models/enrichment-models.state';
+import { geneSetsReducer } from './gene-sets/gene-sets.state';
+import { geneScoresReducer } from './gene-scores/gene-scores.state';
+import { geneSymbolsReducer } from './gene-symbols/gene-symbols.state';
+import { presentInParentReducer } from './present-in-parent/present-in-parent.state';
+import { pedigreeSelectorReducer } from './pedigree-selector/pedigree-selector.state';
+import { geneProfilesReducer } from './gene-profiles-table/gene-profiles-table.state';
+import { regionsFiltersReducer } from './regions-filter/regions-filter.state';
+import { uniqueFamilyVariantsFilterReducer } from './unique-family-variants-filter/unique-family-variants-filter.state';
+import { familyTypeFilterReducer } from './family-type-filter/family-type-filter.state';
 
 const appRoutes: Routes = [
   {
@@ -425,23 +424,41 @@ const appRoutes: Routes = [
       confirmButtonType: 'danger'
     }),
     NgMultiSelectDropDownModule.forRoot(),
-    NgxsModule.forRoot([
-      VarianttypesState, EffecttypesState, GenderState,
-      InheritancetypesState, PersonIdsState, PresentInChildState, PresentInParentState,
-      GeneSymbolsState, FamilyIdsState, FamilyTagsState, RegionsFilterState, StudyTypesState, GeneSetsState,
-      GeneScoresState, EnrichmentModelsState, PedigreeSelectorState, FamilyTypeFilterState,
-      StudyFiltersState, PersonFiltersState, GenomicScoresBlockState, PhenoToolMeasureState,
-      UniqueFamilyVariantsFilterState, ErrorsState, GeneProfilesState, DatasetNodeState, DatasetState
-    ], {compatibility: { strictContentSecurityPolicy: true }}
-    ),
-    NgxsResetPluginModule.forRoot(),
     DragDropModule,
     ClipboardModule,
     ScrollingModule,
     AngularMarkdownEditorModule.forRoot(),
     MatAutocompleteModule,
     MatInputModule,
-    NoopAnimationsModule
+    NoopAnimationsModule,
+    StoreModule.forRoot({
+      errors: errorsReducer,
+      familyIds: familyIdsReducer,
+      datasetId: datasetIdReducer,
+      expandedDatasets: expandedDatasetsReducer,
+      familyTags: familyTagsReducer,
+      personIds: personIdsReducer,
+      personFilters: personFiltersReducer,
+      studyFilters: studyFiltersReducer,
+      effectTypes: effectTypesReducer,
+      genders: gendersReducer,
+      variantTypes: variantTypesReducer,
+      inheritanceTypes: inheritanceTypesReducer,
+      enrichmentModels: enrichmentModelsReducer,
+      geneSets: geneSetsReducer,
+      geneScores: geneScoresReducer,
+      geneSymbols: geneSymbolsReducer,
+      presentInChild: presentInChildReducer,
+      presentInParent: presentInParentReducer,
+      phenoToolMeasure: phenoToolMeasureReducer,
+      pedigreeSelector: pedigreeSelectorReducer,
+      geneProfiles: geneProfilesReducer,
+      regionsFilter: regionsFiltersReducer,
+      genomicScores: genomicScoresReducer,
+      uniqueFamilyVariantsFilter: uniqueFamilyVariantsFilterReducer,
+      familyTypeFilter: familyTypeFilterReducer,
+      studyTypes: studyTypesReducer
+    }),
   ],
   providers: [
     CookieService,

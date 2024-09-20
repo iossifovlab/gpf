@@ -1,9 +1,8 @@
-/* eslint-disable no-unused-vars, @typescript-eslint/no-unused-vars */
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { GenderComponent } from './gender.component';
-import { GenderState } from './gender.state';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
-import { NgxsModule } from '@ngxs/store';
+import { StoreModule } from '@ngrx/store';
+import { gendersReducer } from './gender.state';
 
 
 describe('GenderComponent', () => {
@@ -13,7 +12,7 @@ describe('GenderComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [GenderComponent, ErrorsAlertComponent],
-      imports: [NgxsModule.forRoot([GenderState], {developmentMode: true})]
+      imports: [StoreModule.forRoot({genders: gendersReducer})]
     })
       .compileComponents();
     fixture = TestBed.createComponent(GenderComponent);

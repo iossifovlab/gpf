@@ -1,15 +1,15 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-
-import { Observable, of, Subscription, switchMap, zip } from 'rxjs';
-
+import { combineLatest, Observable, Subscription } from 'rxjs';
 import { EnrichmentResults } from '../enrichment-query/enrichment-result';
 import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
-import { Select, Selector, Store } from '@ngxs/store';
-import { GenesBlockComponent } from 'app/genes-block/genes-block.component';
-import { EnrichmentModelsState } from 'app/enrichment-models/enrichment-models.state';
-import { ErrorsState, ErrorsModel } from 'app/common/errors.state';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { Store } from '@ngrx/store';
+import { selectDatasetId } from 'app/datasets/datasets.state';
+import { selectEnrichmentModels } from 'app/enrichment-models/enrichment-models.state';
+import { selectGeneScores } from 'app/gene-scores/gene-scores.state';
+import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
+import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { selectErrors } from 'app/common/errors.state';
 
 @Component({
   selector: 'gpf-enrichment-tool',
@@ -21,8 +21,7 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
   public selectedDatasetId: string;
   public disableQueryButtons = false;
 
-  @Select(EnrichmentToolComponent.enrichmentToolStateSelector) public state$: Observable<object[]>;
-  @Select(ErrorsState) public errorsState$: Observable<ErrorsModel>;
+  public enrichmentState: Observable<object[]>;
   private enrichmentToolState = {};
   private enrichmentQuerySubscription: Subscription = null;
 
@@ -33,17 +32,35 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
   ) { }
 
   public ngOnInit(): void {
-    this.state$.pipe(
-      switchMap(enrichmentState => {
-        const datasetState$ = this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState);
-        return zip(of(enrichmentState), datasetState$);
-      })
-    ).subscribe(([enrichmentState, datasetState]) => {
-      this.selectedDatasetId = datasetState.selectedDatasetId;
+    combineLatest([
+      this.store.select(selectGeneSymbols),
+      this.store.select(selectGeneSets),
+      this.store.select(selectGeneScores),
+      this.store.select(selectEnrichmentModels),
+      this.store.select(selectDatasetId),
+    ]).subscribe(([
+      geneSymbols,
+      geneSets,
+      geneScores,
+      enrichmentModels,
+      datasetId,
+    ]) => {
+      this.selectedDatasetId = datasetId;
       this.enrichmentToolState = {
         datasetId: this.selectedDatasetId,
-        ...enrichmentState
+        ...enrichmentModels,
       };
+      if (geneSymbols.length) {
+        this.enrichmentToolState['geneSymbols'] = geneSymbols;
+      } else if (geneSets.geneSet) {
+        this.enrichmentToolState['geneSet'] = {
+          geneSet: geneSets.geneSet.name,
+          geneSetsCollection: geneSets.geneSetsCollection.name,
+          geneSetsTypes: geneSets.geneSetsTypes
+        };
+      } else if (geneScores.score) {
+        this.enrichmentToolState['geneScores'] = geneScores;
+      }
       this.enrichmentResults = null;
     });
 
@@ -56,22 +73,15 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.errorsState$.subscribe(state => {
+    this.store.select(selectErrors).subscribe(errorsState => {
       setTimeout(() => {
-        this.disableQueryButtons = state.componentErrors.size > 0;
+        this.disableQueryButtons = errorsState.length > 0;
       });
     });
   }
 
   public ngOnDestroy(): void {
     this.loadingService.setLoadingStop();
-  }
-
-  @Selector([GenesBlockComponent.genesBlockState, EnrichmentModelsState])
-  public static enrichmentToolStateSelector(genesBlockState: object, enrichmentModelsState: object): object {
-    return {
-      ...genesBlockState, ...enrichmentModelsState,
-    };
   }
 
   public submitQuery(): void {

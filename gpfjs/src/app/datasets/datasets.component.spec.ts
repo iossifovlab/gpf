@@ -3,7 +3,6 @@ import { DatasetsComponent } from './datasets.component';
 import { UsersService } from 'app/users/users.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
-import { NgxsModule } from '@ngxs/store';
 import { APP_BASE_HREF } from '@angular/common';
 import { DatasetsService } from './datasets.service';
 import { of } from 'rxjs/internal/observable/of';
@@ -15,6 +14,8 @@ import { UserGroup } from 'app/users-groups/users-groups';
 import { Observable } from 'rxjs/internal/Observable';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { RouterTestingModule } from '@angular/router/testing';
+import { StoreModule } from '@ngrx/store';
+import { expandedDatasetsReducer } from 'app/dataset-node/dataset-node.state';
 
 class MockDatasetService {
   public getDatasetsObservable(): Observable<Dataset[]> {
@@ -82,7 +83,7 @@ describe('DatasetComponent', () => {
     TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
-        NgxsModule.forRoot([], {developmentMode: true}),
+        StoreModule.forRoot({expandedDatasets: expandedDatasetsReducer}),
         RouterTestingModule
       ],
       providers: [

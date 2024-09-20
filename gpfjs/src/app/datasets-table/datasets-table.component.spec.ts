@@ -4,12 +4,12 @@ import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { DatasetsTableComponent } from './datasets-table.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { NgxsModule } from '@ngxs/store';
 import { Observable, lastValueFrom, of } from 'rxjs';
 import { DatasetPermissions } from './datasets-table';
 import * as lodash from 'lodash';
 import { UserGroup } from 'app/users-groups/users-groups';
 import { Item } from 'app/item-add-menu/item-add-menu';
+import { StoreModule } from '@ngrx/store';
 
 const datasetMock = new DatasetPermissions(
   'datasetId',
@@ -92,7 +92,7 @@ describe('DatasetsTableComponent', () => {
       imports: [
         RouterTestingModule,
         HttpClientTestingModule,
-        NgxsModule.forRoot([], {developmentMode: true})
+        StoreModule.forRoot({})
       ],
     }).compileComponents();
 

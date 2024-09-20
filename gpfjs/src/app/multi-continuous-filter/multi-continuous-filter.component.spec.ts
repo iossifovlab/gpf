@@ -8,12 +8,17 @@ import { PhenoMeasureSelectorComponent } from 'app/pheno-measure-selector/pheno-
 import { UsersService } from 'app/users/users.service';
 import { MultiContinuousFilterComponent } from './multi-continuous-filter.component';
 import { Observable, of } from 'rxjs';
-import { NgxsModule } from '@ngxs/store';
 import { FormsModule } from '@angular/forms';
 import { PhenoMeasure } from 'app/pheno-browser/pheno-browser';
-import { MatAutocompleteOrigin, MatAutocomplete, MAT_AUTOCOMPLETE_SCROLL_STRATEGY, MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import {
+  MatAutocompleteOrigin,
+  MatAutocomplete,
+  MAT_AUTOCOMPLETE_SCROLL_STRATEGY,
+  MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { Store, StoreModule } from '@ngrx/store';
+import { personFiltersReducer } from 'app/person-filters/person-filters.state';
 
-const SelectionMock = {
+const selectionMock = {
   isEmpty: (): boolean => true,
 };
 
@@ -24,7 +29,7 @@ const ContinuousFilterStateMock = {
   from: '',
   source: '',
   sourceType: '',
-  selection: SelectionMock,
+  selection: selectionMock,
   isEmpty: (): boolean => true,
   min: 0,
   max: 0,
@@ -32,14 +37,18 @@ const ContinuousFilterStateMock = {
   domainMax: 0
 };
 
-const PersonFilterMock = {
+const personFilterMock = {
+  id: '',
   name: '',
   from: '',
   source: '',
   sourceType: '',
   role: '',
   filterType: '',
-  domain: ['']
+  domain: [''],
+  // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/explicit-function-return-type
+  isEmpty: (): boolean => true,
+  selection: selectionMock
 };
 
 class MockDatasetsService {
@@ -52,6 +61,7 @@ describe('MultiContinuousFilterComponent', () => {
   let component: MultiContinuousFilterComponent;
   let fixture: ComponentFixture<MultiContinuousFilterComponent>;
   const mockDatasetsService = new MockDatasetsService();
+  let store: Store;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -73,17 +83,24 @@ describe('MultiContinuousFilterComponent', () => {
       ],
       imports: [
         RouterTestingModule,
-        NgxsModule.forRoot([], {developmentMode: true}),
+        StoreModule.forRoot({personFilters: personFiltersReducer}),
         FormsModule
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(MultiContinuousFilterComponent);
     component = fixture.componentInstance;
-    component.continuousFilter = PersonFilterMock;
+    component.continuousFilter = personFilterMock;
     component.datasetId = '';
     component.continuousFilterState = ContinuousFilterStateMock;
     fixture.detectChanges();
+
+    store = TestBed.inject(Store);
+
+    jest.spyOn(store, 'select').mockReturnValue(of({
+      familyFilters: [],
+      personFilters: [],
+    }));
   }));
 
   it('should create', () => {

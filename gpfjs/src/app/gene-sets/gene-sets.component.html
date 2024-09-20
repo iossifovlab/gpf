@@ -36,7 +36,7 @@
                   [attr.id]="type.datasetId + '-checkbox-' + personSet.id"
                   [ngModel]="isSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id)"
                   (ngModelChange)="
-                    setSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id, $event); onSearch()
+                    setSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id, $event)
                   " />
                 <span class="pedigree-icon" [style.background-color]="personSet.color"></span>
                 <span>{{ personSet.name }}</span>

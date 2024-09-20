@@ -8,8 +8,8 @@ import { Dataset } from 'app/datasets/datasets';
 import { debounceTime, distinctUntilChanged, map, switchMap, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { ConfigService } from 'app/config/config.service';
-import { Store } from '@ngxs/store';
-import { DatasetModel } from 'app/datasets/datasets.state';
+import { Store } from '@ngrx/store';
+import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
@@ -46,8 +46,9 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   ) { }
 
   public ngOnInit(): void {
-    this.store.selectOnce((state: { datasetState: DatasetModel}) => state.datasetState).pipe(
-      switchMap((state: DatasetModel) => this.datasetsService.getDataset(state.selectedDatasetId))
+    this.store.select(selectDatasetId).pipe(
+      take(1),
+      switchMap(selectedDatasetIdState => this.datasetsService.getDataset(selectedDatasetIdState))
     ).subscribe(dataset => {
       if (!dataset) {
         return;

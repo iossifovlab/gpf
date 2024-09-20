@@ -6,6 +6,7 @@ import { MeasuresService } from 'app/measures/measures.service';
 import { Observable, of } from 'rxjs';
 
 import { ContinuousFilterComponent } from './continuous-filter.component';
+import { StoreModule } from '@ngrx/store';
 
 class MeasuresServiceMock {
   public getContinuousMeasures(): void {
@@ -34,7 +35,7 @@ describe('ContinuousFilterComponent', () => {
     TestBed.configureTestingModule({
       declarations: [ContinuousFilterComponent],
       providers: [{provide: MeasuresService, useValue: measuresServiceMock}, ConfigService],
-      imports: [HttpClientTestingModule]
+      imports: [HttpClientTestingModule, StoreModule.forRoot()]
     })
       .compileComponents();
 

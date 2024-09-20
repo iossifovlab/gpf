@@ -1,10 +1,9 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { NgxsModule } from '@ngxs/store';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
-
 import { FamilyIdsComponent } from './family-ids.component';
-import { FamilyIdsState } from './family-ids.state';
+import { familyIdsReducer } from './family-ids.state';
+import { StoreModule } from '@ngrx/store';
 
 describe('FamilyIdsComponent', () => {
   let component: FamilyIdsComponent;
@@ -13,7 +12,7 @@ describe('FamilyIdsComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [FamilyIdsComponent, ErrorsAlertComponent],
-      imports: [FormsModule, NgxsModule.forRoot([FamilyIdsState], {developmentMode: true})]
+      imports: [FormsModule, StoreModule.forRoot({familyIds: familyIdsReducer})]
     }).compileComponents();
 
     fixture = TestBed.createComponent(FamilyIdsComponent);

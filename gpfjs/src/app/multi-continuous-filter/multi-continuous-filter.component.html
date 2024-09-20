@@ -5,8 +5,8 @@
 <gpf-continuous-filter
   *ngIf="selectedMeasure"
   [datasetId]="datasetId"
-  [continuousFilterState]="continuousFilterState"
+  [continuousFilter]="continuousFilter"
   [measureName]="selectedMeasure?.name"
-  (updateFilterEvent)="updateFilterEvent.emit()"
+  [isFamilyFilters]="isFamilyFilters"
   id="continuous-filter">
 </gpf-continuous-filter>
