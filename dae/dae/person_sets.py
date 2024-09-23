@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Any, FrozenSet, cast
+from typing import Any, cast
 
 from box import Box
 
@@ -187,11 +187,10 @@ class PersonSetCollection:
     def _sources_from_config(
         person_set_collection: dict[str, Any],
     ) -> list[Source]:
-        sources = [
+        return [
             PersonSetCollection.Source(src["from"], src["source"])
             for src in person_set_collection["sources"]
         ]
-        return sources
 
     @staticmethod
     def _produce_sets(config: dict[str, Any]) -> dict[str, PersonSet]:
@@ -269,7 +268,7 @@ class PersonSetCollection:
 
     def collect_person_collection_attributes(
         self, person: Person, pheno_db: PhenotypeData | None,
-    ) -> FrozenSet[str]:
+    ) -> frozenset[str]:
         """Collect all configured attributes for a Person."""
         values = []
         for source in self.sources:
@@ -281,9 +280,9 @@ class PersonSetCollection:
                     value = str(value)
             elif source.sfrom == "phenodb" and pheno_db is not None:
                 assert pheno_db.get_measure(source.ssource).measure_type \
-                    in {MeasureType.categorical, MeasureType.ordinal}, \
-                    f"Continuous measures not allowed in person sets! " \
-                    f"({source.ssource})"
+                    in {MeasureType.categorical, MeasureType.ordinal}, (
+                    f"Continuous measures not allowed in person sets! "
+                    f"({source.ssource})")
 
                 pheno_values = list(pheno_db.get_people_measure_values(
                     [source.ssource],
@@ -470,14 +469,14 @@ class PersonSetCollection:
             domain.append({
                 "id": person_set.id,
                 "name": person_set.name,
-                "values": person_set.values,
+                "values": person_set.values,  # noqa: PD011
                 "color": person_set.color,
             })
         sources = [
             {"from": s.sfrom, "source": s.ssource}
             for s in self.sources
         ]
-        conf = {
+        return {
             "id": self.id,
             "name": self.name,
             "sources": sources,
@@ -489,24 +488,21 @@ class PersonSetCollection:
             },
         }
 
-        return conf
-
     def domain_json(self) -> dict[str, Any]:
         """Produce a JSON to represent domain of this PersonSetCollection."""
-        domain = []
-        for person_set in self.person_sets.values():
-            domain.append({
+        domain = [
+            {
                 "id": person_set.id,
                 "name": person_set.name,
                 "color": person_set.color,
-            })
-        conf = {
+            }
+            for person_set in self.person_sets.values()
+        ]
+        return {
             "id": self.id,
             "name": self.name,
             "domain": domain,
         }
-
-        return conf
 
     def get_stats(self) -> dict[str, dict[str, int]]:
         """
@@ -566,5 +562,5 @@ class PersonSetCollection:
 class PSCQuery:
     """Person set collection query."""
 
-    collection_id: str
+    psc_id: str
     selected_person_sets: set[str]

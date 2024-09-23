@@ -380,8 +380,9 @@ def test_phenotype_person_set_continuous(
             config.pheno_cont, families_fixture, quads_f1_pheno,
         )
 
-    assert "Continuous measures not allowed in person sets! " \
-        "(instrument1.continuous)" in str(excinfo.value)
+    assert (
+        "Continuous measures not allowed in person sets! "
+        "(instrument1.continuous)") in str(excinfo.value)
 
 
 def test_genotype_group_person_sets(
@@ -460,10 +461,8 @@ def test_genotype_group_person_sets_subset(
     phenotype1_persons = set(
         phenotype_collection.person_sets["phenotype1"].persons.keys(),
     )
-    assert (
-        ("f1", "person4") not in unaffected_persons
-        and ("f1", "person4") in phenotype1_persons
-    )
+    assert ("f1", "person4") not in unaffected_persons
+    assert ("f1", "person4") in phenotype1_persons
 
 
 @pytest.fixture()
@@ -536,4 +535,4 @@ def test_merge_person_sets(
     assert len(combined_collection) == 3
 
 
-# # TODO Add unit test for default values in person sets (normal and phenotype)
+# Add unit test for default values in person sets (normal and phenotype)

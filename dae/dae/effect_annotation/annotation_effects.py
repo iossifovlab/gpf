@@ -1,5 +1,3 @@
-#!/bin/env python
-
 # October 25th 2013
 # written by Ewa
 
@@ -17,7 +15,11 @@ nonsyn = [
 ]
 
 
-def get_effect_types(types=True, groups=False):
+def get_effect_types(
+    *,
+    types: bool = True,
+    groups: bool = False,
+) -> list[str]:
     """Produce collection of effect types."""
     effect_types = [
         "tRNA:ANTICODON",
@@ -61,7 +63,7 @@ def get_effect_types(types=True, groups=False):
     return []
 
 
-def get_effect_types_set(effect_types):
+def get_effect_types_set(effect_types: str) -> set[str]:
     """Split comma separated list of effect types."""
     effect_types = effect_types.split(",")
 
