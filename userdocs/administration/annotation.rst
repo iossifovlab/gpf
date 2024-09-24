@@ -394,6 +394,18 @@ By default, only the following are produced: `gene`, `feature`, `feature_type`,
 
 The VEP annotators can be run only in batch mode.
 
+Running the VEP annotation
+++++++++++++++++++++++++++
+
+With a prepared variants file and `annotation.yaml` file, the pipeline can be ran
+using `annotate_columns` with the `--batch-mode` flag.
+
+Example `annotate_columns` run:
+
+.. code-block:: bash
+
+   annotate_columns ./variants.tsv.gz ./annotation.yaml -w work -o ./out.tsv -v -j 4 --batch-mode --col-chrom CHROM --col-pos POS --col-ref REF -r 10000 --col-alt ALT --allow-repeated-attributes
+
 
 
 Command line tools
