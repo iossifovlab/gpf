@@ -273,6 +273,129 @@ Used to annotate whether a variant belongs to a certain gene set.
       input_gene_list: <gene list to use to match variants>
 
 
+VEP annotators
+##############
+
+There are two annotators which depend on and use the Ensembl Variant Effect Predictor (VEP).
+
+Setting up
+++++++++++
+Using the Ensembl VEP annotators requires the `gpf_vep_annotator` conda package to be installed.
+
+.. code-block:: bash
+
+    mamba install \
+        -c conda-forge \
+        -c bioconda \
+        -c iossifovlab \
+        -c defaults \
+        gpf_vep_annotator
+
+
+VEP Full Annotator
+++++++++++++++++++
+Using the full VEP annotator requires a VEP cache to be accessible in the local file system.
+
+Downloading the VEP cache is done with the `vep_install` tool provided by the `ensembl-vep`
+conda package, which comes with `gpf_vep_annotator`.
+
+Download the cache for hg38.
+
+.. code-block:: bash
+
+    vep_install -a cf -s homo_sapiens -y GRCh38 -c /output/path/to/cache --convert
+
+The annotator configuration looks like this:
+
+.. code:: yaml
+
+    - vep_full_annotator:
+        cache_dir: <VEP cache directory>
+
+VEP Effect Annotator
+++++++++++++++++++++
+The VEP effect annotator uses genome and gene model resources to produce
+its output with VEP. It needs to have a genomic resource repository with the genome
+and gene models prepared.
+
+.. code:: yaml
+
+    - external_vep_gtf_annotator:
+        genome: hg38/genomes/GRCh38-hg38
+        gene_models: hg38/gene_models/MANE/1.3
+
+Output Attributes
++++++++++++++++++
+The two VEP annotators can output the following attributes:
+
+gene
+  Gene symbol reported by VEP
+
+gene_id
+  Gene ID reported by VEP
+
+feature
+  VEP feature
+
+feature_type
+  VEP feature type
+
+consequence
+  VEP effect type
+
+location
+  VEP location
+
+allele
+  VEP allele
+
+cdna_position
+  VEP cDNA position
+
+cds_position
+  VEP cds position
+
+protein_position
+  VEP protein position
+
+amino_acids
+  Amino acids reported by VEP
+
+codons
+  Codons reported by VEP
+
+existing_variation
+  Existing variation reported by VEP
+
+impact
+  Variant impact reported by VEP
+
+distance
+  Distance reported by VEP
+
+strand
+  Variant impact reported by VEP
+
+symbol_source
+  VEP gene symbol source
+
+worst_consequence
+  Worst consequence reported by VEP
+
+highest_impact
+  Highest impact reported by VEP
+
+gene_consequence
+    List of gene consequence pairs reported by VEP
+
+
+By default, only the following are produced: `gene`, `feature`, `feature_type`,
+`consequence`, `worst_consequence`, `highest_impact`, `gene_consequence`.
+
+The VEP annotators can be run only in batch mode.
+
+
+
 Command line tools
 ******************
 
