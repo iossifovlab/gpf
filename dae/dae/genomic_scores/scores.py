@@ -82,26 +82,6 @@ SCORE_HISTOGRAM = """
 
 </div>
 
-{%- if score_def.small_values_desc and score_def.large_values_desc %}
-
-<div class="values-desc">
-
-<span class="small-values">
-
-{{ score_def.small_values_desc}}
-
-</span>
-
-<span class="large-values">
-
-{{ score_def.large_values_desc}}
-
-</span>
-
-</div>
-
-{%- endif %}
-
 </div>
 """
 
