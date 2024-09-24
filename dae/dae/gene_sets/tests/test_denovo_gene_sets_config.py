@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import textwrap
-from typing import Any
+from typing import Any, cast
 
 import pytest
 import yaml
@@ -192,7 +192,7 @@ def denovo_gene_sets_config() -> dict[str, Any]:
   - Synonymous.Recurrent
   - Synonymous.Triple
     """)
-    return yaml.safe_load(content)
+    return cast(dict[str, Any], yaml.safe_load(content))
 
 
 def test_parse_denovo_gene_sets_config(
