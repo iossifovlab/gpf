@@ -415,6 +415,13 @@ class DatasetPermissionsView(BaseDatasetPermissionsView):
     @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
         """Return dataset permissions details."""
+
+        if not request.user.is_staff:
+            return Response(
+                {"error": "You have no permission to edit the description."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
         dataset_search = request.GET.get("search")
         page = request.GET.get("page", 1)
         query = Dataset.objects
