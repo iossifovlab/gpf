@@ -228,6 +228,15 @@ class PhenotypeData(ABC):
     ) -> Generator[dict[str, Any], None, None]:
         """Yield measures in the DB according to filters."""
 
+    @abstractmethod
+    def count_measures(
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+    ) -> int:
+        """Count measures in the DB according to filters."""
+
     def has_measure(self, measure_id: str) -> bool:
         """Check if phenotype DB contains a measure by ID."""
         return measure_id in self._measures
@@ -530,6 +539,18 @@ class PhenotypeStudy(PhenotypeData):
                 "measure": measure,
             }
 
+    def count_measures(
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+    ) -> int:
+        return self.db.count_measures(
+            instrument,
+            search_term,
+            page,
+        )
+
 
 class PhenotypeGroup(PhenotypeData):
     """Represents a group of phenotype data studies or groups."""
@@ -616,6 +637,23 @@ class PhenotypeGroup(PhenotypeData):
         ]
         measures = islice(chain(*generators), 1001)
         yield from measures
+
+    def count_measures(
+        self,
+        instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,
+    ) -> int:
+        counts = [
+            pheno.count_measures(
+                instrument,
+                search_term,
+                page,
+            )
+            for pheno in self.children
+        ]
+
+        return sum(counts)
 
     def get_people_measure_values(
         self,
