@@ -198,7 +198,8 @@ def create_denovo_gene_set_spec(
 ) -> DenovoGeneSetSpec:
     """Create de novo gene set specification from name."""
     segments = gene_set_name.split(".")
-    criterias = {}
+    criterias: dict[
+        str, EffectsCriteria | SexesCriteria | RecurrencyCriteria] = {}
 
     for segment in segments:
         if segment in config.effect_types:

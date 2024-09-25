@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
-from typing import Any, cast
+from typing import cast
 
 import pytest
 import toml
@@ -42,7 +42,7 @@ def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
 
 def get_person_set_collections_config(content: str) -> Box:
     config = GPFConfigParser.process_config(
-        cast(dict[str, Any], toml.loads(content)),
+        toml.loads(content),
         {"person_set_collections": person_set_collections_schema},
     ).person_set_collections
     return cast(Box, config)
@@ -438,9 +438,11 @@ def test_genotype_group_person_sets_subset(
 ) -> None:
     genotype_data_group_config = fixtures_gpf_instance.\
         get_genotype_data_config("person_sets_dataset_1")
+    assert genotype_data_group_config is not None
     genotype_data_group = \
         fixtures_gpf_instance._variants_db._load_genotype_group(
             genotype_data_group_config)
+    assert genotype_data_group is not None
 
     # Remove a person to simulate a subset of people being used
     del genotype_data_group.families.persons[("f1", "person4")]
@@ -454,6 +456,7 @@ def test_genotype_group_person_sets_subset(
     phenotype_collection = genotype_data_group.get_person_set_collection(
         "phenotype",
     )
+    assert phenotype_collection is not None
 
     unaffected_persons = set(
         phenotype_collection.person_sets["unaffected"].persons.keys(),
