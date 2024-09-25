@@ -23,10 +23,10 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
   }
 
   public ngAfterViewInit(): void {
-    combineLatest(
+    combineLatest([
       this.store.select(selectPersonFilters),
       this.store.select(selectPersonIds),
-    ).pipe(take(1)).subscribe(([personFiltersState, personIdsState]) => {
+    ]).pipe(take(1)).subscribe(([personFiltersState, personIdsState]) => {
       if (personIdsState.length) {
         setTimeout(() => this.ngbNav.select('personIds'));
       } else if (personFiltersState?.personFilters?.length) {
