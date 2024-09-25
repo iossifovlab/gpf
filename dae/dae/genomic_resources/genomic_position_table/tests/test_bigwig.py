@@ -637,3 +637,54 @@ def test_buffered_pos_begin_to_the_left_of_buffer_start(
         assert vs[0].pos_end == 1003
         vs = list(bigwig_table.get_records_in_region("chr1", 1001, 1005))
         assert len(vs) == 5
+
+
+def test_mini_grr_example(tmp_path: pathlib.Path) -> None:
+    root_path = tmp_path
+    setup_directories(
+        root_path,
+        {
+            "grr.yaml": textwrap.dedent(f"""
+                id: test_grr
+                type: directory
+                directory: {root_path!s}
+            """),
+            "test_score": {
+                "genomic_resource.yaml": textwrap.dedent("""
+                        type: position_score
+                        table:
+                            filename: data.bw
+                            format: bigWig
+                        scores:
+                        - id: score_one
+                          type: float
+                          index: 3
+                """),
+            },
+        },
+    )
+    data = textwrap.dedent("""
+        chr1   0    5  0.1
+        chr1   5   10  0.2
+        chr2   0    5  0.3
+        chr2   5   10  0.4
+    """)
+    setup_bigwig(
+        root_path / "test_score" / "data.bw", data,
+        {"chr1": 10, "chr2": 20},
+    )
+    grr = build_filesystem_test_repository(root_path)
+    assert grr is not None
+    res = grr.get_resource("test_score")
+    table_definition = res.get_config()["table"]
+    with BigWigTable(res, table_definition) as bigwig_table:
+        vs = list(bigwig_table.get_records_in_region("chr1", 5, 5))
+        assert len(vs) == 1
+        assert vs[0].chrom == "chr1"
+        assert vs[0].pos_begin == 1
+        assert vs[0].pos_end == 5
+        vs = list(bigwig_table.get_records_in_region("chr1", 6, 6))
+        assert len(vs) == 1
+        assert vs[0].chrom == "chr1"
+        assert vs[0].pos_begin == 6
+        assert vs[0].pos_end == 10
