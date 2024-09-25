@@ -133,6 +133,20 @@
       <li ngbNavItem id="datasets">
         <a ngbNavLink (click)="switchTableName('DATASETS')">Datasets</a>
         <ng-template ngbNavContent>
+          <div class="table-toolbar">
+            <input
+              #searchBox
+              placeholder="Search"
+              autocomplete="off"
+              (keyup)="search(searchBox.value)"
+              (search)="search(searchBox.value)"
+              id="search-field"
+              class="search-input form-control my-0 py-1"
+              type="search"
+              aria-label="Search"
+              [ngModel]="searchText"
+              spellcheck="false" />
+          </div>
           <gpf-datasets-table [datasets]="datasets"></gpf-datasets-table>
         </ng-template>
       </li>
