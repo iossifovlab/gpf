@@ -210,6 +210,7 @@ def setup_bigwig(
     end_col: list[int] = []
     val_col: list[float] = []
     prev_end: int = -1
+    prev_chrom: str = ""
     for line in convert_to_tab_separated(content).split("\n"):
         tokens = line.strip().split("\t")
         assert len(tokens) == 4
@@ -220,7 +221,9 @@ def setup_bigwig(
 
         assert chrom in chrom_lens
         assert start < end
-        assert start >= prev_end
+        if chrom == prev_chrom:
+            assert start >= prev_end
+        prev_chrom = chrom
         prev_end = end
 
         chrom_col.append(chrom)
