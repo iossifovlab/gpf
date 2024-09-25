@@ -160,3 +160,8 @@ def test_inmemory_genomic_position_table_zero_based_no_header(
     table = build_genomic_position_table(res, res.config["table"])
     table.open()
     assert len(list(table.get_all_records())) == 6
+    vs = list(table.get_records_in_region("chr1", 2, 2))
+    assert len(vs) == 1
+    assert vs[0].chrom == "chr1"
+    assert vs[0].pos_begin == 2
+    assert vs[0].pos_end == 2

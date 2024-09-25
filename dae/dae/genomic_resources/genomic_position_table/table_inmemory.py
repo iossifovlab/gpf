@@ -122,8 +122,6 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
         pos_end: int | None = None,
     ) -> Generator[LineBase, None, None]:
         fch = self.chrom_map[chrom] if self.chrom_map else chrom
-        if pos_begin is not None and self.definition.get("zero_based") is True:
-            pos_begin -= 1
         if fch not in self.records_by_chr:
             raise ValueError(
                 f"The chromosome {chrom} is not present in the table")
