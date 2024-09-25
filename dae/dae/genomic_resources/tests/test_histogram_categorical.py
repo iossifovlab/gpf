@@ -34,14 +34,27 @@ def test_categorical_histogram() -> None:
     assert hist.display_values["value3"] == 1
 
 
-def test_categorical_histogram_add_value_raises() -> None:
+def test_categorical_histogram_default_config_add_value_raises() -> None:
     config = CategoricalHistogramConfig.default_config()
 
     hist = CategoricalHistogram(config)
+    assert not hist.enforce_type
+
     for i in range(100):
         hist.add_value(f"value{i}")
     with pytest.raises(HistogramError):
         hist.add_value("value100")
+
+
+def test_categorical_histogram_add_value_does_not_raise() -> None:
+    config = CategoricalHistogramConfig()
+
+    hist = CategoricalHistogram(config)
+    assert hist.enforce_type
+
+    for i in range(100):
+        hist.add_value(f"value{i}")
+    hist.add_value("value100")
 
 
 def test_categorical_histogram_merge() -> None:
@@ -92,9 +105,6 @@ def test_categorical_histogram_merge_raises() -> None:
 
 
 @pytest.mark.parametrize("conf", [
-    {
-        "categorical_hist": {},
-    },
     {
         "histogram": {"type": "categorical"},
     },

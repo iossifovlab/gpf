@@ -165,7 +165,7 @@ class GeneScore(
 
         index = np.logical_and(
             df.to_numpy() >= score_min,
-            df.to_numpy() <= score_max)  # type: ignore
+            df.to_numpy() <= score_max)
         index = np.logical_and(index, df.notna())
         genes = score_value_df[index].gene
         return set(genes.values)
@@ -222,24 +222,6 @@ class GeneScore(
                     "desc": {"type": "string"},
                     "large_values_desc": {"type": "string"},
                     "small_values_desc": {"type": "string"},
-                    "number_hist": {"type": "dict", "schema": {
-                        "number_of_bins": {
-                            "type": "number",
-                        },
-                        "view_range": {"type": "dict", "schema": {
-                            "min": {"type": "number"},
-                            "max": {"type": "number"},
-                        }},
-                        "x_log_scale": {
-                            "type": "boolean",
-                        },
-                        "y_log_scale": {
-                            "type": "boolean",
-                        },
-                        "x_min_log": {
-                            "type": "number",
-                        },
-                    }},
                     "histogram": {"type": "dict", "schema": {
                         "type": {"type": "string"},
                         "plot_function": {"type": "string"},

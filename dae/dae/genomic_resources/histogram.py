@@ -4,7 +4,6 @@ Currently we support only genomic scores histograms.
 """
 from __future__ import annotations
 
-import copy
 import importlib
 import logging
 import pathlib
@@ -124,6 +123,7 @@ class CategoricalHistogramConfig:
     value_order: list[str | int] | None = None
     y_log_scale: bool = False
     plot_function: str | None = None
+    enforce_type: bool = True
 
     def to_dict(self) -> dict[str, Any]:
         """Transform categorical histogram config to dict."""
@@ -143,7 +143,7 @@ class CategoricalHistogramConfig:
 
     @staticmethod
     def default_config() -> CategoricalHistogramConfig:
-        return CategoricalHistogramConfig()
+        return CategoricalHistogramConfig(enforce_type=False)
 
     @staticmethod
     def from_dict(parsed: dict[str, Any]) -> CategoricalHistogramConfig:
@@ -180,6 +180,7 @@ class CategoricalHistogramConfig:
             value_order=value_order,
             y_log_scale=y_log_scale,
             plot_function=plot_function,
+            enforce_type=True,
         )
 
 
@@ -531,7 +532,7 @@ class CategoricalHistogram(Statistic):
 
     type = "categorical_histogram"
 
-    UNIQUE_VALUES_HADR_LIMIT = 100
+    UNIQUE_VALUES_LIMIT = 100
 
     # pylint: disable=too-few-public-methods
     def __init__(
@@ -544,6 +545,8 @@ class CategoricalHistogram(Statistic):
             "Collects values for categorical histogram.",
         )
         self.config = config
+        self.enforce_type = config.enforce_type
+
         if counter is not None:
             self._counter = Counter(counter)
         else:
@@ -565,7 +568,8 @@ class CategoricalHistogram(Statistic):
                 f"bad <{value}>",
             )
         self._counter[value] += 1
-        if len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_HADR_LIMIT:
+        if not self.enforce_type and \
+                len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_LIMIT:
             raise HistogramError(
                 f"Too many unique values {len(self._counter)} "
                 f"for categorical histogram.",
@@ -577,7 +581,8 @@ class CategoricalHistogram(Statistic):
         assert self.config == other.config
         # pylint: disable=protected-access
         self._counter += other._counter  # noqa: SLF001
-        if len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_HADR_LIMIT:
+        if not self.enforce_type and \
+                len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_LIMIT:
             raise HistogramError(
                 f"Can not merge categorical histograms; "
                 f"too many unique values {len(self._counter)}")
@@ -715,18 +720,6 @@ def build_histogram_config(
     if "histogram" in config:
         hist_config = config["histogram"]
         hist_type = hist_config["type"]
-    elif "number_hist" in config:
-        hist_type = "number"
-        hist_config = copy.copy(config["number_hist"])
-        hist_config["type"] = hist_type
-    elif "categorical_hist" in config:
-        hist_type = "categorical"
-        hist_config = copy.copy(config["categorical_hist"])
-        hist_config["type"] = hist_type
-    elif "null_hist" in config:
-        hist_type = "null"
-        hist_config = copy.copy(config["null_hist"])
-        hist_config["type"] = hist_type
     else:
         return None
 
