@@ -99,7 +99,8 @@ def reannotation_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                         scores:
                         - id: gene_score1
                           desc: Test gene score
-                          number_hist:
+                          histogram:
+                            type: number
                             number_of_bins: 100
                             view_range:
                               min: 0.0
@@ -118,7 +119,8 @@ def reannotation_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                         scores:
                         - id: gene_score2
                           desc: Test gene score
-                          number_hist:
+                          histogram:
+                            type: number
                             number_of_bins: 100
                             view_range:
                               min: 0.0

@@ -19,6 +19,7 @@ from dae.genomic_resources.genomic_scores import (
     ScoreLine,
     build_score_from_resource,
 )
+from dae.genomic_resources.histogram import CategoricalHistogramConfig
 from dae.genomic_resources.implementations.genomic_scores_impl import (
     build_score_implementation_from_resource,
 )
@@ -572,3 +573,57 @@ def test_score_definition_new_configuration_fields(
     assert score_line.get_available_scores() == ("piscore", "2piscore")
     assert score_line.get_score("piscore") == 3.14
     assert score_line.get_score("2piscore") == 6.28
+
+
+def test_score_definition_histograms(
+    tmp_path: pathlib.Path,
+) -> None:
+    setup_directories(
+        tmp_path, {
+            "genomic_resource.yaml": """
+                type: position_score
+                table:
+                  filename: data.txt.gz
+                  format: tabix
+                  header_mode: list
+                  header: ["chrom", "pos", "score1", "score2"]
+                  chrom:
+                    column_index: 0
+                  pos_begin:
+                    column_index: 1
+                  pos_end:
+                    column_index: 1
+                scores:
+                - id: score1
+                  column_index: 2
+                  type: str
+                - id: score2
+                  column_index: 3
+                  type: str
+                  histogram:
+                    type: categorical
+            """,
+        })
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        "1  10  aaa  bbb",
+        seq_col=0, start_col=1, end_col=1)
+    res = build_filesystem_test_resource(tmp_path)
+    score = build_score_from_resource(res)
+    score.open()
+    assert len(score.score_definitions) == 2
+    assert "score1" in score.score_definitions
+    assert "score2" in score.score_definitions
+
+    score_line = next(score._fetch_lines("1", 10, 10))
+    assert score_line.get_available_scores() == ("score1", "score2")
+    assert score_line.get_score("score1") == "aaa"
+    assert score_line.get_score("score2") == "bbb"
+
+    score1_def = score.score_definitions["score1"]
+    assert score1_def.hist_conf is None
+
+    score2_def = score.score_definitions["score2"]
+    assert score2_def.hist_conf is not None
+    assert isinstance(score2_def.hist_conf, CategoricalHistogramConfig)
+    assert score2_def.hist_conf.enforce_type

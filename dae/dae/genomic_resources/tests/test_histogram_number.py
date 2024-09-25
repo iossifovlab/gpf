@@ -240,9 +240,6 @@ def test_histogram_serialize_deserialize() -> None:
 
 @pytest.mark.parametrize("conf", [
     {
-        "number_hist": {},
-    },
-    {
         "histogram": {"type": "number"},
     },
 ])

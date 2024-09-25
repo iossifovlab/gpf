@@ -290,38 +290,6 @@ class GenomicScore(ResourceConfigValidationMixin):
                     "na_values": {"type": ["string", "list"]},
                     "large_values_desc": {"type": "string"},
                     "small_values_desc": {"type": "string"},
-                    "number_hist": {"type": "dict", "schema": {
-                        "number_of_bins": {
-                            "type": "number",
-                        },
-                        "view_range": {"type": "dict", "schema": {
-                            "min": {"type": "number"},
-                            "max": {"type": "number"},
-                        }},
-                        "x_log_scale": {
-                            "type": "boolean",
-                        },
-                        "y_log_scale": {
-                            "type": "boolean",
-                        },
-                        "x_min_log": {
-                            "type": "number",
-                        },
-                    }},
-                    "categorical_hist": {"type": "dict", "schema": {
-                        "y_log_scale": {
-                            "type": "boolean",
-                        },
-                        "value_order": {
-                            "type": "list",
-                            "schema": {"type": ["string", "integer"]},
-                        },
-                    }},
-                    "null_hist": {"type": "dict", "schema": {
-                        "reason": {
-                            "type": "string",
-                        },
-                    }},
                     "histogram": {"type": "dict", "schema": {
                         "type": {"type": "string"},
                         "plot_function": {"type": "string"},

@@ -4,7 +4,6 @@ Currently we support only genomic scores histograms.
 """
 from __future__ import annotations
 
-import copy
 import importlib
 import logging
 import pathlib
@@ -124,6 +123,7 @@ class CategoricalHistogramConfig:
     value_order: list[str | int] | None = None
     y_log_scale: bool = False
     plot_function: str | None = None
+    enforce_type: bool = True
 
     def to_dict(self) -> dict[str, Any]:
         """Transform categorical histogram config to dict."""
@@ -143,7 +143,7 @@ class CategoricalHistogramConfig:
 
     @staticmethod
     def default_config() -> CategoricalHistogramConfig:
-        return CategoricalHistogramConfig()
+        return CategoricalHistogramConfig(enforce_type=False)
 
     @staticmethod
     def from_dict(parsed: dict[str, Any]) -> CategoricalHistogramConfig:
@@ -155,9 +155,9 @@ class CategoricalHistogramConfig:
                 f"{parsed}",
             )
         displayed_values_count = parsed.get(
-            "displayed_values_count", DEFAULT_DISPLAYED_VALUES_COUNT)
+            "displayed_values_count")
         displayed_values_percent = parsed.get(
-            "displayed_values_percen")
+            "displayed_values_percent")
         if displayed_values_count is not None \
                 and displayed_values_percent is not None:
             raise ValueError(
@@ -166,6 +166,9 @@ class CategoricalHistogramConfig:
                 "cannot be both set\n"
                 f"{parsed}",
             )
+
+        if displayed_values_percent is None and displayed_values_count is None:
+            displayed_values_count = DEFAULT_DISPLAYED_VALUES_COUNT
 
         value_order = parsed.get("value_order", [])
         y_log_scale = parsed.get("y_log_scale", False)
@@ -177,6 +180,7 @@ class CategoricalHistogramConfig:
             value_order=value_order,
             y_log_scale=y_log_scale,
             plot_function=plot_function,
+            enforce_type=True,
         )
 
 
@@ -528,7 +532,7 @@ class CategoricalHistogram(Statistic):
 
     type = "categorical_histogram"
 
-    UNIQUE_VALUES_HADR_LIMIT = 100
+    UNIQUE_VALUES_LIMIT = 100
 
     # pylint: disable=too-few-public-methods
     def __init__(
@@ -541,6 +545,8 @@ class CategoricalHistogram(Statistic):
             "Collects values for categorical histogram.",
         )
         self.config = config
+        self.enforce_type = config.enforce_type
+
         if counter is not None:
             self._counter = Counter(counter)
         else:
@@ -562,7 +568,8 @@ class CategoricalHistogram(Statistic):
                 f"bad <{value}>",
             )
         self._counter[value] += 1
-        if len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_HADR_LIMIT:
+        if not self.enforce_type and \
+                len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_LIMIT:
             raise HistogramError(
                 f"Too many unique values {len(self._counter)} "
                 f"for categorical histogram.",
@@ -574,7 +581,8 @@ class CategoricalHistogram(Statistic):
         assert self.config == other.config
         # pylint: disable=protected-access
         self._counter += other._counter  # noqa: SLF001
-        if len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_HADR_LIMIT:
+        if not self.enforce_type and \
+                len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_LIMIT:
             raise HistogramError(
                 f"Can not merge categorical histograms; "
                 f"too many unique values {len(self._counter)}")
@@ -607,8 +615,8 @@ class CategoricalHistogram(Statistic):
                     displayed += count
                 else:
                     other += count
-
-            values["Other Values"] = other
+            if other > 0:
+                values["Other Values"] = other
             return values
 
         for key, count in self._counter.most_common(
@@ -621,7 +629,8 @@ class CategoricalHistogram(Statistic):
             for key, count in self._counter.items():
                 if key not in values:
                     other += count
-            values["Other Values"] = other
+            if other > 0:
+                values["Other Values"] = other
         return values
 
     def values_domain(self) -> str:
@@ -659,7 +668,7 @@ class CategoricalHistogram(Statistic):
         matplotlib.use("agg")
         import matplotlib.pyplot as plt
         display_values = self.display_values
-        values = list(display_values.keys())
+        values = [str(k) for k in display_values]
         counts = list(display_values.values())
 
         plt.figure(figsize=(15, 10), tight_layout=True)
@@ -711,18 +720,6 @@ def build_histogram_config(
     if "histogram" in config:
         hist_config = config["histogram"]
         hist_type = hist_config["type"]
-    elif "number_hist" in config:
-        hist_type = "number"
-        hist_config = copy.copy(config["number_hist"])
-        hist_config["type"] = hist_type
-    elif "categorical_hist" in config:
-        hist_type = "categorical"
-        hist_config = copy.copy(config["categorical_hist"])
-        hist_config["type"] = hist_type
-    elif "null_hist" in config:
-        hist_type = "null"
-        hist_config = copy.copy(config["null_hist"])
-        hist_config["type"] = hist_type
     else:
         return None
 
