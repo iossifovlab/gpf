@@ -155,9 +155,9 @@ class CategoricalHistogramConfig:
                 f"{parsed}",
             )
         displayed_values_count = parsed.get(
-            "displayed_values_count", DEFAULT_DISPLAYED_VALUES_COUNT)
+            "displayed_values_count")
         displayed_values_percent = parsed.get(
-            "displayed_values_percen")
+            "displayed_values_percent")
         if displayed_values_count is not None \
                 and displayed_values_percent is not None:
             raise ValueError(
@@ -166,6 +166,9 @@ class CategoricalHistogramConfig:
                 "cannot be both set\n"
                 f"{parsed}",
             )
+
+        if displayed_values_percent is None and displayed_values_count is None:
+            displayed_values_count = DEFAULT_DISPLAYED_VALUES_COUNT
 
         value_order = parsed.get("value_order", [])
         y_log_scale = parsed.get("y_log_scale", False)
@@ -607,8 +610,8 @@ class CategoricalHistogram(Statistic):
                     displayed += count
                 else:
                     other += count
-
-            values["Other Values"] = other
+            if other > 0:
+                values["Other Values"] = other
             return values
 
         for key, count in self._counter.most_common(
@@ -621,7 +624,8 @@ class CategoricalHistogram(Statistic):
             for key, count in self._counter.items():
                 if key not in values:
                     other += count
-            values["Other Values"] = other
+            if other > 0:
+                values["Other Values"] = other
         return values
 
     def values_domain(self) -> str:
@@ -659,7 +663,7 @@ class CategoricalHistogram(Statistic):
         matplotlib.use("agg")
         import matplotlib.pyplot as plt
         display_values = self.display_values
-        values = list(display_values.keys())
+        values = [str(k) for k in display_values]
         counts = list(display_values.values())
 
         plt.figure(figsize=(15, 10), tight_layout=True)
