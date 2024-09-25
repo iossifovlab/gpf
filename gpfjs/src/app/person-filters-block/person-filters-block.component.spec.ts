@@ -210,6 +210,7 @@ describe('PersonFiltersBlockComponent', () => {
 
   it('should select person ids from state', () => {
     fixture.detectChanges();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const rxjs = jest.requireActual('rxjs');
 
     const personFilters: PersonAndFamilyFilters = {
@@ -237,6 +238,7 @@ describe('PersonFiltersBlockComponent', () => {
 
   it('should select person filters from state', () => {
     fixture.detectChanges();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const rxjs = jest.requireActual('rxjs');
 
     const personFilters: PersonAndFamilyFilters = {
