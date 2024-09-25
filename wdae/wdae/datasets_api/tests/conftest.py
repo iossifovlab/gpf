@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 import pytest_mock
-from conftest import setup_wgpf_intance
 from gpf_instance.gpf_instance import WGPFInstance, reload_datasets
+from utils.testing import setup_wgpf_intance
 
 from dae.testing.import_helpers import setup_dataset_config
 
