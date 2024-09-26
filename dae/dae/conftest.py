@@ -42,6 +42,8 @@ from dae.tools.pheno_import import main as pheno_import
 
 logger = logging.getLogger(__name__)
 
+pytest_plugins = ["dae_conftests.dae_conftests"]
+
 
 @pytest.fixture()
 def gpf_instance_genomic_context_fixture(
@@ -379,6 +381,7 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
         study_config_update={
             "conf_dir": str(root_path / "t4c8_study_2"),
             "person_set_collections": {
+
                 "phenotype": {
                     "id": "phenotype",
                     "name": "Phenotype",
@@ -431,30 +434,7 @@ def _t4c8_dataset(
         ["t4c8_study_1", "t4c8_study_2"],
         dataset_config_update=textwrap.dedent(f"""
             conf_dir: { root_path / "dataset "}
-            person_set_collections:
-                phenotype:
-                  id: phenotype
-                  name: Phenotype
-                  sources:
-                  - from: pedigree
-                    source: status
-                  domain:
-                  - color: '#4b2626'
-                    id: developmental_disorder
-                    name: developmental disorder
-                    values:
-                    - affected
-                  - color: '#ffffff'
-                    id: unaffected
-                    name: unaffected
-                    values:
-                    - unaffected
-                  default:
-                    color: '#aaaaaa'
-                    id: unspecified
-                    name: unspecified
-                selected_person_set_collections:
-                - phenotype"""))
+        """))
 
 
 @pytest.fixture(scope="session")
@@ -516,8 +496,6 @@ person_set_collections:
     default:
       id: unspecified
       name: unspecified
-      values:
-      - unspecified
       color: '#aaaaaa'
 genotype_browser:
   enabled: true

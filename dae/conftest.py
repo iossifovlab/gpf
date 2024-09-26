@@ -12,8 +12,6 @@ from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorage,
 )
 
-pytest_plugins = ["dae_conftests.dae_conftests"]
-
 
 def _default_genotype_storage_configs(
     root_path: pathlib.Path,

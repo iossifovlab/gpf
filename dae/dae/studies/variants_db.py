@@ -48,8 +48,7 @@ status.domain = [
         color = "#ffffff"
     }
 ]
-status.default = {id = "unspecified", name = "unspecified", values = [
-    "unspecified"],color = "#aaaaaa"}
+status.default = {id = "unspecified", name = "unspecified", color = "#aaaaaa"}
 status.sources = [{
     from = "pedigree",
     source = "status"

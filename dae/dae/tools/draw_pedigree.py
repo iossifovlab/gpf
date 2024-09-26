@@ -8,12 +8,14 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from dae.common_reports.family_report import FamiliesReport
-from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.layout import Layout
 from dae.pedigrees.loader import FamiliesLoader
-from dae.person_sets import PersonSetCollection
+from dae.person_sets import (
+    PersonSetCollection,
+    parse_person_sets_collection_config,
+)
 
 mpl.use("PS")
 plt.ioff()
@@ -24,7 +26,7 @@ logger = logging.getLogger("draw_pedigree")
 
 def build_families_report(families: FamiliesData) -> FamiliesReport:
     """Build a family report based on affected status."""
-    status_collection_config = {
+    status_collection_config = parse_person_sets_collection_config({
         "id": "status",
         "name": "Affected status",
         "domain": [
@@ -46,11 +48,8 @@ def build_families_report(families: FamiliesData) -> FamiliesReport:
             "name": "unspecified",
             "color": "#aaaaaa",
         },
-        "sources": [{"from": "pedigree", "column": "status"}],
-    }
-    status_collection_config = FrozenBox(
-        status_collection_config,
-    )
+        "sources": [{"from": "pedigree", "source": "status"}],
+    })
     status_collection = PersonSetCollection.from_families(
         status_collection_config, families,
     )

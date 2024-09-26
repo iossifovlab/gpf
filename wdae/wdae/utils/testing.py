@@ -375,8 +375,6 @@ person_set_collections:
     default:
       id: unspecified
       name: unspecified
-      values:
-      - unspecified
       color: '#aaaaaa'
 genotype_browser:
   enabled: true

@@ -19,7 +19,11 @@ from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.people_counter import PeopleReport
 from dae.effect_annotation.effect import expand_effect_types
 from dae.pedigrees.families_data import FamiliesData
-from dae.person_sets import PersonSetCollection
+from dae.person_sets import (
+    PersonSetCollection,
+    PersonSetCollectionConfig,
+    parse_person_sets_collections_study_config,
+)
 from dae.query_variants.query_runners import QueryResult
 from dae.utils.regions import Region
 from dae.variants.attributes import Role
@@ -521,25 +525,25 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
     @abstractmethod
     def _build_person_set_collection(
-        self, psc_config: dict[str, Any],
+        self, psc_config: PersonSetCollectionConfig,
         families: FamiliesData,
     ) -> PersonSetCollection:
         pass
 
     def _build_person_set_collections(
-        self, pscs_config: dict[str, Any] | None,
+        self, study_config: dict[str, Any] | None,
         families: FamiliesData,
     ) -> dict[str, PersonSetCollection]:
-        if pscs_config is None:
+        if study_config is None:
+            return {}
+        if "person_set_collections" not in study_config:
             return {}
 
-        selected_collections = pscs_config["selected_person_set_collections"]
+        pscs_config = parse_person_sets_collections_study_config(study_config)
         result = {}
-        for psc_id in selected_collections:
-            psc_config = pscs_config[psc_id]
-            psc = self._build_person_set_collection(
-                psc_config, families)
-            result[psc_id] = psc
+        for psc_id, psc_config in pscs_config.items():
+            result[psc_id] = self._build_person_set_collection(
+            psc_config, families)
         return result
 
     def transform_person_set_collection_query(
@@ -577,7 +581,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
     ) -> PersonSetCollection | None:
         if person_set_collection_id is None:
             return None
-        return self.person_set_collections[person_set_collection_id]
+        return self.person_set_collections.get(person_set_collection_id)
 
     def build_report(self) -> CommonReport:
         """Generate common report JSON from genotpye data study."""
@@ -641,6 +645,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         collection = self.get_person_set_collection(
             person_sets_config.selected_person_set_collections[0],
         )
+
         phenotype: list[str] = []
         assert collection is not None
         for person_set in collection.person_sets.values():
@@ -774,7 +779,7 @@ class GenotypeDataGroup(GenotypeData):
         if len(self.studies) == 1:
             self._families = self.studies[0].families
             self._person_set_collections = self._build_person_set_collections(
-                self.config.get("person_set_collections"),
+                self.config,
                 self._families,
             )
             return
@@ -804,18 +809,18 @@ class GenotypeDataGroup(GenotypeData):
         self._families = result
 
         pscs = self._build_person_set_collections(
-            self.config.get("person_set_collections"),
+            self.config,
             result,
         )
 
         self._person_set_collections = pscs
 
     def _build_person_set_collection(
-        self, psc_config: dict[str, Any],
+        self, psc_config: PersonSetCollectionConfig,
         families: FamiliesData,
     ) -> PersonSetCollection:
 
-        psc_id = psc_config["id"]
+        psc_id = psc_config.id
 
         studies_psc = []
         for study in self.studies:
@@ -839,10 +844,9 @@ class GenotypeDataStudy(GenotypeData):
 
     def __init__(self, config: Box, backend: Any):
         super().__init__(config, [self])
-
         self._backend = backend
         self. _person_set_collections = self._build_person_set_collections(
-            self.config.get("person_set_collections"),
+            self.config,
             self.families,
         )
 
@@ -871,9 +875,10 @@ class GenotypeDataStudy(GenotypeData):
         return cast(FamiliesData, self._backend.families)
 
     def _build_person_set_collection(
-        self, psc_config: dict[str, Any],
+        self, psc_config: PersonSetCollectionConfig,
         families: FamiliesData,
     ) -> PersonSetCollection:
+
         psc = PersonSetCollection.from_families(psc_config, self.families)
 
         for fpid, person in families.real_persons.items():

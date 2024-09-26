@@ -53,9 +53,9 @@ def test_denovo_gene_sets_legend(trios2_dgsc: DenovoGeneSetCollection) -> None:
     assert legend[0]["personSetCollectionName"] == "Affected Status"
     assert legend[0]["personSetCollectionLegend"] == [
         {"id": "affected", "name": "affected",
-         "values": ["affected"], "color": "#e35252"},
+         "values": ("affected", ), "color": "#e35252"},
         {"id": "unaffected", "name": "unaffected",
-         "values": ["unaffected"], "color": "#ffffff"},
+         "values": ("unaffected", ), "color": "#ffffff"},
     ]
 
 

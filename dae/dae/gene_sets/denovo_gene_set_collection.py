@@ -19,7 +19,6 @@ class DenovoGeneSetCollection:
         config: box.Box,
         person_set_collections: dict[str, dict[str, Any]],
     ) -> None:
-
         assert config.denovo_gene_sets is not None
         assert config.denovo_gene_sets.selected_person_set_collections
 

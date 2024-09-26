@@ -1,19 +1,21 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
-from typing import Any
 
 import pytest
-from box import Box
 
 from dae.pedigrees.loader import FamiliesLoader
-from dae.person_sets import PersonSetCollection
+from dae.person_sets import (
+    PersonSetCollection,
+    PersonSetCollectionConfig,
+    parse_person_sets_collection_config,
+)
 from dae.testing import setup_pedigree
 
 
 @pytest.fixture()
-def status_config() -> dict[str, Any]:
-    return {
+def status_config() -> PersonSetCollectionConfig:
+    return parse_person_sets_collection_config({
         "id": "affected_status",
         "name": "Affected Status",
         "sources": [
@@ -41,12 +43,12 @@ def status_config() -> dict[str, Any]:
             "name": "Unknown",
             "color": "#aaaaaa",
         },
-    }
+    })
 
 
 def test_create_person_set_collection_with_missing_persons(
     tmp_path: pathlib.Path,
-    status_config: dict[str, Any],
+    status_config: PersonSetCollectionConfig,
 ) -> None:
     families = FamiliesLoader(
         setup_pedigree(
@@ -61,7 +63,7 @@ f1       sib4     0      0      2   0      sib   False      True
     ).load()
 
     person_set_collection = PersonSetCollection.from_families(
-        Box(status_config),
+        status_config,
         families,
     )
     assert person_set_collection is not None
@@ -72,7 +74,7 @@ f1       sib4     0      0      2   0      sib   False      True
 
 def test_create_person_set_collection_with_unspecified_status(
     tmp_path: pathlib.Path,
-    status_config: dict[str, Any],
+    status_config: PersonSetCollectionConfig,
 ) -> None:
     families = FamiliesLoader(
         setup_pedigree(
@@ -87,7 +89,7 @@ f1       sib4     0      0      2   0      sib   False      True
     ).load()
 
     person_set_collection = PersonSetCollection.from_families(
-        Box(status_config),
+        status_config,
         families,
     )
     assert person_set_collection is not None
@@ -98,7 +100,7 @@ f1       sib4     0      0      2   0      sib   False      True
 
 def test_create_person_set_collection_only_affected(
     tmp_path: pathlib.Path,
-    status_config: dict[str, Any],
+    status_config: PersonSetCollectionConfig,
 ) -> None:
     families = FamiliesLoader(
         setup_pedigree(
@@ -111,7 +113,7 @@ f1       sib1     0      0      2   2      sib   False      False
     ).load()
 
     person_set_collection = PersonSetCollection.from_families(
-        Box(status_config),
+        status_config,
         families,
     )
     assert person_set_collection is not None
@@ -124,7 +126,7 @@ f1       sib1     0      0      2   2      sib   False      False
 
 def test_create_person_set_collection_only_unaffected(
     tmp_path: pathlib.Path,
-    status_config: dict[str, Any],
+    status_config: PersonSetCollectionConfig,
 ) -> None:
     families = FamiliesLoader(
         setup_pedigree(
@@ -138,7 +140,7 @@ f1       sib4     0      0      2   0      sib   False      True
     ).load()
 
     person_set_collection = PersonSetCollection.from_families(
-        Box(status_config),
+        status_config,
         families,
     )
     assert person_set_collection is not None
@@ -163,7 +165,7 @@ f1       sib4     0      0      2   0      sib   False      True
             """)),
     ).load()
 
-    status_config = {
+    status_config = parse_person_sets_collection_config({
         "id": "affected_status",
         "name": "Affected Status",
         "sources": [
@@ -179,9 +181,9 @@ f1       sib4     0      0      2   0      sib   False      True
             "name": "Unknown",
             "color": "#aaaaaa",
         },
-    }
+    })
     person_set_collection = PersonSetCollection.from_families(
-        Box(status_config),
+        status_config,
         families,
     )
     assert person_set_collection is not None
@@ -209,7 +211,7 @@ f1       sib4     0      0      2   0      sib   False      True
             """)),
     ).load()
 
-    status_config = {
+    status_config = parse_person_sets_collection_config({
         "id": "affected_status",
         "name": "Affected Status",
         "sources": [
@@ -231,9 +233,9 @@ f1       sib4     0      0      2   0      sib   False      True
             "name": "Unknown",
             "color": "#aaaaaa",
         },
-    }
+    })
     person_set_collection = PersonSetCollection.from_families(
-        Box(status_config),
+        status_config,
         families,
     )
     assert person_set_collection is not None
@@ -262,7 +264,7 @@ f1       sib4     0      0      2   1      sib   False      False
             """)),
     ).load()
 
-    status_config = {
+    status_config = parse_person_sets_collection_config({
         "id": "affected_status",
         "name": "Affected Status",
         "sources": [
@@ -284,9 +286,9 @@ f1       sib4     0      0      2   1      sib   False      False
             "name": "Unknown",
             "color": "#aaaaaa",
         },
-    }
+    })
     person_set_collection = PersonSetCollection.from_families(
-        Box(status_config),
+        status_config,
         families,
     )
     assert person_set_collection is not None
