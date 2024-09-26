@@ -427,7 +427,7 @@ class DatasetPermissionsView(BaseDatasetPermissionsView):
         query = Dataset.objects
         if dataset_search is not None and dataset_search != "":
             query = query.filter(  # type: ignore
-                dataset_id__icontains=dataset_search)
+                dataset_name__icontains=dataset_search)
 
         if page is None:
             return Response(status.HTTP_400_BAD_REQUEST)
