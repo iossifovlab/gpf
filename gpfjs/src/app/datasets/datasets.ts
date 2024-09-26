@@ -15,7 +15,7 @@ export class PersonSet extends IdName {
   public constructor(
     public readonly id: string,
     public readonly name: string,
-    // public readonly values: Array<string>,
+    public readonly values: Array<string>,
     public readonly color: string,
   ) {
     super(id, name);
@@ -29,7 +29,7 @@ export class PersonSet extends IdName {
     return new PersonSet(
       json['id'] as string,
       json['name'] as string,
-      // json['values'] as string[],
+      json['values'] as string[],
       json['color'] as string,
     );
   }

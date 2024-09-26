@@ -1,18 +1,16 @@
+import { PersonSetCollection } from "app/datasets/datasets";
+
 export interface GeneSetJson {
-  /* eslint-disable  @typescript-eslint/naming-convention */
   name: string;
   count: number;
   desc: string;
   download: string;
-  // eslint-enable
 }
 
 export interface GeneSetCollectionJson {
-  /* eslint-disable  @typescript-eslint/naming-convention */
   name: string;
   desc: string;
   types: GeneSetType[];
-  // eslint-enable
 }
 
 export class GeneSetsCollection {
@@ -61,6 +59,7 @@ export class GeneSetType {
   public static fromJsonArray(jsonArray: Array<GeneSetType>): Array<GeneSetType> {
     const result: Array<GeneSetType> = [];
     for (const geneSetType of jsonArray) {
+      // geneSetType.children.forEach() // TO FIX
       result.push(GeneSetType.fromJson(geneSetType));
     }
     return result;
@@ -68,16 +67,17 @@ export class GeneSetType {
 
   public static fromJson(json: GeneSetType): GeneSetType {
     return new GeneSetType(
-      json.datasetId, json.datasetName, json.personSetCollectionId,
-      json.personSetCollectionName, json.personSetCollectionLegend
+      json.datasetId, json.datasetName, json.personSetCollections, json.children
     );
   }
 
   public constructor(
     public readonly datasetId: string,
     public readonly datasetName: string,
-    public readonly personSetCollectionId: string,
-    public readonly personSetCollectionName: string,
-    public readonly personSetCollectionLegend: Array<any>
+    // public readonly personSetCollectionId: string,
+    // public readonly personSetCollectionName: string,
+    // public readonly personSetCollectionLegend: Array<any>, // TO FIX any
+    public readonly personSetCollections: PersonSetCollection[],
+    public readonly children: GeneSetType[],
   ) { }
 }
