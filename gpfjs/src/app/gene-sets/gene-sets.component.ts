@@ -13,6 +13,7 @@ import { selectDatasetId } from 'app/datasets/datasets.state';
 import { ComponentValidator } from 'app/common/component-validator';
 import { selectGeneSets, setGeneSetsValues } from './gene-sets.state';
 import { cloneDeep } from 'lodash';
+import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -28,6 +29,9 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
   public isDropdownOpen = false;
   @ViewChild('dropdownTrigger') private dropdownTrigger: MatAutocompleteTrigger;
   @ViewChild('searchSetsBox') private searchBox: ElementRef;
+  public modal: NgbModalRef;
+  @ViewChild('denovoModal') public denovoModal: ElementRef;
+  public studiesList = [];
 
   public geneSetsQueryChange$ = new Subject<[string, string, object]>();
   private geneSetsResult: Observable<GeneSet[]>;
@@ -47,6 +51,7 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
   public constructor(
     protected store: Store,
     private geneSetsService: GeneSetsService,
+    public modalService: NgbModal,
   ) {
     super(store, 'geneSets', selectGeneSets);
   }
@@ -221,6 +226,17 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
     }
   }
 
+  public openModal(): void {
+    this.studiesList = []; // TO FIX
+    if (this.modalService.hasOpenModals()) {
+      return;
+    }
+    this.modal = this.modalService.open(
+      this.denovoModal,
+      {animation: false, centered: true, windowClass: 'denovo-modal'}
+    );
+  }
+
   public isSelectedGeneType(datasetId: string, personSetCollectionId: string, geneType: string): boolean {
     return this.geneSetsLocalState.isSelected(datasetId, personSetCollectionId, geneType);
   }
@@ -240,6 +256,7 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
   }
 
   public set selectedGeneSetsCollection(selectedGeneSetsCollection: GeneSetsCollection) {
+    console.log(selectedGeneSetsCollection);
     this.geneSetsLocalState.geneSetsCollection = selectedGeneSetsCollection;
     this.geneSetsLocalState.geneSet = null;
     this.geneSetsLocalState.geneSetsTypes = Object.create(null);

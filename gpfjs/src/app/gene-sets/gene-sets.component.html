@@ -12,42 +12,89 @@
         </select>
         <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
       </div>
-      <div
-        ngbAccordion
-        *ngIf="selectedGeneSetsCollection?.types"
-        [destroyOnHide]="false"
-        class="gene-sets-types row-sm-3">
-        <div
-          *ngFor="let type of selectedGeneSetsCollection.types"
-          ngbAccordionItem
-          [collapsed]="!defaultSelectedDenovoGeneSetId.includes(type.datasetId + '-' + type.personSetCollectionId + '-denovo-geneset')"
-          id="{{ type.datasetId }}-{{ type.personSetCollectionId }}-denovo-geneset">
-          <div ngbAccordionHeader>
-            <div style="text-align: left">
-              <button ngbAccordionButton style="display: block" class="btn-sm text-wrap"
-                >{{ type.datasetName }}: {{ type.personSetCollectionName }}</button
-              >
+
+      <button *ngIf="selectedGeneSetsCollection.name === 'denovo'" (click)="openModal()" id="open-modal-button"
+        >Select studies</button
+      >
+
+      <ng-template #denovoModal class="denovo-modal">
+        <div id="content-wrapper">
+          <div id="hierarchy-filters-wrapper">
+            <div id="hierarchy">
+              <ng-container
+                *ngFor="let type of denovoGeneSetTypes"
+                [ngTemplateOutlet]="Recursion"
+                [ngTemplateOutletContext]="{ $implicit: type }"></ng-container>
             </div>
-          </div>
-          <div ngbAccordionCollapse>
-            <div ngbAccordionBody>
-              <div *ngFor="let personSet of type.personSetCollectionLegend">
-                <label *ngIf="personSet" [attr.for]="type.datasetId + '-checkbox-' + personSet.id">
-                  <input
-                    type="checkbox"
-                    [attr.id]="type.datasetId + '-checkbox-' + personSet.id"
-                    [ngModel]="isSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id)"
-                    (ngModelChange)="
-                      setSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id, $event)
-                    " />
-                  <span class="pedigree-icon" [style.background-color]="personSet.color"></span>
-                  <span>{{ personSet.name }}</span>
-                </label>
+
+            <div id="filters" *ngIf="selectedGeneType">
+              <div *ngFor="let collection of selectedGeneType.personSetCollections">
+                {{ collection.personSetCollectionName }}:
+                <div *ngFor="let personSet of collection.personSetCollectionLegend">
+                  <label [attr.for]="selectedGeneType.datasetId + '-checkbox-' + personSet.id">
+                    <input
+                      type="checkbox"
+                      [attr.id]="selectedGeneType.datasetId + '-checkbox-' + personSet.id"
+                      [ngModel]="
+                        isSelectedGeneType(
+                          selectedGeneType.datasetId,
+                          collection.personSetCollectionId,
+                          personSet.id
+                        )
+                      "
+                      (ngModelChange)="
+                        setSelectedGeneType(
+                          selectedGeneType.datasetId,
+                          collection.personSetCollectionId,
+                          personSet.id,
+                          $event
+                        )
+                      " />
+                    <span class="pedigree-icon" [style.background-color]="personSet.color"></span>
+                    <span>{{ personSet.name }}</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
+
+          <div id="modal-study-list">
+            <div *ngFor="let study of studiesList" class="study">
+              {{ study }}
+              <button (click)="removeFromList(study)" class="remove-study">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </ng-template>
+
+      <ng-template #Recursion let-type>
+        <div class="dataset-wrapper">
+          <span
+            #collapseIcon
+            *ngIf="type.children.length"
+            class="collapse-dataset-icon material-icons material-symbols-outlined"
+            [ngClass]="{ rotate: expandedGeneTypes.includes(type) }"
+            (click)="toggleDatasetCollapse(type)"
+            >expand_more</span
+          >
+          <div
+            [id]="'type-' + type.datasetId"
+            class="btn-sm text-wrap"
+            [class.active]="selectedGeneType?.datasetId === type.datasetId"
+            [ngStyle]="{ 'padding-left': (type.children.length ? 0 : 19) + 'px' }"
+            (click)="select(type)"
+            >{{ type.datasetName }}</div
+          >
+        </div>
+        <div *ngIf="type.children.length && expandedGeneTypes.includes(type)" class="children-container">
+          <ng-container
+            *ngFor="let child of type.children"
+            [ngTemplateOutlet]="Recursion"
+            [ngTemplateOutletContext]="{ $implicit: child }"></ng-container>
+        </div>
+      </ng-template>
     </div>
 
     <div class="col-sm-9">
@@ -56,7 +103,7 @@
         matAutocompleteOrigin
         #geneSetsSearch="matAutocompleteOrigin"
         [disabled]="
-          selectedGeneSetsCollection?.types?.length > 0 && object.keys(geneSetsLocalState.geneSetsTypes).length === 0
+          selectedGeneSetsCollection?.types?.length > 0 && currentGeneSetsTypes.length === 0
         ">
         <span
           style="width: 100%"
@@ -121,6 +168,15 @@
         <span>(<a class="download-link" [href]="getDownloadLink()">Download</a>)</span>
       </div>
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+    </div>
+
+    <div *ngIf="selectedGeneSetsCollection.name === 'denovo'" id="selected-studies-list">
+      <div *ngFor="let study of studiesList" class="study">
+        {{ study }}
+        <button (click)="removeFromList(study)" class="remove-study">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>

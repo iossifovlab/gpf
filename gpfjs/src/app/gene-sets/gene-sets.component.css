@@ -21,3 +21,27 @@
   padding: 0 !important;
   box-shadow: none;
 }
+
+/*  overrides pedigree modal; TO FIX */
+::ng-deep .modal-dialog-centered {
+  justify-content: center;
+}
+
+::ng-deep .modal-content {
+  width: fit-content;
+}
+
+#content-wrapper {
+  width: 1000px;
+  height: 650px;
+  overflow-y: scroll;
+  padding: 15px;
+}
+
+#open-modal-button {
+  background-color: #eee;
+  border: 1px solid #ddd;
+  border-radius: 0.375rem;
+  padding: 6px 12px;
+  margin-top: 20px;
+}
