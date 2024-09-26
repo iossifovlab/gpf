@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
 from box import Box
 
@@ -520,42 +520,6 @@ class PersonSetCollection:
                 "children": children,
             }
         return result
-
-    def to_json(self) -> dict[str, Any]:
-        """Serialize a person sets collection to a json format."""
-        return {
-            "config": self.config_json(),
-            "person_sets": [
-                ps.to_json() for ps in self.person_sets.values()
-            ],
-        }
-
-    @staticmethod
-    def from_json(
-        data: dict[str, Any], families: FamiliesData,
-    ) -> PersonSetCollection:
-        """Construct person sets collection from json serialization."""
-        config = data["config"]
-
-        psc = PersonSetCollection(
-            config["id"],
-            config["name"],
-            config,
-            PersonSetCollection._sources_from_config(config),
-            PersonSetCollection._produce_sets(config),
-            PersonSetCollection._produce_default_person_set(config),
-            families,
-        )
-        for ps_json in data["person_sets"]:
-            person_set = psc.person_sets[ps_json["id"]]
-            for fpid_json in ps_json["person_ids"]:
-                fpid = cast(tuple[str, str], tuple(fpid_json))
-                person = families.persons[fpid]
-                assert person.get_attr(psc.id) == person_set.id
-                person_set.persons[fpid] = person
-
-        PersonSetCollection.remove_empty_person_sets(psc)
-        return psc
 
 
 @dataclass

@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import functools
-import gzip
-import json
 import logging
 import os
 import time
@@ -21,7 +19,6 @@ from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.people_counter import PeopleReport
 from dae.effect_annotation.effect import expand_effect_types
 from dae.pedigrees.families_data import FamiliesData
-from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import PersonSetCollection
 from dae.query_variants.query_runners import QueryResult
 from dae.utils.regions import Region
@@ -741,8 +738,7 @@ class GenotypeDataGroup(GenotypeData):
             config, list(studies),
         )
         self._families: FamiliesData
-        if not self.has_families_cache():
-            self.rebuild_families()
+        self.rebuild_families()
 
         self._executor = None
         self.is_remote = False
@@ -768,173 +764,6 @@ class GenotypeDataGroup(GenotypeData):
         for study in self.studies:
             result = result.union(study.get_studies_ids())
         return list(result)
-
-    def _has_cached_families_data(self) -> bool:
-        """Load families data cache if exists."""
-        cache_path = None
-        if "conf_dir" in self.config:
-            cache_path = os.path.join(
-                self.config["conf_dir"], "families_cache.ped.gz",
-            )
-
-        return not (cache_path is None or not os.path.exists(cache_path))
-
-    def _load_cached_families_data(
-        self, cache_dir: str | None = None,
-    ) -> FamiliesData | None:
-        """Load families data cache if exists."""
-        cache_dir = self._ensure_cache_dir(cache_dir)
-        cache_path = os.path.join(
-            cache_dir, "families_cache.ped.gz",
-        )
-
-        if cache_path is not None and os.path.exists(cache_path):
-            try:
-                result = FamiliesLoader.load_pedigree_file(cache_path)
-            except BaseException:  # pylint: disable=broad-except
-                logger.exception(
-                    "Couldn't load families cache for %s", self.study_id,
-                )
-            else:
-                return result
-
-        return None
-
-    def _ensure_cache_dir(self, cache_dir: str | None = None) -> str:
-        if cache_dir is None and "conf_dir" not in self.config:
-            raise ValueError("genotype study group cache dir not specified")
-
-        if cache_dir is None:
-            cache_dir = self.config["conf_dir"]
-
-        if not os.path.exists(cache_dir):
-            os.makedirs(cache_dir)
-        if not os.path.isdir(cache_dir):
-            raise ValueError(f"cache dir {cache_dir} is not a directory")
-        return cache_dir
-
-    def _save_cached_families_data(
-        self, cache_dir: str | None = None,
-    ) -> bool:
-        """Store genotype data group families data into cache."""
-        cache_dir = self._ensure_cache_dir(cache_dir)
-        cache_path = os.path.join(cache_dir, "families_cache.ped.gz")
-
-        try:
-            FamiliesLoader.save_families(self.families, cache_path)
-        except BaseException:  # pylint: disable=broad-except
-            logger.exception(
-                "Failed to cache families for %s", self.study_id,
-            )
-            return False
-
-        return True
-
-    def _save_cached_person_sets(
-        self, cache_dir: str | None = None,
-    ) -> bool:
-        """Save cached person set collections defined for a genotype group."""
-        cache_dir = self._ensure_cache_dir(cache_dir)
-        try:
-            for psc in self._person_set_collections.values():
-                cache_path = os.path.join(
-                    cache_dir,
-                    f"person_set_{psc.id}_cache.json.gz")
-                with gzip.open(cache_path, "wt") as outfile:
-                    json.dump(psc.to_json(), outfile)
-        except BaseException:  # pylint: disable=broad-except
-            logger.exception(
-                "Failed to cache person sets for study %s", self.study_id,
-            )
-            return False
-
-        return True
-
-    def _has_cached_person_sets(self, cache_dir: str | None = None) -> bool:
-        """Save cached person set collections defined for a genotype group."""
-        cache_dir = self._ensure_cache_dir(cache_dir)
-        pscs_config = self.config.get("person_set_collections")
-        if pscs_config is None:
-            return False
-
-        selected_pscs = pscs_config["selected_person_set_collections"]
-        for psc_id in selected_pscs:
-            cache_path = os.path.join(
-                cache_dir,
-                f"person_set_{psc_id}_cache.json.gz")
-            if not os.path.exists(cache_path):
-                logger.info(
-                    "unable to load person sets collection <%s> cache "
-                    "for study %s; missing file %s",
-                    psc_id, self.study_id, cache_path)
-                return False
-
-        return True
-
-    def _load_cached_person_sets(
-        self, cache_dir: str | None = None,
-    ) -> dict[str, PersonSetCollection] | None:
-        """Save cached person set collections defined for a genotype group."""
-        cache_dir = self._ensure_cache_dir(cache_dir)
-
-        pscs_config = self.config.get("person_set_collections")
-        if pscs_config is None:
-            return {}
-
-        selected_pscs = pscs_config["selected_person_set_collections"]
-        try:
-            result = {}
-            for psc_id in selected_pscs:
-                cache_path = os.path.join(
-                    cache_dir,
-                    f"person_set_{psc_id}_cache.json.gz")
-                if not os.path.exists(cache_path):
-                    logger.info(
-                        "unable to load person sets collection <%s> cache "
-                        "for study %s; missing file %s",
-                        psc_id, self.study_id, cache_path)
-                    return None
-
-                with gzip.open(cache_path, "rt") as infile:
-                    content = infile.read()
-                    data = json.loads(content)
-
-                    psc = PersonSetCollection.from_json(data, self.families)
-                    result[psc_id] = psc
-        except BaseException:  # pylint: disable=broad-except
-            logger.exception(
-                "Failed to load cached person sets for study %s",
-                self.study_id)
-            return None
-        return result
-
-    def has_families_cache(self) -> bool:
-        """Check cached families and person set collections."""
-        return self._has_cached_families_data() \
-            and self._has_cached_person_sets()
-
-    def load_families_cache(self) -> bool:
-        """Load cached families and person set collections.
-
-        If cached families or persons are missing, returns False.
-        """
-        families = self._load_cached_families_data()
-        if families is None:
-            return False
-        self._families = families
-        pscs = self._load_cached_person_sets()
-        if pscs is None:
-            return False
-        self._person_set_collections = pscs
-        return True
-
-    def save_families_cache(self, cache_dir: str | None = None) -> None:
-        """Load cached families and person set collections.
-
-        If cached families or persons are missing, returns False.
-        """
-        self._save_cached_families_data(cache_dir)
-        self._save_cached_person_sets(cache_dir)
 
     def rebuild_families(self) -> None:
         """Construct genotype group families data from child studies."""
