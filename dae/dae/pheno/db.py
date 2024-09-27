@@ -10,7 +10,7 @@ import pandas as pd
 import sqlglot
 from duckdb import ConstraintException
 from sqlglot import column, expressions, select, table
-from sqlglot.expressions import delete, insert, update, values
+from sqlglot.expressions import Count, delete, insert, update, values
 
 from dae.pheno.common import MeasureType
 from dae.utils.sql_utils import glot_and, to_duckdb_transpile
@@ -221,35 +221,9 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         query = query.distinct()
 
         if keyword:
-            column_filters = []
-            keyword = keyword.replace("/", "//")\
-                .replace("%", r"/%").replace("_", r"/_")
-            keyword = f"%{keyword}%"
-            if not instrument_name:
-                column_filters.append(
-                    self._build_ilike(
-                        keyword,
-                        column("instrument_name", table="variable_browser"),
-                    ),
-                )
-            column_filters.extend((
-                self._build_ilike(
-                    keyword,
-                    column("measure_id", table="variable_browser"),
-                ),
-                self._build_ilike(
-                    keyword,
-                    column("measure_name", table="variable_browser"),
-                ),
-                self._build_ilike(
-                    keyword,
-                    column("description", table="variable_browser"),
-                ),
-            ))
-            query = query.where(reduce(
-                lambda left, right: left.or_(right),  # type: ignore
-                column_filters,
-            ))
+            query = self._measures_query_by_keyword(
+                query, keyword, instrument_name,
+            )
 
         if instrument_name:
             query = query.where(
@@ -299,6 +273,68 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             )
 
         return query, reg_cols
+
+    def build_measures_count_query(
+        self,
+        instrument_name: str | None = None,
+        keyword: str | None = None,
+    ) -> expressions.Select:
+        """Count measures by keyword search."""
+
+        count = Count(this="*")
+
+        query = select(count).from_(self.variable_browser)
+
+        query = query.distinct()
+
+        if keyword:
+            query = self._measures_query_by_keyword(
+                query, keyword, instrument_name,
+            )
+
+        if instrument_name:
+            query = query.where(
+                f"variable_browser.instrument_name = '{instrument_name}'",
+            )
+
+        return query
+
+    def _measures_query_by_keyword(
+        self,
+        query: expressions.Select,
+        keyword: str,
+        instrument_name: str | None = None,
+    ) -> expressions.Select:
+        column_filters = []
+        keyword = keyword.replace("/", "//")\
+            .replace("%", r"/%").replace("_", r"/_")
+        keyword = f"%{keyword}%"
+        if not instrument_name:
+            column_filters.append(
+                self._build_ilike(
+                    keyword,
+                    column("instrument_name", table="variable_browser"),
+                ),
+            )
+        column_filters.extend((
+            self._build_ilike(
+                keyword,
+                column("measure_id", table="variable_browser"),
+            ),
+            self._build_ilike(
+                keyword,
+                column("measure_name", table="variable_browser"),
+            ),
+            self._build_ilike(
+                keyword,
+                column("description", table="variable_browser"),
+            ),
+        ))
+
+        return query.where(reduce(
+            lambda left, right: left.or_(right),  # type: ignore
+            column_filters,
+        ))
 
     def get_measures_df(
         self,
@@ -401,6 +437,31 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                     "figure_distribution": row[7],
                     **dict(zip(reg_col_names, row[8:], strict=True)),
                 }
+
+    def count_measures(
+        self,
+        instrument_name: str | None = None,
+        keyword: str | None = None,
+        page: int | None = None,
+    ) -> int:
+        """Find measures by keyword search."""
+        query = self.build_measures_count_query(
+            instrument_name,
+            keyword,
+        )
+
+        if page is None:
+            page = 1
+
+        query = query.limit(self.PAGE_SIZE).offset(
+            self.PAGE_SIZE * (page - 1),
+        )
+
+        query_str = to_duckdb_transpile(query)
+
+        with self.connection.cursor() as cursor:
+            rows = cursor.execute(query_str).fetchall()
+            return int(rows[0][0])
 
     def search_measures_df(
         self, instrument_name: str | None = None,

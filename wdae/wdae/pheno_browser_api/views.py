@@ -238,6 +238,34 @@ class PhenoMeasuresDownload(QueryDatasetView):
             dataset, measure_ids,
         )
 
+    def count_measure_ids(self, request: Request) -> None:
+        """Get measure ids."""
+        data = request.query_params
+        data = {k: str(v) for k, v in data.items()}
+
+        if "dataset_id" not in data:
+            raise ValueError
+        dataset_id = data["dataset_id"]
+
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if not dataset or dataset.phenotype_data is None:
+            raise KeyError
+
+        search_term = data.get("search_term", None)
+        instrument = data.get("instrument", None)
+
+        if (instrument is not None
+                and instrument != ""
+                and instrument not in dataset.phenotype_data.instruments):
+            raise KeyError
+
+        measure_ids_count = dataset.phenotype_data.count_measures(
+            instrument, search_term,
+        )
+
+        if measure_ids_count > 1900:
+            raise CountError
+
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         """Return a CSV file stream for measures."""
@@ -265,7 +293,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
     def head(self, request: Request) -> Response:
         """Return a status code validating if measures can be downloaded."""
         try:
-            self.get_measure_ids(request)
+            self.count_measure_ids(request)
         except ValueError:
             logger.exception("Error")
             return Response(status=status.HTTP_400_BAD_REQUEST)
