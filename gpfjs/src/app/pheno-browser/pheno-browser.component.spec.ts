@@ -264,20 +264,20 @@ describe('PhenoBrowserComponent', () => {
     component.downloadMeasures();
     expect(validateSpy).toHaveBeenCalledWith(data);
     expect(downloadSpy).not.toHaveBeenCalled();
-    expect(component.errorModal).toBe(false);
+    expect(component.errorModalMsg).toBe('');
 
     validateSpy.mockReturnValue(of({ status: 413 }));
     component.downloadMeasures();
     expect(validateSpy).toHaveBeenCalledWith(data);
     expect(downloadSpy).not.toHaveBeenCalled();
-    expect(component.errorModal).toBe(true);
+    expect(component.errorModalMsg).toBe('Too many instruments, select less than 1900!');
 
-    component.errorModal = false;
+    component.errorModalMsg = '';
 
     validateSpy.mockReturnValue(of({ status: 200 }));
     component.downloadMeasures();
     expect(validateSpy).toHaveBeenCalledWith(data);
     expect(downloadSpy).toHaveBeenCalledWith(data);
-    expect(component.errorModal).toBe(false);
+    expect(component.errorModalMsg).toBe('');
   });
 });
