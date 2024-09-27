@@ -292,6 +292,8 @@ Using the Ensembl VEP annotators requires the `gpf_vep_annotator` conda package 
         gpf_vep_annotator
 
 
+**The VEP annotators can be run only in batch mode.**
+
 VEP Full Annotator
 ++++++++++++++++++
 Using the full VEP annotator requires a VEP cache to be accessible in the local file system.
@@ -312,6 +314,261 @@ The annotator configuration looks like this:
     - vep_full_annotator:
         cache_dir: <VEP cache directory>
 
+Full Annotator Output Attributes
+++++++++++++++++++++++++++++++++
+The full VEP annotator can output the following attributes:
+
+Location
+  Location of variant in standard coordinate format (chr:start or chr:start-end)
+
+Allele
+  The variant allele used to calculate the consequence
+
+Gene
+  Stable ID of affected gene
+
+Feature
+  Stable ID of feature
+
+Feature_type
+  Type of feature - Transcript, RegulatoryFeature or MotifFeature
+
+Consequence
+  Consequence type
+
+cDNA_position
+  Relative position of base pair in cDNA sequence
+
+CDS_position
+  Relative position of base pair in coding sequence
+
+Protein_position
+  Relative position of amino acid in protein
+
+Amino_acids
+  Reference and variant amino acids
+
+Codons
+  Reference and variant codon sequence
+
+Existing_variation
+  Identifier(s) of co-located known variants
+
+IMPACT
+  Subjective impact classification of consequence type
+
+DISTANCE
+  Shortest distance from variant to transcript
+
+STRAND
+  Strand of the feature (1/-1)
+
+FLAGS
+  Transcript quality flags
+
+VARIANT_CLASS
+  SO variant class
+
+SYMBOL
+  Gene symbol (e.g. HGNC)
+
+SYMBOL_SOURCE
+  Source of gene symbol
+
+HGNC_ID
+  Stable identifer of HGNC gene symbol
+
+BIOTYPE
+  Biotype of transcript or regulatory feature
+
+CANONICAL
+  Indicates if transcript is canonical for this gene
+
+MANE_SELECT
+  MANE Select (Matched Annotation from NCBI and EMBL-EBI) Transcript
+
+MANE_PLUS_CLINICAL
+  MANE Plus Clinical (Matched Annotation from NCBI and EMBL-EBI) Transcript
+
+TSL
+  Transcript support level
+
+APPRIS
+  Annotates alternatively spliced transcripts as primary or alternate based on a range of computational methods
+
+CCDS
+  Indicates if transcript is a CCDS transcript
+
+ENSP
+  Protein identifer
+
+SWISSPROT
+  UniProtKB/Swiss-Prot accession
+
+TREMBL
+  UniProtKB/TrEMBL accession
+
+UNIPARC
+  UniParc accession
+
+UNIPROT_ISOFORM
+  Direct mappings to UniProtKB isoforms
+
+GENE_PHENO
+  Indicates if gene is associated with a phenotype, disease or trait
+
+SIFT
+  SIFT prediction and/or score
+
+PolyPhen
+  PolyPhen prediction and/or score
+
+EXON
+  Exon number(s) / total
+
+INTRON
+  Intron number(s) / total
+
+DOMAINS
+  The source and identifer of any overlapping protein domains
+
+miRNA
+  SO terms of overlapped miRNA secondary structure feature(s)
+
+HGVSc
+  HGVS coding sequence name
+
+HGVSp
+  HGVS protein sequence name
+
+HGVS_OFFSET
+  Indicates by how many bases the HGVS notations for this variant have been shifted
+
+AF
+  Frequency of existing variant in 1000 Genomes combined population
+
+AFR_AF
+  Frequency of existing variant in 1000 Genomes combined African population
+
+AMR_AF
+  Frequency of existing variant in 1000 Genomes combined American population
+
+EAS_AF
+  Frequency of existing variant in 1000 Genomes combined East Asian population
+
+EUR_AF
+  Frequency of existing variant in 1000 Genomes combined European population
+
+SAS_AF
+  Frequency of existing variant in 1000 Genomes combined South Asian population
+
+gnomADe_AF
+  Frequency of existing variant in gnomAD exomes combined population
+
+gnomADe_AFR_AF
+  Frequency of existing variant in gnomAD exomes African/American population
+
+gnomADe_AMR_AF
+  Frequency of existing variant in gnomAD exomes American population
+
+gnomADe_ASJ_AF
+  Frequency of existing variant in gnomAD exomes Ashkenazi Jewish population
+
+gnomADe_EAS_AF
+  Frequency of existing variant in gnomAD exomes East Asian population
+
+gnomADe_FIN_AF
+  Frequency of existing variant in gnomAD exomes Finnish population
+
+gnomADe_NFE_AF
+  Frequency of existing variant in gnomAD exomes Non-Finnish European population
+
+gnomADe_OTH_AF
+  Frequency of existing variant in gnomAD exomes other combined populations
+
+gnomADe_SAS_AF
+  Frequency of existing variant in gnomAD exomes South Asian population
+
+gnomADg_AF
+  Frequency of existing variant in gnomAD genomes combined population
+
+gnomADg_AFR_AF
+  Frequency of existing variant in gnomAD genomes African/American population
+
+gnomADg_AMI_AF
+  Frequency of existing variant in gnomAD genomes Amish population
+
+gnomADg_AMR_AF
+  Frequency of existing variant in gnomAD genomes American population
+
+gnomADg_ASJ_AF
+  Frequency of existing variant in gnomAD genomes Ashkenazi Jewish population
+
+gnomADg_EAS_AF
+  Frequency of existing variant in gnomAD genomes East Asian population
+
+gnomADg_FIN_AF
+  Frequency of existing variant in gnomAD genomes Finnish population
+
+gnomADg_MID_AF
+  Frequency of existing variant in gnomAD genomes Mid-eastern population
+
+gnomADg_NFE_AF
+  Frequency of existing variant in gnomAD genomes Non-Finnish European population
+
+gnomADg_OTH_AF
+  Frequency of existing variant in gnomAD genomes other combined populations
+
+gnomADg_SAS_AF
+  Frequency of existing variant in gnomAD genomes South Asian population
+
+MAX_AF
+  Maximum observed allele frequency in 1000 Genomes, ESP and ExAC/gnomAD
+
+MAX_AF_POPS
+  Populations in which maximum allele frequency was observed
+
+CLIN_SIG
+  ClinVar clinical significance of the dbSNP variant
+
+SOMATIC
+  Somatic status of existing variant
+
+PHENO
+  Indicates if existing variant(s) is associated with a phenotype, disease or trait; multiple values correspond to multiple variants
+
+PUBMED
+  Pubmed ID(s) of publications that cite existing variant
+
+MOTIF_NAME
+  The stable identifier of a transcription factor binding profile (TFBP) aligned at this position
+
+MOTIF_POS
+  The relative position of the variation in the aligned TFBP
+
+HIGH_INF_POS
+  A flag indicating if the variant falls in a high information position of the TFBP
+
+MOTIF_SCORE_CHANGE
+  The difference in motif score of the reference and variant sequences for the TFBP
+
+TRANSCRIPTION_FACTORS
+  List of transcription factors which bind to the transcription factor binding profile
+
+worst_consequence
+  Worst consequence reported by VEP
+
+highest_impact
+  Highest impact reported by VEP
+
+gene_consequence
+  List of gene consequence pairs reported by VEP
+
+
+By default, only the following are produced: `SYMBOL`, `Feature`, `Feature_type`,
+`Consequence`, `worst_consequence`, `highest_impact`, `gene_consequence`.
+
+
 VEP Effect Annotator
 ++++++++++++++++++++
 The VEP effect annotator uses genome and gene model resources to produce
@@ -324,60 +581,69 @@ and gene models prepared.
         genome: hg38/genomes/GRCh38-hg38
         gene_models: hg38/gene_models/MANE/1.3
 
-Output Attributes
-+++++++++++++++++
-The two VEP annotators can output the following attributes:
+Effect Annotator Output Attributes
+++++++++++++++++++++++++++++++++++
+The VEP effect annotator can output the following attributes:
 
-gene
-  Gene symbol reported by VEP
+Location
+  Location of variant in standard coordinate format (chr:start or chr:start-end)
 
-gene_id
-  Gene ID reported by VEP
+Allele
+  The variant allele used to calculate the consequence
 
-feature
-  VEP feature
+Gene
+  Stable ID of affected gene
 
-feature_type
-  VEP feature type
+Feature
+  Stable ID of feature
 
-consequence
-  VEP effect type
+Feature_type
+  Type of feature - Transcript, RegulatoryFeature or MotifFeature
 
-location
-  VEP location
+Consequence
+  Consequence type
 
-allele
-  VEP allele
+cDNA_position
+  Relative position of base pair in cDNA sequence
 
-cdna_position
-  VEP cDNA position
+CDS_position
+  Relative position of base pair in coding sequence
 
-cds_position
-  VEP cds position
+Protein_position
+  Relative position of amino acid in protein
 
-protein_position
-  VEP protein position
+Amino_acids
+  Reference and variant amino acids
 
-amino_acids
-  Amino acids reported by VEP
+Codons
+  Reference and variant codon sequence
 
-codons
-  Codons reported by VEP
+Existing_variation
+  Identifier(s) of co-located known variants
 
-existing_variation
-  Existing variation reported by VEP
+IMPACT
+  Subjective impact classification of consequence type
 
-impact
-  Variant impact reported by VEP
+DISTANCE
+  Shortest distance from variant to transcript
 
-distance
-  Distance reported by VEP
+STRAND
+  Strand of the feature (1/-1)
 
-strand
-  Variant impact reported by VEP
+FLAGS
+  Transcript quality flags
 
-symbol_source
-  VEP gene symbol source
+SYMBOL
+  Gene symbol (e.g. HGNC)
+
+SYMBOL_SOURCE
+  Source of gene symbol
+
+HGNC_ID
+  Stable identifer of HGNC gene symbol
+
+SOURCE
+  Source of transcript
 
 worst_consequence
   Worst consequence reported by VEP
@@ -386,13 +652,15 @@ highest_impact
   Highest impact reported by VEP
 
 gene_consequence
-    List of gene consequence pairs reported by VEP
+  List of gene consequence pairs reported by VEP
+
+<gene model filename>
+  Value from provided gene models
 
 
-By default, only the following are produced: `gene`, `feature`, `feature_type`,
-`consequence`, `worst_consequence`, `highest_impact`, `gene_consequence`.
-
-The VEP annotators can be run only in batch mode.
+By default, only the following are produced: `SYMBOL`, `Feature`, `Feature_type`,
+`Consequence`, `worst_consequence`, `highest_impact`, `gene_consequence` and the
+value from the provided gene models.
 
 Running the VEP annotation
 ++++++++++++++++++++++++++
