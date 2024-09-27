@@ -25,7 +25,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   // To trigger child change detection with on push strategy.
   public measuresChangeTick = 0;
   public measuresSubscription: Subscription;
-  public errorModal = false;
+  public errorModalMsg = '';
 
   public instruments: Observable<PhenoInstruments>;
   public selectedDataset: Dataset;
@@ -164,8 +164,10 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
       ).subscribe(([data, validity]) => {
         if (validity.status === 200) {
           window.open(this.phenoBrowserService.getDownloadMeasuresLink(data));
+        } else if (validity.status === 204) {
+          this.errorModalMsg = 'No instruments, select more than 0!';
         } else if (validity.status === 413) {
-          this.errorModal = true;
+          this.errorModalMsg = 'Too many instruments, select less than 1900!';
         }
       });
   }
@@ -191,8 +193,8 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
     });
   }
 
-  public errorModalBack(): void {
-    this.errorModal = false;
+  public errorModalMsgBack(): void {
+    this.errorModalMsg = '';
   }
 
   public ngOnDestroy(): void {
