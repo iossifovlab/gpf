@@ -6,7 +6,7 @@ import pytest
 import toml
 
 from dae.person_sets import (
-    parse_person_sets_collections_study_config,
+    parse_person_set_collections_study_config,
 )
 
 
@@ -40,7 +40,7 @@ def test_parse_person_set_collection_config_toml(
     config = person_set_collection_config
     assert config is not None
 
-    psc_configs = parse_person_sets_collections_study_config(config)
+    psc_configs = parse_person_set_collections_study_config(config)
     assert psc_configs is not None
     assert len(psc_configs) == 1
 
@@ -82,7 +82,7 @@ def test_parse_person_set_collection_config_missing_keys(
     del sub[to_delete[-1]]
 
     with pytest.raises(ValueError, match=match_message):
-        parse_person_sets_collections_study_config(config)
+        parse_person_set_collections_study_config(config)
 
 
 @pytest.mark.parametrize("sources, match_message", [
@@ -101,7 +101,7 @@ def test_parse_person_set_collection_config_broken_sources(
     config["person_set_collections"]["status"]["sources"] = sources
 
     with pytest.raises(ValueError, match=match_message):
-        parse_person_sets_collections_study_config(config)
+        parse_person_set_collections_study_config(config)
 
 
 @pytest.mark.parametrize("domain, match_message", [
@@ -125,7 +125,7 @@ def test_parse_person_set_collection_config_broken_domain(
     config["person_set_collections"]["status"]["domain"] = domain
 
     with pytest.raises(ValueError, match=re.escape(match_message)):
-        parse_person_sets_collections_study_config(config)
+        parse_person_set_collections_study_config(config)
 
 
 @pytest.mark.parametrize("default, match_message", [
@@ -148,4 +148,4 @@ def test_parse_person_set_collection_config_broken_default(
     config["person_set_collections"]["status"]["default"] = default
 
     with pytest.raises(ValueError, match=re.escape(match_message)):
-        parse_person_sets_collections_study_config(config)
+        parse_person_set_collections_study_config(config)

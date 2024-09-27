@@ -6,9 +6,9 @@ from .person_sets import (
     PersonSetCollectionConfig,
     PersonSetConfig,
     SourceConfig,
+    parse_person_set_collection_config,
+    parse_person_set_collections_study_config,
     parse_person_set_config,
-    parse_person_sets_collection_config,
-    parse_person_sets_collections_study_config,
 )
 
 __all__ = [
@@ -19,7 +19,7 @@ __all__ = [
     "PersonSetCollectionConfig",
     "PersonSetConfig",
     "SourceConfig",
+    "parse_person_set_collection_config",
+    "parse_person_set_collections_study_config",
     "parse_person_set_config",
-    "parse_person_sets_collection_config",
-    "parse_person_sets_collections_study_config",
 ]

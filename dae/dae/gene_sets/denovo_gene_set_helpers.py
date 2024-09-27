@@ -7,6 +7,9 @@ import box
 
 from dae.effect_annotation.effect import expand_effect_types
 from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
+from dae.gene_sets.denovo_gene_sets_config import (
+    parse_denovo_gene_sets_study_config,
+)
 from dae.studies.study import GenotypeData
 from dae.variants.attributes import Inheritance, Sex
 from dae.variants.family_variant import FamilyVariant
@@ -29,27 +32,33 @@ class DenovoGeneSetHelpers:
     @classmethod
     def load_collection(
         cls,
-        genotype_data_study: GenotypeData,
+        study: GenotypeData,
     ) -> DenovoGeneSetCollection:
         """Load a denovo gene set collection for a given study."""
-        config = genotype_data_study.config
-        assert config is not None, genotype_data_study.study_id
-        selected_person_set_collections = \
-            config.denovo_gene_sets.selected_person_set_collections
-        person_set_collection_configs = {
-            psc.id: psc.config_json()
-            for psc in genotype_data_study.person_set_collections.values()
-            if psc.id in selected_person_set_collections
-        }
-        collection = DenovoGeneSetCollection(
-            genotype_data_study.study_id, genotype_data_study.name, config,
-            dict(person_set_collection_configs.items()))
+        config = study.config
+        assert config is not None, study.study_id
+        dgsc_config = parse_denovo_gene_sets_study_config(
+            study.config)
+        if dgsc_config is None:
+            raise ValueError(
+                f"No denovo gene sets defined {study.study_id}")
 
-        for (
-            person_set_collection_id
-        ) in config.denovo_gene_sets.selected_person_set_collections:
+        person_set_collections = {
+            psc_id: psc
+            for psc_id, psc in study.person_set_collections.items()
+            if psc_id in dgsc_config.selected_person_set_collections
+        }
+
+        collection = DenovoGeneSetCollection(
+            study.study_id,
+            study.name,
+            dgsc_config,
+            person_set_collections,
+        )
+
+        for psc_id in dgsc_config.selected_person_set_collections:
             cache_dir = cls.denovo_gene_set_cache_file(
-                config, person_set_collection_id,
+                config, psc_id,
             )
             if not os.path.exists(cache_dir):
                 raise OSError(
@@ -61,7 +70,7 @@ class DenovoGeneSetHelpers:
                 contents = json.load(infile)
             # change all list to sets after loading from json
             contents = cls._convert_cache_innermost_types(contents, list, set)
-            collection.cache[person_set_collection_id] = contents
+            collection.cache[psc_id] = contents
         return collection
 
     @classmethod

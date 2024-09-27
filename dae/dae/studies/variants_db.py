@@ -54,6 +54,10 @@ status.sources = [{
     source = "status"
 }]
 
+[denovo_gene_sets]
+enabled = false
+
+
 [genotype_browser]
 enabled = true
 has_family_filters = true

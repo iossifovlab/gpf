@@ -15,7 +15,7 @@ from dae.person_sets import (
     PersonSet,
     PersonSetCollection,
     PersonSetCollectionConfig,
-    parse_person_sets_collections_study_config,
+    parse_person_set_collections_study_config,
 )
 from dae.testing import setup_pedigree
 
@@ -51,7 +51,7 @@ def get_person_set_collections_config(
         toml.loads(content),
         {"person_set_collections": person_set_collections_schema},
     )
-    return parse_person_sets_collections_study_config(config)
+    return parse_person_set_collections_study_config(config)
 
 
 @pytest.fixture()

@@ -43,7 +43,7 @@ class SexesCriteria(BaseModel):
     sexes: list[Sex]
 
 
-class RecurrencyCriteria(BaseModel):
+class RecurrencyCriteriaBase(BaseModel):
     """Criteria for filtering recurrency."""
 
     model_config = ConfigDict(extra="forbid")
@@ -53,7 +53,7 @@ class RecurrencyCriteria(BaseModel):
     end: int  # open interval
 
 
-class SingleCriteria(RecurrencyCriteria):
+class SingleCriteria(RecurrencyCriteriaBase):
     """Single recurrency criteria."""
 
     name: Literal["Single"]
@@ -61,18 +61,47 @@ class SingleCriteria(RecurrencyCriteria):
     end: Literal[2]
 
 
-class RecurrentCriteria(RecurrencyCriteria):
+class RecurrentCriteria(RecurrencyCriteriaBase):
     """Recurrent recurrency criteria."""
     name: Literal["Recurrent"]
     start: Literal[2]
     end: Literal[-1]
 
 
-class TripleCriteria(RecurrencyCriteria):
+class TripleCriteria(RecurrencyCriteriaBase):
     """Triple recurrency criteria."""
     name: Literal["Triple"]
     start: Literal[3]
     end: Literal[-1]
+
+
+RecurrencyCriteria = SingleCriteria | RecurrentCriteria | TripleCriteria
+
+
+def parse_recurrency_criteria(
+    name: str,
+    recurrency_criteria: dict[str, Any],
+) -> RecurrencyCriteria:
+    """Parse recurrency criteria."""
+    if name == "Single":
+        return SingleCriteria(
+            name="Single",
+            start=recurrency_criteria["start"],
+            end=recurrency_criteria["end"],
+        )
+    if name == "Recurrent":
+        return RecurrentCriteria(
+            name="Recurrent",
+            start=recurrency_criteria["start"],
+            end=recurrency_criteria["end"],
+        )
+    if name == "Triple":
+        return TripleCriteria(
+            name="Triple",
+            start=recurrency_criteria["start"],
+            end=recurrency_criteria["end"],
+        )
+    raise ValueError(f"Invalid recurrency criteria: {name}")
 
 
 class DenovoGeneSetsConfig(BaseModel):
@@ -114,9 +143,11 @@ def _validate_gene_sets_names(
 
 def parse_denovo_gene_sets_config(
     config: dict[str, Any],
-) -> DenovoGeneSetsConfig:
+) -> DenovoGeneSetsConfig | None:
     """Parse de novo gene sets configuration."""
     enabled = config.get("enabled", False)
+    if not enabled:
+        return None
     selected_person_set_collections = config.get(
         "selected_person_set_collections", [])
     if not selected_person_set_collections:
@@ -154,7 +185,7 @@ def parse_denovo_gene_sets_config(
     if recurrency_criteria:
         criteria_segments = recurrency_criteria["segments"]
         recurrency = {
-            name: RecurrencyCriteria(name=name, **criteria)
+            name: parse_recurrency_criteria(name, criteria)
             for name, criteria in criteria_segments.items()
         }
 
@@ -175,6 +206,16 @@ def parse_denovo_gene_sets_config(
         recurrency=recurrency,
         gene_sets_names=gene_sets_names,
     )
+
+
+def parse_denovo_gene_sets_study_config(
+    study_config: dict[str, Any],
+) -> DenovoGeneSetsConfig | None:
+    """Parse de novo gene sets study configuration."""
+    denovo_gene_sets_config = study_config.get("denovo_gene_sets", {})
+    if not denovo_gene_sets_config:
+        return None
+    return parse_denovo_gene_sets_config(denovo_gene_sets_config)
 
 
 class DenovoGeneSetSpec(BaseModel):

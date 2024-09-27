@@ -14,7 +14,6 @@ pytestmark = pytest.mark.usefixtures("gene_info_cache_dir", "calc_gene_sets")
 def test_get_person_set_collection_legend(
         denovo_gene_set_f4: DenovoGeneSetCollection) -> None:
     dgsl = denovo_gene_set_f4.get_person_set_collection_legend("phenotype")
-    print(dgsl)
     assert len(dgsl) == 2
 
 
@@ -52,10 +51,8 @@ def test_denovo_gene_sets_legend(trios2_dgsc: DenovoGeneSetCollection) -> None:
     assert legend[0]["personSetCollectionId"] == "status"
     assert legend[0]["personSetCollectionName"] == "Affected Status"
     assert legend[0]["personSetCollectionLegend"] == [
-        {"id": "affected", "name": "affected",
-         "values": ("affected", ), "color": "#e35252"},
-        {"id": "unaffected", "name": "unaffected",
-         "values": ("unaffected", ), "color": "#ffffff"},
+        {"id": "affected", "name": "affected", "color": "#e35252"},
+        {"id": "unaffected", "name": "unaffected", "color": "#ffffff"},
     ]
 
 

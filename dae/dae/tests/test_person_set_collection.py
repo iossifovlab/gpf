@@ -8,14 +8,14 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import (
     PersonSetCollection,
     PersonSetCollectionConfig,
-    parse_person_sets_collection_config,
+    parse_person_set_collection_config,
 )
 from dae.testing import setup_pedigree
 
 
 @pytest.fixture()
 def status_config() -> PersonSetCollectionConfig:
-    return parse_person_sets_collection_config({
+    return parse_person_set_collection_config({
         "id": "affected_status",
         "name": "Affected Status",
         "sources": [
@@ -165,7 +165,7 @@ f1       sib4     0      0      2   0      sib   False      True
             """)),
     ).load()
 
-    status_config = parse_person_sets_collection_config({
+    status_config = parse_person_set_collection_config({
         "id": "affected_status",
         "name": "Affected Status",
         "sources": [
@@ -211,7 +211,7 @@ f1       sib4     0      0      2   0      sib   False      True
             """)),
     ).load()
 
-    status_config = parse_person_sets_collection_config({
+    status_config = parse_person_set_collection_config({
         "id": "affected_status",
         "name": "Affected Status",
         "sources": [
@@ -264,7 +264,7 @@ f1       sib4     0      0      2   1      sib   False      False
             """)),
     ).load()
 
-    status_config = parse_person_sets_collection_config({
+    status_config = parse_person_set_collection_config({
         "id": "affected_status",
         "name": "Affected Status",
         "sources": [

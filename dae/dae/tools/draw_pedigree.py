@@ -14,7 +14,7 @@ from dae.pedigrees.layout import Layout
 from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets import (
     PersonSetCollection,
-    parse_person_sets_collection_config,
+    parse_person_set_collection_config,
 )
 
 mpl.use("PS")
@@ -26,7 +26,7 @@ logger = logging.getLogger("draw_pedigree")
 
 def build_families_report(families: FamiliesData) -> FamiliesReport:
     """Build a family report based on affected status."""
-    status_collection_config = parse_person_sets_collection_config({
+    status_collection_config = parse_person_set_collection_config({
         "id": "status",
         "name": "Affected status",
         "domain": [

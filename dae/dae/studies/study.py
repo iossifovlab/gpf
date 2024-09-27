@@ -22,7 +22,7 @@ from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import (
     PersonSetCollection,
     PersonSetCollectionConfig,
-    parse_person_sets_collections_study_config,
+    parse_person_set_collections_study_config,
 )
 from dae.query_variants.query_runners import QueryResult
 from dae.utils.regions import Region
@@ -539,7 +539,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         if "person_set_collections" not in study_config:
             return {}
 
-        pscs_config = parse_person_sets_collections_study_config(study_config)
+        pscs_config = parse_person_set_collections_study_config(study_config)
         result = {}
         for psc_id, psc_config in pscs_config.items():
             result[psc_id] = self._build_person_set_collection(

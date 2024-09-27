@@ -163,7 +163,7 @@ def _parse_psc_default(
     )
 
 
-def parse_person_sets_collection_config(
+def parse_person_set_collection_config(
     psc_config: dict[str, Any],
 ) -> PersonSetCollectionConfig:
     """Parse a person set collection configuration."""
@@ -193,7 +193,7 @@ def parse_person_sets_collection_config(
     )
 
 
-def parse_person_sets_collections_study_config(
+def parse_person_set_collections_study_config(
     config: dict[str, Any],
 ) -> dict[str, PersonSetCollectionConfig]:
     """Parse a person sets configuration."""
@@ -215,7 +215,7 @@ def parse_person_sets_collections_study_config(
             raise ValueError(
                 f"No id defined for person set collection: {psc_id}")
 
-        psc_config = parse_person_sets_collection_config(psc_config)
+        psc_config = parse_person_set_collection_config(psc_config)
         result[psc_id] = psc_config
     return result
 
@@ -580,7 +580,7 @@ class PersonSetCollection:
             domain[vid] for vid in sorted(domain.keys())
         ]
 
-        return parse_person_sets_collection_config(result)
+        return parse_person_set_collection_config(result)
 
     def get_person_set(
         self, person_id: tuple[str, str],
@@ -666,6 +666,16 @@ class PersonSetCollection:
                 "color": self.default.color,
             },
         }
+
+    def legend_json(self) -> list[dict[str, Any]]:
+        return [
+            {
+                "id": person_set.id,
+                "name": person_set.name,
+                "color": person_set.color,
+            }
+            for person_set in self.person_sets.values()
+        ]
 
     def domain_json(self) -> dict[str, Any]:
         """Produce a JSON to represent domain of this PersonSetCollection."""
