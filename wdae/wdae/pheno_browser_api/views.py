@@ -238,7 +238,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
             dataset, measure_ids,
         )
 
-    def count_measure_ids(self, request: Request) -> None:
+    def count_measure_ids(self, request: Request) -> int:
         """Get measure ids."""
         data = request.query_params
         data = {k: str(v) for k, v in data.items()}
@@ -259,12 +259,9 @@ class PhenoMeasuresDownload(QueryDatasetView):
                 and instrument not in dataset.phenotype_data.instruments):
             raise KeyError
 
-        measure_ids_count = dataset.phenotype_data.count_measures(
+        return dataset.phenotype_data.count_measures(
             instrument, search_term,
         )
-
-        if measure_ids_count > 1900:
-            raise CountError
 
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
@@ -293,16 +290,20 @@ class PhenoMeasuresDownload(QueryDatasetView):
     def head(self, request: Request) -> Response:
         """Return a status code validating if measures can be downloaded."""
         try:
-            self.count_measure_ids(request)
+            measure_ids_count = self.count_measure_ids(request)
         except ValueError:
             logger.exception("Error")
             return Response(status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
             logger.exception("Measures not found")
             return Response(status=status.HTTP_404_NOT_FOUND)
-        except CountError:
+
+        if measure_ids_count > 1900:
             logger.exception("Measure count is too large")
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+        if measure_ids_count == 0:
+            logger.exception("Measure count zero")
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(status=status.HTTP_200_OK)
 
