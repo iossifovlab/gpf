@@ -27,7 +27,7 @@ def build_gene_score_annotator(pipeline: AnnotationPipeline,
     """Create a gene score annotator."""
     gene_score_resource_id = info.parameters["resource_id"]
     if not gene_score_resource_id:
-        raise ValueError(f"The {info} needs a 'resrouce_id' parameter.")
+        raise ValueError(f"The {info} needs a 'resource_id' parameter.")
     gene_score_resource = pipeline.repository.get_resource(
         gene_score_resource_id)
     if gene_score_resource is None:
@@ -39,10 +39,10 @@ def build_gene_score_annotator(pipeline: AnnotationPipeline,
                          "parameter")
     input_gene_list_info = pipeline.get_attribute_info(input_gene_list)
     if input_gene_list_info is None:
-        raise ValueError(f"The {input_gene_list} is not privided by the "
+        raise ValueError(f"The {input_gene_list} is not provided by the "
                          "pipeline.")
     if input_gene_list_info.type != "object":
-        raise ValueError(f"The {input_gene_list} privided by the pipeline "
+        raise ValueError(f"The {input_gene_list} provided by the pipeline "
                          "is not of type object.")
     return GeneScoreAnnotator(pipeline, info,
                               gene_score_resource, input_gene_list)

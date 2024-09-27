@@ -57,8 +57,7 @@ class AnnotationPipelineImplementation(
         doc_template = env.get_template("annotate_doc_pipeline_template.jinja")
         return {
             "content": doc_template.render(
-                annotation_pipeline_info=self.pipeline.get_info(),
-                preamble=self.pipeline.preamble,
+                pipeline=self.pipeline,
                 markdown=markdown,
             ),
         }
