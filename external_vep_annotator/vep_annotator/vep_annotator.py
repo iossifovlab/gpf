@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import csv
 import os
 import subprocess
@@ -21,6 +22,7 @@ from dae.genomic_resources.gene_models import (
     build_gene_models_from_resource,
     gene_models_to_gtf,
 )
+from vep_annotator.vep_attributes import effect_attributes, full_attributes
 
 # ruff: noqa: S607
 
@@ -85,47 +87,28 @@ class VEPAnnotatorBase(AnnotatorBase):
     def __init__(
         self, pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
+        source_type_desc: dict[str, tuple[str, str]],
+        extra_attributes: list[str] | None = None,
     ):
         if not info.attributes:
-            info.attributes = AnnotationConfigParser.parse_raw_attributes([
-                "gene",
-                "feature",
-                "feature_type",
-                "consequence",
+            attributes = [
+                "Gene",
+                "Feature",
+                "Feature_type",
+                "Consequence",
                 "worst_consequence",
                 "highest_impact",
                 "gene_consequence",
-            ])
+            ]
+
+            if extra_attributes is not None:
+                attributes.extend(extra_attributes)
+
+            info.attributes = AnnotationConfigParser.parse_raw_attributes(
+                attributes)
 
         super().__init__(
-            pipeline, info, {
-                "gene": ("object", "Gene symbol reported by VEP"),
-                "gene_id": ("object", "Gene ID reported by VEP"),
-                "feature": ("object", ""),
-                "feature_type": ("object", ""),
-                "consequence": ("object", "VEP effect type"),
-                "location": ("object", "VEP location"),
-                "allele": ("object", "VEP allele"),
-                "cdna_position": ("object", "VEP cDNA position"),
-                "cds_position": ("object", "VEP cds position"),
-                "protein_position": ("object", "VEP protein position"),
-                "amino_acids": ("object", "Amino acids reported by VEP"),
-                "codons": ("object", "Codons reported by VEP"),
-                "existing_variation": (
-                    "object", "Existing variation reported by VEP",
-                ),
-                "impact": ("object", "Variant impact reported by VEP"),
-                "distance": ("object", "Distance reported by VEP"),
-                "strand": ("int", "Variant impact reported by VEP"),
-                "symbol_source": ("object", "VEP gene symbol source"),
-                "worst_consequence": (
-                    "object", "Worst consequence reported by VEP",
-                ),
-                "highest_impact": ("object", "Highest impact reported by VEP"),
-                "gene_consequence": (
-                    "object", "List of gene consequence pairs reported by VEP",
-                ),
-            },
+            pipeline, info, source_type_desc=source_type_desc,
         )
 
     def _do_annotate(
@@ -191,6 +174,52 @@ class VEPAnnotatorBase(AnnotatorBase):
                 ])
         file.flush()
 
+    def read_output(
+        self, file: TextIO, contexts: list[dict[str, Any]],
+        attributes: dict[str, Any],
+    ) -> None:
+        """Read and return subprocess output contents."""
+        for context in contexts:
+            for attr in attributes:
+                context[attr] = []
+
+        reader = csv.reader(
+            filter(lambda row: not row.startswith("##"), file),
+            delimiter="\t",
+        )
+
+        header = next(reader)[1:]
+        columns_map = dict(enumerate(header))
+
+        for row in reader:
+            idx = int(row[0]) - 1
+            context = contexts[idx]
+
+            for idx, col in enumerate(row[1:]):
+                col_name = columns_map[idx]
+                context[col_name].append(col)
+
+        for context in contexts:
+            gene_consequences = []
+            for gene, consequence in zip(
+                context["SYMBOL"], context["Consequence"], strict=True,
+            ):
+                gene_consequences.append(f"{gene}:{consequence}")
+            context["gene_consequence"] = gene_consequences
+
+            consequences: list[str] = []
+            for conseq in context["Consequence"]:
+                consequences.extend(conseq.split(","))
+
+            context["worst_consequence"] = [sorted(
+                consequences, key=lambda x: CONSEQUENCES[x],
+                reverse=True,
+            )[0]]
+            context["highest_impact"] = [sorted(
+                context["IMPACT"], key=lambda x: IMPACTS[x],
+                reverse=True,
+            )[0]]
+
     def run_vep(self, args: list[str]) -> None:
         command = ["vep"]
         command.extend(args)
@@ -201,76 +230,6 @@ class VEPAnnotatorBase(AnnotatorBase):
             (work_dir / "input.tsv").open("w+t"),
             (work_dir / "output.tsv").open("w+t"),
         )
-
-    def read_output(
-        self, file: TextIO, contexts: list[dict[str, Any]],
-    ) -> None:
-        """Read and return subprocess output contents."""
-        for context in contexts:
-            context["gene"] = []
-            context["gene_id"] = []
-            context["feature"] = []
-            context["feature_type"] = []
-            context["consequence"] = []
-            context["location"] = []
-            context["allele"] = []
-            context["cdna_position"] = []
-            context["cds_position"] = []
-            context["protein_position"] = []
-            context["amino_acids"] = []
-            context["codons"] = []
-            context["existing_variation"] = []
-            context["impact"] = []
-            context["distance"] = []
-            context["strand"] = []
-            context["symbol_source"] = []
-
-        reader = csv.reader(
-            filter(lambda row: row[0] != "#", file),
-            delimiter="\t",
-        )
-
-        for row in reader:
-            idx = int(row[0]) - 1
-            context = contexts[idx]
-            context["allele"].append(row[1])
-            context["location"].append(row[2])
-            context["gene_id"].append(row[3])
-            context["feature"].append(row[4])
-            context["feature_type"].append(row[5])
-            context["consequence"].append(row[6])
-            context["cdna_position"].append(row[7])
-            context["cds_position"].append(row[8])
-            context["protein_position"].append(row[9])
-            context["amino_acids"].append(row[10])
-            context["codons"].append(row[11])
-            context["existing_variation"].append(row[12])
-            context["impact"].append(row[13])
-            context["distance"].append(row[14])
-            context["strand"].append(row[15])
-            context["gene"].append(row[17])
-            context["symbol_source"].append(row[18])
-
-        for context in contexts:
-            gene_consequences = []
-            for gene, consequence in zip(
-                context["gene"], context["consequence"], strict=True,
-            ):
-                gene_consequences.append(f"{gene}:{consequence}")
-            context["gene_consequence"] = gene_consequences
-
-            the_consequences: list[str] = []
-            for conseq in context["consequence"]:
-                the_consequences.extend(conseq.split(","))
-
-            context["worst_consequence"] = [sorted(
-                the_consequences, key=lambda x: CONSEQUENCES[x],
-                reverse=True,
-            )[0]]
-            context["highest_impact"] = [sorted(
-                context["impact"], key=lambda x: IMPACTS[x],
-                reverse=True,
-            )[0]]
 
 
 class VEPCacheAnnotator(VEPAnnotatorBase):
@@ -285,9 +244,8 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
         )
 
         assert self.vep_cache_dir is not None
-
         super().__init__(
-            pipeline, info,
+            pipeline, info, full_attributes,
         )
 
     def _do_batch_annotate(
@@ -310,13 +268,14 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
                 "-o", cast(str, out_file.name),
                 "--tab", "--cache",
                 "--dir", str(self.vep_cache_dir),
+                "--everything",
                 "--symbol",
                 "--no_stats",
                 "--force_overwrite",
             ]
             self.run_vep(args)
             out_file.flush()
-            self.read_output(out_file, contexts)
+            self.read_output(out_file, contexts, full_attributes)
 
         self.aggregate_attributes(contexts)
 
@@ -330,9 +289,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         self, pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
     ):
-        super().__init__(
-            pipeline, info,
-        )
+        self.work_dir: Path = cast(Path, info.parameters.get("work_dir"))
 
         genome_id: str | None = info.parameters.get("genome")
         assert genome_id is not None
@@ -357,6 +314,16 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         self.gtf_path_gz = self.gtf_path.with_suffix(
                 f"{self.gtf_path.suffix}.gz",
             )
+
+        self.annotator_attributes = copy.deepcopy(effect_attributes)
+        self.annotator_attributes[self.gtf_path_gz.name] = (
+            "object",
+            f"Value from {self.gene_models_resource.resource_id}",
+        )
+        super().__init__(
+            pipeline, info, self.annotator_attributes,
+            [self.gtf_path_gz.name],
+        )
 
         if not self.gtf_path_gz.exists():
             gene_models = build_gene_models_from_resource(
@@ -406,7 +373,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
             ]
             self.run_vep(args)
             out_file.flush()
-            self.read_output(out_file, contexts)
+            self.read_output(out_file, contexts, self.annotator_attributes)
 
         self.aggregate_attributes(contexts)
 

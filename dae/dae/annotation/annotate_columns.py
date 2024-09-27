@@ -295,6 +295,9 @@ class AnnotateColumnsTool(AnnotationTool):
                     "unexpected input data format at line %s: %s",
                     lnum, line)
                 errors.append((lnum, line, str(ex)))
+
+        if len(annotatables) == 0:
+            return
         try:
             if isinstance(pipeline, ReannotationPipeline):
                 annotations = pipeline.batch_annotate(
