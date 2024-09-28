@@ -33,7 +33,7 @@ import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { of } from 'rxjs/internal/observable/of';
 import { HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs/internal/Observable';
-import { NavigationStart, Router, RouterEvent } from '@angular/router';
+import { NavigationStart, Router, Event } from '@angular/router';
 import { Subject } from 'rxjs/internal/Subject';
 import { Dataset, GenotypeBrowser } from 'app/datasets/datasets';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
@@ -218,7 +218,7 @@ describe('GenotypeBrowserComponent', () => {
     const cancelSpy = jest.spyOn(queryService, 'cancelStreamPost');
     const router = TestBed.inject(Router);
 
-    (router.events as Subject<RouterEvent>).next(new NavigationStart(1, 'start'));
+    (router.events as Subject<Event>).next(new NavigationStart(1, 'start'));
 
     expect(stopSpy).toHaveBeenCalledTimes(1);
     expect(cancelSpy).toHaveBeenCalledTimes(1);

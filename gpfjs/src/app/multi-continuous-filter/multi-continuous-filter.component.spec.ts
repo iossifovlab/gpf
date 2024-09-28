@@ -67,10 +67,7 @@ describe('MultiContinuousFilterComponent', () => {
     TestBed.configureTestingModule({
       declarations: [
         MultiContinuousFilterComponent,
-        PhenoMeasureSelectorComponent,
-        MatAutocompleteOrigin,
-        MatAutocomplete,
-        MatAutocompleteTrigger
+        PhenoMeasureSelectorComponent
       ],
       providers: [
         MultiContinuousFilterComponent,
@@ -84,7 +81,10 @@ describe('MultiContinuousFilterComponent', () => {
       imports: [
         RouterTestingModule,
         StoreModule.forRoot({personFilters: personFiltersReducer}),
-        FormsModule
+        FormsModule,
+        MatAutocompleteOrigin,
+        MatAutocomplete,
+        MatAutocompleteTrigger
       ]
     }).compileComponents();
 

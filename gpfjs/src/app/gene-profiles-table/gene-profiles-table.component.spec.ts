@@ -9,6 +9,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Store, StoreModule } from '@ngrx/store';
 import { GeneProfiles } from './gene-profiles-table.state';
 import { TruncatePipe } from 'app/utils/truncate.pipe';
+import { Location } from '@angular/common';
 
 const column1 = {
   clickable: 'createTab',
@@ -259,6 +260,7 @@ class MockActivatedRoute {
 
 describe('GeneProfilesTableComponent', () => {
   let component: GeneProfilesTableComponent;
+  let location: Location;
   const geneProfilesTableServiceMock = new GeneProfilesTableServiceMock();
   const mockActivatedRoute = new MockActivatedRoute();
   let fixture: ComponentFixture<GeneProfilesTableComponent>;
@@ -280,6 +282,7 @@ describe('GeneProfilesTableComponent', () => {
     component.sortingButtonsComponents = [];
     component.config = configMock;
     store = TestBed.inject(Store);
+    location = TestBed.inject(Location);
     jest.spyOn(store, 'select').mockReturnValue(of({
       openedTabs: ['POGZ'],
       searchValue: 'chd',
@@ -436,7 +439,7 @@ describe('GeneProfilesTableComponent', () => {
     expect(component.hideTable).toBe(true);
     expect(component.currentTabGeneSet).toStrictEqual(new Set(['POGZ']));
     expect(component.currentTabString).toBe('POGZ');
-    expect(window.location.pathname).toBe('/gene-profiles/POGZ');
+    expect(location.path()).toBe('/gene-profiles/POGZ');
   });
 
   it('should open tab for single view when comparing', () => {
@@ -444,7 +447,7 @@ describe('GeneProfilesTableComponent', () => {
     expect(component.hideTable).toBe(true);
     expect(component.currentTabGeneSet).toStrictEqual(new Set(['DYRK1A', 'FOXP1', 'SPAST']));
     expect(component.currentTabString).toBe('DYRK1A,FOXP1,SPAST');
-    expect(window.location.pathname).toBe('/gene-profiles/DYRK1A,FOXP1,SPAST');
+    expect(location.path()).toBe('/gene-profiles/DYRK1A,FOXP1,SPAST');
   });
 
   it('should close tab', () => {
@@ -463,7 +466,7 @@ describe('GeneProfilesTableComponent', () => {
     component.backToTable();
     expect(component.hideTable).toBe(false);
     expect(component.currentTabString).toBe('all genes');
-    expect(window.location.pathname).toBe('/gene-profiles');
+    expect(location.path()).toBe('/gene-profiles');
   });
 
   it('should new browser tab when middleclick', () => {
