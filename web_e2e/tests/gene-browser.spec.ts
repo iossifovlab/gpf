@@ -4,7 +4,7 @@ import { scanCSV } from 'nodejs-polars';
 
 test.describe('Gene browser basic display tests before query', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, 'ALL Genotypes', 'Gene browser');
   });
@@ -22,7 +22,7 @@ test.describe('Gene browser basic display tests before query', () => {
 
 test.describe('Gene browser basic display tests after query', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, 'ALL Genotypes', 'Gene browser');
     await page.getByPlaceholder('Search gene').pressSequentially('chd8');
@@ -63,7 +63,7 @@ test.describe('Gene browser basic display tests after query', () => {
 
 test.describe('Gene browser family alleles count and table tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, 'ALL Genotypes', 'Gene browser');
     await page.getByPlaceholder('Search gene').pressSequentially('chd8');
@@ -93,7 +93,7 @@ test.describe('Gene browser family alleles count and table tests', () => {
           + testCase.checkbox + '" checkbox and ' + testCase.type, async({ page }
     ) => {
       await getAnyFilter(page, testCase.type, testCase.checkbox).click();
-      await page.waitForRequest(utils.instanceUrl + '/api/v3/genotype_browser/query');
+      await page.waitForRequest(utils.backendUrl + '/api/v3/genotype_browser/query');
       await expect(page.locator('#family-variants-count span')).toHaveText(testCase.expectedFamilyAllelesCount);
     });
   });
@@ -123,7 +123,7 @@ test.describe('Gene browser family alleles count and table tests', () => {
 });
 test.describe('Gene browser download tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, 'ALL Genotypes', 'Gene browser');
   });
@@ -149,9 +149,9 @@ test.describe('Gene browser download tests', () => {
       await page.locator('#search-box').press('Enter');
 
       await getAnyFilter(page, filtersToUncheck[0].field, filtersToUncheck[0].filter).click();
-      await page.waitForRequest(utils.instanceUrl + '/api/v3/genotype_browser/query');
+      await page.waitForRequest(utils.backendUrl + '/api/v3/genotype_browser/query');
       await getAnyFilter(page, filtersToUncheck[1].field, filtersToUncheck[1].filter).click();
-      await page.waitForRequest(utils.instanceUrl + '/api/v3/genotype_browser/query');
+      await page.waitForRequest(utils.backendUrl + '/api/v3/genotype_browser/query');
 
       const downloadPromise = page.waitForEvent('download');
       await page.locator('#download-family-variants-button').click();

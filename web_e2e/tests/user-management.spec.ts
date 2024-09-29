@@ -3,7 +3,7 @@ import * as utils from './utils';
 
 test.describe('Management tests for reset password in Users', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
   });
 
   test('should reset password', async({ page }) => {
@@ -22,11 +22,7 @@ test.describe('Management tests for reset password in Users', () => {
 
     await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
     await page.getByText(email).click();
-    await page.locator('#preview-plain > a').click();
-    await page.goto(
-      utils.instanceUrl + '/'
-      + (await page.locator('#preview-plain > a').getAttribute('href')).split('gpf')[2], {waitUntil: 'load'}
-    );
+    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
 
     await page.locator('#id_new_password1').fill(password);
     await page.locator('#id_new_password2').fill(password);
@@ -58,11 +54,7 @@ test.describe('Management tests for reset password in Users', () => {
 
     await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
     await page.getByText(email).click();
-    await page.locator('#preview-plain > a').click();
-    await page.goto(
-      utils.instanceUrl + '/'
-      + (await page.locator('#preview-plain > a').getAttribute('href')).split('gpf')[2], {waitUntil: 'load'}
-    );
+    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
 
     await page.locator('#id_new_password1').fill(password);
     await page.locator('#id_new_password2').fill(password);
@@ -77,7 +69,7 @@ test.describe('Management tests for reset password in Users', () => {
 
 test.describe('Users management', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
   });
   test('should not create user with already used email', async({ page }) => {
@@ -242,7 +234,7 @@ test.describe('Users management', () => {
 
 test.describe('Groups management', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await page.locator('a:text("Management")').click();
   });
@@ -524,7 +516,7 @@ test.describe('Groups management', () => {
 
 test.describe('Datasets management', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await page.locator('a:text("Management")').click();
   });

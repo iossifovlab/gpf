@@ -3,7 +3,7 @@ import * as utils from './utils';
 
 test.describe('Gene profiles block tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await page.locator('#header a:text("Gene Profiles")').click();
   });
 

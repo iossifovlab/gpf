@@ -23,7 +23,7 @@ const geneScoresData = [
 
 test.describe('Gene scores tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
@@ -60,9 +60,9 @@ test.describe('Gene scores tests', () => {
     await expect(page.locator('input#to-input-field')).toHaveValue('16640');
 
     await page.locator('.histogram-from .step.up').click();
-    await page.waitForRequest(utils.instanceUrl + '/api/v3/gene_scores/partitions');
+    await page.waitForRequest(utils.backendUrl + '/api/v3/gene_scores/partitions');
     await page.locator('.histogram-to .step.down').click();
-    await page.waitForRequest(utils.instanceUrl + '/api/v3/gene_scores/partitions');
+    await page.waitForRequest(utils.backendUrl + '/api/v3/gene_scores/partitions');
     await expect(page.locator('input#from-input-field')).toHaveValue('111.927');
     await expect(page.locator('input#to-input-field')).toHaveValue('16529.073');
 

@@ -4,7 +4,7 @@ import { scanCSV } from 'nodejs-polars';
 
 test.describe('Genomic scores tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
   });

@@ -3,7 +3,7 @@ import * as utils from './utils';
 
 test.describe('Home page tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(`${utils.instanceUrl}/home`, {waitUntil: 'load'});
+    await page.goto(`${utils.frontendUrl}/home`, {waitUntil: 'load'});
     await utils.login(page);
     await page.waitForSelector('gpf-home');
   });
@@ -62,7 +62,7 @@ test.describe('Home page tests', () => {
     await expect(page.locator('a:text("Gene Profiles")')).toHaveClass('highlighted-route');
     await expect(page.locator('gpf-home')).not.toBeVisible();
     await expect(page.locator('gpf-gene-profiles-block')).toBeVisible();
-    await expect(page).toHaveURL(`${utils.instanceUrl}/gene-profiles`);
+    await expect(page).toHaveURL(`${utils.frontendUrl}/gene-profiles`);
   });
 
   test('should search genes by selecting gene', async({ page }) => {
@@ -73,7 +73,7 @@ test.describe('Home page tests', () => {
     await expect(page.locator('a:text("Gene Profiles")')).toHaveClass('highlighted-route');
     await expect(page.locator('gpf-home')).not.toBeVisible();
     await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
-    await expect(page).toHaveURL(`${utils.instanceUrl}/gene-profiles/CHD8`);
+    await expect(page).toHaveURL(`${utils.frontendUrl}/gene-profiles/CHD8`);
     await expect(page.locator('.tab').getByText('CHD8')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'CHD8' })).toBeVisible();
   });
@@ -87,7 +87,7 @@ test.describe('Home page tests', () => {
     await expect(page.locator('a:text("Gene Profiles")')).toHaveClass('highlighted-route');
     await expect(page.locator('gpf-home')).not.toBeVisible();
     await expect(page.locator('gpf-gene-profiles-single-view')).toBeVisible();
-    await expect(page).toHaveURL(`${utils.instanceUrl}/gene-profiles/CHD8`);
+    await expect(page).toHaveURL(`${utils.frontendUrl}/gene-profiles/CHD8`);
     await expect(page.locator('.tab').getByText('CHD8')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'CHD8' })).toBeVisible();
   });
@@ -101,7 +101,7 @@ test.describe('Home page tests', () => {
     await page.keyboard.press('Enter');
 
     await expect(page.getByText('No such gene found!')).toBeVisible();
-    await expect(page).toHaveURL(`${utils.instanceUrl}/home`);
+    await expect(page).toHaveURL(`${utils.frontendUrl}/home`);
   });
 
   test('should expand and close datasets', async({ page }) => {

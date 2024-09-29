@@ -3,7 +3,7 @@ import * as utils from './utils';
 
 test.describe('Save query common tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
@@ -22,7 +22,7 @@ test.describe('Save query common tests', () => {
 
 test.describe('Save query tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
     await utils.loginAdmin(page);
   });
@@ -51,8 +51,8 @@ test.describe('Save query tests', () => {
     await page.locator('#save-query-dropdown-button').click();
     await page.locator('gpf-save-query #name').fill('TestLoadAndDeleteQuery');
     await page.locator('gpf-save-query #save-button').click();
-    await page.waitForResponse(utils.instanceUrl + '/api/v3/user_queries/save');
-    await page.goto(utils.instanceUrl + '/user-profile', { waitUntil: 'load'});
+    await page.waitForResponse(utils.backendUrl + '/api/v3/user_queries/save');
+    await page.goto(utils.frontendUrl + '/user-profile', { waitUntil: 'load'});
     const cell = page.locator('div[id="query-TestLoadAndDeleteQuery-actions-cell"]').first();
     await expect(cell).toBeVisible();
     await cell.locator('#load-button').click();
@@ -68,7 +68,7 @@ test.describe('Save query tests', () => {
     await page.locator('li.nav-item').filter({ hasText: 'Gene browser'}).click();
     await expect(page.locator('gpf-gene-browser')).toBeVisible();
 
-    await page.goto(utils.instanceUrl + '/user-profile', { waitUntil: 'load'});
+    await page.goto(utils.frontendUrl + '/user-profile', { waitUntil: 'load'});
 
     await cell.locator('#delete-button').click();
   });
@@ -81,9 +81,9 @@ test.describe('Save query tests', () => {
     await page.locator('gpf-save-query #name').fill('CheckedSavedQuery');
     await expect(page.locator('gpf-save-query #save-button')).toBeVisible();
     await page.locator('gpf-save-query #save-button').click({force: true});
-    await page.waitForResponse(utils.instanceUrl + '/api/v3/user_queries/save');
+    await page.waitForResponse(utils.backendUrl + '/api/v3/user_queries/save');
 
-    await page.goto(utils.instanceUrl + '/user-profile', { waitUntil: 'load'});
+    await page.goto(utils.frontendUrl + '/user-profile', { waitUntil: 'load'});
     await page.waitForSelector('div#query-CheckedSavedQuery-actions-cell');
     const cell = page.locator('div#query-CheckedSavedQuery-actions-cell').first();
     await expect(cell).toBeVisible();
@@ -103,7 +103,7 @@ test.describe('Save query tests', () => {
       }
     });
 
-    await page.goto(utils.instanceUrl + '/user-profile', { waitUntil: 'load'});
+    await page.goto(utils.frontendUrl + '/user-profile', { waitUntil: 'load'});
     await cell.locator('#delete-button').click();
   });
 

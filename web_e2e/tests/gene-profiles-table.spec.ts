@@ -3,7 +3,7 @@ import * as utils from './utils';
 
 test.describe('Gene profiles row data tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await page.locator('#header a:text("Gene Profiles")').click();
   });
 
@@ -37,6 +37,7 @@ test.describe('Gene profiles row data tests', () => {
     test(`should display correct gene data for ${data.geneSymbol}`, async({ page }) => {
       await page.locator('input#gene-search-input').focus();
       await page.keyboard.type(data.geneSymbol);
+      await expect(page.locator('.search-loading-icon')).toHaveCount(0);
       await expect(page.locator('.table-body-row:not(#nothing-found)')).toHaveCount(1);
 
       const cells = await page.locator('.table-body-row').locator('.row-cell').all();
@@ -50,7 +51,7 @@ test.describe('Gene profiles row data tests', () => {
 
 test.describe('Gene profiles table column filtering tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await page.locator('#header a:text("Gene Profiles")').click();
   });
 
@@ -199,7 +200,7 @@ test.describe('Gene profiles gene comparison tests', () => {
   const oddHighlightColor = 'rgb(247, 247, 203)';
   const evenHighlightColor = 'rgb(255, 255, 214)';
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await page.locator('#header a:text("Gene Profiles")').click();
   });
   test('should highlight a row using control+click and change it\'s background color', async({ page }) => {
@@ -301,7 +302,7 @@ test.describe('Gene profiles gene comparison tests', () => {
 
 test.describe('Gene profiles table functionality tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await page.locator('#header a:text("Gene Profiles")').click();
     await page.waitForSelector('gpf-gene-profiles-table');
@@ -313,6 +314,7 @@ test.describe('Gene profiles table functionality tests', () => {
     const row = page.locator('.table-body-row:not(#nothing-found)');
     await page.locator('input#gene-search-input').focus();
     await page.keyboard.type('RAPGEF');
+    await expect(page.locator('.search-loading-icon')).toHaveCount(0);
     await expect(row).toHaveCount(4);
 
     await page.locator('#category-filtering-button').click();
@@ -345,6 +347,7 @@ test.describe('Gene profiles table functionality tests', () => {
     const row = page.locator('.table-body-row:not(#nothing-found)');
     await page.locator('input#gene-search-input').focus();
     await page.keyboard.type('SENP');
+    await expect(page.locator('.search-loading-icon')).toHaveCount(0);
     await expect(row).toHaveCount(6);
 
     await page.locator('#category-filtering-button').click();
@@ -407,6 +410,7 @@ test.describe('Gene profiles table functionality tests', () => {
       const row = page.locator('.table-body-row:not(#nothing-found)');
       await page.locator('input#gene-search-input').focus();
       await page.keyboard.type('RAPGEF');
+      await expect(page.locator('.search-loading-icon')).toHaveCount(0);
       await expect(row).toHaveCount(4);
 
       await page.getByText(data.score).click();
@@ -431,6 +435,7 @@ test.describe('Gene profiles table functionality tests', () => {
 
     await page.locator('input#gene-search-input').focus();
     await page.keyboard.type('ewoqoqwekwoqkeowqkeowqkeoqwk');
+    await expect(page.locator('.search-loading-icon')).toHaveCount(0);
     await expect(page.locator('#nothing-found')).toBeVisible();
 
     await page.locator('input#gene-search-input').clear();
@@ -445,7 +450,7 @@ test.describe('Gene profiles table functionality tests', () => {
   test('should navigate to genotype browser', async({ page }) => {
     await page.getByTitle('2.0 (1.05)\nTBCD').click();
     await page.waitForSelector('gpf-genotype-browser');
-    expect(page.url()).toEqual(`${utils.instanceUrl}/datasets/iossifov_2014/genotype-browser`);
+    expect(page.url()).toEqual(`${utils.frontendUrl}/datasets/iossifov_2014/genotype-browser`);
 
     await expect(page.locator('#gene-symbols-panel textarea')).toHaveValue('TBCD');
     await expect(page.locator('gpf-pedigree-selector').getByLabel('unaffected')).toBeChecked();
@@ -466,7 +471,7 @@ test.describe('Gene profiles table functionality tests', () => {
 
 test.describe('Gene profiles table state tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await page.locator('#header a:text("Gene Profiles")').click();
     await page.waitForSelector('gpf-gene-profiles-table');
@@ -537,6 +542,7 @@ async function changeTable(page: Page): Promise<void> {
   // search
   await page.locator('input#gene-search-input').focus();
   await page.keyboard.type('RAPGEF');
+  await expect(page.locator('.search-loading-icon')).toHaveCount(0);
 
   // highlight rows and open tab
   await page.keyboard.down('Control');

@@ -4,7 +4,7 @@ import { scanCSV } from 'nodejs-polars';
 
 test.describe('Pheno tool tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype tool');
   });
@@ -111,7 +111,7 @@ test.describe('Pheno tool tests', () => {
 
 test.describe('Pheno tool download tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype tool');
   });

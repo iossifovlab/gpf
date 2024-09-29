@@ -3,7 +3,7 @@ import * as utils from './utils';
 
 test.describe('App tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
   });
 
@@ -25,7 +25,7 @@ test.describe('App tests', () => {
 
   test('should click on the "Datasets" button and ' +
      'navigate to "/datasets/ALL_genotypes/gene-browser"', async({ page }) => {
-    const expectedUrl = `${utils.instanceUrl}/datasets/ALL_genotypes/${utils.toolPageLinks.geneBrowser}`;
+    const expectedUrl = `${utils.frontendUrl}/datasets/ALL_genotypes/${utils.toolPageLinks.geneBrowser}`;
 
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Gene browser');
@@ -38,7 +38,7 @@ test.describe('App tests', () => {
   test('should click on the "User profile" button and navigate to "/user-profile"', async({
     page
   }) => {
-    const savedQueriesUrl = `${utils.instanceUrl}/user-profile`;
+    const savedQueriesUrl = `${utils.frontendUrl}/user-profile`;
 
     await utils.loginAdmin(page);
     await page.locator('a:text("User Profile")').click();
@@ -49,7 +49,7 @@ test.describe('App tests', () => {
   });
 
   test('should click on the "Management" button and navigate to "/management"', async({ page }) => {
-    const managementUrl = `${utils.instanceUrl}/management`;
+    const managementUrl = `${utils.frontendUrl}/management`;
 
     await utils.loginAdmin(page);
 
@@ -62,7 +62,7 @@ test.describe('App tests', () => {
 
   test('should click on the "Gene profiles" button and ' +
      'navigate to "/autism-gene-profiles"', async({ page }) => {
-    const geneProfilesUrl = `${utils.instanceUrl}/gene-profiles`;
+    const geneProfilesUrl = `${utils.frontendUrl}/gene-profiles`;
 
     await utils.loginAdmin(page);
     await page.locator('#header a:text("Gene Profiles")').click();
@@ -99,7 +99,7 @@ test.describe('App user access rights tests', () => {
   };
 
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
   });
 
@@ -184,12 +184,7 @@ test.describe('App user access rights tests', () => {
 
     await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
     await page.getByText(email).first().click();
-    await page.locator('#preview-plain > a').click();
-
-    await page.goto(
-      utils.instanceUrl + '/'
-      + (await page.locator('#preview-plain > a').getAttribute('href')).split('gpf')[2], {waitUntil: 'load'}
-    );
+    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
 
     await page.locator('#id_new_password1').fill(userData.normal.password + '!!__3456');
     await page.locator('#id_new_password2').fill(userData.normal.password + '!!__3456');
@@ -242,18 +237,13 @@ test.describe('App user access rights tests', () => {
 
     await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
     await page.getByText(email).first().click();
-    await page.locator('#preview-plain > a').click();
-
-    await page.goto(
-      utils.instanceUrl + '/'
-      + (await page.locator('#preview-plain > a').getAttribute('href')).split('gpf')[2], {waitUntil: 'load'}
-    );
+    await page.goto(await page.locator('#preview-plain > a').getAttribute('href'), {waitUntil: 'load'});
 
     await page.locator('#id_new_password1').fill(userData.normal.password + '!!__3456');
     await page.locator('#id_new_password2').fill(userData.normal.password + '!!__3456');
     await page.locator('.login-button').click();
 
-    await expect(page).toHaveURL(`${utils.instanceUrl}/datasets/ALL_genotypes/gene-browser`);
+    await expect(page).toHaveURL(`${utils.frontendUrl}/datasets/ALL_genotypes/gene-browser`);
     await expect(page.locator('#log-out-button')).toBeVisible();
     await utils.logout(page);
 

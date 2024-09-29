@@ -5,7 +5,7 @@ import { scanCSV } from 'nodejs-polars';
 
 test.describe('Family filters block tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, datasetIds.compAll, 'Genotype browser');
   });

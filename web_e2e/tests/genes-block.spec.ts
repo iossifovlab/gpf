@@ -5,7 +5,7 @@ import * as path from 'path';
 
 test.describe('Genes block tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, 'comp_all', 'Genotype browser');
   });
@@ -53,7 +53,7 @@ test.describe('Genes block tests', () => {
 
 test.describe('Genes block gene sets names and count tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, 'comp_all', 'Genotype browser');
   });
@@ -76,7 +76,7 @@ test.describe('Genes block gene sets names and count tests', () => {
             await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
             await page.getByRole('tab', { name: 'Gene Sets' }).click();
             await page.locator('select#selected-collection').selectOption(data.collection);
-            await page.waitForRequest(utils.instanceUrl + '/api/v3/gene_sets/gene_sets');
+            await page.waitForRequest(utils.backendUrl + '/api/v3/gene_sets/gene_sets');
             await page.getByPlaceholder('Select or start typing to search').click();
 
             const expectedSetName = data.expectedSearchCondition;
@@ -105,7 +105,7 @@ test.describe('Genes block gene sets names and count tests', () => {
 
 test.describe('Gene block download tests ', () => {
 test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, 'ALL Genotypes', 'Gene browser');
 });
@@ -175,7 +175,7 @@ test.beforeEach(async({ page }) => {
 
 test.describe('Genes block denovo gene set gene symbols tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, { waitUntil: 'load' });
+    await page.goto(utils.frontendUrl, { waitUntil: 'load' });
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
   });

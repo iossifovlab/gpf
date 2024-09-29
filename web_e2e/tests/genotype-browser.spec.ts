@@ -5,7 +5,7 @@ import { scanCSV } from 'nodejs-polars';
 
 test.describe('Genotype browser tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
   });
@@ -38,7 +38,7 @@ test.describe('Genotype browser tests', () => {
 
 test.describe('Genotype browser table preview result tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
   });
 
@@ -389,7 +389,7 @@ test.describe('Genotype browser table preview result tests', () => {
 
 test.describe('Genotype browser download tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
   });
@@ -415,7 +415,7 @@ test.describe('Genotype browser download tests', () => {
 
 test.describe('Genotype browser table tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
   });

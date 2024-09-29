@@ -3,7 +3,7 @@ import * as utils from './utils';
 
 test.describe('Forgotten password tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
   });
 
   test('should open forgotten password window', async({ page }) => {

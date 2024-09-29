@@ -3,7 +3,7 @@ import * as utils from './utils';
 
 test.describe('Unique family variants filter tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
   });
 

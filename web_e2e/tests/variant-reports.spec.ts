@@ -25,7 +25,7 @@ const tags: string[] = [
 
 test.describe('Variant reports tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.login(page);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
@@ -297,7 +297,7 @@ test.describe('Variant reports tests', () => {
 
 test.describe('Variant reports download tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.login(page);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
@@ -364,7 +364,7 @@ test.describe('Variant reports download tests', () => {
 
 test.describe('Variant reports Iossifov count tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.login(page);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();

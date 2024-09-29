@@ -3,7 +3,7 @@ import * as utils from './utils';
 
 test.describe('Gene browser basic display tests before query', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, 'comp_all', 'Genotype browser');
   });

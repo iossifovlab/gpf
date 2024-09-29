@@ -5,7 +5,7 @@ import { datasetIds } from './utils';
 
 test.describe('Gene plot tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Gene browser');
     await page.locator('gpf-gene-browser input#search-box').pressSequentially('chd8');
@@ -95,7 +95,7 @@ test.describe('Gene plot tests', () => {
 
 test.describe('Gene plot download tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, 'ALL Genotypes', 'Gene browser');
   });

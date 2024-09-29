@@ -3,7 +3,7 @@ import * as utils from './utils';
 
 test.describe('Dataset description tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset description');
   });
@@ -80,7 +80,7 @@ test.describe('Dataset description tests', () => {
 
 test.describe('Dataset description access rights tests', () => {
   test.beforeEach(async({ page }) => {
-    await page.goto(utils.instanceUrl, {waitUntil: 'load'});
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
     // await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset description');
   });
@@ -170,9 +170,9 @@ test.describe('Dataset description access rights tests', () => {
 
   test('should login regular user, try to navigate to a dataset description page without description via the url ' +
   'and get redirected back to the home page', async({ page }) => {
-    const homePageUrl = `${utils.instanceUrl}/datasets/ALL_genotypes/${utils.toolPageLinks.datasetDescription}`;
+    const homePageUrl = `${utils.frontendUrl}/datasets/ALL_genotypes/${utils.toolPageLinks.datasetDescription}`;
     const datasetDescriptionUrl =
-      `${utils.instanceUrl}/datasets/ALL_genotypes/${utils.toolPageLinks.datasetDescription}`;
+      `${utils.frontendUrl}/datasets/ALL_genotypes/${utils.toolPageLinks.datasetDescription}`;
 
     await page.goto(datasetDescriptionUrl);
     expect(page.url()).toBe(homePageUrl);
