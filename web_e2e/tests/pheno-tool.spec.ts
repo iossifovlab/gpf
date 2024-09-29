@@ -310,7 +310,7 @@ test.describe('Pheno tool download tests', () => {
       await page.getByRole('tab', { name: 'Gene Sets' }).click();
       await page.locator('gpf-gene-sets select.form-control').selectOption('Denovo');
 
-      await page.locator('ngb-accordion').filter({ hasText: data.genotype + ': Affected Status' }).click();
+      await page.locator('.accordion').filter({ hasText: data.genotype + ': Affected Status' }).click();
       await page.getByRole('button', { name: `${data.genotype}: Affected Status` }).click();
       await page.locator(`#${data.genotype}-checkbox-${data.affectedStatus}`).click();
 
