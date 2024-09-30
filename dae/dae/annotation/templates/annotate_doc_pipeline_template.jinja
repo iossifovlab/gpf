@@ -202,11 +202,11 @@
           <td>{{pipeline.preamble.description}}</td>
         </tr>
       {% endif %}
-      {% if pipeline.preamble.input_reference_genome_res.get_url() %}
+      {% if res_url(pipeline.preamble.input_reference_genome_res) %}
         <tr>
           <th>Input reference genome</th>
           <td>
-            <a href="{{pipeline.preamble.input_reference_genome_res.get_url() + "/index.html"}}">
+            <a href="{{res_url(pipeline.preamble.input_reference_genome_res) + "/index.html"}}">
               {{pipeline.preamble.input_reference_genome}}
             </a>
           </td>
@@ -246,12 +246,9 @@
                 <div class="attribute-type">Type: {{attribute_info.type + ' (Internal)' if attribute_info.internal else attribute_info.name}}</div>
               </div>
               <div class="attribute-description">
-                {{markdown(attribute_info.documentation)}}
-                {% if annotator.score is not none %}
-                  <img src="{{annotator.score.get_histogram_image_url(attribute_info.source)}}" alt="HISTOGRAM">
-                  {% set score_def = annotator.score.get_score_definition(attribute_info.source) %}
-                  <p>small values: {{score_def.small_values_desc}}</p>
-                  <p>large values: {{score_def.large_values_desc}}</p>
+                {{ markdown(attribute_info.documentation) }}
+                {% if annotator.score %}
+                  <img src="{{hist_url(annotator.score, attribute_info.source)}}" alt="HISTOGRAM">
                 {% endif %}
                 <div class="attribute-source">source: {{attribute_info.source}}</div>
               </div>
@@ -277,7 +274,7 @@
           {% for genomic_resource in annotator._info.resources %}
             <div class="resource">
               <div><b>Resource</b></div>
-              <div class="resource-info">Id: <a href="{{genomic_resource.get_url()}}/index.html">
+              <div class="resource-info">Id: <a href="{{res_url(genomic_resource)}}/index.html">
                       {{genomic_resource.get_id()}}</a></div>
               <div class="resource-info">Type: {{genomic_resource.get_type()}}</div>
               {% if genomic_resource.get_summary() %}

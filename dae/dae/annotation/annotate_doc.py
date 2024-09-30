@@ -42,17 +42,23 @@ def cli(raw_args: list[str] | None = None) -> None:
     context = get_genomic_context()
     pipeline = CLIAnnotationContext.get_pipeline(context)
 
-    annotation_info = pipeline.get_info()
-
     pipeline_path = None
     if os.path.exists(args.pipeline):
         pipeline_path = args.pipeline
+
+    def make_resource_url(resource: GenomicResource) -> str:
+        return resource.get_url()
+
+    def make_histogram_url(score: GenomicScore, score_id: str) -> str:
+        return score.get_histogram_image_url(score_id)
 
     env = Environment(loader=PackageLoader("dae.annotation", "templates"))
     template = env.get_template("annotate_doc_pipeline_template.jinja")
     html_doc = template.render(pipeline=pipeline,
                                pipeline_path=pipeline_path,
-                               markdown=markdown)
+                               markdown=markdown,
+                               res_url=make_resource_url,
+                               hist_url=make_histogram_url)
     if args.output:
         with open(args.output, "w") as outfile:
             outfile.write(html_doc)

@@ -2,6 +2,7 @@ import logging
 import textwrap
 from typing import Any
 
+from urllib.parse import quote
 from jinja2 import Environment, PackageLoader, Template
 from markdown2 import markdown
 
@@ -12,6 +13,7 @@ from dae.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
     InfoImplementationMixin,
 )
+from dae.genomic_resources.genomic_scores import GenomicScore
 from dae.task_graph.graph import Task, TaskGraph
 
 logger = logging.getLogger(__name__)
@@ -55,10 +57,26 @@ class AnnotationPipelineImplementation(
             raise ValueError
         env = Environment(loader=PackageLoader("dae.annotation", "templates"))  # noqa
         doc_template = env.get_template("annotate_doc_pipeline_template.jinja")
+
+        relative_prefix_to_root_dir = \
+            "/".join([".."] * len(self.resource.resource_id.split("/")))
+
+        def make_resource_url(resource: GenomicResource) -> str:
+            return "/".join([relative_prefix_to_root_dir, resource.resource_id])
+
+        def make_histogram_url(score: GenomicScore, score_id: str) -> str:
+            return "/".join([
+                relative_prefix_to_root_dir,
+                score.resource.resource_id,
+                quote(score.get_histogram_image_filename(score_id)),
+            ])
+
         return {
             "content": doc_template.render(
                 pipeline=self.pipeline,
                 markdown=markdown,
+                res_url=make_resource_url,
+                hist_url=make_histogram_url,
             ),
         }
 
