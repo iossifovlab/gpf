@@ -18,9 +18,9 @@
         [destroyOnHide]="false"
         class="gene-sets-types row-sm-3">
         <div
-          *ngFor="let type of selectedGeneSetsCollection.types; let first = first"
+          *ngFor="let type of selectedGeneSetsCollection.types"
           ngbAccordionItem
-          [collapsed]="!first"
+          [collapsed]="!defaultSelectedDenovoGeneSetId.includes(type.datasetId + '-' + type.personSetCollectionId + '-denovo-geneset')"
           id="{{ type.datasetId }}-{{ type.personSetCollectionId }}-denovo-geneset">
           <div ngbAccordionHeader>
             <div style="text-align: left">
