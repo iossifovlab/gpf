@@ -5,15 +5,12 @@ from typing import Any, cast
 import pytest
 import pytest_mock
 from django.test import Client
+from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 from rest_framework.response import Response
 from users_api.models import User
 
 from dae.pheno.pheno_data import PhenotypeStudy
-
-pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance", "dae_calc_gene_sets")
-
 
 URL = "/api/v3/pheno_browser/instruments"
 MEASURES_URL = "/api/v3/pheno_browser/measures"
@@ -24,10 +21,10 @@ DOWNLOAD_URL = "/api/v3/pheno_browser/download"
 
 
 @pytest.mark.parametrize("url,method,body", [
-    (f"{URL}?dataset_id=quads_f1_ds", "get", None),
-    (f"{MEASURES_INFO_URL}?dataset_id=quads_f1_ds", "get", None),
+    (f"{URL}?dataset_id=t4c8_study_1", "get", None),
+    (f"{MEASURES_INFO_URL}?dataset_id=t4c8_study_1", "get", None),
     (
-        f"{MEASURES_URL}?dataset_id=quads_f1_ds&instrument=instrument1",
+        f"{MEASURES_URL}?dataset_id=t4c8_study_1&instrument=i1",
         "get",
         None,
     ),
@@ -35,14 +32,14 @@ DOWNLOAD_URL = "/api/v3/pheno_browser/download"
         DOWNLOAD_URL,
         "post",
         {
-            "dataset_id": "quads_f1",
-            "instrument": "instrument1",
+            "dataset_id": "t4c8_study_1",
+            "instrument": "i1",
         },
     ),
     (
         (
-            f"{MEASURE_DESCRIPTION_URL}?dataset_id=quads_f1_ds"
-            "&measure_id=instrument1.categorical"
+            f"{MEASURE_DESCRIPTION_URL}?dataset_id=t4c8_study_1"
+            "&measure_id=i1.age"
         ),
         "get",
         None,
@@ -53,6 +50,7 @@ def test_pheno_browser_api_permissions(
     url: str,
     method: str,
     body: dict,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
@@ -65,30 +63,42 @@ def test_pheno_browser_api_permissions(
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_instruments_missing_dataset_id(admin_client: Client) -> None:
+def test_instruments_missing_dataset_id(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     response = admin_client.get(URL)
 
     assert response.status_code == 400
 
 
-def test_instruments_missing_dataset_id_forbidden(user_client: Client) -> None:
+def test_instruments_missing_dataset_id_forbidden(
+    user_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     response = user_client.get(URL)
 
     assert response.status_code == 400
 
 
-def test_instruments(admin_client: Client) -> None:
-    url = f"{URL}?dataset_id=quads_f1_ds"
+def test_instruments(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = f"{URL}?dataset_id=t4c8_study_1"
     response = admin_client.get(url)
 
     assert response.status_code == 200
     assert "default" in response.data
     assert "instruments" in response.data
-    assert len(response.data["instruments"]) == 1
+    assert len(response.data["instruments"]) == 2
 
 
-def test_instruments_forbidden(user_client: Client) -> None:
-    url = f"{URL}?dataset_id=quads_f1_ds"
+def test_instruments_forbidden(
+    user_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = f"{URL}?dataset_id=t4c8_study_1"
     response = user_client.get(url)
 
     assert response.status_code == 403
@@ -101,8 +111,11 @@ def test_instruments_forbidden(user_client: Client) -> None:
     )
 
 
-def test_measures_info(admin_client: Client) -> None:
-    url = f"{MEASURES_INFO_URL}?dataset_id=quads_f1_ds"
+def test_measures_info(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = f"{MEASURES_INFO_URL}?dataset_id=t4c8_study_1"
     response = admin_client.get(url)
 
     assert response.status_code == 200
@@ -110,18 +123,25 @@ def test_measures_info(admin_client: Client) -> None:
     assert "has_descriptions" in response.data
 
 
-def test_measures(admin_client: Client) -> None:
-    url = f"{MEASURES_URL}?dataset_id=quads_f1_ds&instrument=instrument1"
+def test_measures(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = f"{MEASURES_URL}?dataset_id=t4c8_study_1&instrument=i1"
     response = admin_client.get(url)
     assert response.status_code == 200
 
     res = json.loads("".join([x.decode("utf-8") for x in response]))
-    assert len(res) == 4
+    assert len(res) == 7
 
 
-def test_measures_forbidden(user_client: Client, user: User) -> None:
+def test_measures_forbidden(
+    user_client: Client,
+    user: User,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     print(user.groups.all())
-    url = f"{MEASURES_URL}?dataset_id=quads_f1_ds&instrument=instrument1"
+    url = f"{MEASURES_URL}?dataset_id=t4c8_study_1&instrument=i1"
     response = cast(Response, user_client.get(url))
 
     assert response.status_code == 403
@@ -134,10 +154,13 @@ def test_measures_forbidden(user_client: Client, user: User) -> None:
     )
 
 
-def test_download(admin_client: Client) -> None:
+def test_download(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     data = {
-        "dataset_id": "quads_f1",
-        "instrument": "instrument1",
+        "dataset_id": "t4c8_study_1",
+        "instrument": "i1",
     }
     response = cast(Response, admin_client.get(
         DOWNLOAD_URL, data,
@@ -151,11 +174,14 @@ def test_download(admin_client: Client) -> None:
     assert header[0] == "person_id"
 
 
-def test_download_specific_measures(admin_client: Client) -> None:
+def test_download_specific_measures(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     data = {
-        "dataset_id": "quads_f1",
-        "instrument": "instrument1",
-        "search_term": "instrument1.continuous",
+        "dataset_id": "t4c8_study_1",
+        "instrument": "i1",
+        "search_term": "i1.age",
     }
     response = cast(Response, admin_client.get(
         DOWNLOAD_URL, data,
@@ -168,12 +194,15 @@ def test_download_specific_measures(admin_client: Client) -> None:
     header = content.split()[0].split(",")
     assert len(header) == 2
     assert header[0] == "person_id"
-    assert header[1] == "instrument1.continuous"
+    assert header[1] == "i1.age"
 
 
-def test_download_all_instruments(admin_client: Client) -> None:
+def test_download_all_instruments(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     data = {
-        "dataset_id": "quads_f1",
+        "dataset_id": "t4c8_study_1",
         "instrument": "",
         "search_term": "",
     }
@@ -188,22 +217,28 @@ def test_download_all_instruments(admin_client: Client) -> None:
     header = header.split()[0].split(",")
 
     print("header:\n", header)
-    assert len(header) == 5
+    assert len(header) == 10
     assert set(header) == {
+        "i1.age",
+        "i1.iq",
+        "i1.m1",
+        "i1.m2",
+        "i1.m3",
+        "i1.m4",
+        "i1.m5",
+        "pheno_common.phenotype",
+        "pheno_common.sample_id",
         "person_id",
-        "instrument1.continuous",
-        "instrument1.categorical",
-        "instrument1.ordinal",
-        "instrument1.raw",
     }
 
 
 def test_download_all_instruments_specific_measures(
     admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
 ) -> None:
     data = {
-        "dataset_id": "quads_f1",
-        "search_term": "instrument1",
+        "dataset_id": "t4c8_study_1",
+        "search_term": "i1",
     }
     response = cast(Response, admin_client.get(
         DOWNLOAD_URL, data,
@@ -216,37 +251,49 @@ def test_download_all_instruments_specific_measures(
     header = header.split()[0].split(",")
 
     print("header:\n", header)
-    assert len(header) == 5
+    assert len(header) == 8
     assert set(header) == {
+        "i1.age",
+        "i1.iq",
+        "i1.m1",
+        "i1.m2",
+        "i1.m3",
+        "i1.m4",
+        "i1.m5",
         "person_id",
-        "instrument1.continuous",
-        "instrument1.categorical",
-        "instrument1.ordinal",
-        "instrument1.raw",
     }
 
 
-def test_measure_details(admin_client: Client) -> None:
+def test_measure_details(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     url = (
-        f"{MEASURE_DESCRIPTION_URL}?dataset_id=quads_f1_ds"
-        "&measure_id=instrument1.categorical"
+        f"{MEASURE_DESCRIPTION_URL}?dataset_id=t4c8_study_1"
+        "&measure_id=i1.age"
     )
     response = admin_client.get(url)
 
     assert response.status_code == 200
 
     print(response.data)
-    assert response.data["instrument_name"] == "instrument1"
-    assert response.data["measure_name"] == "categorical"
-    assert response.data["measure_type"] == "categorical"
-    assert response.data["values_domain"] == ["option1", "option2"]
+    assert response.data["instrument_name"] == "i1"
+    assert response.data["measure_name"] == "age"
+    assert response.data["measure_type"] == "continuous"
+    assert response.data["values_domain"] == [
+        68.00148724003327,
+        565.9100943623504,
+    ]
 
 
-def test_get_specific_measure_values(admin_client: Client) -> None:
+def test_get_specific_measure_values(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     data = {
-        "dataset_id": "quads_f1",
-        "instrument": "instrument1",
-        "measure_ids": ["instrument1.continuous", "instrument1.categorical"],
+        "dataset_id": "t4c8_study_1",
+        "instrument": "i1",
+        "measure_ids": ["i1.age", "i1.iq"],
     }
     response = cast(Response, admin_client.post(
         MEASURE_VALUES_URL, json.dumps(data), "application/json",
@@ -256,32 +303,35 @@ def test_get_specific_measure_values(admin_client: Client) -> None:
     content = json.loads(b"".join(list(response.streaming_content)))
     print(content)
 
-    assert len(content) == 5
+    assert len(content) == 16
 
     assert content[0] == {
-        "family_id": "f1",
+        "family_id": "f1.1",
         "person_id": "dad1",
         "role": "dad",
         "sex": "M",
         "status": "unaffected",
-        "instrument1.continuous": pytest.approx(2.718),
-        "instrument1.categorical": None,
+        "i1.age": pytest.approx(455.741, rel=1e-3),
+        "i1.iq": pytest.approx(95.692, rel=1e-3),
     }
     assert content[1] == {
-        "family_id": "f1",
-        "person_id": "mom1",
-        "role": "mom",
-        "sex": "F",
-        "status": "affected",
-        "instrument1.continuous": None,
-        "instrument1.categorical": "option1",
+        "family_id": "f1.2",
+        "person_id": "dad2",
+        "role": "dad",
+        "sex": "M",
+        "status": "unaffected",
+        "i1.age": pytest.approx(565.910, rel=1e-3),
+        "i1.iq": pytest.approx(74.266, rel=1e-3),
     }
 
 
-def test_get_measure_values(admin_client: Client) -> None:
+def test_get_measure_values(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     data = {
-        "dataset_id": "quads_f1",
-        "instrument": "instrument1",
+        "dataset_id": "t4c8_study_1",
+        "instrument": "i1",
     }
     response = cast(Response, admin_client.post(
         MEASURE_VALUES_URL, json.dumps(data), "application/json",
@@ -289,49 +339,60 @@ def test_get_measure_values(admin_client: Client) -> None:
 
     assert response.status_code == 200
     content = json.loads(b"".join(list(response.streaming_content)))
+    assert len(content) == 16
+    assert content[0]["i1.age"] == pytest.approx(455.741, rel=1e-3)
 
-    assert len(content) == 5
     assert content[0] == {
-        "family_id": "f1",
+        "family_id": "f1.1",
+        "i1.age": pytest.approx(455.741, rel=1e-3),
+        "i1.iq": pytest.approx(95.692, rel=1e-3),
+        "i1.m1": pytest.approx(30.170, rel=1e-3),
+        "i1.m2": pytest.approx(46.091, rel=1e-3),
+        "i1.m3": pytest.approx(80.809, rel=1e-3),
+        "i1.m4": 6.0,
+        "i1.m5": "val5",
         "person_id": "dad1",
         "role": "dad",
         "sex": "M",
         "status": "unaffected",
-        "instrument1.continuous": pytest.approx(2.718),
-        "instrument1.categorical": None,
-        "instrument1.ordinal": None,
-        "instrument1.raw": "othervalue",
     }
     assert content[2] == {
-        "family_id": "f1",
-        "person_id": "prb1",
-        "role": "prb",
+        "family_id": "f1.3",
+        "i1.age": pytest.approx(529.034, rel=1e-3),
+        "i1.iq": pytest.approx(102.329, rel=1e-3),
+        "i1.m1": pytest.approx(102.991, rel=1e-3),
+        "i1.m2": pytest.approx(49.505, rel=1e-3),
+        "i1.m3": pytest.approx(74.830, rel=1e-3),
+        "i1.m4": 2.0,
+        "i1.m5": "val1",
+        "person_id": "dad3",
+        "role": "dad",
         "sex": "M",
-        "status": "affected",
-        "instrument1.continuous": pytest.approx(3.14),
-        "instrument1.categorical": "option2",
-        "instrument1.ordinal": pytest.approx(5.0),
-        "instrument1.raw": "somevalue",
+        "status": "unaffected",
     }
     assert content[4] == {
-        "family_id": "f1",
-        "person_id": "sib2",
-        "role": "sib",
+        "family_id": "f1.1",
+        "i1.age": pytest.approx(495.851, rel=1e-3),
+        "i1.iq": pytest.approx(97.504, rel=1e-3),
+        "i1.m1": pytest.approx(52.812, rel=1e-3),
+        "i1.m2": pytest.approx(30.027, rel=1e-3),
+        "i1.m3": pytest.approx(71.375, rel=1e-3),
+        "i1.m4": 7.0,
+        "i1.m5": "val3",
+        "person_id": "mom1",
+        "role": "mom",
         "sex": "F",
         "status": "unaffected",
-        "instrument1.continuous": pytest.approx(4.56),
-        "instrument1.categorical": None,
-        "instrument1.ordinal": None,
-        "instrument1.raw": None,
     }
 
 
 def test_measure_values_limits_measures(
     admin_client: Client,
     mocker: pytest_mock.MockerFixture,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
 ) -> None:
     data: dict[str, Any] = {
-        "dataset_id": "quads_f1",
+        "dataset_id": "t4c8_study_1",
     }
     data["measure_ids"] = [f"measure{i}" for i in range(2000)]
     spy = mocker.spy(PhenotypeStudy, "get_people_measure_values")
