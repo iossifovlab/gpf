@@ -103,7 +103,12 @@ def test_explore_new_style_configs() -> None:
         effects=["LGDs"],
     )
     assert effects.name == "LGDs"
-    assert effects.effects == ["LGDs"]
+    assert effects.effects == [
+        "nonsense",
+        "splice-site",
+        "no-frame-shift-newStop",
+        "frame-shift",
+    ]
 
     sexes = SexesCriteria(
         name="Female",

@@ -416,7 +416,7 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
                     ],
                 },
                 "selected_person_set_collections": [
-                    "phenotype",
+                    "phenotype", "status",
                 ],
             },
         })
@@ -476,6 +476,7 @@ chr_prefix: true
 person_set_collections:
   selected_person_set_collections:
   - phenotype
+  - status
   phenotype:
     id: phenotype
     name: Phenotype
@@ -497,6 +498,28 @@ person_set_collections:
       id: unspecified
       name: unspecified
       color: '#aaaaaa'
+  status:
+    id: status
+    name: Affected Status
+    sources:
+    - from: pedigree
+      source: status
+    domain:
+    - id: affected
+      name: affected
+      values:
+      - affected
+      color: '#ff2121'
+    - id: unaffected
+      name: unaffected
+      values:
+      - unaffected
+      color: '#ffffff'
+    default:
+      id: unspecified
+      name: unspecified
+      color: '#aaaaaa'
+
 genotype_browser:
   enabled: true
   has_family_filters: true
@@ -746,6 +769,7 @@ denovo_gene_sets:
   enabled: true
   selected_person_set_collections:
   - phenotype
+  - status
   standard_criterias:
     effect_types:
       segments:
@@ -772,17 +796,19 @@ denovo_gene_sets:
   - LGDs
   - LGDs.Male
   - LGDs.Female
-  - LGDs.Recurrent
   - LGDs.Single
+  - LGDs.Recurrent
   - LGDs.Triple
   - Missense
   - Missense.Male
   - Missense.Female
+  - Missense.Single
   - Missense.Recurrent
   - Missense.Triple
   - Synonymous
   - Synonymous.Male
   - Synonymous.Female
+  - Synonymous.Single
   - Synonymous.Recurrent
   - Synonymous.Triple
 enrichment:

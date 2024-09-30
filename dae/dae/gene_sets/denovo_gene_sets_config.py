@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Annotated, Any, Literal
 
 from pydantic import (
@@ -8,16 +9,19 @@ from pydantic import (
 )
 from pydantic.functional_validators import AfterValidator
 
-from dae.effect_annotation.annotation_effects import get_effect_types
+from dae.effect_annotation.annotation_effects import (
+    get_effect_types,
+    get_effect_types_set,
+)
 from dae.variants.attributes import Sex
 
 
-def _validate_effect_types(effect_types: list[str]) -> list[str]:
+def _validate_effect_types(effect_types: Iterable[str]) -> list[str]:
     available_effect_types = set(get_effect_types(types=True, groups=True))
     for effect_type in effect_types:
         if effect_type not in available_effect_types:
             raise ValueError(f"Invalid effect type: {effect_type}")
-    return effect_types
+    return list(get_effect_types_set(effect_types))
 
 
 EffectTypes = Annotated[
@@ -116,17 +120,17 @@ class DenovoGeneSetsConfig(BaseModel):
     sexes: dict[str, SexesCriteria]
     recurrency: dict[str, RecurrencyCriteria]
 
-    gene_sets_names: list[str]
+    gene_sets_ids: list[str]
 
 
 def _validate_gene_sets_names(
-    gene_sets_names: list[str],
+    gene_sets_ids: list[str],
     effect_types: dict[str, EffectsCriteria],
     sexes: dict[str, SexesCriteria],
     recurrency: dict[str, RecurrencyCriteria],
 ) -> list[str]:
-    for gene_set_name in gene_sets_names:
-        segements = gene_set_name.split(".")
+    for gene_set_id in gene_sets_ids:
+        segements = gene_set_id.split(".")
         for segment in segements:
             if segment in effect_types:
                 continue
@@ -135,10 +139,10 @@ def _validate_gene_sets_names(
             if segment in recurrency:
                 continue
             raise ValueError(
-                f"Invalid gene set name: {gene_set_name}; "
+                f"Invalid gene set name: {gene_set_id}; "
                 f"bad segement: {segment}")
 
-    return gene_sets_names
+    return gene_sets_ids
 
 
 def parse_denovo_gene_sets_config(
@@ -189,13 +193,13 @@ def parse_denovo_gene_sets_config(
             for name, criteria in criteria_segments.items()
         }
 
-    gene_sets_names = _validate_gene_sets_names(
+    gene_sets_ids = _validate_gene_sets_names(
         config.get("gene_sets_names", []),
         effect_types=effect_types,
         sexes=sexes,
         recurrency=recurrency,
     )
-    if not gene_sets_names:
+    if not gene_sets_ids:
         raise ValueError("No gene sets names defined")
 
     return DenovoGeneSetsConfig(
@@ -204,7 +208,7 @@ def parse_denovo_gene_sets_config(
         effect_types=effect_types,
         sexes=sexes,
         recurrency=recurrency,
-        gene_sets_names=gene_sets_names,
+        gene_sets_ids=gene_sets_ids,
     )
 
 
@@ -264,6 +268,66 @@ def generate_denovo_gene_sets_specs(
 ) -> dict[str, Any]:
     """Generate de novo gene sets specs."""
     return {
-        gene_set_name: create_denovo_gene_set_spec(gene_set_name, config)
-        for gene_set_name in config.gene_sets_names
+        gene_set_id: create_denovo_gene_set_spec(gene_set_id, config)
+        for gene_set_id in config.gene_sets_ids
     }
+
+
+class DGSCQuery(BaseModel):
+    """Query for de novo gene set collection."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    gene_set_id: str
+    psc_id: str
+    selected_person_sets: set[str]
+
+    effects: list[EffectsCriteria]
+    sex: list[SexesCriteria]
+    recurrency: RecurrencyCriteria | None
+
+    def _str_(self) -> str:
+        return (
+            f"{self.gene_set_id} {self.psc_id}:"
+            f"{','.join(self.selected_person_sets)}"
+        )
+
+
+def parse_dgsc_query(
+    gene_set_spec: str,
+    dgsc_config: DenovoGeneSetsConfig,
+) -> DGSCQuery:
+    """Parse de novo gene set collection query."""
+    gene_set_id, other = gene_set_spec.split(" ")
+    if gene_set_id not in dgsc_config.gene_sets_ids:
+        raise ValueError(f"Invalid gene set id: {gene_set_id}")
+    psc_id, other = other.split(":")
+    if psc_id not in dgsc_config.selected_person_set_collections:
+        raise ValueError(f"Invalid person set collection id: {psc_id}")
+    person_sets = other.split(",")
+
+    segments = gene_set_id.split(".")
+    effect: list[EffectsCriteria] = []
+    sex: list[SexesCriteria] = []
+    recurrency: RecurrencyCriteria | None = None
+
+    for segment in segments:
+        if segment in dgsc_config.effect_types:
+            effect = [dgsc_config.effect_types[segment]]
+            continue
+        if segment in dgsc_config.sexes:
+            sex = [dgsc_config.sexes[segment]]
+            continue
+        if segment in dgsc_config.recurrency:
+            recurrency = dgsc_config.recurrency[segment]
+            continue
+        raise ValueError(f"Invalid segment: {segment}")
+
+    return DGSCQuery(
+        gene_set_id=gene_set_id,
+        psc_id=psc_id,
+        selected_person_sets=set(person_sets),
+        effects=effect or list(dgsc_config.effect_types.values()),
+        sex=sex or list(dgsc_config.sexes.values()),
+        recurrency=recurrency,
+    )

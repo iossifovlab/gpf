@@ -1,18 +1,12 @@
-import json
+import logging
 import os
-from itertools import product
-from typing import Any
 
 import box
 
-from dae.effect_annotation.effect import expand_effect_types
 from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
-from dae.gene_sets.denovo_gene_sets_config import (
-    parse_denovo_gene_sets_study_config,
-)
 from dae.studies.study import GenotypeData
-from dae.variants.attributes import Inheritance, Sex
-from dae.variants.family_variant import FamilyVariant
+
+logger = logging.getLogger(__name__)
 
 
 class DenovoGeneSetHelpers:
@@ -33,273 +27,26 @@ class DenovoGeneSetHelpers:
     def load_collection(
         cls,
         study: GenotypeData,
-    ) -> DenovoGeneSetCollection:
+    ) -> DenovoGeneSetCollection | None:
         """Load a denovo gene set collection for a given study."""
-        config = study.config
-        assert config is not None, study.study_id
-        dgsc_config = parse_denovo_gene_sets_study_config(
-            study.config)
-        if dgsc_config is None:
-            raise ValueError(
-                f"No denovo gene sets defined {study.study_id}")
-
-        person_set_collections = {
-            psc_id: psc
-            for psc_id, psc in study.person_set_collections.items()
-            if psc_id in dgsc_config.selected_person_set_collections
-        }
-
-        collection = DenovoGeneSetCollection(
-            study.study_id,
-            study.name,
-            dgsc_config,
-            person_set_collections,
-        )
-
-        for psc_id in dgsc_config.selected_person_set_collections:
-            cache_dir = cls.denovo_gene_set_cache_file(
-                config, psc_id,
-            )
-            if not os.path.exists(cache_dir):
-                raise OSError(
-                    f"Denovo gene sets caches dir '{cache_dir}' "
-                    f"does not exists",
-                )
-
-            with open(cache_dir, "r") as infile:
-                contents = json.load(infile)
-            # change all list to sets after loading from json
-            contents = cls._convert_cache_innermost_types(contents, list, set)
-            collection.cache[psc_id] = contents
-        return collection
+        dgsc = DenovoGeneSetCollection.create_empty_collection(study)
+        if dgsc is None:
+            logger.info(
+                "No denovo gene set collection for %s", study.study_id)
+            return None
+        cache_dir = study.config.conf_dir
+        dgsc.load(cache_dir)
+        return dgsc
 
     @classmethod
     def build_collection(
         cls, genotype_data_study: GenotypeData,
     ) -> None:
         """Build a denovo gene set collection for a study and save it."""
-        config = genotype_data_study.config
-        assert config is not None, genotype_data_study.study_id
-
-        denovo_person_set_collections = \
-            config.denovo_gene_sets.selected_person_set_collections
-        for person_set_collection_id in denovo_person_set_collections:
-            gene_set_cache = cls._generate_gene_set_for(
-                genotype_data_study,
-                config.denovo_gene_sets,
-                person_set_collection_id,
-            )
-            cache_path = cls.denovo_gene_set_cache_file(
-                config, person_set_collection_id,
-            )
-            cls._save_cache(gene_set_cache, cache_path)
-
-    @classmethod
-    def _format_criterias(
-        cls, standard_criterias: box.Box,
-    ) -> tuple[
-        list[dict[str, Any]],
-        list[dict[str, Any]],
-    ]:
-        """
-        Replicates functionality from denovo gene set config parser.
-
-        Given a TOML config's standard criterias, it does additional formatting
-        which was done before in the parser.
-        """
-        effect_type_criterias = []
-        for name, criteria in standard_criterias.effect_types.segments.items():
-            effect_type_criterias.append(
-                {
-                    "property": "effect_types",
-                    "name": name,
-                    "value": expand_effect_types(criteria),
-                },
-            )
-        sex_criterias = []
-        for name, criteria in standard_criterias.sexes.segments.items():
-            sex_criterias.append(
-                {
-                    "property": "sexes",
-                    "name": name,
-                    "value": [Sex.from_name(criteria)],
-                },
-            )
-
-        return (effect_type_criterias, sex_criterias)
-
-    @classmethod
-    def _recursive_cache_update(
-        cls, input_cache: dict, updater_cache: dict,
-    ) -> None:
-        """Recursively update a dictionary with another dictionary."""
-        # This method cannot handle nested dictionaries
-        # that hold a reference to the dictionary that
-        # contains them. If such a dictionary is given
-        # to this function, it will reach the maximum
-        # recursion depth.
-
-        for key, val in updater_cache.items():
-            if key in input_cache and isinstance(val, dict):
-                assert isinstance(input_cache[key], dict), updater_cache[key]
-                cls._recursive_cache_update(
-                    input_cache[key], updater_cache[key],
-                )
-            elif key in input_cache and isinstance(val, set):
-                input_cache[key] = input_cache[key].union(val)
-            else:
-                input_cache[key] = updater_cache[key]
-
-    @classmethod
-    def _generate_gene_set_for(
-        cls, genotype_data: GenotypeData,
-        config: box.Box,
-        person_set_collection_id: str,
-    ) -> dict[str, dict]:
-        """
-        Produce a nested dictionary which represents a denovo gene set.
-
-        It maps denovo gene set criteria to an innermost dictionary mapping
-        gene set symbols to lists of family IDs.
-        """
-        person_set_collection = genotype_data.get_person_set_collection(
-            person_set_collection_id,
+        dgsc = DenovoGeneSetCollection.build_collection(
+            genotype_data_study,
         )
-        if person_set_collection is None:
-            raise ValueError(
-                f"Person set collection '{person_set_collection_id}' "
-                "not found in study",
-            )
-        assert person_set_collection is not None
-
-        cache: dict[str, dict[str, Any]] = {
-            set_id: {}
-            for set_id in person_set_collection.person_sets
-        }
-
-        variants = genotype_data.query_variants(inheritance=["denovo"])
-
-        criterias = list(product(
-            *cls._format_criterias(config.standard_criterias)),
-        )
-
-        for variant in variants:
-            for criteria_combination in criterias:
-                search_args = {
-                    criteria["property"]: criteria["value"]
-                    for criteria in criteria_combination
-                }
-                for person_set in person_set_collection.person_sets.values():
-                    innermost_cache = cache[person_set.id]
-                    for criteria in criteria_combination:
-                        innermost_cache = innermost_cache.setdefault(
-                            criteria["name"], {},
-                        )
-
-                    persons_in_set = set(person_set.persons.keys())
-                    cls._recursive_cache_update(
-                        innermost_cache,
-                        cls._add_genes_families(
-                            variant, persons_in_set, search_args,
-                        ),
-                    )
-
-        return cache
-
-    @classmethod
-    def _save_cache(
-        cls,
-        cache: dict[str, dict[str, Any]],
-        cache_path: str,
-    ) -> None:
-        """Write a denovo gene set cache to the filesystem in JSON format."""
-        # change all sets to lists so they can be saved in json
-
-        cache = cls._convert_cache_innermost_types(
-            cache, set, list, sort_values=True,
-        )
-
-        if not os.path.exists(os.path.dirname(cache_path)):
-            os.makedirs(os.path.dirname(cache_path))
-        with open(cache_path, "w") as out:
-            json.dump(
-                cache, out, sort_keys=True, indent=4, separators=(",", ": "),
-            )
-
-    @classmethod
-    def _convert_cache_innermost_types(
-        cls, cache: Any,
-        from_type: type,
-        to_type: type, *,
-        sort_values: bool = False,
-    ) -> Any:
-        """
-        Coerce the types of all values in a dictionary matching a given type.
-
-        This is done recursively.
-        """
-        if isinstance(cache, from_type):
-            if sort_values is True:
-                return sorted(to_type(cache))
-            return to_type(cache)
-
-        assert isinstance(
-            cache, dict,
-        ), f"expected type 'dict', got '{type(cache)}'"
-
-        res = {}
-        for key, value in cache.items():
-            res[key] = cls._convert_cache_innermost_types(
-                value, from_type, to_type, sort_values=sort_values,
-            )
-        return res
-
-    @staticmethod
-    def _add_genes_families(
-        variant: FamilyVariant,
-        persons_in_set: set[tuple[str, str]],
-        search_args: dict[str, Any],
-    ) -> dict:
-        """
-        Return a map of gene symbols in variants to family IDs.
-
-        For the given variants and people with a certain people group,
-        produce a dictionary which maps the gene symbols of those variants
-        matching the given search_args to the IDs of the families in which
-        those variants are found.
-        """
-        cache: dict[str, set[str]] = {}
-
-        family_id = variant.family_id
-        for aa in variant.family_alt_alleles:
-            if Inheritance.denovo not in aa.inheritance_in_members:
-                continue
-            if not set(aa.variant_in_members_fpid) & persons_in_set:
-                continue
-            effect = aa.effects
-            if effect is None:
-                continue
-
-            filter_flag = False
-            for search_arg_name, search_arg_value in search_args.items():
-                if search_arg_name == "effect_types" and not (
-                            aa.effects
-                            and set(aa.effects.types) & set(search_arg_value)
-                        ):
-                    filter_flag = True
-                    break
-                if search_arg_name == "sexes" and not (
-                            set(aa.variant_in_sexes) & set(search_arg_value)
-                        ):
-                    filter_flag = True
-                    break
-
-            if filter_flag:
-                continue
-
-            for gene in effect.genes:
-                if gene.effect in search_args.get("effect_types", set()):
-                    assert gene.symbol is not None
-                    cache.setdefault(gene.symbol, set()).add(family_id)
-
-        return cache
+        if dgsc is None:
+            return
+        cache_dir = genotype_data_study.config.conf_dir
+        dgsc.save(cache_dir)

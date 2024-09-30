@@ -1,6 +1,6 @@
 # October 25th 2013
 # written by Ewa
-
+from collections.abc import Iterable
 
 LOF = ["splice-site", "frame-shift", "nonsense", "no-frame-shift-newStop"]
 nonsyn = [
@@ -63,9 +63,12 @@ def get_effect_types(
     return []
 
 
-def get_effect_types_set(effect_types: str) -> set[str]:
+def get_effect_types_set(effect_typess: str | Iterable[str]) -> set[str]:
     """Split comma separated list of effect types."""
-    effect_types = effect_types.split(",")
+    if isinstance(effect_typess, str):
+        effect_types: Iterable[str] = effect_typess.split(",")
+    else:
+        effect_types = effect_typess
 
     groups = {
         "LGDs": LOF,

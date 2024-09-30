@@ -1,18 +1,29 @@
 from __future__ import annotations
 
+import json
 import logging
+import os
+from collections import defaultdict
 from collections.abc import Iterable
+from itertools import product
 from typing import Any
 
 from dae.gene_sets.denovo_gene_sets_config import (
     DenovoGeneSetsConfig,
+    DGSCQuery,
     RecurrencyCriteria,
+    parse_denovo_gene_sets_study_config,
+    parse_dgsc_query,
 )
+from dae.gene_sets.gene_sets_db import GeneSet
+from dae.pedigrees.family import Person
 from dae.person_sets import (
     PersonSetCollection,
 )
+from dae.studies.study import GenotypeData
+from dae.variants.attributes import Inheritance
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class DenovoGeneSetCollection:
@@ -32,12 +43,211 @@ class DenovoGeneSetCollection:
 
         self.recurrency_criteria = \
             self.config.recurrency
-        self.gene_sets_names = \
-            self.config.gene_sets_names
+        self.gene_sets_ids = \
+            self.config.gene_sets_ids
 
         self.pscs = pscs
-        self.cache: dict[str, Any] = {}
+        self.cache: dict[str, Any] = self._build_empty_cache()
         self._gene_sets_types_legend: list[dict[str, Any]] | None = None
+
+    def add_gene(
+        self,
+        gene_effects: list[tuple[str, str]],
+        persons: list[Person],
+    ) -> None:
+        """Add a gene to the cache."""
+        for psc_id, person_set_collection in self.pscs.items():
+            if psc_id not in self.cache:
+                self.cache[psc_id] = {}
+            for ps_id, person_set in person_set_collection.person_sets.items():
+                for person in persons:
+                    if person.fpid not in person_set.persons:
+                        continue
+                    for gene_symbol, effect in gene_effects:
+                        self._cache_update(
+                            psc_id, ps_id, gene_symbol, effect, person,
+                        )
+
+    def _build_empty_cache(self) -> dict[str, Any]:
+        cache: dict[str, Any] = {}
+        for psc_id in self.config.selected_person_set_collections:
+            cache[psc_id] = {}
+            for ps_id in self.pscs[psc_id].person_sets:
+                cache[psc_id][ps_id] = {}
+
+                ps_cache = cache[psc_id][ps_id]
+                for effect_criteria, sex_critera in product(
+                        self.config.effect_types.values(),
+                        self.config.sexes.values()):
+                    if effect_criteria.name not in ps_cache:
+                        ps_cache[effect_criteria.name] = {}
+                    effect_cache = ps_cache[effect_criteria.name]
+                    if sex_critera.name not in effect_cache:
+                        effect_cache[sex_critera.name] = {}
+
+        return cache
+
+    def _cache_update(
+        self,
+        psc_id: str,
+        ps_id: str,
+        gene_symbol: str,
+        effect: str,
+        person: Person,
+    ) -> None:
+        """Update the cache with a gene."""
+        ps_cache = self.cache[psc_id][ps_id]
+        for effect_criteria, sex_critera in product(
+                self.config.effect_types.values(),
+                self.config.sexes.values()):
+            if effect not in effect_criteria.effects:
+                continue
+            if person.sex not in sex_critera.sexes:
+                continue
+            effect_cache = ps_cache[effect_criteria.name]
+            sex_cache = effect_cache[sex_critera.name]
+            if gene_symbol not in sex_cache:
+                sex_cache[gene_symbol] = set()
+            sex_cache[gene_symbol].add(person.family_id)
+
+    @staticmethod
+    def create_empty_collection(
+        study: GenotypeData,
+    ) -> DenovoGeneSetCollection | None:
+        """Create an empty denovo gene set collection for a genotype data."""
+        config = study.config
+        assert config is not None, study.study_id
+        dgsc_config = parse_denovo_gene_sets_study_config(
+            study.config)
+        if dgsc_config is None:
+            logger.info(
+                "No denovo gene sets defined %s", study.study_id)
+            return None
+
+        person_set_collections = {
+            psc_id: psc
+            for psc_id, psc in study.person_set_collections.items()
+            if psc_id in dgsc_config.selected_person_set_collections
+        }
+
+        return DenovoGeneSetCollection(
+            study.study_id,
+            study.name,
+            dgsc_config,
+            person_set_collections,
+        )
+
+    @staticmethod
+    def build_collection(
+        genotype_data: GenotypeData,
+    ) -> DenovoGeneSetCollection | None:
+        """Generate a denovo gene set collection for a study."""
+        dgsc = DenovoGeneSetCollection.create_empty_collection(genotype_data)
+        if dgsc is None:
+            return None
+
+        assert dgsc is not None
+
+        effect_types = [
+            e
+            for etc in dgsc.config.effect_types.values()
+            for e in etc.effects
+        ]
+        variants = genotype_data.query_variants(
+            effect_types=effect_types,
+            inheritance=["denovo"])
+
+        for fv in variants:
+            for fa in fv.family_alt_alleles:
+                persons = []
+                for index, person_id in enumerate(fa.variant_in_members):
+                    if person_id is None:
+                        continue
+                    inheritance = fa.inheritance_in_members[index]
+                    if inheritance != Inheritance.denovo:
+                        continue
+                    person = fa.family.persons[person_id]
+                    persons.append(person)
+                if not persons:
+                    continue
+                effect = fa.effects
+                if effect is None:
+                    continue
+                gene_effects = [
+                    (gene.symbol, gene.effect)
+                    for gene in effect.genes
+                    if gene.symbol is not None and gene.effect is not None
+                ]
+                assert all(
+                    ge[0] is not None and ge[1] is not None
+                    for ge in gene_effects)
+                assert all(p is not None for p in persons)
+                dgsc.add_gene(gene_effects, persons)
+        return dgsc
+
+    @staticmethod
+    def _cache_file(
+        psc_id: str,
+        cache_dir: str,
+    ) -> str:
+        """Return the path to the cache file for a person set collection."""
+        return os.path.join(
+            cache_dir,
+            f"denovo-cache-{psc_id}.json",
+        )
+
+    @classmethod
+    def _convert_cache_innermost_types(
+        cls, cache: Any,
+        from_type: type,
+        to_type: type, *,
+        sort_values: bool = False,
+    ) -> Any:
+        """
+        Coerce the types of all values in a dictionary matching a given type.
+
+        This is done recursively.
+        """
+        if isinstance(cache, from_type):
+            if sort_values is True:
+                return sorted(to_type(cache))
+            return to_type(cache)
+
+        assert isinstance(
+            cache, dict,
+        ), f"expected type 'dict', got '{type(cache)}'"
+
+        res = {}
+        for key, value in cache.items():
+            res[key] = cls._convert_cache_innermost_types(
+                value, from_type, to_type, sort_values=sort_values,
+            )
+        return res
+
+    def save(self, cache_dir: str) -> None:
+        """Save the denovo gene set collection to a cache files."""
+        if not os.path.exists(cache_dir):
+            os.mkdir(cache_dir)
+        for psc_id in self.config.selected_person_set_collections:
+            cache_file = self._cache_file(psc_id, cache_dir)
+            content = self.cache[psc_id]
+            content = self._convert_cache_innermost_types(content, set, list)
+
+            with open(cache_file, "w") as outfile:
+                json.dump(content, outfile)
+
+    def load(self, cache_dir: str) -> None:
+        """Load cached denovo gene set collection from a cache files."""
+        for psc_id in self.config.selected_person_set_collections:
+            cache_file = self._cache_file(psc_id, cache_dir)
+            if not os.path.exists(cache_file):
+                continue
+
+            with open(cache_file, "r") as infile:
+                cache = json.load(infile)
+                self.cache[psc_id] = self._convert_cache_innermost_types(
+                    cache, list, set,
+                )
 
     def get_gene_sets_types_legend(self) -> list[Any]:
         """Return list of dictionaries for legends for each collection."""
@@ -69,6 +279,39 @@ class DenovoGeneSetCollection:
             return person_set_collection.legend_json()
         return []
 
+    def get_gene_set(
+        self,
+        dgsc_query: str | DGSCQuery,
+    ) -> GeneSet | None:
+        """Return a gene set from the collection."""
+        if isinstance(dgsc_query, str):
+            dgsc_query = parse_dgsc_query(dgsc_query, self.config)
+        assert isinstance(dgsc_query, DGSCQuery)
+        if dgsc_query.gene_set_id not in self.gene_sets_ids:
+            raise ValueError(
+                f"Invalid gene set id: {dgsc_query.gene_set_id}")
+        if dgsc_query.psc_id not in self.config.selected_person_set_collections:
+            raise ValueError(
+                f"Invalid person set collection id: {dgsc_query.psc_id}")
+        result: dict[str, set[str]] = defaultdict(set)
+        psc_cache = self.cache[dgsc_query.psc_id]
+        for keys in product(
+                    dgsc_query.selected_person_sets,
+                    dgsc_query.effects,
+                    dgsc_query.sex,
+                ):
+            innermost_cache = psc_cache[keys[0]][keys[1].name][keys[2].name]
+            for gene, families in innermost_cache.items():
+                result[gene].update(families)
+        if dgsc_query.recurrency is not None:
+            result = self._apply_recurrency(result, dgsc_query.recurrency)
+
+        return GeneSet(
+            name=str(dgsc_query),
+            desc=str(dgsc_query),
+            syms=list(result.keys()),
+        )
+
     @classmethod
     def get_all_gene_sets(
         cls, denovo_gene_sets: list[DenovoGeneSetCollection],
@@ -76,7 +319,7 @@ class DenovoGeneSetCollection:
     ) -> list[dict[str, Any]]:
         """Return all gene sets from provided denovo gene set collections."""
         sets = [
-            cls.get_gene_set(
+            cls.get_gene_set_from_collections(
                 name,
                 denovo_gene_sets,
                 denovo_gene_set_spec)
@@ -85,7 +328,7 @@ class DenovoGeneSetCollection:
         return list(filter(None, sets))
 
     @classmethod
-    def get_gene_set(
+    def get_gene_set_from_collections(
         cls, gene_set_id: str,
         denovo_gene_set_collections: list[DenovoGeneSetCollection],
         denovo_gene_set_spec: dict[str, dict[str, list[str]]],
@@ -273,13 +516,13 @@ class DenovoGeneSetCollection:
         if len(denovo_gene_set_collections) == 0:
             return []
 
-        gene_sets_names = frozenset(
-            denovo_gene_set_collections[0].gene_sets_names,
+        gene_sets_ids = frozenset(
+            denovo_gene_set_collections[0].gene_sets_ids,
         )
 
         for collection in denovo_gene_set_collections:
-            gene_sets_names = gene_sets_names.intersection(
-                collection.gene_sets_names,
+            gene_sets_ids = gene_sets_ids.intersection(
+                collection.gene_sets_ids,
             )
 
-        return list(gene_sets_names)
+        return list(gene_sets_ids)

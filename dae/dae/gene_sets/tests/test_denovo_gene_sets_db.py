@@ -32,7 +32,7 @@ def test_get_all_descriptions(
     assert gene_set_descriptions["desc"] == "Denovo"
     assert gene_set_descriptions["name"] == "denovo"
     assert gene_set_descriptions["format"] == ["key", " (|count|)"]
-    assert len(gene_set_descriptions["types"]) == 4
+    assert len(gene_set_descriptions["types"]) == 8
 
 
 def test_get_t4c8_study_4_descriptions(
@@ -46,7 +46,7 @@ def test_get_t4c8_study_4_descriptions(
     assert gene_set_descriptions["desc"] == "Denovo"
     assert gene_set_descriptions["name"] == "denovo"
     assert gene_set_descriptions["format"] == ["key", " (|count|)"]
-    assert len(gene_set_descriptions["types"]) == 1
+    assert len(gene_set_descriptions["types"]) == 2
     assert gene_set_descriptions["types"][0]["datasetId"] == "t4c8_study_4"
     assert gene_set_descriptions["types"][0]["datasetName"] == "t4c8_study_4"
     assert gene_set_descriptions["types"][0]["personSetCollectionId"] == \
@@ -115,7 +115,7 @@ def test_get_denovo_gene_sets_t4c8_study_4_autism(
     )
 
     assert dgs is not None
-    assert len(dgs) == 5
+    assert len(dgs) == 6
     assert name_in_gene_sets(dgs, "Missense.Female", 2)
     assert name_in_gene_sets(dgs, "Synonymous.Female", 1)
     assert name_in_gene_sets(dgs, "Missense", 2)
@@ -131,7 +131,7 @@ def test_get_denovo_gene_sets_t4c8_study_4_unaffected(
     )
 
     assert dgs is not None
-    assert len(dgs) == 5
+    assert len(dgs) == 7
 
     assert name_in_gene_sets(dgs, "Missense.Female", 1)
     assert name_in_gene_sets(dgs, "Synonymous.Female", 1)
@@ -148,7 +148,7 @@ def test_get_denovo_gene_sets_f4_autism_unaffected(
     )
 
     assert dgs is not None
-    assert len(dgs) == 7
+    assert len(dgs) == 9
     assert name_in_gene_sets(dgs, "Missense.Female", 2)
     assert name_in_gene_sets(dgs, "Synonymous.Female", 1)
     assert name_in_gene_sets(dgs, "Missense", 2)
@@ -203,8 +203,7 @@ def test_get_denovo_gene_sets_f4_autism_unaffected_t4c8(
     )
 
     assert dgs is not None
-
-    assert len(dgs) == 7
+    assert len(dgs) == 9
 
     checked = False
     for denovo_gene_set in dgs:

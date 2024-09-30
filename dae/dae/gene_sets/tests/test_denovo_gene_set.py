@@ -74,7 +74,7 @@ def test_get_denovo_gene_set(
         trios2_dgsc: DenovoGeneSetCollection,
         denovo_gene_set: str, people_groups: list[str], count: int) -> None:
 
-    dgs = DenovoGeneSetCollection.get_gene_set(
+    dgs = DenovoGeneSetCollection.get_gene_set_from_collections(
         denovo_gene_set, [trios2_dgsc], {"trios2": {"status": people_groups}},
     )
 

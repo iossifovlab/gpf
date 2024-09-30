@@ -43,15 +43,16 @@ def test_gene_sets_collections(db, admin_client):
     assert len(data) == 4, data
 
 
-def test_gene_set_download(db, admin_client):
+def test_gene_set_download(db, admin_client, wdae_gpf_instance):
     url = "/api/v3/gene_sets/gene_set_download"
     query = {
         "geneSetsCollection": "denovo",
         "geneSet": "Synonymous",
         "geneSetsTypes": {
-            "f1_group": {"phenotype": ["phenotype1", "unaffected"]},
+            "f1_trio": {"phenotype": ["phenotype1", "unaffected"]},
         },
     }
+
     response = admin_client.post(
         url, json.dumps(query), content_type="application/json", format="json",
     )
@@ -61,7 +62,7 @@ def test_gene_set_download(db, admin_client):
     result = list(response.streaming_content)
 
     count = len(result)
-    assert count == 1 + 1
+    assert count == 1 + 2
 
 
 @pytest.mark.xfail(reason="[gene models] wrong annotation")

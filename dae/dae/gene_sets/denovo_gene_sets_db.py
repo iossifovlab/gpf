@@ -114,7 +114,7 @@ class DenovoGeneSetsDb:
         """Return de Novo gene set matching the spec for permitted datasets."""
         gene_set_spec = self._filter_spec(gene_set_spec, permitted_datasets)
 
-        return DenovoGeneSetCollection.get_gene_set(
+        return DenovoGeneSetCollection.get_gene_set_from_collections(
             gene_set_id,
             list(self._denovo_gene_set_collections.values()),
             gene_set_spec,
