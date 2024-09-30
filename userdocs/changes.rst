@@ -1,6 +1,25 @@
 Release Notes
 =============
 
+* 2024.9.2
+    * Support search for datasets in management user interface
+    * Fix denovo report generation
+    * Remove duplicated large and small value labes in genomic scores histograms help modals
+    * Fix bigWig genomic position table fetch method
+    * Fix inmemory genomic position table handling of zero based scores
+    * Fix handling of displayed_values_percent in categorical histograms
+  
+* 2024.9.1
+    * Fix default number of bins in genomic scores histograms
+    * Support case insensitive search in phenotype browser
+    * Update links to annotators documentation in annotation pipeline documentation
+    * Add missing files method in gene sets genomic resource implementation
+    * Fix handling of ultra rare heuristics in DuckDb genotype storage queries
+    * Clean up and imporements in wdae unit testing
+    * Fix hanlding of zero based scores in inmemory genomic position table
+    * Fix phenotype browser table sorting buttons state
+    * Refactor and clean up of GPFjs internal state handling and transition to ngrx
+
 * 2024.9.0
     * Performance improvements in annotation with bigWig scores resources
     * Bug fixing in wdae datasets API hierarchy
