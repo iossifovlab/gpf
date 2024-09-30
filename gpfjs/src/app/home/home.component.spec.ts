@@ -37,7 +37,7 @@ describe('HomeComponent', () => {
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
-      declarations: [HomeComponent, MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger],
+      declarations: [HomeComponent],
       providers: [
         HttpClient,
         HttpHandler,
@@ -49,7 +49,7 @@ describe('HomeComponent', () => {
         { provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''},
         DatasetsTreeService,
       ],
-      imports: [StoreModule.forRoot({})]
+      imports: [StoreModule.forRoot({}), MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger]
     }).compileComponents();
 
     fixture = TestBed.createComponent(HomeComponent);

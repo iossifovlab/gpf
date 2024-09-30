@@ -28,7 +28,7 @@ describe('PhenoMeasureSelectorComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [PhenoMeasureSelectorComponent, MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger],
+      declarations: [PhenoMeasureSelectorComponent],
       providers: [
         MeasuresService,
         ConfigService,
@@ -36,7 +36,13 @@ describe('PhenoMeasureSelectorComponent', () => {
         UsersService,
         {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, StoreModule.forRoot({})],
+      imports: [
+        HttpClientTestingModule,
+        RouterTestingModule,
+        StoreModule.forRoot({}),
+        MatAutocompleteOrigin,
+        MatAutocomplete,
+        MatAutocompleteTrigger],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 

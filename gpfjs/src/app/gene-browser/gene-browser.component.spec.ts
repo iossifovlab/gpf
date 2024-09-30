@@ -1,6 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, NavigationStart, Router, RouterEvent } from '@angular/router';
+import { ActivatedRoute, NavigationStart, Router, RouterEvent, Event } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Observable, of, Subject } from 'rxjs';
 import { geneSymbolsReducer } from 'app/gene-symbols/gene-symbols.state';
@@ -99,9 +99,9 @@ describe('GeneBrowserComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [
-        GeneBrowserComponent, GenePlotComponent,
-        GenotypePreviewTableComponent,
-        MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger
+        GeneBrowserComponent,
+        GenePlotComponent,
+        GenotypePreviewTableComponent
       ],
       providers: [
         ConfigService, UsersService, DatasetsTreeService, FullscreenLoadingService,
@@ -113,9 +113,14 @@ describe('GeneBrowserComponent', () => {
         {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
       ],
       imports: [
-        HttpClientTestingModule, RouterTestingModule,
+        HttpClientTestingModule,
+        RouterTestingModule,
         StoreModule.forRoot({geneSymbols: geneSymbolsReducer}),
-        NgbModule, FormsModule
+        NgbModule,
+        FormsModule,
+        MatAutocompleteOrigin,
+        MatAutocomplete,
+        MatAutocompleteTrigger
       ],
     }).compileComponents();
 
@@ -335,7 +340,7 @@ describe('GeneBrowserComponent', () => {
       }
     };
 
-    component.onSubmit(mockEvent as unknown as Event);
+    component.onSubmit(mockEvent as any);
 
     expect(mockEvent.target.queryData.value).toStrictEqual(JSON.stringify({
       effectTypes: [
@@ -378,7 +383,7 @@ describe('GeneBrowserComponent', () => {
     const cancelSpy = jest.spyOn(mockQueryService, 'cancelStreamPost');
     const router = TestBed.inject(Router);
 
-    (router.events as Subject<RouterEvent>).next(new NavigationStart(1, 'start'));
+    (router.events as Subject<Event>).next(new NavigationStart(1, 'start'));
 
     expect(stopSpy).toHaveBeenCalledTimes(1);
     expect(cancelSpy).toHaveBeenCalledTimes(1);

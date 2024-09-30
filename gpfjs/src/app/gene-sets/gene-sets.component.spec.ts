@@ -76,13 +76,16 @@ describe('GeneSetsComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [GeneSetsComponent, MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger],
+      declarations: [GeneSetsComponent],
       imports: [
         StoreModule.forRoot({geneSets: geneSetsReducer}),
         HttpClientTestingModule, RouterTestingModule,
         NgbAccordionModule, NgbNavModule,
         CommonModule,
-        BrowserModule
+        BrowserModule,
+        MatAutocompleteOrigin,
+        MatAutocomplete,
+        MatAutocompleteTrigger
       ],
       providers: [
         ConfigService, GeneSetsService, UsersService,
@@ -230,13 +233,16 @@ describe('GeneSetsComponent MockedGeneSetsService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [GeneSetsComponent, MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger],
+      declarations: [GeneSetsComponent],
       imports: [
         StoreModule.forRoot({geneSets: geneSetsReducer}),
         HttpClientTestingModule, RouterTestingModule,
         NgbAccordionModule, NgbNavModule,
         CommonModule,
-        BrowserModule
+        BrowserModule,
+        MatAutocompleteOrigin,
+        MatAutocomplete,
+        MatAutocompleteTrigger
       ],
       providers: [
         ConfigService, {

@@ -12,39 +12,42 @@
         </select>
         <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
       </div>
-      <ngb-accordion
+      <div
+        ngbAccordion
         *ngIf="selectedGeneSetsCollection?.types"
-        activeIds="{{ defaultSelectedDenovoGeneSetId }}"
         [destroyOnHide]="false"
-        #acc="ngbAccordion"
         class="gene-sets-types row-sm-3">
-        <ngb-panel
+        <div
           *ngFor="let type of selectedGeneSetsCollection.types"
+          ngbAccordionItem
+          [collapsed]="!defaultSelectedDenovoGeneSetId.includes(type.datasetId + '-' + type.personSetCollectionId + '-denovo-geneset')"
           id="{{ type.datasetId }}-{{ type.personSetCollectionId }}-denovo-geneset">
-          <ng-template ngbPanelTitle>
+          <div ngbAccordionHeader>
             <div style="text-align: left">
-              <span style="display: block" class="btn-sm text-wrap"
-                >{{ type.datasetName }}: {{ type.personSetCollectionName }}</span
+              <button ngbAccordionButton style="display: block" class="btn-sm text-wrap"
+                >{{ type.datasetName }}: {{ type.personSetCollectionName }}</button
               >
             </div>
-          </ng-template>
-          <ng-template ngbPanelContent>
-            <div *ngFor="let personSet of type.personSetCollectionLegend">
-              <label [attr.for]="type.datasetId + '-checkbox-' + personSet.id">
-                <input
-                  type="checkbox"
-                  [attr.id]="type.datasetId + '-checkbox-' + personSet.id"
-                  [ngModel]="isSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id)"
-                  (ngModelChange)="
-                    setSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id, $event)
-                  " />
-                <span class="pedigree-icon" [style.background-color]="personSet.color"></span>
-                <span>{{ personSet.name }}</span>
-              </label>
+          </div>
+          <div ngbAccordionCollapse>
+            <div ngbAccordionBody>
+              <div *ngFor="let personSet of type.personSetCollectionLegend">
+                <label *ngIf="personSet" [attr.for]="type.datasetId + '-checkbox-' + personSet.id">
+                  <input
+                    type="checkbox"
+                    [attr.id]="type.datasetId + '-checkbox-' + personSet.id"
+                    [ngModel]="isSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id)"
+                    (ngModelChange)="
+                      setSelectedGeneType(type.datasetId, type.personSetCollectionId, personSet.id, $event)
+                    " />
+                  <span class="pedigree-icon" [style.background-color]="personSet.color"></span>
+                  <span>{{ personSet.name }}</span>
+                </label>
+              </div>
             </div>
-          </ng-template>
-        </ngb-panel>
-      </ngb-accordion>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="col-sm-9">
