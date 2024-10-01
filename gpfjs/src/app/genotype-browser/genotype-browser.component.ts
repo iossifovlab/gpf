@@ -16,7 +16,6 @@ import { selectVariantTypes } from 'app/variant-types/variant-types.state';
 import { selectEffectTypes } from 'app/effect-types/effect-types.state';
 import { selectFamilyIds } from 'app/family-ids/family-ids.state';
 import { selectFamilyTags } from 'app/family-tags/family-tags.state';
-import { selectFamilyTypeFilter } from 'app/family-type-filter/family-type-filter.state';
 import { selectGenders } from 'app/gender/gender.state';
 import { selectGeneScores } from 'app/gene-scores/gene-scores.state';
 import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
@@ -116,7 +115,6 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
       this.store.select(selectPresentInParent), // edited
       this.store.select(selectStudyTypes),
       this.store.select(selectPedigreeSelector),
-      this.store.select(selectFamilyTypeFilter),
       this.store.select(selectFamilyIds),
       this.store.select(selectFamilyTags),
       this.store.select(selectPersonFilters),
@@ -138,7 +136,6 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
         presentInParentState, // edited
         studyTypesState,
         pedigreeSelectorState,
-        familyTypeFilterState,
         familyIdsState,
         familyTagsState,
         personFiltersState,
@@ -177,7 +174,6 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
           ...{inheritanceTypeFilter: inheritanceTypesState},
           ...presentInChildState?.length && {presentInChild: presentInChildState},
           ...studyTypesState?.length && {studyTypes: studyTypesState},
-          ...familyTypeFilterState?.length && {familyTypes: familyTypeFilterState},
           ...familyIdsState?.length && {familyIds: familyIdsState},
           ...geneSymbolsState?.length && {geneSymbols: geneSymbolsState},
           ...regionsFiltersState?.length && {regions: regionsFiltersState},
