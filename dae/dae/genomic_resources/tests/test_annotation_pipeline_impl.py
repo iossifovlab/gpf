@@ -3,6 +3,7 @@ import pathlib
 
 import pytest
 
+from dae.genomic_resources.genomic_scores import GenomicScore
 from dae.genomic_resources.implementations.annotation_pipeline_impl import (
     AnnotationPipelineImplementation,
 )
@@ -43,6 +44,25 @@ def grr_fixture(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     return build_filesystem_test_repository(root_path)
 
 
+@pytest.fixture()
+def alt_grr_fixture(tmp_path: pathlib.Path) -> GenomicResourceRepo:
+    root_path = tmp_path / "alt_grr"
+    setup_directories(root_path, {
+        "other_score": {
+            "genomic_resource.yaml": """
+                type: position_score
+                table:
+                    filename: data.txt
+                scores:
+                - id: score
+                  type: float
+                  name: s1
+            """,
+        },
+    })
+    return build_filesystem_test_repository(root_path)
+
+
 def test_pipeline_impl_init(grr_fixture: GenomicResourceRepo) -> None:
     assert AnnotationPipelineImplementation(
         grr_fixture.get_resource("pipeline"))
@@ -56,3 +76,33 @@ def test_pipeline_impl_info(grr_fixture: GenomicResourceRepo) -> None:
     assert "position_score" in info
     assert "one" in info
     assert "A score description testtest" in info
+
+
+def test_pipeline_doc_resource_url(
+    grr_fixture: GenomicResourceRepo,
+    alt_grr_fixture: GenomicResourceRepo,
+) -> None:
+    impl = AnnotationPipelineImplementation(
+        grr_fixture.get_resource("pipeline"))
+
+    res = grr_fixture.get_resource("one")
+    other_res = alt_grr_fixture.get_resource("other_score")
+
+    assert impl._make_resource_url(res) == "../one"
+    assert impl._make_resource_url(other_res) == other_res.get_url()
+
+
+def test_pipeline_doc_histogram_url(
+    grr_fixture: GenomicResourceRepo,
+    alt_grr_fixture: GenomicResourceRepo,
+) -> None:
+    impl = AnnotationPipelineImplementation(
+        grr_fixture.get_resource("pipeline"))
+
+    score = GenomicScore(grr_fixture.get_resource("one"))
+    other_score = GenomicScore(alt_grr_fixture.get_resource("other_score"))
+
+    assert impl._make_histogram_url(score, "s1") \
+        == "../one/statistics/histogram_s1.png"
+    assert impl._make_histogram_url(other_score, "s1") == \
+        other_score.get_histogram_image_url("s1")

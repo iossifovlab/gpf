@@ -330,8 +330,12 @@ class GenomicResource:
                 return str(meta["summary"])
         return self.get_description()
 
+    def get_repo_url(self) -> str:
+        """Return repository's URL."""
+        return self.proto.get_url()
+
     def get_url(self) -> str:
-        return f"{self.proto.get_url()}/{self.get_full_id()}"
+        return f"{self.get_repo_url()}/{self.get_full_id()}"
 
     def get_labels(self) -> dict[str, Any]:
         """Return resource labels."""

@@ -52,31 +52,56 @@ class AnnotationPipelineImplementation(
             {% endblock %}
         """))
 
+    @property
+    def _relative_prefix_to_root_dir(self) -> str:
+        return "/".join([".."] * len(self.resource.resource_id.split("/")))
+
+    def _make_resource_url(self, resource: GenomicResource) -> str:
+        repo_url = self.resource.get_repo_url()
+        res_url = resource.get_url()
+        if repo_url in res_url:
+            res_url = "/".join([
+                self._relative_prefix_to_root_dir,
+                resource.resource_id,
+            ])
+        else:
+            logger.warning(
+                "Referencing resource outside managed GRR %s",
+                resource.get_id(),
+            )
+        return res_url
+
+    def _make_histogram_url(
+        self, score: GenomicScore, score_id: str,
+    ) -> str | None:
+        repo_url = self.resource.get_repo_url()
+        hist_url = score.get_histogram_image_url(score_id)
+        if hist_url is None:
+            return None
+        if repo_url in hist_url:
+            hist_url = "/".join([
+                self._relative_prefix_to_root_dir,
+                score.resource.resource_id,
+                quote(score.get_histogram_image_filename(score_id)),
+            ])
+        else:
+            logger.warning(
+                "Referencing resource outside managed GRR %s",
+                score.resource.get_id(),
+            )
+        return hist_url
+
     def _get_template_data(self) -> dict[str, Any]:
         if self.pipeline is None:
             raise ValueError
         env = Environment(loader=PackageLoader("dae.annotation", "templates"))  # noqa
         doc_template = env.get_template("annotate_doc_pipeline_template.jinja")
-
-        relative_prefix_to_root_dir = \
-            "/".join([".."] * len(self.resource.resource_id.split("/")))
-
-        def make_resource_url(resource: GenomicResource) -> str:
-            return "/".join([relative_prefix_to_root_dir, resource.resource_id])
-
-        def make_histogram_url(score: GenomicScore, score_id: str) -> str:
-            return "/".join([
-                relative_prefix_to_root_dir,
-                score.resource.resource_id,
-                quote(score.get_histogram_image_filename(score_id)),
-            ])
-
         return {
             "content": doc_template.render(
                 pipeline=self.pipeline,
                 markdown=markdown,
-                res_url=make_resource_url,
-                hist_url=make_histogram_url,
+                res_url=self._make_resource_url,
+                hist_url=self._make_histogram_url,
             ),
         }
 
