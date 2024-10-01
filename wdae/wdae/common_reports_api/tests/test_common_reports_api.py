@@ -8,19 +8,15 @@ from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 
-pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance", "dae_calc_gene_sets", "use_common_reports",
-)
-
 
 @pytest.mark.parametrize("url,method,body", [
-    ("/api/v3/common_reports/studies/study4", "get", None),
-    ("/api/v3/common_reports/studies/study4/full", "get", None),
+    ("/api/v3/common_reports/studies/t4c8_study_1", "get", None),
+    ("/api/v3/common_reports/studies/t4c8_study_1/full", "get", None),
     (
         "/api/v3/common_reports/family_counters",
         "post",
         {
-            "study_id": "study4",
+            "study_id": "t4c8_study_1",
             "group_name": "Phenotype",
             "counter_id": "0",
         }),
@@ -29,17 +25,20 @@ pytestmark = pytest.mark.usefixtures(
         "post",
         {
             "queryData": json.dumps({
-                "study_id": "study4",
+                "study_id": "t4c8_study_1",
                 "group_name": "Phenotype",
                 "counter_id": "0",
             }),
         },
     ),
-    ("/api/v3/common_reports/families_data/Study1", "get", None),
+    ("/api/v3/common_reports/families_data/t4c8_study_1", "get", None),
 ])
 def test_variant_reports_permissions(
-    anonymous_client: Client, url: str,
-    method: str, body: dict[str, Any],
+    anonymous_client: Client,
+    url: str,
+    method: str,
+    body: dict[str, Any],
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
@@ -53,8 +52,11 @@ def test_variant_reports_permissions(
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_variant_reports(admin_client: Client) -> None:
-    url = "/api/v3/common_reports/studies/study4"
+def test_variant_reports(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = "/api/v3/common_reports/studies/t4c8_study_1"
     response = admin_client.get(url)
 
     assert response
@@ -64,8 +66,11 @@ def test_variant_reports(admin_client: Client) -> None:
     assert data
 
 
-def test_variant_reports_full(admin_client: Client) -> None:
-    url = "/api/v3/common_reports/studies/study4/full"
+def test_variant_reports_full(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = "/api/v3/common_reports/studies/t4c8_study_1/full"
     response = admin_client.get(url)
 
     assert response
@@ -75,9 +80,12 @@ def test_variant_reports_full(admin_client: Client) -> None:
     assert data
 
 
-def test_family_counters(admin_client: Client) -> None:
+def test_family_counters(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     data = {
-        "study_id": "study4",
+        "study_id": "t4c8_study_1",
         "group_name": "Phenotype",
         "counter_id": "0",
     }
@@ -91,13 +99,16 @@ def test_family_counters(admin_client: Client) -> None:
 
     data = response.data  # type: ignore
     print(data)
-    assert list(data) == ["f2", "f4"]
+    assert list(data) == ["f1.1"]
 
 
-def test_family_counters_download(admin_client: Client) -> None:
+def test_family_counters_download(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     data = {
         "queryData": json.dumps({
-            "study_id": "study4",
+            "study_id": "t4c8_study_1",
             "group_name": "Phenotype",
             "counter_id": "0",
         }),
@@ -113,12 +124,15 @@ def test_family_counters_download(admin_client: Client) -> None:
     res = list(response.streaming_content)  # type: ignore
     print(b"".join(res).decode())
 
-    assert len(res) == 13
+    assert len(res) == 5
 
 
-def test_families_tags_download(admin_client: Client) -> None:
+def test_families_tags_download(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     url = (
-        "/api/v3/common_reports/families_data/Study1"
+        "/api/v3/common_reports/families_data/t4c8_dataset"
     )
     body = {
         "tagsQuery": {
@@ -136,7 +150,7 @@ def test_families_tags_download(admin_client: Client) -> None:
 
     res = list(response.streaming_content)  # type: ignore
     print(b"".join(res).decode())
-    assert len(res) == 24
+    assert len(res) == 4
 
 
 @pytest.mark.parametrize(
@@ -181,9 +195,10 @@ def test_families_tags_download(admin_client: Client) -> None:
 )
 def test_families_tags_download_errors_on_bad_body(
     admin_client: Client, body: dict[str, Any],
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = (
-        "/api/v3/common_reports/families_data/Study1"
+        "/api/v3/common_reports/families_data/t4c8_study_1"
     )
     response = admin_client.post(
         url, json.dumps(body), content_type="application/json",
@@ -193,8 +208,11 @@ def test_families_tags_download_errors_on_bad_body(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_variant_reports_no_permissions(user_client: Client) -> None:
-    url = "/api/v3/common_reports/studies/study4"
+def test_variant_reports_no_permissions(
+    user_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = "/api/v3/common_reports/studies/t4c8_study_1"
     response = user_client.get(url)
 
     assert response
@@ -205,24 +223,29 @@ def test_variant_reports_no_permissions(user_client: Client) -> None:
 
 
 def test_autogenerate_common_report(
-    admin_client: Client, wdae_gpf_instance: WGPFInstance,
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,
 ) -> None:
-    study = wdae_gpf_instance.get_genotype_data("Study3")
+    study = t4c8_wgpf.get_genotype_data("t4c8_study_1")
     assert study is not None
     report_filename = study.config.common_report.file_path
+    os.remove(report_filename)
     assert not os.path.exists(report_filename)
 
-    url = "/api/v3/common_reports/studies/Study3"
+    url = "/api/v3/common_reports/studies/t4c8_study_1"
     response = admin_client.get(url)
 
     assert response.status_code == status.HTTP_200_OK
-    assert response.data["id"] == "Study3"  # type: ignore
+    assert response.data["id"] == "t4c8_study_1"  # type: ignore
 
     assert os.path.exists(report_filename)
 
 
-def test_families_data_download(admin_client: Client) -> None:
-    url = "/api/v3/common_reports/families_data/Study1"
+def test_families_data_download(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = "/api/v3/common_reports/families_data/t4c8_study_1"
     response = admin_client.post(url)
 
     assert response
@@ -231,19 +254,25 @@ def test_families_data_download(admin_client: Client) -> None:
     streaming_content = list(response.streaming_content)  # type: ignore
     assert streaming_content
 
-    assert len(streaming_content) == 34
+    assert len(streaming_content) == 9
 
 
-def test_families_data_download_no_permissions(user_client: Client) -> None:
-    url = "/api/v3/common_reports/families_data/study4"
+def test_families_data_download_no_permissions(
+    user_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = "/api/v3/common_reports/families_data/t4c8_study_1"
     response = user_client.post(url)
 
     assert response
     assert response.status_code == status.HTTP_403_FORBIDDEN
 
 
-def test_families_data_all_download(admin_client: Client) -> None:
-    url = "/api/v3/common_reports/families_data/Study1"
+def test_families_data_all_download(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = "/api/v3/common_reports/families_data/t4c8_study_1"
     response = admin_client.get(url)
 
     assert response
@@ -252,13 +281,14 @@ def test_families_data_all_download(admin_client: Client) -> None:
     streaming_content = list(response.streaming_content)  # type: ignore
     assert streaming_content
 
-    assert len(streaming_content) == 34
+    assert len(streaming_content) == 9
 
 
 def test_families_data_all_download_no_permissions(
     user_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
 ) -> None:
-    url = "/api/v3/common_reports/families_data/study4"
+    url = "/api/v3/common_reports/families_data/t4c8_study_1"
     response = user_client.get(url)
 
     assert response
