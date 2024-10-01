@@ -20,7 +20,6 @@ import { initialState as geneSymbolsInitialState } from 'app/gene-symbols/gene-s
 import { initialState as presentInChildInitialState } from 'app/present-in-child/present-in-child.state';
 import { initialState as regionsFilterInitialState } from 'app/regions-filter/regions-filter.state';
 import { initialState as uniqueFamilyVariantsInitialState } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
-import { initialState as familyTypeFilterInitialState } from 'app/family-type-filter/family-type-filter.state';
 import { initialState as studyTypesInitialState } from 'app/study-types/study-types.state';
 import { initialState as familyIdsInitialState } from 'app/family-ids/family-ids.state';
 import { GenomicScoreInterface } from 'app/genotype-browser/genotype-browser';
@@ -52,7 +51,6 @@ export interface State {
   regionsFilter: string[];
   genomicScores: GenomicScoreInterface[];
   uniqueFamilyVariantsFilter: boolean;
-  familyTypeFilter: string[];
   studyTypes: string[];
 }
 
@@ -79,7 +77,6 @@ export const initialState: State = {
   regionsFilter: regionsFilterInitialState,
   genomicScores: genomicScoresInitialState,
   uniqueFamilyVariantsFilter: uniqueFamilyVariantsInitialState,
-  familyTypeFilter: familyTypeFilterInitialState,
   studyTypes: studyTypesInitialState,
 };
 

@@ -186,7 +186,6 @@ import { pedigreeSelectorReducer } from './pedigree-selector/pedigree-selector.s
 import { geneProfilesReducer } from './gene-profiles-table/gene-profiles-table.state';
 import { regionsFiltersReducer } from './regions-filter/regions-filter.state';
 import { uniqueFamilyVariantsFilterReducer } from './unique-family-variants-filter/unique-family-variants-filter.state';
-import { familyTypeFilterReducer } from './family-type-filter/family-type-filter.state';
 
 const appRoutes: Routes = [
   {
@@ -454,7 +453,6 @@ const appRoutes: Routes = [
       regionsFilter: regionsFiltersReducer,
       genomicScores: genomicScoresReducer,
       uniqueFamilyVariantsFilter: uniqueFamilyVariantsFilterReducer,
-      familyTypeFilter: familyTypeFilterReducer,
       studyTypes: studyTypesReducer
     }),
   ],
