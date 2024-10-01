@@ -58,19 +58,19 @@ class GeneScoreAnnotator(Annotator):
                  gene_score_resource: GenomicResource, input_gene_list: str):
 
         self.gene_score_resource = gene_score_resource
-        self.gene_score = build_gene_score_from_resource(
+        self.score = build_gene_score_from_resource(
             self.gene_score_resource)
 
         info.resources += [gene_score_resource]
         if not info.attributes:
             info.attributes = AnnotationConfigParser.parse_raw_attributes(
-                self.gene_score.get_all_scores(),
+                self.score.get_all_scores(),
             )
 
         self.aggregators: list[str] = []
 
         for attribute_config in info.attributes:
-            score_def = self.gene_score.score_definitions.get(
+            score_def = self.score.score_definitions.get(
                 attribute_config.source,
             )
             if score_def is None:
@@ -121,7 +121,7 @@ class GeneScoreAnnotator(Annotator):
 
         for symbol in gene_symbols:
             aggregator.add(
-                self.gene_score.get_gene_value(score_id, symbol),
+                self.score.get_gene_value(score_id, symbol),
                 key=symbol,
             )
 
