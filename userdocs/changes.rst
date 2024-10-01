@@ -1,6 +1,11 @@
 Release Notes
 =============
 
+* 2024.9.3
+    * Fix phenotype measures download in phenotype browser
+    * Fix searches for datasets in management user interface
+    * Fix datasets permissions REST API
+
 * 2024.9.2
     * Support search for datasets in management user interface
     * Fix denovo report generation
