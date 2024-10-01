@@ -1,9 +1,0 @@
-.dropdown-toggle::after {
-  position: relative;
-  top: 2px;
-  opacity: 45%;
-}
-
-#create-group-btn {
-  border-color: #d3d3d3;
-}
