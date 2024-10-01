@@ -28,7 +28,6 @@ from dae.gene_scores.gene_scores import GeneScore
 from dae.gene_scores.gene_scores import ScoreDesc as GeneScoreDesc
 from dae.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.gene_sets.gene_sets_db import (
-    GeneSet,
     GeneSetsDb,
     build_gene_set_collection_from_resource,
 )
@@ -447,54 +446,6 @@ class GPFInstance:
             if config is not None and config.common_report is not None:
                 configs.append(config.common_report)
         return configs
-
-    # Gene sets
-    def get_gene_sets_collections(self) -> list[dict[str, Any]]:
-        return self.gene_sets_db.collections_descriptions
-
-    def has_gene_set_collection(self, gsc_id: str) -> bool:
-        return self.gene_sets_db.has_gene_set_collection(gsc_id)
-
-    def get_all_gene_sets(self, collection_id: str) -> list[GeneSet]:
-        return self.gene_sets_db.get_all_gene_sets(collection_id)
-
-    def get_gene_set(self, collection_id: str, gene_set_id: str) -> GeneSet:
-        return cast(
-            GeneSet,
-            self.gene_sets_db.get_gene_set(collection_id, gene_set_id),
-        )
-
-    def get_denovo_gene_sets(
-        self, datasets: list[str],
-    ) -> list[dict[str, Any]]:
-        return [
-            self.denovo_gene_sets_db.get_gene_set_descriptions(datasets)]
-
-    def has_denovo_gene_sets(self) -> bool:
-        return len(self.denovo_gene_sets_db) > 0
-
-    def get_all_denovo_gene_sets(
-        self, types: dict[str, Any],
-        datasets: list[Any],
-        collection_id: str,  # noqa: ARG002
-    ) -> list[dict[str, Any]]:
-        return self.denovo_gene_sets_db.get_all_gene_sets(types, datasets)
-
-    def get_denovo_gene_set(
-        self, gene_set_id: str,
-        types: dict[str, Any],
-        datasets: list[str],
-        collection_id: str,  # noqa: ARG002
-    ) -> dict[str, Any] | None:
-        return self.denovo_gene_sets_db.get_gene_set(
-            gene_set_id, types, datasets,
-        )
-
-    def get_denovo_gene_set_collection_types_legend(
-        self, collection_id: str,
-    ) -> list[Any]:
-        return \
-            self.denovo_gene_sets_db.get_collection_types_legend(collection_id)
 
     # Variants DB
     def get_dataset(self, dataset_id: str) -> GenotypeData:

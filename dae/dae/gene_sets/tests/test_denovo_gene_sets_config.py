@@ -208,7 +208,7 @@ def test_parse_denovo_gene_sets_config(
     assert config is not None
 
 
-@pytest.mark.parametrize("gene_set_name,count", [
+@pytest.mark.parametrize("gene_set_id,count", [
     ("LGDs.Triple", 2),
     ("LGDs.Male.Single", 3),
     ("Synonymous", 1),
@@ -216,7 +216,7 @@ def test_parse_denovo_gene_sets_config(
 ])
 def test_create_denovo_sene_set_spec(
     denovo_gene_sets_config: dict[str, Any],
-    gene_set_name: str,
+    gene_set_id: str,
     count: int,
 ) -> None:
     config = parse_denovo_gene_sets_config(
@@ -224,9 +224,9 @@ def test_create_denovo_sene_set_spec(
     assert config is not None
 
     gene_set_spec = create_denovo_gene_set_spec(
-        gene_set_name,
+        gene_set_id,
         config,
     )
     assert gene_set_spec is not None
     assert len(gene_set_spec.criterias) == count
-    assert gene_set_spec.name == gene_set_name
+    assert gene_set_spec.gene_set_id == gene_set_id

@@ -84,7 +84,9 @@ def gene_sets_repo(tmp_path: pathlib.Path) -> GenomicResourceProtocolRepo:  # no
 
 
 @pytest.fixture()
-def gene_sets_db(gene_sets_repo: GenomicResourceProtocolRepo) -> None:
+def gene_sets_db(
+    gene_sets_repo: GenomicResourceProtocolRepo,
+) -> GeneSetsDb:
     resources = [
         gene_sets_repo.get_resource("main"),
         gene_sets_repo.get_resource("test_mapping"),
@@ -248,6 +250,7 @@ def test_get_gene_set(gene_sets_db: GeneSetsDb) -> None:
 
 def test_get_gene_set_gmt(gene_sets_db: GeneSetsDb) -> None:
     gene_set = gene_sets_db.get_gene_set("test_gmt", "TEST_GENE_SET1")
+    assert gene_set is not None
     assert gene_set["name"] == "TEST_GENE_SET1"
     assert gene_set["count"] == 2
     assert gene_set["desc"] == "somedescription"
@@ -256,6 +259,7 @@ def test_get_gene_set_gmt(gene_sets_db: GeneSetsDb) -> None:
 
 def test_get_gene_set_mapping(gene_sets_db: GeneSetsDb) -> None:
     gene_set = gene_sets_db.get_gene_set("test_mapping", "test:01")
+    assert gene_set is not None
     assert gene_set["name"] == "test:01"
     assert gene_set["count"] == 1
     assert gene_set["desc"] == "test_first"

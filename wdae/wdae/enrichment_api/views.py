@@ -139,7 +139,7 @@ class EnrichmentTestView(QueryDatasetView):
     # @silk_profile(name="Enrichment Test")
     def post(self, request: Request) -> Response:
         """Run the enrichment test and return the result."""
-        query = expand_gene_set(request.data, request.user, self.instance_id)
+        query = expand_gene_set(request.data)
         dataset_id = query.get("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -190,7 +190,8 @@ class EnrichmentTestView(QueryDatasetView):
         logger.info("selected background model: %s", background_name)
         logger.info("selected counting model: %s", counting_name)
 
-        builder = self.gpf_instance.get_enrichment_builder(dataset)
+        builder = self.gpf_instance \
+            .get_enrichment_builder(dataset)  # type: ignore
 
         if builder is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)

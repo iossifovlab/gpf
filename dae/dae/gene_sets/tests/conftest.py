@@ -1,8 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import os
-import shutil
-from collections.abc import Callable, Iterator
 from typing import Any, cast
 
 import pytest
@@ -16,7 +14,6 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.testing import denovo_study, setup_denovo, setup_pedigree
 from dae.testing.foobar_import import foobar_gpf
-from dae.utils.fixtures import change_environment
 from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 
 
@@ -29,91 +26,24 @@ def path_to_fixtures(*args: Any) -> str:
 
 
 @pytest.fixture(scope="session")
-def local_gpf_instance(
-    gpf_instance: Callable[[Any], GPFInstance],
-) -> GPFInstance:
-    return gpf_instance(
-        os.path.join(fixtures_dir(), "gpf_instance.yaml"))
-
-
-@pytest.fixture(scope="session")
-def denovo_gene_sets_db(local_gpf_instance: GPFInstance) -> DenovoGeneSetsDb:
-    return local_gpf_instance.denovo_gene_sets_db
-
-
-@pytest.fixture(scope="module")
-def gene_info_cache_dir() -> Iterator[None]:
-    cache_dir = path_to_fixtures("geneInfo", "cache")
-    os.makedirs(cache_dir, exist_ok=True)
-
-    new_envs = {
-        "DATA_STUDY_GROUPS_DENOVO_GENE_SETS_DIR": path_to_fixtures(
-            "geneInfo", "cache",
-        ),
-        "DAE_DB_DIR": path_to_fixtures(),
-    }
-
-    yield from change_environment(new_envs)
-
-    shutil.rmtree(cache_dir, ignore_errors=True)
-
-
-@pytest.fixture(scope="session")
-def genotype_data_names() -> list[str]:
-    return ["f1_group", "f2_group", "f3_group", "f4_trio"]
-
-
-@pytest.fixture(scope="session")
-def calc_gene_sets(  # noqa: PT004
-    request: pytest.FixtureRequest,
-    local_gpf_instance: GPFInstance,
-    genotype_data_names: list[str],
-) -> None:
-    for dgs in genotype_data_names:
-        genotype_data = local_gpf_instance.get_genotype_data(dgs)
-        DenovoGeneSetHelpers.build_collection(genotype_data)
-
-    print("PRECALCULATION COMPLETE")
-
-    def remove_gene_sets() -> None:
-        for dgs in genotype_data_names:
-            genotype_data = local_gpf_instance.get_genotype_data(dgs)
-            cache_file = \
-                DenovoGeneSetHelpers.denovo_gene_set_cache_file(
-                    genotype_data.config, "phenotype",
-                )
-            if os.path.exists(cache_file):
-                os.remove(cache_file)
-
-    request.addfinalizer(remove_gene_sets)  # noqa: PT021
-
-
-@pytest.fixture(scope="session")
-def denovo_gene_sets(
-    local_gpf_instance: GPFInstance,
+def t4c8_denovo_gene_sets(
+    t4c8_instance: GPFInstance,
 ) -> list[DenovoGeneSetCollection]:
-    return [
+    result = [
         DenovoGeneSetHelpers.load_collection(
-            local_gpf_instance.get_genotype_data("f1_group"),
+            t4c8_instance.get_genotype_data("t4c8_study_1"),
         ),
         DenovoGeneSetHelpers.load_collection(
-            local_gpf_instance.get_genotype_data("f2_group"),
+            t4c8_instance.get_genotype_data("t4c8_study_2"),
         ),
         DenovoGeneSetHelpers.load_collection(
-            local_gpf_instance.get_genotype_data("f3_group"),
+            t4c8_instance.get_genotype_data("t4c8_study_4"),
         ),
     ]
+    return list(filter(None, result))
 
 
 @pytest.fixture(scope="session")
-def denovo_gene_set_f4(
-    local_gpf_instance: GPFInstance,
-) -> DenovoGeneSetCollection:
-    return DenovoGeneSetHelpers.load_collection(
-        local_gpf_instance.get_genotype_data("f4_trio"))
-
-
-@pytest.fixture()
 def trios2_study(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> GenotypeData:
@@ -154,6 +84,16 @@ def trios2_study(
                 "enabled": True,
             },
         })
+
+
+@pytest.fixture(scope="session")
+def trios2_dgsc(
+    trios2_study: GenotypeData,
+) -> DenovoGeneSetCollection:
+    DenovoGeneSetHelpers.build_collection(trios2_study)
+    result = DenovoGeneSetHelpers.load_collection(trios2_study)
+    assert result is not None
+    return result
 
 
 @pytest.fixture(scope="session")

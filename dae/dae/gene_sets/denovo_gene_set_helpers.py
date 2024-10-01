@@ -41,12 +41,13 @@ class DenovoGeneSetHelpers:
     @classmethod
     def build_collection(
         cls, genotype_data_study: GenotypeData,
-    ) -> None:
+    ) -> DenovoGeneSetCollection | None:
         """Build a denovo gene set collection for a study and save it."""
         dgsc = DenovoGeneSetCollection.build_collection(
             genotype_data_study,
         )
         if dgsc is None:
-            return
+            return None
         cache_dir = genotype_data_study.config.conf_dir
         dgsc.save(cache_dir)
+        return dgsc

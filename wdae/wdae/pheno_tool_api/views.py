@@ -61,7 +61,7 @@ class PhenoToolView(QueryDatasetView):
 
     def post(self, request: Request) -> Response:
         """Return pheno tool results based on POST request."""
-        data = expand_gene_set(request.data, request.user, self.instance_id)
+        data = expand_gene_set(request.data)
         study_wrapper = self.gpf_instance.get_wdae_wrapper(data["datasetId"])
         if study_wrapper is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -155,8 +155,7 @@ class PhenoToolDownload(PhenoToolView):
 
     def post(self, request: Request) -> Response:
         """Pheno tool download."""
-        data = expand_gene_set(
-            parse_query_params(request.data), request.user, self.instance_id)
+        data = expand_gene_set(parse_query_params(request.data))
 
         if not user_has_permission(
             self.instance_id, request.user, data["datasetId"],

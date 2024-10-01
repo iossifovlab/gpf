@@ -7,6 +7,9 @@ from collections.abc import Callable
 import pytest
 import pytest_mock
 
+from dae.gene_sets.generate_denovo_gene_sets import (
+    main as generate_denovo_gene_sets,
+)
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.genomic_context import (
@@ -37,7 +40,6 @@ from dae.testing import (
 )
 from dae.testing.import_helpers import setup_dataset_config
 from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
-from dae.tools.generate_denovo_gene_sets import main
 from dae.tools.pheno_import import main as pheno_import
 
 logger = logging.getLogger(__name__)
@@ -270,7 +272,7 @@ def setup_t4c8_instance(
     _t4c8_dataset(gpf_instance)
 
     gpf_instance.reload()
-    main(argv=[], gpf_instance=gpf_instance)
+    generate_denovo_gene_sets(argv=[], gpf_instance=gpf_instance)
 
     return gpf_instance
 
@@ -882,7 +884,7 @@ s4,121.0199895975403,39.74107684421966,77.32212831797972,51.37116746952451,36.55
 def _t4c8_study_4(
     root_path: pathlib.Path,
     t4c8_instance: GPFInstance,
-) -> None:
+) -> GenotypeData:
     ped_path = setup_pedigree(
         root_path / "t4c8_study_4" / "pedigree" / "in.ped",
         """
@@ -895,6 +897,9 @@ f4.3     mom4.3   0      0      2   1      mom  unaffected
 f4.3     dad4.3   0      0      1   1      dad  unaffected
 f4.3     p4.3     dad4.3 mom4.3 2   2      prb  autism
 f4.3     s4.3     dad4.3 mom4.3 2   1      sib  unaffected
+f4.5     mom4.5   0      0      2   1      mom  unaffected
+f4.5     dad4.5   0      0      1   1      dad  unaffected
+f4.5     p4.5     dad4.5 mom4.5 1   2      prb  autism
         """)
     vcf_path1 = setup_vcf(
         root_path / "t4c8_study_4" / "vcf" / "in.vcf.gz",
@@ -904,15 +909,15 @@ f4.3     s4.3     dad4.3 mom4.3 2   1      sib  unaffected
 ##contig=<ID=chr1>
 ##contig=<ID=chr2>
 ##contig=<ID=chr3>
-#CHROM POS ID   REF ALT QUAL FILTER INFO FORMAT mom4.1 dad4.1 p4.1 s4.1 mom4.3 dad4.3 p4.3 s4.3
-chr1   52  MIS  C   A   .    .      .    GT     0/0    0/0    0/1  0/0  0/0    0/0    0/0  0/0
-chr1   54  SYN  T   C   .    .      .    GT     0/0    0/0    0/0  0/0  0/0    0/0    0/1  0/0
-chr1   57  SYN  A   C   .    .      .    GT     0/0    0/0    0/1  0/0  0/0    0/0    0/1  0/1
-chr1   117 MIS  T   G   .    .      .    GT     0/0    0/0    0/1  0/0  0/0    0/0    0/0  0/1
-chr1   119 SYN  A   G   .    .      .    GT     0/0    0/0    0/0  0/1  0/0    0/0    0/0  0/0
+#CHROM POS ID   REF ALT QUAL FILTER INFO FORMAT mom4.1 dad4.1 p4.1 s4.1 mom4.3 dad4.3 p4.3 s4.3 mom4.5 dad4.5 p4.5
+chr1   52  MIS  C   A   .    .      .    GT     0/0    0/0    0/1  0/0  0/0    0/0    0/0  0/0  0/0    0/0    0/0
+chr1   54  SYN  T   C   .    .      .    GT     0/0    0/0    0/0  0/0  0/0    0/0    0/1  0/0  0/0    0/0    0/0
+chr1   57  SYN  A   C   .    .      .    GT     0/0    0/0    0/1  0/0  0/0    0/0    0/1  0/1  0/0    0/0    0/1
+chr1   117 MIS  T   G   .    .      .    GT     0/0    0/0    0/1  0/0  0/0    0/0    0/0  0/1  0/0    0/0    0/1
+chr1   119 SYN  A   G   .    .      .    GT     0/0    0/0    0/0  0/1  0/0    0/0    0/0  0/0  0/0    0/0    0/0
         """)  # noqa: E501
 
-    vcf_study(
+    return vcf_study(
         root_path,
         "t4c8_study_4", ped_path, [vcf_path1],
         t4c8_instance,

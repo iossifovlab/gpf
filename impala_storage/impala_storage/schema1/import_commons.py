@@ -234,10 +234,10 @@ rule reports:
         stderr="logs/reports_stderr.log"
     shell:
         '''
-        generate_common_report.py --studies {{study_id}} \\
+        generate_common_report --studies {{study_id}} \\
             > {log.stdout} 2> {log.stderr}
 {%- if variants %}
-        generate_denovo_gene_sets.py --studies {{study_id}} \\
+        generate_denovo_gene_sets --studies {{study_id}} \\
             >> {log.stdout} 2>> {log.stderr}
 {%- endif %}
         '''

@@ -123,7 +123,7 @@ class DenovoGeneSetsConfig(BaseModel):
     gene_sets_ids: list[str]
 
 
-def _validate_gene_sets_names(
+def _validate_gene_sets_ids(
     gene_sets_ids: list[str],
     effect_types: dict[str, EffectsCriteria],
     sexes: dict[str, SexesCriteria],
@@ -193,14 +193,14 @@ def parse_denovo_gene_sets_config(
             for name, criteria in criteria_segments.items()
         }
 
-    gene_sets_ids = _validate_gene_sets_names(
+    gene_sets_ids = _validate_gene_sets_ids(
         config.get("gene_sets_names", []),
         effect_types=effect_types,
         sexes=sexes,
         recurrency=recurrency,
     )
     if not gene_sets_ids:
-        raise ValueError("No gene sets names defined")
+        raise ValueError("No gene sets ids defined in denovo gene sets config")
 
     return DenovoGeneSetsConfig(
         enabled=enabled,
@@ -222,27 +222,27 @@ def parse_denovo_gene_sets_study_config(
     return parse_denovo_gene_sets_config(denovo_gene_sets_config)
 
 
-class DenovoGeneSetSpec(BaseModel):
+class DGSSpec(BaseModel):
     """De novo gene set specification."""
 
     model_config = ConfigDict(extra="forbid")
 
-    name: str
+    gene_set_id: str
     criterias: dict[
         str,
         EffectsCriteria | SexesCriteria | RecurrencyCriteria,
     ]
 
     def _str_(self) -> str:
-        return self.name
+        return self.gene_set_id
 
 
 def create_denovo_gene_set_spec(
-    gene_set_name: str,
+    gene_set_id: str,
     config: DenovoGeneSetsConfig,
-) -> DenovoGeneSetSpec:
+) -> DGSSpec:
     """Create de novo gene set specification from name."""
-    segments = gene_set_name.split(".")
+    segments = gene_set_id.split(".")
     criterias: dict[
         str, EffectsCriteria | SexesCriteria | RecurrencyCriteria] = {}
 
@@ -257,20 +257,10 @@ def create_denovo_gene_set_spec(
             criterias[segment] = config.recurrency[segment]
             continue
         raise ValueError(f"Invalid segment: {segment}")
-    return DenovoGeneSetSpec(
-        name=gene_set_name,
+    return DGSSpec(
+        gene_set_id=gene_set_id,
         criterias=criterias,
     )
-
-
-def generate_denovo_gene_sets_specs(
-    config: DenovoGeneSetsConfig,
-) -> dict[str, Any]:
-    """Generate de novo gene sets specs."""
-    return {
-        gene_set_id: create_denovo_gene_set_spec(gene_set_id, config)
-        for gene_set_id in config.gene_sets_ids
-    }
 
 
 class DGSCQuery(BaseModel):

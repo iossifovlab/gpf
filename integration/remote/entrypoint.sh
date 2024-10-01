@@ -39,13 +39,13 @@ cd /wd
 cd /wd/integration/fixtures/hg19/micro_iossifov2014
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    simple_study_import.py --id iossifov_2014 \
+    simple_study_import --id iossifov_2014 \
     -o /wd/data/temp-remote \
     --denovo-file iossifov2014.txt \
     iossifov2014_families.ped
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    generate_denovo_gene_sets.py
+    generate_denovo_gene_sets
 
 
 cat >> /wd/data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.yaml << EOT

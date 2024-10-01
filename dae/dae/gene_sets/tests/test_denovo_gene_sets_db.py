@@ -6,8 +6,6 @@ import pytest
 from dae.gene_sets.denovo_gene_sets_db import DenovoGeneSetsDb
 from dae.studies.study import GenotypeData
 
-pytestmark = pytest.mark.usefixtures("gene_info_cache_dir", "calc_gene_sets")
-
 
 def name_in_gene_sets(
     gene_sets: list[dict[str, Any]],
@@ -27,34 +25,28 @@ def name_in_gene_sets(
 def test_get_all_descriptions(
     t4c8_denovo_gene_sets_db: DenovoGeneSetsDb,
 ) -> None:
-    gene_set_descriptions = t4c8_denovo_gene_sets_db.get_gene_set_descriptions()
+    gene_set_descriptions = t4c8_denovo_gene_sets_db.collections_descriptions
+    assert len(gene_set_descriptions) == 1
 
-    assert gene_set_descriptions["desc"] == "Denovo"
-    assert gene_set_descriptions["name"] == "denovo"
-    assert gene_set_descriptions["format"] == ["key", " (|count|)"]
-    assert len(gene_set_descriptions["types"]) == 8
+    desc = gene_set_descriptions[0]
 
+    assert desc["desc"] == "Denovo"
+    assert desc["name"] == "denovo"
+    assert desc["format"] == ["key", " (|count|)"]
+    assert len(desc["types"]) == 8
 
-def test_get_t4c8_study_4_descriptions(
-    t4c8_denovo_gene_sets_db: DenovoGeneSetsDb,
-) -> None:
-
-    gene_set_descriptions = t4c8_denovo_gene_sets_db.get_gene_set_descriptions(
-        permitted_datasets=["t4c8_study_4"],
-    )
-
-    assert gene_set_descriptions["desc"] == "Denovo"
-    assert gene_set_descriptions["name"] == "denovo"
-    assert gene_set_descriptions["format"] == ["key", " (|count|)"]
-    assert len(gene_set_descriptions["types"]) == 2
-    assert gene_set_descriptions["types"][0]["datasetId"] == "t4c8_study_4"
-    assert gene_set_descriptions["types"][0]["datasetName"] == "t4c8_study_4"
-    assert gene_set_descriptions["types"][0]["personSetCollectionId"] == \
+    assert desc["desc"] == "Denovo"
+    assert desc["name"] == "denovo"
+    assert desc["format"] == ["key", " (|count|)"]
+    assert len(desc["types"]) == 8
+    assert desc["types"][0]["datasetId"] == "t4c8_study_4"
+    assert desc["types"][0]["datasetName"] == "t4c8_study_4"
+    assert desc["types"][0]["personSetCollectionId"] == \
         "phenotype"
-    assert gene_set_descriptions["types"][0]["personSetCollectionName"] == \
+    assert desc["types"][0]["personSetCollectionName"] == \
         "Phenotype"
     assert len(
-        gene_set_descriptions["types"][0]["personSetCollectionLegend"]) == 2
+        desc["types"][0]["personSetCollectionLegend"]) == 2
 
 
 @pytest.mark.parametrize(
@@ -115,7 +107,7 @@ def test_get_denovo_gene_sets_t4c8_study_4_autism(
     )
 
     assert dgs is not None
-    assert len(dgs) == 6
+    assert len(dgs) == 10
     assert name_in_gene_sets(dgs, "Missense.Female", 2)
     assert name_in_gene_sets(dgs, "Synonymous.Female", 1)
     assert name_in_gene_sets(dgs, "Missense", 2)
@@ -140,7 +132,7 @@ def test_get_denovo_gene_sets_t4c8_study_4_unaffected(
     assert name_in_gene_sets(dgs, "Synonymous.Male", 1)
 
 
-def test_get_denovo_gene_sets_f4_autism_unaffected(
+def test_get_denovo_gene_sets_t4c8_study_4_autism_unaffected(
     t4c8_denovo_gene_sets_db: DenovoGeneSetsDb,
 ) -> None:
     dgs = t4c8_denovo_gene_sets_db.get_all_gene_sets(
@@ -148,14 +140,14 @@ def test_get_denovo_gene_sets_f4_autism_unaffected(
     )
 
     assert dgs is not None
-    assert len(dgs) == 9
+    assert len(dgs) == 12
     assert name_in_gene_sets(dgs, "Missense.Female", 2)
     assert name_in_gene_sets(dgs, "Synonymous.Female", 1)
     assert name_in_gene_sets(dgs, "Missense", 2)
     assert name_in_gene_sets(dgs, "Synonymous.Recurrent", 1)
     assert name_in_gene_sets(dgs, "Missense.Recurrent", 1)
     assert name_in_gene_sets(dgs, "Synonymous", 2)
-    assert name_in_gene_sets(dgs, "Synonymous.Male", 1)
+    assert name_in_gene_sets(dgs, "Synonymous.Male", 2)
 
 
 def test_all_denovo_gene_set_ids(
@@ -167,11 +159,11 @@ def test_all_denovo_gene_set_ids(
 
 
 @pytest.mark.parametrize("query, count", [
-    ({}, 7),
-    ({"genes": ["t4"]}, 4),
-    ({"genes": ["c8"]}, 3),
-    ({"effect_types": ["missense"]}, 3),
-    ({"effect_types": ["synonymous"]}, 4),
+    ({}, 9),
+    ({"genes": ["t4"]}, 5),
+    ({"genes": ["c8"]}, 4),
+    ({"effect_types": ["missense"]}, 4),
+    ({"effect_types": ["synonymous"]}, 5),
 ])
 def test_check_new_fixtures(
     query: dict,
@@ -189,10 +181,10 @@ def test_check_new_fixtures(
     ("Synonymous.Recurrent", 1, {"t4"}),
     ("Missense.Recurrent", 1, {"c8"}),
     ("Synonymous.Female", 1, {"t4"}),
-    ("Synonymous.Male", 1, {"c8"}),
+    ("Synonymous.Male", 2, {"t4", "c8"}),
     ("Missense.Female", 2, {"c8", "t4"}),
 ])
-def test_get_denovo_gene_sets_f4_autism_unaffected_t4c8(
+def test_get_denovo_gene_sets_t4c8_study_4_autism_unaffected_genes(
     t4c8_denovo_gene_sets_db: DenovoGeneSetsDb,
     gene_set_name: str,
     count: int,
@@ -203,7 +195,7 @@ def test_get_denovo_gene_sets_f4_autism_unaffected_t4c8(
     )
 
     assert dgs is not None
-    assert len(dgs) == 9
+    assert len(dgs) == 12
 
     checked = False
     for denovo_gene_set in dgs:

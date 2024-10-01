@@ -30,8 +30,6 @@ setuptools.setup(
         "dae.annotation": ["templates/annotate_doc_pipeline_template.jinja"],
     },
     scripts=[
-        "dae/tools/generate_denovo_gene_sets.py",
-        "dae/tools/simple_study_import.py",
         "dae/tools/simple_family2pedigree.py",
         "dae/tools/ped2ped.py",
         "dae/tools/draw_pedigree.py",
@@ -129,11 +127,13 @@ setuptools.setup(
     generate_gene_profile=dae.gene_profile.generate_gene_profile:main
     generate_common_report=dae.common_reports.generate_common_report:main
     generate_families_cache=dae.pedigrees.generate_families_cache:main
+    generate_denovo_gene_sets=dae.gene_sets.generate_denovo_gene_sets:main
 
     build_coding_length_enrichment_background=dae.enrichment_tool.build_coding_length_enrichment_background:cli
     build_ur_synonymous_enrichment_background=dae.enrichment_tool.build_ur_synonymous_enrichment_background:cli
     enrichment_cache_builder=dae.enrichment_tool.enrichment_cache_builder:cli
     to_gpf_gene_models_format=dae.tools.to_gpf_gene_models_format:main
+    simple_study_import=dae.tools.simple_study_import:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
