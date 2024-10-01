@@ -54,24 +54,6 @@ pytest_plugins = ["dae_conftests.dae_conftests"]
 
 
 @pytest.fixture()
-def user(
-    db: None,  # noqa: ARG001
-) -> WdaeUser:
-    user_model = get_user_model()
-    new_user = user_model.objects.create(
-        email="user@example.com",
-        name="User",
-        is_staff=False,
-        is_active=True,
-        is_superuser=False,
-    )
-    new_user.set_password("secret")
-    new_user.save()
-
-    return new_user
-
-
-@pytest.fixture()
 def hundred_users(
     db: None,  # noqa: ARG001
     user: WdaeUser,  # noqa: ARG001
@@ -165,31 +147,6 @@ def tokens(
     user_access_token.save()
     admin_access_token.save()
     return user_access_token, admin_access_token
-
-
-@pytest.fixture()
-def user_client(
-    user: WdaeUser,  # noqa: ARG001
-    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
-) -> Client:
-    return Client(HTTP_AUTHORIZATION="Bearer user-token")
-
-
-@pytest.fixture()
-def anonymous_client(
-    client: Client,
-    db: None,  # noqa: ARG001
-) -> Client:
-    client.logout()
-    return client
-
-
-@pytest.fixture()
-def admin_client(
-    admin: WdaeUser,  # noqa: ARG001
-    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
-) -> Client:
-    return Client(HTTP_AUTHORIZATION="Bearer admin-token")
 
 
 @pytest.fixture()
@@ -553,6 +510,49 @@ def hundred_groups(
 ###############################################################################
 # New style fixtures
 ###############################################################################
+
+@pytest.fixture()
+def user(
+    db: None,  # noqa: ARG001
+) -> WdaeUser:
+    user_model = get_user_model()
+    new_user = user_model.objects.create(
+        email="user@example.com",
+        name="User",
+        is_staff=False,
+        is_active=True,
+        is_superuser=False,
+    )
+    new_user.set_password("secret")
+    new_user.save()
+
+    return new_user
+
+
+@pytest.fixture()
+def admin_client(
+    admin: WdaeUser,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
+) -> Client:
+    return Client(HTTP_AUTHORIZATION="Bearer admin-token")
+
+
+@pytest.fixture()
+def user_client(
+    user: WdaeUser,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
+) -> Client:
+    return Client(HTTP_AUTHORIZATION="Bearer user-token")
+
+
+@pytest.fixture()
+def anonymous_client(
+    client: Client,
+    db: None,  # noqa: ARG001
+) -> Client:
+    client.logout()
+    return client
+
 
 @pytest.fixture(scope="session")
 def t4c8_instance(
