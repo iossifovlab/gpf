@@ -1,19 +1,19 @@
 import logging
 import textwrap
 from typing import Any
-
 from urllib.parse import quote
+
 from jinja2 import Environment, PackageLoader, Template
 from markdown2 import markdown
 
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.genomic_resources.genomic_scores import GenomicScore
 from dae.genomic_resources.repository import GenomicResource
 from dae.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
     InfoImplementationMixin,
 )
-from dae.genomic_resources.genomic_scores import GenomicScore
 from dae.task_graph.graph import Task, TaskGraph
 
 logger = logging.getLogger(__name__)
