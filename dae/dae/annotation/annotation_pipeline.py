@@ -410,7 +410,7 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
             return self.child.annotate(input_annotatable, context)
         raise ValueError(
             f"The object with a key {input_annotatable} in the "
-            f"annotation context {context} is not an Annotabable.",
+            f"annotation context {context} is not an Annotatable.",
         )
 
 

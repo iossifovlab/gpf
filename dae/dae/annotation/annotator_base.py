@@ -62,7 +62,7 @@ class AnnotatorBase(Annotator):
         Internal abstract method used for batch annotation.
         """
         return list(starmap(
-            self.annotate, zip(annotatables, contexts, strict=True),
+            self._do_annotate, zip(annotatables, contexts, strict=True),
         ))
 
     def batch_annotate(
