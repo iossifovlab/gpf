@@ -15,7 +15,7 @@ def test_datasets_api_get_all(
     assert response
     assert response.status_code == 200
     data = response.json()
-    assert len(data["data"]) == 3
+    assert len(data["data"]) == 4
 
 
 def test_datasets_api_get_all_studies(
@@ -27,7 +27,7 @@ def test_datasets_api_get_all_studies(
     assert response
     assert response.status_code == 200
     data = response.json()
-    assert len(data["data"]) == 2
+    assert len(data["data"]) == 3
 
 
 def test_datasets_api_get_one(
@@ -253,7 +253,7 @@ def test_datasets_hierarchy(
 
     data = response.json()
     assert data
-    assert len(data["data"]) == 1
+    assert len(data["data"]) == 2
 
     dataset = data["data"][0]
     assert dataset == {
@@ -281,7 +281,7 @@ def test_datasets_permissions(
 
     data = response.json()
 
-    assert len(data) == 3
+    assert len(data) == 4
     assert set(data[0].keys()) == {
         "dataset_id",
         "dataset_name",

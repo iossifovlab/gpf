@@ -26,8 +26,7 @@ class ConfigView(QueryDatasetView):
     @request_logging(LOGGER)
     @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
-        data = expand_gene_set(
-            request.query_params, request.user, self.instance_id)
+        data = expand_gene_set(request.query_params)
         dataset_id = data["datasetId"]
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -46,7 +45,7 @@ class QueryVariantsView(QueryDatasetView):
     @method_decorator(etag(get_permissions_etag))
     def post(self, request: Request) -> Response:
         """Query gene view summary variants."""
-        data = expand_gene_set(request.data, request.user, self.instance_id)
+        data = expand_gene_set(request.data)
         dataset_id = data.pop("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -101,8 +100,7 @@ class DownloadSummaryVariantsView(QueryDatasetView):
     @request_logging(LOGGER)
     def post(self, request: Request) -> Response:
         """Summary variants download."""
-        data = expand_gene_set(
-            parse_query_params(request.data), request.user, self.instance_id)
+        data = expand_gene_set(parse_query_params(request.data))
         dataset_id = data.pop("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)

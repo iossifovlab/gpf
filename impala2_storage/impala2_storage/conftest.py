@@ -9,7 +9,6 @@ from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
 
-pytest_plugins = ["dae_conftests.dae_conftests"]
 logger = logging.getLogger(__name__)
 
 

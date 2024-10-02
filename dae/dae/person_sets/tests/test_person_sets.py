@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
-from typing import Any, cast
 
 import pytest
 import toml
@@ -12,7 +11,12 @@ from dae.configuration.schemas.person_sets import person_set_collections_schema
 from dae.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.person_sets import PersonSet, PersonSetCollection
+from dae.person_sets import (
+    PersonSet,
+    PersonSetCollection,
+    PersonSetCollectionConfig,
+    parse_person_set_collections_study_config,
+)
 from dae.testing import setup_pedigree
 
 
@@ -40,16 +44,18 @@ def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
     return families
 
 
-def get_person_set_collections_config(content: str) -> Box:
+def get_person_set_collections_config(
+    content: str,
+) -> dict[str, PersonSetCollectionConfig]:
     config = GPFConfigParser.process_config(
-        cast(dict[str, Any], toml.loads(content)),
+        toml.loads(content),
         {"person_set_collections": person_set_collections_schema},
-    ).person_set_collections
-    return cast(Box, config)
+    )
+    return parse_person_set_collections_study_config(config)
 
 
 @pytest.fixture()
-def status_person_sets_collection() -> Box:
+def status_person_sets_collection() -> dict[str, PersonSetCollectionConfig]:
     content = textwrap.dedent(
         """
         [person_set_collections]
@@ -78,18 +84,18 @@ def status_person_sets_collection() -> Box:
 
 
 def test_load_config(status_person_sets_collection: Box) -> None:
-    assert status_person_sets_collection.status is not None
+    assert status_person_sets_collection["status"] is not None
 
 
 def test_produce_sets(status_person_sets_collection: Box) -> None:
     people_sets = PersonSetCollection._produce_sets(
-        status_person_sets_collection.status)
+        status_person_sets_collection["status"])
     assert people_sets == {
         "affected": PersonSet(
-            "affected", "Affected", ["affected_val"], "#aabbcc", {},
+            "affected", "Affected", ("affected_val", ), "#aabbcc", {},
         ),
         "unaffected": PersonSet(
-            "unaffected", "Unaffected", ["unaffected_val"], "#ffffff", {},
+            "unaffected", "Unaffected", ("unaffected_val", ), "#ffffff", {},
         ),
     }
 
@@ -98,9 +104,9 @@ def test_produce_default_person_set(
     status_person_sets_collection: Box,
 ) -> None:
     people_set = PersonSetCollection._produce_default_person_set(
-        status_person_sets_collection.status)
+        status_person_sets_collection["status"])
     assert people_set == PersonSet(
-        "unknown", "Unknown", ["DEFAULT"], "#aaaaaa", {})
+        "unknown", "Unknown", (), "#aaaaaa", {})
 
 
 def test_from_pedigree(
@@ -108,7 +114,7 @@ def test_from_pedigree(
     status_person_sets_collection: Box,
 ) -> None:
     status_collection = PersonSetCollection.from_families(
-        status_person_sets_collection.status, families_fixture,
+        status_person_sets_collection["status"], families_fixture,
     )
 
     assert set(status_collection.person_sets.keys()) == \
@@ -148,9 +154,9 @@ def test_from_pedigree_missing_value_in_domain(
         """)
 
     config = get_person_set_collections_config(content)
-
+    status_config = config["status"]
     collection = PersonSetCollection.from_families(
-        config.status, families_fixture)
+        status_config, families_fixture)
 
     assert set(collection.person_sets.keys()) == {"unaffected", "unknown"}
 
@@ -177,7 +183,7 @@ def test_from_pedigree_nonexistent_domain(
     config = get_person_set_collections_config(content)
 
     collection = PersonSetCollection.from_families(
-        config.invalid, families_fixture)
+        config["invalid"], families_fixture)
     assert set(collection.person_sets.keys()) == {"unknown"}
 
 
@@ -187,7 +193,7 @@ def test_get_person_color(
 ) -> None:
 
     status_collection = PersonSetCollection.from_families(
-        status_person_sets_collection.status, families_fixture,
+        status_person_sets_collection["status"], families_fixture,
     )
 
     assert (
@@ -243,12 +249,12 @@ def test_collection_merging_configs_order(
     """))
 
     role_collection = PersonSetCollection.from_families(
-        role_config.role, families_fixture,
+        role_config["role"], families_fixture,
     )
     assert len(role_collection.person_sets) == 5
 
     role_collection_extended = PersonSetCollection.from_families(
-        role_ext_config.role, families_fixture,
+        role_ext_config["role"], families_fixture,
     )
     assert len(role_collection_extended.person_sets) == 6
 
@@ -295,7 +301,7 @@ def test_multiple_column_person_set(
     """))
 
     status_sex_collection = PersonSetCollection.from_families(
-        config.status_sex, families_fixture,
+        config["status_sex"], families_fixture,
     )
 
     affected_male = set(
@@ -312,94 +318,96 @@ def test_multiple_column_person_set(
 
 
 def test_phenotype_person_set_categorical(
-    fixtures_gpf_instance: GPFInstance,
+    t4c8_instance: GPFInstance,
     families_fixture: FamiliesData,
 ) -> None:
 
     config = get_person_set_collections_config(textwrap.dedent("""
     [person_set_collections]
-
+    selected_person_set_collections = ["pheno_cat"]
     pheno_cat.id = "pheno_cat"
     pheno_cat.name = "Phenotype measure categorical"
     pheno_cat.sources = [
-        { from = "phenodb", source = "instrument1.categorical" },
+        { from = "phenodb", source = "i1.m5" },
     ]
     pheno_cat.domain = [
-        {id = "option1", name = "Option 1",
-        values = ["option1"], color = "#ffffff"}
-        {id = "option2", name = "Option 2",
-        values = ["option2"], color = "#aabbcc"},
+        {id = "val3", name = "Value 3",
+        values = ["val3"], color = "#aabbcc"},
+        {id = "val4", name = "Value 4",
+        values = ["val4"], color = "#aabbcc"},
     ]
     pheno_cat.default = {id = "unknown", name = "Unknown", color="#ffffff"}
 
     """))
 
-    quads_f1_pheno = fixtures_gpf_instance.get_phenotype_data("quads_f1")
+    t4c8_study_1 = t4c8_instance.get_phenotype_data("study_1_pheno")
+
     pheno_categorical_collection = PersonSetCollection.from_families(
-        config.pheno_cat, families_fixture, quads_f1_pheno,
+        config["pheno_cat"], families_fixture, t4c8_study_1,
     )
 
-    option1 = set(
-        pheno_categorical_collection.person_sets["option1"].persons.keys(),
+    val3 = set(
+        pheno_categorical_collection.person_sets["val3"].persons.keys(),
     )
 
-    option2 = set(
-        pheno_categorical_collection.person_sets["option2"].persons.keys(),
+    val4 = set(
+        pheno_categorical_collection.person_sets["val4"].persons.keys(),
     )
 
-    assert option1 == {("f1", "mom1")}
-    assert option2 == {("f1", "prb1")}
+    assert val3 == {("f2", "mom2"), ("f1", "mom1")}
+    assert val4 == {("f2", "dad2")}
 
 
 def test_phenotype_person_set_continuous(
     families_fixture: FamiliesData,
-    fixtures_gpf_instance: GPFInstance,
+    t4c8_instance: GPFInstance,
 ) -> None:
 
     config = get_person_set_collections_config(textwrap.dedent("""
     [person_set_collections]
+    selected_person_set_collections = ["pheno_cont"]
 
     pheno_cont.id = "pheno_cont"
     pheno_cont.name = "Phenotype measure continuous"
     pheno_cont.sources = [
-        { from = "phenodb", source = "instrument1.continuous" },
+        { from = "phenodb", source = "i1.iq" },
     ]
     pheno_cont.domain = [
         {id = "lower", name = "Lower",
-         values = ["1", "3"], color = "#ffffff"}
+         values = ["1"], color = "#ffffff"}
         {id = "higher", name = "Higher",
-         values = ["3", "5"], color = "#aabbcc"},
+         values = ["3"], color = "#aabbcc"},
     ]
     pheno_cont.default = {id = "unknown", name = "Unknown", color="#ffffff"}
     """))
 
-    quads_f1_pheno = fixtures_gpf_instance.get_phenotype_data("quads_f1")
+    study_1_pheno = t4c8_instance.get_phenotype_data("study_1_pheno")
 
     with pytest.raises(AssertionError) as excinfo:
         PersonSetCollection.from_families(
-            config.pheno_cont, families_fixture, quads_f1_pheno,
+            config["pheno_cont"], families_fixture, study_1_pheno,
         )
 
-    assert "Continuous measures not allowed in person sets! " \
-        "(instrument1.continuous)" in str(excinfo.value)
+    assert (
+        "Continuous measures not allowed in person sets! "
+        "(i1.iq)") in str(excinfo.value)
 
 
 def test_genotype_group_person_sets(
-    fixtures_gpf_instance: GPFInstance,
+    t4c8_instance: GPFInstance,
 ) -> None:
-    genotype_data_group = fixtures_gpf_instance.get_genotype_data(
-        "person_sets_dataset_1",
+    genotype_data_group = t4c8_instance.get_genotype_data(
+        "t4c8_study_1",
     )
-    print(genotype_data_group._person_set_collections)
-
+    assert genotype_data_group is not None
     phenotype_collection = genotype_data_group.get_person_set_collection(
         "phenotype",
     )
     assert phenotype_collection is not None
 
     expected_unaffected_persons = {
-        ("f1", "person1"), ("f1", "person2"),
-        ("f2", "person5"), ("f2", "person6"),
+        ("f1.1", "mom1"), ("f1.1", "dad1"), ("f1.1", "s1"),
+        ("f1.3", "mom3"), ("f1.3", "dad3"), ("f1.3", "s3"),
     }
 
     assert (
@@ -409,10 +417,10 @@ def test_genotype_group_person_sets(
 
 
 def test_genotype_group_person_sets_overlapping(
-    fixtures_gpf_instance: GPFInstance,
+    t4c8_instance: GPFInstance,
 ) -> None:
-    genotype_data_group = fixtures_gpf_instance.get_genotype_data(
-        "person_sets_dataset_2",
+    genotype_data_group = t4c8_instance.get_genotype_data(
+        "t4c8_study_2",
     )
 
     phenotype_collection = genotype_data_group.get_person_set_collection(
@@ -423,47 +431,37 @@ def test_genotype_group_person_sets_overlapping(
     unaffected_persons = set(
         phenotype_collection.person_sets["unaffected"].persons.keys(),
     )
-    assert "phenotype2" not in phenotype_collection.person_sets
+    assert "epilepsy" in phenotype_collection.person_sets
 
-    phenotype2_persons = set(
-        phenotype_collection.person_sets["phenotype1"].persons.keys(),
+    epilepsy_persons = set(
+        phenotype_collection.person_sets["epilepsy"].persons.keys(),
     )
-    assert ("f1", "person3") not in unaffected_persons
-    assert ("f1", "person3") in phenotype2_persons
+    assert ("f2.1", "ch1") not in unaffected_persons
+    assert ("f2.1", "ch1") in epilepsy_persons
 
 
 def test_genotype_group_person_sets_subset(
-    fixtures_gpf_instance: GPFInstance,
+    t4c8_instance: GPFInstance,
 ) -> None:
-    genotype_data_group_config = fixtures_gpf_instance.\
-        get_genotype_data_config("person_sets_dataset_1")
-    genotype_data_group = \
-        fixtures_gpf_instance._variants_db._load_genotype_group(
-            genotype_data_group_config)
-
-    # Remove a person to simulate a subset of people being used
-    del genotype_data_group.families.persons[("f1", "person4")]
-
-    genotype_data_group._person_set_collections = \
-        genotype_data_group._build_person_set_collections(
-            genotype_data_group_config["person_set_collections"],
-            genotype_data_group.families,
-        )
+    genotype_data_group = t4c8_instance.get_genotype_data("t4c8_dataset")
+    assert genotype_data_group is not None
 
     phenotype_collection = genotype_data_group.get_person_set_collection(
         "phenotype",
     )
+    assert phenotype_collection is not None
 
-    unaffected_persons = set(
-        phenotype_collection.person_sets["unaffected"].persons.keys(),
+    assert "autism" in phenotype_collection.person_sets
+    assert "epilepsy" in phenotype_collection.person_sets
+
+    autims_persons = set(
+        phenotype_collection.person_sets["autism"].persons.keys(),
     )
-    phenotype1_persons = set(
-        phenotype_collection.person_sets["phenotype1"].persons.keys(),
+    epilepsy_persons = set(
+        phenotype_collection.person_sets["epilepsy"].persons.keys(),
     )
-    assert (
-        ("f1", "person4") not in unaffected_persons
-        and ("f1", "person4") in phenotype1_persons
-    )
+    assert {("f1.1", "p1"), ("f1.3", "p3")} == autims_persons
+    assert {("f2.3", "ch3"), ("f2.1", "ch1")} == epilepsy_persons
 
 
 @pytest.fixture()
@@ -505,7 +503,7 @@ def test_merge_person_sets(
     """)
     config1 = get_person_set_collections_config(content1)
     collection1 = PersonSetCollection.from_families(
-        config1.phenotype, families_fixture)
+        config1["phenotype"], families_fixture)
     assert collection1.person_sets is not None, (config1, collection1)
 
     content2 = textwrap.dedent("""
@@ -522,7 +520,7 @@ def test_merge_person_sets(
     """)
     config2 = get_person_set_collections_config(content2)
     collection2 = PersonSetCollection.from_families(
-        config2.phenotype, families_fixture2)
+        config2["phenotype"], families_fixture2)
     assert collection2.person_sets is not None, (config2, collection2)
 
     combined_families = FamiliesData.combine(
@@ -536,4 +534,4 @@ def test_merge_person_sets(
     assert len(combined_collection) == 3
 
 
-# # TODO Add unit test for default values in person sets (normal and phenotype)
+# Add unit test for default values in person sets (normal and phenotype)

@@ -17,13 +17,13 @@ def test_collection_configs_view(
                 {
                     "id": "autism",
                     "name": "autism",
-                    "values": ["affected"],
+                    "values": ("affected", ),
                     "color": "#ff2121",
                 },
                 {
                     "id": "unaffected",
                     "name": "unaffected",
-                    "values": ["unaffected"],
+                    "values": ("unaffected", ),
                     "color": "#ffffff",
                 },
             ],

@@ -51,7 +51,7 @@ def test_genotype_data_group_quads_composite_dict(
 def test_genotype_data_group_quads_composite_attr(
     quads_composite_genotype_data_group_config: Box,
     option_name: str,
-    expected_value: list[str] | str | bool | None,
+    expected_value: list[str] | str | bool | None,  # noqa: FBT001
 ) -> None:
 
     assert quads_composite_genotype_data_group_config is not None
@@ -100,10 +100,6 @@ def test_composite_genotype_data_group_config_genotype_browser_overwrite(
 
     assert quads_composite_genotype_data_group_config is not None
 
-    study_config = variants_db_fixture.get_genotype_study_config(
-        quads_composite_genotype_data_group_config.studies[0],
-    )
-
     assert (
         quads_composite_genotype_data_group_config.genotype_browser.enabled
         is True
@@ -113,6 +109,10 @@ def test_composite_genotype_data_group_config_genotype_browser_overwrite(
     )
     assert genotype_browser_config is not None
 
+    study_config = variants_db_fixture.get_genotype_study_config(
+        quads_composite_genotype_data_group_config.studies[0],
+    )
+    assert study_config is not None
     assert study_config.genotype_browser != genotype_browser_config
 
     download_columns = genotype_browser_config.download_columns

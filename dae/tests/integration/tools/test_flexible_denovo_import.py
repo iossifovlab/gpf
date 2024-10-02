@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
 import pathlib
 from collections.abc import Callable
 
@@ -8,6 +9,14 @@ from dae.genotype_storage import GenotypeStorage
 from dae.gpf_instance import GPFInstance
 from dae.testing.foobar_import import foobar_gpf
 from dae.tools.simple_study_import import main
+
+
+@pytest.fixture(scope="module")
+def resources_dir(request: pytest.FixtureRequest) -> pathlib.Path:
+    resources_path = os.path.join(
+        os.path.dirname(os.path.realpath(request.module.__file__)),
+        "resources")
+    return pathlib.Path(resources_path)
 
 
 @pytest.mark.skip(reason="wrong reference genome")

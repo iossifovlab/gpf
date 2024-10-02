@@ -5,6 +5,8 @@ import logging
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
+logger = logging.getLogger("generate_denovo_gene_sets")
+
 
 def main(
     gpf_instance: GPFInstance | None = None,
@@ -33,7 +35,6 @@ def main(
     args = parser.parse_args(argv)
 
     VerbosityConfiguration.set(args)
-    logging.getLogger("impala").setLevel(logging.WARNING)
 
     if gpf_instance is None:
         gpf_instance = GPFInstance.build()
@@ -56,7 +57,7 @@ def main(
             if study_id in studies
         ]
         # pylint: disable=protected-access
-        denovo_gene_sets_db._build_cache(filter_studies_ids)
+        denovo_gene_sets_db.build_cache(filter_studies_ids)
 
 
 if __name__ == "__main__":

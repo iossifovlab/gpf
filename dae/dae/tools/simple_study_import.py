@@ -11,11 +11,11 @@ from box import Box
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 from dae.common_reports import generate_common_report
+from dae.gene_sets import generate_denovo_gene_sets
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.cli import run_with_project
 from dae.import_tools.import_tools import ImportProject
 from dae.pedigrees.loader import FamiliesLoader
-from dae.tools import generate_denovo_gene_sets
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -127,30 +127,12 @@ def cli_arguments(
         "variants file",
     )
 
-    # parser.add_argument(
-    #     "--study-config",
-    #     type=str,
-    #     default=None,
-    #     dest="study_config",
-    #     help="Config used to overwrite values in generated configuration",
-    # )
-
-    # parser.add_argument(
-    #     "--force", "-F",
-    #     dest="force",
-    #     action="store_true",
-    #     help="allows overwriting configuration file in case "
-    #     "target directory already contains such file",
-    #     default=False
-    # )
-
     DenovoLoader.cli_arguments(parser, options_only=True)
     VcfLoader.cli_arguments(parser, options_only=True)
     DaeTransmittedLoader.cli_arguments(parser, options_only=True)
     CNVLoader.cli_arguments(parser, options_only=True)
 
-    parsed_args = parser.parse_args(argv or sys.argv[1:])
-    return parsed_args
+    return parser.parse_args(argv or sys.argv[1:])
 
 
 def _decorate_loader(
@@ -159,7 +141,7 @@ def _decorate_loader(
     annotation_pipeline: AnnotationPipeline,
 ) -> VariantsLoader:
     variants_loader = EffectAnnotationDecorator(
-        variants_loader, effect_annotator)
+        variants_loader, effect_annotator)  # type: ignore
 
     if annotation_pipeline is not None:
         variants_loader = AnnotationPipelineDecorator(
@@ -243,7 +225,7 @@ def main(
             gpf_instance = GPFInstance.build()
             dae_config = gpf_instance.dae_config
         except Exception as ex:  # pylint: disable=broad-except
-            logger.error("GPF not configured correctly", exc_info=True)
+            logger.exception("GPF not configured correctly")
             raise ValueError("unable to find configured GPF instance") from ex
 
     if argv is None:

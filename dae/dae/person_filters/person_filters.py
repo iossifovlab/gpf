@@ -1,4 +1,5 @@
 from collections.abc import Collection
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -72,7 +73,7 @@ class PersonFilterRange(CriteriaFilter):
             return df[df[self.criteria] >= self.values_min]  # type: ignore
         if self.values_max is not None:
             return df[df[self.criteria] <= self.values_max]  # type: ignore
-        return df[-np.isnan(df[self.criteria])]
+        return df[df[self.criteria].notna()]
 
 
 class PhenoFilter(CriteriaFilter):  # pylint: disable=abstract-method
@@ -142,10 +143,12 @@ class FamilyFilter(PersonFilter):
     def apply_to_df(self, df: pd.DataFrame) -> pd.DataFrame:
         return self.person_filter.apply_to_df(df)
 
-    def apply(self, *args, **kwargs) -> set[str]:
-        families: FamiliesData = args[0]
+    def apply(
+        self, families: FamiliesData,
+        *args: Any, **kwargs: Any,
+    ) -> set[str]:
         return families.families_of_persons(
-            self.person_filter.apply(*args, **kwargs),
+            self.person_filter.apply(families, *args, **kwargs),
         )
 
 

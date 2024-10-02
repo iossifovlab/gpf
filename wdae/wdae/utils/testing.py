@@ -4,6 +4,7 @@ import textwrap
 
 from gpf_instance.gpf_instance import WGPFInstance
 
+from dae.gene_sets.denovo_gene_set_helpers import DenovoGeneSetHelpers
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.repository import (
@@ -53,6 +54,40 @@ def setup_t4c8_grr(
                 t4,10.123456789
                 c8,20.0
             """),
+        },
+    )
+    setup_directories(
+        repo_path / "gene_sets" / "main",
+        {
+            GR_CONF_FILE_NAME:
+            """
+                type: gene_set
+                id: main
+                format: directory
+                directory: main_gene_sets
+                web_label: Main
+                web_format_str: "key| (|count|): |desc"
+                meta:
+                  description: t4c8 main gene sets
+                """,
+            "main_gene_sets": {
+                "t4_candidates.txt": textwrap.dedent(
+                """t4_candidates
+                   T4 Candidates
+                   t4
+                """),
+                "c8_candidates.txt": textwrap.dedent(
+                """c8_candidates
+                   C8 Candidates
+                   c8
+                """),
+                "all_candidates.txt": textwrap.dedent(
+                """all_candidates
+                   All Candidates
+                   t4
+                   c8
+                """),
+            },
         },
     )
 
@@ -106,12 +141,15 @@ def setup_t4c8_instance(
                 annotation:
                   conf_file: annotation.yaml
                 reference_genome:
-                    resource_id: t4c8_genome
+                  resource_id: t4c8_genome
                 gene_models:
-                    resource_id: t4c8_genes
+                  resource_id: t4c8_genes
                 gene_scores_db:
-                    gene_scores:
-                    - "gene_scores/t4c8_score"
+                  gene_scores:
+                  - "gene_scores/t4c8_score"
+                gene_sets_db:
+                  gene_set_collections:
+                  - gene_sets/main
                 default_study_config:
                   conf_file: default_study_configuration.yaml
                 genotype_storage:
@@ -123,9 +161,9 @@ def setup_t4c8_instance(
                     base_dir: '%(wd)s/duckdb_storage'
                 gpfjs:
                   visible_datasets:
-                    - t4c8_dataset
-                    - t4c8_study_1
-                    - nonexistend_dataset
+                  - t4c8_dataset
+                  - t4c8_study_1
+                  - nonexistend_dataset
             """),
             "annotation.yaml": textwrap.dedent("""
                - position_score: genomic_scores/score_one
@@ -146,6 +184,15 @@ def setup_t4c8_instance(
     _t4c8_study_1(root_path, gpf_instance)
     _t4c8_study_2(root_path, gpf_instance)
     _t4c8_dataset(gpf_instance)
+    _t4c8_study_4(root_path, gpf_instance)
+
+    gpf_instance.reload()
+
+    for study_id in [
+            "t4c8_study_1", "t4c8_study_2", "t4c8_dataset", "t4c8_study_4"]:
+        study = gpf_instance.get_genotype_data(study_id)
+        assert study is not None, study_id
+        DenovoGeneSetHelpers.build_collection(study)
 
     gpf_instance.reload()
 
@@ -155,7 +202,7 @@ def setup_t4c8_instance(
 def _t4c8_study_1(
     root_path: pathlib.Path,
     t4c8_instance: GPFInstance,
-) -> None:
+) -> GenotypeData:
     ped_path = setup_pedigree(
         root_path / "t4c8_study_1" / "pedigree" / "in.ped",
         """
@@ -186,7 +233,7 @@ chr1   119 .  A   G,C  .    .      .    GT     0/0  0/0  0/2 0/2 0/1  0/2  0/1 0
 chr1   122 .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/1 0/2  0/2  0/2 0/1
         """)  # noqa: E501
 
-    vcf_study(
+    return vcf_study(
         root_path,
         "t4c8_study_1", ped_path, [vcf_path1],
         t4c8_instance,
@@ -375,8 +422,6 @@ person_set_collections:
     default:
       id: unspecified
       name: unspecified
-      values:
-      - unspecified
       color: '#aaaaaa'
 genotype_browser:
   enabled: true
@@ -757,3 +802,54 @@ s4,121.0199895975403,39.74107684421966,77.32212831797972,51.37116746952451,36.55
         "--task-status-dir", str(pheno_path / "status"),
         "--regression", str(pheno_path / "regressions.yaml"),
     ])
+
+
+def _t4c8_study_4(
+    root_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+) -> GenotypeData:
+    ped_path = setup_pedigree(
+        root_path / "t4c8_study_4" / "pedigree" / "in.ped",
+        """
+familyId personId dadId  momId  sex status role phenotype
+f4.1     mom4.1   0      0      2   1      mom  unaffected
+f4.1     dad4.1   0      0      1   1      dad  unaffected
+f4.1     p4.1     dad4.1 mom4.1 2   2      prb  autism
+f4.1     s4.1     dad4.1 mom4.1 1   1      sib  unaffected
+f4.3     mom4.3   0      0      2   1      mom  unaffected
+f4.3     dad4.3   0      0      1   1      dad  unaffected
+f4.3     p4.3     dad4.3 mom4.3 2   2      prb  autism
+f4.3     s4.3     dad4.3 mom4.3 2   1      sib  unaffected
+f4.5     mom4.5   0      0      2   1      mom  unaffected
+f4.5     dad4.5   0      0      1   1      dad  unaffected
+f4.5     p4.5     dad4.5 mom4.5 1   2      prb  autism
+        """)
+    vcf_path1 = setup_vcf(
+        root_path / "t4c8_study_4" / "vcf" / "in.vcf.gz",
+        """
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chr1>
+##contig=<ID=chr2>
+##contig=<ID=chr3>
+#CHROM POS ID   REF ALT QUAL FILTER INFO FORMAT mom4.1 dad4.1 p4.1 s4.1 mom4.3 dad4.3 p4.3 s4.3 mom4.5 dad4.5 p4.5
+chr1   52  MIS  C   A   .    .      .    GT     0/0    0/0    0/1  0/0  0/0    0/0    0/0  0/0  0/0    0/0    0/0
+chr1   54  SYN  T   C   .    .      .    GT     0/0    0/0    0/0  0/0  0/0    0/0    0/1  0/0  0/0    0/0    0/0
+chr1   57  SYN  A   C   .    .      .    GT     0/0    0/0    0/1  0/0  0/0    0/0    0/1  0/1  0/0    0/0    0/1
+chr1   117 MIS  T   G   .    .      .    GT     0/0    0/0    0/1  0/0  0/0    0/0    0/0  0/1  0/0    0/0    0/1
+chr1   119 SYN  A   G   .    .      .    GT     0/0    0/0    0/0  0/1  0/0    0/0    0/0  0/0  0/0    0/0    0/0
+        """)  # noqa: E501
+
+    return vcf_study(
+        root_path,
+        "t4c8_study_4", ped_path, [vcf_path1],
+        t4c8_instance,
+        project_config_update={
+            "input": {
+                "vcf": {
+                    "denovo_mode": "denovo",
+                    "omission_mode": "omission",
+                },
+            },
+        },
+    )

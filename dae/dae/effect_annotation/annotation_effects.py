@@ -1,8 +1,6 @@
-#!/bin/env python
-
 # October 25th 2013
 # written by Ewa
-
+from collections.abc import Iterable
 
 LOF = ["splice-site", "frame-shift", "nonsense", "no-frame-shift-newStop"]
 nonsyn = [
@@ -17,7 +15,11 @@ nonsyn = [
 ]
 
 
-def get_effect_types(types=True, groups=False):
+def get_effect_types(
+    *,
+    types: bool = True,
+    groups: bool = False,
+) -> list[str]:
     """Produce collection of effect types."""
     effect_types = [
         "tRNA:ANTICODON",
@@ -61,9 +63,12 @@ def get_effect_types(types=True, groups=False):
     return []
 
 
-def get_effect_types_set(effect_types):
+def get_effect_types_set(effect_typess: str | Iterable[str]) -> set[str]:
     """Split comma separated list of effect types."""
-    effect_types = effect_types.split(",")
+    if isinstance(effect_typess, str):
+        effect_types: Iterable[str] = effect_typess.split(",")
+    else:
+        effect_types = effect_typess
 
     groups = {
         "LGDs": LOF,

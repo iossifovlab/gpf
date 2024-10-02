@@ -1,16 +1,13 @@
 import logging
-from functools import cache
-from typing import Any
+from functools import cached_property, lru_cache
+from typing import Any, cast
 
 from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
-from dae.gene_sets.denovo_gene_set_collection_factory import (
-    DenovoGeneSetCollectionFactory,
+from dae.gene_sets.denovo_gene_set_helpers import (
+    DenovoGeneSetHelpers,
 )
 
 logger = logging.getLogger(__name__)
-
-# TODO Document the denovo gene set spec somehow - what it contains,
-# maybe make it a namedtuple subclass
 
 
 class DenovoGeneSetsDb:
@@ -24,6 +21,9 @@ class DenovoGeneSetsDb:
 
     def __len__(self) -> int:
         return len(self._denovo_gene_set_collections)
+
+    def has_gene_sets(self) -> bool:
+        return len(self._denovo_gene_set_collections) > 0
 
     def reload(self) -> None:
         self._gene_set_collections_cache = {}
@@ -47,38 +47,41 @@ class DenovoGeneSetsDb:
             study = self.gpf_instance.get_genotype_data(study_id)
             assert study is not None, study_id
 
-            gs_collection = \
-                DenovoGeneSetCollectionFactory.load_collection(study)
-            self._gene_set_configs_cache[study_id] = gs_collection.config
-            self._gene_set_collections_cache[study_id] = gs_collection
+            dgsc = DenovoGeneSetHelpers.load_collection(study)
+            if dgsc is None:
+                logger.info(
+                    "No denovo gene set collection for %s", study_id)
+                continue
 
-    def _build_cache(self, genotype_data_ids: list[str]) -> None:
+            self._gene_set_configs_cache[study_id] = dgsc.config
+            self._gene_set_collections_cache[study_id] = dgsc
+
+    def build_cache(self, genotype_data_ids: list[str]) -> None:
         for study_id in genotype_data_ids:
             study = self.gpf_instance.get_genotype_data(study_id)
             assert study is not None, study_id
-            DenovoGeneSetCollectionFactory.build_collection(study)
+            DenovoGeneSetHelpers.build_collection(study)
 
-    def get_gene_set_descriptions(
-        self, permitted_datasets: list[str] | None = None,
-    ) -> dict[str, Any]:
+    @cached_property
+    def collections_descriptions(self) -> list[dict[str, Any]]:
+        """Return gene set descriptions."""
         gene_sets_types = []
-        for gs_id, gs_collection in self._denovo_gene_set_collections.items():
-            if permitted_datasets is None or gs_id in permitted_datasets:
-                gene_sets_types += gs_collection.get_gene_sets_types_legend()
+        for gs_collection in self._denovo_gene_set_collections.values():
+            gene_sets_types += gs_collection.get_gene_sets_types_legend()
 
-        return {
+        return [{
             "desc": "Denovo",
             "name": "denovo",
             "format": ["key", " (|count|)"],
             "types": gene_sets_types,
-        }
+        }]
 
     def get_collection_types_legend(self, gs_collection_id: str) -> list[Any]:
         return self._denovo_gene_set_collections[gs_collection_id]\
             .get_gene_sets_types_legend()
 
-    @cache
-    def get_genotype_data_ids(self):
+    @lru_cache(maxsize=64)
+    def get_genotype_data_ids(self) -> set[str]:
         """Return list of genotype data IDs with denovo gene sets."""
         study_ids = set(
             self.gpf_instance.get_genotype_data_ids())
@@ -98,20 +101,21 @@ class DenovoGeneSetsDb:
 
         return result
 
-    def get_gene_set_ids(self, genotype_data_id):
-        return self._denovo_gene_set_configs[genotype_data_id].gene_sets_names
+    def get_gene_set_ids(self, genotype_data_id: str) -> list[str]:
+        return cast(
+            list[str],
+            self._gene_set_configs_cache[
+                genotype_data_id].gene_sets_names)
 
     def get_gene_set(
         self,
-        gene_set_id,
-        gene_set_spec,
-        permitted_datasets=None,
-        collection_id="denovo",  # pylint: disable=unused-argument
-    ):
+        gene_set_id: str,
+        gene_set_spec: dict[str, dict[str, list[str]]],
+        collection_id: str = "denovo",  # noqa: ARG002
+    ) -> dict[str, Any] | None:
+        # pylint: disable=unused-argument
         """Return de Novo gene set matching the spec for permitted datasets."""
-        gene_set_spec = self._filter_spec(gene_set_spec, permitted_datasets)
-
-        return DenovoGeneSetCollection.get_gene_set(
+        return DenovoGeneSetCollection.get_gene_set_from_collections(
             gene_set_id,
             list(self._denovo_gene_set_collections.values()),
             gene_set_spec,
@@ -119,30 +123,12 @@ class DenovoGeneSetsDb:
 
     def get_all_gene_sets(
         self,
-        denovo_gene_set_spec,
-        permitted_datasets=None,
-        collection_id="denovo",  # pylint: disable=unused-argument
-    ):
+        denovo_gene_set_spec: dict[str, dict[str, list[str]]],
+        collection_id: str = "denovo",  # noqa: ARG002
+    ) -> list[dict[str, Any]]:
+        # pylint: disable=unused-argument
         """Return all de Novo gene sets matching the spec for permitted DS."""
-        denovo_gene_set_spec = self._filter_spec(
-            denovo_gene_set_spec, permitted_datasets,
-        )
-
         return DenovoGeneSetCollection.get_all_gene_sets(
             list(self._denovo_gene_set_collections.values()),
             denovo_gene_set_spec,
         )
-
-    @staticmethod
-    def _filter_spec(denovo_gene_set_spec, permitted_datasets):
-        """Filter a denovo gene set spec to remove datasets without permitions.
-
-        List of permitted datasets is passed and used to filter non-permitted
-        dataset set from denovo gene set specicification.
-        """
-        return {
-            genotype_data_id: {pg_id: v for pg_id, v in pg.items() if v}
-            for genotype_data_id, pg in denovo_gene_set_spec.items()
-            if permitted_datasets is None
-            or genotype_data_id in permitted_datasets
-        }

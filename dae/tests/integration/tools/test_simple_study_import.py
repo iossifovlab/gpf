@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
 import pathlib
 import textwrap
 from collections.abc import Callable
@@ -16,6 +17,22 @@ from dae.testing import (
 )
 from dae.testing.foobar_import import foobar_gpf
 from dae.tools.simple_study_import import main
+
+
+def relative_to_this_test_folder(path: str) -> str:
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        path,
+    )
+
+
+@pytest.fixture(scope="session")
+def fixture_dirname() -> Callable[[str], str]:
+
+    def builder(relpath: str) -> str:
+        return relative_to_this_test_folder(os.path.join("fixtures", relpath))
+
+    return builder
 
 
 def test_del_loader_prefix() -> None:
@@ -543,8 +560,8 @@ def test_denovo_db_import(
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
 
-    families_filename = fixture_dirname("backends/denovo-db-person-id.ped")
-    denovo_filename = fixture_dirname("backends/denovo-db-person-id.tsv")
+    families_filename = fixture_dirname("denovo-db-person-id.ped")
+    denovo_filename = fixture_dirname("denovo-db-person-id.tsv")
     study_id = f"test_denovo_db_import_{genotype_storage.storage_id}"
 
     argv = [

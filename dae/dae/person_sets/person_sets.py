@@ -10,9 +10,12 @@ from __future__ import annotations
 import logging
 from collections.abc import Generator
 from dataclasses import dataclass
-from typing import Any, FrozenSet, cast
+from typing import Any, Literal
 
-from box import Box
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+)
 
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Person
@@ -22,6 +25,201 @@ from dae.variants.attributes import Sex
 logger = logging.getLogger(__name__)
 
 
+class PersonSetConfig(BaseModel):
+    """Configuration for a person set."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    name: str
+    values: tuple[str, ...]
+    color: str
+
+
+class SourceConfig(BaseModel):
+    """Configuration for a source."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    from_: Literal["pedigree", "phenodb"]
+    source: str
+
+
+class PersonSetCollectionConfig(BaseModel):
+    """Configuration for a collection of person sets."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    name: str
+    sources: list[SourceConfig]
+    domain: list[PersonSetConfig]
+    default: PersonSetConfig
+
+
+def _parse_psc_sources(
+    psc_id: str,
+    psc_config: dict[str, Any],
+) -> list[SourceConfig]:
+    if "sources" not in psc_config:
+        raise ValueError(
+            f"No sources defined for person set collection: {psc_id}")
+    psc_sources = []
+    for source in psc_config["sources"]:
+        if "from" not in source:
+            raise ValueError(
+                f"No 'from' defined for source in person set collection: "
+                f"{psc_id}")
+        if "source" not in source:
+            raise ValueError(
+                f"No 'source' defined for source in person set collection: "
+                f"{psc_id}")
+        psc_sources.append(SourceConfig(from_=source["from"],
+                                        source=source["source"]))
+    if not psc_sources:
+        raise ValueError(
+            f"Empty sources defined for person set collection: {psc_id}")
+    return psc_sources
+
+
+def parse_person_set_config(
+    psc_id: str,
+    domain: dict[str, Any],
+) -> PersonSetConfig:
+    """Parse a person set configuration."""
+    if "id" not in domain:
+        raise ValueError(
+            f"No id defined for domain in person set collection: "
+            f"{psc_id}")
+    if "name" not in domain:
+        raise ValueError(
+            f"No name defined for domain in person set collection: "
+            f"{psc_id}")
+    if "values" not in domain:
+        raise ValueError(
+            f"No values defined for domain in person set collection: "
+            f"{psc_id}")
+    if "color" not in domain:
+        raise ValueError(
+            f"No color defined for domain in person set collection: "
+            f"{psc_id}")
+    return PersonSetConfig(
+        id=domain["id"],
+        name=domain["name"],
+        values=tuple(domain["values"]),
+        color=domain["color"],
+    )
+
+
+def _parse_psc_domain(
+    psc_id: str,
+    psc_config: dict[str, Any],
+    psc_sources: list[SourceConfig],
+) -> list[PersonSetConfig]:
+    if "domain" not in psc_config:
+        raise ValueError(
+            f"No domain defined for person set collection: {psc_id}")
+    psc_domain = []
+    for domain in psc_config["domain"]:
+        ps_config = parse_person_set_config(psc_id, domain)
+        if len(ps_config.values) != len(psc_sources):
+            raise ValueError(
+                f"Values count {ps_config.values} "  # noqa: PD011
+                "mismatch for domain in person set collection: "
+                f"{psc_id}")
+        psc_domain.append(ps_config)
+
+    if not psc_domain:
+        logger.warning(
+            "Empty domain defined for person set collection: %s", psc_id)
+    return psc_domain
+
+
+def _parse_psc_default(
+    psc_id: str,
+    psc_config: dict[str, Any],
+) -> PersonSetConfig:
+    if "default" not in psc_config:
+        raise ValueError(
+            f"No default defined for person set collection: {psc_id}")
+    psc_default = psc_config["default"]
+    if "id" not in psc_default:
+        raise ValueError(
+            f"No id defined for default in person set collection: {psc_id}")
+    if "name" not in psc_default:
+        raise ValueError(
+            f"No name defined for default in person set collection: {psc_id}")
+    if "color" not in psc_default:
+        raise ValueError(
+            f"No color defined for default in person set collection: {psc_id}")
+    if "values" in psc_default:
+        raise ValueError(
+            f"Values shoud not be defined for default in "
+            f"person set collection: {psc_id}")
+
+    return PersonSetConfig(
+        values=(),
+        **psc_default,
+    )
+
+
+def parse_person_set_collection_config(
+    psc_config: dict[str, Any],
+) -> PersonSetCollectionConfig:
+    """Parse a person set collection configuration."""
+    if "id" not in psc_config:
+        raise ValueError(
+            "No id defined for person set collection configuration")
+
+    psc_id = psc_config["id"]
+    if "name" not in psc_config:
+        raise ValueError(
+            f"No name defined for person set collection: {psc_id}")
+    if psc_config["id"] != psc_id:
+        raise ValueError(
+            f"Person set collection id mismatch: {psc_id} != "
+            f"{psc_config['id']}")
+
+    psc_sources = _parse_psc_sources(psc_id, psc_config)
+    psc_domain = _parse_psc_domain(psc_id, psc_config, psc_sources)
+    psc_default = _parse_psc_default(psc_id, psc_config)
+
+    return PersonSetCollectionConfig(
+        id=psc_id,
+        name=psc_config["name"],
+        sources=psc_sources,
+        domain=psc_domain,
+        default=psc_default,
+    )
+
+
+def parse_person_set_collections_study_config(
+    config: dict[str, Any],
+) -> dict[str, PersonSetCollectionConfig]:
+    """Parse a person sets configuration."""
+
+    if "person_set_collections" not in config:
+        raise ValueError("Invalid person sets collections configuration")
+    pscs_config = config["person_set_collections"]
+    if "selected_person_set_collections" not in pscs_config:
+        raise ValueError("No person set collections selected")
+
+    psc_selected = pscs_config["selected_person_set_collections"]
+    result = {}
+    for psc_id in psc_selected:
+        if psc_id not in pscs_config:
+            raise ValueError(
+                f"Selected person set collection not found: {psc_id}")
+        psc_config = pscs_config[psc_id]
+        if "id" not in psc_config:
+            raise ValueError(
+                f"No id defined for person set collection: {psc_id}")
+
+        psc_config = parse_person_set_collection_config(psc_config)
+        result[psc_id] = psc_config
+    return result
+
+
 @dataclass
 class ChildrenStats:
     """Statistics about children in a PersonSet."""
@@ -29,6 +227,7 @@ class ChildrenStats:
     male: int
     female: int
     unspecified: int
+    parents: int
 
     @property
     def total(self) -> int:
@@ -50,11 +249,11 @@ class PersonSet:
 
     def __init__(
             self, psid: str, name: str,
-            values: list[str], color: str,
+            values: tuple[str, ...], color: str,
             persons: dict[tuple[str, str], Person]):
         self.id: str = psid  # pylint: disable=invalid-name
         self.name: str = name
-        self.values: list[str] = values
+        self.values: tuple[str, ...] = values
         self.color: str = color
         assert all(not p.generated for p in persons.values())
         self.persons: dict[tuple[str, str], Person] = persons
@@ -109,6 +308,7 @@ class PersonSet:
                 len(children_by_sex.male),
                 len(children_by_sex.female),
                 len(children_by_sex.unspecified),
+                len(list(self.get_parents())),
             )
         assert self._children_stats is not None
         return self._children_stats
@@ -147,25 +347,17 @@ class PersonSet:
 class PersonSetCollection:
     """The collection of all possible person sets in a given source."""
 
-    @dataclass(frozen=True, eq=True)
-    class Source:
-        sfrom: str
-        ssource: str
-
     def __init__(
-            self, pscid: str, name: str,
-            config: dict[str, Any],
-            sources: list[Source],
+            self,
+            config: PersonSetCollectionConfig,
             person_sets: dict[str, PersonSet],
             default: PersonSet,
             families: FamiliesData):
 
-        assert config.get("default") is not None
-
-        self.id: str = pscid  # pylint: disable=invalid-name
-        self.name: str = name
         self.config = config
-        self.sources = sources
+        self.id: str = config.id
+        self.name: str = config.name
+        self.sources = self.config.sources
 
         self.person_sets: dict[str, PersonSet] = person_sets
         self.default: PersonSet = default
@@ -181,49 +373,40 @@ class PersonSetCollection:
         return len(self.person_sets)
 
     def is_pedigree_only(self) -> bool:
-        return all(s.sfrom == "pedigree" for s in self.sources)
+        return all(s.from_ == "pedigree" for s in self.sources)
 
     @staticmethod
-    def _sources_from_config(
-        person_set_collection: dict[str, Any],
-    ) -> list[Source]:
-        sources = [
-            PersonSetCollection.Source(src["from"], src["source"])
-            for src in person_set_collection["sources"]
-        ]
-        return sources
-
-    @staticmethod
-    def _produce_sets(config: dict[str, Any]) -> dict[str, PersonSet]:
+    def _produce_sets(
+        config: PersonSetCollectionConfig,
+    ) -> dict[str, PersonSet]:
         """
         Produce initial PersonSet instances.
 
         Initializes a dictionary of person set IDs mapped to
         empty PersonSet instances from a given configuration.
         """
-        person_set_configs = config["domain"]
         result = {}
-        for person_set in person_set_configs:
-            result[person_set["id"]] = PersonSet(
-                person_set["id"],
-                person_set["name"],
-                person_set["values"],
-                person_set["color"],
-                {},
+        for ps_config in config.domain:
+            result[ps_config.id] = PersonSet(
+                ps_config.id,
+                name=ps_config.name,
+                values=ps_config.values,
+                color=ps_config.color,
+                persons={},
             )
         return result
 
     @staticmethod
-    def _produce_default_person_set(config: dict[str, Any]) -> PersonSet:
-        assert config["default"] is not None, config
-
-        default_config = config["default"]
+    def _produce_default_person_set(
+        config: PersonSetCollectionConfig,
+    ) -> PersonSet:
+        default_config = config.default
         return PersonSet(
-            default_config["id"],
-            default_config["name"],
-            [],
-            default_config["color"],
-            {},
+            default_config.id,
+            name=default_config.name,
+            values=(),
+            color=default_config.color,
+            persons={},
         )
 
     @staticmethod
@@ -269,56 +452,52 @@ class PersonSetCollection:
 
     def collect_person_collection_attributes(
         self, person: Person, pheno_db: PhenotypeData | None,
-    ) -> FrozenSet[str]:
+    ) -> tuple[str, ...]:
         """Collect all configured attributes for a Person."""
         values = []
         for source in self.sources:
-            if source.sfrom == "pedigree":
-                value = person.get_attr(source.ssource)
+            if source.from_ == "pedigree":
+                value = person.get_attr(source.source)
                 # Convert to string since some of the person's
                 # attributes can be of an enum type
                 if value is not None:
                     value = str(value)
-            elif source.sfrom == "phenodb" and pheno_db is not None:
-                assert pheno_db.get_measure(source.ssource).measure_type \
-                    in {MeasureType.categorical, MeasureType.ordinal}, \
-                    f"Continuous measures not allowed in person sets! " \
-                    f"({source.ssource})"
+            elif source.from_ == "phenodb" and pheno_db is not None:
+                assert pheno_db.get_measure(source.source).measure_type \
+                    in {MeasureType.categorical, MeasureType.ordinal}, (
+                    f"Continuous measures not allowed in person sets! "
+                    f"({source.source})")
 
                 pheno_values = list(pheno_db.get_people_measure_values(
-                    [source.ssource],
+                    [source.source],
                     person_ids=[person.person_id],
                 ))
                 if len(pheno_values) == 0:
                     value = None
                 else:
-                    value = pheno_values[0][source.ssource]
+                    value = pheno_values[0][source.source]
             else:
-                raise ValueError(f"Invalid source type {source.sfrom}!")
+                raise ValueError(f"Invalid source type {source.from_}!")
             values.append(value)
 
-        # make unified frozenset value
-        return frozenset(values)
+        return tuple(values)
 
     @staticmethod
     def from_families(
-        psc_config: dict[str, Any],
+        psc_config: PersonSetCollectionConfig,
         families_data: FamiliesData,
         pheno_db: PhenotypeData | None = None,
     ) -> PersonSetCollection:
         """Produce a PersonSetCollection from a config and pedigree."""
         collection = PersonSetCollection(
-            psc_config["id"],
-            psc_config["name"],
             psc_config,
-            PersonSetCollection._sources_from_config(psc_config),
             PersonSetCollection._produce_sets(psc_config),
             PersonSetCollection._produce_default_person_set(psc_config),
             families_data,
         )
         value_to_id = {
-            frozenset(ps_config["values"]): ps_config["id"]
-            for ps_config in psc_config["domain"]
+            ps_config.values: ps_config.id  # noqa: PD011
+            for ps_config in psc_config.domain
         }
         logger.debug("person set collection value_to_id: %s", value_to_id)
         for person_id, person in families_data.real_persons.items():
@@ -336,7 +515,7 @@ class PersonSetCollection:
     @staticmethod
     def merge_configs(
         person_set_collections: list[PersonSetCollection],
-    ) -> Box:
+    ) -> PersonSetCollectionConfig:
         """
         Merge the configurations of a list of PersonSetCollection objects.
 
@@ -401,7 +580,7 @@ class PersonSetCollection:
             domain[vid] for vid in sorted(domain.keys())
         ]
 
-        return Box(result)
+        return parse_person_set_collection_config(result)
 
     def get_person_set(
         self, person_id: tuple[str, str],
@@ -442,8 +621,7 @@ class PersonSetCollection:
 
         config = PersonSetCollection.merge_configs(collections)
         result = PersonSetCollection(
-            config["id"], config["name"], config,
-            PersonSetCollection._sources_from_config(config),
+            config,
             PersonSetCollection._produce_sets(config),
             PersonSetCollection._produce_default_person_set(config),
             families)
@@ -470,14 +648,14 @@ class PersonSetCollection:
             domain.append({
                 "id": person_set.id,
                 "name": person_set.name,
-                "values": person_set.values,
+                "values": person_set.values,  # noqa: PD011
                 "color": person_set.color,
             })
         sources = [
-            {"from": s.sfrom, "source": s.ssource}
+            {"from": s.from_, "source": s.source}
             for s in self.sources
         ]
-        conf = {
+        return {
             "id": self.id,
             "name": self.name,
             "sources": sources,
@@ -489,24 +667,31 @@ class PersonSetCollection:
             },
         }
 
-        return conf
-
-    def domain_json(self) -> dict[str, Any]:
-        """Produce a JSON to represent domain of this PersonSetCollection."""
-        domain = []
-        for person_set in self.person_sets.values():
-            domain.append({
+    def legend_json(self) -> list[dict[str, Any]]:
+        return [
+            {
                 "id": person_set.id,
                 "name": person_set.name,
                 "color": person_set.color,
-            })
-        conf = {
+            }
+            for person_set in self.person_sets.values()
+        ]
+
+    def domain_json(self) -> dict[str, Any]:
+        """Produce a JSON to represent domain of this PersonSetCollection."""
+        domain = [
+            {
+                "id": person_set.id,
+                "name": person_set.name,
+                "color": person_set.color,
+            }
+            for person_set in self.person_sets.values()
+        ]
+        return {
             "id": self.id,
             "name": self.name,
             "domain": domain,
         }
-
-        return conf
 
     def get_stats(self) -> dict[str, dict[str, int]]:
         """
@@ -517,54 +702,19 @@ class PersonSetCollection:
         """
         result = {}
         for set_id, person_set in self.person_sets.items():
-            parents = len(list(person_set.get_parents()))
-            children = len(list(person_set.get_children()))
+            children_stats = person_set.get_children_stats()
+            parents = children_stats.parents
+            children = children_stats.total
             result[set_id] = {
                 "parents": parents,
                 "children": children,
             }
         return result
 
-    def to_json(self) -> dict[str, Any]:
-        """Serialize a person sets collection to a json format."""
-        return {
-            "config": self.config_json(),
-            "person_sets": [
-                ps.to_json() for ps in self.person_sets.values()
-            ],
-        }
-
-    @staticmethod
-    def from_json(
-        data: dict[str, Any], families: FamiliesData,
-    ) -> PersonSetCollection:
-        """Construct person sets collection from json serialization."""
-        config = data["config"]
-
-        psc = PersonSetCollection(
-            config["id"],
-            config["name"],
-            config,
-            PersonSetCollection._sources_from_config(config),
-            PersonSetCollection._produce_sets(config),
-            PersonSetCollection._produce_default_person_set(config),
-            families,
-        )
-        for ps_json in data["person_sets"]:
-            person_set = psc.person_sets[ps_json["id"]]
-            for fpid_json in ps_json["person_ids"]:
-                fpid = cast(tuple[str, str], tuple(fpid_json))
-                person = families.persons[fpid]
-                assert person.get_attr(psc.id) == person_set.id
-                person_set.persons[fpid] = person
-
-        PersonSetCollection.remove_empty_person_sets(psc)
-        return psc
-
 
 @dataclass
 class PSCQuery:
     """Person set collection query."""
 
-    collection_id: str
+    psc_id: str
     selected_person_sets: set[str]

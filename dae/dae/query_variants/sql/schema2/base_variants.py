@@ -429,7 +429,7 @@ class SqlSchema2Variants(QueryVariantsBase):
                 for source, value in zip(
                         person_set_collection.sources,
                         person_set.values, strict=True):
-                    person_set_query[source.ssource] = value
+                    person_set_query[source.source] = value
                 result.append(person_set_query)
             return result
 

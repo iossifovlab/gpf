@@ -1,0 +1,33 @@
+SampleID	StudyName	PubmedID	NumProbands	NumControls	SequenceType	PrimaryPhenotype	Validation	Chr	Position	Variant	rsID	DbsnpBuild	AncestralAllele	1000GenomeCount	ExacFreq	EspAaFreq	EspEaFreq	Transcript	codingDnaSize	Gene	FunctionClass	cDnaVariant	ProteinVariant	Exon/Intron	PolyPhen(HDiv)	PolyPhen(HVar)	SiftScore	CaddScore	LofScore	LrtScore	Ref	Alt
+13872.p1	Turner_2017	28965761	516	516	genome	autism	unknown	1	759381	AAAAT>A	0	0	N	0	0.0	0.0	0.0	none	-1		upstream-gene			intergenic	-1.0	-1.0	-1.0	-1.0	-1.0	-1.0	AAAAT	A
+14633.s1	Turner_2017	28965761	516	516	genome	control	unknown	1	770905	A>G	0	0	N	0	0.0	0.0	0.0	NR_047519.1	6776	LOC643837	intron	n.287+6421A>G		intron2	-1.0	-1.0	-1.0	2.174	-1.0	-1.0	A	G
+14633.s1	Turner_2017	28965761	516	516	genome	control	unknown	1	770905	A>G	0	0	N	0	0.0	0.0	0.0	NR_047520.1	6727	LOC643837	intron	n.287+6421A>G		intron2	-1.0	-1.0	-1.0	2.174	-1.0	-1.0	A	G
+14633.s1	Turner_2017	28965761	516	516	genome	control	unknown	1	770905	A>G	0	0	N	0	0.0	0.0	0.0	NR_047521.1	6623	LOC643837	intron	n.287+6421A>G		intron2	-1.0	-1.0	-1.0	2.174	-1.0	-1.0	A	G
+14633.s1	Turner_2017	28965761	516	516	genome	control	unknown	1	770905	A>G	0	0	N	0	0.0	0.0	0.0	NR_047522.1	6574	LOC643837	intron	n.287+6421A>G		intron2	-1.0	-1.0	-1.0	2.174	-1.0	-1.0	A	G
+14633.s1	Turner_2017	28965761	516	516	genome	control	unknown	1	770905	A>G	0	0	N	0	0.0	0.0	0.0	NR_047523.1	6527	LOC643837	intron	n.287+6421A>G		intron2	-1.0	-1.0	-1.0	2.174	-1.0	-1.0	A	G
+14633.s1	Turner_2017	28965761	516	516	genome	control	unknown	1	770905	A>G	0	0	N	0	0.0	0.0	0.0	NR_047525.1	6490	LOC643837	intron	n.154+6421A>G		intron2	-1.0	-1.0	-1.0	2.174	-1.0	-1.0	A	G
+14633.s1	Turner_2017	28965761	516	516	genome	control	unknown	1	770905	A>G	0	0	N	0	0.0	0.0	0.0	NR_015368.2	6482	LOC643837	intron	n.287+6421A>G		intron2	-1.0	-1.0	-1.0	2.174	-1.0	-1.0	A	G
+14633.s1	Turner_2017	28965761	516	516	genome	control	unknown	1	770905	A>G	0	0	N	0	0.0	0.0	0.0	NR_047524.1	6439	LOC643837	intron	n.287+6421A>G		intron2	-1.0	-1.0	-1.0	2.174	-1.0	-1.0	A	G
+14633.s1	Turner_2017	28965761	516	516	genome	control	unknown	1	770905	A>G	0	0	N	0	0.0	0.0	0.0	NR_047526.1	2692	LOC643837	intron	n.288-5675A>G		intron2	-1.0	-1.0	-1.0	2.174	-1.0	-1.0	A	G
+12626.p1	Turner_2017	28965761	516	516	genome	autism	unknown	1	783547	A>G	0	0	N	0	0.0	0.0	0.0	NR_047519.1	6776	LOC643837	intron	n.440+361A>G		intron3	-1.0	-1.0	-1.0	2.227	-1.0	-1.0	A	G
+12626.p1	Turner_2017	28965761	516	516	genome	autism	unknown	1	783547	A>G	0	0	N	0	0.0	0.0	0.0	NR_047520.1	6727	LOC643837	intron	n.440+361A>G		intron3	-1.0	-1.0	-1.0	2.227	-1.0	-1.0	A	G
+12626.p1	Turner_2017	28965761	516	516	genome	autism	unknown	1	783547	A>G	0	0	N	0	0.0	0.0	0.0	NR_047521.1	6623	LOC643837	intron	n.288-3760A>G		intron2	-1.0	-1.0	-1.0	2.227	-1.0	-1.0	A	G
+12626.p1	Turner_2017	28965761	516	516	genome	autism	unknown	1	783547	A>G	0	0	N	0	0.0	0.0	0.0	NR_047522.1	6574	LOC643837	intron	n.288-3760A>G		intron2	-1.0	-1.0	-1.0	2.227	-1.0	-1.0	A	G
+12626.p1	Turner_2017	28965761	516	516	genome	autism	unknown	1	783547	A>G	0	0	N	0	0.0	0.0	0.0	NR_047523.1	6527	LOC643837	intron	n.288-3760A>G		intron2	-1.0	-1.0	-1.0	2.227	-1.0	-1.0	A	G
+12626.p1	Turner_2017	28965761	516	516	genome	autism	unknown	1	783547	A>G	0	0	N	0	0.0	0.0	0.0	NR_047525.1	6490	LOC643837	intron	n.155-3760A>G		intron2	-1.0	-1.0	-1.0	2.227	-1.0	-1.0	A	G
+12626.p1	Turner_2017	28965761	516	516	genome	autism	unknown	1	783547	A>G	0	0	N	0	0.0	0.0	0.0	NR_015368.2	6482	LOC643837	intron	n.440+361A>G		intron3	-1.0	-1.0	-1.0	2.227	-1.0	-1.0	A	G
+12626.p1	Turner_2017	28965761	516	516	genome	autism	unknown	1	783547	A>G	0	0	N	0	0.0	0.0	0.0	NR_047524.1	6439	LOC643837	intron	n.288-4504A>G		intron2	-1.0	-1.0	-1.0	2.227	-1.0	-1.0	A	G
+Lelieveld_752	Lelieveld2016	27479843	820	0	exome	intellectualDisability	unknown	1	879375	C>T	0	0	C	0	1.7e-05	0.0	0.0	NM_152486.2	2046	SAMD11	stop-gained	c.1888C>T	p.(R630*)	exon14	-1.0	-1.0	-1.0	21.8	-1.0	-1.0	C	T
+12676.p1	Turner_2017	28965761	516	516	genome	autism	unknown	1	880107	C>A	0	0	C	0	0.0	0.0	0.0	NM_015658.3	2250	NOC2L	missense	c.2217G>T	p.(E739D)	exon19	0.454	0.071	0.018000000000000002	9.348	-1.0	0.047388	C	A
+DDD4K.01045	DDD_2017	28135719	4293	0	exome	developmentalDisorder	unknown	1	880463	CCCTCCTCCTCGTCCTC>CCCTC	0	0	N	0	0.0	0.0	0.0	NM_015658.3	2250	NOC2L	codingComplex	c.2105_2116del12	p.(G702_G706delinsG)	exon18	-1.0	-1.0	-1.0	-1.0	-1.0	-1.0	CCCTCCTCCTCGTCCTC	CCCTC
+Lelieveld_520	Lelieveld2016	27479843	820	0	exome	intellectualDisability	unknown	1	880500	G>C	0	0	G	0	0.0	0.0	0.0	NM_015658.3	2250	NOC2L	missense	c.2080C>G	p.(H694D)	exon18	0.008	0.004	0.425	2.802	-1.0	0.472428	G	C
+7-0080-003	Yuen2017	28263302	1625	2	genome	autism	unknown	1	881314	CAGGCCTGAGG>CAGG	0	0	N	0	0.0	0.0	0.0	NM_015658.3	2250	NOC2L	intron	c.1917+232_1917+238del7		intron16	-1.0	-1.0	-1.0	-1.0	-1.0	-1.0	CAGGCCTGAGG	CAGG
+AC01-0062-01	DeRubeis2014	25363760	1445	0	exome	autism	unknown	1	881802	C>T	0	0	C	0	1.6e-05	0.0	0.0	NM_015658.3	2250	NOC2L	missense	c.1783G>A	p.(V595I)	exon15	0.999	0.945	0.217	16.59	-1.0	0.0	C	T
+13102.s1	Turner_2017	28965761	516	516	genome	control	unknown	1	886702	C>A	0	0	N	0	0.0	0.0	0.0	NM_015658.3	2250	NOC2L	intron	c.1332-84G>T		intron11	-1.0	-1.0	-1.0	4.1	-1.0	-1.0	C	A
+1-0533-003	Yuen2017	28263302	1625	2	genome	autism	unknown	1	888854	G>A	0	0	N	0	0.0	0.0	0.0	NM_015658.3	2250	NOC2L	intron	c.889-186C>T		intron8	-1.0	-1.0	-1.0	1.051	-1.0	-1.0	G	A
+Proband-7	Jonsson2017	28959963	1548	0	genome	mixed	unknown	1	890075	C>T	0	0	N	0	0.0	0.0	0.0	NM_015658.3	2250	NOC2L	intron	c.699-613G>A		intron6	-1.0	-1.0	-1.0	1.208	-1.0	-1.0	C	T
+Proband-8	Jonsson2017	28959963	1548	0	genome	mixed	unknown	1	891051	C>A	0	0	N	0	0.0	0.0	0.0	NM_015658.3	2250	NOC2L	intron	c.698+252G>T		intron6	-1.0	-1.0	-1.0	1.317	-1.0	-1.0	C	A
+14505.p1	Iossifov	25363768	2508	1911	exome	autism	yes	1	897349	G>A	149416826	134	N	0	0.0	0.0	0.0	NM_198317.2	1929	KLHL17	synonymous	c.633G>A	p.(K211=)	exon4	-1.0	-1.0	-1.0	10.34	-1.0	-1.0	G	A
+DDD4K.03258	DDD_2017	28135719	4293	0	exome	developmentalDisorder	unknown	1	897417	C>T	0	0	C	0	8e-06	0.0	0.0	NM_198317.2	1929	KLHL17	missense	c.701C>T	p.(P234L)	exon4	0.957	0.8240000000000001	0.005	17.36	-1.0	0.0	C	T
+09C87513	DeRubeis2014	25363760	1445	0	exome	autism	unknown	1	897739	T>C	0	0	T	0	0.0	0.0	0.0	NM_198317.2	1929	KLHL17	missense	c.716T>C	p.(L239P)	exon5	0.998	0.972	0.18600000000000005	15.16	-1.0	0.0	T	C
+3332-1	Fromer2014	24463507	623	0	exome	schizophrenia	yes	1	899318	CCT>C	0	0	N	0	0.0	0.0	0.0	NM_198317.2	1929	KLHL17	frameshift	c.1375_1376del2	p.(L459Dfs*23)	exon9	-1.0	-1.0	-1.0	-1.0	1.0	-1.0	CCT	C

@@ -33,7 +33,7 @@ cp -r $DAE_DB_DIR/pheno/comp_pheno/images/comp_pheno \
 cd /wd/integration/fixtures/hg19/micro_iossifov2014
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    simple_study_import.py --id iossifov_2014 \
+    simple_study_import --id iossifov_2014 \
     -o /wd/data/temp-local \
     --denovo-file iossifov2014.txt \
     iossifov2014_families.ped
@@ -41,7 +41,7 @@ cd /wd/integration/fixtures/hg19/micro_iossifov2014
 cd /wd
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    generate_denovo_gene_sets.py
+    generate_denovo_gene_sets
 
 chmod -R 0777 $DAE_DB_DIR
 echo "sample description" > $DAE_DB_DIR/main_description.md
