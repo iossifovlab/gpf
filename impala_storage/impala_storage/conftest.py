@@ -1,6 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import logging
 import os
+import pathlib
+from collections.abc import Generator
 
 import pytest
 
@@ -10,6 +12,16 @@ from dae.genotype_storage.genotype_storage_registry import (
 )
 
 logger = logging.getLogger(__name__)
+
+pytest_plugins = ["dae_conftests.dae_conftests"]
+
+
+@pytest.fixture(scope="module")
+def resources_dir(request: pytest.FixtureRequest) -> pathlib.Path:
+    resources_path = os.path.join(
+        os.path.dirname(os.path.realpath(request.module.__file__)),
+        "resources")
+    return pathlib.Path(resources_path)
 
 
 @pytest.fixture(scope="session")
@@ -24,9 +36,9 @@ def impala_host() -> str:
 
 @pytest.fixture(scope="session")
 def impala_genotype_storage(
-        request: pytest.FixtureRequest,
-        hdfs_host: str,
-        impala_host: str) -> GenotypeStorage:
+    hdfs_host: str,
+    impala_host: str,
+) -> Generator[GenotypeStorage, None, None]:
 
     storage_config = {
         "id": "impala_test_storage",
@@ -40,14 +52,12 @@ def impala_genotype_storage(
         "hdfs": {
             "host": hdfs_host,
             "port": 8020,
-            "base_dir": "/tmp/test_data"},
+            "base_dir": "/tmp/test_data",  # noqa: S108
+        },
     }
     registry = GenotypeStorageRegistry()
     registry.register_storage_config(storage_config)
 
-    def fin() -> None:
-        registry.shutdown()
+    yield registry.get_genotype_storage("impala_test_storage")
 
-    request.addfinalizer(fin)
-
-    return registry.get_genotype_storage("impala_test_storage")
+    registry.shutdown()

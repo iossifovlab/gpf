@@ -1,17 +1,19 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import io
 import textwrap
-from typing import Any, Dict, cast
 
 import pytest
 import toml
-from box import Box
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.person_sets import person_set_collections_schema
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.person_sets import PersonSetCollection
+from dae.person_sets import (
+    PersonSetCollection,
+    PersonSetCollectionConfig,
+    parse_person_set_collections_study_config,
+)
 from dae.testing import convert_to_tab_separated
 from impala_storage.schema1.impala_variants import ImpalaVariants
 
@@ -38,13 +40,14 @@ def families_fixture() -> FamiliesData:
     return families
 
 
-def get_person_set_collections_config(content: str) -> Box:
-    return cast(
-        Box,
-        GPFConfigParser.process_config(
-            cast(Dict[str, Any], toml.loads(content)),
-            {"person_set_collections": person_set_collections_schema},
-        ).person_set_collections)
+def get_person_set_collections_config(
+    content: str,
+) -> dict[str, PersonSetCollectionConfig]:
+    config = GPFConfigParser.process_config(
+        toml.loads(content),
+        {"person_set_collections": person_set_collections_schema},
+    )
+    return parse_person_set_collections_study_config(config)
 
 
 @pytest.fixture()
@@ -76,9 +79,8 @@ def status_collection(families_fixture: FamiliesData) -> PersonSetCollection:
 
     config = get_person_set_collections_config(content)
 
-    collection = PersonSetCollection.from_families(
-        config.status, families_fixture)
-    return collection
+    return PersonSetCollection.from_families(
+        config["status"], families_fixture)
 
 
 def test_status_person_set_collection(
@@ -155,7 +157,7 @@ def status_sex_collection(
     """))
 
     return PersonSetCollection.from_families(
-        config.status_sex, families_fixture,
+        config["status_sex"], families_fixture,
     )
 
 

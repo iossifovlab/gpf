@@ -43,9 +43,10 @@ dependencies:
   - jinja2=3.1.4
   - toolz=0.12
   - markdown2=2.4
-  - python-duckdb=1.0
-  - duckdb-engine=0.12
-  - sqlglot=25.9
+  - python-duckdb=1.1
+  - duckdb=1.1
+  # - duckdb-engine=0.13
+  - sqlglot=25
   - polars=1.2
   - sentry-sdk=2.12
   - pybigwig=0.3
