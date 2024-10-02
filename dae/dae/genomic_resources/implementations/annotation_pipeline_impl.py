@@ -1,12 +1,14 @@
 import logging
 import textwrap
 from typing import Any
+from urllib.parse import quote
 
 from jinja2 import Environment, PackageLoader, Template
 from markdown2 import markdown
 
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.genomic_resources.genomic_scores import GenomicScore
 from dae.genomic_resources.repository import GenomicResource
 from dae.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
@@ -50,6 +52,45 @@ class AnnotationPipelineImplementation(
             {% endblock %}
         """))
 
+    @property
+    def _relative_prefix_to_root_dir(self) -> str:
+        return "/".join([".."] * len(self.resource.resource_id.split("/")))
+
+    def _make_resource_url(self, resource: GenomicResource) -> str:
+        repo_url = self.resource.get_repo_url()
+        res_url = resource.get_url()
+        if repo_url in res_url:
+            res_url = "/".join([
+                self._relative_prefix_to_root_dir,
+                resource.resource_id,
+            ])
+        else:
+            logger.warning(
+                "Referencing resource outside managed GRR %s",
+                resource.get_id(),
+            )
+        return res_url
+
+    def _make_histogram_url(
+        self, score: GenomicScore, score_id: str,
+    ) -> str | None:
+        repo_url = self.resource.get_repo_url()
+        hist_url = score.get_histogram_image_url(score_id)
+        if hist_url is None:
+            return None
+        if repo_url in hist_url:
+            hist_url = "/".join([
+                self._relative_prefix_to_root_dir,
+                score.resource.resource_id,
+                quote(score.get_histogram_image_filename(score_id)),
+            ])
+        else:
+            logger.warning(
+                "Referencing resource outside managed GRR %s",
+                score.resource.get_id(),
+            )
+        return hist_url
+
     def _get_template_data(self) -> dict[str, Any]:
         if self.pipeline is None:
             raise ValueError
@@ -57,9 +98,10 @@ class AnnotationPipelineImplementation(
         doc_template = env.get_template("annotate_doc_pipeline_template.jinja")
         return {
             "content": doc_template.render(
-                annotation_pipeline_info=self.pipeline.get_info(),
-                preamble=self.pipeline.preamble,
+                pipeline=self.pipeline,
                 markdown=markdown,
+                res_url=self._make_resource_url,
+                hist_url=self._make_histogram_url,
             ),
         }
 

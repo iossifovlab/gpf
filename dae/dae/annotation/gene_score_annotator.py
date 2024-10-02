@@ -27,7 +27,7 @@ def build_gene_score_annotator(pipeline: AnnotationPipeline,
     """Create a gene score annotator."""
     gene_score_resource_id = info.parameters["resource_id"]
     if not gene_score_resource_id:
-        raise ValueError(f"The {info} needs a 'resrouce_id' parameter.")
+        raise ValueError(f"The {info} needs a 'resource_id' parameter.")
     gene_score_resource = pipeline.repository.get_resource(
         gene_score_resource_id)
     if gene_score_resource is None:
@@ -39,10 +39,10 @@ def build_gene_score_annotator(pipeline: AnnotationPipeline,
                          "parameter")
     input_gene_list_info = pipeline.get_attribute_info(input_gene_list)
     if input_gene_list_info is None:
-        raise ValueError(f"The {input_gene_list} is not privided by the "
+        raise ValueError(f"The {input_gene_list} is not provided by the "
                          "pipeline.")
     if input_gene_list_info.type != "object":
-        raise ValueError(f"The {input_gene_list} privided by the pipeline "
+        raise ValueError(f"The {input_gene_list} provided by the pipeline "
                          "is not of type object.")
     return GeneScoreAnnotator(pipeline, info,
                               gene_score_resource, input_gene_list)
@@ -58,19 +58,19 @@ class GeneScoreAnnotator(Annotator):
                  gene_score_resource: GenomicResource, input_gene_list: str):
 
         self.gene_score_resource = gene_score_resource
-        self.gene_score = build_gene_score_from_resource(
+        self.score = build_gene_score_from_resource(
             self.gene_score_resource)
 
         info.resources += [gene_score_resource]
         if not info.attributes:
             info.attributes = AnnotationConfigParser.parse_raw_attributes(
-                self.gene_score.get_all_scores(),
+                self.score.get_all_scores(),
             )
 
         self.aggregators: list[str] = []
 
         for attribute_config in info.attributes:
-            score_def = self.gene_score.score_definitions.get(
+            score_def = self.score.score_definitions.get(
                 attribute_config.source,
             )
             if score_def is None:
@@ -121,7 +121,7 @@ class GeneScoreAnnotator(Annotator):
 
         for symbol in gene_symbols:
             aggregator.add(
-                self.gene_score.get_gene_value(score_id, symbol),
+                self.score.get_gene_value(score_id, symbol),
                 key=symbol,
             )
 

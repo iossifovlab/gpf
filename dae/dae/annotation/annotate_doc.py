@@ -4,12 +4,15 @@ import argparse
 import logging
 import os
 import sys
+from pathlib import Path
 
 from jinja2 import Environment, PackageLoader
 from markdown2 import markdown
 
 from dae.annotation.context import CLIAnnotationContext
 from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.genomic_resources.genomic_scores import GenomicScore
+from dae.genomic_resources.repository import GenomicResource
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("annotate_doc")
@@ -42,21 +45,25 @@ def cli(raw_args: list[str] | None = None) -> None:
     context = get_genomic_context()
     pipeline = CLIAnnotationContext.get_pipeline(context)
 
-    annotation_info = pipeline.get_info()
-
     pipeline_path = None
     if os.path.exists(args.pipeline):
         pipeline_path = args.pipeline
 
-    env = Environment(loader=PackageLoader("dae.annotation", "templates"))
+    def make_resource_url(resource: GenomicResource) -> str:
+        return resource.get_url()
+
+    def make_histogram_url(score: GenomicScore, score_id: str) -> str | None:
+        return score.get_histogram_image_url(score_id)
+
+    env = Environment(loader=PackageLoader("dae.annotation", "templates"))  # noqa: S701
     template = env.get_template("annotate_doc_pipeline_template.jinja")
-    html_doc = template.render(annotation_pipeline_info=annotation_info,
-                               preamble=pipeline.preamble,
+    html_doc = template.render(pipeline=pipeline,
                                pipeline_path=pipeline_path,
-                               markdown=markdown)
+                               markdown=markdown,
+                               res_url=make_resource_url,
+                               hist_url=make_histogram_url)
     if args.output:
-        with open(args.output, "w") as outfile:
-            outfile.write(html_doc)
+        Path(args.output).write_text(html_doc)
     else:
         print(html_doc)
 

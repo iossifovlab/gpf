@@ -78,7 +78,6 @@ class GenomicScoreAnnotatorBase(Annotator):
             attribute_info.type = score_def.value_type
             attribute_info.description = score_def.desc
 
-            self._create_the_attribute_documentation(attribute_info)
         self.simple_score_queries: list[str] = [
             attr.source for attr in info.attributes]
 
@@ -95,22 +94,6 @@ class GenomicScoreAnnotatorBase(Annotator):
     def close(self) -> None:
         self.score.close()
         super().close()
-
-    def _create_the_attribute_documentation(
-        self, attribute_info: AttributeInfo,
-    ) -> None:
-        hist_url = self.score.get_histogram_image_url(attribute_info.source)
-        score_def = self.score.get_score_definition(attribute_info.source)
-        assert score_def is not None
-        # pylint: disable=protected-access
-        attribute_info._documentation = f"""
-{attribute_info.description}
-
-![HISTOGRAM]({hist_url})
-
-small values: {score_def.small_values_desc}\n
-large_values {score_def.large_values_desc}
-        """  # noqa: SLF001
 
     def _build_score_aggregator_documentation(
         self, attribute_info: AttributeInfo,

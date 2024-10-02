@@ -187,37 +187,37 @@
 
   <body>
     <h1 class="pipeline-header">Pipeline Documentation</h1>
-    {% if preamble is not none %}
+    {% if pipeline.preamble is not none %}
       <h2 class="preamble-header">preamble</h2>
       <table style="width: 100%">
-      {% if preamble.summary %}
+      {% if pipeline.preamble.summary %}
         <tr>
           <th>Summary</th>
-          <td>{{preamble.summary}}</td>
+          <td>{{pipeline.preamble.summary}}</td>
         </tr>
       {% endif %}
-      {% if preamble.description %}
+      {% if pipeline.preamble.description %}
         <tr>
           <th>Description</th>
-          <td>{{preamble.description}}</td>
+          <td>{{pipeline.preamble.description}}</td>
         </tr>
       {% endif %}
-      {% if preamble.input_reference_genome_res.get_url() %}
+      {% if res_url(pipeline.preamble.input_reference_genome_res) %}
         <tr>
           <th>Input reference genome</th>
           <td>
-            <a href="{{preamble.input_reference_genome_res.get_url() + "/index.html"}}">
-              {{preamble.input_reference_genome}}
+            <a href="{{res_url(pipeline.preamble.input_reference_genome_res) + "/index.html"}}">
+              {{pipeline.preamble.input_reference_genome}}
             </a>
           </td>
         </tr>
       {% endif %}
-      {% if preamble.metadata.items()|length > 1 %}
+      {% if pipeline.preamble.metadata.items()|length > 1 %}
         <tr>
           <th>Metadata</th>
           <td>
             <ul>
-                {%- for k, v in preamble.metadata.items() %}
+                {%- for k, v in pipeline.preamble.metadata.items() %}
                 <li>{{k}} = {{v}}</li>
                 {%- endfor %}
             </ul>
@@ -234,10 +234,10 @@
     {% endif %}
 
     <h2 class="annotator-list-header">Annotators</h2>
-    {% for annotator_info in annotation_pipeline_info %}
+    {% for annotator in pipeline.annotators %}
       <div class="annotator-doc">
         <div class="attribute-list">
-          {% for attribute_info in annotator_info.attributes %}
+          {% for attribute_info in annotator._info.attributes %}
             <div class="attribute">
               <div class="attribute-info {{'attribute-internal' if attribute_info.internal }}">
                 <div class="attribute-name">
@@ -246,21 +246,24 @@
                 <div class="attribute-type">Type: {{attribute_info.type + ' (Internal)' if attribute_info.internal else attribute_info.name}}</div>
               </div>
               <div class="attribute-description">
-                {{markdown(attribute_info.documentation)}}
+                {{ markdown(attribute_info.documentation) }}
+                {% if annotator.score %}
+                  <img src="{{hist_url(annotator.score, attribute_info.source)}}" alt="HISTOGRAM">
+                {% endif %}
                 <div class="attribute-source">source: {{attribute_info.source}}</div>
               </div>
             </div>
           {% endfor %}
         </div>
 
-        <div class="annotator-line {{'sticky-line' if annotator_info.attributes|length > 1 }}">
+        <div class="annotator-line {{'sticky-line' if annotator._info.attributes|length > 1 }}">
           <div class="annotator">
-            <div class="annotator-title">Annotator type: {{annotator_info.type}}</div>
+            <div class="annotator-title">Annotator type: {{annotator._info.type}}</div>
           </div>
-    
-          {% if annotator_info.documentation %}
+
+          {% if annotator._info.documentation %}
             <div class="annotator-description">
-              {{ markdown(annotator_info.documentation) }}
+              {{ markdown(annotator._info.documentation) }}
             </div>
           {% else %}
             <div class="no-description">
@@ -268,11 +271,11 @@
             </div>
           {% endif %}
 
-          {% for genomic_resource in annotator_info.resources %}
+          {% for genomic_resource in annotator._info.resources %}
             <div class="resource">
               <div><b>Resource</b></div>
-              <div class="resource-info">Id: <a href="{{genomic_resource.get_url()}}/index.html">
-                      {{genomic_resource.get_id()}}</a></div>                            
+              <div class="resource-info">Id: <a href="{{res_url(genomic_resource)}}/index.html">
+                      {{genomic_resource.get_id()}}</a></div>
               <div class="resource-info">Type: {{genomic_resource.get_type()}}</div>
               {% if genomic_resource.get_summary() %}
                 <div class="resource-info">Summary:</div>
