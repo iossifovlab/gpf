@@ -85,11 +85,9 @@ import { UserManagementComponent } from './user-management/user-management.compo
 import { UserInfoPipe } from './users/user-info.pipe';
 import { UsersTableComponent } from './users-table/users-table.component';
 import { GroupsTableComponent } from './groups-table/groups-table.component';
-import { UserEditComponent } from './user-edit/user-edit.component';
 import { ManagementComponent } from './management/management.component';
 import { UsersGroupsService } from './users-groups/users-groups.service';
 import { ConfirmationPopoverModule } from 'angular-confirmation-popover';
-import { UserGroupsSelectorComponent } from './user-groups-selector/user-groups-selector.component';
 import { DatasetsTableComponent } from './datasets-table/datasets-table.component';
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
@@ -110,7 +108,6 @@ import { inheritanceTypesReducer } from './inheritancetypes/inheritancetypes.sta
 import { GeneBrowserComponent } from './gene-browser/gene-browser.component';
 import { GlobalErrorHandler } from './global-error-handler/global-error-handler';
 import { GlobalErrorDisplayComponent } from './global-error-display/global-error-display.component';
-import { NgMultiSelectDropDownModule } from 'ng-multiselect-dropdown';
 import { CommonReportsRowComponent } from './variant-reports/common-reports-row/common-reports-row.component';
 import { CommonReportsPedigreeCellComponent } from './variant-reports/common-reports-pedigree-cell/common-reports-pedigree-cell.component';
 import { LoadingSpinnerComponent } from './loading-spinner/loading-spinner.component';
@@ -259,10 +256,6 @@ const appRoutes: Routes = [
         path: '',
         pathMatch: 'full',
         component: UserManagementComponent
-      },
-      {
-        path: 'users/:id',
-        component: UserEditComponent
       }
     ]
   },
@@ -344,9 +337,7 @@ const appRoutes: Routes = [
     UserManagementComponent,
     UsersTableComponent,
     GroupsTableComponent,
-    UserEditComponent,
     ManagementComponent,
-    UserGroupsSelectorComponent,
     DatasetsTableComponent,
     GenotypePreviewFieldComponent,
     ErrorsAlertComponent,
@@ -420,7 +411,6 @@ const appRoutes: Routes = [
     ConfirmationPopoverModule.forRoot({
       confirmButtonType: 'danger'
     }),
-    NgMultiSelectDropDownModule.forRoot(),
     DragDropModule,
     ClipboardModule,
     ScrollingModule,
