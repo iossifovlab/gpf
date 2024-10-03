@@ -65,9 +65,10 @@ class DenovoGeneSetsDb:
     @cached_property
     def collections_descriptions(self) -> list[dict[str, Any]]:
         """Return gene set descriptions."""
-        gene_sets_types = []
-        for gs_collection in self._denovo_gene_set_collections.values():
-            gene_sets_types += gs_collection.get_gene_sets_types_legend()
+        gene_sets_types: list[dict[str, Any]] = [
+            gs_collection.get_gene_sets_types_legend()
+            for gs_collection in self._denovo_gene_set_collections.values()
+        ]
 
         return [{
             "desc": "Denovo",
@@ -76,7 +77,9 @@ class DenovoGeneSetsDb:
             "types": gene_sets_types,
         }]
 
-    def get_collection_types_legend(self, gs_collection_id: str) -> list[Any]:
+    def get_collection_types_legend(
+        self, gs_collection_id: str,
+    ) -> dict[str, Any]:
         return self._denovo_gene_set_collections[gs_collection_id]\
             .get_gene_sets_types_legend()
 
