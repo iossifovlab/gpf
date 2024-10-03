@@ -542,7 +542,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         instrument_tables = {}
 
         for measure_id in measure_ids:
-            instrument, _ = measure_id.split(".")
+            instrument, _ = measure_id.split(".", maxsplit=1)
             instrument_table = table(generate_instrument_table_name(instrument))
             instrument_tables[instrument] = instrument_table
 
@@ -574,7 +574,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         query = select(*output_cols).from_(instrument_people)
         joined = set()
         for measure_id in measure_ids:
-            instrument, measure = measure_id.split(".")
+            instrument, measure = measure_id.split(".", maxsplit=1)
             instrument_table = instrument_tables[instrument]
             if instrument not in joined:
                 left_col = person_id_col.sql()
