@@ -1,4 +1,5 @@
 import logging
+import operator
 from functools import cached_property, lru_cache
 from typing import Any, cast
 
@@ -65,10 +66,9 @@ class DenovoGeneSetsDb:
     @cached_property
     def collections_descriptions(self) -> list[dict[str, Any]]:
         """Return gene set descriptions."""
-        gene_sets_types: list[dict[str, Any]] = [
-            gs_collection.get_gene_sets_types_legend()
-            for gs_collection in self._denovo_gene_set_collections.values()
-        ]
+        gene_sets_types: list[Any] = []
+        for gs_collection in self._denovo_gene_set_collections.values():
+            gene_sets_types += gs_collection.get_gene_sets_types_legend_list()
 
         return [{
             "desc": "Denovo",
@@ -77,11 +77,25 @@ class DenovoGeneSetsDb:
             "types": gene_sets_types,
         }]
 
+    @cached_property
+    def denovo_gene_sets_types(self) -> list[dict[str, Any]]:
+        """Return denovo gene sets types descriptions."""
+        return sorted([
+            gs_collection.get_gene_sets_types_legend()
+            for gs_collection in self._denovo_gene_set_collections.values()
+        ], key=operator.itemgetter("datasetId"))
+
     def get_collection_types_legend(
         self, gs_collection_id: str,
     ) -> dict[str, Any]:
         return self._denovo_gene_set_collections[gs_collection_id]\
             .get_gene_sets_types_legend()
+
+    def get_collection_types_legend_list(
+        self, gs_collection_id: str,
+    ) -> list[Any]:
+        return self._denovo_gene_set_collections[gs_collection_id]\
+            .get_gene_sets_types_legend_list()
 
     @lru_cache(maxsize=64)
     def get_genotype_data_ids(self) -> set[str]:

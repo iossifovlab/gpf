@@ -42,6 +42,55 @@ def test_gene_sets_collections(
     assert len(data) == 2, data
 
 
+def test_denovo_gene_sets_types(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    url = "/api/v3/gene_sets/denovo_gene_sets_types"
+    response = admin_client.get(url)
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    assert data[0]["datasetId"] == "t4c8_dataset"
+    assert data[1]["datasetId"] == "t4c8_study_1"
+    assert data[2]["datasetId"] == "t4c8_study_2"
+    assert data[3]["datasetId"] == "t4c8_study_4"
+
+    assert len(
+        data[0]["personSetCollections"][0]["personSetCollectionLegend"],
+    ) == 4
+    assert len(
+        data[1]["personSetCollections"][0]["personSetCollectionLegend"],
+    ) == 2
+    assert len(
+        data[2]["personSetCollections"][0]["personSetCollectionLegend"],
+    ) == 3
+    assert len(
+        data[3]["personSetCollections"][0]["personSetCollectionLegend"],
+    ) == 2
+
+    assert data[0]["personSetCollections"][0][
+        "personSetCollectionLegend"
+    ][0]["id"] == "autism"
+    assert data[0]["personSetCollections"][0][
+        "personSetCollectionLegend"
+    ][1]["id"] == "epilepsy"
+    assert data[0]["personSetCollections"][0][
+        "personSetCollectionLegend"
+    ][2]["id"] == "unaffected"
+    assert data[0]["personSetCollections"][0][
+        "personSetCollectionLegend"
+    ][3]["id"] == "unspecified"
+
+    assert data[1]["personSetCollections"][0][
+        "personSetCollectionLegend"
+    ][0]["id"] == "autism"
+    assert data[1]["personSetCollections"][0][
+        "personSetCollectionLegend"
+    ][1]["id"] == "unaffected"
+
+
 def test_denovo_gene_set_download(
     admin_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance

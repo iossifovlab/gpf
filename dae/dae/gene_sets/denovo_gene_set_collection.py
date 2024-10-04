@@ -48,7 +48,9 @@ class DenovoGeneSetCollection:
 
         self.pscs = pscs
         self.cache: dict[str, Any] = self._build_empty_cache()
-        self._gene_sets_types_legend: dict[str, Sequence[Collection[str]]] | None = None
+        self._gene_sets_types_legend: \
+            dict[str, Sequence[Collection[str]]] | None = None
+        self._gene_sets_types_legend_old: list[dict[str, Any]] | None = None
 
     def add_gene(
         self,
@@ -270,6 +272,25 @@ class DenovoGeneSetCollection:
             }
 
         return self._gene_sets_types_legend
+
+    def get_gene_sets_types_legend_list(self) -> list[Any]:
+        """Return list of dictionaries for legends for each collection."""
+        if self._gene_sets_types_legend_old is None:
+            name = self.study_name or self.study_id
+            self._gene_sets_types_legend_old = [
+                {
+                    "datasetId": self.study_id,
+                    "datasetName": name,
+                    "personSetCollectionId": collection_id,
+                    "personSetCollectionName": person_set_collection.name,
+                    "personSetCollectionLegend":
+                        self.get_person_set_collection_legend(collection_id),
+                }
+                for collection_id, person_set_collection
+                in self.pscs.items()
+            ]
+
+        return self._gene_sets_types_legend_old
 
     def get_person_set_collection_legend(
         self, psc_id: str,
