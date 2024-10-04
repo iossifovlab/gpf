@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+* 2024.10.1
+    * Bump Angular version to 17
+    * Bump DuckDb version to 1.1.1
+    * Fix Impala genotype storage bugs
+    * Clean up dataset statistics unit tests
+
+* 2024.10.0
+    * Bump Angular version to 16
+    * Clean up of GPFjs code
+    * Fix annotatoion pipeline documentation links to genomic resources
+    * Support for full VEP annotation in VEP annotator plugin
+    * Reorganization of de Novo gene sets API
+
 * 2024.9.3
     * Fix phenotype measures download in phenotype browser
     * Fix searches for datasets in management user interface
