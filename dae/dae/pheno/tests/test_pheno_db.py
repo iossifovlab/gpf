@@ -222,6 +222,15 @@ def test_default_get_measure_df(fake_phenotype_data: PhenotypeStudy) -> None:
     assert len(df) == 17
 
 
+def test_get_query_with_dot_measure(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
+    result = fake_phenotype_data.db._get_measure_values_query(
+        ["instr.some.measure.1"],
+    )
+    assert result is not None
+
+
 @pytest.mark.parametrize(
     "families,expected_count", [(["f20"], 5), (["f20", "f21"], 10)],
 )
