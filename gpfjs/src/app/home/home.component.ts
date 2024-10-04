@@ -1,6 +1,7 @@
 import { APP_BASE_HREF } from '@angular/common';
 import { Component, ElementRef, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatAutocompleteTrigger } from '@angular/material/autocomplete';
+import { DatasetHierarchy } from 'app/datasets/datasets';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Gene } from 'app/gene-browser/gene';
@@ -26,7 +27,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   public allStudies = new Set();
   public visibleDatasets: string[];
   public datasets: string[] = [];
-  public content: object = null;
+  public content: DatasetHierarchy[] = null;
   public loadingFinished = false;
   public studiesLoaded = 0;
   public geneProfilesConfig: GeneProfilesSingleViewConfig;
@@ -56,20 +57,22 @@ export class HomeComponent implements OnInit, OnDestroy {
       datasets: this.datasetsTreeService.getDatasetHierarchy(),
       visibleDatasets: this.datasetsService.getVisibleDatasets()
     }).subscribe(({datasets, visibleDatasets}) => {
-      (datasets['data'] as Array<object>).forEach((d: object) => {
-        this.collectAllStudies(d); this.attachDatasetDescription(d);
+      console.log(datasets);
+      datasets.forEach((d: DatasetHierarchy) => {
+        this.collectAllStudies(d);
+        this.attachDatasetDescription(d);
       });
 
       this.content = datasets;
       this.visibleDatasets = visibleDatasets as string[];
 
-      (this.content['data'] as Array<object>).forEach(d => {
-        if (this.visibleDatasets.includes(d['dataset'] as string)) {
-          this.datasets.push(d['dataset'] as string);
+      this.content.forEach(d => {
+        if (this.visibleDatasets.includes(d.id)) {
+          this.datasets.push(d.id);
         }
 
-        if (d['children'] as Array<object>) {
-          (d['children'] as Array<object>).map(c => c['dataset'] as string).forEach(c => {
+        if (d.children) {
+          d.children.map(c => c.id).forEach(c => {
             if (this.visibleDatasets.includes(c)) {
               this.datasets.push(c);
             }
@@ -143,11 +146,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.geneSymbolSuggestions = [];
   }
 
-  public attachDatasetDescription(entry: object): void {
-    entry['children']?.forEach((d: object) => this.attachDatasetDescription(d));
-    this.subscription.add(this.datasetsService.getDatasetDescription(entry['dataset'] as string).subscribe(desc => {
+  public attachDatasetDescription(entry: DatasetHierarchy): void {
+    entry.children?.forEach((d: DatasetHierarchy) => this.attachDatasetDescription(d));
+    this.subscription.add(this.datasetsService.getDatasetDescription(entry.id).subscribe(desc => {
       if (desc) {
-        entry['description'] = this.getFirstParagraph(desc);
+        entry.description = this.getFirstParagraph(desc);
       }
 
       this.studiesLoaded++;
@@ -167,16 +170,16 @@ export class HomeComponent implements OnInit, OnDestroy {
     return splitDescription[0];
   }
 
-  public collectAllStudies(data: object): void {
-    this.allStudies.add(data['dataset']);
-    if (data['children'] && (data['children'] as Array<object>).length !== 0) {
-      (data['children'] as Array<object>).forEach(dataset => {
+  public collectAllStudies(data: DatasetHierarchy): void {
+    this.allStudies.add(data.id);
+    if (data.children && data.children.length !== 0) {
+      data.children.forEach(dataset => {
         this.collectAllStudies(dataset);
       });
     }
   }
 
-  public datasetHasVisibleChildren(children: string[]): boolean {
+  public datasetHasVisibleChildren(children: DatasetHierarchy[]): boolean {
     let result = false;
 
     if (!children) {
@@ -184,21 +187,21 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
 
     children.forEach(c => {
-      if (this.visibleDatasets.includes(c['dataset'] as string)) {
+      if (this.visibleDatasets.includes(c.id)) {
         result = true;
       }
     });
     return result;
   }
 
-  public toggleDatasetCollapse(dataset): void {
-    if (!this.visibleDatasets.includes(dataset.dataset)) {
+  public toggleDatasetCollapse(dataset: DatasetHierarchy): void {
+    if (!this.visibleDatasets.includes(dataset.id)) {
       return;
     }
 
-    const children = dataset.children.map(c => c.dataset);
-    if (this.datasets.includes(dataset.children.map(d => d.dataset)[0])) {
-      this.datasets = this.datasets.filter(a => !new Set(this.findAllByKey(dataset.children, 'dataset')).has(a));
+    const children = dataset.children.map(c => c.id);
+    if (this.datasets.includes(dataset.children.map(d => d.id)[0])) {
+      this.datasets = this.datasets.filter(a => !new Set(this.findAllByKey(dataset.children, 'id')).has(a));
     } else {
       children.forEach(c => {
         if (this.visibleDatasets.includes(c)) {
