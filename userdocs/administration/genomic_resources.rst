@@ -273,8 +273,6 @@ Other values are grouped into the ``Other`` category.
 The categorical histogram configuration supports the following fields:
 
 * ``type`` - the type of the histogram. This should be set to ``categorical``.
-* ``number_of_bins`` - the number of bins in the histogram. By default this is set
-  to 100.
 * ``y_log_scale`` - if set to ``True`` the y axis of the histogram will be 
   logarithmic.
 * ``displayed_values_count`` - the number of unique values that will be displayed in
@@ -283,7 +281,7 @@ The categorical histogram configuration supports the following fields:
 * ``displayed_values_percent`` - the percentage of total mass of unique values 
   that will be displayed. Other values are grouped into the ``Other`` category.
   **Only one of** ``displayed_values_count`` and ``displayed_values_percent`` can be set.
-* ``values_order`` - the order in which the unique values are displayed in the 
+* ``value_order`` - the order in which the unique values are displayed in the 
   histogram.
 * ``plot_function`` - user defined plot function. When the default plot function is
   not suitable for the score, a user defined function can be used.
