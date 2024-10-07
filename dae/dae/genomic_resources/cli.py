@@ -659,6 +659,7 @@ def _run_resource_stats_command(
         return 1
 
     impl = build_resource_implementation(res)
+
     needs_rebuild = _stats_need_rebuild(proto, impl)
 
     if dry_run and needs_rebuild:
@@ -762,8 +763,8 @@ def _run_resource_info_command(
     if res is None:
         logger.error("resource not found...")
         return 1
-
     _do_resource_info_command(repo, proto, res)
+
     return 0
 
 
@@ -857,48 +858,59 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
 
     if command in {"repo-manifest", "repo-stats", "repo-info", "repo-repair"}:
         status = 0
-        if command == "repo-manifest":
-            status = _run_repo_manifest_command(proto, **vars(args))
-        elif command == "repo-stats":
-            status = _run_repo_stats_command(repo, proto, **vars(args))
-        elif command == "repo-info":
-            status = _run_repo_info_command(repo, proto, **vars(args))
-        elif command == "repo-repair":
-            status = _run_repo_repair_command(repo, proto, **vars(args))
-        else:
-            logger.error(
-                "Unknown command %s.", command)
-            sys.exit(1)
-        if status == 0:
-            logger.info("GRR <%s> is consistent", repo_url)
-        else:
-            logger.warning("inconsistent GRR <%s> state", repo_url)
-            sys.exit(status)
+        try:
+            if command == "repo-manifest":
+                status = _run_repo_manifest_command(proto, **vars(args))
+            elif command == "repo-stats":
+                status = _run_repo_stats_command(repo, proto, **vars(args))
+            elif command == "repo-info":
+                status = _run_repo_info_command(repo, proto, **vars(args))
+            elif command == "repo-repair":
+                status = _run_repo_repair_command(repo, proto, **vars(args))
+            else:
+                logger.error(
+                    "Unknown command %s.", command)
+                sys.exit(1)
+            if status == 0:
+                logger.info("GRR <%s> is consistent", repo_url)
+                return
+        except ValueError as ex:
+            logger.error(  # noqa: TRY400
+                "Misconfigured repository %s; %s", repo_url, ex)
+            status = 1
+
+        logger.warning("inconsistent GRR <%s> state", repo_url)
+        sys.exit(status)
     elif command in {
             "resource-manifest", "resource-stats",
             "resource-info", "resource-repair"}:
         status = 0
-        if command == "resource-manifest":
-            status = _run_resource_manifest_command(
-                proto, repo_url, **vars(args))
-        elif command == "resource-stats":
-            status = _run_resource_stats_command(
-                repo, proto, repo_url, **vars(args))
-        elif command == "resource-info":
-            status = _run_resource_info_command(
-                repo, proto, repo_url, **vars(args))
-        elif command == "resource-repair":
-            status = _run_resource_repair_command(
-                repo, proto, repo_url, **vars(args))
-        else:
-            logger.error(
-                "Unknown command %s.", command)
-            sys.exit(1)
-        if status == 0:
-            logger.info("GRR <%s> is consistent", repo_url)
-        else:
-            logger.warning("inconsistent GRR <%s> state", repo_url)
-            sys.exit(status)
+        try:
+            if command == "resource-manifest":
+                status = _run_resource_manifest_command(
+                    proto, repo_url, **vars(args))
+            elif command == "resource-stats":
+                status = _run_resource_stats_command(
+                    repo, proto, repo_url, **vars(args))
+            elif command == "resource-info":
+                status = _run_resource_info_command(
+                    repo, proto, repo_url, **vars(args))
+            elif command == "resource-repair":
+                status = _run_resource_repair_command(
+                    repo, proto, repo_url, **vars(args))
+            else:
+                logger.error(
+                    "Unknown command %s.", command)
+                sys.exit(1)
+            if status == 0:
+                logger.info("GRR <%s> is consistent", repo_url)
+                return
+        except ValueError as ex:
+            logger.error("%s", ex)  # noqa: TRY400
+            status = 1
+        logger.warning("inconsistent GRR <%s> state", repo_url)
+        sys.exit(status)
+
     else:
         logger.error(
             "Unknown command %s. The known commands are index, "
