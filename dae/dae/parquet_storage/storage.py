@@ -43,7 +43,7 @@ class ParquetLoaderVariants:
         reference_genome: ReferenceGenome | None = None,
         gene_models: GeneModels | None = None,
     ) -> None:
-        self.loader = ParquetLoader(data_dir)
+        self.loader = ParquetLoader.load_from_dir(data_dir)
         self.reference_genome = reference_genome
         self.gene_models = gene_models
 
