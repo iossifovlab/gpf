@@ -429,6 +429,9 @@ class FsspecReadWriteProtocol(
 
         result = Manifest()
         for name, path in self._scan_resource_for_files(resource_path, []):
+            if name.endswith("html"):  # Ignore generated info files
+                continue
+
             size = self._get_filepath_size(path)
             result.add(ManifestEntry(name, size, None))
         return result
@@ -610,7 +613,7 @@ class FsspecReadWriteProtocol(
                 "manifest": res.get_manifest().to_manifest_entries(),
             }
             for res in self.get_all_resources()]
-        content = sorted(content, key=operator.itemgetter("id"))  # type: ignore
+        content = sorted(content, key=operator.itemgetter("id"))
 
         content_filepath = os.path.join(
             self.url, GR_CONTENTS_FILE_NAME)
