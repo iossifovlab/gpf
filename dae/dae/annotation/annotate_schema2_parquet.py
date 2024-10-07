@@ -1,5 +1,7 @@
 import argparse
 import os
+import pathlib
+from datetime import datetime
 from glob import glob
 
 import yaml
@@ -51,12 +53,17 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             help="Directory to store intermediate output files in",
             default="annotate_schema2_output")
         parser.add_argument(
-            "-o", "--output",
-            help="Path of the directory to hold the output")
-        parser.add_argument(
             "-i", "--full-reannotation",
             help="Ignore any previous annotation and run "
             " a full reannotation.")
+        output_behaviour = parser.add_mutually_exclusive_group()
+        output_behaviour.add_argument(
+            "-o", "--output",
+            help="Path of the directory to hold the output")
+        output_behaviour.add_argument(
+            "-e", "--in-place",
+            help="Produce output directly in given input dir.",
+            action="store_true")
 
         CLIAnnotationContext.add_context_arguments(parser)
         TaskGraphCli.add_arguments(parser)
@@ -65,7 +72,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
     @staticmethod
     def annotate(
-        input_dir: str,
+        input_layout: Schema2DatasetLayout,
         output_dir: str,
         pipeline_config: RawAnnotatorsConfig,
         region: str,
@@ -74,7 +81,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         allow_repeated_attributes: bool,  # noqa: FBT001
     ) -> None:
         """Run annotation over a given directory of Parquet files."""
-        loader = ParquetLoader.load_from_dir(input_dir)
+        loader = ParquetLoader(input_layout)
         pipeline = AnnotateSchema2ParquetTool._produce_annotation_pipeline(
             pipeline_config,
             (loader.meta["annotation_pipeline"]
@@ -149,11 +156,44 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             meta_values.append(str(v))
         append_meta_to_parquet(layout.meta, meta_keys, meta_values)
 
+    def relabel_old_data(self, directory: str) -> tuple[str, str]:
+        """
+        Backup old meta and summary data, create new directories and link them.
+        """
+        loader = ParquetLoader.load_from_dir(directory)
+        assert loader.layout.summary is not None
+        meta_path = pathlib.Path(loader.layout.meta)
+        summary_path = pathlib.Path(loader.layout.summary)
+
+        date = datetime.today().strftime("%Y%m%d")
+
+        bak_meta_name = f"{meta_path.stem}_{date}"
+        bak_summary_name = f"summary_{date}"
+
+        return str(meta_path.rename(meta_path.with_stem(bak_meta_name))), \
+               str(summary_path.rename(summary_path.with_name(bak_summary_name)))
+
     def work(self) -> None:
         input_dir = os.path.abspath(self.args.input)
-        output_dir = os.path.abspath(self.args.output)
+
+        if self.args.in_place:
+            output_dir = input_dir
+        else:
+            output_dir = os.path.abspath(self.args.output)
 
         loader = ParquetLoader.load_from_dir(input_dir)
+
+        if self.args.in_place:
+            input_meta, input_summary = self.relabel_old_data(input_dir)
+            input_layout = Schema2DatasetLayout(
+                loader.layout.study,
+                loader.layout.pedigree,
+                input_summary,
+                loader.layout.family,
+                input_meta,
+                loader.layout.base_dir,
+            )
+            loader = ParquetLoader(input_layout)
 
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
@@ -182,17 +222,18 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             pipeline,
         )
 
-        # Symlink pedigree and family variants directories
-        os.symlink(
-            os.path.split(loader.layout.pedigree)[0],
-            os.path.split(layout.pedigree)[0],
-            target_is_directory=True,
-        )
-        os.symlink(
-            loader.layout.family,
-            layout.family,
-            target_is_directory=True,
-        )
+        if not self.args.in_place:
+            # Symlink pedigree and family variants directories
+            os.symlink(
+                os.path.split(loader.layout.pedigree)[0],
+                os.path.split(layout.pedigree)[0],
+                target_is_directory=True,
+            )
+            os.symlink(
+                loader.layout.family,
+                layout.family,
+                target_is_directory=True,
+            )
 
         if "reference_genome" not in loader.meta:
             raise ValueError("No reference genome found in study metadata!")
@@ -215,7 +256,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             annotation_tasks.append(self.task_graph.create_task(
                 f"part_{region}",
                 AnnotateSchema2ParquetTool.annotate,
-                [input_dir, output_dir,
+                [loader.layout, output_dir,
                  self.pipeline.raw, region, self.grr.definition,
                  idx, self.args.allow_repeated_attributes],
                 [],
