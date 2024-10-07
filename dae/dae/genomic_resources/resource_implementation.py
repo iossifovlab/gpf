@@ -181,7 +181,7 @@ class ResourceConfigValidationMixin:
                 resource.resource_id,
                 resource.get_type(),
                 validator.errors)
-            raise ValueError("Invalid configuration")
+            raise ValueError(f"Invalid configuration: {resource.resource_id}")
         return cast(dict, validator.document)
 
 
