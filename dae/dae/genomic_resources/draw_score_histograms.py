@@ -26,7 +26,7 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 def parse_cli_arguments() -> argparse.ArgumentParser:
     """Create CLI parser."""
     parser = argparse.ArgumentParser(
-        description="liftover VCF variants")
+        description="Draw histograms for genomic scores.")
 
     VerbosityConfiguration.set_arguments(parser)
 
