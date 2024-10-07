@@ -289,7 +289,7 @@ def test_reannotate_parquet_metadata(
         "-j", "1",
     ])
 
-    loader_result = ParquetLoader(output_dir)
+    loader_result = ParquetLoader.load_from_dir(output_dir)
 
     result_pipeline = dict(loader_result.meta).pop("annotation_pipeline")
 
@@ -335,8 +335,8 @@ def test_reannotate_parquet_symlinking(
         "-j", "1",
     ])
 
-    loader_old = ParquetLoader(input_dir)
-    loader_result = ParquetLoader(output_dir)
+    loader_old = ParquetLoader.load_from_dir(input_dir)
+    loader_result = ParquetLoader.load_from_dir(output_dir)
 
     # check pedigree is symlinked
     pedigree_path = pathlib.Path(loader_result.layout.pedigree)
@@ -388,8 +388,8 @@ def test_reannotate_parquet_symlinking_relative(
         "-j", "1",
     ])
 
-    loader_old = ParquetLoader(input_dir)
-    loader_result = ParquetLoader(output_dir)
+    loader_old = ParquetLoader.load_from_dir(input_dir)
+    loader_result = ParquetLoader.load_from_dir(output_dir)
 
     # check pedigree is symlinked
     pedigree_path = pathlib.Path(loader_result.layout.pedigree)
@@ -435,7 +435,7 @@ def test_reannotate_parquet_variants(
         "-j", "1",
     ])
 
-    loader_result = ParquetLoader(output_dir)
+    loader_result = ParquetLoader.load_from_dir(output_dir)
 
     # check variants are correctly reannotated
     result = set()
@@ -484,7 +484,7 @@ def test_reannotate_parquet_merging(
     assert len(glob(parquets_glob, recursive=True)) == expected_pq_files
 
     # check all variants present
-    loader_result = ParquetLoader(str(output_dir))
+    loader_result = ParquetLoader.load_from_dir(str(output_dir))
     assert len(list(loader_result.fetch_summary_variants())) == 6
 
 
@@ -518,7 +518,7 @@ def test_internal_attributes_reannotation(
     ])
 
     # check internal attributes are not saved
-    for sv in ParquetLoader(output_dir).fetch_summary_variants():
+    for sv in ParquetLoader.load_from_dir(output_dir).fetch_summary_variants():
         assert not sv.has_attribute("score_A_internal")
 
 
@@ -576,7 +576,7 @@ def test_annotationless_study_variants(
         "-j", "1",
     ])
 
-    loader_result = ParquetLoader(output_dir)
+    loader_result = ParquetLoader.load_from_dir(output_dir)
 
     # check variants are correctly reannotated
     result = set()
@@ -611,7 +611,7 @@ def test_internal_attributes_without_reannotation(
     ])
 
     # check internal attributes are not saved
-    for sv in ParquetLoader(output_dir).fetch_summary_variants():
+    for sv in ParquetLoader.load_from_dir(output_dir).fetch_summary_variants():
         assert not sv.has_attribute("score_A_internal")
 
 

@@ -147,14 +147,12 @@ class ParquetLoader:
         "bucket_index", "summary_index", "family_id", "family_variant_data",
     ]
 
-    def __init__(self, data_dir: str):
-        self.data_dir: str = data_dir
-        self.layout: Schema2DatasetLayout = \
-            load_schema2_dataset_layout(data_dir)
+    def __init__(self, layout: Schema2DatasetLayout):
+        self.layout = layout
 
         if not os.path.exists(self.layout.pedigree):
             raise ParquetLoaderException(
-                f"No pedigree file exists in {self.data_dir}!")
+                f"No pedigree file exists in {self.layout.study}!")
 
         self.families: FamiliesData = self._load_families(self.layout.pedigree)
         meta_file = pq.ParquetFile(self.layout.meta)
@@ -188,6 +186,10 @@ class ParquetLoader:
                 for contig in [r.split("=") for r in
                                self.meta["contigs"].split(",")]
             }
+
+    @staticmethod
+    def load_from_dir(input_dir: str) -> "ParquetLoader":
+        return ParquetLoader(load_schema2_dataset_layout(input_dir))
 
     def _scan_region_bins(self) -> dict[tuple[str, str], list[str]]:
         if not self.layout.summary:
@@ -233,7 +235,7 @@ class ParquetLoader:
     def _pq_file_in_region(self, path: str, region: Region) -> bool:
         if not self.partition_descriptor.has_region_bins():
             raise ParquetLoaderException(
-                f"No region bins exist in {self.data_dir}!")
+                f"No region bins exist in {self.layout.study}!")
 
         normalized_region = Region(
             (region.chrom

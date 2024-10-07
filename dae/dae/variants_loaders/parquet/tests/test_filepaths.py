@@ -8,7 +8,7 @@ from dae.variants_loaders.parquet.loader import ParquetLoader
 def test_get_summary_pq_filepaths_nonpartitioned(
     t4c8_study_nonpartitioned: str,
 ) -> None:
-    loader = ParquetLoader(t4c8_study_nonpartitioned)
+    loader = ParquetLoader.load_from_dir(t4c8_study_nonpartitioned)
     filepaths = next(loader.get_summary_pq_filepaths())
     assert list(map(os.path.basename, filepaths)) == [
         "summary_bucket_index_100000.parquet",
@@ -18,7 +18,7 @@ def test_get_summary_pq_filepaths_nonpartitioned(
 def test_get_summary_pq_filepaths_partitioned(
     t4c8_study_partitioned: str,
 ) -> None:
-    loader = ParquetLoader(t4c8_study_partitioned)
+    loader = ParquetLoader.load_from_dir(t4c8_study_partitioned)
     filepaths = list(loader.get_summary_pq_filepaths())
     assert len(filepaths) == 2
 
@@ -43,7 +43,7 @@ def test_get_summary_pq_filepaths_partitioned(
 def test_get_summary_pq_filepaths_partitioned_region(
     t4c8_study_partitioned: str,
 ) -> None:
-    loader = ParquetLoader(t4c8_study_partitioned)
+    loader = ParquetLoader.load_from_dir(t4c8_study_partitioned)
     region = Region("chr1", 1, 100)
     filepaths = next(loader.get_summary_pq_filepaths(region))
     assert set(map(os.path.basename, filepaths)) == {
@@ -63,7 +63,7 @@ def test_get_summary_pq_filepaths_partitioned_region(
 
 
 def test_get_family_filepaths_case_a(t4c8_study_partitioned: str) -> None:
-    loader = ParquetLoader(t4c8_study_partitioned)
+    loader = ParquetLoader.load_from_dir(t4c8_study_partitioned)
     summary_path = os.path.join(
         t4c8_study_partitioned,
         "summary/region_bin=chr1_1/frequency_bin=1/coding_bin=1/summary_region_bin_chr1_1_frequency_bin_1_coding_bin_1_bucket_index_100000.parquet",
@@ -72,11 +72,11 @@ def test_get_family_filepaths_case_a(t4c8_study_partitioned: str) -> None:
         t4c8_study_partitioned,
         "family/region_bin=chr1_1/frequency_bin=1/coding_bin=1/family_bin=1/family_region_bin_chr1_1_frequency_bin_1_coding_bin_1_family_bin_1_bucket_index_100000.parquet",
     )
-    assert loader.get_family_pq_filepaths(summary_path) == [family_path,]
+    assert loader.get_family_pq_filepaths(summary_path) == [family_path]
 
 
 def test_get_family_filepaths_case_b(t4c8_study_partitioned: str) -> None:
-    loader = ParquetLoader(t4c8_study_partitioned)
+    loader = ParquetLoader.load_from_dir(t4c8_study_partitioned)
     summary_path = os.path.join(
         t4c8_study_partitioned,
         "summary/region_bin=chr1_1/frequency_bin=2/coding_bin=0/summary_region_bin_chr1_1_frequency_bin_2_coding_bin_0_bucket_index_100000.parquet",
