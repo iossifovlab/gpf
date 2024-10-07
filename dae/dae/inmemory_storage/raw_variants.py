@@ -107,7 +107,7 @@ class RawFamilyVariants(abc.ABC):
                 for aa in fv.alt_alleles:
                     fa = cast(FamilyAllele, aa)
                     seen_in_status[fa.allele_index] = reduce(
-                        lambda t, s: t | s.value,  # type: ignore
+                        lambda t, s: t | s.value,
                         filter(None, fa.allele_in_statuses),
                         seen_in_status[fa.allele_index])
                     seen_as_denovo[fa.allele_index] = reduce(

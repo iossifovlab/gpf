@@ -111,7 +111,6 @@ class Role(enum.Enum):
 
     def __repr__(self) -> str:
         return self.name
-        # return "{}: {:023b}".format(self.name, self.value)
 
     def __str__(self) -> str:
         return self.name
@@ -174,11 +173,11 @@ class Sex(enum.Enum):
             return Sex.from_value(name)
         assert isinstance(name, str)
         name = name.lower()
-        if name in set(["male", "m", "1"]):
+        if name in {"male", "m", "1"}:
             return Sex.male
-        if name in set(["female", "f", "2"]):
+        if name in {"female", "f", "2"}:
             return Sex.female
-        if name in set(["unspecified", "u", "0", "unknown"]):
+        if name in {"unspecified", "u", "0", "unknown"}:
             return Sex.unspecified
         raise ValueError(f"unexpected sex name: {name}")
 
@@ -235,13 +234,13 @@ class Status(enum.Enum):
             return Status.from_value(name)
         assert isinstance(name, str)
         name = name.lower()
-        if name in set(["unaffected", "1", "false"]):
+        if name in {"unaffected", "1", "false"}:
             return Status.unaffected
-        if name in set(["affected", "2", "true"]):
+        if name in {"affected", "2", "true"}:
             return Status.affected
-        if name in set(["unspecified", "-", "0", "unknown"]):
+        if name in {"unspecified", "-", "0", "unknown"}:
             return Status.unspecified
-        raise ValueError("unexpected status type: " + name)
+        raise ValueError(f"unexpected status type: {name}")
 
     @staticmethod
     def to_value(name: int | str | None) -> int:
@@ -321,7 +320,7 @@ class Inheritance(enum.Enum):
 
 def bitmask2inheritance(bitmask: int) -> set[Inheritance]:
     """Convert a bitmask to set of inheritance."""
-    all_inheritance = set([
+    all_inheritance = {
         Inheritance.reference,
         Inheritance.mendelian,
         Inheritance.denovo,
@@ -331,7 +330,7 @@ def bitmask2inheritance(bitmask: int) -> set[Inheritance]:
         Inheritance.other,
         Inheritance.missing,
         Inheritance.unknown,
-    ])
+    }
     result: set[Inheritance] = set()
     for inh in all_inheritance:
         if bitmask & inh.value:
@@ -354,104 +353,3 @@ class TransmissionType(enum.IntEnum):
     unknown = 0
     transmitted = 1
     denovo = 2
-
-
-# class VariantType(enum.Enum):
-#     invalid = 0
-#     substitution = 1
-#     insertion = 1 << 1
-#     deletion = 1 << 2
-#     comp = 1 << 3
-#     indel = insertion | deletion | comp
-#     cnv_p = 1 << 4
-#     cnv_m = 1 << 5
-#     cnv = cnv_p | cnv_m
-
-#     tandem_repeat = 1 << 6
-#     tandem_repeat_ins = tandem_repeat | insertion
-#     tandem_repeat_del = tandem_repeat | deletion
-
-#     def __and__(self, other):
-#         assert isinstance(other, VariantType), type(other)
-#         return self.value & other.value
-
-#     def __or__(self, other):
-#         assert isinstance(other, VariantType)
-#         return self.value | other.value
-
-#     def __ior__(self, other):
-#         assert isinstance(other, VariantType)
-#         return VariantType(self.value | other.value)
-
-#     @staticmethod
-#     def from_name(name):
-#         name = name.lower().strip()
-#         if name == "sub" or name == "substitution":
-#             return VariantType.substitution
-#         elif name == "ins" or name == "insertion":
-#             return VariantType.insertion
-#         elif name == "del" or name == "deletion":
-#             return VariantType.deletion
-#         elif name == "comp" or name == "complex":
-#             return VariantType.comp
-#         elif name == "cnv_p" or name == "cnv+":
-#             return VariantType.cnv_p
-#         elif name == "cnv_m" or name == "cnv-":
-#             return VariantType.cnv_m
-#         elif name.lower() in set(["tr", "tandem_repeat"]):
-#             return VariantType.tandem_repeat
-
-#         raise ValueError(f"unexpected variant type: {name}")
-
-#     @staticmethod
-#     def from_cshl_variant(variant):
-#         # FIXME: Change logic to use entire string
-#         if variant is None:
-#             return VariantType.invalid
-
-#         vt = variant[0:2]
-#         if vt == "su":
-#             return VariantType.substitution
-#         elif vt == "in":
-#             return VariantType.insertion
-#         elif vt == "de":
-#             return VariantType.deletion
-#         elif vt == "co":
-#             return VariantType.comp
-#         elif vt == "TR":
-#             return VariantType.tandem_repeat
-#         elif variant == "CNV+":
-#             return VariantType.cnv_p
-#         elif variant == "CNV-":
-#             return VariantType.cnv_m
-#         else:
-#             raise ValueError(f"unexpected variant type: {variant}")
-
-#     @staticmethod
-#     def from_value(value):
-#         if value is None:
-#             return None
-#         return VariantType(value)
-
-#     @staticmethod
-#     def is_cnv(vt):
-#         if vt is None:
-#             return False
-#         assert isinstance(vt, VariantType)
-#         return vt & VariantType.cnv
-
-#     @staticmethod
-#     def is_tr(vt):
-#         if vt is None:
-#             return False
-#         assert isinstance(vt, VariantType)
-#         return vt & VariantType.tandem_repeat
-
-#     def __repr__(self) -> str:
-#         return _VARIANT_TYPE_DISPLAY_NAME.get(self.name) or self.name
-
-#     def __str__(self) -> str:
-#         return _VARIANT_TYPE_DISPLAY_NAME.get(self.name) or self.name
-
-#     def __lt__(self, other):
-#         return self.value < other.value

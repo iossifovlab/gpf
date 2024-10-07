@@ -773,6 +773,10 @@ class SummaryVariant:
                 allele.update_attributes({key: val})
 
     @property
+    def attributes(self) -> list[dict[str, Any]]:
+        return [aa.attributes for aa in self.alt_alleles]
+
+    @property
     def _variant_repr(self) -> str:
         if self.alternative:
             return f"{self.reference}->{self.alternative}"
