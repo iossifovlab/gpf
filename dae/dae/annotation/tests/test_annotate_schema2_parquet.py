@@ -2,6 +2,7 @@
 import pathlib
 import textwrap
 from collections.abc import Callable
+from datetime import datetime
 from glob import glob
 
 import pytest
@@ -643,3 +644,41 @@ def test_autodetection_reannotate(
 
     # check auto-detection by asserting reannotation pipeline is constructed
     assert ReannotationPipeline.__init__.call_count >= 1  # type: ignore
+
+
+@pytest.mark.parametrize("study", [("t4c8_study_nonpartitioned"),
+                                   ("t4c8_study_partitioned")])
+def test_reannotate_in_place(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    study: str,
+    t4c8_study_nonpartitioned: str,
+    t4c8_study_partitioned: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    input_dir = t4c8_study_nonpartitioned \
+        if study == "t4c8_study_nonpartitioned" \
+        else t4c8_study_partitioned
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    work_dir = str(tmp_path / "work")
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    cli([
+        input_dir, annotation_file_new,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1",
+        "--in-place",
+    ])
+
+    date = datetime.today().strftime("%Y%m%d")
+
+    assert pathlib.Path(input_dir, "summary").exists()  # new
+    assert pathlib.Path(input_dir, f"summary_{date}").exists()  # backup
+
+    assert pathlib.Path(input_dir, "meta", "meta.parquet").exists()  # new
+    assert pathlib.Path(
+        input_dir, "meta", f"meta_{date}.parquet").exists()  # backup
