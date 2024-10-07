@@ -4,17 +4,14 @@ import json
 
 import pytest
 from django.test.client import Client
+from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status  # type: ignore
-
-pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance", "dae_calc_gene_sets")
-
 
 TOOL_URL = "/api/v3/pheno_tool"
 TOOL_DOWNLOAD_URL = "/api/v3/pheno_tool/download"
 
 QUERY = {
-    "datasetId": "fake_study",
+    "datasetId": "t4c8_study_1",
     "measureId": "i1.m1",
     "normalizeBy": [],
     "presentInParent": {"presentInParent": ["neither"]},
@@ -29,7 +26,7 @@ QUERY = {
         "/api/v3/pheno_tool/people_values",
         "post",
         {
-            "datasetId": "f1_trio",
+            "datasetId": "t4c8_study_1",
             "measureIds": ["i1.m1"],
         },
     ),
@@ -37,21 +34,22 @@ QUERY = {
         "/api/v3/pheno_tool/measure",
         "post",
         {
-            "datasetId": "f1_trio",
+            "datasetId": "t4c8_study_1",
             "measureId": "i1.m1",
         },
     ),
     (
-        "/api/v3/pheno_tool/measures?datasetId=f1_trio&instrument=i1",
+        "/api/v3/pheno_tool/measures?datasetId=t4c8_study_1&instrument=i1",
         "get", None,
     ),
-    ("/api/v3/pheno_tool/instruments?datasetId=f1_trio", "get", None),
+    ("/api/v3/pheno_tool/instruments?datasetId=t4c8_study_1", "get", None),
 ])
 def test_pheno_tool_api_permissions(
     anonymous_client: Client,
     url: str,
     method: str,
     body: dict,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
@@ -64,7 +62,10 @@ def test_pheno_tool_api_permissions(
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-def test_pheno_tool_view_valid_request(admin_client: Client) -> None:
+def test_pheno_tool_view_valid_request(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     query = copy.deepcopy(QUERY)
 
     response = admin_client.post(
@@ -76,7 +77,10 @@ def test_pheno_tool_view_valid_request(admin_client: Client) -> None:
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_pheno_tool_view_missense(admin_client: Client) -> None:
+def test_pheno_tool_view_missense(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["missense"]
 
@@ -94,25 +98,24 @@ def test_pheno_tool_view_missense(admin_client: Client) -> None:
     assert result["effect"] == "missense"
     assert result["maleResults"]["positive"]["count"] == 0
     assert result["maleResults"]["positive"]["deviation"] == 0
-    assert result["maleResults"]["positive"]["mean"] == \
-        pytest.approx(59.2852, abs=1e-3)
-    assert result["maleResults"]["negative"]["count"] == 2
-    assert result["maleResults"]["negative"]["deviation"] == \
-        pytest.approx(33.9863, abs=1e-3)
-    assert result["maleResults"]["negative"]["mean"] == \
-        pytest.approx(59.2852, abs=1e-3)
-    assert result["femaleResults"]["positive"]["count"] == 0
+    assert result["maleResults"]["positive"]["mean"] == 0
+    assert result["maleResults"]["negative"]["count"] == 0
+    assert result["maleResults"]["negative"]["deviation"] == 0
+    assert result["maleResults"]["negative"]["mean"] == 0
+    assert result["femaleResults"]["positive"]["count"] == 1
     assert result["femaleResults"]["positive"]["deviation"] == 0
     assert result["femaleResults"]["positive"]["mean"] == \
-        pytest.approx(69.0976, abs=1e-3)
-    assert result["femaleResults"]["negative"]["count"] == 2
-    assert result["femaleResults"]["negative"]["deviation"] == \
-        pytest.approx(7.9317, abs=1e-3)
+        pytest.approx(110.71112823486328, abs=1e-3)
+    assert result["femaleResults"]["negative"]["count"] == 1
+    assert result["femaleResults"]["negative"]["deviation"] == 0
     assert result["femaleResults"]["negative"]["mean"] == \
-        pytest.approx(69.0976, abs=1e-3)
+        pytest.approx(96.634521484375, abs=1e-3)
 
 
-def test_pheno_tool_view_cnv_on_non_cnv_study(admin_client: Client) -> None:
+def test_pheno_tool_view_cnv_on_non_cnv_study(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["missense", "CNV+"]
 
@@ -125,7 +128,10 @@ def test_pheno_tool_view_cnv_on_non_cnv_study(admin_client: Client) -> None:
     assert response.status_code == status.HTTP_200_OK
 
 
-def test_pheno_tool_view_normalize(admin_client: Client) -> None:
+def test_pheno_tool_view_normalize(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["missense"]
 
@@ -154,35 +160,35 @@ def test_pheno_tool_view_normalize(admin_client: Client) -> None:
     assert result["effect"] == "missense"
     assert result_normalized["effect"] == "missense"
 
-    assert result["maleResults"]["negative"]["count"] == 2
-    assert result_normalized["maleResults"]["negative"]["count"] == 2
+    assert result["maleResults"]["negative"]["count"] == 0
+    assert result_normalized["maleResults"]["negative"]["count"] == 0
 
-    assert result["maleResults"]["negative"]["deviation"] == \
-        pytest.approx(33.9863, abs=1e-3)
-    assert result_normalized["maleResults"]["negative"]["deviation"] == \
-        pytest.approx(31.3010, abs=1e-3)
+    assert result["maleResults"]["negative"]["deviation"] == 0
+    assert result_normalized["maleResults"]["negative"]["deviation"] == 0
 
-    assert result["maleResults"]["negative"]["mean"] != pytest.approx(
-        result_normalized["maleResults"]["negative"]["mean"], abs=1e-3,
-    )
+    assert result["maleResults"]["negative"]["mean"] == 0
 
-    assert result["femaleResults"]["negative"]["count"] == 2
-    assert result_normalized["femaleResults"]["negative"]["count"] == 2
+    assert result["femaleResults"]["negative"]["count"] == 1
+    assert result_normalized["femaleResults"]["negative"]["count"] == 1
 
-    assert result["femaleResults"]["negative"]["deviation"] == \
-        pytest.approx(7.9317, abs=1e-3)
-    assert result_normalized["femaleResults"]["negative"]["deviation"] == \
-        pytest.approx(12.5952, abs=1e-3)
+    assert result["femaleResults"]["negative"]["deviation"] == 0
+    assert result_normalized["femaleResults"]["negative"]["deviation"] == 0
 
     assert result["femaleResults"]["negative"]["mean"] != pytest.approx(
         result_normalized["femaleResults"]["negative"]["mean"], abs=1e-3,
     )
+    assert result["femaleResults"]["positive"]["mean"] != pytest.approx(
+        result_normalized["femaleResults"]["positive"]["mean"], abs=1e-3,
+    )
 
 
-def test_pheno_tool_view_family_ids_filter(admin_client: Client) -> None:
+def test_pheno_tool_view_family_ids_filter(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["LGDs"]
-    query["familyIds"] = ["f1", "f4"]
+    query["familyIds"] = ["f1.1", "f1.3"]
 
     response = admin_client.post(
         TOOL_URL,
@@ -194,14 +200,17 @@ def test_pheno_tool_view_family_ids_filter(admin_client: Client) -> None:
     result = response.json()["results"][0]
     assert result["maleResults"]["positive"]["count"] == 0
     assert result["femaleResults"]["positive"]["count"] == 0
-    assert result["maleResults"]["negative"]["count"] == 1
-    assert result["femaleResults"]["negative"]["count"] == 1
+    assert result["maleResults"]["negative"]["count"] == 0
+    assert result["femaleResults"]["negative"]["count"] == 2
 
 
-def test_pheno_tool_view_na_values(admin_client: Client) -> None:
+def test_pheno_tool_view_na_values(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["frame-shift"]
-    query["familyIds"] = ["f4"]
+    query["familyIds"] = ["f1.1"]
 
     response = admin_client.post(
         TOOL_URL,
@@ -222,21 +231,24 @@ def test_pheno_tool_view_na_values(admin_client: Client) -> None:
     )
 
 
-def test_pheno_tool_view_pheno_filter(admin_client: Client) -> None:
+def test_pheno_tool_view_pheno_filter(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["frame-shift"]
     query["familyFilters"] = [
         {  # type: ignore
             "id": "Proband Continuous",
             "from": "phenodb",
-            "source": "i1.m2",
+            "source": "i1.m4",
             "sourceType": "continuous",
             "role": "prb",
             "selection": {
-                "domainMax": 67.4553055880587,
-                "domainMin": 17.5536981163936,
-                "max": 43,
-                "min": 42.9,
+                "domainMax": 15,
+                "domainMin": 1,
+                "max": 15,
+                "min": 1,
             },
         },
     ]
@@ -266,7 +278,10 @@ def test_pheno_tool_view_pheno_filter(admin_client: Client) -> None:
     )
 
 
-def test_pheno_tool_view_missing_dataset(admin_client: Client) -> None:
+def test_pheno_tool_view_missing_dataset(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     query = copy.deepcopy(QUERY)
     query["datasetId"] = "???"
 
@@ -279,7 +294,10 @@ def test_pheno_tool_view_missing_dataset(admin_client: Client) -> None:
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_pheno_tool_view_missing_measure(admin_client: Client) -> None:
+def test_pheno_tool_view_missing_measure(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     query = copy.deepcopy(QUERY)
     query["measureId"] = "???"
 
@@ -292,7 +310,10 @@ def test_pheno_tool_view_missing_measure(admin_client: Client) -> None:
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
-def test_pheno_tool_download_valid_request(admin_client: Client) -> None:
+def test_pheno_tool_download_valid_request(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["missense"]
     query["normalizeBy"] = [
@@ -307,15 +328,12 @@ def test_pheno_tool_download_valid_request(admin_client: Client) -> None:
     )
     assert response.status_code == status.HTTP_200_OK
     content = list(response.streaming_content)  # type: ignore
-    print(content)
     assert content == [
         b"",
         (
             b"person_id,family_id,status,sex,"
             b"i1.m1,i1.age,i1.m1 ~ i1.age,missense\n"
         ),
-        b"f1.p1,f1,affected,M,34.76286,125.90605,-28.58866,0\n",
-        b"f2.p1,f2,affected,F,74.8207,70.6014,15.09174,0\n",
-        b"f3.p1,f3,affected,M,83.80771,185.06656,16.58106,0\n",
-        b"f4.p1,f4,affected,F,63.37458,173.3426,-3.08413,0\n",
+        b"p1,f1.1,affected,F,110.71113,166.33975,1e-05,1.0\n",
+        b"p3,f1.3,affected,F,96.63452,68.00149,1e-05,0.0\n",
     ]
