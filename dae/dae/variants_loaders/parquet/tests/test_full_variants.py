@@ -78,7 +78,7 @@ chr1   100  .  T   G    .    .      .    GT     0/1  0/1  0/1 0/0  0/0  0/0 0/1 
 def test_fetch_variants_count_nonpartitioned(
     t4c8_study_nonpartitioned: str,
 ) -> None:
-    loader = ParquetLoader(t4c8_study_nonpartitioned)
+    loader = ParquetLoader.load_from_dir(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_variants())
     # summary variants
     assert len(vs) == 3
@@ -89,7 +89,7 @@ def test_fetch_variants_count_nonpartitioned(
 def test_fetch_variants_count_partitioned(
     t4c8_study_partitioned: str,
 ) -> None:
-    loader = ParquetLoader(t4c8_study_partitioned)
+    loader = ParquetLoader.load_from_dir(t4c8_study_partitioned)
     vs = list(loader.fetch_variants())
     # summary variants
     assert len(vs) == 6
@@ -100,7 +100,7 @@ def test_fetch_variants_count_partitioned(
 def test_fetch_variants_count_nonpartitioned_region(
     t4c8_study_nonpartitioned: str,
 ) -> None:
-    loader = ParquetLoader(t4c8_study_nonpartitioned)
+    loader = ParquetLoader.load_from_dir(t4c8_study_nonpartitioned)
     vs = list(loader.fetch_variants(region=Region("chr1", 119, 119)))
     # summary variants
     assert len(vs) == 1
@@ -117,7 +117,7 @@ def test_fetch_variants_count_nonpartitioned_region(
 def test_fetch_variants_count_partitioned_region(
     t4c8_study_partitioned: str,
 ) -> None:
-    loader = ParquetLoader(t4c8_study_partitioned)
+    loader = ParquetLoader.load_from_dir(t4c8_study_partitioned)
     vs = list(loader.fetch_variants(region=Region("chr1", 1, 89)))
     # summary variants
     assert len(vs) == 2
@@ -134,7 +134,7 @@ def test_fetch_variants_count_partitioned_region(
 def test_fetch_variants_odd_study(
     t4c8_study_odd: str,
 ) -> None:
-    loader = ParquetLoader(t4c8_study_odd)
+    loader = ParquetLoader.load_from_dir(t4c8_study_odd)
     vs = list(loader.fetch_variants())
     # summary variants
     assert len(vs) == 4
@@ -145,7 +145,7 @@ def test_fetch_variants_odd_study(
 def test_fetch_variants_pedigree_only(
     t4c8_study_pedigree_only: str,
 ) -> None:
-    loader = ParquetLoader(t4c8_study_pedigree_only)
+    loader = ParquetLoader.load_from_dir(t4c8_study_pedigree_only)
     vs = list(loader.fetch_variants())
     # summary variants
     assert len(vs) == 0

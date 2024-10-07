@@ -74,7 +74,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         allow_repeated_attributes: bool,  # noqa: FBT001
     ) -> None:
         """Run annotation over a given directory of Parquet files."""
-        loader = ParquetLoader(input_dir)
+        loader = ParquetLoader.load_from_dir(input_dir)
         pipeline = AnnotateSchema2ParquetTool._produce_annotation_pipeline(
             pipeline_config,
             (loader.meta["annotation_pipeline"]
@@ -153,7 +153,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         input_dir = os.path.abspath(self.args.input)
         output_dir = os.path.abspath(self.args.output)
 
-        loader = ParquetLoader(input_dir)
+        loader = ParquetLoader.load_from_dir(input_dir)
 
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
