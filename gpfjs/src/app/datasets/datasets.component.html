@@ -55,7 +55,7 @@
         >
       </li>
       <li
-        [class.disabled-tool]="!(selectedDataset.commonReport.enabled && selectedDataset.accessRights)"
+        [class.disabled-tool]="!(selectedDataset.commonReport.enabled)"
         class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.datasetStatistics }}" routerLinkActive="active"
           >Dataset Statistics</a
@@ -73,7 +73,10 @@
   </div>
 
   <router-outlet
-    *ngIf="selectedDataset.accessRights || selectedTool === toolPageLinks.datasetDescription"
+    *ngIf="selectedDataset.accessRights
+      || selectedTool === toolPageLinks.datasetDescription
+      || selectedTool === toolPageLinks.phenotypeBrowser
+      || selectedTool === toolPageLinks.datasetStatistics"
     (activate)="routeChange()"
     class="content"></router-outlet>
 </div>

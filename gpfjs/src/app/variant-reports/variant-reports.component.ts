@@ -12,6 +12,8 @@ import { Store } from '@ngrx/store';
 import { Router } from '@angular/router';
 import { resetFamilyTags } from 'app/family-tags/family-tags.state';
 import { selectDatasetId } from 'app/datasets/datasets.state';
+import { DatasetsService } from 'app/datasets/datasets.service';
+import { Dataset } from 'app/datasets/datasets';
 
 @Pipe({ name: 'getPeopleCounterRow' })
 export class PeopleCounterRowPipe implements PipeTransform {
@@ -47,7 +49,7 @@ export class VariantReportsComponent implements OnInit {
   public familiesCounters: FamilyCounter[];
   public pedigreeTables: PedigreeTable[];
 
-  public selectedDatasetId: string;
+  public selectedDataset: Dataset;
 
   public imgPathPrefix = environment.imgPathPrefix;
   public orderedTagList = [];
@@ -62,6 +64,7 @@ export class VariantReportsComponent implements OnInit {
     public modalService: NgbModal,
     public config: ConfigService,
     private variantReportsService: VariantReportsService,
+    private datasetsService: DatasetsService,
     protected store: Store,
     private router: Router,
   ) {
@@ -79,9 +82,10 @@ export class VariantReportsComponent implements OnInit {
 
   public ngOnInit(): void {
     this.store.select(selectDatasetId).pipe(
-      switchMap(datasetId => {
-        this.selectedDatasetId = datasetId;
-        return this.variantReportsService.getVariantReport(this.selectedDatasetId);
+      switchMap(selectedDatasetState => this.datasetsService.getDataset(selectedDatasetState)),
+      switchMap(dataset => {
+        this.selectedDataset = dataset;
+        return this.variantReportsService.getVariantReport(this.selectedDataset.id);
       }),
       take(1)
     ).subscribe(params => {
@@ -251,7 +255,7 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public getDownloadLink(): string {
-    return this.variantReportsService.getDownloadLink() + this.selectedDatasetId;
+    return this.variantReportsService.getDownloadLink() + this.selectedDataset;
   }
 
   public downloadTags(event): void {
