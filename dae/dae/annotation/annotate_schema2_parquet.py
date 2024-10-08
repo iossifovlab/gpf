@@ -170,6 +170,14 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         bak_meta_name = f"{meta_path.stem}_{date}"
         bak_summary_name = f"summary_{date}"
 
+        if meta_path.with_stem(bak_meta_name).exists():
+            counts = len(list(meta_path.parent.glob(f"{bak_meta_name}*")))
+            bak_meta_name = f"{bak_meta_name}-{counts}"
+
+        if summary_path.with_name(bak_summary_name).exists():
+            counts = len(list(summary_path.parent.glob(f"{bak_summary_name}*")))
+            bak_summary_name = f"{bak_summary_name}-{counts}"
+
         return str(meta_path.rename(meta_path.with_stem(bak_meta_name))), \
                str(summary_path.rename(summary_path.with_name(bak_summary_name)))
 
