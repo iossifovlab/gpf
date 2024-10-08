@@ -1,4 +1,4 @@
-import { PersonSetCollection } from "app/datasets/datasets";
+import { PersonSet } from 'app/datasets/datasets';
 
 export interface GeneSetJson {
   name: string;
@@ -10,7 +10,7 @@ export interface GeneSetJson {
 export interface GeneSetCollectionJson {
   name: string;
   desc: string;
-  types: GeneSetType[];
+  types: GeneSetTypeNode[];
 }
 
 export class GeneSetsCollection {
@@ -18,7 +18,7 @@ export class GeneSetsCollection {
     return new GeneSetsCollection(
       json.name,
       json.desc,
-      GeneSetType.fromJsonArray(json.types)
+      json.types
     );
   }
 
@@ -29,7 +29,7 @@ export class GeneSetsCollection {
   public constructor(
     public readonly name: string,
     public readonly desc: string,
-    public readonly types: Array<GeneSetType>,
+    public readonly types: Array<GeneSetTypeNode>,
   ) { }
 }
 
@@ -55,11 +55,19 @@ export class GeneSet {
   ) { }
 }
 
+
+export class DenovoPersonSetCollection {
+  public constructor(
+    public readonly personSetCollectionId: string,
+    public readonly personSetCollectionName: string,
+    public readonly personSetCollectionLegend: PersonSet[],
+  ) { }
+}
+
 export class GeneSetType {
   public static fromJsonArray(jsonArray: Array<GeneSetType>): Array<GeneSetType> {
     const result: Array<GeneSetType> = [];
     for (const geneSetType of jsonArray) {
-      // geneSetType.children.forEach() // TO FIX
       result.push(GeneSetType.fromJson(geneSetType));
     }
     return result;
@@ -67,17 +75,37 @@ export class GeneSetType {
 
   public static fromJson(json: GeneSetType): GeneSetType {
     return new GeneSetType(
-      json.datasetId, json.datasetName, json.personSetCollections, json.children
+      json.datasetId, json.datasetName, json.personSetCollections
     );
   }
 
   public constructor(
     public readonly datasetId: string,
     public readonly datasetName: string,
-    // public readonly personSetCollectionId: string,
-    // public readonly personSetCollectionName: string,
-    // public readonly personSetCollectionLegend: Array<any>, // TO FIX any
-    public readonly personSetCollections: PersonSetCollection[],
-    public readonly children: GeneSetType[],
+    public readonly personSetCollections: DenovoPersonSetCollection[],
+
+  ) { }
+}
+
+export class GeneSetTypeNode {
+  public constructor(
+    public readonly datasetId: string,
+    public readonly datasetName: string,
+    public readonly personSetCollections: DenovoPersonSetCollection[],
+    public readonly children: GeneSetTypeNode[],
+  ) { }
+}
+
+export class SelectedDenovoTypes {
+  public constructor(
+    public datasetId: string,
+    public collections: SelectedPersonSetCollections[],
+  ) { }
+}
+
+export class SelectedPersonSetCollections {
+  public constructor(
+    public personSetId: string,
+    public types: string[],
   ) { }
 }

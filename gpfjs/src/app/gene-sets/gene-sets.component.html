@@ -36,11 +36,7 @@
                       type="checkbox"
                       [attr.id]="selectedGeneType.datasetId + '-checkbox-' + personSet.id"
                       [ngModel]="
-                        isSelectedGeneType(
-                          selectedGeneType.datasetId,
-                          collection.personSetCollectionId,
-                          personSet.id
-                        )
+                        isSelectedGeneType(selectedGeneType.datasetId, collection.personSetCollectionId, personSet.id)
                       "
                       (ngModelChange)="
                         setSelectedGeneType(

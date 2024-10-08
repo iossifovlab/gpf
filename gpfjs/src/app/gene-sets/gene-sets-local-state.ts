@@ -6,8 +6,7 @@ export class GeneSetsLocalState {
   public geneSetsCollection: GeneSetsCollection;
   public geneSetsTypes = Object.create(null);
 
-  @IsNotEmpty({message: 'Please select a gene set.'})
-  public geneSet: GeneSet;
+  
 
   public select(datasetId: string, personSetCollectionId: string, phenotype: string): void {
     this.geneSetsTypes = cloneDeep(this.geneSetsTypes);
