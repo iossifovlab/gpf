@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { combineLatest, Observable, Subscription } from 'rxjs';
+import { combineLatest, Observable, of, Subscription, switchMap } from 'rxjs';
 import { EnrichmentResults } from '../enrichment-query/enrichment-result';
 import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
@@ -10,6 +10,8 @@ import { selectGeneScores } from 'app/gene-scores/gene-scores.state';
 import { selectGeneSets } from 'app/gene-sets/gene-sets.state';
 import { selectGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
 import { selectErrors } from 'app/common/errors.state';
+import { DatasetsService } from 'app/datasets/datasets.service';
+import { Dataset } from 'app/datasets/datasets';
 
 @Component({
   selector: 'gpf-enrichment-tool',
@@ -18,7 +20,7 @@ import { selectErrors } from 'app/common/errors.state';
 })
 export class EnrichmentToolComponent implements OnInit, OnDestroy {
   public enrichmentResults: EnrichmentResults;
-  public selectedDatasetId: string;
+  public selectedDataset: Dataset;
   public disableQueryButtons = false;
 
   public enrichmentState: Observable<object[]>;
@@ -27,27 +29,34 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
 
   public constructor(
     private enrichmentQueryService: EnrichmentQueryService,
+    private datasetsService: DatasetsService,
     private loadingService: FullscreenLoadingService,
     private store: Store
   ) { }
 
   public ngOnInit(): void {
-    combineLatest([
-      this.store.select(selectGeneSymbols),
-      this.store.select(selectGeneSets),
-      this.store.select(selectGeneScores),
-      this.store.select(selectEnrichmentModels),
-      this.store.select(selectDatasetId),
-    ]).subscribe(([
+    this.store.select(selectDatasetId).pipe(
+      switchMap(selectedDatasetidState => this.datasetsService.getDataset(
+        selectedDatasetidState
+      )),
+      switchMap(dataset => combineLatest([
+        of(dataset),
+        this.store.select(selectGeneSymbols),
+        this.store.select(selectGeneSets),
+        this.store.select(selectGeneScores),
+        this.store.select(selectEnrichmentModels),
+      ]))
+    )
+    .subscribe(([
+      dataset,
       geneSymbols,
       geneSets,
       geneScores,
       enrichmentModels,
-      datasetId,
     ]) => {
-      this.selectedDatasetId = datasetId;
+      this.selectedDataset = dataset;
       this.enrichmentToolState = {
-        datasetId: this.selectedDatasetId,
+        datasetId: this.selectedDataset.id,
         ...enrichmentModels,
       };
       if (geneSymbols.length) {

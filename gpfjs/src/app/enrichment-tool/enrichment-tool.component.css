@@ -4,3 +4,7 @@
   padding-top: 20px;
   font-size: 0.8em;
 }
+
+.disabled-table-links {
+  pointer-events: none;
+}

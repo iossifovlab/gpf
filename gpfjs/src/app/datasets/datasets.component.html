@@ -41,7 +41,7 @@
           >Phenotype Browser</a
         >
       </li>
-      <li [class.disabled-tool]="!(selectedDataset.enrichmentTool && selectedDataset.accessRights)" class="nav-item">
+      <li [class.disabled-tool]="!(selectedDataset.enrichmentTool)" class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.enrichmentTool }}" routerLinkActive="active"
           >Enrichment Tool</a
         >
@@ -76,7 +76,8 @@
     *ngIf="selectedDataset.accessRights
       || selectedTool === toolPageLinks.datasetDescription
       || selectedTool === toolPageLinks.phenotypeBrowser
-      || selectedTool === toolPageLinks.datasetStatistics"
+      || selectedTool === toolPageLinks.datasetStatistics
+      || selectedTool === toolPageLinks.enrichmentTool"
     (activate)="routeChange()"
     class="content"></router-outlet>
 </div>
