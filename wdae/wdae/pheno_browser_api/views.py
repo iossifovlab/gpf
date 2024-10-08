@@ -10,7 +10,7 @@ from datasets_api.permissions import (
 from django.http.response import HttpResponse, StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from query_base.query_base import QueryDatasetView
+from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -20,11 +20,7 @@ from utils.streaming_response_util import iterator_to_json
 logger = logging.getLogger(__name__)
 
 
-class PhenoBrowserBaseView(QueryDatasetView):
-    pass
-
-
-class PhenoConfigView(PhenoBrowserBaseView):
+class PhenoConfigView(QueryBaseView, DatasetAccessRightsView):
     """Phenotype data configuration view."""
 
     @method_decorator(etag(get_instance_timestamp_etag))
@@ -42,10 +38,10 @@ class PhenoConfigView(PhenoBrowserBaseView):
         return Response(self.gpf_instance.get_phenotype_data_config(dbname))
 
 
-class PhenoInstrumentsView(QueryDatasetView):
+class PhenoInstrumentsView(QueryBaseView):
     """Phenotype instruments view."""
 
-    @method_decorator(etag(get_permissions_etag))
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         """Get phenotype instruments."""
         if "dataset_id" not in request.query_params:
@@ -64,10 +60,10 @@ class PhenoInstrumentsView(QueryDatasetView):
         return Response(res)
 
 
-class PhenoMeasuresInfoView(PhenoBrowserBaseView):
+class PhenoMeasuresInfoView(QueryBaseView):
     """Phenotype measures info view."""
 
-    @method_decorator(etag(get_permissions_etag))
+    @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
         """Get pheno measures info."""
         if "dataset_id" not in request.query_params:
@@ -83,7 +79,7 @@ class PhenoMeasuresInfoView(PhenoBrowserBaseView):
         return Response(res)
 
 
-class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
+class PhenoMeasureDescriptionView(QueryBaseView, DatasetAccessRightsView):
     """Phenotype measures description view."""
 
     @method_decorator(etag(get_permissions_etag))
@@ -113,7 +109,7 @@ class PhenoMeasureDescriptionView(PhenoBrowserBaseView):
         return Response(res)
 
 
-class PhenoMeasuresView(PhenoBrowserBaseView):
+class PhenoMeasuresView(QueryBaseView):
     """Phenotype measures view."""
 
     @method_decorator(etag(get_instance_timestamp_etag))
@@ -164,7 +160,7 @@ class CountError(Exception):
     pass
 
 
-class PhenoMeasuresDownload(QueryDatasetView):
+class PhenoMeasuresDownload(QueryBaseView, DatasetAccessRightsView):
     """Phenotype measure downloads view."""
 
     def csv_value_iterator(
@@ -308,7 +304,7 @@ class PhenoMeasuresDownload(QueryDatasetView):
         return Response(status=status.HTTP_200_OK)
 
 
-class PhenoMeasuresCount(QueryDatasetView):
+class PhenoMeasuresCount(QueryBaseView, DatasetAccessRightsView):
     """Phenotype measure search count view."""
 
     def get_count(self, request: Request) -> int:
@@ -354,7 +350,7 @@ class PhenoMeasuresCount(QueryDatasetView):
         return Response({"count": count})
 
 
-class PhenoMeasureValues(QueryDatasetView):
+class PhenoMeasureValues(QueryBaseView, DatasetAccessRightsView):
     """Phenotype measure values view."""
 
     def post(self, request: Request) -> Response:
@@ -399,7 +395,7 @@ class PhenoMeasureValues(QueryDatasetView):
         )
 
 
-class PhenoImagesView(QueryDatasetView):
+class PhenoImagesView(QueryBaseView, DatasetAccessRightsView):
     """Remote pheno images view."""
 
     @method_decorator(etag(get_permissions_etag))
