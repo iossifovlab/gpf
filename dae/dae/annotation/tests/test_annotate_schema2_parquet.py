@@ -682,3 +682,57 @@ def test_reannotate_in_place(
     assert pathlib.Path(input_dir, "meta", "meta.parquet").exists()  # new
     assert pathlib.Path(
         input_dir, "meta", f"meta_{date}.parquet").exists()  # backup
+
+    # check variants are correctly reannotated
+    loader = ParquetLoader.load_from_dir(input_dir)
+    vs = list(loader.fetch_summary_variants())
+    assert len(vs) == 6
+    result = set()
+    for sv in vs:
+        assert not sv.has_attribute("score_two")
+        assert sv.has_attribute("score_A")
+        result.add(sv.get_attribute("score_A").pop())
+    assert result == {0.21, 0.22, 0.23, 0.24, 0.25, 0.26}
+
+
+@pytest.mark.parametrize("study", [("t4c8_study_nonpartitioned"),
+                                   ("t4c8_study_partitioned")])
+def test_reannotate_in_place_increment_backup_filenames(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    study: str,
+    t4c8_study_nonpartitioned: str,
+    t4c8_study_partitioned: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    input_dir = t4c8_study_nonpartitioned \
+        if study == "t4c8_study_nonpartitioned" \
+        else t4c8_study_partitioned
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    work_dir = str(tmp_path / "work")
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    times = 5
+
+    for _ in range(times):
+        cli([
+            input_dir, annotation_file_new,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", "1",
+            "--in-place",
+        ])
+
+    date = datetime.today().strftime("%Y%m%d")
+
+    assert pathlib.Path(input_dir, "summary").exists()
+    for i in range(times - 1):
+        assert pathlib.Path(input_dir, f"summary_{date}-{i + 1}").exists()
+
+    assert pathlib.Path(input_dir, "meta", "meta.parquet").exists()
+    for i in range(times - 1):
+        assert pathlib.Path(
+            input_dir, "meta", f"meta_{date}-{i + 1}.parquet").exists()
