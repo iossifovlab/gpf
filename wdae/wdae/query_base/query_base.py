@@ -32,5 +32,5 @@ class QueryBaseView(views.APIView):
         return IsDatasetAllowed.permitted_datasets(user, self.instance_id)
 
 
-class QueryDatasetView(QueryBaseView):
+class DatasetAccessRightsView(views.APIView):
     permission_classes: ClassVar[list] = [IsDatasetAllowed]

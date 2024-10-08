@@ -7,7 +7,7 @@ from datasets_api.permissions import (
     user_has_permission,
 )
 from django.http.response import FileResponse, StreamingHttpResponse
-from query_base.query_base import QueryDatasetView
+from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -22,7 +22,7 @@ from dae.utils.dae_utils import join_line
 logger = logging.getLogger(__name__)
 
 
-class GenotypeBrowserQueryView(QueryDatasetView):
+class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
     """Genotype browser queries view."""
 
     MAX_SHOWN_VARIANTS = 1000

@@ -5,7 +5,7 @@ import numpy as np
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from query_base.query_base import QueryDatasetView
+from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -15,7 +15,7 @@ from dae.pheno.common import MeasureType
 logger = logging.getLogger(__name__)
 
 
-class PhenoMeasuresView(QueryDatasetView):
+class PhenoMeasuresView(QueryBaseView, DatasetAccessRightsView):
     """View for phenotype measures."""
 
     @method_decorator(etag(get_instance_timestamp_etag))
@@ -56,7 +56,7 @@ class PhenoMeasuresView(QueryDatasetView):
         return Response(res, status=status.HTTP_200_OK)
 
 
-class PhenoMeasureHistogramView(QueryDatasetView):
+class PhenoMeasureHistogramView(QueryBaseView, DatasetAccessRightsView):
     """View for phenotype measure histograms."""
 
     def post(self, request: Request) -> Response:
@@ -103,7 +103,7 @@ class PhenoMeasureHistogramView(QueryDatasetView):
         return Response(result, status=status.HTTP_200_OK)
 
 
-class PhenoMeasurePartitionsView(QueryDatasetView):
+class PhenoMeasurePartitionsView(QueryBaseView, DatasetAccessRightsView):
     """View for phenotype measure partitions."""
 
     def post(self, request: Request) -> Response:
@@ -148,7 +148,7 @@ class PhenoMeasurePartitionsView(QueryDatasetView):
         return Response(res)
 
 
-class PhenoMeasureRegressionsView(QueryDatasetView):
+class PhenoMeasureRegressionsView(QueryBaseView, DatasetAccessRightsView):
     """View for phenotype measure regressions."""
 
     @method_decorator(etag(get_instance_timestamp_etag))

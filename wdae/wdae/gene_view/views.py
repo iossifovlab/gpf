@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.http.response import FileResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from query_base.query_base import QueryDatasetView
+from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -21,7 +21,7 @@ from utils.query_params import parse_query_params
 LOGGER = logging.getLogger(__name__)
 
 
-class ConfigView(QueryDatasetView):
+class ConfigView(QueryBaseView, DatasetAccessRightsView):
 
     @request_logging(LOGGER)
     @method_decorator(etag(get_permissions_etag))
@@ -39,7 +39,7 @@ class ConfigView(QueryDatasetView):
         return Response(dataset.config.gene_browser, status=status.HTTP_200_OK)
 
 
-class QueryVariantsView(QueryDatasetView):
+class QueryVariantsView(QueryBaseView, DatasetAccessRightsView):
 
     @request_logging(LOGGER)
     @method_decorator(etag(get_permissions_etag))
@@ -68,7 +68,7 @@ class QueryVariantsView(QueryDatasetView):
         )
 
 
-class DownloadSummaryVariantsView(QueryDatasetView):
+class DownloadSummaryVariantsView(QueryBaseView, DatasetAccessRightsView):
     """Summary download view."""
 
     DOWNLOAD_LIMIT = 10000
