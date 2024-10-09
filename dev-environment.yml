@@ -42,3 +42,7 @@ dependencies:
     - sphinx-autorun
     - rangehttpserver
     - sphinxcontrib-video
+    - sphinx-last-updated-by-git
+    - esbonio
+    - doc8
+    - rstcheck
