@@ -95,7 +95,7 @@ class AnnotationTool:
         self.args.log_dir = os.path.join(self.args.work_dir, ".task-log")
 
     @staticmethod
-    def _produce_annotation_pipeline(
+    def produce_annotation_pipeline(
         pipeline_config: RawAnnotatorsConfig,
         pipeline_config_old: str | None,
         grr_definition: dict | None,
@@ -103,6 +103,7 @@ class AnnotationTool:
         allow_repeated_attributes: bool,
         work_dir: Path | None = None,
     ) -> AnnotationPipeline:
+        """Produce an annotation or reannotation pipeline."""
         grr = build_genomic_resource_repository(definition=grr_definition)
         pipeline = build_annotation_pipeline(
             pipeline_config, grr,
