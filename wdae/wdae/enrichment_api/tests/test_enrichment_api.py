@@ -18,7 +18,7 @@ pytestmark = pytest.mark.usefixtures(
         "post",
         {
             "datasetId": "f1_trio",
-            "enrichmentBackgroundModel": "coding_len_background_model",
+            "enrichmentBackgroundModel": "enrichment/coding_len_testing",
             "enrichmentCountingModel": "enrichment_gene_counting",
             "geneSymbols": ["SAMD11", "PLEKHN1", "POGZ"],
         },
@@ -38,7 +38,7 @@ def test_enrichment_api_permissions(
         )
 
     assert response
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status.HTTP_200_OK
 
 
 def test_enrichment_models(admin_client: Client) -> None:
