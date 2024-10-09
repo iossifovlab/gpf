@@ -22,7 +22,7 @@
           (focus)="reset()"
           (keydown.enter)="submitGeneRequest(); geneBrowserSearchTrigger.closePanel()" />
 
-        <mat-autocomplete autoActiveFirstOption #geneDropdown="matAutocomplete" class="gene-suggestions-dropdown">
+        <mat-autocomplete #geneDropdown="matAutocomplete" class="gene-suggestions-dropdown">
           <mat-option
             *ngFor="let suggestion of geneSymbolSuggestions"
             class="dropdown-item"
