@@ -39,7 +39,7 @@ class ConfigView(QueryBaseView, DatasetAccessRightsView):
         return Response(dataset.config.gene_browser, status=status.HTTP_200_OK)
 
 
-class QueryVariantsView(QueryBaseView, DatasetAccessRightsView):
+class QueryVariantsView(QueryBaseView):
 
     @request_logging(LOGGER)
     @method_decorator(etag(get_permissions_etag))
