@@ -21,13 +21,19 @@ MEASURE_DESCRIPTION_URL = "/api/v3/pheno_browser/measure_description"
 DOWNLOAD_URL = "/api/v3/pheno_browser/download"
 
 
-@pytest.mark.parametrize("url,method,body", [
-    (f"{URL}?dataset_id=t4c8_study_1", "get", None),
-    (f"{MEASURES_INFO_URL}?dataset_id=t4c8_study_1", "get", None),
+@pytest.mark.parametrize("url,method,body,status", [
+    (f"{URL}?dataset_id=t4c8_study_1", "get", None, status.HTTP_200_OK),
+    (
+        f"{MEASURES_INFO_URL}?dataset_id=t4c8_study_1",
+        "get",
+        None,
+        status.HTTP_200_OK,
+    ),
     (
         f"{MEASURES_URL}?dataset_id=t4c8_study_1&instrument=i1",
         "get",
         None,
+        status.HTTP_200_OK,
     ),
     (
         DOWNLOAD_URL,
@@ -36,6 +42,7 @@ DOWNLOAD_URL = "/api/v3/pheno_browser/download"
             "dataset_id": "t4c8_study_1",
             "instrument": "i1",
         },
+        status.HTTP_401_UNAUTHORIZED,
     ),
     (
         (
@@ -44,6 +51,7 @@ DOWNLOAD_URL = "/api/v3/pheno_browser/download"
         ),
         "get",
         None,
+        status.HTTP_401_UNAUTHORIZED,
     ),
 ])
 def test_pheno_browser_api_permissions(
@@ -51,6 +59,7 @@ def test_pheno_browser_api_permissions(
     url: str,
     method: str,
     body: dict,
+    status: Any,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     if method == "get":
@@ -61,7 +70,7 @@ def test_pheno_browser_api_permissions(
         )
 
     assert response
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status
 
 
 def test_instruments_missing_dataset_id(
@@ -96,21 +105,14 @@ def test_instruments(
     assert len(data["instruments"]) == 2
 
 
-def test_instruments_forbidden(
+def test_anonymous_instruments_allowed(
     user_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = f"{URL}?dataset_id=t4c8_study_1"
     response = user_client.get(url)
 
-    assert response.status_code == 403
-
-    header = response.json()
-    assert len(header.keys()) == 1
-    assert (
-        header["detail"]
-        == "You do not have permission to perform this action."
-    )
+    assert response.status_code == 200
 
 
 def test_measures_info(
@@ -150,7 +152,7 @@ def test_measures_count(
     assert res["count"] == 7
 
 
-def test_measures_forbidden(
+def test_anonymous_measures_allowed(
     user_client: Client,
     user: User,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
@@ -159,14 +161,7 @@ def test_measures_forbidden(
     url = f"{MEASURES_URL}?dataset_id=t4c8_study_1&instrument=i1"
     response = cast(Response, user_client.get(url))
 
-    assert response.status_code == 403
-
-    header = response.data
-    assert len(header.keys()) == 1
-    assert (
-        header["detail"]
-        == "You do not have permission to perform this action."
-    )
+    assert response.status_code == 200
 
 
 def test_download(

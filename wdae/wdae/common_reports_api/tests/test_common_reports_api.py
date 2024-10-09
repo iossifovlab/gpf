@@ -9,9 +9,19 @@ from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 
 
-@pytest.mark.parametrize("url,method,body", [
-    ("/api/v3/common_reports/studies/t4c8_study_1", "get", None),
-    ("/api/v3/common_reports/studies/t4c8_study_1/full", "get", None),
+@pytest.mark.parametrize("url,method,body,status", [
+    (
+        "/api/v3/common_reports/studies/t4c8_study_1",
+        "get",
+        None,
+        status.HTTP_200_OK,
+    ),
+    (
+        "/api/v3/common_reports/studies/t4c8_study_1/full",
+        "get",
+        None,
+        status.HTTP_401_UNAUTHORIZED,
+    ),
     (
         "/api/v3/common_reports/family_counters",
         "post",
@@ -19,7 +29,9 @@ from rest_framework import status
             "study_id": "t4c8_study_1",
             "group_name": "Phenotype",
             "counter_id": "0",
-        }),
+        },
+        status.HTTP_401_UNAUTHORIZED,
+    ),
     (
         "/api/v3/common_reports/family_counters/download",
         "post",
@@ -30,8 +42,14 @@ from rest_framework import status
                 "counter_id": "0",
             }),
         },
+        status.HTTP_401_UNAUTHORIZED,
     ),
-    ("/api/v3/common_reports/families_data/t4c8_study_1", "get", None),
+    (
+        "/api/v3/common_reports/families_data/t4c8_study_1",
+        "get",
+        None,
+        status.HTTP_401_UNAUTHORIZED,
+    ),
 ])
 def test_variant_reports_permissions(
     anonymous_client: Client,
@@ -39,6 +57,7 @@ def test_variant_reports_permissions(
     method: str,
     body: dict[str, Any],
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    status: Any,
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
@@ -49,7 +68,7 @@ def test_variant_reports_permissions(
 
     assert response
     print(response.headers)
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status
 
 
 def test_variant_reports(
@@ -208,7 +227,7 @@ def test_families_tags_download_errors_on_bad_body(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
-def test_variant_reports_no_permissions(
+def test_variant_reports_has_permissions(
     user_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
@@ -216,10 +235,9 @@ def test_variant_reports_no_permissions(
     response = user_client.get(url)
 
     assert response
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.status_code == status.HTTP_200_OK
 
-    data = response.data  # type: ignore
-    assert data
+    assert response.data  # type: ignore
 
 
 def test_autogenerate_common_report(
