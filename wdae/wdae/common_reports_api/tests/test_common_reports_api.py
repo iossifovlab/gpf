@@ -38,7 +38,7 @@ def test_variant_reports_permissions(
     url: str,
     method: str,
     body: dict[str, Any],
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
@@ -54,7 +54,7 @@ def test_variant_reports_permissions(
 
 def test_variant_reports(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = "/api/v3/common_reports/studies/t4c8_study_1"
     response = admin_client.get(url)
@@ -68,7 +68,7 @@ def test_variant_reports(
 
 def test_variant_reports_full(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = "/api/v3/common_reports/studies/t4c8_study_1/full"
     response = admin_client.get(url)
@@ -82,7 +82,7 @@ def test_variant_reports_full(
 
 def test_family_counters(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     data = {
         "study_id": "t4c8_study_1",
@@ -104,7 +104,7 @@ def test_family_counters(
 
 def test_family_counters_download(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     data = {
         "queryData": json.dumps({
@@ -129,7 +129,7 @@ def test_family_counters_download(
 
 def test_families_tags_download(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = (
         "/api/v3/common_reports/families_data/t4c8_dataset"
@@ -195,7 +195,7 @@ def test_families_tags_download(
 )
 def test_families_tags_download_errors_on_bad_body(
     admin_client: Client, body: dict[str, Any],
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = (
         "/api/v3/common_reports/families_data/t4c8_study_1"
@@ -210,7 +210,7 @@ def test_families_tags_download_errors_on_bad_body(
 
 def test_variant_reports_no_permissions(
     user_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = "/api/v3/common_reports/studies/t4c8_study_1"
     response = user_client.get(url)
@@ -224,9 +224,9 @@ def test_variant_reports_no_permissions(
 
 def test_autogenerate_common_report(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,
+    t4c8_wgpf_instance: WGPFInstance,
 ) -> None:
-    study = t4c8_wgpf.get_genotype_data("t4c8_study_1")
+    study = t4c8_wgpf_instance.get_genotype_data("t4c8_study_1")
     assert study is not None
     report_filename = study.config.common_report.file_path
     os.remove(report_filename)
@@ -243,7 +243,7 @@ def test_autogenerate_common_report(
 
 def test_families_data_download(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = "/api/v3/common_reports/families_data/t4c8_study_1"
     response = admin_client.post(url)
@@ -259,7 +259,7 @@ def test_families_data_download(
 
 def test_families_data_download_no_permissions(
     user_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = "/api/v3/common_reports/families_data/t4c8_study_1"
     response = user_client.post(url)
@@ -270,7 +270,7 @@ def test_families_data_download_no_permissions(
 
 def test_families_data_all_download(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = "/api/v3/common_reports/families_data/t4c8_study_1"
     response = admin_client.get(url)
@@ -286,7 +286,7 @@ def test_families_data_all_download(
 
 def test_families_data_all_download_no_permissions(
     user_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = "/api/v3/common_reports/families_data/t4c8_study_1"
     response = user_client.get(url)
