@@ -49,7 +49,7 @@ def test_pheno_tool_api_permissions(
     url: str,
     method: str,
     body: dict,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
@@ -64,7 +64,7 @@ def test_pheno_tool_api_permissions(
 
 def test_pheno_tool_view_valid_request(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     query = copy.deepcopy(QUERY)
 
@@ -79,7 +79,7 @@ def test_pheno_tool_view_valid_request(
 
 def test_pheno_tool_view_missense(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["missense"]
@@ -114,7 +114,7 @@ def test_pheno_tool_view_missense(
 
 def test_pheno_tool_view_cnv_on_non_cnv_study(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["missense", "CNV+"]
@@ -130,7 +130,7 @@ def test_pheno_tool_view_cnv_on_non_cnv_study(
 
 def test_pheno_tool_view_normalize(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["missense"]
@@ -184,7 +184,7 @@ def test_pheno_tool_view_normalize(
 
 def test_pheno_tool_view_family_ids_filter(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["LGDs"]
@@ -206,7 +206,7 @@ def test_pheno_tool_view_family_ids_filter(
 
 def test_pheno_tool_view_na_values(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["frame-shift"]
@@ -233,7 +233,7 @@ def test_pheno_tool_view_na_values(
 
 def test_pheno_tool_view_pheno_filter(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["frame-shift"]
@@ -280,7 +280,7 @@ def test_pheno_tool_view_pheno_filter(
 
 def test_pheno_tool_view_missing_dataset(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["datasetId"] = "???"
@@ -296,7 +296,7 @@ def test_pheno_tool_view_missing_dataset(
 
 def test_pheno_tool_view_missing_measure(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["measureId"] = "???"
@@ -312,7 +312,7 @@ def test_pheno_tool_view_missing_measure(
 
 def test_pheno_tool_download_valid_request(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     query = copy.deepcopy(QUERY)
     query["effectTypes"] = ["missense"]
