@@ -372,3 +372,32 @@ class PhenoRemoteImages(QueryDatasetView):
         image, mimetype = client.get_pheno_image(image_path)
 
         return HttpResponse(image, content_type=mimetype)
+
+
+class PhenoImagesView(QueryDatasetView):
+    """Remote pheno images view."""
+
+    @method_decorator(etag(get_permissions_etag))
+    def get(
+        self, _request: Request, pheno_id: str, image_path: str,
+    ) -> Response | HttpResponse:
+        """Return raw image data from a remote GPF instance."""
+        if image_path == "":
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        phenotype_data = self.gpf_instance.get_phenotype_data(pheno_id)
+
+        if phenotype_data is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            image, mimetype = phenotype_data.get_image(image_path)
+        except ValueError:
+            logger.exception(
+                "Could not get image %s for %s",
+                image_path,
+                pheno_id,
+            )
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        return HttpResponse(image, content_type=mimetype)
