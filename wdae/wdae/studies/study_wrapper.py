@@ -82,8 +82,7 @@ class StudyWrapperBase:
         result["genotype_browser"] = config.genotype_browser.enabled
         result["common_report"] = {"enabled": config.common_report.enabled}
         result["enrichment_tool"] = config.enrichment.enabled
-        result["gene_browser"] = {
-            "enabled": config.gene_browser and config.gene_browser.enabled}
+        result["gene_browser"] = config.gene_browser
 
         return result
 
