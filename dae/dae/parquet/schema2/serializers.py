@@ -171,14 +171,16 @@ class AlleleParquetSerializer:
             family_header.append(spr)
             family_properties.append(prop_value)
 
-        # TODO: Clean the hack to clean in the Nones
         assert family_header[-1] == "allele_in_members"
         family_properties[-1] = [v for v in family_properties[-1] if v]
 
         allele_data: dict[str, list] = {
             name: [] for name in self.schema_family.names
         }
-        for name, value in zip(family_header, family_properties):
+        for name, value in zip(
+                family_header,
+                family_properties,
+                strict=True):
             allele_data[name].append(value)
 
         allele_data["family_variant_data"] = [family_variant_data]
@@ -203,7 +205,9 @@ class AlleleParquetSerializer:
                     prop_value = [
                         {"effect_types": e[0], "effect_gene_symbols": e[1]}
                         for e in zip(
-                            allele.effect_types, allele.effect_gene_symbols,
+                            allele.effect_types,
+                            allele.effect_gene_symbols,
+                            strict=True,
                         )
                     ]
             else:

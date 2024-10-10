@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
+from dae.person_sets import PSCQuery
 from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.acgt_import import acgt_gpf
@@ -128,14 +129,14 @@ def test_can_query_person_sets(ps_study: GenotypeData) -> None:
     vs = list(ps_study.query_variants())
     assert len(vs) == 3
 
-    ps_query = ("status", ["affected"])
+    ps_query = PSCQuery("status", {"affected"})
     vs = list(genotype_study.query_variants(person_set_collection=ps_query))
     assert len(vs) == 2
 
-    ps_query = ("status", ["unaffected"])
+    ps_query = PSCQuery("status", {"unaffected"})
     vs = list(genotype_study.query_variants(person_set_collection=ps_query))
     assert len(vs) == 2
 
-    ps_query = ("status", ["unaffected", "affected"])
+    ps_query = PSCQuery("status", {"unaffected", "affected"})
     vs = list(genotype_study.query_variants(person_set_collection=ps_query))
     assert len(vs) == 3

@@ -20,7 +20,6 @@ from dae.inmemory_storage.raw_variants import (
     RealAttrFilterType,
 )
 from dae.pedigrees.families_data import FamiliesData
-from dae.person_sets import PersonSetCollection
 from dae.schema2_storage.schema2_import_storage import (
     Schema2ImportStorage,
 )
@@ -63,7 +62,7 @@ class ParquetLoaderVariants:
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        limit: int | None = None,
+        limit: int | None = None,  # noqa: ARG002
         **kwargs: Any,
     ) -> RawVariantsQueryRunner:
         """Return a query runner for the summary variants."""
@@ -158,13 +157,6 @@ class ParquetLoaderVariants:
         return RawVariantsQueryRunner(
             variants_iterator=family_variants_iterator,
             deserializer=filter_func)
-
-    @staticmethod
-    def build_person_set_collection_query(
-        _person_set_collection: PersonSetCollection,
-        _person_set_collection_query: tuple[str, set[str]],
-    ) -> tuple | tuple[list[str], list[str]] | None:
-        return None
 
 
 class ParquetGenotypeStorage(GenotypeStorage):

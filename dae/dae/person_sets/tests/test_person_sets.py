@@ -4,7 +4,6 @@ import textwrap
 
 import pytest
 import toml
-from box import Box
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.person_sets import person_set_collections_schema
@@ -18,30 +17,6 @@ from dae.person_sets import (
     parse_person_set_collections_study_config,
 )
 from dae.testing import setup_pedigree
-
-
-@pytest.fixture()
-def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
-
-    ped_path = setup_pedigree(
-        tmp_path / "test_pedigree" / "ped.ped",
-        textwrap.dedent("""
-            familyId personId dadId	 momId	sex status role
-            f1       mom1     0      0      2   1      mom
-            f1       dad1     0      0      1   1      dad
-            f1       prb1     dad1   mom1   1   2      prb
-            f1       sib1     dad1   mom1   2   2      sib
-            f1       sib2     dad1   mom1   2   2      sib
-            f2       grmom2   0      0      2   1      maternal_grandmother
-            f2       grdad2   0      0      1   1      maternal_grandfather
-            f2       mom2     grdad2 grmom2 2   1      mom
-            f2       dad2     0      0      1   1      dad
-            f2       prb2     dad2   mom2   1   2      prb
-            f2       sib2_3   dad2   mom2   2   2      sib
-        """))
-    families = FamiliesLoader(ped_path).load()
-    assert families is not None
-    return families
 
 
 def get_person_set_collections_config(
@@ -83,11 +58,15 @@ def status_person_sets_collection() -> dict[str, PersonSetCollectionConfig]:
     return get_person_set_collections_config(content)
 
 
-def test_load_config(status_person_sets_collection: Box) -> None:
+def test_load_config(
+    status_person_sets_collection: dict[str, PersonSetCollectionConfig],
+) -> None:
     assert status_person_sets_collection["status"] is not None
 
 
-def test_produce_sets(status_person_sets_collection: Box) -> None:
+def test_produce_sets(
+    status_person_sets_collection: dict[str, PersonSetCollectionConfig],
+) -> None:
     people_sets = PersonSetCollection._produce_sets(
         status_person_sets_collection["status"])
     assert people_sets == {
@@ -101,7 +80,7 @@ def test_produce_sets(status_person_sets_collection: Box) -> None:
 
 
 def test_produce_default_person_set(
-    status_person_sets_collection: Box,
+    status_person_sets_collection: dict[str, PersonSetCollectionConfig],
 ) -> None:
     people_set = PersonSetCollection._produce_default_person_set(
         status_person_sets_collection["status"])
@@ -111,14 +90,14 @@ def test_produce_default_person_set(
 
 def test_from_pedigree(
     families_fixture: FamiliesData,
-    status_person_sets_collection: Box,
+    status_person_sets_collection: dict[str, PersonSetCollectionConfig],
 ) -> None:
     status_collection = PersonSetCollection.from_families(
         status_person_sets_collection["status"], families_fixture,
     )
 
     assert set(status_collection.person_sets.keys()) == \
-        {"affected", "unaffected"}
+        {"affected", "unaffected", "unknown"}
 
     result_person_ids = set(
         status_collection.person_sets["affected"].persons.keys(),
@@ -188,7 +167,7 @@ def test_from_pedigree_nonexistent_domain(
 
 
 def test_get_person_color(
-    status_person_sets_collection: Box,
+    status_person_sets_collection: dict[str, PersonSetCollectionConfig],
     families_fixture: FamiliesData,
 ) -> None:
 
@@ -531,7 +510,4 @@ def test_merge_person_sets(
 
     print(combined_collection)
 
-    assert len(combined_collection) == 3
-
-
-# Add unit test for default values in person sets (normal and phenotype)
+    assert len(combined_collection) == 4

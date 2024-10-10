@@ -8,7 +8,6 @@ from functools import reduce
 from typing import Any, cast
 
 from dae.pedigrees.families_data import FamiliesData
-from dae.person_sets import PersonSetCollection
 from dae.query_variants.attributes_query import (
     Matcher,
     inheritance_query,
@@ -107,7 +106,7 @@ class RawFamilyVariants(abc.ABC):
                 for aa in fv.alt_alleles:
                     fa = cast(FamilyAllele, aa)
                     seen_in_status[fa.allele_index] = reduce(
-                        lambda t, s: t | s.value,  # type: ignore
+                        lambda t, s: t | s.value,
                         filter(None, fa.allele_in_statuses),
                         seen_in_status[fa.allele_index])
                     seen_as_denovo[fa.allele_index] = reduce(
@@ -548,14 +547,6 @@ class RawFamilyVariants(abc.ABC):
             return None
 
         return filter_func
-
-    @staticmethod
-    def build_person_set_collection_query(
-        person_set_collection: PersonSetCollection,  # noqa: ARG004
-        person_set_collection_query: tuple[str, list[str]],  # noqa: ARG004
-    ) -> None:
-        # pylint: disable=unused-argument
-        return None
 
     def build_family_variants_query_runner(
         self, *,

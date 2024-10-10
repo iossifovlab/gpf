@@ -16,7 +16,6 @@ from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.person_sets import PersonSetCollection
 from dae.query_variants.base_query_variants import QueryVariantsBase
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.query_variants.sql.schema2.sql_query_builder import (
@@ -496,11 +495,3 @@ class DuckDb2Variants(QueryVariantsBase):
                 limit -= 1
                 if limit == 0:
                     break
-
-    @staticmethod
-    def build_person_set_collection_query(
-            _person_set_collection: PersonSetCollection,
-            _person_set_collection_query: tuple[str, set[str]],
-    ) -> tuple | tuple[list[str], list[str]] | None:
-        """No idea what it does. If you know please edit."""
-        return None

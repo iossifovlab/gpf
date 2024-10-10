@@ -1,6 +1,6 @@
 import abc
 import logging
-from collections.abc import Generator, Iterable
+from collections.abc import Generator
 from contextlib import closing
 from typing import Any
 
@@ -11,7 +11,6 @@ from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.variant_serializers import VariantsDataSerializer
 from dae.pedigrees.loader import FamiliesLoader
-from dae.person_sets import PersonSetCollection
 from dae.query_variants.base_query_variants import QueryVariantsBase
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
@@ -395,49 +394,3 @@ class SqlSchema2Variants(QueryVariantsBase):
                     continue
                 yield v
                 seen.add(v.fvuid)
-
-    @staticmethod
-    def build_person_set_collection_query(
-            person_set_collection: PersonSetCollection,
-            person_set_collection_query: tuple[str, set[str]],
-    ) -> tuple | tuple[list[str], list[str]] | None:
-        """No idea what it does. If you know please edit."""
-        collection_id, selected_person_sets = person_set_collection_query
-        assert collection_id == person_set_collection.id
-        selected_person_sets = set(selected_person_sets)
-        assert isinstance(selected_person_sets, set)
-
-        if not person_set_collection.is_pedigree_only():
-            return None
-
-        available_person_sets = set(person_set_collection.person_sets.keys())
-        if (available_person_sets & selected_person_sets) == \
-                available_person_sets:
-            return ()
-
-        def pedigree_columns(
-            selected_person_sets: Iterable[str],
-        ) -> list[dict[str, str]]:
-            result = []
-            for person_set_id in sorted(selected_person_sets):
-                if person_set_id not in person_set_collection.person_sets:
-                    continue
-                person_set = person_set_collection.person_sets[person_set_id]
-                assert len(person_set.values) == \
-                    len(person_set_collection.sources)
-                person_set_query = {}
-                for source, value in zip(
-                        person_set_collection.sources,
-                        person_set.values, strict=True):
-                    person_set_query[source.source] = value
-                result.append(person_set_query)
-            return result
-
-        if person_set_collection.default.id not in selected_person_sets:
-            return (list(pedigree_columns(selected_person_sets)), [])
-        return (
-            [],
-            list(
-                pedigree_columns(
-                    available_person_sets - selected_person_sets)),
-        )

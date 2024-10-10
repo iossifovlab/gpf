@@ -214,7 +214,6 @@ def test_f1_canonical_denovo_return_reference_or_unknown(
         return_unknown=return_unknown,
         return_reference=return_reference))
     for v in vs:
-        print(100 * "-")
         for aa in v.alleles:
             print(aa, cast(FamilyAllele, aa).inheritance_in_members)
 
@@ -249,7 +248,6 @@ def test_f1_partially_unknown_denovo_return_reference_or_unknown(
         return_unknown=return_unknown,
         return_reference=return_reference))
     for v in vs:
-        print(100 * "-")
         for aa in v.alleles:
             print(aa, cast(FamilyAllele, aa).inheritance_in_members)
 

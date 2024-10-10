@@ -134,7 +134,6 @@ class StudyWrapperBase:
             ]
         }
 
-        # TODO Code below could be made a bit leaner and separated
         table_columns = []
         for column in config.genotype_browser.preview_columns:
             logger.info(
@@ -143,7 +142,7 @@ class StudyWrapperBase:
             if column in config.genotype_browser.column_groups:
                 new_col = dict(config.genotype_browser.column_groups[column])
                 new_col["columns"] = StudyWrapperBase.get_columns_as_sources(
-                    config, [column],  # FIXME Hacky way of using that method
+                    config, [column],
                 )
                 table_columns.append(new_col)
             else:
@@ -443,11 +442,11 @@ class StudyWrapper(StudyWrapperBase):
                                 f"reached",
                             ]
                         break
+                    psc_query = kwargs.get("person_set_collection", None)
                     row_variant = self.response_transformer.build_variant_row(
                         v, sources,
-                        person_set_collection=kwargs.get(
-                            "person_set_collection", (None, None))[0],
-                    )
+                        person_set_collection=psc_query.psc_id if psc_query
+                        else None)
 
                     yield row_variant
         except GeneratorExit:

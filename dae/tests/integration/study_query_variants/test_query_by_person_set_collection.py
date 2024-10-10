@@ -5,6 +5,7 @@ from collections.abc import Callable
 import pytest
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.person_sets import PSCQuery
 from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.alla_import import alla_gpf
@@ -153,14 +154,14 @@ def test_study_build_person_set_collection(
     "person_set_collection, count",
     [
         (None, 4),
-        (("phenotype", ["autism"]), 2),
-        (("phenotype", ["unaffected"]), 2),
-        (("phenotype", ["autism", "unaffected"]), 4),
+        (PSCQuery("phenotype", {"autism"}), 2),
+        (PSCQuery("phenotype", {"unaffected"}), 2),
+        (PSCQuery("phenotype", {"autism", "unaffected"}), 4),
     ],
 )
 def test_query_by_person_set_coolection(
     imported_study: GenotypeData,
-    person_set_collection: tuple[str, list[str]] | None,
+    person_set_collection: PSCQuery | None,
     count: int,
 ) -> None:
     vs = list(imported_study.query_variants(

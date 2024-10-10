@@ -148,7 +148,6 @@ def test_query_summary_varaints_gene_effects(
         effect_types=effects,
         genes=genes))
     for v in vs:
-        print(100 * "-")
         for aa in v.alt_alleles:
             print(aa, aa.effects)
     assert len(vs) == count

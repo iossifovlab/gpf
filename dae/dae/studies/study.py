@@ -22,6 +22,7 @@ from dae.pedigrees.families_data import FamiliesData
 from dae.person_sets import (
     PersonSetCollection,
     PersonSetCollectionConfig,
+    PSCQuery,
     parse_person_set_collections_study_config,
 )
 from dae.query_variants.query_runners import QueryResult
@@ -191,7 +192,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         effect_types: list[str] | None = None,
         family_ids: Iterable[str] | None = None,
         person_ids: Iterable[str] | None = None,
-        person_set_collection: tuple[str, list[str]] | None = None,
+        person_set_collection: PSCQuery | None = None,
         inheritance: str | list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
@@ -209,7 +210,6 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         """Build a query result."""
         # pylint: disable=too-many-locals,too-many-arguments
         del pedigree_fields  # Unused argument
-        psc_query = person_set_collection
 
         if person_ids is not None and not person_ids:
             return None
@@ -240,22 +240,23 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             query_person_ids = set(person_ids) \
                 if person_ids is not None else None
 
+            psc_query = person_set_collection
             if psc_query is not None:
-                psc_id, selected_person_set_ids = psc_query
-                if selected_person_set_ids is not None:
-                    psc = genotype_study.get_person_set_collection(psc_id)
-
-                    # pylint: disable=no-member,protected-access
-                    person_sets_query = genotype_study\
-                        .backend\
-                        .build_person_set_collection_query(psc, psc_query)
-                    if person_sets_query == ([], []):
+                assert isinstance(psc_query, PSCQuery)
+                psc = genotype_study.get_person_set_collection(psc_query.psc_id)
+                if psc is None:
+                    # this study does not have requested person set collection
+                    continue
+                assert psc is not None
+                psc_person_ids = psc.query_person_ids(psc_query)
+                if psc_person_ids is not None:
+                    if len(psc_person_ids) == 0:
+                        # no persons matching the query
                         continue
-
-                    if person_sets_query is None:
-                        query_person_ids = genotype_study\
-                            .transform_person_set_collection_query(
-                                psc_query, person_ids)
+                    if query_person_ids is not None:
+                        query_person_ids = query_person_ids & psc_person_ids
+                    else:
+                        query_person_ids = psc_person_ids
 
             if query_person_ids is not None and len(query_person_ids) == 0:
                 logger.debug(
@@ -265,7 +266,6 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     psc_query)
                 continue
 
-            # pylint: disable=no-member,protected-access
             runner = genotype_study.backend\
                 .build_family_variants_query_runner(
                     regions=regions,
@@ -317,7 +317,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         effect_types: list[str] | None = None,
         family_ids: Iterable[str] | None = None,
         person_ids: Iterable[str] | None = None,
-        person_set_collection: tuple[str, list[str]] | None = None,
+        person_set_collection: PSCQuery | None = None,
         inheritance: str | list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
@@ -545,36 +545,6 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             result[psc_id] = self._build_person_set_collection(
             psc_config, families)
         return result
-
-    def transform_person_set_collection_query(
-        self, collection_query: tuple[str, list[str]],
-        person_ids: Iterable[str] | None,
-    ) -> set[str] | None:
-        """Transform person set collection query to person ids."""
-        assert collection_query is not None
-
-        collection_id, selected_sets = collection_query
-        collection = self.get_person_set_collection(collection_id)
-        if collection is None or selected_sets is None:
-            return set(person_ids) if person_ids is not None else None
-
-        person_set_ids = set(collection.person_sets.keys())
-        selected_fpids: set[tuple[str, str]] = set()
-        if set(selected_sets) == person_set_ids:
-            return set(person_ids) \
-                if person_ids is not None else None
-
-        for set_id in (set(selected_sets) & person_set_ids):
-            selected_fpids.update(
-                collection.person_sets[set_id].persons.keys(),
-            )
-        selected_person_ids: set[str] = {
-            fpid[1] for fpid in selected_fpids
-        }
-
-        if person_ids is not None:
-            return set(person_ids) & selected_person_ids
-        return selected_person_ids
 
     def get_person_set_collection(
         self, person_set_collection_id: str,

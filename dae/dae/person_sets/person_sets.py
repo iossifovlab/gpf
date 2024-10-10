@@ -711,6 +711,31 @@ class PersonSetCollection:
             }
         return result
 
+    def query_fpids(self, query: PSCQuery) -> set[tuple[str, str]] | None:
+        """Query the PersonSetCollection for the selected person sets."""
+        if query.psc_id != self.id:
+            raise ValueError(
+                f"Query for PersonSetCollection {query.psc_id} "
+                f"on PersonSetCollection {self.id}")
+        all_person_sets = set(self.person_sets.keys())
+        if all_person_sets & query.selected_person_sets == all_person_sets:
+            # Everything is selected
+            return None
+
+        result: set[tuple[str, str]] = set()
+        for set_id in query.selected_person_sets:
+            if set_id not in self.person_sets:
+                continue
+            result.update(self.person_sets[set_id].persons.keys())
+        return result
+
+    def query_person_ids(self, query: PSCQuery) -> set[str] | None:
+        """Query the PersonSetCollection for the selected person sets."""
+        fpids = self.query_fpids(query)
+        if fpids is None:
+            return None
+        return {fpid[1] for fpid in fpids}
+
 
 @dataclass
 class PSCQuery:

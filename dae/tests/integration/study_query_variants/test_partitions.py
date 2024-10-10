@@ -5,6 +5,7 @@ from collections.abc import Callable
 import pytest
 
 from dae.genotype_storage import GenotypeStorage
+from dae.person_sets import PSCQuery
 from dae.studies.study import GenotypeData
 from dae.testing import (
     setup_pedigree,
@@ -183,8 +184,8 @@ def test_query_complex(imported_study: GenotypeData) -> None:
 def test_query_pedigree_fields(imported_study: GenotypeData) -> None:
     assert len(list(
         imported_study.query_variants(
-            person_set_collection=(
-                "status", ["affected", "unaffected", "unspecified"])))) == 8
+            person_set_collection=PSCQuery(
+                "status", {"affected", "unaffected", "unspecified"})))) == 8
 
 
 def test_af_parent_count(imported_study: GenotypeData) -> None:

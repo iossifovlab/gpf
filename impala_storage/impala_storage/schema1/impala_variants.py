@@ -13,7 +13,6 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.person_sets import PersonSetCollection
 from dae.query_variants.query_runners import QueryResult
 from dae.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status
@@ -166,48 +165,6 @@ class ImpalaVariants:
         runner.adapt(filter_func)
 
         return runner
-
-    @staticmethod
-    def build_person_set_collection_query(
-            person_set_collection: PersonSetCollection,
-            person_set_collection_query: tuple[str, set[str]],
-    ) -> tuple | tuple[list[str], list[str]] | None:
-        """No idea what it does. If you know please edit."""
-        collection_id, selected_person_sets = person_set_collection_query
-        assert collection_id == person_set_collection.id
-        selected_person_sets = set(selected_person_sets)
-        assert isinstance(selected_person_sets, set)
-
-        if not person_set_collection.is_pedigree_only():
-            return None
-
-        available_person_sets = set(person_set_collection.person_sets.keys())
-        if (available_person_sets & selected_person_sets) == \
-                available_person_sets:
-            return ()
-
-        def pedigree_columns(selected_person_sets: set) -> list:
-            result = []
-            for person_set_id in sorted(selected_person_sets):
-                if person_set_id not in person_set_collection.person_sets:
-                    continue
-                person_set = person_set_collection.person_sets[person_set_id]
-                assert len(person_set.values) == \
-                    len(person_set_collection.sources)
-                person_set_query = {}
-                for source, value in zip(
-                        person_set_collection.sources, person_set.values,
-                        strict=True):
-                    person_set_query[source.source] = value
-                result.append(person_set_query)
-            return result
-
-        if person_set_collection.default.id not in selected_person_sets:
-            return (pedigree_columns(selected_person_sets), [])
-        return (
-            [],
-            pedigree_columns(available_person_sets - selected_person_sets),
-        )
 
     def build_family_variants_query_runner(
         self, *,
