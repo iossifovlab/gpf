@@ -57,7 +57,9 @@ def load_extension(instance: WGPFInstance) -> None:
                 client, wrapper.remote_study_id,
             )
 
-            instance.register_pheno_tool_adapter(pheno_tool_adapter)
+            instance.register_pheno_tool_adapter(
+                wrapper.study_id, pheno_tool_adapter,
+            )
 
         gs_db = instance.gene_sets_db
         for collection in client.get_gene_set_collections():
