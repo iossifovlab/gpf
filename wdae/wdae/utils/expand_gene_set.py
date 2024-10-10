@@ -32,14 +32,23 @@ def expand_gene_syms(data: dict) -> dict:
         query = {}
     gene_sets_collection = query.get("geneSetsCollection", None)
     gene_set = query.get("geneSet", None)
+
     denovo_gene_set_spec = query.get("geneSetsTypes", [])
+
+    denovo_gene_set_spec_dict = {}
+    for gene_sets_type in denovo_gene_set_spec:
+        collections = {}
+        for collection in gene_sets_type["collections"]:
+            collections[collection["personSetId"]] = collection["types"]
+        denovo_gene_set_spec_dict[gene_sets_type["datasetId"]] = collections
+
     gpf_instance = get_wgpf_instance()
     assert gene_sets_collection is not None
     if gene_sets_collection.endswith("denovo"):
         denovo_gene_sets_db = gpf_instance.denovo_gene_sets_db
         gene_set = denovo_gene_sets_db.get_gene_set(
             gene_set,
-            denovo_gene_set_spec,
+            denovo_gene_set_spec_dict,
             collection_id=gene_sets_collection,
         )
     else:

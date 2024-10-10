@@ -8,12 +8,12 @@ urlpatterns = [
         views.GeneSetsCollectionsView.as_view(),
         name="gene_sets_collections",
     ),
-    re_path(r"^/gene_sets/?$", views.GeneSetsView.as_view(), name="gene_sets"),
     re_path(
-        r"^/denovo_gene_sets_types_legend/?$",
-        views.DenovoGeneSetTypesLegendView.as_view(),
-        name="denovo_gene_sets_types_legend",
+        r"^/denovo_gene_sets_types/?$",
+        views.DenovoGeneSetsTypesView.as_view(),
+        name="denovo_gene_sets_types",
     ),
+    re_path(r"^/gene_sets/?$", views.GeneSetsView.as_view(), name="gene_sets"),
     re_path(
         r"^/gene_set_download/?$",
         views.GeneSetDownloadView.as_view(),
