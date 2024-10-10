@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
-from typing import Dict, List
+import operator
 
 import pytest
 from django.test.client import Client
@@ -28,7 +28,7 @@ def test_enrichment_api_permissions(
     anonymous_client: Client,
     url: str,
     method: str,
-    body: Dict[str, str | List[str]] | None,
+    body: dict[str, str | list[str]] | None,
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
@@ -52,7 +52,7 @@ def test_enrichment_models(admin_client: Client) -> None:
 
     assert len(result["background"]) == 2
     background = result["background"]
-    background.sort(key=lambda x: x["id"])
+    background.sort(key=operator.itemgetter("id"))
     assert background[0]["id"] == "enrichment/coding_len_testing"
     assert background[0]["name"] == "CodingLenBackground"
     assert background[0]["desc"] == ""
@@ -64,7 +64,7 @@ def test_enrichment_models(admin_client: Client) -> None:
     assert len(result["counting"]) == 2
 
     counting = result["counting"]
-    counting.sort(key=lambda x: x["name"])
+    counting.sort(key=operator.itemgetter("name"))
 
     assert counting[0]["id"] == "enrichment_events_counting"
     assert counting[0]["name"] == "enrichment_events_counting name"
@@ -198,7 +198,7 @@ def test_enrichment_test_gene_symbols(admin_client: Client) -> None:
 
 def test_enrichment_test_gene_scores(
     admin_client: Client,
-    wdae_gpf_instance: WGPFInstance,
+    wdae_gpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = "/api/v3/enrichment/test"
     query = {
@@ -220,7 +220,7 @@ def test_enrichment_test_gene_scores(
 
 
 def test_enrichment_test_gene_scores_with_zero_range(
-        admin_client: Client, wdae_gpf_instance: WGPFInstance,
+        admin_client: Client, wdae_gpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = "/api/v3/enrichment/test"
     query = {
@@ -246,7 +246,7 @@ def test_enrichment_test_gene_scores_with_zero_range(
 
 def test_enrichment_test_gene_set(
     admin_client: Client,
-    wdae_gpf_instance: WGPFInstance,
+    wdae_gpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = "/api/v3/enrichment/test"
     query = {
@@ -256,7 +256,19 @@ def test_enrichment_test_gene_set(
         "geneSet": {
             "geneSetsCollection": "denovo",
             "geneSet": "Missense",
-            "geneSetsTypes": {"f1_trio": {"phenotype": ["phenotype1"]}},
+            "geneSetsTypes": [
+            {
+                "datasetId": "f1_trio",
+                "collections": [
+                    {
+                        "personSetId": "phenotype",
+                        "types": [
+                            "phenotype1",
+                        ],
+                    },
+                ],
+            },
+        ],
         },
     }
     response = admin_client.post(
