@@ -6,6 +6,7 @@ from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.families_data import FamiliesData, tag_families_data
 from dae.pedigrees.family import Family, Person
 from dae.person_sets import PersonSetCollection
+from dae.person_sets.person_sets import parse_person_set_collection_config
 from dae.studies.study import GenotypeData
 from dae.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
@@ -89,7 +90,8 @@ class RemoteGenotypeData(GenotypeData):
             self.remote_study_id,
         )
         for conf in configs.values():
-            psc = PersonSetCollection.from_families(conf, self._families)
+            psc_config = parse_person_set_collection_config(conf)
+            psc = PersonSetCollection.from_families(psc_config, self._families)
             result[psc.id] = psc
         return result
 
@@ -99,8 +101,8 @@ class RemoteGenotypeData(GenotypeData):
     ) -> PersonSetCollection:
         raise NotImplementedError
 
-    def get_studies_ids(  # pylint: disable=arguments-differ
-        self, *, _leaves: bool = True,
+    def get_studies_ids(
+        self, *, leaves: bool = True,  # noqa: ARG002
     ) -> list[str]:
         return [self.study_id]
 
