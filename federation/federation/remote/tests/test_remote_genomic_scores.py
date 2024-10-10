@@ -1,8 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from gpf_instance.gpf_instance import WGPFInstance
 from pytest_mock import MockerFixture
-from remote.genomic_scores_registry import RemoteGenomicScoresRegistry
-from remote.rest_api_client import RESTClient
+
+from federation.remote.genomic_scores_registry import (
+    RemoteGenomicScoresRegistry,
+)
+from federation.remote.rest_api_client import RESTClient
 
 
 def test_remote_genomic_scores(
