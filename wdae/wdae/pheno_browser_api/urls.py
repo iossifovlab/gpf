@@ -43,4 +43,9 @@ urlpatterns = [
         views.PhenoRemoteImages.as_view(),
         name="pheno_browser_remote_images",
     ),
+    re_path(
+        r"^/images/(?P<pheno_id>[^/]+)/(?P<image_path>.+)?",
+        views.PhenoImagesView.as_view(),
+        name="pheno_browser_images",
+    ),
 ]
