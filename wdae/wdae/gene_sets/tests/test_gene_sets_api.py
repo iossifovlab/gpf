@@ -99,9 +99,19 @@ def test_denovo_gene_set_download(
     query = {
         "geneSetsCollection": "denovo",
         "geneSet": "Synonymous",
-        "geneSetsTypes": {
-            "t4c8_study_1": {"phenotype": ["autism", "unaffected"]},
-        },
+        "geneSetsTypes": [
+            {
+                "datasetId": "t4c8_study_1",
+                "collections": [
+                    {
+                        "personSetId": "phenotype",
+                        "types": [
+                            "autism", "unaffected",
+                        ],
+                    },
+                ],
+            },
+        ],
     }
 
     response = admin_client.post(
@@ -125,7 +135,19 @@ def test_gene_set_download_missense(
     query = {
         "geneSetsCollection": "denovo",
         "geneSet": "Missense",
-        "geneSetsTypes": {"t4c8_dataset": {"phenotype": ["autism"]}},
+        "geneSetsTypes": [
+            {
+                "datasetId": "t4c8_dataset",
+                "collections": [
+                    {
+                        "personSetId": "phenotype",
+                        "types": [
+                            "autism",
+                        ],
+                    },
+                ],
+            },
+        ],
     }
     response = admin_client.post(
         url, json.dumps(query), content_type="application/json", format="json",
@@ -146,7 +168,19 @@ def test_denovo_gene_set_not_found(
     query = {
         "geneSetsCollection": "denovo",
         "geneSet": "Synonymous.BadBad",
-        "geneSetsTypes": {"t4c8_dataset": {"phenotype": ["autism"]}},
+        "geneSetsTypes": [
+            {
+                "datasetId": "t4c8_dataset",
+                "collections": [
+                    {
+                        "personSetId": "phenotype",
+                        "types": [
+                            "autism",
+                        ],
+                    },
+                ],
+            },
+        ],
     }
     response = admin_client.post(
         url, json.dumps(query), content_type="application/json", format="json",
@@ -193,7 +227,19 @@ def test_get_gene_set_download_synonymous_autism(
     query = {
         "geneSetsCollection": "denovo",
         "geneSet": "Synonymous",
-        "geneSetsTypes": {"t4c8_dataset": {"phenotype": ["autism"]}},
+        "geneSetsTypes": [
+            {
+                "datasetId": "t4c8_dataset",
+                "collections": [
+                    {
+                        "personSetId": "phenotype",
+                        "types": [
+                            "autism",
+                        ],
+                    },
+                ],
+            },
+        ],
     }
     request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
@@ -214,7 +260,19 @@ def test_get_gene_set_download_synonymous_recurrent(
     query = {
         "geneSetsCollection": "denovo",
         "geneSet": "Synonymous.Recurrent",
-        "geneSetsTypes": {"t4c8_study_4": {"phenotype": ["autism"]}},
+        "geneSetsTypes": [
+            {
+                "datasetId": "t4c8_study_4",
+                "collections": [
+                    {
+                        "personSetId": "phenotype",
+                        "types": [
+                            "autism",
+                        ],
+                    },
+                ],
+            },
+        ],
     }
     request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
@@ -235,7 +293,19 @@ def test_get_gene_set_download_synonymous_triple(
     query = {
         "geneSetsCollection": "denovo",
         "geneSet": "Synonymous.Triple",
-        "geneSetsTypes": {"t4c8_study_4": {"phenotype": ["autism"]}},
+        "geneSetsTypes": [
+            {
+                "datasetId": "t4c8_study_4",
+                "collections": [
+                    {
+                        "personSetId": "phenotype",
+                        "types": [
+                            "autism",
+                        ],
+                    },
+                ],
+            },
+        ],
     }
     request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
@@ -256,7 +326,19 @@ def test_get_denovo_gene_set_not_found(
     query = {
         "geneSetsCollection": "denovo",
         "geneSet": "Synonymous.BadBad",
-        "geneSetsTypes": {"t4c8_study_4": {"phenotype": ["autism"]}},
+        "geneSetsTypes": [
+            {
+                "datasetId": "t4c8_study_4",
+                "collections": [
+                    {
+                        "personSetId": "phenotype",
+                        "types": [
+                            "autism",
+                        ],
+                    },
+                ],
+            },
+        ],
     }
     request = f"{url}?{urlencode(query)}"
     response = admin_client.get(request)
@@ -309,7 +391,19 @@ def test_denovo_gene_sets(
     url = "/api/v3/gene_sets/gene_sets"
     query = {
         "geneSetsCollection": "denovo",
-        "geneSetsTypes": {"t4c8_study_4": {"phenotype": ["autism"]}},
+        "geneSetsTypes": [
+            {
+                "datasetId": "t4c8_study_4",
+                "collections": [
+                    {
+                        "personSetId": "phenotype",
+                        "types": [
+                            "autism",
+                        ],
+                    },
+                ],
+            },
+        ],
     }
     response = admin_client.post(
         url, json.dumps(query),
