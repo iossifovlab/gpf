@@ -78,8 +78,8 @@ class RESTClient:
         """Build a url for accessing remote GPF static images."""
         host_url = self.build_host_url()
         if self.gpf_prefix:
-            return f"{host_url}/{self.gpf_prefix}/static/images/{url}"
-        return f"{host_url}/static/images/{url}"
+            return f"{host_url}/{self.gpf_prefix}/static/{url}"
+        return f"{host_url}/static/{url}"
 
     def _build_url(
         self, url: str, query_values: dict | None = None,
