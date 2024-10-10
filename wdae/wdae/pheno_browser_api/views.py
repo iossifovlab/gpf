@@ -274,10 +274,10 @@ class PhenoMeasuresDownload(QueryDatasetView):
             logger.exception("Error")
             return Response(status=status.HTTP_400_BAD_REQUEST)
         except KeyError:
-            logger.exception("Measures not found")
+            logger.info("Measures not found")
             return Response(status=status.HTTP_404_NOT_FOUND)
         except CountError:
-            logger.exception("Measure count is too large")
+            logger.info("Measure count is too large")
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
 
         response["Content-Disposition"] = \
@@ -299,10 +299,10 @@ class PhenoMeasuresDownload(QueryDatasetView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if measure_ids_count > 1900:
-            logger.exception("Measure count is too large")
+            logger.info("Measure count is too large")
             return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
         if measure_ids_count == 0:
-            logger.exception("Measure count zero")
+            logger.info("Measure count zero")
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         return Response(status=status.HTTP_200_OK)
