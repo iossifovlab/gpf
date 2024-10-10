@@ -22,25 +22,25 @@
           <div id="hierarchy-filters-wrapper">
             <div id="hierarchy">
               <ng-container
-                *ngFor="let type of denovoGeneSetTypes"
+                *ngFor="let type of denovoDatasetsHierarchy"
                 [ngTemplateOutlet]="Recursion"
                 [ngTemplateOutletContext]="{ $implicit: type }"></ng-container>
             </div>
 
-            <div id="filters" *ngIf="selectedGeneType">
-              <div *ngFor="let collection of selectedGeneType.personSetCollections">
+            <div id="filters" *ngIf="activeDataset">
+              <div *ngFor="let collection of activeDataset.personSetCollections">
                 {{ collection.personSetCollectionName }}:
                 <div *ngFor="let personSet of collection.personSetCollectionLegend">
-                  <label [attr.for]="selectedGeneType.datasetId + '-checkbox-' + personSet.id">
+                  <label [attr.for]="activeDataset.datasetId + '-checkbox-' + personSet.id">
                     <input
                       type="checkbox"
-                      [attr.id]="selectedGeneType.datasetId + '-checkbox-' + personSet.id"
+                      [attr.id]="activeDataset.datasetId + '-checkbox-' + personSet.id"
                       [ngModel]="
-                        isSelectedGeneType(selectedGeneType.datasetId, collection.personSetCollectionId, personSet.id)
+                        isSelectedGeneType(activeDataset.datasetId, collection.personSetCollectionId, personSet.id)
                       "
                       (ngModelChange)="
                         setSelectedGeneType(
-                          selectedGeneType.datasetId,
+                          activeDataset.datasetId,
                           collection.personSetCollectionId,
                           personSet.id,
                           $event
@@ -55,7 +55,7 @@
           </div>
 
           <div id="modal-study-list">
-            <div *ngFor="let study of studiesList" class="study">
+            <div *ngFor="let study of datasetsList" class="study">
               {{ study }}
               <button (click)="removeFromList(study)" class="remove-study">
                 <span class="material-symbols-outlined">close</span>
@@ -71,20 +71,21 @@
             #collapseIcon
             *ngIf="type.children.length"
             class="collapse-dataset-icon material-icons material-symbols-outlined"
-            [ngClass]="{ rotate: expandedGeneTypes.includes(type) }"
+            [ngClass]="{ rotate: expandedDatasets.includes(type) }"
             (click)="toggleDatasetCollapse(type)"
             >expand_more</span
           >
           <div
             [id]="'type-' + type.datasetId"
             class="btn-sm text-wrap"
-            [class.active]="selectedGeneType?.datasetId === type.datasetId"
+            [class.active]="activeDataset?.datasetId === type.datasetId"
+            [class.modified]="activeDataset?.datasetId !== type.datasetId && modifiedDatasetIds.has(type.datasetId)"
             [ngStyle]="{ 'padding-left': (type.children.length ? 0 : 19) + 'px' }"
             (click)="select(type)"
             >{{ type.datasetName }}</div
           >
         </div>
-        <div *ngIf="type.children.length && expandedGeneTypes.includes(type)" class="children-container">
+        <div *ngIf="type.children.length && expandedDatasets.includes(type)" class="children-container">
           <ng-container
             *ngFor="let child of type.children"
             [ngTemplateOutlet]="Recursion"
@@ -167,7 +168,7 @@
     </div>
 
     <div *ngIf="selectedGeneSetsCollection.name === 'denovo'" id="selected-studies-list">
-      <div *ngFor="let study of studiesList" class="study">
+      <div *ngFor="let study of datasetsList" class="study">
         {{ study }}
         <button (click)="removeFromList(study)" class="remove-study">
           <span class="material-symbols-outlined">close</span>

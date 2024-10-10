@@ -10,6 +10,14 @@
   color: white;
 }
 
+.text-wrap.modified {
+  background-color: #dbdbdb;
+}
+
+.text-wrap.modified:hover {
+  background-color: #c9c9c9;
+}
+
 .text-wrap:hover {
   background-color: #e9ecef;
   cursor: pointer;
@@ -63,7 +71,7 @@
 
 #hierarchy-filters-wrapper {
   display: flex;
-  gap: 65px;
+  gap: 25px;
   overflow-y: auto;
 }
 
@@ -99,7 +107,6 @@
 #filters {
   width: 50%;
   padding-top: 15px;
-  padding-left: 25px;
   overflow-y: auto;
   display: flex;
   flex-flow: column wrap;
@@ -108,7 +115,9 @@
 
 #modal-study-list {
   border-top: 2px solid rgb(197, 197, 197);
-  max-height: 40%;
+  height: 15%;
+  max-height: 30%;
+  margin-top: 10px;
   overflow-y: auto;
 }
 
