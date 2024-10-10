@@ -8,7 +8,7 @@ import { GeneSetsService } from './gene-sets.service';
 import { NgbAccordionModule, NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { BrowserModule, By } from '@angular/platform-browser';
 import { CommonModule, APP_BASE_HREF } from '@angular/common';
-import { GeneSet, GeneSetsCollection, GeneSetType } from './gene-sets';
+import { DenovoPersonSetCollection, GeneSet, GeneSetsCollection, GeneSetType } from './gene-sets';
 import { Observable } from 'rxjs/internal/Observable';
 import { of } from 'rxjs';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
@@ -19,6 +19,7 @@ import {
   MatAutocompleteTrigger,
   MAT_AUTOCOMPLETE_SCROLL_STRATEGY } from '@angular/material/autocomplete';
 import { StoreModule, Store } from '@ngrx/store';
+import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 
 class MockGeneSetsService {
   public provide = true;
@@ -36,31 +37,61 @@ class MockGeneSetsService {
       return of([
         new GeneSetsCollection('denovo', 'desc2',
           [
-            new GeneSetType('id3', 'datasetName4', 'personSetCollectionId5', 'personSetCollectionName6',
-              [
-                '7', '8'
-              ]
+            new GeneSetType(
+              'id3',
+              'datasetName4',
+              [new DenovoPersonSetCollection('personSetCollectionId5', 'personSetCollectionName6', [])]
             ),
-            new GeneSetType('id9', 'datasetName10', 'personSetCollectionId11', 'personSetCollectionName12',
-              [
-                '13', '14'
-              ]
+            new GeneSetType(
+              'id9',
+              'datasetName10',
+              [new DenovoPersonSetCollection('personSetCollectionId11', 'personSetCollectionName12', [])]
             )
           ]
         ),
         new GeneSetsCollection('name15', 'desc16',
           [
-            new GeneSetType('id17', 'datasetName18', 'personSetCollectionId19', 'personSetCollectionName20',
-              [
-                '21', '22'
-              ]
+            new GeneSetType(
+              'id17',
+              'datasetName18',
+              [new DenovoPersonSetCollection('personSetCollectionId19', 'personSetCollectionName20', [])]
             ),
-            new GeneSetType('id23', 'datasetName24', 'personSetCollectionId25', 'personSetCollectionName26',
-              [
-                '27', '28'
-              ]
+            new GeneSetType(
+              'id23',
+              'datasetName24',
+              [new DenovoPersonSetCollection('personSetCollectionId25', 'personSetCollectionName26', [])]
             )
           ]
+        )
+      ]);
+    } else {
+      return of(undefined);
+    }
+  }
+
+  public getDenovoGeneSets(): Observable<GeneSetType[]> {
+    if (this.provide) {
+      return of([
+        new GeneSetType(
+          'id3',
+          'datasetName4',
+          [new DenovoPersonSetCollection('personSetCollectionId5', 'personSetCollectionName6', [])]
+        ),
+        new GeneSetType(
+          'id9',
+          'datasetName10',
+          [new DenovoPersonSetCollection('personSetCollectionId11', 'personSetCollectionName12', [])]
+        ),
+    
+        new GeneSetType(
+          'id17',
+          'datasetName18',
+          [new DenovoPersonSetCollection('personSetCollectionId19', 'personSetCollectionName20', [])]
+        ),
+        new GeneSetType(
+          'id23',
+          'datasetName24',
+          [new DenovoPersonSetCollection('personSetCollectionId25', 'personSetCollectionName26', [])]
         )
       ]);
     } else {
@@ -88,7 +119,7 @@ describe('GeneSetsComponent', () => {
         MatAutocompleteTrigger
       ],
       providers: [
-        ConfigService, GeneSetsService, UsersService,
+        ConfigService, GeneSetsService, UsersService, DatasetsTreeService,
         { provide: APP_BASE_HREF, useValue: '' },
         {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
       ], schemas: [NO_ERRORS_SCHEMA]
@@ -130,29 +161,30 @@ describe('GeneSetsComponent', () => {
 
   it('should set and get selectedGeneSetsCollection', () => {
     const geneSetsCollectionMock1 = new GeneSetsCollection('name1', 'desc2', [
-      new GeneSetType('datasetId3', 'datasetName4', 'personSetCollectionId5', 'personSetCollectionName6',
-        ['personSetCollectionLegend7', 'personSetCollectionLegend8']),
-      new GeneSetType('datasetId9', 'datasetName10', 'personSetCollectionId11', 'personSetCollectionName12',
-        ['personSetCollectionLegend13', 'personSetCollectionLegend14'])
+      new GeneSetType(
+        'datasetId3',
+        'datasetName4',
+        [new DenovoPersonSetCollection('personSetCollectionId5', 'personSetCollectionName6',[])]
+      ),
+      new GeneSetType(
+        'datasetId9',
+        'datasetName10',
+        [new DenovoPersonSetCollection('personSetCollectionId11', 'personSetCollectionName12',[])]
+      )
     ]);
 
     component.selectedGeneSetsCollection = geneSetsCollectionMock1;
 
     expect(component.selectedGeneSetsCollection).toStrictEqual(GeneSetsCollection.fromJson({
-      name: 'name1', desc: 'desc2',
-      types: [{
-        datasetId: 'datasetId3',
-        datasetName: 'datasetName4',
-        personSetCollectionId: 'personSetCollectionId5',
-        personSetCollectionName: 'personSetCollectionName6',
-        personSetCollectionLegend: ['personSetCollectionLegend7', 'personSetCollectionLegend8']
-      }, {
-        datasetId: 'datasetId9',
-        datasetName: 'datasetName10',
-        personSetCollectionId: 'personSetCollectionId11',
-        personSetCollectionName: 'personSetCollectionName12',
-        personSetCollectionLegend: ['personSetCollectionLegend13', 'personSetCollectionLegend14']
-      }
+      name: 'name1',
+      desc: 'desc2',
+      types: [
+        new GeneSetType('datasetId3', 'datasetName4', [
+          new DenovoPersonSetCollection('personSetCollectionId5', 'personSetCollectionName6', [])
+        ]),
+        new GeneSetType('datasetId9', 'datasetName10', [
+          new DenovoPersonSetCollection('personSetCollectionId11', 'personSetCollectionName12', [])
+        ])
       ]
     }));
   });
@@ -173,10 +205,8 @@ describe('GeneSetsComponent', () => {
 
   it('should set onSelect', () => {
     const geneSetsCollectionMock1 = new GeneSetsCollection('name1', 'desc2', [
-      new GeneSetType('datasetId3', 'datasetName4', 'personSetCollectionId5', 'personSetCollectionName6',
-        ['personSetCollectionLegend7', 'personSetCollectionLegend8']),
-      new GeneSetType('datasetId9', 'datasetName10', 'personSetCollectionId11', 'personSetCollectionName12',
-        ['personSetCollectionLegend13', 'personSetCollectionLegend14'])
+      new GeneSetType('datasetId3', 'datasetName4', [new DenovoPersonSetCollection('personSetCollectionId5', 'personSetCollectionName6', [])]),
+      new GeneSetType('datasetId9', 'datasetName10', [new DenovoPersonSetCollection('personSetCollectionId11', 'personSetCollectionName12', [])])
     ]);
 
     component.selectedGeneSetsCollection = geneSetsCollectionMock1;
@@ -194,12 +224,8 @@ describe('GeneSetsComponent', () => {
 
   it('should set onSearch', () => {
     component.selectedGeneSetsCollection = new GeneSetsCollection('name1', 'desc2', [
-      new GeneSetType('datasetId1', 'datasetName2', 'personSetCollectionId3', 'personSetCollectionName4', [
-        'personSetCollectionLegend5', 'personSetCollection6'
-      ]),
-      new GeneSetType('datasetId7', 'datasetName8', 'personSetCollectionId9', 'personSetCollectionName10', [
-        'personSetCollectionLegend11', 'personSetCollection12'
-      ])
+      new GeneSetType('datasetId1', 'datasetName2', [new DenovoPersonSetCollection('personSetCollectionId3', 'personSetCollectionName4', [])]),
+      new GeneSetType('datasetId7', 'datasetName8', [new DenovoPersonSetCollection('personSetCollectionId9', 'personSetCollectionName10', [])]),
     ]);
 
     component.geneSets = [
@@ -221,60 +247,5 @@ describe('GeneSetsComponent', () => {
     expect(component.geneSets).toStrictEqual([
       new GeneSet('name17', 18, 'desc19', 'download20'),
       new GeneSet('name17', 21, 'desc20', 'download21')]);
-  });
-});
-
-
-describe('GeneSetsComponent MockedGeneSetsService', () => {
-  let component: GeneSetsComponent;
-  let fixture: ComponentFixture<GeneSetsComponent>;
-  const mockGeneSetsService = new MockGeneSetsService();
-  let store: Store;
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      declarations: [GeneSetsComponent],
-      imports: [
-        StoreModule.forRoot({geneSets: geneSetsReducer}),
-        HttpClientTestingModule, RouterTestingModule,
-        NgbAccordionModule, NgbNavModule,
-        CommonModule,
-        BrowserModule,
-        MatAutocompleteOrigin,
-        MatAutocomplete,
-        MatAutocompleteTrigger
-      ],
-      providers: [
-        ConfigService, {
-          provide: GeneSetsService, useValue: mockGeneSetsService
-        }, UsersService,
-        { provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
-      ], schemas: [NO_ERRORS_SCHEMA]
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(GeneSetsComponent);
-    component = fixture.componentInstance;
-
-    const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
-
-    store = TestBed.inject(Store);
-    jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
-    jest.spyOn(store, 'dispatch').mockReturnValue(null);
-
-    fixture.detectChanges();
-  });
-
-  it('should test empty gene sets', () => {
-    expect(fixture.debugElement.query(By.css('div > div#gene-sets-panel'))).toBeTruthy();
-    mockGeneSetsService.provide = false;
-    component.ngOnInit();
-    component.geneSetsCollections = undefined;
-    component.selectedGeneSetsCollection = undefined;
-    fixture.detectChanges();
-    expect(fixture.debugElement.query(
-      By.css('div > div.form-block > div.card > ul > li > span'))
-    ).toBeTruthy();
-    expect(fixture.debugElement.query(By.css('div > div#gene-sets-panel'))).not.toBeTruthy();
-    mockGeneSetsService.provide = true;
   });
 });

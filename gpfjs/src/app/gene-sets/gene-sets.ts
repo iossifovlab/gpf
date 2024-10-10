@@ -10,7 +10,7 @@ export interface GeneSetJson {
 export interface GeneSetCollectionJson {
   name: string;
   desc: string;
-  types: GeneSetTypeNode[];
+  types: GeneSetType[];
 }
 
 export class GeneSetsCollection {
@@ -29,7 +29,7 @@ export class GeneSetsCollection {
   public constructor(
     public readonly name: string,
     public readonly desc: string,
-    public readonly types: Array<GeneSetTypeNode>,
+    public readonly types: Array<GeneSetType>,
   ) { }
 }
 
