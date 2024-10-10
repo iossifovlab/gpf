@@ -255,7 +255,7 @@ export class VariantReportsComponent implements OnInit {
   }
 
   public getDownloadLink(): string {
-    return this.variantReportsService.getDownloadLink() + this.selectedDataset;
+    return this.variantReportsService.getDownloadLink() + this.selectedDataset.id;
   }
 
   public downloadTags(event): void {
