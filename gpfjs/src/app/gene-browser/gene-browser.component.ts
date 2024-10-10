@@ -90,10 +90,14 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       }
       this.selectedDataset = dataset;
       this.selectedDatasetId = dataset.id;
-      this.legend = this.selectedDataset.personSetCollections
-        .getLegend(this.selectedDataset.defaultPersonSetCollection);
-      this.geneBrowserConfig = this.selectedDataset.geneBrowser;
 
+      if (this.selectedDataset.accessRights) {
+        this.legend = this.selectedDataset.personSetCollections.getLegend(
+          this.selectedDataset.defaultPersonSetCollection
+        );
+      }
+
+      this.geneBrowserConfig = this.selectedDataset.geneBrowser;
       if (this.route.snapshot.params.gene && typeof this.route.snapshot.params.gene === 'string') {
         this.geneSymbol = this.route.snapshot.params.gene;
       }
@@ -116,7 +120,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
         this.familyVariantsLoaded = true;
         this.displayVariantsCount();
       }),
-      this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => this.updateShownTablePreviewVariantsArray()),
+      this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => {
+        this.updateShownTablePreviewVariantsArray()
+      }),
       this.searchBoxInput$.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {
         if (!this.geneSymbol) {
           this.geneSymbolSuggestions = [];
@@ -360,6 +366,10 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   private updateShownTablePreviewVariantsArray(): void {
+    if (!this.selectedDataset.accessRights) {
+      return;
+    }
+
     const params = {
       ...this.requestParams,
       maxVariantsCount: this.maxFamilyVariants,

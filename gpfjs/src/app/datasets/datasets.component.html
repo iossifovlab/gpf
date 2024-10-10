@@ -27,7 +27,7 @@
         </div>
       </li>
       <li
-        [class.disabled-tool]="!(selectedDataset.geneBrowser.enabled && selectedDataset.accessRights)"
+        [class.disabled-tool]="!selectedDataset.geneBrowser.enabled"
         class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.geneBrowser }}" routerLinkActive="active">Gene Browser</a>
       </li>
@@ -77,6 +77,7 @@
       || selectedTool === toolPageLinks.datasetDescription
       || selectedTool === toolPageLinks.phenotypeBrowser
       || selectedTool === toolPageLinks.datasetStatistics
+      || selectedTool === toolPageLinks.geneBrowser
       || selectedTool === toolPageLinks.enrichmentTool"
     (activate)="routeChange()"
     class="content"></router-outlet>

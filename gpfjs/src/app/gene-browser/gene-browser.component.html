@@ -172,7 +172,7 @@
         (downloadSummaryVariants)="onSubmitSummary()">
       </gpf-gene-plot>
 
-      <fieldset id="unique-family-variants-block" class="form-block">
+      <fieldset *ngIf="selectedDataset.accessRights" id="unique-family-variants-block" class="form-block">
         <div id="unique-family-variants">
           <label
             for="unique-family-variants-checkbox"
@@ -209,18 +209,18 @@
                 <span class="material-symbols-outlined">download</span>
               </button>
             </form>
-            <form
-              id="download-summary-form"
-              action="{{ configService.baseUrl }}gene_view/download_summary_variants"
-              method="post"
-              style="display: hidden">
-              <input name="queryData" type="hidden" />
-            </form>
           </div>
         </div>
       </fieldset>
+      <form
+        id="download-summary-form"
+        action="{{ configService.baseUrl }}gene_view/download_summary_variants"
+        method="post"
+        style="display: hidden">
+        <input name="queryData" type="hidden" />
+      </form>
 
-      <div class="row">
+      <div *ngIf="selectedDataset.accessRights" class="row">
         <div class="col-6">
           <gpf-loading-spinner
             *ngIf="selectedGene"
@@ -232,6 +232,7 @@
       </div>
 
       <gpf-genotype-preview-table
+        *ngIf="selectedDataset.accessRights"
         [columns]="selectedDataset?.genotypeBrowserConfig?.tableColumns"
         [genotypePreviewVariantsArray]="genotypePreviewVariantsArray"
         [legend]="legend">

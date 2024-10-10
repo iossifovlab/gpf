@@ -201,7 +201,12 @@ export class DatasetsComponent extends ComponentValidator implements OnInit, OnD
       this.store.dispatch(reset());
     }
 
-    this.selectedTool = url.split('/').pop();
+    if (url.includes('?')) {
+      this.selectedTool = this.toolPageLinks.geneBrowser;
+    } else {
+      this.selectedTool = url.split('/').pop();
+    }
+
     DatasetsComponent.previousUrl = url;
   }
 }
