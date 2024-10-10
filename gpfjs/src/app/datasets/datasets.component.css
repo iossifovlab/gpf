@@ -64,3 +64,20 @@
   pointer-events: none;
   user-select: none;
 }
+
+#register-alert {
+  background-color: #fff8c5c7;
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  border: 0;
+  border-bottom: 1px solid #eaead2;
+  border-radius: 0;
+  height: 48px;
+  font-size: 14px;
+}
+
+#register-alert span {
+  margin-left: 16px;
+  color: #4d4007de;
+}
