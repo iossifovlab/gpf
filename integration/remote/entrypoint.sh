@@ -32,7 +32,7 @@ cd /wd/integration/fixtures/pheno/comp-data
 
 mkdir -p $DAE_DB_DIR/pheno/images
 cp -r $DAE_DB_DIR/pheno/comp_pheno/images/comp_pheno \
-    $DAE_DB_DIR/pheno/
+    $DAE_DB_DIR/pheno/images
 
 cd /wd
 
@@ -51,6 +51,9 @@ cd /wd/integration/fixtures/hg19/micro_iossifov2014
 cat >> /wd/data/data-hg19-remote/studies/iossifov_2014/iossifov_2014.yaml << EOT
 
 phenotype_data: comp_pheno
+
+phenotype_browser: true
+phenotype_tool: true
 
 enrichment:
   enabled: true
