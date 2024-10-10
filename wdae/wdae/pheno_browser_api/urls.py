@@ -24,6 +24,11 @@ urlpatterns = [
         name="pheno_browser_measures",
     ),
     re_path(
+        r"^/measures_count/?$",
+        views.PhenoMeasuresCount.as_view(),
+        name="pheno_browser_measures_count",
+    ),
+    re_path(
         r"^/measure_description/?$",
         views.PhenoMeasureDescriptionView.as_view(),
         name="pheno_browser_measure_description",

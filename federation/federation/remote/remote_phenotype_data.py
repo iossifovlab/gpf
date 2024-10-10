@@ -84,6 +84,15 @@ class RemotePhenotypeData(PhenotypeData):
         )
         return {m["measureName"]: Measure.from_json(m) for m in measures}
 
+    def count_measures(
+        self, instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,  # noqa: ARG002
+    ) -> int:
+        return self.rest_client.get_browser_measure_count(
+            self.remote_dataset_id, instrument, search_term,
+        )
+
     def get_people_measure_values(  # type: ignore
         self,
         measure_ids: Iterable[str],

@@ -308,6 +308,52 @@ class PhenoMeasuresDownload(QueryDatasetView):
         return Response(status=status.HTTP_200_OK)
 
 
+class PhenoMeasuresCount(QueryDatasetView):
+    """Phenotype measure search count view."""
+
+    def get_count(self, request: Request) -> int:
+        """Return measure count for request."""
+        data = request.query_params
+        data = {k: str(v) for k, v in data.items()}
+
+        if "dataset_id" not in data:
+            raise ValueError
+        dataset_id = data["dataset_id"]
+
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if not dataset or dataset.phenotype_data is None:
+            raise KeyError
+
+        search_term = data.get("search_term", None)
+        instrument = data.get("instrument", None)
+
+        if (instrument is not None
+                and instrument != ""
+                and instrument not in dataset.phenotype_data.instruments):
+            raise KeyError
+
+        return dataset.phenotype_data.count_measures(
+            instrument, search_term,
+        )
+
+    @method_decorator(etag(get_instance_timestamp_etag))
+    def get(self, request: Request) -> Response:
+        """Return a CSV file stream for measures."""
+        try:
+            count = self.get_count(request)
+        except ValueError:
+            logger.exception("Error")
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        except KeyError:
+            logger.exception("Measures not found")
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except CountError:
+            logger.exception("Measure count is too large")
+            return Response(status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+
+        return Response({"count": count})
+
+
 class PhenoMeasureValues(QueryDatasetView):
     """Phenotype measure values view."""
 
