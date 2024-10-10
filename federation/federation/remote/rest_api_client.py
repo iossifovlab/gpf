@@ -78,8 +78,8 @@ class RESTClient:
         """Build a url for accessing remote GPF static images."""
         host_url = self.build_host_url()
         if self.gpf_prefix:
-            return f"{host_url}/{self.gpf_prefix}/static/images/{url}"
-        return f"{host_url}/static/images/{url}"
+            return f"{host_url}/{self.gpf_prefix}/static/{url}"
+        return f"{host_url}/static/{url}"
 
     def _build_url(
         self, url: str, query_values: dict | None = None,
@@ -363,6 +363,33 @@ class RESTClient:
             query_values={"dataset_id": dataset_id},
         )
         return response.json()["instruments"]
+
+    def get_browser_measure_count(
+        self,
+        dataset_id: str,
+        instrument: str | None,
+        search_term: str | None,
+    ) -> int:
+        """Post download request for pheno measures."""
+        response = self._get(
+            "pheno_browser/measures_count",
+            query_values={
+                "dataset_id": dataset_id,
+                "search_term": search_term,
+                "instrument": instrument,
+            },
+            stream=True,
+        )
+        res = response.json()
+        if res.status_code != 200:
+            raise ValueError(
+                f"{self.remote_id}: Failed to get measure count"
+                f"from {dataset_id}",
+            )
+        if "count" not in res:
+            raise ValueError(f"{self.remote_id}: Invalid response")
+
+        return cast(int, res["count"])
 
     def get_measures_download(
             self, dataset_id: str,

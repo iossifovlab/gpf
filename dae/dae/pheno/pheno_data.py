@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import logging
 import math
+import mimetypes
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Generator, Iterable, Sequence
 from itertools import chain, islice
+from pathlib import Path
 from typing import Any, cast
 
 import pandas as pd
@@ -245,6 +247,24 @@ class PhenotypeData(ABC):
         """Return a measure by measure_id."""
         assert measure_id in self._measures, measure_id
         return self._measures[measure_id]
+
+    def get_image(self, image_path: str) -> tuple[bytes, str]:
+        """Return binary image data with mimetype."""
+
+        base_image_dir = Path(get_pheno_browser_images_dir())
+
+        full_image_path = base_image_dir / image_path
+
+        image_data = full_image_path.read_bytes()
+
+        mimetype = mimetypes.guess_type(full_image_path)[0]
+
+        if mimetype is None:
+            raise ValueError(
+                f"Cannot guess image mimetype of {full_image_path}",
+            )
+
+        return image_data, mimetype
 
     def get_measures(
         self,
