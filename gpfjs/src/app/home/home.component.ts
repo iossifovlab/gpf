@@ -57,7 +57,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       datasets: this.datasetsTreeService.getDatasetHierarchy(),
       visibleDatasets: this.datasetsService.getVisibleDatasets()
     }).subscribe(({datasets, visibleDatasets}) => {
-      console.log(datasets);
       datasets.forEach((d: DatasetHierarchy) => {
         this.collectAllStudies(d);
         this.attachDatasetDescription(d);

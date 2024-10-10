@@ -102,11 +102,6 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
 
       this.denovoDatasetsHierarchy = denovoGeneSetTypesHierarchy;
 
-      // if (this.denovoDatasetsHierarchy.length) {
-      //   this.activeDataset = this.activeDataset || this.denovoDatasetsHierarchy[0];
-      //   this.expandUntil(this.activeDataset.datasetId, this.denovoDatasetsHierarchy);
-      // }
-
       this.geneSetsCollections = geneSetsCollectionsClone;
       this.selectedGeneSetsCollection = geneSetsCollectionsClone[0];
 
