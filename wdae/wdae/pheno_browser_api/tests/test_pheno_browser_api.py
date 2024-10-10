@@ -14,6 +14,7 @@ from dae.pheno.pheno_data import PhenotypeStudy
 
 URL = "/api/v3/pheno_browser/instruments"
 MEASURES_URL = "/api/v3/pheno_browser/measures"
+MEASURES_COUNT_URL = "/api/v3/pheno_browser/measures_count"
 MEASURE_VALUES_URL = "/api/v3/pheno_browser/measure_values"
 MEASURES_INFO_URL = "/api/v3/pheno_browser/measures_info"
 MEASURE_DESCRIPTION_URL = "/api/v3/pheno_browser/measure_description"
@@ -135,6 +136,18 @@ def test_measures(
 
     res = json.loads("".join([x.decode("utf-8") for x in response]))
     assert len(res) == 7
+
+
+def test_measures_count(
+    admin_client: Client,
+    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+) -> None:
+    url = f"{MEASURES_COUNT_URL}?dataset_id=t4c8_study_1&instrument=i1"
+    response = admin_client.get(url)
+    assert response.status_code == 200
+    res = response.json()
+
+    assert res["count"] == 7
 
 
 def test_measures_forbidden(
