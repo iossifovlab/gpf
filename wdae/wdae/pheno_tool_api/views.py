@@ -11,7 +11,7 @@ from datasets_api.permissions import (
 from django.http.response import StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from query_base.query_base import QueryDatasetView
+from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -27,7 +27,7 @@ from dae.pheno_tool.tool import PhenoResult, PhenoTool
 logger = logging.getLogger(__name__)
 
 
-class PhenoToolView(QueryDatasetView):
+class PhenoToolView(QueryBaseView, DatasetAccessRightsView):
     """View for returning pheno tool results."""
 
     @staticmethod
@@ -203,7 +203,7 @@ class PhenoToolDownload(PhenoToolView):
         return response
 
 
-class PhenoToolPeopleValues(QueryDatasetView):
+class PhenoToolPeopleValues(QueryBaseView, DatasetAccessRightsView):
     """View for returning person phenotype data."""
 
     def post(self, request: Request) -> Response:
@@ -231,7 +231,7 @@ class PhenoToolPeopleValues(QueryDatasetView):
         return Response(result)
 
 
-class PhenoToolMeasure(QueryDatasetView):
+class PhenoToolMeasure(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
@@ -257,7 +257,7 @@ class PhenoToolMeasure(QueryDatasetView):
         return Response(result.to_json())
 
 
-class PhenoToolMeasures(QueryDatasetView):
+class PhenoToolMeasures(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
@@ -286,7 +286,7 @@ class PhenoToolMeasures(QueryDatasetView):
         return Response([m.to_json() for m in result.values()])
 
 
-class PhenoToolInstruments(QueryDatasetView):
+class PhenoToolInstruments(QueryBaseView, DatasetAccessRightsView):
 
     def measure_to_json(self, measure: Measure) -> dict:
         return {

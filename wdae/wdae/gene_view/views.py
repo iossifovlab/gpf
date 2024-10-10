@@ -1,15 +1,12 @@
 import logging
 from collections.abc import Generator
 
-from datasets_api.permissions import (
-    get_permissions_etag,
-    handle_partial_permissions,
-)
+from datasets_api.permissions import get_permissions_etag
 from django.contrib.auth.models import User
 from django.http.response import FileResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from query_base.query_base import QueryDatasetView
+from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -21,7 +18,7 @@ from utils.query_params import parse_query_params
 LOGGER = logging.getLogger(__name__)
 
 
-class ConfigView(QueryDatasetView):
+class ConfigView(QueryBaseView, DatasetAccessRightsView):
 
     @request_logging(LOGGER)
     @method_decorator(etag(get_permissions_etag))
@@ -39,7 +36,7 @@ class ConfigView(QueryDatasetView):
         return Response(dataset.config.gene_browser, status=status.HTTP_200_OK)
 
 
-class QueryVariantsView(QueryDatasetView):
+class QueryVariantsView(QueryBaseView):
 
     @request_logging(LOGGER)
     @method_decorator(etag(get_permissions_etag))
@@ -58,9 +55,6 @@ class QueryVariantsView(QueryDatasetView):
         if dataset.is_remote:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        user = request.user
-        handle_partial_permissions(self.instance_id, user, dataset_id, data)
-
         freq_col = dataset.config.gene_browser.frequency_column
 
         return Response(
@@ -68,7 +62,7 @@ class QueryVariantsView(QueryDatasetView):
         )
 
 
-class DownloadSummaryVariantsView(QueryDatasetView):
+class DownloadSummaryVariantsView(QueryBaseView):
     """Summary download view."""
 
     DOWNLOAD_LIMIT = 10000
@@ -78,12 +72,10 @@ class DownloadSummaryVariantsView(QueryDatasetView):
             data: dict,
             user: User,
             dataset: StudyWrapper,
-            dataset_id: str,
     ) -> Generator[str, None, None]:
         """Summary variants generator."""
         # Return a response instantly and make download more responsive
         yield ""
-        handle_partial_permissions(self.instance_id, user, dataset_id, data)
 
         download_limit = None
         if not (
@@ -114,7 +106,7 @@ class DownloadSummaryVariantsView(QueryDatasetView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         response = FileResponse(
-            self.generate_variants(data, request.user, dataset, dataset_id),
+            self.generate_variants(data, request.user, dataset),
             content_type="text/tsv",
         )
         response["Content-Disposition"] = \
