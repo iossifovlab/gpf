@@ -9,6 +9,7 @@ from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
 from dae.gpf_instance import GPFInstance
+from dae.person_sets import PSCQuery
 from dae.studies.study import GenotypeData, GenotypeDataGroup
 from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.acgt_import import acgt_gpf
@@ -278,15 +279,15 @@ def test_dataset_simple(dataset: GenotypeDataGroup) -> None:
 
 @pytest.mark.parametrize(
     "psc_query, count", [
-        (("phenotype", ["epilepsy"]), 3),
-        (("phenotype", ["autism"]), 3),
-        (("phenotype", ["unaffected"]), 2),
-        (("phenotype", ["unspecified"]), 2),
-        (("phenotype", ["epilepsy", "autism"]), 6),
-        (("phenotype", ["unaffected", "autism"]), 4),
-        (("phenotype", ["epilepsy", "autism", "unaffected"]), 6),
-        (("phenotype",
-          ["epilepsy", "autism", "unaffected", "unspecified"]), 8),
+        (PSCQuery("phenotype", {"epilepsy"}), 3),
+        (PSCQuery("phenotype", {"autism"}), 3),
+        (PSCQuery("phenotype", {"unaffected"}), 2),
+        (PSCQuery("phenotype", {"unspecified"}), 2),
+        (PSCQuery("phenotype", {"epilepsy", "autism"}), 6),
+        (PSCQuery("phenotype", {"unaffected", "autism"}), 4),
+        (PSCQuery("phenotype", {"epilepsy", "autism", "unaffected"}), 6),
+        (PSCQuery("phenotype",
+          {"epilepsy", "autism", "unaffected", "unspecified"}), 8),
     ],
 )
 def test_dataset_person_sets_queries(

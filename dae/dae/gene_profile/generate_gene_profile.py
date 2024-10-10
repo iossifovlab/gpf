@@ -13,6 +13,7 @@ from dae.gene_sets.gene_sets_db import GeneSet
 from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.statistic import GPStatistic
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.person_sets import PSCQuery
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
@@ -331,15 +332,14 @@ def main(
         assert genotype_data is not None, dataset_id
         person_ids[dataset_id] = {}
         for ps in filters.person_sets:
-            person_set_query = (
+            psc_query = PSCQuery(
                 ps.collection_name,
-                [ps.set_name],
+                {ps.set_name},
             )
-            person_set = \
-                genotype_data.transform_person_set_collection_query(
-                    person_set_query, None,
-                )
-            assert person_set is not None, person_set_query
+            psc = genotype_data.get_person_set_collection(psc_query.psc_id)
+            assert psc is not None
+            person_set = psc.query_person_ids(psc_query)
+            assert person_set is not None, psc_query
             children_person_set = set(person_set) & genotype_data_children
 
             person_ids[dataset_id][ps.set_name] = children_person_set

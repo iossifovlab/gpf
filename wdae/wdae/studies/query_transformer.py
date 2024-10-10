@@ -7,6 +7,7 @@ from dae.effect_annotation.effect import EffectTypesMixin
 from dae.pedigrees.family import FamilyTag
 from dae.pedigrees.family_tag_builder import check_family_tags_query
 from dae.person_filters import make_pedigree_filter, make_pheno_filter
+from dae.person_sets import PSCQuery
 from dae.query_variants.attributes_query import role_query
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance
@@ -251,23 +252,26 @@ class QueryTransformer:
     def _handle_person_set_collection(
         self, kwargs: dict[str, Any],
     ) -> dict[str, Any]:
-        people_group = kwargs.pop("personSetCollection", {})
-        logger.debug("person set collection requested: %s", people_group)
+        psc_query = kwargs.pop("personSetCollection", {})
+        logger.debug("person set collection requested: %s", psc_query)
 
         collection_id, selected_sets = None, None
-        if people_group:
-            collection_id = people_group["id"]
-            selected_sets = people_group["checkedValues"]
+        if psc_query:
+            collection_id = psc_query["id"]
+            selected_sets = psc_query["checkedValues"]
+            kwargs["person_set_collection"] = PSCQuery(
+                collection_id, set(selected_sets))
         else:
-            selected_person_set_collections = self.study_wrapper\
-                .genotype_data\
-                .config.person_set_collections\
-                .selected_person_set_collections
-            if selected_person_set_collections:
-                collection_id = selected_person_set_collections[0]
+            # use default (first defined) person set collection
+            # we need it for meaningful pedigree display
+            person_set_collections = self.study_wrapper\
+                .genotype_data.person_set_collections
+            psc_id = next(iter(person_set_collections))
+            default_psc = person_set_collections[psc_id]
+            kwargs["person_set_collection"] = PSCQuery(
+                psc_id, set(default_psc.person_sets.keys()),
+            )
 
-        if collection_id is not None:
-            kwargs["person_set_collection"] = collection_id, selected_sets
         return kwargs
 
     def _transform_regions(self, regions: list[str]) -> list[Region]:

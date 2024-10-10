@@ -6,6 +6,7 @@ from collections.abc import Callable
 import pytest
 
 from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.person_sets import PSCQuery
 from dae.studies.study import GenotypeDataGroup
 from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.alla_import import alla_gpf
@@ -233,13 +234,15 @@ def test_query_by_person_ids(
     "person_set_collection, count",
     [
         (None, 4),
-        (("phenotype", ["autism"]), 1),
-        (("phenotype", ["developmental_disorder"]), 1),
-        (("phenotype", ["unaffected"]), 2),
-        (("phenotype", ["autism", "unaffected"]), 3),
-        (("phenotype", ["developmental_disorder", "unaffected"]), 3),
-        (("phenotype", ["autism", "developmental_disorder"]), 2),
-        (("phenotype", ["autism", "developmental_disorder", "unaffected"]), 4),
+        (PSCQuery("phenotype", {"autism"}), 1),
+        (PSCQuery("phenotype", {"developmental_disorder"}), 1),
+        (PSCQuery("phenotype", {"unaffected"}), 2),
+        (PSCQuery("phenotype", {"autism", "unaffected"}), 3),
+        (PSCQuery("phenotype", {"developmental_disorder", "unaffected"}), 3),
+        (PSCQuery("phenotype", {"autism", "developmental_disorder"}), 2),
+        (PSCQuery(
+            "phenotype",
+            {"autism", "developmental_disorder", "unaffected"}), 4),
     ],
 )
 def test_query_by_person_set_coolection(

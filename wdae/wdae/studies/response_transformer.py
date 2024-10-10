@@ -366,10 +366,10 @@ class ResponseTransformer:
                     col_source = f"{col_source}.{col_role}"
 
                 if col_source == "pedigree":
-                    assert kwargs.get("person_set_collection") is not None
                     assert isinstance(v, FamilyVariant)
+                    psc_id = kwargs["person_set_collection"]
                     row_variant.append(self._generate_pedigree(
-                        v, kwargs["person_set_collection"],
+                        v, psc_id,
                     ))
                 elif col_source in self.PHENOTYPE_ATTRS:
                     phenotype_person_sets = \

@@ -5,6 +5,7 @@ from .person_sets import (
     PersonSetCollection,
     PersonSetCollectionConfig,
     PersonSetConfig,
+    PSCQuery,
     SourceConfig,
     parse_person_set_collection_config,
     parse_person_set_collections_study_config,
@@ -14,6 +15,7 @@ from .person_sets import (
 __all__ = [
     "ChildrenBySex",
     "ChildrenStats",
+    "PSCQuery",
     "PersonSet",
     "PersonSetCollection",
     "PersonSetCollectionConfig",

@@ -8,7 +8,6 @@ from functools import reduce
 from typing import Any, cast
 
 from dae.pedigrees.families_data import FamiliesData
-from dae.person_sets import PersonSetCollection
 from dae.query_variants.attributes_query import (
     Matcher,
     inheritance_query,
@@ -548,14 +547,6 @@ class RawFamilyVariants(abc.ABC):
             return None
 
         return filter_func
-
-    @staticmethod
-    def build_person_set_collection_query(
-        person_set_collection: PersonSetCollection,  # noqa: ARG004
-        person_set_collection_query: tuple[str, list[str]],  # noqa: ARG004
-    ) -> None:
-        # pylint: disable=unused-argument
-        return None
 
     def build_family_variants_query_runner(
         self, *,
