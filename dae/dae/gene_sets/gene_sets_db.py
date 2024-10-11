@@ -269,7 +269,6 @@ class GeneSetsDb:
                     "desc": label,
                     "name": gsc_id,
                     "format": format_str.split("|"),
-                    "types": [],
                 },
             )
         return gene_sets_collections_desc

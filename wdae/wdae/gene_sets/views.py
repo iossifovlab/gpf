@@ -33,10 +33,25 @@ class GeneSetsCollectionsView(QueryBaseView):
             self.gpf_instance.gene_sets_db.collections_descriptions,
         )
         denovo_gene_sets = deepcopy(
-            self.gpf_instance.denovo_gene_sets_db.collections_descriptions)
+            self.gpf_instance.denovo_gene_sets_db.collections_descriptions,
+        )
 
         gene_sets_collections[1:1] = denovo_gene_sets
         return Response(gene_sets_collections, status=status.HTTP_200_OK)
+
+
+class DenovoGeneSetsTypesView(QueryBaseView):
+    """Class to handle denovo gene sets view."""
+
+    @method_decorator(etag(get_instance_timestamp_etag))
+    def get(self, _request: Request) -> Response:
+        """Build response to a get request."""
+
+        dataset_phenotypes = deepcopy(
+            self.gpf_instance.denovo_gene_sets_db.denovo_gene_sets_types,
+        )
+
+        return Response(dataset_phenotypes, status=status.HTTP_200_OK)
 
 
 class GeneSetsView(QueryBaseView):
