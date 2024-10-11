@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+* 2024.10.4
+    * Refactor and fixes in support of person set collection queries
+
+* 2024.10.3
+    * Remove an exception logger from phenotype measures download in phenotype browser
+
+* 2024.10.2
+    * Clean up user edit code from GPFjs 
+
 * 2024.10.1
     * Bump Angular version to 17
     * Bump DuckDb version to 1.1.1
