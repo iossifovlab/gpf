@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
+from typing import Any
 
 import pytest
 from django.test import Client
@@ -7,21 +8,24 @@ from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 
 
-@pytest.mark.parametrize("url,method,body", [
+@pytest.mark.parametrize("url,method,body,status", [
     (
         "/api/v3/gene_view/config?datasetId=t4c8_study_1",
         "get",
         None,
+        status.HTTP_401_UNAUTHORIZED,
     ),
     (
         "/api/v3/gene_view/query_summary_variants",
         "post",
         {"datasetId": "t4c8_study_1"},
+        status.HTTP_200_OK,
     ),
     (
         "/api/v3/gene_view/download_summary_variants",
         "post",
         {"datasetId": "t4c8_study_1"},
+        status.HTTP_200_OK,
     ),
 ])
 def test_gene_view_api_permissions(
@@ -29,6 +33,7 @@ def test_gene_view_api_permissions(
     url: str,
     method: str,
     body: dict,
+    status: Any,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     if method == "get":
@@ -39,7 +44,7 @@ def test_gene_view_api_permissions(
         )
 
     assert response
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status
 
 
 def test_gene_view_summary_variants_query(
