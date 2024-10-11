@@ -1,7 +1,6 @@
 import os
 import pathlib
 from datetime import datetime
-from glob import glob
 
 import yaml
 
@@ -16,7 +15,6 @@ from dae.annotation.annotation_pipeline import (
 )
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.parquet.helpers import merge_parquets
 from dae.parquet.parquet_writer import (
     append_meta_to_parquet,
     merge_variants_parquets,
@@ -192,13 +190,11 @@ def produce_schema2_merging_tasks(
             ) for path in to_join
         ]
     else:
-        out_path = next(loader.get_summary_pq_filepaths()).pop()
         tasks = [
             task_graph.create_task(
                 "merge",
                 merge_non_partitioned,
-                [output_layout.summary,
-                 os.path.basename(out_path)],
+                [output_layout.summary],
                 annotation_tasks,
             ),
         ]
@@ -259,7 +255,5 @@ def merge_partitioned(
     merge_variants_parquets(partition_descriptor, output_dir, partitions)
 
 
-def merge_non_partitioned(output_dir: str, output_filename: str) -> None:
-    to_merge = glob(os.path.join(output_dir, "*.parquet"))
-    output_path = os.path.join(output_dir, output_filename)
-    merge_parquets(to_merge, output_path)
+def merge_non_partitioned(output_dir: str) -> None:
+    merge_variants_parquets(PartitionDescriptor(), output_dir, [])
