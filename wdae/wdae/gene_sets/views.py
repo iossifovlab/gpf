@@ -67,7 +67,10 @@ class GeneSetsView(QueryBaseView):
         if "geneSetsCollection" not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data["geneSetsCollection"]
-        gene_sets_types = data.get("geneSetsTypes", {})
+
+        gene_sets_types = gene_sets_types_to_dict(
+            data.get("geneSetsTypes", []),
+        )
 
         gene_sets: Sequence[GeneSet | dict[str, Any]] = []
 
@@ -118,8 +121,7 @@ class GeneSetsView(QueryBaseView):
             }
             for gs in response
         ]
-        logger.debug(
-            "gene sets response: %s", [r["name"] for r in response])
+        logger.debug("gene sets response: %s", [r["name"] for r in response])
         return Response(response, status=status.HTTP_200_OK)
 
 
@@ -143,7 +145,9 @@ class GeneSetDownloadView(QueryBaseView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data["geneSetsCollection"]
         gene_set_id = data["geneSet"]
-        gene_sets_types = data.get("geneSetsTypes", {})
+        gene_sets_types = gene_sets_types_to_dict(
+            data.get("geneSetsTypes", []),
+        )
 
         gene_set: GeneSet | dict[str, Any] | None = None
 
@@ -151,7 +155,8 @@ class GeneSetDownloadView(QueryBaseView):
             if not self.gpf_instance.denovo_gene_sets_db.has_gene_sets():
                 return Response(status=status.HTTP_404_NOT_FOUND)
             gene_set = self.gpf_instance.denovo_gene_sets_db.get_gene_set(
-                gene_set_id, gene_sets_types,
+                gene_set_id,
+                gene_sets_types,
                 gene_sets_collection_id,
             )
         else:
@@ -164,7 +169,8 @@ class GeneSetDownloadView(QueryBaseView):
                 )
 
             gene_set = self.gpf_instance.gene_sets_db.get_gene_set(
-                gene_sets_collection_id, gene_set_id,
+                gene_sets_collection_id,
+                gene_set_id,
             )
 
         if gene_set is None:
@@ -226,3 +232,15 @@ class GeneSetsHasDenovoView(QueryBaseView):
         if self.gpf_instance.denovo_gene_sets_db.has_gene_sets():
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+def gene_sets_types_to_dict(gene_sets_types: list[Any]) -> dict[str, Any]:
+    """Convert typescript style gene sets types into python dict."""
+    gene_sets_types_dict = {}
+    for gene_sets_type in gene_sets_types:
+        collections = {}
+        for collection in gene_sets_type["collections"]:
+            collections[collection["personSetId"]] = collection["types"]
+        gene_sets_types_dict[gene_sets_type["datasetId"]] = collections
+
+    return gene_sets_types_dict
