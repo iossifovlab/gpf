@@ -13,6 +13,7 @@ from dae.annotation.annotation_pipeline import ReannotationPipeline
 from dae.genomic_resources.genomic_context import GenomicContext
 from dae.gpf_instance import GPFInstance
 from dae.testing import (
+    denovo_study,
     setup_denovo,
     setup_directories,
     setup_pedigree,
@@ -144,6 +145,25 @@ def t4c8_study_variants() -> str:
 
 
 @pytest.fixture()
+def t4c8_study_variants_denovo() -> str:
+    return textwrap.dedent("""
+    chrom  position   ref   alt   family_id  genotype
+    chr1   4          T     G,TA  f1.1       0/1,0/1,0/0
+    chr1   54         T     C     f1.1       0/1,0/0,0/1
+    chr1   90         G     C,GA  f1.1       0/1,0/2,0/2
+    chr1   100        T     G,TA  f1.1       0/1,0/1,0/0
+    chr1   119        A     G,C   f1.1       0/0,0/2,0/2
+    chr1   122        A     C,AC  f1.1       0/1,0/1,0/1
+    chr1   4          T     G,TA  f3.1       0/1,0/2,0/2
+    chr1   54         T     C     f3.1       0/0,0/0,0/0
+    chr1   90         G     C,GA  f3.1       0/1,0/2,0/1
+    chr1   100        T     G,TA  f3.1       0/2,0/2,0/0
+    chr1   119        A     G,C   f3.1       0/1,0/2,0/1
+    chr1   122        A     C,AC  f3.1       0/2,0/2,0/2
+    """)
+
+
+@pytest.fixture()
 def t4c8_project_config() -> dict:
     return {
         "destination": {"storage_type": "schema2"},
@@ -261,17 +281,61 @@ def t4c8_annotationless_study(
     return f"{root_path}/work_dir/annotationless_study"
 
 
-@pytest.fixture(params=["nonpartitioned", "partitioned", "annotationless"])
+@pytest.fixture()
+def t4c8_study_denovo(
+    t4c8_instance: GPFInstance,
+    t4c8_study_pedigree: str,
+    t4c8_study_variants_denovo: str,
+    t4c8_project_config: dict,
+) -> str:
+    root_path = pathlib.Path(t4c8_instance.dae_dir)
+    ped_path = setup_pedigree(
+        root_path / "study_denovo" / "pedigree" / "in.ped",
+        t4c8_study_pedigree,
+    )
+    dnv_path = setup_denovo(
+        root_path / "study_denovo" / "denovo" / "variants.tsv",
+        t4c8_study_variants_denovo,
+    )
+
+    config_update = {
+        "input": {
+            "denovo": {
+                "chrom": "chrom",
+                "pos": "position",
+                "ref": "ref",
+                "alt": "alt",
+                "family_id": "family_id",
+                "genotype": "genotype",
+            },
+        },
+    }
+
+    denovo_study(
+        root_path, "study_denovo",
+        ped_path, [dnv_path],
+        t4c8_instance,
+        project_config_update=config_update,
+        project_config_overwrite=t4c8_project_config,
+    )
+    return f"{root_path}/work_dir/study_denovo"
+
+
+@pytest.fixture(params=["nonpartitioned", "partitioned",
+                        "annotationless", "denovo"])
 def study(
     t4c8_study_nonpartitioned: str,
     t4c8_study_partitioned: str,
     t4c8_annotationless_study: str,
+    t4c8_study_denovo: str,
     request: pytest.FixtureRequest,
 ) -> str:
     if request.param == "nonpartitioned":
         return t4c8_study_nonpartitioned
     if request.param == "partitioned":
         return t4c8_study_partitioned
+    if request.param == "denovo":
+        return t4c8_study_denovo
     return t4c8_annotationless_study
 
 
