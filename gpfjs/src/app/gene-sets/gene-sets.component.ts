@@ -77,7 +77,6 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
       this.geneSetsService.getDenovoGeneSets(),
       this.store.select(selectDatasetId).pipe(take(1)),
       this.store.select(selectGeneSets).pipe(take(1)),
-
     ]).pipe(
       switchMap(([hierarchies, denovoGeneSets, datasetIdState, geneSetsState]) => {
         const datasetIdStateClone = cloneDeep(datasetIdState);
@@ -107,11 +106,8 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
 
       if (geneSetsState.geneSet) {
         this.restoreState(geneSetsState);
-      } else {
-        if (this.denovoDatasetsHierarchy.length) {
-          this.activeDataset = this.activeDataset || this.denovoDatasetsHierarchy[0];
-          this.expandUntil(this.activeDataset.datasetId, this.denovoDatasetsHierarchy);
-        }
+      } else if (this.denovoDatasetsHierarchy.length) {
+        this.expandUntil(this.activeDataset.datasetId, this.denovoDatasetsHierarchy);
       }
       this.geneSetsLoaded = geneSetsCollectionsClone.length;
     });
@@ -348,7 +344,6 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
       }
     } else {
       this.datasetsList.delete(`${datasetId}: ${personSetCollectionId}: ${geneType}`);
-      this.modifiedDatasetIds.delete(datasetId);
 
       const foundType = this.currentGeneSetsTypes.find(type => type.datasetId === datasetId);
       if (foundType) {
@@ -366,6 +361,11 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
             }
           }
         }
+      }
+
+      if(!this.currentGeneSetsTypes.find(type => type.datasetId === datasetId)) {
+        this.modifiedDatasetIds.delete(datasetId);
+
       }
     }
   }
