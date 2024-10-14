@@ -2,6 +2,8 @@ from typing import cast
 
 from gpf_instance.gpf_instance import get_wgpf_instance
 
+from utils.gene_sets import get_denovo_gene_set_spec
+
 
 def expand_gene_set(data: dict) -> dict:
     """Expand gene set to list of gene symbols."""
@@ -33,14 +35,9 @@ def expand_gene_syms(data: dict) -> dict:
     gene_sets_collection = query.get("geneSetsCollection", None)
     gene_set = query.get("geneSet", None)
 
-    denovo_gene_set_spec = query.get("geneSetsTypes", [])
-
-    denovo_gene_set_spec_dict = {}
-    for gene_sets_type in denovo_gene_set_spec:
-        collections = {}
-        for collection in gene_sets_type["collections"]:
-            collections[collection["personSetId"]] = collection["types"]
-        denovo_gene_set_spec_dict[gene_sets_type["datasetId"]] = collections
+    denovo_gene_sets_types = get_denovo_gene_set_spec(
+        data.get("geneSetsTypes", []),
+    )
 
     gpf_instance = get_wgpf_instance()
     assert gene_sets_collection is not None
@@ -48,7 +45,7 @@ def expand_gene_syms(data: dict) -> dict:
         denovo_gene_sets_db = gpf_instance.denovo_gene_sets_db
         gene_set = denovo_gene_sets_db.get_gene_set(
             gene_set,
-            denovo_gene_set_spec_dict,
+            denovo_gene_sets_types,
             collection_id=gene_sets_collection,
         )
     else:

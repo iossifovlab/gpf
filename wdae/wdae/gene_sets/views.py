@@ -17,6 +17,7 @@ from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
+from utils.gene_sets import get_denovo_gene_set_spec
 
 from dae.gene_sets.gene_sets_db import GeneSet
 
@@ -83,7 +84,7 @@ class GeneSetsView(QueryBaseView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data["geneSetsCollection"]
 
-        gene_sets_types = gene_sets_types_to_dict(
+        gene_sets_types = get_denovo_gene_set_spec(
             data.get("geneSetsTypes", []),
         )
 
@@ -160,7 +161,7 @@ class GeneSetDownloadView(QueryBaseView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data["geneSetsCollection"]
         gene_set_id = data["geneSet"]
-        gene_sets_types = gene_sets_types_to_dict(
+        gene_sets_types = get_denovo_gene_set_spec(
             data.get("geneSetsTypes", []),
         )
 
@@ -221,15 +222,3 @@ class GeneSetsHasDenovoView(QueryBaseView):
         if self.gpf_instance.denovo_gene_sets_db.has_gene_sets():
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_404_NOT_FOUND)
-
-
-def gene_sets_types_to_dict(gene_sets_types: list[Any]) -> dict[str, Any]:
-    """Convert typescript style gene sets types into python dict."""
-    gene_sets_types_dict = {}
-    for gene_sets_type in gene_sets_types:
-        collections = {}
-        for collection in gene_sets_type["collections"]:
-            collections[collection["personSetId"]] = collection["types"]
-        gene_sets_types_dict[gene_sets_type["datasetId"]] = collections
-
-    return gene_sets_types_dict
