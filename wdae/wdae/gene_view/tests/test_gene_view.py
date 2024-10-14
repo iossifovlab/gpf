@@ -24,7 +24,7 @@ from rest_framework import status
     (
         "/api/v3/gene_view/download_summary_variants",
         "post",
-        {"datasetId": "t4c8_study_1"},
+        {"queryData": json.dumps({"datasetId": "t4c8_study_2"})},
         status.HTTP_200_OK,
     ),
 ])
