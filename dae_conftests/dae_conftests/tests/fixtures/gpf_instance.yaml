@@ -91,7 +91,6 @@ enrichment:
   conf_file: "enrichment.conf"
 
 gpfjs:
-  permission_denied_prompt_file: "permissionDeniedPrompt.md"
   visible_datasets:
   - Dataset1
   - Study1

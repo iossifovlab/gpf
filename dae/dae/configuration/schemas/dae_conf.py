@@ -4,12 +4,10 @@ config_reference_schema = {
     "conf_file": {
         "type": "string",
         "required": False,
-        # "check_with": validate_existing_path,
         "coerce": "abspath",
     },
     "dir": {
         "type": "string",
-        # "check_with": validate_existing_path,
         "coerce": "abspath",
     },
 }
@@ -173,7 +171,6 @@ dae_conf_schema = {
         "schema": {
             "dir": {
                 "type": "string",
-                # "check_with": validate_existing_path,
                 "coerce": "abspath",
             },
         },
@@ -205,11 +202,6 @@ dae_conf_schema = {
             "visible_datasets": {
                 "type": "list",
                 "schema": {"type": "string"},
-            },
-            "permission_denied_prompt_file": {
-                "type": "string",
-                # "check_with": validate_existing_path,
-                "coerce": "abspath",
             },
             "main_description_file": {
                 "type": "string",
