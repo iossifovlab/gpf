@@ -28,6 +28,8 @@
             </div>
 
             <div id="filters" *ngIf="activeDataset">
+              <div *ngIf="!activeDataset.personSetCollections.length" id="no-collections-message">No person set collections</div>
+
               <div *ngFor="let collection of activeDataset.personSetCollections">
                 {{ collection.personSetCollectionName }}:
                 <div *ngFor="let personSet of collection.personSetCollectionLegend">
