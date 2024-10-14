@@ -4,6 +4,7 @@
     "projects/**/*"
   ],
   "plugins": [
+    "@stylistic",
     "only-warn",
     "jest"
   ],
@@ -19,8 +20,6 @@
         "createDefaultProgram": true
       },
       "extends": [
-        "plugin:@angular-eslint/ng-cli-compat",
-        "plugin:@angular-eslint/ng-cli-compat--formatting-add-on",
         "plugin:@angular-eslint/template/process-inline-templates",
         "plugin:@angular-eslint/recommended",
         "eslint:recommended",
@@ -31,7 +30,7 @@
         "@typescript-eslint"
        ],
       "rules": {
-        "no-trailing-spaces": "warn",
+        "@stylistic/no-trailing-spaces": "warn",
         "require-atomic-updates": "warn",
         "no-await-in-loop": "warn",
         "no-constructor-return": "warn",
@@ -43,8 +42,8 @@
         "no-caller": "warn",
         "no-delete-var": "warn",
         "eqeqeq": ["warn", "always"],
-        "no-extra-semi": "warn",
-        "no-floating-decimal": "warn",
+        "@stylistic/no-extra-semi": "warn",
+        "@stylistic/no-floating-decimal": "warn",
         "no-implicit-coercion": "warn",
         "no-implied-eval": "warn",
         "no-lone-blocks": "warn",
@@ -77,6 +76,7 @@
         "prefer-object-spread": "warn",
         "prefer-spread": "warn",
         "quote-props": ["warn", "consistent-as-needed"],
+        "@stylistic/quotes": ["error", "single"],
         "radix": "warn",
         "array-bracket-spacing": ["warn", "never"],
         "arrow-spacing": ["warn", { "before": true, "after": true }],
@@ -88,8 +88,8 @@
         "func-call-spacing": ["warn", "never"],
         "key-spacing": ["warn", { "beforeColon": false }],
         "keyword-spacing": ["warn", { "before": true }],
-        "no-multi-spaces": "warn",
-        "no-tabs": ["warn"],
+        "@stylistic/no-multi-spaces": "warn",
+        "@stylistic/no-tabs": ["warn"],
         "curly": "warn",
         "padded-blocks": ["warn", "never"],
         "rest-spread-spacing": ["warn", "never"],
@@ -119,16 +119,16 @@
           }
         ],
         "@typescript-eslint/no-explicit-any": "warn",
-        "dot-notation": "off",
+        "@stylistic/dot-notation": "off",
         "@typescript-eslint/dot-notation": "off",
         "@typescript-eslint/explicit-function-return-type": "warn",
         "@typescript-eslint/no-extra-parens": ["warn", "all", { "nestedBinaryExpressions": false }],
         "@typescript-eslint/no-floating-promises": "off",
         "@typescript-eslint/member-ordering": "off",
-        "@typescript-eslint/semi": "warn",
+        "@stylistic/semi": "warn",
         "@typescript-eslint/no-unused-vars": "warn",
         "indent": ["warn", 2, {"SwitchCase": 1}],
-        "max-len": [
+        "@stylistic/max-len": [
           "warn",
           {
             "code": 120
@@ -136,15 +136,15 @@
         ],
         "no-duplicate-case": "warn",
         "no-invalid-this": "warn",
-        "no-multiple-empty-lines": "warn",
+        "@stylistic/no-multiple-empty-lines": "warn",
         "no-shadow": "warn",
         "no-template-curly-in-string": "warn",
         "no-unused-expressions": "warn",
-        "space-before-function-paren": [
+        "@stylistic/space-before-function-paren": [
           "warn",
           "never"
         ],
-        "space-in-parens": [
+        "@stylistic/space-in-parens": [
           "warn",
           "never"
         ],
