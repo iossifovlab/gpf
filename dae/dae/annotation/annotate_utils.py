@@ -135,8 +135,10 @@ class AnnotationTool:
         }
         cache_resources(self.grr, resource_ids)
 
-        self.task_graph.input_files.append(self.args.input)
-        self.task_graph.input_files.append(self.args.pipeline)
+        if hasattr(self.args, "input"):
+            self.task_graph.input_files.append(self.args.input)
+        if hasattr(self.args, "pipeline"):
+            self.task_graph.input_files.append(self.args.pipeline)
         if hasattr(self.args, "reannotate") and self.args.reannotate:
             self.task_graph.input_files.append(self.args.reannotate)
 
