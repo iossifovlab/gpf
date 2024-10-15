@@ -110,3 +110,9 @@
 .modal {
   background: #0000007b;
 }
+
+.disabled-download {
+  opacity: 35%;
+  pointer-events: none;
+  user-select: none;
+}

@@ -36,7 +36,7 @@
           >Genotype Browser</a
         >
       </li>
-      <li [class.disabled-tool]="!(selectedDataset.phenotypeBrowser && selectedDataset.accessRights)" class="nav-item">
+      <li [class.disabled-tool]="!(selectedDataset.phenotypeBrowser)" class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.phenotypeBrowser }}" routerLinkActive="active"
           >Phenotype Browser</a
         >
