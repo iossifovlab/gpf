@@ -167,7 +167,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
         } else if (validity.status === 204) {
           this.errorModalMsg = 'No instruments, select more than 0!';
         } else if (validity.status === 413) {
-          this.errorModalMsg = 'Too many instruments, select less than 1900!';
+          this.errorModalMsg = 'Too many measures, select less than 1900!';
         }
       });
   }

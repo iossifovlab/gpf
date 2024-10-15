@@ -270,7 +270,7 @@ describe('PhenoBrowserComponent', () => {
     component.downloadMeasures();
     expect(validateSpy).toHaveBeenCalledWith(data);
     expect(downloadSpy).not.toHaveBeenCalled();
-    expect(component.errorModalMsg).toBe('Too many instruments, select less than 1900!');
+    expect(component.errorModalMsg).toBe('Too many measures, select less than 1900!');
 
     component.errorModalMsg = '';
 
