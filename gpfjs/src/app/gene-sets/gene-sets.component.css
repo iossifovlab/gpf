@@ -2,6 +2,7 @@
   white-space: normal;
   width: 100%;
   padding: 5px 0;
+  user-select: none;
 }
 
 .text-wrap.active,
@@ -48,7 +49,7 @@
   box-shadow: none;
 }
 
-/*  overrides pedigree modal; TO FIX */
+/*  overrides pedigree modal */
 ::ng-deep .modal-dialog-centered {
   justify-content: center;
 }
@@ -58,9 +59,9 @@
 }
 
 #content-wrapper {
-  max-width: 45vw;
-  width: 45vw;
-  min-width: 500px;
+  max-width: 1000px;
+  width: 90vw;
+  min-width: 700px;
   height: 650px;
   max-height: 650px;
   padding: 15px;
@@ -86,17 +87,18 @@
 .collapse-dataset-icon {
   position: relative;
   left: 0;
-  top: 7px;
+  top: 10px;
   width: 20px;
   height: 20px;
   user-select: none;
+  cursor: pointer;
   transform: rotate(270deg);
 }
 
 .rotate {
   right: 10px;
   transform: translate(-3px, 5px) rotate(0);
-  top: 0;
+  top: 3px;
 }
 
 #hierarchy {
@@ -116,7 +118,7 @@
 #modal-study-list {
   border-top: 2px solid rgb(197, 197, 197);
   height: 15%;
-  max-height: 30%;
+  min-height: 15%;
   margin-top: 10px;
   overflow-y: auto;
 }
@@ -138,6 +140,8 @@
 
 .remove-study > span {
   font-size: 22px;
+  color: red;
+  margin-top: -1px;
 }
 
 .study {
