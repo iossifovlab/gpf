@@ -105,6 +105,8 @@ setuptools.setup(
     annotate_doc=dae.annotation.annotate_doc:cli
     annotate_schema2_parquet=dae.annotation.annotate_schema2_parquet:cli
     pheno_import=dae.tools.pheno_import:main
+    pheno_reference_import=dae.pheno.reference_import:main
+    pheno_duckdb_import=dae.pheno.duckdb_import:main
 
 
     agp_exporter=dae.gene_profile.exporter:cli_export
