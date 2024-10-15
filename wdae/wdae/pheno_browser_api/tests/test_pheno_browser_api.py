@@ -50,7 +50,7 @@ def test_pheno_browser_api_permissions(
     url: str,
     method: str,
     body: dict,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     if method == "get":
         response = anonymous_client.get(url)
@@ -65,7 +65,7 @@ def test_pheno_browser_api_permissions(
 
 def test_instruments_missing_dataset_id(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     response = admin_client.get(URL)
 
@@ -74,7 +74,7 @@ def test_instruments_missing_dataset_id(
 
 def test_instruments_missing_dataset_id_forbidden(
     user_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     response = user_client.get(URL)
 
@@ -83,27 +83,28 @@ def test_instruments_missing_dataset_id_forbidden(
 
 def test_instruments(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = f"{URL}?dataset_id=t4c8_study_1"
     response = admin_client.get(url)
 
     assert response.status_code == 200
-    assert "default" in response.data
-    assert "instruments" in response.data
-    assert len(response.data["instruments"]) == 2
+    data = response.json()
+    assert "default" in data
+    assert "instruments" in data
+    assert len(data["instruments"]) == 2
 
 
 def test_instruments_forbidden(
     user_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = f"{URL}?dataset_id=t4c8_study_1"
     response = user_client.get(url)
 
     assert response.status_code == 403
 
-    header = response.data
+    header = response.json()
     assert len(header.keys()) == 1
     assert (
         header["detail"]
@@ -113,19 +114,20 @@ def test_instruments_forbidden(
 
 def test_measures_info(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = f"{MEASURES_INFO_URL}?dataset_id=t4c8_study_1"
     response = admin_client.get(url)
 
+    data = response.json()
     assert response.status_code == 200
-    assert "base_image_url" in response.data
-    assert "has_descriptions" in response.data
+    assert "base_image_url" in data
+    assert "has_descriptions" in data
 
 
 def test_measures(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = f"{MEASURES_URL}?dataset_id=t4c8_study_1&instrument=i1"
     response = admin_client.get(url)
@@ -138,7 +140,7 @@ def test_measures(
 def test_measures_forbidden(
     user_client: Client,
     user: User,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     print(user.groups.all())
     url = f"{MEASURES_URL}?dataset_id=t4c8_study_1&instrument=i1"
@@ -156,7 +158,7 @@ def test_measures_forbidden(
 
 def test_download(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     data = {
         "dataset_id": "t4c8_study_1",
@@ -176,7 +178,7 @@ def test_download(
 
 def test_download_specific_measures(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     data = {
         "dataset_id": "t4c8_study_1",
@@ -199,7 +201,7 @@ def test_download_specific_measures(
 
 def test_download_all_instruments(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     data = {
         "dataset_id": "t4c8_study_1",
@@ -234,7 +236,7 @@ def test_download_all_instruments(
 
 def test_download_all_instruments_specific_measures(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     data = {
         "dataset_id": "t4c8_study_1",
@@ -266,7 +268,7 @@ def test_download_all_instruments_specific_measures(
 
 def test_measure_details(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     url = (
         f"{MEASURE_DESCRIPTION_URL}?dataset_id=t4c8_study_1"
@@ -276,11 +278,11 @@ def test_measure_details(
 
     assert response.status_code == 200
 
-    print(response.data)
-    assert response.data["instrument_name"] == "i1"
-    assert response.data["measure_name"] == "age"
-    assert response.data["measure_type"] == "continuous"
-    assert response.data["values_domain"] == [
+    data = response.json()
+    assert data["instrument_name"] == "i1"
+    assert data["measure_name"] == "age"
+    assert data["measure_type"] == "continuous"
+    assert data["values_domain"] == [
         68.00148724003327,
         565.9100943623504,
     ]
@@ -288,7 +290,7 @@ def test_measure_details(
 
 def test_get_specific_measure_values(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     data = {
         "dataset_id": "t4c8_study_1",
@@ -327,7 +329,7 @@ def test_get_specific_measure_values(
 
 def test_get_measure_values(
     admin_client: Client,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     data = {
         "dataset_id": "t4c8_study_1",
@@ -389,7 +391,7 @@ def test_get_measure_values(
 def test_measure_values_limits_measures(
     admin_client: Client,
     mocker: pytest_mock.MockerFixture,
-    t4c8_wgpf: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     data: dict[str, Any] = {
         "dataset_id": "t4c8_study_1",
