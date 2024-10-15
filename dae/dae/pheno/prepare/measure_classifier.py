@@ -35,6 +35,11 @@ class ClassifierReport:
         self.numeric_values: list[int] | np.ndarray | None = None
         self.distribution: Any = None
 
+        self.min_value: int | None = None
+        self.max_value: int | None = None
+        self.values_domain: str | None = None
+        self.rank: int | None = None
+
     def set_measure(self, measure: Box) -> "ClassifierReport":
         self.instrument_name = measure.instrument_name
         self.measure_name = measure.measure_name
@@ -440,7 +445,7 @@ class MeasureClassifier:
 
         if (
             conf.min_individuals is not None and
-            rep.count_with_values is not None and 
+            rep.count_with_values is not None and
             rep.count_with_values < conf.min_individuals
         ):
             return MeasureType.raw
@@ -476,3 +481,80 @@ class MeasureClassifier:
             return MeasureType.categorical
 
         return MeasureType.raw
+
+
+def classification_reference_impl(
+    measure_values: list[str | None], config: InferenceConfig,
+) -> tuple[list[Any], ClassifierReport]:
+    """Reference implementation for measure classification."""
+    report = ClassifierReport()
+    unique_values: set[str] = set()
+    numeric_values: list[float | None] = []
+    unique_numeric_values = set()
+    report.count_total = len(measure_values)
+    numeric_count = 0
+    measure_type = None
+    none_count = 0
+
+    if config.measure_type is not None:
+        measure_type = MeasureType.from_str(config.measure_type)
+
+    for val in measure_values:
+        if val is None:
+            none_count += 1
+            numeric_values.append(None)
+            continue
+        unique_values.add(val)
+        try:
+            num_value = float(val)
+            numeric_values.append(num_value)
+            numeric_count += 1
+            unique_numeric_values.add(num_value)
+        except ValueError:
+            numeric_values.append(None)
+
+    report.count_with_values = len(measure_values) - none_count
+    report.count_without_values = none_count
+    report.count_with_numeric_values = numeric_count
+    report.count_with_non_numeric_values = \
+        report.count_with_values - report.count_with_numeric_values
+    report.unique_values = list(unique_values)
+    report.count_unique_values = len(report.unique_values)
+    report.count_unique_numeric_values = len(unique_numeric_values)
+
+    assert (
+        report.count_total
+        == report.count_with_values + report.count_without_values
+    )
+    assert (
+        report.count_with_values
+        == report.count_with_numeric_values
+        + report.count_with_non_numeric_values
+    )
+    classifier = MeasureClassifier(config)
+
+    if measure_type is None:
+        measure_type = classifier.classify(report)
+    report.measure_type = measure_type
+
+    if measure_type in {MeasureType.continuous, MeasureType.ordinal}:
+        report.min_value = np.min(
+            cast(np.ndarray, report.numeric_values),
+        )
+        if isinstance(report.min_value, np.bool_):
+            report.min_value = np.int8(report.min_value)
+        report.max_value = np.max(
+            cast(np.ndarray, report.numeric_values),
+        )
+        if isinstance(report.max_value, np.bool_):
+            report.max_value = np.int8(report.max_value)
+        report.values_domain = f"[{report.min_value}, {report.max_value}]"
+    else:
+        values = [v for v in report.unique_values if v.strip() != ""]
+        report.values_domain = ", ".join(sorted(values))
+
+    report.rank = report.count_unique_values
+
+    if measure_type in [MeasureType.ordinal, MeasureType.continuous]:
+        return numeric_values, report
+    return measure_values, report
