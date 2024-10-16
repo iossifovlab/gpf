@@ -296,6 +296,14 @@ class BedRegion(Region):
 
         super().__init__(chrom, start, stop)
 
+    @staticmethod
+    def from_str(region: str) -> BedRegion:
+        """Parse string representation of a region."""
+        result = Region.from_str(region)
+        if result.start is None or result.stop is None:
+            raise ValueError(f"Invalid region format: {region}")
+        return BedRegion(result.chrom, result.start, result.stop)
+
     @property
     def start(self) -> int:
         assert self._start is not None
