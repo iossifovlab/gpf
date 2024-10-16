@@ -712,3 +712,39 @@ def test_print_meta(
     assert "annotation_pipeline" in res
     assert "summary_schema" in res
     assert "family_schema" in res
+
+
+def test_output_argument_behaviour(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_study_nonpartitioned: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    work_dir = str(tmp_path / "work")
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    with pytest.raises(ValueError, match="No output path was provided!"):
+        cli([
+            t4c8_study_nonpartitioned,
+            annotation_file_new,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", "1",
+        ])
+
+    output_dir = tmp_path / "out"
+    output_dir.mkdir()
+
+    with pytest.raises(ValueError, match=r"Output path .+ already exists!"):
+        cli([
+            t4c8_study_nonpartitioned,
+            annotation_file_new,
+            "-o", str(output_dir),
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", "1",
+        ])
