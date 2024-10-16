@@ -11,7 +11,6 @@ import { DatasetPermissions } from 'app/datasets-table/datasets-table';
 @Injectable()
 export class DatasetsService {
   private readonly datasetUrl = 'datasets';
-  private readonly permissionDeniedPromptUrl = 'datasets/denied_prompt';
   private readonly datasetsDetailsUrl = 'datasets/details';
   private readonly datasetPedigreeUrl = 'datasets/pedigree';
   private readonly visibleDatasetsUrl = 'datasets/visible';
@@ -95,14 +94,6 @@ export class DatasetsService {
 
   private reloadAllDatasets(): void {
     this.getDatasets().pipe(take(1)).subscribe(() => null);
-  }
-
-  public getPermissionDeniedPrompt(): Observable<string> {
-    const options = { withCredentials: true };
-
-    return this.http.get(this.config.baseUrl + this.permissionDeniedPromptUrl, options).pipe(
-      map(res => res['data'] as string)
-    );
   }
 
   public getDatasetPedigreeColumnDetails(datasetId: string, column: string): Observable<object> {

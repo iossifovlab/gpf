@@ -28,10 +28,6 @@ class MockDatasetService {
   public getDatasetsLoadedObservable(): Observable<object[]> {
     return of([mockDataset1]);
   }
-
-  public getPermissionDeniedPrompt(): Observable<object[]> {
-    return of([{}]);
-  }
 }
 
 const mockDataset1 = new Dataset(

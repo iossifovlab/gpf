@@ -21,7 +21,6 @@ export class DatasetsComponent extends ComponentValidator implements OnInit, OnD
   public registerAlertVisible = false;
   public datasetTrees: DatasetNode[];
   public selectedDataset: Dataset = null;
-  public permissionDeniedPrompt: string;
   public toolPageLinks = toolPageLinks;
   public visibleDatasets: string[];
   private subscriptions: Subscription[] = [];
@@ -81,10 +80,7 @@ export class DatasetsComponent extends ComponentValidator implements OnInit, OnD
         if (this.router.url === '/datasets' && this.datasetTrees.length > 0) {
           this.router.navigate(['/', 'datasets', this.datasetTrees[0].dataset.id]);
         }
-      }),
-      this.datasetsService.getPermissionDeniedPrompt().subscribe(aprompt => {
-        this.permissionDeniedPrompt = aprompt;
-      }),
+      })
     );
   }
 
