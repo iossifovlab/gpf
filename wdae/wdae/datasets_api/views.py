@@ -204,23 +204,6 @@ class StudiesView(QueryBaseView):
         return Response({"data": self._collect_datasets_summary(user)})
 
 
-class PermissionDeniedPromptView(QueryBaseView):
-    """Provide the markdown-formatted permission denied prompt text."""
-
-    def __init__(self) -> None:
-        super().__init__()
-
-        self.permission_denied_prompt = (
-            "The whole Genotype and Phenotype in Families (GPF) data and"
-            " functionalities are accessible only by registered users."
-            " Visit the About page for information how to register."
-        )
-
-    @method_decorator(etag(get_instance_timestamp_etag))
-    def get(self, _request: Request) -> Response:
-        return Response({"data": self.permission_denied_prompt})
-
-
 class DatasetDetailsView(QueryBaseView):
     """Provide miscellaneous details for a given dataset."""
 
