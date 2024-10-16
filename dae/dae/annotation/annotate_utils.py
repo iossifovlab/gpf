@@ -88,6 +88,8 @@ class AnnotationTool:
         self.grr = grr
 
         self.task_graph = TaskGraph()
+
+    def setup_work_dir(self) -> None:
         if not os.path.exists(self.args.work_dir):
             os.mkdir(self.args.work_dir)
         self.args.task_status_dir = os.path.join(
@@ -134,6 +136,8 @@ class AnnotationTool:
             for res in annotator.resources
         }
         cache_resources(self.grr, resource_ids)
+
+        self.setup_work_dir()
 
         if hasattr(self.args, "input"):
             self.task_graph.input_files.append(self.args.input)
