@@ -1,7 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import io
 import pathlib
 import textwrap
 from collections.abc import Callable
+from contextlib import redirect_stdout
 from datetime import datetime
 from glob import glob
 
@@ -693,3 +695,20 @@ def test_reannotate_in_place_increment_backup_filenames(
     for i in range(times - 1):
         assert pathlib.Path(
             study, "meta", f"meta_{date}-{i + 1}.parquet").exists()
+
+
+def test_print_meta(
+    t4c8_instance: GPFInstance,
+    t4c8_study_partitioned: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
+) -> None:
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        cli([t4c8_study_partitioned, "--meta"])
+    res = buf.getvalue()
+    assert res
+    assert "partition_description" in res
+    assert "annotation_pipeline" in res
+    assert "summary_schema" in res
+    assert "family_schema" in res

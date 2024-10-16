@@ -50,11 +50,27 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             "-e", "--in-place",
             help="Produce output directly in given input dir.",
             action="store_true")
+        output_behaviour.add_argument(
+            "-m", "--meta",
+            help="Print the input Parquet's meta properties.",
+            action="store_true")
 
         CLIAnnotationContext.add_context_arguments(parser)
         TaskGraphCli.add_arguments(parser)
         VerbosityConfiguration.set_arguments(parser)
         return parser
+
+    def print_meta(self) -> None:
+        """Print the metadata of a Parquet study."""
+        input_dir = os.path.abspath(self.args.input)
+        if self.args.meta:
+            loader = ParquetLoader.load_from_dir(input_dir)
+            for k, v in loader.meta.items():
+                print("=" * 50)
+                print(k)
+                print("=" * 50)
+                print(v)
+                print()
 
     def work(self) -> None:
         input_dir = os.path.abspath(self.args.input)
@@ -106,5 +122,9 @@ def cli(
     raw_args: list[str] | None = None,
     gpf_instance: GPFInstance | None = None,
 ) -> None:
+    """Entry method for AnnotateSchema2ParquetTool."""
     tool = AnnotateSchema2ParquetTool(raw_args, gpf_instance)
+    if tool.args.meta:
+        tool.print_meta()
+        return
     tool.run()
