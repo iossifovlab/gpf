@@ -63,7 +63,7 @@
   <div class="separator"></div>
 
   <div style="width: 100%">
-    <ng-container *ngTemplateOutlet="datasetsTemplate; context: { entries: content['data'], nesting: 0 }">
+    <ng-container *ngTemplateOutlet="datasetsTemplate; context: { entries: content, nesting: 0 }">
     </ng-container>
   </div>
   <div class="separator"></div>
@@ -81,7 +81,7 @@
 
   <ng-template #datasetsTemplate let-entries="entries" let-nesting="nesting">
     <ng-container *ngFor="let entry of entries">
-      <ng-container *ngIf="datasets.includes(entry.dataset)">
+      <ng-container *ngIf="datasets.includes(entry.id)">
         <div>
           <div
             [ngStyle]="{ 'padding-left': (nesting * 80 || 36) + 'px' }"
@@ -98,13 +98,13 @@
 
               <span
                 class="material-symbols-outlined sm"
-                [ngClass]="!entry.access_rights ? 'lock-icon' : 'unlock-icon'"
-                >{{ !entry.access_rights ? 'lock' : 'lock_open_right' }}</span
+                [ngClass]="!entry.accessRights ? 'lock-icon' : 'unlock-icon'"
+                >{{ !entry.accessRights ? 'lock' : 'lock_open_right' }}</span
               >
             </div>
             <h4>
               <a
-                [attr.href]="'datasets/' + entry.dataset"
+                [attr.href]="'datasets/' + entry.id"
                 [style.font-size]="nesting ? 24 - 2 * nesting + 'px' : '24px'"
                 >{{ entry.name }}</a
               >

@@ -1,5 +1,32 @@
 .text-wrap {
   white-space: normal;
+  width: 100%;
+  padding: 5px 0;
+  user-select: none;
+}
+
+.text-wrap.active,
+.text-wrap.active:hover {
+  background-color: #2a6395;
+  color: white;
+}
+
+.text-wrap.modified {
+  background-color: #dbdbdb;
+}
+
+.text-wrap.modified:hover {
+  background-color: #c9c9c9;
+}
+
+.text-wrap:hover {
+  background-color: #e9ecef;
+  cursor: pointer;
+}
+
+.dataset-wrapper {
+  font-size: 18px;
+  display: flex;
 }
 
 .gene-sets-types {
@@ -20,4 +47,108 @@
   border-top: none;
   padding: 0 !important;
   box-shadow: none;
+}
+
+/*  overrides pedigree modal */
+::ng-deep .modal-dialog-centered {
+  justify-content: center;
+}
+
+::ng-deep .modal-content {
+  width: fit-content;
+}
+
+#content-wrapper {
+  max-width: 1000px;
+  width: 90vw;
+  min-width: 700px;
+  height: 650px;
+  max-height: 650px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+#hierarchy-filters-wrapper {
+  display: flex;
+  gap: 25px;
+  overflow-y: auto;
+}
+
+#open-modal-button {
+  background-color: #eee;
+  border: 1px solid #ddd;
+  border-radius: 0.375rem;
+  padding: 6px 12px;
+  margin-top: 20px;
+}
+
+.collapse-dataset-icon {
+  position: relative;
+  left: 0;
+  top: 10px;
+  width: 20px;
+  height: 20px;
+  user-select: none;
+  cursor: pointer;
+  transform: rotate(270deg);
+}
+
+.rotate {
+  right: 10px;
+  transform: translate(-3px, 5px) rotate(0);
+  top: 3px;
+}
+
+#hierarchy {
+  width: 50%;
+  overflow-y: auto;
+}
+
+#filters {
+  width: 50%;
+  padding-top: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-flow: column wrap;
+  column-gap: 30px;
+}
+
+#modal-study-list {
+  border-top: 2px solid rgb(197, 197, 197);
+  height: 15%;
+  min-height: 15%;
+  margin-top: 10px;
+  overflow-y: auto;
+}
+
+#selected-studies-list {
+  margin-top: 15px;
+}
+
+.children-container {
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 1px solid #e4e4e4;
+}
+
+.remove-study {
+  border: none;
+  background-color: transparent;
+}
+
+.remove-study > span {
+  font-size: 22px;
+  color: red;
+  margin-top: -1px;
+}
+
+.study {
+  display: flex;
+}
+
+#no-collections-message {
+  opacity: 75%;
+  font-style: italic;
 }

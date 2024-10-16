@@ -8,7 +8,7 @@ import { GeneSetsService } from './gene-sets.service';
 import { NgbAccordionModule, NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { BrowserModule, By } from '@angular/platform-browser';
 import { CommonModule, APP_BASE_HREF } from '@angular/common';
-import { GeneSet, GeneSetsCollection, GeneSetType } from './gene-sets';
+import { DenovoPersonSetCollection, GeneSet, GeneSetsCollection, GeneSetType, GeneSetTypeNode, SelectedDenovoTypes, SelectedPersonSetCollections } from './gene-sets';
 import { Observable } from 'rxjs/internal/Observable';
 import { of } from 'rxjs';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
@@ -19,7 +19,87 @@ import {
   MatAutocompleteTrigger,
   MAT_AUTOCOMPLETE_SCROLL_STRATEGY } from '@angular/material/autocomplete';
 import { StoreModule, Store } from '@ngrx/store';
+import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
+import { DatasetHierarchy, PersonSet } from 'app/datasets/datasets';
 
+const denovoGeneSetsMock = [
+  new GeneSetType(
+    'SSC_genotypes',
+    'SSC Genotypes',
+    [new DenovoPersonSetCollection('phenotype', 'phenotype', [
+      new PersonSet('autism', 'autism', '#0000'),
+      new PersonSet('unaffected', 'unaffected', '#0000'),
+    ])]
+  ),
+  new GeneSetType(
+    'SFARI_SSC_WGS_2',
+    'SSC NYGC WGS',
+    [new DenovoPersonSetCollection('phenotype', 'phenotype', [
+      new PersonSet('autism', 'autism', '#0000'),
+      new PersonSet('unaffected', 'unaffected', '#0000'),
+    ])]
+  ),
+
+  new GeneSetType(
+    'ssc_rna_seq',
+    'SSC LCL RNA Sequencing',
+    [new DenovoPersonSetCollection('phenotype', 'phenotype', [
+      new PersonSet('autism', 'autism', '#0000'),
+      new PersonSet('unaffected', 'unaffected', '#0000'),
+    ])]
+  ),
+  new GeneSetType(
+    'SFARI_SSC_WGS_CSHL',
+    'SSC CSHL WGS',
+    [new DenovoPersonSetCollection('phenotype', 'phenotype', [
+      new PersonSet('autism', 'autism', '#0000'),
+      new PersonSet('unaffected', 'unaffected', '#0000'),
+    ])]
+  )
+];
+
+const geneSetsCollectionMock = [
+  new GeneSetsCollection('denovo', 'desc2',
+    [
+      new GeneSetType(
+        'id3',
+        'datasetName4',
+        [new DenovoPersonSetCollection('phenotype', 'phenotype', [
+          new PersonSet('autism', 'autism', '#0000'),
+          new PersonSet('unaffected', 'unaffected', '#0000'),
+        ])]
+      ),
+      new GeneSetType(
+        'id9',
+        'datasetName10',
+        [new DenovoPersonSetCollection('phenotype', 'phenotype', [
+          new PersonSet('autism', 'autism', '#0000'),
+          new PersonSet('unaffected', 'unaffected', '#0000'),
+        ])]
+      )
+    ]
+  ),
+  new GeneSetsCollection('name15', 'desc16',
+    [
+      new GeneSetType(
+        'id17',
+        'datasetName18',
+        [new DenovoPersonSetCollection('phenotype', 'phenotype', [
+          new PersonSet('autism', 'autism', '#0000'),
+          new PersonSet('unaffected', 'unaffected', '#0000'),
+        ])]
+      ),
+      new GeneSetType(
+        'id23',
+        'datasetName24',
+        [new DenovoPersonSetCollection('phenotype', 'phenotype', [
+          new PersonSet('autism', 'autism', '#0000'),
+          new PersonSet('unaffected', 'unaffected', '#0000'),
+        ])]
+      )
+    ]
+  )
+]
 class MockGeneSetsService {
   public provide = true;
 
@@ -33,39 +113,42 @@ class MockGeneSetsService {
 
   public getGeneSetsCollections(): Observable<GeneSetsCollection[]> {
     if (this.provide) {
-      return of([
-        new GeneSetsCollection('denovo', 'desc2',
-          [
-            new GeneSetType('id3', 'datasetName4', 'personSetCollectionId5', 'personSetCollectionName6',
-              [
-                '7', '8'
-              ]
-            ),
-            new GeneSetType('id9', 'datasetName10', 'personSetCollectionId11', 'personSetCollectionName12',
-              [
-                '13', '14'
-              ]
-            )
-          ]
-        ),
-        new GeneSetsCollection('name15', 'desc16',
-          [
-            new GeneSetType('id17', 'datasetName18', 'personSetCollectionId19', 'personSetCollectionName20',
-              [
-                '21', '22'
-              ]
-            ),
-            new GeneSetType('id23', 'datasetName24', 'personSetCollectionId25', 'personSetCollectionName26',
-              [
-                '27', '28'
-              ]
-            )
-          ]
-        )
-      ]);
+      return of(geneSetsCollectionMock);
     } else {
       return of(undefined);
     }
+  }
+
+  public getDenovoGeneSets(): Observable<GeneSetType[]> {
+    if (this.provide) {
+      return of(denovoGeneSetsMock);
+    } else {
+      return of(undefined);
+    }
+  }
+}
+
+const datasetHierarchyMock = [
+    new DatasetHierarchy(
+    'SSC_genotypes',
+    'SSC Genotypes',
+    true,
+    [
+      new DatasetHierarchy('SFARI_SSC_WGS_2', 'SSC NYGC WGS', true, null),
+      new DatasetHierarchy('SFARI_SSC_WGS_CSHL', 'SSC CSHL WGS', true, null),
+        ]
+    ),
+    new DatasetHierarchy(
+      'ssc_rna_seq',
+      'SSC LCL RNA Sequencing',
+      true,
+      []
+    )
+  ]
+
+class MockDatasetsTreeService {
+  public getDatasetHierarchy(): Observable<DatasetHierarchy[]> {
+    return of(datasetHierarchyMock);
   }
 }
 
@@ -73,6 +156,8 @@ describe('GeneSetsComponent', () => {
   let component: GeneSetsComponent;
   let fixture: ComponentFixture<GeneSetsComponent>;
   let store: Store;
+  let geneSetsServiceMock = new MockGeneSetsService();
+  let datasetsTreeServiceMock = new MockDatasetsTreeService();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -88,9 +173,11 @@ describe('GeneSetsComponent', () => {
         MatAutocompleteTrigger
       ],
       providers: [
-        ConfigService, GeneSetsService, UsersService,
+        ConfigService, UsersService,
         { provide: APP_BASE_HREF, useValue: '' },
-        {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
+        { provide: GeneSetsService, useValue: geneSetsServiceMock },
+        { provide: DatasetsTreeService, useValue: datasetsTreeServiceMock },
+        { provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: '' }
       ], schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
@@ -130,29 +217,30 @@ describe('GeneSetsComponent', () => {
 
   it('should set and get selectedGeneSetsCollection', () => {
     const geneSetsCollectionMock1 = new GeneSetsCollection('name1', 'desc2', [
-      new GeneSetType('datasetId3', 'datasetName4', 'personSetCollectionId5', 'personSetCollectionName6',
-        ['personSetCollectionLegend7', 'personSetCollectionLegend8']),
-      new GeneSetType('datasetId9', 'datasetName10', 'personSetCollectionId11', 'personSetCollectionName12',
-        ['personSetCollectionLegend13', 'personSetCollectionLegend14'])
+      new GeneSetType(
+        'datasetId3',
+        'datasetName4',
+        [new DenovoPersonSetCollection('personSetCollectionId5', 'personSetCollectionName6',[])]
+      ),
+      new GeneSetType(
+        'datasetId9',
+        'datasetName10',
+        [new DenovoPersonSetCollection('personSetCollectionId11', 'personSetCollectionName12',[])]
+      )
     ]);
 
     component.selectedGeneSetsCollection = geneSetsCollectionMock1;
 
     expect(component.selectedGeneSetsCollection).toStrictEqual(GeneSetsCollection.fromJson({
-      name: 'name1', desc: 'desc2',
-      types: [{
-        datasetId: 'datasetId3',
-        datasetName: 'datasetName4',
-        personSetCollectionId: 'personSetCollectionId5',
-        personSetCollectionName: 'personSetCollectionName6',
-        personSetCollectionLegend: ['personSetCollectionLegend7', 'personSetCollectionLegend8']
-      }, {
-        datasetId: 'datasetId9',
-        datasetName: 'datasetName10',
-        personSetCollectionId: 'personSetCollectionId11',
-        personSetCollectionName: 'personSetCollectionName12',
-        personSetCollectionLegend: ['personSetCollectionLegend13', 'personSetCollectionLegend14']
-      }
+      name: 'name1',
+      desc: 'desc2',
+      types: [
+        new GeneSetType('datasetId3', 'datasetName4', [
+          new DenovoPersonSetCollection('personSetCollectionId5', 'personSetCollectionName6', [])
+        ]),
+        new GeneSetType('datasetId9', 'datasetName10', [
+          new DenovoPersonSetCollection('personSetCollectionId11', 'personSetCollectionName12', [])
+        ])
       ]
     }));
   });
@@ -163,20 +251,218 @@ describe('GeneSetsComponent', () => {
     component.setSelectedGeneType('datasetId1', 'personSetCollectionId2', 'geneType3', true);
     component.setSelectedGeneType('datasetId4', 'personSetCollectionId5', 'geneType6', false);
     jest.advanceTimersByTime(350);
+
     expect(component.isSelectedGeneType('datasetId1', 'personSetCollectionId2', 'geneType3')).toBe(true);
+    expect(component.datasetsList).toStrictEqual(new Set<string>(['datasetId1: personSetCollectionId2: geneType3']));
+    expect(component.modifiedDatasetIds).toStrictEqual(new Set<string>(['datasetId1']));
+
     expect(component.isSelectedGeneType('datasetId4', 'personSetCollectionId5', 'geneType6')).toBe(false);
+    expect(component.datasetsList).toStrictEqual(new Set<string>(['datasetId1: personSetCollectionId2: geneType3']));
+    expect(component.modifiedDatasetIds).toStrictEqual(new Set<string>(['datasetId1']));
 
     component.setSelectedGeneType('datasetId1', 'personSetCollectionId2', 'geneType3', false);
     jest.advanceTimersByTime(350);
     expect(component.isSelectedGeneType('datasetId1', 'personSetCollectionId2', 'geneType3')).toBe(false);
   });
 
+  it('should add type to existing collection of a dataset in current selected types object', () => {
+    jest.useFakeTimers();
+
+    component.currentGeneSetsTypes = [
+      new SelectedDenovoTypes(
+        'deNovo',
+        [
+          new SelectedPersonSetCollections('phenotype', ['autism'])
+        ])
+    ];
+    component.datasetsList = new Set<string>(['deNovo: phenotype: autism']);
+
+    component.setSelectedGeneType('deNovo', 'phenotype', 'unaffected', true);
+    jest.advanceTimersByTime(350);
+
+    expect(component.currentGeneSetsTypes).toStrictEqual(
+      [
+        new SelectedDenovoTypes(
+          'deNovo',
+          [
+            new SelectedPersonSetCollections('phenotype', ['autism', 'unaffected'])
+          ])
+      ]
+    );
+
+    expect(component.selectedGeneSet).toBeNull();
+    expect(component.searchQuery).toBe('');
+    expect(component.datasetsList).toContain('deNovo: phenotype: unaffected');
+    expect(component.datasetsList).toContain('deNovo: phenotype: autism');
+    expect(component.modifiedDatasetIds).toStrictEqual(new Set<string>(['deNovo']));
+  });
+
+  it('should add type and new collection to dataset in current selected types object', () => {
+    jest.useFakeTimers();
+
+    component.currentGeneSetsTypes = [
+      new SelectedDenovoTypes(
+        'deNovo',
+        [
+          new SelectedPersonSetCollections('phenotype', ['autism'])
+        ])
+    ];
+    component.datasetsList = new Set<string>(['deNovo: phenotype: autism']);
+
+    component.setSelectedGeneType('deNovo', 'nonExistingCollection', 'unaffected', true);
+    jest.advanceTimersByTime(350);
+
+    expect(component.currentGeneSetsTypes).toStrictEqual(
+      [
+        new SelectedDenovoTypes(
+          'deNovo',
+          [
+            new SelectedPersonSetCollections('phenotype', ['autism']),
+            new SelectedPersonSetCollections('nonExistingCollection', ['unaffected'])
+          ]
+        )
+      ]
+    );
+
+    expect(component.selectedGeneSet).toBeNull();
+    expect(component.searchQuery).toBe('');
+    expect(component.datasetsList).toContain('deNovo: nonExistingCollection: unaffected');
+    expect(component.datasetsList).toContain('deNovo: phenotype: autism');
+    expect(component.modifiedDatasetIds).toStrictEqual(new Set<string>(['deNovo']));
+  });
+
+  it('should add type and new dataset in current selected types object', () => {
+    jest.useFakeTimers();
+
+    component.currentGeneSetsTypes = [
+      new SelectedDenovoTypes(
+        'deNovo',
+        [
+          new SelectedPersonSetCollections('phenotype', ['autism'])
+        ])
+    ];
+    component.datasetsList = new Set<string>(['deNovo: phenotype: autism']);
+    component.modifiedDatasetIds = new Set<string>(['deNovo']);
+
+    component.setSelectedGeneType('newDatasetId', 'phenotype', 'unaffected', true);
+    jest.advanceTimersByTime(350);
+
+    expect(component.currentGeneSetsTypes).toStrictEqual(
+      [
+        new SelectedDenovoTypes(
+          'deNovo',
+          [
+            new SelectedPersonSetCollections('phenotype', ['autism']),
+          ]
+        ),
+        new SelectedDenovoTypes(
+          'newDatasetId',
+          [
+            new SelectedPersonSetCollections('phenotype', ['unaffected']),
+          ]
+        )
+      ]
+    );
+
+    expect(component.selectedGeneSet).toBeNull();
+    expect(component.searchQuery).toBe('');
+    expect(component.datasetsList).toContain('newDatasetId: phenotype: unaffected');
+    expect(component.datasetsList).toContain('deNovo: phenotype: autism');
+    expect(component.modifiedDatasetIds).toStrictEqual(new Set<string>(['deNovo', 'newDatasetId']));
+  });
+
+  it('should remove type from collection of a dataset in current selected types object', () => {
+    jest.useFakeTimers();
+
+    component.currentGeneSetsTypes = [
+      new SelectedDenovoTypes(
+        'deNovo',
+        [
+          new SelectedPersonSetCollections('phenotype', ['autism', 'unaffected'])
+        ])
+    ];
+    component.datasetsList = new Set<string>(['deNovo: phenotype: autism', 'deNovo: phenotype: unaffected']);
+    component.modifiedDatasetIds = new Set<string>(['deNovo']);
+
+    component.setSelectedGeneType('deNovo', 'phenotype', 'unaffected', false);
+    jest.advanceTimersByTime(350);
+
+    expect(component.currentGeneSetsTypes).toStrictEqual(
+      [
+        new SelectedDenovoTypes(
+          'deNovo',
+          [
+            new SelectedPersonSetCollections('phenotype', ['autism']),
+          ]
+        )
+      ]
+    );
+
+    expect(component.selectedGeneSet).toBeNull();
+    expect(component.searchQuery).toBe('');
+    expect(component.datasetsList).not.toContain('deNovo: phenotype: unaffected');
+    expect(component.modifiedDatasetIds).toStrictEqual(new Set<string>(['deNovo']));
+  });
+
+  it('should remove collection of a dataset removing the last type from current selected types object', () => {
+    jest.useFakeTimers();
+
+    component.currentGeneSetsTypes = [
+      new SelectedDenovoTypes(
+        'deNovo',
+        [
+          new SelectedPersonSetCollections('phenotype', ['autism']),
+          new SelectedPersonSetCollections('16p_status', ['negative'])
+        ])
+    ];
+    component.datasetsList = new Set<string>(['deNovo: phenotype: autism', 'deNovo: 16p_status: negative']);
+    component.modifiedDatasetIds = new Set<string>(['deNovo']);
+
+    component.setSelectedGeneType('deNovo', 'phenotype', 'autism', false);
+    jest.advanceTimersByTime(350);
+
+    expect(component.currentGeneSetsTypes).toStrictEqual([
+      new SelectedDenovoTypes(
+        'deNovo',
+        [
+          new SelectedPersonSetCollections('16p_status', ['negative'])
+        ])
+    ]);
+
+    expect(component.selectedGeneSet).toBeNull();
+    expect(component.searchQuery).toBe('');
+    expect(component.datasetsList).toContain('deNovo: 16p_status: negative');
+    expect(component.datasetsList).not.toContain('deNovo: phenotype: affected');
+    expect(component.modifiedDatasetIds).toStrictEqual(new Set<string>(['deNovo']));
+  });
+
+  it('should remove the only collection of a dataset removing the last type and remove the dataset from current selected types object', () => {
+    jest.useFakeTimers();
+
+    component.currentGeneSetsTypes = [
+      new SelectedDenovoTypes(
+        'deNovo',
+        [
+          new SelectedPersonSetCollections('phenotype', ['autism'])
+        ])
+    ];
+    component.datasetsList = new Set<string>(['deNovo: phenotype: autism']);
+    component.modifiedDatasetIds = new Set<string>(['deNovo']);
+
+    component.setSelectedGeneType('deNovo', 'phenotype', 'autism', false);
+    jest.advanceTimersByTime(350);
+
+    expect(component.currentGeneSetsTypes).toStrictEqual([]);
+
+    expect(component.selectedGeneSet).toBeNull();
+    expect(component.searchQuery).toBe('');
+    expect(component.datasetsList).not.toContain('deNovo: phenotype: affected');
+    expect(component.modifiedDatasetIds).toStrictEqual(new Set<string>([]));
+  });
   it('should set onSelect', () => {
     const geneSetsCollectionMock1 = new GeneSetsCollection('name1', 'desc2', [
-      new GeneSetType('datasetId3', 'datasetName4', 'personSetCollectionId5', 'personSetCollectionName6',
-        ['personSetCollectionLegend7', 'personSetCollectionLegend8']),
-      new GeneSetType('datasetId9', 'datasetName10', 'personSetCollectionId11', 'personSetCollectionName12',
-        ['personSetCollectionLegend13', 'personSetCollectionLegend14'])
+      new GeneSetType('datasetId3', 'datasetName4', [new DenovoPersonSetCollection('personSetCollectionId5', 'personSetCollectionName6', [])]),
+      new GeneSetType('datasetId9', 'datasetName10', [new DenovoPersonSetCollection('personSetCollectionId11', 'personSetCollectionName12', [])])
     ]);
 
     component.selectedGeneSetsCollection = geneSetsCollectionMock1;
@@ -194,12 +480,8 @@ describe('GeneSetsComponent', () => {
 
   it('should set onSearch', () => {
     component.selectedGeneSetsCollection = new GeneSetsCollection('name1', 'desc2', [
-      new GeneSetType('datasetId1', 'datasetName2', 'personSetCollectionId3', 'personSetCollectionName4', [
-        'personSetCollectionLegend5', 'personSetCollection6'
-      ]),
-      new GeneSetType('datasetId7', 'datasetName8', 'personSetCollectionId9', 'personSetCollectionName10', [
-        'personSetCollectionLegend11', 'personSetCollection12'
-      ])
+      new GeneSetType('datasetId1', 'datasetName2', [new DenovoPersonSetCollection('personSetCollectionId3', 'personSetCollectionName4', [])]),
+      new GeneSetType('datasetId7', 'datasetName8', [new DenovoPersonSetCollection('personSetCollectionId9', 'personSetCollectionName10', [])]),
     ]);
 
     component.geneSets = [
@@ -222,59 +504,129 @@ describe('GeneSetsComponent', () => {
       new GeneSet('name17', 18, 'desc19', 'download20'),
       new GeneSet('name17', 21, 'desc20', 'download21')]);
   });
-});
 
+  it('should remove selected types from the list of types displayed in ui', () => {
+    component.datasetsList = new Set<string>(['deNovo: phenotype: autism', 'deNovo: 16p_status: negative']);
 
-describe('GeneSetsComponent MockedGeneSetsService', () => {
-  let component: GeneSetsComponent;
-  let fixture: ComponentFixture<GeneSetsComponent>;
-  const mockGeneSetsService = new MockGeneSetsService();
-  let store: Store;
+    const setSelectedGeneTypeSpy = jest.spyOn(component, 'setSelectedGeneType');
+    component.removeFromList('deNovo: 16p_status: negative');
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
-      declarations: [GeneSetsComponent],
-      imports: [
-        StoreModule.forRoot({geneSets: geneSetsReducer}),
-        HttpClientTestingModule, RouterTestingModule,
-        NgbAccordionModule, NgbNavModule,
-        CommonModule,
-        BrowserModule,
-        MatAutocompleteOrigin,
-        MatAutocomplete,
-        MatAutocompleteTrigger
-      ],
-      providers: [
-        ConfigService, {
-          provide: GeneSetsService, useValue: mockGeneSetsService
-        }, UsersService,
-        { provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
-      ], schemas: [NO_ERRORS_SCHEMA]
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(GeneSetsComponent);
-    component = fixture.componentInstance;
-
-    const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
-
-    store = TestBed.inject(Store);
-    jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
-    jest.spyOn(store, 'dispatch').mockReturnValue(null);
-
-    fixture.detectChanges();
+    expect(setSelectedGeneTypeSpy).toBeCalledWith('deNovo', '16p_status', 'negative', false);
   });
 
-  it('should test empty gene sets', () => {
-    expect(fixture.debugElement.query(By.css('div > div#gene-sets-panel'))).toBeTruthy();
-    mockGeneSetsService.provide = false;
+  it('should set the selected dataset as an active dataset', () => {
+    const datasetNode = new GeneSetTypeNode('datasetId', 'datasetName', [], []);
+    expect(component.activeDataset).toBeUndefined();
+
+    component.select(datasetNode);
+    expect(component.activeDataset).toBe(datasetNode);
+  });
+
+  it('should expand dataset when clicking it in the hierarchy', () => {
+    const datasetNodeChild = new GeneSetTypeNode('childStudyId', 'childStudyName', [], []);
+    const datasetNode = new GeneSetTypeNode('datasetId', 'datasetName', [], [datasetNodeChild]);
+    expect(component.expandedDatasets).toStrictEqual([]);
+
+    component.toggleDatasetCollapse(datasetNode);
+    expect(component.expandedDatasets).toStrictEqual([datasetNode]);
+  
+  });
+
+  it('should close all inner opened datasets when closing a parent in the hierarchy', () => {
+    const datasetNodeChild2 = new GeneSetTypeNode('childStudyId2', 'childStudyName2', [], []);
+    const datasetNodeChild1 = new GeneSetTypeNode('childStudyId1', 'childStudyName1', [], [datasetNodeChild2]);
+    const datasetNode = new GeneSetTypeNode('datasetId', 'datasetName', [], [datasetNodeChild1]);
+    const datasetNodeParallel = new GeneSetTypeNode('parallelDatasetId', 'parallelDatasetName', [], [datasetNodeChild1]);
+    component.expandedDatasets = [datasetNode, datasetNodeChild1, datasetNodeParallel];
+
+    component.toggleDatasetCollapse(datasetNode);
+    expect(component.expandedDatasets).toStrictEqual([datasetNodeParallel]);
+  });
+
+  it('should create denovo modal hierarchy', () => {
+    const rxjs = jest.requireActual('rxjs');
+    jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
+    datasetHierarchyMock,
+    denovoGeneSetsMock,
+     'SSC_genotypes',
+     {
+      geneSet: null,
+      geneSetsCollection: null,
+      geneSetsTypes: null,
+    }
+    ]));
+
     component.ngOnInit();
-    component.geneSetsCollections = undefined;
-    component.selectedGeneSetsCollection = undefined;
-    fixture.detectChanges();
-    expect(fixture.debugElement.query(
-      By.css('div > div.form-block > div.card > ul > li > span'))
-    ).toBeTruthy();
-    expect(fixture.debugElement.query(By.css('div > div#gene-sets-panel'))).not.toBeTruthy();
-    mockGeneSetsService.provide = true;
+    expect(component.denovoDatasetsHierarchy).toEqual(
+      [
+        new GeneSetTypeNode('SSC_genotypes', 'SSC Genotypes', [new DenovoPersonSetCollection('phenotype', 'phenotype', [
+          new PersonSet('autism', 'autism', '#0000'),
+          new PersonSet('unaffected', 'unaffected', '#0000'),
+        ])], [
+          new GeneSetTypeNode('SFARI_SSC_WGS_2', 'SSC NYGC WGS', [new DenovoPersonSetCollection('phenotype', 'phenotype', [
+            new PersonSet('autism', 'autism', '#0000'),
+            new PersonSet('unaffected', 'unaffected', '#0000'),
+          ])], []),
+          new GeneSetTypeNode('SFARI_SSC_WGS_CSHL', 'SSC CSHL WGS', [new DenovoPersonSetCollection('phenotype', 'phenotype', [
+            new PersonSet('autism', 'autism', '#0000'),
+            new PersonSet('unaffected', 'unaffected', '#0000'),
+          ])], []),
+        ]),
+        new GeneSetTypeNode('ssc_rna_seq', 'SSC LCL RNA Sequencing', [new DenovoPersonSetCollection('phenotype', 'phenotype', [
+          new PersonSet('autism', 'autism', '#0000'),
+          new PersonSet('unaffected', 'unaffected', '#0000'),
+        ])], []),
+      ]
+    );
+
+    expect(component.geneSetsCollections).toEqual(geneSetsCollectionMock);
+    expect(component.selectedGeneSetsCollection.name).toEqual('denovo');
+    expect(component.activeDataset.datasetId).toEqual('SSC_genotypes');
+    expect(component.geneSetsLoaded).toEqual(2);
   });
+
+  it('should restore gene sets types', () => {
+    const rxjs = jest.requireActual('rxjs');
+    jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
+    datasetHierarchyMock,
+    denovoGeneSetsMock,
+     'datasetId',
+     {
+      geneSet: new GeneSet('geneSet1', 10, 'geneSet1', 'download'),
+      geneSetsCollection: new GeneSetsCollection('denovo', 'denovo', []),
+      geneSetsTypes: [
+        new SelectedDenovoTypes('SFARI_SSC_WGS_CSHL', [
+          new SelectedPersonSetCollections('phenotype', ['unaffected'])
+        ])
+      ]
+    }
+    ]));
+
+    component.ngOnInit();
+    expect(component.selectedGeneSet.name).toEqual('geneSet1');
+    expect(component.expandedDatasets[0].datasetId).toBe('SSC_genotypes');
+    expect(component.datasetsList).toContain('SFARI_SSC_WGS_CSHL: phenotype: unaffected');
+    expect(component.modifiedDatasetIds).toStrictEqual(new Set<string>(['SFARI_SSC_WGS_CSHL']));
+  });
+
+  it('should select first person set type from the first dataset as default', () => {
+    const rxjs = jest.requireActual('rxjs');
+    jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
+    datasetHierarchyMock,
+    denovoGeneSetsMock,
+     'SSC_genotypes',
+     {
+      geneSet: null,
+      geneSetsCollection: null,
+      geneSetsTypes: null
+    }
+    ]));
+
+    component.ngOnInit();
+    expect(component.selectedGeneSet).toBeNull();
+    expect(component.activeDataset.datasetId).toBe('SSC_genotypes');
+    expect(component.datasetsList).toContain('SSC_genotypes: phenotype: autism');
+    expect(component.modifiedDatasetIds).toStrictEqual(new Set<string>(['SSC_genotypes']));
+  });
+
 });

@@ -63,7 +63,7 @@ describe('HomeComponent', () => {
 
   it('should open sinle view', () => {
     component.loadingFinished = true;
-    component.content = {};
+    component.content = [];
     component.geneProfilesConfig = new GeneProfilesSingleViewConfig();
     fixture.detectChanges();
 
@@ -84,7 +84,7 @@ describe('HomeComponent', () => {
     component.showError = true;
 
     component.loadingFinished = true;
-    component.content = {};
+    component.content = [];
     component.geneProfilesConfig = new GeneProfilesSingleViewConfig();
     fixture.detectChanges();
 
