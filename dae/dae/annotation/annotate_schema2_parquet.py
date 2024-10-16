@@ -80,11 +80,13 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             input_layout = backup_schema2_study(input_dir)
             loader = ParquetLoader(input_layout)
         else:
+            if not self.args.output:
+                raise ValueError("No output path was provided!")
             output_dir = os.path.abspath(self.args.output)
+            if os.path.exists(output_dir):
+                raise ValueError(f"Output path '{output_dir}' already exists!")
             loader = ParquetLoader.load_from_dir(input_dir)
 
-        if not os.path.exists(output_dir):
-            os.mkdir(output_dir)
         output_layout = create_schema2_dataset_layout(output_dir)
 
         if loader.layout.summary is None:
