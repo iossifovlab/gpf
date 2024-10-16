@@ -2,7 +2,9 @@
 
 import pytest
 
-from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
+from dae.duckdb_storage.duckdb_legacy_genotype_storage import (
+    DuckDbLegacyStorage,
+)
 from dae.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )
@@ -25,19 +27,19 @@ def duckdb_storage_config(
 
 @pytest.fixture(scope="session")
 def duckdb_storage_fixture(
-        duckdb_storage_config: dict) -> DuckDbGenotypeStorage:
+        duckdb_storage_config: dict) -> DuckDbLegacyStorage:
     storage_factory = get_genotype_storage_factory("duckdb_legacy")
     assert storage_factory is not None
     storage = storage_factory(duckdb_storage_config)
     assert storage is not None
-    assert isinstance(storage, DuckDbGenotypeStorage)
+    assert isinstance(storage, DuckDbLegacyStorage)
     return storage
 
 
 @pytest.fixture(scope="session")
 def imported_study(
         tmp_path_factory: pytest.TempPathFactory,
-        duckdb_storage_fixture: DuckDbGenotypeStorage) -> GenotypeData:
+        duckdb_storage_fixture: DuckDbLegacyStorage) -> GenotypeData:
     root_path = tmp_path_factory.mktemp(
         f"vcf_path_{duckdb_storage_fixture.storage_id}")
     gpf_instance = foobar_gpf(root_path, duckdb_storage_fixture)
