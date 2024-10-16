@@ -24,6 +24,11 @@ urlpatterns = [
         name="pheno_browser_measures",
     ),
     re_path(
+        r"^/measures_count/?$",
+        views.PhenoMeasuresCount.as_view(),
+        name="pheno_browser_measures_count",
+    ),
+    re_path(
         r"^/measure_description/?$",
         views.PhenoMeasureDescriptionView.as_view(),
         name="pheno_browser_measure_description",
@@ -39,8 +44,8 @@ urlpatterns = [
         name="pheno_browser_values",
     ),
     re_path(
-        r"^/remote_images/(?P<remote_id>[^/]+)/(?P<image_path>.+)?",
-        views.PhenoRemoteImages.as_view(),
-        name="pheno_browser_remote_images",
+        r"^/images/(?P<pheno_id>[^/]+)/(?P<image_path>.+)?",
+        views.PhenoImagesView.as_view(),
+        name="pheno_browser_images",
     ),
 ]

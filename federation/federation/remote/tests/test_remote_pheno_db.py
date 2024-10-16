@@ -1,5 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from remote.remote_phenotype_data import RemotePhenotypeData
+from federation.remote.remote_phenotype_data import RemotePhenotypeData
 
 
 def test_extract_url() -> None:

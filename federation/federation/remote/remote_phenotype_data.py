@@ -84,6 +84,15 @@ class RemotePhenotypeData(PhenotypeData):
         )
         return {m["measureName"]: Measure.from_json(m) for m in measures}
 
+    def count_measures(
+        self, instrument: str | None,
+        search_term: str | None,
+        page: int | None = None,  # noqa: ARG002
+    ) -> int:
+        return self.rest_client.get_browser_measure_count(
+            self.remote_dataset_id, instrument, search_term,
+        )
+
     def get_people_measure_values(  # type: ignore
         self,
         measure_ids: Iterable[str],
@@ -140,10 +149,21 @@ class RemotePhenotypeData(PhenotypeData):
         )
         pheno_folder = self._extract_pheno_dir(output["base_image_url"])
         output["base_image_url"] = (
-            "/api/v3/pheno_browser/remote_images/"
-            f"{self.rest_client.remote_id}/{pheno_folder}/"
+            f"/api/v3/pheno_browser/images/{self.pheno_id}/"
+            f"{pheno_folder}/"
         )
         return cast(dict[str, Any], output)
+
+    def get_image(self, image_path: str) -> tuple[bytes, str]:
+        """Return binary image data with mimetype."""
+        image, mimetype = self.rest_client.get_pheno_image(image_path)
+        if image is None or mimetype is None:
+            raise ValueError(
+                f"Cannot get remote image at {image_path} for "
+                f"{self.remote_dataset_id} with remote pheno"
+                f"{self._remote_pheno_id}",
+            )
+        return image, mimetype
 
     def search_measures(
         self,

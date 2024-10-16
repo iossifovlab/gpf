@@ -1,13 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from gpf_instance.gpf_instance import WGPFInstance
 from pytest_mock import MockerFixture
-from remote.genomic_scores_registry import RemoteGenomicScoresRegistry
-from remote.rest_api_client import RESTClient
+
+from federation.remote.genomic_scores_registry import (
+    RemoteGenomicScoresRegistry,
+)
+from federation.remote.rest_api_client import RESTClient
 
 
 def test_remote_genomic_scores(
     mocker: MockerFixture, rest_client: RESTClient,
-    wdae_gpf_instance: WGPFInstance,
+    remote_t4c8_wgpf_instance: WGPFInstance,
 ) -> None:
     patch = mocker.patch.object(rest_client, "get_genomic_scores")
     patch.return_value = [{
@@ -57,7 +60,7 @@ def test_remote_genomic_scores(
         "description": "ala bala",
         "help": "bala ala",
     }]
-    local_db = wdae_gpf_instance.genomic_scores
+    local_db = remote_t4c8_wgpf_instance.genomic_scores
 
     db = RemoteGenomicScoresRegistry({"remote": rest_client}, local_db)
     assert len(db.remote_scores) == 1

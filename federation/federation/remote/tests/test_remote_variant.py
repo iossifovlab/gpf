@@ -3,9 +3,12 @@ from typing import Any
 
 import numpy as np
 import pytest
-from remote.remote_variant import RemoteFamilyAllele, RemoteFamilyVariant
 
 from dae.pedigrees.family import Family, Person
+from federation.remote.remote_variant import (
+    RemoteFamilyAllele,
+    RemoteFamilyVariant,
+)
 
 
 @pytest.fixture()
@@ -123,7 +126,6 @@ def test_remote_variant_alleles(
     attributes, columns = sample_attributes_columns
     variant = RemoteFamilyVariant(attributes, sample_family, columns)
 
-    # assert isinstance(variant.family_genotype, np.ndarray)
     assert variant.family_genotype == [[0, 0], [0, 0], [1, 0], [0, 0]]
 
     assert isinstance(variant.best_state, np.ndarray)
