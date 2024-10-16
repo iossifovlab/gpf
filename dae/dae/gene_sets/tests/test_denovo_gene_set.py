@@ -8,12 +8,18 @@ from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
 def test_denovo_gene_sets_legend(trios2_dgsc: DenovoGeneSetCollection) -> None:
     assert trios2_dgsc is not None
     legend = trios2_dgsc.get_gene_sets_types_legend()
-    assert len(legend) == 1
-    assert legend[0]["datasetId"] == "trios2"
-    assert legend[0]["datasetName"] == "trios2"
-    assert legend[0]["personSetCollectionId"] == "status"
-    assert legend[0]["personSetCollectionName"] == "Affected Status"
-    assert legend[0]["personSetCollectionLegend"] == [
+    assert len(legend) == 3
+    assert legend["datasetId"] == "trios2"
+    assert legend["datasetName"] == "trios2"
+    assert legend["personSetCollections"][0][
+        "personSetCollectionId"
+    ] == "status"
+    assert legend["personSetCollections"][0][
+        "personSetCollectionName"
+    ] == "Affected Status"
+    assert legend["personSetCollections"][0][
+        "personSetCollectionLegend"
+    ] == [
         {"id": "affected", "name": "affected", "color": "#e35252"},
         {"id": "unaffected", "name": "unaffected", "color": "#ffffff"},
     ]

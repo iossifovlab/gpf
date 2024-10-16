@@ -1,4 +1,5 @@
 import logging
+import operator
 from functools import cached_property, lru_cache
 from typing import Any, cast
 
@@ -65,18 +66,24 @@ class DenovoGeneSetsDb:
     @cached_property
     def collections_descriptions(self) -> list[dict[str, Any]]:
         """Return gene set descriptions."""
-        gene_sets_types = []
-        for gs_collection in self._denovo_gene_set_collections.values():
-            gene_sets_types += gs_collection.get_gene_sets_types_legend()
 
         return [{
             "desc": "Denovo",
             "name": "denovo",
             "format": ["key", " (|count|)"],
-            "types": gene_sets_types,
         }]
 
-    def get_collection_types_legend(self, gs_collection_id: str) -> list[Any]:
+    @cached_property
+    def denovo_gene_sets_types(self) -> list[dict[str, Any]]:
+        """Return denovo gene sets types descriptions."""
+        return sorted([
+            gs_collection.get_gene_sets_types_legend()
+            for gs_collection in self._denovo_gene_set_collections.values()
+        ], key=operator.itemgetter("datasetId"))
+
+    def get_collection_types_legend(
+        self, gs_collection_id: str,
+    ) -> dict[str, Any]:
         return self._denovo_gene_set_collections[gs_collection_id]\
             .get_gene_sets_types_legend()
 

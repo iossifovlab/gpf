@@ -142,19 +142,16 @@ def test_get_collections_descriptions(gene_sets_db: GeneSetsDb) -> None:
             "desc": "Main",
             "name": "main",
             "format": ["key", " (", "count", "): ", "desc"],
-            "types": [],
         },
         {
             "desc": "Test mapping",
             "name": "test_mapping",
             "format": ["key", " (", "count", ")"],
-            "types": [],
         },
         {
             "desc": "Test GMT",
             "name": "test_gmt",
             "format": ["key", " (", "count", ")"],
-            "types": [],
         },
     ]
 

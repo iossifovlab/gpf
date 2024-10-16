@@ -22,33 +22,6 @@ def name_in_gene_sets(
     return False
 
 
-def test_get_all_descriptions(
-    t4c8_denovo_gene_sets_db: DenovoGeneSetsDb,
-) -> None:
-    gene_set_descriptions = t4c8_denovo_gene_sets_db.collections_descriptions
-    assert len(gene_set_descriptions) == 1
-
-    desc = gene_set_descriptions[0]
-
-    assert desc["desc"] == "Denovo"
-    assert desc["name"] == "denovo"
-    assert desc["format"] == ["key", " (|count|)"]
-    assert len(desc["types"]) == 8
-
-    assert desc["desc"] == "Denovo"
-    assert desc["name"] == "denovo"
-    assert desc["format"] == ["key", " (|count|)"]
-    assert len(desc["types"]) == 8
-    assert desc["types"][0]["datasetId"] == "t4c8_study_4"
-    assert desc["types"][0]["datasetName"] == "t4c8_study_4"
-    assert desc["types"][0]["personSetCollectionId"] == \
-        "phenotype"
-    assert desc["types"][0]["personSetCollectionName"] == \
-        "Phenotype"
-    assert len(
-        desc["types"][0]["personSetCollectionLegend"]) == 2
-
-
 @pytest.mark.parametrize(
     "denovo_gene_set_id,people_groups,count",
     [

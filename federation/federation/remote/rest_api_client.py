@@ -618,22 +618,6 @@ class RESTClient:
 
         return response.content.decode()
 
-    def get_denovo_gene_set_collection_types_legend(
-            self,
-    ) -> Any:
-        """Get a denovo gene set."""
-        response = self._get(
-            "gene_sets/denovo_gene_sets_types_legend",
-            query_values={
-                "geneSetsCollection": "denovo",
-            },
-        )
-
-        if response.status_code != 200:
-            return None
-
-        return response.content.decode()
-
     def get_genomic_scores(self) -> list[dict[str, Any]] | None:
         response = self._get("genomic_scores/score_descs")
         if response.status_code != 200:
