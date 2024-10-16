@@ -3,7 +3,9 @@ import pathlib
 
 import pytest
 
-from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
+from dae.duckdb_storage.duckdb_genotype_storage import (
+    DuckDbStorage,
+)
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage_registry import (
@@ -19,26 +21,26 @@ from dae.testing.t4c8_import import t4c8_gpf
 @pytest.fixture()
 def duckdb_storage(
     tmp_path: pathlib.Path,
-) -> DuckDbGenotypeStorage:
+) -> DuckDbStorage:
     storage_path = tmp_path / "duckdb_storage"
     storage_config = {
         "id": "duckdb_test",
-        "storage_type": "duckdb2",
+        "storage_type": "duckdb",
         "db": "duckdb_storage/test.duckdb",
         "base_dir": str(storage_path),
     }
-    storage_factory = get_genotype_storage_factory("duckdb2")
+    storage_factory = get_genotype_storage_factory("duckdb")
     assert storage_factory is not None
     storage = storage_factory(storage_config)
     assert storage is not None
-    assert isinstance(storage, DuckDbGenotypeStorage)
+    assert isinstance(storage, DuckDbStorage)
     return storage
 
 
 @pytest.fixture()
 def t4c8_instance(
     tmp_path: pathlib.Path,
-    duckdb_storage: DuckDbGenotypeStorage,
+    duckdb_storage: DuckDbStorage,
 ) -> GPFInstance:
     root_path = tmp_path / "t4c8_instance"
     return t4c8_gpf(root_path, duckdb_storage)

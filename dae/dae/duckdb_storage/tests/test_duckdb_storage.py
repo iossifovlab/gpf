@@ -1,7 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
 from dae.duckdb_storage.duckdb_import_storage import DuckDbImportStorage
+from dae.duckdb_storage.duckdb_legacy_genotype_storage import (
+    DuckDbLegacyStorage,
+)
 from dae.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )
@@ -14,7 +16,7 @@ def test_genotype_storage_config(duckdb_storage_config: dict) -> None:
     assert storage_factory is not None
     storage = storage_factory(duckdb_storage_config)
     assert storage is not None
-    assert isinstance(storage, DuckDbGenotypeStorage)
+    assert isinstance(storage, DuckDbLegacyStorage)
 
 
 def test_import_storage_config() -> None:

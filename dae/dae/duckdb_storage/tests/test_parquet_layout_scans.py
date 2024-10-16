@@ -5,7 +5,9 @@ from typing import cast
 import pytest
 import pytest_mock
 
-from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
+from dae.duckdb_storage.duckdb_legacy_genotype_storage import (
+    DuckDbLegacyStorage,
+)
 from dae.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )
@@ -16,7 +18,8 @@ from dae.testing.foobar_import import foobar_gpf
 
 @pytest.fixture()
 def duckdb_storage_parquet(
-        tmp_path_factory: pytest.TempPathFactory) -> DuckDbGenotypeStorage:
+    tmp_path_factory: pytest.TempPathFactory,
+) -> DuckDbLegacyStorage:
     storage_path = tmp_path_factory.mktemp("duckdb_storage")
     storage_config = {
         "id": "dev_duckdb_storage",
@@ -25,14 +28,15 @@ def duckdb_storage_parquet(
     }
     storage_factory = get_genotype_storage_factory("duckdb_legacy")
     genotype_storage = cast(
-        DuckDbGenotypeStorage, storage_factory(storage_config))
+        DuckDbLegacyStorage, storage_factory(storage_config))
     genotype_storage.start()
     return genotype_storage
 
 
 def imported_study(
-        root_path: pathlib.Path,
-        duckdb_storage: DuckDbGenotypeStorage) -> GenotypeData:
+    root_path: pathlib.Path,
+    duckdb_storage: DuckDbLegacyStorage,
+) -> GenotypeData:
 
     gpf_instance = foobar_gpf(root_path, duckdb_storage)
     ped_path = setup_pedigree(
@@ -77,7 +81,7 @@ def imported_study(
 )
 def test_base_dir_join_parquet_scan(
         base_dir: str | None, parquet_scan: str, expected: str,
-        duckdb_storage_parquet: DuckDbGenotypeStorage,
+        duckdb_storage_parquet: DuckDbLegacyStorage,
         mocker: pytest_mock.MockerFixture) -> None:
 
     mocker.patch.object(
@@ -92,7 +96,7 @@ def test_base_dir_join_parquet_scan(
 
 def test_parquet_storage(
         tmp_path_factory: pytest.TempPathFactory,
-        duckdb_storage_parquet: DuckDbGenotypeStorage) -> None:
+        duckdb_storage_parquet: DuckDbLegacyStorage) -> None:
 
     root_path = tmp_path_factory.mktemp("test_parquet_storage")
     study = imported_study(root_path, duckdb_storage_parquet)

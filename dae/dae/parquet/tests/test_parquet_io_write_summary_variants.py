@@ -4,7 +4,9 @@ from typing import Any
 
 import pytest
 
-from dae.duckdb_storage.duckdb_genotype_storage import DuckDbGenotypeStorage
+from dae.duckdb_storage.duckdb_genotype_storage import (
+    DuckDbStorage,
+)
 from dae.genotype_storage.genotype_storage_registry import (
     get_genotype_storage_factory,
 )
@@ -18,30 +20,29 @@ from dae.utils.regions import Region
 @pytest.fixture(scope="module")
 def duckdb_storage(
     tmp_path_factory: pytest.TempPathFactory,
-) -> DuckDbGenotypeStorage:
+) -> DuckDbStorage:
     storage_path = tmp_path_factory.mktemp("duckdb_storage")
     storage_config = {
         "id": "duckdb_test",
-        "storage_type": "duckdb2",
+        "storage_type": "duckdb",
         "db": "duckdb_storage/test.duckdb",
         "base_dir": str(storage_path),
     }
-    storage_factory = get_genotype_storage_factory("duckdb2")
+    storage_factory = get_genotype_storage_factory("duckdb")
     assert storage_factory is not None
     storage = storage_factory(storage_config)
     assert storage is not None
-    assert isinstance(storage, DuckDbGenotypeStorage)
+    assert isinstance(storage, DuckDbStorage)
     return storage
 
 
 @pytest.fixture(scope="module")
 def t4c8_instance(
     tmp_path_factory: pytest.TempPathFactory,
-    duckdb_storage: DuckDbGenotypeStorage,
+    duckdb_storage: DuckDbStorage,
 ) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("t4c8_instance")
-    gpf_instance = t4c8_gpf(root_path, duckdb_storage)
-    return gpf_instance
+    return t4c8_gpf(root_path, duckdb_storage)
 
 
 @pytest.fixture(scope="module")
@@ -100,13 +101,12 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
         },
     }
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
         t4c8_instance,
         project_config_update=project_config_update,
     )
-    return study
 
 
 def test_summary_variants_simple(

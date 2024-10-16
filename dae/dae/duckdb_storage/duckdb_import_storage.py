@@ -5,7 +5,9 @@ import yaml
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.duckdb_storage.duckdb_genotype_storage import (
     AbstractDuckDbStorage,
-    DuckDbGenotypeStorage,
+)
+from dae.duckdb_storage.duckdb_legacy_genotype_storage import (
+    DuckDbLegacyStorage,
 )
 from dae.import_tools.import_tools import ImportProject, save_study_config
 from dae.schema2_storage.schema2_import_storage import (
@@ -28,7 +30,7 @@ class DuckDbImportStorage(Schema2ImportStorage):
         genotype_storage = project.get_genotype_storage()
         assert isinstance(
             genotype_storage,
-            (AbstractDuckDbStorage, DuckDbGenotypeStorage))
+            (AbstractDuckDbStorage, DuckDbLegacyStorage))
         layout = load_schema2_dataset_layout(
             project.get_parquet_dataset_dir(),
         )
