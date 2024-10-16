@@ -36,7 +36,7 @@ def expand_gene_syms(data: dict) -> dict:
     gene_set = query.get("geneSet", None)
 
     denovo_gene_sets_types = get_denovo_gene_set_spec(
-        data.get("geneSetsTypes", []),
+        query.get("geneSetsTypes", []),
     )
 
     gpf_instance = get_wgpf_instance()
