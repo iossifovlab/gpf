@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { GeneSetsCollection, GeneSet, GeneSetCollectionJson, GeneSetJson } from './gene-sets';
+import { GeneSetsCollection, GeneSet, GeneSetJson, GeneSetType, GeneSetCollectionJson } from './gene-sets';
 import { ConfigService } from '../config/config.service';
 import { map } from 'rxjs/operators';
 
 @Injectable()
 export class GeneSetsService {
   private readonly geneSetsCollectionsUrl = 'gene_sets/gene_sets_collections';
+  private readonly denovoGeneSetsUrl = 'gene_sets/denovo_gene_sets_types';
   private readonly geneSetsSearchUrl = 'gene_sets/gene_sets';
 
   public constructor(
@@ -23,6 +24,16 @@ export class GeneSetsService {
     return this.http
       .get<GeneSetCollectionJson[]>(this.config.baseUrl + this.geneSetsCollectionsUrl, options)
       .pipe(map(res => GeneSetsCollection.fromJsonArray(res)));
+  }
+
+  public getDenovoGeneSets(): Observable<GeneSetType[]> {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const headers = { 'Content-Type': 'application/json' };
+    const options = { headers: headers, withCredentials: true };
+
+    return this.http
+      .get<GeneSetType[]>(this.config.baseUrl + this.denovoGeneSetsUrl, options)
+      .pipe(map(res => GeneSetType.fromJsonArray(res)));
   }
 
   public getGeneSets(
