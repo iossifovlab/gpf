@@ -6,7 +6,7 @@ import pytest
 from dae.utils.dae_utils import split_iterable
 
 
-def test_splits_empty_iterable():
+def test_splits_empty_iterable() -> None:
     gen = split_iterable(iter(""), 5)
 
     assert isgenerator(gen)
@@ -16,7 +16,7 @@ def test_splits_empty_iterable():
         pytest.fail("should be an empty generator")
 
 
-def test_splists_perfectly():
+def test_splists_perfectly() -> None:
     gen = split_iterable("asddsa", 3)
 
     i = 0
@@ -27,7 +27,7 @@ def test_splists_perfectly():
     assert i == 2
 
 
-def test_splits_left_to_right():
+def test_splits_left_to_right() -> None:
     gen = split_iterable("asddsa", 3)
 
     val1 = next(gen)
@@ -37,7 +37,7 @@ def test_splits_left_to_right():
     assert val2 == ["d", "s", "a"]
 
 
-def test_imperfectly_yields_all_parts():
+def test_imperfectly_yields_all_parts() -> None:
     gen = split_iterable("asd", 2)
 
     val1 = next(gen)
@@ -47,11 +47,12 @@ def test_imperfectly_yields_all_parts():
     assert len(val2) == 1
 
 
-def test_consumes_given_iterable():
+def test_consumes_given_iterable() -> None:
     iterator = iter("asddsa")
     gen = split_iterable(iterator, 3)
 
-    gen = list(gen)  # consumes result
+    res = list(gen)  # consumes result
+    assert res
 
     for _ in iterator:
         pytest.fail("should have been consumed")
