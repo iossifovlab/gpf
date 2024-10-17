@@ -162,7 +162,7 @@ test.describe('App user access rights tests', () => {
   test('should login researcher and check whether the datasets have the correct opacity value', async({ page }) => {
     await utils.login(page, userData.normal.username, userData.normal.password);
     await page.locator('a:text("Datasets")').click();
-    await expect(page.locator('#permission-denied-prompt')).toBeVisible();
+    await expect(page.locator('#register-alert')).toBeVisible();
     await page.locator('#datasets-dropdown-menu-button').click();
     await page.waitForSelector('div.dropdown-menu');
 
@@ -255,25 +255,25 @@ test.describe('App user access rights tests', () => {
     await utils.logout(page);
 
     await utils.login(page, email, userData.normal.password + '!!__3456');
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
+    await expect(page.locator('#register-alert')).not.toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype Browser');
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
+    await expect(page.locator('#register-alert')).not.toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.compDenovo, 'Dataset Statistics');
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
+    await expect(page.locator('#register-alert')).not.toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Dataset Statistics');
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
+    await expect(page.locator('#register-alert')).not.toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.compGenotypes, 'Genotype Browser');
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
+    await expect(page.locator('#register-alert')).not.toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset Statistics');
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
+    await expect(page.locator('#register-alert')).not.toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.multi, 'Dataset Statistics');
-    await expect(page.locator('#permission-denied-prompt')).not.toBeVisible();
+    await expect(page.locator('#register-alert')).not.toBeVisible();
   });
 });
 

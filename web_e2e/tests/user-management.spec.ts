@@ -61,7 +61,7 @@ test.describe('Management tests for reset password in Users', () => {
     await page.getByText('Reset password').click();
     await utils.login(page, email, password);
 
-    await page.waitForSelector('#permission-denied-prompt');
+    await page.waitForSelector('#register-alert');
     await expect(page.locator('#log-out-button')).toBeVisible();
     await page.locator('#log-out-button').click();
   });
