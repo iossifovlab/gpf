@@ -15,6 +15,25 @@ import numpy as np
 import pandas as pd
 import sqlglot
 from box import Box
+from sqlglot import (
+    column,
+    select,
+)
+from sqlglot.expressions import (
+    AnyValue,
+    Cast,
+    Column,
+    Count,
+    Distinct,
+    GroupConcat,
+    Max,
+    Min,
+    Star,
+    TableAlias,
+    TryCast,
+    null,
+    parse_identifier,
+)
 
 from dae.pedigrees.loader import (
     PED_COLUMNS_REQUIRED,
@@ -234,9 +253,9 @@ class PreparePersons(PrepareBase):
             "SELECT DISTINCT family_id FROM ped_df",
         )
         family_file = f"{self.parquet_dir}/family.parquet"
-        self.connection.execute(
-            f"COPY family TO '{family_file}' (FORMAT PARQUET)",
-        )
+        # self.connection.execute(
+            # f"COPY family TO '{family_file}' (FORMAT PARQUET)",
+        # )
 
     @staticmethod
     def _build_sample_id(sample_id: str | float | None) -> str | None:
@@ -256,9 +275,9 @@ class PreparePersons(PrepareBase):
             "SELECT family_id, person_id, "
             "role, status, sex, sample_id FROM ped_df ",
         )
-        self.connection.execute(
-            f"COPY person TO '{person_file}' (FORMAT PARQUET)",
-        )
+        # self.connection.execute(
+            # f"COPY person TO '{person_file}' (FORMAT PARQUET)",
+        # )
 
     def save_pedigree(self, ped_df: pd.DataFrame) -> None:
         self._save_families(ped_df)
@@ -298,6 +317,7 @@ class ClassifyMeasureTask(Task):
         measure_name: str,
         measure_desc: str | None,
         dbfile: str,
+        person_id_column: str,
     ) -> None:
         self.config = config
         self.measure = self.create_default_measure(
@@ -307,6 +327,7 @@ class ClassifyMeasureTask(Task):
         self.rank: int | None = None
         self.classifier_report: ClassifierReport | None = None
         self.dbfile = dbfile
+        self.person_id_column = person_id_column
 
     @staticmethod
     def create_default_measure(
@@ -363,80 +384,210 @@ class ClassifyMeasureTask(Task):
         self.measure.values_domain = values_domain
         self.rank = self.classifier_report.count_unique_values
 
+    def build_stats_common_table_expressions(
+        self, data_table_name: str, col_name: str, person_id_col_name: str,
+    ) -> list[Any]:
+        casted_col = TryCast(this=column(col_name), to="FLOAT")
+        cast_value_table = (
+            TableAlias(
+                this=parse_identifier("cast_value_table"),
+                columns=[
+                    parse_identifier("person_id"),
+                    parse_identifier("original"),
+                    parse_identifier("casted"),
+                ],
+            ),
+            select(
+                column(person_id_col_name), column(col_name), casted_col,
+            ).from_(data_table_name),
+        )
+        non_null_value_table = (
+            TableAlias(
+                this=parse_identifier("non_null_value_table"),
+                columns=[
+                    parse_identifier("person_id"),
+                    parse_identifier("original"),
+                    parse_identifier("casted"),
+                ],
+            ),
+            select(
+                column("person_id"), column("original"), "casted",
+            ).from_("cast_value_table").where(
+                column("original").is_(null()).not_(),
+            ).and_(
+                column("casted").neq("NaN").or_(column("casted").is_(null())),
+            ),
+        )
+        numeric_values_table = (
+            TableAlias(
+                this=parse_identifier("numeric_values_table"),
+                columns=[
+                    parse_identifier("person_id"),
+                    parse_identifier("val"),
+                ],
+            ),
+            select(
+                column("person_id"), column("casted"),
+            ).from_("non_null_value_table").where(
+                column("casted").is_(null()).not_(),
+            ),
+        )
+        unique_string_value_table = (
+            TableAlias(
+                this=parse_identifier("unique_string_value_table"),
+                columns=[
+                    parse_identifier("val"),
+                ],
+            ),
+            select(
+                Cast(this=column("original"), to="VARCHAR"),
+            ).distinct().from_("cast_value_table").limit(20),
+        )
+        values_domain_table = (
+            TableAlias(
+                this=parse_identifier("values_domain_table"),
+                columns=[
+                    parse_identifier("domain"),
+                ],
+            ),
+            select(
+                GroupConcat(this=column("val")),
+            ).from_("unique_string_value_table"),
+        )
+        return [
+            cast_value_table,
+            non_null_value_table,
+            numeric_values_table,
+            unique_string_value_table,
+            values_domain_table,
+        ]
+
+    def get_statistics_query(
+        self, data_table_name: str, col_name: str, person_id_col_name: str,
+    ):
+        all_values_col = Column(this=Star(), table="cast_value_table")
+        non_null_values_col = column("original", table="non_null_value_table")
+        numeric_values_col = column("val", table="numeric_values_table")
+        values_domain_col = column("domain", table="values_domain_table")
+        query = select(
+            Count(this=all_values_col).as_("count_total"),
+            Count(this=non_null_values_col).as_("count_with_values"),
+            (
+                column("count_total") - column("count_with_values")
+            ).as_("count_without_values"),
+            Count(this=numeric_values_col).as_("count_with_numeric_values"),
+            (
+                column("count_total") - column("count_with_numeric_values")
+            ).as_("count_with_non_numeric_values"),
+            Count(this=Distinct(expressions=[
+                non_null_values_col,
+            ])).as_("count_unique_values"),
+            Count(this=Distinct(expressions=[
+                numeric_values_col,
+            ])).as_("count_unique_numeric_values"),
+            Min(this=numeric_values_col).as_("min_value"),
+            Max(this=numeric_values_col).as_("max_value"),
+            AnyValue(this=values_domain_col).as_("values_domain"),
+        ).from_("cast_value_table").join(
+            "non_null_value_table",
+            on=column("person_id", table="cast_value_table").eq(
+                column("person_id", table="non_null_value_table"),
+            ),
+            join_type="LEFT",
+        ).join(
+            "numeric_values_table",
+            on=column("person_id", table="cast_value_table").eq(
+                column("person_id", table="numeric_values_table"),
+            ),
+            join_type="LEFT",
+        ).join(
+            "values_domain_table",
+            on="1=1",
+            join_type="LEFT",
+        )
+        tables = self.build_stats_common_table_expressions(
+            data_table_name, col_name, person_id_col_name,
+        )
+        for table_alias, table_query in tables:
+            query = query.with_(table_alias, table_query)
+        return query
+
     def run(self) -> ClassifyMeasureTask:
         try:
             cursor = duckdb.connect(self.dbfile, read_only=True).cursor()
             table_name = self.instrument_table_name
             measure_name = self.measure.measure_name
 
+            query = self.get_statistics_query(
+                table_name, measure_name, self.person_id_column,
+            )
+
             logging.info("classifying measure %s", self.measure.measure_id)
+
+            result = cursor.execute(to_duckdb_transpile(query))
+
+            df = result.pl()
+
+            assert len(df) == 1
+
+            stats = df.to_dicts()[0]
+
+            report = ClassifierReport()
+
+            report.count_total = stats["count_total"]
+            report.count_with_values = stats["count_with_values"]
+            report.count_without_values = stats["count_without_values"]
+            report.count_with_numeric_values = stats[
+                "count_with_numeric_values"
+            ]
+            report.count_with_non_numeric_values = stats[
+                "count_with_non_numeric_values"
+            ]
+            report.count_unique_values = stats["count_unique_values"]
+            report.count_unique_numeric_values = stats[
+                "count_unique_numeric_values"
+            ]
+
             if self.config.measure_type is not None:
                 logging.info(
-                    "Type infered as %s via config", self.config.measure_type,
+                    "Type for %s infered as %s via config",
+                    self.config.measure_type,
+                    self.measure.measure_id,
                 )
                 self.measure.measure_type = MeasureType.from_str(
                     self.config.measure_type,
                 )
 
-                if self.measure.measure_type in {
-                    MeasureType.continuous, MeasureType.ordinal,
-                }:
-                    result = cursor.sql(
-                        f'SELECT COUNT("{measure_name}") FROM {table_name} '
-                        'WHERE '
-                        f'TRY_CAST("{measure_name}" AS FLOAT) != \'NaN\' AND '
-                        f'"{measure_name}" IS NOT NULL',
-                    ).fetchone()
-                    assert result is not None
-                    self.measure.individuals = result[0]
+            else:
+                classifier = MeasureClassifier(self.config)
+                self.measure.measure_type = classifier.classify(report)
 
-                    result = cursor.sql(
-                        f'SELECT MIN("{measure_name}") FROM {table_name}'
-                    ).fetchone()
-                    assert result is not None
-                    min_value = result[0]
-                    self.measure.min_value = min_value
+            if self.measure.measure_type in {
+                MeasureType.continuous, MeasureType.ordinal,
+            }:
+                report.min_value = stats["min_value"]
+                report.max_value = stats["max_value"]
+                report.values_domain = \
+                    f"[{report.min_value}, {report.max_value}]"
+            else:
+                report.min_value = None
+                report.max_value = None
+                report.values_domain = ""
+                if stats["values_domain"] is not None:
+                    report.values_domain = stats["values_domain"]
 
-                    result = cursor.sql(
-                        f'SELECT MAX("{measure_name}") FROM {table_name}'
-                    ).fetchone()
-                    assert result is not None
-                    max_value = result[0]
-                    self.measure.max_value = max_value
-                    self.measure.values_domain = f"[{min_value}, {max_value}]"
-                else:
-                    self.measure.min_value = None
-                    self.measure.max_value = None
-                    rows = list(cursor.sql(
-                        f'SELECT DISTINCT "{measure_name}" FROM {table_name}'
-                        f'WHERE "{measure_name}" IS NOT NULL'
-                        f'SELECT "{measure_name}", '
-                        f'TRY_CAST("{measure_name}" AS FLOAT) as casted '
-                        f'from {table_name} WHERE "{measure_name}" IS NOT NULL'
-                        ")",
-                    ).fetchall())
-                    assert rows is not None
-                    unique_values = [row[0] for row in rows]
-                    self.measure.values_domain = ", ".join(
-                        sorted(unique_values),
-                    )
+            self.rank = report.count_unique_values
 
-                return self
 
-            classifier = MeasureClassifier(self.config)
-            self.classifier_report = classifier.meta_measures(
-                cursor,
-                table_name,
-                self.measure.measure_name,
-            )
-            assert self.classifier_report is not None
-            self.classifier_report.set_measure(self.measure)
+            self.rank = report.count_unique_values
+            self.measure.min_value = report.min_value
+            self.measure.max_value = report.max_value
+            self.measure.values_domain = report.values_domain
+            self.measure.individuals = report.count_with_values
+            report.set_measure(self.measure)
 
-            self.measure.individuals = self.classifier_report.count_with_values
-            self.measure.measure_type = classifier.classify(
-                self.classifier_report,
-            )
-            self.build_meta_measure(cursor)
+            self.classifier_report = report
+
         except Exception:  # pylint: disable=broad-except
             logger.exception(
                 "problem processing measure: %s", self.measure.measure_id,
@@ -672,9 +823,13 @@ class PrepareVariables(PreparePersons):
         instruments = self._collect_instruments(instruments_dirname)
         descriptions = PrepareVariables.load_descriptions(description_path)
 
+        import time
+        start = time.time()
+        print("LOADING INSTRUMENTS")
         for instrument_name, instrument_filenames in list(instruments.items()):
             assert instrument_name is not None
             self.load_instrument(instrument_name, instrument_filenames)
+        print(f"DONE LOADING {time.time() - start}")
 
         if not kwargs.get("skip_pheno_common"):
             self.prepare_pheno_common_data()
@@ -689,6 +844,8 @@ class PrepareVariables(PreparePersons):
         if not kwargs.get("skip_pheno_common"):
             self.build_pheno_common(temp_dbfile_name, **kwargs)
 
+        start = time.time()
+        print("BUILDING INSTRUMENTS")
         for instrument_name in list(instruments.keys()):
             table_name = self._instrument_tmp_table_name(instrument_name)
             out = self.connection.execute(
@@ -705,15 +862,16 @@ class PrepareVariables(PreparePersons):
                 **kwargs,
             )
             self.connection.execute(f"DROP TABLE {table_name}")
+        print(f"DONE LOADING {time.time() - start}")
 
-        instrument_file = f"{self.parquet_dir}/instrument.parquet"
-        self.connection.execute(
-            f"COPY instrument TO '{instrument_file}' (FORMAT PARQUET)",
-        )
-        measure_file = f"{self.parquet_dir}/measure.parquet"
-        self.connection.execute(
-            f"COPY measure TO '{measure_file}' (FORMAT PARQUET)",
-        )
+        # instrument_file = f"{self.parquet_dir}/instrument.parquet"
+        # self.connection.execute(
+            # f"COPY instrument TO '{instrument_file}' (FORMAT PARQUET)",
+        # )
+        # measure_file = f"{self.parquet_dir}/measure.parquet"
+        # self.connection.execute(
+            # f"COPY measure TO '{measure_file}' (FORMAT PARQUET)",
+        # )
 
     def _instrument_tmp_table_name(self, instrument_name: str) -> str:
         return safe_db_name(f"{instrument_name}_data")
@@ -908,7 +1066,7 @@ class PrepareVariables(PreparePersons):
             )
 
             print(f"Classifying {instrument_name}.{measure_name}")
-            dump_config(inference_config)
+            # dump_config(inference_config)
             check_phenotype_data_config(inference_config)
 
             if inference_config.skip:
@@ -921,6 +1079,7 @@ class PrepareVariables(PreparePersons):
                 measure_name,
                 measure_desc,
                 temp_dbfile,
+                self.config.person_column
             )
             task_graph.create_task(
                 f"{instrument_name}_{measure_name}_classify",
@@ -935,6 +1094,9 @@ class PrepareVariables(PreparePersons):
         )
 
         seen_measure_names: dict[str, int] = {}
+        import time
+        start=time.time()
+        print("\tSTARTED CLASSIFYING")
         with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
             try:
                 for result in task_graph_run_with_results(task_graph, xtor):
@@ -964,6 +1126,7 @@ class PrepareVariables(PreparePersons):
                     measure_col_names[measure.measure_id] = db_name
             except Exception:
                 logger.exception("Failed to create images")
+        print(f"\tDONE CLASSIFYING {time.time() - start}")
 
         if self.config.report_only:
             return
@@ -991,6 +1154,8 @@ class PrepareVariables(PreparePersons):
                     f'i."{measure.measure_name}" as {db_name}',
                 )
 
+        start=time.time()
+        print("\tCreating output table")
         cursor.execute(
             f"CREATE TABLE {output_table_name} AS FROM ("  # noqa: S608
             f'SELECT i."{self.config.person_column}" as person_id, '
@@ -1000,12 +1165,13 @@ class PrepareVariables(PreparePersons):
             f'ON i."{self.config.person_column}" = p.person_id'
             ")",
         )
+        print(f"\tDONE CREATING OUTPUT TABLE {time.time() - start}")
         instruments_dir = os.path.join(self.parquet_dir, "instruments")
         os.makedirs(instruments_dir, exist_ok=True)
         output_file = f"{instruments_dir}/{output_table_name}.parquet"
-        self.connection.execute(
-            f"COPY {output_table_name} TO '{output_file}' (FORMAT PARQUET)",
-        )
+        # self.connection.execute(
+            # f"COPY {output_table_name} TO '{output_file}' (FORMAT PARQUET)",
+        # )
 
     @staticmethod
     def create_default_measure(
