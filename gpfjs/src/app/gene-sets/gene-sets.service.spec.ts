@@ -5,6 +5,7 @@ import { ConfigService } from 'app/config/config.service';
 import { of } from 'rxjs';
 import { GeneSetsService } from './gene-sets.service';
 import { APP_BASE_HREF } from '@angular/common';
+import { SelectedDenovoTypes, SelectedPersonSetCollections } from './gene-sets';
 
 describe('GeneSetsService', () => {
   let service: GeneSetsService;
@@ -44,12 +45,22 @@ describe('GeneSetsService', () => {
   });
 
   it('should get the gene set download link', () => {
-    const mockGeneSet = {
-      download: 'gene_sets/gene_set_1/download'
-    };
+    const collectionName = 'denovo';
+    const geneSetName = 'LGDs.Male';
+    const geneSetTypes = [
+      new SelectedDenovoTypes(
+        'deNovo',
+        [
+          new SelectedPersonSetCollections('phenotype', ['autism', 'unaffected'])
+        ])
+    ];
 
-    const downloadLink = service.getGeneSetDownloadLink(mockGeneSet as any);
+    const downloadLink = service.getGeneSetDownloadLink(collectionName, geneSetName, geneSetTypes);
 
-    expect(downloadLink).toBe(`${configMock.baseUrl}gene_sets/gene_set_1/download`);
+    expect(downloadLink).toBe(`${configMock.baseUrl}gene_sets/gene_set_download?` +
+      `geneSetsCollection=denovo&` +
+      `geneSet=LGDs.Male&` +
+      `geneSetsTypes=` +
+      `[{\"datasetId\":\"deNovo\",\"collections\":[{\"personSetId\":\"phenotype\",\"types\":[\"autism\",\"unaffected\"]}]}]`);
   });
 });

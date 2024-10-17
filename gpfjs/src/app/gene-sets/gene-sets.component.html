@@ -22,9 +22,9 @@
           <div id="hierarchy-filters-wrapper">
             <div id="hierarchy">
               <ng-container
-                *ngFor="let type of denovoDatasetsHierarchy"
+                *ngFor="let dataset of denovoDatasetsHierarchy"
                 [ngTemplateOutlet]="Recursion"
-                [ngTemplateOutletContext]="{ $implicit: type }"></ng-container>
+                [ngTemplateOutletContext]="{ $implicit: dataset }"></ng-container>
             </div>
 
             <div id="filters" *ngIf="activeDataset">
@@ -56,40 +56,41 @@
             </div>
           </div>
 
-          <div id="modal-study-list">
-            <div *ngFor="let study of datasetsList" class="study">
-              <button (click)="removeFromList(study)" class="remove-study">
-                <span class="material-symbols-outlined">close</span>
+          <div id="modal-filter-list">
+            <div *ngFor="let filter of datasetsList" class="filter">
+              <button (click)="removeFromList(filter)" class="remove-filter">
+                <span [id]="'remove-' + filter" class="material-symbols-outlined">close</span>
               </button>
-              {{ study }}
+              {{ filter }}
             </div>
           </div>
         </div>
       </ng-template>
 
-      <ng-template #Recursion let-type>
+      <ng-template #Recursion let-dataset>
         <div class="dataset-wrapper">
           <span
             #collapseIcon
-            *ngIf="type.children.length"
+            *ngIf="dataset.children.length"
+            [id]="'expand-' + dataset.datasetId"
             class="collapse-dataset-icon material-icons material-symbols-outlined"
-            [ngClass]="{ rotate: expandedDatasets.includes(type) }"
-            (click)="toggleDatasetCollapse(type)"
+            [ngClass]="{ rotate: expandedDatasets.includes(dataset) }"
+            (click)="toggleDatasetCollapse(dataset)"
             >expand_more</span
           >
           <div
-            [id]="'type-' + type.datasetId"
+            [id]="'dataset-' + dataset.datasetId"
             class="btn-sm text-wrap"
-            [class.active]="activeDataset?.datasetId === type.datasetId"
-            [class.modified]="activeDataset?.datasetId !== type.datasetId && modifiedDatasetIds.has(type.datasetId)"
-            [ngStyle]="{ 'padding-left': (type.children.length ? 5 : 19) + 'px' }"
-            (click)="select(type)"
-            >{{ type.datasetName }}</div
+            [class.active]="activeDataset?.datasetId === dataset.datasetId"
+            [class.modified]="activeDataset?.datasetId !== dataset.datasetId && modifiedDatasetIds.has(dataset.datasetId)"
+            [ngStyle]="{ 'padding-left': (dataset.children.length ? 5 : 19) + 'px' }"
+            (click)="select(dataset)"
+            >{{ dataset.datasetName }}</div
           >
         </div>
-        <div *ngIf="type.children.length && expandedDatasets.includes(type)" class="children-container">
+        <div *ngIf="dataset.children.length && expandedDatasets.includes(dataset)" class="children-container">
           <ng-container
-            *ngFor="let child of type.children"
+            *ngFor="let child of dataset.children"
             [ngTemplateOutlet]="Recursion"
             [ngTemplateOutletContext]="{ $implicit: child }"></ng-container>
         </div>
@@ -102,7 +103,7 @@
         matAutocompleteOrigin
         #geneSetsSearch="matAutocompleteOrigin"
         [disabled]="
-          selectedGeneSetsCollection?.types?.length > 0 && currentGeneSetsTypes.length === 0
+          selectedGeneSetsCollection.name === 'denovo' && currentGeneSetsTypes.length === 0
         ">
         <span
           style="width: 100%"
@@ -169,12 +170,12 @@
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
 
-    <div *ngIf="selectedGeneSetsCollection.name === 'denovo'" id="selected-studies-list">
-      <div *ngFor="let study of datasetsList" class="study">
-        <button (click)="removeFromList(study)" class="remove-study">
-          <span class="material-symbols-outlined">close</span>
+    <div *ngIf="selectedGeneSetsCollection.name === 'denovo'" id="selected-filter-list">
+      <div *ngFor="let filter of datasetsList" class="filter">
+        <button (click)="removeFromList(filter)" class="remove-filter">
+          <span [id]="'remove-' + filter" class="material-symbols-outlined">close</span>
         </button>
-        {{ study }}
+        {{ filter }}
       </div>
     </div>
   </div>
