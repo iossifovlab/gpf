@@ -215,7 +215,7 @@ class PartitionDescriptor:
                 f"Partition <{self.serialize()}> does not define region bins.")
         assert self.chromosomes is not None
         assert self.region_length > 0
-        pos_bin = pos // self.region_length
+        pos_bin = (pos - 1) // self.region_length
 
         if chrom in self.chromosomes:
             if self.integer_region_bins:
@@ -273,8 +273,8 @@ class PartitionDescriptor:
         if start == stop:
             return [self.make_region_bin(region.chrom, start)]
         return [
-            self.make_region_bin(region.chrom, i * self.region_length)
-            for i in range(start // self.region_length,
+            self.make_region_bin(region.chrom, i * self.region_length + 1)
+            for i in range((start - 1) // self.region_length,
                            (stop - 1) // self.region_length + 1)
         ]
 
