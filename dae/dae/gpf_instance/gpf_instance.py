@@ -11,7 +11,10 @@ from typing import Any, cast
 import yaml
 from box import Box
 
-from dae.annotation.annotation_factory import build_annotation_pipeline
+from dae.annotation.annotation_factory import (
+    build_annotation_pipeline,
+    load_pipeline_from_yaml,
+)
 from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.common_reports.common_report import CommonReport
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -622,3 +625,25 @@ class GPFInstance:
             )
 
         return self._pheno_tool_adapters[dataset.study_id]
+
+    def _verify_study_annotation(self) -> None:
+        canonical = set(self.get_annotation_pipeline().get_info())
+        for study in self._variants_db.get_all_genotype_studies():
+            storage = self.genotype_storages.get_genotype_storage(
+                study.config.genotype_storage.id,
+            )
+            backend = study.backend
+            if storage.storage_type == "duckdb_parquet":
+                raw = backend.fetch_annotation()
+            elif storage.storage_type == "parquet":
+                raw = backend.loader.meta["annotation_pipeline"]
+            else:
+                return
+            raw = raw.strip()
+            annotation = load_pipeline_from_yaml(raw, self.grr) if raw else None
+            if annotation is None:
+                return
+            new_infos = set(annotation.get_info())
+            if new_infos != canonical:
+                logger.error("Study %s has invalid annotation!",
+                             study.config.id)

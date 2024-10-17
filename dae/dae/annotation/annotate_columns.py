@@ -200,7 +200,7 @@ class AnnotateColumnsTool(AnnotationTool):
         if args.reannotate:
             pipeline_config_old = Path(args.reannotate).read_text()
 
-        pipeline = AnnotateColumnsTool._produce_annotation_pipeline(
+        pipeline = AnnotateColumnsTool.produce_annotation_pipeline(
             pipeline_config, pipeline_config_old, grr_definition,
             allow_repeated_attributes=args.allow_repeated_attributes,
             work_dir=Path(args.work_dir),

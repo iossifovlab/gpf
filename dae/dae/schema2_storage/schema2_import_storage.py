@@ -5,7 +5,19 @@ from collections.abc import Generator
 import yaml
 from pyarrow import parquet as pq
 
-from dae.import_tools.import_tools import Bucket, ImportProject, ImportStorage
+from dae.annotation.parquet import (
+    backup_schema2_study,
+    produce_schema2_annotation_tasks,
+    produce_schema2_merging_tasks,
+    write_new_meta,
+)
+from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.import_tools.import_tools import (
+    Bucket,
+    ImportProject,
+    ImportStorage,
+    construct_import_annotation_pipeline,
+)
 from dae.parquet.parquet_writer import (
     append_meta_to_parquet,
     collect_pedigree_parquet_schema,
@@ -25,6 +37,7 @@ from dae.schema2_storage.schema2_layout import (
 )
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils import fs_utils
+from dae.variants_loaders.parquet.loader import ParquetLoader
 
 logger = logging.getLogger(__name__)
 
@@ -256,6 +269,40 @@ class Schema2ImportStorage(ImportStorage):
         if project.get_processing_parquet_dataset_dir() is None:
             self._build_all_parquet_tasks(project, graph)
 
+        return graph
+
+    @staticmethod
+    def generate_reannotate_task_graph(
+        gpf_instance: GPFInstance,
+        study_dir: str,
+        region_size: int,
+        allow_repeated_attributes: bool,  # noqa: FBT001
+    ) -> TaskGraph:
+        """Generate TaskGraph for reannotation of a given study."""
+        graph = TaskGraph()
+
+        pipeline = construct_import_annotation_pipeline(gpf_instance)
+        study_layout = create_schema2_dataset_layout(study_dir)
+        backup_layout = backup_schema2_study(study_dir)
+        loader = ParquetLoader(backup_layout)
+
+        write_new_meta(loader, pipeline, study_layout)
+
+        annotation_tasks = produce_schema2_annotation_tasks(
+            graph,
+            loader,
+            study_dir,
+            pipeline.raw,
+            gpf_instance.grr,
+            region_size,
+            allow_repeated_attributes,
+        )
+        produce_schema2_merging_tasks(
+            graph,
+            annotation_tasks,
+            loader,
+            study_layout,
+        )
         return graph
 
     @staticmethod

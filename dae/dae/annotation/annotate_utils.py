@@ -88,6 +88,8 @@ class AnnotationTool:
         self.grr = grr
 
         self.task_graph = TaskGraph()
+
+    def setup_work_dir(self) -> None:
         if not os.path.exists(self.args.work_dir):
             os.mkdir(self.args.work_dir)
         self.args.task_status_dir = os.path.join(
@@ -95,7 +97,7 @@ class AnnotationTool:
         self.args.log_dir = os.path.join(self.args.work_dir, ".task-log")
 
     @staticmethod
-    def _produce_annotation_pipeline(
+    def produce_annotation_pipeline(
         pipeline_config: RawAnnotatorsConfig,
         pipeline_config_old: str | None,
         grr_definition: dict | None,
@@ -103,6 +105,7 @@ class AnnotationTool:
         allow_repeated_attributes: bool,
         work_dir: Path | None = None,
     ) -> AnnotationPipeline:
+        """Produce an annotation or reannotation pipeline."""
         grr = build_genomic_resource_repository(definition=grr_definition)
         pipeline = build_annotation_pipeline(
             pipeline_config, grr,
@@ -134,8 +137,12 @@ class AnnotationTool:
         }
         cache_resources(self.grr, resource_ids)
 
-        self.task_graph.input_files.append(self.args.input)
-        self.task_graph.input_files.append(self.args.pipeline)
+        self.setup_work_dir()
+
+        if hasattr(self.args, "input"):
+            self.task_graph.input_files.append(self.args.input)
+        if hasattr(self.args, "pipeline"):
+            self.task_graph.input_files.append(self.args.pipeline)
         if hasattr(self.args, "reannotate") and self.args.reannotate:
             self.task_graph.input_files.append(self.args.reannotate)
 

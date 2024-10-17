@@ -238,6 +238,9 @@ class DuckDb2Variants(QueryVariantsBase):
         ped_df = self._fetch_pedigree()
         return FamiliesLoader.build_families_data_from_pedigree(ped_df)
 
+    def fetch_annotation(self) -> str:
+        return self._fetch_meta_property("annotation_pipeline")
+
     def _deserialize_summary_variant(
         self, record: list[bytes],
     ) -> SummaryVariant:
