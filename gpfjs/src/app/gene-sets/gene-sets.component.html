@@ -103,7 +103,7 @@
         matAutocompleteOrigin
         #geneSetsSearch="matAutocompleteOrigin"
         [disabled]="
-          selectedGeneSetsCollection?.types?.length > 0 && currentGeneSetsTypes.length === 0
+          selectedGeneSetsCollection.name === 'denovo' && currentGeneSetsTypes.length === 0
         ">
         <span
           style="width: 100%"
