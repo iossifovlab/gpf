@@ -129,9 +129,20 @@ class GeneSetDownloadView(QueryBaseView):
     {
         "geneSetsCollection": "denovo",
         "geneSet": "LGDs",
-        "geneSetsTypes": {
-            "SD_TEST": {"phenotype": ["autism", "epilepsy"]}
-        }
+        "geneSetsTypes": [
+            {
+                "datasetId": "SD_TEST",
+                "collections": [
+                    {
+                        "personSetId": "phenotype"
+                        "types": [
+                            "autism",
+                            "epilepsy",
+                        ]
+                    }
+                ]
+            }
+        ]
     }
     """
 
