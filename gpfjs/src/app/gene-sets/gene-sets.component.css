@@ -115,7 +115,7 @@
   column-gap: 30px;
 }
 
-#modal-study-list {
+#modal-filter-list {
   border-top: 2px solid rgb(197, 197, 197);
   height: 15%;
   min-height: 15%;
@@ -133,18 +133,18 @@
   border-left: 1px solid #e4e4e4;
 }
 
-.remove-study {
+.remove-filter {
   border: none;
   background-color: transparent;
 }
 
-.remove-study > span {
+.remove-filter > span {
   font-size: 22px;
   color: red;
   margin-top: -1px;
 }
 
-.study {
+.filter {
   display: flex;
 }
 
