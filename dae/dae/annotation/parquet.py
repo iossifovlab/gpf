@@ -130,6 +130,7 @@ def produce_schema2_annotation_tasks(
     grr: GenomicResourceRepo,
     region_size: int,
     allow_repeated_attributes: bool,  # noqa: FBT001
+    region: str | None = None,
 ) -> list[Task]:
     """Produce TaskGraph tasks for Parquet file annotation."""
 
@@ -143,11 +144,21 @@ def produce_schema2_annotation_tasks(
     for contig in contigs:
         contig_lens[contig] = genome.get_chrom_length(contig)
 
-    regions = [
-        f"{contig}:{start}-{start + region_size}"
-        for contig, length in contig_lens.items()
-        for start in range(1, length, region_size)
-    ]
+    if region is not None:
+        region_obj = Region.from_str(region)
+        if region_obj.chrom not in contigs:
+            raise KeyError(
+                f"No such contig '{region_obj.chrom}' found in data!")
+        regions = [
+            f"{region_obj.chrom}:{start}-{min(start + region_size, region_obj.stop)}"  # noqa: E501
+            for start in range(region_obj.start, region_obj.stop, region_size)
+        ]
+    else:
+        regions = [
+            f"{contig}:{start}-{start + region_size}"
+            for contig, length in contig_lens.items()
+            for start in range(1, length, region_size)
+        ]
 
     tasks = []
     for idx, region in enumerate(regions):

@@ -748,3 +748,63 @@ def test_output_argument_behaviour(
             "--grr", grr_file,
             "-j", "1",
         ])
+
+
+def test_region_option(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    study: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    output_dir = str(tmp_path / "out")
+    work_dir = str(tmp_path / "work")
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    cli([
+        study, annotation_file_new,
+        "-o", output_dir,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1",
+        "--region", "chr1:90-100",
+    ])
+
+    loader_result = ParquetLoader.load_from_dir(output_dir)
+
+    result = set()
+    for sv in loader_result.fetch_summary_variants():
+        assert not sv.has_attribute("score_two")
+        assert sv.has_attribute("score_A")
+        result.add(sv.get_attribute("score_A").pop())
+    assert result == {0.23, 0.24}
+
+
+def test_region_option_invalid(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    study: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    output_dir = str(tmp_path / "out")
+    work_dir = str(tmp_path / "work")
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    with pytest.raises(
+        KeyError, match="No such contig 'chrX' found in data!",
+    ):
+        cli([
+            study, annotation_file_new,
+            "-o", output_dir,
+            "-w", work_dir,
+            "--grr", grr_file,
+            "-j", "1",
+            "--region", "chrX:90-100",
+        ])

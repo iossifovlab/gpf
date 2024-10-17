@@ -32,7 +32,11 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             "input", default="-", nargs="?",
             help="the directory containing Parquet files")
         parser.add_argument(
-            "-r", "--region-size", default=300_000_000,
+            "-r", "--region",
+            type=str, help="annotate only a specific region",
+            default=None)
+        parser.add_argument(
+            "-s", "--region-size", default=300_000_000,
             type=int, help="region size to parallelize by")
         parser.add_argument(
             "-w", "--work-dir",
@@ -111,6 +115,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             self.grr,
             self.args.region_size,
             self.args.allow_repeated_attributes,
+            region=self.args.region,
         )
         produce_schema2_merging_tasks(
             self.task_graph,
