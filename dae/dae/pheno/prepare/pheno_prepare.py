@@ -1072,6 +1072,7 @@ class PrepareVariables(PreparePersons):
             if inference_config.skip:
                 continue
 
+            tasks = []
             classify_task = ClassifyMeasureTask(
                 inference_config,
                 instrument_name,
@@ -1081,51 +1082,42 @@ class PrepareVariables(PreparePersons):
                 temp_dbfile,
                 self.config.person_column
             )
-            task_graph.create_task(
-                f"{instrument_name}_{measure_name}_classify",
-                run_classify_task,
-                [classify_task],
-                [],
-            )
+            tasks.append(classify_task)
 
-        task_cache = TaskCache.create(
-            force=cast(bool | None, kwargs.get("force")),
-            cache_dir=cast(str | None, kwargs.get("task_status_dir")),
-        )
 
         seen_measure_names: dict[str, int] = {}
         import time
         start=time.time()
         print("\tSTARTED CLASSIFYING")
-        with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
-            try:
-                for result in task_graph_run_with_results(task_graph, xtor):
-                    measure, classifier_report = result
+        try:
+            for task in tasks:
+                result = run_classify_task(task)
+                measure, classifier_report = result
 
-                    self.log_measure(measure, classifier_report)
-                    if measure.measure_type == MeasureType.skipped:
-                        logging.info(
-                            "skip saving measure: %s; measurings: %s",
-                            measure.measure_id,
-                            classifier_report.count_with_values)
-                        continue
+                self.log_measure(measure, classifier_report)
+                if measure.measure_type == MeasureType.skipped:
+                    logging.info(
+                        "skip saving measure: %s; measurings: %s",
+                        measure.measure_id,
+                        classifier_report.count_with_values)
+                    continue
 
-                    measures.append(measure)
+                measures.append(measure)
 
-                    m_name = self._adjust_instrument_measure_name(
-                        instrument_name, measure.measure_name,
-                    )
+                m_name = self._adjust_instrument_measure_name(
+                    instrument_name, measure.measure_name,
+                )
 
-                    db_name = safe_db_name(m_name)
-                    if db_name.lower() in seen_measure_names:
-                        seen_measure_names[db_name.lower()] += 1
-                        db_name = \
-                            f"{db_name}_{seen_measure_names[db_name.lower()]}"
-                    else:
-                        seen_measure_names[db_name.lower()] = 1
-                    measure_col_names[measure.measure_id] = db_name
-            except Exception:
-                logger.exception("Failed to create images")
+                db_name = safe_db_name(m_name)
+                if db_name.lower() in seen_measure_names:
+                    seen_measure_names[db_name.lower()] += 1
+                    db_name = \
+                        f"{db_name}_{seen_measure_names[db_name.lower()]}"
+                else:
+                    seen_measure_names[db_name.lower()] = 1
+                measure_col_names[measure.measure_id] = db_name
+        except Exception:
+            logger.exception("Failed to create images")
         print(f"\tDONE CLASSIFYING {time.time() - start}")
 
         if self.config.report_only:
