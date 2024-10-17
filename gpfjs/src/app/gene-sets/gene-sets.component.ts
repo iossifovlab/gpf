@@ -407,6 +407,10 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
   }
 
   public getDownloadLink(): string {
-    return this.geneSetsService.getGeneSetDownloadLink(this.selectedGeneSet);
+    return this.geneSetsService.getGeneSetDownloadLink(
+      this.currentGeneSetsCollection.name,
+      this.currentGeneSet.name,
+      this.currentGeneSetsTypes
+    );
   }
 }

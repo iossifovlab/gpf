@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { GeneSetsCollection, GeneSet, GeneSetJson, GeneSetType, GeneSetCollectionJson } from './gene-sets';
+import { GeneSetsCollection, GeneSet, GeneSetJson, GeneSetType, GeneSetCollectionJson, SelectedDenovoTypes } from './gene-sets';
 import { ConfigService } from '../config/config.service';
 import { map } from 'rxjs/operators';
 
@@ -55,7 +55,15 @@ export class GeneSetsService {
       .pipe(map(res => GeneSet.fromJsonArray(res)));
   }
 
-  public getGeneSetDownloadLink(geneSet: GeneSet): string {
-    return `${this.config.baseUrl}${geneSet.download}`;
+  public getGeneSetDownloadLink(
+    geneSetsCollectionName: string,
+    geneSetName: string,
+    geneSetsTypes: SelectedDenovoTypes[]
+  ): string {
+    return `${this.config.baseUrl}gene_sets/gene_set_download?` +
+      `geneSetsCollection=${geneSetsCollectionName}&` +
+      `geneSet=${geneSetName}&` +
+      `geneSetsTypes=${JSON.stringify(geneSetsTypes)}`;
+    ;
   }
 }
