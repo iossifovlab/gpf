@@ -3,19 +3,20 @@ import json
 
 import pytest
 from django.test.client import Client
-
-pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance", "dae_calc_gene_sets")
+from gpf_instance.gpf_instance import WGPFInstance
 
 
-def test_gene_scores_list_view(user_client: Client) -> None:
+def test_gene_scores_list_view(
+    user_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
     url = "/api/v3/gene_scores"
     response = user_client.get(url)
     assert response.status_code == 200
 
     data = response.json()
     print([d["score"] for d in data])
-    assert len(data) == 5
+    assert len(data) == 1
 
     for score in data:
         assert "desc" in score
@@ -24,10 +25,13 @@ def test_gene_scores_list_view(user_client: Client) -> None:
         assert "bins" in score
 
 
-def test_gene_scores_partitions(user_client: Client) -> None:
+def test_gene_scores_partitions(
+    user_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
     url = "/api/v3/gene_scores/partitions"
     data = {
-        "score": "LGD_rank",
+        "score": "t4c8_score",
         "min": 1.5,
         "max": 5.0,
     }
@@ -39,42 +43,44 @@ def test_gene_scores_partitions(user_client: Client) -> None:
 
     data = response.json()
     assert len(data) == 3
-    assert data["left"]["count"] == 1  # type: ignore
-    assert data["right"]["count"] == 18454  # type: ignore
+    assert data["left"]["count"] == 0  # type: ignore
+    assert data["right"]["count"] == 2  # type: ignore
 
 
 @pytest.mark.parametrize("data", [
     {
-        "score": "LGD_rank",
+        "score": "t4c8_score",
         "min": 1.5,
     },
     {
-        "score": "LGD_rank",
+        "score": "t4c8_score",
         "max": 5.0,
     },
     {
-        "score": "LGD_rank",
+        "score": "t4c8_score",
         "min": "non-float-value",
         "max": 5.0,
     },
     {
-        "score": "LGD_rank",
+        "score": "t4c8_score",
         "min": 1.5,
         "max": "non-float-value",
     },
     {
-        "score": "LGD_rank",
+        "score": "t4c8_score",
         "min": None,
         "max": 5.0,
     },
     {
-        "score": "LGD_rank",
+        "score": "t4c8_score",
         "min": 1.5,
         "max": None,
     },
 ])
 def test_gene_scores_partitions_bad_request(
-    user_client: Client, data: dict[str, str | float | None],
+    user_client: Client,
+    data: dict[str, str | float | None],
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
 ) -> None:
     url = "/api/v3/gene_scores/partitions"
     response = user_client.post(
@@ -83,8 +89,11 @@ def test_gene_scores_partitions_bad_request(
     assert response.status_code == 400
 
 
-def test_gene_score_download(user_client: Client) -> None:
-    url = "/api/v3/gene_scores/download/LGD_rank"
+def test_gene_score_download(
+    user_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    url = "/api/v3/gene_scores/download/t4c8_score"
 
     response = user_client.get(url)
     assert response.status_code == 200
