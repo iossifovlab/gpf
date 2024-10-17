@@ -9,11 +9,6 @@ urlpatterns = [
         name="visible",
     ),
     re_path(
-        r"^/denied_prompt/?$",
-        views.PermissionDeniedPromptView.as_view(),
-        name="denied_prompt",
-    ),
-    re_path(
         r"^/details/(?P<dataset_id>[^/]+)/?$",
         views.DatasetDetailsView.as_view(),
         name="dataset_details",

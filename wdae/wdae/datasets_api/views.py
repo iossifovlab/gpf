@@ -1,8 +1,6 @@
 import logging
-import os
 from collections.abc import Iterable
 from operator import itemgetter
-from pathlib import Path
 from typing import Any, cast
 
 from django.conf import settings
@@ -204,37 +202,6 @@ class StudiesView(QueryBaseView):
         user = request.user
 
         return Response({"data": self._collect_datasets_summary(user)})
-
-
-class PermissionDeniedPromptView(QueryBaseView):
-    """Provide the markdown-formatted permission denied prompt text."""
-
-    def __init__(self) -> None:
-        super().__init__()
-
-        dae_config = self.gpf_instance.dae_config
-        default_prompt = (
-            "The Genotype and Phenotype in Families (GPF) data is"
-            " accessible by registered users. Contact the system"
-            " administrator of the GPF system to get an account in"
-            " the system and get permission to access the data."
-        )
-        if dae_config.gpfjs is None or \
-                dae_config.gpfjs.permission_denied_prompt_file is None:
-            self.permission_denied_prompt = default_prompt
-        else:
-            prompt_filepath = dae_config.gpfjs.permission_denied_prompt_file
-
-            if not os.path.exists(prompt_filepath) or\
-                    not os.path.isfile(prompt_filepath):
-                self.permission_denied_prompt = default_prompt
-            else:
-                self.permission_denied_prompt = \
-                    Path(prompt_filepath).read_text()
-
-    @method_decorator(etag(get_instance_timestamp_etag))
-    def get(self, _request: Request) -> Response:
-        return Response({"data": self.permission_denied_prompt})
 
 
 class DatasetDetailsView(QueryBaseView):

@@ -4,7 +4,7 @@ from datasets_api.permissions import get_permissions_etag
 from django.http.response import StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from query_base.query_base import QueryDatasetView
+from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -16,7 +16,7 @@ from dae.pedigrees.family_tag_builder import check_family_tags_query
 from dae.pedigrees.loader import FamiliesLoader
 
 
-class VariantReportsView(QueryDatasetView):
+class VariantReportsView(QueryBaseView):
     """Variant reports view class."""
 
     @method_decorator(etag(get_permissions_etag))
@@ -36,7 +36,7 @@ class VariantReportsView(QueryDatasetView):
         )
 
 
-class VariantReportsFullView(QueryDatasetView):
+class VariantReportsFullView(QueryBaseView, DatasetAccessRightsView):
     """Variants report full view class."""
 
     @method_decorator(etag(get_permissions_etag))
@@ -56,7 +56,7 @@ class VariantReportsFullView(QueryDatasetView):
         )
 
 
-class FamilyCounterListView(QueryDatasetView):
+class FamilyCounterListView(QueryBaseView, DatasetAccessRightsView):
     """Family couters list view class."""
 
     def post(self, request: Request) -> Response:
@@ -86,7 +86,7 @@ class FamilyCounterListView(QueryDatasetView):
         return Response(counter.families)
 
 
-class FamilyCounterDownloadView(QueryDatasetView):
+class FamilyCounterDownloadView(QueryBaseView, DatasetAccessRightsView):
     """Family counters download view class."""
 
     def post(self, request: Request) -> Response:
@@ -133,7 +133,7 @@ class FamilyCounterDownloadView(QueryDatasetView):
         return response
 
 
-class FamiliesDataDownloadView(QueryDatasetView):
+class FamiliesDataDownloadView(QueryBaseView, DatasetAccessRightsView):
     """Families data download view class."""
 
     @classmethod

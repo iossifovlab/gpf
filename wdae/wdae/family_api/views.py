@@ -4,7 +4,7 @@ from datasets_api.permissions import (
 )
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from query_base.query_base import QueryDatasetView
+from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from dae.pedigrees.family_tag_builder import FamilyTag, check_tag
 
 
-class ListFamiliesView(QueryDatasetView):
+class ListFamiliesView(QueryBaseView, DatasetAccessRightsView):
     """List dataåset families."""
 
     @method_decorator(etag(get_permissions_etag))
@@ -53,7 +53,7 @@ class ListFamiliesView(QueryDatasetView):
         )
 
 
-class FamilyDetailsView(QueryDatasetView):
+class FamilyDetailsView(QueryBaseView, DatasetAccessRightsView):
     """Get a family details view."""
 
     @method_decorator(etag(get_permissions_etag))
@@ -86,7 +86,7 @@ class FamilyDetailsView(QueryDatasetView):
         )
 
 
-class TagsView(QueryDatasetView):
+class TagsView(QueryBaseView, DatasetAccessRightsView):
 
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request: Request) -> Response:
@@ -97,7 +97,7 @@ class TagsView(QueryDatasetView):
         )
 
 
-class ListMembersView(QueryDatasetView):
+class ListMembersView(QueryBaseView, DatasetAccessRightsView):
     """List family members view."""
 
     @method_decorator(etag(get_permissions_etag))
@@ -130,7 +130,7 @@ class ListMembersView(QueryDatasetView):
         )
 
 
-class MemberDetailsView(QueryDatasetView):
+class MemberDetailsView(QueryBaseView, DatasetAccessRightsView):
     """Details view of a person."""
 
     @method_decorator(etag(get_permissions_etag))
@@ -172,7 +172,7 @@ class MemberDetailsView(QueryDatasetView):
         )
 
 
-class AllMemberDetailsView(QueryDatasetView):
+class AllMemberDetailsView(QueryBaseView, DatasetAccessRightsView):
     """Details of all members of a family."""
 
     @method_decorator(etag(get_permissions_etag))
@@ -210,7 +210,7 @@ class AllMemberDetailsView(QueryDatasetView):
         )
 
 
-class ListAllDetailsView(QueryDatasetView):
+class ListAllDetailsView(QueryBaseView, DatasetAccessRightsView):
     """List of all family details."""
 
     @method_decorator(etag(get_permissions_etag))
