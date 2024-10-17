@@ -753,3 +753,20 @@ def test_make_all_region_bins_integer_bins(
 
     result = pd.make_all_region_bins(chrom_lens)
     assert result == expected
+
+
+@pytest.mark.parametrize("region, region_bins", [
+    (Region("chr1", 100, 205), ["chr1_0", "chr1_1", "chr1_2"]),
+])
+def test_region_to_region_bins_additional(
+    region: Region,
+    region_bins: list[str],
+) -> None:
+    pd = PartitionDescriptor.parse_string("""
+        [region_bin]
+        chromosomes = chr1
+        region_length = 100
+    """)
+    chrom_lens = {"chr1": 300}
+
+    assert pd.region_to_region_bins(region, chrom_lens) == region_bins

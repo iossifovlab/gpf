@@ -62,11 +62,11 @@ def test_import_task_bin_size(
         bucket_index=[
             0, 0, 0,
             1, 1,
-            2,
+            2, 2,
         ],
         positions=[
             1, 2, 10,
-            21, 22, 59,
+            21, 22, 59, 60,
         ],
     )
 
@@ -75,16 +75,16 @@ def test_import_task_bin_size(
         study_dir,
         "summary/region_bin=chr1_1/frequency_bin=0")
     parquet_files = [
-        "merged_region_bin_chr1_1_frequency_bin_0.parquet",
+        "summary_region_bin_chr1_1_frequency_bin_0_bucket_index_000003.parquet",
     ]
     assert set(os.listdir(out_dir)) == set(parquet_files)
     _assert_variants(
         join(out_dir, parquet_files[0]),
         bucket_index=[
-            2, 3, 3,
+            3, 3,
         ],
         positions=[
-            60, 70, 71,
+            70, 71,
         ],
     )
 
