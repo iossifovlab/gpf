@@ -40,7 +40,11 @@
       <div id="download-wrapper">
         <span>Phenotype measures</span>
         <input name="queryData" type="hidden" />
-        <button (click)="downloadMeasures()" id="download-measures" class="btn btn-md btn-primary btn-right">
+        <button
+          [class.disabled-download]="!(selectedDataset?.accessRights)"
+          (click)="downloadMeasures()"
+          id="download-measures"
+          class="btn btn-md btn-primary btn-right">
           <span class="material-symbols-outlined">download</span>
         </button>
       </div>

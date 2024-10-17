@@ -32,7 +32,11 @@
 
   <ng-template #familiesByNumber>
     <div id="download-total-families">
-      <a class="download-link" [href]="getDownloadLink()" download
+      <a
+        [class.disabled-download]="!(selectedDataset?.accessRights)"
+        class="download-link"
+        [href]="getDownloadLink()"
+        download
         >Download all families ({{ variantReport.familyReport.familiesTotal }})</a
       >
     </div>
@@ -97,12 +101,13 @@
         <form
           id="dl-form"
           (ngSubmit)="downloadTags($event)"
-          action="{{ config.baseUrl }}common_reports/families_data/{{ selectedDatasetId }}"
+          action="{{ config.baseUrl }}common_reports/families_data/{{ selectedDataset.id }}"
           method="post"
           style="display: flex; align-items: center">
           <span>Selected families: </span><span id="families-sum">{{ filteredFamiliesCount + ' / ' + totalFamiliesCount }}</span>
           <input name="queryData" type="hidden" />
           <button
+            [class.disabled-download]="!(selectedDataset?.accessRights)"
             class="btn btn-md btn-primary btn-right"
             id="download-button"
             [disabled]="currentPedigreeTable.pedigrees.length === 0"
@@ -131,7 +136,11 @@
           </colgroup>
           <tbody *ngIf="currentPedigreeTable.pedigrees.length !== 0">
             <ng-template ngFor let-pedigreeGroup [ngForOf]="currentPedigreeTable.pedigrees">
-              <tr gpf-common-reports-row [pedigreeGroup]="pedigreeGroup"></tr>
+              <tr
+                [class.disabled-pedigrees]="!(selectedDataset?.accessRights)"
+                gpf-common-reports-row
+                [pedigreeGroup]="pedigreeGroup"
+              ></tr>
             </ng-template>
           </tbody>
           <th *ngIf="currentPedigreeTable.pedigrees.length === 0" id="nothing-found" class="table-row table-body-row">
