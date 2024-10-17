@@ -253,9 +253,9 @@ class PreparePersons(PrepareBase):
             "SELECT DISTINCT family_id FROM ped_df",
         )
         family_file = f"{self.parquet_dir}/family.parquet"
-        # self.connection.execute(
-            # f"COPY family TO '{family_file}' (FORMAT PARQUET)",
-        # )
+        self.connection.execute(
+            f"COPY family TO '{family_file}' (FORMAT PARQUET)",
+        )
 
     @staticmethod
     def _build_sample_id(sample_id: str | float | None) -> str | None:
@@ -275,9 +275,9 @@ class PreparePersons(PrepareBase):
             "SELECT family_id, person_id, "
             "role, status, sex, sample_id FROM ped_df ",
         )
-        # self.connection.execute(
-            # f"COPY person TO '{person_file}' (FORMAT PARQUET)",
-        # )
+        self.connection.execute(
+            f"COPY person TO '{person_file}' (FORMAT PARQUET)",
+        )
 
     def save_pedigree(self, ped_df: pd.DataFrame) -> None:
         self._save_families(ped_df)
@@ -864,14 +864,14 @@ class PrepareVariables(PreparePersons):
             self.connection.execute(f"DROP TABLE {table_name}")
         print(f"DONE LOADING {time.time() - start}")
 
-        # instrument_file = f"{self.parquet_dir}/instrument.parquet"
-        # self.connection.execute(
-            # f"COPY instrument TO '{instrument_file}' (FORMAT PARQUET)",
-        # )
-        # measure_file = f"{self.parquet_dir}/measure.parquet"
-        # self.connection.execute(
-            # f"COPY measure TO '{measure_file}' (FORMAT PARQUET)",
-        # )
+        instrument_file = f"{self.parquet_dir}/instrument.parquet"
+        self.connection.execute(
+            f"COPY instrument TO '{instrument_file}' (FORMAT PARQUET)",
+        )
+        measure_file = f"{self.parquet_dir}/measure.parquet"
+        self.connection.execute(
+            f"COPY measure TO '{measure_file}' (FORMAT PARQUET)",
+        )
 
     def _instrument_tmp_table_name(self, instrument_name: str) -> str:
         return safe_db_name(f"{instrument_name}_data")
@@ -1161,9 +1161,9 @@ class PrepareVariables(PreparePersons):
         instruments_dir = os.path.join(self.parquet_dir, "instruments")
         os.makedirs(instruments_dir, exist_ok=True)
         output_file = f"{instruments_dir}/{output_table_name}.parquet"
-        # self.connection.execute(
-            # f"COPY {output_table_name} TO '{output_file}' (FORMAT PARQUET)",
-        # )
+        self.connection.execute(
+            f"COPY {output_table_name} TO '{output_file}' (FORMAT PARQUET)",
+        )
 
     @staticmethod
     def create_default_measure(
