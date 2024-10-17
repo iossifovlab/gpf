@@ -4,7 +4,7 @@ from typing import Any
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
-from query_base.query_base import DatasetAccessRightsView, QueryBaseView
+from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response

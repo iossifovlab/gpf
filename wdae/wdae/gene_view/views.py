@@ -19,10 +19,12 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ConfigView(QueryBaseView, DatasetAccessRightsView):
+    """Gene browser config view."""
 
     @request_logging(LOGGER)
     @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request) -> Response:
+        """Get gene browser config."""
         data = expand_gene_set(request.query_params)
         dataset_id = data["datasetId"]
         if dataset_id is None:
@@ -37,7 +39,7 @@ class ConfigView(QueryBaseView, DatasetAccessRightsView):
 
 
 class QueryVariantsView(QueryBaseView):
-
+    """Gene view summary variants view."""
     @request_logging(LOGGER)
     @method_decorator(etag(get_permissions_etag))
     def post(self, request: Request) -> Response:
