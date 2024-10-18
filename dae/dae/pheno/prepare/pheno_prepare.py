@@ -8,6 +8,7 @@ import textwrap
 from collections import defaultdict
 from collections.abc import Callable
 from multiprocessing.pool import AsyncResult
+from string import Template
 from typing import Any, cast
 
 import duckdb
@@ -318,6 +319,8 @@ class ClassifyMeasureTask(Task):
         measure_name: str,
         measure_desc: str | None,
         dbfile: str,
+        person_id_column: str,
+        query_template: Template,
     ) -> None:
         self.config = config
         self.measure = self.create_default_measure(
@@ -327,6 +330,8 @@ class ClassifyMeasureTask(Task):
         self.rank: int | None = None
         self.classifier_report: ClassifierReport | None = None
         self.dbfile = dbfile
+        self.person_id_column = person_id_column
+        self.query_template = query_template
 
     @staticmethod
     def create_default_measure(
@@ -386,77 +391,75 @@ class ClassifyMeasureTask(Task):
     def run(self) -> ClassifyMeasureTask:
         try:
             cursor = duckdb.connect(self.dbfile, read_only=True).cursor()
-            table_name = self.instrument_table_name
             measure_name = self.measure.measure_name
 
             logging.info("classifying measure %s", self.measure.measure_id)
+            query = self.query_template.substitute(
+                measure=measure_name, person_id=self.person_id_column,
+            )
+
+            result = cursor.execute(query)
+
+            df = result.pl()
+
+            assert len(df) == 1
+
+            stats = df.to_dicts()[0]
+
+            report = ClassifierReport()
+
+            report.count_total = stats["count_total"]
+            report.count_with_values = stats["count_with_values"]
+            report.count_without_values = stats["count_without_values"]
+            report.count_with_numeric_values = stats[
+                "count_with_numeric_values"
+            ]
+            report.count_with_non_numeric_values = stats[
+                "count_with_non_numeric_values"
+            ]
+            report.count_unique_values = stats["count_unique_values"]
+            report.count_unique_numeric_values = stats[
+                "count_unique_numeric_values"
+            ]
+
             if self.config.measure_type is not None:
                 logging.info(
-                    "Type infered as %s via config", self.config.measure_type,
+                    "Type for %s infered as %s via config",
+                    self.config.measure_type,
+                    self.measure.measure_id,
                 )
                 self.measure.measure_type = MeasureType.from_str(
                     self.config.measure_type,
                 )
 
-                if self.measure.measure_type in {
-                    MeasureType.continuous, MeasureType.ordinal,
-                }:
-                    result = cursor.sql(
-                        f'SELECT COUNT("{measure_name}") FROM {table_name} '
-                        'WHERE '
-                        f'TRY_CAST("{measure_name}" AS FLOAT) != \'NaN\' AND '
-                        f'"{measure_name}" IS NOT NULL',
-                    ).fetchone()
-                    assert result is not None
-                    self.measure.individuals = result[0]
+            else:
+                classifier = MeasureClassifier(self.config)
+                self.measure.measure_type = classifier.classify(report)
 
-                    result = cursor.sql(
-                        f'SELECT MIN("{measure_name}") FROM {table_name}'
-                    ).fetchone()
-                    assert result is not None
-                    min_value = result[0]
-                    self.measure.min_value = min_value
+            if self.measure.measure_type in {
+                MeasureType.continuous, MeasureType.ordinal,
+            }:
+                report.min_value = stats["min_value"]
+                report.max_value = stats["max_value"]
+                report.values_domain = \
+                    f"[{report.min_value}, {report.max_value}]"
+            else:
+                report.min_value = None
+                report.max_value = None
+                report.values_domain = ""
+                if stats["values_domain"] is not None:
+                    report.values_domain = stats["values_domain"]
 
-                    result = cursor.sql(
-                        f'SELECT MAX("{measure_name}") FROM {table_name}'
-                    ).fetchone()
-                    assert result is not None
-                    max_value = result[0]
-                    self.measure.max_value = max_value
-                    self.measure.values_domain = f"[{min_value}, {max_value}]"
-                else:
-                    self.measure.min_value = None
-                    self.measure.max_value = None
-                    rows = list(cursor.sql(
-                        f'SELECT DISTINCT "{measure_name}" FROM {table_name}'
-                        f'WHERE "{measure_name}" IS NOT NULL'
-                        f'SELECT "{measure_name}", '
-                        f'TRY_CAST("{measure_name}" AS FLOAT) as casted '
-                        f'from {table_name} WHERE "{measure_name}" IS NOT NULL'
-                        ")",
-                    ).fetchall())
-                    assert rows is not None
-                    unique_values = [row[0] for row in rows]
-                    self.measure.values_domain = ", ".join(
-                        sorted(unique_values),
-                    )
+            self.rank = report.count_unique_values
 
-                return self
+            self.measure.min_value = report.min_value
+            self.measure.max_value = report.max_value
+            self.measure.values_domain = report.values_domain
+            self.measure.individuals = report.count_with_values
+            report.set_measure(self.measure)
 
-            classifier = MeasureClassifier(self.config)
-            self.classifier_report = classifier.meta_measures(
-                cursor,
-                table_name,
-                self.measure.measure_name,
-            )
-            assert self.classifier_report is not None
-            self.classifier_report.set_measure(self.measure)
+            self.classifier_report = report
 
-            self.measure.individuals = self.classifier_report.count_with_values
-            self.measure.measure_type = classifier.classify(
-                self.classifier_report,
-            )
-            self.build_meta_measure(cursor)
         except Exception:  # pylint: disable=broad-except
             logger.exception(
                 "problem processing measure: %s", self.measure.measure_id,
@@ -1034,6 +1037,8 @@ class PrepareVariables(PreparePersons):
 
         cursor = self.connection.cursor()
 
+        query_template = Template(self.get_statistics_query(tmp_table_name))
+
         def run_classify_task(classify_task: ClassifyMeasureTask) -> Any:
             classify_task.run()
             return classify_task.done()
@@ -1073,6 +1078,8 @@ class PrepareVariables(PreparePersons):
                 measure_name,
                 measure_desc,
                 temp_dbfile,
+                self.config.person_column,
+                query_template,
             )
             task_graph.create_task(
                 f"{instrument_name}_{measure_name}_classify",
