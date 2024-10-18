@@ -576,7 +576,7 @@ async function changeTable(page: Page): Promise<void> {
 
   await page.locator('gpf-multiple-select-menu label').nth(0).hover();
   await page.mouse.down();
-  await page.mouse.move(1030, 400, {steps: 3});
+  await page.mouse.move(1030, 370, {steps: 3});
   await page.mouse.up();
 
   await expect(page.locator('gpf-multiple-select-menu label').nth(2)).toHaveText('CHD8 target genes');
