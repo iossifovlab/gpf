@@ -810,6 +810,7 @@ class PrepareVariables(PreparePersons):
         instrument_name: str,
         measure_name: str,
     ) -> InferenceConfig:
+        """Merge configs by order of specificity"""
         inference_config = InferenceConfig()
         current_config = inference_config.dict()
 
