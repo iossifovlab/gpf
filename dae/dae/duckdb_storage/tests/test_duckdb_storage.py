@@ -1,6 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from dae.duckdb_storage.duckdb_import_storage import DuckDbImportStorage
+from dae.duckdb_storage.duckdb_import_storage import (
+    DuckDbLegacyImportStorage,
+)
 from dae.duckdb_storage.duckdb_legacy_genotype_storage import (
     DuckDbLegacyStorage,
 )
@@ -24,7 +26,7 @@ def test_import_storage_config() -> None:
     assert storage_factory is not None
     storage = storage_factory()
     assert storage is not None
-    assert isinstance(storage, DuckDbImportStorage)
+    assert isinstance(storage, DuckDbLegacyImportStorage)
 
 
 def test_imported_study(imported_study: GenotypeData) -> None:
