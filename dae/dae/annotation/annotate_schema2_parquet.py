@@ -115,7 +115,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             self.grr,
             self.args.region_size,
             self.args.allow_repeated_attributes,
-            region=self.args.region,
+            target_region=self.args.region,
         )
         produce_schema2_merging_tasks(
             self.task_graph,
