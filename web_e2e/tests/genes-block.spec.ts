@@ -180,6 +180,62 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
     await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
   });
 
+  test('basic functionality', async({ page }) => {
+      await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
+      await page.locator('#gene-sets').click();
+      await expect(page.locator('#gene-sets-panel')).toBeVisible();
+      await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
+
+      await page.getByRole('button', { name: 'Select studies' }).click();
+      await expect(page.locator('.modal-content')).toBeVisible();
+      await expect(page.locator('#hierarchy')).toBeVisible();
+      await expect(page.locator('#filters')).toBeVisible();
+      await expect(page.locator('#modal-filter-list')).toBeVisible();
+      await expect(page.locator('#dataset-comp_vcf')).not.toBeVisible();
+      await expect(page.locator('#dataset-comp_denovo')).not.toBeVisible();
+
+      await page.locator('#expand-COMP_genotypes').click();
+      await expect(page.locator('#dataset-comp_vcf')).toBeVisible();
+      await expect(page.locator('#dataset-comp_denovo')).toBeVisible();
+
+      await page.locator('#dataset-COMP_genotypes').click();
+      await expect(page.getByText('No person set collections')).toBeVisible();
+
+      await page.locator('#dataset-comp_denovo').click();
+      await expect(page.locator('#dataset-iossifov_2014')).toHaveClass('btn-sm text-wrap modified');
+      await expect(page.getByText('Affected Status:')).toBeVisible();
+
+      await page.locator('#comp_denovo-checkbox-affected').click();
+      await page.locator('#comp_denovo-checkbox-unaffected').click();
+
+      await expect(page.locator('#modal-filter-list').getByText('iossifov_2014: status: affected')).toBeVisible();
+      await expect(page.locator('#modal-filter-list').getByText('comp_denovo: status: affected')).toBeVisible();
+      await expect(page.locator('#modal-filter-list').getByText('comp_denovo: status: unaffected')).toBeVisible();
+      await page.mouse.click(0, 0); // close modal
+
+      await expect(page.locator('#selected-filter-list')).toBeVisible();
+      await expect(page.locator('#selected-filter-list')).toContainText('iossifov_2014: status: affected');
+      await expect(page.locator('#selected-filter-list')).toContainText('comp_denovo: status: affected');
+      await expect(page.locator('#selected-filter-list')).toContainText('comp_denovo: status: unaffected');
+
+
+      await page.locator('[id="remove-iossifov_2014: status: affected"]').click();
+      await page.locator('[id="remove-comp_denovo: status: affected"]').click();
+
+      await expect(page.locator('#selected-filter-list')).not.toContainText('iossifov_2014: status: affected');
+      await expect(page.locator('#selected-filter-list')).not.toContainText('comp_denovo: status: affected');
+      await expect(page.locator('#selected-filter-list')).toContainText('comp_denovo: status: unaffected');
+
+      await page.getByRole('button', { name: 'Select studies' }).click();
+
+      await expect(page.locator('#comp_denovo-checkbox-affected')).not.toBeChecked();
+      await expect(page.locator('#comp_denovo-checkbox-unaffected')).toBeChecked();
+      await expect(page.locator('#dataset-iossifov_2014')).toHaveClass('btn-sm text-wrap');
+      await expect(page.locator('#modal-filter-list').getByText('iossifov_2014: status: affected')).not.toBeVisible();
+      await expect(page.locator('#modal-filter-list').getByText('comp_denovo: status: affected')).not.toBeVisible();
+      await expect(page.locator('#modal-filter-list').getByText('comp_denovo: status: unaffected')).toBeVisible();
+    }
+  );
   test(
     'should download iossifov affected ' +
       'denovo gene sets and check whether they are equal to the reference data', async({ page }) => {
@@ -230,9 +286,12 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
           await expect(page.locator('#gene-sets-panel')).toBeVisible();
           await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
 
-          await page.isChecked('#iossifov_2014-checkbox-affected'); // wait for gpfjs state first
+          await page.getByRole('button', { name: 'Select studies' }).click();
+          await expect(page.locator('.modal-content')).toBeVisible();
+
           await page.locator('#iossifov_2014-checkbox-affected').click();
           await page.locator('#iossifov_2014-checkbox-unaffected').click();
+          await page.mouse.click(0, 0); // close modal
 
           await page.getByPlaceholder('Select or start typing to search').click();
           await page.getByPlaceholder('Select or start typing to search').focus();

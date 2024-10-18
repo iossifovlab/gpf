@@ -310,9 +310,13 @@ test.describe('Pheno tool download tests', () => {
       await page.getByRole('tab', { name: 'Gene Sets' }).click();
       await page.locator('gpf-gene-sets select.form-control').selectOption('Denovo');
 
-      await page.locator('.accordion').filter({ hasText: data.genotype + ': Affected Status' }).click();
-      await page.getByRole('button', { name: `${data.genotype}: Affected Status` }).click();
+      await page.getByRole('button', { name: 'Select studies' }).click();
+      await expect(page.locator('.modal-content')).toBeVisible();
+
+      await page.locator('#expand-COMP_genotypes').click();
+      await page.locator('#dataset-' + data.genotype).click();
       await page.locator(`#${data.genotype}-checkbox-${data.affectedStatus}`).click();
+      await page.mouse.click(0, 0); // close modal
 
       await page.getByLabel('Gene Sets').getByPlaceholder('Select or start typing to search').click();
       await page.getByRole('option', { name: data.set}).click();
