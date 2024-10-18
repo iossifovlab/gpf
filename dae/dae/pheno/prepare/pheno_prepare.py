@@ -15,6 +15,26 @@ import numpy as np
 import pandas as pd
 import sqlglot
 from box import Box
+from sqlglot import (
+    column,
+    select,
+    table,
+)
+from sqlglot.expressions import (
+    AnyValue,
+    Cast,
+    Column,
+    Count,
+    Distinct,
+    GroupConcat,
+    Max,
+    Min,
+    Star,
+    TableAlias,
+    TryCast,
+    null,
+    parse_identifier,
+)
 
 from dae.pedigrees.loader import (
     PED_COLUMNS_REQUIRED,
@@ -865,6 +885,138 @@ class PrepareVariables(PreparePersons):
             )
 
         return output_table_cols
+
+    def build_stats_common_table_expressions(
+        self, table_name: str,
+    ) -> list[Any]:
+        """Create SQLGlot CTE objects for measure statistics query."""
+        casted_col = TryCast(this=column("$measure", quoted=False), to="FLOAT")
+        cast_value_table = (
+            TableAlias(
+                this=parse_identifier("cast_value_table"),
+                columns=[
+                    parse_identifier("person_id"),
+                    parse_identifier("original"),
+                    parse_identifier("casted"),
+                ],
+            ),
+            select(
+                column("$person_id", quoted=False),
+                column("$measure", quoted=False),
+                casted_col,
+            ).from_(table(table_name, quoted=False)),
+        )
+        non_null_value_table = (
+            TableAlias(
+                this=parse_identifier("non_null_value_table"),
+                columns=[
+                    parse_identifier("person_id"),
+                    parse_identifier("original"),
+                    parse_identifier("casted"),
+                ],
+            ),
+            select(
+                column("person_id"), column("original"), "casted",
+            ).from_("cast_value_table").where(
+                column("original").is_(null()).not_(),
+            ).and_(
+                column("casted").neq("NaN").or_(column("casted").is_(null())),
+            ),
+        )
+        numeric_values_table = (
+            TableAlias(
+                this=parse_identifier("numeric_values_table"),
+                columns=[
+                    parse_identifier("person_id"),
+                    parse_identifier("val"),
+                ],
+            ),
+            select(
+                column("person_id"), column("casted"),
+            ).from_("non_null_value_table").where(
+                column("casted").is_(null()).not_(),
+            ),
+        )
+        unique_string_value_table = (
+            TableAlias(
+                this=parse_identifier("unique_string_value_table"),
+                columns=[
+                    parse_identifier("val"),
+                ],
+            ),
+            select(
+                Cast(this=column("original"), to="VARCHAR"),
+            ).distinct().from_("cast_value_table").limit(20),
+        )
+        values_domain_table = (
+            TableAlias(
+                this=parse_identifier("values_domain_table"),
+                columns=[
+                    parse_identifier("domain"),
+                ],
+            ),
+            select(
+                GroupConcat(this=column("val")),
+            ).from_("unique_string_value_table"),
+        )
+        return [
+            cast_value_table,
+            non_null_value_table,
+            numeric_values_table,
+            unique_string_value_table,
+            values_domain_table,
+        ]
+
+    def get_statistics_query(self, table_name: str) -> str:
+        """
+        Create query for calculating measure statistics for classification.
+
+        Query is a template with the variables $measure and $person_id
+        """
+        all_values_col = Column(this=Star(), table="cast_value_table")
+        non_null_values_col = column("original", table="non_null_value_table")
+        numeric_values_col = column("val", table="numeric_values_table")
+        values_domain_col = column("domain", table="values_domain_table")
+        query = select(
+            Count(this=all_values_col).as_("count_total"),
+            Count(this=non_null_values_col).as_("count_with_values"),
+            (
+                column("count_total") - column("count_with_values")
+            ).as_("count_without_values"),
+            Count(this=numeric_values_col).as_("count_with_numeric_values"),
+            (
+                column("count_total") - column("count_with_numeric_values")
+            ).as_("count_with_non_numeric_values"),
+            Count(this=Distinct(expressions=[
+                non_null_values_col,
+            ])).as_("count_unique_values"),
+            Count(this=Distinct(expressions=[
+                numeric_values_col,
+            ])).as_("count_unique_numeric_values"),
+            Min(this=numeric_values_col).as_("min_value"),
+            Max(this=numeric_values_col).as_("max_value"),
+            AnyValue(this=values_domain_col).as_("values_domain"),
+        ).from_("cast_value_table").join(
+            "non_null_value_table",
+            on=column("person_id", table="cast_value_table").eq(
+                column("person_id", table="non_null_value_table"),
+            ),
+            join_type="LEFT",
+        ).join(
+            "numeric_values_table",
+            on=column("person_id", table="cast_value_table").eq(
+                column("person_id", table="numeric_values_table"),
+            ),
+            join_type="LEFT",
+        ).join(
+            "values_domain_table",
+            on="1=1",
+            join_type="LEFT",
+        )
+        tables = self.build_stats_common_table_expressions(table_name)
+        for table_alias, table_query in tables:
+            query = query.with_(table_alias, table_query)
+        return query.sql()
 
     def build_instrument(
         self, instrument_name: str,
