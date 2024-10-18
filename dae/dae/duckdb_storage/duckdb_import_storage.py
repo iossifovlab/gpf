@@ -1,3 +1,4 @@
+import abc
 from typing import Any, cast
 
 import yaml
@@ -20,28 +21,15 @@ from dae.schema2_storage.schema2_layout import (
 from dae.task_graph.graph import TaskGraph
 
 
-class DuckDbImportStorage(Schema2ImportStorage):
+class AbstractDuckDbImportStorage(Schema2ImportStorage, abc.ABC):
     """Import logic for data in the DuckDb Schema 2 format."""
 
-    @classmethod
+    @staticmethod
+    @abc.abstractmethod
     def _do_import_dataset(
-        cls, project: ImportProject,
+        project: ImportProject,
     ) -> Schema2DatasetLayout:
-        genotype_storage = project.get_genotype_storage()
-        assert isinstance(
-            genotype_storage,
-            (AbstractDuckDbStorage, DuckDbLegacyStorage))
-        layout = load_schema2_dataset_layout(
-            project.get_parquet_dataset_dir(),
-        )
-        work_dir = project.work_dir
-
-        return genotype_storage.import_dataset(
-            work_dir,
-            project.study_id,
-            layout,
-            project.get_partition_descriptor(),
-        )
+        pass
 
     @classmethod
     def do_study_config(
@@ -108,3 +96,27 @@ class DuckDbImportStorage(Schema2ImportStorage):
                 [project, tables_task], [tables_task])
 
         return graph
+
+
+class DuckDbLegacyImportStorage(AbstractDuckDbImportStorage):
+    """Import logic for data in the DuckDb Schema 2 format."""
+
+    @classmethod
+    def _do_import_dataset(
+        cls, project: ImportProject,
+    ) -> Schema2DatasetLayout:
+        genotype_storage = project.get_genotype_storage()
+        assert isinstance(
+            genotype_storage,
+            (AbstractDuckDbStorage, DuckDbLegacyStorage))
+        layout = load_schema2_dataset_layout(
+            project.get_parquet_dataset_dir(),
+        )
+        work_dir = project.work_dir
+
+        return genotype_storage.import_dataset(
+            work_dir,
+            project.study_id,
+            layout,
+            project.get_partition_descriptor(),
+        )
