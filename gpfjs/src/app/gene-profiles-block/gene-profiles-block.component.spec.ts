@@ -19,6 +19,8 @@ import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-t
 import { geneProfilesReducer } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { cloneDeep } from 'lodash';
 import { StoreModule } from '@ngrx/store';
+import { User } from 'app/users/users';
+
 
 const config = {
   geneLinkTemplates: [
@@ -112,6 +114,17 @@ class UsersServiceMock {
   public getUserInfoObservable(): Observable<object> {
     return of({});
   }
+
+  public getUserInfo(): Observable<User> {
+    return of(new User(
+      1,
+      'userMame',
+      'userEmail',
+      ['group'],
+      true,
+      [{datasetId: 'datasetId', datasetName: 'datasetName'}]
+    ));
+  }
 }
 
 /* eslint-disable max-len */
@@ -146,7 +159,7 @@ describe('GeneProfilesBlockComponent', () => {
         UsersService,
         { provide: APP_BASE_HREF, useValue: '' },
         { provide: GeneProfilesService, useValue: geneProfilesServiceMock },
-        { provide: UsersService, useValue: usersServiceMock}
+        { provide: UsersService, useValue: usersServiceMock }
       ],
       imports: [
         HttpClientTestingModule, NgbNavModule, RouterTestingModule, FormsModule,

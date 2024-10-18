@@ -5,7 +5,7 @@ import {
 import { NgbDropdownMenu } from '@ng-bootstrap/ng-bootstrap';
 import { MultipleSelectMenuComponent } from 'app/multiple-select-menu/multiple-select-menu.component';
 import { SortingButtonsComponent } from 'app/sorting-buttons/sorting-buttons.component';
-import { debounceTime, distinctUntilChanged, take, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, take, tap } from 'rxjs/operators';
 import { BehaviorSubject, Subscription, zip } from 'rxjs';
 import { GeneProfilesTableConfig, GeneProfilesColumn } from './gene-profiles-table';
 import { GeneProfilesTableService } from './gene-profiles-table.service';
@@ -24,6 +24,7 @@ import {
   setGeneProfilesSearchValue,
   setGeneProfilesSortBy,
   setGeneProfilesValues } from './gene-profiles-table.state';
+import { UsersService } from 'app/users/users.service';
 
 @Component({
   selector: 'gpf-gene-profiles-table',
@@ -83,6 +84,7 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
     private location: Location,
     private route: ActivatedRoute,
     protected store: Store,
+    private usersService: UsersService
   ) {
     super(store, 'geneProfiles', selectGeneProfiles);
   }
@@ -100,32 +102,36 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
 
     this.focusSearchBox();
 
-    this.subscription.add(this.geneProfilesTableService.getUserGeneProfilesState().subscribe(state => {
-      if (state) {
-        this.store.dispatch(setGeneProfilesValues({
-          geneProfiles: {
-            openedTabs: state.openedTabs,
-            searchValue: state.searchValue,
-            highlightedRows: state.highlightedRows,
-            sortBy: state.sortBy,
-            orderBy: state.orderBy,
-            headerLeaves: state.headerLeaves
+    this.subscription.add(
+      this.usersService.getUserInfo().pipe(
+        switchMap(() => this.geneProfilesTableService.getUserGeneProfilesState()))
+        .subscribe(state => {
+          if (state) {
+            this.store.dispatch(setGeneProfilesValues({
+              geneProfiles: {
+                openedTabs: state.openedTabs,
+                searchValue: state.searchValue,
+                highlightedRows: state.highlightedRows,
+                sortBy: state.sortBy,
+                orderBy: state.orderBy,
+                headerLeaves: state.headerLeaves
+              }
+            }));
           }
-        }));
-      }
 
-      this.loadState();
+          this.loadState();
 
-      if (this.route.snapshot.params.genes as string) {
-        this.currentTabGeneSet = new Set(
-          (this.route.snapshot.params.genes as string)
-            .split(',')
-            .filter(p => p)
-            .map(p => p.trim())
-        );
-        this.loadSingleView(this.currentTabGeneSet);
-      }
-    }));
+          if (this.route.snapshot.params.genes as string) {
+            this.currentTabGeneSet = new Set(
+              (this.route.snapshot.params.genes as string)
+                .split(',')
+                .filter(p => p)
+                .map(p => p.trim())
+            );
+            this.loadSingleView(this.currentTabGeneSet);
+          }
+        })
+    );
   }
 
   public ngOnChanges(): void {
