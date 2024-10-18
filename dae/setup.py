@@ -104,6 +104,7 @@ setuptools.setup(
     annotate_vcf=dae.annotation.annotate_vcf:cli
     annotate_doc=dae.annotation.annotate_doc:cli
     annotate_schema2_parquet=dae.annotation.annotate_schema2_parquet:cli
+    reannotate_instance=dae.annotation.reannotate_instance:cli
     pheno_import=dae.tools.pheno_import:main
 
 

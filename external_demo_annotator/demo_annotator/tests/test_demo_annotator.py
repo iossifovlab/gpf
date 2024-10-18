@@ -82,7 +82,7 @@ def annotation_configs(
 )
 def test_demo_annotator_initialization(annotation_configs, config_key):
     config = yaml.safe_load(annotation_configs[config_key])
-    pipeline = AnnotationTool._produce_annotation_pipeline(
+    pipeline = AnnotationTool.produce_annotation_pipeline(
         config, None, None, allow_repeated_attributes=True,
     )
     annotators = pipeline.annotators

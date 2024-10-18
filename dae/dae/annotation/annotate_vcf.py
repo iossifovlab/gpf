@@ -141,7 +141,7 @@ class AnnotateVCFTool(AnnotationTool):
     ) -> None:
         # flake8: noqa: C901
         """Annotate a region from a given input VCF file using a pipeline."""
-        pipeline = AnnotateVCFTool._produce_annotation_pipeline(
+        pipeline = AnnotateVCFTool.produce_annotation_pipeline(
             pipeline_config, pipeline_config_old,
             grr_definition, allow_repeated_attributes=allow_repeated_attributes,
         )
