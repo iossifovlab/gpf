@@ -2,7 +2,10 @@
 
 import pytest
 
-from dae.duckdb_storage.duckdb_genotype_storage import DuckDbS3ParquetStorage
+from dae.duckdb_storage.duckdb_genotype_storage import (
+    DuckDbS3ParquetStorage,
+    DuckDbS3Storage,
+)
 from dae.genomic_resources.testing import (
     build_s3_test_bucket,
     build_s3_test_filesystem,
@@ -14,34 +17,49 @@ from dae.genotype_storage.genotype_storage_registry import (
 from dae.studies.study import GenotypeData
 from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
+from dae.utils import fs_utils
 
 
-@pytest.fixture(scope="session")
-def duckdb_storage_config() -> dict:
+@pytest.fixture(scope="module", params=["duckdb_s3_parquet", "duckdb_s3"])
+def duckdb_storage_config(
+    request: pytest.FixtureRequest,
+) -> dict:
     s3_endpoint = s3_test_server_endpoint()
     s3_filesystem = build_s3_test_filesystem(s3_endpoint)
     s3_test_bucket = build_s3_test_bucket(s3_filesystem)
-
+    storage_type = request.param
+    if storage_type == "duckdb_s3_parquet":
+        return {
+            "id": f"dev_duckdb_storage_{storage_type}",
+            "storage_type": "duckdb_s3_parquet",
+            "bucket_url": fs_utils.join(s3_test_bucket, "parquet"),
+            "endpoint_url": s3_endpoint,
+        }
+    assert storage_type == "duckdb_s3"
     return {
-        "id": "dev_duckdb_storage",
-        "storage_type": "duckdb_s3_parquet",
-        "bucket_url": s3_test_bucket,
+        "id": f"dev_duckdb_storage_{storage_type}",
+        "storage_type": "duckdb_s3",
+        "bucket_url": fs_utils.join(s3_test_bucket, "database"),
         "endpoint_url": s3_endpoint,
+        "db": "storage.db",
     }
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def duckdb_storage_fixture(
-        duckdb_storage_config: dict) -> DuckDbS3ParquetStorage:
-    storage_factory = get_genotype_storage_factory("duckdb_s3_parquet")
+    duckdb_storage_config: dict,
+) -> DuckDbS3Storage | DuckDbS3ParquetStorage:
+    storage_type = duckdb_storage_config["storage_type"]
+    storage_factory = get_genotype_storage_factory(storage_type)
     assert storage_factory is not None
+
     storage = storage_factory(duckdb_storage_config)
     assert storage is not None
-    assert isinstance(storage, DuckDbS3ParquetStorage)
+    assert isinstance(storage, (DuckDbS3ParquetStorage, DuckDbS3Storage))
     return storage
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def imported_study(
     tmp_path_factory: pytest.TempPathFactory,
     duckdb_storage_fixture: DuckDbS3ParquetStorage,

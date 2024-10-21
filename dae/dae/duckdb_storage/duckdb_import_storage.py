@@ -10,6 +10,7 @@ from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.duckdb_storage.duckdb_genotype_storage import (
     DuckDbParquetStorage,
     DuckDbS3ParquetStorage,
+    DuckDbS3Storage,
     DuckDbStorage,
 )
 from dae.duckdb_storage.duckdb_legacy_genotype_storage import (
@@ -225,5 +226,51 @@ class DuckDbImportStorage(AbstractDuckDbImportStorage):
         assert genotype_storage.connection_factory is None
 
         fs_utils.copy(db_filename, work_db_filename)
+
+        return work_tables
+
+
+class DuckDbS3ImportStorage(AbstractDuckDbImportStorage):
+    """Import logic for data in the DuckDb Schema 2 format."""
+
+    @classmethod
+    def _do_import_dataset(
+        cls, project: ImportProject,
+    ) -> Schema2DatasetLayout:
+        genotype_storage = project.get_genotype_storage()
+        assert isinstance(
+            genotype_storage,
+            DuckDbS3Storage)
+        layout = load_schema2_dataset_layout(
+            project.get_parquet_dataset_dir(),
+        )
+        work_dir = project.work_dir
+        work_db_filename = os.path.join(
+            work_dir, genotype_storage.config.db)
+        with closing(create_database_connection(
+                work_db_filename, read_only=False),
+            ) as connection:
+            work_tables = create_duckdb_tables(
+                connection,
+                project.study_id,
+                layout,
+                project.get_partition_descriptor(),
+            )
+
+        db_filename = genotype_storage.get_db_filename()
+        # this could replace already existing database so we need
+        # to shut down the genotype storage
+        # reconnect the storage
+        if genotype_storage.connection_factory is not None:
+            genotype_storage.shutdown()
+        assert genotype_storage.connection_factory is None
+
+        s3_fs = create_s3_filesystem(genotype_storage.config.endpoint_url)
+        if not s3_fs.exists(db_filename):
+            logger.warning(
+                "replacing existing DuckDb database: %s",
+                db_filename)
+
+        s3_fs.put(work_db_filename, db_filename, recursive=True)
 
         return work_tables

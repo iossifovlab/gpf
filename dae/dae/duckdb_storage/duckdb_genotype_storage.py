@@ -15,12 +15,14 @@ from dae.duckdb_storage.duckdb2_variants import (
 from dae.duckdb_storage.duckdb_storage_config import (
     DuckDbConf,
     DuckDbParquetConf,
+    DuckDbS3Conf,
     DuckDbS3ParquetConf,
     parse_duckdb_config,
 )
 from dae.duckdb_storage.duckdb_storage_helpers import (
     create_database_connection,
     create_memory_connection,
+    create_s3_attach_db_clause,
     create_s3_secret_clause,
     create_study_parquet_tables_layout,
     get_study_config_tables,
@@ -28,6 +30,7 @@ from dae.duckdb_storage.duckdb_storage_helpers import (
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.utils import fs_utils
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +40,8 @@ class AbstractDuckDbStorage(GenotypeStorage, DuckDbConnectionFactory):
 
     def __init__(
         self,
-        dd_config: DuckDbConf | DuckDbParquetConf | DuckDbS3ParquetConf,
+        dd_config: DuckDbConf | DuckDbS3Conf |
+            DuckDbParquetConf | DuckDbS3ParquetConf,
     ):
         super().__init__(dd_config.model_dump())
         self.dd_config = dd_config
@@ -242,3 +246,68 @@ def duckdb_storage_factory(
         raise TypeError(
             f"unexpected storage type: {dd_config.storage_type}")
     return DuckDbStorage(dd_config)
+
+
+class DuckDbS3Storage(AbstractDuckDbStorage):
+    """Defines `duckdb` genotype storage."""
+
+    def __init__(self, dd_config: DuckDbS3Conf):
+        super().__init__(dd_config)
+        self.config = dd_config
+        self.connection_factory: duckdb.DuckDBPyConnection | None = None
+
+    @classmethod
+    def get_storage_types(cls) -> set[str]:
+        return {"duckdb_s3"}
+
+    def start(self) -> DuckDbS3Storage:
+        if self.connection_factory:
+            logger.warning(
+                "starting already started DuckDb genotype storage: <%s>",
+                self.storage_id)
+            return self
+        db_filename = self.get_db_filename()
+
+        logger.info("connection to inmemory duckdb")
+        self.connection_factory = create_memory_connection(
+            memory_limit=self.config.memory_limit)
+
+        s3_secret_clause = create_s3_secret_clause(
+            self.storage_id, self.config.endpoint_url)
+        self.connection_factory.sql(s3_secret_clause)
+        s3_attach_clause = create_s3_attach_db_clause(db_filename)
+        self.connection_factory.sql(s3_attach_clause)
+
+        return self
+
+    def get_db_filename(self) -> str:
+        """Construct database full filename."""
+        db = self.config.db
+        return fs_utils.join(str(self.config.bucket_url), db)
+
+    def build_study_layout(
+        self,
+        study_config: dict[str, Any],
+    ) -> Db2Layout:
+        db_name = pathlib.Path(self.get_db_filename()).stem
+        study_config_layout = get_study_config_tables(
+            study_config, db_name=db_name)
+        return Db2Layout(
+            db=db_name,
+            study=study_config_layout.study,
+            pedigree=study_config_layout.pedigree,
+            summary=study_config_layout.summary,
+            family=study_config_layout.family,
+            meta=study_config_layout.meta,
+        )
+
+
+def duckdb_s3_storage_factory(
+    storage_config: dict[str, Any],
+) -> DuckDbS3Storage:
+    """Create `duckdb_s3` genotype storage."""
+    dd_config = parse_duckdb_config(storage_config)
+    if dd_config.storage_type != "duckdb_s3":
+        raise TypeError(
+            f"unexpected storage type: {dd_config.storage_type}")
+    return DuckDbS3Storage(dd_config)
