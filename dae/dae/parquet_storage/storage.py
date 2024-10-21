@@ -6,7 +6,9 @@ from typing import Any, ClassVar, cast
 from cerberus import Validator
 
 from dae.configuration.utils import validate_path
-from dae.duckdb_storage.duckdb_import_storage import DuckDbImportStorage
+from dae.duckdb_storage.duckdb_import_storage import (
+    DuckDbLegacyImportStorage,
+)
 from dae.genomic_resources.gene_models import (
     GeneModels,
     create_regions_from_genes,
@@ -252,7 +254,8 @@ class ParquetImportStorage(Schema2ImportStorage):
                 [project], graph.tasks,
             )
             graph.create_task(
-                "Creating a study config", DuckDbImportStorage.do_study_config,
+                "Creating a study config",
+                DuckDbLegacyImportStorage.do_study_config,
                 [project, import_task], [import_task],
             )
         return graph

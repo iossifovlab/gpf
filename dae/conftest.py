@@ -64,7 +64,13 @@ def _default_genotype_storage_configs(
         },
 
         # DuckDb S3 Storage
-        # ??
+        "duckdb_s3": {
+            "id": "duckdb_s3",
+            "storage_type": "duckdb_s3",
+            "db": "storage_s3.db",
+            "bucket_url": f"s3:/{root_path}/duckdb-s3",
+            "endpoint_url": f"http://{localstack_host}:4566/",
+        },
     }
 
 

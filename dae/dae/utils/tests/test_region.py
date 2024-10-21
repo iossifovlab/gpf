@@ -1,12 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import List
 
 import pysam
 import pytest
 
 from dae.genomic_resources.testing import setup_tabix
 from dae.utils.regions import (
+    BedRegion,
     Region,
     collapse,
     collapse_no_chrom,
@@ -46,12 +46,12 @@ def test_parse_regions(region: str, expected: Region) -> None:
         ("1:1-2,1:3-4", [Region("1", 1, 2), Region("1", 3, 4)]),
     ],
 )
-def test_collapse_simple(data: str, expected: List[Region]) -> None:
+def test_collapse_simple(data: str, expected: list[Region]) -> None:
     regions = [Region.from_str(r) for r in data.split(",")]
     result = collapse(regions)
 
     assert len(result) == len(expected)
-    for res, exp in zip(result, expected):
+    for res, exp in zip(result, expected, strict=True):
         assert res == exp
 
 
@@ -63,12 +63,12 @@ def test_collapse_simple(data: str, expected: List[Region]) -> None:
         ("1:1-2,1:3-4", [Region("1", 1, 2), Region("1", 3, 4)]),
     ],
 )
-def test_collapse_no_chrom_simple(data: str, expected: List[Region]) -> None:
-    regions = [Region.from_str(r) for r in data.split(",")]
+def test_collapse_no_chrom_simple(data: str, expected: list[Region]) -> None:
+    regions = [BedRegion.from_str(r) for r in data.split(",")]
     result = collapse_no_chrom(regions)
 
     assert len(result) == len(expected)
-    for res, exp in zip(result, expected):
+    for res, exp in zip(result, expected, strict=True):
         assert res == exp
 
 
@@ -87,7 +87,7 @@ def test_collapse_no_chrom_simple(data: str, expected: List[Region]) -> None:
 )
 def test_split_into_regions(
     chrom: str, chrom_length: int, region_size: int,
-    expected: List[Region],
+    expected: list[Region],
 ) -> None:
     result = split_into_regions(chrom, chrom_length, region_size)
 
@@ -169,7 +169,11 @@ def test_get_chrom_length(
         (Region("1", None, 10), Region("1", 1), False),
     ],
 )
-def test_region_contains(reg1: Region, reg2: Region, expected: bool) -> None:
+def test_region_contains(
+    reg1: Region,
+    reg2: Region,
+    expected: bool,  # noqa: FBT001
+) -> None:
     assert reg1.contains(reg2) == expected
 
 

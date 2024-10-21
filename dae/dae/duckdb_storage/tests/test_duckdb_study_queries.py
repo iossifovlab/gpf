@@ -7,7 +7,7 @@ from dae.duckdb_storage.duckdb_variants import DuckDbVariants
 from dae.studies.study import GenotypeData
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def duckdb_backend(imported_study: GenotypeData) -> DuckDbVariants:
     return cast(DuckDbVariants, imported_study._backend)  # type: ignore
 

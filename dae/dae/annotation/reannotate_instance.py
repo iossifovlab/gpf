@@ -5,8 +5,10 @@ from typing import Any
 from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.context import CLIAnnotationContext
 from dae.duckdb_storage.duckdb_genotype_storage import (
-    PARQUET_SCAN,
     DuckDbParquetStorage,
+)
+from dae.duckdb_storage.duckdb_storage_helpers import (
+    PARQUET_SCAN,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage
@@ -38,8 +40,8 @@ class ReannotateInstanceTool(AnnotationTool):
             help="Output which studies will be reannotated"
                  " without carrying out the reannotation.",
         )
-        # TODO Implement --full-reannotation after it is implemented in
-        # annotate_schema2_parquet
+        # TODO Implement --full-reannotation after it is  # noqa: FIX002
+        # implemented in annotate_schema2_parquet
         parser.add_argument(
             "-i", "--full-reannotation",
             help="Ignore any previous annotation and run "
@@ -110,9 +112,9 @@ class ReannotateInstanceTool(AnnotationTool):
             for study in self.gpf_instance.get_all_genotype_data()
             if self._is_reannotatable(study, self.gpf_instance)
         ]
-        # TODO When constructing reannotatable_data, maybe for each study we
-        # could check the contents of the constructed ReannotationPipeline?
-        # so for studies with empty ReannotationPipelines
+        # TODO When constructing reannotatable_data, maybe for  # noqa: FIX002
+        # each study we could check the contents of the constructed
+        # ReannotationPipeline? so for studies with empty ReannotationPipelines
         # (i.e. no reannotation needed) they would not be displayed
         print("Studies to be reannotated:")
         for study in reannotatable_data:

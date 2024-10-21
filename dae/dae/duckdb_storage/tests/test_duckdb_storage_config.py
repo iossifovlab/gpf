@@ -119,7 +119,6 @@ def test_duckdb_s3_config() -> None:
         "db": "db",
         "bucket_url": "s3://duckdb/storage/studies",
         "endpoint_url": "http://localhost:9000",
-        "work_dir": "/storage/work_dir",
     })
     assert dd_config
     assert isinstance(dd_config, DuckDbS3Conf)
