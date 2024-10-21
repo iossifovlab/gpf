@@ -62,7 +62,6 @@ class DuckDbS3Conf(DuckDbBaseConf):
     db: str
     bucket_url: S3Path
     endpoint_url: HttpUrl | None = None
-    work_dir: pathlib.Path | None = None
 
 
 class DuckDbS3ParquetConf(DuckDbBaseConf):

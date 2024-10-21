@@ -83,9 +83,9 @@ setuptools.setup(
     schema2=dae.schema2_storage.schema2_import_storage:Schema2ImportStorage
     inmemory=dae.inmemory_storage.inmemory_import_storage:InmemoryImportStorage
     duckdb_legacy=dae.duckdb_storage.duckdb_import_storage:DuckDbLegacyImportStorage
-    duckdb=dae.duckdb_storage.duckdb_import_storage:DuckDbLegacyImportStorage
-    duckdb_parquet=dae.duckdb_storage.duckdb_import_storage:DuckDbLegacyImportStorage
-    duckdb_s3_parquet=dae.duckdb_storage.duckdb_import_storage:DuckDbLegacyImportStorage
+    duckdb=dae.duckdb_storage.duckdb_import_storage:DuckDbImportStorage
+    duckdb_parquet=dae.duckdb_storage.duckdb_import_storage:DuckDbParquetImportStorage
+    duckdb_s3_parquet=dae.duckdb_storage.duckdb_import_storage:DuckDbS3ParquetImportStorage
     parquet=dae.parquet_storage.storage:ParquetImportStorage
 
     [console_scripts]

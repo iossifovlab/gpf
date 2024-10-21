@@ -1,14 +1,25 @@
 import abc
+import logging
+import os
+from contextlib import closing
 from typing import Any, cast
 
 import yaml
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.duckdb_storage.duckdb_genotype_storage import (
-    AbstractDuckDbStorage,
+    DuckDbParquetStorage,
+    DuckDbS3ParquetStorage,
+    DuckDbStorage,
 )
 from dae.duckdb_storage.duckdb_legacy_genotype_storage import (
     DuckDbLegacyStorage,
+)
+from dae.duckdb_storage.duckdb_storage_helpers import (
+    create_database_connection,
+    create_duckdb_tables,
+    create_relative_parquet_scans_layout,
+    create_s3_filesystem,
 )
 from dae.import_tools.import_tools import ImportProject, save_study_config
 from dae.schema2_storage.schema2_import_storage import (
@@ -19,6 +30,9 @@ from dae.schema2_storage.schema2_layout import (
     load_schema2_dataset_layout,
 )
 from dae.task_graph.graph import TaskGraph
+from dae.utils import fs_utils
+
+logger = logging.getLogger(__name__)
 
 
 class AbstractDuckDbImportStorage(Schema2ImportStorage, abc.ABC):
@@ -108,7 +122,7 @@ class DuckDbLegacyImportStorage(AbstractDuckDbImportStorage):
         genotype_storage = project.get_genotype_storage()
         assert isinstance(
             genotype_storage,
-            (AbstractDuckDbStorage, DuckDbLegacyStorage))
+            DuckDbLegacyStorage)
         layout = load_schema2_dataset_layout(
             project.get_parquet_dataset_dir(),
         )
@@ -120,3 +134,96 @@ class DuckDbLegacyImportStorage(AbstractDuckDbImportStorage):
             layout,
             project.get_partition_descriptor(),
         )
+
+
+class DuckDbParquetImportStorage(AbstractDuckDbImportStorage):
+    """Import logic for data in the DuckDb Schema 2 format."""
+
+    @classmethod
+    def _do_import_dataset(
+        cls, project: ImportProject,
+    ) -> Schema2DatasetLayout:
+        genotype_storage = project.get_genotype_storage()
+        assert isinstance(
+            genotype_storage,
+            DuckDbParquetStorage)
+        layout = load_schema2_dataset_layout(
+            project.get_parquet_dataset_dir(),
+        )
+        dest_layout = create_relative_parquet_scans_layout(
+            str(genotype_storage.config.base_dir),
+            project.study_id,
+            project.get_partition_descriptor(),
+        )
+        fs_utils.copy(dest_layout.study, layout.study)
+        return dest_layout
+
+
+class DuckDbS3ParquetImportStorage(AbstractDuckDbImportStorage):
+    """Import logic for data in the DuckDb Schema 2 format."""
+
+    @classmethod
+    def _do_import_dataset(
+        cls, project: ImportProject,
+    ) -> Schema2DatasetLayout:
+        genotype_storage = project.get_genotype_storage()
+        assert isinstance(
+            genotype_storage,
+            DuckDbS3ParquetStorage)
+        layout = load_schema2_dataset_layout(
+            project.get_parquet_dataset_dir(),
+        )
+        dest_layout = create_relative_parquet_scans_layout(
+            str(genotype_storage.config.bucket_url),
+            project.study_id,
+            project.get_partition_descriptor(),
+        )
+        s3_fs = create_s3_filesystem(genotype_storage.config.endpoint_url)
+        s3_fs.put(layout.study, dest_layout.study, recursive=True)
+
+        return dest_layout
+
+
+class DuckDbImportStorage(AbstractDuckDbImportStorage):
+    """Import logic for data in the DuckDb Schema 2 format."""
+
+    @classmethod
+    def _do_import_dataset(
+        cls, project: ImportProject,
+    ) -> Schema2DatasetLayout:
+        genotype_storage = project.get_genotype_storage()
+        assert isinstance(
+            genotype_storage,
+            DuckDbStorage)
+        layout = load_schema2_dataset_layout(
+            project.get_parquet_dataset_dir(),
+        )
+        work_dir = project.work_dir
+        work_db_filename = os.path.join(
+            work_dir, genotype_storage.config.db)
+        with closing(create_database_connection(
+                work_db_filename, read_only=False),
+            ) as connection:
+            work_tables = create_duckdb_tables(
+                connection,
+                project.study_id,
+                layout,
+                project.get_partition_descriptor(),
+            )
+
+        db_filename = genotype_storage.get_db_filename()
+        if not os.path.exists(db_filename):
+            logger.warning(
+                "replacing existing DuckDb database: %s",
+                db_filename)
+
+        # this could replace already existing database so we need
+        # to shut down the genotype storage
+        # reconnect the storage
+        if genotype_storage.connection_factory is not None:
+            genotype_storage.shutdown()
+        assert genotype_storage.connection_factory is None
+
+        fs_utils.copy(db_filename, work_db_filename)
+
+        return work_tables
