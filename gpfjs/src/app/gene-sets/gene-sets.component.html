@@ -28,7 +28,9 @@
             </div>
 
             <div id="filters" *ngIf="activeDataset">
-              <div *ngIf="!activeDataset.personSetCollections.length" id="no-collections-message">No person set collections</div>
+              <div *ngIf="!activeDataset.personSetCollections.length" id="no-collections-message"
+                >No person set collections</div
+              >
 
               <div *ngFor="let collection of activeDataset.personSetCollections">
                 {{ collection.personSetCollectionName }}:
@@ -82,7 +84,9 @@
             [id]="'dataset-' + dataset.datasetId"
             class="btn-sm text-wrap"
             [class.active]="activeDataset?.datasetId === dataset.datasetId"
-            [class.modified]="activeDataset?.datasetId !== dataset.datasetId && modifiedDatasetIds.has(dataset.datasetId)"
+            [class.modified]="
+              activeDataset?.datasetId !== dataset.datasetId && modifiedDatasetIds.has(dataset.datasetId)
+            "
             [ngStyle]="{ 'padding-left': (dataset.children.length ? 5 : 19) + 'px' }"
             (click)="select(dataset)"
             >{{ dataset.datasetName }}</div
@@ -102,9 +106,7 @@
         style="display: inline-flex; flex-wrap: nowrap; width: 100%"
         matAutocompleteOrigin
         #geneSetsSearch="matAutocompleteOrigin"
-        [disabled]="
-          selectedGeneSetsCollection.name === 'denovo' && currentGeneSetsTypes.length === 0
-        ">
+        [disabled]="selectedGeneSetsCollection.name === 'denovo' && currentGeneSetsTypes.length === 0">
         <span
           style="width: 100%"
           [hidden]="!selectedGeneSet"

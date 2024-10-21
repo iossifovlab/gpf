@@ -58,9 +58,9 @@ describe('GeneSetsService', () => {
     const downloadLink = service.getGeneSetDownloadLink(collectionName, geneSetName, geneSetTypes);
 
     expect(downloadLink).toBe(`${configMock.baseUrl}gene_sets/gene_set_download?` +
-      `geneSetsCollection=denovo&` +
-      `geneSet=LGDs.Male&` +
-      `geneSetsTypes=` +
-      `[{\"datasetId\":\"deNovo\",\"collections\":[{\"personSetId\":\"phenotype\",\"types\":[\"autism\",\"unaffected\"]}]}]`);
+      'geneSetsCollection=denovo&' +
+      'geneSet=LGDs.Male&' +
+      'geneSetsTypes=' +
+      '[{"datasetId":"deNovo","collections":[{"personSetId":"phenotype","types":["autism","unaffected"]}]}]');
   });
 });

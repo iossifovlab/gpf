@@ -268,9 +268,9 @@ describe('FamilyFiltersBlockComponent', () => {
     fixture = TestBed.createComponent(FamilyFiltersBlockComponent);
     component = fixture.componentInstance;
 
-    // eslint-disable-next-line max-len
+    // eslint-disable-next-line @stylistic/max-len
     const genotypeBrowserMock = new GenotypeBrowser(true, true, true, true, true, true, true, true, true, [], [], [], null, null, null, null, 0);
-    // eslint-disable-next-line max-len
+    // eslint-disable-next-line @stylistic/max-len
     const datasetMock = new Dataset('datasetId', 'dataset', [], true, [], [], [], '', true, true, true, true, {enabled: true}, genotypeBrowserMock, null, null, null, true, null, false);
     component.dataset = datasetMock;
 

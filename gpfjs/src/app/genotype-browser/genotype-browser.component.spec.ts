@@ -179,7 +179,6 @@ describe('GenotypeBrowserComponent', () => {
     component = fixture.componentInstance;
     loadingService = TestBed.inject(FullscreenLoadingService);
 
-    // eslint-disable-next-line max-len
     const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
 
     store = TestBed.inject(Store);
@@ -202,7 +201,7 @@ describe('GenotypeBrowserComponent', () => {
         submit: jest.fn()
       }
     };
-    // eslint-disable-next-line max-len
+    // eslint-disable-next-line @stylistic/max-len
     component.selectedDataset = new Dataset('datasetId', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, genotypeMock, null, [], null, null, '', null);
 
     component.onSubmit(mockEvent);

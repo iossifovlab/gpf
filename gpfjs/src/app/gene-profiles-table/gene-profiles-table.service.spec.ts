@@ -68,7 +68,7 @@ describe('GeneProfilesTableService', () => {
     );
 
     const res$ = service.getUserGeneProfilesState();
-    expect(getUserGeneProfilesStateMock.mock.calls).toEqual([
+    expect(getUserGeneProfilesStateMock.mock.calls).toStrictEqual([
       [service['config'].baseUrl + service['usersUrl'], {withCredentials: true}]
     ]);
 
@@ -93,10 +93,10 @@ describe('GeneProfilesTableService', () => {
 
     service.saveUserGeneProfilesState(); // Expected to be cancelled
     service.saveUserGeneProfilesState(); // Expected to cancel the first one
-    expect(saveUserGeneProfilesStateSpy.mock.calls).toEqual([]);
+    expect(saveUserGeneProfilesStateSpy.mock.calls).toStrictEqual([]);
 
     tick(5000);
-    expect(saveUserGeneProfilesStateSpy.mock.calls).toEqual([
+    expect(saveUserGeneProfilesStateSpy.mock.calls).toStrictEqual([
       [service['config'].baseUrl + service['usersUrl'], state, {withCredentials: true}]
     ]);
   }));

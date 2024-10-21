@@ -19,6 +19,8 @@ import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-t
 import { geneProfilesReducer } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { cloneDeep } from 'lodash';
 import { StoreModule } from '@ngrx/store';
+import { User } from 'app/users/users';
+
 
 const config = {
   geneLinkTemplates: [
@@ -112,9 +114,20 @@ class UsersServiceMock {
   public getUserInfoObservable(): Observable<object> {
     return of({});
   }
+
+  public getUserInfo(): Observable<User> {
+    return of(new User(
+      1,
+      'userMame',
+      'userEmail',
+      ['group'],
+      true,
+      [{datasetId: 'datasetId', datasetName: 'datasetName'}]
+    ));
+  }
 }
 
-/* eslint-disable max-len */
+/* eslint-disable @stylistic/max-len */
 const geneColumn = new GeneProfilesColumn('createTab', [], 'Gene', false, 'geneSymbol', null, false, true);
 const geneSetSetsCol = new GeneProfilesColumn(null, [], 'SFARI ALL', true, 'autism_gene_sets_rank.SFARI ALL', null, true, true);
 const geneSetCol = new GeneProfilesColumn(null, [geneSetSetsCol], 'Autism Gene Sets', false, 'autism_gene_sets_rank', null, true, true);
@@ -123,7 +136,7 @@ const geneScoreCol = new GeneProfilesColumn(null, [geneScoreScoresCol], 'Autism 
 const datasetPersonSetsStatisticsCol = new GeneProfilesColumn('goToQuery', [], 'dn LGDs', false, 'sequencing_de_novo.autism.denovo_lgds', null, true, true);
 const datasetPersonSetsCol = new GeneProfilesColumn(null, [datasetPersonSetsStatisticsCol], 'autism (21775)', false, 'sequencing_de_novo.autism', null, false, true);
 const datasetCol = new GeneProfilesColumn(null, [datasetPersonSetsCol], 'Sequencing de Novo', false, 'sequencing_de_novo', null, false, true);
-/* eslint-enable max-len */
+/* eslint-enable @stylistic/max-len */
 
 const geneProfilesTableConfigMock= new GeneProfilesTableConfig();
 geneProfilesTableConfigMock.columns = [geneColumn, geneSetCol, geneScoreCol, datasetCol];
@@ -146,7 +159,7 @@ describe('GeneProfilesBlockComponent', () => {
         UsersService,
         { provide: APP_BASE_HREF, useValue: '' },
         { provide: GeneProfilesService, useValue: geneProfilesServiceMock },
-        { provide: UsersService, useValue: usersServiceMock}
+        { provide: UsersService, useValue: usersServiceMock }
       ],
       imports: [
         HttpClientTestingModule, NgbNavModule, RouterTestingModule, FormsModule,

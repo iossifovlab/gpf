@@ -174,14 +174,16 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
     geneSet: GeneSet;
 }): void {
     if (state.geneSet && state.geneSetsCollection) {
-      this.selectedGeneSetsCollection = this.geneSetsCollections.find(collection => collection.name === state.geneSetsCollection.name);
-        if (state.geneSetsTypes) {
-          this.restoreGeneTypes(state.geneSetsTypes);
-        }
-        // the gene set must be restored last, as that triggers the state update
-        // otherwise, sharing a restored state won't work properly
-        this.selectedGeneSet = state.geneSet;
-        this.onSearch();
+      this.selectedGeneSetsCollection = this.geneSetsCollections.find(
+        collection => collection.name === state.geneSetsCollection.name
+      );
+      if (state.geneSetsTypes) {
+        this.restoreGeneTypes(state.geneSetsTypes);
+      }
+      // the gene set must be restored last, as that triggers the state update
+      // otherwise, sharing a restored state won't work properly
+      this.selectedGeneSet = state.geneSet;
+      this.onSearch();
     } else {
       this.onSearch();
     }
@@ -202,15 +204,15 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
 
   private expandUntil(datasetId: string, hierarchy: GeneSetTypeNode[]): boolean {
     let parentExpand = false;
-    if(!hierarchy.length) {
+    if (!hierarchy.length) {
       return parentExpand;
     }
     hierarchy.forEach(node => {
-      if(node.datasetId === datasetId) {
+      if (node.datasetId === datasetId) {
         parentExpand = true;
       } else {
         const toExpand = this.expandUntil(datasetId, node.children);
-        if(toExpand) {
+        if (toExpand) {
           this.expandedDatasets.push(node);
           parentExpand = true;
         }
@@ -363,9 +365,8 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
         }
       }
 
-      if(!this.currentGeneSetsTypes.find(type => type.datasetId === datasetId)) {
+      if (!this.currentGeneSetsTypes.find(type => type.datasetId === datasetId)) {
         this.modifiedDatasetIds.delete(datasetId);
-
       }
     }
   }

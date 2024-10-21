@@ -39,9 +39,7 @@ describe('PhenoToolMeasureComponent', () => {
     fixture = TestBed.createComponent(PhenoToolMeasureComponent);
     component = fixture.componentInstance;
 
-    // eslint-disable-next-line max-len
     const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
-
 
     store = TestBed.inject(Store);
     jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));

@@ -131,7 +131,6 @@ describe('GeneBrowserComponent', () => {
     component.summaryVariantsArray = new SummaryAllelesArray();
     jest.spyOn(component['queryService'], 'getSummaryVariants');
 
-    // eslint-disable-next-line max-len
     const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
 
     store = TestBed.inject(Store);

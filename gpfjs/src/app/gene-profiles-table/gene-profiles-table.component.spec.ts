@@ -10,6 +10,8 @@ import { Store, StoreModule } from '@ngrx/store';
 import { GeneProfiles } from './gene-profiles-table.state';
 import { TruncatePipe } from 'app/utils/truncate.pipe';
 import { Location } from '@angular/common';
+import { User } from 'app/users/users';
+import { UsersService } from 'app/users/users.service';
 
 const column1 = {
   clickable: 'createTab',
@@ -234,6 +236,19 @@ const genesMock = [
 ];
 /* eslint-enable */
 
+class UsersServiceMock {
+  public getUserInfo(): Observable<User> {
+    return of(new User(
+      1,
+      'userMame',
+      'userEmail',
+      ['group'],
+      true,
+      [{datasetId: 'datasetId', datasetName: 'datasetName'}]
+    ));
+  }
+}
+
 class GeneProfilesTableServiceMock {
   public getGenes(pageIndex: number, geneInput: string): Observable<Record<string, any>> {
     const res = cloneDeep(genesMock);
@@ -265,13 +280,16 @@ describe('GeneProfilesTableComponent', () => {
   const mockActivatedRoute = new MockActivatedRoute();
   let fixture: ComponentFixture<GeneProfilesTableComponent>;
   let store: Store;
+  const usersServiceMock = new UsersServiceMock();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [GeneProfilesTableComponent, TruncatePipe],
       providers: [
         {provide: ActivatedRoute, useValue: mockActivatedRoute},
-        {provide: GeneProfilesTableService, useValue: geneProfilesTableServiceMock}
+        {provide: GeneProfilesTableService, useValue: geneProfilesTableServiceMock},
+        { provide: UsersService, useValue: usersServiceMock }
+
       ],
       imports: [StoreModule.forRoot({})]
     }).compileComponents();
@@ -487,7 +505,7 @@ describe('GeneProfilesTableComponent', () => {
     expect(component.searchValue$.value).toBe('chd');
     expect(component.highlightedGenes).toStrictEqual(new Set(['CHD8']));
     expect(component.orderBy).toBe('desc');
-    expect(component.leavesIds).toEqual([
+    expect(component.leavesIds).toStrictEqual([
       'column1',
       'column21',
       'column22',
