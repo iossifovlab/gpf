@@ -24,7 +24,7 @@ describe('GeneSets', () => {
         new GeneSetType('datasetId9', 'datasetName10', [
           new DenovoPersonSetCollection('personSetCollectionId11', 'personSetCollectionName12', [])
         ])
-       ]
+      ]
     });
     expect(geneSetsCollectionMock1).toStrictEqual(geneSetsCollectionMockFromJSON1);
   });

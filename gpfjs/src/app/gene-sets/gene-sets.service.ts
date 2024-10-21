@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { GeneSetsCollection, GeneSet, GeneSetJson, GeneSetType, GeneSetCollectionJson, SelectedDenovoTypes } from './gene-sets';
+import {
+  GeneSetsCollection,
+  GeneSet,
+  GeneSetJson,
+  GeneSetType,
+  GeneSetCollectionJson,
+  SelectedDenovoTypes } from './gene-sets';
 import { ConfigService } from '../config/config.service';
 import { map } from 'rxjs/operators';
 
@@ -64,6 +70,5 @@ export class GeneSetsService {
       `geneSetsCollection=${geneSetsCollectionName}&` +
       `geneSet=${geneSetName}&` +
       `geneSetsTypes=${JSON.stringify(geneSetsTypes)}`;
-    ;
   }
 }

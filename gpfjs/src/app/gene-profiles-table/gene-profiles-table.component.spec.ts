@@ -505,7 +505,7 @@ describe('GeneProfilesTableComponent', () => {
     expect(component.searchValue$.value).toBe('chd');
     expect(component.highlightedGenes).toStrictEqual(new Set(['CHD8']));
     expect(component.orderBy).toBe('desc');
-    expect(component.leavesIds).toEqual([
+    expect(component.leavesIds).toStrictEqual([
       'column1',
       'column21',
       'column22',
