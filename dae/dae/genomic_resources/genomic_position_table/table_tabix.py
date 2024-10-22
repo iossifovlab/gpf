@@ -216,7 +216,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 if buffering:
                     self.buffer.append(line)
 
-                if line.fchrom != chrom:
+                if line.chrom != chrom:
                     return
                 if pos is not None and line.pos_begin > pos:
                     return
@@ -254,11 +254,6 @@ class TabixGenomicPositionTable(GenomicPositionTable):
             raise ValueError(
                 f"The chromosome {chrom} is not part of the table.")
 
-        fchrom = self.unmap_chromosome(chrom)
-        if fchrom is None:
-            raise ValueError(
-                f"error in mapping chromosome {chrom} to file contigs: "
-                f"{self.get_file_chromosomes()}")
         buffering = True
         if pos_begin is None:
             pos_begin = 1
@@ -268,14 +263,14 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         else:
             self.stats["with buffering"] += 1
 
-        prev_call_chrom, _prev_call_beg, prev_call_end = self._last_call
-        self._last_call = fchrom, pos_begin, pos_end
+        prev_call_chrom, _, prev_call_end = self._last_call
+        self._last_call = chrom, pos_begin, pos_end
 
-        if buffering and len(self.buffer) > 0 and prev_call_chrom == fchrom:
+        if buffering and len(self.buffer) > 0 and prev_call_chrom == chrom:
 
             first = self.buffer.peek_first()
             assert pos_end is not None
-            if first.chrom == fchrom \
+            if first.chrom == chrom \
                and prev_call_end is not None \
                and pos_begin > prev_call_end \
                and pos_end < first.pos_begin:
@@ -284,29 +279,29 @@ class TabixGenomicPositionTable(GenomicPositionTable):
                 self.stats["not found"] += 1
                 return
 
-            if self.buffer.contains(fchrom, pos_begin):
+            if self.buffer.contains(chrom, pos_begin):
                 for row in self._gen_from_buffer_and_tabix(
-                        fchrom, pos_begin, pos_end):
+                        chrom, pos_begin, pos_end):
                     self.stats["yield from buffer and tabix"] += 1
                     yield row
 
-                self.buffer.prune(fchrom, pos_begin)
+                self.buffer.prune(chrom, pos_begin)
                 return
 
-            if self._should_use_sequential_seek_forward(fchrom, pos_begin):
-                self._sequential_seek_forward(fchrom, pos_begin)
+            if self._should_use_sequential_seek_forward(chrom, pos_begin):
+                self._sequential_seek_forward(chrom, pos_begin)
 
                 yield from self._gen_from_buffer_and_tabix(
-                        fchrom, pos_begin, pos_end)
-                self.buffer.prune(fchrom, pos_begin)
+                        chrom, pos_begin, pos_end)
+                self.buffer.prune(chrom, pos_begin)
                 return
 
         # without using buffer
-        self.line_iterator = self.get_line_iterator(fchrom, pos_begin - 1)
+        self.line_iterator = self.get_line_iterator(chrom, pos_begin - 1)
 
-        yield from self._gen_from_tabix(fchrom, pos_end, buffering=buffering)
+        yield from self._gen_from_tabix(chrom, pos_end, buffering=buffering)
 
-        self.buffer.prune(fchrom, pos_begin)
+        self.buffer.prune(chrom, pos_begin)
 
     def get_line_iterator(
         self, chrom: str | None = None,
@@ -315,11 +310,20 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         """Extract raw lines and wrap them in our Line adapter."""
         assert isinstance(self.pysam_file, pysam.TabixFile)
 
+        if chrom is not None:
+            fchrom = self.unmap_chromosome(chrom)
+            if fchrom is None:
+                raise ValueError(
+                    f"error in mapping chromosome {chrom} to file contigs: "
+                    f"{self.get_file_chromosomes()}")
+        else:
+            fchrom = None
+
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
 
         # Yes, the argument for the chromosome/contig is called "reference".
         for raw in self.pysam_file.fetch(
-            reference=chrom, start=pos_begin, parser=pysam.asTuple(),
+            reference=fchrom, start=pos_begin, parser=pysam.asTuple(),
         ):
             yield self._make_line(raw)
