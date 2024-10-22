@@ -63,7 +63,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       });
 
       this.content = datasets;
-      this.visibleDatasets = visibleDatasets as string[];
+      this.visibleDatasets = visibleDatasets;
 
       this.content.forEach(d => {
         if (this.visibleDatasets.includes(d.id)) {
@@ -199,7 +199,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
 
     const children = dataset.children.map(c => c.id);
-    if (this.datasets.includes(dataset.children.map(d => d.id)[0])) {
+    if (this.datasets.includes(children[0])) {
       this.datasets = this.datasets.filter(a => !new Set(this.findAllByKey(dataset.children, 'id')).has(a));
     } else {
       children.forEach(c => {
