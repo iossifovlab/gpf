@@ -686,11 +686,10 @@ class CategoricalHistogram(Statistic):
             large_values_description is not None:
 
             sec = ax.secondary_xaxis(location=0)
-            values_list = list(values)
             sec.set_ticks(
                 [
-                    values_list[0],
-                    values_list[-1],
+                    0,
+                    len(values) - 1,
                 ],
                 labels=[
                     f"\n{small_values_description}",
