@@ -39,6 +39,7 @@ class ClassifierReport:
         self.max_value: int | None = None
         self.values_domain: str | None = None
         self.rank: int | None = None
+        self.db_name: str | None = None
 
     def set_measure(self, measure: Box) -> "ClassifierReport":
         self.instrument_name = measure.instrument_name
@@ -556,5 +557,7 @@ def classification_reference_impl(
     report.rank = report.count_unique_values
 
     if measure_type in [MeasureType.ordinal, MeasureType.continuous]:
+        assert len(measure_values) == len(numeric_values)
         return numeric_values, report
+
     return measure_values, report
