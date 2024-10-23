@@ -28,6 +28,7 @@ import {
 import { StoreModule, Store } from '@ngrx/store';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { DatasetHierarchy, PersonSet } from 'app/datasets/datasets';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 const denovoGeneSetsMock = [
   new GeneSetType(
@@ -142,7 +143,10 @@ const datasetHierarchyMock = [
     true,
     [
       new DatasetHierarchy('SFARI_SSC_WGS_2', 'SSC NYGC WGS', true, null),
-      new DatasetHierarchy('SFARI_SSC_WGS_CSHL', 'SSC CSHL WGS', true, null),
+      new DatasetHierarchy('SFARI_SSC_WGS_CSHL', 'SSC CSHL WGS', true, [
+        new DatasetHierarchy('SFARI_SSC_WGS_CSHLChild1', 'SSC CSHL WGS', true, null),
+        new DatasetHierarchy('SFARI_SSC_WGS_CSHLChild2', 'SSC CSHL WGS', true, null)
+      ]),
     ]
   ),
   new DatasetHierarchy(
@@ -159,12 +163,21 @@ class MockDatasetsTreeService {
   }
 }
 
+const visibleDatasetsMock = ['SSC_genotypes', 'ssc_rna_seq', 'SFARI_SSC_WGS_2', 'SFARI_SSC_WGS_CSHL'];
+
+class DatasetsServiceMock {
+  public getVisibleDatasets(): Observable<string[]> {
+    return of(visibleDatasetsMock);
+  }
+}
+
 describe('GeneSetsComponent', () => {
   let component: GeneSetsComponent;
   let fixture: ComponentFixture<GeneSetsComponent>;
   let store: Store;
   const geneSetsServiceMock = new MockGeneSetsService();
   const datasetsTreeServiceMock = new MockDatasetsTreeService();
+  const datasetsServiceMock = new DatasetsServiceMock();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -184,6 +197,7 @@ describe('GeneSetsComponent', () => {
         { provide: APP_BASE_HREF, useValue: '' },
         { provide: GeneSetsService, useValue: geneSetsServiceMock },
         { provide: DatasetsTreeService, useValue: datasetsTreeServiceMock },
+        { provide: DatasetsService, useValue: datasetsServiceMock },
         { provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: '' }
       ], schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
@@ -575,6 +589,7 @@ describe('GeneSetsComponent', () => {
     const rxjs = jest.requireActual('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       datasetHierarchyMock,
+      visibleDatasetsMock,
       denovoGeneSetsMock,
       'SSC_genotypes',
       {
@@ -620,16 +635,35 @@ describe('GeneSetsComponent', () => {
       ]
     );
 
-    expect(component.geneSetsCollections).toEqual(geneSetsCollectionMock);
+    expect(component.geneSetsCollections).toStrictEqual(geneSetsCollectionMock);
     expect(component.selectedGeneSetsCollection.name).toBe('denovo');
     expect(component.activeDataset.datasetId).toBe('SSC_genotypes');
     expect(component.geneSetsLoaded).toBe(2);
+  });
+
+  it('should not create denovo modal hierarchy when datasets hierarchy nodes are invalid', () => {
+    const rxjs = jest.requireActual('rxjs');
+    jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
+      [null],
+      visibleDatasetsMock,
+      denovoGeneSetsMock,
+      'SSC_genotypes',
+      {
+        geneSet: null,
+        geneSetsCollection: null,
+        geneSetsTypes: null,
+      }
+    ]));
+
+    component.ngOnInit();
+    expect(component.denovoDatasetsHierarchy).toStrictEqual([]);
   });
 
   it('should restore gene sets types', () => {
     const rxjs = jest.requireActual('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       datasetHierarchyMock,
+      visibleDatasetsMock,
       denovoGeneSetsMock,
       'datasetId',
       {
@@ -654,6 +688,7 @@ describe('GeneSetsComponent', () => {
     const rxjs = jest.requireActual('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       datasetHierarchyMock,
+      visibleDatasetsMock,
       denovoGeneSetsMock,
       'SSC_genotypes',
       {

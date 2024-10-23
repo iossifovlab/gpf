@@ -20,6 +20,7 @@ import { cloneDeep } from 'lodash';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { DatasetHierarchy } from 'app/datasets/datasets';
+import { DatasetsService } from 'app/datasets/datasets.service';
 
 @Component({
   selector: 'gpf-gene-sets',
@@ -64,6 +65,7 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
     private geneSetsService: GeneSetsService,
     public modalService: NgbModal,
     private datasetsTreeService: DatasetsTreeService,
+    private datasetsService: DatasetsService
   ) {
     super(store, 'geneSets', selectGeneSets);
   }
@@ -74,20 +76,25 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
 
     combineLatest([
       this.datasetsTreeService.getDatasetHierarchy(),
+      this.datasetsService.getVisibleDatasets(),
       this.geneSetsService.getDenovoGeneSets(),
       this.store.select(selectDatasetId).pipe(take(1)),
       this.store.select(selectGeneSets).pipe(take(1)),
     ]).pipe(
-      switchMap(([hierarchies, denovoGeneSets, datasetIdState, geneSetsState]) => {
+      switchMap(([hierarchies, visibleDatasets, denovoGeneSets, datasetIdState, geneSetsState]) => {
         const datasetIdStateClone = cloneDeep(datasetIdState);
         const geneSetsStateClone = cloneDeep(geneSetsState);
         this.selectedDatasetId = datasetIdStateClone;
 
         const denovoTypesHierarchy: GeneSetTypeNode[] = [];
         const loadStateTypes = Boolean(geneSetsStateClone.geneSetsTypes);
-        hierarchies.forEach(hierarchy => denovoTypesHierarchy.push(
-          this.createDenovoGeneSetTypeHierarchy(hierarchy, denovoGeneSets, loadStateTypes)
-        ));
+        hierarchies.forEach(hierarchy => {
+          const node =
+            this.createDenovoGeneSetTypeHierarchy(hierarchy, visibleDatasets, denovoGeneSets, loadStateTypes);
+          if (node) {
+            denovoTypesHierarchy.push(node);
+          }
+        });
 
         return combineLatest([
           of(denovoTypesHierarchy),
@@ -142,6 +149,7 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
 
   private createDenovoGeneSetTypeHierarchy(
     hierarchy: DatasetHierarchy,
+    visibleDatasets: string[],
     denovoGeneSetsTypes: GeneSetType[],
     loadStateTypes: boolean
   ): GeneSetTypeNode {
@@ -151,8 +159,10 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
 
     let children: GeneSetTypeNode[] = [];
     if (hierarchy.children) {
-      children = hierarchy.children
-        .map(child => this.createDenovoGeneSetTypeHierarchy(child, denovoGeneSetsTypes, loadStateTypes));
+      const visibleChildren = hierarchy.children.filter(child => visibleDatasets.includes(child.id));
+      children = visibleChildren.map(
+        child => this.createDenovoGeneSetTypeHierarchy(child, visibleDatasets, denovoGeneSetsTypes, loadStateTypes)
+      );
     }
 
     const newGeneSetTypeNode = new GeneSetTypeNode(
