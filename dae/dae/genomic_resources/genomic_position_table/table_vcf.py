@@ -66,9 +66,19 @@ class VCFGenomicPositionTable(TabixGenomicPositionTable):
         self, chrom: str | None = None, pos_begin: int | None = None,
     ) -> Generator[VCFLine | None, None, None]:
         assert isinstance(self.pysam_file, pysam.VariantFile)
+
+        if chrom is not None:
+            fchrom = self.unmap_chromosome(chrom)
+            if fchrom is None:
+                raise ValueError(
+                    f"error in mapping chromosome {chrom} to file contigs: "
+                    f"{self.get_file_chromosomes()}")
+        else:
+            fchrom = None
+
         self.stats["tabix fetch"] += 1
         self.buffer.clear()
-        for raw_line in self.pysam_file.fetch(chrom, pos_begin):
+        for raw_line in self.pysam_file.fetch(fchrom, pos_begin):
             allele_index: int | None
             for allele_index, alt in enumerate(raw_line.alts or [None]):
                 assert raw_line.ref is not None
