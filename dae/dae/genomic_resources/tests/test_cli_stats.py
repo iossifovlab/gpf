@@ -171,10 +171,10 @@ def test_stats_allele_score(tmp_path: pathlib.Path) -> None:
         tmp_path, "one", "statistics", "min_max_freq.yaml",
     )
     histogram_statistic_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_freq.yaml",
+        tmp_path, "one", "statistics", "histogram_freq.json",
     )
     histogram_image_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_freq.yaml",
+        tmp_path, "one", "statistics", "histogram_freq.json",
     )
     assert not os.path.exists(minmax_statistic_path)
     assert os.path.exists(histogram_statistic_path)
@@ -248,7 +248,7 @@ def test_stats_position_score(tmp_path: pathlib.Path) -> None:
         tmp_path, "one", "statistics", "min_max_phastCons100way.yaml",
     )
     histogram_100way_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_phastCons100way.yaml",
+        tmp_path, "one", "statistics", "histogram_phastCons100way.json",
     )
     histogram_image_100way_path = os.path.join(
         tmp_path, "one", "statistics", "histogram_phastCons100way.png",
@@ -257,7 +257,7 @@ def test_stats_position_score(tmp_path: pathlib.Path) -> None:
         tmp_path, "one", "statistics", "min_max_phastCons5way.yaml",
     )
     histogram_5way_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_phastCons5way.yaml",
+        tmp_path, "one", "statistics", "histogram_phastCons5way.json",
     )
     histogram_image_5way_path = os.path.join(
         tmp_path, "one", "statistics", "histogram_phastCons5way.png",
@@ -352,7 +352,7 @@ def test_stats_np_score(tmp_path: pathlib.Path) -> None:
         tmp_path, "one", "statistics", "min_max_cadd_raw.yaml",
     )
     histogram_cadd_raw_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_cadd_raw.yaml",
+        tmp_path, "one", "statistics", "histogram_cadd_raw.json",
     )
     histogram_image_cadd_raw_path = os.path.join(
         tmp_path, "one", "statistics", "histogram_cadd_raw.png",
@@ -361,7 +361,7 @@ def test_stats_np_score(tmp_path: pathlib.Path) -> None:
         tmp_path, "one", "statistics", "min_max_cadd_test.yaml",
     )
     histogram_cadd_test_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_cadd_test.yaml",
+        tmp_path, "one", "statistics", "histogram_cadd_test.json",
     )
     histogram_image_cadd_test_path = os.path.join(
         tmp_path, "one", "statistics", "histogram_cadd_test.png",
@@ -540,7 +540,7 @@ def test_stats_categorical(tmp_path: pathlib.Path) -> None:
     cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
 
     histogram_statistic_path = os.path.join(
-        tmp_path, "one", "statistics", "histogram_some_stat.yaml",
+        tmp_path, "one", "statistics", "histogram_some_stat.json",
     )
 
     stat_hist = CategoricalHistogram.deserialize(

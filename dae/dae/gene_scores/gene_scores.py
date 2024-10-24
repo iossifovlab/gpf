@@ -281,7 +281,7 @@ class GeneScore(
         return None
 
     def get_histogram_filename(self, score_id: str) -> str:
-        return f"statistics/histogram_{score_id}.yaml"
+        return f"statistics/histogram_{score_id}.json"
 
     @lru_cache(maxsize=64)
     def get_score_histogram(self, score_id: str) -> NumberHistogram:

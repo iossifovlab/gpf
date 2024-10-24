@@ -5,6 +5,7 @@ Currently we support only genomic scores histograms.
 from __future__ import annotations
 
 import importlib
+import json
 import logging
 import pathlib
 import sys
@@ -383,7 +384,7 @@ class NumberHistogram(Statistic):
         }
 
     def serialize(self) -> str:
-        return yaml.dump(self.to_dict())
+        return json.dumps(self.to_dict(), indent=2)
 
     def plot(
         self,
@@ -399,7 +400,7 @@ class NumberHistogram(Statistic):
         import matplotlib.pyplot as plt
         width = self.bins[1:] - self.bins[:-1]
 
-        _, ax = plt.subplots()
+        fig, ax = plt.subplots()
         ax.bar(
             x=self.bins[:-1], height=self.bars,
             log=self.config.y_log_scale,
@@ -437,6 +438,7 @@ class NumberHistogram(Statistic):
 
         plt.savefig(outfile)
         plt.clf()
+        plt.close(fig)
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> NumberHistogram:
@@ -456,7 +458,7 @@ class NumberHistogram(Statistic):
 
     @staticmethod
     def deserialize(content: str) -> NumberHistogram:
-        data = yaml.safe_load(content)
+        data = json.loads(content)
         return NumberHistogram.from_dict(data)
 
 
@@ -507,7 +509,7 @@ class NullHistogram(Statistic):
         return
 
     def serialize(self) -> str:
-        return yaml.dump(self.to_dict())
+        return json.dumps(self.to_dict(), indent=2)
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> NullHistogram:
@@ -523,7 +525,7 @@ class NullHistogram(Statistic):
 
     @staticmethod
     def deserialize(content: str) -> NullHistogram:
-        data = yaml.safe_load(content)
+        data = json.loads(content)
         return NullHistogram.from_dict(data)
 
 
@@ -643,7 +645,7 @@ class CategoricalHistogram(Statistic):
         }
 
     def serialize(self) -> str:
-        return yaml.dump(self.to_dict())
+        return json.dumps(self.to_dict(), indent=2)
 
     @staticmethod
     def from_dict(data: dict[str, Any]) -> CategoricalHistogram:
@@ -652,7 +654,7 @@ class CategoricalHistogram(Statistic):
 
     @staticmethod
     def deserialize(content: str) -> CategoricalHistogram:
-        data = yaml.safe_load(content)
+        data = json.loads(content)
         return CategoricalHistogram.from_dict(data)
 
     def plot(
@@ -673,7 +675,7 @@ class CategoricalHistogram(Statistic):
 
         plt.figure(figsize=(15, 10), tight_layout=True)
 
-        _, ax = plt.subplots()
+        fig, ax = plt.subplots()
         ax.bar(
             x=values,
             height=counts,
@@ -709,6 +711,7 @@ class CategoricalHistogram(Statistic):
 
         plt.savefig(outfile)
         plt.clf()
+        plt.close(fig)
 
 
 def build_histogram_config(
@@ -787,8 +790,16 @@ def load_histogram(
         return NullHistogram(NullHistogramConfig(
             "Histogram file not found.",
         ))
-
-    hist_data = yaml.safe_load(content)
+    if filename.endswith(".yaml"):
+        hist_data = yaml.safe_load(content)
+    elif filename.endswith(".json"):
+        hist_data = json.loads(content)
+    else:
+        logger.error(
+            "Invalid histogram file format: %s", filename)
+        return NullHistogram(NullHistogramConfig(
+            "Invalid histogram file format.",
+        ))
     config = hist_data["config"]
     hist_type = config["type"]
     try:
