@@ -47,6 +47,35 @@ class GeneScoresListView(QueryBaseView):
         )
 
 
+class HistogramView(QueryBaseView):
+    """Provides list of all gene scores."""
+
+    @method_decorator(etag(get_instance_timestamp_etag))
+    def get(self, request: Request) -> Response:
+        """Build list of gene scores and return it."""
+        ids = request.query_params.get("ids")
+        if ids:
+            gene_scores = [
+                self.gpf_instance.get_gene_score_desc(gene_score)
+                for gene_score in ids.strip().split(",")
+            ]
+        else:
+            gene_scores = self.gpf_instance.get_all_gene_score_descs()
+        return Response(
+            [
+                {
+                    "score": score.score_id,
+                    "desc": f"{score.name} - {score.description}",
+                    "histogram": score.hist.to_dict(),
+                    "help": score.help,
+                    "small_values_desc": score.small_values_desc,
+                    "large_values_desc": score.large_values_desc,
+                }
+                for score in gene_scores
+            ],
+        )
+
+
 class GeneScoresDownloadView(QueryBaseView):
     """Serves gene scores download requests."""
 
