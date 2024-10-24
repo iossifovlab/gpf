@@ -177,7 +177,7 @@ class VariantsParquetWriter:
         serializer: VariantsDataSerializer | None = None,
         bucket_index: int = 1,
         row_group_size: int = 10_000,
-        include_reference: bool = True,
+        include_reference: bool = False,
         filesystem: fsspec.AbstractFileSystem | None = None,
     ) -> None:
         self.out_dir = out_dir

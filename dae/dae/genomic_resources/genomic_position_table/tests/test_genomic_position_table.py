@@ -5,6 +5,7 @@ from typing import cast
 
 import pysam
 import pytest
+import pytest_mock
 
 from dae.genomic_resources.genomic_position_table import (
     TabixGenomicPositionTable,
@@ -941,7 +942,9 @@ def test_tabix_middle_optimization_regions(tmp_path: pathlib.Path) -> None:
 
 
 def test_tabix_middle_optimization_regions_buggy_1(
-        tmp_path: pathlib.Path) -> None:
+    tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
     setup_directories(
         tmp_path, {
             "genomic_resource.yaml": """
@@ -979,11 +982,15 @@ def test_tabix_middle_optimization_regions_buggy_1(
     assert res.config is not None
 
     with build_genomic_position_table(res, res.config["tabix_table"]) as table:
+        # We need to spy on _gen_from_buffer_and_tabix to assert that buffering
+        # and sequential seeking are working correctly when contigs are remapped
+        mocker.spy(TabixGenomicPositionTable, "_gen_from_buffer_and_tabix")
         assert [
             r.row() for r in table.get_records_in_region("chr1", 505637, 505637)
         ] == [
             ("1", "505637", "505637", "0.009"),
         ]
+        assert TabixGenomicPositionTable._gen_from_buffer_and_tabix.call_count == 0  # type: ignore  # noqa: E501
 
         assert [
             r.row() for r in table.get_records_in_region("chr1", 505643, 505646)
@@ -992,12 +999,14 @@ def test_tabix_middle_optimization_regions_buggy_1(
             ("1", "505644", "505645", "0.006"),
             ("1", "505646", "505646", "0.005"),
         ]
+        assert TabixGenomicPositionTable._gen_from_buffer_and_tabix.call_count == 1  # type: ignore  # noqa: E501
 
         assert [
             r.row() for r in table.get_records_in_region("chr1", 505762, 505762)
         ] == [
             ("1", "505762", "505764", "0.002"),
         ]
+        assert TabixGenomicPositionTable._gen_from_buffer_and_tabix.call_count == 2  # type: ignore  # noqa: E501
 
 
 def test_buggy_fitcons_e67(tmp_path: pathlib.Path) -> None:
