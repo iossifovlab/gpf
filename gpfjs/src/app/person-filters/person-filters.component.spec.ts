@@ -36,6 +36,22 @@ const mockDataset = {
         'familyFilterType2',
         'familyRole2',
       ),
+      new PersonFilter(
+        'familyName3',
+        'familyFrom3',
+        'familySource3',
+        null,
+        'familyFilterType3',
+        'familyRole3',
+      ),
+      new PersonFilter(
+        'familyName5',
+        'familyFrom5',
+        'familySource5',
+        'continuous',
+        'familyFilterType5',
+        'familyRole5',
+      ),
     ],
     personFilters: [
       new PersonFilter(
@@ -54,6 +70,14 @@ const mockDataset = {
         'personFilterType2',
         'personRole2',
       ),
+      new PersonFilter(
+        'personName3',
+        'personFrom3',
+        'personSource3',
+        'non-exisitng type',
+        'personFilterType3',
+        'personRole3',
+      ),
     ]
   }
 };
@@ -61,10 +85,18 @@ const mockDataset = {
 const mockPersonAndFamilyFiltersState = {
   familyFilters: [
     new PersonFilterState(
+      'familyName1',
+      'categorical',
+      'familyRole1',
+      'familySource1',
+      'familyFrom1',
+      new CategoricalSelection(['familySelection1']),
+    ),
+    new PersonFilterState(
       'familyName3',
       'categorical',
       'familyRole3',
-      'familySource',
+      'familySource3',
       'familyFrom3',
       new CategoricalSelection(['familySelection3']),
     ),
@@ -76,8 +108,24 @@ const mockPersonAndFamilyFiltersState = {
       'familyFrom4',
       new ContinuousSelection(1, 2, 3, 4),
     ),
+    new PersonFilterState(
+      'familyName5',
+      'continuous',
+      'familyRole5',
+      'familySource5',
+      'familyFrom5',
+      new ContinuousSelection(1, 2, 3, 4),
+    ),
   ],
   personFilters: [
+    new PersonFilterState(
+      'personName1',
+      'continuous',
+      'personRole1',
+      'personSource1',
+      'personFrom1',
+      new ContinuousSelection(5, 6, 7, 8),
+    ),
     new PersonFilterState(
       'personName3',
       'categorical',
@@ -151,7 +199,15 @@ describe('PersonFiltersComponent', () => {
         'familySource2',
         'familyFrom2',
         new ContinuousSelection(null, null, null, null),
-      )
+      ),
+      new ContinuousFilterState(
+        'familyName5',
+        'continuous',
+        'familyRole5',
+        'familySource5',
+        'familyFrom5',
+        new ContinuousSelection(null, null, null, null),
+      ),
     ]);
   });
 
@@ -216,6 +272,14 @@ describe('PersonFiltersComponent', () => {
         new ContinuousSelection(null, null, null, null),
       ),
       new PersonFilterState(
+        'personName1',
+        'continuous',
+        'personRole1',
+        'personSource1',
+        'personFrom1',
+        new ContinuousSelection(5, 6, 7, 8),
+      ),
+      new PersonFilterState(
         'personName4',
         'continuous',
         'personRole4',
@@ -223,6 +287,114 @@ describe('PersonFiltersComponent', () => {
         'personFrom4',
         new ContinuousSelection(5, 6, 7, 8),
       )
+    ]);
+  });
+
+  it('should initialize with state family filters', () => {
+    component.isFamilyFilters = true;
+    jest.spyOn(store, 'select').mockReturnValue(of(cloneDeep(mockPersonAndFamilyFiltersState)));
+    fixture.detectChanges();
+
+    expect(component.areFiltersSelected).toBeTruthy();
+    expect(component.categoricalFilters).toStrictEqual([
+      new PersonFilterState(
+        'familyName1',
+        'categorical',
+        'familyRole1',
+        'familySource1',
+        'familyFrom1',
+        new CategoricalSelection(['familySelection1']),
+      ),
+      new PersonFilterState(
+        'familyName3',
+        'categorical',
+        'familyRole3',
+        'familySource3',
+        'familyFrom3',
+        new CategoricalSelection(['familySelection3']),
+      ),
+    ]);
+    expect(component.continuousFilters).toStrictEqual([
+      new ContinuousFilterState(
+        'familyName2',
+        'continuous',
+        'familyRole2',
+        'familySource2',
+        'familyFrom2',
+        new ContinuousSelection(null, null, null, null),
+      ),
+      new PersonFilterState(
+        'familyName5',
+        'continuous',
+        'familyRole5',
+        'familySource5',
+        'familyFrom5',
+        new ContinuousSelection(1, 2, 3, 4),
+      ),
+      new PersonFilterState(
+        'familyName4',
+        'continuous',
+        'familyRole4',
+        'familySource4',
+        'familyFrom4',
+        new ContinuousSelection(1, 2, 3, 4),
+      ),
+    ]);
+  });
+
+  it('should console error when trying to add filter from state with unknown type', () => {
+    component.isFamilyFilters = true;
+    jest.spyOn(store, 'select').mockReturnValue(of(cloneDeep({
+      familyFilters: [
+        new PersonFilterState(
+          'familyName12',
+          'unknown',
+          'familyRole12',
+          'familySource12',
+          'familyFrom12',
+          new CategoricalSelection(['familySelection12']),
+        )
+      ],
+      personFilters: [
+        new PersonFilterState(
+          'personName12',
+          'non-existing type',
+          'personRole12',
+          'personSource12',
+          'personFrom12',
+          new ContinuousSelection(5, 6, 7, 8),
+        )
+      ]
+    })));
+    fixture.detectChanges();
+
+    expect(component.categoricalFilters).toStrictEqual([
+      new CategoricalFilterState(
+        'familyName1',
+        'categorical',
+        'familyRole1',
+        'familySource1',
+        'familyFrom1',
+        new CategoricalSelection([]),
+      ),
+    ]);
+    expect(component.continuousFilters).toStrictEqual([
+      new ContinuousFilterState(
+        'familyName2',
+        'continuous',
+        'familyRole2',
+        'familySource2',
+        'familyFrom2',
+        new ContinuousSelection(null, null, null, null),
+      ),
+      new ContinuousFilterState(
+        'familyName5',
+        'continuous',
+        'familyRole5',
+        'familySource5',
+        'familyFrom5',
+        new ContinuousSelection(null, null, null, null),
+      ),
     ]);
   });
 });
