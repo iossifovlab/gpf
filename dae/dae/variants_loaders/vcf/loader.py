@@ -293,15 +293,12 @@ class SingleVcfLoader(VariantsGenotypesLoader):
     def _build_vcf_iterators(
         self, region: str | None,
     ) -> list[Iterator[pysam.VariantRecord]]:
-        if "HLA" in region:
-            logger.warning("skipping odd chromosomal regions: %s", region)
-            return []
-
         if region is None:
             return [
                 vcf.fetch()
                 for vcf in self.vcfs
             ]
+
         return [
             vcf.fetch(region=self._unadjust_chrom_prefix(region))
             for vcf in self.vcfs]
@@ -547,7 +544,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         summary_index = initial_summary_index
         for region in self.regions:
-            if "HLA" in region:
+            if region is not None and "HLA" in region:
                 logger.warning("skipping odd chromosomal region: %s", region)
                 continue
 
