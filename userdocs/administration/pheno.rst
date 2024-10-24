@@ -88,24 +88,144 @@ with a dot character (e.g. `instrument1.measure1`).
 Measure Classification
 ######################
 
-In order to be inserted into an SQLite3 database, each measure is classified into one of four types: continuous, ordinal, categorical and raw.
+Each measure in the study is classified into one of four types: `continuous`, `ordinal`, `categorical` and `raw`.
 
-The default non-numeric cutoff value is 6%. That is, a measure with more than 6% non-numeric values will be considered a non-numeric measure.
+The `raw` measure type is reserved for measures, which could not be classified or did not fit any classification or has no values.
 
-If a measure does not contain any values, it will be classified as a raw measure.
+The measure type is determined by the inference configuration that is used by the import tool.
 
-A numeric measure with 10 or more unique values will be classified as a continuous measure. Numeric measures with less than 10 unique values will be classified as ordinal measures.
+The inference configuration file is a YAML dictionary of string based scopes to inference configurations.
 
-Non-numeric measures with between 1 to 15 (including) unique values with a maximum length of 32 characters will be classified as categorical measures.
+The configuration format allows setting a scope for a specific rule to apply to different measures and instruments.
 
-Any other measure will be classified as a raw measure.
+The format scopes follow an order of specificity to determine the final configuration used for a given measure.
 
-The values which determine measure classification can be tweaked - see the help option of the pheno2dae tool.
+The supported types of scopes (in order of specificity) are the following:
 
-How The Tool Works
-##################
+* `*.*` - Wildcard for all measures in all instruments
+* `ala.*` - Affects all measures in the instrument `ala`.
+* `*.bala` - Affects the measure `bala` in any instrument.
+* `ala.bala` - Affects the measure `bala` in the instrument `ala`.
 
-* First the tool reads and imports the pedigree into the DuckDB database.
+Example configuration (default configuration):
+
+
+.. code:: yaml
+
+    "*.*":
+        min_individuals: 1
+        non_numeric_cutoff: 0.06
+        value_max_len: 32
+        continuous:
+          min_rank: 10
+        ordinal:
+          min_rank: 1
+        categorical:
+          min_rank: 1
+          max_rank: 15
+        skip: false
+        measure_type: null
+
+
+A more advanced example:
+
+
+.. code:: yaml
+
+    "*.*":
+        min_individuals: 1
+        non_numeric_cutoff: 0.06
+        value_max_len: 32
+        continuous:
+          min_rank: 10
+        ordinal:
+          min_rank: 1
+        categorical:
+          min_rank: 1
+          max_rank: 15
+        skip: false
+        measure_type: null
+    "ala.*":
+        min_individuals: 2
+    "*.bala"
+        non_numeric_cutoff: 0.12
+
+
+In this example, any measure outside of the instrument `ala`, that is not named `bala`, will have
+the confiugration under `"*.*"`.
+Any measures named `bala` outside of `ala` will have a `non_numeric_cutoff` of 0.12 and
+a `min_individuals` of 1, any inside `ala` will have `min_individuals` set to 2.
+
+Inference parameters
+####################
+
+* `min_individuals` - The minimum amount of values for a measure to be classified,
+  any amount under this will be classified immediately as `raw`.
+
+* `non_numeric_cutoff` - The fraction of values required to be non-numeric in order for a measure to be considered non-numeric.
+  A cutoff of 0.06 means that if the amount of non-numeric values in the measure is below 6%, then the measure is considered numeric.
+
+* `continuous.min_rank` - The amount of unique numeric values in a measure required for a measure to be classified as `continuous`.
+
+* `ordinal.min_rank` - The amount of unique numeric values in a measure required for a measure to be classified as `ordinal`. The
+  check for ordinal is done after `continuous`, and the value of `continuous.min_rank` should be larger than `ordinal.min_rank`.
+
+* `categorical.min_rank/max_rank` - In order for a measure to be classified as `categorical`,
+  the measure first has to be determined as non-numeric and the amount of unique values
+  in the measure must be between `cateogrical.min_rank` and `categorical.max_rank`.
+
+* `skip` - Whether to skip this measure (Skipped measure are not imported at all and absent from the final table,
+  unlike measures classified as `raw`)
+
+* `measure_type`: Force a measure type onto the measure. This skips the classification step, but not the statistics.
+  The value of measure type should be a string or left as null or preferably omitted from the configuration if unused,
+  as the default value is null. The valid string values are: `raw`, `categorical`, `ordinal` and `continuous`
+
+
+How The Classification Works
+############################
+
+The measure classification works through the `classification_reference_impl` function.
+
+The function takes a list of string values and a merged inference configuration.
+
+The classification first creates a classification report and then iterates through the entire list,
+collecting unique values, counting `None` values and attempting to
+cast every value into a `float`. On success, the value is added to the list of numeric values, otherwise `None` is added to the
+list of numeric values.
+
+Afterwards, with the collected values and counts through iteration, the following values are set in the report:
+
+* The total count of non-null values
+
+* The total count of null values
+
+* The total count of numeric values
+
+* The total count of non-numeric values
+
+* The total amount of unique values
+
+* The total amount of unique numeric values
+
+The measure type is then classified according to the inference configuration:
+
+* First, the amount of values is checked against `min_individuals`.
+  If it has less values than `min_individuals`, the type is `raw`
+
+* Then, the fraction of non-numeric values is calculated and compared against `non_numeric_cutoff`.
+
+* If the measure is numeric, it is first checked for `continuous`, then `ordinal`, if both fail, then the measure type is `raw`.
+
+* If the measure is non-numeric, it is checked for `categorical` and if it does not pass, the measure type is `raw`.
+
+After determining the measure type, numeric measures will get `min_value`, `max_value` and `values_domain` values assigned
+in the report, and non-numeric measures will get `values_domain` assigned.
+
+If the measure is numeric, the function returns the list of numeric values and the report, otherwise it returns
+the normal untransformed list of string values and the report.
+
+
 
 * Then it collects all instruments and their associated files.
 
