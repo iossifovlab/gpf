@@ -2,7 +2,6 @@
 
 import ast
 import itertools
-import json
 import logging
 from collections.abc import Sequence
 from copy import deepcopy
@@ -11,7 +10,6 @@ from typing import Any
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.http.response import StreamingHttpResponse
 from django.utils.decorators import method_decorator
-from django.utils.http import urlencode
 from django.views.decorators.http import etag
 from query_base.query_base import QueryBaseView
 from rest_framework import status
@@ -68,15 +66,6 @@ class GeneSetsView(QueryBaseView):
     }
     """
 
-    @staticmethod
-    def _build_download_url(query: dict[str, Any]) -> str:
-        url = "gene_sets/gene_set_download"
-
-        if "denovo" in query["geneSetsCollection"]:
-            query["geneSetsTypes"] = json.dumps(query["geneSetsTypes"])
-            query["geneSetsTypes"] = query["geneSetsTypes"].replace(" ", "")
-        return f"{url}?{urlencode(query)}"
-
     def post(self, request: Request) -> Response:
         """Build response to a post request."""
         data = request.data
@@ -127,13 +116,6 @@ class GeneSetsView(QueryBaseView):
                 "count": gs["count"],
                 "name": gs["name"],
                 "desc": gs["desc"],
-                "download": self._build_download_url(
-                    {
-                        "geneSetsCollection": gene_sets_collection_id,
-                        "geneSet": gs["name"],
-                        "geneSetsTypes": gene_sets_types,
-                    },
-                ),
             }
             for gs in response
         ]
@@ -147,9 +129,20 @@ class GeneSetDownloadView(QueryBaseView):
     {
         "geneSetsCollection": "denovo",
         "geneSet": "LGDs",
-        "geneSetsTypes": {
-            "SD_TEST": {"phenotype": ["autism", "epilepsy"]}
-        }
+        "geneSetsTypes": [
+            {
+                "datasetId": "SD_TEST",
+                "collections": [
+                    {
+                        "personSetId": "phenotype"
+                        "types": [
+                            "autism",
+                            "epilepsy",
+                        ]
+                    }
+                ]
+            }
+        ]
     }
     """
 
