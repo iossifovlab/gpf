@@ -62,10 +62,10 @@
                     [style.height]="histogramOptions.height"
                     [width]="histogramOptions.width"
                     [height]="histogramOptions.height"
-                    [bins]="geneScore.bins"
-                    [bars]="geneScore.bars"
-                    [logScaleX]="geneScore.logScaleX"
-                    [logScaleY]="geneScore.logScaleY"
+                    [bins]="geneScore.histogram.bins"
+                    [bars]="geneScore.histogram.bars"
+                    [logScaleX]="geneScore.histogram.logScaleX"
+                    [logScaleY]="geneScore.histogram.logScaleY"
                     [showMinMaxInput]="false"
                     [isInteractive]="false"
                     [singleScoreValue]="
@@ -73,8 +73,8 @@
                     "
                     [marginLeft]="histogramOptions.marginLeft"
                     [marginTop]="histogramOptions.marginTop"
-                    [smallValuesDesc]="geneScore.smallValuesDesc"
-                    [largeValuesDesc]="geneScore.largeValuesDesc">
+                    [smallValuesDesc]="geneScore.histogram.smallValuesDesc"
+                    [largeValuesDesc]="geneScore.histogram.largeValuesDesc">
                   </gpf-histogram>
                   <span>{{ score.scoreName }}</span>
                 </td>

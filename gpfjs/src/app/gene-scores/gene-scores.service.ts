@@ -16,7 +16,7 @@ export class GeneScoresService {
   ) {}
 
   public getGeneScores(geneScoresIds?: string): Observable<GeneScores[]> {
-    let url = this.config.baseUrl + this.geneScoresUrl;
+    let url = this.config.baseUrl + this.geneScoresUrl + '/histograms';
     if (geneScoresIds) {
       const searchParams = new HttpParams().set('ids', geneScoresIds);
       url += `?${searchParams.toString()}`;

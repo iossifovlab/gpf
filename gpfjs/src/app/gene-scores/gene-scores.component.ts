@@ -141,12 +141,12 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
 
   private changeDomain(scores: GeneScores): void {
     if (scores !== undefined) {
-      if (scores.domain !== null) {
-        this.geneScoresLocalState.domainMin = scores.domain[0];
-        this.geneScoresLocalState.domainMax = scores.domain[1];
+      if (scores.histogram.rangeMin && scores.histogram.rangeMax) {
+        this.geneScoresLocalState.domainMin = scores.histogram.rangeMin;
+        this.geneScoresLocalState.domainMax = scores.histogram.rangeMax;
       } else {
-        this.geneScoresLocalState.domainMin = scores?.bins[0];
-        this.geneScoresLocalState.domainMax = scores?.bins[scores.bins.length - 1];
+        this.geneScoresLocalState.domainMin = scores?.histogram.bins[0];
+        this.geneScoresLocalState.domainMax = scores?.histogram.bins[scores.histogram.bins.length - 1];
       }
     }
   }

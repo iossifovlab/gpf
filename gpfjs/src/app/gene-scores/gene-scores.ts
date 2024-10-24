@@ -3,20 +3,28 @@ import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 
 export class GeneScores {
-  public readonly logScaleX: boolean;
-  public readonly logScaleY: boolean;
   public static fromJson(json: object): GeneScores {
+    let histogram: NumberHistogram;
+    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    if (json['histogram']['config']['type'] as string === 'number') {
+      histogram = new NumberHistogram(
+        json['histogram']['bars'] as number[],
+        json['histogram']['bins'] as number[],
+        json['large_values_desc'] as string,
+        json['small_values_desc'] as string,
+        json['histogram']['config']['view_range']['min'] as number,
+        json['histogram']['config']['view_range']['max'] as number,
+        json['histogram']['config']['x_log_scale"'] as boolean,
+        json['histogram']['config']['x_log_scale"'] as boolean,
+      );
+    }
+    /* eslint-enable */
+
     return new GeneScores(
-      json['bars'] as number[],
-      json['bins'] as number[],
       json['desc'] as string,
       json['help'] as string,
-      json['large_values_desc'] as string,
-      json['small_values_desc'] as string,
       json['score'] as string,
-      json['range'] as number[],
-      json['xscale'] as string,
-      json['yscale'] as string
+      histogram,
     );
   }
 
@@ -26,23 +34,29 @@ export class GeneScores {
 
 
   public constructor(
-    public readonly bars: number[],
-    public readonly bins: number[],
     public readonly desc: string,
     public readonly help: string,
+    public readonly score: string,
+    public readonly histogram: NumberHistogram,
+  ) {
+
+  }
+}
+
+export class NumberHistogram {
+  public constructor(
+    public readonly bars: number[],
+    public readonly bins: number[],
     public readonly largeValuesDesc: string,
     public readonly smallValuesDesc: string,
-    public readonly score: string,
-    public readonly domain: number[],
-    private xScale: string,
-    private yScale: string,
-
+    public readonly rangeMin: number,
+    public readonly rangeMax: number,
+    public readonly logScaleX: boolean,
+    public readonly logScaleY: boolean,
   ) {
     if (bins.length === (bars.length + 1)) {
       bars.push(0);
     }
-    this.logScaleX = xScale === 'log';
-    this.logScaleY = yScale === 'log';
   }
 }
 
