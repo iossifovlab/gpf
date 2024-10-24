@@ -42,25 +42,21 @@ def scores_repo() -> GenomicResourceRepo:
                 G6,3
             """),
             "statistics": {
-                "histogram_linear score.yaml": textwrap.dedent("""
-                    bars:
-                    - 2
-                    - 2
-                    - 2
-                    bins:
-                    - 1.0
-                    - 1.665
-                    - 2.333
-                    - 3.0
-                    config:
-                      type: number
-                      number_of_bins: 3
-                      score: linear score
-                      view_range:
-                        max: 3.0
-                        min: 1.0
-                      x_log_scale: false
-                      y_log_scale: false
+                "histogram_linear score.json": textwrap.dedent("""{
+                    "bars":[2,2,2],
+                    "bins":[1.0,1.665,2.333,3.0],
+                    "config":{
+                      "type": "number",
+                      "number_of_bins": 3,
+                      "score": "linear score",
+                      "view_range": {
+                        "max": 3.0,
+                        "min": 1.0
+                      },
+                      "x_log_scale": false,
+                      "y_log_scale": false
+                    }
+                }
                 """),
             },
         },
@@ -91,29 +87,23 @@ def scores_repo() -> GenomicResourceRepo:
                 G6,1.0
             """),
             "statistics": {
-                "histogram_log.yaml": textwrap.dedent("""
-                    bars:
-                    - 2
-                    - 1
-                    - 1
-                    - 1
-                    - 1
-                    bins:
-                    - 0.0,
-                    - 0.001,
-                    - 0.005623413251903491,
-                    - 0.03162277660168379,
-                    - 0.1778279410038923,
-                    - 1.0
-                    config:
-                      type: number
-                      number_of_bins: 5
-                      view_range:
-                        min: 0.0
-                        max: 1.0
-                      x_min_log: 0.001
-                      x_log_scale: true
-                      y_log_scale: false
+                "histogram_log.json": textwrap.dedent("""{
+                    "bars":[2,1,1,1,1],
+                    "bins": [
+                        0.0,0.001,0.005623413251903491,0.03162277660168379,
+                        0.1778279410038923,1.0],
+                    "config": {
+                        "type": "number",
+                        "number_of_bins": 5,
+                        "view_range": {
+                            "min": 0.0,
+                            "max": 1.0
+                        },
+                        "x_min_log": 0.001,
+                        "x_log_scale": true,
+                        "y_log_scale": false
+                    }
+                }
                 """),
             },
         },
@@ -140,25 +130,30 @@ def scores_repo() -> GenomicResourceRepo:
                 G6,3
             """),
             "statistics": {
-                "histogram_linear.yaml": textwrap.dedent("""
-                    bars:
-                    - 2
-                    - 2
-                    - 2
-                    bins:
-                    - 1.0
-                    - 1.665
-                    - 2.333
-                    - 3.0
-                    config:
-                      type: number
-                      number_of_bins: 3
-                      score: linear
-                      view_range:
-                        max: 3.0
+                "histogram_linear.json": textwrap.dedent("""{
+                    "bars":[
+                        2,
+                        2,
+                        2
+                    ],
+                    "bins": [
+                        1.0,
+                        1.665,
+                        2.333,
+                        3.0
+                    ],
+                    "config": {
+                      "type": "number",
+                      "number_of_bins": 3,
+                      "score": "linear",
+                      "view_range": {
+                        max: 3.0,
                         min: 1.0
-                      x_log_scale: false
-                      y_log_scale: false
+                      }
+                      "x_log_scale": false,
+                      "y_log_scale": false
+                    }
+                }
                 """),
             },
         },

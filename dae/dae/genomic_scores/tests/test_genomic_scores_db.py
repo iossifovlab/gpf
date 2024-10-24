@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-import pathlib
 import textwrap
 
 import pytest
@@ -25,8 +24,8 @@ from dae.testing import (
 
 
 @pytest.fixture()
-def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceProtocolRepo:
-    sets_repo = build_inmemory_test_repository({
+def scores_repo() -> GenomicResourceProtocolRepo:
+    return build_inmemory_test_repository({
         "phastCons": {
             GR_CONF_FILE_NAME: textwrap.dedent("""
                 type: position_score
@@ -61,44 +60,48 @@ def scores_repo(tmp_path: pathlib.Path) -> GenomicResourceProtocolRepo:
                   labels: ~
             """),
             "statistics": {
-                "histogram_phastCons100.yaml": textwrap.dedent("""
-                    bars:
-                    - 470164
-                    - 48599
-                    - 25789
-                    - 16546
-                    - 9269
-                    - 6170
-                    - 4756
-                    - 4633
-                    - 5240
-                    - 25736
-                    bins:
-                    - 0.0
-                    - 0.1
-                    - 0.2
-                    - 0.30000000000000004
-                    - 0.4
-                    - 0.5
-                    - 0.6000000000000001
-                    - 0.7000000000000001
-                    - 0.8
-                    - 0.9
-                    - 1.0
-                    config:
-                      type: number
-                      number_of_bins: 10
-                      view_range:
-                        max: 1.0
-                        min: 0.0
-                      x_log_scale: false
-                      x_min_log: null
-                      y_log_scale: false
+                "histogram_phastCons100.json": textwrap.dedent("""{
+                    "bars": [
+                        470164,
+                        48599,
+                        25789,
+                        16546,
+                        9269,
+                        6170,
+                        4756,
+                        4633,
+                        5240,
+                        25736
+                    ],
+                    "bins": [
+                        0.0,
+                        0.1,
+                        0.2,
+                        0.30000000000000004,
+                        0.4,
+                        0.5,
+                        0.6000000000000001,
+                        0.7000000000000001,
+                        0.8,
+                        0.9,
+                        1.0
+                    ],
+                    "config": {
+                      "type": "number",
+                      "number_of_bins": 10,
+                      "view_range": {
+                        "max": 1.0,
+                        "min": 0.0
+                      },
+                      "x_log_scale": false,
+                      "x_min_log": null,
+                      "y_log_scale": false
+                    }
+                }
                 """),
             },
         },
     })
-    return sets_repo
 
 
 @pytest.fixture()
@@ -134,14 +137,13 @@ def annotation_gpf(
         "directory": str(root_path / "alla_gpf"),
     })
 
-    gpf_instance = setup_gpf_instance(
+    return setup_gpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="genome",
         gene_models_id="empty_gene_models",
         grr=build_genomic_resource_group_repository(
             "aaa", [local_repo, scores_repo]),
     )
-    return gpf_instance
 
 
 def test_genomic_scores_db_with_annotation(
