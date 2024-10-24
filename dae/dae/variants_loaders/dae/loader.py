@@ -1,5 +1,4 @@
 # pylint: disable=too-many-lines
-# FIXME refactor and shorten this module
 import argparse
 import gzip
 import logging
@@ -74,7 +73,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_filename: str,
             genome: ReferenceGenome,
             regions: list[str] | None = None,
-            params: dict[str, Any] | None = None,
+            params: dict[str, Any] | None = None, *,
             sort: bool = True) -> None:
         super().__init__(
             families=families,
@@ -84,7 +83,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             regions=regions,
             expect_genotype=False,
             expect_best_state=False,
-            params=params if params else {})
+            params=params or {})
 
         self.genome = genome
         self.set_attribute("source_type", "denovo")
@@ -100,12 +99,14 @@ class DenovoLoader(VariantsGenotypesLoader):
         self.set_attribute("extra_attributes", extra_attributes)
         self._init_chromosomes()
 
-        if np.all(pd.isnull(self.denovo_df["genotype"])):
+        if np.all(pd.isna(self.denovo_df["genotype"])):
             self.expect_best_state = True
-        elif np.all(pd.isnull(self.denovo_df["best_state"])):
+        elif np.all(pd.isna(self.denovo_df["best_state"])):
             self.expect_genotype = True
         else:
-            assert False
+            raise ValueError(
+                "Denovo loader expects either genotype or best_state "
+                "to be missing in the input file")
         if sort:
             self.denovo_df = self.denovo_df.sort_values(
                 by=["chrom", "position", "reference", "alternative"])
@@ -170,21 +171,21 @@ class DenovoLoader(VariantsGenotypesLoader):
                 family, genotypes, best_state)  # type: ignore
             for fam, genotype, best_state in \
                     family_genotypes.family_genotype_iterator():
-                fvariant = FamilyVariant(svariant, fam, genotype, best_state)
+                fv = FamilyVariant(svariant, fam, genotype, best_state)
                 extra_attributes = {}
                 for attr in extra_attributes_keys:
                     attr_val = values.get(attr)[f_idx]  # type: ignore
                     extra_attributes[attr] = [attr_val]
                 if genotype is None:
-                    fvariant.gt, fvariant._genetic_model = \
-                        self._calc_genotype(  # type: ignore
-                            fvariant, self.genome)
-                    for fallele in fvariant.alleles:
-                        fallele.gt = fvariant.gt
+                    (fv.gt,
+                     fv._genetic_model,  # noqa: SLF001
+                    ) = self._calc_genotype(fv, self.genome)
+                    for fa in fv.alleles:
+                        fa.gt = fv.gt
                         # pylint: disable=protected-access
-                        fallele._genetic_model = fvariant.genetic_model
-                fvariant.update_attributes(extra_attributes)
-                fvs.append(fvariant)
+                        fa._genetic_model = fv.genetic_model  # noqa: SLF001
+                fv.update_attributes(extra_attributes)
+                fvs.append(fv)
         return fvs
 
     def _full_variants_iterator_impl(self) -> FullVariantsIterator:
@@ -192,13 +193,13 @@ class DenovoLoader(VariantsGenotypesLoader):
             ["chrom", "position", "reference", "alternative"],
             sort=False).agg(list)
         for num_idx, (idx, values) in enumerate(group.iterrows()):
-            chrom, position, reference, alternative = idx  # type: ignore
-            position = int(position)
+            chrom, position, ref, alts = idx  # type: ignore
+            position = int(position)  # type: ignore
             summary_records = []
-            for alt_index, alt in enumerate(alternative.split(",")):
+            for alt_index, alt in enumerate(alts.split(",")):  # type: ignore
                 summary_records.append({
-                    "chrom": chrom,
-                    "reference": reference,
+                    "chrom": chrom,  # type: ignore
+                    "reference": ref,  # type: ignore
                     "alternative": alt,
                     "position": position,
                     "summary_index": num_idx,
@@ -225,25 +226,26 @@ class DenovoLoader(VariantsGenotypesLoader):
         full_iterator = super().full_variants_iterator()
         for summary_variants, family_variants in full_iterator:
             for fvariant in family_variants:
-                for fallele in fvariant.family_alt_alleles:
+                for fa in fvariant.family_alt_alleles:
                     inheritance = [
                         Inheritance.denovo
                         if vinmem is not None
-                        and mem.role in set([
-                            Role.prb, Role.sib, Role.unknown])
-                        and inh in set([
+                        and mem.role in {
+                            Role.prb, Role.sib, Role.unknown}
+                        and inh in {
                             Inheritance.unknown,
                             Inheritance.possible_denovo,
-                            Inheritance.possible_omission])
+                            Inheritance.possible_omission}
                         else inh
                         for inh, vinmem, mem in zip(
-                            fallele.inheritance_in_members,
-                            fallele.variant_in_members,
-                            fallele.members_in_order,
+                            fa.inheritance_in_members,
+                            fa.variant_in_members,
+                            fa.members_in_order,
+                            strict=True,
                         )
                     ]
                     # pylint: disable=protected-access
-                    fallele._inheritance_in_members = inheritance
+                    fa._inheritance_in_members = inheritance  # noqa: SLF001
 
             yield summary_variants, family_variants
 
@@ -264,7 +266,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             members_with_variant: list[str]) -> np.ndarray:
         """Produce genotype."""
 
-        # TODO: Add support for multiallelic variants
+        # Add support for multiallelic variants
         # This method currently assumes biallelic variants
 
         genotype = np.zeros(shape=(2, len(family)), dtype=GenotypeType)
@@ -313,7 +315,6 @@ class DenovoLoader(VariantsGenotypesLoader):
         ))
         arguments.append(CLIArgument(
             "--denovo-location",
-            # default_value="location",
             help_text="The label or index of the"
             " column containing the CSHL-style"
             " location of the variant. [Default: location]",
@@ -332,13 +333,11 @@ class DenovoLoader(VariantsGenotypesLoader):
         ))
         arguments.append(CLIArgument(
             "--denovo-family-id",
-            # default_value="familyId",
             help_text="The label or index of the column containing the"
             " family's ID. [Default: familyId]",
         ))
         arguments.append(CLIArgument(
             "--denovo-best-state",
-            # default_value="bestState",
             help_text="The label or index of the"
             " column containing the best state"
             " for the family. [Default: bestState]",
@@ -365,8 +364,8 @@ class DenovoLoader(VariantsGenotypesLoader):
     # flake8: noqa: C901
     @classmethod
     def parse_cli_arguments(
-        cls, argv: argparse.Namespace,
-        use_defaults: bool = False,
+        cls, argv: argparse.Namespace, *,
+        use_defaults: bool = False,  # noqa: ARG003
     ) -> tuple[list[str], dict[str, Any]]:
         # pylint: disable=too-many-branches
         logger.debug("CLI arguments: %s", argv)
@@ -463,7 +462,6 @@ class DenovoLoader(VariantsGenotypesLoader):
             denovo_genotype: str | None = None,
             denovo_sep: str = "\t",
             **_kwargs: Any) -> tuple[pd.DataFrame, Any]:
-        # FIXME
         # pylint: disable=too-many-arguments,too-many-branches
         # pylint: disable=too-many-statements,too-many-locals
         assert families is not None
@@ -498,7 +496,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                 filepath,
                 sep=denovo_sep,
                 converters={
-                    denovo_pos: lambda p: int(p) if p else None,  # type: ignore
+                    denovo_pos: lambda p: int(p) if p else None,
                 } if denovo_pos is not None else {},
                 dtype=str,
                 comment="#",
@@ -507,7 +505,9 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         if denovo_location:
             chrom_col, pos_col = zip(
-                *map(self.split_location, raw_df[denovo_location]),
+                *map(self.split_location,
+                raw_df[denovo_location]),
+                strict=True,
             )
         else:
             assert denovo_chrom is not None
@@ -522,9 +522,10 @@ class DenovoLoader(VariantsGenotypesLoader):
                     self._adjust_chrom_prefix(variant_tuple[0]),
                     variant_tuple[1], variant_tuple[2],
                     genome,
-                ) for variant_tuple in zip(chrom_col, pos_col, variant_col)
+                ) for variant_tuple in zip(
+                    chrom_col, pos_col, variant_col, strict=True)
             ]
-            pos_col, ref_col, alt_col = zip(*ref_alt_tuples)
+            pos_col, ref_col, alt_col = zip(*ref_alt_tuples, strict=True)
 
         else:
             assert denovo_ref is not None
@@ -567,7 +568,7 @@ class DenovoLoader(VariantsGenotypesLoader):
 
             result = []
 
-            # TODO Implement support for multiallelic variants
+            #  Implement support for multiallelic variants
             for variant, variants_indices in grouped.groups.items():
                 # Here we join and then split again by ',' to handle cases
                 # where the person IDs are actually a list of IDs, separated
@@ -604,7 +605,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                             raise ValueError(
                                 f"person {person_id} in multiple families")
 
-                # TODO Implement support for multiallelic variants
+                # Implement support for multiallelic variants
                 for family_id in variant_families:
                     family = families[family_id]
                     family_dict = {
@@ -638,7 +639,6 @@ class DenovoLoader(VariantsGenotypesLoader):
                         raw_df[denovo_best_state],
                     ),
                 )
-                # genotype_col = list(map(best2gt, best_state_col))
 
                 denovo_df = pd.DataFrame(
                     {
@@ -659,8 +659,6 @@ class DenovoLoader(VariantsGenotypesLoader):
                         raw_df[denovo_genotype],
                     ),
                 )
-                # genotype_col = list(map(best2gt, best_state_col))
-
                 denovo_df = pd.DataFrame(
                     {
                         "chrom": chrom_col,
@@ -747,7 +745,6 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         :rtype: An instance of Pandas' DataFrame class.
         """
-        # FIXME too many arguments
         # pylint: disable=too-many-arguments
         denovo_df, _ = self._flexible_denovo_load_internal(
             filepath,
@@ -812,7 +809,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         toomany_filename = DaeTransmittedLoader._build_toomany_filename(
             summary_filename,
         )
-        params = params if params else {}
+        params = params or {}
 
         super().__init__(
             families=families,
@@ -841,7 +838,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             with pysam.Tabixfile(self.summary_filename) as tbx:
                 self._chromosomes = \
                     [self._adjust_chrom_prefix(chrom) for chrom in tbx.contigs]
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001 pylint: disable=broad-except
             self._chromosomes = self.genome.chromosomes
 
     @property
@@ -865,10 +862,9 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         elif basename.endswith(".txt.gz"):
             result = os.path.join(dirname, f"{basename[:-7]}-TOOMANY.txt.gz")
         else:
-            assert False, (
+            raise ValueError(
                 f"Bad summary filename {summary_filename}: "
-                f"unexpected extention"
-            )
+                f"unexpected extention")
 
         assert fs_utils.exists(result), f"missing TOOMANY file {result}"
         assert fs_utils.exists(
@@ -891,12 +887,10 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
     @staticmethod
     def _load_column_names(filename: str) -> list[str]:
-        with fsspec.open(filename) as rawfile:
-            with gzip.open(rawfile) as infile:
-                column_names = (
-                    infile.readline().decode("utf-8").strip().split("\t")
-                )
-        return column_names
+        with fsspec.open(filename) as rawfile, gzip.open(rawfile) as infile:
+            return (
+                infile.readline().decode("utf-8").strip().split("\t")
+            )
 
     @classmethod
     def _load_toomany_columns(cls, toomany_filename: str) -> list[str]:
@@ -978,16 +972,15 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
             "af_allele_freq": float(rec.get("all.altFreq", 0.0)),
             "hw": rec.get("HW"),
         }
-        summary_variant = SummaryVariantFactory.summary_variant_from_records(
+        return SummaryVariantFactory.summary_variant_from_records(
             [ref, alt], transmission_type=self.transmission_type,
         )
-        return summary_variant
 
     @staticmethod
     def _explode_family_data(
         family_data: str,
-    ) -> dict[str, tuple[np.ndarray, np.ndarray]]:
-        best_states = {
+    ) -> dict:
+        return {
             fid: (
                 str2mat(bs, col_sep="", row_sep="/"),
                 str2lists(rc, col_sep=" ", row_sep="/"),
@@ -996,17 +989,6 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                 fg.split(":") for fg in family_data.split(";")
             ]
         }
-        return best_states
-
-    # @staticmethod
-    # def _explode_family_read_counts(family_data):
-    #     read_counts = {
-    #         fid: str2mat(rc, col_sep=" ", row_sep="/")
-    #         for (fid, _bs, rc) in [
-    #             fg.split(":") for fg in family_data.split(";")
-    #         ]
-    #     }
-    #     return read_counts
 
     def close(self) -> None:
         pass
@@ -1019,17 +1001,16 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
         for (fam, best_state, read_counts) in \
                 families_genotypes.family_genotype_iterator():
 
-            fvariant = FamilyVariant(
+            fv = FamilyVariant(
                 summary_variant, fam, None, best_state)
-            fvariant.gt, fvariant._genetic_model = \
-                self._calc_genotype(
-                    fvariant, self.genome)
-            for fallele in fvariant.alleles:
-                fallele.gt = fvariant.gt  # type: ignore
+            fv.gt, fv._genetic_model = self._calc_genotype(  # noqa: SLF001
+                    fv, self.genome)
+            for fa in fv.family_alleles:
+                fa.gt = fv.gt
                 # pylint: disable=protected-access
-                fallele._genetic_model = fvariant._genetic_model  # type: ignore
-                fallele.update_attributes({"read_counts": read_counts})
-            family_variants.append(fvariant)
+                fa._genetic_model = fv._genetic_model  # noqa: SLF001
+                fa.update_attributes({"read_counts": read_counts})
+            family_variants.append(fv)
         return family_variants
 
     def _full_variants_iterator_impl(self) -> FullVariantsIterator:
@@ -1061,7 +1042,8 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                     )
 
                     for summary_line in summary_iterator:
-                        rec = dict(zip(summary_columns, summary_line))
+                        rec = dict(
+                            zip(summary_columns, summary_line, strict=True))
                         try:
                             summary_variant = \
                                 self._summary_variant_from_dae_record(
@@ -1073,7 +1055,8 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                                 if toomany_line is None:
                                     return
                                 toomany_rec = dict(zip(
-                                    toomany_columns, toomany_line))
+                                    toomany_columns, toomany_line,
+                                    strict=True))
                                 family_data = toomany_rec["familyData"]
 
                                 assert rec["cshl_position"] == int(
@@ -1092,12 +1075,11 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                             yield summary_variant, family_variants
                             summary_index += 1
                         except Exception:  # pylint: disable=broad-except
-                            logger.error(
+                            logger.exception(
                                 "unable to process summary line: %s "
                                 "from %s: %s",
                                 summary_line, self.summary_filename,
-                                self.regions,
-                                exc_info=True)
+                                self.regions)
 
             except ValueError:
                 logger.warning(
@@ -1124,7 +1106,8 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
     @classmethod
     def parse_cli_arguments(
-        cls, argv: argparse.Namespace, use_defaults: bool = False,
+        cls, argv: argparse.Namespace, *,
+        use_defaults: bool = False,  # noqa: ARG003
     ) -> tuple[list[str], dict[str, Any]]:
         filename = argv.dae_summary_file
 

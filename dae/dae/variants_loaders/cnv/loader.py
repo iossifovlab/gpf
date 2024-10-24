@@ -77,7 +77,7 @@ import logging
 from collections.abc import Generator
 from copy import copy
 from pathlib import Path
-from typing import Any, Dict, List, TextIO, Tuple
+from typing import Any, TextIO
 
 import pandas as pd
 
@@ -110,8 +110,8 @@ def _cnv_loader(
         cnv_family_id: str | None = None,
         cnv_best_state: str | None = None,
         cnv_variant_type: str | None = None,
-        cnv_plus_values: List[str] | None = None,
-        cnv_minus_values: List[str] | None = None,
+        cnv_plus_values: list[str] | None = None,
+        cnv_minus_values: list[str] | None = None,
         cnv_sep: str = "\t",
         **kwargs: Any) -> pd.DataFrame:
     """Flexible load of CNV variants.
@@ -140,9 +140,7 @@ def _cnv_loader(
         cnv_sep=cnv_sep,
     )
 
-    data = []
-    for record in variant_generator:
-        data.append(record)
+    data = list(variant_generator)
 
     df: pd.DataFrame = pd.DataFrame.from_records(
         data, columns=[
@@ -154,12 +152,11 @@ def _cnv_loader(
     df = df.sort_values(
         by=["chrom", "pos", "pos_end"])
 
-    df = df.rename(
+    return df.rename(
         columns={
             "pos": "position",
             "pos_end": "end_position",
         })
-    return df
 
 
 class CNVLoader(VariantsGenotypesLoader):
@@ -171,7 +168,7 @@ class CNVLoader(VariantsGenotypesLoader):
             cnv_filenames: list[str | Path | TextIO],
             genome: ReferenceGenome,
             regions: list[str] | None = None,
-            params: Dict[str, Any] | None = None):
+            params: dict[str, Any] | None = None):
 
         if params is None:
             params = {}
@@ -243,30 +240,6 @@ class CNVLoader(VariantsGenotypesLoader):
             " column containing the CSHL-style"
             " location of the variant. [Default: location]",
         ))
-        # arguments.append(CLIArgument(
-        #     "--cnv-chrom",
-        #     value_type=str,
-        #     default_value="chrom",
-        #     help_text="The label or index of the"
-        #     " column containing the chromosome"
-        #     " of the variant. [Default: chrom]",
-        # ))
-        # arguments.append(CLIArgument(
-        #     "--cnv-start",
-        #     value_type=str,
-        #     default_value="pos",
-        #     help_text="The label or index of the"
-        #     " column containing the start"
-        #     " of the CNV. [Default: pos]",
-        # ))
-        # arguments.append(CLIArgument(
-        #     "--cnv-end",
-        #     value_type=str,
-        #     default_value="pos_end",
-        #     help_text="The label or index of the"
-        #     " column containing the end"
-        #     " of the CNV variant. [Default: pos_end]",
-        # ))
         arguments.append(CLIArgument(
             "--cnv-family-id",
             value_type=str,
@@ -353,7 +326,7 @@ class CNVLoader(VariantsGenotypesLoader):
 
     def _full_variants_iterator_impl(
         self,
-    ) -> Generator[Tuple[SummaryVariant, List[FamilyVariant]], None, None]:
+    ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
         # pylint: disable=too-many-locals
         group = self.cnv_df.groupby(
             ["chrom", "position", "end_position", "variant_type"],
@@ -362,16 +335,16 @@ class CNVLoader(VariantsGenotypesLoader):
         for num_idx, (idx, values) in enumerate(group.iterrows()):
 
             chrom, position, end_position, variant_type = idx  # type: ignore
-            position = int(position)
-            end_position = int(end_position)
-            summary_rec = {
-                "chrom": chrom,
+            position: int = int(position)  # type: ignore
+            end_position: int = int(end_position)  # type: ignore
+            summary_rec: dict[str, Any] = {
+                "chrom": chrom,  # type: ignore
                 "reference": None,
                 "alternative": None,
-                "position": position,
-                "end_position": end_position,
+                "position": position,  # type: ignore
+                "end_position": end_position,  # type: ignore
                 "summary_index": num_idx,
-                "variant_type": variant_type,
+                "variant_type": variant_type,  # type: ignore
                 "allele_index": 0,
             }
             alt_rec = copy(summary_rec)
@@ -415,24 +388,26 @@ class CNVLoader(VariantsGenotypesLoader):
 
         for summary_variants, family_variants in full_iterator:
             for fvar in family_variants:
-                for fallele in fvar.family_alt_alleles:
+                for fa in fvar.family_alt_alleles:
                     if self.transmission_type == TransmissionType.denovo:
                         inheritance = [
                             Inheritance.denovo if mem is not None else inh
                             for inh, mem in zip(
-                                fallele.inheritance_in_members,
-                                fallele.variant_in_members,
+                                fa.inheritance_in_members,
+                                fa.variant_in_members,
+                                strict=True,
                             )
                         ]
                         # pylint: disable=protected-access
-                        fallele._inheritance_in_members = inheritance
+                        fa._inheritance_in_members = inheritance  # noqa: SLF001
 
             yield summary_variants, family_variants
 
     @classmethod
     def parse_cli_arguments(
-        cls, argv: argparse.Namespace, use_defaults: bool = False,
-    ) -> Tuple[List[str], Dict[str, Any]]:
+        cls, argv: argparse.Namespace, *,
+        use_defaults: bool = False,  # noqa: ARG003
+    ) -> tuple[list[str], dict[str, Any]]:
         if argv.cnv_file is None:
             return [], {}
         return [argv.cnv_file], {
