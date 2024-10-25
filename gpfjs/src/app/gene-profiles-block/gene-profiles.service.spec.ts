@@ -36,6 +36,17 @@ describe('GeneProfilesService', () => {
     expect(res).toBeInstanceOf(GeneProfilesSingleViewConfig);
   });
 
+  it('should get invalid config response', async() => {
+    const getConfigSpy = jest.spyOn(service['http'], 'get');
+    getConfigSpy.mockReturnValue(of({ }));
+
+    const resultConfig = service.getConfig();
+
+    expect(getConfigSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['configUrl']);
+    const res = await lastValueFrom(resultConfig.pipe(take(1)));
+    expect(res).toBeUndefined();
+  });
+
   it('should get single gene', async() => {
     const getGeneSpy = jest.spyOn(service['http'], 'get');
     getGeneSpy.mockReturnValue(of({ mockGeneProperty: 'mockGeneValue' }));
