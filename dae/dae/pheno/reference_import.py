@@ -5,8 +5,10 @@ import os
 import re
 import sys
 import textwrap
+import time
 import traceback
 from collections import defaultdict
+from copy import copy
 from pathlib import Path
 from typing import Any, cast
 
@@ -14,17 +16,22 @@ import duckdb
 import pandas as pd
 import sqlglot
 import yaml
+from box import Box
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.phenotype_data import regression_conf_schema
 from dae.pedigrees.loader import (
     FamiliesLoader,
 )
 from dae.pheno.common import ImportConfig, InferenceConfig
 from dae.pheno.db import safe_db_name
+from dae.pheno.pheno_data import PhenotypeStudy
 from dae.pheno.prepare.measure_classifier import (
     ClassifierReport,
     classification_reference_impl,
 )
 from dae.pheno.prepare.pheno_prepare import PrepareVariables
+from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
 from dae.task_graph.executor import task_graph_run_with_results
 from dae.task_graph.graph import TaskGraph
@@ -180,7 +187,7 @@ def parse_phenotype_data_config(args: argparse.Namespace) -> ImportConfig:
     return config
 
 
-def main(argv: list[str] | None = None) -> int:  # noqa: C901
+def main(argv: list[str] | None = None) -> int:
     """Run phenotype import tool."""
     if argv is None:
         argv = sys.argv[1:]
@@ -200,189 +207,11 @@ def main(argv: list[str] | None = None) -> int:  # noqa: C901
             print("missing pheno db name", sys.stderr)
             raise ValueError  # noqa: TRY301
 
-        output_dir = args.output
+        if not args.browser_only:
+            import_pheno_data(args)
 
-        os.makedirs(output_dir, exist_ok=True)
-
-        args.pheno_db_filename = os.path.join(
-            output_dir, f"{args.pheno_name}.db",
-        )
-        if os.path.exists(args.pheno_db_filename):
-            os.remove(args.pheno_db_filename)
-
-        config = parse_phenotype_data_config(args)
-        os.makedirs(os.path.join(config.output, "parquet"), exist_ok=True)
-
-        inference_configs: dict[str, Any] = {}
-        if args.inference_config:
-            inference_configs = yaml.safe_load(
-                Path(args.inference_config).read_text(),
-            )
-
-        instrument_name = "test_instrument"
-
-        connection = duckdb.connect(args.pheno_db_filename)
-
-        create_tables(connection)
-
-        import time
-        print("READING PEDIGREE")
-        start = time.time()
-        ped_df = FamiliesLoader.flexible_pedigree_read(
-            args.pedigree, enums_as_values=True,
-        )
-
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "INSERT INTO family "
-                "SELECT DISTINCT family_id FROM ped_df",
-            )
-            cursor.execute(
-                "INSERT INTO person "
-                "SELECT family_id, person_id, "
-                "role, status, sex, sample_id FROM ped_df ",
-            )
-        print(f"DONE {time.time() - start}")
-
-        print("READING COLUMNS FROM INSTRUMENT FILE")
-
-        instruments = collect_instruments(args.instruments)
-        start = time.time()
-        delimiter = "\t" if args.tab_separated else ","
-        instrument_measure_names = {}
-        for instrument_name, instrument_files in instruments.items():
-            file_to_read = instrument_files[0]
-            with file_to_read.open() as csvfile:
-                reader = csv.reader(csvfile, delimiter=delimiter)
-                header = next(reader)
-                instrument_measure_names[instrument_name] = \
-                    list(map(safe_db_name, header[1:]))
-
-        print(f"DONE {time.time() - start}")
-
-        print("READING AND CLASSIFYING INSTRUMENTS")
-        start = time.time()
-
-        table_column_names = [
-            "person_id", "family_id", "role", "status", "sex",
-        ]
-        seen_col_names = defaultdict(int)
-
-        task_graph = TaskGraph()
-
-        task_cache = TaskCache.create(
-            force=cast(bool | None, args.force),
-            cache_dir=cast(str | None, args.task_status_dir),
-        )
-
-        person_id_column = args.person_column
-
-        for instrument_name, instrument_filenames in instruments.items():
-            measure_names = instrument_measure_names[instrument_name]
-
-            for measure_name in measure_names:
-                inference_config = PrepareVariables.merge_inference_configs(
-                    inference_configs, instrument_name, measure_name,
-                )
-
-                if inference_config.skip:
-                    continue
-
-                if measure_name in table_column_names:
-                    seen_col_names[measure_name] += 1
-                    db_name = f"{measure_name}_{seen_col_names[measure_name]}"
-                else:
-                    seen_col_names[measure_name] += 1
-                    db_name = measure_name
-
-                table_column_names.append(db_name)
-                m_id = safe_db_name(f"{instrument_name}.{measure_name}")
-
-                task_graph.create_task(
-                    f"{m_id}_read_and_classify",
-                    read_and_classify_measure,
-                    [
-                        instrument_filenames,
-                        instrument_name,
-                        measure_name,
-                        person_id_column,
-                        db_name,
-                        inference_config,
-                    ],
-                    [],
-                )
-
-        def default_row():
-            def none_val():
-                return None
-            return defaultdict(none_val)
-        instrument_tables: dict[str, Any] = {
-            instr: defaultdict(default_row)
-            for instr in instruments
-        }
-        kwargs = vars(args)
-        with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
-            try:
-                for result in task_graph_run_with_results(task_graph, xtor):
-                    values, report = result
-                    table = instrument_tables[report.instrument_name]
-                    for p_id, value in values.items():
-                        table[p_id][report.db_name] = value
-                    m_id = f"{report.instrument_name}.{report.measure_name}"
-
-                    with connection.cursor() as cursor:
-                        cursor.execute(
-                            "INSERT INTO measure VALUES ("
-                            "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
-                            ")",
-                            parameters=[
-                                m_id,
-                                report.db_name,
-                                report.measure_name,
-                                report.instrument_name,
-                                "",
-                                report.measure_type.value,
-                                report.count_with_values,
-                                "",
-                                report.min_value,
-                                report.max_value,
-                                report.values_domain.replace("'", "''"),
-                                report.rank,
-                            ],
-                        )
-
-            except Exception:
-                logger.exception("Failed to classify measure")
-
-        print(f"DONE {time.time() - start}")
-
-        print("WRITING RESULTS")
-        start = time.time()
-
-        with connection.cursor() as cursor:
-            for instrument_name, table in instrument_tables.items():
-                output_table_df = pd.DataFrame(
-                    table).transpose().rename_axis("person_id").reset_index()
-
-                output_table_df = output_table_df.merge(
-                    ped_df[["person_id", "family_id", "sex", "status", "role"]],
-                    on="person_id", how="left",
-                )
-
-                output_table_df.drop(
-                    output_table_df[
-                        ~output_table_df["person_id"].isin(ped_df["person_id"])
-                    ].index,
-                )
-
-                table_name = safe_db_name(f"{instrument_name}_measure_values")
-                cursor.execute(
-                    textwrap.dedent(f"""
-                        CREATE TABLE {table_name} AS
-                        SELECT * FROM output_table_df
-                    """),
-                )
-        print(f"DONE {time.time() - start}")
+        if not args.import_only:
+            build_browser(args)
 
     except KeyboardInterrupt:
         return 0
@@ -398,7 +227,205 @@ def main(argv: list[str] | None = None) -> int:  # noqa: C901
     return 0
 
 
+def import_pheno_data(args: Any) -> None:
+    """Import pheno data into DuckDB."""
+    os.makedirs(args.output, exist_ok=True)
+
+    args.pheno_db_filename = os.path.join(
+        args.output, f"{args.pheno_name}.db",
+    )
+    if os.path.exists(args.pheno_db_filename):
+        os.remove(args.pheno_db_filename)
+
+    config = parse_phenotype_data_config(args)
+    os.makedirs(os.path.join(config.output, "parquet"), exist_ok=True)
+
+    inference_configs: dict[str, Any] = {}
+    if args.inference_config:
+        inference_configs = yaml.safe_load(
+            Path(args.inference_config).read_text(),
+        )
+    inference_configs = load_inference_configs(args.inference_config)
+
+    connection = duckdb.connect(args.pheno_db_filename)
+
+    create_tables(connection)
+
+    print("READING PEDIGREE")
+    start = time.time()
+
+    ped_df = read_pedigree(connection, args.pedigree)
+
+    print(f"DONE {time.time() - start}")
+
+    print("READING COLUMNS FROM INSTRUMENT FILE")
+    start = time.time()
+
+    instruments = collect_instruments(args.instruments)
+    instrument_measure_names = read_instrument_measure_names(
+        instruments, tab_separated=args.tab_separated,
+    )
+
+    print(f"DONE {time.time() - start}")
+
+    print("READING AND CLASSIFYING INSTRUMENTS")
+    start = time.time()
+
+    task_graph = TaskGraph()
+
+    task_cache = TaskCache.create(
+        force=cast(bool | None, args.force),
+        cache_dir=cast(str | None, args.task_status_dir),
+    )
+
+    for instrument_name, instrument_filenames in instruments.items():
+        seen_col_names: dict[str, int] = defaultdict(int)
+        table_column_names = [
+            "person_id", "family_id", "role", "status", "sex",
+        ]
+        measure_names = instrument_measure_names[instrument_name]
+
+        for measure_name in measure_names:
+            inference_config = PrepareVariables.merge_inference_configs(
+                inference_configs, instrument_name, measure_name,
+            )
+
+            if inference_config.skip:
+                continue
+
+            if measure_name in table_column_names:
+                seen_col_names[measure_name] += 1
+                db_name = f"{measure_name}_{seen_col_names[measure_name]}"
+            else:
+                seen_col_names[measure_name] += 1
+                db_name = measure_name
+
+            table_column_names.append(db_name)
+            m_id = safe_db_name(f"{instrument_name}.{measure_name}")
+
+            task_graph.create_task(
+                f"{m_id}_read_and_classify",
+                read_and_classify_measure,
+                [
+                    instrument_filenames,
+                    instrument_name,
+                    measure_name,
+                    args.person_column,
+                    db_name,
+                    inference_config,
+                ],
+                [],
+            )
+
+    def default_row() -> dict[str, Any]:
+        def none_val() -> None:
+            return None
+        return defaultdict(none_val)
+    instrument_tables: dict[str, Any] = {
+        instr: defaultdict(default_row)
+        for instr in instruments
+    }
+    with TaskGraphCli.create_executor(task_cache, **vars(args)) as xtor:
+        try:
+            for result in task_graph_run_with_results(task_graph, xtor):
+                values, report = result
+                table = instrument_tables[report.instrument_name]
+                for p_id, value in values.items():
+                    table[p_id][report.db_name] = value
+                m_id = f"{report.instrument_name}.{report.measure_name}"
+
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO measure VALUES ("
+                        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
+                        ")",
+                        parameters=[
+                            m_id,
+                            report.db_name,
+                            report.measure_name,
+                            report.instrument_name,
+                            "",
+                            report.measure_type.value,
+                            report.count_with_values,
+                            "",
+                            report.min_value,
+                            report.max_value,
+                            report.values_domain.replace("'", "''"),
+                            report.rank,
+                        ],
+                    )
+
+        except Exception:
+            logger.exception("Failed to classify measure")
+
+    print(f"DONE {time.time() - start}")
+
+    print("WRITING RESULTS")
+    start = time.time()
+
+    write_results(connection, instrument_tables, ped_df)
+
+    print(f"DONE {time.time() - start}")
+
+    connection.close()
+
+
+def build_pheno_browser(
+    dbfile: str, pheno_name: str, output_dir: str,
+    pheno_regressions: Box | None = None, **kwargs: Any,
+) -> None:
+    """Calculate and save pheno browser values to db."""
+
+    phenodb = PhenotypeStudy(
+        pheno_name, dbfile=dbfile, read_only=False,
+    )
+
+    images_dir = os.path.join(output_dir, "images")
+    os.makedirs(images_dir, exist_ok=True)
+
+    prep = PreparePhenoBrowserBase(
+        pheno_name, phenodb, output_dir, pheno_regressions, images_dir)
+    prep.run(**kwargs)
+
+
+def build_browser(
+    args: argparse.Namespace,
+) -> None:
+    """Perform browser data build step."""
+    if args.regression:
+        regressions = GPFConfigParser.load_config(
+            args.regression, regression_conf_schema,
+        )
+    else:
+        regressions = None
+    output_dir = args.output
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    kwargs = copy(vars(args))
+    pheno_db_filename = args.pheno_db_filename
+    del kwargs["pheno_db_filename"]
+    pheno_name = args.pheno_name
+    del kwargs["pheno_name"]
+
+    build_pheno_browser(
+        pheno_db_filename,
+        pheno_name,
+        output_dir,
+        regressions,
+        **kwargs,
+    )
+
+    pheno_conf_path = os.path.join(
+        output_dir, f"{pheno_name}.yaml",
+    )
+
+    config = yaml.dump(generate_phenotype_data_config(args, regressions))
+    Path(pheno_conf_path).write_text(config)
+
+
 def collect_instruments(dirname: str) -> dict[str, Any]:
+    """Collect all instrument files in a directory."""
     regexp = re.compile("(?P<instrument>.*)(?P<ext>\\.csv.*)")
     instruments = defaultdict(list)
     for root, _dirnames, filenames in os.walk(dirname):
@@ -427,6 +454,7 @@ def read_and_classify_measure(
     *,
     tab_separated: bool = False,
 ) -> tuple[dict[str, Any], ClassifierReport]:
+    """Read a measure's values and classify from an instrument file."""
     output = {}
     for instrument_filepath in instrument_filepaths:
         with instrument_filepath.open() as csvfile:
@@ -460,7 +488,20 @@ def read_and_classify_measure(
         output[person_id] = values[idx]
     return output, report
 
+
+def load_inference_configs(
+    inference_config_filepath: str | None,
+) -> dict[str, Any]:
+    """Load import inference configuration file."""
+    if inference_config_filepath:
+        return cast(dict[str, Any], yaml.safe_load(
+            Path(inference_config_filepath).read_text(),
+        ))
+    return {}
+
+
 def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
+    """Create phenotype data tables in DuckDB."""
     create_instrument = sqlglot.parse(textwrap.dedent(
         """
         CREATE TABLE instrument(
@@ -589,6 +630,90 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
         for query in queries:
             cursor.execute(to_duckdb_transpile(query))
 
+
+def read_instrument_measure_names(
+    instruments: dict[str, list[Path]],
+    *,
+    tab_separated: bool = False,
+) -> dict[str, list[str]]:
+    """Read the headers of all the instrument files."""
+    delimiter = "\t" if tab_separated else ","
+    instrument_measure_names = {}
+    for instrument_name, instrument_files in instruments.items():
+        file_to_read = instrument_files[0]
+        with file_to_read.open() as csvfile:
+            reader = csv.reader(csvfile, delimiter=delimiter)
+            header = next(reader)
+            instrument_measure_names[instrument_name] = header[1:]
+    return instrument_measure_names
+
+
+def read_pedigree(
+    connection: duckdb.DuckDBPyConnection, pedigree_filepath: str,
+) -> pd.DataFrame:
+    """
+    Read a pedigree file into a pandas DataFrame
+
+    Also imports the pedigree data into the database.
+    """
+    ped_df = FamiliesLoader.flexible_pedigree_read(
+        pedigree_filepath, enums_as_values=True,
+    )
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO family "
+            "SELECT DISTINCT family_id FROM ped_df",
+        )
+        cursor.execute(
+            "INSERT INTO person "
+            "SELECT family_id, person_id, "
+            "role, status, sex, sample_id FROM ped_df ",
+        )
+    return ped_df
+
+
+def write_results(
+    connection: duckdb.DuckDBPyConnection,
+    instrument_tables: dict[str, Any],
+    ped_df: pd.DataFrame,
+) -> None:
+    """Write imported data into duckdb as measure value tables."""
+    with connection.cursor() as cursor:
+        for instrument_name, table in instrument_tables.items():
+            output_table_df = pd.DataFrame(
+                table).transpose().rename_axis("person_id").reset_index()
+
+            output_table_df = output_table_df.merge(
+                ped_df[["person_id", "family_id", "role", "status", "sex"]],
+                on="person_id", how="left",
+            )
+
+            cols = output_table_df.columns.tolist()
+
+            # Reorder columns so that pedigree columns are first
+            output_table_df = \
+                output_table_df[cols[0:1] + cols[-4:] + cols[1:-4]]
+
+            output_table_df.drop(
+                output_table_df[
+                    ~output_table_df["person_id"].isin(ped_df["person_id"])
+                ].index,
+            )
+
+            table_name = safe_db_name(f"{instrument_name}_measure_values")
+            cursor.execute(
+                textwrap.dedent(f"""
+                    INSERT INTO instrument VALUES
+                    ('{instrument_name}', '{table_name}')
+                """),
+            )
+            cursor.execute(
+                textwrap.dedent(f"""
+                    CREATE TABLE {table_name} AS
+                    SELECT * FROM output_table_df
+                """),
+            )
 
 
 if __name__ == "__main__":
