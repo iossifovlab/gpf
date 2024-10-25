@@ -3,7 +3,6 @@ import { MeasuresService } from '../measures/measures.service';
 import { HistogramData } from '../measures/measures';
 import { ContinuousFilterState, ContinuousSelection } from '../person-filters/person-filters';
 import { Observable, Subject } from 'rxjs';
-import { Partitions } from '../gene-scores/gene-scores';
 import { debounceTime, distinctUntilChanged, switchMap, take } from 'rxjs/operators';
 import { cloneDeep } from 'lodash';
 import { Store } from '@ngrx/store';
@@ -16,7 +15,6 @@ import { selectPersonFilters, updateFamilyFilter, updatePersonFilter } from 'app
 })
 export class ContinuousFilterComponent extends ComponentValidator implements OnInit, OnChanges {
   private rangeChanges = new Subject<[string, string, number, number]>();
-  private partitions: Observable<Partitions>;
 
   @Input() public datasetId: string;
   @Input() public measureName: string;
@@ -36,17 +34,6 @@ export class ContinuousFilterComponent extends ComponentValidator implements OnI
   }
 
   public ngOnInit(): void {
-    this.partitions = this.rangeChanges.pipe(
-      debounceTime(100),
-      distinctUntilChanged(),
-      switchMap(([datasetId, measureName, internalRangeStart, internalRangeEnd]) => this.measuresService
-        .getMeasurePartitions(datasetId, measureName, internalRangeStart, internalRangeEnd))
-    );
-
-    this.partitions.subscribe(partitions => {
-      this.rangesCounts = [partitions.leftCount, partitions.midCount, partitions.rightCount];
-    });
-
     this.store.select(selectPersonFilters).pipe(take(1)).subscribe(state => {
       let stateFilter: ContinuousFilterState;
 

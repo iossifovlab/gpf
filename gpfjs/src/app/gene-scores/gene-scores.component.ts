@@ -1,10 +1,10 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { Partitions, GeneScoresLocalState, GeneScores } from './gene-scores';
+import { GeneScoresLocalState, GeneScores } from './gene-scores';
 import { GeneScoresService } from './gene-scores.service';
-import { ReplaySubject, Observable, combineLatest, of } from 'rxjs';
+import { ReplaySubject, combineLatest, of } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { ConfigService } from '../config/config.service';
-import { catchError, debounceTime, distinctUntilChanged, map, switchMap, take } from 'rxjs/operators';
+import { switchMap, take } from 'rxjs/operators';
 import { ValidateNested } from 'class-validator';
 import { environment } from 'environments/environment';
 import { ComponentValidator } from 'app/common/component-validator';
@@ -18,10 +18,8 @@ import { selectGeneScores, setGeneScore, setGeneScoresHistogramValues } from './
 })
 export class GeneScoresComponent extends ComponentValidator implements OnInit {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
-  private partitions: Observable<Partitions>;
 
   public geneScoresArray: GeneScores[];
-  public rangesCounts: Observable<Array<number>>;
   public downloadUrl: string;
 
   @ValidateNested() public geneScoresLocalState = new GeneScoresLocalState();
@@ -34,23 +32,6 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
     private config: ConfigService
   ) {
     super(store, 'geneScores', selectGeneScores);
-    this.partitions = this.rangeChanges.pipe(
-      debounceTime(100),
-      distinctUntilChanged(),
-      switchMap(([score, internalRangeStart, internalRangeEnd]) =>
-        this.geneScoresService.getPartitions(score, internalRangeStart, internalRangeEnd)
-      ),
-      catchError(error => {
-        console.warn(error);
-        return of(null);
-      })
-    );
-
-    this.rangesCounts = this.partitions.pipe(
-      map((partitions) =>
-        [partitions.leftCount, partitions.midCount, partitions.rightCount]
-      )
-    );
   }
 
   public ngOnInit(): void {

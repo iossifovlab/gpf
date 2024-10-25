@@ -49,7 +49,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   @Input() public domainMin: number;
   @Input() public domainMax: number;
 
-  @Input() public rangesCounts: Array<number>;
+  public rangesCounts: Array<number> = [];
 
   @Input() public logScaleX = false;
   @Input() public logScaleY = false;

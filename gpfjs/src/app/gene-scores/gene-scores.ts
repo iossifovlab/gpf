@@ -60,28 +60,6 @@ export class NumberHistogram {
   }
 }
 
-export class Partitions {
-  public static fromJson(json: any): Partitions {
-    return new Partitions(
-      +json['left']['count'],
-      +json['left']['percent'],
-      +json['mid']['count'],
-      +json['mid']['percent'],
-      +json['right']['count'],
-      +json['right']['percent'],
-    );
-  }
-
-  public constructor(
-    public readonly leftCount: number,
-    private readonly leftPercent: number,
-    public readonly midCount: number,
-    private readonly midPercent: number,
-    public readonly rightCount: number,
-    private readonly rightPercent: number,
-  ) { }
-}
-
 export class GeneScoresLocalState {
   @IsNotEmpty()
   public score: GeneScores = null;
