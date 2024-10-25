@@ -286,44 +286,12 @@ def import_pheno_data(args: Any) -> None:
         cache_dir=cast(str | None, args.task_status_dir),
     )
 
-    for instrument_name, instrument_filenames in instruments.items():
-        seen_col_names: dict[str, int] = defaultdict(int)
-        table_column_names = [
-            "person_id", "family_id", "role", "status", "sex",
-        ]
-        measure_names = instrument_measure_names[instrument_name]
-
-        for measure_name in measure_names:
-            inference_config = PrepareVariables.merge_inference_configs(
-                inference_configs, instrument_name, measure_name,
-            )
-
-            if inference_config.skip:
-                continue
-
-            if measure_name in table_column_names:
-                seen_col_names[measure_name] += 1
-                db_name = f"{measure_name}_{seen_col_names[measure_name]}"
-            else:
-                seen_col_names[measure_name] += 1
-                db_name = measure_name
-
-            table_column_names.append(db_name)
-            m_id = safe_db_name(f"{instrument_name}.{measure_name}")
-
-            task_graph.create_task(
-                f"{m_id}_read_and_classify",
-                read_and_classify_measure,
-                [
-                    instrument_filenames,
-                    instrument_name,
-                    measure_name,
-                    args.person_column,
-                    db_name,
-                    inference_config,
-                ],
-                [],
-            )
+    create_import_tasks(
+        task_graph, instruments,
+        instrument_measure_names,
+        inference_configs,
+        args.person_column,
+    )
 
     def default_row() -> dict[str, Any]:
         def none_val() -> None:
