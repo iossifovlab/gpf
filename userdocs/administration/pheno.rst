@@ -159,8 +159,8 @@ a `min_individuals` of 1, any inside `ala` will have `min_individuals` set to 2.
 Inference parameters
 ####################
 
-* `min_individuals` - The minimum amount of values for a measure to be classified,
-  any amount under this will be classified immediately as `raw`.
+* `min_individuals` - The minimum amount of people in the instrument required for its measures to be classified,
+  any amount under this will classify all instrument measures as `raw`.
 
 * `non_numeric_cutoff` - The fraction of values required to be non-numeric in order for a measure to be considered non-numeric.
   A cutoff of 0.06 means that if the amount of non-numeric values in the measure is below 6%, then the measure is considered numeric.
