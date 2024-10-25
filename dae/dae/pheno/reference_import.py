@@ -8,6 +8,7 @@ import textwrap
 import time
 import traceback
 from collections import defaultdict
+from collections.abc import Callable
 from copy import copy
 from pathlib import Path
 from typing import Any, cast
@@ -325,6 +326,7 @@ def import_pheno_data(args: Any) -> None:
         instr: defaultdict(default_row)
         for instr in instruments
     }
+    description_builder = load_descriptions(args.data_dictionary)
     with TaskGraphCli.create_executor(task_cache, **vars(args)) as xtor:
         try:
             for result in task_graph_run_with_results(task_graph, xtor):
@@ -333,6 +335,12 @@ def import_pheno_data(args: Any) -> None:
                 for p_id, value in values.items():
                     table[p_id][report.db_name] = value
                 m_id = f"{report.instrument_name}.{report.measure_name}"
+                description = ""
+                if description_builder:
+                    description = description_builder(
+                        report.instrument_name,
+                        report.measure_name,
+                    )
 
                 with connection.cursor() as cursor:
                     cursor.execute(
@@ -344,7 +352,7 @@ def import_pheno_data(args: Any) -> None:
                             report.db_name,
                             report.measure_name,
                             report.instrument_name,
-                            "",
+                            description,
                             report.measure_type.value,
                             report.count_with_values,
                             "",
@@ -713,6 +721,98 @@ def write_results(
                     CREATE TABLE {table_name} AS
                     SELECT * FROM output_table_df
                 """),
+            )
+
+
+def load_descriptions(
+    description_path: str | None,
+) -> Callable | None:
+    """Load measure descriptions."""
+    if not description_path:
+        return None
+    assert os.path.exists(
+        os.path.abspath(description_path),
+    ), description_path
+
+    data = pd.read_csv(description_path, sep="\t")
+
+    class DescriptionDf:
+        """Phenotype database support for measure descriptions."""
+
+        def __init__(self, desc_df: pd.DataFrame):
+            self.desc_df = desc_df
+            assert all(
+                col in list(desc_df)
+                for col in [
+                    "instrumentName",
+                    "measureName",
+                    "measureId",
+                    "description",
+                ]
+            ), list(desc_df)
+
+        def __call__(self, iname: str, mname: str) -> str | None:
+            if (
+                f"{iname}.{mname}"
+                not in self.desc_df["measureId"].to_numpy()
+            ):
+                return None
+            row = self.desc_df.query(
+
+                    "(instrumentName == @iname) and "
+                    "(measureName == @mname)",
+
+            )
+            return cast(str, row.iloc[0]["description"])
+
+    return DescriptionDf(data)
+
+
+def create_import_tasks(
+    task_graph: TaskGraph,
+    instruments: dict[str, Any],
+    instrument_measure_names: dict[str, list[str]],
+    inference_configs: dict[str, Any],
+    person_column: str,
+) -> None:
+    """Add measure tasks for importing pheno data."""
+    for instrument_name, instrument_filenames in instruments.items():
+        seen_col_names: dict[str, int] = defaultdict(int)
+        table_column_names = [
+            "person_id", "family_id", "role", "status", "sex",
+        ]
+        measure_names = instrument_measure_names[instrument_name]
+
+        for measure_name in measure_names:
+            inference_config = PrepareVariables.merge_inference_configs(
+                inference_configs, instrument_name, measure_name,
+            )
+
+            if inference_config.skip:
+                continue
+
+            if measure_name in table_column_names:
+                seen_col_names[measure_name] += 1
+                db_name = f"{measure_name}_{seen_col_names[measure_name]}"
+            else:
+                seen_col_names[measure_name] += 1
+                db_name = measure_name
+
+            table_column_names.append(db_name)
+            m_id = safe_db_name(f"{instrument_name}.{measure_name}")
+
+            task_graph.create_task(
+                f"{m_id}_read_and_classify",
+                read_and_classify_measure,
+                [
+                    instrument_filenames,
+                    instrument_name,
+                    measure_name,
+                    person_column,
+                    db_name,
+                    inference_config,
+                ],
+                [],
             )
 
 
