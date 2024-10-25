@@ -724,30 +724,28 @@ def test_output_argument_behaviour(
     annotation_file_new = str(root_path / "new_annotation.yaml")
     grr_file = str(root_path / "grr.yaml")
     work_dir = str(tmp_path / "work")
+    output_dir = str(tmp_path / "out")
 
     gpf_instance_genomic_context_fixture(t4c8_instance)
 
+    cli_args = [
+        t4c8_study_nonpartitioned,
+        annotation_file_new,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1",
+    ]
+
     with pytest.raises(ValueError, match="No output path was provided!"):
-        cli([
-            t4c8_study_nonpartitioned,
-            annotation_file_new,
-            "-w", work_dir,
-            "--grr", grr_file,
-            "-j", "1",
-        ])
+        cli(cli_args)
 
-    output_dir = tmp_path / "out"
-    output_dir.mkdir()
-
+    cli([*cli_args, "-o", output_dir])
     with pytest.raises(ValueError, match=r"Output path .+ already exists!"):
-        cli([
-            t4c8_study_nonpartitioned,
-            annotation_file_new,
-            "-o", str(output_dir),
-            "-w", work_dir,
-            "--grr", grr_file,
-            "-j", "1",
-        ])
+        cli([*cli_args, "-o", output_dir])
+
+    cli([*cli_args, "-o", output_dir, "--force"])
+    vs = list(ParquetLoader.load_from_dir(output_dir).fetch_summary_variants())
+    assert len(vs) == 6
 
 
 def test_region_option(
@@ -808,3 +806,50 @@ def test_region_option_invalid(
             "-j", "1",
             "--region", "chrX:90-100",
         ])
+
+
+def test_data_removal_func_preserves_other_files(
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_study_nonpartitioned: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    annotation_file_new = str(root_path / "new_annotation.yaml")
+    grr_file = str(root_path / "grr.yaml")
+    work_dir = str(tmp_path / "work")
+    output_dir = tmp_path / "out"
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    cli_args = [
+        t4c8_study_nonpartitioned,
+        annotation_file_new,
+        "-w", work_dir,
+        "--grr", grr_file,
+        "-j", "1",
+        "-o", str(output_dir),
+    ]
+
+    cli(cli_args)
+
+    some_file = output_dir / "some_random_file.txt"
+    some_file.touch()
+    some_dir = output_dir / "some_random_dir"
+    some_dir.mkdir()
+
+    assert some_file.exists()
+    assert some_dir.exists()
+    assert {path.name for path in output_dir.glob("*")} == {
+        "meta", "summary", "family", "pedigree",  # schema2 dirs
+        "some_random_file.txt", "some_random_dir",  # new stuff
+    }
+
+    cli([*cli_args, "--force"])
+
+    assert some_file.exists()
+    assert some_dir.exists()
+    assert {path.name for path in output_dir.glob("*")} == {
+        "meta", "summary", "family", "pedigree",  # schema2 dirs
+        "some_random_file.txt", "some_random_dir",  # new stuff
+    }
