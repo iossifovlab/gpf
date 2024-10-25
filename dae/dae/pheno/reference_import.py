@@ -223,78 +223,7 @@ def main(argv: list[str] | None = None) -> int:  # noqa: C901
 
         connection = duckdb.connect(args.pheno_db_filename)
 
-        create_instrument = sqlglot.parse(textwrap.dedent(
-            """
-            CREATE TABLE instrument(
-                instrument_name VARCHAR NOT NULL PRIMARY KEY,
-                table_name VARCHAR NOT NULL,
-            );
-            CREATE UNIQUE INDEX instrument_instrument_name_idx
-                ON instrument (instrument_name);
-            """,
-        ))
-
-        create_measure = sqlglot.parse(textwrap.dedent(
-            """
-            CREATE TABLE measure(
-                measure_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
-                db_column_name VARCHAR NOT NULL,
-                measure_name VARCHAR NOT NULL,
-                instrument_name VARCHAR NOT NULL,
-                description VARCHAR,
-                measure_type INT,
-                individuals INT,
-                default_filter VARCHAR,
-                min_value FLOAT,
-                max_value FLOAT,
-                values_domain VARCHAR,
-                rank INT,
-            );
-            CREATE UNIQUE INDEX measure_measure_id_idx
-                ON measure (measure_id);
-            CREATE INDEX measure_measure_name_idx
-                ON measure (measure_name);
-            CREATE INDEX measure_measure_type_idx
-                ON measure (measure_type);
-            """,
-        ))
-
-        create_family = sqlglot.parse(textwrap.dedent(
-            """
-            CREATE TABLE family(
-                family_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
-            );
-            CREATE UNIQUE INDEX family_family_id_idx
-                ON family (family_id);
-            """,
-        ))
-
-        create_person = sqlglot.parse(textwrap.dedent(
-            f"""
-            CREATE TABLE person(
-                family_id VARCHAR NOT NULL,
-                person_id VARCHAR NOT NULL,
-                role INT NOT NULL,
-                status INT NOT NULL DEFAULT {Status.unaffected.value},
-                sex INT NOT NULL,
-                sample_id VARCHAR,
-                PRIMARY KEY (family_id, person_id)
-            );
-            CREATE UNIQUE INDEX person_person_id_idx
-                ON person (person_id);
-            """,
-        ))
-
-        queries = [
-            *create_instrument,
-            *create_measure,
-            *create_family,
-            *create_person,
-        ]
-
-        with connection.cursor() as cursor:
-            for query in queries:
-                cursor.execute(to_duckdb_transpile(query))
+        create_tables(connection)
 
         import time
         print("READING PEDIGREE")
@@ -530,6 +459,136 @@ def read_and_classify_measure(
     for idx, person_id in enumerate(output):
         output[person_id] = values[idx]
     return output, report
+
+def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
+    create_instrument = sqlglot.parse(textwrap.dedent(
+        """
+        CREATE TABLE instrument(
+            instrument_name VARCHAR NOT NULL PRIMARY KEY,
+            table_name VARCHAR NOT NULL,
+        );
+        CREATE UNIQUE INDEX instrument_instrument_name_idx
+            ON instrument (instrument_name);
+        """,
+    ))
+
+    create_measure = sqlglot.parse(textwrap.dedent(
+        """
+        CREATE TABLE measure(
+            measure_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
+            db_column_name VARCHAR NOT NULL,
+            measure_name VARCHAR NOT NULL,
+            instrument_name VARCHAR NOT NULL,
+            description VARCHAR,
+            measure_type INT,
+            individuals INT,
+            default_filter VARCHAR,
+            min_value FLOAT,
+            max_value FLOAT,
+            values_domain VARCHAR,
+            rank INT,
+        );
+        CREATE UNIQUE INDEX measure_measure_id_idx
+            ON measure (measure_id);
+        CREATE INDEX measure_measure_name_idx
+            ON measure (measure_name);
+        CREATE INDEX measure_measure_type_idx
+            ON measure (measure_type);
+        """,
+    ))
+
+    create_family = sqlglot.parse(textwrap.dedent(
+        """
+        CREATE TABLE family(
+            family_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
+        );
+        CREATE UNIQUE INDEX family_family_id_idx
+            ON family (family_id);
+        """,
+    ))
+
+    create_person = sqlglot.parse(textwrap.dedent(
+        f"""
+        CREATE TABLE person(
+            family_id VARCHAR NOT NULL,
+            person_id VARCHAR NOT NULL,
+            role INT NOT NULL,
+            status INT NOT NULL DEFAULT {Status.unaffected.value},
+            sex INT NOT NULL,
+            sample_id VARCHAR,
+            PRIMARY KEY (family_id, person_id)
+        );
+        CREATE UNIQUE INDEX person_person_id_idx
+            ON person (person_id);
+        """,
+    ))
+
+    create_variable_browser = sqlglot.parse(textwrap.dedent(
+        """
+        CREATE TABLE variable_browser(
+            measure_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
+            instrument_name VARCHAR NOT NULL,
+            measure_name VARCHAR NOT NULL,
+            measure_type INT NOT NULL,
+            description VARCHAR,
+            values_domain VARCHAR,
+            figure_distribution_small VARCHAR,
+            figure_distribution VARCHAR
+        );
+        CREATE UNIQUE INDEX variable_browser_measure_id_idx
+            ON variable_browser (measure_id);
+        CREATE INDEX variable_browser_instrument_name_idx
+            ON variable_browser (instrument_name);
+        CREATE INDEX variable_browser_measure_name_idx
+            ON variable_browser (measure_name);
+        """,
+    ))
+
+    create_regression = sqlglot.parse(textwrap.dedent(
+        """
+        CREATE TABLE regression(
+            regression_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
+            instrument_name VARCHAR,
+            measure_name VARCHAR NOT NULL,
+            display_name VARCHAR,
+        );
+        CREATE UNIQUE INDEX regression_regression_id_idx
+            ON regression (regression_id);
+        """,
+    ))
+
+    create_regression_values = sqlglot.parse(textwrap.dedent(
+        """
+        CREATE TABLE regression_values(
+            regression_id VARCHAR NOT NULL,
+            measure_id VARCHAR NOT NULL,
+            figure_regression VARCHAR,
+            figure_regression_small VARCHAR,
+            pvalue_regression_male DOUBLE,
+            pvalue_regression_female DOUBLE,
+            PRIMARY KEY (regression_id, measure_id)
+        );
+        CREATE INDEX regression_values_regression_id_idx
+            ON regression_values (regression_id);
+        CREATE INDEX regression_values_measure_id_idx
+            ON regression_values (measure_id);
+        """,
+    ))
+
+    queries = [
+        *create_instrument,
+        *create_measure,
+        *create_family,
+        *create_person,
+        *create_variable_browser,
+        *create_regression,
+        *create_regression_values,
+    ]
+
+    with connection.cursor() as cursor:
+        for query in queries:
+            cursor.execute(to_duckdb_transpile(query))
+
 
 
 if __name__ == "__main__":
