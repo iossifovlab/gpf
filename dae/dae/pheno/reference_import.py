@@ -31,7 +31,6 @@ from dae.pheno.prepare.measure_classifier import (
     ClassifierReport,
     classification_reference_impl,
 )
-from dae.pheno.prepare.pheno_prepare import PrepareVariables
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
 from dae.task_graph.executor import task_graph_run_with_results
@@ -743,6 +742,36 @@ def load_descriptions(
     return DescriptionDf(data)
 
 
+def merge_inference_configs(
+    inference_configs: dict[str, Any],
+    instrument_name: str,
+    measure_name: str,
+) -> InferenceConfig:
+    """Merge configs by order of specificity"""
+    inference_config = InferenceConfig()
+    current_config = inference_config.dict()
+
+    if "*.*" in inference_configs:
+        update_config = inference_configs["*.*"]
+        current_config.update(update_config)
+
+    if f"{instrument_name}.*" in inference_configs:
+        update_config = inference_configs[f"{instrument_name}.*"]
+        current_config.update(update_config)
+
+    if f"*.{measure_name}" in inference_configs:
+        update_config = inference_configs[f"*.{measure_name}"]
+        current_config.update(update_config)
+
+    if f"{instrument_name}.{measure_name}" in inference_configs:
+        update_config = inference_configs[
+            f"{instrument_name}.{measure_name}"
+        ]
+        current_config.update(update_config)
+
+    return InferenceConfig.parse_obj(current_config)
+
+
 def create_import_tasks(
     task_graph: TaskGraph,
     instruments: dict[str, Any],
@@ -759,7 +788,7 @@ def create_import_tasks(
         measure_names = instrument_measure_names[instrument_name]
 
         for measure_name in measure_names:
-            inference_config = PrepareVariables.merge_inference_configs(
+            inference_config = merge_inference_configs(
                 inference_configs, instrument_name, measure_name,
             )
 
