@@ -18,8 +18,9 @@ import { TruncatePipe } from '../utils/truncate.pipe';
 import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-table/gene-profiles-table';
 import { geneProfilesReducer } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { cloneDeep } from 'lodash';
-import { StoreModule } from '@ngrx/store';
+import { Store, StoreModule } from '@ngrx/store';
 import { User } from 'app/users/users';
+import { GeneProfileSingleViewComponent } from 'app/gene-profiles-single-view/gene-profiles-single-view.component';
 
 
 const config = {
@@ -148,6 +149,7 @@ describe('GeneProfilesBlockComponent', () => {
   let fixture: ComponentFixture<GeneProfilesBlockComponent>;
   const geneProfilesServiceMock = new GeneProfilesServiceMock();
   const usersServiceMock = new UsersServiceMock();
+  let store: Store;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -169,6 +171,8 @@ describe('GeneProfilesBlockComponent', () => {
 
     fixture = TestBed.createComponent(GeneProfilesBlockComponent);
     component = fixture.componentInstance;
+    store = TestBed.inject(Store);
+
     fixture.detectChanges();
   });
 
@@ -191,5 +195,51 @@ describe('GeneProfilesBlockComponent', () => {
     expect(component.geneProfilesTableConfig).not.toStrictEqual(oldTableConfig);
     component.resetConf();
     expect(component.geneProfilesTableConfig).toStrictEqual(oldTableConfig);
+  });
+
+  it('should handle table value click event', () => {
+    const goToQuerySpy = jest.spyOn(GeneProfileSingleViewComponent, 'goToQuery').mockImplementation();
+    const args = {
+      geneSymbol: 'chd8',
+      statisticId: 'sequencing_de_novo.autism.denovo_lgds',
+      newTab: false
+    };
+    component.goToQueryEventHandler(args);
+    expect(goToQuerySpy).toHaveBeenCalledWith(
+      store,
+      component['queryService'],
+      'chd8',
+      {
+        childrenCount: 21775,
+        collectionId: 'phenotype',
+        defaultVisible: true,
+        description: '',
+        displayName: 'autism',
+        id: 'autism',
+        parentsCount: 9836,
+        shown: [],
+        statistics: [{
+          category: 'denovo',
+          defaultVisible: true,
+          description: 'de Novo LGDs',
+          displayName: 'dn LGDs',
+          effects: ['LGDs'],
+          id: 'denovo_lgds',
+          scores: [],
+          variantTypes: []}
+        ]},
+      'sequencing_de_novo',
+      {
+        category: 'denovo',
+        defaultVisible: true,
+        description: 'de Novo LGDs',
+        displayName: 'dn LGDs',
+        effects: ['LGDs'],
+        id: 'denovo_lgds',
+        scores: [],
+        variantTypes: []
+      },
+      false
+    );
   });
 });
