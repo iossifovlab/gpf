@@ -236,7 +236,14 @@ def import_pheno_data(args: Any) -> None:
         args.output, f"{args.pheno_name}.db",
     )
     if os.path.exists(args.pheno_db_filename):
-        os.remove(args.pheno_db_filename)
+        if args.force:
+            os.remove(args.pheno_db_filename)
+        else:
+            print(
+                f"Pheno DB already exists at {args.pheno_db_filename}!\n"
+                "Use --force or specify another directory.",
+            )
+            sys.exit(1)
 
     config = parse_phenotype_data_config(args)
     os.makedirs(os.path.join(config.output, "parquet"), exist_ok=True)
