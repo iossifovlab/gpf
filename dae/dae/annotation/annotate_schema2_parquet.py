@@ -1,5 +1,7 @@
 import argparse
 import os
+import pathlib
+import shutil
 
 from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.context import CLIAnnotationContext
@@ -15,6 +17,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.schema2_storage.schema2_import_storage import (
     create_schema2_dataset_layout,
 )
+from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.variants_loaders.parquet.loader import ParquetLoader
 
@@ -76,41 +79,76 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                 print(v)
                 print()
 
-    def work(self) -> None:
-        input_dir = os.path.abspath(self.args.input)
+    def _remove_data(self, path: str) -> None:
+        data_layout = create_schema2_dataset_layout(path)
+        assert data_layout.family is not None
+        assert data_layout.summary is not None
 
-        if self.args.in_place:
-            output_dir = input_dir
-            input_layout = backup_schema2_study(input_dir)
-            loader = ParquetLoader(input_layout)
+        pedigree = pathlib.Path(data_layout.pedigree).parent
+        meta = pathlib.Path(data_layout.meta).parent
+        family = pathlib.Path(data_layout.family)
+        summary = pathlib.Path(data_layout.summary)
+
+        shutil.rmtree(summary)
+        shutil.rmtree(meta)
+
+        if pedigree.is_symlink():
+            pedigree.unlink()
         else:
-            if not self.args.output:
-                raise ValueError("No output path was provided!")
-            output_dir = os.path.abspath(self.args.output)
-            if os.path.exists(output_dir):
-                raise ValueError(f"Output path '{output_dir}' already exists!")
-            loader = ParquetLoader.load_from_dir(input_dir)
+            shutil.rmtree(pedigree)
 
+        if family.is_symlink():
+            family.unlink()
+        else:
+            shutil.rmtree(family)
+
+    def _setup_io_layouts(self) -> tuple[Schema2DatasetLayout,
+                                         Schema2DatasetLayout]:
+        """
+        Produces the input and output dataset layouts for the tool to run.
+
+        Additionally, carries out any transformations necessary to produce
+        the layouts correctly, such as renaming, removing, etc.
+        """
+        if not self.args.in_place and not self.args.output:
+            raise ValueError("No output path was provided!")
+
+        input_dir = os.path.abspath(self.args.input)
+        output_dir = input_dir if self.args.in_place \
+                     else os.path.abspath(self.args.output)
+
+        if not self.args.in_place:
+            if os.path.exists(output_dir) and not self.args.force:
+                raise ValueError(f"Output path '{output_dir}' already exists!")
+            if os.path.exists(output_dir) and self.args.force:
+                self._remove_data(output_dir)
+
+        input_layout = backup_schema2_study(input_dir) if self.args.in_place \
+                       else create_schema2_dataset_layout(input_dir)
         output_layout = create_schema2_dataset_layout(output_dir)
 
-        if loader.layout.summary is None:
+        if input_layout.summary is None:
             raise ValueError("Invalid summary dir in input layout!")
-        if loader.layout.family is None:
-            raise ValueError("Invalid family dir in input layout!")
         if output_layout.summary is None:
             raise ValueError("Invalid summary dir in output layout!")
         if output_layout.family is None:
             raise ValueError("Invalid family dir in output layout!")
 
-        write_new_meta(loader, self.pipeline, output_layout)
+        return input_layout, output_layout
 
+    def work(self) -> None:
+        input_layout, output_layout = self._setup_io_layouts()
+
+        loader = ParquetLoader(input_layout)
+
+        write_new_meta(loader, self.pipeline, output_layout)
         if not self.args.in_place:
             symlink_pedigree_and_family_variants(loader.layout, output_layout)
 
         annotation_tasks = produce_schema2_annotation_tasks(
             self.task_graph,
             loader,
-            output_dir,
+            output_layout.study,
             self.pipeline.raw,
             self.grr,
             self.args.region_size,
