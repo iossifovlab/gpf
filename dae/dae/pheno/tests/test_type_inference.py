@@ -6,7 +6,7 @@ import yaml
 from pydantic import ValidationError
 
 from dae.pheno.common import InferenceConfig
-from dae.pheno.reference_import import merge_inference_configs
+from dae.pheno.pheno_import import merge_inference_configs
 
 
 def test_valid_config_loads() -> None:
