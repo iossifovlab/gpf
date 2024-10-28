@@ -31,6 +31,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.gpf_instance_plugin.gpf_instance_context_plugin import (
     init_test_gpf_instance_genomic_context_plugin,
 )
+from dae.pheno.pheno_import import main as pheno_import
 from dae.studies.study import GenotypeData
 from dae.testing import (
     setup_gpf_instance,
@@ -40,7 +41,6 @@ from dae.testing import (
 )
 from dae.testing.import_helpers import setup_dataset_config
 from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
-from dae.tools.pheno_import import main as pheno_import
 
 logger = logging.getLogger(__name__)
 
