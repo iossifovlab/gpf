@@ -225,7 +225,8 @@ def classification_reference_impl(
 
     assert (
         report.count_total
-        == report.count_with_values + report.count_without_values
+        == report.count_with_values
+        + report.count_without_values
     )
     assert (
         report.count_with_values

@@ -152,7 +152,6 @@ def generate_phenotype_data_config(
 ) -> dict[str, Any]:
     """Construct phenotype data configuration from command line arguments."""
     dbfile = os.path.join("%(wd)s", os.path.basename(args.pheno_db_filename))
-    # pheno_db_path = os.path.dirname("%(wd)s")  # noqa
     config = {
         "vars": {"wd": "."},
         "phenotype_data": {
@@ -192,27 +191,27 @@ def main(argv: list[str] | None = None) -> int:
     if argv is None:
         argv = sys.argv[1:]
 
-    try:
         # Setup argument parser
 
-        parser = pheno_cli_parser()
-        args = parser.parse_args(argv)
-        if args.instruments is None:
-            print("missing instruments directory parameter", sys.stderr)
-            raise ValueError  # noqa: TRY301
-        if args.pedigree is None:
-            print("missing pedigree filename", sys.stderr)
-            raise ValueError  # noqa: TRY301
-        if args.pheno_name is None:
-            print("missing pheno db name", sys.stderr)
-            raise ValueError  # noqa: TRY301
+    parser = pheno_cli_parser()
+    args = parser.parse_args(argv)
+    if args.instruments is None:
+        raise ValueError("missing instruments directory parameter")
+    if args.pedigree is None:
+        raise ValueError("missing pedigree filename")
+    if args.pheno_name is None:
+        raise ValueError("missing pheno db name")
 
+    args.pheno_db_filename = os.path.join(
+        args.output, f"{args.pheno_name}.db",
+    )
+
+    try:
         if not args.browser_only:
             import_pheno_data(args)
 
         if not args.import_only:
             build_browser(args)
-
     except KeyboardInterrupt:
         return 0
     except ValueError as e:
@@ -231,9 +230,6 @@ def import_pheno_data(args: Any) -> None:
     """Import pheno data into DuckDB."""
     os.makedirs(args.output, exist_ok=True)
 
-    args.pheno_db_filename = os.path.join(
-        args.output, f"{args.pheno_name}.db",
-    )
     if os.path.exists(args.pheno_db_filename):
         if args.force:
             os.remove(args.pheno_db_filename)
@@ -281,8 +277,8 @@ def import_pheno_data(args: Any) -> None:
     task_graph = TaskGraph()
 
     task_cache = TaskCache.create(
-        force=cast(bool | None, args.force),
-        cache_dir=cast(str | None, args.task_status_dir),
+        force=args.force,
+        cache_dir=args.task_status_dir,
     )
 
     create_import_tasks(
@@ -398,12 +394,10 @@ def build_browser(
         **kwargs,
     )
 
-    pheno_conf_path = os.path.join(
-        output_dir, f"{pheno_name}.yaml",
-    )
-
     config = yaml.dump(generate_phenotype_data_config(args, regressions))
-    Path(pheno_conf_path).write_text(config)
+
+    pheno_conf_path = Path(output_dir, f"{pheno_name}.yaml")
+    pheno_conf_path.write_text(config)
 
 
 def collect_instruments(dirname: str) -> dict[str, Any]:
@@ -412,8 +406,7 @@ def collect_instruments(dirname: str) -> dict[str, Any]:
     instruments = defaultdict(list)
     for root, _dirnames, filenames in os.walk(dirname):
         for filename in filenames:
-            basename = os.path.basename(filename)
-            basename = basename.lower()
+            basename = os.path.basename(filename).lower()
             res = regexp.match(basename)
             if not res:
                 logger.debug(
@@ -424,7 +417,7 @@ def collect_instruments(dirname: str) -> dict[str, Any]:
                 "instrument matched: %s; file extension: %s",
                 res.group("instrument"), res.group("ext"))
             instruments[res.group("instrument")].append(
-                Path(os.path.abspath(os.path.join(root, filename))),
+                Path(root, filename).absolute(),
             )
     return instruments
 
@@ -438,6 +431,18 @@ def read_and_classify_measure(
 ) -> tuple[dict[str, Any], ClassifierReport]:
     """Read a measure's values and classify from an instrument file."""
     output = {}
+
+    def transform_value(val: str) -> str | None:
+        if val == "":
+            return None
+        if val == "True":
+            return "1.0"
+        if val == "False":
+            return "0.0"
+        if isinstance(val, bool):
+            return str(int(val))
+        return val
+
     for instrument_filepath in instrument_filepaths:
         with instrument_filepath.open() as csvfile:
             reader = csv.DictReader(
@@ -445,16 +450,6 @@ def read_and_classify_measure(
                 delimiter="\t" if tab_separated else ",",
             )
 
-            def transform_value(val: str) -> str | None:
-                if val == "":
-                    return None
-                if val == "True":
-                    return "1.0"
-                if val == "False":
-                    return "0.0"
-                if isinstance(val, bool):
-                    return str(int(val))
-                return val
             for row in reader:
                 person_id = row[person_id_column]
                 output[person_id] = transform_value(row[measure_name])
@@ -704,26 +699,26 @@ def load_descriptions(
     """Load measure descriptions."""
     if not description_path:
         return None
-    assert os.path.exists(
-        os.path.abspath(description_path),
-    ), description_path
+    absolute_path = Path(description_path).absolute()
+    assert absolute_path.exists(), absolute_path
 
-    data = pd.read_csv(description_path, sep="\t")
+    data = pd.read_csv(absolute_path, sep="\t")
 
     class DescriptionDf:
         """Phenotype database support for measure descriptions."""
 
         def __init__(self, desc_df: pd.DataFrame):
             self.desc_df = desc_df
+            header = list(desc_df)
             assert all(
-                col in list(desc_df)
+                col in header
                 for col in [
                     "instrumentName",
                     "measureName",
                     "measureId",
                     "description",
                 ]
-            ), list(desc_df)
+            ), header
 
         def __call__(self, iname: str, mname: str) -> str | None:
             if (
