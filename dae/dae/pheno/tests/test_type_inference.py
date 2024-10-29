@@ -6,7 +6,7 @@ import yaml
 from pydantic import ValidationError
 
 from dae.pheno.common import InferenceConfig
-from dae.pheno.prepare.pheno_prepare import PrepareVariables
+from dae.pheno.pheno_import import merge_inference_configs
 
 
 def test_valid_config_loads() -> None:
@@ -89,7 +89,7 @@ def test_merge() -> None:
         """,
     ))
 
-    config = PrepareVariables.merge_inference_configs(
+    config = merge_inference_configs(
         configs,
         "some_instrument",
         "another_measure",
@@ -100,7 +100,7 @@ def test_merge() -> None:
     assert config.measure_type is None
     assert config.skip is False
 
-    config = PrepareVariables.merge_inference_configs(
+    config = merge_inference_configs(
         configs,
         "some_instrument",
         "some_measure",
@@ -111,7 +111,7 @@ def test_merge() -> None:
     assert config.measure_type == "ordinal"
     assert config.skip is False
 
-    config = PrepareVariables.merge_inference_configs(
+    config = merge_inference_configs(
         configs,
         "asdf",
         "ghjk",
@@ -122,7 +122,7 @@ def test_merge() -> None:
     assert config.measure_type is None
     assert config.skip is False
 
-    config = PrepareVariables.merge_inference_configs(
+    config = merge_inference_configs(
         configs,
         "another_instrument",
         "some_measure",

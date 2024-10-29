@@ -12,6 +12,7 @@ from dae.genomic_resources.repository import (
     GenomicResourceRepo,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.pheno.pheno_import import main as pheno_import
 from dae.studies.study import GenotypeData
 from dae.testing import (
     setup_directories,
@@ -22,7 +23,6 @@ from dae.testing import (
 )
 from dae.testing.import_helpers import setup_dataset_config
 from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
-from dae.tools.pheno_import import main as pheno_import
 
 
 def setup_t4c8_grr(
