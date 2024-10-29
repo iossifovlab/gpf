@@ -20,9 +20,10 @@ class AnnotatorBase(Annotator):
                  source_type_desc: dict[str, tuple[str, str]]):
         for attribute_config in info.attributes:
             if attribute_config.source not in source_type_desc:
-                raise ValueError(f"The source {attribute_config.source} "
-                                 " is not supported for the annotator "
-                                 f"{info.type}")
+                raise ValueError(
+                    f"The attribute source '{attribute_config.source}'"
+                    " is not supported for the annotator"
+                    f" {info.type}")
             att_type, att_desc = source_type_desc[attribute_config.source]
             attribute_config.type = att_type
             attribute_config.description = att_desc
