@@ -446,7 +446,7 @@ def read_and_classify_measure(
     for instrument_filepath in instrument_filepaths:
         with instrument_filepath.open() as csvfile:
             reader = csv.DictReader(
-                csvfile,
+                    filter(lambda x: x.strip() != "", csvfile),
                 delimiter="\t" if tab_separated else ",",
             )
 
@@ -619,7 +619,10 @@ def read_instrument_measure_names(
     for instrument_name, instrument_files in instruments.items():
         file_to_read = instrument_files[0]
         with file_to_read.open() as csvfile:
-            reader = csv.reader(csvfile, delimiter=delimiter)
+            reader = filter(
+                lambda line: len(line) != 0,
+                csv.reader(csvfile, delimiter=delimiter),
+            )
             header = next(reader)
             instrument_measure_names[instrument_name] = header[1:]
     return instrument_measure_names
