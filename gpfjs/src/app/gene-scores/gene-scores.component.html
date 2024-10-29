@@ -21,7 +21,7 @@
 
     <div class="col-sm-9">
       <gpf-histogram
-        *ngIf="selectedGeneScores"
+        *ngIf="selectedGeneScores && isNumberHistogram(selectedGeneScores.histogram)"
         [width]="650"
         [height]="145"
         [bins]="selectedGeneScores.histogram.bins"

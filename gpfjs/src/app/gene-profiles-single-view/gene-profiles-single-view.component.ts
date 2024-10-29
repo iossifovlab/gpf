@@ -5,7 +5,7 @@ import {
 } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { Observable, of, zip } from 'rxjs';
 import { GeneScoresService } from '../gene-scores/gene-scores.service';
-import { GeneScores } from 'app/gene-scores/gene-scores';
+import { CategoricalHistogram, GeneScores, NumberHistogram } from 'app/gene-scores/gene-scores';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { switchMap, take } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -259,5 +259,13 @@ export class GeneProfileSingleViewComponent implements OnInit {
       this.store.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
       this.router.navigate(['/gene-profiles']);
     });
+  }
+
+  public isNumberHistogram(arg: object): arg is NumberHistogram {
+    return arg instanceof NumberHistogram;
+  }
+
+  public isCategoricalHistogram(arg: object): arg is CategoricalHistogram {
+    return arg instanceof CategoricalHistogram;
   }
 }
