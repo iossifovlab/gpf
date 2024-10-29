@@ -373,6 +373,35 @@ def test_phase_field_serialization_negative_strand(
 
 
 @pytest.mark.parametrize(
+    "sort,expected", [
+        (True, ["gene", "transcript", "exon", "UTR", "CDS", "start_codon",
+                "exon", "CDS", "exon", "CDS", "exon", "CDS", "exon", "CDS",
+                "exon", "CDS", "stop_codon", "UTR"]),
+        (False, ["gene", "transcript",
+                 "exon", "exon", "exon", "exon", "exon", "exon",
+                 "start_codon",
+                 "CDS", "CDS", "CDS", "CDS", "CDS", "CDS",
+                 "stop_codon", "UTR", "UTR"]),
+    ],
+)
+def test_gene_models_to_gtf_sort_parameter(
+    gencode_46_calml6_example: GeneModels,
+    sort: bool,  # noqa: FBT001
+    expected: list[str],
+) -> None:
+    example_models = gencode_46_calml6_example
+    example_models.load()
+    serialized = gene_models_to_gtf(example_models, sort=sort).getvalue()
+
+    # [4:] skips auto-generated comment lines
+    features = [
+        line.split("\t")[2]
+        for line in serialized.strip().split("\n")[4:]
+    ]
+    assert features == expected
+
+
+@pytest.mark.parametrize(
     "strand,regions,expected", [
         (
             "+",
