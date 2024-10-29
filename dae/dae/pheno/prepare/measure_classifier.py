@@ -29,7 +29,7 @@ class ClassifierReport:
         self.value_max_len: int | None = None
 
         self.unique_values: list[Any] | None = None
-        self.numeric_values: list[int] | np.ndarray | None = None
+        self.numeric_values: list[float | None] | np.ndarray | None = None
         self.distribution: Any = None
 
         self.min_value: int | None = None
@@ -214,6 +214,7 @@ def classification_reference_impl(
         except ValueError:
             numeric_values.append(None)
 
+    report.numeric_values = numeric_values
     report.count_with_values = len(measure_values) - none_count
     report.count_without_values = none_count
     report.count_with_numeric_values = numeric_count
