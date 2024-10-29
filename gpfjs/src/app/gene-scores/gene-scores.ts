@@ -4,8 +4,9 @@ import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 
 export class GeneScores {
   public static fromJson(json: object): GeneScores {
-    let histogram: NumberHistogram;
+    let histogram: NumberHistogram | CategoricalHistogram;
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     if (json['histogram']['config']['type'] as string === 'number') {
       histogram = new NumberHistogram(
         json['histogram']['bars'] as number[],
@@ -15,7 +16,20 @@ export class GeneScores {
         json['histogram']['config']['view_range']['min'] as number,
         json['histogram']['config']['view_range']['max'] as number,
         json['histogram']['config']['x_log_scale"'] as boolean,
-        json['histogram']['config']['x_log_scale"'] as boolean,
+        json['histogram']['config']['y_log_scale"'] as boolean,
+      );
+    } else if (json['histogram']['config']['type'] as string === 'categorical') {
+      const values: {name: string, value: number}[] = [];
+      Object.keys(json['histogram']['values'] as object).forEach(key => {
+        values.push({name: key, value: json['histogram']['values'][key]});
+      });
+
+      histogram = new CategoricalHistogram(
+        values,
+        json['histogram']['config']['value_order'] as string[],
+        json['large_values_desc'] as string,
+        json['small_values_desc'] as string,
+        json['histogram']['config']['y_log_scale"'] as boolean,
       );
     }
     /* eslint-enable */
@@ -37,7 +51,7 @@ export class GeneScores {
     public readonly desc: string,
     public readonly help: string,
     public readonly score: string,
-    public readonly histogram: NumberHistogram,
+    public readonly histogram: NumberHistogram | CategoricalHistogram,
   ) {
 
   }
@@ -57,6 +71,18 @@ export class NumberHistogram {
     if (bins.length === (bars.length + 1)) {
       bars.push(0);
     }
+  }
+}
+
+export class CategoricalHistogram {
+  public constructor(
+    public readonly values: {name: string, value: number}[],
+    public readonly valueOrder: string[],
+    public readonly largeValuesDesc: string,
+    public readonly smallValuesDesc: string,
+    public readonly logScaleY: boolean,
+  ) {
+
   }
 }
 
