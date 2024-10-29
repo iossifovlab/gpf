@@ -87,6 +87,7 @@
             [class.modified]="
               activeDataset?.datasetId !== dataset.datasetId && modifiedDatasetIds.has(dataset.datasetId)
             "
+            [style.opacity]="dataset.personSetCollections.length ? 1.0 : 0.3"
             [ngStyle]="{ 'padding-left': (dataset.children.length ? 5 : 19) + 'px' }"
             (click)="select(dataset)"
             >{{ dataset.datasetName }}</div
