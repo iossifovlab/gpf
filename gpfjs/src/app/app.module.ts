@@ -183,6 +183,7 @@ import { pedigreeSelectorReducer } from './pedigree-selector/pedigree-selector.s
 import { geneProfilesReducer } from './gene-profiles-table/gene-profiles-table.state';
 import { regionsFiltersReducer } from './regions-filter/regions-filter.state';
 import { uniqueFamilyVariantsFilterReducer } from './unique-family-variants-filter/unique-family-variants-filter.state';
+import { CategoricalHistogramComponent } from './categorical-histogram/categorical-histogram.component';
 
 const appRoutes: Routes = [
   {
@@ -397,6 +398,7 @@ const appRoutes: Routes = [
     AboutComponent,
     MarkdownEditorComponent,
     FamilyTagsComponent,
+    CategoricalHistogramComponent,
   ],
   imports: [
     BrowserModule,
