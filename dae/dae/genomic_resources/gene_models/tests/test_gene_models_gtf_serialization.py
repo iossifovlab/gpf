@@ -165,7 +165,7 @@ chr1    TEST    UTR           78   100    .    +    .    gene_id||"GENE";||trans
 def test_save_as_gtf_simple(ensembl_gtf_example: GeneModels) -> None:
     reference = ensembl_gtf_example
     reference.load()
-    serialized = gene_models_to_gtf(reference)
+    serialized = gene_models_to_gtf(reference).getvalue()
 
     gene_models = build_gene_models_from_resource(build_inmemory_test_resource(
         content={
@@ -192,7 +192,7 @@ def test_save_as_gtf_simple(ensembl_gtf_example: GeneModels) -> None:
 def test_save_as_gtf_complex(ensembl_gtf_example_shh: GeneModels) -> None:
     example_models = ensembl_gtf_example_shh
     example_models.load()
-    serialized = gene_models_to_gtf(example_models)
+    serialized = gene_models_to_gtf(example_models).getvalue()
 
     assert "start_codon\t155812120\t155812122" in serialized
     assert "stop_codon\t155802900\t155802902" in serialized
@@ -224,7 +224,7 @@ def test_save_as_gtf_noncoding(
 ) -> None:
     example_models = ensembl_gtf_example_noncoding
     example_models.load()
-    serialized = gene_models_to_gtf(example_models)
+    serialized = gene_models_to_gtf(example_models).getvalue()
 
     gene_models = build_gene_models_from_resource(build_inmemory_test_resource(
         content={
@@ -252,7 +252,7 @@ def test_save_as_gtf_no_exons(
 ) -> None:
     example_models = gtf_example_no_exons
     example_models.load()
-    serialized = gene_models_to_gtf(example_models)
+    serialized = gene_models_to_gtf(example_models).getvalue()
 
     gene_models = build_gene_models_from_resource(build_inmemory_test_resource(
         content={
@@ -280,7 +280,7 @@ def test_save_as_gtf_split_start_stop_codons(
 ) -> None:
     example_models = gtf_example_split_start_stop_codons
     example_models.load()
-    serialized = gene_models_to_gtf(example_models)
+    serialized = gene_models_to_gtf(example_models).getvalue()
 
     gene_models = build_gene_models_from_resource(build_inmemory_test_resource(
         content={
@@ -327,7 +327,7 @@ def test_phase_field_serialization_positive_strand(
 ) -> None:
     example_models = gencode_46_calml6_example
     example_models.load()
-    serialized = gene_models_to_gtf(example_models)
+    serialized = gene_models_to_gtf(example_models).getvalue()
 
     # [4:] skips auto-generated comment lines
     line_phases = [
@@ -358,7 +358,7 @@ def test_phase_field_serialization_negative_strand(
 ) -> None:
     example_models = ensembl_gtf_example_shh
     example_models.load()
-    serialized = gene_models_to_gtf(example_models)
+    serialized = gene_models_to_gtf(example_models).getvalue()
 
     line_phases = [
         line.split("\t")[:8]
