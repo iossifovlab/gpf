@@ -110,15 +110,4 @@ export class CategoricalHistogramComponent implements OnChanges {
     const pos = true ? '0 0' : '-8 -8';
     return `${pos} ${this.width} ${this.height}`;
   }
-
-  private transform(value: number): string {
-    if (!value) {
-      return '0';
-    }
-    if (value < 1e-4) {
-      return value.toExponential(2);
-    } else {
-      return value.toFixed(3);
-    }
-  }
 }
