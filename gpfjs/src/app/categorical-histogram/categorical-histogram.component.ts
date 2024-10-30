@@ -4,7 +4,9 @@ import {
   ViewChild,
   ChangeDetectionStrategy,
   ElementRef,
-  OnChanges
+  OnChanges,
+  Output,
+  EventEmitter
 } from '@angular/core';
 import { CategoricalHistogram } from 'app/gene-scores/gene-scores';
 
@@ -32,6 +34,8 @@ export class CategoricalHistogramComponent implements OnChanges {
 
   @Input() public isInteractive = true;
   @Input() public singleScoreValue: string;
+
+  @Output() public selectCategoricalValue = new EventEmitter<string>();
 
   public xScale: d3.ScaleBand<string>;
   public scaleXAxis: d3.ScaleOrdinal<string, number, never>;
@@ -78,7 +82,15 @@ export class CategoricalHistogramComponent implements OnChanges {
       .attr('width', this.xScale.bandwidth())
       .attr('y', (v: { name: string, value: number }) => v.value === 0 ? height : this.scaleYAxis(v.value))
       .attr('height', (v: { name: string, value: number }) =>
-        v.value === 0 || v.value === undefined ? 0 : height - this.scaleYAxis(v.value));
+        v.value === 0 || v.value === undefined ? 0 : height - this.scaleYAxis(v.value))
+      .attr('id', (v: { name: string, value: number }) => v.name)
+      .style('cursor', 'pointer');
+
+    svg.selectAll('rect').on('click', event => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      this.selectValue(event);
+    });
+
     this.svg = svg;
   }
 
@@ -104,6 +116,15 @@ export class CategoricalHistogramComponent implements OnChanges {
       .call(
         d3.axisBottom(this.scaleXAxis)
       ).style('font-size', '12px');
+  }
+
+  private selectValue(event: { srcElement: { id: string, style: { fill: string } } }): void {
+    if (event.srcElement.style.fill === 'steelblue') {
+      event.srcElement.style.fill = 'coral';
+    } else {
+      event.srcElement.style.fill = 'steelblue';
+    }
+    this.selectCategoricalValue.emit(event.srcElement.id);
   }
 
   public get viewBox(): string {
