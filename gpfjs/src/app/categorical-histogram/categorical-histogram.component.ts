@@ -31,10 +31,10 @@ export class CategoricalHistogramComponent implements OnChanges {
   private svg: d3.Selection<SVGElement, unknown, null, undefined>;
 
   @Input() public isInteractive = true;
-  @Input() public singleScoreValue: number;
+  @Input() public singleScoreValue: string;
 
   public xScale: d3.ScaleBand<string>;
-  public scaleXAxis: d3.ScaleThreshold<number, number, never>;
+  public scaleXAxis: d3.ScaleOrdinal<string, number, never>;
   public scaleYAxis: d3.ScaleLinear<number, number, never>
                      | d3.ScaleLogarithmic<number, number, never>;
 
@@ -45,7 +45,7 @@ export class CategoricalHistogramComponent implements OnChanges {
   }
 
   public singleScoreValueIsValid(): boolean {
-    return this.singleScoreValue !== undefined && this.singleScoreValue !== null && !isNaN(this.singleScoreValue);
+    return this.singleScoreValue !== undefined && this.singleScoreValue !== null;
   }
 
   private redrawHistogram(): void {
@@ -58,7 +58,7 @@ export class CategoricalHistogramComponent implements OnChanges {
 
     this.xScale = d3.scaleBand()
       .padding(0.1)
-      .domain(this.histogram.values.map(x => x.name))
+      .domain(this.histogram.values.map(v => v.name))
       .range([0, width]);
 
     this.scaleYAxis = this.histogram.logScaleY ? d3.scaleLog() : d3.scaleLinear();
@@ -85,24 +85,24 @@ export class CategoricalHistogramComponent implements OnChanges {
   private redrawXAxis(
     svg: d3.Selection<SVGElement, unknown, null, undefined>,
     width: number,
-    height: number
+    height: number,
   ): void {
-    const axisX = [0];
-    const axisVals = [];
+    const axisX: number[] = [0];
+    const axisVals: string[] = [''];
 
-    for (let i = 0; i < this.histogram.values.length - 1; i++) {
-      const leftX = this.xScale(i.toString()) - this.xScale.step() * this.xScale.paddingOuter() / 2;
+    this.histogram.values.forEach(value => {
+      const leftX = this.xScale(value.name) + this.xScale.bandwidth() / 2;
       axisX.push(leftX);
-      axisVals.push(this.histogram.values[i].name);
-    }
+      axisVals.push(value.name);
+    });
 
-    this.scaleXAxis = d3.scaleThreshold().range(axisX).domain(axisVals);
-
+    axisX.push(width);
+    axisVals.push('');
+    this.scaleXAxis = d3.scaleOrdinal(axisVals, axisX);
     svg.append('g')
       .attr('transform', `translate(0,${height})`)
       .call(
         d3.axisBottom(this.scaleXAxis)
-          .tickValues(this.histogram.values.map(v => v.value))
       ).style('font-size', '12px');
   }
 
