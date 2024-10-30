@@ -33,6 +33,12 @@
         [(rangeStart)]="rangeStart"
         [(rangeEnd)]="rangeEnd">
       </gpf-histogram>
+      <gpf-categorical-histogram
+        *ngIf="selectedGeneScores && isCategoricalHistogram(selectedGeneScores.histogram)"
+        [width]="650"
+        [height]="145"
+        [histogram]="selectedGeneScores.histogram">
+      </gpf-categorical-histogram>
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
   </div>
