@@ -2,6 +2,7 @@ import gzip
 import logging
 import operator
 from datetime import datetime
+from io import StringIO
 from typing import IO
 
 from deprecation import deprecated
@@ -23,11 +24,14 @@ GTFRecordIndex = tuple[str, int, int, int]
 GTFRecord = tuple[GTFRecordIndex, str]
 
 
-def gene_models_to_gtf(gene_models: GeneModels) -> str:
+def gene_models_to_gtf(
+    gene_models: GeneModels, *,
+    sort: bool = True,
+) -> StringIO:
     """Output a GTF format string representation."""
     if not gene_models.gene_models:
         logger.warning("Serializing empty (probably not loaded) gene models!")
-        return ""
+        return StringIO()
 
     record_buffer: list[GTFRecord] = []
 
@@ -56,16 +60,17 @@ def gene_models_to_gtf(gene_models: GeneModels) -> str:
         for transcript in transcripts:
             record_buffer.extend(transcript_to_gtf(transcript))
 
-    record_buffer.sort(key=operator.itemgetter(0))
+    if sort:
+        record_buffer.sort(key=operator.itemgetter(0))
 
     joined_records = "\n".join(rec[1] for rec in record_buffer)
-    return \
+    return StringIO(
 f"""##description: GTF format dump for gene models "{gene_models.resource.resource_id or '?'}"
 ##provider: GPF
 ##format: gtf
 ##date: {datetime.today().strftime('%Y-%m-%d')}
 {joined_records}
-"""  # noqa: E501
+""")  # noqa: E501
 
 
 def build_gtf_record(

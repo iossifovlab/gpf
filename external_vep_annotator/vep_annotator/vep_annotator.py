@@ -331,7 +331,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
             )
 
             gene_models.load()
-            gtf_content = gene_models_to_gtf(gene_models)
+            gtf_content = gene_models_to_gtf(gene_models).getvalue()
 
             self.gtf_path.write_text(gtf_content)
 
