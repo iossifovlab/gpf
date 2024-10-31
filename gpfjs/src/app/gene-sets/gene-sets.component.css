@@ -148,7 +148,6 @@
   display: flex;
 }
 
-#no-collections-message {
-  opacity: 75%;
-  font-style: italic;
+.disabled-dataset {
+  pointer-events: none;
 }

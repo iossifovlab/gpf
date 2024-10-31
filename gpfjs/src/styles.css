@@ -565,6 +565,10 @@ mat-option.mat-mdc-option-active {
   background: rgba(0, 0, 0, 4%) !important;
 }
 
+.mat-mdc-option .mat-pseudo-checkbox-minimal {
+  display: none;
+}
+
 /* stylelint-disable-next-line selector-class-pattern */
 .mdc-list-item__primary-text {
   color: black !important;

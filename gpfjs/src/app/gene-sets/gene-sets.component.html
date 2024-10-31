@@ -28,10 +28,6 @@
             </div>
 
             <div id="filters" *ngIf="activeDataset">
-              <div *ngIf="!activeDataset.personSetCollections.length" id="no-collections-message"
-                >No person set collections</div
-              >
-
               <div *ngFor="let collection of activeDataset.personSetCollections">
                 {{ collection.personSetCollectionName }}:
                 <div *ngFor="let personSet of collection.personSetCollectionLegend">
@@ -87,6 +83,8 @@
             [class.modified]="
               activeDataset?.datasetId !== dataset.datasetId && modifiedDatasetIds.has(dataset.datasetId)
             "
+            [class.disabled-dataset]="!dataset.personSetCollections.length"
+            [style.opacity]="dataset.personSetCollections.length ? 1.0 : 0.3"
             [ngStyle]="{ 'padding-left': (dataset.children.length ? 5 : 19) + 'px' }"
             (click)="select(dataset)"
             >{{ dataset.datasetName }}</div

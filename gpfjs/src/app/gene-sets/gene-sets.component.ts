@@ -235,7 +235,6 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
     this.searchQuery = '';
     this.selectedGeneSet = null;
     this.isDropdownOpen = true;
-    this.onSearch();
   }
 
   public openCloseDropdown(): void {
@@ -379,6 +378,8 @@ export class GeneSetsComponent extends ComponentValidator implements OnInit {
         this.modifiedDatasetIds.delete(datasetId);
       }
     }
+
+    this.onSearch();
   }
 
   public get selectedGeneSetsCollection(): GeneSetsCollection {
