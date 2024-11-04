@@ -17,11 +17,24 @@ from .gene_models import (
 
 logger = logging.getLogger(__name__)
 
+GTF_FEATURE_ORDER: dict[str, int] = {
+    "gene": 0,
+    "transcript": 1,
+    "exon": 2,
+    "CDS": 2,
+    "start_codon": 2,
+    "stop_codon": 2,
+    "UTR": 3,
+}
 
-GTF_FEATURE_ORDER = ("gene", "transcript", "exon", "CDS",
-                     "start_codon", "stop_codon", "UTR")
 GTFRecordIndex = tuple[str, int, int, int]
 GTFRecord = tuple[GTFRecordIndex, str]
+
+
+def gtf_canonical_index(index: GTFRecordIndex) -> tuple:
+    # This function converts a GTFRecordIndex for GTF-canonical
+    # sorting of a GTF file by placing the feature's index at the front
+    return (index[3], *index[:3])
 
 
 def gene_models_to_gtf(
@@ -56,12 +69,14 @@ def gene_models_to_gtf(
         gene_rec = \
             f"{chrom}\t{src}\tgene\t{start}\t{stop}\t.\t{strand}\t.\t{attrs};"
         record_buffer.append(
-            ((chrom, start, -stop, GTF_FEATURE_ORDER.index("gene")), gene_rec))
+            ((chrom, start, -stop, GTF_FEATURE_ORDER["gene"]), gene_rec))
         for transcript in transcripts:
             record_buffer.extend(transcript_to_gtf(transcript))
 
     if sort_by_position:
         record_buffer.sort(key=operator.itemgetter(0))
+    else:
+        record_buffer.sort(key=lambda rec: gtf_canonical_index(rec[0]))
 
     joined_records = "\n".join(rec[1] for rec in record_buffer)
     return StringIO(
@@ -98,7 +113,7 @@ def build_gtf_record(
         line = f'{line}exon_number "{exon_number}";'
     # add stop as negative to sort it in descending order
     index = \
-        (transcript.chrom, start, -stop, GTF_FEATURE_ORDER.index(feature))
+        (transcript.chrom, start, -stop, GTF_FEATURE_ORDER[feature])
     return (index, line)
 
 
