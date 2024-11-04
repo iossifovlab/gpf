@@ -5,28 +5,58 @@ import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { GeneScoresService } from 'app/gene-scores/gene-scores.service';
 import { UsersService } from 'app/users/users.service';
-import { of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { GeneProfileSingleViewComponent } from './gene-profiles-single-view.component';
 import { QueryService } from 'app/query/query.service';
 import { APP_BASE_HREF } from '@angular/common';
-import { StoreModule } from '@ngrx/store';
+import { Store, StoreModule } from '@ngrx/store';
+import {
+  GeneProfilesDatasetPersonSet,
+  GeneProfilesDatasetStatistic,
+  GeneProfilesGenomicScores,
+  GeneProfilesGenomicScoreWithValue } from './gene-profiles-single-view';
+import { setEffectTypes } from 'app/effect-types/effect-types.state';
+import { setGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
+import { setPresentInChild } from 'app/present-in-child/present-in-child.state';
+import { setPresentInParent } from 'app/present-in-parent/present-in-parent.state';
+import { setVariantTypes } from 'app/variant-types/variant-types.state';
+import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
+import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { setStudyTypes } from 'app/study-types/study-types.state';
+import { GenomicScore } from 'app/genotype-browser/genotype-browser';
+import { selectGeneProfiles, setGeneProfilesOpenedTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
+
+class QueryServiceMock {
+  public saveQuery(state: object, tool: string): Observable<object> {
+    return of({});
+  }
+
+  public getLoadUrlFromResponse(obj: object): string {
+    return 'url';
+  }
+}
 
 describe('GeneProfileSingleViewComponent', () => {
   let component: GeneProfileSingleViewComponent;
   let fixture: ComponentFixture<GeneProfileSingleViewComponent>;
+  let store: Store;
+  const queryServiceMock = new QueryServiceMock();
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [GeneProfileSingleViewComponent],
       providers: [
         ConfigService, GeneScoresService, DatasetsService,
-        UsersService, QueryService, { provide: APP_BASE_HREF, useValue: '' }
+        UsersService,
+        {provide: QueryService, useValue: queryServiceMock },
+        { provide: APP_BASE_HREF, useValue: '' }
       ],
       imports: [HttpClientTestingModule, RouterTestingModule, StoreModule.forRoot({})]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GeneProfileSingleViewComponent);
     component = fixture.componentInstance;
+    store = TestBed.inject(Store);
     component.config = {geneSets: ['mockGeneSet']} as any;
     fixture.detectChanges();
   });
@@ -77,6 +107,13 @@ describe('GeneProfileSingleViewComponent', () => {
     component.ngOnInit();
     expect(component['gene$']).toStrictEqual(geneMock);
     expect(component.isGeneInSFARI).toBeFalsy();
+
+    getGeneSpy.mockReturnValueOnce(throwError(() => {
+      new Error('FAIL');
+    }));
+
+    component.ngOnInit();
+    expect(component.errorModal).toBe(true);
   });
 
   it('should get autism score gene score', () => {
@@ -166,5 +203,111 @@ describe('GeneProfileSingleViewComponent', () => {
       .toStrictEqual({id: 'effectTypeId7'} as any);
     expect(component.getGeneDatasetValue(mockGene as any, 'studyId2', 'personSetId4', 'effectTypeId8'))
       .toStrictEqual({id: 'effectTypeId8'} as any);
+  });
+
+  it('should get single score value', () => {
+    const mocksScores = [
+      { id: 'autismScore', scores: [
+        { id: 'score1', value: 43, format: 'format' },
+        { id: 'score2', value: 12, format: 'format' },
+      ] as GeneProfilesGenomicScoreWithValue[]},
+      { id: 'protectionScore', scores: [
+        { id: 'score3', value: 56, format: 'format' },
+        { id: 'score4', value: 39, format: 'format' },
+      ] as GeneProfilesGenomicScoreWithValue[]}
+    ];
+    expect(component.getSingleScoreValue(
+      mocksScores as GeneProfilesGenomicScores[],
+      'protectionScore',
+      'score4'))
+      .toBe(39);
+  });
+
+  it.skip('should save genotype browser filters state to state', () => {
+    fixture.detectChanges();
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+    const goToQuerySpy = jest.spyOn(GeneProfileSingleViewComponent, 'goToQuery');
+    const saveQuerySpy = jest.spyOn(queryServiceMock, 'saveQuery');
+
+    const personSet = {
+      id: 'personSetId',
+      displayName: 'person set',
+      collectionId: 'collectionId',
+      description: '',
+      parentsCount: 2,
+      childrenCount: 0,
+      defaultVisible: true,
+      shown: [],
+      statistics: []
+    } as GeneProfilesDatasetPersonSet;
+
+    const statistic = {
+      id: 'personSetId',
+      displayName: 'person set',
+      effects: ['intron'],
+      category: 'rare',
+      description: '',
+      variantTypes: ['type1', 'type2'],
+      scores: [
+        // {
+        //   max: null,
+        //   min: 2,
+        //   name: 'mpc'
+        // }
+      ],
+      defaultVisible: true
+    } as GeneProfilesDatasetStatistic;
+
+    component.goToQuery('chd8', personSet, 'datasetId', statistic);
+
+    expect(goToQuerySpy).toHaveBeenCalledWith(
+      store,
+      queryServiceMock,
+      'chd8',
+      personSet,
+      'datasetId',
+      statistic
+    );
+
+    expect(dispatchSpy.mock.calls).toStrictEqual([
+      [setGenomicScores({genomicScores: [new GenomicScore('a', 0, 10)]})],
+      [setEffectTypes({effectTypes: ['intron']})],
+      [setVariantTypes({variantTypes: ['type1', 'type2']})],
+      [setGeneSymbols({geneSymbols: ['chd8']})],
+      [setPresentInChild({presentInChild: ['proband only', 'proband and sibling', 'sibling only']})],
+      [setPresentInParent({presentInParent: {
+        presentInParent: ['father only', 'mother only', 'mother and father'],
+        rarity: {
+          rarityType: 'rare',
+          rarityIntervalStart: 0,
+          rarityIntervalEnd: 1
+        }
+      }})],
+      [setPedigreeSelector({
+        pedigreeSelector: {
+          id: personSet.collectionId,
+          checkedValues: [personSet.id]
+        }
+      })],
+      [setStudyTypes({studyTypes: ['we']})]
+    ]);
+
+    expect(saveQuerySpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('should go back from error modal', () => {
+    jest.clearAllMocks();
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+    const selectSpy = jest.spyOn(store, 'select').mockReturnValueOnce(of({openedTabs: ['tab1', 'tab2', 'tab3']}));
+    const routerSpy = jest.spyOn(component['router'], 'navigate');
+
+    component.errorModal = true;
+    Object.defineProperty(component, 'geneSymbol', {value: 'tab2' });
+    component.errorModalBack();
+
+    expect(component.errorModal).toBe(false);
+    expect(selectSpy).toHaveBeenCalledWith(selectGeneProfiles);
+    expect(dispatchSpy).toHaveBeenCalledWith(setGeneProfilesOpenedTabs({ openedTabs: ['tab1', 'tab3'] }));
+    expect(routerSpy).toHaveBeenCalledWith(['/gene-profiles']);
   });
 });
