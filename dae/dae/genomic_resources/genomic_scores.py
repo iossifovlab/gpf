@@ -183,19 +183,25 @@ class ScoreLine:
         assert key is not None
 
         value: str | int | float | None = self.line.get(key)
-        if score_id in self.score_defs:
-            col_def = self.score_defs[score_id]
-            if value in col_def.na_values:
+        if value is None:
+            return None
+        if score_id not in self.score_defs:
+            logger.warning(
+                "unexpected score_id %s in score", score_id)
+            return None
+
+        col_def = self.score_defs[score_id]
+        if value in col_def.na_values:
+            value = None
+        elif col_def.value_parser is not None:
+            # pylint: disable=broad-except
+            try:  # Temporary workaround for GRR generation
+                value = col_def.value_parser(value)
+            except Exception:
+                logger.exception(
+                    "unable to parse value %s for score %s",
+                    value, score_id)
                 value = None
-            elif col_def.value_parser is not None:
-                # pylint: disable=broad-except
-                try:  # Temporary workaround for GRR generation
-                    value = col_def.value_parser(value)
-                except Exception:
-                    logger.exception(
-                        "unable to parse value %s for score %s",
-                        value, score_id)
-                    value = None
         return value
 
     def get_available_scores(self) -> tuple[Any, ...]:
@@ -715,7 +721,11 @@ class GenomicScore(ResourceConfigValidationMixin):
         return None
 
     def get_histogram_filename(self, score_id: str) -> str:
-        return f"statistics/histogram_{score_id}.yaml"
+        """Return the histogram filename for a genomic score."""
+        filename = f"statistics/histogram_{score_id}.yaml"
+        if filename in self.resource.get_manifest():
+            return filename
+        return f"statistics/histogram_{score_id}.json"
 
     @lru_cache(maxsize=64)
     def get_score_histogram(self, score_id: str) -> Histogram:

@@ -281,7 +281,11 @@ class GeneScore(
         return None
 
     def get_histogram_filename(self, score_id: str) -> str:
-        return f"statistics/histogram_{score_id}.yaml"
+        """Return the histogram filename for a gene score."""
+        filename = f"statistics/histogram_{score_id}.yaml"
+        if filename in self.resource.get_manifest():
+            return filename
+        return f"statistics/histogram_{score_id}.json"
 
     @lru_cache(maxsize=64)
     def get_score_histogram(self, score_id: str) -> NumberHistogram:
