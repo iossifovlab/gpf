@@ -39,10 +39,10 @@ export class UsersComponent implements OnInit {
       came_from: this.router.url
     };
     window.location.href = `${this.config.rootUrl}${this.baseHref}`
-      + `o/authorize/?response_type=code`
-      + `&code_challenge_method=S256`
+      + 'o/authorize/?response_type=code'
+      + '&code_challenge_method=S256'
       + `&code_challenge=${codeChallenge}`
-      + `&scope=read`
+      + '&scope=read'
       + `&client_id=${this.config.oauthClientId}`
       + `&redirect_uri=${window.location.origin}${this.baseHref}login`
       + `&state=${btoa(JSON.stringify(state))}`;

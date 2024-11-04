@@ -8,6 +8,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
+import { FullEffectDetails } from './genotype-preview-field';
 
 describe('GenotypePreviewFieldComponent', () => {
   let component: GenotypePreviewFieldComponent;
@@ -37,6 +38,20 @@ describe('GenotypePreviewFieldComponent', () => {
     expect(component).toBeTruthy();
   });
 
+  it('should format effect details', () => {
+    const getUCSCLinkSpy = jest.spyOn(component, 'getUCSCLink').mockReturnValue('link');
+    const fromGenotypeValueSpy = jest.spyOn(FullEffectDetails, 'fromGenotypeValue')
+      .mockReturnValue(new FullEffectDetails('', '', [], [], true));
+    component.field = 'full_effect_details';
+
+    component.ngOnInit();
+
+    expect(getUCSCLinkSpy).toHaveBeenCalledWith();
+    expect(component.UCSCLink).toBe('link');
+    expect(fromGenotypeValueSpy).toHaveBeenCalledWith(component.value);
+    expect(component.fullEffectDetails).toStrictEqual(new FullEffectDetails('', '', [], [], true));
+  });
+
   it('should store format value', () => {
     component.ngOnChanges();
     expect(component.formattedValue).toBe('3.14');
@@ -47,6 +62,11 @@ describe('GenotypePreviewFieldComponent', () => {
     component.field = 'pi';
     component.format = '%.2f';
     expect(component.formatValue()).toStrictEqual(['3.14']);
+
+    component.value = ['-', 'nan'];
+    component.field = 'pi';
+    component.format = '%.2f';
+    expect(component.formatValue()).toStrictEqual(['-', 'nan']);
 
     component.value = 3.14159;
     component.field = 'pi';
@@ -72,5 +92,15 @@ describe('GenotypePreviewFieldComponent', () => {
     component.field = 'pi';
     component.format = null;
     expect(component.formatValue()).toBe('3.14159');
+  });
+
+  it('should get UCSCLink depending on the genome', () => {
+    component.genome = 'hg19';
+    let link = component.getUCSCLink();
+    expect(link).toBe(`http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr${component.value}`);
+
+    component.genome = 'hg38';
+    link = component.getUCSCLink();
+    expect(link).toBe(`http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=${component.value}`);
   });
 });

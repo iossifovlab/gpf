@@ -144,4 +144,16 @@ describe('FamilyTagsComponent', () => {
     expect(component.deselectedTags).toStrictEqual(['tag2']);
     expect(component.selectedTags).toStrictEqual([]);
   });
+
+  it('should reset family tags state', () => {
+    component.tags = ['tag1', 'tag2'];
+    component.filtersButtonsState = {
+      tag2: 1,
+      tag1: -1
+    };
+
+    component.ngOnInit();
+    expect(component.filtersButtonsState['tag1']).toBe(0);
+    expect(component.filtersButtonsState['tag2']).toBe(0);
+  });
 });

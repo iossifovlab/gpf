@@ -33,7 +33,7 @@ describe('GeneScoresComponent', () => {
   let component: GeneScoresComponent;
   let fixture: ComponentFixture<GeneScoresComponent>;
   let mockGeneScoresService: MockGeneScoresService;
-  let store;
+  let store: Store;
 
   beforeEach(() => {
     mockGeneScoresService = new MockGeneScoresService();
@@ -47,6 +47,7 @@ describe('GeneScoresComponent', () => {
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     jest.spyOn(store, 'select').mockReturnValue(of({score: 'score1'}));
 

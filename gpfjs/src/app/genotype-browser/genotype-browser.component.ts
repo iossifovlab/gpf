@@ -3,7 +3,7 @@ import { combineLatest, Observable, Subscription } from 'rxjs';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
-import { Dataset, PersonSet } from '../datasets/datasets';
+import { Dataset, PersonSet, PersonSetCollection } from '../datasets/datasets';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { filter, map, switchMap, take } from 'rxjs/operators';
 import { clone } from 'lodash';
@@ -214,7 +214,8 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
 
     this.genotypePreviewVariantsArray = null;
     this.genotypeBrowserState['datasetId'] = this.selectedDataset.id;
-    this.legend = this.selectedDataset.personSetCollections.getLegend(this.genotypeBrowserState['personSetCollection']);
+    this.legend = this.selectedDataset.personSetCollections
+      .getLegend(this.genotypeBrowserState['personSetCollection'] as PersonSetCollection);
 
     this.queryService.streamingSubject.pipe(take(1)).subscribe(() => {
       this.showTable = true;

@@ -7,7 +7,8 @@ import { PedigreeComponent } from './pedigree.component';
 import { Store, StoreModule } from '@ngrx/store';
 
 class MockVariantReportsService {
-  public getFamilies(): Observable<string[]> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public getFamilies(datasetId: string, groupName: string, counterId: number): Observable<string[]> {
     return of(['family1', 'family2', 'family3']);
   }
 }
@@ -34,10 +35,11 @@ describe('PedigreeComponent', () => {
     fixture = TestBed.createComponent(PedigreeComponent);
     component = fixture.componentInstance;
 
-    const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
+    const selectedDatasetMock = 'testId';
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
-    jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
+    jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMock));
 
     fixture.detectChanges();
   });
@@ -49,19 +51,21 @@ describe('PedigreeComponent', () => {
   it('should have working return guard in the loadFamilyListData() function', () => {
     const getFamiliesSpy = jest.spyOn(mockVariantReportsService, 'getFamilies');
 
+    component.groupName = 'groupName';
+    component.counterId = 2;
     component.familyIdsList = ['1', '2', '3'];
     component.loadFamilyListData();
     expect(getFamiliesSpy).not.toHaveBeenCalled();
 
     component.familyIdsList = undefined;
     component.loadFamilyListData();
-    expect(getFamiliesSpy).toHaveBeenCalled();
+    expect(getFamiliesSpy).toHaveBeenCalledWith('testId', 'groupName', 2);
   });
 
   it('should open modal', () => {
     jest.spyOn(modalService, 'open');
     jest.spyOn(component, 'loadFamilyListData');
     component.openModal();
-    expect(modalService.open).toHaveBeenCalled();
+    expect(modalService.open).toHaveBeenCalledTimes(1);
   });
 });

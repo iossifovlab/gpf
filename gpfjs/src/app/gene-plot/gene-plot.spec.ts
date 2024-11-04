@@ -34,8 +34,17 @@ describe('GenePlotModel', () => {
     jest.spyOn(GenePlotModel.prototype, 'buildDomain').mockImplementation(() => [1]);
     jest.spyOn(GenePlotModel.prototype, 'buildRange').mockImplementation(() => [2]);
     const plotModel = new GenePlotModel(
-      new Gene('CYP2D6', [new Transcript('id1', 'chr1', 'strand1', ['1', 2, 3] as any, ['2', 3, 4] as any)]), 123, 150
+      new Gene('CYP2D6', [
+        new Transcript(
+          'id1',
+          'chr1',
+          'strand1',
+          [{ chromosome: '1', start: 2, stop: 3 }],
+          [{ chromosome: '2', start: 3, stop: 4 }]
+        )
+      ]), 123, 150
     );
+
     expect(plotModel.buildDomain).toHaveBeenCalledWith(0, 3000000000);
     expect(plotModel.buildRange).toHaveBeenCalledWith(0, 3000000000, 123, false);
     expect(plotModel.buildRange).toHaveBeenCalledWith(0, 3000000000, 123, true);
@@ -82,7 +91,7 @@ describe('GenePlotZoomHistory', () => {
   it('should reset to default on instantiation', () => {
     jest.spyOn(GenePlotZoomHistory.prototype, 'reset').mockImplementation(() => {});
     const history = new GenePlotZoomHistory(new GenePlotScaleState(null, null, null, null, null));
-    expect(history.reset).toHaveBeenCalled();
+    expect(history.reset).toHaveBeenCalledWith();
     jest.restoreAllMocks();
   });
 
@@ -141,12 +150,24 @@ describe('GenePlotZoomHistory', () => {
     const transcripts: Transcript[] = [];
     for (let i = 0; i < 50; i++) {
       transcripts[i] = new Transcript(
-        `id${i}`, `chr${i}`, `strand${i}`, [i, i as Number, i as Number] as any, [i, i as Number, i as Number] as any
+        `id${i}`,
+        `chr${i}`,
+        `strand${i}`,
+        [{ chromosome: i.toString(), start: i, stop: i }],
+        [{ chromosome: i.toString(), start: i, stop: i }]
       );
     }
 
     let geneModel = new GenePlotModel(
-      new Gene('CYP2D6', [new Transcript('id1', 'chr1', 'strand1', ['1', 2, 3] as any, ['2', 3, 4] as any)]), 5, 150
+      new Gene('CYP2D6', [new Transcript(
+        'id1',
+        'chr1',
+        'strand1',
+        [{ chromosome: '1', start: 2, stop: 3 }],
+        [{ chromosome: '2', start: 3, stop: 4 }])]
+      ),
+      5,
+      150
     );
     const length = geneModel.spacerLength;
     expect(length).toBe(150);

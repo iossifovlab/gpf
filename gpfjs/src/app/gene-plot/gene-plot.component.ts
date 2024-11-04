@@ -476,7 +476,7 @@ export class GenePlotComponent implements OnChanges {
         `\nChromosome: ${transcript.chromosome}` +
         `\nExons length: ${this.commaSeparateNumber(exonsLength)}`;
     } else {
-      svgTitle = `COLLAPSED TRANSCRIPT` +
+      svgTitle = 'COLLAPSED TRANSCRIPT' +
         `\n${this.chromosomesTitle}` +
         `\nExons length: ${this.commaSeparateNumber(exonsLength)}`;
     }
@@ -531,7 +531,7 @@ export class GenePlotComponent implements OnChanges {
     y: number,
     strand: string
   ): void {
-    const [lUTR, rUTR] = strand === '+' ? [`5'`, `3'`] : [`3'`, `5'`]; // Choose strand direction
+    const [lUTR, rUTR] = strand === '+' ? ['5\'', '3\''] : ['3\'', '5\'']; // Choose strand direction
     draw.hoverText(svgGroup, this.scale.x(xStart) - 10, y + 5, lUTR, `UTR ${lUTR}`, this.constants.fontSize);
     draw.hoverText(svgGroup, this.scale.x(xEnd) + 23, y + 5, rUTR, `UTR ${rUTR}`, this.constants.fontSize);
   }

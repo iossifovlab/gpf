@@ -2,7 +2,7 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ConfigService } from './config/config.service';
-import { Observable, Subject, take, tap, catchError, of } from 'rxjs';
+import { Observable, Subject, take, tap, catchError } from 'rxjs';
 import { APP_BASE_HREF } from '@angular/common';
 import { CookieService } from 'ngx-cookie-service';
 import pkceChallenge from 'pkce-challenge';
@@ -54,7 +54,7 @@ export class AuthService {
     return this.http.post(`${this.config.rootUrl}${this.baseHref}o/revoke_token/`, {
       client_id: this.config.oauthClientId,
       token: this.accessToken,
-    }, this.options).pipe(take(1), tap({next: () => { this.clearTokens(); }}));
+    }, this.options).pipe(take(1), tap({next: () => this.clearTokens()}));
   }
 
   public clearTokens(): void {

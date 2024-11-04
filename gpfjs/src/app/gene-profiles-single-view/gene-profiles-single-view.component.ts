@@ -170,8 +170,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
   public static goToQuery(
     store: Store,
-    queryService:
-    QueryService,
+    queryService: QueryService,
     geneSymbol: string,
     personSet: GeneProfilesDatasetPersonSet,
     datasetId: string,
@@ -228,23 +227,6 @@ export class GeneProfileSingleViewComponent implements OnInit {
     }));
     store.dispatch(setStudyTypes({studyTypes: ['we']}));
     store.dispatch(setGenomicScores({genomicScores: genomicScores}));
-    store.dispatch(setPresentInChild({presentInChild: presentInChildValues}));
-    store.dispatch(setPresentInParent({
-      presentInParent: {
-        presentInParent: presentInParent,
-        rarity: {
-          rarityType: rarityType,
-          rarityIntervalStart: 0,
-          rarityIntervalEnd: 1,
-        }
-      }
-    }));
-    store.dispatch(setPedigreeSelector({
-      pedigreeSelector: {
-        id: personSet.collectionId,
-        checkedValues: [personSet.id],
-      }
-    }));
 
     store.pipe(take(1)).subscribe(state => {
       const clonedState = cloneDeep(state);
@@ -270,12 +252,12 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
     this.store.select(selectGeneProfiles).pipe(take(1)).subscribe(state => {
       tabs = state.openedTabs;
+
+      const index = tabs.indexOf(this.geneSymbol, 0);
+      tabs.splice(index, 1);
+
+      this.store.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
+      this.router.navigate(['/gene-profiles']);
     });
-
-    const index = tabs.indexOf(this.geneSymbol, 0);
-    tabs.splice(index, 1);
-
-    this.store.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
-    this.router.navigate(['/gene-profiles']);
   }
 }

@@ -99,6 +99,7 @@ describe('PhenoToolComponent', () => {
     fixture = TestBed.createComponent(PhenoToolComponent);
     component = fixture.componentInstance;
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
   }));
 
@@ -108,6 +109,7 @@ describe('PhenoToolComponent', () => {
 
   it('should test state selector', () => {
     jest.clearAllMocks();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const rxjs = jest.requireActual('rxjs');
 
     const geneSetsMock: GeneSetsState = {

@@ -40,8 +40,8 @@ export class PedigreeComponent {
 
     this.store.select(selectDatasetId).pipe(
       take(1),
-      switchMap(selectwsDatasetIdState => {
-        this.selectedDatasetId = selectwsDatasetIdState;
+      switchMap(selectedDatasetIdState => {
+        this.selectedDatasetId = selectedDatasetIdState;
         return this.variantReportsService.getFamilies(
           this.selectedDatasetId,
           this.groupName,
