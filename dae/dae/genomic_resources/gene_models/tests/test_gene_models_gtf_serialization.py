@@ -393,7 +393,8 @@ def test_gene_models_to_gtf_sort_parameter(
 ) -> None:
     example_models = gencode_46_calml6_example
     example_models.load()
-    serialized = gene_models_to_gtf(example_models, sort=sort).getvalue()
+    serialized = gene_models_to_gtf(
+        example_models, sort_by_position=sort).getvalue()
 
     # [4:] skips auto-generated comment lines
     features = [

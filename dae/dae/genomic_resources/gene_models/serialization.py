@@ -26,7 +26,7 @@ GTFRecord = tuple[GTFRecordIndex, str]
 
 def gene_models_to_gtf(
     gene_models: GeneModels, *,
-    sort: bool = True,
+    sort_by_position: bool = True,
 ) -> StringIO:
     """Output a GTF format string representation."""
     if not gene_models.gene_models:
@@ -60,7 +60,7 @@ def gene_models_to_gtf(
         for transcript in transcripts:
             record_buffer.extend(transcript_to_gtf(transcript))
 
-    if sort:
+    if sort_by_position:
         record_buffer.sort(key=operator.itemgetter(0))
 
     joined_records = "\n".join(rec[1] for rec in record_buffer)
