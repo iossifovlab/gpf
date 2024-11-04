@@ -6,25 +6,28 @@ export interface GeneScoresState {
   score: string;
   rangeStart: number;
   rangeEnd: number;
+  values: string[];
 }
 
 export const initialState: GeneScoresState = {
   score: null,
   rangeStart: 0,
-  rangeEnd: 0
+  rangeEnd: 0,
+  values: null,
 };
 
 export const selectGeneScores =
   createFeatureSelector<GeneScoresState>('geneScores');
 
-export const setGeneScoresHistogramValues = createAction(
-  '[Genotype] Set geneScores histogram values',
-  props<{ score: string; rangeStart: number; rangeEnd: number }>()
+export const setGeneScoreContinuous = createAction(
+  '[Genotype] Set score with continuous histogram data',
+  props<{score: string, rangeStart: number, rangeEnd: number}>()
 );
 
-export const setGeneScore = createAction(
-  '[Genotype] Set score',
-  props<GeneScoresState>()
+export const setGeneScoreCategorical = createAction(
+  '[Genotype] Set score with categorical histogram data',
+
+  props<{score: string, values: string[]}>()
 );
 
 export const resetGeneScoresValues = createAction(
@@ -33,15 +36,17 @@ export const resetGeneScoresValues = createAction(
 
 export const geneScoresReducer = createReducer(
   initialState,
-  on(setGeneScoresHistogramValues, (state, { score, rangeStart, rangeEnd }) => ({
+  on(setGeneScoreContinuous, (state, { score, rangeStart, rangeEnd }) => ({
     score: score,
     rangeStart: rangeStart,
-    rangeEnd: rangeEnd
+    rangeEnd: rangeEnd,
+    values: initialState.values,
   })),
-  on(setGeneScore, (state, { score, rangeStart, rangeEnd }) => ({
+  on(setGeneScoreCategorical, (state, { score, values }) => ({
     score: score,
-    rangeStart: rangeStart,
-    rangeEnd: rangeEnd
+    rangeStart: initialState.rangeStart,
+    rangeEnd: initialState.rangeEnd,
+    values: values,
   })),
   on(reset, resetGeneScoresValues, state => cloneDeep(initialState))
 );

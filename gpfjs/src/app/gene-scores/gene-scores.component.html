@@ -37,7 +37,9 @@
         *ngIf="selectedGeneScores && isCategoricalHistogram(selectedGeneScores.histogram)"
         [width]="650"
         [height]="145"
-        [histogram]="selectedGeneScores.histogram">
+        [histogram]="selectedGeneScores.histogram"
+        [stateCategoricalNames]="categoricalValues"
+        (selectCategoricalValue)="toggleCategoricalValue($event)">
       </gpf-categorical-histogram>
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>

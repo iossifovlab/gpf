@@ -8,7 +8,8 @@ import { switchMap, take } from 'rxjs/operators';
 import { ValidateNested } from 'class-validator';
 import { environment } from 'environments/environment';
 import { ComponentValidator } from 'app/common/component-validator';
-import { selectGeneScores, setGeneScore, setGeneScoresHistogramValues } from './gene-scores.state';
+import { selectGeneScores, setGeneScoreCategorical, setGeneScoreContinuous } from './gene-scores.state';
+import { cloneDeep } from 'lodash';
 
 @Component({
   encapsulation: ViewEncapsulation.None, // TODO: What is this?
@@ -23,6 +24,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   public downloadUrl: string;
 
   @ValidateNested() public geneScoresLocalState = new GeneScoresLocalState();
+  public categoricalValues: string[] = [];
 
   public imgPathPrefix = environment.imgPathPrefix;
 
@@ -47,8 +49,13 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
         for (const score of this.geneScoresArray) {
           if (score.score === state.score) {
             this.selectedGeneScores = score;
-            this.rangeStart = state.rangeStart;
-            this.rangeEnd = state.rangeEnd;
+            // Load either categorical or continuous histogram selection data
+            if (state.values?.length > 0) {
+              this.categoricalValues = cloneDeep(state.values);
+            } else {
+              this.rangeStart = state.rangeStart;
+              this.rangeEnd = state.rangeEnd;
+            }
             break;
           }
         }
@@ -56,8 +63,14 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
         this.selectedGeneScores = this.geneScoresArray[0];
       }
     });
-    if (this.geneScoresLocalState.score !== null && this.rangeStart !== null && this.rangeEnd !== null) {
-      this.updateHistogramState();
+
+    if (this.geneScoresLocalState.score !== null) {
+      if (this.rangeStart !== 0 && this.rangeEnd !== 0) {
+        this.updateContinuousHistogramState();
+      }
+      if (this.categoricalValues.length > 0) {
+        this.updateCategoricalHistogramState();
+      }
     }
   }
 
@@ -69,12 +82,19 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
     ]);
   }
 
-  private updateHistogramState(): void {
+  private updateContinuousHistogramState(): void {
     this.updateLabels();
-    this.store.dispatch(setGeneScoresHistogramValues({
+    this.store.dispatch(setGeneScoreContinuous({
       score: this.selectedGeneScores.score,
       rangeStart: this.geneScoresLocalState.rangeStart,
       rangeEnd: this.geneScoresLocalState.rangeEnd,
+    }));
+  }
+
+  private updateCategoricalHistogramState(): void {
+    this.store.dispatch(setGeneScoreCategorical({
+      score: this.selectedGeneScores.score,
+      values: this.categoricalValues,
     }));
   }
 
@@ -84,23 +104,23 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
 
   public set selectedGeneScores(selectedGeneScores: GeneScores) {
     this.geneScoresLocalState.score = selectedGeneScores;
+    this.downloadUrl = this.getDownloadUrl();
     if (selectedGeneScores !== undefined && this.isNumberHistogram(selectedGeneScores.histogram)) {
       this.changeDomain(selectedGeneScores.histogram);
+      this.rangeStart = this.geneScoresLocalState.domainMin;
+      this.rangeEnd = this.geneScoresLocalState.domainMax;
+      this.updateLabels();
+      this.store.dispatch(setGeneScoreContinuous({
+        score: this.geneScoresLocalState.score.score,
+        rangeStart: this.geneScoresLocalState.rangeStart,
+        rangeEnd: this.geneScoresLocalState.rangeEnd,
+      }));
     }
-    this.rangeStart = this.geneScoresLocalState.domainMin;
-    this.rangeEnd = this.geneScoresLocalState.domainMax;
-    this.updateLabels();
-    this.downloadUrl = this.getDownloadUrl();
-    this.store.dispatch(setGeneScore({
-      score: this.geneScoresLocalState.score.score,
-      rangeStart: this.geneScoresLocalState.rangeStart,
-      rangeEnd: this.geneScoresLocalState.rangeEnd,
-    }));
   }
 
   public set rangeStart(range: number) {
     this.geneScoresLocalState.rangeStart = range;
-    this.updateHistogramState();
+    this.updateContinuousHistogramState();
   }
 
   public get rangeStart(): number {
@@ -109,7 +129,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
 
   public set rangeEnd(range: number) {
     this.geneScoresLocalState.rangeEnd = range;
-    this.updateHistogramState();
+    this.updateContinuousHistogramState();
   }
 
   public get rangeEnd(): number {
@@ -130,6 +150,19 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
       this.geneScoresLocalState.domainMin = histogram.bins[0];
       this.geneScoresLocalState.domainMax = histogram.bins[histogram.bins.length - 1];
     }
+  }
+
+  public toggleCategoricalValue(value: string): void {
+    const valueIndex = this.categoricalValues.findIndex(v => v === value);
+    if (valueIndex === -1) {
+      this.categoricalValues.push(value);
+    } else {
+      this.categoricalValues.splice(valueIndex, 1);
+    }
+    this.store.dispatch(setGeneScoreCategorical({
+      score: this.geneScoresLocalState.score.score,
+      values: cloneDeep(this.categoricalValues),
+    }));
   }
 
   public isNumberHistogram(arg: object): arg is NumberHistogram {

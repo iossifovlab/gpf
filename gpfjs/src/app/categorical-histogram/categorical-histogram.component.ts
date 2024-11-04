@@ -29,6 +29,7 @@ export class CategoricalHistogramComponent implements OnChanges {
   @Input() public showMinMaxInput: boolean;
 
   @Input() public histogram: CategoricalHistogram;
+  @Input() public stateCategoricalNames: string[] = [];
 
   private svg: d3.Selection<SVGElement, unknown, null, undefined>;
 
@@ -90,6 +91,13 @@ export class CategoricalHistogramComponent implements OnChanges {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       this.selectValue(event);
     });
+
+    if (this.stateCategoricalNames.length > 0) {
+      this.stateCategoricalNames.forEach(name => {
+        svg.select(`[id="${name}"]`)
+          .style('fill', 'coral');
+      });
+    }
 
     this.svg = svg;
   }

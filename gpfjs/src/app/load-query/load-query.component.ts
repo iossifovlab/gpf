@@ -14,7 +14,7 @@ import { setPresentInChild } from 'app/present-in-child/present-in-child.state';
 import { setPresentInParent } from 'app/present-in-parent/present-in-parent.state';
 import { setGeneSetsValues } from 'app/gene-sets/gene-sets.state';
 import { setGeneSymbols } from 'app/gene-symbols/gene-symbols.state';
-import { setGeneScore } from 'app/gene-scores/gene-scores.state';
+import { setGeneScoreCategorical, setGeneScoreContinuous } from 'app/gene-scores/gene-scores.state';
 import { setRegionsFilters } from 'app/regions-filter/regions-filter.state';
 import { setStudyFilters } from 'app/study-filters/study-filters.state';
 import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
@@ -87,11 +87,6 @@ export class LoadQueryComponent implements OnInit {
         geneSetsTypes: state.geneSets.geneSetsTypes
       }));
       this.store.dispatch(setGeneSymbols({geneSymbols: state.geneSymbols}));
-      this.store.dispatch(setGeneScore({
-        score: state.geneScores.score,
-        rangeEnd: state.geneScores.rangeEnd,
-        rangeStart: state.geneScores.rangeStart,
-      }));
       this.store.dispatch(setRegionsFilters({regionsFilter: state.regionsFilter}));
       this.store.dispatch(setStudyFilters({studyFilters: state.studyFilters}));
       this.store.dispatch(setGenomicScores({genomicScores: state.genomicScores}));
@@ -104,6 +99,18 @@ export class LoadQueryComponent implements OnInit {
       this.store.dispatch(setFamilyIds({familyIds: state.familyIds}));
       this.store.dispatch(setPersonIds({personIds: state.personIds}));
       this.router.navigate(navigationParams);
+      if (state.geneScores.values?.length > 0) {
+        this.store.dispatch(setGeneScoreCategorical({
+          score: state.geneScores.score,
+          values: state.geneScores.values,
+        }));
+      } else {
+        this.store.dispatch(setGeneScoreContinuous({
+          score: state.geneScores.score,
+          rangeEnd: state.geneScores.rangeEnd,
+          rangeStart: state.geneScores.rangeStart,
+        }));
+      }
     }
   }
 }
