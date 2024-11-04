@@ -41,7 +41,7 @@ def gene_models_to_gtf(
         start = min(t.tx[0] for t in transcripts)
         stop = max(t.tx[1] for t in transcripts)
         strand = t.strand
-        gene_id = t.attributes.get("gene_id", gene_name)
+        gene_id = gene_name
         version = t.attributes.get("gene_version", ".")
         src = t.attributes.get("gene_source", ".")
         biotype = t.attributes.get("gene_biotype", ".")
@@ -306,11 +306,11 @@ def transcript_to_gtf(transcript: TranscriptModel) -> list[GTFRecord]:
     """Output an indexed list of GTF-formatted features of a transcript."""
     record_buffer: list[GTFRecord] = []
 
-    attributes = dict(transcript.attributes)
-    if "gene_name" not in attributes:
-        attributes["gene_name"] = transcript.gene
-    if "gene_id" not in attributes:
-        attributes["gene_id"] = transcript.gene
+    attributes = {
+        "transcript_id": transcript.tr_id,
+        "gene_name": transcript.gene,
+        "gene_id": transcript.gene,
+    }
     str_attrs = ";".join(f'{k} "{v}"' for k, v in attributes.items())
 
     def write_record(feature: str, start: int, stop: int) -> None:
