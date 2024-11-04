@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
 from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
@@ -8,6 +9,7 @@ from dae.genomic_resources.gene_models import (
     Exon,
     GeneModels,
     TranscriptModel,
+    build_gene_models_from_file,
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.gene_models.serialization import (
@@ -377,11 +379,9 @@ def test_phase_field_serialization_negative_strand(
         (True, ["gene", "transcript", "exon", "UTR", "CDS", "start_codon",
                 "exon", "CDS", "exon", "CDS", "exon", "CDS", "exon", "CDS",
                 "exon", "CDS", "stop_codon", "UTR"]),
-        (False, ["gene", "transcript",
-                 "exon", "exon", "exon", "exon", "exon", "exon",
-                 "start_codon",
-                 "CDS", "CDS", "CDS", "CDS", "CDS", "CDS",
-                 "stop_codon", "UTR", "UTR"]),
+        (False, ["gene", "transcript", "exon", "CDS", "start_codon",
+                 "exon", "CDS", "exon", "CDS", "exon", "CDS", "exon", "CDS",
+                 "exon", "CDS", "stop_codon", "UTR", "UTR"]),
     ],
 )
 def test_gene_models_to_gtf_sort_parameter(
@@ -391,7 +391,8 @@ def test_gene_models_to_gtf_sort_parameter(
 ) -> None:
     example_models = gencode_46_calml6_example
     example_models.load()
-    serialized = gene_models_to_gtf(example_models, sort=sort).getvalue()
+    serialized = gene_models_to_gtf(
+        example_models, sort_by_position=sort).getvalue()
 
     # [4:] skips auto-generated comment lines
     features = [
@@ -962,3 +963,37 @@ def test_explore_shh_gene(
 
     frame = calc_frame_for_gtf_cds_feature(transcript, start_codons[0])
     assert frame == 0
+
+
+@pytest.mark.parametrize("filename,fmt", [
+    ("gene_models/genePred_100.txt.gz", "ucscgenepred"),
+    ("gene_models/test_ref_flat.txt", "refflat"),
+    ("gene_models/test_ref_flat_no_header.txt", "refflat"),
+    ("gene_models/test_ccds.txt", "ccds"),
+    ("gene_models/test_ref_gene.txt", "refseq"),
+    ("gene_models/test_ref_seq_hg38.txt", "refseq"),
+    ("gene_models/test_known_gene.txt", "knowngene"),
+    ("gene_models/test_default_ref_gene_201309.txt", "default"),
+])
+def test_with_various_formats(filename: str, fmt: str) -> None:
+    path = str(Path(__file__).resolve().parent / "fixtures" / filename)
+    reference_models = build_gene_models_from_file(path, file_format=fmt)
+    assert reference_models is not None
+    reference_models.load()
+    serialized = gene_models_to_gtf(reference_models).getvalue()
+
+    gtf_models = build_gene_models_from_resource(build_inmemory_test_resource(
+        content={
+            "genomic_resource.yaml":
+                "{type: gene_models, filename: gencode.txt, format: gtf}",
+            "gencode.txt": serialized,
+    }))
+    gtf_models.load()
+
+    assert gtf_models is not None
+
+    assert len(gtf_models.transcript_models) \
+        == len(reference_models.transcript_models)
+
+    assert len(gtf_models.gene_models) \
+        == len(reference_models.gene_models)
