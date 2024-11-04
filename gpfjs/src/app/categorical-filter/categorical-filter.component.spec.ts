@@ -75,6 +75,7 @@ const measureDescMock = {
 };
 
 class MockPhenoBrowserService {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public getMeasureDescription(datasetId: string, source: string): Observable<object> {
     return of(measureDescMock);
   }
@@ -104,6 +105,7 @@ describe('CategoricalFilterComponent', () => {
 
     fixture = TestBed.createComponent(CategoricalFilterComponent);
     component = fixture.componentInstance;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     fixture.detectChanges();
   });

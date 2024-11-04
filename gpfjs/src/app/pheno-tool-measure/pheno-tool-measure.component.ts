@@ -147,8 +147,8 @@ export class PhenoToolMeasureComponent extends ComponentValidator implements OnI
 
   public clearCheckbox(): void {
     this.inputs.forEach(checkbox => {
-      checkbox.nativeElement.checked = false;
-      checkbox.nativeElement.dispatchEvent(new Event('change'));
+      (checkbox.nativeElement as HTMLInputElement).checked = false;
+      (checkbox.nativeElement as HTMLInputElement).dispatchEvent(new Event('change'));
     });
   }
 }

@@ -27,10 +27,12 @@ import { GenomicScore } from 'app/genotype-browser/genotype-browser';
 import { selectGeneProfiles, setGeneProfilesOpenedTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
 
 class QueryServiceMock {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public saveQuery(state: object, tool: string): Observable<object> {
     return of({});
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public getLoadUrlFromResponse(obj: object): string {
     return 'url';
   }
@@ -56,6 +58,7 @@ describe('GeneProfileSingleViewComponent', () => {
 
     fixture = TestBed.createComponent(GeneProfileSingleViewComponent);
     component = fixture.componentInstance;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     component.config = {geneSets: ['mockGeneSet']} as any;
     fixture.detectChanges();

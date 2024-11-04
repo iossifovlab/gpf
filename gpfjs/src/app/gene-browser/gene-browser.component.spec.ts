@@ -1,6 +1,6 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, NavigationStart, Router, RouterEvent, Event } from '@angular/router';
+import { ActivatedRoute, NavigationStart, Router, Event } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Observable, of, Subject } from 'rxjs';
 import { geneSymbolsReducer } from 'app/gene-symbols/gene-symbols.state';
@@ -133,6 +133,7 @@ describe('GeneBrowserComponent', () => {
 
     const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
 

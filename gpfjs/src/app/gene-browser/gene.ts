@@ -35,7 +35,7 @@ function collapseSegments(transcripts: Transcript[]): Transcript {
 }
 
 function collapseMultipleTranscripts(chromKeys: string[], transcripts: Transcript[]): Transcript[] {
-  let trans: Transcript[] = [];
+  const trans: Transcript[] = [];
   for (const key of chromKeys) {
     const chromosomeTranscripts = transcripts.filter(t => t.chromosome === key);
     trans.push(collapseSegments(chromosomeTranscripts));
@@ -163,7 +163,7 @@ export class Gene {
   public readonly collapsedTranscripts: Transcript[];
   public readonly chromosomes: Map<string, [number, number]>;
   public readonly medianExon: Map<string, number>;
-  public readonly medianExonLength;
+  public readonly medianExonLength: number;
 
   public constructor(
     public readonly geneSymbol: string,

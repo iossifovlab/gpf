@@ -250,6 +250,7 @@ class UsersServiceMock {
 }
 
 class GeneProfilesTableServiceMock {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public getGenes(pageIndex: number, geneInput: string): Observable<Record<string, any>> {
     const res = cloneDeep(genesMock);
     return of(res);
@@ -299,6 +300,7 @@ describe('GeneProfilesTableComponent', () => {
 
     component.sortingButtonsComponents = [];
     component.config = configMock;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     location = TestBed.inject(Location);
     jest.spyOn(store, 'select').mockReturnValue(of({

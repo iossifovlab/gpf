@@ -75,7 +75,7 @@ describe('pheno browser service', () => {
   it('should provide a correct download link', () => {
     const instrumentName = 'testInstrument';
     const datasetName = 'testDataset';
-    const expectedUrl = `http://testUrl/pheno_browser/download`
+    const expectedUrl = 'http://testUrl/pheno_browser/download'
                         + `?dataset_id=${datasetName}&instrument=${instrumentName}`;
     expect(phenoBrowserService.getDownloadLink(instrumentName, datasetName)).toBe(expectedUrl);
   });

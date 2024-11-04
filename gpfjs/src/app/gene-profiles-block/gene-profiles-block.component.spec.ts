@@ -171,6 +171,7 @@ describe('GeneProfilesBlockComponent', () => {
 
     fixture = TestBed.createComponent(GeneProfilesBlockComponent);
     component = fixture.componentInstance;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
 
     fixture.detectChanges();

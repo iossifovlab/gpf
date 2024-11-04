@@ -180,6 +180,7 @@ describe('PhenoBrowserComponent', () => {
 
     const selectedDatasetMockModel = {selectedDatasetId: 'testId'};
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     jest.spyOn(store, 'select').mockReturnValue(of(selectedDatasetMockModel));
 

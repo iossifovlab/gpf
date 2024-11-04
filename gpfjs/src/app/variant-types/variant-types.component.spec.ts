@@ -39,6 +39,7 @@ describe('VariantTypesComponent', () => {
 
   it('should handle selected values input and/or restore state', () => {
     let dispatchSpy;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
 
     jest.spyOn(store, 'select').mockReturnValue(of(['value1', 'value2']));
@@ -65,6 +66,7 @@ describe('VariantTypesComponent', () => {
 
   it('should update variant types', () => {
     component.selectedVariantTypes = undefined;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     jest.spyOn(store, 'dispatch').mockReturnValue();
 

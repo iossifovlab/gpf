@@ -13,6 +13,7 @@ import { Observable, of } from 'rxjs';
 import { StoreModule } from '@ngrx/store';
 
 class MockQueryService {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public deleteQuery(uuid: string): Observable<void> {
     return of();
   }

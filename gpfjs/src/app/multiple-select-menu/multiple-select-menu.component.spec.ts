@@ -29,7 +29,7 @@ describe('MultipleSelectMenuComponent', () => {
     component.buttonLabel = 'Uncheck all';
     component.columns = [
       new GeneProfilesColumn('clickable', [], 'option', false, 'id', 'meta', true, true)
-    ]
+    ];
     component.toggleCheckingAll();
     expect(component.buttonLabel).toBe('Check all');
     expect(component.columns[0].visibility).toBe(false);
@@ -43,12 +43,12 @@ describe('MultipleSelectMenuComponent', () => {
 
   it('should refresh', () => {
     const column1 = new GeneProfilesColumn('clickable', [], 'option1', false, 'id1', 'meta1', true, true);
-    const column2 =  new GeneProfilesColumn('clickable', [], 'option2', false, 'id2', 'meta2', true, false);
+    const column2 = new GeneProfilesColumn('clickable', [], 'option2', false, 'id2', 'meta2', true, false);
 
     component.searchText = 'search value';
     component.buttonLabel = 'Check all';
     component.columns = [column1, column2];
-    component.filteredColumns = [column2]
+    component.filteredColumns = [column2];
 
     component.refresh();
 
@@ -65,7 +65,7 @@ describe('MultipleSelectMenuComponent', () => {
 
   it('should filter items by substring', () => {
     const column1 = new GeneProfilesColumn('clickable', [], 'option1', false, 'id1', 'meta1', true, true);
-    const column2 =  new GeneProfilesColumn('clickable', [], 'option2', false, 'id2', 'meta2', true, false);
+    const column2 = new GeneProfilesColumn('clickable', [], 'option2', false, 'id2', 'meta2', true, false);
 
     component.columns = [column1, column2];
     component.filterItems('on2');

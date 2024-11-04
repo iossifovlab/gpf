@@ -121,7 +121,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
         this.displayVariantsCount();
       }),
       this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => {
-        this.updateShownTablePreviewVariantsArray()
+        this.updateShownTablePreviewVariantsArray();
       }),
       this.searchBoxInput$.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {
         if (!this.geneSymbol) {

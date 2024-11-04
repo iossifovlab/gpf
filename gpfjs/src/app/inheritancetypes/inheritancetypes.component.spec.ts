@@ -19,6 +19,7 @@ describe('InheritancetypesComponent', () => {
       ],
       imports: [StoreModule.forRoot({inheritanceTypes: inheritanceTypesReducer})],
     }).compileComponents();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     store.dispatch(setInheritanceTypes({inheritanceTypes: ['value1', 'value2']}));
     fixture = TestBed.createComponent(InheritancetypesComponent);

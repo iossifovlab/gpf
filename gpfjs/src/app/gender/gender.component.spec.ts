@@ -20,6 +20,7 @@ describe('GenderComponent', () => {
     fixture = TestBed.createComponent(GenderComponent);
     component = fixture.componentInstance;
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
     fixture.detectChanges();
   }));

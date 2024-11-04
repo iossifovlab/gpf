@@ -10,20 +10,22 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 class InstanceServiceMock {
   public writeAboutDescription(description: string): Observable<object> {
     return of({
-      'content': description
+      content: description
     });
   }
 
   public getAboutDescription(): Observable<object> {
-   return of({
-    'content': '# Introduction\n[GPF](https://iossifovlab.com/gpf/) (Genotypes and Phenotypes in Families) is an open-source platform that manages genotypes and phenotypes derived from collections of families.'
+    return of({
+      content: '# Introduction\n[GPF](https://iossifovlab.com/gpf/) ' +
+        '(Genotypes and Phenotypes in Families) is an open-source platform that ' +
+        'manages genotypes and phenotypes derived from collections of families.'
     });
   }
 }
 describe('AboutComponent', () => {
   let component: AboutComponent;
   let fixture: ComponentFixture<AboutComponent>;
-  let instanceServiceMock = new InstanceServiceMock();
+  const instanceServiceMock = new InstanceServiceMock();
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
@@ -47,11 +49,15 @@ describe('AboutComponent', () => {
   });
 
   it('should get about description', () => {
-    expect(component.aboutDescription).toBe('# Introduction\n[GPF](https://iossifovlab.com/gpf/) (Genotypes and Phenotypes in Families) is an open-source platform that manages genotypes and phenotypes derived from collections of families.');
+    expect(component.aboutDescription).toBe(
+      '# Introduction\n[GPF](https://iossifovlab.com/gpf/) ' +
+      '(Genotypes and Phenotypes in Families) is an open-source platform ' +
+      'that manages genotypes and phenotypes derived from collections of families.'
+    );
   });
 
   it('should write about description', () => {
-    jest.spyOn(instanceServiceMock, 'getAboutDescription').mockReturnValueOnce(of({'content': 'new description'}));
+    jest.spyOn(instanceServiceMock, 'getAboutDescription').mockReturnValueOnce(of({content: 'new description'}));
 
     component.writeDescription('new description');
     expect(component.aboutDescription).toBe('new description');
