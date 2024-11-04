@@ -302,6 +302,7 @@ def import_pheno_data(args: Any) -> None:
         instr: defaultdict(default_row)
         for instr in instruments
     }
+    imported_instruments = set()
     description_builder = load_descriptions(args.data_dictionary)
     with TaskGraphCli.create_executor(task_cache, **vars(args)) as xtor:
         try:
@@ -338,6 +339,7 @@ def import_pheno_data(args: Any) -> None:
                             report.rank,
                         ],
                     )
+                imported_instruments.add(report.instrument_name)
 
         except Exception:
             logger.exception("Failed to classify measure")
@@ -346,6 +348,10 @@ def import_pheno_data(args: Any) -> None:
 
     print("WRITING RESULTS")
     start = time.time()
+
+    for k in list(instrument_tables.keys()):
+        if k not in imported_instruments:
+            del instrument_tables[k]
 
     write_results(connection, instrument_tables, ped_df)
 
