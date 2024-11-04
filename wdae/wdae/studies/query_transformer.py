@@ -48,6 +48,7 @@ class QueryTransformer:
         scores_name = gene_scores.get("score")
         range_start = gene_scores.get("rangeStart")
         range_end = gene_scores.get("rangeEnd")
+        values = gene_scores.get("values")
 
         if scores_name and scores_name in self.study_wrapper.gene_scores_db:
             score_desc = self.study_wrapper.gene_scores_db[
@@ -57,7 +58,7 @@ class QueryTransformer:
                 score_desc.resource_id,
             )
 
-            genes = score.get_genes(scores_name, range_start, range_end)
+            genes = score.get_genes(scores_name, range_start, range_end, values)
 
             return list(genes)
 
