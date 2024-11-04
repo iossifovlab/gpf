@@ -2,7 +2,7 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { environment } from '../environments/environment';
 import { BnNgIdleService } from 'bn-ng-idle';
 import { UsersService } from './users/users.service';
-import { switchMap, take } from 'rxjs/operators';
+import { switchMap } from 'rxjs/operators';
 import { GeneProfilesService } from './gene-profiles-block/gene-profiles.service';
 import { GeneProfilesSingleViewConfig } from './gene-profiles-single-view/gene-profiles-single-view';
 import { NgbConfig } from '@ng-bootstrap/ng-bootstrap';
