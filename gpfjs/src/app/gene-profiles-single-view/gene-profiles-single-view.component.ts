@@ -270,12 +270,12 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
     this.store.select(selectGeneProfiles).pipe(take(1)).subscribe(state => {
       tabs = state.openedTabs;
+
+      const index = tabs.indexOf(this.geneSymbol, 0);
+      tabs.splice(index, 1);
+
+      this.store.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
+      this.router.navigate(['/gene-profiles']);
     });
-
-    const index = tabs.indexOf(this.geneSymbol, 0);
-    tabs.splice(index, 1);
-
-    this.store.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
-    this.router.navigate(['/gene-profiles']);
   }
 }
