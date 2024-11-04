@@ -198,8 +198,8 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
       await expect(page.locator('#dataset-comp_vcf')).toBeVisible();
       await expect(page.locator('#dataset-comp_denovo')).toBeVisible();
 
-      await page.locator('#dataset-COMP_genotypes').click();
-      await expect(page.getByText('No person set collections')).toBeVisible();
+      await expect(page.locator('#dataset-COMP_genotypes')).toHaveCSS('opacity', '0.3');
+      await expect(page.locator('#dataset-COMP_genotypes')).toHaveCSS('pointer-events', 'none');
 
       await page.locator('#dataset-comp_denovo').click();
       await expect(page.locator('#dataset-iossifov_2014')).toHaveClass('btn-sm text-wrap modified');
