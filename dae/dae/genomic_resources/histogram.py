@@ -804,11 +804,11 @@ def load_histogram(
     hist_type = config["type"]
     try:
         if hist_type == "number":
-            return NumberHistogram.deserialize(content)
+            return NumberHistogram.from_dict(hist_data)
         if hist_type == "categorical":
-            return CategoricalHistogram.deserialize(content)
+            return CategoricalHistogram.from_dict(hist_data)
         if hist_type == "null":
-            return NullHistogram.deserialize(content)
+            return NullHistogram.from_dict(hist_data)
 
         return NullHistogram(NullHistogramConfig("Invalid histogram type"))
     except BaseException:  # pylint: disable=broad-except
@@ -819,6 +819,24 @@ def load_histogram(
         return NullHistogram(NullHistogramConfig(
             "Failed to deserialize histogram.",
         ))
+
+
+def save_histogram(
+    resource: GenomicResource,
+    filename: str,
+    histogram: Histogram,
+) -> None:
+    """Save histogram into a resource."""
+    if not filename.endswith(".json"):
+        logger.error(
+            "Invalid histogram file format: %s; "
+            "histograms are stored in JSON format only", filename)
+        raise ValueError(
+            f"Invalid histogram file format: <{filename}>; "
+            f"histograms are stored in JSON format only",
+        )
+    with resource.open_raw_file(filename, mode="wt") as outfile:
+        outfile.write(histogram.serialize())
 
 
 HistogramConfig = \

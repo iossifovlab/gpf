@@ -721,6 +721,10 @@ class GenomicScore(ResourceConfigValidationMixin):
         return None
 
     def get_histogram_filename(self, score_id: str) -> str:
+        """Return the histogram filename for a genomic score."""
+        filename = f"statistics/histogram_{score_id}.yaml"
+        if filename in self.resource.get_manifest():
+            return filename
         return f"statistics/histogram_{score_id}.json"
 
     @lru_cache(maxsize=64)
