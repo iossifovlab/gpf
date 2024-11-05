@@ -17,7 +17,13 @@ from dae.gene_sets.gene_term import (
     read_mapping_file,
 )
 from dae.genomic_resources.fsspec_protocol import build_local_resource
-from dae.genomic_resources.repository import GenomicResource
+from dae.genomic_resources.repository import (
+    GenomicResource,
+    GenomicResourceRepo,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genomic_resources.resource_implementation import (
     GenomicResourceImplementation,
     InfoImplementationMixin,
@@ -361,3 +367,12 @@ def build_gene_set_collection_from_resource(
         raise ValueError(f"missing resource {resource}")
 
     return GeneSetCollection(resource)
+
+
+def build_gene_set_collection_from_resource_id(
+    resource_id: str, grr: GenomicResourceRepo | None = None,
+) -> GeneSetCollection:
+    if grr is None:
+        grr = build_genomic_resource_repository()
+    return build_gene_set_collection_from_resource(
+        grr.get_resource(resource_id))
