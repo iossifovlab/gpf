@@ -18,6 +18,7 @@ from dae.genomic_resources.genomic_scores import (
     AlleleScore,
     ScoreLine,
     build_score_from_resource,
+    build_score_from_resource_id,
 )
 from dae.genomic_resources.histogram import CategoricalHistogramConfig
 from dae.genomic_resources.implementations.genomic_scores_impl import (
@@ -27,6 +28,7 @@ from dae.genomic_resources.repository import GR_CONF_FILE_NAME, GenomicResource
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
     build_filesystem_test_resource,
+    build_inmemory_test_repository,
     build_inmemory_test_resource,
     convert_to_tab_separated,
     setup_directories,
@@ -627,3 +629,26 @@ def test_score_definition_histograms(
     assert score2_def.hist_conf is not None
     assert isinstance(score2_def.hist_conf, CategoricalHistogramConfig)
     assert score2_def.hist_conf.enforce_type
+
+
+def test_build_genomic_score_from_resource_id() -> None:
+    grr = build_inmemory_test_repository({
+        "example_score": {
+            GR_CONF_FILE_NAME: """
+                type: position_score
+                table:
+                  filename: data.mem
+                scores:
+                  - id: s1
+                    type: float
+                    name: s1
+            """,
+            "data.mem": """
+                chrom  pos_begin  s1
+                1      10         0.02
+            """,
+        }})
+    score = build_score_from_resource_id("example_score", grr)
+    score.open()
+    assert score is not None
+    assert list(score.fetch_region("1", 10, None, ["s1"])) == [{"s1": 0.02}]
