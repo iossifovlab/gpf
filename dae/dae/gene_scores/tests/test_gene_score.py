@@ -4,6 +4,7 @@ import textwrap
 import numpy as np
 import pytest
 
+from dae.gene_scores.gene_scores import build_gene_score_from_resource_id
 from dae.gene_scores.implementations.gene_scores_impl import (
     GeneScoreImplementation,
     build_gene_score_from_resource,
@@ -303,3 +304,11 @@ def test_get_histogram_image_url(scores_repo: GenomicResourceRepo) -> None:
     url = result.get_histogram_image_url("linear score")
     assert url is not None
     assert url.endswith("histogram_linear%20score.png")
+
+
+def test_build_gene_scores_from_resource_id(
+    scores_repo: GenomicResourceRepo,
+) -> None:
+    gs = build_gene_score_from_resource_id("LinearHist", scores_repo)
+    assert gs is not None
+    assert len(gs.get_scores()) == 1
