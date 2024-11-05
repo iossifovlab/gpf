@@ -13,13 +13,40 @@ from dae.genomic_resources.implementations.reference_genome_impl import (
 from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_file,
     build_reference_genome_from_resource,
+    build_reference_genome_from_resource_id,
+)
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GenomicResourceRepo,
 )
 from dae.genomic_resources.testing import (
     build_filesystem_test_resource,
     build_http_test_protocol,
+    build_inmemory_test_repository,
     setup_directories,
     setup_genome,
 )
+
+
+@pytest.fixture()
+def genome_repo() -> GenomicResourceRepo:
+    return build_inmemory_test_repository({
+        "gosho_genome": {
+            GR_CONF_FILE_NAME: """
+                type: genome
+                filename: chr.fa
+            """,
+            "chr.fa": textwrap.dedent("""
+                >pesho
+                NNACCCAAAC
+                GGGCCTTCCN
+                NNNA
+                >gosho
+                NNAACCGGTT
+                TTGGCCAANN"""),
+            "chr.fa.fai": "pesho\t24\t8\t10\t11\ngosho\t20\t42\t10\t11",
+        },
+    })
 
 
 @pytest.fixture()
@@ -257,3 +284,14 @@ def test_reference_genome_fetch_small_buffer(
             "A",
             "A",
         ]
+
+
+def test_build_reference_genome_from_resource_id(
+    genome_repo: GenomicResourceRepo,
+) -> None:
+    reference_genome = build_reference_genome_from_resource_id(
+        "gosho_genome", genome_repo)
+    with reference_genome.open() as ref:
+        assert len(ref.get_all_chrom_lengths()) == 2
+        assert ref.get_chrom_length("pesho") == 24
+        assert ref.get_chrom_length("gosho") == 20
