@@ -309,9 +309,10 @@ class QueryBuilderBase:
         if not ultra_rare and frequency_filter is None:
             return []
 
-        frequency_bins: set[int] = {0}  # always search de Novo variants
+        frequency_bins: set[int] = set()
         if ultra_rare is not None and ultra_rare:
             frequency_bins.add(1)
+
         if frequency_filter is not None:
             for freq, (_, right) in frequency_filter:
                 if freq != "af_allele_freq":
@@ -323,6 +324,10 @@ class QueryBuilderBase:
                     frequency_bins.add(2)
                 elif right > self.partition_descriptor.rare_boundary:
                     return []
+
+        if len(frequency_bins) == 0:
+            return []
+        frequency_bins.add(0)  # always search de Novo variants
         result: list[str] = []
         if frequency_bins and len(frequency_bins) < 4:
             result = [
