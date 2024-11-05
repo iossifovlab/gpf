@@ -4,8 +4,10 @@ import pytest
 from dae.genomic_resources.gene_models import (
     GeneModels,
     build_gene_models_from_resource,
+    build_gene_models_from_resource_id,
 )
 from dae.genomic_resources.testing import (
+    build_inmemory_test_repository,
     build_inmemory_test_resource,
     convert_to_tab_separated,
     resource_builder,
@@ -93,3 +95,18 @@ def test_against_against_different_repo_types(scheme: str) -> None:
 
         assert set(gene_models.gene_names()) == {"TP53", "POGZ"}
         assert len(gene_models.transcript_models) == 3
+
+
+def test_build_gene_models_from_resource_id() -> None:
+    grr = build_inmemory_test_repository({
+        "example_models": {
+            "genomic_resource.yaml":
+                "{type: gene_models, filename: genes.txt, format: refflat}",
+            "genes.txt": convert_to_tab_separated(GMM_CONTENT),
+        },
+    })
+    gene_models = build_gene_models_from_resource_id("example_models", grr)
+    gene_models.load()
+    assert isinstance(gene_models, GeneModels)
+    assert set(gene_models.gene_names()) == {"TP53", "POGZ"}
+    assert len(gene_models.transcript_models) == 3
