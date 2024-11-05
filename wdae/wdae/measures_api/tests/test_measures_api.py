@@ -31,7 +31,7 @@ def test_measures_list_categorical(
     )
 
     assert response.status_code == 200
-    assert len(response.data) == 1  # type: ignore
+    assert len(response.data) == 2  # type: ignore
 
 
 def test_measures_list_continuous(

@@ -486,6 +486,7 @@ def read_and_classify_measure(
 def add_pheno_common_inference(
     config: dict[str, Any],
 ) -> None:
+    """Add pedigree columns as skipped columns to the inference config."""
     default_cols = [
         "familyId",
         "personId",
