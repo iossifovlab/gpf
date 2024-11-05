@@ -1,6 +1,29 @@
 Release Notes
 =============
 
+* 2024.11.0
+    * Pure python implementation of type inference for phenotype measures
+    * Phenotype data import refactored
+    * Support for storing gene models in GTF format
+    * Support for storing gene and genomic scores histograms in JSON format
+    * Fix de Novo gene sets user interface
+    * Fix hanling of families and persons IDs in save/share query 
+
+* 2024.10.6
+    * Bug fix in handling genomic scores with chromosome remapping
+    * Workaround for pysam handling of HLA contigs regions
+    * Bug fix for handling dataset description without children
+    * 
+
+* 2024.10.5
+    * GPF federation refactoring to create a separate conda package *gpf_federation*
+    * Update de Novo gene sets REST API
+    * Support for restricted access of GPF tools without explicit access rights
+    * Improvement and fixes in Schema2 parquet datasets re-annotation
+    * Bump DuckDb version to 1.1.2
+    * Support for DuckDb S3 genotype storage
+    * Fix missing gene profiles state in GPFjs
+
 * 2024.10.4
     * Refactor and fixes in support of person set collection queries
 
