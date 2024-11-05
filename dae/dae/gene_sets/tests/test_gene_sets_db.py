@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pathlib
 import textwrap
 
 import pytest
@@ -11,14 +10,13 @@ from dae.gene_sets.gene_sets_db import (
 )
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
-    GenomicResourceProtocolRepo,
     GenomicResourceRepo,
 )
 from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
 @pytest.fixture()
-def gene_sets_repo(tmp_path: pathlib.Path) -> GenomicResourceProtocolRepo:  # noqa: ARG001
+def gene_sets_repo() -> GenomicResourceRepo:
     return build_inmemory_test_repository({
         "main": {
             GR_CONF_FILE_NAME: textwrap.dedent("""
@@ -90,7 +88,7 @@ def gene_sets_repo(tmp_path: pathlib.Path) -> GenomicResourceProtocolRepo:  # no
 
 @pytest.fixture()
 def gene_sets_db(
-    gene_sets_repo: GenomicResourceProtocolRepo,
+    gene_sets_repo: GenomicResourceRepo,
 ) -> GeneSetsDb:
     resources = [
         gene_sets_repo.get_resource("main"),
@@ -104,7 +102,7 @@ def gene_sets_db(
 
 
 def test_gene_set_collection_main(
-    gene_sets_repo: GenomicResourceProtocolRepo,
+    gene_sets_repo: GenomicResourceRepo,
 ) -> None:
     resource = gene_sets_repo.get_resource("main")
     gsc = GeneSetCollection(resource)
