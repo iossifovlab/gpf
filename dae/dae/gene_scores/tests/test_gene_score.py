@@ -4,10 +4,12 @@ import textwrap
 import numpy as np
 import pytest
 
-from dae.gene_scores.gene_scores import build_gene_score_from_resource_id
+from dae.gene_scores.gene_scores import (
+    build_gene_score_from_resource,
+    build_gene_score_from_resource_id,
+)
 from dae.gene_scores.implementations.gene_scores_impl import (
     GeneScoreImplementation,
-    build_gene_score_from_resource,
 )
 from dae.genomic_resources.histogram import NumberHistogram
 from dae.genomic_resources.repository import (
@@ -288,9 +290,6 @@ def test_calculate_histogram(scores_repo: GenomicResourceRepo) -> None:
 
     histogram = GeneScoreImplementation._calc_histogram(res, "linear score")
     assert histogram is not None
-    print(histogram.config.view_range[0])
-    print(type(histogram.config.view_range[0]))
-    print(histogram.serialize())
 
 
 def test_get_histogram_image_url(scores_repo: GenomicResourceRepo) -> None:
