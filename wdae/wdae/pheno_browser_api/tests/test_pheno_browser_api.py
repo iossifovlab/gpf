@@ -102,7 +102,7 @@ def test_instruments(
     data = response.json()
     assert "default" in data
     assert "instruments" in data
-    assert len(data["instruments"]) == 1
+    assert len(data["instruments"]) == 2
 
 
 def test_anonymous_instruments_allowed(
@@ -227,8 +227,9 @@ def test_download_all_instruments(
     header = header.split()[0].split(",")
 
     print("header:\n", header)
-    assert len(header) == 8
+    assert len(header) == 9
     assert set(header) == {
+        "pheno_common.phenotype",
         "i1.age",
         "i1.iq",
         "i1.m1",

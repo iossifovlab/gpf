@@ -240,15 +240,18 @@ def classification_reference_impl(
         measure_type = classifier.classify(report)
     report.measure_type = measure_type
 
+    non_null_numeric_values = list(
+        filter(lambda x: x is not None, report.numeric_values))
+
     if measure_type in {MeasureType.continuous, MeasureType.ordinal}:
-        report.min_value = np.min(
-            cast(np.ndarray, report.numeric_values),
-        )
+        if len(non_null_numeric_values) == 0:
+            raise ValueError(
+                "Measure %s is set as numeric but has no numeric values!",
+            )
+        report.min_value = np.min(cast(np.ndarray, non_null_numeric_values))
         if isinstance(report.min_value, np.bool_):
             report.min_value = np.int8(report.min_value)
-        report.max_value = np.max(
-            cast(np.ndarray, report.numeric_values),
-        )
+        report.max_value = np.max(cast(np.ndarray, non_null_numeric_values))
         if isinstance(report.max_value, np.bool_):
             report.max_value = np.int8(report.max_value)
         report.values_domain = f"[{report.min_value}, {report.max_value}]"

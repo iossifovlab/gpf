@@ -21,6 +21,7 @@ from box import Box
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
+from dae.pedigrees.family import ALL_FAMILY_TAG_LABELS
 from dae.pedigrees.loader import (
     FamiliesLoader,
 )
@@ -249,6 +250,7 @@ def import_pheno_data(args: Any) -> None:
             Path(args.inference_config).read_text(),
         )
     inference_configs = load_inference_configs(args.inference_config)
+    add_pheno_common_inference(inference_configs)
 
     connection = duckdb.connect(args.pheno_db_filename)
 
@@ -265,6 +267,10 @@ def import_pheno_data(args: Any) -> None:
     start = time.time()
 
     instruments = collect_instruments(args.instruments)
+
+    if not args.skip_pheno_common:
+        instruments["pheno_common"] = [Path(args.pedigree).absolute()]
+
     instrument_measure_names = read_instrument_measure_names(
         instruments, tab_separated=args.tab_separated,
     )
@@ -296,6 +302,7 @@ def import_pheno_data(args: Any) -> None:
         instr: defaultdict(default_row)
         for instr in instruments
     }
+    imported_instruments = set()
     description_builder = load_descriptions(args.data_dictionary)
     with TaskGraphCli.create_executor(task_cache, **vars(args)) as xtor:
         try:
@@ -332,6 +339,7 @@ def import_pheno_data(args: Any) -> None:
                             report.rank,
                         ],
                     )
+                imported_instruments.add(report.instrument_name)
 
         except Exception:
             logger.exception("Failed to classify measure")
@@ -340,6 +348,10 @@ def import_pheno_data(args: Any) -> None:
 
     print("WRITING RESULTS")
     start = time.time()
+
+    for k in list(instrument_tables.keys()):
+        if k not in imported_instruments:
+            del instrument_tables[k]
 
     write_results(connection, instrument_tables, ped_df)
 
@@ -432,6 +444,9 @@ def read_and_classify_measure(
     """Read a measure's values and classify from an instrument file."""
     output = {}
 
+    if instrument_name == "pheno_common":
+        person_id_column = "personId"
+
     def transform_value(val: str) -> str | None:
         if val == "":
             return None
@@ -446,8 +461,10 @@ def read_and_classify_measure(
     for instrument_filepath in instrument_filepaths:
         with instrument_filepath.open() as csvfile:
             reader = csv.DictReader(
-                    filter(lambda x: x.strip() != "", csvfile),
-                delimiter="\t" if tab_separated else ",",
+                filter(lambda x: x.strip() != "", csvfile),
+                delimiter="\t"
+                if tab_separated or instrument_name == "pheno_common"
+                else ",",
             )
 
             for row in reader:
@@ -464,6 +481,31 @@ def read_and_classify_measure(
     for idx, person_id in enumerate(output):
         output[person_id] = values[idx]
     return output, report
+
+
+def add_pheno_common_inference(
+    config: dict[str, Any],
+) -> None:
+    """Add pedigree columns as skipped columns to the inference config."""
+    default_cols = [
+        "familyId",
+        "personId",
+        "momId",
+        "dadId",
+        "sex",
+        "status",
+        "role",
+        "sample_id",
+        "layout",
+        "generated",
+        "proband",
+        "not_sequenced",
+        "missing",
+    ]
+    default_cols.extend(ALL_FAMILY_TAG_LABELS)
+    for col in default_cols:
+        entry = f"pheno_common.{col}"
+        config[entry] = {"skip": True}
 
 
 def load_inference_configs(
@@ -614,9 +656,11 @@ def read_instrument_measure_names(
     tab_separated: bool = False,
 ) -> dict[str, list[str]]:
     """Read the headers of all the instrument files."""
-    delimiter = "\t" if tab_separated else ","
     instrument_measure_names = {}
     for instrument_name, instrument_files in instruments.items():
+        delimiter = "\t" \
+            if tab_separated or instrument_name == "pheno_common" \
+            else ","
         file_to_read = instrument_files[0]
         with file_to_read.open() as csvfile:
             reader = filter(

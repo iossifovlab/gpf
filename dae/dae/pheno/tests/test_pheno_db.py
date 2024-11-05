@@ -15,8 +15,6 @@ def df_check(
     df: pd.DataFrame, expected_count: int, expected_cols: list[str],
 ) -> None:
     assert df is not None
-    # FIXME Should we drop na vals, and when?
-    # df = df.dropna()
     assert all(col in df for col in expected_cols)
     assert expected_count == len(df)
 
