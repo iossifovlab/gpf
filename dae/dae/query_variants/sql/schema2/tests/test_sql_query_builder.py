@@ -483,3 +483,34 @@ def test_sqlglot_nested_schema_experiments_array() -> None:
         tables=tables)
 
     assert len(result) == 2
+
+
+@pytest.mark.parametrize(
+    "inheritance,expected", [
+        (
+            [
+                "any(denovo,mendelian)",
+                "not possible_denovo and not possible_omission",
+            ],
+            False,
+        ),
+        (
+            [
+                "any(denovo)",
+            ],
+            True,
+        ),
+        (
+            [
+                "denovo and not possible_denovo",
+            ],
+            True,
+        ),
+    ])
+def test_check_inheritance_denovo_only(
+    inheritance: list[str],
+    expected: bool,  # noqa: FBT001
+    sql_builder: SqlQueryBuilder,
+) -> None:
+    result = sql_builder.check_inheritance_denovo_only(inheritance)
+    assert result == expected

@@ -13,11 +13,23 @@ GenotypeType = np.int8
 BestStateType = np.int8
 
 
-def mat2str(mat: np.ndarray, col_sep: str = "", row_sep: str = "/") -> str:
+def mat2str(
+    mat: np.ndarray | list[list[int]],
+    col_sep: str = "", row_sep: str = "/",
+) -> str:
+    """Construct sting representation of a matrix."""
+    if isinstance(mat, np.ndarray):
+        return row_sep.join(
+            [
+                col_sep.join([str(n) if n >= 0 else "?" for n in mat[i, :]])
+                for i in range(mat.shape[0])
+            ],
+        )
+
     return row_sep.join(
         [
-            col_sep.join([str(n) if n >= 0 else "?" for n in mat[i, :]])
-            for i in range(mat.shape[0])
+            col_sep.join([str(n) if n >= 0 else "?" for n in mat[i]])
+            for i in range(len(mat))
         ],
     )
 

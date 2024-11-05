@@ -11,7 +11,7 @@ channels:
 dependencies:
   - versioneer=0.29
   - dask-kubernetes=2024.5
-  - dask-jobqueue=0.8
+  - duckdb-cli=1.1.3
   - coverage=7.5
   - ruff=0.4
   - mypy=1.10
@@ -38,6 +38,7 @@ dependencies:
   - monkeytype
   - parquet-tools
   - pip
+  - ipython
   - pip:
     - sphinx-autorun
     - rangehttpserver

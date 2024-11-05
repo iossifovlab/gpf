@@ -87,6 +87,11 @@ def test_region_bin_heuristics_query(
     ({"frequency_filter": [("af_allele_freq", (None, 15.0))]}, "(0, 1, 2)"),
     ({"frequency_filter": [("af_allele_freq", (None, 25.0))]}, "(0, 1, 2)"),
     ({"frequency_filter": [("af_allele_freq", (None, 25.1))]}, None),
+    ({"frequency_filter": [("gnomad_af", (None, 100.0))]}, None),
+    ({"ultra_rare": True, "frequency_filter": [("gnomad_af", (None, 100.0))]},
+     "(0, 1)"),
+    ({"ultra_rare": False, "frequency_filter": [("gnomad_af", (None, 100.0))]},
+     None),
 ])
 def test_frequency_bin_heuristics_query(
     params: dict[str, Any],
