@@ -140,6 +140,12 @@ class EnrichmentTestView(QueryBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         assert dataset is not None
 
+        builder = self.gpf_instance \
+            .get_enrichment_builder(dataset)  # type: ignore
+
+        if builder is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         gene_syms = None
         if "geneSymbols" in query:
             gene_syms = self._parse_gene_syms(query)
@@ -179,12 +185,6 @@ class EnrichmentTestView(QueryBaseView):
         counting_name = query.get("enrichmentCountingModel", None)
         logger.info("selected background model: %s", background_name)
         logger.info("selected counting model: %s", counting_name)
-
-        builder = self.gpf_instance \
-            .get_enrichment_builder(dataset)  # type: ignore
-
-        if builder is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         results = builder.build(gene_syms, background_name, counting_name)
         return Response({"desc": desc, "result": results})
