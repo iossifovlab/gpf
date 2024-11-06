@@ -137,10 +137,9 @@
           <tbody *ngIf="currentPedigreeTable.pedigrees.length !== 0">
             <ng-template ngFor let-pedigreeGroup [ngForOf]="currentPedigreeTable.pedigrees">
               <tr
-                [class.disabled-pedigrees]="!(selectedDataset?.accessRights)"
                 gpf-common-reports-row
                 [pedigreeGroup]="pedigreeGroup"
-              ></tr>
+                [modalSimpleView]="!selectedDataset.accessRights"></tr>
             </ng-template>
           </tbody>
           <th *ngIf="currentPedigreeTable.pedigrees.length === 0" id="nothing-found" class="table-row table-body-row">

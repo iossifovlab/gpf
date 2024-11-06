@@ -19,6 +19,7 @@ export class PedigreeComponent {
   @Input() public pedigreeMaxWidth: number;
   @Input() public pedigreeMaxHeight: number;
   @Input() public modalSimpleView = true;
+  @Input() public count: number;
   @ViewChild('pedigreeModal') public pedigreeModal;
 
   public modal: NgbModalRef;
@@ -49,6 +50,7 @@ export class PedigreeComponent {
         );
       })).subscribe(list => {
       this.familyIdsList = list;
+      this.count = this.familyIdsList.length;
     });
   }
 
