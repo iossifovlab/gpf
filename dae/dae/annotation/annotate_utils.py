@@ -13,6 +13,7 @@ from dae.annotation.annotation_factory import (
 )
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
+    FullReannotationPipeline,
     ReannotationPipeline,
 )
 from dae.annotation.context import CLIAnnotationContext
@@ -104,6 +105,7 @@ class AnnotationTool:
         *,
         allow_repeated_attributes: bool,
         work_dir: Path | None = None,
+        full_reannotation: bool = False,
     ) -> AnnotationPipeline:
         """Produce an annotation or reannotation pipeline."""
         grr = build_genomic_resource_repository(definition=grr_definition)
@@ -114,7 +116,10 @@ class AnnotationTool:
         )
         if pipeline_config_old is not None:
             pipeline_old = load_pipeline_from_yaml(pipeline_config_old, grr)
-            pipeline = ReannotationPipeline(pipeline, pipeline_old)
+            pipeline = ReannotationPipeline(pipeline, pipeline_old) \
+                if not full_reannotation \
+                else FullReannotationPipeline(pipeline, pipeline_old)
+
         return pipeline
 
     @abstractmethod

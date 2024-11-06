@@ -48,7 +48,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         parser.add_argument(
             "-i", "--full-reannotation",
             help="Ignore any previous annotation and run "
-            " a full reannotation.")
+            " a full reannotation.",
+            action="store_true")
         output_behaviour = parser.add_mutually_exclusive_group()
         output_behaviour.add_argument(
             "-o", "--output",
@@ -154,6 +155,7 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             self.args.region_size,
             self.args.allow_repeated_attributes,
             target_region=self.args.region,
+            full_reannotation=self.args.full_reannotation,
         )
         produce_schema2_merging_tasks(
             self.task_graph,
