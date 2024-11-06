@@ -1,19 +1,22 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pathlib
 import textwrap
 
 import pytest
 
-from dae.gene_sets.gene_sets_db import GeneSetCollection, GeneSetsDb
+from dae.gene_sets.gene_sets_db import (
+    GeneSetCollection,
+    GeneSetsDb,
+    build_gene_set_collection_from_resource_id,
+)
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
-    GenomicResourceProtocolRepo,
+    GenomicResourceRepo,
 )
 from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
 @pytest.fixture()
-def gene_sets_repo(tmp_path: pathlib.Path) -> GenomicResourceProtocolRepo:  # noqa: ARG001
+def gene_sets_repo() -> GenomicResourceRepo:
     return build_inmemory_test_repository({
         "main": {
             GR_CONF_FILE_NAME: textwrap.dedent("""
@@ -85,7 +88,7 @@ def gene_sets_repo(tmp_path: pathlib.Path) -> GenomicResourceProtocolRepo:  # no
 
 @pytest.fixture()
 def gene_sets_db(
-    gene_sets_repo: GenomicResourceProtocolRepo,
+    gene_sets_repo: GenomicResourceRepo,
 ) -> GeneSetsDb:
     resources = [
         gene_sets_repo.get_resource("main"),
@@ -99,7 +102,7 @@ def gene_sets_db(
 
 
 def test_gene_set_collection_main(
-    gene_sets_repo: GenomicResourceProtocolRepo,
+    gene_sets_repo: GenomicResourceRepo,
 ) -> None:
     resource = gene_sets_repo.get_resource("main")
     gsc = GeneSetCollection(resource)
@@ -280,3 +283,25 @@ def test_get_gene_set_collection_files(gene_sets_db: GeneSetsDb) -> None:
     assert gene_set_collections["test_gmt"].files == {
         "test-gmt.gmt",
     }
+
+
+def test_build_gene_set_collection_from_resource_id(
+    gene_sets_repo: GenomicResourceRepo,
+) -> None:
+    gsc = build_gene_set_collection_from_resource_id("main", gene_sets_repo)
+    gene_set = gsc.get_gene_set("main_candidates")
+    assert gene_set is not None
+    assert gene_set["name"] == "main_candidates"
+    assert gene_set["count"] == 9
+    assert set(gene_set["syms"]) == {
+        "POGZ",
+        "CHD8",
+        "ANK2",
+        "FAT4",
+        "NBEA",
+        "CELSR1",
+        "USP7",
+        "GOLGA5",
+        "PCSK2",
+    }
+    assert gene_set["desc"] == "Main Candidates"

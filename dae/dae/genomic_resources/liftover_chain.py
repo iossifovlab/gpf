@@ -8,6 +8,10 @@ from typing import Any, cast
 from pyliftover import LiftOver  # type: ignore
 
 from dae.genomic_resources import GenomicResource
+from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genomic_resources.resource_implementation import (
     ResourceConfigValidationMixin,
     get_base_resource_schema,
@@ -128,3 +132,12 @@ def build_liftover_chain_from_resource(
         raise ValueError(f"wrong resource type: {config}")
 
     return LiftoverChain(resource)
+
+
+def build_liftover_chain_from_resource_id(
+    resource_id: str, grr: GenomicResourceRepo | None = None,
+) -> LiftoverChain:
+    if grr is None:
+        grr = build_genomic_resource_repository()
+    return build_liftover_chain_from_resource(
+        grr.get_resource(resource_id))

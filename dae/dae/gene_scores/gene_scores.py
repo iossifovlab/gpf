@@ -19,6 +19,10 @@ from dae.genomic_resources.histogram import (
     build_histogram_config,
     load_histogram,
 )
+from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genomic_resources.resource_implementation import (
     ResourceConfigValidationMixin,
     get_base_resource_schema,
@@ -448,3 +452,11 @@ def build_gene_score_from_resource(resource: GenomicResource) -> GeneScore:
     if resource is None:
         raise ValueError(f"missing resource {resource}")
     return GeneScore(resource)
+
+
+def build_gene_score_from_resource_id(
+    resource_id: str, grr: GenomicResourceRepo | None = None,
+) -> GeneScore:
+    if grr is None:
+        grr = build_genomic_resource_repository()
+    return build_gene_score_from_resource(grr.get_resource(resource_id))

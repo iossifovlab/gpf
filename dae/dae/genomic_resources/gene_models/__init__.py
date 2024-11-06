@@ -4,6 +4,7 @@ from .gene_models import (
     TranscriptModel,
     build_gene_models_from_file,
     build_gene_models_from_resource,
+    build_gene_models_from_resource_id,
     create_regions_from_genes,
     join_gene_models,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "TranscriptModel",
     "build_gene_models_from_file",
     "build_gene_models_from_resource",
+    "build_gene_models_from_resource_id",
     "create_regions_from_genes",
     "gene_models_to_gtf",
     "join_gene_models",

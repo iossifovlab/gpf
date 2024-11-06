@@ -1,14 +1,18 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 
 from dae.genomic_resources.fsspec_protocol import build_fsspec_protocol
 from dae.genomic_resources.liftover_chain import (
     build_liftover_chain_from_resource,
+    build_liftover_chain_from_resource_id,
 )
-from dae.genomic_resources.repository import GenomicResourceProtocolRepo
+from dae.genomic_resources.repository import (
+    GenomicResourceProtocolRepo,
+    GenomicResourceRepo,
+)
 
 
 @pytest.mark.parametrize("pos,expected_chrom,expected_pos,expected_strand", [
@@ -37,3 +41,11 @@ def test_liftover_chain_resource(
     assert out[0] == expected_chrom
     assert out[1] == expected_pos
     assert out[2] == expected_strand
+
+
+def test_build_liftover_chain_from_resource_id(
+    liftover_grr_fixture: GenomicResourceRepo,
+) -> None:
+    liftover_chain = build_liftover_chain_from_resource_id(
+        "liftover_chain", liftover_grr_fixture)
+    assert liftover_chain is not None

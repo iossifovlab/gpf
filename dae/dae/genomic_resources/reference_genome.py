@@ -8,6 +8,10 @@ from typing import IO, Any
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.fsspec_protocol import build_local_resource
+from dae.genomic_resources.repository import GenomicResourceRepo
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genomic_resources.resource_implementation import (
     ResourceConfigValidationMixin,
     get_base_resource_schema,
@@ -282,3 +286,12 @@ def build_reference_genome_from_resource(
         raise ValueError(f"wrong resource type: {resource.resource_id}")
 
     return ReferenceGenome(resource)
+
+
+def build_reference_genome_from_resource_id(
+    resource_id: str, grr: GenomicResourceRepo | None = None,
+) -> ReferenceGenome:
+    if grr is None:
+        grr = build_genomic_resource_repository()
+    return build_reference_genome_from_resource(
+        grr.get_resource(resource_id))

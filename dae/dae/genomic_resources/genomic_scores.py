@@ -30,7 +30,13 @@ from dae.genomic_resources.histogram import (
     build_histogram_config,
     load_histogram,
 )
-from dae.genomic_resources.repository import GenomicResource
+from dae.genomic_resources.repository import (
+    GenomicResource,
+    GenomicResourceRepo,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genomic_resources.resource_implementation import (
     ResourceConfigValidationMixin,
     get_base_resource_schema,
@@ -1115,3 +1121,11 @@ def build_score_from_resource(
     if ctor is None:
         raise ValueError(f"Resource {resource.get_id()} is not of score type")
     return ctor(resource)
+
+
+def build_score_from_resource_id(
+    resource_id: str, grr: GenomicResourceRepo | None = None,
+) -> GenomicScore:
+    if grr is None:
+        grr = build_genomic_resource_repository()
+    return build_score_from_resource(grr.get_resource(resource_id))
