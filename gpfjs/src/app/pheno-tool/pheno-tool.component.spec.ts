@@ -121,7 +121,8 @@ describe('PhenoToolComponent', () => {
     const geneScoresMock: GeneScoresState = {
       score: null,
       rangeStart: 0,
-      rangeEnd: 0
+      rangeEnd: 0,
+      values: null,
     };
 
     const phenoToolMeasureMock: PhenoToolMeasureState = {

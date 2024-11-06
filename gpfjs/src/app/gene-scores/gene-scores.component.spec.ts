@@ -6,7 +6,7 @@ import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 import { Observable } from 'rxjs';
 import { of } from 'rxjs/internal/observable/of';
-import { GeneScores } from './gene-scores';
+import { GeneScores, NumberHistogram } from './gene-scores';
 import { GeneScoresComponent } from './gene-scores.component';
 import { GeneScoresService } from './gene-scores.service';
 import { geneScoresReducer } from './gene-scores.state';
@@ -18,10 +18,16 @@ class MockGeneScoresService {
     if (this.provide) {
       return of([
         new GeneScores(
-          [1, 2], [4, 5], 'desc1', 'help1', 'larger1', 'smaller1', 'score1', [7, 8], 'xScale1', 'yScale1'
+          'desc1',
+          'help1',
+          'score1',
+          new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', 7, 8, true, true),
         ),
         new GeneScores(
-          [11, 12], [14, 15], 'desc2', 'help2', 'larger2', 'smaller2', 'score2', [17, 18], 'xScale2', 'yScale2'
+          'desc2',
+          'help2',
+          'score2',
+          new NumberHistogram([11, 12], [14, 15], 'larger2', 'smaller2', 17, 88, true, true),
         )
       ]);
     } else {
