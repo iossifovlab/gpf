@@ -455,3 +455,38 @@ class ValueTransformAnnotatorDecorator(AnnotatorDecorator):
         return {k: (self.value_transformers[k](v)
                     if k in self.value_transformers else v)
                 for k, v in result.items()}
+
+
+class FullReannotationPipeline(ReannotationPipeline):
+    """
+    Special-case ReannotationPipeline.
+
+    Completely removes all old attributes and runs every new annotator,
+    without reusing anything.
+    """
+
+    def __init__(
+        self,
+        pipeline_new: AnnotationPipeline,
+        pipeline_old: AnnotationPipeline,
+    ):
+        super().__init__(pipeline_new, pipeline_old)
+
+        self.attributes_deleted: list[str] = []
+        for deleted_info in pipeline_old.get_info():
+            for attr in deleted_info.attributes:
+                if not attr.internal:
+                    self.attributes_deleted.append(attr.name)
+
+        self.annotators_new: set[AnnotatorInfo] = set(pipeline_new.get_info())
+
+        self.annotators_rerun: set[AnnotatorInfo] = set()
+        self.attributes_reused: dict[str, AttributeInfo] = {}
+
+        self.annotators = self.pipeline_new.annotators
+
+        logger.debug("REANNOTATION SUMMARY:")
+        logger.debug("DELETED ATTRIBUTES - %s", self.attributes_deleted)
+        logger.debug("REUSED ATTRIBUTES - %s", self.attributes_reused)
+        logger.debug("NEW ANNOTATORS - %s", self.annotators_new)
+        logger.debug("RE-RUNNING ANNOTATORS - %s", self.annotators_rerun)

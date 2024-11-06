@@ -12,6 +12,7 @@ import pytest_mock
 
 from dae.annotation.annotate_schema2_parquet import cli
 from dae.annotation.annotation_pipeline import ReannotationPipeline
+from dae.annotation.score_annotator import PositionScoreAnnotator
 from dae.genomic_resources.genomic_context import GenomicContext
 from dae.gpf_instance import GPFInstance
 from dae.testing import (
@@ -46,6 +47,17 @@ def t4c8_instance(tmp_path: pathlib.Path) -> GPFInstance:
                     - source: score_three
                       name: score_A_internal
                       internal: true
+            """),
+            "new_annotation_2.yaml": textwrap.dedent("""
+                - position_score:
+                    resource_id: three
+                    attributes:
+                    - source: score_three
+                      name: score_A
+                    - source: score_three
+                      name: score_A_internal
+                      internal: true
+                - position_score: two
             """),
             "one": {
                 "genomic_resource.yaml": textwrap.dedent("""
@@ -853,3 +865,52 @@ def test_data_removal_func_preserves_other_files(
         "meta", "summary", "family", "pedigree",  # schema2 dirs
         "some_random_file.txt", "some_random_dir",  # new stuff
     }
+
+
+def test_full_reannotation_flag(
+    mocker: pytest_mock.MockerFixture,
+    tmp_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+    t4c8_study_nonpartitioned: str,
+    gpf_instance_genomic_context_fixture: Callable[[GPFInstance], GenomicContext],  # noqa: E501
+) -> None:
+    root_path = pathlib.Path(t4c8_instance.dae_dir) / ".."
+    grr_file = str(root_path / "grr.yaml")
+
+    gpf_instance_genomic_context_fixture(t4c8_instance)
+
+    out_path = str(tmp_path / "out")
+    cli([t4c8_study_nonpartitioned,
+         str(root_path / "new_annotation_2.yaml"),
+         "--grr", grr_file,
+         "-j", "1",
+         "-o", out_path,
+         "-w", str(tmp_path / "work")])
+
+    mocker.spy(PositionScoreAnnotator, "annotate")
+
+    out_path_2 = str(tmp_path / "out2")
+    cli([out_path,
+         str(root_path / "new_annotation.yaml"),
+         "--grr", grr_file,
+         "-j", "1",
+         "--full-reannotation",
+         "-o", out_path_2,
+         "-w", str(tmp_path / "work2")])
+
+    # due to --full-reannotation being passed, the position score annotator
+    # should have re-annotated (even though it has not changed), indicated
+    # by 11 calls to its annotate method
+    assert PositionScoreAnnotator.annotate.call_count == 11  # type: ignore
+
+    loader = ParquetLoader.load_from_dir(out_path_2)
+    vs = list(loader.fetch_summary_variants())
+    attrs = list(vs[0].alt_alleles[0].attributes.keys())
+
+    # the difference between new_annotation_2.yaml and
+    # new_annotation.yaml is that new_annotation_2.yaml also
+    # annotates with the resource "two", while new_annotation.yaml doesn't
+    # this is used to test that --full-reannotation will clear out attributes
+    # from previous annotations properly
+    assert "score_A" in attrs
+    assert "score_two" not in attrs

@@ -74,14 +74,16 @@ def annotate_parquet(
     grr_definition: dict,
     bucket_idx: int,
     allow_repeated_attributes: bool,  # noqa: FBT001
+    full_reannotation: bool,  # noqa: FBT001
 ) -> None:
     """Run annotation over a given directory of Parquet files."""
     loader = ParquetLoader(input_layout)
     pipeline = AnnotationTool.produce_annotation_pipeline(
         pipeline_config,
-        (loader.meta["annotation_pipeline"] if loader.has_annotation else None),
+        loader.meta["annotation_pipeline"] if loader.has_annotation else None,
         grr_definition,
         allow_repeated_attributes=allow_repeated_attributes,
+        full_reannotation=full_reannotation,
     )
 
     writer = VariantsParquetWriter(
@@ -131,6 +133,8 @@ def produce_schema2_annotation_tasks(
     region_size: int,
     allow_repeated_attributes: bool,  # noqa: FBT001
     target_region: str | None = None,
+    *,
+    full_reannotation: bool = False,
 ) -> list[Task]:
     """Produce TaskGraph tasks for Parquet file annotation."""
 
@@ -169,7 +173,7 @@ def produce_schema2_annotation_tasks(
             annotate_parquet,
             [loader.layout, output_dir,
              raw_pipeline, region, grr.definition,
-             idx, allow_repeated_attributes],
+             idx, allow_repeated_attributes, full_reannotation],
             [],
         ))
     return tasks
