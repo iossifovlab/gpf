@@ -375,7 +375,7 @@ def _t4c8_dataset(
                 - phenotype"""))
 
 
-def setup_wgpf_intance(root_path: pathlib.Path) -> WGPFInstance:
+def setup_wgpf_instance(root_path: pathlib.Path) -> WGPFInstance:
     t4c8_instance = setup_t4c8_instance(root_path)
     t4c8_grr = t4c8_instance.grr
     root_path = pathlib.Path(t4c8_instance.dae_dir)

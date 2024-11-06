@@ -2,7 +2,7 @@
 import pytest
 import pytest_mock
 from gpf_instance.gpf_instance import WGPFInstance, reload_datasets
-from utils.testing import setup_wgpf_intance
+from utils.testing import setup_wgpf_instance
 
 from dae.testing.import_helpers import setup_dataset_config
 
@@ -12,7 +12,7 @@ def custom_wgpf_module(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> WGPFInstance:
     root_path = tmp_path_factory.mktemp("t4c8_wgpf_module")
-    gpf_instance = setup_wgpf_intance(root_path)
+    gpf_instance = setup_wgpf_instance(root_path)
     setup_dataset_config(gpf_instance, "dataset_1", ["t4c8_study_1"])
     setup_dataset_config(gpf_instance, "dataset_2", ["t4c8_study_2"])
     setup_dataset_config(gpf_instance, "omni_dataset", ["dataset_1",
