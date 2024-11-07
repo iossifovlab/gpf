@@ -59,8 +59,7 @@ def f1_trio_enrichment_config(gpf_fixture: GPFInstance) -> Box:
 
 @pytest.fixture(scope="session")
 def f1_trio(gpf_fixture: GPFInstance) -> GenotypeData:
-    result = gpf_fixture.get_genotype_data("f1_trio")
-    return result
+    return gpf_fixture.get_genotype_data("f1_trio")
 
 
 @pytest.fixture(scope="session")
@@ -192,13 +191,11 @@ def t4c8_fixture(tmp_path: pathlib.Path) -> GPFInstance:
     })
 
     grr = build_filesystem_test_repository(root_path / "grr")
-    gpf_instance = setup_gpf_instance(
+    return setup_gpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="t4c8_genome",
         gene_models_id="t4c8_genes",
         grr=grr)
-
-    return gpf_instance
 
 
 @pytest.fixture(scope="session")
