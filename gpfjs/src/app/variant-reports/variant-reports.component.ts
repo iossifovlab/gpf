@@ -29,6 +29,7 @@ export class PeopleCounterRowPipe implements PipeTransform {
   styleUrls: ['./variant-reports.component.css']
 })
 export class VariantReportsComponent implements OnInit {
+  public accessRights: boolean;
   public tags: Array<string> = new Array<string>();
 
   public currentPeopleCounter: PeopleCounter;

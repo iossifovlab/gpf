@@ -1,10 +1,11 @@
 <div *ngIf="pedigree" class="pedigree-cell" (click)="openModal()">
   <gpf-pedigree
-    [modalSimpleView]="false"
+    [modalSimpleView]="modalSimpleView"
     [family]="pedigree.data"
     [groupName]="pedigree.groupName"
     [counterId]="pedigree.counterId"
-    [pedigreeMaxWidth]="pedigreeMaxWidth">
+    [pedigreeMaxWidth]="pedigreeMaxWidth"
+    [count]="pedigree.count">
   </gpf-pedigree>
   <span class="pedigree-count">{{ pedigree.count }}</span>
 </div>

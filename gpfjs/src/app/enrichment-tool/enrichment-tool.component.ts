@@ -46,8 +46,7 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
         this.store.select(selectGeneScores),
         this.store.select(selectEnrichmentModels),
       ]))
-    )
-    .subscribe(([
+    ).subscribe(([
       dataset,
       geneSymbols,
       geneSets,

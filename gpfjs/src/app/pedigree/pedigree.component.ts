@@ -18,9 +18,10 @@ export class PedigreeComponent {
   @Input() public counterId: number;
   @Input() public pedigreeMaxWidth: number;
   @Input() public pedigreeMaxHeight: number;
-
   @Input() public modalSimpleView = true;
+  @Input() public count: number;
   @ViewChild('pedigreeModal') public pedigreeModal;
+
   public modal: NgbModalRef;
   public familyIdsList: string[];
   public pedigreeScale = 2.5;
@@ -49,6 +50,7 @@ export class PedigreeComponent {
         );
       })).subscribe(list => {
       this.familyIdsList = list;
+      this.count = this.familyIdsList.length;
     });
   }
 
@@ -74,8 +76,8 @@ export class PedigreeComponent {
   }
 
   public onSubmit(event): void {
-    this.store.select(selectDatasetId).pipe(take(1)).subscribe(selectwsDatasetIdState => {
-      const selectedDatasetId = selectwsDatasetIdState;
+    this.store.select(selectDatasetId).pipe(take(1)).subscribe(selectedDatasetIdState => {
+      const selectedDatasetId = selectedDatasetIdState;
       const args = {
         study_id: selectedDatasetId,
         group_name: this.groupName,
