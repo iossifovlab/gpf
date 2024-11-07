@@ -1,6 +1,6 @@
 import {
   Input, Component, OnInit, AfterViewInit, ViewChild, ViewChildren,
-  ViewEncapsulation, Output, EventEmitter, SimpleChanges, QueryList, ElementRef
+  ViewEncapsulation, Output, EventEmitter, QueryList, ElementRef
 } from '@angular/core';
 import * as d3 from 'd3';
 
@@ -23,7 +23,7 @@ export class HistogramRangeSelectorLineComponent implements OnInit, AfterViewIni
   @Input() public text: string;
   @Input() public textOnRight = true;
 
-  @Input() public width: any;
+  @Input() public width: number;
   @Input() public x = 0;
   @Output() public xChange = new EventEmitter();
 
@@ -35,7 +35,7 @@ export class HistogramRangeSelectorLineComponent implements OnInit, AfterViewIni
   public ngAfterViewInit(): void {
     this.triangles.forEach((triangle) => {
       d3.select(triangle.nativeElement)
-        .attr('d', d3.symbol().type((d3.symbolTriangle)));
+        .attr('d', d3.symbol().type(d3.symbolTriangle));
     });
   }
 
