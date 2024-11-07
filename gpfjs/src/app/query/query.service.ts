@@ -45,7 +45,7 @@ export class QueryService {
   ) { }
 
   public cancelStreamPost(): void {
-    if (this.oboeInstance) {
+    if (this.oboeInstance !== null) {
       this.oboeInstance.abort();
       this.oboeInstance = null;
     }
@@ -86,7 +86,7 @@ export class QueryService {
   }
 
   public cancelSummaryStreamPost(): void {
-    if (this.summaryOboeInstance) {
+    if (this.summaryOboeInstance !== null) {
       this.summaryOboeInstance.abort();
       this.summaryOboeInstance = null;
     }

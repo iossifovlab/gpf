@@ -87,6 +87,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
 
     this.getGenotypeBrowserState().subscribe(state => {
       this.genotypeBrowserState = {...state};
+      this.queryService.cancelStreamPost();
       this.genotypePreviewVariantsArray = null;
     });
 
