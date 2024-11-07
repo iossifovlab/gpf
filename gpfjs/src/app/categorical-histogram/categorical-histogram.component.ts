@@ -6,7 +6,8 @@ import {
   ElementRef,
   OnChanges,
   Output,
-  EventEmitter
+  EventEmitter,
+  OnInit
 } from '@angular/core';
 import { CategoricalHistogram } from 'app/gene-scores/gene-scores';
 
@@ -18,7 +19,7 @@ import * as d3 from 'd3';
   styleUrl: './categorical-histogram.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CategoricalHistogramComponent implements OnChanges {
+export class CategoricalHistogramComponent implements OnChanges, OnInit {
   @Input() public width: number;
   @Input() public height: number;
   @Input() public marginLeft = 100;
@@ -36,6 +37,10 @@ export class CategoricalHistogramComponent implements OnChanges {
   @Input() public isInteractive = true;
   @Input() public singleScoreValue: string;
 
+  public sliderStartIndex: number = 0;
+  public sliderEndIndex: number = 450;
+  public valuesBetweenSliders = new Set<string>();
+
   @Output() public selectCategoricalValue = new EventEmitter<string>();
 
   public xScale: d3.ScaleBand<string>;
@@ -47,6 +52,11 @@ export class CategoricalHistogramComponent implements OnChanges {
     d3.select(this.histogramContainer.nativeElement).selectAll('g').remove();
     d3.select(this.histogramContainer.nativeElement).selectAll('rect').remove();
     this.redrawHistogram();
+  }
+
+  public ngOnInit(): void {
+    this.sliderStartIndex = 0;
+    this.sliderEndIndex = this.histogram.values.length - 1;
   }
 
   public singleScoreValueIsValid(): boolean {
@@ -127,16 +137,84 @@ export class CategoricalHistogramComponent implements OnChanges {
   }
 
   private selectValue(event: { srcElement: { id: string, style: { fill: string } } }): void {
-    if (event.srcElement.style.fill === 'steelblue') {
-      event.srcElement.style.fill = 'coral';
-    } else {
-      event.srcElement.style.fill = 'steelblue';
+    if (event.srcElement.style.fill !== 'lightsteelblue') {
+      if (event.srcElement.style.fill === 'steelblue') {
+        event.srcElement.style.fill = 'coral';
+      } else {
+        event.srcElement.style.fill = 'steelblue';
+      }
+      this.selectCategoricalValue.emit(event.srcElement.id);
     }
-    this.selectCategoricalValue.emit(event.srcElement.id);
+  }
+
+  private colorBars(): void {
+    this.svg.selectAll('rect').style('fill', (b: {name: string, value: number}) => {
+      const i = this.histogram.values.findIndex(bar => bar.name === b.name);
+      return i < this.sliderStartIndex || i > this.sliderEndIndex
+        ? 'lightsteelblue' : 'steelblue';
+    });
+  }
+
+  private valuesBewteen(): void {
+    this.valuesBetweenSliders = new Set<string>();
+    this.histogram.values.forEach((value, i) => {
+      if (i >= this.sliderStartIndex && i <= this.sliderEndIndex) {
+        this.valuesBetweenSliders.add(value.name);
+      }
+    });
   }
 
   public get viewBox(): string {
     const pos = true ? '0 0' : '-8 -8';
     return `${pos} ${this.width} ${this.height}`;
+  }
+
+  public get startX(): number {
+    const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
+    const name = this.histogram.values.at(this.sliderStartIndex).name;
+    return this.xScale(name) - distBetweenBars / 2 - 1;
+  }
+
+  public set startX(newPositionX) {
+    const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
+    const newStartIndex = this.getClosestIndexByX(newPositionX + distBetweenBars / 2 + 1);
+    if (newStartIndex > this.sliderEndIndex) {
+      return;
+    }
+    this.sliderStartIndex = newStartIndex;
+    this.colorBars();
+    this.valuesBewteen();
+  }
+
+  public get endX(): number {
+    const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
+    const name = this.histogram.values.at(this.sliderEndIndex).name;
+    return this.xScale(name) + this.xScale.bandwidth() + distBetweenBars / 2 - 1;
+  }
+
+  public set endX(newPositionX) {
+    const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
+    const newEndIndex = this.getClosestIndexByX(newPositionX - this.xScale.bandwidth() - distBetweenBars / 2 + 1);
+    if (newEndIndex < this.sliderStartIndex) {
+      return;
+    }
+    this.sliderEndIndex = newEndIndex;
+    this.colorBars();
+    this.valuesBewteen();
+  }
+
+  private getClosestIndexByX(x: number): number {
+    // Domain uses bins count which is larger than bars by 1 element
+    const maxIndex = this.xScale.domain().length;
+    for (let i = 1; i < maxIndex; i++) {
+      const prevVal = (i - 1) * this.xScale.step();
+      const currVal = i * this.xScale.step();
+      if (currVal > x) {
+        const prev = Math.abs(x - prevVal);
+        const curr = Math.abs(x - currVal);
+        return prev < curr ? i - 1 : i;
+      }
+    }
+    return maxIndex - 1;
   }
 }

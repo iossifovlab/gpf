@@ -5,16 +5,22 @@
         <g
           #histogramContainer
           [ngStyle]="isInteractive ? { transform: 'translate(0px, 50px)' } : { transform: 'translate(0px, 0px)' }"></g>
-        <g *ngIf="!isInteractive && singleScoreValueIsValid()">
-          <!-- prettier-ignore -->
-          <text [attr.x]="scaleXAxis(singleScoreValue)" [attr.y]="-10" class="small" text-anchor="middle">{{ singleScoreValue }}</text>
-          <line
-            class="single-score-marker"
-            style="stroke: rgb(255, 0, 0); stroke-width: 2"
-            [attr.x1]="scaleXAxis(singleScoreValue)"
-            [attr.y1]="scaleYAxis(1)"
-            [attr.x2]="scaleXAxis(singleScoreValue)"
-            [attr.y2]="-5" />
+        <g *ngIf="isInteractive">
+          <g gpf-histogram-range-selector-line [width]="2" [(x)]="startX"></g>
+          <g gpf-histogram-range-selector-line [width]="2" [(x)]="endX"></g>
+
+          <g *ngIf="!isInteractive && singleScoreValueIsValid()">
+            <!-- eslint-disable-next-line prettier/prettier -->
+            <text [attr.x]="scaleXAxis(singleScoreValue)" [attr.y]="-10" class="small" text-anchor="middle">{{ singleScoreValue }}</text>
+            <line
+              *ngIf="!isInteractive && singleScoreValueIsValid()"
+              class="single-score-marker"
+              style="stroke: rgb(255, 0, 0); stroke-width: 2"
+              [attr.x1]="scaleXAxis(singleScoreValue)"
+              [attr.y1]="scaleYAxis(1)"
+              [attr.x2]="scaleXAxis(singleScoreValue)"
+              [attr.y2]="-5" />
+          </g>
         </g>
       </g>
     </svg>
