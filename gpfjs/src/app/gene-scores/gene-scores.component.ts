@@ -37,7 +37,6 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   }
 
   public ngOnInit(): void {
-    super.ngOnInit();
     this.geneScoresService.getGeneScores().pipe(
       switchMap(geneScores =>
         combineLatest([of(geneScores), this.store.select(selectGeneScores).pipe(take(1))])
@@ -62,6 +61,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
       } else {
         this.selectedGeneScores = this.geneScoresArray[0];
       }
+      super.ngOnInit();
     });
 
     if (this.geneScoresLocalState.score !== null) {
