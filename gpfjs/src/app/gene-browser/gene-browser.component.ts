@@ -175,6 +175,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.queryService.cancelStreamPost();
     this.geneSymbol = '';
     this.showResults = false;
     this.geneSymbolSuggestions = [];
