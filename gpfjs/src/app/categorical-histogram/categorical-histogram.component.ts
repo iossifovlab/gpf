@@ -91,7 +91,9 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   }
 
   public singleScoreValueIsValid(): boolean {
-    return this.singleScoreValue !== undefined && this.singleScoreValue !== null;
+    return this.singleScoreValue !== undefined
+      && this.singleScoreValue !== null
+      && this.singleScoreValue !== '';
   }
 
   private redrawHistogram(): void {

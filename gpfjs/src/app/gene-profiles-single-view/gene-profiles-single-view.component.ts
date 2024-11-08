@@ -146,6 +146,14 @@ export class GeneProfileSingleViewComponent implements OnInit {
     return genomicScores.find(category => category.id === categoryId).scores.find(score => score.id === scoreId).value;
   }
 
+  // Remove when GPF starts supporting string names for categorical histogram values
+  public convertScoreValueToString(value: number): string {
+    if (value === null) {
+      return '';
+    }
+    return value.toString();
+  }
+
   public getGeneDatasetValue(
     gene: GeneProfilesGene,
     studyId: string,

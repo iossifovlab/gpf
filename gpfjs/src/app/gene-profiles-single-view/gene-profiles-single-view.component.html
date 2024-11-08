@@ -79,6 +79,18 @@
                       [smallValuesDesc]="geneScore.histogram.smallValuesDesc"
                       [largeValuesDesc]="geneScore.histogram.largeValuesDesc">
                     </gpf-histogram>
+                    <gpf-categorical-histogram
+                      *ngIf="isCategoricalHistogram(geneScore.histogram)"
+                      [width]="650"
+                      [height]="145"
+                      [histogram]="geneScore.histogram"
+                      [isInteractive]="false"
+                      [singleScoreValue]="
+                        convertScoreValueToString(
+                          getSingleScoreValue(gene.genomicScores, genomicScoreCategory.category, score.scoreName)
+                        )
+                      ">
+                    </gpf-categorical-histogram>
                   </ng-container>
 
                   <span>{{ score.scoreName }}</span>
