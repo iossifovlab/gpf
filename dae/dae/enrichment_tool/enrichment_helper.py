@@ -78,6 +78,7 @@ class EnrichmentHelper:
             return []
         enrichment_config = self.get_enrichment_config(genotype_data)
         assert enrichment_config is not None
+
         return [
             self.create_background(background_id)
             for background_id in enrichment_config["selected_background_models"]
