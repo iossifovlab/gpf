@@ -542,7 +542,8 @@ class RawFamilyVariants(abc.ABC):
                     return v
                 logger.info("no matched alleles for family variant: %s", v)
             except Exception as ex:  # pylint: disable=broad-except  # noqa: BLE001
-                logger.warning("unexpected error: %s", ex, exc_info=True)
+                logger.warning(
+                    "unexpected error: %s; %s", ex, v, exc_info=True)
                 return None
             return None
 
