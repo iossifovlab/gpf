@@ -152,13 +152,15 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
     }
   }
 
-  public toggleCategoricalValue(value: string): void {
-    const valueIndex = this.categoricalValues.findIndex(v => v === value);
-    if (valueIndex === -1) {
-      this.categoricalValues.push(value);
-    } else {
-      this.categoricalValues.splice(valueIndex, 1);
-    }
+  public toggleCategoricalValues(values: string[]): void {
+    values.forEach(value => {
+      const valueIndex = this.categoricalValues.findIndex(v => v === value);
+      if (valueIndex === -1) {
+        this.categoricalValues.push(value);
+      } else {
+        this.categoricalValues.splice(valueIndex, 1);
+      }
+    });
     this.store.dispatch(setGeneScoreCategorical({
       score: this.geneScoresLocalState.score.score,
       values: cloneDeep(this.categoricalValues),

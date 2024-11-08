@@ -24,6 +24,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   @Input() public height: number;
   @Input() public marginLeft = 100;
   @Input() public marginTop = 10;
+  @Input() public useRangeSelectors = true;
   @ViewChild('histogramContainer', {static: true}) public histogramContainer: ElementRef;
 
   @Input() public showCounts = true;
@@ -40,9 +41,9 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
 
   public sliderStartIndex: number = 0;
   public sliderEndIndex: number = 450;
-  public valuesBetweenSliders = new Set<string>();
+  public valuesBetweenSliders: string[] = [];
 
-  @Output() public selectCategoricalValue = new EventEmitter<string>();
+  @Output() public selectCategoricalValues = new EventEmitter<string[]>();
 
   public xScale: d3.ScaleBand<string>;
   public scaleXAxis: d3.ScaleOrdinal<string, number, never>;
@@ -68,16 +69,25 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       this.histogram.values.push({name: 'other', value: otherSum});
     }
 
+    this.sliderStartIndex = 0;
+    this.sliderEndIndex = this.histogram.values.length - 1;
     this.redrawHistogram();
+
+    if (this.useRangeSelectors) {
+      if (this.stateCategoricalNames.length === 0) {
+        this.toggleValuesInRange(0, this.histogram.values.length);
+      } else {
+        this.stateCategoricalNames.sort((a, b) => {
+          return this.histogram.valueOrder.indexOf(a) - this.histogram.valueOrder.indexOf(b);
+        });
+
+        this.redrawSliders(this.stateCategoricalNames);
+      }
+    }
   }
 
   public ngOnChanges(): void {
     this.redrawHistogram();
-  }
-
-  public ngOnInit(): void {
-    this.sliderStartIndex = 0;
-    this.sliderEndIndex = this.histogram.values.length - 1;
   }
 
   public singleScoreValueIsValid(): boolean {
@@ -118,19 +128,21 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       .attr('y', (v: { name: string, value: number }) => v.value === 0 ? height : this.scaleYAxis(v.value))
       .attr('height', (v: { name: string, value: number }) =>
         v.value === 0 || v.value === undefined ? 0 : height - this.scaleYAxis(v.value))
-      .attr('id', (v: { name: string, value: number }) => v.name)
-      .style('cursor', 'pointer');
+      .attr('id', (v: { name: string, value: number }) => v.name);
 
-    svg.selectAll('rect').on('click', event => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      this.selectValue(event);
-    });
 
-    if (this.stateCategoricalNames.length > 0) {
-      this.stateCategoricalNames.forEach(name => {
-        svg.select(`[id="${name}"]`)
-          .style('fill', 'coral');
+    if (!this.useRangeSelectors) {
+      svg.selectAll('rect').on('click', event => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        this.toggleValue(event);
       });
+
+      if (this.stateCategoricalNames.length > 0) {
+        this.stateCategoricalNames.forEach(name => {
+          svg.select(`[id="${name}"]`)
+            .style('fill', 'coral');
+        });
+      }
     }
 
     this.svg = svg;
@@ -160,14 +172,16 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       ).style('font-size', '12px');
   }
 
-  private selectValue(event: { srcElement: { id: string, style: { fill: string } } }): void {
+  private toggleValue(event: { srcElement: { id: string, style: { fill: string } } }): void {
     if (event.srcElement.style.fill !== 'lightsteelblue') {
       if (event.srcElement.style.fill === 'steelblue') {
         event.srcElement.style.fill = 'coral';
       } else {
         event.srcElement.style.fill = 'steelblue';
       }
-      this.selectCategoricalValue.emit(event.srcElement.id);
+      this.selectCategoricalValues.emit([
+        event.srcElement.id
+      ]);
     }
   }
 
@@ -179,18 +193,26 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     });
   }
 
-  private valuesBewteen(): void {
-    this.valuesBetweenSliders = new Set<string>();
-    this.histogram.values.forEach((value, i) => {
-      if (i >= this.sliderStartIndex && i <= this.sliderEndIndex) {
-        this.valuesBetweenSliders.add(value.name);
-      }
-    });
-  }
-
   public get viewBox(): string {
     const pos = true ? '0 0' : '-8 -8';
     return `${pos} ${this.width} ${this.height}`;
+  }
+
+  private redrawSliders(selectedValues: string[]): void {
+    const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
+
+    this.sliderStartIndex = this.histogram.values.findIndex(v =>
+      v.name === selectedValues[0]);
+    this.sliderEndIndex = this.histogram.values.findIndex(v =>
+      v.name === selectedValues[selectedValues.length-1]);
+
+    this.startX = this.xScale(selectedValues[0])
+      - distBetweenBars / 2 - 1;
+
+    this.endX = this.xScale(selectedValues[selectedValues.length-1])
+      + this.xScale.bandwidth() + distBetweenBars / 2 - 1;
+
+    this.colorBars();
   }
 
   public get startX(): number {
@@ -202,12 +224,13 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   public set startX(newPositionX) {
     const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
     const newStartIndex = this.getClosestIndexByX(newPositionX + distBetweenBars / 2 + 1);
-    if (newStartIndex > this.sliderEndIndex) {
+    if (newStartIndex === this.sliderStartIndex || newStartIndex > this.sliderEndIndex) {
       return;
     }
+
+    this.toggleValuesInRange(this.sliderStartIndex, newStartIndex);
     this.sliderStartIndex = newStartIndex;
     this.colorBars();
-    this.valuesBewteen();
   }
 
   public get endX(): number {
@@ -219,12 +242,14 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   public set endX(newPositionX) {
     const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
     const newEndIndex = this.getClosestIndexByX(newPositionX - this.xScale.bandwidth() - distBetweenBars / 2 + 1);
-    if (newEndIndex < this.sliderStartIndex) {
+    if (newEndIndex === this.sliderEndIndex || newEndIndex < this.sliderStartIndex) {
       return;
     }
+
+    // Uses +1 because end slider is offset by 1 compared to start slider
+    this.toggleValuesInRange(this.sliderEndIndex + 1, newEndIndex + 1);
     this.sliderEndIndex = newEndIndex;
     this.colorBars();
-    this.valuesBewteen();
   }
 
   private getClosestIndexByX(x: number): number {
@@ -240,5 +265,13 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       }
     }
     return maxIndex - 1;
+  }
+
+  private toggleValuesInRange(a: number, b: number): void {
+    const start = Math.min(a, b);
+    const end = Math.max(a, b);
+    this.selectCategoricalValues.emit(
+      this.histogram.values.slice(start, end).map(v => v.name)
+    );
   }
 }
