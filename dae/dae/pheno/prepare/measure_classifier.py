@@ -246,7 +246,7 @@ def classification_reference_impl(
     if measure_type in {MeasureType.continuous, MeasureType.ordinal}:
         if len(non_null_numeric_values) == 0:
             raise ValueError(
-                "Measure %s is set as numeric but has no numeric values!",
+                "Measure is set as numeric but has no numeric values!",
             )
         report.min_value = np.min(cast(np.ndarray, non_null_numeric_values))
         if isinstance(report.min_value, np.bool_):
