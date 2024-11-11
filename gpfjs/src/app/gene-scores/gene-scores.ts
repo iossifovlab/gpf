@@ -24,9 +24,14 @@ export class GeneScores {
         values.push({name: key, value: json['histogram']['values'][key]});
       });
 
+      let valueOrder: string[] = null;
+      if (json['histogram']['config']['value_order']?.length > 0) {
+        valueOrder = json['histogram']['config']['value_order'];
+      }
+
       histogram = new CategoricalHistogram(
         values,
-        json['histogram']['config']['value_order'] as string[],
+        valueOrder,
         json['large_values_desc'] as string,
         json['small_values_desc'] as string,
         json['histogram']['config']['y_log_scale"'] as boolean,
