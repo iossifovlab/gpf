@@ -123,6 +123,7 @@ describe('PhenoToolComponent', () => {
       rangeStart: 0,
       rangeEnd: 0,
       values: null,
+      categoricalView: null,
     };
 
     const phenoToolMeasureMock: PhenoToolMeasureState = {

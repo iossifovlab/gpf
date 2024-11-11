@@ -1,5 +1,11 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { GeneScoresLocalState, GeneScores, CategoricalHistogram, NumberHistogram } from './gene-scores';
+import {
+  GeneScoresLocalState,
+  GeneScores,
+  CategoricalHistogram,
+  NumberHistogram,
+  CategoricalHistogramView
+} from './gene-scores';
 import { GeneScoresService } from './gene-scores.service';
 import { ReplaySubject, combineLatest, of } from 'rxjs';
 import { Store } from '@ngrx/store';
@@ -9,7 +15,6 @@ import { ValidateNested } from 'class-validator';
 import { environment } from 'environments/environment';
 import { ComponentValidator } from 'app/common/component-validator';
 import {
-  resetGeneScoresValues,
   selectGeneScores,
   setGeneScoreCategorical,
   setGeneScoreContinuous
@@ -30,6 +35,8 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
 
   @ValidateNested() public geneScoresLocalState = new GeneScoresLocalState();
   public categoricalValues: string[] = [];
+  public showCategoricalHistogramViewMenu = false;
+  public selectedCategoricalHistogramView: CategoricalHistogramView = 'range selector';
 
   public imgPathPrefix = environment.imgPathPrefix;
 
@@ -56,6 +63,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
             // Load either categorical or continuous histogram selection data
             if (state.values?.length > 0) {
               this.categoricalValues = cloneDeep(state.values);
+              this.selectedCategoricalHistogramView = state.categoricalView;
             } else {
               this.rangeStart = state.rangeStart;
               this.rangeEnd = state.rangeEnd;
@@ -99,8 +107,15 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   private updateCategoricalHistogramState(): void {
     this.store.dispatch(setGeneScoreCategorical({
       score: this.selectedGeneScores.score,
-      values: this.categoricalValues,
+      values: cloneDeep(this.categoricalValues),
+      categoricalView: this.selectedCategoricalHistogramView,
     }));
+  }
+
+  public switchCategoricalHistogramView(view: CategoricalHistogramView): void {
+    this.selectedCategoricalHistogramView = view;
+    this.categoricalValues = [];
+    this.updateCategoricalHistogramState();
   }
 
   public get selectedGeneScores(): GeneScores {
@@ -121,6 +136,10 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
         rangeStart: this.geneScoresLocalState.rangeStart,
         rangeEnd: this.geneScoresLocalState.rangeEnd,
       }));
+    } else if (this.isCategoricalHistogram(selectedGeneScores.histogram)) {
+      if (!(this.selectedGeneScores.histogram as CategoricalHistogram).valueOrder) {
+        this.selectedCategoricalHistogramView = 'click selector';
+      }
     }
   }
 
@@ -170,6 +189,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
     this.store.dispatch(setGeneScoreCategorical({
       score: this.geneScoresLocalState.score.score,
       values: cloneDeep(this.categoricalValues),
+      categoricalView: this.selectedCategoricalHistogramView,
     }));
   }
 

@@ -9,7 +9,7 @@ import {
   EventEmitter,
   OnInit
 } from '@angular/core';
-import { CategoricalHistogram } from 'app/gene-scores/gene-scores';
+import { CategoricalHistogram, CategoricalHistogramView } from 'app/gene-scores/gene-scores';
 
 import * as d3 from 'd3';
 
@@ -24,7 +24,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   @Input() public height: number;
   @Input() public marginLeft = 100;
   @Input() public marginTop = 10;
-  @Input() public useRangeSelectors = true;
+  @Input() public interactType: CategoricalHistogramView = 'range selector';
   @ViewChild('histogramContainer', {static: true}) public histogramContainer: ElementRef;
 
   @Input() public showCounts = true;
@@ -73,7 +73,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     this.sliderEndIndex = this.histogram.values.length - 1;
     this.redrawHistogram();
 
-    if (this.useRangeSelectors) {
+    if (this.interactType === 'range selector') {
       if (this.stateCategoricalNames.length === 0) {
         this.toggleValuesInRange(0, this.histogram.values.length);
       } else {
@@ -133,7 +133,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       .attr('id', (v: { name: string, value: number }) => v.name);
 
 
-    if (!this.useRangeSelectors) {
+    if (this.interactType === 'click selector') {
       svg.selectAll('rect').on('click', event => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         this.toggleValue(event);

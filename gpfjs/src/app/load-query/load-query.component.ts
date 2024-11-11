@@ -103,6 +103,7 @@ export class LoadQueryComponent implements OnInit {
         this.store.dispatch(setGeneScoreCategorical({
           score: state.geneScores.score,
           values: state.geneScores.values,
+          categoricalView: state.geneScores.categoricalView,
         }));
       } else {
         this.store.dispatch(setGeneScoreContinuous({

@@ -90,10 +90,10 @@ export class CategoricalHistogram {
     public readonly logScaleY: boolean,
     public readonly displayedValuesCount: number = null,
     public readonly displayedValuesPercent: number = null,
-  ) {
-
-  }
+  ) { }
 }
+
+export type CategoricalHistogramView = 'range selector' | 'click selector';
 
 export class GeneScoresLocalState {
   @IsNotEmpty()

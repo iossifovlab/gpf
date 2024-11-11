@@ -6,7 +6,7 @@
           #histogramContainer
           [ngStyle]="isInteractive ? { transform: 'translate(0px, 50px)' } : { transform: 'translate(0px, 0px)' }"></g>
         <g *ngIf="isInteractive">
-          <ng-container *ngIf="useRangeSelectors">
+          <ng-container *ngIf="interactType === 'range selector'">
             <g gpf-histogram-range-selector-line [width]="2" [(x)]="startX"></g>
             <g gpf-histogram-range-selector-line [width]="2" [(x)]="endX"></g>
           </ng-container>

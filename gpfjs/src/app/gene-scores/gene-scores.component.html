@@ -13,6 +13,25 @@
           [style.visibility]="this.geneScoresLocalState.score.help ? 'visible' : 'hidden'"
           [modalContent]="this.geneScoresLocalState.score.help"
           [isMarkdown]="true"></gpf-helper-modal>
+        <div *ngIf="isCategoricalHistogram(selectedGeneScores.histogram)">
+          <span
+            class="material-symbols-outlined"
+            (click)="showCategoricalHistogramViewMenu = !showCategoricalHistogramViewMenu"
+            >more_vert</span
+          >
+          <div *ngIf="showCategoricalHistogramViewMenu" id="view-menu-container">
+            <div
+              (click)="switchCategoricalHistogramView('range selector')"
+              [ngClass]="{ 'selected-view': selectedCategoricalHistogramView === 'range selector' }"
+              >range selector</div
+            >
+            <div
+              (click)="switchCategoricalHistogramView('click selector')"
+              [ngClass]="{ 'selected-view': selectedCategoricalHistogramView === 'click selector' }"
+              >click selector</div
+            >
+          </div>
+        </div>
       </div>
       <div style="margin-top: 5px">
         <a class="download-link" href="{{ downloadUrl }}">Download</a>
@@ -34,11 +53,29 @@
         [(rangeEnd)]="rangeEnd">
       </gpf-histogram>
       <gpf-categorical-histogram
-        *ngIf="selectedGeneScores && isCategoricalHistogram(selectedGeneScores.histogram)"
+        *ngIf="
+          selectedGeneScores &&
+          isCategoricalHistogram(selectedGeneScores.histogram) &&
+          selectedCategoricalHistogramView === 'click selector'
+        "
         [width]="650"
         [height]="145"
         [histogram]="selectedGeneScores.histogram"
         [stateCategoricalNames]="categoricalValues"
+        [interactType]="selectedCategoricalHistogramView"
+        (selectCategoricalValues)="toggleCategoricalValues($event)">
+      </gpf-categorical-histogram>
+      <gpf-categorical-histogram
+        *ngIf="
+          selectedGeneScores &&
+          isCategoricalHistogram(selectedGeneScores.histogram) &&
+          selectedCategoricalHistogramView === 'range selector'
+        "
+        [width]="650"
+        [height]="145"
+        [histogram]="selectedGeneScores.histogram"
+        [stateCategoricalNames]="categoricalValues"
+        [interactType]="selectedCategoricalHistogramView"
         (selectCategoricalValues)="toggleCategoricalValues($event)">
       </gpf-categorical-histogram>
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
