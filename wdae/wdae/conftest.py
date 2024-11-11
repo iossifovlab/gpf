@@ -619,6 +619,10 @@ def t4c8_wgpf_instance(
         "query_base.query_base.get_wgpf_instance",
         return_value=session_t4c8_wgpf_instance,
     )
+    mocker.patch(
+        "utils.expand_gene_set.get_wgpf_instance",
+        return_value=session_t4c8_wgpf_instance,
+    )
 
     return session_t4c8_wgpf_instance
 
