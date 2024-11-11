@@ -30,7 +30,7 @@ from studies.study_wrapper import (
     StudyWrapper,
 )
 from users_api.models import WdaeUser
-from utils.testing import setup_t4c8_instance, setup_wgpf_intance
+from utils.testing import setup_t4c8_instance, setup_wgpf_instance
 
 from dae.common_reports import generate_common_report
 from dae.gene_profile.db import GeneProfileDB
@@ -597,7 +597,7 @@ def session_t4c8_wgpf_instance(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> WGPFInstance:
     root_path = tmp_path_factory.mktemp("session_t4c8_wgpf_instance")
-    return setup_wgpf_intance(root_path)
+    return setup_wgpf_instance(root_path)
 
 
 @pytest.fixture()
@@ -619,6 +619,10 @@ def t4c8_wgpf_instance(
         "query_base.query_base.get_wgpf_instance",
         return_value=session_t4c8_wgpf_instance,
     )
+    mocker.patch(
+        "utils.expand_gene_set.get_wgpf_instance",
+        return_value=session_t4c8_wgpf_instance,
+    )
 
     return session_t4c8_wgpf_instance
 
@@ -629,7 +633,7 @@ def t4c8_wgpf(
     db: None,  # noqa: ARG001
     mocker: pytest_mock.MockFixture,
 ) -> WGPFInstance:
-    wgpf_instance = setup_wgpf_intance(tmp_path)
+    wgpf_instance = setup_wgpf_instance(tmp_path)
 
     reload_datasets(wgpf_instance)
     mocker.patch(

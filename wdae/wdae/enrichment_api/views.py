@@ -27,26 +27,20 @@ class EnrichmentModelsView(QueryBaseView):
         self, study: GenotypeData,
     ) -> list[dict[str, str]]:
         """Collect counting models."""
-        enrichment_config = self.enrichment_helper.get_enrichment_config(
-            study)
+        enrichment_config = self.enrichment_helper.get_enrichment_config(study)
         if enrichment_config is None:
             return []
         selected_models = enrichment_config["selected_counting_models"]
-        result = []
-        for counting_model in enrichment_config["counting"].values():
-            if counting_model.id in selected_models:
-                result.append({  # noqa: PERF401
-                    "id": counting_model.id,
-                    "name": counting_model.name,
-                    "desc": counting_model.desc,
-                })
-        return result
+        return [
+            {"id": counting_model.id,
+             "name": counting_model.name,
+             "desc": counting_model.desc}
+            for counting_model in enrichment_config["counting"].values()
+            if counting_model.id in selected_models
+        ]
 
     @method_decorator(etag(get_instance_timestamp_etag))
-    def get(
-        self, _request: Request,  # pylint: disable=unused-argument
-        dataset_id: str,
-    ) -> Response:
+    def get(self, _request: Request, dataset_id: str) -> Response:
         """Return enrichment configuration prepared for choosing."""
         study = self.gpf_instance.get_genotype_data(dataset_id)
 
@@ -54,7 +48,6 @@ class EnrichmentModelsView(QueryBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         background_descriptions = []
-        # pylint: disable=protected-access
         study_backgrounds = self.enrichment_helper \
             .collect_genotype_data_backgrounds(study)
         default_background_model = self.enrichment_helper \
@@ -62,22 +55,21 @@ class EnrichmentModelsView(QueryBaseView):
         default_counting_model = self.enrichment_helper \
             .get_default_counting_model(study)
 
-        for background in study_backgrounds:
-            background_descriptions.append({  # noqa: PERF401
-                "id": background.background_id,
-                "name": background.name,
-                "type": background.background_type,
-                "summary": background.resource.get_summary(),
-                "desc": background.resource.get_description(),
-            })
-        couting_models = self._collect_counting_models(study)
-        result = {
+        background_descriptions = [
+            {"id": background.background_id,
+             "name": background.name,
+             "type": background.background_type,
+             "summary": background.resource.get_summary(),
+             "desc": background.resource.get_description()}
+            for background in study_backgrounds
+        ]
+
+        return Response({
             "background": background_descriptions,
-            "counting": couting_models,
+            "counting": self._collect_counting_models(study),
             "defaultBackground": default_background_model,
             "defaultCounting": default_counting_model,
-        }
-        return Response(result)
+        })
 
 
 class EnrichmentTestView(QueryBaseView):
@@ -136,7 +128,6 @@ class EnrichmentTestView(QueryBaseView):
         gene_syms = ",".join(self._parse_gene_syms(query))
         return f"Gene Symbols: {gene_syms}"
 
-    # @silk_profile(name="Enrichment Test")
     def post(self, request: Request) -> Response:
         """Run the enrichment test and return the result."""
         query = expand_gene_set(request.data)
@@ -148,6 +139,12 @@ class EnrichmentTestView(QueryBaseView):
         if not dataset:
             return Response(status=status.HTTP_404_NOT_FOUND)
         assert dataset is not None
+
+        builder = self.gpf_instance \
+            .get_enrichment_builder(dataset)  # type: ignore
+
+        if builder is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         gene_syms = None
         if "geneSymbols" in query:
@@ -183,20 +180,11 @@ class EnrichmentTestView(QueryBaseView):
 
         desc = self.enrichment_description(query)
         desc = f"{desc} ({len(gene_syms)})"
-        print(query)
 
         background_name = query.get("enrichmentBackgroundModel", None)
         counting_name = query.get("enrichmentCountingModel", None)
         logger.info("selected background model: %s", background_name)
         logger.info("selected counting model: %s", counting_name)
 
-        builder = self.gpf_instance \
-            .get_enrichment_builder(dataset)  # type: ignore
-
-        if builder is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
         results = builder.build(gene_syms, background_name, counting_name)
-
-        enrichment = {"desc": desc, "result": results}
-        return Response(enrichment)
+        return Response({"desc": desc, "result": results})

@@ -115,8 +115,30 @@ def setup_t4c8_grr(
         },
     )
 
-    cli_manage([
-        "repo-repair", "-R", str(repo_path), "-j", "1"])
+    setup_directories(
+      repo_path / "coding_len_background",
+      {
+        "genomic_resource.yaml": textwrap.dedent("""
+            type: gene_score
+            filename: coding_len_background.tsv
+            separator: "\t"
+            scores:
+            - id: gene_weight
+              name: t4c8CodingLenBackground
+              histogram:
+                type: number
+                number_of_bins: 10
+                view_range:
+                  min: 0
+                  max: 20
+            meta:
+              description: T4C8 gene coding length enrichment background model
+        """),
+        "coding_len_background.tsv": "gene\tgene_weight\nT4\t44\nC8\t45",
+      },
+    )
+
+    cli_manage(["repo-repair", "-R", str(repo_path), "-j", "1"])
 
     return build_genomic_resource_repository({
         "id": "t4c8_local",
@@ -375,7 +397,7 @@ def _t4c8_dataset(
                 - phenotype"""))
 
 
-def setup_wgpf_intance(root_path: pathlib.Path) -> WGPFInstance:
+def setup_wgpf_instance(root_path: pathlib.Path) -> WGPFInstance:
     t4c8_instance = setup_t4c8_instance(root_path)
     t4c8_grr = t4c8_instance.grr
     root_path = pathlib.Path(t4c8_instance.dae_dir)
@@ -712,7 +734,41 @@ denovo_gene_sets:
   - Synonymous.Recurrent
   - Synonymous.Triple
 enrichment:
-  enabled: false
+  enabled: true
+  selected_person_set_collections:
+    - phenotype
+  selected_background_models:
+    - coding_len_background
+  default_background_model: coding_len_background
+  selected_counting_models:
+    - enrichment_gene_counting
+    - enrichment_events_counting
+  counting:
+    enrichment_gene_counting:
+      id: enrichment_gene_counting
+      name: Counting affected genes
+      desc: Counting affected genes
+    enrichment_events_counting:
+      id: enrichment_events_counting
+      name: Counting events
+      desc: Counting events
+  default_counting_model: enrichment_gene_counting
+  effect_types:
+    - Nonsense
+    - Frame-shift
+    - Splice-site
+    - Missense
+    - No-frame-shift
+    - noStart
+    - noEnd
+    - Synonymous
+    - Non coding
+    - Intron
+    - Intergenic
+    - 3'-UTR
+    - 5'-UTR
+    - CNV+
+    - CNV-
 gene_browser:
   enabled: true
   frequency_column: "score_one"

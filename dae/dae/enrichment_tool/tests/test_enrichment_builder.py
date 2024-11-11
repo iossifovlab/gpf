@@ -1,11 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pytest
-
-from dae.studies.study import GenotypeData
 from dae.enrichment_tool.enrichment_builder import EnrichmentBuilder
-
-pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance", "dae_calc_gene_sets")
+from dae.studies.study import GenotypeData
 
 
 def test_build_results(enrichment_builder: EnrichmentBuilder) -> None:

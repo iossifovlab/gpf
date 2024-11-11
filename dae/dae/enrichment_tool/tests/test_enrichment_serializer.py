@@ -1,12 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
-import pytest
-
 from dae.enrichment_tool.enrichment_serializer import EnrichmentSerializer
 from dae.enrichment_tool.event_counters import EnrichmentSingleResult
-
-pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 
 def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
@@ -66,7 +60,6 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "del",
         "complex",
     ]
-    # assert all_serialized["overlapFilter"]["geneSymbols"] == {"SAMD11"}
 
     rec_serialized = serialize[0]["missense"]["rec"]
 
@@ -146,7 +139,6 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "del",
         "complex",
     ]
-    # assert male_serialized["overlapFilter"]["geneSymbols"] == {"SAMD11"}
 
     female_serialized = serialize[0]["missense"]["female"]
 
@@ -189,7 +181,6 @@ def test_serialize(enrichment_serializer: EnrichmentSerializer) -> None:
         "del",
         "complex",
     ]
-    # assert female_serialized["overlapFilter"]["geneSymbols"] == {"SAMD11"}
 
 
 def test_serialize_enrichment_result(

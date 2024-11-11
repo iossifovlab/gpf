@@ -10,6 +10,9 @@ from box import Box
 from dae.enrichment_tool.build_coding_length_enrichment_background import (
     cli as build_coding_len_background_cli,
 )
+from dae.enrichment_tool.enrichment_builder import EnrichmentBuilder
+from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
+from dae.enrichment_tool.enrichment_serializer import EnrichmentSerializer
 from dae.enrichment_tool.gene_weights_background import (
     GeneScoreEnrichmentBackground,
 )
@@ -56,8 +59,7 @@ def f1_trio_enrichment_config(gpf_fixture: GPFInstance) -> Box:
 
 @pytest.fixture(scope="session")
 def f1_trio(gpf_fixture: GPFInstance) -> GenotypeData:
-    result = gpf_fixture.get_genotype_data("f1_trio")
-    return result
+    return gpf_fixture.get_genotype_data("f1_trio")
 
 
 @pytest.fixture(scope="session")
@@ -189,10 +191,38 @@ def t4c8_fixture(tmp_path: pathlib.Path) -> GPFInstance:
     })
 
     grr = build_filesystem_test_repository(root_path / "grr")
-    gpf_instance = setup_gpf_instance(
+    return setup_gpf_instance(
         root_path / "gpf_instance",
         reference_genome_id="t4c8_genome",
         gene_models_id="t4c8_genes",
         grr=grr)
 
-    return gpf_instance
+
+@pytest.fixture(scope="session")
+def enrichment_helper(grr: GenomicResourceRepo) -> EnrichmentHelper:
+    return EnrichmentHelper(grr)
+
+
+@pytest.fixture(scope="session")
+def enrichment_builder(
+    f1_trio: GenotypeData,
+    enrichment_helper: EnrichmentHelper,
+) -> EnrichmentBuilder:
+    return EnrichmentBuilder(enrichment_helper, f1_trio)
+
+
+@pytest.fixture(scope="session")
+def enrichment_serializer(
+    f1_trio: GenotypeData,
+    enrichment_helper: EnrichmentHelper,
+    enrichment_builder: EnrichmentBuilder,
+) -> EnrichmentSerializer:
+    enrichment_config = enrichment_helper.get_enrichment_config(f1_trio)
+    assert enrichment_config is not None
+
+    build = enrichment_builder.build_results(
+        gene_syms=["SAMD11", "PLEKHN1", "POGZ"],
+        background_id="enrichment/coding_len_testing",
+        counting_id="enrichment_events_counting",
+    )
+    return EnrichmentSerializer(enrichment_config, build)
