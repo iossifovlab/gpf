@@ -225,6 +225,15 @@ class IsDatasetAllowed(permissions.BasePermission):
                 for group in dataset.groups.all():
                     if group.name == "any_user":
                         allowed_datasets.add(dataset_id)
+                        allowed_datasets.update(
+                            [
+                                child.dataset_id for child in
+                                DatasetHierarchy.get_children(
+                                    instance_id,
+                                    dataset,
+                                )
+                            ],
+                        )
                         break
 
             return allowed_datasets
