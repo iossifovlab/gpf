@@ -8,7 +8,12 @@ import { switchMap, take } from 'rxjs/operators';
 import { ValidateNested } from 'class-validator';
 import { environment } from 'environments/environment';
 import { ComponentValidator } from 'app/common/component-validator';
-import { selectGeneScores, setGeneScoreCategorical, setGeneScoreContinuous } from './gene-scores.state';
+import {
+  resetGeneScoresValues,
+  selectGeneScores,
+  setGeneScoreCategorical,
+  setGeneScoreContinuous
+} from './gene-scores.state';
 import { cloneDeep } from 'lodash';
 
 @Component({
@@ -103,6 +108,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   }
 
   public set selectedGeneScores(selectedGeneScores: GeneScores) {
+    this.categoricalValues = [];
     this.geneScoresLocalState.score = selectedGeneScores;
     this.downloadUrl = this.getDownloadUrl();
     if (selectedGeneScores !== undefined && this.isNumberHistogram(selectedGeneScores.histogram)) {
