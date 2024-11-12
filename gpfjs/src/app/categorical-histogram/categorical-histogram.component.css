@@ -12,3 +12,8 @@
   width: 100%;
   max-width: 600px;
 }
+
+.histogram svg {
+  width: 100%;
+  height: 100%;
+}
