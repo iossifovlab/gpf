@@ -30,6 +30,15 @@ class Line:
     Provides attribute access to a number of important columns - chromosome,
     start position, end position, reference allele and alternative allele.
     """
+    __slots__ = (  # noqa: RUF023
+        "_data",
+        "chrom",
+        "fchrom",
+        "pos_begin",
+        "pos_end",
+        "ref",
+        "alt",
+    )
 
     def __init__(
         self,
