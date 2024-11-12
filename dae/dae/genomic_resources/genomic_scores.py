@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import copy
 import logging
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Callable, Generator, Iterator
 from dataclasses import dataclass
 from functools import lru_cache
 from types import TracebackType
@@ -683,8 +683,9 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     def fetch_region(
         self, chrom: str,
-        pos_begin: int | None, pos_end: int | None, scores: Iterable[str],
-    ) -> Iterator[dict[str, ScoreValue]]:
+        pos_begin: int | None, pos_end: int | None,
+        scores: list[str] | None = None,
+    ) -> Generator[dict[str, ScoreValue], None, None]:
         """Return score values in a region."""
         if not self.is_open():
             raise ValueError(f"genomic score <{self.resource_id}> is not open")
@@ -692,6 +693,9 @@ class GenomicScore(ResourceConfigValidationMixin):
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
+
+        if scores is None:
+            scores = self.get_all_scores()
 
         for line in self._fetch_lines(chrom, pos_begin, pos_end):
             line_pos_begin, line_pos_end = self._line_to_begin_end(line)
@@ -768,8 +772,9 @@ class PositionScore(GenomicScore):
         return cast(PositionScore, super().open())
 
     def fetch_scores(
-            self, chrom: str, position: int,
-            scores: list[str] | None = None) -> list[Any] | None:
+        self, chrom: str, position: int,
+        scores: list[str] | None = None,
+    ) -> list[ScoreValue] | None:
         """Fetch score values at specific genomic position."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
@@ -883,8 +888,10 @@ class NPScore(GenomicScore):
         return cast(NPScore, super().open())
 
     def fetch_scores(
-            self, chrom: str, position: int, reference: str, alternative: str,
-            scores: list[str] | None = None) -> list[Any] | None:
+        self, chrom: str, position: int,
+        reference: str, alternative: str,
+        scores: list[str] | None = None,
+    ) -> list[ScoreValue] | None:
         """Fetch score values at specified genomic position and nucleotide."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
@@ -1008,8 +1015,10 @@ class AlleleScore(GenomicScore):
         return cast(AlleleScore, super().open())
 
     def fetch_scores(
-            self, chrom: str, position: int, reference: str, alternative: str,
-            scores: list[str] | None = None) -> list[Any] | None:
+        self, chrom: str, position: int,
+        reference: str, alternative: str,
+        scores: list[str] | None = None,
+    ) -> list[ScoreValue] | None:
         """Fetch scores values for specific allele."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
