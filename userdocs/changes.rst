@@ -1,6 +1,24 @@
 Release Notes
 =============
 
+* 2024.11.2
+    * Fix pheno import type inference issues
+    * Improvments in phenotype data import unit testing
+    * Improvements in enrichment REST API unit testing
+    * Fix handling of `any_user` access rights in dataset hierarchy
+    * Fix query cancelation in gene browser
+
+* 2024.11.1
+    * Fix pheno import type inference issues
+    * Improvments in phenotype data import testing
+    * Construct gene sets download ling on the frontend
+    * Fix handling of frequency filters in DuckDb genotype storage
+    * Bump version DuckDb to 1.1.3
+    * Implementation of full re-annotation of schema2 parquet datasets
+    * Factory functions for bulding genomic resources from resource ID
+    * Fix query cancelation in genotype browser
+    * Improvement in handling pedigrees in dataset statistics without access rights
+
 * 2024.11.0
     * Pure python implementation of type inference for phenotype measures
     * Phenotype data import refactored
