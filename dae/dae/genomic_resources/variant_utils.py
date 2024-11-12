@@ -87,9 +87,10 @@ def maximally_extend_variant(
             if s2.startswith(s1) or s2.endswith(s1):
                 right = genome.get_sequence(
                     chrom, pos + len(ref), pos + len(ref))
-                ref = f"{ref}{right}"
-                alts = [f"{alt}{right}" for alt in alts]
-                changed = True
+                if right:
+                    ref = f"{ref}{right}"
+                    alts = [f"{alt}{right}" for alt in alts]
+                    changed = True
                 break
         if not changed:
             break
