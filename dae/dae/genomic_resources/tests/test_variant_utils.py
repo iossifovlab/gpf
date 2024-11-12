@@ -205,6 +205,8 @@ def test_normalize_novariant_allele(
     ("foo", 6, "C", ["G"], 5, "ACG", ["AGG"]),
     ("foo", 7, "G", ["T", "A"], 6, "CGT", ["CTT", "CAT"]),
     ("foo", 9, "A", ["T", "AA"], 8, "TAC", ["TTC", "TAAC"]),
+    ("foo", 93, "A", ["ACGTACGTACGT"],
+     93, "ACGTACGTACGT", ["ACGTACGTACGTCGTACGTACGT"]),
 ])
 def test_maximally_extend_variant(
     chrom: str,
