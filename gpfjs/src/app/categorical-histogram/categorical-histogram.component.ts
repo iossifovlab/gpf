@@ -196,7 +196,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   }
 
   public get viewBox(): string {
-    const pos = true ? '0 0' : '-8 -8';
+    const pos = '-8 -8';
     return `${pos} ${this.width} ${this.height}`;
   }
 
