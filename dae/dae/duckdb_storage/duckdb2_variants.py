@@ -109,8 +109,6 @@ class DuckDb2Runner(QueryRunner):
 class DuckDb2Variants(QueryVariantsBase):
     """Backend for DuckDb storage backend."""
 
-    RUNNER_CLASS = DuckDb2Runner
-
     def __init__(
         self,
         connection_factory: DuckDbConnectionFactory,
@@ -290,7 +288,7 @@ class DuckDb2Variants(QueryVariantsBase):
         )
         logger.info("SUMMARY VARIANTS QUERY:\n%s", query)
 
-        runner = self.RUNNER_CLASS(
+        runner = DuckDb2Runner(
             connection_factory=self.connection_factory.connect(),
             query=query,
             deserializer=self._deserialize_summary_variant)
@@ -412,7 +410,7 @@ class DuckDb2Variants(QueryVariantsBase):
         deserialize_row = self._deserialize_family_variant
 
         # pylint: disable=protected-access
-        runner = self.RUNNER_CLASS(
+        runner = DuckDb2Runner(
             connection_factory=self.connection_factory.connect(),
             query=query,
             deserializer=deserialize_row)

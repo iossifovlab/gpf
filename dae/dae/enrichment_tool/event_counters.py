@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import itertools
+import operator
 from collections.abc import Iterable
 from dataclasses import dataclass
 
@@ -23,15 +24,15 @@ def filter_denovo_one_event_per_family(
 
     The result is represented as list of lists.
     """
-    seen = set()
+    seen: set[str] = set()
     res = []
     for ve in variant_events:
-        syms = set(
+        syms = {
             ge.gene
             for ae in ve.allele_events
             for ge in ae.effect_genes
             if ge.effect in requested_effect_types
-        )
+        }
         not_seen_genes = [gs for gs in syms if (ve.family_id + gs) not in seen]
         if not not_seen_genes:
             continue
@@ -57,13 +58,13 @@ def get_sym_2_fn(
     )
     sym_2_vars: dict[str, list[VariantEvent]] = {
         sym: [t[1] for t in tpi]  # type: ignore
-        for sym, tpi in itertools.groupby(gn_sorted, key=lambda x: x[0])
+        for sym, tpi in itertools.groupby(
+            gn_sorted, key=operator.itemgetter(0))
     }
-    sym_2_fn = {
-        sym: len(set(ve.family_id for ve in variant_events))
+    return {
+        sym: len({ve.family_id for ve in variant_events})
         for sym, variant_events in list(sym_2_vars.items())
     }
-    return sym_2_fn
 
 
 def filter_denovo_one_gene_per_recurrent_events(
@@ -72,16 +73,14 @@ def filter_denovo_one_gene_per_recurrent_events(
 ) -> list[list[str]]:
     """Collect only events that occur in more than one family."""
     sym_2_fn = get_sym_2_fn(variant_events, requsted_effect_types)
-    res = [[gs] for gs, fn in list(sym_2_fn.items()) if fn > 1]
-    return res
+    return [[gs] for gs, fn in list(sym_2_fn.items()) if fn > 1]
 
 
 def filter_denovo_one_gene_per_events(
     variant_events: list[VariantEvent], requested_effect_types: Iterable[str],
 ) -> list[list[str]]:
     sym_2_fn = get_sym_2_fn(variant_events, requested_effect_types)
-    res = [[gs] for gs, _fn in list(sym_2_fn.items())]
-    return res
+    return [[gs] for gs, _fn in list(sym_2_fn.items())]
 
 
 @dataclass
@@ -156,11 +155,13 @@ class EnrichmentSingleResult:
         self.overlapped_genes = overlapped_genes
 
     def __repr__(self) -> str:
-        return f"EnrichmentSingleResult({self.name}): " \
-            f"events={self.events}; " \
-            f"overlapped=" \
-            f"{self.overlapped}; " \
+        return (
+            f"EnrichmentSingleResult({self.name}): "
+            f"events={self.events}; "
+            f"overlapped="
+            f"{self.overlapped}; "
             f"expected={self.expected}; pvalue={self.pvalue}"
+        )
 
 
 @dataclass
@@ -185,14 +186,13 @@ def overlap_enrichment_result_dict(
 ) -> EventsResult:
     """Calculate the overlap between all events and requested gene syms."""
     gene_syms_upper = [gs.upper() for gs in gene_syms]
-    result = EventsResult(
+    return EventsResult(
         filter_overlapping_events(events_counts.all, gene_syms_upper),
         filter_overlapping_events(events_counts.rec, gene_syms_upper),
         filter_overlapping_events(events_counts.male, gene_syms_upper),
         filter_overlapping_events(events_counts.female, gene_syms_upper),
         filter_overlapping_events(events_counts.unspecified, gene_syms_upper),
     )
-    return result
 
 
 def overlap_event_counts(
@@ -363,14 +363,13 @@ class GeneEventsCounter(CounterBase):
             events_result.unspecified, effect_types,
         )
 
-        result = EventsResult(
+        return EventsResult(
             all_events,
             rec_events,
             male_events,
             female_events,
             unspecified_events,
         )
-        return result
 
 
 EVENT_COUNTERS: dict[str, EventsCounter | GeneEventsCounter] = {

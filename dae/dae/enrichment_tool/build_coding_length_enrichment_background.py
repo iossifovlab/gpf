@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 from collections import defaultdict
+from typing import cast
 
 import pandas as pd
 
@@ -13,7 +14,7 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.utils.regions import collapse
+from dae.utils.regions import BedRegion, collapse
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
@@ -72,10 +73,8 @@ def build_coding_length_background(gene_models: GeneModels) -> pd.DataFrame:
 
     genes_lengths = {}
     for gene, regions in genes_regions.items():
-        gene_len = sum(len(r) for r in regions)
+        gene_len = sum(len(cast(BedRegion, r)) for r in regions)
         genes_lengths[gene.upper()] = gene_len
 
-    df = pd.DataFrame.from_records(
+    return pd.DataFrame.from_records(
         list(genes_lengths.items()), columns=["gene", "gene_weight"])
-
-    return df

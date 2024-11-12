@@ -210,12 +210,16 @@ class QueryResult:
 
     def close(self) -> None:
         """Gracefully close and dispose of resources."""
-        for runner in self.runners:
+        logger.info("closing query result...")
+        logger.info("closing %s query runners", len(self.runners))
+        for runner in self.runners[::-1]:
             try:
                 runner.close()
+                logger.debug("runner %s closed", runner.study_id)
             except Exception as ex:  # noqa: BLE001 pylint: disable=broad-except
                 logger.info(
                     "exception in result close: %s", type(ex), exc_info=True)
+        logger.debug("emptying result queue %s", self.result_queue.qsize())
         while not self.result_queue.empty():
             item = self.result_queue.get()
             if isinstance(item, Exception):

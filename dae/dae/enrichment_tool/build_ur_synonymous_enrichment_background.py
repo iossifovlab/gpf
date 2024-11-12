@@ -18,8 +18,10 @@ def cli(
     """Command line tool to create UR synonymous enrichment background."""
     if argv is None:
         argv = sys.argv[1:]
-    description = "Command line tool to create UR synonymous enrichment " \
+    description = (
+        "Command line tool to create UR synonymous enrichment "
         "background."
+    )
     parser = argparse.ArgumentParser(description=description)
     VerbosityConfiguration.set_arguments(parser)
 

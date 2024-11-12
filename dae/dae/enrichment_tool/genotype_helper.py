@@ -17,7 +17,6 @@ class GeneEffect:
 @dataclass(frozen=True)
 class AlleleEvent:
     persons: set[tuple[str, str]]
-    # person_sets: set[str]
     effect_genes: set[GeneEffect]
 
 
@@ -44,7 +43,7 @@ class GenotypeHelper:
         denovo_variants = self.genotype_data.query_variants(
             effect_types=effect_types,
             genes=genes,
-            inheritance=str(Inheritance.denovo.name))
+            inheritance=[str(Inheritance.denovo.name)])
 
         self._denovo_events = self.collect_denovo_events(denovo_variants)
 
