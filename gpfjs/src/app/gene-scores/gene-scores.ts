@@ -15,8 +15,8 @@ export class GeneScores {
         json['small_values_desc'] as string,
         json['histogram']['config']['view_range']['min'] as number,
         json['histogram']['config']['view_range']['max'] as number,
-        json['histogram']['config']['x_log_scale"'] as boolean,
-        json['histogram']['config']['y_log_scale"'] as boolean,
+        json['histogram']['config']['x_log_scale'] as boolean,
+        json['histogram']['config']['y_log_scale'] as boolean,
       );
     } else if (json['histogram']['config']['type'] as string === 'categorical') {
       const values: {name: string, value: number}[] = [];
@@ -34,7 +34,7 @@ export class GeneScores {
         valueOrder,
         json['large_values_desc'] as string,
         json['small_values_desc'] as string,
-        json['histogram']['config']['y_log_scale"'] as boolean,
+        json['histogram']['config']['y_log_scale'] as boolean,
         json['histogram']['config']['displayed_values_count'] as number,
         json['histogram']['config']['displayed_values_percent'] as number,
       );
@@ -50,7 +50,9 @@ export class GeneScores {
   }
 
   public static fromJsonArray(jsonArray: Array<object>): Array<GeneScores> {
-    return jsonArray.map((json) => GeneScores.fromJson(json));
+    return jsonArray.map((json) => {
+      return GeneScores.fromJson(json)
+    });
   }
 
 
