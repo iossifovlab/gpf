@@ -14,23 +14,23 @@
           [modalContent]="this.geneScoresLocalState.score.help"
           [isMarkdown]="true"></gpf-helper-modal>
         <div *ngIf="isCategoricalHistogram(selectedGeneScores.histogram)">
-          <span
-            class="material-symbols-outlined"
-            (click)="showCategoricalHistogramViewMenu = !showCategoricalHistogramViewMenu"
-            >more_vert</span
-          >
-          <div *ngIf="showCategoricalHistogramViewMenu" id="view-menu-container">
-            <div
+          <button mat-icon-button [matMenuTriggerFor]="menu" id="view-menu-button">
+            <span class="material-symbols-outlined">more_vert</span>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button
+              mat-menu-item
               (click)="switchCategoricalHistogramView('range selector')"
               [ngClass]="{ 'selected-view': selectedCategoricalHistogramView === 'range selector' }"
-              >range selector</div
-            >
-            <div
+              >range selector
+            </button>
+            <button
+              mat-menu-item
               (click)="switchCategoricalHistogramView('click selector')"
               [ngClass]="{ 'selected-view': selectedCategoricalHistogramView === 'click selector' }"
-              >click selector</div
-            >
-          </div>
+              >click selector
+            </button>
+          </mat-menu>
         </div>
       </div>
       <div style="margin-top: 5px">

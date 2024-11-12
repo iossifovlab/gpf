@@ -16,23 +16,27 @@ select {
   text-overflow: ellipsis;
 }
 
-#view-menu-container {
+#view-menu-button {
+  background: none;
+  border: none;
+  color: #b4b4b4;
+}
+
+.mat-mdc-menu-content {
   border: 1px solid #ced4da;
   border-radius: 0.375rem;
-  background-color: white;
-  padding: 5px;
-  margin-right: 70px;
-  display: flex;
-  flex-direction: column;
-  right: 0;
-  position: absolute;
-  gap: 10px;
-  align-items: center;
+  padding: 0 !important;
+}
+
+.mat-mdc-menu-item {
+  min-height: 40px !important;
+}
+
+.mat-mdc-elevation-specific.mat-elevation-z8 {
+  box-shadow: none;
 }
 
 .selected-view {
-  background-color: #2a6395;
-  color: #fff;
-  border-radius: 0.25rem;
-  padding: 3px 10px;
+  background-color: #2a6395 !important;
+  color: #fff !important;
 }

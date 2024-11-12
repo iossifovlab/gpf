@@ -35,7 +35,6 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
 
   @ValidateNested() public geneScoresLocalState = new GeneScoresLocalState();
   public categoricalValues: string[] = [];
-  public showCategoricalHistogramViewMenu = false;
   public selectedCategoricalHistogramView: CategoricalHistogramView = 'range selector';
 
   public imgPathPrefix = environment.imgPathPrefix;

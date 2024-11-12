@@ -184,6 +184,7 @@ import { geneProfilesReducer } from './gene-profiles-table/gene-profiles-table.s
 import { regionsFiltersReducer } from './regions-filter/regions-filter.state';
 import { uniqueFamilyVariantsFilterReducer } from './unique-family-variants-filter/unique-family-variants-filter.state';
 import { CategoricalHistogramModule } from './categorical-histogram/categorical-histogram.module';
+import {MatMenuModule} from '@angular/material/menu';
 
 const appRoutes: Routes = [
   {
@@ -419,6 +420,7 @@ const appRoutes: Routes = [
     AngularMarkdownEditorModule.forRoot(),
     MatAutocompleteModule,
     MatInputModule,
+    MatMenuModule,
     NoopAnimationsModule,
     StoreModule.forRoot({
       errors: errorsReducer,
