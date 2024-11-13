@@ -21,6 +21,7 @@ from studies.study_wrapper import StudyWrapperBase
 
 from dae.studies.study import GenotypeData
 from datasets_api.permissions import (
+    IsDatasetAllowed,
     get_instance_timestamp_etag,
     get_permissions_etag,
     get_wdae_parents,
@@ -446,13 +447,12 @@ class DatasetHierarchyView(QueryBaseView):
 
     def produce_tree(
         self,
-        instance_id: str,
         dataset: GenotypeData,
-        user: User,
         selected: list[str],
+        permitted_datasets: set[str],
     ) -> dict[str, Any] | None:
         """Recursively collect a dataset's id, children and access rights."""
-        has_rights = user_has_permission(instance_id, user, dataset.study_id)
+        has_rights = dataset.study_id in permitted_datasets
         dataset_obj = Dataset.objects.get(dataset_id=dataset.study_id)
         groups = dataset_obj.groups.all()
         if "hidden" in [group.name for group in groups] and not has_rights:
@@ -464,7 +464,7 @@ class DatasetHierarchyView(QueryBaseView):
             for child in dataset.studies:
                 if child.study_id in selected:
                     tree = self.produce_tree(
-                        instance_id, child, user, selected,
+                        child, selected, permitted_datasets,
                     )
                     if tree is not None:
                         children.append(tree)
@@ -483,11 +483,15 @@ class DatasetHierarchyView(QueryBaseView):
 
         genotype_data_ids = self.gpf_instance.get_genotype_data_ids()
 
+        permitted_datasets = set(
+            IsDatasetAllowed.permitted_datasets(user, self.instance_id),
+        )
+
         if dataset_id:
             genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
 
             tree = self.produce_tree(
-                self.instance_id, genotype_data, user, genotype_data_ids,
+                genotype_data, genotype_data_ids, permitted_datasets,
             )
 
             return Response({"data": tree}, status=status.HTTP_200_OK)
@@ -501,7 +505,9 @@ class DatasetHierarchyView(QueryBaseView):
 
         for gd in genotype_datas:
             tree = self.produce_tree(
-                self.instance_id, gd, user, genotype_data_ids,
+                gd,
+                genotype_data_ids,
+                permitted_datasets,
             )
             if tree is not None:
                 trees.append(tree)
