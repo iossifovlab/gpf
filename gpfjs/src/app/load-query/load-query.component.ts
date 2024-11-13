@@ -99,13 +99,13 @@ export class LoadQueryComponent implements OnInit {
       this.store.dispatch(setFamilyIds({familyIds: state.familyIds}));
       this.store.dispatch(setPersonIds({personIds: state.personIds}));
       this.router.navigate(navigationParams);
-      if (state.geneScores.values?.length > 0) {
+      if (state.geneScores.histogramType === 'categorical') {
         this.store.dispatch(setGeneScoreCategorical({
           score: state.geneScores.score,
           values: state.geneScores.values,
           categoricalView: state.geneScores.categoricalView,
         }));
-      } else {
+      } else if (state.geneScores.histogramType === 'continuous') {
         this.store.dispatch(setGeneScoreContinuous({
           score: state.geneScores.score,
           rangeEnd: state.geneScores.rangeEnd,

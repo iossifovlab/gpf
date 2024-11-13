@@ -3,7 +3,10 @@ import { cloneDeep } from 'lodash';
 import { reset } from 'app/users/state-actions';
 import { CategoricalHistogramView } from './gene-scores';
 
+export type HistogramType = 'continuous' | 'categorical';
+
 export interface GeneScoresState {
+  histogramType: HistogramType;
   score: string;
   rangeStart: number;
   rangeEnd: number;
@@ -12,6 +15,7 @@ export interface GeneScoresState {
 }
 
 export const initialState: GeneScoresState = {
+  histogramType: null,
   score: null,
   rangeStart: 0,
   rangeEnd: 0,
@@ -40,6 +44,7 @@ export const resetGeneScoresValues = createAction(
 export const geneScoresReducer = createReducer(
   initialState,
   on(setGeneScoreContinuous, (state, { score, rangeStart, rangeEnd }) => ({
+    histogramType: 'continuous' as const,
     score: score,
     rangeStart: rangeStart,
     rangeEnd: rangeEnd,
@@ -47,6 +52,7 @@ export const geneScoresReducer = createReducer(
     categoricalView: initialState.categoricalView,
   })),
   on(setGeneScoreCategorical, (state, { score, values, categoricalView }) => ({
+    histogramType: 'categorical' as const,
     score: score,
     rangeStart: initialState.rangeStart,
     rangeEnd: initialState.rangeEnd,

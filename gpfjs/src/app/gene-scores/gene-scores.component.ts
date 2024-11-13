@@ -60,10 +60,10 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
           if (score.score === state.score) {
             this.selectedGeneScores = score;
             // Load either categorical or continuous histogram selection data
-            if (state.values?.length > 0) {
+            if (state.histogramType === 'categorical') {
               this.categoricalValues = cloneDeep(state.values);
               this.selectedCategoricalHistogramView = state.categoricalView;
-            } else {
+            } else if (state.histogramType === 'continuous') {
               this.rangeStart = state.rangeStart;
               this.rangeEnd = state.rangeEnd;
             }
