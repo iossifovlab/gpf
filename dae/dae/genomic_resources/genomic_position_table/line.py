@@ -82,7 +82,7 @@ class VCFLine:
         self.pos_end: int = raw_line.pos
 
         assert raw_line.ref is not None
-        self.ref: str = raw_line.ref
+        self.ref: str | None = raw_line.ref
         self.alt: str | None = None
         # Used to handle multiallelic variants in VCF files.
         # The allele index is None if the variant for this line
@@ -120,7 +120,7 @@ class BigWigLine:
     """Represents a line read from a bigWig file."""
 
     def __init__(self, raw_line: tuple):
-        self._data: tuple[str, int, int, float] = raw_line  # type: ignore
+        self._data: tuple[str, int, int, float] = raw_line
         self.chrom: str = self._data[0]
         self.fchrom: str = self._data[0]
         self.pos_begin: int = self._data[1]
