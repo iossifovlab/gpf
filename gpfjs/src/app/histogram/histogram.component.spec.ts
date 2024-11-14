@@ -134,7 +134,7 @@ describe('HistogramComponent', () => {
     fixture.whenStable().then(() => {
       const sumOfBarsLabelEl = fixture.debugElement.query(By.css('#sumOfBarsLabel'));
       expect(sumOfBarsLabelEl).not.toBeNull();
-      expect((sumOfBarsLabelEl.nativeElement as HTMLElement).textContent.trim()).toBe('~7 (50.00%)');
+      expect((sumOfBarsLabelEl.nativeElement as HTMLElement).textContent.trim()).toBe('7 (50.00%)');
     });
   }));
 
@@ -150,7 +150,7 @@ describe('HistogramComponent', () => {
     const sliderLabelsText = sliderLabels.map((label) => (label.nativeElement as HTMLElement).textContent.trim());
     expect(sliderLabels).toHaveLength(3);
     expect(sliderLabelsText).toHaveLength(3);
-    expect(sliderLabelsText).toStrictEqual(['~2 (14.29%)', '~5 (35.71%)', '~7 (50.00%)']);
+    expect(sliderLabelsText).toStrictEqual(['2 (14.29%)', '5 (35.71%)', '7 (50.00%)']);
   });
 
   it('should not render range input fields if less than 10 bins', waitForAsync(() => {
@@ -221,6 +221,6 @@ describe('HistogramComponentNoDomain', () => {
     const sliderLabelsText = sliderLabels.map((label) => (label.nativeElement as HTMLElement).textContent.trim());
     expect(sliderLabels).toHaveLength(3);
     expect(sliderLabelsText).toHaveLength(3);
-    expect(sliderLabelsText).toStrictEqual(['~2 (14.29%)', '~5 (35.71%)', '~7 (50.00%)']);
+    expect(sliderLabelsText).toStrictEqual(['2 (14.29%)', '5 (35.71%)', '7 (50.00%)']);
   });
 });

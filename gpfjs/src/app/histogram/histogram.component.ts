@@ -49,8 +49,6 @@ export class HistogramComponent implements OnInit, OnChanges {
   @Input() public domainMin: number;
   @Input() public domainMax: number;
 
-  public rangesCounts: Array<number> = [];
-
   @Input() public logScaleX = false;
   @Input() public logScaleY = false;
   @Input() public showCounts = true;
@@ -114,14 +112,6 @@ export class HistogramComponent implements OnInit, OnChanges {
         this.rangeEnd = null;
       }
       this.resetRange = true;
-    }
-
-    if ('rangesCounts' in changes) {
-      if (this.rangesCounts && this.rangesCounts.length === 3) {
-        this.beforeRangeText = this.formatEstimateText(this.rangesCounts[0], false);
-        this.insideRangeText = this.formatEstimateText(this.rangesCounts[1], false);
-        this.afterRangeText = this.formatEstimateText(this.rangesCounts[2], false);
-      }
     }
   }
 
@@ -187,12 +177,11 @@ export class HistogramComponent implements OnInit, OnChanges {
         ? 'lightsteelblue' : 'steelblue');
   }
 
-  private formatEstimateText(count: number, estimate = true): string {
+  private formatEstimateText(count: number): string {
     const perc = count / this.barsTotalSum * 100;
 
     if (this.showCounts) {
-      const str = estimate ? '~' : '';
-      return str + count.toFixed(0) + ' (' + perc.toFixed(2) + '%)';
+      return count.toFixed(0) + ' (' + perc.toFixed(2) + '%)';
     } else {
       return perc.toFixed(2) + '%';
     }
