@@ -298,10 +298,7 @@ class TabixGenomicPositionTable(GenomicPositionTable):
 
         # without using buffer
         self.line_iterator = self.get_line_iterator(chrom, pos_begin - 1)
-
         yield from self._gen_from_tabix(chrom, pos_end, buffering=buffering)
-
-        self.buffer.prune(chrom, pos_begin)
 
     def get_line_iterator(
         self, chrom: str | None = None,

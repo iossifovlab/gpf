@@ -1,40 +1,44 @@
-import abc
 from collections import deque
 from collections.abc import Generator
-from typing import Any
+from typing import Any, Protocol
 
 import pysam
 
 Key = str | int
 
 
-class LineBase(abc.ABC):
-    """Base class for genomic position table lines."""
+class LineBase(Protocol):
+    """Protocol for genomic position table lines."""
 
-    def __init__(self) -> None:
+    chrom: str
+    fchrom: str
+    pos_begin: int
+    pos_end: int
+    ref: str | None
+    alt: str | None
 
-        self.chrom: str
-        self.fchrom: str
-        self.pos_begin: int
-        self.pos_end: int
-        self.ref: str | None
-        self.alt: str | None
-
-    @abc.abstractmethod
     def get(self, key: Key) -> Any:
-        """Return score value."""
+        ...
 
-    @abc.abstractmethod
     def row(self) -> tuple:
-        """Return row as tuple."""
+        ...
 
 
-class Line(LineBase):
+class Line:
     """Represents a line read from a genomic position table.
 
     Provides attribute access to a number of important columns - chromosome,
     start position, end position, reference allele and alternative allele.
     """
+    __slots__ = (  # noqa: RUF023
+        "_data",
+        "chrom",
+        "fchrom",
+        "pos_begin",
+        "pos_end",
+        "ref",
+        "alt",
+    )
 
     def __init__(
         self,
@@ -45,8 +49,6 @@ class Line(LineBase):
         ref_key: int | None = None,
         alt_key: int | None = None,
     ):
-        super().__init__()
-
         self._data: tuple[str, ...] = raw_line
 
         self.chrom: str = self._data[chrom_key]
@@ -65,7 +67,7 @@ class Line(LineBase):
         return tuple(self._data)
 
 
-class VCFLine(LineBase):
+class VCFLine:
     """Line adapter for lines derived from a VCF file.
 
     Implements functionality for handling multi-allelic variants
@@ -74,15 +76,13 @@ class VCFLine(LineBase):
 
     def __init__(
             self, raw_line: pysam.VariantRecord, allele_index: int | None):
-        super().__init__()
-
         self.chrom: str = raw_line.contig
         self.fchrom: str = raw_line.contig
         self.pos_begin: int = raw_line.pos
         self.pos_end: int = raw_line.pos
 
         assert raw_line.ref is not None
-        self.ref: str = raw_line.ref
+        self.ref: str | None = raw_line.ref
         self.alt: str | None = None
         # Used to handle multiallelic variants in VCF files.
         # The allele index is None if the variant for this line
@@ -116,12 +116,11 @@ class VCFLine(LineBase):
         return ()
 
 
-class BigWigLine(LineBase):
+class BigWigLine:
     """Represents a line read from a bigWig file."""
 
     def __init__(self, raw_line: tuple):
-        super().__init__()
-        self._data: tuple[str, int, int, float] = raw_line  # type: ignore
+        self._data: tuple[str, int, int, float] = raw_line
         self.chrom: str = self._data[0]
         self.fchrom: str = self._data[0]
         self.pos_begin: int = self._data[1]
