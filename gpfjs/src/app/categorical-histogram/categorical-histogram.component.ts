@@ -124,7 +124,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     svg.selectAll('bar')
       .data(this.histogram.values)
       .enter().append('rect')
-      .style('fill', 'steelblue')
+      .style('fill', 'lightsteelblue')
       .attr('x', (v: { name: string, value: number }) => this.xScale(v.name))
       .attr('width', this.xScale.bandwidth())
       .attr('y', (v: { name: string, value: number }) => v.value === 0 ? height : this.scaleYAxis(v.value))
@@ -139,10 +139,18 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
         this.toggleValue(event);
       });
 
+      svg.selectAll('rect').on('mouseover', (element) => {
+        element.srcElement.style.opacity = '75%';
+        element.srcElement.style.cursor = 'pointer';
+      }).on('mouseout', (element) => {
+        element.srcElement.style.opacity = '100%';
+        element.srcElement.style.cursor = 'defualt';
+      });
+
       if (this.stateCategoricalNames.length > 0) {
         this.stateCategoricalNames.forEach(name => {
           svg.select(`[id="${name}"]`)
-            .style('fill', 'coral');
+            .style('fill', 'steelblue');
         });
       }
     }
@@ -175,16 +183,14 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   }
 
   private toggleValue(event: { srcElement: { id: string, style: { fill: string } } }): void {
-    if (event.srcElement.style.fill !== 'lightsteelblue') {
-      if (event.srcElement.style.fill === 'steelblue') {
-        event.srcElement.style.fill = 'coral';
-      } else {
-        event.srcElement.style.fill = 'steelblue';
-      }
-      this.selectCategoricalValues.emit([
-        event.srcElement.id
-      ]);
+    if (event.srcElement.style.fill === 'steelblue') {
+      event.srcElement.style.fill = 'lightsteelblue';
+    } else {
+      event.srcElement.style.fill = 'steelblue';
     }
+    this.selectCategoricalValues.emit([
+      event.srcElement.id
+    ]);
   }
 
   private colorBars(): void {
@@ -275,5 +281,6 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     this.selectCategoricalValues.emit(
       this.histogram.values.slice(start, end).map(v => v.name)
     );
+    this.colorBars();
   }
 }
