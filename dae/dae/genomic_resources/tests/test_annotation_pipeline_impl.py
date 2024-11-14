@@ -3,7 +3,7 @@ import pathlib
 
 import pytest
 
-from dae.genomic_resources.genomic_scores import GenomicScore
+from dae.genomic_resources.genomic_scores import build_score_from_resource
 from dae.genomic_resources.implementations.annotation_pipeline_impl import (
     AnnotationPipelineImplementation,
 )
@@ -99,8 +99,10 @@ def test_pipeline_doc_histogram_url(
     impl = AnnotationPipelineImplementation(
         grr_fixture.get_resource("pipeline"))
 
-    score = GenomicScore(grr_fixture.get_resource("one"))
-    other_score = GenomicScore(alt_grr_fixture.get_resource("other_score"))
+    score = build_score_from_resource(
+        grr_fixture.get_resource("one"))
+    other_score = build_score_from_resource(
+        alt_grr_fixture.get_resource("other_score"))
 
     assert impl._make_histogram_url(score, "s1") \
         == "../one/statistics/histogram_s1.png"

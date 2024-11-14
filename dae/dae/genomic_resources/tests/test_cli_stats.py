@@ -236,7 +236,7 @@ def test_stats_position_score(tmp_path: pathlib.Path) -> None:
         1      17         19       0.03  0
         1      22         25       0.46  EMPTY
         2      5          80       0.01  3
-        2      10         11       0.02  3
+        2      81         90       0.02  3
         """, seq_col=0, start_col=1, end_col=2)
 
     repo = build_filesystem_test_repository(tmp_path)
@@ -280,16 +280,16 @@ def test_stats_position_score(tmp_path: pathlib.Path) -> None:
     assert len(phast_cons_100way_hist.bars) == 100
     assert phast_cons_100way_hist.bars[0] == 0
     assert phast_cons_100way_hist.bars[1] == 76  # region [5-80]
-    assert phast_cons_100way_hist.bars[2] == 8  # region [10-15] and [10-11]
+    assert phast_cons_100way_hist.bars[2] == 16  # region [10-15] and [10-11]
     assert phast_cons_100way_hist.bars[3] == 3  # region [17-19]
     assert phast_cons_100way_hist.bars[4] == 0
     assert phast_cons_100way_hist.bars[46] == 4  # region [22-24]
-    assert phast_cons_100way_hist.bars.sum() == (76 + 8 + 3 + 4)
+    assert phast_cons_100way_hist.bars.sum() == (76 + 16 + 3 + 4)
 
     assert len(phast_cons_5way_hist.bars) == 4
-    assert phast_cons_5way_hist.bars[0] == 3  # region [17-19]
-    assert phast_cons_5way_hist.bars[3] == 76 + 2  # region [5-80] and [10-11]
-    assert phast_cons_5way_hist.bars.sum() == (76 + 2 + 3)
+    assert phast_cons_5way_hist.bars[0] == 3
+    assert phast_cons_5way_hist.bars[3] == 86
+    assert phast_cons_5way_hist.bars.sum() == 89
 
 
 def test_stats_np_score(tmp_path: pathlib.Path) -> None:

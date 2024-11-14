@@ -651,4 +651,5 @@ def test_build_genomic_score_from_resource_id() -> None:
     score = build_score_from_resource_id("example_score", grr)
     score.open()
     assert score is not None
-    assert list(score.fetch_region("1", 10, None, ["s1"])) == [{"s1": 0.02}]
+    assert list(score.fetch_region("1", 10, None, ["s1"])) == [
+        (10, 10, [0.02])]

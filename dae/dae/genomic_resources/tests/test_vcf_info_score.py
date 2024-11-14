@@ -3,7 +3,7 @@ import textwrap
 
 import pytest
 
-from dae.genomic_resources.genomic_scores import AlleleScore
+from dae.genomic_resources.genomic_scores import AlleleScore, ScoreValue
 from dae.genomic_resources.testing import (
     build_filesystem_test_resource,
     setup_directories,
@@ -91,11 +91,14 @@ def test_clinvar_score_columns(vcf_info_clinvar: AlleleScore) -> None:
 @pytest.mark.parametrize("chrom,begin,end,scores,expected", [
     (
         "chrA", 1, 1, ["DBVARID"],
-        [{"DBVARID": None}],
+        [(1, 1, [None])],
     ),
     (
         "chrA", 2, 3, ["DBVARID"],
-        [{"DBVARID": None}, {"DBVARID": None}],
+        [
+            (2, 2, [None]),
+            (3, 3, [None]),
+        ],
     ),
 
 ])
@@ -105,7 +108,7 @@ def test_clinvar_fetch_region(
     begin: int,
     end: int,
     scores: list[str],
-    expected: list[dict[str, str | int | None]],
+    expected: list[tuple[int, int, list[ScoreValue] | None]],
 ) -> None:
     vcf_info_clinvar.open()
     result = vcf_info_clinvar.fetch_region(chrom, begin, end, scores)
@@ -358,39 +361,37 @@ def test_gnomad_vcf_resource(
     (
         "chrA", 1, 2, ["AN", "AC"],
         [
-            {"AN": 53780, "AC": 0},
-            {"AN": 72762, "AC": 2},
+            (1, 1, [53780, 0]),
+            (2, 2, [72762, 2]),
         ],
     ),
     (
         "chrA", 1, 3, ["AN", "AC"],
         [
-            {"AN": 53780, "AC": 0},
-            {"AN": 72762, "AC": 2},
-            {"AN": 81114, "AC": 1},
+            (1, 1, [53780, 0]),
+            (2, 2, [72762, 2]),
+            (3, 3, [81114, 1]),
         ],
     ),
     (
         "chrA", 1, 2, ["lcr", "non_par", "variant_type"],
         [
-            {"lcr": True, "non_par": False, "variant_type": "snv"},
-            {"lcr": True, "non_par": False, "variant_type": "snv"},
+            (1, 1, [True, False, "snv"]),
+            (2, 2, [True, False, "snv"]),
         ],
     ),
     (
         "chrA", 4, 5, ["culprit", "NEGATIVE_TRAIN_SITE", "AN_asj_female"],
         [
-            {"culprit": "AS_QD", "NEGATIVE_TRAIN_SITE": True,
-             "AN_asj_female": 1166},
-            {"culprit": "AS_FS", "NEGATIVE_TRAIN_SITE": False,
-             "AN_asj_female": 1436},
+            (4, 4, ["AS_QD", True, 1166]),
+            (5, 5, ["AS_FS", False, 1436]),
         ],
     ),
     (
         "chrA", 4, 5, ["SB"],
         [
-            {"SB": "47|22|6|7"},
-            {"SB": "97|29|13|19"},
+            (4, 4, ["47|22|6|7"]),
+            (5, 5, ["97|29|13|19"]),
         ],
     ),
 ])
@@ -400,7 +401,7 @@ def test_gnomad_vcf_fetch_region(
     start: int,
     end: int,
     scores: list[str],
-    expected: list[dict],
+    expected: list[tuple[int, int, list[ScoreValue] | None]],
 ) -> None:
     result = list(vcf_info_gnomad.fetch_region(chrom, start, end, scores))
     assert result == expected
