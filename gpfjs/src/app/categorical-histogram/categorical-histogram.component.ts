@@ -140,10 +140,10 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       });
 
       svg.selectAll('rect').on('mouseover', (element) => {
-        element.srcElement.style.opacity = '75%';
+        element.srcElement.style.filter = 'brightness(75%)';
         element.srcElement.style.cursor = 'pointer';
       }).on('mouseout', (element) => {
-        element.srcElement.style.opacity = '100%';
+        element.srcElement.style.filter = 'none';
         element.srcElement.style.cursor = 'defualt';
       });
 
