@@ -11,7 +11,7 @@ import { ReplaySubject, combineLatest, of } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { ConfigService } from '../config/config.service';
 import { switchMap, take } from 'rxjs/operators';
-import { ValidateNested } from 'class-validator';
+import { ArrayNotEmpty, ValidateIf, ValidateNested } from 'class-validator';
 import { environment } from 'environments/environment';
 import { ComponentValidator } from 'app/common/component-validator';
 import {
@@ -34,6 +34,10 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   public downloadUrl: string;
 
   @ValidateNested() public geneScoresLocalState = new GeneScoresLocalState();
+  @ValidateIf(
+    (component: GeneScoresComponent) => component.isCategoricalHistogram(component.selectedGeneScores.histogram)
+  )
+  @ArrayNotEmpty({message: 'Please select at least one bar.'})
   public categoricalValues: string[] = [];
   public selectedCategoricalHistogramView: CategoricalHistogramView = 'range selector';
 
