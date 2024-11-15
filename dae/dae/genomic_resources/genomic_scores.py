@@ -881,38 +881,12 @@ class PositionScore(GenomicScore):
         return [squery.position_aggregator for squery in score_aggs]
 
 
-class NPScore(GenomicScore):
-    """Defines nucleotide-position genomic score."""
+class NPScoreBase(GenomicScore):
+    """Base class for NPScore and AlleleScore.
 
-    def __init__(self, resource: GenomicResource):
-        if resource.get_type() != "np_score":
-            raise ValueError("The resrouce provided to NPScore should be of"
-                             f"'np_score' type, not a '{resource.get_type()}'")
-        super().__init__(resource)
-
-    @staticmethod
-    def get_schema() -> dict[str, Any]:
-        schema = copy.deepcopy(GenomicScore.get_schema())
-        schema["table"]["schema"]["reference"] = {
-            "type": "dict", "schema": {
-                "index": {"type": "integer"},
-                "name": {"type": "string", "excludes": "index"},
-            },
-        }
-        schema["table"]["schema"]["alternative"] = {
-            "type": "dict", "schema": {
-                "index": {"type": "integer"},
-                "name": {"type": "string", "excludes": "index"},
-            },
-        }
-
-        scores_schema = schema["scores"]["schema"]["schema"]
-        scores_schema["position_aggregator"] = AGGREGATOR_SCHEMA
-        scores_schema["nucleotide_aggregator"] = AGGREGATOR_SCHEMA
-        return schema
-
-    def open(self) -> NPScore:
-        return cast(NPScore, super().open())
+    Implements common methods for NPScore and AlleleScore.
+    NPScore and AlleleScore inherit from this class.
+    """
 
     def fetch_region(
         self, chrom: str,
@@ -979,6 +953,40 @@ class NPScore(GenomicScore):
             return None
         requested_scores = scores or self.get_all_scores()
         return [selected_line.get_score(sc) for sc in requested_scores]
+
+
+class NPScore(NPScoreBase):
+    """Defines nucleotide-position genomic score."""
+
+    def __init__(self, resource: GenomicResource):
+        if resource.get_type() != "np_score":
+            raise ValueError("The resrouce provided to NPScore should be of"
+                             f"'np_score' type, not a '{resource.get_type()}'")
+        super().__init__(resource)
+
+    @staticmethod
+    def get_schema() -> dict[str, Any]:
+        schema = copy.deepcopy(GenomicScore.get_schema())
+        schema["table"]["schema"]["reference"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"},
+            },
+        }
+        schema["table"]["schema"]["alternative"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"},
+            },
+        }
+
+        scores_schema = schema["scores"]["schema"]["schema"]
+        scores_schema["position_aggregator"] = AGGREGATOR_SCHEMA
+        scores_schema["nucleotide_aggregator"] = AGGREGATOR_SCHEMA
+        return schema
+
+    def open(self) -> NPScore:
+        return cast(NPScore, super().open())
 
     def _build_scores_agg(
             self, score_queries: list[NPScoreQuery]) -> list[NPScoreAggr]:
@@ -1052,8 +1060,15 @@ class NPScore(GenomicScore):
         return [sagg.position_aggregator for sagg in score_aggs]
 
 
-class AlleleScore(GenomicScore):
+class AlleleScore(NPScoreBase):
     """Defines allele genomic scores."""
+
+    def __init__(self, resource: GenomicResource):
+        if resource.get_type() != "allele_score":
+            raise ValueError(
+                "The resrouce provided to AlleleScore should be of"
+                f"'allele_score' type, not a '{resource.get_type()}'")
+        super().__init__(resource)
 
     @staticmethod
     def get_schema() -> dict[str, Any]:
@@ -1080,76 +1095,6 @@ class AlleleScore(GenomicScore):
 
     def open(self) -> AlleleScore:
         return cast(AlleleScore, super().open())
-
-    def fetch_region(
-        self, chrom: str,
-        pos_begin: int | None, pos_end: int | None,
-        scores: list[str] | None = None,
-    ) -> Generator[
-            tuple[int, int, list[ScoreValue] | None], None, None]:
-        """Return score values in a region."""
-
-        region_lines = self._fetch_region_lines(
-            chrom, pos_begin, pos_end, scores,
-        )
-        first_line = next(region_lines, None)
-        if first_line is None:
-            return
-        left, right, val, line = first_line
-
-        returned_region: tuple[
-            int, int, list[ScoreValue] | None,
-            set[tuple[str | None, str | None]],
-        ] = (left, right, val, {(line.ref, line.alt)})
-        yield (left, right, val)
-
-        for left, right, val, line in region_lines:
-            returned_nucleotides = (line.ref, line.alt)
-            if (left, right) == (returned_region[0], returned_region[1]):
-                if returned_nucleotides in returned_region[3]:
-                    raise ValueError(
-                        f"multiple values for positions [{left}, {right}] "
-                        f"and alleles {returned_nucleotides}")
-
-                returned_region[3].add((line.ref, line.alt))
-                yield (left, right, val)
-                continue
-            prev_right = returned_region[1]
-            if left < prev_right:
-                raise ValueError(
-                    f"multiple values for positions [{left}, {prev_right}]")
-            returned_region = (left, right, val, {(line.ref, line.alt)})
-            yield (left, right, val)
-
-    def fetch_scores(
-        self, chrom: str, position: int,
-        reference: str, alternative: str,
-        scores: list[str] | None = None,
-    ) -> list[ScoreValue] | None:
-        """Fetch scores values for specific allele."""
-        if chrom not in self.get_all_chromosomes():
-            raise ValueError(
-                f"{chrom} is not among the available chromosomes for "
-                f"Allele Score resource {self.resource_id}")
-
-        lines = list(self._fetch_lines(chrom, position, position))
-        if not lines:
-            return None
-
-        selected_line = None
-        for line in lines:
-            if line.ref == reference and line.alt == alternative:
-                selected_line = line
-                break
-
-        if selected_line is None:
-            return None
-
-        requested_scores = scores or self.get_all_scores()
-
-        return [
-            selected_line.get_score(sc)
-            for sc in requested_scores]
 
     def _build_scores_agg(
         self, score_queries: list[AlleleScoreQuery],
