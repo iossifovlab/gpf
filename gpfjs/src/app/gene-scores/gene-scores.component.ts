@@ -112,6 +112,9 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   }
 
   public switchCategoricalHistogramView(view: CategoricalHistogramView): void {
+    if (view === this.selectedCategoricalHistogramView) {
+      return;
+    }
     this.selectedCategoricalHistogramView = view;
     this.categoricalValues = [];
     this.updateCategoricalHistogramState();
