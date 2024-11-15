@@ -17,9 +17,12 @@ select {
 }
 
 #view-menu-button {
-  background: none;
-  border: none;
-  color: #b4b4b4;
+  background: #2a6395;
+  color: white;
+  border: 1px solid #2a6395;
+  border-radius: 0.3rem;
+  padding: 5px 10px;
+  margin-left: 10px;
 }
 
 .mat-mdc-menu-content {
