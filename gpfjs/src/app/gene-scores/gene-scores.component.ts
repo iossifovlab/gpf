@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import {
   GeneScoresLocalState,
-  GeneScores,
+  GeneScore,
   CategoricalHistogram,
   NumberHistogram,
   CategoricalHistogramView
@@ -30,7 +30,7 @@ import { cloneDeep } from 'lodash';
 export class GeneScoresComponent extends ComponentValidator implements OnInit {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
 
-  public geneScoresArray: GeneScores[];
+  public geneScoresArray: GeneScore[];
   public downloadUrl: string;
 
   @ValidateNested() public geneScoresLocalState = new GeneScoresLocalState();
@@ -124,11 +124,11 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
     this.updateCategoricalHistogramState();
   }
 
-  public get selectedGeneScores(): GeneScores {
+  public get selectedGeneScores(): GeneScore {
     return this.geneScoresLocalState.score;
   }
 
-  public set selectedGeneScores(selectedGeneScores: GeneScores) {
+  public set selectedGeneScores(selectedGeneScores: GeneScore) {
     this.categoricalValues = [];
     this.geneScoresLocalState.score = selectedGeneScores;
     this.downloadUrl = this.getDownloadUrl();

@@ -6,7 +6,7 @@ import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
 import { Observable } from 'rxjs';
 import { of } from 'rxjs/internal/observable/of';
-import { CategoricalHistogram, CategoricalHistogramView, GeneScores, NumberHistogram } from './gene-scores';
+import { CategoricalHistogram, CategoricalHistogramView, GeneScore, NumberHistogram } from './gene-scores';
 import { GeneScoresComponent } from './gene-scores.component';
 import { GeneScoresService } from './gene-scores.service';
 import { geneScoresReducer, setGeneScoreCategorical, setGeneScoreContinuous } from './gene-scores.state';
@@ -14,16 +14,16 @@ import { Store, StoreModule } from '@ngrx/store';
 
 class MockGeneScoresService {
   public provide = true;
-  public getGeneScores(): Observable<GeneScores[]> {
+  public getGeneScores(): Observable<GeneScore[]> {
     if (this.provide) {
       return of([
-        new GeneScores(
+        new GeneScore(
           'desc1',
           'help1',
           'score1',
           new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', 7, 8, true, true),
         ),
-        new GeneScores(
+        new GeneScore(
           'desc2',
           'help2',
           'score2',
@@ -31,7 +31,7 @@ class MockGeneScoresService {
         )
       ]);
     } else {
-      return of([] as GeneScores[]);
+      return of([] as GeneScore[]);
     }
   }
 }
@@ -119,7 +119,7 @@ describe('GeneScoresComponent', () => {
 
   it('should toggle categorical histogram values and save to state', () => {
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
-    component.geneScoresLocalState.score = new GeneScores('desc', 'help', 'score1', null);
+    component.geneScoresLocalState.score = new GeneScore('desc', 'help', 'score1', null);
 
     const values = ['name5', 'name2'];
     component.categoricalValues = ['name1', 'name2', 'name3'];
@@ -133,7 +133,7 @@ describe('GeneScoresComponent', () => {
 
   it('should switch categorical histogram view', () => {
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
-    component.geneScoresLocalState.score = new GeneScores('desc', 'help', 'score1', null);
+    component.geneScoresLocalState.score = new GeneScore('desc', 'help', 'score1', null);
     component.selectedCategoricalHistogramView = 'range selector';
     component.categoricalValues = ['name1', 'name2', 'name3'];
 
@@ -150,7 +150,7 @@ describe('GeneScoresComponent', () => {
   });
 
   it('should set default categorical histogram view', () => {
-    const scoreWithValuesOrder = new GeneScores('desc', 'help', 'score1', new CategoricalHistogram(
+    const scoreWithValuesOrder = new GeneScore('desc', 'help', 'score1', new CategoricalHistogram(
       [
         {name: 'name1', value: 10},
         {name: 'name2', value: 20},
@@ -165,7 +165,7 @@ describe('GeneScoresComponent', () => {
     component.selectedGeneScores = scoreWithValuesOrder;
     expect(component.selectedCategoricalHistogramView).toBe('range selector');
 
-    const scoreWithoutValuesOrder = new GeneScores('desc', 'help', 'score1', new CategoricalHistogram(
+    const scoreWithoutValuesOrder = new GeneScore('desc', 'help', 'score1', new CategoricalHistogram(
       [
         {name: 'name1', value: 10},
         {name: 'name2', value: 20},
@@ -181,7 +181,7 @@ describe('GeneScoresComponent', () => {
   });
 
   it('should set default ranges for continuous histogram as domain', () => {
-    const score = new GeneScores(
+    const score = new GeneScore(
       'desc',
       'help',
       'score1',
@@ -194,7 +194,7 @@ describe('GeneScoresComponent', () => {
   });
 
   it('should set domain using number histogram min and max ranges', () => {
-    const score = new GeneScores(
+    const score = new GeneScore(
       'desc',
       'help',
       'score1',
@@ -208,7 +208,7 @@ describe('GeneScoresComponent', () => {
 
   it('should set and get range start', () => {
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
-    const score = new GeneScores(
+    const score = new GeneScore(
       'desc',
       'help',
       'score1',
@@ -232,7 +232,7 @@ describe('GeneScoresComponent', () => {
 
   it('should set and get range end', () => {
     const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
-    const score = new GeneScores(
+    const score = new GeneScore(
       'desc',
       'help',
       'score1',

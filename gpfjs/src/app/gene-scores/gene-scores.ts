@@ -2,8 +2,8 @@ import { IsNotEmpty, IsNumber, ValidateIf } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 
-export class GeneScores {
-  public static fromJson(json: object): GeneScores {
+export class GeneScore {
+  public static fromJson(json: object): GeneScore {
     let histogram: NumberHistogram | CategoricalHistogram;
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
     /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -41,7 +41,7 @@ export class GeneScores {
     }
     /* eslint-enable */
 
-    return new GeneScores(
+    return new GeneScore(
       json['desc'] as string,
       json['help'] as string,
       json['score'] as string,
@@ -49,9 +49,9 @@ export class GeneScores {
     );
   }
 
-  public static fromJsonArray(jsonArray: Array<object>): Array<GeneScores> {
+  public static fromJsonArray(jsonArray: Array<object>): Array<GeneScore> {
     return jsonArray.map((json) => {
-      return GeneScores.fromJson(json)
+      return GeneScore.fromJson(json)
     });
   }
 
@@ -99,7 +99,7 @@ export type CategoricalHistogramView = 'range selector' | 'click selector';
 
 export class GeneScoresLocalState {
   @IsNotEmpty()
-  public score: GeneScores = null;
+  public score: GeneScore = null;
 
   @ValidateIf(o => o.rangeStart !== null)
   @IsNumber()
