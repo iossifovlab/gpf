@@ -62,7 +62,7 @@ def proto_fixture(
         1       17         19       0.03  1.03
         1       22         25       0.04  1.04
         2       5          80       0.01  2.01
-        2       10         11       0.02  2.02
+        2       81         90       0.02  2.02
         """, seq_col=0, start_col=1, end_col=2)
     setup_tabix(
         path / "two" / "data.txt.gz",

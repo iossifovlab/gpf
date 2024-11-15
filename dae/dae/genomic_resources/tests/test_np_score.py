@@ -133,15 +133,15 @@ def test_np_score_fetch_region() -> None:
         """,
         "data.mem": convert_to_tab_separated("""
             chrom  pos_begin  pos_end  reference  alternative  s1    s2
-            1      10         15       A          G            0.02  2
             1      10         15       A          C            0.03  -1
+            1      10         15       A          G            0.02  2
             1      10         15       A          T            0.04  4
+            1      16         19       C          A            0.05  0
             1      16         19       C          G            0.03  3
             1      16         19       C          T            0.04  EMPTY
-            1      16         19       C          A            0.05  0
             2      16         19       C          A            0.03  3
-            2      16         19       C          T            0.04  3
             2      16         19       C          G            0.05  4
+            2      16         19       C          T            0.04  3
         """),
     })
     score = NPScore(res).open()
@@ -149,32 +149,26 @@ def test_np_score_fetch_region() -> None:
     # The in-mem table will sort the records. In this example it will sort
     # the alternatives column (previous columns are the same). That is why
     # the scores (freq) appear out of order
-    assert list(score.fetch_region("1", 14, 16, ["cadd_raw"])) == \
-        [{"cadd_raw": 0.03},
-         {"cadd_raw": 0.03},
-         {"cadd_raw": 0.02},
-         {"cadd_raw": 0.02},
-         {"cadd_raw": 0.04},
-         {"cadd_raw": 0.04},
-         {"cadd_raw": 0.05},
-         {"cadd_raw": 0.03},
-         {"cadd_raw": 0.04}]
+    assert list(score.fetch_region("1", 14, 16, ["cadd_raw"])) == [
+        (14, 15, [0.03]),
+        (14, 15, [0.02]),
+        (14, 15, [0.04]),
+        (16, 16, [0.05]),
+        (16, 16, [0.03]),
+        (16, 16, [0.04]),
+    ]
 
-    assert list(score.fetch_region("1", 14, 16, ["cadd_test"])) == \
-        [{"cadd_test": None},
-         {"cadd_test": None},
-         {"cadd_test": 2},
-         {"cadd_test": 2},
-         {"cadd_test": 4},
-         {"cadd_test": 4},
-         {"cadd_test": 0},
-         {"cadd_test": 3},
-         {"cadd_test": None}]
+    assert list(score.fetch_region("1", 14, 16, ["cadd_test"])) == [
+        (14, 15, [None]),
+        (14, 15, [2]),
+        (14, 15, [4]),
+        (16, 16, [0]),
+        (16, 16, [3]),
+        (16, 16, [None]),
+    ]
 
-    assert list(score.fetch_region("2", 13, 17, ["cadd_test"])) == \
-        [{"cadd_test": 3},
-         {"cadd_test": 3},
-         {"cadd_test": 4},
-         {"cadd_test": 4},
-         {"cadd_test": 3},
-         {"cadd_test": 3}]
+    assert list(score.fetch_region("2", 13, 17, ["cadd_test"])) == [
+        (16, 17, [3]),
+        (16, 17, [4]),
+        (16, 17, [3]),
+    ]

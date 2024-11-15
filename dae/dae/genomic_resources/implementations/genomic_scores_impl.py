@@ -247,7 +247,7 @@ class GenomicScoreImplementation(
     @staticmethod
     def _do_min_max(
         resource: GenomicResource,
-        score_ids: Iterable[str],
+        score_ids: list[str],
         chrom: str, start: int, end: int,
     ) -> dict[str, MinMaxValue]:
         impl = build_score_implementation_from_resource(resource)
@@ -257,13 +257,13 @@ class GenomicScoreImplementation(
         }
         with impl.score.open():
             for rec in impl.score.fetch_region(chrom, start, end, score_ids):
-                for score_id in score_ids:
-                    result[score_id].add_value(rec[score_id])  # type: ignore
+                for score_index, score_id in enumerate(score_ids):
+                    result[score_id].add_value(rec[score_index])  # type: ignore
         return result
 
     @staticmethod
     def _merge_min_max(
-        score_ids: Iterable[str],
+        score_ids: list[str],
         *calculate_tasks: dict[str, MinMaxValue],
     ) -> dict[str, Any]:
         res: dict[str, MinMaxValue | None] = dict.fromkeys(score_ids)
@@ -364,14 +364,18 @@ class GenomicScoreImplementation(
 
         score_ids = list(result.keys())
         with impl.score.open():
-            for rec in impl.score.fetch_region(chrom, start, end, score_ids):
-                for scr_id in score_ids:
+            for left, right, rec in impl.score.fetch_region(
+                    chrom, start, end, score_ids):
+                for scr_index, scr_id in enumerate(score_ids):
+
                     try:
-                        result[scr_id].add_value(rec[scr_id])  # type: ignore
+                        result[scr_id].add_value(
+                            rec[scr_index], right - left + 1)  # type: ignore
                     except TypeError as err:
                         logger.exception(
                             "Failed adding value %s to histogram of %s; "
-                            "%s:%s-%s", rec[scr_id], resource.resource_id,
+                            "%s:%s-%s", rec[scr_index] if rec else None,
+                            resource.resource_id,
                             chrom, start, end)
                         result[scr_id] = NullHistogram(
                             NullHistogramConfig(str(err)),

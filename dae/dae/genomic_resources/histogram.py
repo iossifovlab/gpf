@@ -322,7 +322,7 @@ class NumberHistogram(Statistic):
     def values_domain(self) -> str:
         return f"[{self.min_value:0.3f}, {self.max_value:0.3f}]"
 
-    def add_value(self, value: float | None) -> None:
+    def add_value(self, value: float | None, count: int = 1) -> None:
         """Add value to the histogram."""
         if value is None or np.isnan(value):
             return
@@ -341,10 +341,10 @@ class NumberHistogram(Statistic):
             logger.warning(
                 "out of range %s value %s", self.view_range, value)
             tindex = index + 2
-            self.out_of_range_bins[tindex] += 1
+            self.out_of_range_bins[tindex] += count
             return
 
-        self.bars[index] += 1
+        self.bars[index] += count
 
     def choose_bin_lin(self, value: float) -> int:
         """Compute bin index for a passed value for linear x-scale."""
@@ -487,7 +487,10 @@ class NullHistogram(Statistic):
             config = NullHistogramConfig.default_config()
         self.reason = config.reason
 
-    def add_value(self, _value: Any) -> None:
+    def add_value(
+        self, value: Any, count: int = 1,  # noqa: ARG002
+    ) -> None:
+        # pylint: disable=unused-argument
         return
 
     def merge(self, _other: Any) -> None:
@@ -556,7 +559,10 @@ class CategoricalHistogram(Statistic):
 
         self.y_log_scale = config.y_log_scale
 
-    def add_value(self, value: str | int | None) -> None:
+    def add_value(
+        self, value: str | int | None,
+        count: int = 1,
+    ) -> None:
         """Add a value to the categorical histogram.
 
         Returns true if successfully added and false if failed.
@@ -569,7 +575,7 @@ class CategoricalHistogram(Statistic):
                 "Only string or int values can be added categorical histogram; "
                 f"bad <{value}>",
             )
-        self._counter[value] += 1
+        self._counter[value] += count
         if not self.enforce_type and \
                 len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_LIMIT:
             raise HistogramError(
