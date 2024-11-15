@@ -792,7 +792,7 @@ class PositionScore(GenomicScore):
             chrom, pos_begin, pos_end, scores,
         ):
             prev_end = returned_region[1]
-            if prev_end and left < prev_end:
+            if prev_end and left <= prev_end:
                 raise ValueError(
                     f"multiple values for positions [{left}, {prev_end}]")
             returned_region = (left, right, val)
