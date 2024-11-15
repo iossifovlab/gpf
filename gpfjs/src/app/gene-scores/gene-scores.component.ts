@@ -139,6 +139,8 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
         rangeEnd: this.geneScoresLocalState.rangeEnd,
       }));
     } else if (this.isCategoricalHistogram(selectedGeneScores.histogram)) {
+      this.rangeStart = null;
+      this.rangeEnd = null;
       if (!(this.selectedGeneScores.histogram as CategoricalHistogram).valueOrder) {
         this.selectedCategoricalHistogramView = 'click selector';
       }
