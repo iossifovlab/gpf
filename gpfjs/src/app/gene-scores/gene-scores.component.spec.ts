@@ -67,7 +67,7 @@ describe('GeneScoresComponent', () => {
 
   it('should test setting gene scores', () => {
     fixture.detectChanges();
-    expect(component.selectedGeneScores.score).toBe('score1');
+    expect(component.selectedGeneScore.score).toBe('score1');
   });
 
   it('should test empty gene scores', () => {
@@ -80,7 +80,7 @@ describe('GeneScoresComponent', () => {
 
   it('should load default score', () => {
     component.ngOnInit();
-    expect(component.selectedGeneScores.score).toBe('score1');
+    expect(component.selectedGeneScore.score).toBe('score1');
   });
 
   it('should continuous histogram load from state', () => {
@@ -95,7 +95,7 @@ describe('GeneScoresComponent', () => {
 
     component.ngOnInit();
 
-    expect(component.selectedGeneScores.score).toBe('score2');
+    expect(component.selectedGeneScore.score).toBe('score2');
     expect(component.rangeStart).toBe(10);
     expect(component.rangeEnd).toBe(20);
   });
@@ -112,7 +112,7 @@ describe('GeneScoresComponent', () => {
 
     component.ngOnInit();
 
-    expect(component.selectedGeneScores.score).toBe('score1');
+    expect(component.selectedGeneScore.score).toBe('score1');
     expect(component.categoricalValues).toStrictEqual(['name2', 'name5']);
     expect(component.selectedCategoricalHistogramView).toBe('click selector');
   });
@@ -162,7 +162,7 @@ describe('GeneScoresComponent', () => {
       true,
     ));
     component.selectedCategoricalHistogramView = 'range selector';
-    component.selectedGeneScores = scoreWithValuesOrder;
+    component.selectedGeneScore = scoreWithValuesOrder;
     expect(component.selectedCategoricalHistogramView).toBe('range selector');
 
     const scoreWithoutValuesOrder = new GeneScore('desc', 'help', 'score1', new CategoricalHistogram(
@@ -176,7 +176,7 @@ describe('GeneScoresComponent', () => {
       'small value descriptions',
       true,
     ));
-    component.selectedGeneScores = scoreWithoutValuesOrder;
+    component.selectedGeneScore = scoreWithoutValuesOrder;
     expect(component.selectedCategoricalHistogramView).toBe('click selector');
   });
 
@@ -188,7 +188,7 @@ describe('GeneScoresComponent', () => {
       new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', null, null, true, true),
     );
 
-    component.selectedGeneScores = score;
+    component.selectedGeneScore = score;
     expect(component.geneScoresLocalState.domainMin).toBe(4);
     expect(component.geneScoresLocalState.domainMax).toBe(5);
   });
@@ -201,7 +201,7 @@ describe('GeneScoresComponent', () => {
       new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', 2, 500, true, true),
     );
 
-    component.selectedGeneScores = score;
+    component.selectedGeneScore = score;
     expect(component.geneScoresLocalState.domainMin).toBe(2);
     expect(component.geneScoresLocalState.domainMax).toBe(500);
   });

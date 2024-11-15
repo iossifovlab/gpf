@@ -35,7 +35,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
 
   @ValidateNested() public geneScoresLocalState = new GeneScoresLocalState();
   @ValidateIf(
-    (component: GeneScoresComponent) => component.isCategoricalHistogram(component.selectedGeneScores.histogram)
+    (component: GeneScoresComponent) => component.isCategoricalHistogram(component.selectedGeneScore.histogram)
   )
   @ArrayNotEmpty({message: 'Please select at least one bar.'})
   public categoricalValues: string[] = [];
@@ -62,7 +62,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
       if (state.score !== null) {
         for (const score of this.geneScoresArray) {
           if (score.score === state.score) {
-            this.selectedGeneScores = score;
+            this.selectedGeneScore = score;
             // Load either categorical or continuous histogram selection data
             if (state.histogramType === 'categorical') {
               this.categoricalValues = cloneDeep(state.values);
@@ -75,7 +75,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
           }
         }
       } else {
-        this.selectedGeneScores = this.geneScoresArray[0];
+        this.selectedGeneScore = this.geneScoresArray[0];
       }
       super.ngOnInit();
     });
@@ -101,7 +101,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   private updateContinuousHistogramState(): void {
     this.updateLabels();
     this.store.dispatch(setGeneScoreContinuous({
-      score: this.selectedGeneScores.score,
+      score: this.selectedGeneScore.score,
       rangeStart: this.geneScoresLocalState.rangeStart,
       rangeEnd: this.geneScoresLocalState.rangeEnd,
     }));
@@ -109,7 +109,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
 
   private updateCategoricalHistogramState(): void {
     this.store.dispatch(setGeneScoreCategorical({
-      score: this.selectedGeneScores.score,
+      score: this.selectedGeneScore.score,
       values: cloneDeep(this.categoricalValues),
       categoricalView: this.selectedCategoricalHistogramView,
     }));
@@ -124,16 +124,16 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
     this.updateCategoricalHistogramState();
   }
 
-  public get selectedGeneScores(): GeneScore {
+  public get selectedGeneScore(): GeneScore {
     return this.geneScoresLocalState.score;
   }
 
-  public set selectedGeneScores(selectedGeneScores: GeneScore) {
+  public set selectedGeneScore(selectedGeneScore: GeneScore) {
     this.categoricalValues = [];
-    this.geneScoresLocalState.score = selectedGeneScores;
+    this.geneScoresLocalState.score = selectedGeneScore;
     this.downloadUrl = this.getDownloadUrl();
-    if (selectedGeneScores !== undefined && this.isNumberHistogram(selectedGeneScores.histogram)) {
-      this.changeDomain(selectedGeneScores.histogram);
+    if (selectedGeneScore !== undefined && this.isNumberHistogram(selectedGeneScore.histogram)) {
+      this.changeDomain(selectedGeneScore.histogram);
       this.rangeStart = this.geneScoresLocalState.domainMin;
       this.rangeEnd = this.geneScoresLocalState.domainMax;
       this.updateLabels();
@@ -142,10 +142,10 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
         rangeStart: this.geneScoresLocalState.rangeStart,
         rangeEnd: this.geneScoresLocalState.rangeEnd,
       }));
-    } else if (this.isCategoricalHistogram(selectedGeneScores.histogram)) {
+    } else if (this.isCategoricalHistogram(selectedGeneScore.histogram)) {
       this.rangeStart = null;
       this.rangeEnd = null;
-      if (!(this.selectedGeneScores.histogram as CategoricalHistogram).valueOrder) {
+      if (!(this.selectedGeneScore.histogram as CategoricalHistogram).valueOrder) {
         this.selectedCategoricalHistogramView = 'click selector';
       }
     }
@@ -170,8 +170,8 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   }
 
   private getDownloadUrl(): string {
-    if (this.selectedGeneScores !== undefined) {
-      return `${this.config.baseUrl}gene_scores/download/${this.selectedGeneScores.score}`;
+    if (this.selectedGeneScore !== undefined) {
+      return `${this.config.baseUrl}gene_scores/download/${this.selectedGeneScore.score}`;
     }
   }
 
