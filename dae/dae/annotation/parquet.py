@@ -24,7 +24,7 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.graph import Task, TaskGraph
-from dae.utils.regions import Region
+from dae.utils.regions import Region, split_into_regions
 from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
@@ -124,6 +124,29 @@ def annotate_parquet(
     writer.close()
 
 
+def produce_regions(
+    target_region: str | None,
+    region_size: int,
+    contig_lens: dict[str, int],
+) -> list[str]:
+    """Produce regions to annotate by."""
+    regions: list[Region] = []
+    for contig, contig_length in contig_lens.items():
+        regions.extend(split_into_regions(contig, contig_length, region_size))
+
+    if target_region is not None:
+        region_obj = Region.from_str(target_region)
+        assert region_obj.start is not None
+        assert region_obj.stop is not None
+        if region_obj.chrom not in contig_lens:
+            raise KeyError(
+                f"No such contig '{region_obj.chrom}' found in data!")
+        regions = list(filter(None, [region_obj.intersection(reg)
+                                     for reg in regions]))
+
+    return list(map(repr, regions))
+
+
 def produce_schema2_annotation_tasks(
     task_graph: TaskGraph,
     loader: ParquetLoader,
@@ -148,23 +171,7 @@ def produce_schema2_annotation_tasks(
     for contig in contigs:
         contig_lens[contig] = genome.get_chrom_length(contig)
 
-    if target_region is not None:
-        region_obj = Region.from_str(target_region)
-        assert region_obj.start is not None
-        assert region_obj.stop is not None
-        if region_obj.chrom not in contigs:
-            raise KeyError(
-                f"No such contig '{region_obj.chrom}' found in data!")
-        regions = [
-            f"{region_obj.chrom}:{start}-{min(start + region_size, region_obj.stop)}"  # noqa: E501
-            for start in range(region_obj.start, region_obj.stop, region_size)
-        ]
-    else:
-        regions = [
-            f"{contig}:{start}-{start + region_size}"
-            for contig, length in contig_lens.items()
-            for start in range(1, length, region_size)
-        ]
+    regions = produce_regions(target_region, region_size, contig_lens)
 
     tasks = []
     for idx, region in enumerate(regions):
