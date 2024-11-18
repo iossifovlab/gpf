@@ -47,12 +47,13 @@ from dae.genomic_resources.repository_factory import (
 )
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
+from dae.utils.regions import Region
 
 logger = logging.getLogger("annotate_columns")
 
 
 def read_input(
-    args: Any, region: tuple = (),
+    args: Any, region: Region | None = None,
 ) -> tuple[Any, Any, list[str]]:
     """Return a file object, line iterator and list of header columns.
 
@@ -60,11 +61,13 @@ def read_input(
     """
     if args.input.endswith(".gz"):
         tabix_file = TabixFile(args.input)
+        region_tuple: tuple = (region.chrom, region.start, region.stop) \
+            if region is not None else ()
         with gzip.open(args.input, "rt") as in_file_raw:
             header = in_file_raw.readline() \
                 .strip("\r\n") \
                 .split(args.input_separator)
-        return closing(tabix_file), tabix_file.fetch(*region), header
+        return closing(tabix_file), tabix_file.fetch(*region_tuple), header
     # pylint: disable=consider-using-with
     text_file = open(args.input, "rt")  # noqa: SIM115
     header = text_file.readline().strip("\r\n").split(args.input_separator)
@@ -188,7 +191,7 @@ class AnnotateColumnsTool(AnnotationTool):
         grr_definition: dict | None,
         ref_genome_id: str | None,
         out_file_path: str,
-        region: tuple = (),
+        region: Region | None = None,
         compress_output: bool = False,  # noqa: FBT001 FBT002
     ) -> None:
         """Annotate a variants file with a given pipeline configuration."""
@@ -225,12 +228,12 @@ class AnnotateColumnsTool(AnnotationTool):
         else:
             out_file = open(out_file_path, "wt")  # noqa: SIM115
 
-        if region is None or len(region) == 0:
+        if region is None:
             batch_work_dir = None
         else:
-            chrom = region[0]
-            pos_beg = region[1] if len(region) > 1 else "_"
-            pos_end = region[2] if len(region) > 2 else "_"
+            chrom = region.chrom
+            pos_beg = region.start if region.start is not None else "_"
+            pos_end = region.stop if region.stop is not None else "_"
             batch_work_dir = f"{chrom}_{pos_beg}_{pos_end}"
 
         pipeline.open()
@@ -413,8 +416,7 @@ class AnnotateColumnsTool(AnnotationTool):
                 "annotate_all",
                 AnnotateColumnsTool.annotate,
                 [self.args, self.pipeline.raw, self.grr.definition,
-                 ref_genome_id, output,
-                 (), output.endswith(".gz")],
+                 ref_genome_id, output, None, output.endswith(".gz")],
                 [])
 
 
