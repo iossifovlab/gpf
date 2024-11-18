@@ -44,6 +44,46 @@ def regions2bedfile(regions: list[BedRegion], bed_filename: str) -> None:
                 f"{reg.chrom}\t{reg.start - 1}\t{reg.stop}\n")
 
 
+def calc_bin_begin(bin_len: int, bin_idx: int) -> int:
+    """
+    Calculates the 1-based start position of the <bin_idx>-th bin
+    of length <bin_len>.
+
+    n       2n      3n      4n
+    |_______|_______|_______|
+     bin_len \
+              \
+               bin_begin
+    """
+    return (bin_len * bin_idx) + 1
+
+
+def calc_bin_end(bin_len: int, bin_idx: int) -> int:
+    """
+    Calculates the 1-based end position of the <bin_idx>-th bin
+    of length <bin_len>.
+
+    n       2n      3n      4n
+    |_______|_______|_______|
+     bin_len        \
+                     \
+                      bin_end
+    """
+    return bin_len * (bin_idx + 1)
+
+
+def calc_bin_index(bin_len: int, pos: int) -> int:
+    """
+    Calculates the index of the <bin_len>-long bin the given 1-based
+    position <pos> falls into.
+
+    n       2n      3n      4n
+    |_______|_______|_______|
+     (bin 0) (bin 1) (bin 2)
+    """
+    return (pos - 1) // bin_len
+
+
 def split_into_regions(
         chrom: str, chrom_length: int,
         region_size: int) -> list[Region]:
