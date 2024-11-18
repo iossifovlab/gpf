@@ -1,9 +1,9 @@
-<div *ngIf="selectedGeneScores">
+<div *ngIf="selectedGeneScore">
   <div class="row panel" id="gene-scores-panel">
     <div class="col-sm-9">
       <div id="select-help-wrapper">
         <div class="select-wrapper">
-          <select class="form-control" [(ngModel)]="selectedGeneScores" [title]="selectedGeneScores.desc" required>
+          <select class="form-control" [(ngModel)]="selectedGeneScore" [title]="selectedGeneScore.desc" required>
             <option *ngFor="let geneScores of geneScoresArray" [ngValue]="geneScores">{{ geneScores.desc }}</option>
           </select>
           <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
@@ -13,6 +13,25 @@
           [style.visibility]="this.geneScoresLocalState.score.help ? 'visible' : 'hidden'"
           [modalContent]="this.geneScoresLocalState.score.help"
           [isMarkdown]="true"></gpf-helper-modal>
+        <div *ngIf="isCategoricalHistogram(selectedGeneScore.histogram)">
+          <button mat-icon-button [matMenuTriggerFor]="menu" id="view-menu-button">
+            <span>Mode</span>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button
+              mat-menu-item
+              (click)="switchCategoricalHistogramView('range selector')"
+              [ngClass]="{ 'selected-view': selectedCategoricalHistogramView === 'range selector' }"
+              >range selector
+            </button>
+            <button
+              mat-menu-item
+              (click)="switchCategoricalHistogramView('click selector')"
+              [ngClass]="{ 'selected-view': selectedCategoricalHistogramView === 'click selector' }"
+              >click selector
+            </button>
+          </mat-menu>
+        </div>
       </div>
       <div style="margin-top: 5px">
         <a class="download-link" href="{{ downloadUrl }}">Download</a>
@@ -21,24 +40,49 @@
 
     <div class="col-sm-9">
       <gpf-histogram
-        *ngIf="selectedGeneScores"
+        *ngIf="selectedGeneScore && isNumberHistogram(selectedGeneScore.histogram)"
         [width]="650"
         [height]="145"
-        [bins]="selectedGeneScores.bins"
-        [bars]="selectedGeneScores.bars"
-        [logScaleX]="selectedGeneScores.logScaleX"
-        [logScaleY]="selectedGeneScores.logScaleY"
-        [smallValuesDesc]="selectedGeneScores.smallValuesDesc"
-        [largeValuesDesc]="selectedGeneScores.largeValuesDesc"
-        [rangesCounts]="rangesCounts | async"
+        [bins]="selectedGeneScore.histogram.bins"
+        [bars]="selectedGeneScore.histogram.bars"
+        [logScaleX]="selectedGeneScore.histogram.logScaleX"
+        [logScaleY]="selectedGeneScore.histogram.logScaleY"
+        [smallValuesDesc]="selectedGeneScore.histogram.smallValuesDesc"
+        [largeValuesDesc]="selectedGeneScore.histogram.largeValuesDesc"
         [(rangeStart)]="rangeStart"
         [(rangeEnd)]="rangeEnd">
       </gpf-histogram>
+      <gpf-categorical-histogram
+        *ngIf="
+          selectedGeneScore &&
+          isCategoricalHistogram(selectedGeneScore.histogram) &&
+          selectedCategoricalHistogramView === 'click selector'
+        "
+        [width]="650"
+        [height]="145"
+        [histogram]="selectedGeneScore.histogram"
+        [stateCategoricalNames]="categoricalValues"
+        [interactType]="selectedCategoricalHistogramView"
+        (selectCategoricalValues)="toggleCategoricalValues($event)">
+      </gpf-categorical-histogram>
+      <gpf-categorical-histogram
+        *ngIf="
+          selectedGeneScore &&
+          isCategoricalHistogram(selectedGeneScore.histogram) &&
+          selectedCategoricalHistogramView === 'range selector'
+        "
+        [width]="650"
+        [height]="145"
+        [histogram]="selectedGeneScore.histogram"
+        [stateCategoricalNames]="categoricalValues"
+        [interactType]="selectedCategoricalHistogramView"
+        (selectCategoricalValues)="toggleCategoricalValues($event)">
+      </gpf-categorical-histogram>
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
   </div>
 </div>
-<div *ngIf="!selectedGeneScores">
+<div *ngIf="!selectedGeneScore">
   <div class="form-block" style="display: contents">
     <div class="card">
       <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: center">

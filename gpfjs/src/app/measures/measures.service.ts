@@ -3,14 +3,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
 import { ContinuousMeasure, HistogramData } from './measures';
-import { Partitions } from '../gene-scores/gene-scores';
 import { map } from 'rxjs/operators';
 
 @Injectable()
 export class MeasuresService {
   private readonly continuousMeasuresUrl = 'measures/type/continuous';
   private readonly measureHistogramUrl = 'measures/histogram';
-  private readonly measurePartitionsUrl = 'measures/partitions';
   private readonly regressionsUrl = 'measures/regressions';
 
   public constructor(
@@ -40,24 +38,6 @@ export class MeasuresService {
       .pipe(
         map((res) => HistogramData.fromJson(res))
       );
-  }
-
-  public getMeasurePartitions(
-    datasetId: string,
-    measureName: string,
-    rangeStart: number,
-    rangeEnd: number
-  ): Observable<Partitions> {
-    const headers = { 'Content-Type': 'application/json' };
-    const options = { headers: headers, withCredentials: true };
-
-    return this.http.post(
-      this.config.baseUrl + this.measurePartitionsUrl,
-      { datasetId: datasetId, measure: measureName, min: rangeStart, max: rangeEnd },
-      options
-    ).pipe(
-      map((res) => Partitions.fromJson(res))
-    );
   }
 
   public getRegressions(datasetId: string): Observable<Object> {

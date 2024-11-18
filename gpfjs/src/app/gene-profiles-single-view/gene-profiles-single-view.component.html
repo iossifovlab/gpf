@@ -23,7 +23,7 @@
           style="padding-bottom: 12px; padding-top: 4px">
           <h2 style="padding-left: 0">{{ geneSymbol }}</h2>
         </div>
-        <div *ngIf="gene.geneLinks" class="wrapper" [ngClass]="{ 'compact': compactView }">
+        <div *ngIf="gene.geneLinks" class="wrapper" [ngClass]="{ compact: compactView }">
           <table id="links-table">
             <tr>
               <td style="border-right: 1px solid #dee2e6; padding-left: 2px; text-align: center">Links</td>
@@ -34,7 +34,7 @@
           </table>
         </div>
 
-        <div [ngClass]="{ 'compare-wrapper': isInGeneCompare, 'compact': compactView }" class="wrapper">
+        <div [ngClass]="{ 'compare-wrapper': isInGeneCompare, compact: compactView }" class="wrapper">
           <table
             *ngFor="let genomicScoreCategory of config.genomicScores"
             [attr.id]="genomicScoreCategory.category"
@@ -53,29 +53,48 @@
                     "
                     [modalContent]="getGeneScoreByKey(genomicScoreCategory.category, score.scoreName).help"
                     [isMarkdown]="true"></gpf-helper-modal>
-                  <gpf-histogram
+
+                  <ng-container
                     *ngIf="
                       genomicScoresGeneScores &&
                       getGeneScoreByKey(genomicScoreCategory.category, score.scoreName) as geneScore
-                    "
-                    [style.width]="histogramOptions.width"
-                    [style.height]="histogramOptions.height"
-                    [width]="histogramOptions.width"
-                    [height]="histogramOptions.height"
-                    [bins]="geneScore.bins"
-                    [bars]="geneScore.bars"
-                    [logScaleX]="geneScore.logScaleX"
-                    [logScaleY]="geneScore.logScaleY"
-                    [showMinMaxInput]="false"
-                    [isInteractive]="false"
-                    [singleScoreValue]="
-                      getSingleScoreValue(gene.genomicScores, genomicScoreCategory.category, score.scoreName)
-                    "
-                    [marginLeft]="histogramOptions.marginLeft"
-                    [marginTop]="histogramOptions.marginTop"
-                    [smallValuesDesc]="geneScore.smallValuesDesc"
-                    [largeValuesDesc]="geneScore.largeValuesDesc">
-                  </gpf-histogram>
+                    ">
+                    <gpf-histogram
+                      *ngIf="isNumberHistogram(geneScore.histogram)"
+                      [style.width]="histogramOptions.width"
+                      [style.height]="histogramOptions.height"
+                      [width]="histogramOptions.width"
+                      [height]="histogramOptions.height"
+                      [bins]="geneScore.histogram.bins"
+                      [bars]="geneScore.histogram.bars"
+                      [logScaleX]="geneScore.histogram.logScaleX"
+                      [logScaleY]="geneScore.histogram.logScaleY"
+                      [showMinMaxInput]="false"
+                      [isInteractive]="false"
+                      [singleScoreValue]="
+                        getSingleScoreValue(gene.genomicScores, genomicScoreCategory.category, score.scoreName)
+                      "
+                      [marginLeft]="histogramOptions.marginLeft"
+                      [marginTop]="histogramOptions.marginTop"
+                      [smallValuesDesc]="geneScore.histogram.smallValuesDesc"
+                      [largeValuesDesc]="geneScore.histogram.largeValuesDesc">
+                    </gpf-histogram>
+                    <gpf-categorical-histogram
+                      *ngIf="isCategoricalHistogram(geneScore.histogram)"
+                      [width]="histogramOptions.width"
+                      [height]="histogramOptions.height"
+                      [marginLeft]="histogramOptions.marginLeft"
+                      [marginTop]="histogramOptions.marginTop"
+                      [histogram]="geneScore.histogram"
+                      [isInteractive]="false"
+                      [singleScoreValue]="
+                        convertScoreValueToString(
+                          getSingleScoreValue(gene.genomicScores, genomicScoreCategory.category, score.scoreName)
+                        )
+                      ">
+                    </gpf-categorical-histogram>
+                  </ng-container>
+
                   <span>{{ score.scoreName }}</span>
                 </td>
               </ng-container>
@@ -83,7 +102,7 @@
           </table>
         </div>
 
-        <div [ngClass]="{ 'compare-wrapper': isInGeneCompare, 'compact': compactView }" class="wrapper">
+        <div [ngClass]="{ 'compare-wrapper': isInGeneCompare, compact: compactView }" class="wrapper">
           <table
             *ngFor="let geneSetCategory of config.geneSets"
             [attr.id]="geneSetCategory.category"
@@ -109,7 +128,7 @@
 
         <div
           style="max-width: 1252px; display: flex; flex-direction: row; flex-wrap: wrap; align-items: stretch"
-          [ngClass]="{ 'compare-wrapper': isInGeneCompare, 'compact': compactView }"
+          [ngClass]="{ 'compare-wrapper': isInGeneCompare, compact: compactView }"
           class="wrapper">
           <ng-container *ngFor="let dataset of config.datasets">
             <table class="gpf-basic-table datasets-table">

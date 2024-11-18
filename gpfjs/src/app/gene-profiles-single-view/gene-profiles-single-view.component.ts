@@ -5,7 +5,7 @@ import {
 } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { Observable, of, zip } from 'rxjs';
 import { GeneScoresService } from '../gene-scores/gene-scores.service';
-import { GeneScores } from 'app/gene-scores/gene-scores';
+import { CategoricalHistogram, GeneScore, NumberHistogram } from 'app/gene-scores/gene-scores';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { switchMap, take } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -38,7 +38,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
   public compactView = false;
   public showTemplate = true;
 
-  public genomicScoresGeneScores: {category: string; scores: GeneScores[]}[] = [];
+  public genomicScoresGeneScores: {category: string; scores: GeneScore[]}[] = [];
   public gene$: Observable<GeneProfilesGene>;
 
   public histogramOptions = {
@@ -103,14 +103,14 @@ export class GeneProfileSingleViewComponent implements OnInit {
         });
 
         let scores: string;
-        const geneScoresObservables: Observable<GeneScores[]>[] = [];
+        const geneScoresObservables: Observable<GeneScore[]>[] = [];
         for (const genomicScore of gene.genomicScores) {
           scores = [...genomicScore.scores.map(score => score.id)].join(',');
           geneScoresObservables.push(
             this.geneScoresService.getGeneScores(scores)
           );
         }
-        const genomicScoresObservables: Observable<[string, GeneScores[]]>[] = [];
+        const genomicScoresObservables: Observable<[string, GeneScore[]]>[] = [];
         for (let k = 0; k < geneScoresObservables.length; k++) {
           genomicScoresObservables.push(
             zip(
@@ -136,7 +136,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
     });
   }
 
-  public getGeneScoreByKey(category: string, key: string): GeneScores {
+  public getGeneScoreByKey(category: string, key: string): GeneScore {
     return this.genomicScoresGeneScores
       .find(genomicScoresCategory => genomicScoresCategory.category === category).scores
       .find(score => score.score === key);
@@ -144,6 +144,14 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
   public getSingleScoreValue(genomicScores: GeneProfilesGenomicScores[], categoryId: string, scoreId: string): number {
     return genomicScores.find(category => category.id === categoryId).scores.find(score => score.id === scoreId).value;
+  }
+
+  // Remove when GPF starts supporting string names for categorical histogram values
+  public convertScoreValueToString(value: number): string {
+    if (value === null) {
+      return '';
+    }
+    return value.toString();
   }
 
   public getGeneDatasetValue(
@@ -259,5 +267,13 @@ export class GeneProfileSingleViewComponent implements OnInit {
       this.store.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
       this.router.navigate(['/gene-profiles']);
     });
+  }
+
+  public isNumberHistogram(arg: object): arg is NumberHistogram {
+    return arg instanceof NumberHistogram;
+  }
+
+  public isCategoricalHistogram(arg: object): arg is CategoricalHistogram {
+    return arg instanceof CategoricalHistogram;
   }
 }

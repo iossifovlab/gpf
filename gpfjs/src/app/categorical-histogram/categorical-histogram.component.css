@@ -1,0 +1,19 @@
+:host::ng-deep#values-description {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -8px;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  font-style: italic;
+  color: #acacac;
+  font-size: 14px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.histogram svg {
+  width: 100%;
+  height: 100%;
+}

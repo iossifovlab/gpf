@@ -12,6 +12,7 @@ import { FormsModule } from '@angular/forms';
   ],
   exports: [
     HistogramComponent,
+    HistogramRangeSelectorLineComponent
   ],
   imports: [
     CommonModule,

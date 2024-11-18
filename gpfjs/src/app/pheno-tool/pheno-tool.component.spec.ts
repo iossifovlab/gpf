@@ -119,9 +119,12 @@ describe('PhenoToolComponent', () => {
     };
 
     const geneScoresMock: GeneScoresState = {
+      histogramType: null,
       score: null,
       rangeStart: 0,
-      rangeEnd: 0
+      rangeEnd: 0,
+      values: null,
+      categoricalView: null,
     };
 
     const phenoToolMeasureMock: PhenoToolMeasureState = {
