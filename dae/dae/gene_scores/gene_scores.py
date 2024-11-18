@@ -178,7 +178,7 @@ class GeneScore(
             genes = score_value_df[index].gene
         else:
             genes = score_value_df.loc[
-                score_value_df["gene-score"].isin([float(v) for v in values])
+                score_value_df[score_id].isin([float(v) for v in values])
             ].gene
         return set(genes.values)
 
