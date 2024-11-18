@@ -1,9 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import List
-
 import numpy as np
 import pytest
 
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.utils.variant_utils import (
     get_locus_ploidy,
     gt2str,
@@ -15,7 +14,7 @@ from dae.utils.variant_utils import (
 )
 from dae.variants.attributes import Sex
 
-chroms: List[int | str] = list(range(1, 23))
+chroms: list[int | str] = list(range(1, 23))
 chroms.append("Y")
 
 test_data = [
@@ -23,22 +22,27 @@ test_data = [
     for sex in (Sex.M, Sex.F)
     for chrom in list(range(1, 23))
 ]
-test_data.append(("X", 1, Sex.F, 2))
-test_data.append(("X", 60001, Sex.F, 2))
-test_data.append(("X", 100000, Sex.F, 2))
-test_data.append(("X", 2700000, Sex.F, 2))
-test_data.append(("X", 154931044, Sex.F, 2))
-test_data.append(("X", 154931050, Sex.F, 2))
-test_data.append(("X", 155260560, Sex.F, 2))
-test_data.append(("X", 155260600, Sex.F, 2))
-test_data.append(("X", 1, Sex.M, 1))
-test_data.append(("X", 60001, Sex.M, 2))
-test_data.append(("X", 100000, Sex.M, 2))
-test_data.append(("X", 2700000, Sex.M, 1))
-test_data.append(("X", 154931044, Sex.M, 2))
-test_data.append(("X", 154931050, Sex.M, 2))
-test_data.append(("X", 155260560, Sex.M, 2))
-test_data.append(("X", 155260600, Sex.M, 1))
+
+test_data.extend(
+    (
+        ("X", 1, Sex.F, 2),
+        ("X", 60001, Sex.F, 2),
+        ("X", 100000, Sex.F, 2),
+        ("X", 2700000, Sex.F, 2),
+        ("X", 154931044, Sex.F, 2),
+        ("X", 154931050, Sex.F, 2),
+        ("X", 155260560, Sex.F, 2),
+        ("X", 155260600, Sex.F, 2),
+        ("X", 1, Sex.M, 1),
+        ("X", 60001, Sex.M, 2),
+        ("X", 100000, Sex.M, 2),
+        ("X", 2700000, Sex.M, 1),
+        ("X", 154931044, Sex.M, 2),
+        ("X", 154931050, Sex.M, 2),
+        ("X", 155260560, Sex.M, 2),
+        ("X", 155260600, Sex.M, 1),
+    ),
+)
 
 # test_data_chr_prefix = list(
 #     map(lambda x: ("chr" + x[0], x[1], x[2], x[3]), test_data)
@@ -47,7 +51,13 @@ test_data.append(("X", 155260600, Sex.M, 1))
 
 
 @pytest.mark.parametrize("chrom,pos,sex,expected", [*test_data])
-def test_get_locus_ploidy(chrom, pos, sex, expected, gpf_instance_2013):
+def test_get_locus_ploidy(
+    chrom: str,
+    pos: int,
+    sex: Sex,
+    expected: int,
+    gpf_instance_2013: GPFInstance,
+) -> None:
     genomic_sequence = gpf_instance_2013.reference_genome
     assert get_locus_ploidy(chrom, pos, sex, genomic_sequence) == expected
 
@@ -57,7 +67,7 @@ def test_get_locus_ploidy(chrom, pos, sex, expected, gpf_instance_2013):
     ("ac", "GT"),
     ("actg", "CAGT"),
 ])
-def test_reverse_complement(dna, expected):
+def test_reverse_complement(dna: str, expected: str) -> None:
     result = reverse_complement(dna)
     assert result == expected
 
@@ -76,7 +86,7 @@ def test_reverse_complement(dna, expected):
         "0/0,1/.,0/0",
     ),
 ])
-def test_gt2str(gt, expected):
+def test_gt2str(gt: np.ndarray, expected: np.ndarray) -> None:
     res = gt2str(gt)
 
     assert res == expected
@@ -96,7 +106,7 @@ def test_gt2str(gt, expected):
         np.array([[0, 1, 0], [0, -1, 0]], dtype=np.int8),
     ),
 ])
-def test_str2gt(gts, expected):
+def test_str2gt(gts: str, expected: np.ndarray) -> None:
     res = str2gt(gts)
 
     assert np.all(res == expected)
@@ -111,8 +121,14 @@ def test_str2gt(gts, expected):
     (100, "TGGTGCAGGC", "TGGTGCAGGCGGTGCAGGC", 100, "T", "TGGTGCAGGC"),
     (100, "TGGTGCAGGC", "TGGTGCAGGT", 100, "TGGTGCAGGC", "TGGTGCAGGT"),
 ])
-def test_trim_str_right(pos, ref, alt, trim_pos, trim_ref, trim_alt):
-
+def test_trim_str_right(
+    pos: int,
+    ref: str,
+    alt: str,
+    trim_pos: int,
+    trim_ref: str,
+    trim_alt: str,
+) -> None:
     tpos, tref, talt = trim_str_right(pos, ref, alt)
     assert trim_pos == tpos
     assert trim_ref == tref
@@ -128,8 +144,14 @@ def test_trim_str_right(pos, ref, alt, trim_pos, trim_ref, trim_alt):
     (100, "TGGTGCAGGC", "TGGTGCAGGCGGTGCAGGC", 110, "", "GGTGCAGGC"),
     (100, "TGGTGCAGGC", "TGGTGCAGGT", 109, "C", "T"),
 ])
-def test_trim_str_left(pos, ref, alt, trim_pos, trim_ref, trim_alt):
-
+def test_trim_str_left(
+    pos: int,
+    ref: str,
+    alt: str,
+    trim_pos: int,
+    trim_ref: str,
+    trim_alt: str,
+) -> None:
     tpos, tref, talt = trim_str_left(pos, ref, alt)
     assert trim_pos == tpos
     assert trim_ref == tref
@@ -150,7 +172,8 @@ def test_trim_str_left(pos, ref, alt, trim_pos, trim_ref, trim_alt):
     ((100, "TGGTGCAGGC", "TGGTGCAGGCGGTGCAGGC"), (100, "T", "TGGTGCAGGC")),
     ((100, "TGGTGCAGGC", "TGGTGCAGGT"), (109, "C", "T")),
 ])
-def test_trim_parsimonious(allele, parsimonious):
+def test_trim_parsimonious(
+    allele: tuple[int, str, str], parsimonious: tuple[int, str, str]) -> None:
     pos, ref, alt = trim_parsimonious(*allele)
 
     assert (pos, ref, alt) == parsimonious
