@@ -456,6 +456,8 @@ def user_has_permission(instance_id: str, user: User, dataset_id: str) -> bool:
     """Check if a user has permission to browse the given dataset."""
     if settings.DISABLE_PERMISSIONS:
         return True
+    if not user.is_active:
+        return False
     if user.is_superuser or user.is_staff:
         return True
     user_groups = get_user_groups(user)
@@ -467,7 +469,7 @@ def user_has_permission(instance_id: str, user: User, dataset_id: str) -> bool:
     if dataset is None:
         return True
 
-    return check_permissions(instance_id, dataset, user_groups)
+    return dataset_id in IsDatasetAllowed.permitted_datasets(user, instance_id)
 
 
 def get_allowed_genotype_studies(
@@ -486,17 +488,19 @@ def get_allowed_genotype_studies(
         return set()
 
     if DatasetHierarchy.is_study(instance_id, dataset):
-        if skip_check or check_permissions_up(
-            instance_id, dataset, user_groups,
+        if skip_check or dataset_id in IsDatasetAllowed.permitted_datasets(
+            user, instance_id,
         ):
             allowed_studies.add(dataset.dataset_id)
         return allowed_studies
 
     for child in get_wdae_children(instance_id, dataset.dataset_id):
         if DatasetHierarchy.is_study(instance_id, child) and (
-                skip_check or check_permissions_up(
-                    instance_id, child, user_groups,
-                )):
+                skip_check
+                or child.dataset_id in IsDatasetAllowed.permitted_datasets(
+                    user, instance_id,
+                )
+            ):
             allowed_studies.add(child.dataset_id)
 
     return set(allowed_studies)
