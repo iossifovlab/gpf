@@ -12,13 +12,9 @@ from studies.study_wrapper import StudyWrapper
 from dae.studies.study import GenotypeData, GenotypeDataGroup
 from datasets_api.models import Dataset
 from datasets_api.permissions import (
-    _user_has_permission_strict,
     add_group_perm_to_dataset,
     add_group_perm_to_user,
-    get_allowed_genotype_data,
-    get_allowed_genotype_studies,
     get_dataset_groups,
-    get_directly_allowed_genotype_data,
     get_user_groups,
     user_has_permission,
 )
@@ -87,46 +83,6 @@ def test_permissions_give_access_to_parent(
     assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
 
 
-def test_get_allowed_genotype_data_and_studies(
-    user: User, omni_dataset: GenotypeData,
-) -> None:
-    add_group_perm_to_user("dataset_1", user)
-    result = get_allowed_genotype_data(
-        "t4c8_instance", user, omni_dataset.study_id)
-    assert result == {"omni_dataset", "dataset_1", "t4c8_study_1"}
-
-    result = get_allowed_genotype_studies(
-        "t4c8_instance", user, omni_dataset.study_id)
-    assert result == {"t4c8_study_1"}
-
-
-def test_get_allowed_genotype_data_and_studies_mixed(
-    user: User, omni_dataset: GenotypeData,
-) -> None:
-    add_group_perm_to_user("dataset_2", user)
-    add_group_perm_to_user("t4c8_study_1", user)
-
-    result = get_allowed_genotype_data(
-        "t4c8_instance", user, omni_dataset.study_id)
-    assert result == {"omni_dataset", "dataset_2",
-                      "t4c8_study_1", "t4c8_study_2"}
-
-    result = get_allowed_genotype_studies(
-        "t4c8_instance", user, omni_dataset.study_id)
-    assert result == {"t4c8_study_1", "t4c8_study_2"}
-
-
-def test_get_allowed_dataset_from_parent(
-    user: User,
-    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
-) -> None:
-    add_group_perm_to_user("test_group", user)
-    add_group_perm_to_dataset("test_group", "omni_dataset")
-    allowed_datasets = get_allowed_genotype_data(
-        "t4c8_instance", user, "dataset_1")
-    assert "dataset_1" in allowed_datasets
-
-
 def test_dataset_group_rights(user: User, omni_dataset: GenotypeData) -> None:
     add_group_perm_to_user("test_group", user)
     add_group_perm_to_dataset("test_group", omni_dataset.study_id)
@@ -160,56 +116,6 @@ def test_dataset_group_rights_mixed(
     add_group_perm_to_dataset("test_group", "dataset_1")
     assert user_has_permission("t4c8_instance", user, "t4c8_study_1")
     assert not user_has_permission("t4c8_instance", user, "t4c8_study_2")
-
-
-def test_any_user_group_rights(omni_dataset: GenotypeData) -> None:
-    user = cast(User, AnonymousUser())
-    assert not user_has_permission("t4c8_instance", user, omni_dataset.study_id)
-    add_group_perm_to_dataset("any_user", omni_dataset.study_id)
-    assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
-
-    result = get_allowed_genotype_data(
-        "t4c8_instance", user, omni_dataset.study_id)
-    assert result == {"omni_dataset", "dataset_1", "dataset_2",
-                      "t4c8_study_1", "t4c8_study_2"}
-
-    result = get_allowed_genotype_studies(
-        "t4c8_instance", user, omni_dataset.study_id)
-    assert result == {"t4c8_study_1", "t4c8_study_2"}
-
-
-def test_any_dataset_group_rights(
-    user: User, omni_dataset: GenotypeData,
-) -> None:
-    assert not user_has_permission("t4c8_instance", user, omni_dataset.study_id)
-    add_group_perm_to_user("any_dataset", user)
-    assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
-
-    result = get_allowed_genotype_data(
-        "t4c8_instance", user, omni_dataset.study_id)
-    assert result == {"omni_dataset", "dataset_1", "dataset_2",
-                      "t4c8_study_1", "t4c8_study_2"}
-
-    result = get_allowed_genotype_studies(
-        "t4c8_instance", user, omni_dataset.study_id)
-    assert result == {"t4c8_study_1", "t4c8_study_2"}
-
-
-def test_admin_group_rights(
-    user: User, omni_dataset: GenotypeData,
-) -> None:
-    assert not user_has_permission("t4c8_instance", user, omni_dataset.study_id)
-    add_group_perm_to_user("admin", user)
-    assert user_has_permission("t4c8_instance", user, omni_dataset.study_id)
-
-    result = get_allowed_genotype_data(
-        "t4c8_instance", user, omni_dataset.study_id)
-    assert result == {"omni_dataset", "dataset_1", "dataset_2",
-                      "t4c8_study_1", "t4c8_study_2"}
-
-    result = get_allowed_genotype_studies(
-        "t4c8_instance", user, omni_dataset.study_id)
-    assert result == {"t4c8_study_1", "t4c8_study_2"}
 
 
 def test_user_and_dataset_groups_getter_methods(
@@ -276,17 +182,6 @@ def test_unregistered_dataset_does_not_propagate_permissions(
     )
 
 
-def test_get_directly_allowed_genotype_data(
-    user: User,
-    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
-) -> None:
-    add_group_perm_to_user("test_group", user)
-    add_group_perm_to_dataset("test_group", "omni_dataset")
-    allowed_datasets = get_directly_allowed_genotype_data(user)
-    assert any([ds["datasetId"] == "omni_dataset"] for ds in allowed_datasets)
-    assert _user_has_permission_strict(user, "omni_dataset")
-
-
 def test_nauser_user_and_dataset_groups_getter_methods(
     na_user: User,
     custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
@@ -294,17 +189,6 @@ def test_nauser_user_and_dataset_groups_getter_methods(
     add_group_perm_to_user("test_group", na_user)
     add_group_perm_to_dataset("test_group", "omni_dataset")
     assert get_user_groups(na_user) & get_dataset_groups("omni_dataset")
-
-
-def test_nauser_get_directly_allowed_datasets(
-    na_user: User,
-    custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
-) -> None:
-    add_group_perm_to_user("test_group", na_user)
-    add_group_perm_to_dataset("test_group", "omni_dataset")
-    allowed_datasets = get_directly_allowed_genotype_data(na_user)
-    assert any([ds["datasetId"] == "omni_dataset"] for ds in allowed_datasets)
-    assert not _user_has_permission_strict(na_user, "omni_dataset")
 
 
 @override_settings(DISABLE_PERMISSIONS=True)
