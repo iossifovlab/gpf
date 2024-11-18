@@ -86,17 +86,16 @@ def calc_bin_index(bin_len: int, pos: int) -> int:
 
 def split_into_regions(
         chrom: str, chrom_length: int,
-        region_size: int) -> list[Region]:
+        region_size: int, start: int = 1) -> list[Region]:
     """Return a list of regions for a chrom with a given length."""
-    regions = []
-
-    current_start = 1
-    while current_start < chrom_length + 1:
-        end = min(chrom_length, current_start + region_size - 1)
-        regions.append(Region(chrom, current_start, end))
-        current_start = current_start + region_size
-
-    return regions
+    region_size = min(region_size, chrom_length)
+    return [
+        Region(chrom,
+               calc_bin_begin(region_size, i),
+               calc_bin_end(region_size, i))
+        for i in range(calc_bin_index(region_size, start),
+                       calc_bin_index(region_size, chrom_length) + 1)
+    ]
 
 
 def get_chromosome_length_tabix(

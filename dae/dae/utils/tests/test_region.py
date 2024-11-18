@@ -97,6 +97,30 @@ def test_split_into_regions(
         assert res == expected[i], f"{res} != {expected[i]}"
 
 
+def test_split_into_regions_with_start_pos() -> None:
+    expected = [
+        Region("1", 21, 30),
+        Region("1", 31, 40),
+        Region("1", 41, 50),
+    ]
+    result = split_into_regions("1", 50, 10, start=21)
+    assert len(result) == len(expected)
+    for i, res in enumerate(result):
+        assert res == expected[i], f"{res} != {expected[i]}"
+
+    expected = [
+        Region("1", 1, 10),
+        Region("1", 11, 20),
+        Region("1", 21, 30),
+        Region("1", 31, 40),
+        Region("1", 41, 50),
+    ]
+    result = split_into_regions("1", 50, 10, start=10)
+    assert len(result) == len(expected)
+    for i, res in enumerate(result):
+        assert res == expected[i], f"{res} != {expected[i]}"
+
+
 @pytest.fixture()
 def sample_tabix(tmp_path: pathlib.Path) -> pysam.TabixFile:
     filepath = tmp_path / "data.txt.gz"
