@@ -33,9 +33,6 @@ from dae.testing import setup_denovo, setup_directories, setup_genome
 
         ({"chrom": "chr1", "pos_beg": "4", "pos_end": "30"},
          Region("chr1", 4, 30)),
-
-        ({"chrom": "chr1", "pos_beg": "4", "pos_end": "30"},
-         Region("chr1", 4, 30)),
     ],
 )
 def test_default_columns(
@@ -88,9 +85,6 @@ def gc_fixture(tmp_path: pathlib.Path) -> GenomicContext:
 
         ({"vcf_like": "chr1:4:C:CT"},
          VCFAllele("chr1", 4, "C", "CT")),
-
-        ({"chrom": "chr1", "pos_beg": "4", "pos_end": "30"},
-         Region("chr1", 4, 30)),
 
         ({"chrom": "chr1", "pos_beg": "4", "pos_end": "30"},
          Region("chr1", 4, 30)),
@@ -148,11 +142,11 @@ def test_renamed_columns(
 def test_build_record_to_annotable_failures() -> None:
     with pytest.raises(
             ValueError, match="no record to annotatable could be found"):
-        build_record_to_annotatable({}, set([]))
+        build_record_to_annotatable({}, set())
 
     with pytest.raises(
             ValueError, match="no record to annotatable could be found"):
-        build_record_to_annotatable({"gosho": "pesho"}, set([]))
+        build_record_to_annotatable({"gosho": "pesho"}, set())
 
 
 def get_file_content_as_string(file: str) -> str:
@@ -264,6 +258,7 @@ def test_cli_columns_basic_setup(
     out_file_content = get_file_content_as_string(str(out_file))
     print(out_file_content)
     assert out_file_content == out_expected_content
+
 
 def test_cli_batch_mode(
         annotate_directory_fixture: pathlib.Path) -> None:
