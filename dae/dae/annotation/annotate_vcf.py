@@ -30,6 +30,7 @@ from dae.genomic_resources.repository_factory import (
 )
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
+from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("annotate_vcf")
@@ -132,7 +133,7 @@ class AnnotateVCFTool(AnnotationTool):
     @staticmethod
     def annotate(  # pylint: disable=too-many-locals,too-many-branches
         input_file: str,
-        region: tuple[str, int, int] | None,
+        region: Region | None,
         pipeline_config: RawAnnotatorsConfig,
         grr_definition: dict | None,
         out_file_path: str,
@@ -155,7 +156,8 @@ class AnnotateVCFTool(AnnotationTool):
                 if region is None:
                     in_file_iter = in_file.fetch()
                 else:
-                    in_file_iter = in_file.fetch(*region)
+                    in_file_iter = in_file.fetch(
+                        region.chrom, region.start, region.stop)
 
                 for vcf_var in in_file_iter:
                     # pylint: disable=use-list-literal
