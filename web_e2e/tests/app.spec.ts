@@ -189,6 +189,7 @@ test.describe('App user access rights tests', () => {
 
     await page.locator(`[id="${email}-reset-password-button"] > button`).click();
     await page.locator('button:text("Reset")').click();
+    await utils.logout(page);
 
     await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
     await page.getByText(email).first().click();
@@ -196,9 +197,9 @@ test.describe('App user access rights tests', () => {
 
     await page.locator('#id_new_password1').fill(userData.normal.password + '!!__3456');
     await page.locator('#id_new_password2').fill(userData.normal.password + '!!__3456');
-    await page.locator('.login-button').click();
+    await page.locator('input[value="Reset password"]').click();
+    await expect(page).toHaveURL(`${utils.frontendUrl}/datasets/ALL_genotypes/dataset-description`);
 
-    await utils.logout(page);
     await utils.login(page, email, userData.normal.password + '!!__3456');
 
     await utils.navigateToDataset(page, utils.datasetIds.compVcf);
@@ -241,6 +242,7 @@ test.describe('App user access rights tests', () => {
 
     await page.locator(`[id="${email}-reset-password-button"] > button`).click();
     await page.locator('button:text("Reset")').click();
+    await utils.logout(page);
 
     await page.goto(utils.mailhogUrl, {waitUntil: 'load'});
     await page.getByText(email).first().click();
@@ -248,11 +250,9 @@ test.describe('App user access rights tests', () => {
 
     await page.locator('#id_new_password1').fill(userData.normal.password + '!!__3456');
     await page.locator('#id_new_password2').fill(userData.normal.password + '!!__3456');
-    await page.locator('.login-button').click();
+    await page.locator('input[value="Reset password"]').click();
 
-    await expect(page).toHaveURL(`${utils.frontendUrl}/datasets/ALL_genotypes/gene-browser`);
-    await expect(page.locator('#log-out-button')).toBeVisible();
-    await utils.logout(page);
+    await expect(page).toHaveURL(`${utils.frontendUrl}/datasets/ALL_genotypes/dataset-description`);
 
     await utils.login(page, email, userData.normal.password + '!!__3456');
     await expect(page.locator('#register-alert')).not.toBeVisible();
