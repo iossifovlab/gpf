@@ -25,7 +25,11 @@ from dae.genomic_resources.repository_factory import (
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.task_graph import TaskGraphCli
 from dae.task_graph.graph import TaskGraph
-from dae.utils.regions import get_chromosome_length_tabix
+from dae.utils.regions import (
+    Region,
+    get_chromosome_length_tabix,
+    split_into_regions,
+)
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}.gz"
@@ -33,7 +37,7 @@ PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}.gz"
 
 def produce_regions(
     pysam_file: TabixFile, region_size: int,
-) -> list[tuple[str, int, int]]:
+) -> list[Region]:
     """Given a region size, produce contig regions to annotate by."""
     contig_lengths: dict[str, int] = {}
     for contig in map(str, pysam_file.contigs):
@@ -41,24 +45,24 @@ def produce_regions(
         if length is None:
             raise ValueError(f"unable to find length of contig '{contig}'")
         contig_lengths[contig] = length
-    return [
-        (contig, start, start + region_size)
-        for contig, length in contig_lengths.items()
-        for start in range(1, length, region_size)
-    ]
+
+    regions: list[Region] = []
+    for contig, length in contig_lengths.items():
+        regions.extend(split_into_regions(contig, length, region_size))
+    return regions
 
 
 def produce_partfile_paths(
-    input_file_path: str, regions: list[tuple[str, int, int]], work_dir: str,
+    input_file_path: str, regions: list[Region], work_dir: str,
 ) -> list[str]:
     """Produce a list of file paths for output region part files."""
     filenames = []
     for region in regions:
-        pos_beg = region[1] if len(region) > 1 else "_"
-        pos_end = region[2] if len(region) > 2 else "_"
+        pos_beg = region.start if region.start is not None else "_"
+        pos_end = region.stop if region.stop is not None else "_"
         filenames.append(os.path.join(work_dir, PART_FILENAME.format(
             in_file=os.path.basename(input_file_path),
-            chrom=region[0], pos_beg=pos_beg, pos_end=pos_end,
+            chrom=region.chrom, pos_beg=pos_beg, pos_end=pos_end,
         )))
     return filenames
 

@@ -44,19 +44,58 @@ def regions2bedfile(regions: list[BedRegion], bed_filename: str) -> None:
                 f"{reg.chrom}\t{reg.start - 1}\t{reg.stop}\n")
 
 
+def calc_bin_begin(bin_len: int, bin_idx: int) -> int:
+    """
+    Calculates the 1-based start position of the <bin_idx>-th bin
+    of length <bin_len>.
+
+    n       2n      3n      4n
+    |_______|_______|_______|
+     bin_len \
+              \
+               bin_begin
+    """
+    return (bin_len * bin_idx) + 1
+
+
+def calc_bin_end(bin_len: int, bin_idx: int) -> int:
+    """
+    Calculates the 1-based end position of the <bin_idx>-th bin
+    of length <bin_len>.
+
+    n       2n      3n      4n
+    |_______|_______|_______|
+     bin_len        \
+                     \
+                      bin_end
+    """
+    return bin_len * (bin_idx + 1)
+
+
+def calc_bin_index(bin_len: int, pos: int) -> int:
+    """
+    Calculates the index of the <bin_len>-long bin the given 1-based
+    position <pos> falls into.
+
+    n       2n      3n      4n
+    |_______|_______|_______|
+     (bin 0) (bin 1) (bin 2)
+    """
+    return (pos - 1) // bin_len
+
+
 def split_into_regions(
         chrom: str, chrom_length: int,
-        region_size: int) -> list[Region]:
+        region_size: int, start: int = 1) -> list[Region]:
     """Return a list of regions for a chrom with a given length."""
-    regions = []
-
-    current_start = 1
-    while current_start < chrom_length + 1:
-        end = min(chrom_length, current_start + region_size - 1)
-        regions.append(Region(chrom, current_start, end))
-        current_start = current_start + region_size
-
-    return regions
+    region_size = min(region_size, chrom_length)
+    return [
+        Region(chrom,
+               calc_bin_begin(region_size, i),
+               calc_bin_end(region_size, i))
+        for i in range(calc_bin_index(region_size, start),
+                       calc_bin_index(region_size, chrom_length) + 1)
+    ]
 
 
 def get_chromosome_length_tabix(

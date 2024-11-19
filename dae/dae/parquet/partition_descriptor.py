@@ -16,7 +16,12 @@ import yaml
 
 from dae.effect_annotation.effect import expand_effect_types
 from dae.utils import fs_utils
-from dae.utils.regions import Region
+from dae.utils.regions import (
+    Region,
+    calc_bin_begin,
+    calc_bin_end,
+    calc_bin_index,
+)
 from dae.variants.attributes import TransmissionType
 from dae.variants.family_variant import FamilyAllele
 from dae.variants.variant import SummaryAllele
@@ -216,7 +221,7 @@ class PartitionDescriptor:
         assert self.chromosomes is not None
         assert self.region_length > 0
         assert pos > 0
-        pos_bin = (pos - 1) // self.region_length
+        pos_bin = calc_bin_index(self.region_length, pos)
 
         if chrom in self.chromosomes:
             if self.integer_region_bins:
@@ -256,8 +261,8 @@ class PartitionDescriptor:
                 continue
 
             for region_index in range(region_bins_count):
-                start = region_index * self.region_length + 1
-                end = (region_index + 1) * self.region_length
+                start = calc_bin_begin(self.region_length, region_index)
+                end = calc_bin_end(self.region_length, region_index)
                 end = min(end, chromosome_lengths[chrom])
                 region_bin = self.make_region_bin(chrom, start)
                 result[region_bin].append(Region(chrom, start, end))
@@ -277,9 +282,10 @@ class PartitionDescriptor:
         if start == stop:
             return [self.make_region_bin(region.chrom, start)]
         return [
-            self.make_region_bin(region.chrom, i * self.region_length + 1)
-            for i in range((start - 1) // self.region_length,
-                           (stop - 1) // self.region_length + 1)
+            self.make_region_bin(
+                region.chrom, calc_bin_begin(self.region_length, i))
+            for i in range(calc_bin_index(self.region_length, start),
+                           calc_bin_index(self.region_length, stop) + 1)
         ]
 
     def make_all_region_bins(

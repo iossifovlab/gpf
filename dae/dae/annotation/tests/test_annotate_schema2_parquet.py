@@ -12,6 +12,7 @@ import pytest_mock
 
 from dae.annotation.annotate_schema2_parquet import cli
 from dae.annotation.annotation_pipeline import ReannotationPipeline
+from dae.annotation.parquet import produce_regions
 from dae.annotation.score_annotator import PositionScoreAnnotator
 from dae.genomic_resources.genomic_context import GenomicContext
 from dae.gpf_instance import GPFInstance
@@ -914,3 +915,53 @@ def test_full_reannotation_flag(
     # from previous annotations properly
     assert "score_A" in attrs
     assert "score_two" not in attrs
+
+
+@pytest.mark.parametrize(
+    "region_size,target_region,expected",
+    [
+        (100, "chrZ:200-600",
+         ["chrZ:200-200",
+          "chrZ:201-300",
+          "chrZ:301-400",
+          "chrZ:401-500",
+          "chrZ:501-600"]),
+
+        (50, "chrZ:234-345",
+         ["chrZ:234-250",
+          "chrZ:251-300",
+          "chrZ:301-345"]),
+
+        (300, "chrZ:200-700",
+         ["chrZ:200-300",
+          "chrZ:301-600",
+          "chrZ:601-700"]),
+
+        (500, None,
+         ["chrZ:1-500",
+          "chrZ:501-1000",
+          "chrW:1-500",
+          "chrW:501-1000",
+          "chrW:1001-1500",
+          "chrW:1501-2000"]),
+
+        (500, "chrZ:1-9999",
+         ["chrZ:1-500",
+          "chrZ:501-1000"]),
+
+        (500, "chrZ:800-900",
+         ["chrZ:800-900"]),
+
+        (9999, None,
+         ["chrZ:1-1000",
+          "chrW:1-2000"]),
+    ],
+)
+def test_produce_regions(
+    region_size: int,
+    target_region: str | None,
+    expected: list[str],
+) -> None:
+    contig_lens = {"chrZ": 1000, "chrW": 2000}
+    result = produce_regions(target_region, region_size, contig_lens)
+    assert result == expected
