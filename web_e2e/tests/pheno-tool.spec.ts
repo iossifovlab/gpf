@@ -218,16 +218,8 @@ test.describe('Pheno tool download tests', () => {
       await page.locator('#from-input-field').clear();
       await page.locator('#from-input-field').fill(data.familyHistogramfromTo[0]);
 
-      await page.waitForResponse(
-        resp => resp.url().includes('/api/v3/measures/partitions') && resp.status() === 200
-      );
-
       await page.locator('#to-input-field').clear();
       await page.locator('#to-input-field').fill(data.familyHistogramfromTo[1]);
-
-      await page.waitForResponse(
-        resp => resp.url().includes('/api/v3/measures/partitions') && resp.status() === 200
-      );
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
       await page.getByText('Download').click();
