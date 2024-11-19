@@ -24,29 +24,29 @@ test.describe('Genomic scores tests', () => {
     await page.locator('#add-filter').click();
     await page.locator('input#from-input-field').clear();
     await page.locator('input#from-input-field').fill('0.3');
-    await expect(page.locator('text.partitions-text').nth(0)).toHaveText('~21727789 (32.46%)');
+    await expect(page.locator('text.partitions-text').nth(0)).toHaveText('21727789 (32.46%)');
 
     await page.locator('input#to-input-field').clear();
     await page.locator('input#to-input-field').fill('1.45');
-    await expect(page.locator('text.partitions-text').nth(1)).toHaveText('~9402408 (14.05%)');
-    await expect(page.locator('text.partitions-text').nth(2)).toHaveText('~35798106 (53.49%)');
+    await expect(page.locator('text.partitions-text').nth(1)).toHaveText('9402408 (14.05%)');
+    await expect(page.locator('text.partitions-text').nth(2)).toHaveText('35798106 (53.49%)');
 
     await page.locator('#add-filter').click();
     await page.locator('gpf-genomic-scores select').nth(1).selectOption('exome_gnomad_af_percent - ' +
     'Alternative allele frequency in the whole gnomAD exome samples v2.1.1 as percent');
     await page.locator('input#from-input-field').nth(1).clear();
     await page.locator('input#from-input-field').nth(1).fill('9.7944');
-    await expect(page.locator('text.partitions-text').nth(3)).toHaveText('~17113188 (99.46%)');
+    await expect(page.locator('text.partitions-text').nth(3)).toHaveText('17113188 (99.46%)');
 
     await page.locator('input#to-input-field').nth(1).clear();
     await page.locator('input#to-input-field').nth(1).fill('13.6935');
-    await expect(page.locator('text.partitions-text').nth(4)).toHaveText('~82289 (0.48%)');
-    await expect(page.locator('text.partitions-text').nth(5)).toHaveText('~10162 (0.06%)');
+    await expect(page.locator('text.partitions-text').nth(4)).toHaveText('82289 (0.48%)');
+    await expect(page.locator('text.partitions-text').nth(5)).toHaveText('10162 (0.06%)');
 
     await page.locator('#remove-button').nth(0).click();
-    await expect(page.locator('text.partitions-text').nth(0)).toHaveText('~17113188 (99.46%)');
-    await expect(page.locator('text.partitions-text').nth(1)).toHaveText('~82289 (0.48%)');
-    await expect(page.locator('text.partitions-text').nth(2)).toHaveText('~10162 (0.06%)');
+    await expect(page.locator('text.partitions-text').nth(0)).toHaveText('17113188 (99.46%)');
+    await expect(page.locator('text.partitions-text').nth(1)).toHaveText('82289 (0.48%)');
+    await expect(page.locator('text.partitions-text').nth(2)).toHaveText('10162 (0.06%)');
   });
 
   test('should test download', async({ page }) => {
