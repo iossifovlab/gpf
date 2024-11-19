@@ -914,9 +914,8 @@ class NPScoreBase(GenomicScore):
             returned_nucleotides = (line.ref, line.alt)
             if (left, right) == (returned_region[0], returned_region[1]):
                 if returned_nucleotides in returned_region[3]:
-                    raise ValueError(
-                        f"multiple values for positions [{left}, {right}] "
-                        f"and nucleotides {returned_nucleotides}")
+                    self._handle_multiple_values(
+                        left, right, returned_nucleotides)
 
                 returned_region[3].add((line.ref, line.alt))
                 yield (left, right, val)
@@ -927,6 +926,13 @@ class NPScoreBase(GenomicScore):
                     f"multiple values for positions [{left}, {prev_right}]")
             returned_region = (left, right, val, {(line.ref, line.alt)})
             yield (left, right, val)
+
+    @abc.abstractmethod
+    def _handle_multiple_values(
+        self, left: int, right: int,
+        returned_nucleotides: tuple[str | None, str | None],
+    ) -> None:
+        """Handle multiple values for a region."""
 
     def fetch_scores(
         self, chrom: str, position: int,
@@ -1010,6 +1016,15 @@ class NPScore(NPScoreBase):
                 NPScoreAggr(
                     squery.score, position_aggregator, nucleotide_aggregator))
         return score_aggs
+
+    def _handle_multiple_values(
+        self, left: int, right: int,
+        returned_nucleotides: tuple[str | None, str | None],
+    ) -> None:
+        logger.warning(
+            "multiple values for positions [%s, %s] "
+            "and nucleotides %s",
+            left, right, returned_nucleotides)
 
     def fetch_scores_agg(
             self, chrom: str, pos_begin: int, pos_end: int,
@@ -1095,6 +1110,14 @@ class AlleleScore(NPScoreBase):
 
     def open(self) -> AlleleScore:
         return cast(AlleleScore, super().open())
+
+    def _handle_multiple_values(
+        self, left: int, right: int,
+        returned_nucleotides: tuple[str | None, str | None],
+    ) -> None:
+        raise ValueError(
+            f"multiple values for positions [{left}, {right}] "
+            f"and nucleotides {returned_nucleotides}")
 
     def _build_scores_agg(
         self, score_queries: list[AlleleScoreQuery],

@@ -159,9 +159,9 @@ def np_score(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
             chr1   31          33       C    G    0.4   na
             chr1   31          33       C    T    na   5.0
 
-            chr2   1           3        A    G    0.1   1.0
-            chr2   1           3        A    C    0.1   1.0
-            chr2   1           3        A    G    0.1   1.0
+            chr1   41          43       A    G    0.1   1.0
+            chr1   41          43       A    C    0.1   1.0
+            chr1   41          43       A    G    0.1   1.0
 
             chr3   1           13       A    G    0.3   3.0
             chr3   1           13       A    C    0.33  3.3
@@ -218,6 +218,11 @@ def np_score(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
         (11, 13, [None, 0.3]),
         (11, 13, [None, 0.4]),
     ]),
+    (41, 43, ["s1", "s2"], [
+        (41, 43, [0.1, 1.0]),
+        (41, 43, [0.1, 1.0]),
+        (41, 43, [0.1, 1.0]),
+    ]),
 ])
 def test_np_score_fetch_regions(
     np_score: NPScore,
@@ -235,7 +240,6 @@ def test_np_score_fetch_regions(
 
 
 @pytest.mark.parametrize("chrom,begin,end", [
-    ("chr2", 1, 10),
     ("chr3", 1, 20),
 ])
 def test_np_score_fetch_regions_consistency_failed(
@@ -289,16 +293,17 @@ def np_score2(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
             chr1    31         C    G    0.4   na
             chr1    31         C    T    na   5.0
 
-            chr2    1          A    G    0.1   1.0
-            chr2    1          A    C    0.1   1.0
-            chr2    1          A    G    0.1   1.0
+            chr1    41         A    G    0.1   1.0
+            chr1    41         A    C    0.1   1.0
+            chr1    41         A    G    0.1   1.0
 
-            chr3    1          A    G    0.3   3.0
-            chr3    1          A    C    0.33  3.3
-            chr3    10         A    G    0.3   3.0
-            chr3    10         A    C    0.33  3.3
-            chr3    10         A    G    0.3   3.0
-            chr3    10         A    C    0.33  3.3
+            chr1    51         A    G    0.3   3.0
+            chr1    51         A    C    0.33  3.3
+
+            chr1    60         A    G    0.3   3.0
+            chr1    60         A    C    0.33  3.3
+            chr1    60         A    G    0.3   3.0
+            chr1    60         A    C    0.33  3.3
 
         """).strip(),
         seq_col=0, start_col=1, end_col=1, line_skip=1)
@@ -311,20 +316,6 @@ def np_score2(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
     assert "s2" in score.score_definitions
 
     return cast(NPScore, score)
-
-
-@pytest.mark.parametrize("chrom,begin,end", [
-    ("chr2", 1, 10),
-    ("chr3", 1, 20),
-])
-def test_np_score2_fetch_regions_consistency_failed(
-    np_score2: NPScore,
-    chrom: str,
-    begin: int | None,
-    end: int | None,
-) -> None:
-    with pytest.raises(ValueError, match="multiple values for positions"):
-        list(np_score2.fetch_region(chrom, begin, end))
 
 
 @pytest.mark.parametrize("begin,end,scores,expected", [
@@ -363,6 +354,21 @@ def test_np_score2_fetch_regions_consistency_failed(
         (11, 11, [2.0, 0.2]),
         (11, 11, [None, 0.3]),
         (11, 11, [None, 0.4]),
+    ]),
+    (41, 41, ["s1", "s2"], [
+        (41, 41, [0.1, 1.0]),
+        (41, 41, [0.1, 1.0]),
+        (41, 41, [0.1, 1.0]),
+    ]),
+    (51, 51, ["s1", "s2"], [
+        (51, 51, [0.3, 3.0]),
+        (51, 51, [0.33, 3.3]),
+    ]),
+    (60, 60, ["s1", "s2"], [
+        (60, 60, [0.3, 3.0]),
+        (60, 60, [0.33, 3.3]),
+        (60, 60, [0.3, 3.0]),
+        (60, 60, [0.33, 3.3]),
     ]),
 ])
 def test_np_score2_fetch_regions(
