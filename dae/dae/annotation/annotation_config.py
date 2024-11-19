@@ -231,7 +231,10 @@ class AnnotationConfigParser:
         ]
 
     @staticmethod
-    def parse_complete(raw: dict[str, Any], idx: int) -> AnnotatorInfo:
+    def parse_complete(
+        raw: dict[str, Any], idx: int,
+        grr: GenomicResourceRepo | None = None,
+    ) -> list[AnnotatorInfo]:
         """Parse a full-form annotation config."""
         ann_type, ann_details = next(iter(raw.items()))
         attributes = []
@@ -239,11 +242,22 @@ class AnnotationConfigParser:
             attributes = AnnotationConfigParser.parse_raw_attributes(
                 ann_details["attributes"],
             )
-        parameters = {k: v for k, v in ann_details.items()
-                      if k != "attributes"}
-        return AnnotatorInfo(
-            ann_type, attributes, parameters, annotator_id=f"A{idx}",
-        )
+        parameters = {k: v for k, v in ann_details.items() if k != "attributes"}
+
+        if "resource_id" in parameters \
+           and AnnotationConfigParser.has_wildcard(parameters["resource_id"]):
+            assert grr is not None
+            matching_resources = AnnotationConfigParser.query_resources(
+                ann_type, parameters.pop("resource_id"), grr,
+            )
+            return [
+                AnnotatorInfo(ann_type, attributes,
+                              {"resource_id": resource, **parameters},
+                              annotator_id=f"A{idx}_{resource}")
+                for resource in matching_resources
+            ]
+        return [AnnotatorInfo(
+                ann_type, attributes, parameters, annotator_id=f"A{idx}")]
 
     @staticmethod
     def _parse_preamble(
@@ -317,9 +331,9 @@ class AnnotationConfigParser:
                     continue
                 if isinstance(ann_details, dict):
                     # the complete annotator configuration form
-                    result.append(
-                        AnnotationConfigParser.parse_complete(raw_cfg, idx),
-                    )
+                    result.extend(AnnotationConfigParser.parse_complete(
+                        raw_cfg, idx, grr,
+                    ))
                     continue
             raise AnnotationConfigurationError(dedent(f"""
                 Incorrect annotator configuation form: {raw_cfg}.

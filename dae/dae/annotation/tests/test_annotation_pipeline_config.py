@@ -433,3 +433,27 @@ def test_parse_preamble_no_preamble() -> None:
             - att1
     """)
     assert preamble is None
+
+
+def test_wildcard_in_complete_syntax(test_grr: GenomicResourceRepo) -> None:
+    _, pipeline_config = AnnotationConfigParser.parse_str("""
+        - position_score:
+            resource_id: score_*
+            param1: val1
+            param2: val2
+
+    """, grr=test_grr)
+    assert pipeline_config == [
+        AnnotatorInfo(
+            "position_score", [], {"resource_id": "score_one",
+                                   "param1": "val1",
+                                   "param2": "val2"},
+            annotator_id="A0_score_one",
+        ),
+        AnnotatorInfo(
+            "position_score", [], {"resource_id": "score_two",
+                                   "param1": "val1",
+                                   "param2": "val2"},
+            annotator_id="A0_score_two",
+        ),
+    ]
