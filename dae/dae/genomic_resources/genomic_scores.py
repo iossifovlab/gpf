@@ -794,7 +794,8 @@ class PositionScore(GenomicScore):
             prev_end = returned_region[1]
             if prev_end and left <= prev_end:
                 raise ValueError(
-                    f"multiple values for positions [{left}, {prev_end}]")
+                    f"multiple values for positions {chrom}: "
+                    f"[{left}, {prev_end}]")
             returned_region = (left, right, val)
             yield (left, right, val)
 
