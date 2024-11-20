@@ -319,7 +319,8 @@ class AnnotateColumnsTool(AnnotationTool):
         for record, annotation in zip(records, annotations, strict=True):
             for col in annotation_columns:
                 record[col] = annotation[col]
-            yield list(map(str, record.values()))
+            yield [str(val) if val is not None else ""
+                   for val in record.values()]
 
         if len(errors) > 0:
             logger.error("there were errors during the import")
@@ -358,8 +359,8 @@ class AnnotateColumnsTool(AnnotationTool):
 
                 for col in annotation_columns:
                     record[col] = annotation[col]
-                result = list(map(str, record.values()))
-                yield result
+                yield [str(val) if val is not None else ""
+                    for val in record.values()]
             except Exception as ex:  # pylint: disable=broad-except
                 logger.exception(
                     "unexpected input data format at line %s: %s",
