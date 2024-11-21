@@ -824,37 +824,59 @@ class PositionScore(GenomicScore):
 
     def fetch_scores(
         self, chrom: str, position: int,
-        scores: list[str] | None = None,
+        scores: list[str] | list[PositionScoreQuery] | None = None,
     ) -> list[ScoreValue] | None:
         """Fetch score values at specific genomic position."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
 
-        lines = list(self._fetch_lines(chrom, position, position))
-        if not lines:
-            return None
+        if not self.allow_multiple_values():
+            if scores is None:
+                scores = self.get_all_scores()
+            else:
+                scores = [
+                    s.score if isinstance(s, PositionScoreQuery) else s
+                    for s in scores]
+            assert all(isinstance(s, str) for s in scores)
 
-        if len(lines) > 1 and not self.allow_multiple_values():
-            logger.warning(
-                "multiple values for positions %s:%s",
-                chrom, position)
-            if not self.allow_multiple_values():
-                raise ValueError(
-                    f"multiple values ({len(lines)}) for positions "
-                    f"{chrom}:{position}")
+            lines = list(self._fetch_lines(chrom, position, position))
+            if not lines:
+                return None
 
-        line = lines[0]
+            if len(lines) > 1 and not self.allow_multiple_values():
+                logger.warning(
+                    "multiple values for positions %s:%s",
+                    chrom, position)
+                if not self.allow_multiple_values():
+                    raise ValueError(
+                        f"multiple values ({len(lines)}) for positions "
+                        f"{chrom}:{position}")
 
-        requested_scores = scores or self.get_all_scores()
-        return [line.get_score(scr) for scr in requested_scores]
+            line = lines[0]
+
+            requested_scores = scores or self.get_all_scores()
+            return [line.get_score(scr) for scr in requested_scores]
+
+        aggs = self.fetch_scores_agg(chrom, position, position, scores)
+        return [agg.get_final() for agg in aggs]
 
     def _build_scores_agg(
-        self, scores: list[PositionScoreQuery],
+        self, scores: list[str] | list[PositionScoreQuery],
     ) -> list[PositionScoreAggr]:
         score_aggs = []
         aggregator_type: str | None
         for score in scores:
+            if isinstance(score, str):
+                aggregator_type = self.score_definitions[score].pos_aggregator
+                assert aggregator_type is not None
+                score_aggs.append(PositionScoreAggr(
+                    score,
+                    build_aggregator(aggregator_type),
+                ))
+                continue
+
+            assert isinstance(score, PositionScoreQuery)
             if score.position_aggregator is not None:
                 aggregator_type = score.position_aggregator
             else:
@@ -870,7 +892,7 @@ class PositionScore(GenomicScore):
 
     def fetch_scores_agg(  # pylint: disable=too-many-arguments,too-many-locals
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: list[PositionScoreQuery] | None = None,
+            scores: list[str] | list[PositionScoreQuery] | None = None,
     ) -> list[Aggregator]:
         """Fetch score values in a region and aggregates them.
 
