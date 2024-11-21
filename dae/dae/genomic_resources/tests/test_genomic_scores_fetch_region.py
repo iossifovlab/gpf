@@ -6,7 +6,6 @@ import pytest
 
 from dae.genomic_resources.genomic_scores import (
     AlleleScore,
-    NPScore,
     PositionScore,
     ScoreValue,
     build_score_from_resource,
@@ -138,12 +137,12 @@ def test_position_score_get_region_scores(
 
 
 @pytest.fixture(scope="module")
-def np_score(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
+def np_score(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
     root_path = tmp_path_factory.mktemp("np_score")
     setup_directories(
         root_path, {
         "genomic_resource.yaml": """
-            type: np_score
+            type: allele_score
             table:
                 filename: data.txt.gz
                 format: tabix
@@ -200,7 +199,7 @@ def np_score(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
     assert "s1" in score.score_definitions
     assert "s2" in score.score_definitions
 
-    return cast(NPScore, score)
+    return cast(AlleleScore, score)
 
 
 @pytest.mark.parametrize("begin,end,scores,expected", [
@@ -247,7 +246,7 @@ def np_score(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
     ]),
 ])
 def test_np_score_fetch_regions(
-    np_score: NPScore,
+    np_score: AlleleScore,
     begin: int | None,
     end: int | None,
     scores: list[str] | None,
@@ -266,7 +265,7 @@ def test_np_score_fetch_regions(
     ("chr3", 10, 20),
 ])
 def test_np_score_fetch_regions_consistency_failed(
-    np_score: NPScore,
+    np_score: AlleleScore,
     chrom: str,
     begin: int | None,
     end: int | None,
@@ -276,7 +275,7 @@ def test_np_score_fetch_regions_consistency_failed(
 
 
 @pytest.fixture(scope="module")
-def np_score2(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
+def np_score2(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
     root_path = tmp_path_factory.mktemp("np_score")
     setup_directories(
         root_path, {
@@ -338,7 +337,7 @@ def np_score2(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
     assert "s1" in score.score_definitions
     assert "s2" in score.score_definitions
 
-    return cast(NPScore, score)
+    return cast(AlleleScore, score)
 
 
 @pytest.mark.parametrize("begin,end,scores,expected", [
@@ -395,7 +394,7 @@ def np_score2(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
     ]),
 ])
 def test_np_score2_fetch_regions(
-    np_score2: NPScore,
+    np_score2: AlleleScore,
     begin: int | None,
     end: int | None,
     scores: list[str] | None,
@@ -416,6 +415,7 @@ def allele_score(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
         root_path, {
         "genomic_resource.yaml": """
             type: allele_score
+            allow_multiple_values: false
             table:
                 filename: data.txt.gz
                 format: tabix
