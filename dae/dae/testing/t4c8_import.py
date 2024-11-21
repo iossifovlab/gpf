@@ -10,36 +10,32 @@ from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.gpf_instance import GPFInstance
 from dae.testing import setup_gene_models, setup_genome, setup_gpf_instance
 
-
-def t4c8_genome(root_path: pathlib.Path) -> ReferenceGenome:
-    return setup_genome(
-        root_path / "t4c8_genome" / "chrAll.fa",
-        """
-           >chr1
-           TTGTGTGAAGATGGAGGTAGGCCAGTTTCCCGGAGAGGTGAACAGACATTC"""
-        #  0         1    1         2          3        4    5
-        #  1     6   1    6         6          7        6    1
-        #        ====|M1|E2---------|F3|P4|G5|E6--------|T7|F8
-        """CATACAACCATGGTGAAATAGTCCTTCCTGTTACACAAG"""
-        #  |H9|T0|T1|M2|V3|K|S =============
-        #  5                   7       8   8     9
-        #  2                   2       0   4     0
-        #
-        """NNNNNNNNAT"""
-        #  9        1
-        #  1        0
-        #           0
-        """AAGGATGGGGCTTCAGTCATCAGCGTGATGACCCTAGGATCTCACCTTTTTCCCATT"""
-        #  ============|S<|D |D |A |H |H<|G<|-----------|K |K |G |N<
-        #  1        1  1 1            1  1 1            1        1 1
-        #  0        1  1 1            2  3 3            4        5 5
-        #  1        0  3 5            8 01 3            6        5 7
-        """GGGGTCTGCCATCTTGGGAAAGAACTCCTGTTGGCCTACCTGTGCCTCAAANN""",
-        #  |P |D<|A<|M<|==============------------=========
-        #  1 1  1  1  11             1            1       2    2
-        #  5 6  6  6  67             8            9       0    1
-        #  8 0  3  6  90             3            6       4    0
-    )
+GENOME_CONTENT = (
+    ">chr1\n"
+    """TTGTGTGAAGATGGAGGTAGGCCAGTTTCCCGGAGAGGTGAACAGACATTC"""
+    #  0         1    1         2          3        4    5
+    #  1     6   1    6         6          7        6    1
+    #        ====|M1|E2---------|F3|P4|G5|E6--------|T7|F8
+    """CATACAACCATGGTGAAATAGTCCTTCCTGTTACACAAG"""
+    #  |H9|T0|T1|M2|V3|K|S =============
+    #  5                   7       8   8     9
+    #  2                   2       0   4     0
+    #
+    """NNNNNNNNAT"""
+    #  9        1
+    #  1        0
+    #           0
+    """AAGGATGGGGCTTCAGTCATCAGCGTGATGACCCTAGGATCTCACCTTTTTCCCATT"""
+    #  ============|S<|D |D |A |H |H<|G<|-----------|K |K |G |N<
+    #  1        1  1 1            1  1 1            1        1 1
+    #  0        1  1 1            2  3 3            4        5 5
+    #  1        0  3 5            8 01 3            6        5 7
+    """GGGGTCTGCCATCTTGGGAAAGAACTCCTGTTGGCCTACCTGTGCCTCAAANN"""
+    #  |P |D<|A<|M<|==============------------=========
+    #  1 1  1  1  11             1            1       2    2
+    #  5 6  6  6  67             8            9       0    1
+    #  8 0  3  6  90             3            6       4    0
+)
 
 
 # This content follows the 'refflat' gene model format
@@ -50,6 +46,10 @@ GMM_CONTENT = """
 t4        tx1  chr1  +      5       84    10       71     3         5,25,45     16,37,84
 c8        tx1  chr1  -      100     204   112      169    3         100,145,195 133,183,204
 """  # noqa
+
+
+def t4c8_genome(root_path: pathlib.Path) -> ReferenceGenome:
+    return setup_genome(root_path / "t4c8_genome" / "chrAll.fa", GENOME_CONTENT)
 
 
 def t4c8_genes(root_path: pathlib.Path) -> GeneModels:
