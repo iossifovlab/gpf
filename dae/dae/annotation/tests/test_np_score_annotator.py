@@ -83,7 +83,7 @@ def test_np_score_annotator(
             - source: test_raw
               name: test
               position_aggregator: {pos_aggregator}
-              nucleotide_aggregator: {nuc_aggregator}
+              allele_aggregator: {nuc_aggregator}
         """)
 
     pipeline = load_pipeline_from_yaml(pipeline_config, repo)
@@ -177,11 +177,11 @@ def test_np_score2_annotator(
             - source: s1
               name: s1
               position_aggregator: {pos_aggregator}
-              nucleotide_aggregator: {nuc_aggregator}
+              allele_aggregator: {nuc_aggregator}
             - source: s2
               name: s2
               position_aggregator: {pos_aggregator}
-              nucleotide_aggregator: {nuc_aggregator}
+              allele_aggregator: {nuc_aggregator}
         """)
 
     pipeline = load_pipeline_from_yaml(pipeline_config, np_score2_repo)

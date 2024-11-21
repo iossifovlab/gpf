@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from dae.genomic_resources import GenomicResource
-from dae.genomic_resources.genomic_scores import NPScore, NPScoreQuery
+from dae.genomic_resources.genomic_scores import AlleleScore, AlleleScoreQuery
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.testing import build_inmemory_test_resource
 from dae.testing import convert_to_tab_separated
@@ -33,7 +33,7 @@ def test_the_simplest_np_score() -> None:
         """,
     })
     assert res.get_type() == "np_score"
-    score = NPScore(res)
+    score = AlleleScore(res)
     score.open()
 
     assert score.get_all_scores() == ["cadd_raw"]
@@ -62,7 +62,7 @@ def test_np_score_aggregation() -> None:
                 - id: cadd_test
                   type: int
                   position_aggregator: max
-                  nucleotide_aggregator: mean
+                  allele_aggregator: mean
                   na_values: "-1"
                   desc: ""
                   name: s2
@@ -79,7 +79,7 @@ def test_np_score_aggregation() -> None:
     })
 
     assert res.get_type() == "np_score"
-    score = NPScore(res)
+    score = AlleleScore(res)
     score.open()
 
     assert score.table.chrom_key == 0  # "chrom"
@@ -87,19 +87,19 @@ def test_np_score_aggregation() -> None:
     assert score.table.pos_end_key == 1  # "pos_end"
 
     assert score.fetch_scores_agg(
-        "1", 1, 18, [NPScoreQuery("cadd_raw")]) == [0.045]
+        "1", 1, 18, [AlleleScoreQuery("cadd_raw")]) == [0.045]
 
     assert score.fetch_scores_agg(
-        "1", 1, 18, [NPScoreQuery("cadd_raw", "max")]) == [0.05]
+        "1", 1, 18, [AlleleScoreQuery("cadd_raw", "max")]) == [0.05]
 
     assert score.fetch_scores_agg(
-        "1", 1, 18, [NPScoreQuery("cadd_test")]) == [3.0]
+        "1", 1, 18, [AlleleScoreQuery("cadd_test")]) == [3.0]
 
     assert score.fetch_scores_agg(
-        "1", 1, 18, [NPScoreQuery("cadd_test", "min")]) == [1.5]
+        "1", 1, 18, [AlleleScoreQuery("cadd_test", "min")]) == [1.5]
 
     assert score.fetch_scores_agg(
-        "1", 1, 18, [NPScoreQuery("cadd_test", "min", "min")]) == [0]
+        "1", 1, 18, [AlleleScoreQuery("cadd_test", "min", "min")]) == [0]
 
 
 def test_np_score_fetch_region() -> None:
@@ -121,7 +121,7 @@ def test_np_score_fetch_region() -> None:
                 - id: cadd_test
                   type: int
                   position_aggregator: max
-                  nucleotide_aggregator: mean
+                  allele_aggregator: mean
                   na_values: "-1"
                   desc: ""
                   name: s2
@@ -140,7 +140,7 @@ def test_np_score_fetch_region() -> None:
             2      16         C          T            0.04  3
         """),
     })
-    score = NPScore(res).open()
+    score = AlleleScore(res).open()
 
     # The in-mem table will sort the records. In this example it will sort
     # the alternatives column (previous columns are the same). That is why

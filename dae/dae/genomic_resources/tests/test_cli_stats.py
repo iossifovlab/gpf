@@ -296,10 +296,11 @@ def test_stats_np_score(tmp_path: pathlib.Path) -> None:
     setup_directories(tmp_path, {
         "one": {
             GR_CONF_FILE_NAME: """
-                type: np_score
+                type: allele_score
                 table:
                     filename: data.txt.gz
                     format: tabix
+                allow_multiple_values: false
                 scores:
                     - id: cadd_raw
                       type: float
@@ -315,7 +316,7 @@ def test_stats_np_score(tmp_path: pathlib.Path) -> None:
                     - id: cadd_test
                       type: int
                       position_aggregator: max
-                      nucleotide_aggregator: mean
+                      allele_aggregator: mean
                       na_values: "-1"
                       desc: ""
                       name: s2
