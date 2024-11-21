@@ -50,14 +50,17 @@ class EffectAnnotatorAdapter(AnnotatorBase):
         assert isinstance(gene_models, GeneModels)
 
         genome_resource_id = info.parameters.get("genome") or \
-            gene_models.reference_genome_id
+            gene_models.reference_genome_id or \
+            (pipeline.preamble.input_reference_genome
+             if pipeline.preamble is not None else None)
         if genome_resource_id is None:
             genome = get_genomic_context().get_reference_genome()
             if genome is None:
                 raise ValueError(f"The {info} has no reference genome"
                                   " specified and no genome was found"
-                                  " in the gene models' configuration"
-                                  " or the context.")
+                                  " in the gene models' configuration,"
+                                  " the context or the annotation config's"
+                                  " preamble.")
         else:
             genome = build_reference_genome_from_resource_id(
                 genome_resource_id, pipeline.repository)

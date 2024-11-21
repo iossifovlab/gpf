@@ -19,6 +19,9 @@ def grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     setup_genome(tmp_path / "t4c8_genome" / "chrAll.fa", GENOME_CONTENT)
     setup_genome(tmp_path / "t4c8_genome_implicit_A" / "chrAll.fa",
                  GENOME_CONTENT)
+    setup_genome(tmp_path / "t4c8_genome_implicit_B" / "chrAll.fa",
+                 GENOME_CONTENT)
+
     setup_gene_models(
         tmp_path / "t4c8_genes" / "genes.txt",
         GMM_CONTENT,
@@ -30,6 +33,11 @@ def grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
               labels:
                 reference_genome: t4c8_genome_implicit_A
         """))
+
+    setup_gene_models(
+        tmp_path / "t4c8_genes_ALT" / "genes.txt",
+        GMM_CONTENT, fileformat="refflat")
+
     return build_filesystem_test_repository(tmp_path)
 
 
@@ -72,6 +80,29 @@ def test_effect_annotator_implicit_genome_from_gene_models(
     config = textwrap.dedent(f"""
         - effect_annotator:
             gene_models: {gene_models}
+        """)
+
+    annotation_pipeline = load_pipeline_from_yaml(config, grr)
+
+    with annotation_pipeline.open() as pipeline:
+        annotator = pipeline.annotators[0]
+        assert {res.get_id() for res in annotator.resources} == {
+            genome,
+            gene_models,
+        }
+
+
+def test_effect_annotator_implicit_genome_from_preamble(
+    grr: GenomicResourceRepo,
+) -> None:
+    genome = "t4c8_genome_implicit_B"
+    gene_models = "t4c8_genes_ALT"
+    config = textwrap.dedent(f"""
+        preamble:
+          input_reference_genome: {genome}
+        annotators:
+          - effect_annotator:
+              gene_models: {gene_models}
         """)
 
     annotation_pipeline = load_pipeline_from_yaml(config, grr)
