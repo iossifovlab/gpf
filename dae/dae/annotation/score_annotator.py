@@ -24,8 +24,6 @@ from dae.genomic_resources.genomic_scores import (
     AlleleScore,
     AlleleScoreQuery,
     GenomicScore,
-    NPScore,
-    NPScoreQuery,
     PositionScore,
     PositionScoreQuery,
     ScoreDef,
@@ -107,11 +105,6 @@ class GenomicScoreAnnotatorBase(Annotator):
                 "int": "mean",
                 "str": "concatenate",
             },
-            "nucleotide_aggregator": {
-                "float": "max",
-                "int": "max",
-                "str": "concatenate",
-            },
             "allele_aggregator": {
                 "float": "max",
                 "int": "max",
@@ -122,8 +115,6 @@ class GenomicScoreAnnotatorBase(Annotator):
             dict[str, Callable[[ScoreDef], str | None]] = {
                 "position_aggregator":
                 lambda sc: sc.pos_aggregator,
-                "nucleotide_aggregator":
-                lambda sc: sc.nuc_aggregator,
                 "allele_aggregator":
                 lambda sc: sc.allele_aggregator,
             }
@@ -281,7 +272,7 @@ class NPScoreAnnotator(PositionScoreAnnotatorBase):
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
         resource = get_genomic_resource(pipeline, info, "np_score")
-        self.np_score = NPScore(resource)
+        self.np_score = AlleleScore(resource)
         super().__init__(pipeline, info, self.np_score)
 
         self.np_score_queries = []
@@ -297,16 +288,23 @@ nucleotide change like CADD, MPC, etc.
         for att_info in info.attributes:
             pos_agg = att_info.parameters.get("position_aggregator")
             nuc_agg = att_info.parameters.get("nucleotide_aggregator")
+            allele_agg = att_info.parameters.get("allele_aggregator")
+            if nuc_agg is not None:
+                logger.warning(
+                    "attibute `nucleotide_aggregator` is deprecated, "
+                    "use `allele_aggregator` instead")
+                assert allele_agg is None
+                allele_agg = nuc_agg
 
             for agg in [pos_agg, nuc_agg]:
                 if agg:
                     validate_aggregator(agg)
             self.np_score_queries.append(
-                NPScoreQuery(att_info.source, pos_agg, nuc_agg))
+                AlleleScoreQuery(att_info.source, pos_agg, nuc_agg))
             self.add_score_aggregator_documentation(
                 att_info, "position_aggregator", pos_agg)
             self.add_score_aggregator_documentation(
-                att_info, "nucleotide_aggregator", nuc_agg)
+                att_info, "allele_aggregator", allele_agg)
 
     def build_score_aggregator_documentation(
         self, attr_info: AttributeInfo,
@@ -317,9 +315,9 @@ nucleotide change like CADD, MPC, etc.
         pos_doc = self._build_score_aggregator_documentation(
             attr_info, "position_aggregator", pos_aggregator)
 
-        nuc_aggregator = attr_info.parameters.get("nucleotide_aggregator")
+        nuc_aggregator = attr_info.parameters.get("allele_aggregator")
         nuc_doc = self._build_score_aggregator_documentation(
-            attr_info, "nucleotide_aggregator", nuc_aggregator,
+            attr_info, "allele_aggregator", nuc_aggregator,
         )
         return [pos_doc, nuc_doc]
 
@@ -360,17 +358,24 @@ variant frequencies, etc.
 
         for att_info in info.attributes:
             pos_agg = att_info.parameters.get("position_aggregator")
-            all_agg = att_info.parameters.get("allele_aggregator")
+            nuc_agg = att_info.parameters.get("nucleotide_aggregator")
+            allele_agg = att_info.parameters.get("allele_aggregator")
+            if nuc_agg is not None:
+                logger.warning(
+                    "attibute `nucleotide_aggregator` is deprecated, "
+                    "use `allele_aggregator` instead")
+                assert allele_agg is None
+                allele_agg = nuc_agg
 
-            for agg in [pos_agg, all_agg]:
+            for agg in [pos_agg, allele_agg]:
                 if agg:
                     validate_aggregator(agg)
             self.allele_score_queries.append(
-                AlleleScoreQuery(att_info.source, pos_agg, all_agg))
+                AlleleScoreQuery(att_info.source, pos_agg, allele_agg))
             self.add_score_aggregator_documentation(
                 att_info, "position_aggregator", pos_agg)
             self.add_score_aggregator_documentation(
-                att_info, "allele_aggregator", all_agg)
+                att_info, "allele_aggregator", allele_agg)
 
     def build_score_aggregator_documentation(
         self, attr_info: AttributeInfo,
