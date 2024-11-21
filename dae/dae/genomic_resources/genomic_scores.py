@@ -404,18 +404,6 @@ class GenomicScore(ResourceConfigValidationMixin):
             }},
             "allow_multiple_values": {"type": "boolean", "default": False},
             "scores": scores_schema,
-            "histograms": {"type": "list", "schema": {
-                "type": "dict",
-                "schema": {
-                    "score": {"type": "string"},
-                    "bins": {"type": "integer"},
-                    "min": {"type": "number"},
-                    "max": {"type": "number"},
-                    "x_min_log": {"type": "number"},
-                    "x_scale": {"type": "string"},
-                    "y_scale": {"type": "string"},
-                },
-            }},
             "default_annotation": {
                 "type": ["dict", "list"], "allow_unknown": True,
             },
