@@ -3,7 +3,8 @@ from __future__ import annotations
 import abc
 import math
 import re
-from typing import Any, Callable, Type, cast
+from collections.abc import Callable
+from typing import Any, cast
 
 
 class Aggregator(abc.ABC):
@@ -16,8 +17,8 @@ class Aggregator(abc.ABC):
     def __call__(self) -> Any:
         return self.get_final()
 
-    def add(self, value: Any, **kwargs: Any) -> None:
-        self.total_count += 1
+    def add(self, value: Any, count: int = 1, **kwargs: Any) -> None:
+        self.total_count += count
         self._add_internal(value, **kwargs)
 
     @abc.abstractmethod
@@ -53,7 +54,10 @@ class MaxAggregator(Aggregator):
         super().__init__()
         self.current_max = None
 
-    def _add_internal(self, value: Any, **kwargs: Any) -> None:
+    def _add_internal(
+        self, value: Any,
+        **kwargs: Any,  # noqa: ARG002
+    ) -> None:
         if value is None:
             return
         if self.current_max is not None:
@@ -77,7 +81,10 @@ class MinAggregator(Aggregator):
         super().__init__()
         self.current_min = None
 
-    def _add_internal(self, value: Any, **kwargs: Any) -> None:
+    def _add_internal(
+        self, value: Any,
+        **kwargs: Any,  # noqa: ARG002
+    ) -> None:
         if value is None:
             return
         if self.current_min is not None:
@@ -101,7 +108,10 @@ class MeanAggregator(Aggregator):
         super().__init__()
         self.sum = 0
 
-    def _add_internal(self, value: Any, **kwargs: Any) -> None:
+    def _add_internal(
+        self, value: Any,
+        **kwargs: Any,  # noqa: ARG002
+    ) -> None:
         if value is None:
             return
 
@@ -124,7 +134,10 @@ class ConcatAggregator(Aggregator):
         super().__init__()
         self.out = ""
 
-    def _add_internal(self, value: Any, **kwargs: Any) -> None:
+    def _add_internal(
+        self, value: Any,
+        **kwargs: Any,  # noqa: ARG002
+    ) -> None:
         if value is not None:
             self.out += str(value)
             self.used_count += 1
@@ -146,7 +159,10 @@ class MedianAggregator(Aggregator):
         super().__init__()
         self.values: list[Any] = []
 
-    def _add_internal(self, value: Any, **kwargs: Any) -> None:
+    def _add_internal(
+        self, value: Any,
+        **kwargs: Any,  # noqa: ARG002
+    ) -> None:
         if value is not None:
             self.values.append(value)
             self.used_count += 1
@@ -176,7 +192,10 @@ class ModeAggregator(Aggregator):
         super().__init__()
         self.value_counts: dict[Any, int] = {}
 
-    def _add_internal(self, value: Any, **kwargs: Any) -> None:
+    def _add_internal(
+        self, value: Any,
+        **kwargs: Any,  # noqa: ARG002
+    ) -> None:
         if value is not None:
             if value not in self.value_counts:
                 self.value_counts[value] = 0
@@ -210,7 +229,10 @@ class JoinAggregator(Aggregator):
         self.values: list[Any] = []
         self.separator = separator
 
-    def _add_internal(self, value: Any, **kwargs: Any) -> None:
+    def _add_internal(
+        self, value: Any,
+        **kwargs: Any,  # noqa: ARG002
+    ) -> None:
         if value is not None:
             self.values.append(str(value))
             self.used_count += 1
@@ -231,7 +253,10 @@ class ListAggregator(Aggregator):
         super().__init__()
         self.values: list[Any] = []
 
-    def _add_internal(self, value: Any, **kwargs: Any) -> None:
+    def _add_internal(
+        self, value: Any,
+        **kwargs: Any,  # noqa: ARG002
+    ) -> None:
         if value is not None:
             self.values.append(value)
             self.used_count += 1
@@ -262,7 +287,7 @@ class DictAggregator(Aggregator):
         return self.values
 
 
-AGGREGATOR_CLASS_DICT: dict[str, Type[Aggregator]] = {
+AGGREGATOR_CLASS_DICT: dict[str, type[Aggregator]] = {
     "max": MaxAggregator,
     "min": MinAggregator,
     "mean": MeanAggregator,
