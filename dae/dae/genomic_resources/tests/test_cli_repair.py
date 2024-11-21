@@ -35,9 +35,9 @@ def proto_fixture(
                     - id: phastCons100way
                       type: float
                       name: s1
-                histograms:
-                    - score: phastCons100way
-                      bins: 100
+                      histogram:
+                        type: number
+                        number_of_bins: 100
                 """),
         },
         "two": {
@@ -51,9 +51,9 @@ def proto_fixture(
                     - id: phastCons100way
                       type: float
                       name: s1
-                histograms:
-                    - score: phastCons100way
-                      bins: 100
+                      histogram:
+                        type: number
+                        number_of_bins: 100
                 """),
         },
     })

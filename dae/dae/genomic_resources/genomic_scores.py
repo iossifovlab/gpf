@@ -402,19 +402,8 @@ class GenomicScore(ResourceConfigValidationMixin):
                     "del_prefix": {"type": "string", "excludes": "add_prefix"},
                 }},
             }},
+            "allow_multiple_values": {"type": "boolean", "default": False},
             "scores": scores_schema,
-            "histograms": {"type": "list", "schema": {
-                "type": "dict",
-                "schema": {
-                    "score": {"type": "string"},
-                    "bins": {"type": "integer"},
-                    "min": {"type": "number"},
-                    "max": {"type": "number"},
-                    "x_min_log": {"type": "number"},
-                    "x_scale": {"type": "string"},
-                    "y_scale": {"type": "string"},
-                },
-            }},
             "default_annotation": {
                 "type": ["dict", "list"], "allow_unknown": True,
             },
@@ -563,6 +552,9 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     def get_config(self) -> dict[str, Any]:
         return self.config
+
+    def allow_multiple_values(self) -> bool:
+        return bool(self.config.get("allow_multiple_values", False))
 
     def get_default_annotation_attributes(self) -> list[Any]:
         """Collect default annotation attributes."""
@@ -793,8 +785,13 @@ class PositionScore(GenomicScore):
         ):
             prev_end = returned_region[1]
             if prev_end and left <= prev_end:
-                raise ValueError(
-                    f"multiple values for positions [{left}, {prev_end}]")
+                logger.warning(
+                    "multiple values for positions %s:%s-%s",
+                    chrom, left, right)
+                if not self.allow_multiple_values():
+                    raise ValueError(
+                        f"multiple values for positions "
+                        f"{chrom}:{left}-{right}")
             returned_region = (left, right, val)
             yield (left, right, val)
 
@@ -811,11 +808,15 @@ class PositionScore(GenomicScore):
         if not lines:
             return None
 
-        if len(lines) != 1:
-            raise ValueError(
-                f"The resource {self.resource_id} has "
-                f"more than one ({len(lines)}) lines for position "
-                f"{chrom}:{position}")
+        if len(lines) > 1 and not self.allow_multiple_values():
+            logger.warning(
+                "multiple values for positions %s:%s",
+                chrom, position)
+            if not self.allow_multiple_values():
+                raise ValueError(
+                    f"multiple values ({len(lines)}) for positions "
+                    f"{chrom}:{position}")
+
         line = lines[0]
 
         requested_scores = scores or self.get_all_scores()
@@ -914,9 +915,15 @@ class NPScoreBase(GenomicScore):
             returned_nucleotides = (line.ref, line.alt)
             if (left, right) == (returned_region[0], returned_region[1]):
                 if returned_nucleotides in returned_region[3]:
-                    raise ValueError(
-                        f"multiple values for positions [{left}, {right}] "
-                        f"and nucleotides {returned_nucleotides}")
+                    logger.warning(
+                        "multiple values for positions %s:%s-%s "
+                        "and nucleotides %s",
+                        chrom, left, right, returned_nucleotides)
+                    if not self.allow_multiple_values():
+                        raise ValueError(
+                            f"multiple values for positions "
+                            f"{chrom}:{left}-{right} "
+                            f"and nucleotides {returned_nucleotides}")
 
                 returned_region[3].add((line.ref, line.alt))
                 yield (left, right, val)
@@ -967,6 +974,7 @@ class NPScore(NPScoreBase):
     @staticmethod
     def get_schema() -> dict[str, Any]:
         schema = copy.deepcopy(GenomicScore.get_schema())
+        schema["allow_multiple_values"] = {"type": "boolean", "default": True}
         schema["table"]["schema"]["reference"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
