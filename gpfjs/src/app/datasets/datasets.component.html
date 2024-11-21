@@ -1,8 +1,9 @@
 <div *ngIf="selectedDataset" class="content">
-  <div
-    *ngIf="registerAlertVisible"
-    id="register-alert">
-    <span>To gain full access of the data and tools in GPF please consider registering. Visit the <a routerLink="/about">About</a> page for more information.</span>
+  <div *ngIf="registerAlertVisible" id="register-alert">
+    <span
+      >To gain full access of the data and tools in GPF please consider registering. Visit the
+      <a routerLink="/about">About</a> page for more information.</span
+    >
   </div>
 
   <nav class="navbar navbar-custom navbar-toggleable-md navbar-expand-lg navbar-light bg-light">
@@ -32,9 +33,7 @@
           </div>
         </div>
       </li>
-      <li
-        [class.disabled-tool]="!selectedDataset.geneBrowser.enabled"
-        class="nav-item">
+      <li [class.disabled-tool]="!selectedDataset.geneBrowser.enabled" class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.geneBrowser }}" routerLinkActive="active">Gene Browser</a>
       </li>
       <li [class.disabled-tool]="!(selectedDataset.genotypeBrowser && selectedDataset.accessRights)" class="nav-item">
@@ -42,12 +41,12 @@
           >Genotype Browser</a
         >
       </li>
-      <li [class.disabled-tool]="!(selectedDataset.phenotypeBrowser)" class="nav-item">
+      <li [class.disabled-tool]="!selectedDataset.phenotypeBrowser" class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.phenotypeBrowser }}" routerLinkActive="active"
           >Phenotype Browser</a
         >
       </li>
-      <li [class.disabled-tool]="!(selectedDataset.enrichmentTool)" class="nav-item">
+      <li [class.disabled-tool]="!selectedDataset.enrichmentTool" class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.enrichmentTool }}" routerLinkActive="active"
           >Enrichment Tool</a
         >
@@ -60,9 +59,7 @@
           >Dataset Description</a
         >
       </li>
-      <li
-        [class.disabled-tool]="!(selectedDataset.commonReport.enabled)"
-        class="nav-item">
+      <li [class.disabled-tool]="!selectedDataset.commonReport.enabled" class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.datasetStatistics }}" routerLinkActive="active"
           >Dataset Statistics</a
         >
@@ -71,12 +68,14 @@
   </nav>
 
   <router-outlet
-    *ngIf="selectedDataset.accessRights
-      || selectedTool === toolPageLinks.datasetDescription
-      || selectedTool === toolPageLinks.phenotypeBrowser
-      || selectedTool === toolPageLinks.datasetStatistics
-      || selectedTool === toolPageLinks.geneBrowser
-      || selectedTool === toolPageLinks.enrichmentTool"
+    *ngIf="
+      selectedDataset.accessRights ||
+      selectedTool === toolPageLinks.datasetDescription ||
+      selectedTool === toolPageLinks.phenotypeBrowser ||
+      selectedTool === toolPageLinks.datasetStatistics ||
+      selectedTool === toolPageLinks.geneBrowser ||
+      selectedTool === toolPageLinks.enrichmentTool
+    "
     (activate)="routeChange()"
     class="content"></router-outlet>
 </div>

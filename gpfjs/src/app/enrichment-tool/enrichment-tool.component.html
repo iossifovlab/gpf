@@ -11,12 +11,10 @@
       value="Enrichment Test"
       (click)="submitQuery()" />
     <gpf-save-query
-      [disabled]="disableQueryButtons || !(selectedDataset?.accessRights)"
-      queryType="enrichment"
-    ></gpf-save-query>
+      [disabled]="disableQueryButtons || !selectedDataset?.accessRights"
+      queryType="enrichment"></gpf-save-query>
   </div>
   <gpf-enrichment-table
-    [class.disabled-table-links]="!(selectedDataset?.accessRights)"
-    [enrichmentResults]="enrichmentResults"
-  ></gpf-enrichment-table>
+    [class.disabled-table-links]="!selectedDataset?.accessRights"
+    [enrichmentResults]="enrichmentResults"></gpf-enrichment-table>
 </div>

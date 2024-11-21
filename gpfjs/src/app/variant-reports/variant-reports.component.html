@@ -33,7 +33,7 @@
   <ng-template #familiesByNumber>
     <div id="download-total-families">
       <a
-        [class.disabled-download]="!(selectedDataset?.accessRights)"
+        [class.disabled-download]="!selectedDataset?.accessRights"
         class="download-link"
         [href]="getDownloadLink()"
         download
@@ -104,10 +104,11 @@
           action="{{ config.baseUrl }}common_reports/families_data/{{ selectedDataset.id }}"
           method="post"
           style="display: flex; align-items: center">
-          <span>Selected families: </span><span id="families-sum">{{ filteredFamiliesCount + ' / ' + totalFamiliesCount }}</span>
+          <span>Selected families: </span>
+          <span id="families-sum">{{ filteredFamiliesCount + ' / ' + totalFamiliesCount }}</span>
           <input name="queryData" type="hidden" />
           <button
-            [class.disabled-download]="!(selectedDataset?.accessRights)"
+            [class.disabled-download]="!selectedDataset?.accessRights"
             class="btn btn-md btn-primary btn-right"
             id="download-button"
             [disabled]="currentPedigreeTable.pedigrees.length === 0"
