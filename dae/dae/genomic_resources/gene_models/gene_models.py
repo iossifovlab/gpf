@@ -432,6 +432,12 @@ class GeneModels(
             resource.get_config(), resource,
         )
 
+        self.reference_genome_id: str | None = \
+            self.config["meta"]["labels"].get("reference_genome") \
+            if (self.config.get("meta") is not None
+                and self.config["meta"].get("labels") is not None) \
+            else None
+
         self.gene_models: dict[str, list[TranscriptModel]] = defaultdict(list)
         self.utr_models: dict[
                 str, dict[tuple[int, int], list[TranscriptModel]]] = \

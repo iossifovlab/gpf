@@ -21,7 +21,7 @@ from dae.genomic_resources.gene_models import (
 from dae.genomic_resources.genomic_context import get_genomic_context
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
-    build_reference_genome_from_resource,
+    build_reference_genome_from_resource_id,
 )
 
 logger = logging.getLogger(__name__)
@@ -36,19 +36,6 @@ class EffectAnnotatorAdapter(AnnotatorBase):
     """Adapts effect annotator to be used in annotation infrastructure."""
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
-
-        genome_resource_id = info.parameters.get("genome")
-        if genome_resource_id is None:
-            genome = get_genomic_context().get_reference_genome()
-            if genome is None:
-                raise ValueError(f"The {info} has no reference genome "
-                                 "specified and a genome is missing in "
-                                 "the context.")
-        else:
-            resource = pipeline.repository.get_resource(genome_resource_id)
-            genome = build_reference_genome_from_resource(resource)
-        assert isinstance(genome, ReferenceGenome)
-
         gene_models_resource_id = info.parameters.get("gene_models")
         if gene_models_resource_id is None:
             gene_models = get_genomic_context().get_gene_models()
@@ -61,6 +48,20 @@ class EffectAnnotatorAdapter(AnnotatorBase):
                 gene_models_resource_id)
             gene_models = build_gene_models_from_resource(resource)
         assert isinstance(gene_models, GeneModels)
+
+        genome_resource_id = info.parameters.get("genome") or \
+            gene_models.reference_genome_id
+        if genome_resource_id is None:
+            genome = get_genomic_context().get_reference_genome()
+            if genome is None:
+                raise ValueError(f"The {info} has no reference genome"
+                                  " specified and no genome was found"
+                                  " in the gene models' configuration"
+                                  " or the context.")
+        else:
+            genome = build_reference_genome_from_resource_id(
+                genome_resource_id, pipeline.repository)
+        assert isinstance(genome, ReferenceGenome)
 
 
         info.documentation += textwrap.dedent("""
