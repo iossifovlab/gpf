@@ -402,6 +402,7 @@ class GenomicScore(ResourceConfigValidationMixin):
                     "del_prefix": {"type": "string", "excludes": "add_prefix"},
                 }},
             }},
+            "allow_multiple_values": {"type": "boolean", "default": False},
             "scores": scores_schema,
             "histograms": {"type": "list", "schema": {
                 "type": "dict",
@@ -563,6 +564,9 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     def get_config(self) -> dict[str, Any]:
         return self.config
+
+    def allow_multiple_values(self) -> bool:
+        return bool(self.config.get("allow_multiple_values", False))
 
     def get_default_annotation_attributes(self) -> list[Any]:
         """Collect default annotation attributes."""
@@ -793,9 +797,13 @@ class PositionScore(GenomicScore):
         ):
             prev_end = returned_region[1]
             if prev_end and left <= prev_end:
-                raise ValueError(
-                    f"multiple values for positions {chrom}: "
-                    f"[{left}, {prev_end}]")
+                logger.warning(
+                    "multiple values for positions %s:%s-%s",
+                    chrom, left, right)
+                if not self.allow_multiple_values():
+                    raise ValueError(
+                        f"multiple values for positions "
+                        f"{chrom}:{left}-{right}")
             returned_region = (left, right, val)
             yield (left, right, val)
 
@@ -812,11 +820,15 @@ class PositionScore(GenomicScore):
         if not lines:
             return None
 
-        if len(lines) != 1:
-            raise ValueError(
-                f"The resource {self.resource_id} has "
-                f"more than one ({len(lines)}) lines for position "
-                f"{chrom}:{position}")
+        if len(lines) > 1 and not self.allow_multiple_values():
+            logger.warning(
+                "multiple values for positions %s:%s",
+                chrom, position)
+            if not self.allow_multiple_values():
+                raise ValueError(
+                    f"multiple values ({len(lines)}) for positions "
+                    f"{chrom}:{position}")
+
         line = lines[0]
 
         requested_scores = scores or self.get_all_scores()
@@ -915,8 +927,15 @@ class NPScoreBase(GenomicScore):
             returned_nucleotides = (line.ref, line.alt)
             if (left, right) == (returned_region[0], returned_region[1]):
                 if returned_nucleotides in returned_region[3]:
-                    self._handle_multiple_values(
-                        left, right, returned_nucleotides)
+                    logger.warning(
+                        "multiple values for positions %s:%s-%s "
+                        "and nucleotides %s",
+                        chrom, left, right, returned_nucleotides)
+                    if not self.allow_multiple_values():
+                        raise ValueError(
+                            f"multiple values for positions "
+                            f"{chrom}:{left}-{right} "
+                            f"and nucleotides {returned_nucleotides}")
 
                 returned_region[3].add((line.ref, line.alt))
                 yield (left, right, val)
@@ -927,13 +946,6 @@ class NPScoreBase(GenomicScore):
                     f"multiple values for positions [{left}, {prev_right}]")
             returned_region = (left, right, val, {(line.ref, line.alt)})
             yield (left, right, val)
-
-    @abc.abstractmethod
-    def _handle_multiple_values(
-        self, left: int, right: int,
-        returned_nucleotides: tuple[str | None, str | None],
-    ) -> None:
-        """Handle multiple values for a region."""
 
     def fetch_scores(
         self, chrom: str, position: int,
@@ -974,6 +986,7 @@ class NPScore(NPScoreBase):
     @staticmethod
     def get_schema() -> dict[str, Any]:
         schema = copy.deepcopy(GenomicScore.get_schema())
+        schema["allow_multiple_values"] = {"type": "boolean", "default": True}
         schema["table"]["schema"]["reference"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
@@ -1017,15 +1030,6 @@ class NPScore(NPScoreBase):
                 NPScoreAggr(
                     squery.score, position_aggregator, nucleotide_aggregator))
         return score_aggs
-
-    def _handle_multiple_values(
-        self, left: int, right: int,
-        returned_nucleotides: tuple[str | None, str | None],
-    ) -> None:
-        logger.warning(
-            "multiple values for positions [%s, %s] "
-            "and nucleotides %s",
-            left, right, returned_nucleotides)
 
     def fetch_scores_agg(
             self, chrom: str, pos_begin: int, pos_end: int,
@@ -1111,14 +1115,6 @@ class AlleleScore(NPScoreBase):
 
     def open(self) -> AlleleScore:
         return cast(AlleleScore, super().open())
-
-    def _handle_multiple_values(
-        self, left: int, right: int,
-        returned_nucleotides: tuple[str | None, str | None],
-    ) -> None:
-        raise ValueError(
-            f"multiple values for positions [{left}, {right}] "
-            f"and nucleotides {returned_nucleotides}")
 
     def _build_scores_agg(
         self, score_queries: list[AlleleScoreQuery],
