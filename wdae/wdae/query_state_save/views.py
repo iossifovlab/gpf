@@ -20,6 +20,7 @@ class QueryStateSaveView(views.APIView):
         query_state = QueryState.objects.create(
             data=json.dumps(serializer.data["data"]),
             page=serializer.data["page"],
+            origin=serializer.data["origin"],
         )
 
         return Response(

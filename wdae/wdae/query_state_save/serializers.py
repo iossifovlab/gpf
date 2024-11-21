@@ -9,4 +9,4 @@ class QueryStateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = QueryState
-        fields = ("data", "page")
+        fields = ("data", "page", "origin")
