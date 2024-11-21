@@ -116,7 +116,11 @@
 
     <div class="grid-cell figure-distribution-cell">
       <a [class.clickable]="!!measure.figureDistribution" (click)="openModal(measure.figureDistribution)">
-        <img *ngIf="measure.figureDistributionSmall" class="table-chart" [src]="measure.figureDistributionSmall" />
+        <img
+          *ngIf="measure.figureDistributionSmall"
+          class="table-chart"
+          [src]="measure.figureDistributionSmall"
+          loading="lazy" />
       </a>
     </div>
 
@@ -157,7 +161,8 @@
           <img
             *ngIf="measure.regressions.getReg(regressionId).figureRegressionSmall"
             class="table-chart"
-            [src]="measure.regressions.getReg(regressionId).figureRegressionSmall" />
+            [src]="measure.regressions.getReg(regressionId).figureRegressionSmall"
+            loading="lazy" />
         </a>
       </div>
 
