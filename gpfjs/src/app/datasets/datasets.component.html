@@ -51,7 +51,7 @@
           >Enrichment Tool</a
         >
       </li>
-      <li [class.disabled-tool]="!(selectedDataset.phenotypeTool && selectedDataset.accessRights)" class="nav-item">
+      <li [class.disabled-tool]="!selectedDataset.phenotypeTool" class="nav-item">
         <a class="nav-link" routerLink="{{ toolPageLinks.phenotypeTool }}" routerLinkActive="active">Phenotype Tool</a>
       </li>
       <li class="nav-item">
@@ -74,7 +74,8 @@
       selectedTool === toolPageLinks.phenotypeBrowser ||
       selectedTool === toolPageLinks.datasetStatistics ||
       selectedTool === toolPageLinks.geneBrowser ||
-      selectedTool === toolPageLinks.enrichmentTool
+      selectedTool === toolPageLinks.enrichmentTool ||
+      selectedTool === toolPageLinks.phenotypeTool
     "
     (activate)="routeChange()"
     class="content"></router-outlet>

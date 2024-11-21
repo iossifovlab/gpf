@@ -19,14 +19,16 @@
           [disabled]="disableQueryButtons">
           Report
         </button>
-        <gpf-save-query [disabled]="disableQueryButtons" queryType="phenotool"></gpf-save-query>
+        <gpf-save-query
+          [disabled]="disableQueryButtons || !selectedDataset?.accessRights"
+          queryType="phenotool"></gpf-save-query>
       </div>
       <div class="btn-group">
         <form (ngSubmit)="onDownload($event)" action="{{ configService.baseUrl }}pheno_tool/download" method="post">
           <input name="queryData" type="hidden" />
           <button
             class="btn btn-md btn-primary"
-            [disabled]="disableQueryButtons"
+            [disabled]="disableQueryButtons || !selectedDataset?.accessRights"
             type="submit"
             id="download-pheno-report-button"
             >Download</button
