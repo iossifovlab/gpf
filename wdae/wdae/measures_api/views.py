@@ -15,7 +15,7 @@ from dae.pheno.common import MeasureType
 logger = logging.getLogger(__name__)
 
 
-class PhenoMeasuresView(QueryBaseView, DatasetAccessRightsView):
+class PhenoMeasuresView(QueryBaseView):
     """View for phenotype measures."""
 
     @method_decorator(etag(get_instance_timestamp_etag))
@@ -56,7 +56,7 @@ class PhenoMeasuresView(QueryBaseView, DatasetAccessRightsView):
         return Response(res, status=status.HTTP_200_OK)
 
 
-class PhenoMeasureHistogramView(QueryBaseView, DatasetAccessRightsView):
+class PhenoMeasureHistogramView(QueryBaseView):
     """View for phenotype measure histograms."""
 
     def post(self, request: Request) -> Response:
@@ -148,7 +148,7 @@ class PhenoMeasurePartitionsView(QueryBaseView, DatasetAccessRightsView):
         return Response(res)
 
 
-class PhenoMeasureRegressionsView(QueryBaseView, DatasetAccessRightsView):
+class PhenoMeasureRegressionsView(QueryBaseView):
     """View for phenotype measure regressions."""
 
     @method_decorator(etag(get_instance_timestamp_etag))
