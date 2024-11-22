@@ -17,6 +17,7 @@ from dae.annotation.annotate_utils import (
     AnnotationTool,
     produce_partfile_paths,
     produce_regions,
+    stringify,
 )
 from dae.annotation.annotation_config import (
     RawAnnotatorsConfig,
@@ -319,8 +320,7 @@ class AnnotateColumnsTool(AnnotationTool):
         for record, annotation in zip(records, annotations, strict=True):
             for col in annotation_columns:
                 record[col] = annotation[col]
-            yield [str(val) if val is not None else ""
-                   for val in record.values()]
+            yield [stringify(val) for val in record.values()]
 
         if len(errors) > 0:
             logger.error("there were errors during the import")
@@ -359,8 +359,8 @@ class AnnotateColumnsTool(AnnotationTool):
 
                 for col in annotation_columns:
                     record[col] = annotation[col]
-                yield [str(val) if val is not None else ""
-                    for val in record.values()]
+
+                yield [stringify(val) for val in record.values()]
             except Exception as ex:  # pylint: disable=broad-except
                 logger.exception(
                     "unexpected input data format at line %s: %s",
