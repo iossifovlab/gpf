@@ -261,18 +261,22 @@ def setup_genome(out_path: pathlib.Path, content: str) -> ReferenceGenome:
 
 def setup_gene_models(
         out_path: pathlib.Path,
-        content: str, fileformat: str | None = None) -> GeneModels:
+        content: str,
+        fileformat: str | None = None,
+        config: str | None = None) -> GeneModels:
     """Set up gene models in refflat format using the passed content."""
     setup_directories(out_path, convert_to_tab_separated(content))
-    setup_directories(out_path.parent, {
-        "genomic_resource.yaml": textwrap.dedent(f"""
+
+    if config is None:
+        config = textwrap.dedent(f"""
             type: gene_models
 
             filename: { out_path.name }
 
             format: "{ fileformat }"
-        """),
-    })
+        """)
+    setup_directories(out_path.parent, {"genomic_resource.yaml": config})
+
     # pylint: disable=import-outside-toplevel
     from dae.genomic_resources.gene_models import build_gene_models_from_file
     gene_models = build_gene_models_from_file(

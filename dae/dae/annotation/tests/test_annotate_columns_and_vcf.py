@@ -544,6 +544,50 @@ def test_annotate_vcf_forbidden_symbol_replacement(
     assert result == ["a|b", "c|d", "e_f"]
 
 
+def test_annotate_columns_none_values(
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom  pos        ref        alt
+        chr1   23         C          T
+        chr1   24         C          A
+        chr1   24         C          G
+        chr1   24         C          T
+        chr1   25         C          T
+        chr1   26         C          G
+    """)
+    expected = (
+        "chrom\tpos\tref\talt\tscore\n"
+        "chr1\t23\tC\tT\t0.1\n"
+        "chr1\t24\tC\tA\t0.3\n"
+        "chr1\t24\tC\tG\t0.4\n"
+        "chr1\t24\tC\tT\t\n"
+        "chr1\t25\tC\tT\t\n"
+        "chr1\t26\tC\tG\t\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.tsv"
+    out_file = root_path / "out.tsv"
+    workdir = root_path / "output"
+    annotation_file = root_path / "annotation_multiallelic.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", workdir,
+            "-j", 1,
+        ]
+    ])
+
+    result = pathlib.Path(out_file).read_text()
+    assert result == expected
+
+
 def test_annotate_vcf_none_values(
     annotate_directory_fixture: pathlib.Path,
 ) -> None:

@@ -51,11 +51,19 @@ class CLIAnnotationContext(CLIGenomicContext):
             grr = context.get_genomic_resources_repository()
             assert grr is not None
 
-            if (pipeline_path := pathlib.Path(args.pipeline)).exists():
+            pipeline_path = pathlib.Path(args.pipeline)
+            pipeline_resource = grr.find_resource(args.pipeline)
+
+            if pipeline_path.exists():
                 raw_pipeline = pipeline_path.read_text()
-            else:
+            elif pipeline_resource is not None:
                 raw_pipeline = AnnotationPipelineImplementation(
-                    grr.get_resource(args.pipeline)).raw
+                   pipeline_resource).raw
+            else:
+                raise ValueError(
+                    f"The provided argument for an annotation"
+                    f" pipeline ('{args.pipeline}') is neither a valid"
+                    f" filepath, nor a valid GRR resource ID.")
 
             work_dir = None
             if hasattr(args, "work_dir"):
