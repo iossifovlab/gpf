@@ -3,8 +3,13 @@ import pathlib
 import textwrap
 
 import pytest
+import pytest_mock
 
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
+from dae.genomic_resources.genomic_context import SimpleGenomicContext
+from dae.genomic_resources.reference_genome import (
+    build_reference_genome_from_resource_id,
+)
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
@@ -111,5 +116,33 @@ def test_effect_annotator_implicit_genome_from_preamble(
         annotator = pipeline.annotators[0]
         assert {res.get_id() for res in annotator.resources} == {
             genome,
+            gene_models,
+        }
+
+
+def test_effect_annotator_implicit_genome_from_context(
+    mocker: pytest_mock.MockerFixture,
+    grr: GenomicResourceRepo,
+) -> None:
+    genome_id = "t4c8_genome_implicit_B"
+    gene_models = "t4c8_genes_ALT"
+    config = textwrap.dedent(f"""
+        - effect_annotator:
+            gene_models: {gene_models}
+        """)
+
+    genome = build_reference_genome_from_resource_id(genome_id, grr)
+    context = SimpleGenomicContext(
+        context_objects={"reference_genome": genome}, source=())
+    mocker.patch(
+        "dae.annotation.effect_annotator.get_genomic_context",
+    ).return_value = context
+
+    annotation_pipeline = load_pipeline_from_yaml(config, grr)
+
+    with annotation_pipeline.open() as pipeline:
+        annotator = pipeline.annotators[0]
+        assert {res.get_id() for res in annotator.resources} == {
+            genome_id,
             gene_models,
         }
