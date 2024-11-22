@@ -17,6 +17,7 @@ from dae.annotation.annotate_utils import (
     AnnotationTool,
     produce_partfile_paths,
     produce_regions,
+    stringify,
 )
 from dae.annotation.annotation_config import RawAnnotatorsConfig
 from dae.annotation.annotation_factory import build_annotation_pipeline
@@ -199,19 +200,23 @@ class AnnotateVCFTool(AnnotationTool):
 
                         for buff, attribute in zip(buffers, annotation_attributes):
                             attr = annotation.get(attribute.name)
-                            attr = attr if attr is not None else "."
-                            if attr != ".":
+                            if attr is not None:
                                 has_value[attribute.name] = True
+
                             if isinstance(attr, list):
-                                attr = ";".join(map(str, attr))
+                                attr = ";".join(stringify(a, vcf=True)
+                                                for a in attr)
                             elif isinstance(attr, dict):
                                 attr = ";".join(
                                     f"{k}:{v}"
                                     for k, v in attr.items()
                                 )
-                            attr = str(attr).replace(";", "|")\
-                                            .replace(",", "|")\
-                                            .replace(" ", "_")
+                            else:
+                                attr = stringify(attr, vcf=True)
+                            attr = stringify(attr, vcf=True) \
+                                .replace(";", "|")\
+                                .replace(",", "|")\
+                                .replace(" ", "_")
                             buff.append(attr)
 
                     for attribute, buff in zip(annotation_attributes, buffers):

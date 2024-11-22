@@ -837,3 +837,38 @@ def test_annotate_columns_float_precision(
     ])
     out_file_content = get_file_content_as_string(str(out_file))
     assert out_file_content == out_expected_content
+
+
+def test_annotate_vcf_float_precision(
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr4>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr4   53  .  C   T   .    .      .    GT     0/1 0/0 0/0
+    """)
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.vcf"
+    out_file = root_path / "out.vcf"
+    workdir = root_path / "output"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    cli_vcf([
+        str(a) for a in [
+            in_file, annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", workdir,
+            "-j", 1,
+        ]
+    ])
+
+    # pylint: disable=no-member
+    with pysam.VariantFile(str(out_file)) as vcf_file:
+        result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
+    assert result == ["0.123457"]
