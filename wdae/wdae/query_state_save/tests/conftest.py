@@ -5,9 +5,9 @@ import pytest
 from rest_framework import status
 
 
-def save_object(data, page, client):
+def save_object(data, page, origin, client):
     url = "/api/v3/query_state/save"
-    query = {"data": data, "page": page}
+    query = {"data": data, "page": page, "origin": origin}
     response = client.post(
         url, json.dumps(query), content_type="application/json", format="json",
     )
