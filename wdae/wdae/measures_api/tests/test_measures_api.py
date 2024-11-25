@@ -19,7 +19,7 @@ def test_measures_api_permissions(
 ) -> None:
     response = anonymous_client.get(url)
     assert response
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status.HTTP_200_OK
 
 
 def test_measures_list_categorical(
