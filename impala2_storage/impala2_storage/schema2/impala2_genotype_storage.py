@@ -129,19 +129,19 @@ class Impala2GenotypeStorage(GenotypeStorage):
         tables = storage_config["tables"] if has_tables else None
 
         family_table: str | None = None
-        if has_tables and tables.get("family"):
+        if tables and tables.get("family"):
             family_table = tables["family"]
 
         summary_table: str | None = None
-        if has_tables and tables.get("summary"):
+        if tables and tables.get("summary"):
             summary_table = tables["summary"]
 
         pedigree_table = f"{study_id}_pedigree"
-        if has_tables and tables.get("pedigree"):
+        if tables and tables.get("pedigree"):
             pedigree_table = tables.pedigree
 
         meta_table = f"{study_id}_meta"
-        if has_tables and tables.get("meta"):
+        if tables and tables.get("meta"):
             meta_table = tables["meta"]
 
         return family_table, summary_table, pedigree_table, meta_table

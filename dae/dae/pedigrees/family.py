@@ -150,12 +150,12 @@ class Person:
     def redefine(self) -> None:
         # pylint: disable=too-many-branches
         """Extract attributes and turns them into properties."""
-        self.family_id = self._attributes["family_id"]
-        self.person_id = self._attributes["person_id"]
+        self.family_id: str = self._attributes["family_id"]
+        self.person_id: str = self._attributes["person_id"]
         self.fpid: tuple[str, str] = (self.family_id, self.person_id)
 
         self.family: Family | None = None
-        self.sample_id = self._attributes.get("sample_id", None)
+        self.sample_id: str = self._attributes.get("sample_id", self.person_id)
 
         self._sex = Sex.from_name(self._attributes["sex"])
         if "role" not in self._attributes:

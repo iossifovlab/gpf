@@ -15,7 +15,6 @@ from dae.variants.family_variant import FamilyAllele, FamilyVariant
 logger = logging.getLogger(__name__)
 
 
-# FIXME: Too many instance attributes
 class EffectCell:  # pylint: disable=too-many-instance-attributes
     """Class representing a cell in the denovo report table."""
 
@@ -37,7 +36,8 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
             p.person_id for p in self.person_set.get_children()
         }
         if len(self.person_set_children) == 0:
-            self.person_set_children = set(self.person_set.persons.keys())
+            self.person_set_children = {
+                p[1] for p in self.person_set.persons}
 
         logger.info(
             "DENOVO REPORTS: persons set %s children %s",
@@ -107,12 +107,12 @@ class EffectCell:  # pylint: disable=too-many-instance-attributes
             return
         if not family_allele.effects:
             return
-        # FIXME: Avoid conversion of effect types to set
         if not set(family_allele.effects.types) & self.effect_types:
             return
         self.observed_variants_ids.add(family_variant.fvuid)
         self.observed_people_with_event.update(
-            set(family_allele.variant_in_members) & self.person_set_children)
+            set(filter(None, family_allele.variant_in_members))
+            & self.person_set_children)
 
     def is_empty(self) -> bool:
         return (
@@ -179,7 +179,6 @@ class DenovoReportTable:
         self.effect_groups = json["effect_groups"]
         self.effect_types = json["effect_types"]
 
-    # FIXME: Too many locals
     @staticmethod
     def from_variants(  # pylint: disable=too-many-locals
         denovo_variants: Iterable[FamilyVariant],

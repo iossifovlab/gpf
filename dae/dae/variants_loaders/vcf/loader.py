@@ -675,7 +675,7 @@ class VcfLoader(VariantsGenotypesLoader):
             assert len(families.persons) == len(other_families.persons)
             for other_person in other_families.persons.values():
                 if other_person.not_sequenced:
-                    person = families.persons[other_person.person_id]
+                    person = families.persons[other_person.fpid]
                     logger.warning(
                         "families intersection: person %s "
                         "is marked as 'not_sequenced'", person.person_id)

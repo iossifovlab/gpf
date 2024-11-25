@@ -113,7 +113,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             self._genetic_model = genetic_model
 
         self._inheritance_in_members = inheritance_in_members
-        self._variant_in_members: list[str] | None = None
+        self._variant_in_members: list[str | None] | None = None
         self._variant_in_members_objects: list[Person] | None = None
         self._variant_in_roles: list[Role | None] | None = None
         self._variant_in_sexes: list[Sex | None] | None = None
@@ -290,7 +290,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self._inheritance_in_members
 
     @property
-    def variant_in_members(self) -> list[str]:
+    def variant_in_members(self) -> list[str | None]:
         """Return set of affected by this variant family members' IDs."""
         if self._variant_in_members is None:
             assert self.gt is not None
@@ -312,7 +312,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self._variant_in_members
 
     @property
-    def allele_in_members(self) -> list[str]:
+    def allele_in_members(self) -> list[str | None]:
         return self.variant_in_members
 
     @property
