@@ -51,6 +51,9 @@ def test_allele_score_annotator_attributes(
     (("1", 10, "A", "T"), 0.04),
     (("1", 16, "C", "T"), 0.04),
     (("1", 16, "C", "A"), 0.05),
+    (("1", 16, "CA", "G"), 0.03),
+    (("1", 16, "C", "CG"), 2.0),
+    (("1", 16, "C", "CA"), 1.0),
 ])
 def test_allele_score_with_default_score_annotation(
         variant: tuple, expected: float,
@@ -61,6 +64,7 @@ def test_allele_score_with_default_score_annotation(
             "allele_score": {
                 GR_CONF_FILE_NAME: """
                     type: allele_score
+                    substitutions_only: false
                     table:
                         filename: data.txt
                         reference:
@@ -89,6 +93,8 @@ def test_allele_score_with_default_score_annotation(
                     1      16         CA         G           .   0.03
                     1      16         C          T           ct  0.04
                     1      16         C          A           ca  0.05
+                    1      16         C          CA          ca  1.0
+                    1      16         C          CG          ca  2.0
                 """),
             },
         })
@@ -113,6 +119,8 @@ def test_allele_score_with_default_score_annotation(
     (("chr1", 1, "C", "A"), 0.001),
     (("chr1", 11, "C", "A"), 0.1),
     (("chr1", 21, "C", "A"), 0.2),
+    (("chr1", 31, "C", "CA"), 0.3),
+    (("chr1", 31, "C", "CG"), 1.0),
 ])
 def test_allele_annotator_add_chrom_prefix_vcf_table(
         tmp_path: pathlib.Path, allele: tuple, expected: float) -> None:
@@ -122,6 +130,7 @@ def test_allele_annotator_add_chrom_prefix_vcf_table(
             "allele_score1": {
                 "genomic_resource.yaml": textwrap.dedent("""
                     type: allele_score
+                    substitutions_only: false
                     table:
                         filename: data.vcf.gz
                         format: vcf_info
@@ -146,6 +155,9 @@ def test_allele_annotator_add_chrom_prefix_vcf_table(
         1      1   .  C   A   .    .      test100way=0.001;
         1      11  .  C   A   .    .      test100way=0.1;
         1      21  .  C   A   .    .      test100way=0.2;
+        1      31  .  C   CA  .    .      test100way=0.3;
+        1      31  .  C   G   .    .      test100way=0.4;
+        1      31  .  C   CG  .    .      test100way=1.0;
         """))
     repo = build_filesystem_test_repository(tmp_path)
 
