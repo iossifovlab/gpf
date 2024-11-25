@@ -507,7 +507,8 @@ class ImportProject:
         return res
 
     def _loader_region_bins(
-            self, loader_type: str) -> Generator[Bucket, None, None]:
+        self, loader_type: str,
+    ) -> Generator[Bucket, None, None]:
         # pylint: disable=too-many-locals
         reference_genome = self.get_gpf_instance().reference_genome
 
@@ -552,17 +553,25 @@ class ImportProject:
             }
 
         default_bucket_index = self._get_default_bucket_index(loader_type)
-        for index, (region_bin, regions) in enumerate(
-                processing_regions.items()):
-            assert index <= 100_000, f"Too many buckets {loader_type}"
-            bucket_index = default_bucket_index + index
 
-            yield Bucket(
-                loader_type,
-                region_bin,
-                regions,
-                bucket_index,
-            )
+        if len(processing_regions) == 1:
+            yield Bucket(loader_type, "all", [], default_bucket_index)
+            return
+
+        index = 0
+        for region_bin, regions in processing_regions.items():
+            for region in regions:
+                assert index <= 100_000, \
+                    f"Too many buckets <{index}> for {loader_type}"
+                bucket_index = default_bucket_index + index
+                index += 1
+
+                yield Bucket(
+                    loader_type,
+                    region_bin,
+                    [region],
+                    bucket_index,
+                )
 
     def _get_processing_region_length(self, loader_type: str) -> int | None:
         processing_config = self._get_loader_processing_config(loader_type)
