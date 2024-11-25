@@ -79,7 +79,7 @@ class PhenoMeasuresInfoView(QueryBaseView):
         return Response(res)
 
 
-class PhenoMeasureDescriptionView(QueryBaseView, DatasetAccessRightsView):
+class PhenoMeasureDescriptionView(QueryBaseView):
     """Phenotype measures description view."""
 
     @method_decorator(etag(get_permissions_etag))

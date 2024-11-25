@@ -51,7 +51,7 @@ DOWNLOAD_URL = "/api/v3/pheno_browser/download"
         ),
         "get",
         None,
-        status.HTTP_401_UNAUTHORIZED,
+        status.HTTP_200_OK,
     ),
 ])
 def test_pheno_browser_api_permissions(

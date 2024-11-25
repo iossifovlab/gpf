@@ -27,7 +27,7 @@ from dae.pheno_tool.tool import PhenoResult, PhenoTool
 logger = logging.getLogger(__name__)
 
 
-class PhenoToolView(QueryBaseView, DatasetAccessRightsView):
+class PhenoToolView(QueryBaseView):
     """View for returning pheno tool results."""
 
     @staticmethod
@@ -92,7 +92,7 @@ class PhenoToolView(QueryBaseView, DatasetAccessRightsView):
         return Response(result)
 
 
-class PhenoToolDownload(PhenoToolView):
+class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
     """Pheno tool download view."""
 
     def generate_columns(
