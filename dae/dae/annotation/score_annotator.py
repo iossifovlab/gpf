@@ -36,15 +36,17 @@ logger = logging.getLogger(__name__)
 
 def get_genomic_resource(
         pipeline: AnnotationPipeline, info: AnnotatorInfo,
-        resource_type: str) -> GenomicResource:
+        resource_types: set[str]) -> GenomicResource:
     """Return genomic score resource used for given genomic score annotator."""
     if "resource_id" not in info.parameters:
         raise ValueError(f"The {info} has not 'resource_id' parameters")
     resource_id = info.parameters["resource_id"]
     resource = pipeline.repository.get_resource(resource_id)
-    if resource.get_type() != resource_type:
-        raise ValueError(f"The {info} requires 'resource_id' to point to a "
-                         "resource of type position_score.")
+    if resource.get_type() not in resource_types:
+        raise ValueError(
+            f"The {info} requires 'resource_id' to point to a "
+            f"resource of type {resource_types}; "
+            f"resource of type <{resource.get_type()}> found.")
     return resource
 
 
@@ -171,8 +173,7 @@ class PositionScoreAnnotatorBase(GenomicScoreAnnotatorBase):
         if annotatable is None:
             return self._empty_result()
 
-        if annotatable.chromosome not in \
-                self.score.get_all_chromosomes():
+        if annotatable.chromosome not in self.score.get_all_chromosomes():
             return self._empty_result()
 
         if annotatable.type == Annotatable.Type.SUBSTITUTION:
@@ -214,7 +215,7 @@ class PositionScoreAnnotator(PositionScoreAnnotatorBase):
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
 
-        resource = get_genomic_resource(pipeline, info, "position_score")
+        resource = get_genomic_resource(pipeline, info, {"position_score"})
         self.position_score = PositionScore(resource)
         super().__init__(pipeline, info, self.position_score)
 
@@ -264,74 +265,10 @@ phastCons, phyloP, FitCons2, etc.
 
 def build_np_score_annotator(pipeline: AnnotationPipeline,
                              info: AnnotatorInfo) -> Annotator:
-    return NPScoreAnnotator(pipeline, info)
-
-
-class NPScoreAnnotator(PositionScoreAnnotatorBase):
-    """This class implements np_score annotator."""
-
-    def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
-        resource = get_genomic_resource(pipeline, info, "np_score")
-        self.np_score = AlleleScore(resource)
-        super().__init__(pipeline, info, self.np_score)
-
-        self.np_score_queries = []
-        info.documentation += textwrap.dedent("""
-
-Annotator to use with genomic scores depending on genomic position and
-nucleotide change like CADD, MPC, etc.
-
-<a href="https://www.iossifovlab.com/gpfuserdocs/administration/annotation.html#np-score" target="_blank">More info</a>
-
-""")  # noqa
-
-        for att_info in info.attributes:
-            pos_agg = att_info.parameters.get("position_aggregator")
-            nuc_agg = att_info.parameters.get("nucleotide_aggregator")
-            allele_agg = att_info.parameters.get("allele_aggregator")
-            if nuc_agg is not None:
-                logger.warning(
-                    "attibute `nucleotide_aggregator` is deprecated, "
-                    "use `allele_aggregator` instead")
-                assert allele_agg is None
-                allele_agg = nuc_agg
-
-            for agg in [pos_agg, nuc_agg]:
-                if agg:
-                    validate_aggregator(agg)
-            self.np_score_queries.append(
-                AlleleScoreQuery(att_info.source, pos_agg, nuc_agg))
-            self.add_score_aggregator_documentation(
-                att_info, "position_aggregator", pos_agg)
-            self.add_score_aggregator_documentation(
-                att_info, "allele_aggregator", allele_agg)
-
-    def build_score_aggregator_documentation(
-        self, attr_info: AttributeInfo,
-    ) -> list[str]:
-        """Collect score aggregator documentation."""
-        # pylint: disable=protected-access
-        pos_aggregator = attr_info.parameters.get("position_aggregator")
-        pos_doc = self._build_score_aggregator_documentation(
-            attr_info, "position_aggregator", pos_aggregator)
-
-        nuc_aggregator = attr_info.parameters.get("allele_aggregator")
-        nuc_doc = self._build_score_aggregator_documentation(
-            attr_info, "allele_aggregator", nuc_aggregator,
-        )
-        return [pos_doc, nuc_doc]
-
-    def _fetch_substitution_scores(
-            self, allele: VCFAllele) -> list[Any] | None:
-        return self.np_score.fetch_scores(allele.chromosome, allele.position,
-                                          allele.reference, allele.alternative,
-                                          self.simple_score_queries)
-
-    def _fetch_aggregated_scores(
-            self, chrom: str, pos_begin: int, pos_end: int) -> list[Any]:
-        scores_agg = self.np_score.fetch_scores_agg(chrom, pos_begin, pos_end,
-                                                    self.np_score_queries)
-        return [sagg.get_final() for sagg in scores_agg]
+    logger.warning(
+        "usage of 'np_score' annotator is deprecated, "
+        "use 'allele_score' annotator instead")
+    return AlleleScoreAnnotator(pipeline, info)
 
 
 def build_allele_score_annotator(pipeline: AnnotationPipeline,
@@ -343,8 +280,11 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
     """This class implements allele_score annotator."""
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
-        resource = get_genomic_resource(pipeline, info, "allele_score")
+        resource = get_genomic_resource(
+            pipeline, info, {"np_score", "allele_score"})
         self.allele_score = AlleleScore(resource)
+        self.substitutions_only = self.allele_score.substitutions_only()
+
         super().__init__(pipeline, info, self.allele_score)
         self.allele_score_queries = []
         info.documentation += textwrap.dedent("""
@@ -382,15 +322,30 @@ variant frequencies, etc.
     ) -> list[str]:
         """Collect score aggregator documentation."""
         # pylint: disable=protected-access
-        pos_aggregator = attr_info.parameters.get("position_aggregator")
+        pos_agg = attr_info.parameters.get("position_aggregator")
         pos_doc = self._build_score_aggregator_documentation(
-            attr_info, "position_aggregator", pos_aggregator)
+            attr_info, "position_aggregator", pos_agg)
 
-        allele_aggregator = attr_info.parameters.get("allele_aggregator")
+        nuc_agg = attr_info.parameters.get("nucleotide_aggregator")
+        allele_agg = attr_info.parameters.get("allele_aggregator")
+        if nuc_agg is not None:
+            logger.warning(
+                "attibute `nucleotide_aggregator` is deprecated, "
+                "use `allele_aggregator` instead")
+            assert allele_agg is None
+            allele_agg = nuc_agg
+
         allele_doc = self._build_score_aggregator_documentation(
-            attr_info, "allele_aggregator", allele_aggregator,
+            attr_info, "allele_aggregator", allele_agg,
         )
         return [pos_doc, allele_doc]
+
+    def _fetch_substitution_scores(
+            self, allele: VCFAllele) -> list[Any] | None:
+        return self.allele_score.fetch_scores(
+            allele.chromosome, allele.position,
+            allele.reference, allele.alternative,
+            self.simple_score_queries)
 
     def _fetch_vcf_allele_score(self, allele: VCFAllele) \
             -> list[Any] | None:
@@ -414,7 +369,12 @@ variant frequencies, etc.
         if annotatable.chromosome not in self.score.get_all_chromosomes():
             return self._empty_result()
 
-        if isinstance(annotatable, VCFAllele):
+        if self.substitutions_only and \
+                    annotatable.type == Annotatable.Type.SUBSTITUTION:
+            assert isinstance(annotatable, VCFAllele)
+            scores = self._fetch_substitution_scores(annotatable)
+        elif not self.substitutions_only and \
+                isinstance(annotatable, VCFAllele):
             scores = self._fetch_vcf_allele_score(annotatable)
         else:
             if len(annotatable) > self._region_length_cutoff:

@@ -140,6 +140,7 @@ def test_allele_score_fetch_agg(
     res: GenomicResource = build_inmemory_test_resource({
         GR_CONF_FILE_NAME: """
             type: allele_score
+            substitutions_only: false
             table:
                 filename: data.mem
                 reference:
