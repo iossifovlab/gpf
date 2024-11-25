@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import copy
 import json
+from typing import Any, Literal
 
 import pytest
 from django.test.client import Client
@@ -19,9 +20,9 @@ QUERY = {
 }
 
 
-@pytest.mark.parametrize("url,method,body", [
-    (TOOL_URL, "post", QUERY),
-    (TOOL_DOWNLOAD_URL, "post", QUERY),
+@pytest.mark.parametrize("url,method,body,status", [
+    (TOOL_URL, "post", QUERY, status.HTTP_200_OK),
+    (TOOL_DOWNLOAD_URL, "post", QUERY, status.HTTP_401_UNAUTHORIZED),
     (
         "/api/v3/pheno_tool/people_values",
         "post",
@@ -29,6 +30,7 @@ QUERY = {
             "datasetId": "t4c8_study_1",
             "measureIds": ["i1.m1"],
         },
+        status.HTTP_401_UNAUTHORIZED,
     ),
     (
         "/api/v3/pheno_tool/measure",
@@ -37,18 +39,26 @@ QUERY = {
             "datasetId": "t4c8_study_1",
             "measureId": "i1.m1",
         },
+        status.HTTP_401_UNAUTHORIZED,
     ),
     (
         "/api/v3/pheno_tool/measures?datasetId=t4c8_study_1&instrument=i1",
         "get", None,
+        status.HTTP_401_UNAUTHORIZED,
     ),
-    ("/api/v3/pheno_tool/instruments?datasetId=t4c8_study_1", "get", None),
+    (
+        "/api/v3/pheno_tool/instruments?datasetId=t4c8_study_1",
+        "get",
+        None,
+        status.HTTP_401_UNAUTHORIZED,
+    ),
 ])
 def test_pheno_tool_api_permissions(
     anonymous_client: Client,
     url: str,
     method: str,
     body: dict,
+    status: status,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> None:
     if method == "get":
@@ -59,7 +69,7 @@ def test_pheno_tool_api_permissions(
         )
 
     assert response
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status
 
 
 def test_pheno_tool_view_valid_request(
