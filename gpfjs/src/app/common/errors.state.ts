@@ -36,9 +36,16 @@ export const errorsReducer = createReducer(
       updatedState = [...state, cloneDeep(errors)];
       return updatedState;
     }
+
+    errors.errors.forEach(e => {
+      if (!state[currentIndex].errors.includes(e)) {
+        state[currentIndex].errors.push(e);
+      }
+    });
+
     updatedState[currentIndex] = {
       componentId: state[currentIndex].componentId,
-      errors: [...state[currentIndex].errors, ...errors.errors]
+      errors: [...state[currentIndex].errors]
     };
     return updatedState;
   }),

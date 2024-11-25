@@ -34,14 +34,12 @@ export class PersonFiltersComponent extends ComponentValidator implements OnInit
 
   public ngOnInit(): void {
     this.selectedDatasetId = this.dataset.id;
-
     this.store.select(selectPersonFilters).subscribe((state: PersonAndFamilyFilters) => {
       if (this.isFamilyFilters) {
         this.areFiltersSelected = Boolean(state.familyFilters?.filter(f => f.sourceType === 'continuous').length);
       } else {
         this.areFiltersSelected = Boolean(state.personFilters?.filter(f => f.sourceType === 'continuous').length);
       }
-      super.ngOnInit();
     });
 
     this.store.select(selectPersonFilters).pipe(take(1)).subscribe((state: PersonAndFamilyFilters) => {
@@ -49,6 +47,8 @@ export class PersonFiltersComponent extends ComponentValidator implements OnInit
       this.setDefaultFilters();
       this.setFiltersFromState(clonedState);
     });
+
+    super.ngOnInit();
   }
 
   private setDefaultFilters(): void {

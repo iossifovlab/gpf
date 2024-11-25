@@ -104,7 +104,7 @@ export const personFiltersReducer = createReducer(
     };
   }),
   on(removeFamilyFilter, (state, {familyFilter}) => {
-    const newFamilyFilters = state.familyFilters;
+    const newFamilyFilters = cloneDeep(state.familyFilters);
     newFamilyFilters?.splice(newFamilyFilters.findIndex(filter => filter.id === familyFilter.id), 1);
 
     return {
@@ -113,7 +113,7 @@ export const personFiltersReducer = createReducer(
     };
   }),
   on(removePersonFilter, (state, {personFilter}) => {
-    const newPersonFilters = state.personFilters;
+    const newPersonFilters = cloneDeep(state.personFilters);
     newPersonFilters?.splice(newPersonFilters.findIndex(filter => filter.id === personFilter.id), 1);
 
     return {

@@ -24,8 +24,10 @@ export class FamilyIdsComponent extends ComponentValidator implements OnInit {
 
     this.focusTextInputArea();
     this.store.select(selectFamilyIds).pipe(take(1)).subscribe((familyIds: string[]) => {
-      // restore state
-      this.setFamilyIds(familyIds.join('\n')); // must join on more conditions most likely
+      if (familyIds.length) {
+        // restore state
+        this.setFamilyIds(familyIds.join('\n')); // must join on more conditions most likely
+      }
     });
   }
 
