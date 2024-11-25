@@ -25,7 +25,6 @@ from datasets_api.permissions import (
     get_instance_timestamp_etag,
     get_permissions_etag,
     get_wdae_parents,
-    user_has_permission,
 )
 
 from .models import Dataset, DatasetHierarchy
