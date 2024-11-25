@@ -41,7 +41,7 @@ def build_liftover_annotator(pipeline: AnnotationPipeline,
                          f"{chain_resource_id} that is unavailable.")
     chain = build_liftover_chain_from_resource(chain_resource)
 
-    resource_id = info.parameters.get("target_genome")
+    resource_id = info.parameters.get("target_genome", chain.target_genome_id)
     if resource_id is None:
         raise ValueError(
             f"The {info} requires a 'target_genome' parameter.")
@@ -52,7 +52,7 @@ def build_liftover_annotator(pipeline: AnnotationPipeline,
                          "unavailable.")
     target_genome = build_reference_genome_from_resource(resource)
 
-    resource_id = info.parameters.get("source_genome")
+    resource_id = info.parameters.get("source_genome", chain.source_genome_id)
     if resource_id is None:
         raise ValueError(
             f"The {info} requires a 'source_genome' parameter.")
