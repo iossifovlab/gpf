@@ -1037,7 +1037,7 @@ class AlleleScore(NPScoreBase):
         schema = copy.deepcopy(GenomicScore.get_schema())
 
         schema["allow_multiple_values"] = {"type": "boolean", "default": True}
-
+        schema["substitutions_only"] = {"type": "boolean", "default": True}
         schema["table"]["schema"]["reference"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
@@ -1064,6 +1064,9 @@ class AlleleScore(NPScoreBase):
 
     def open(self) -> AlleleScore:
         return cast(AlleleScore, super().open())
+
+    def substitutions_only(self) -> bool:
+        return bool(self.config.get("substitutions_only", True))
 
     def _build_scores_agg(
         self, score_queries: list[AlleleScoreQuery],
