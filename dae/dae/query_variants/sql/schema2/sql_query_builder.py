@@ -1026,7 +1026,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         if not query.ctes:
             return base_query
 
-        result = cast(Select, query.copy())
+        result = query.copy()
         result.ctes[0].args["this"] = base_query
         return result
 

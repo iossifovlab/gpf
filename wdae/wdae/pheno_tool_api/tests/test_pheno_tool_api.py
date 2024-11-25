@@ -1,12 +1,11 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import copy
 import json
-from typing import Any, Literal
 
 import pytest
 from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
-from rest_framework import status  # type: ignore
+from rest_framework import status
 
 TOOL_URL = "/api/v3/pheno_tool"
 TOOL_DOWNLOAD_URL = "/api/v3/pheno_tool/download"
