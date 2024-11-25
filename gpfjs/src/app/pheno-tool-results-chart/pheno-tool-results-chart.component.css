@@ -3,3 +3,13 @@
   width: 100%;
   font-weight: bold;
 }
+
+#image-download-container {
+  max-width: 1140px;
+  margin: auto;
+  padding: 0 15px 30px;
+}
+
+#image-download {
+  float: right;
+}
