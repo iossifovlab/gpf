@@ -128,7 +128,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       this.phenoToolResults = null;
     });
 
-    this.loadingService.interruptEvent.subscribe(_ => {
+    this.loadingService.interruptEvent.subscribe(() => {
       if (this.phenoToolSubscription !== null) {
         this.phenoToolSubscription.unsubscribe();
         this.phenoToolSubscription = null;

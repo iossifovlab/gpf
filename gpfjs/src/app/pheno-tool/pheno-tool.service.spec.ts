@@ -32,7 +32,7 @@ describe('PhenoToolService', () => {
     httpGetSpy.mockReturnValue(of('fakeResponse'));
     service.getPhenoToolResults('filter' as any);
 
-    expect(httpGetSpy.mock.calls).toEqual(
+    expect(httpGetSpy.mock.calls).toStrictEqual(
       [
         [
           'testUrl/pheno_tool',

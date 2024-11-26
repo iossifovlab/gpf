@@ -330,7 +330,7 @@ describe('PedigreeChartComponent', () => {
     expect(component.positionedIndividuals[0][0].individual.matingUnits[0].children.individuals[0].pedigreeData.id).toBe('prb1');
     expect(component.positionedIndividuals[0][0].individual.matingUnits[0].children.toString()).toBe('s{prb1}');
     expect(component.positionedIndividuals[0][0].individual.matingUnits[0].children.individualSet().size).toBe(1);
-    expect(component.positionedIndividuals[0][0].individual.matingUnits[0].children.childrenSet()).toEqual(new Set());
+    expect(component.positionedIndividuals[0][0].individual.matingUnits[0].children.childrenSet()).toStrictEqual(new Set());
     expect(component.positionedIndividuals[0][0].individual.pedigreeData.id).toBe('dad1');
     expect(component.positionedIndividuals[0][0].individual.parents).toBeUndefined();
     expect(component.positionedIndividuals[0][0].individual.rank).toBe(-3673473456);
@@ -346,7 +346,7 @@ describe('PedigreeChartComponent', () => {
     expect(component.positionedIndividuals[0][1].individual.matingUnits[0].children.individuals[0].pedigreeData.id).toBe('prb1');
     expect(component.positionedIndividuals[0][1].individual.matingUnits[0].children.toString()).toBe('s{prb1}');
     expect(component.positionedIndividuals[0][1].individual.matingUnits[0].children.individualSet().size).toBe(1);
-    expect(component.positionedIndividuals[0][1].individual.matingUnits[0].children.childrenSet()).toEqual(new Set());
+    expect(component.positionedIndividuals[0][1].individual.matingUnits[0].children.childrenSet()).toStrictEqual(new Set());
     expect(component.positionedIndividuals[0][1].individual.pedigreeData.id).toBe('mom1');
     expect(component.positionedIndividuals[0][1].individual.parents).toBeUndefined();
     expect(component.positionedIndividuals[0][1].individual.rank).toBe(-3673473456);
@@ -415,7 +415,7 @@ describe('PedigreeChartComponent', () => {
     expect(component.positionedIndividuals[0][0].individual.matingUnits[0].children.individuals[0].pedigreeData.id).toBe('prb2');
     expect(component.positionedIndividuals[0][0].individual.matingUnits[0].children.toString()).toBe('s{prb2}');
     expect(component.positionedIndividuals[0][0].individual.matingUnits[0].children.individualSet().size).toBe(1);
-    expect(component.positionedIndividuals[0][0].individual.matingUnits[0].children.childrenSet()).toEqual(new Set());
+    expect(component.positionedIndividuals[0][0].individual.matingUnits[0].children.childrenSet()).toStrictEqual(new Set());
     expect(component.positionedIndividuals[0][0].individual.pedigreeData.id).toBe('mom2');
     expect(component.positionedIndividuals[0][0].individual.parents).toBeUndefined();
     expect(-component.positionedIndividuals[0][0].individual.rank).toBe(0);
@@ -431,7 +431,7 @@ describe('PedigreeChartComponent', () => {
     expect(component.positionedIndividuals[0][1].individual.matingUnits[0].children.individuals[0].pedigreeData.id).toBe('prb2');
     expect(component.positionedIndividuals[0][1].individual.matingUnits[0].children.toString()).toBe('s{prb2}');
     expect(component.positionedIndividuals[0][1].individual.matingUnits[0].children.individualSet().size).toBe(1);
-    expect(component.positionedIndividuals[0][1].individual.matingUnits[0].children.childrenSet()).toEqual(new Set());
+    expect(component.positionedIndividuals[0][1].individual.matingUnits[0].children.childrenSet()).toStrictEqual(new Set());
     expect(component.positionedIndividuals[0][1].individual.pedigreeData.id).toBe('dad2');
     expect(component.positionedIndividuals[0][1].individual.parents).toBeUndefined();
     expect(component.positionedIndividuals[0][1].individual.rank === 0).toBe(true);

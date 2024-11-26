@@ -86,7 +86,7 @@ describe('HistogramComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [ FormsModule ],
+      imports: [FormsModule],
       declarations: [
         HistogramComponent, HistogramRangeSelectorLineComponent,
         TestHostComponent,
@@ -206,7 +206,7 @@ describe('HistogramComponentNoDomain', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [ FormsModule ],
+      imports: [FormsModule],
       declarations: [
         HistogramComponent, HistogramRangeSelectorLineComponent,
         TestHostComponentNoDomain,
