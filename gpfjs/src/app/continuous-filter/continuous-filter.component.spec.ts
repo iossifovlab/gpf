@@ -1,8 +1,9 @@
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { HistogramData } from 'app/measures/measures';
 import { MeasuresService } from 'app/measures/measures.service';
+import { Partitions } from 'app/gene-scores/gene-scores';
 import { Observable, of } from 'rxjs';
 
 import { ContinuousFilterComponent } from './continuous-filter.component';
@@ -59,6 +60,17 @@ class MeasuresServiceMock {
   public getMeasureHistogram(datasetId: string, measureName: string): Observable<HistogramData> {
     return of(
       new HistogramData([], measureName, 0, 10, 3, [], 'description')
+    );
+  }
+
+  public getMeasurePartitions(
+    datasetId: string,
+    measureName: string,
+    rangeStart: number,
+    rangeEnd: number
+  ): Observable<Partitions> {
+    return of(
+      new Partitions(0, 0, 5, 30, 10, 60)
     );
   }
 
@@ -155,6 +167,20 @@ describe('ContinuousFilterComponent', () => {
     component.ngOnInit();
     expect(component['continuousFilterState']).toBeUndefined();
   });
+
+  it('should get measure partitions', fakeAsync(() => {
+    jest.spyOn(store, 'select').mockReturnValue(of(cloneDeep({
+      familyFilters: null,
+      personFilters: null
+    })));
+    const getMeasurePartitionsSpy = jest.spyOn(measuresServiceMock, 'getMeasurePartitions');
+    component.ngOnInit();
+
+    component['rangeChanges'].next(['datasetId', 'measureName', 10, 20]);
+    tick(200);
+    expect(getMeasurePartitionsSpy).toHaveBeenCalledWith('datasetId', 'measureName', 10, 20);
+    expect(component['rangesCounts']).toStrictEqual([0, 5, 10]);
+  }));
 
   it('should get histogram data on changes', () => {
     jest.spyOn(store, 'select').mockReturnValue(of(cloneDeep({
