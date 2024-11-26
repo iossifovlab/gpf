@@ -16,6 +16,14 @@ describe('PhenoToolResultsChartComponent', () => {
       description: undefined,
       results: []
     };
+
+    Object.defineProperty(URL, 'createObjectURL', {
+      value: jest.fn()
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      value: jest.fn()
+    });
+
     fixture.detectChanges();
   }));
 
