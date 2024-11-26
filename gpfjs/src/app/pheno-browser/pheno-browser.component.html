@@ -41,7 +41,7 @@
         <span>Phenotype measures</span>
         <input name="queryData" type="hidden" />
         <button
-          [class.disabled-download]="!(selectedDataset?.accessRights)"
+          [class.disabled-download]="!selectedDataset?.accessRights"
           (click)="downloadMeasures()"
           id="download-measures"
           class="btn btn-md btn-primary btn-right">
