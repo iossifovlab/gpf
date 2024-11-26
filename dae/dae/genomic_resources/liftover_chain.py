@@ -46,6 +46,15 @@ class LiftoverChain(ResourceConfigValidationMixin):
 
         self.liftover: LiftOver | None = None
 
+        self.source_genome_id: str | None = None
+        self.target_genome_id: str | None = None
+
+        if config.get("meta") is not None \
+           and config["meta"].get("labels") is not None:
+            labels = config["meta"]["labels"]
+            self.source_genome_id = labels.get("source_genome")
+            self.target_genome_id = labels.get("target_genome")
+
     def close(self) -> None:
         del self.liftover
         self.liftover = None
