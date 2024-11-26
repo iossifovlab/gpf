@@ -3,6 +3,7 @@ import os
 import sys
 from abc import abstractmethod
 from pathlib import Path
+from typing import Any
 
 from pysam import TabixFile
 
@@ -65,6 +66,14 @@ def produce_partfile_paths(
             chrom=region.chrom, pos_beg=pos_beg, pos_end=pos_end,
         )))
     return filenames
+
+
+def stringify(value: Any, *, vcf: bool = False) -> str:
+    if value is None:
+        return "." if vcf else ""
+    if isinstance(value, float):
+        return f"{value:.6g}"
+    return str(value)
 
 
 class AnnotationTool:
