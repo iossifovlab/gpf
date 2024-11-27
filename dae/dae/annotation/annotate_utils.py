@@ -72,7 +72,7 @@ def stringify(value: Any, *, vcf: bool = False) -> str:
     if value is None:
         return "." if vcf else ""
     if isinstance(value, float):
-        return f"{value:.6g}"
+        return f"{value:.3g}"
     return str(value)
 
 

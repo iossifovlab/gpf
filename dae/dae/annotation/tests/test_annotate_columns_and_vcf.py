@@ -817,7 +817,7 @@ def test_annotate_columns_float_precision(
     """)
     out_expected_content = (
         "chrom\tpos\tscore\n"
-        "chr4\t53\t0.123457\n"
+        "chr4\t53\t0.123\n"
     )
     root_path = annotate_directory_fixture
     in_file = root_path / "in.txt"
@@ -871,4 +871,4 @@ def test_annotate_vcf_float_precision(
     # pylint: disable=no-member
     with pysam.VariantFile(str(out_file)) as vcf_file:
         result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
-    assert result == ["0.123457"]
+    assert result == ["0.123"]
