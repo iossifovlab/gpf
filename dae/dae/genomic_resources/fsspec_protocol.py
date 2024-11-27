@@ -176,7 +176,9 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
                     entry["id"], version, config=entry["config"],
                     manifest=manifest)
                 logger.debug(
-                    "url repo caching resource %s", resource.resource_id)
+                    "repo %s loaded resource %s",
+                    self.proto_id,
+                    resource.resource_id)
                 self._all_resources.append(resource)
             self._all_resources = sorted(
                 self._all_resources,
@@ -667,6 +669,10 @@ def build_fsspec_protocol(
     if url.scheme in {"file", ""}:
         from fsspec.implementations.local import LocalFileSystem
         filesystem = LocalFileSystem()
+        read_only = kwargs.get("read_only", False)
+        if read_only:
+            return FsspecReadOnlyProtocol(
+                proto_id, root_url, filesystem)
         return FsspecReadWriteProtocol(
             proto_id, root_url, filesystem)
     if url.scheme in {"http", "https"}:

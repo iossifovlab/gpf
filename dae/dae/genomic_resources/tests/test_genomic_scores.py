@@ -38,7 +38,7 @@ from dae.genomic_resources.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def vcf_score(tmp_path: pathlib.Path) -> AlleleScore:
     setup_directories(
         tmp_path, {

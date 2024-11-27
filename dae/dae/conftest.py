@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 pytest_plugins = ["dae_conftests.dae_conftests"]
 
 
-@pytest.fixture()
+@pytest.fixture
 def gpf_instance_genomic_context_fixture(
     mocker: pytest_mock.MockerFixture,
 ) -> Callable[[GPFInstance], GenomicContext]:
@@ -70,7 +70,7 @@ def gpf_instance_genomic_context_fixture(
     return builder
 
 
-@pytest.fixture()
+@pytest.fixture
 def liftover_grr_fixture(
         tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
     root_path = tmp_path_factory.mktemp("liftover_grr_fixture")

@@ -18,7 +18,7 @@ from dae.gpf_instance import GPFInstance
 from dae.variants.core import Allele
 
 
-@pytest.fixture()
+@pytest.fixture
 def dummy_liftover_grr_fixture(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> GenomicResourceRepo:
