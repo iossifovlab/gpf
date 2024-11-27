@@ -3,7 +3,10 @@ import logging
 from typing import Any
 
 from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotation_config import AnnotatorInfo
+from dae.annotation.annotation_config import (
+    AnnotationConfigParser,
+    AnnotatorInfo,
+)
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
@@ -72,6 +75,10 @@ class GeneSetAnnotator(Annotator):
         self.gene_set = gs
 
         info.resources += [gene_set_resource]
+        info.attributes = AnnotationConfigParser.parse_raw_attributes(
+            [self.gene_set.name],
+        )
+        info.attributes[0].type = "bool"
 
         self.input_gene_list = input_gene_list
         super().__init__(pipeline, info)
