@@ -1,4 +1,5 @@
 import logging
+import textwrap
 from typing import Any
 
 from dae.annotation.annotatable import Annotatable
@@ -44,6 +45,14 @@ class SimpleEffectAnnotator(AnnotatorBase):
                 gene_models_resrouce_id)
             gene_models = build_gene_models_from_resource(resource)
         assert isinstance(gene_models, GeneModels)
+
+        info.documentation += textwrap.dedent("""
+
+Simple effect annotator.
+
+<a href="https://iossifovlab.com/gpfuserdocs/administration/annotation.html#simple-effect-annotator" target="_blank">More info</a>
+
+""")  # noqa
 
         info.resources.append(gene_models.resource)
         if not info.attributes:
