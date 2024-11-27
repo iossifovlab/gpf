@@ -239,7 +239,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
     store.pipe(take(1)).subscribe(state => {
       const clonedState = cloneDeep(state);
       clonedState['datasetId'] = datasetId;
-      queryService.saveQuery(clonedState, 'genotype')
+      queryService.saveQuery(clonedState, 'genotype', 'system')
         .pipe(take(1))
         .subscribe(urlObject => {
           const url = queryService.getLoadUrlFromResponse(urlObject);
