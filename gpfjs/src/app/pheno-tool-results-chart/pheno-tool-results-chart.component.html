@@ -1,10 +1,14 @@
-<div class="description">{{ phenoToolResults.description }}</div>
+<div id="image-download-container">
+  <a id="image-download">Download report as an image</a>
+</div>
 <div style="display: flex; justify-content: center; max-height: 700px; min-width: 1000px">
   <svg [attr.max-width]="width" [attr.max-height]="height" [attr.viewBox]="getViewBox()">
-    <text x="0" y="45">with hit</text>
-    <text x="0" y="65">without hit</text>
+    <text x="40%" y="20" class="description">{{ phenoToolResults.description }}</text>
 
-    <g #innerGroup transform="translate(30, 80)">
+    <text x="0" y="70">with hit</text>
+    <text x="0" y="90">without hit</text>
+
+    <g #innerGroup transform="translate(30, 110)">
       <g
         *ngFor="let result of phenoToolResults.results; let i = index"
         gpf-pheno-tool-results-chart-per-effect

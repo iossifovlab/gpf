@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, Input, OnChanges, OnInit, ViewChild } from '@angular/core';
 import { PhenoToolResults, PhenoToolResult } from '../pheno-tool/pheno-tool-results';
 import * as d3 from 'd3';
 
@@ -7,7 +7,7 @@ import * as d3 from 'd3';
   templateUrl: './pheno-tool-results-chart.component.html',
   styleUrls: ['./pheno-tool-results-chart.component.css']
 })
-export class PhenoToolResultsChartComponent implements OnInit, OnChanges {
+export class PhenoToolResultsChartComponent implements OnInit, OnChanges, AfterViewInit {
   @ViewChild('innerGroup', {static: true}) public innerGroup: any;
   @Input() public phenoToolResults: PhenoToolResults;
   @Input() public width = 1060;
@@ -31,6 +31,9 @@ export class PhenoToolResultsChartComponent implements OnInit, OnChanges {
       .attr('transform', 'translate(42,0)');
   }
 
+  public ngAfterViewInit(): void {
+    this.createImgFromSvg();
+  }
   public addRange(phenoToolResult: PhenoToolResult, outputValues: Array<number>): void {
     outputValues.push(phenoToolResult.mean + phenoToolResult.deviation);
     outputValues.push(phenoToolResult.mean - phenoToolResult.deviation);
@@ -62,5 +65,41 @@ export class PhenoToolResultsChartComponent implements OnInit, OnChanges {
 
   public getViewBox(): string {
     return `0 0 ${this.columnCount > 4 ? this.columnCount * 260 : this.width} ${this.height}`;
+  }
+
+  private createImgFromSvg(): void {
+    const container = document.getElementById('image-download-container');
+    const svg = document.querySelector('svg');
+
+    if (container && svg) {
+      svg.style.backgroundColor = 'white';
+      svg.style.font = '16px Roboto, sans-serif, "Noto Sans Symbols 2", "Noto Sans Math"';
+
+      const XML = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([XML], {
+        type: 'image/svg+xml;charset=utf-8'
+      });
+      const url = URL.createObjectURL(svgBlob);
+      const img = new Image();
+      img.addEventListener('load', () => {
+        const bbox = svg.getBBox();
+        const width = bbox.width < 1000 ? 1000 : bbox.width;
+        const height = bbox.height;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const context = canvas.getContext('2d');
+        context.drawImage(img, 0, 0, width, height);
+
+        URL.revokeObjectURL(url);
+
+        const a = document.getElementById('image-download') as HTMLAnchorElement;
+        a.download = 'pheno-tool-report.png';
+        a.href = canvas.toDataURL();
+      });
+      img.src = url;
+    }
   }
 }
