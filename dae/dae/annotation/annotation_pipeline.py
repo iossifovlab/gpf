@@ -318,6 +318,8 @@ class ReannotationPipeline(AnnotationPipeline):
                 converted_value = int(raw_value)
             elif attr.type == "float":
                 converted_value = float(raw_value)
+            elif attr.type == "bool":
+                converted_value = bool(raw_value)
             elif attr.type == "annotatable":
                 converted_value = Annotatable.from_string(raw_value)
             elif attr.type == "object":
