@@ -177,7 +177,7 @@ describe('ContinuousFilterComponent', () => {
     component.ngOnInit();
 
     component['rangeChanges'].next(['datasetId', 'measureName', 10, 20]);
-    tick(200);
+    tick(500);
     expect(getMeasurePartitionsSpy).toHaveBeenCalledWith('datasetId', 'measureName', 10, 20);
     expect(component['rangesCounts']).toStrictEqual([0, 5, 10]);
   }));

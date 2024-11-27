@@ -37,7 +37,7 @@ export class ContinuousFilterComponent extends ComponentValidator implements OnI
 
   public ngOnInit(): void {
     this.partitions = this.rangeChanges.pipe(
-      debounceTime(100),
+      debounceTime(500),
       distinctUntilChanged(),
       switchMap(([datasetId, measureName, internalRangeStart, internalRangeEnd]) => this.measuresService
         .getMeasurePartitions(datasetId, measureName, internalRangeStart, internalRangeEnd))
