@@ -1,4 +1,3 @@
-
 import logging
 from typing import Any
 
@@ -81,6 +80,12 @@ class GeneSetAnnotator(Annotator):
         info.attributes[0].type = "bool"
 
         self.input_gene_list = input_gene_list
+        info.documentation = (
+            f"This annotator uses the **{self.gene_set.name}** gene set "
+            f"from the **{self.gene_set_collection.collection_id}** collection"
+            "\n\n  "
+            f"Description: {self.gene_set.desc}"
+        )
         super().__init__(pipeline, info)
 
     @property
