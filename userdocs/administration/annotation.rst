@@ -200,6 +200,37 @@ LGD_gene_list
         genome: <reference genome resource ID>
         gene_models: <gene models resource ID>
 
+Specifying the ``genome`` parameter in the configuration is optional - the effect annotator will attempt to get a genome in the following order:
+
+1. ``genome`` parameter in annotator configuration
+2. ``reference_genome`` label in provided ``gene_models`` resource's configuration
+3. ``input_reference_genome`` field from annotation pipeline config preamble section
+4. Genomic context
+
+
+Simple effect annotator
+#######################
+
+Classify an event according to the scheme described in https://pmc.ncbi.nlm.nih.gov/articles/PMC8410909/figure/Fig2/.
+The attributes the annotator will output are the following:
+
+effect
+  The worst effect across all transcripts.
+
+
+genes
+  The affected genes.
+
+
+gene_list
+  List of all genes.
+
+
+.. code:: yaml
+
+    - simple_effect_annotator:
+        gene_models: <gene models resource ID>
+
 
 Liftover annotator
 ##################
@@ -219,6 +250,7 @@ This produced annotatable is labeled ``liftover_annotatable`` and can be passed 
           name: hg19_annotatable
           internal: true
 
+Specifying the ``source_genome`` and ``target_genome`` parameters in the configuration is optional - if none are provided, the annotator will attempt to collect them from the provided ``chain`` resource's configuration. Specifically, the ``chain`` resource can have ``source_genome`` and ``target_genome`` labels in its configuration's meta section.
 
 Normalize allele annotator
 ##########################
@@ -232,6 +264,10 @@ Similar to the liftover annotator, produces an "annotatable" object called ``nor
 
     - normalize_allele_annotator:
         genome: hg38/genomes/GRCh38-hg38
+        attributes:
+        - source: normalized_allele
+          name: hg38_normalized_annotatable
+          internal: true
 
 
 Gene score annotator
