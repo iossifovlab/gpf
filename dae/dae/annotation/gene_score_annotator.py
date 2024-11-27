@@ -74,9 +74,11 @@ class GeneScoreAnnotator(Annotator):
                 attribute_config.source,
             )
             if score_def is None:
-                message = f"The gene score {attribute_config.source} is " + \
-                          f"unknown in {gene_score_resource.get_id()} " + \
-                          "resource!"
+                message = (
+                    f"The gene score {attribute_config.source} is "
+                    f"unknown in {gene_score_resource.get_id()} "
+                    "resource!"
+                )
                 raise ValueError(message)
             attribute_config.type = "float"
             attribute_config.description = score_def.desc
@@ -115,7 +117,9 @@ class GeneScoreAnnotator(Annotator):
             return self._empty_result()
 
         attributes = {}
-        for attr, aggregator_type in zip(self.attributes, self.aggregators):
+        for attr, aggregator_type in zip(
+            self.attributes, self.aggregators, strict=True,
+        ):
             attributes[attr.name] = self.aggregate_gene_values(
                 attr.source, genes, aggregator_type,
             )
