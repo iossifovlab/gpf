@@ -83,14 +83,19 @@ def produce_tabix_index(
     record_to_annotatable = build_record_to_annotatable(
         vars(args), set(header), ref_genome)
     line_skip = 0 if header[0].startswith("#") else 1
-    seq_col = 0
-    start_col = 1
     if isinstance(record_to_annotatable, (RecordToRegion,
                                           RecordToCNVAllele)):
-        end_col = 2
-    elif isinstance(record_to_annotatable, (RecordToVcfAllele,
-                                            RecordToPosition)):
-        end_col = 1
+        seq_col = header.index(record_to_annotatable.chrom_col)
+        start_col = header.index(record_to_annotatable.pos_beg_col)
+        end_col = header.index(record_to_annotatable.pos_end_col)
+    elif isinstance(record_to_annotatable, RecordToVcfAllele):
+        seq_col = header.index(record_to_annotatable.chrom_col)
+        start_col = header.index(record_to_annotatable.pos_col)
+        end_col = start_col
+    elif isinstance(record_to_annotatable, RecordToPosition):
+        seq_col = header.index(record_to_annotatable.chrom_column)
+        start_col = header.index(record_to_annotatable.pos_column)
+        end_col = start_col
     else:
         raise TypeError(
             "Could not generate tabix index: record"

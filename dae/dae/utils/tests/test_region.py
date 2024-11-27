@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+import textwrap
 
 import pysam
 import pytest
@@ -265,3 +266,26 @@ def test_region_intersection(
     reg1: Region, reg2: Region, expected: Region,
 ) -> None:
     assert reg1.intersection(reg2) == expected
+
+
+def test_get_chromosome_length_tabix_avoid_infinite_loop(
+    tmp_path: pathlib.Path,
+) -> None:
+    """
+    If the tabix file is malformed and cannot provide any records,
+    the function should not enter an infinite loop.
+    """
+
+    in_content = textwrap.dedent("""
+        dummyCol1 chrom   dummyCol2 pos  dummyCol3
+        ?         chr1    ?         23   ?
+    """)
+    in_file = tmp_path / "in.txt.gz"
+    # in this case, the tabix file will be malformed
+    # since the header does not start with a '#' symbol,
+    # and the line has not been skipped in setup_tabix.
+    setup_tabix(in_file, in_content,
+                seq_col=1, start_col=3, end_col=3, line_skip=0)
+
+    assert get_chromosome_length_tabix(
+        pysam.TabixFile(str(in_file)), "chr1") is None

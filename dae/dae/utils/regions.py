@@ -127,6 +127,8 @@ def get_chromosome_length_tabix(
                 left = pos
                 pos = pos * 2
             else:
+                if pos == 0:  # stop infinite loop if any_records is never True
+                    raise ValueError  # noqa: TRY301
                 right = pos
                 pos = pos // 2
         # Second we use binary search to narrow the region until we find the

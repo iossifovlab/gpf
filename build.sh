@@ -283,9 +283,7 @@ EOT
         local -A ctx_dae
         build_run_ctx_init ctx:ctx_dae "container" "${gpf_dev_image_ref}" \
           --network "${ctx_network["network_id"]}" \
-          --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-          --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
           --env AWS_ACCESS_KEY_ID="foo" \
           --env AWS_SECRET_ACCESS_KEY="foo" \
@@ -316,9 +314,7 @@ EOT
         local -A ctx_dae_integ
         build_run_ctx_init ctx:ctx_dae_integ "container" "${gpf_dev_image_ref}" \
           --network "${ctx_network["network_id"]}" \
-          --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-          --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
           --env AWS_ACCESS_KEY_ID="foo" \
           --env AWS_SECRET_ACCESS_KEY="foo" \
