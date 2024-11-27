@@ -90,6 +90,15 @@ class GeneScoreAnnotator(Annotator):
 
             self.aggregators.append(aggregator_type)
 
+            aggregator_doc = f"**gene_aggregator**: {aggregator_type}"
+
+            if aggregator_type == "dict":
+                aggregator_doc = f"{aggregator_doc} [default]"
+            attribute_config._documentation = (  # noqa: SLF001
+                f"{attribute_config.documentation}\n\n"
+                f"{aggregator_doc}"
+            )
+
         self.input_gene_list = input_gene_list
         super().__init__(pipeline, info)
 
