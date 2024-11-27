@@ -123,7 +123,7 @@ test.describe('App user access rights tests', () => {
     await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Phenotype Browser'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Enrichment Tool'})).toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Phenotype Tool'})).toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Phenotype Tool'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Dataset Description'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
 
@@ -143,7 +143,7 @@ test.describe('App user access rights tests', () => {
     await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Phenotype Browser'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Enrichment Tool'})).toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Phenotype Tool'})).toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Phenotype Tool'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Dataset Description'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
   });
