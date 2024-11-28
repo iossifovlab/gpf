@@ -1,4 +1,5 @@
 import json
+from datetime import date
 
 from django.shortcuts import get_object_or_404
 from rest_framework import status, views
@@ -21,6 +22,7 @@ class QueryStateSaveView(views.APIView):
             data=json.dumps(serializer.data["data"]),
             page=serializer.data["page"],
             origin=serializer.data["origin"],
+            timestamp=date.today(),
         )
 
         return Response(

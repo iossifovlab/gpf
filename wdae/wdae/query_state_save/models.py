@@ -1,5 +1,4 @@
 import uuid
-from datetime import date
 
 from django.db import models
 
@@ -20,17 +19,20 @@ PAGE_TYPE_OPTIONS = [x[0] for x in PAGE_TYPES]
 
 
 class QueryState(models.Model):
-
+    """Model for saved queries, shared queries and system generated queries."""
     data: models.TextField = models.TextField(
         null=False, blank=False)
     page: models.CharField = models.CharField(
         blank=False, null=False, max_length=10, choices=PAGE_TYPES)
     uuid = models.UUIDField(default=uuid.uuid4)  # type: ignore
     timestamp: models.DateField = models.DateField(
-            default=date.today)
+        null=True,
+        default=None,
+    )
     origin: models.CharField = models.CharField(
-        blank=False,
+        blank=True,
         max_length=10,
         choices=ORIGIN,
-        default="system",
+        null=True,
+        default=None,
     )
