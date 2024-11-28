@@ -6,14 +6,14 @@ Release Notes
     * Fix SimpleEffectAnnotator to produce a link to the GPF documentation
     * Adjust formatting of float numbers in annotate_columns and annotate_vcf
       tools
-    * Fix gene set annotator to include attributes in annotation schema
+    * Fix gene set annotator to include attributes in the annotation schema
     * Fix gene score annotator documentation to include aggregator
     * Add support for read-only filesystem GRR
     * Add support for liftover annotator to use source and target genomes from
       liftover chain genomic resource labels
-    * Annonymous users can access limitted functionality of phenotype tools
+    * Annonymous users can access limited functionality of phenotype tools
     * Add support for effect annotator to use reference genome from genomic
-      resource labels, annotation pipeline preamble and genomic context
+      resource labels, annotation pipeline preamble, and genomic context
     * Fix types produced in annotation pipeline documentation
     * Fix dataset hierarchy permissions
     * Support for wildcards in annotation pipeline resource_id annotator's
@@ -21,12 +21,12 @@ Release Notes
     * Fix in region splitting in annotation and reannotation tools -
       annotate_columns, annotate_vcf and annotate_schema2_parquet
     * Support for categorical histograms in gene scores user interface
-    * Support for consistence checks in genomic scores fetch_region method
-    * Minor optimizations in genomic position table
-    * Fix an infinite loop in liftover annotator
+    * Support for consistency checks in genomic scores fetch_region method
+    * Minor optimizations in the genomic position table
+    * Fix an infinite loop in the liftover annotator
     * Minor improvements in DuckDb genotype storage
     * Support for downloading phenotype tool report image
-    * Fix in error handling for family filters in genotype browser
+    * Fix in the error handling for family filters in the genotype browser
 
 
 * 2024.11.2
