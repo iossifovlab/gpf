@@ -86,6 +86,8 @@ class CnvCollection:
         """Return list of CNVs that overlap with the provided region."""
         assert self.is_open()
         cnvs = []
+        if chrom not in self.table.get_chromosomes():
+            return cnvs
         for line in self.table.get_records_in_region(chrom, start, stop):
             attributes = {}
             for score_id, score_def in self.score_defs.items():
