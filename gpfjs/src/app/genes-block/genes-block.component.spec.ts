@@ -44,8 +44,7 @@ describe('GenesBlockComponent', () => {
   });
 
   it('should open gene symbols tab when loading gene symbols from state', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(['value1', 'value2']));
 
     const selectNavSpy = jest.spyOn(component.ngbNav, 'select');
@@ -73,8 +72,7 @@ describe('GenesBlockComponent', () => {
       categoricalView: null,
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([[], geneSetsMock, initialGeneScores]));
     const selectNavSpy = jest.spyOn(component.ngbNav, 'select');
 
@@ -102,8 +100,7 @@ describe('GenesBlockComponent', () => {
       categoricalView: null,
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([[], initialGeneSets, geneScoresMock]));
     const selectNavSpy = jest.spyOn(component.ngbNav, 'select');
 

@@ -446,8 +446,7 @@ describe('GenotypeBrowserComponent', () => {
 
   it('should create genotype browser state with rare rarity', () => {
     jest.clearAllMocks();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(allStatesMock));
     component.ngOnInit();
 
@@ -457,8 +456,7 @@ describe('GenotypeBrowserComponent', () => {
 
   it('should create genotype browser state with interval rarity', () => {
     jest.clearAllMocks();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(allStatesMock));
 
     allStatesMock[5] = {
@@ -476,8 +474,7 @@ describe('GenotypeBrowserComponent', () => {
 
   it('should get genotype browser state with ultra rare rarity', () => {
     jest.clearAllMocks();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
 
     allStatesMock[5] = {
       presentInParent: ['neither'],
@@ -498,8 +495,7 @@ describe('GenotypeBrowserComponent', () => {
 
   it('should create genotype browser empty state when all component states are empty', () => {
     jest.clearAllMocks();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
 
     const emptyStatesMock = [
       [],

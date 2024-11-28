@@ -109,8 +109,7 @@ describe('PhenoToolComponent', () => {
 
   it('should test state selector', () => {
     jest.clearAllMocks();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
 
     const geneSetsMock: GeneSetsState = {
       geneSet: null,

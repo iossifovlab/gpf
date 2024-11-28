@@ -587,8 +587,7 @@ describe('GeneSetsComponent', () => {
   });
 
   it('should create denovo modal hierarchy', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       datasetHierarchyMock,
       visibleDatasetsMock,
@@ -644,8 +643,7 @@ describe('GeneSetsComponent', () => {
   });
 
   it('should not create denovo modal hierarchy when datasets hierarchy nodes are invalid', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       [null],
       visibleDatasetsMock,
@@ -663,8 +661,7 @@ describe('GeneSetsComponent', () => {
   });
 
   it('should restore gene sets types', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       datasetHierarchyMock,
       visibleDatasetsMock,
@@ -689,8 +686,7 @@ describe('GeneSetsComponent', () => {
   });
 
   it('should select first person set type from the first dataset as default', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       datasetHierarchyMock,
       visibleDatasetsMock,
