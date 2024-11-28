@@ -1,6 +1,34 @@
 Release Notes
 =============
 
+* 2024.11.3
+    * Fix annoate_columns to create a correct tabix index
+    * Fix SimpleEffectAnnotator to produce a link to the GPF documentation
+    * Adjust formatting of float numbers in annotate_columns and annotate_vcf
+      tools
+    * Fix gene set annotator to include attributes in annotation schema
+    * Fix gene score annotator documentation to include aggregator
+    * Add support for read-only filesystem GRR
+    * Add support for liftover annotator to use source and target genomes from
+      liftover chain genomic resource labels
+    * Annonymous users can access limitted functionality of phenotype tools
+    * Add support for effect annotator to use reference genome from genomic
+      resource labels, annotation pipeline preamble and genomic context
+    * Fix types produced in annotation pipeline documentation
+    * Fix dataset hierarchy permissions
+    * Support for wildcards in annotation pipeline resource_id annotator's
+      attributes
+    * Fix in region splitting in annotation and reannotation tools -
+      annotate_columns, annotate_vcf and annotate_schema2_parquet
+    * Support for categorical histograms in gene scores user interface
+    * Support for consistence checks in genomic scores fetch_region method
+    * Minor optimizations in genomic position table
+    * Fix an infinite loop in liftover annotator
+    * Minor improvements in DuckDb genotype storage
+    * Support for downloading phenotype tool report image
+    * Fix in error handling for family filters in genotype browser
+
+
 * 2024.11.2
     * Fix pheno import type inference issues
     * Improvments in phenotype data import unit testing
@@ -17,7 +45,8 @@ Release Notes
     * Implementation of full re-annotation of schema2 parquet datasets
     * Factory functions for bulding genomic resources from resource ID
     * Fix query cancelation in genotype browser
-    * Improvement in handling pedigrees in dataset statistics without access rights
+    * Improvement in handling pedigrees in dataset statistics without
+      access rights
 
 * 2024.11.0
     * Pure python implementation of type inference for phenotype measures
@@ -25,16 +54,16 @@ Release Notes
     * Support for storing gene models in GTF format
     * Support for storing gene and genomic scores histograms in JSON format
     * Fix de Novo gene sets user interface
-    * Fix hanling of families and persons IDs in save/share query 
+    * Fix hanling of families and persons IDs in save/share query
 
 * 2024.10.6
     * Bug fix in handling genomic scores with chromosome remapping
     * Workaround for pysam handling of HLA contigs regions
     * Bug fix for handling dataset description without children
-    * 
 
 * 2024.10.5
-    * GPF federation refactoring to create a separate conda package *gpf_federation*
+    * GPF federation refactoring to create a separate conda
+      package *gpf_federation*
     * Update de Novo gene sets REST API
     * Support for restricted access of GPF tools without explicit access rights
     * Improvement and fixes in Schema2 parquet datasets re-annotation
@@ -46,10 +75,11 @@ Release Notes
     * Refactor and fixes in support of person set collection queries
 
 * 2024.10.3
-    * Remove an exception logger from phenotype measures download in phenotype browser
+    * Remove an exception logger from phenotype measures download in
+      phenotype browser
 
 * 2024.10.2
-    * Clean up user edit code from GPFjs 
+    * Clean up user edit code from GPFjs
 
 * 2024.10.1
     * Bump Angular version to 17
