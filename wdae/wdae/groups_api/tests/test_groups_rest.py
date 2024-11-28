@@ -176,7 +176,7 @@ def test_empty_group_with_permissions_is_shown(
     response = admin_client.get(url)
     assert response.status_code is status.HTTP_200_OK
     data = response.json()
-    assert len(data) == 25
+    assert len(data) == 7
     new_group_reponse = next(
         (
             response_group
@@ -210,7 +210,7 @@ def test_group_has_all_datasets(
     data = response.json()
     assert len(data["datasets"]) == 1
     assert data["datasets"][0]["datasetId"] == dataset.dataset_id
-    assert data["datasets"][0]["datasetName"] == "Dataset1"
+    assert data["datasets"][0]["datasetName"] == "t4c8_dataset"
     assert data["datasets"][0]["broken"] is False
 
 
@@ -222,7 +222,7 @@ def test_grant_permission_for_group(
     user = cast(User, wdae_user)
     data = {"datasetId": dataset.dataset_id, "groupName": group.name}
 
-    assert not user_has_permission("test_data", user, dataset.dataset_id)
+    assert not user_has_permission("t4c8_instance", user, dataset.dataset_id)
 
     url = "/api/v3/groups/grant-permission"
     response = admin_client.post(
@@ -230,7 +230,7 @@ def test_grant_permission_for_group(
     )
 
     assert response.status_code == status.HTTP_200_OK
-    assert user_has_permission("test_data", user, dataset.dataset_id)
+    assert user_has_permission("t4c8_instance", user, dataset.dataset_id)
 
 
 def test_grant_permission_creates_new_group(
@@ -240,7 +240,7 @@ def test_grant_permission_creates_new_group(
     data = {"datasetId": dataset.dataset_id, "groupName": group_name}
 
     assert not user_has_permission(
-        "test_data", cast(User, user), dataset.dataset_id,
+        "t4c8_instance", cast(User, user), dataset.dataset_id,
     )
 
     url = "/api/v3/groups/grant-permission"
@@ -260,7 +260,7 @@ def test_grant_permission_creates_new_group_case_sensitive(
     data = {"datasetId": dataset.dataset_id, "groupName": group_name}
 
     assert not user_has_permission(
-        "test_data", cast(User, user), dataset.dataset_id,
+        "t4c8_instance", cast(User, user), dataset.dataset_id,
     )
 
     url = "/api/v3/groups/grant-permission"
@@ -282,7 +282,7 @@ def test_not_admin_cant_grant_permissions(
 
     data = {"datasetId": dataset.dataset_id, "groupName": group.name}
 
-    assert not user_has_permission("test_data", user, dataset.dataset_id)
+    assert not user_has_permission("t4c8_instance", user, dataset.dataset_id)
 
     url = "/api/v3/groups/grant-permission"
     response = user_client.post(
@@ -290,7 +290,7 @@ def test_not_admin_cant_grant_permissions(
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert not user_has_permission("test_data", user, dataset.dataset_id)
+    assert not user_has_permission("t4c8_instance", user, dataset.dataset_id)
 
 
 def test_not_admin_grant_permissions_does_not_create_group(
@@ -319,7 +319,7 @@ def test_revoke_permission_for_group(
 
     dataset.groups.add(group)
 
-    assert user_has_permission("test_data", user, dataset.dataset_id)
+    assert user_has_permission("t4c8_instance", user, dataset.dataset_id)
 
     url = "/api/v3/groups/revoke-permission"
     response = admin_client.post(
@@ -327,7 +327,7 @@ def test_revoke_permission_for_group(
     )
 
     assert response.status_code == status.HTTP_200_OK
-    assert not user_has_permission("test_data", user, dataset.dataset_id)
+    assert not user_has_permission("t4c8_instance", user, dataset.dataset_id)
 
 
 def test_not_admin_cant_revoke_permissions(
@@ -340,7 +340,7 @@ def test_not_admin_cant_revoke_permissions(
     data = {"datasetId": dataset.dataset_id, "groupId": group.id}
     dataset.groups.add(group)
 
-    assert user_has_permission("test_data", user, dataset.dataset_id)
+    assert user_has_permission("t4c8_instance", user, dataset.dataset_id)
 
     url = "/api/v3/groups/revoke-permission"
     response = user_client.post(
@@ -348,7 +348,7 @@ def test_not_admin_cant_revoke_permissions(
     )
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
-    assert user_has_permission("test_data", user, dataset.dataset_id)
+    assert user_has_permission("t4c8_instance", user, dataset.dataset_id)
 
 
 def test_cant_revoke_default_permissions(
@@ -378,11 +378,11 @@ def test_cant_revoke_default_permissions(
 @pytest.mark.parametrize(
     "page,status_code,length, first_name, last_name",
     [
-        (1, status.HTTP_200_OK, 25, "Dataset1", "Group27"),
-        (2, status.HTTP_200_OK, 25, "Group28", "Group5"),
-        (3, status.HTTP_200_OK, 25, "Group50", "Group72"),
-        (4, status.HTTP_200_OK, 25, "Group73", "Group95"),
-        (5, status.HTTP_200_OK, 25, "Group96", None),
+        (1, status.HTTP_200_OK, 25, "Group1", "Group30"),
+        (2, status.HTTP_200_OK, 25, "Group31", "Group53"),
+        (3, status.HTTP_200_OK, 25, "Group54", "Group76"),
+        (4, status.HTTP_200_OK, 25, "Group77", "Group99"),
+        (5, status.HTTP_200_OK, 6, "admin", None),
         (7, status.HTTP_204_NO_CONTENT, None, None, None),
     ],
 )
@@ -425,8 +425,7 @@ def test_groups_search(
         (2, status.HTTP_200_OK, 25),
         (3, status.HTTP_200_OK, 25),
         (4, status.HTTP_200_OK, 25),
-        (5, status.HTTP_200_OK, 3),
-        (6, status.HTTP_204_NO_CONTENT, None),
+        (5, status.HTTP_204_NO_CONTENT, None),
     ],
 )
 def test_groups_search_pagination(
@@ -479,8 +478,8 @@ def test_group_retrieve(
     assert data["name"] == "Group1"
     assert data["users"] == ["user@example.com"]
     assert data["datasets"] == [{
-        "datasetName": "Dataset1",
-        "datasetId": "Dataset1",
+        "datasetName": "t4c8_dataset",
+        "datasetId": "t4c8_dataset",
         "broken": False,
     }]
 
@@ -495,14 +494,10 @@ def test_group_retrieve_alphabetical_order(
 
     assert data["name"] == "any_dataset"
     assert data["users"] == []
-    assert data["datasets"][0]["datasetName"] == "comp"
-    assert data["datasets"][2]["datasetName"] == "Dataset1"
-    assert data["datasets"][3]["datasetName"] == "Dataset2"
-    assert data["datasets"][6]["datasetName"] == "f1_group"
-    assert data["datasets"][7]["datasetName"] == "f1_study"
-    assert data["datasets"][8]["datasetName"] == "f1_trio"
-    assert data["datasets"][13]["datasetName"] == "FAKE_STUDY"
-    assert data["datasets"][-1]["datasetName"] == "TRIO"
+    assert data["datasets"][0]["datasetName"] == "t4c8_dataset"
+    assert data["datasets"][1]["datasetName"] == "t4c8_study_1"
+    assert data["datasets"][2]["datasetName"] == "t4c8_study_2"
+    assert data["datasets"][3]["datasetName"] == "t4c8_study_4"
 
 
 def test_group_retrieve_missing(admin_client: Client) -> None:

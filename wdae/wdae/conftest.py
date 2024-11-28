@@ -484,15 +484,16 @@ def use_common_reports(  # noqa: PT004
 @pytest.fixture()
 def sample_dataset(
     db: None,  # noqa: ARG001
-    wdae_gpf_instance: WGPFInstance,  # noqa: ARG001
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
 ) -> Dataset:
-    return Dataset.objects.get(dataset_id="Dataset1")
+    return Dataset.objects.get(dataset_id="t4c8_dataset")
 
 
 @pytest.fixture()
 def hundred_groups(
     db: None,  # noqa: ARG001
-    sample_dataset: Dataset, user: WdaeUser,
+    sample_dataset: Dataset,
+    user: WdaeUser,
 ) -> list[Group]:
     groups_data = [
         Group(
