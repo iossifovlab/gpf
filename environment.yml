@@ -53,3 +53,5 @@ dependencies:
   - gunicorn=22.0
   - mysqlclient=2.2
   - pydantic=2.8.2
+  # pin the version of pyopenssl to pass the build
+  - pyopenssl=24.2.1
