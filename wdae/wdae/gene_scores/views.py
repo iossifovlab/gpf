@@ -1,9 +1,11 @@
 
+import numpy as np
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.http.response import StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
 from query_base.query_base import QueryBaseView
+from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -88,3 +90,51 @@ class GeneScoresDownloadView(QueryBaseView):
         response["Content-Disposition"] = "attachment; filename=scores.csv"
         response["Expires"] = "0"
         return response
+
+
+class GeneScoresPartitionsView(QueryBaseView):
+    """Serves gene scores partitions request."""
+
+    def post(self, request: Request) -> Response:
+        """Calculate and return gene score partitions."""
+        data = request.data
+
+        assert "score" in data
+
+        score_name = data["score"]
+
+        if not self.gpf_instance.has_gene_score(score_name):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if "min" not in data or "max" not in data:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        score_desc = self.gpf_instance.get_gene_score_desc(score_name)
+        gene_score = self.gpf_instance.get_gene_score(score_desc.resource_id)
+        df = gene_score.get_score_df(score_name)
+
+        try:
+            score_min = float(data["min"])
+        except (ValueError, TypeError):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            score_max = float(data["max"])
+        except (ValueError, TypeError):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        total = 1.0 * len(df)
+
+        ldf = df[df[score_name] < score_min]
+        rdf = df[df[score_name] > score_max]
+        mdf = df[
+            np.logical_and(
+                df[score_name] >= score_min,
+                df[score_name] <= score_max)
+        ]
+
+        res = {
+            "left": {"count": len(ldf), "percent": len(ldf) / total},
+            "mid": {"count": len(mdf), "percent": len(mdf) / total},
+            "right": {"count": len(rdf), "percent": len(rdf) / total},
+        }
+        return Response(res)

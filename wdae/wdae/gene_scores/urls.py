@@ -14,4 +14,9 @@ urlpatterns = [
         views.GeneScoresDownloadView.as_view(),
         name="gene_scores_download",
     ),
+    re_path(
+        r"^/partitions/?$",
+        views.GeneScoresPartitionsView.as_view(),
+        name="gene_scores_partitions",
+    ),
 ]
