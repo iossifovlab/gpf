@@ -250,20 +250,32 @@ class AnnotationEffect:  # pylint: disable=too-many-instance-attributes
 
         return (
             cls.worst_effect(effects),
-            list(zip(*gene_effects)),  # type: ignore
-            list(zip(*transcript_effects)))
+            list(zip(*gene_effects, strict=True)),
+            list(zip(*transcript_effects, strict=True)))
 
     @classmethod
-    def lgd_gene_effects(
+    def filter_gene_effects(
         cls, effects: list[AnnotationEffect],
+        effect_type: str,
     ) -> list[list[str]]:
-        """Filter and return a mapping of gene to effects by the LGD group."""
-        gene_effects = zip(*cls.gene_effects(effects))
-        result = [
-            gene_effect
-            for gene_effect in gene_effects
-            if gene_effect[1] in EffectTypesMixin.EFFECT_GROUPS["LGDs"]
-        ]
+        """Filter and map genes to effects by a group or effect type."""
+        gene_effects = zip(*cls.gene_effects(effects), strict=True)
+        if effect_type in EffectTypesMixin.EFFECT_GROUPS:
+            result = [
+                gene_effect
+                for gene_effect in gene_effects
+                if gene_effect[1] in EffectTypesMixin.EFFECT_GROUPS[effect_type]
+            ]
+        elif effect_type in EffectTypesMixin.EFFECT_TYPES:
+            result = [
+                gene_effect
+                for gene_effect in gene_effects
+                if gene_effect[1] == effect_type
+            ]
+        else:
+            raise ValueError(
+                f"{effect_type} does not match any effect type or group",
+            )
         return [[str(r[0]) for r in result], [str(r[1]) for r in result]]
 
     @classmethod
