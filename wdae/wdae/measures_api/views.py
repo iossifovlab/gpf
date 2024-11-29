@@ -104,7 +104,11 @@ class PhenoMeasureHistogramView(QueryBaseView):
 
 
 class PhenoMeasurePartitionsView(QueryBaseView, DatasetAccessRightsView):
-    """View for phenotype measure partitions."""
+    """View for phenotype measure partitions.
+    Histograms can calculate gene count when min and max are not inside bins.
+    Using a range that has min/max somewhere inside a bin needs a more
+    accurate calculation of genes.
+    """
 
     def post(self, request: Request) -> Response:
         """Get phenotype measure partitions."""
