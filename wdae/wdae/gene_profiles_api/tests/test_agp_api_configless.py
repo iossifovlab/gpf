@@ -1,17 +1,15 @@
-import pytest
+# pylint: disable=W0621,C0114,C0116,W0212,W0613
 from django.test.client import Client
-
-pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance",
-    "dae_calc_gene_sets",
-    # "agp_gpf_instance",
-)
+from gpf_instance.gpf_instance import WGPFInstance
 
 ROUTE_PREFIX = "/api/v3/gene_profiles"
 
 
-def test_configuration(admin_client: Client) -> None:
+def test_configuration(
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
+    admin_client: Client,
+) -> None:
     response = admin_client.get(f"{ROUTE_PREFIX}/single-view/configuration")
 
     assert response.status_code == 200
-    assert response.data == dict()  # type: ignore
+    assert response.data == {}  # type: ignore

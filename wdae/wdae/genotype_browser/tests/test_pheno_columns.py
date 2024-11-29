@@ -1,13 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import json
 
-import pytest
 from django.test import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
-
-pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance", "dae_calc_gene_sets")
 
 QUERY_URL = "/api/v3/genotype_browser/query"
 

@@ -3,7 +3,6 @@
 import copy
 import json
 
-import pytest
 from datasets_api.permissions import (
     add_group_perm_to_dataset,
     add_group_perm_to_user,
@@ -12,10 +11,6 @@ from django.contrib.auth.models import User
 from django.test import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
-
-pytestmark = pytest.mark.usefixtures(
-    "wdae_gpf_instance", "dae_calc_gene_sets")
-
 
 EXAMPLE_REQUEST: dict = {
     "datasetId": "t4c8_study_1",

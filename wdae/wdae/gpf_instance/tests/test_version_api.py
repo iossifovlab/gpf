@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
-from collections.abc import Generator
+from pathlib import Path
 
 import pytest
+import pytest_mock
 from django.test import Client
 from rest_framework import status
 
@@ -10,32 +10,31 @@ from gpf_instance.gpf_instance import WGPFInstance
 
 
 @pytest.fixture()
-def reset_main_description(
-    wdae_gpf_instance: WGPFInstance,
-    global_dae_fixtures_dir: str,
-) -> Generator[None, None, None]:
-    file_path = os.path.join(global_dae_fixtures_dir, "main_description.md")
-    with open(file_path, "r") as infile:
-        content = infile.read()
-    yield None
-    with open(file_path, "w") as infile:
-        infile.write(content)
+def mock_instance(
+    mocker: pytest_mock.MockerFixture,
+    t4c8_wgpf_instance: WGPFInstance,
+    tmp_path: Path,
+) -> WGPFInstance:
+    main_path = Path(tmp_path, "main_description.md")
+    main_path.write_text("main description")
+    mocker.patch.object(
+        t4c8_wgpf_instance,
+        "get_main_description_path",
+        return_value=main_path,
+    )
 
-
-@pytest.fixture()
-def reset_about_description(
-    wdae_gpf_instance: WGPFInstance,
-    global_dae_fixtures_dir: str,
-) -> Generator[None, None, None]:
-    file_path = os.path.join(global_dae_fixtures_dir, "about_description.md")
-    with open(file_path, "r") as infile:
-        content = infile.read()
-    yield None
-    with open(file_path, "w") as infile:
-        infile.write(content)
+    about_path = Path(tmp_path, "about_description.md")
+    about_path.write_text("about description")
+    mocker.patch.object(
+        t4c8_wgpf_instance,
+        "get_about_description_path",
+        return_value=about_path,
+    )
+    return t4c8_wgpf_instance
 
 
 def test_get_gpf_version(
+    mock_instance: WGPFInstance,  # noqa: ARG001
     anonymous_client: Client,
 ) -> None:
     """Try to get gpf version."""
@@ -48,8 +47,8 @@ def test_get_gpf_version(
 
 
 def test_update_gpf_main_description_anonymous(
+    mock_instance: WGPFInstance,  # noqa: ARG001
     anonymous_client: Client,
-    reset_main_description: Generator[None, None, None],
 ) -> None:
     """Try to get gpf version."""
     url = "/api/v3/instance/description"
@@ -59,8 +58,8 @@ def test_update_gpf_main_description_anonymous(
 
 
 def test_gpf_main_description(
+    mock_instance: WGPFInstance,  # noqa: ARG001
     admin_client: Client,
-    reset_main_description: Generator[None, None, None],
 ) -> None:
     """Try to get gpf version."""
     url = "/api/v3/instance/description"
@@ -78,8 +77,8 @@ def test_gpf_main_description(
 
 
 def test_update_gpf_about_description_anonymous(
+    mock_instance: WGPFInstance,  # noqa: ARG001
     anonymous_client: Client,
-    reset_about_description: Generator[None, None, None],
 ) -> None:
     """Try to get gpf version."""
     url = "/api/v3/instance/about"
@@ -89,8 +88,8 @@ def test_update_gpf_about_description_anonymous(
 
 
 def test_gpf_about_description(
+    mock_instance: WGPFInstance,  # noqa: ARG001
     admin_client: Client,
-    reset_about_description: Generator[None, None, None],
 ) -> None:
     """Try to get gpf version."""
     url = "/api/v3/instance/about"
