@@ -1,11 +1,14 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import pathlib
 import textwrap
+from typing import Any
 
 import pytest
 import pytest_mock
 
+from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
+from dae.effect_annotation.effect import AnnotationEffect
 from dae.genomic_resources.genomic_context import SimpleGenomicContext
 from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource_id,
@@ -146,3 +149,83 @@ def test_effect_annotator_implicit_genome_from_context(
             genome_id,
             gene_models,
         }
+
+
+@pytest.mark.parametrize(
+    "effects, target_gene_list, expected_gene_list", [
+        (["CNV+", "frame-shift"], "CNV", ["gene1"]),
+        (["frame-shift", "CNV+"], "CNV", ["gene2"]),
+        (["CNV-", "CNV+"], "CNV", ["gene1", "gene2"]),
+        (["CNV-", "CNV+"], "CNV+", ["gene2"]),
+        (["nonsense", "CNV+"], "coding", ["gene1"]),
+        (["nonsense", "CNV+"], "nonsynonymous", ["gene1"]),
+        (["intron", "CNV+"], "noncoding", ["gene1"]),
+        (["frame-shift", "CNV+"], "LGDs", ["gene1"]),
+        (["3'UTR", "CNV+"], "UTRs", ["gene1"]),
+        (["3'UTR", "CNV+"], "3'UTR", ["gene1"]),
+        (["3'UTR-intron", "CNV+"], "3'UTR-intron", ["gene1"]),
+        (["5'UTR", "CNV+"], "5'UTR", ["gene1"]),
+        (["5'UTR-intron", "CNV+"], "5'UTR-intron", ["gene1"]),
+        (["frame-shift", "CNV+"], "frame-shift", ["gene1"]),
+        (["intergenic", "CNV+"], "intergenic", ["gene1"]),
+        (["intron", "CNV+"], "intron", ["gene1"]),
+        (["missense", "CNV+"], "missense", ["gene1"]),
+        (["no-frame-shift", "CNV+"], "no-frame-shift", ["gene1"]),
+        (
+            ["no-frame-shift-newStop", "CNV+"],
+            "no-frame-shift-newStop", ["gene1"],
+        ),
+        (["noEnd", "CNV+"], "noEnd", ["gene1"]),
+        (["noStart", "CNV+"], "noStart", ["gene1"]),
+        (["non-coding", "CNV+"], "non-coding", ["gene1"]),
+        (["non-coding-intron", "CNV+"], "non-coding-intron", ["gene1"]),
+        (["nonsense", "CNV+"], "nonsense", ["gene1"]),
+        (["splice-site", "CNV+"], "splice-site", ["gene1"]),
+        (["synonymous", "CNV+"], "synonymous", ["gene1"]),
+        (["CDS", "CNV+"], "CDS", ["gene1"]),
+        (["CNV-", "CNV+"], "CNV-", ["gene1"]),
+    ],
+)
+def test_effect_annotator_gene_lists(
+    mocker: pytest_mock.MockerFixture,
+    grr: GenomicResourceRepo,
+    effects: list[str],
+    target_gene_list: str,
+    expected_gene_list: list[str],
+) -> None:
+    genome_id = "t4c8_genome_implicit_B"
+    gene_models = "t4c8_genes_ALT"
+    config = textwrap.dedent(f"""
+        - effect_annotator:
+            gene_models: {gene_models}
+            attributes:
+              - gene_list
+              - {target_gene_list}_gene_list
+        """)
+
+    genome = build_reference_genome_from_resource_id(genome_id, grr)
+    context = SimpleGenomicContext(
+        context_objects={"reference_genome": genome}, source=())
+    mocker.patch(
+        "dae.annotation.effect_annotator.get_genomic_context",
+    ).return_value = context
+
+    annotation_pipeline = load_pipeline_from_yaml(config, grr)
+
+    annotation_effects = [
+        AnnotationEffect(effect) for effect in effects
+    ]
+
+    for idx, eff in enumerate(annotation_effects, start=1):
+        eff.gene = f"gene{idx}"
+
+    with annotation_pipeline.open() as pipeline:
+        annotate_context: dict[str, Any] = {}
+        annotator = pipeline.annotators[0]
+        mocker.patch.object(
+            annotator.effect_annotator, "annotate_allele",  # type: ignore
+            return_value=annotation_effects,
+        )
+        annotatable = VCFAllele("chr1", 1, "A", "T")
+        result = annotator.annotate(annotatable, annotate_context)
+        assert result[f"{target_gene_list}_gene_list"] == expected_gene_list
