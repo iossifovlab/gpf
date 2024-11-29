@@ -13,7 +13,11 @@ from dae.annotation.annotation_pipeline import (
 )
 from dae.annotation.annotator_base import AnnotatorBase
 from dae.effect_annotation.annotator import EffectAnnotator
-from dae.effect_annotation.effect import AlleleEffects, AnnotationEffect
+from dae.effect_annotation.effect import (
+    AlleleEffects,
+    AnnotationEffect,
+    EffectTypesMixin,
+)
 from dae.genomic_resources.gene_models import (
     GeneModels,
     build_gene_models_from_resource,
@@ -82,6 +86,22 @@ Annotator to identify the effect of the variant on protein coding.
                 "gene_effects",
                 {"name": "gene_list", "internal": True},
             ])
+
+        self.effect_types_gene_lists = {}
+        for group in EffectTypesMixin.EFFECT_GROUPS:
+            self.effect_types_gene_lists[f"{group}_gene_list"] = (
+                "object",
+                f"List of all {group} genes",
+            )
+        for effect_type in EffectTypesMixin.EFFECT_TYPES:
+            self.effect_types_gene_lists[f"{effect_type}_gene_list"] = (
+                "object",
+                f"List of all {effect_type} genes",
+            )
+        self.effect_types_gene_lists["LGD_gene_list"] = (
+            "object",
+            "List of all LGD genes (deprecated, use LGDs_gene_list)",
+        )
         super().__init__(pipeline, info, {
             "worst_effect": ("str", "Worst effect accross all transcripts."),
             "gene_effects": ("str", "Effects types for genes. Format: "
@@ -94,9 +114,12 @@ Annotator to identify the effect of the variant on protein coding.
                                          "details of the effects for each "
                                          "affected transcript."),
             "gene_list": ("object", "List of all genes"),
-            "LGD_gene_list": ("object", "List of all LGD genes"),
+            **self.effect_types_gene_lists,
         })
 
+        self.used_attributes = [
+            attr.source for attr in self.get_info().attributes
+        ]
         self.genome = genome
         self.gene_models = gene_models
         self._promoter_len = info.parameters.get("promoter_len", 0)
@@ -175,9 +198,9 @@ Annotator to identify the effect of the variant on protein coding.
                     length=length,
                 )
             except Exception:  # pylint: disable=broad-except
-                logger.error(
+                logger.exception(
                     "unable to create effect annotation for allele %s",
-                    annotatable, exc_info=True)
+                    annotatable)
                 return self._not_found(result)
 
         elif length > self._region_length_cutoff:
@@ -199,9 +222,7 @@ Annotator to identify the effect of the variant on protein coding.
         gene_list = list(set(
             AnnotationEffect.gene_effects(effects)[0],
         ))
-        lgd_gene_list = list(set(
-            AnnotationEffect.lgd_gene_effects(effects)[0],
-        ))
+
         full_desc = AnnotationEffect.effects_description(effects)
         result = {
             "worst_effect": full_desc[0],
@@ -209,7 +230,14 @@ Annotator to identify the effect of the variant on protein coding.
             "effect_details": full_desc[2],
             "allele_effects": AlleleEffects.from_effects(effects),
             "gene_list": gene_list,
-            "lgd_gene_list": lgd_gene_list,
         }
+        for effect_gene_list in self.effect_types_gene_lists:
+            if effect_gene_list in self.used_attributes:
+                effect_type = effect_gene_list.split("_")[0]
+                if effect_type == "LGD":
+                    effect_type = "LGDs"
+                result[effect_gene_list] = \
+                    AnnotationEffect.filter_gene_effects(
+                        effects, effect_type)[0]
 
         return result
