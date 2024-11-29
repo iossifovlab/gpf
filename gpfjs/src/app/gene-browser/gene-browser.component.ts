@@ -357,7 +357,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     const params = {
       datasetId: this.selectedDatasetId,
       geneSymbols: [this.geneSymbol.trim()],
-      maxVariantsCount: 10000,
+      maxVariantsCount: 100000,
       inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
     };
     if (this.summaryVariantsFilter.codingOnly) {
