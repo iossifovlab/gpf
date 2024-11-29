@@ -190,8 +190,112 @@ gene_list
   List of all genes
 
 
-LGD_gene_list
+3'UTR_gene_list
+  List of all 3'UTR genes
+
+
+3'UTR-intron_gene_list
+  List of all 3'UTR-intron genes
+
+
+5'UTR_gene_list
+  List of all 5'UTR genes
+
+
+5'UTR-intron_gene_list
+  List of all 5'UTR-intron genes
+
+
+frame-shift_gene_list
+  List of all frame-shift genes
+
+
+intergenic_gene_list
+  List of all intergenic genes
+
+
+intron_gene_list
+  List of all intron genes
+
+
+missense_gene_list
+  List of all missense genes
+
+
+no-frame-shift_gene_list
+  List of all no-frame-shift genes
+
+
+no-frame-shift-newStop_gene_list
+  List of all no-frame-shift-newStop genes
+
+
+noEnd_gene_list
+  List of all noEnd genes
+
+
+noStart_gene_list
+  List of all noStart genes
+
+
+non-coding_gene_list
+  List of all non-coding genes
+
+
+non-coding-intron_gene_list
+  List of all non-coding-intron genes
+
+
+nonsense_gene_list
+  List of all nonsense genes
+
+
+splice-site_gene_list
+  List of all splice-site genes
+
+
+synonymous_gene_list
+  List of all synonymous genes
+
+
+CDS_gene_list
+  List of all CDS genes
+
+
+CNV+_gene_list
+  List of all CNV+ genes
+
+
+CNV-_gene_list
+  List of all CNV- genes
+
+
+coding_gene_list
+  List of all coding genes
+
+
+noncoding_gene_list
+  List of all noncoding genes
+
+
+CNV_gene_list
+  List of all CNV genes
+
+
+LGDs_gene_list
   List of all LGD genes
+
+
+LGD_gene_list (deprecated)
+  List of all LGD genes
+
+
+nonsynonymous_gene_list
+  List of all nonsynonymous genes
+
+
+UTRs_gene_list
+  List of all UTRs genes
 
 
 .. code:: yaml
