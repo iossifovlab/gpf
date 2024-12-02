@@ -795,6 +795,24 @@ class PositionScore(GenomicScore):
             returned_region = (left, right, val)
             yield (left, right, val)
 
+    def get_region_scores(
+        self,
+        chrom: str,
+        pos_beg: int,
+        pos_end: int,
+        score_id: str,
+    ) -> list[ScoreValue]:
+        """Return score values in a region."""
+        result: list[ScoreValue | None] = [None] * (pos_end - pos_beg + 1)
+        for b, e, v in self.fetch_region(
+                chrom, pos_beg, pos_end, [score_id]):
+            e = min(e, pos_end)
+            if v is None:
+                continue
+            result[b - pos_beg:e - pos_beg + 1] = [v[0]] * (e - b + 1)
+
+        return result
+
     def fetch_scores(
         self, chrom: str, position: int,
         scores: list[str] | None = None,

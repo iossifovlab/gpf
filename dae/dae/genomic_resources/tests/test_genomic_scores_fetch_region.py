@@ -118,6 +118,25 @@ def test_position_score_fetch_region_consistency(
         list(position_score.fetch_region(chrom, begin, end))
 
 
+@pytest.mark.parametrize("begin,end,score,expected", [
+    (12, 14, "s1", [1.0, 1.0, None]),
+    (12, 14, "s2", [10.0, 10.0, None]),
+    (20, 22, "s1", [None, 2.0, 2.0]),
+    (20, 22, "s2", [None, None, None]),
+    (40, 42, "s1", [None, None, None]),
+    (40, 42, "s2", [None, 40.0, 40.0]),
+])
+def test_position_score_get_region_scores(
+    position_score: PositionScore,
+    begin: int,
+    end: int,
+    score: str,
+    expected: list[ScoreValue],
+) -> None:
+    res = position_score.get_region_scores("chr1", begin, end, score)
+    assert res == expected
+
+
 @pytest.fixture(scope="module")
 def np_score(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
     root_path = tmp_path_factory.mktemp("np_score")
