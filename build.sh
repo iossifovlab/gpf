@@ -200,7 +200,7 @@ EOT
     # pylint
     build_run_detached bash -c '
       cd /wd/;
-      wdae_files=$(find wdae/wdae -name "*.py");
+      wdae_files=$(find wdae/wdae -name "*.py" -not -path "**/migrations/*");
       /opt/conda/bin/conda run --no-capture-output -n gpf
       pylint dae/dae impala_storage/impala_storage  $wdae_files -f parseable --reports=no -j 4 \
           --exit-zero > /wd/results/pylint_gpf_report || true'
