@@ -45,8 +45,7 @@ export const surroundingRectangle = (
   w: number = 16
 ): void => {
   const h = 16;
-  element.append('g')
-    .append('rect')
+  element.append('rect')
     .attr('x', x - w / 2)
     .attr('y', y - h / 2)
     .attr('width', w)
@@ -89,8 +88,7 @@ export const triangle = (
   color: string,
   title: string
 ): void => {
-  element.append('g')
-    .append('polygon')
+  element.append('polygon')
     .attr('points', getTrianglePoints(x, y, 14))
     .style('fill', color)
     .attr('fill-opacity', '0.6')
@@ -107,8 +105,7 @@ export const circle = (
   title: string,
   radius: number = 7
 ): void => {
-  element.append('g')
-    .append('circle')
+  element.append('circle')
     .attr('cx', x)
     .attr('cy', y)
     .attr('r', radius)
