@@ -3,6 +3,7 @@ from datetime import date
 
 from django.shortcuts import get_object_or_404
 from rest_framework import status, views
+from rest_framework.request import Request
 from rest_framework.response import Response
 from user_queries.models import UserQuery
 
@@ -11,7 +12,9 @@ from .serializers import QueryStateSerializer
 
 
 class QueryStateSaveView(views.APIView):
-    def post(self, request):
+    """Query state save view."""
+    def post(self, request: Request) -> Response:
+        """Save query state"""
         serializer = QueryStateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(
@@ -31,7 +34,9 @@ class QueryStateSaveView(views.APIView):
 
 
 class QueryStateLoadView(views.APIView):
-    def post(self, request):
+    """Query state load view."""
+    def post(self, request: Request) -> Response:
+        """Get query state"""
         query_state = get_object_or_404(QueryState, uuid=request.data["uuid"])
 
         return Response(
@@ -41,7 +46,9 @@ class QueryStateLoadView(views.APIView):
 
 
 class QueryStateDeleteView(views.APIView):
-    def post(self, request):
+    """Query state delete view"""
+    def post(self, request: Request) -> Response:
+        """Delete saved query state"""
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 

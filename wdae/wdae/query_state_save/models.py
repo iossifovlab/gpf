@@ -24,7 +24,7 @@ class QueryState(models.Model):
         null=False, blank=False)
     page: models.CharField = models.CharField(
         blank=False, null=False, max_length=10, choices=PAGE_TYPES)
-    uuid = models.UUIDField(default=uuid.uuid4)  # type: ignore
+    uuid = models.UUIDField(default=uuid.uuid4)
     timestamp: models.DateField = models.DateField(
         null=True,
         default=None,
