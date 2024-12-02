@@ -256,7 +256,7 @@ class GenomicScoreImplementation(
             for scr_id in score_ids
         }
         with impl.score.open():
-            for _left, _right, rec in impl.score.fetch_region(
+            for _left, _right, rec in impl.score.fetch_region_values(
                     chrom, start, end, score_ids):
                 for score_index, score_id in enumerate(score_ids):
                     result[score_id].add_value(rec[score_index])  # type: ignore
@@ -365,7 +365,7 @@ class GenomicScoreImplementation(
 
         score_ids = list(result.keys())
         with impl.score.open():
-            for left, right, rec in impl.score.fetch_region(
+            for left, right, rec in impl.score.fetch_region_values(
                     chrom, start, end, score_ids):
                 for scr_index, scr_id in enumerate(score_ids):
 

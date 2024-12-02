@@ -707,7 +707,7 @@ class GenomicScore(ResourceConfigValidationMixin):
             yield (left, right, val, line)
 
     @abc.abstractmethod
-    def fetch_region(
+    def fetch_region_values(
         self, chrom: str,
         pos_begin: int | None, pos_end: int | None,
         scores: list[str] | None = None,
@@ -770,7 +770,7 @@ class PositionScore(GenomicScore):
     def open(self) -> PositionScore:
         return cast(PositionScore, super().open())
 
-    def fetch_region(
+    def fetch_region_values(
         self, chrom: str,
         pos_begin: int | None, pos_end: int | None,
         scores: list[str] | None = None,
@@ -804,7 +804,7 @@ class PositionScore(GenomicScore):
     ) -> list[ScoreValue]:
         """Return score values in a region."""
         result: list[ScoreValue | None] = [None] * (pos_end - pos_beg + 1)
-        for b, e, v in self.fetch_region(
+        for b, e, v in self.fetch_region_values(
                 chrom, pos_beg, pos_end, [score_id]):
             e = min(e, pos_end)
             if v is None:
@@ -907,7 +907,7 @@ class NPScoreBase(GenomicScore):
     NPScore and AlleleScore inherit from this class.
     """
 
-    def fetch_region(
+    def fetch_region_values(
         self, chrom: str,
         pos_begin: int | None, pos_end: int | None,
         scores: list[str] | None = None,

@@ -11,7 +11,7 @@ from dae.genomic_resources.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def vcf_info_clinvar(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
     root_path = tmp_path_factory.mktemp("vcf_info_clinvar")
     setup_directories(
@@ -111,7 +111,7 @@ def test_clinvar_fetch_region(
     expected: list[tuple[int, int, list[ScoreValue] | None]],
 ) -> None:
     vcf_info_clinvar.open()
-    result = vcf_info_clinvar.fetch_region(chrom, begin, end, scores)
+    result = vcf_info_clinvar.fetch_region_values(chrom, begin, end, scores)
     assert list(result) == expected
 
 
@@ -149,7 +149,7 @@ def test_clinvar_fetch_scores(
     assert result == expected
 
 
-@pytest.fixture()
+@pytest.fixture
 def vcf_info_gnomad(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
     root_path = tmp_path_factory.mktemp("vcf_info_gnomad")
     setup_directories(
@@ -403,7 +403,8 @@ def test_gnomad_vcf_fetch_region(
     scores: list[str],
     expected: list[tuple[int, int, list[ScoreValue] | None]],
 ) -> None:
-    result = list(vcf_info_gnomad.fetch_region(chrom, start, end, scores))
+    result = list(vcf_info_gnomad.fetch_region_values(
+        chrom, start, end, scores))
     assert result == expected
 
 
