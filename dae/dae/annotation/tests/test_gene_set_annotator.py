@@ -78,17 +78,34 @@ def test_grr(tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
 def test_gene_set_annotator(test_grr: GenomicResourceRepo) -> None:
     resource = test_grr.get_resource("foobar_gene_set_collection")
     annotator = GeneSetAnnotator(
-        None, AnnotatorInfo("gosho", [], {}), resource, "set_0", "gene_list",
+        None, AnnotatorInfo("gosho", [], {}), resource, "gene_list",
     )
 
-    result = annotator.annotate(None, {"gene_list": ["g1"]})
-    assert result == {"set_0": True}
+    annotatable = VCFAllele("1", 1, "A", "G")
 
-    result = annotator.annotate(None, {"gene_list": ["g3"]})
-    assert result == {"set_0": False}
+    result = annotator.annotate(annotatable, {"gene_list": ["g1"]})
+    assert result == {
+        "set_0": True,
+        "set_1": True,
+        "set_2": False,
+        "in_sets": ["set_0", "set_1"],
+    }
 
-    result = annotator.annotate(None, {"gene_list": ["g3", "g2"]})
-    assert result == {"set_0": True}
+    result = annotator.annotate(annotatable, {"gene_list": ["g3"]})
+    assert result == {
+        "set_0": False,
+        "set_1": False,
+        "set_2": False,
+        "in_sets": [],
+    }
+
+    result = annotator.annotate(annotatable, {"gene_list": ["g3", "g2"]})
+    assert result == {
+        "set_0": True,
+        "set_1": False,
+        "set_2": True,
+        "in_sets": ["set_0", "set_2"],
+    }
 
 
 def test_gene_score_annotator_used_context_attributes(
@@ -96,7 +113,7 @@ def test_gene_score_annotator_used_context_attributes(
 ) -> None:
     resource = test_grr.get_resource("foobar_gene_set_collection")
     annotator = GeneSetAnnotator(
-        None, AnnotatorInfo("gosho", [], {}), resource, "set_0", "gene_list",
+        None, AnnotatorInfo("gosho", [], {}), resource, "gene_list",
     )
 
     assert annotator.used_context_attributes == ("gene_list",)
@@ -121,16 +138,15 @@ def test_gene_set_annotator_in_pipeline(
     pos: int,
     ref: str,
     alt: str,
-    expected: bool,
+    expected: bool,  # noqa: FBT001
 ) -> None:
     pipeline = load_pipeline_from_yaml(textwrap.dedent(
-        f"""
+        """
         - effect_annotator:
             genome: foobar_genome
             gene_models: foobar_genes
         - gene_set_annotator:
             resource_id: foobar_gene_set_collection
-            gene_set_id: {set_id}
             input_gene_list: gene_list
         """),
         test_grr)
