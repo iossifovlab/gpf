@@ -97,6 +97,28 @@ export class CategoricalHistogram {
 
 export type CategoricalHistogramView = 'range selector' | 'click selector';
 
+
+export class Partitions {
+  public static fromJson(json: any): Partitions {
+    return new Partitions(
+      Number(json['left']['count']),
+      Number(json['left']['percent']),
+      Number(json['mid']['count']),
+      Number(json['mid']['percent']),
+      Number(json['right']['count']),
+      Number(json['right']['percent']),
+    );
+  }
+
+  public constructor(
+    public readonly leftCount: number,
+    private readonly leftPercent: number,
+    public readonly midCount: number,
+    private readonly midPercent: number,
+    public readonly rightCount: number,
+    private readonly rightPercent: number,
+  ) { }
+}
 export class GeneScoresLocalState {
   @IsNotEmpty()
   public score: GeneScore = null;

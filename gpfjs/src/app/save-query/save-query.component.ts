@@ -43,8 +43,8 @@ export class SaveQueryComponent implements OnInit {
   }
 
   public saveUserQuery(name: string, description: string): void {
-    this.nameInputRef.nativeElement.value = '';
-    this.descInputRef.nativeElement.value = '';
+    (this.nameInputRef.nativeElement as HTMLInputElement).value = '';
+    (this.descInputRef.nativeElement as HTMLInputElement).value = '';
 
     this.store.pipe(
       take(1),
@@ -64,7 +64,7 @@ export class SaveQueryComponent implements OnInit {
 
   public focusNameInput(): void {
     this.changeDetectorRef.detectChanges();
-    this.nameInputRef.nativeElement.focus();
+    (this.nameInputRef.nativeElement as HTMLInputElement).focus();
   }
 
   public toggleDropdown(): void {

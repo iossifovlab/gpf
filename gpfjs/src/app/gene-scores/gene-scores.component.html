@@ -49,6 +49,7 @@
         [logScaleY]="selectedGeneScore.histogram.logScaleY"
         [smallValuesDesc]="selectedGeneScore.histogram.smallValuesDesc"
         [largeValuesDesc]="selectedGeneScore.histogram.largeValuesDesc"
+        [rangesCounts]="rangesCounts | async"
         [(rangeStart)]="rangeStart"
         [(rangeEnd)]="rangeEnd">
       </gpf-histogram>
