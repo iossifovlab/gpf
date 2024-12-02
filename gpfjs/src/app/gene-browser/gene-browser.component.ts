@@ -79,6 +79,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
 
   public variantsCountDisplay: string;
   public familyVariantsCount: string;
+  public totalFamilyVariantsCount: number = 0;
 
   public ngOnInit(): void {
     this.store.select(selectDatasetId).pipe(
@@ -244,6 +245,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       ];
       this.loadingService.setLoadingStop();
       this.showResults = true;
+      this.totalFamilyVariantsCount = this.summaryVariantsArray.totalFamilyVariantsCount;
       this.updateVariants();
     });
   }
