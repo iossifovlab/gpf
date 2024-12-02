@@ -10,6 +10,7 @@ from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
 )
+from dae.annotation.annotator_base import AnnotatorBase
 from dae.gene_sets.gene_sets_db import build_gene_set_collection_from_resource
 from dae.genomic_resources import GenomicResource
 
@@ -29,10 +30,6 @@ def build_gene_set_annotator(
     if gene_set_resource is None:
         raise ValueError(f"The {gene_set_resource_id} is not available.")
 
-    gene_set_id = info.parameters["gene_set_id"]
-    if not gene_set_id:
-        raise ValueError(f"The {info} needs a 'gene_set_id' parameter.")
-
     input_gene_list = info.parameters.get("input_gene_list")
     if input_gene_list is None:
         raise ValueError(f"The {input} must have an 'input_gene_list' "
@@ -48,12 +45,11 @@ def build_gene_set_annotator(
         pipeline,
         info,
         gene_set_resource,
-        gene_set_id,
         input_gene_list,
     )
 
 
-class GeneSetAnnotator(Annotator):
+class GeneSetAnnotator(AnnotatorBase):
     """Gene set annotator class."""
 
     def __init__(
@@ -61,47 +57,57 @@ class GeneSetAnnotator(Annotator):
         pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
         gene_set_resource: GenomicResource,
-        gene_set_id: str,
         input_gene_list: str,
     ):
         self.gene_set_resource = gene_set_resource
         self.gene_set_collection = build_gene_set_collection_from_resource(
             self.gene_set_resource)
 
-        gs = self.gene_set_collection.get_gene_set(gene_set_id)
-        if gs is None:
-            raise ValueError(f"The {gene_set_id} is not in the collection")
-        self.gene_set = gs
+        self.gene_sets = self.gene_set_collection.get_all_gene_sets()
 
         info.resources += [gene_set_resource]
-        info.attributes = AnnotationConfigParser.parse_raw_attributes(
-            [self.gene_set.name],
+        attrs = {
+            gene_set.name: ("bool", gene_set.desc) for gene_set
+            in self.gene_set_collection.get_all_gene_sets()
+        }
+        attrs["in_sets"] = (
+            "object", (
+                "List of gene sets of the collection, "
+                "which have at least 1 gene from the input gene list"
+            ),
         )
-        info.attributes[0].type = "bool"
+        if not info.attributes:
+            info.attributes = AnnotationConfigParser.parse_raw_attributes([
+                *attrs.keys(),
+            ])
 
         self.input_gene_list = input_gene_list
         info.documentation = (
-            f"This annotator uses the **{self.gene_set.name}** gene set "
-            f"from the **{self.gene_set_collection.collection_id}** collection"
-            "\n\n  "
-            f"Description: {self.gene_set.desc}"
+            "This annotator uses the"
+            f"**{self.gene_set_collection.collection_id}**"
         )
-        super().__init__(pipeline, info)
+        super().__init__(pipeline, info, attrs)
 
     @property
     def used_context_attributes(self) -> tuple[str, ...]:
         return (self.input_gene_list,)
 
-    def annotate(self, _: Annotatable | None,
-                 context: dict[str, Any]) \
-            -> dict[str, Any]:
+    def _do_annotate(
+        self, _: Annotatable | None,
+        context: dict[str, Any],
+    ) -> dict[str, Any]:
 
         genes = context.get(self.input_gene_list)
         if genes is None:
             return self._empty_result()
+        genes_set = set(genes)
 
-        is_in = False
-        if len(set(genes).intersection(set(self.gene_set.syms))) != 0:
-            is_in = True
+        in_sets: list[str] = []
+        output: dict[str, Any] = {"in_sets": in_sets}
+        for gs in self.gene_sets:
+            output[gs.name] = False
+            if genes_set.intersection(set(gs.syms)):
+                output[gs.name] = True
+                in_sets.append(gs.name)
 
-        return {self.gene_set.name: is_in}
+        return output
