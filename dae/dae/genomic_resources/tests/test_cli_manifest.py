@@ -6,14 +6,17 @@ import pytest
 
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.fsspec_protocol import FsspecReadWriteProtocol
-from dae.genomic_resources.repository import GR_CONTENTS_FILE_NAME
+from dae.genomic_resources.repository import (
+    GR_CONTENTS_FILE_NAME,
+    GR_MANIFEST_FILE_NAME,
+)
 from dae.genomic_resources.testing import (
     build_filesystem_test_protocol,
     setup_directories,
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def proto_fixture(
     content_fixture: dict[str, Any],
     tmp_path_factory: pytest.TempPathFactory,
@@ -31,18 +34,18 @@ def test_resource_manifest_simple(
 ) -> None:
     # Given
     path, proto = proto_fixture
-    proto.filesystem.delete(str(path / ".CONTENTS"))
-    proto.filesystem.delete(str(path / "one/.MANIFEST"))
+    proto.filesystem.delete(str(path / GR_CONTENTS_FILE_NAME))
+    proto.filesystem.delete(str(path / "one" / GR_MANIFEST_FILE_NAME))
 
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
-    assert not (path / "one/.MANIFEST").exists()
+    assert not (path / "one" / GR_MANIFEST_FILE_NAME).exists()
 
     # When
     cli_manage([
         "resource-manifest", "-R", str(path), "-r", "one"])
 
     # Then
-    assert (path / "one/.MANIFEST").is_file()
+    assert (path / "one" / GR_MANIFEST_FILE_NAME).is_file()
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
 
 
@@ -51,11 +54,11 @@ def test_resource_manifest_dry_run_simple(
 ) -> None:
     # Given
     path, proto = proto_fixture
-    proto.filesystem.delete(str(path / ".CONTENTS"))
+    proto.filesystem.delete(str(path / GR_CONTENTS_FILE_NAME))
     proto.filesystem.delete(str(path / "one/.MANIFEST"))
 
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
-    assert not (path / "one/.MANIFEST").exists()
+    assert not (path / "one" / GR_MANIFEST_FILE_NAME).exists()
 
     # When
     with pytest.raises(SystemExit):
@@ -63,7 +66,7 @@ def test_resource_manifest_dry_run_simple(
             "resource-manifest", "-R", str(path), "-r", "one", "--dry-run"])
 
     # Then
-    assert not (path / "one/.MANIFEST").exists()
+    assert not (path / "one" / GR_MANIFEST_FILE_NAME).exists()
 
 
 def test_repo_manifest_simple(
@@ -72,18 +75,18 @@ def test_repo_manifest_simple(
 
     # Given
     path, proto = proto_fixture
-    proto.filesystem.delete(str(path / ".CONTENTS"))
-    proto.filesystem.delete(str(path / "one/.MANIFEST"))
+    proto.filesystem.delete(str(path / GR_CONTENTS_FILE_NAME))
+    proto.filesystem.delete(str(path / "one" / GR_MANIFEST_FILE_NAME))
 
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
-    assert not (path / "one/.MANIFEST").exists()
+    assert not (path / "one" / GR_MANIFEST_FILE_NAME).exists()
 
     # When
     cli_manage([
         "repo-manifest", "-R", str(path)])
 
     # Then
-    assert (path / "one/.MANIFEST").is_file()
+    assert (path / "one" / GR_MANIFEST_FILE_NAME).is_file()
     assert (path / GR_CONTENTS_FILE_NAME).exists()
 
 
@@ -92,11 +95,11 @@ def test_repo_manifest_dry_run_simple(
 ) -> None:
     # Given
     path, proto = proto_fixture
-    proto.filesystem.delete(str(path / ".CONTENTS"))
-    proto.filesystem.delete(str(path / "one/.MANIFEST"))
+    proto.filesystem.delete(str(path / GR_CONTENTS_FILE_NAME))
+    proto.filesystem.delete(str(path / "one" / GR_MANIFEST_FILE_NAME))
 
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
-    assert not (path / "one/.MANIFEST").exists()
+    assert not (path / "one" / GR_MANIFEST_FILE_NAME).exists()
 
     # When
     with pytest.raises(SystemExit):
@@ -104,7 +107,7 @@ def test_repo_manifest_dry_run_simple(
             "repo-manifest", "-R", str(path), "--dry-run"])
 
     # Then
-    assert not (path / "one/.MANIFEST").exists()
+    assert not (path / "one" / GR_MANIFEST_FILE_NAME).exists()
 
 
 def test_check_manifest_update(

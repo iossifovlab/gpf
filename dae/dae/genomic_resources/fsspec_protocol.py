@@ -4,6 +4,7 @@ from __future__ import annotations
 import datetime
 import fcntl
 import hashlib
+import json
 import logging
 import operator
 import os
@@ -167,7 +168,16 @@ class FsspecReadOnlyProtocol(ReadOnlyRepositoryProtocol):
             self._all_resources = []
             content_filename = os.path.join(
                 self.url, GR_CONTENTS_FILE_NAME)
-            contents = yaml.safe_load(self.filesystem.open(content_filename))
+            if not self.filesystem.exists(content_filename):
+                content_filename = content_filename[:-5]
+
+            with self.filesystem.open(content_filename, "rt") as infile:
+                data = infile.read()
+
+            if content_filename.endswith(".json"):
+                contents = json.loads(data)
+            else:
+                contents = yaml.safe_load(data)
 
             for entry in contents:
                 version = tuple(map(int, entry["version"].split(".")))
@@ -621,7 +631,7 @@ class FsspecReadWriteProtocol(
             self.url, GR_CONTENTS_FILE_NAME)
         with self.filesystem.open(
                 content_filepath, "wt", encoding="utf8") as outfile:
-            yaml.dump(content, outfile)
+            json.dump(content, outfile)
 
         return content
 

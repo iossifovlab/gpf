@@ -19,7 +19,7 @@ from dae.genomic_resources.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def proto_fixture(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[pathlib.Path, FsspecReadWriteProtocol]:
@@ -87,7 +87,7 @@ def test_resource_repair_simple(
     # Given
     path, proto = proto_fixture
     proto.filesystem.delete(
-        os.path.join(proto.url, ".CONTENTS"))
+        os.path.join(proto.url, GR_CONTENTS_FILE_NAME))
     assert not (path / "one/statistics").exists()
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
 
@@ -107,7 +107,7 @@ def test_repo_repair_simple(
     # Given
     path, proto = proto_fixture
     proto.filesystem.delete(
-        os.path.join(proto.url, ".CONTENTS"))
+        os.path.join(proto.url, GR_CONTENTS_FILE_NAME))
     assert not (path / "one/statistics").exists()
     assert not (path / "two/statistics").exists()
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
@@ -130,9 +130,9 @@ def test_resource_repair_dry_run(
     # Given
     path, proto = proto_fixture
     proto.filesystem.delete(
-        os.path.join(proto.url, ".CONTENTS"))
+        os.path.join(proto.url, GR_CONTENTS_FILE_NAME))
 
-    proto.filesystem.delete(str(path / "one" / ".MANIFEST"))
+    proto.filesystem.delete(str(path / "one" / GR_MANIFEST_FILE_NAME))
 
     assert not (path / "one/statistics").exists()
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
@@ -146,7 +146,7 @@ def test_resource_repair_dry_run(
 
     # Then
     assert not (path / "one/statistics").exists()
-    assert not (path / "one/.MANIFEST").exists()
+    assert not (path / "one" / GR_MANIFEST_FILE_NAME).exists()
 
 
 def test_repo_repair_dry_run(
@@ -155,7 +155,7 @@ def test_repo_repair_dry_run(
     # Given
     path, proto = proto_fixture
     proto.filesystem.delete(
-        os.path.join(proto.url, ".CONTENTS"))
+        os.path.join(proto.url, GR_CONTENTS_FILE_NAME))
     assert not (path / "one/statistics").exists()
     assert not (path / GR_CONTENTS_FILE_NAME).exists()
 
