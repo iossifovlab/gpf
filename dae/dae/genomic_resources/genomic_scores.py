@@ -707,7 +707,7 @@ class GenomicScore(ResourceConfigValidationMixin):
             yield (left, right, val, line)
 
     @abc.abstractmethod
-    def fetch_region_values(
+    def _fetch_region_values(
         self, chrom: str,
         pos_begin: int | None, pos_end: int | None,
         scores: list[str] | None = None,
@@ -770,7 +770,7 @@ class PositionScore(GenomicScore):
     def open(self) -> PositionScore:
         return cast(PositionScore, super().open())
 
-    def fetch_region_values(
+    def _fetch_region_values(
         self, chrom: str,
         pos_begin: int | None, pos_end: int | None,
         scores: list[str] | None = None,
@@ -795,6 +795,15 @@ class PositionScore(GenomicScore):
             returned_region = (left, right, val)
             yield (left, right, val)
 
+    def fetch_region(
+        self, chrom: str,
+        pos_begin: int | None, pos_end: int | None,
+        scores: list[str] | None = None,
+    ) -> Generator[
+            tuple[int, int, list[ScoreValue] | None], None, None]:
+        """Return position score values in a region."""
+        yield from self._fetch_region_values(chrom, pos_begin, pos_end, scores)
+
     def get_region_scores(
         self,
         chrom: str,
@@ -804,7 +813,7 @@ class PositionScore(GenomicScore):
     ) -> list[ScoreValue]:
         """Return score values in a region."""
         result: list[ScoreValue | None] = [None] * (pos_end - pos_beg + 1)
-        for b, e, v in self.fetch_region_values(
+        for b, e, v in self.fetch_region(
                 chrom, pos_beg, pos_end, [score_id]):
             e = min(e, pos_end)
             if v is None:
@@ -907,14 +916,24 @@ class NPScoreBase(GenomicScore):
     NPScore and AlleleScore inherit from this class.
     """
 
-    def fetch_region_values(
+    def _fetch_region_values(
         self, chrom: str,
         pos_begin: int | None, pos_end: int | None,
         scores: list[str] | None = None,
     ) -> Generator[
             tuple[int, int, list[ScoreValue] | None], None, None]:
         """Return score values in a region."""
+        for line in self.fetch_region(chrom, pos_begin, pos_end, scores):
+            yield line[0], line[1], line[4]
 
+    def fetch_region(
+        self, chrom: str,
+        pos_begin: int | None, pos_end: int | None,
+        scores: list[str] | None = None,
+    ) -> Generator[
+            tuple[int, int, str | None, str | None, list[ScoreValue] | None],
+            None, None]:
+        """Return position score values in a region."""
         region_lines = self._fetch_region_lines(
             chrom, pos_begin, pos_end, scores,
         )
@@ -927,7 +946,7 @@ class NPScoreBase(GenomicScore):
             int, int, list[ScoreValue] | None,
             set[tuple[str | None, str | None]],
         ] = (left, right, val, {(line.ref, line.alt)})
-        yield (left, right, val)
+        yield (left, right, line.ref, line.alt, val)
 
         for left, right, val, line in region_lines:
             returned_nucleotides = (line.ref, line.alt)
@@ -944,14 +963,14 @@ class NPScoreBase(GenomicScore):
                             f"and nucleotides {returned_nucleotides}")
 
                 returned_region[3].add((line.ref, line.alt))
-                yield (left, right, val)
+                yield (left, right, line.ref, line.alt, val)
                 continue
             prev_right = returned_region[1]
             if left < prev_right:
                 raise ValueError(
                     f"multiple values for positions [{left}, {prev_right}]")
             returned_region = (left, right, val, {(line.ref, line.alt)})
-            yield (left, right, val)
+            yield (left, right, line.ref, line.alt, val)
 
     def fetch_scores(
         self, chrom: str, position: int,

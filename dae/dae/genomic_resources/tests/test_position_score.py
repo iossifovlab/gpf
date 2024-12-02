@@ -171,20 +171,20 @@ def test_position_score_fetch_region() -> None:
     })
     score = PositionScore(res).open()
 
-    assert list(score.fetch_region_values(
+    assert list(score._fetch_region_values(
             "1", 13, 18, ["phastCons100way"])) == [
         (13, 15, [0.02]),
         (17, 18, [0.03]),
     ]
 
-    assert list(score.fetch_region_values(
+    assert list(score._fetch_region_values(
             "1", 13, 18, ["phastCons5way"])) == [
         (13, 15, [None]),
         (17, 18, [0]),
     ]
 
     scores = ["phastCons5way", "phastCons100way"]
-    assert list(score.fetch_region_values("2", 13, 18, scores)) == [
+    assert list(score._fetch_region_values("2", 13, 18, scores)) == [
         (13, 18, [3, 0.01]),
     ]
 

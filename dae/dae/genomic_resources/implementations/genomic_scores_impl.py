@@ -255,8 +255,8 @@ class GenomicScoreImplementation(
             scr_id: MinMaxValue(scr_id)
             for scr_id in score_ids
         }
-        with impl.score.open():
-            for _left, _right, rec in impl.score.fetch_region_values(
+        with impl.score.open() as score:
+            for _left, _right, rec in score._fetch_region_values(  # noqa
                     chrom, start, end, score_ids):
                 for score_index, score_id in enumerate(score_ids):
                     result[score_id].add_value(rec[score_index])  # type: ignore
@@ -364,8 +364,8 @@ class GenomicScoreImplementation(
             result[score_id] = build_empty_histogram(hist_conf)
 
         score_ids = list(result.keys())
-        with impl.score.open():
-            for left, right, rec in impl.score.fetch_region_values(
+        with impl.score.open() as score:
+            for left, right, rec in score._fetch_region_values(  # noqa
                     chrom, start, end, score_ids):
                 for scr_index, scr_id in enumerate(score_ids):
 
