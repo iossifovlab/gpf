@@ -1,6 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import cast
-
 import pytest
 
 from dae.effect_annotation.annotator import EffectAnnotator
@@ -9,14 +7,14 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.gpf_instance import GPFInstance
 
 
-@pytest.fixture()
+@pytest.fixture
 def genomic_sequence_2013(gpf_instance_2013: GPFInstance) -> ReferenceGenome:
-    return cast(ReferenceGenome, gpf_instance_2013.reference_genome)
+    return gpf_instance_2013.reference_genome
 
 
-@pytest.fixture()
+@pytest.fixture
 def gene_models_2013(gpf_instance_2013: GPFInstance) -> GeneModels:
-    return cast(GeneModels, gpf_instance_2013.gene_models)
+    return gpf_instance_2013.gene_models
 
 
 def test_synonymous_complex_var(
@@ -57,16 +55,12 @@ def test_just_next_to_splice_site_var(
     assert effects_sorted[0].transcript_id == "NM_001199189_1"
     assert effects_sorted[0].strand == "-"
     assert effects_sorted[0].effect == "intron"
-    # assert effects_sorted[0].prot_pos is None
-    # assert effects_sorted[0].prot_length is None
     assert effects_sorted[0].aa_change is None
 
     assert effects_sorted[1].gene == "CCNH"
     assert effects_sorted[1].transcript_id == "NM_001239_1"
     assert effects_sorted[1].strand == "-"
     assert effects_sorted[1].effect == "intron"
-    # assert effects_sorted[1].prot_pos is None
-    # assert effects_sorted[1].prot_length is None
     assert effects_sorted[1].aa_change is None
 
 
@@ -88,8 +82,6 @@ def test_chr2_32853362_ins_var(
     assert effects_sorted[0].transcript_id == "NM_017519_1"
     assert effects_sorted[0].strand == "+"
     assert effects_sorted[0].effect == "nonsense"
-    # assert effects_sorted[0].prot_pos is None
-    # assert effects_sorted[0].prot_length is None
     assert effects_sorted[0].aa_change == "HisTrp->GlnEnd"
 
     assert effects_sorted[1].gene == "ARID1B"

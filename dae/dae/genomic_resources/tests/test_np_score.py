@@ -149,7 +149,7 @@ def test_np_score_fetch_region() -> None:
     # The in-mem table will sort the records. In this example it will sort
     # the alternatives column (previous columns are the same). That is why
     # the scores (freq) appear out of order
-    assert list(score.fetch_region("1", 14, 16, ["cadd_raw"])) == [
+    assert list(score._fetch_region_values("1", 14, 16, ["cadd_raw"])) == [
         (14, 15, [0.03]),
         (14, 15, [0.02]),
         (14, 15, [0.04]),
@@ -158,7 +158,7 @@ def test_np_score_fetch_region() -> None:
         (16, 16, [0.04]),
     ]
 
-    assert list(score.fetch_region("1", 14, 16, ["cadd_test"])) == [
+    assert list(score._fetch_region_values("1", 14, 16, ["cadd_test"])) == [
         (14, 15, [None]),
         (14, 15, [2]),
         (14, 15, [4]),
@@ -167,7 +167,7 @@ def test_np_score_fetch_region() -> None:
         (16, 16, [None]),
     ]
 
-    assert list(score.fetch_region("2", 13, 17, ["cadd_test"])) == [
+    assert list(score._fetch_region_values("2", 13, 17, ["cadd_test"])) == [
         (16, 17, [3]),
         (16, 17, [4]),
         (16, 17, [3]),

@@ -97,7 +97,7 @@ def test_position_score_fetch_region(
 ) -> None:
 
     score_lines = list(
-        position_score.fetch_region("chr1", begin, end, scores=scores))
+        position_score._fetch_region_values("chr1", begin, end, scores=scores))
 
     assert len(score_lines) == len(expected)
     assert score_lines == expected
@@ -115,7 +115,26 @@ def test_position_score_fetch_region_consistency(
 ) -> None:
 
     with pytest.raises(ValueError, match="multiple values for positions"):
-        list(position_score.fetch_region(chrom, begin, end))
+        list(position_score._fetch_region_values(chrom, begin, end))
+
+
+@pytest.mark.parametrize("begin,end,score,expected", [
+    (12, 14, "s1", [1.0, 1.0, None]),
+    (12, 14, "s2", [10.0, 10.0, None]),
+    (20, 22, "s1", [None, 2.0, 2.0]),
+    (20, 22, "s2", [None, None, None]),
+    (40, 42, "s1", [None, None, None]),
+    (40, 42, "s2", [None, 40.0, 40.0]),
+])
+def test_position_score_get_region_scores(
+    position_score: PositionScore,
+    begin: int,
+    end: int,
+    score: str,
+    expected: list[ScoreValue],
+) -> None:
+    res = position_score.get_region_scores("chr1", begin, end, score)
+    assert res == expected
 
 
 @pytest.fixture(scope="module")
@@ -234,7 +253,7 @@ def test_np_score_fetch_regions(
     assert np_score is not None
 
     score_lines = list(
-        np_score.fetch_region("chr1", begin, end, scores=scores))
+        np_score._fetch_region_values("chr1", begin, end, scores=scores))
     assert len(score_lines) == len(expected)
     assert score_lines == expected
 
@@ -249,7 +268,7 @@ def test_np_score_fetch_regions_consistency_failed(
     end: int | None,
 ) -> None:
     with pytest.raises(ValueError, match="multiple values for positions"):
-        list(np_score.fetch_region(chrom, begin, end))
+        list(np_score._fetch_region_values(chrom, begin, end))
 
 
 @pytest.fixture(scope="module")
@@ -381,7 +400,7 @@ def test_np_score2_fetch_regions(
     assert np_score2 is not None
 
     score_lines = list(
-        np_score2.fetch_region("chr1", begin, end, scores=scores))
+        np_score2._fetch_region_values("chr1", begin, end, scores=scores))
     assert len(score_lines) == len(expected)
     assert score_lines == expected
 
@@ -500,7 +519,7 @@ def test_allele_score_fetch_regions(
     assert allele_score is not None
 
     score_lines = list(
-        allele_score.fetch_region("chr1", begin, end, scores=scores))
+        allele_score._fetch_region_values("chr1", begin, end, scores=scores))
     assert len(score_lines) == len(expected)
     assert score_lines == expected
 
@@ -516,7 +535,7 @@ def test_allele_score_fetch_regions_consistency_failed(
     end: int | None,
 ) -> None:
     with pytest.raises(ValueError, match="multiple values for positions"):
-        list(allele_score.fetch_region(chrom, begin, end))
+        list(allele_score._fetch_region_values(chrom, begin, end))
 
 
 @pytest.fixture(scope="module")
@@ -584,5 +603,5 @@ def test_position_multiscore_fetch_region(
     end: int | None,
 ) -> None:
 
-    lines = list(position_multiscore.fetch_region(chrom, begin, end))
+    lines = list(position_multiscore._fetch_region_values(chrom, begin, end))
     assert len(lines) == 2

@@ -18,7 +18,7 @@ from dae.genomic_resources.testing import (
 from dae.utils.fs_utils import find_directory_with_a_file
 
 
-@pytest.fixture()
+@pytest.fixture
 def repo_fixture(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[pathlib.Path, GenomicResourceProtocolRepo]:
@@ -216,7 +216,7 @@ def test_repo_init(
     cli_manage(["repo-init", "-R", str(path)])
 
     # Then
-    assert (path / ".CONTENTS").exists()
+    assert (path / GR_CONTENTS_FILE_NAME).exists()
 
 
 def test_repo_init_inside_repo(
@@ -233,4 +233,4 @@ def test_repo_init_inside_repo(
         cli_manage(["repo-init", "-R", str(path / "inside")])
 
     # Then
-    assert not (path / "inside" / ".CONTENTS").exists()
+    assert not (path / "inside" / GR_CONTENTS_FILE_NAME).exists()

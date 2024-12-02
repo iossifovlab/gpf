@@ -49,7 +49,7 @@ class CnvCollection:
         self.table = build_genomic_position_table(
             self.resource, self.resource.config["table"],
         )
-        self.score_defs = GenomicScore._parse_scoredef_config(
+        self.score_defs = GenomicScore._parse_scoredef_config(  # noqa: SLF001
             self.resource.config)
 
     def close(self) -> None:
@@ -85,20 +85,21 @@ class CnvCollection:
     def fetch_cnvs(self, chrom: str, start: int, stop: int) -> list[CNV]:
         """Return list of CNVs that overlap with the provided region."""
         assert self.is_open()
-        cnvs = []
+        cnvs: list = []
         if chrom not in self.table.get_chromosomes():
             return cnvs
         for line in self.table.get_records_in_region(chrom, start, stop):
             attributes = {}
             for score_id, score_def in self.score_defs.items():
+                assert score_def.score_index is not None
                 value = line.get(score_def.score_index)
                 if value in score_def.na_values:
                     value = None
                 elif score_def.value_parser is not None:
                     try:
                         value = score_def.value_parser(value)
-                    except Exception as err:  # pylint: disable=broad-except
-                        logger.error(err)
+                    except Exception:  # pylint: disable=broad-except
+                        logger.exception("unable to parse value: %s", value)
                         value = None
                 attributes[score_id] = value
             cnvs.append(CNV(line.chrom, line.pos_begin, line.pos_end,
@@ -111,7 +112,9 @@ class CnvCollectionImplementation(GenomicResourceImplementation,
     """Assists in the management of resource of type cnv_collection."""
 
     def add_statistics_build_tasks(
-            self, task_graph: TaskGraph, **kwargs: str) -> list[Task]:
+        self, task_graph: TaskGraph,  # noqa: ARG002
+        **kwargs: str,  # noqa: ARG002
+    ) -> list[Task]:
         return []
 
     def calc_info_hash(self) -> bytes:

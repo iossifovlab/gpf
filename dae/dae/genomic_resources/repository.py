@@ -38,12 +38,12 @@ logger = logging.getLogger(__name__)
 
 GR_CONF_FILE_NAME = "genomic_resource.yaml"
 GR_MANIFEST_FILE_NAME = ".MANIFEST"
-GR_CONTENTS_FILE_NAME = ".CONTENTS"
+GR_CONTENTS_FILE_NAME = ".CONTENTS.json"
 GR_INDEX_FILE_NAME = "index.html"
 
 GR_ENCODING = "utf-8"
 
-_GR_ID_TOKEN_RE = re.compile("[a-zA-Z0-9._-]+")
+_GR_ID_TOKEN_RE = re.compile(r"[a-zA-Z0-9._-]+")
 
 
 def is_gr_id_token(token: str) -> bool:
