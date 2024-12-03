@@ -352,7 +352,14 @@ export class GenePlotComponent implements OnChanges {
   private drawVariants(): void {
     const variantsElement = this.plotElement.append('g').attr('id', 'variants').attr('display', 'none');
 
-    let c = 0;
+    /*
+    The following two variables - the counter and ratio, are used to draw every {ratio}-th
+    variant with the "other" effect type. The ratio is used as a modulo of the counter when
+    choosing whether to draw the variant, so as to distribute them evenly on the plot (if we were
+    to draw the first {maxDrawnVariants}-th variants, they'd all be to the left of the plot, as the
+    variants array is ordered by position.)
+    */
+    let otherVariantsCounter = 0;
     const ratio = Math.max(1, Math.round(this.variantsArray.summaryAlleles.length / this.constants.maxDrawnVariants));
     for (const allele of this.variantsArray.summaryAlleles) {
       const allelePosition = this.scale.x(Math.max(allele.position, this.xDomain[0]));
@@ -396,10 +403,10 @@ export class GenePlotComponent implements OnChanges {
           alleleHeight - 0.5, 1, color, 1, alleleTitle
         );
       } else {
-        if (c % ratio === 0 || allele.seenAsDenovo) {
+        if (otherVariantsCounter % ratio === 0 || allele.seenAsDenovo) {
           draw.dot(variantsElement, allelePosition, alleleHeight, color, alleleTitle);
         }
-        c++;
+        otherVariantsCounter++;
       }
     }
     variantsElement.attr('display', 'unset');
