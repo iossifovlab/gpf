@@ -232,9 +232,12 @@ export class GenePlotComponent implements OnChanges {
     // Update SVG element with newly-calculated height and clear all child elements
     this.svgElement
       .attr('viewBox', `0 0 ${this.svgWidth} ${this.svgHeight}`)
-      .select('#plot')
-      .selectAll('*')
-      .remove();
+      .attr('display', 'none');
+    this.plotElement.remove();
+
+    this.plotElement = this.svgElement.append('g')
+      .attr('id', 'plot')
+      .attr('transform', `translate(${this.constants.margin.left}, ${this.constants.margin.top})`);
 
     this.drawPlot();
 
@@ -243,6 +246,8 @@ export class GenePlotComponent implements OnChanges {
 
     this.drawVariants();
     this.drawGene();
+
+    this.svgElement.attr('display', 'unset');
   }
 
   public toggleCondenseIntrons(): void {
@@ -345,7 +350,8 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private drawVariants(): void {
-    const variantsElement = this.plotElement.append('g').attr('id', 'variants');
+    const variantsElement = this.plotElement.append('g').attr('id', 'variants').attr('display', 'none');
+
     let c = 0
     let ratio = Math.max(1, Math.round(this.variantsArray.summaryAlleles.length / this.constants.maxDrawnVariants));
     for (const allele of this.variantsArray.summaryAlleles) {
@@ -396,6 +402,7 @@ export class GenePlotComponent implements OnChanges {
         c++;
       }
     }
+    variantsElement.attr('display', 'unset');
   }
 
   private drawGene(): void {
