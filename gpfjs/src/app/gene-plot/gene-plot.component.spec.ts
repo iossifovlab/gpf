@@ -29,14 +29,14 @@ const geneMock = new Gene(
   ]
 );
 
-const variantsArrayMock = [
+const summaryAllelesArray = new SummaryAllelesArray([
   new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true),
   new SummaryAllele('l2', 2, 20, 'chr', 'v2', 'CNV-', 2.00023, 2, true, false, true),
   new SummaryAllele('l3', 3, 20, 'chr', 'v3', 'missense', 3.00012, 2, true, false, true),
   new SummaryAllele('l4', 4, 20, 'chr', 'v4', 'synonymous', 4.00023, 2, true, false, true),
   new SummaryAllele('l5', 5, 20, 'chr', 'v5', 'lgds', 5.000456, 2, true, false, true),
   new SummaryAllele('l6', 6, 20, 'chr', 'v6', 'no-frame-shift', 6.000467, 2, true, false, true),
-];
+]);
 
 describe('GenePlotComponent', () => {
   let component: GenePlotComponent;
@@ -52,6 +52,7 @@ describe('GenePlotComponent', () => {
     Object.defineProperty(component, 'gene', { value: geneMock });
     Object.defineProperty(component, 'frequencyDomain', { value: [1, 100] });
     Object.defineProperty(component, 'allVariantsCounts', { value: [0, 0] });
+    Object.defineProperty(component, 'variantsArray', { value: summaryAllelesArray });
     fixture.detectChanges();
   });
 
@@ -60,11 +61,6 @@ describe('GenePlotComponent', () => {
   });
 
   it('should draw plot', () => {
-    const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
-    Object.defineProperty(component, 'variantsArray', {
-      value: summaryAllelesArray
-    });
-
     const alleleTitleCNVPlus =
         `Effect type: ${summaryAllelesArray.summaryAlleles[0].effect}`
         + `\nPosition: ${summaryAllelesArray.summaryAlleles[0].location}`
@@ -134,10 +130,6 @@ describe('GenePlotComponent', () => {
   });
 
   it('should render no frequency text', () => {
-    const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
-    Object.defineProperty(component, 'variantsArray', {
-      value: summaryAllelesArray
-    });
     component.ngOnChanges({ gene: new SimpleChange(null, geneMock, true) });
     component.redraw();
 
@@ -154,10 +146,6 @@ describe('GenePlotComponent', () => {
   });
 
   it('should render no frequency domain', () => {
-    const summaryAllelesArray = new SummaryAllelesArray(variantsArrayMock);
-    Object.defineProperty(component, 'variantsArray', {
-      value: summaryAllelesArray
-    });
     component.ngOnChanges({ gene: new SimpleChange(null, geneMock, true) });
     component.redraw();
 

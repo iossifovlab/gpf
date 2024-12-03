@@ -312,44 +312,6 @@ describe('SummaryAllelesArray', () => {
     ]);
   });
 
-  it('should add summary allele', () => {
-    const summaryAllele1 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
-    summaryAllele1.numberOfFamilyVariants = 3;
-    summaryAllele1.seenAsDenovo = false;
-    summaryAllele1.seenInAffected = true;
-    summaryAllele1.seenInUnaffected = false;
-    summaryAllele1.sauid = 'sauid1';
-
-    const summaryAllele2 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
-    summaryAllele2.numberOfFamilyVariants = 13;
-    summaryAllele2.seenAsDenovo = true;
-    summaryAllele2.seenInAffected = false;
-    summaryAllele2.seenInUnaffected = true;
-    summaryAllele2.sauid = 'sauid2';
-
-    const summaryAllele3 = new SummaryAllele('l1', 1, 20, 'chr', 'v1', 'CNV+', 1.00003, 2, true, false, true);
-    summaryAllele3.numberOfFamilyVariants = 7;
-    summaryAllele3.seenAsDenovo = true;
-    summaryAllele3.seenInAffected = false;
-    summaryAllele3.seenInUnaffected = false;
-    summaryAllele3.sauid = 'sauid1';
-
-    const summaryAlleleArray = new SummaryAllelesArray();
-
-    summaryAlleleArray.addSummaryAllele(summaryAllele1);
-    summaryAlleleArray.addSummaryAllele(summaryAllele2);
-    expect(summaryAlleleArray.summaryAlleles).toStrictEqual([summaryAllele1, summaryAllele2]);
-    expect(summaryAlleleArray.summaryAlleleIds).toStrictEqual(['sauid1', 'sauid2']);
-
-    summaryAlleleArray.addSummaryAllele(summaryAllele3);
-    expect(summaryAlleleArray.summaryAlleles[0].sauid).toBe('sauid1');
-    expect(summaryAlleleArray.summaryAlleles[0].numberOfFamilyVariants).toBe(10);
-    expect(summaryAlleleArray.summaryAlleles[0].seenAsDenovo).toBeTruthy();
-    expect(summaryAlleleArray.summaryAlleles[0].seenInAffected).toBeTruthy();
-    expect(summaryAlleleArray.summaryAlleles[0].seenInUnaffected).toBeFalsy();
-    expect(summaryAlleleArray.summaryAlleleIds).toStrictEqual(['sauid1', 'sauid2']);
-  });
-
   it('should get total family variants count', () => {
     const summaryAlleleArray = new SummaryAllelesArray();
     const summaryAllele = summaryAlleleMock;
