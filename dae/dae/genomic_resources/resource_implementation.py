@@ -99,6 +99,13 @@ class GenomicResourceImplementation(ABC):
         """Construct the contents of the implementation's HTML info page."""
         raise NotImplementedError
 
+    @abstractmethod
+    def get_statistics_info(self, **kwargs: Any) -> str:
+        """Construct the contents of the implementation's HTML
+        statistics info page.
+        """
+        raise NotImplementedError
+
     def get_statistics(self) -> ResourceStatistics | None:
         """Try and load resource statistics."""
         return None
@@ -147,6 +154,14 @@ class InfoImplementationMixin:
             and entry.name != "index.html"]
         template_data["resource_files"].append(
             FileEntry("statistics/", "", ""))
+        template_data["statistic_files"] = [
+            FileEntry(
+                entry.name.removeprefix("statistics/"),
+                convert_size(entry.size),
+                entry.md5,
+            )
+            for entry in self.resource.get_manifest().entries.values()
+            if entry.name.startswith("statistics")]
         return template_data
 
     def get_info(self) -> str:
@@ -157,6 +172,16 @@ class InfoImplementationMixin:
             markdown=markdown,
             data=template_data,
             base=RESOURCE_TEMPLATE,
+        )
+
+    def get_statistics_info(self) -> str:
+        """Construct the contents of the implementation's HTML info page."""
+        template_data = self.get_template_data()
+        return self.get_template().render(
+            resource=self.resource,
+            markdown=markdown,
+            data=template_data,
+            base=STATISTICS_TEMPLATE,
         )
 
 
@@ -293,13 +318,20 @@ td {
     </thead>
     <tbody>
         {%- for entry in data["resource_files"] %}
-        <tr>
-            <td class="nowrap">
-                <a href='{{entry.name}}'>{{entry.name}}</a>
-            </td>
-            <td class="nowrap">{{entry.size}}</td>
-            <td class="nowrap">{{entry.md5}}</td>
-        </tr>
+            <tr>
+                {% if entry.name == "statistics/" %}
+                    <td class="nowrap">
+                        <a href='statistics/index.html'>{{entry.name}}</a>
+                    </td>
+                {% else %}
+                    <td class="nowrap">
+                        <a href='{{entry.name}}'>{{entry.name}}</a>
+                    </td>
+                {% endif %}
+                <td class="nowrap">{{entry.size}}</td>
+                <td class="nowrap">{{entry.md5}}</td>
+            </tr>
+
         {%- endfor %}
     </tbody>
     </table>
@@ -307,3 +339,53 @@ td {
     </body>
 </html>
 """)  # noqa: E501
+
+STATISTICS_TEMPLATE = Template(
+"""
+<html>
+<head>
+<style>
+h3,h4 {
+    margin-top:0.5em;
+    margin-bottom:0.5em;
+}
+table {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+}
+th {
+    font-size: 20px;
+}
+td {
+    font-size: 18px;
+}
+{% block extra_styles %}{% endblock %}
+
+</style>
+</head>
+    <body>
+        <table>
+        <thead>
+            <tr>
+                <th>Filename</th>
+                <th>Size</th>
+                <th>md5</th>
+            </tr>
+        </thead>
+        <tbody>
+            {%- for entry in data["statistic_files"] %}
+            <tr>
+                <td class="nowrap">
+                    <a href='{{entry.name}}'>{{entry.name}}</a>
+                </td>
+                <td class="nowrap">{{entry.size}}</td>
+                <td class="nowrap">{{entry.md5}}</td>
+            </tr>
+            {%- endfor %}
+        </tbody>
+        </table>
+    </body>
+</html>
+""")
