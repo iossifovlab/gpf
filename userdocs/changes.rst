@@ -1,6 +1,20 @@
 Release Notes
 =============
 
+* 2024.12.1
+    * Fix support for GRR contents file in YAML format
+
+* 2024.12.0
+    * Restore gene scores partitions REST API
+    * Clean up WDAE unit tests
+    * The cnv_collection does not crash on an unknown chromosome
+    * Added get_region_scores to PostionScore interface
+    * Change `fetch_region` method signature for `AlleleScore`
+    * Switch to using JSON format for GRR contents file
+    * Reorganization of GeneSetAnnotator to support multiple gene sets
+    * Fis support for downloading phenotype tool report image
+    * Restore usage of gene scores partitions
+
 * 2024.11.3
     * Fix annoate_columns to create a correct tabix index
     * Fix SimpleEffectAnnotator to produce a link to the GPF documentation
