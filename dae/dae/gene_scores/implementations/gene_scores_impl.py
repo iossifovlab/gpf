@@ -53,6 +53,9 @@ class GeneScoreImplementation(
     def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002
         return InfoImplementationMixin.get_info(self)
 
+    def get_statistics_info(self, **kwargs: Any) -> str:  # noqa: ARG002
+        return InfoImplementationMixin.get_statistics_info(self)
+
     def add_statistics_build_tasks(
         self, task_graph: TaskGraph,
         **kwargs: str,  # noqa: ARG002
