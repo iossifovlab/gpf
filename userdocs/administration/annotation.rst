@@ -403,14 +403,21 @@ Annotate a variant with a gene score.
 Gene set annotator
 ##################
 
-Used to annotate whether a variant belongs to a certain gene set.
+Used to annotate whether a variant belongs to gene sets in a gene set collection.
 
 .. code:: yaml
 
   - gene_set_annotator:
       resource_id: <gene set collection resource ID>
-      gene_set_id: <gene set id>
       input_gene_list: <gene list to use to match variants>
+      attributes:
+        - <gene set name>
+        - in_sets
+
+
+The gene set annotator can output an attribute for every single gene set in a collection
+along with a special attribute `in_sets`, which is a list of the names of every gene set
+that the variant belongs to from the collection.
 
 
 VEP annotators
