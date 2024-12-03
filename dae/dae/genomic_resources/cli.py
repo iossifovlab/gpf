@@ -746,6 +746,14 @@ def _do_resource_info_command(
         content = implementation.get_info(repo=repo)
         outfile.write(content)
 
+    with proto.open_raw_file(
+        res,
+        "statistics/index.html",
+        mode="wt",
+    ) as outfile:
+        content = implementation.get_statistics_info(repo=repo)
+        outfile.write(content)
+
 
 def _run_resource_info_command(
         repo: GenomicResourceRepo,
