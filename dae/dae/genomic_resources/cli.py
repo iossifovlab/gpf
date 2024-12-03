@@ -816,6 +816,8 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
     if repo_url is None:
         repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME)
         if repo_url is None:
+            repo_url = find_directory_with_a_file(GR_CONTENTS_FILE_NAME[:-5])
+        if repo_url is None:
             logger.error(
                 "Can't find repository starting from: %s", os.getcwd())
             sys.exit(1)
