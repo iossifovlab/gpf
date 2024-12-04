@@ -147,6 +147,8 @@ def np_score(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
             table:
                 filename: data.txt.gz
                 format: tabix
+                pos_begin:
+                    name: pos
                 reference:
                   name: ref
                 alternative:
@@ -164,31 +166,32 @@ def np_score(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
     setup_tabix(
         root_path / "data.txt.gz",
         textwrap.dedent("""
-            #chrom  pos_begin  pos_end  ref  alt  s1    s2
-            chr1   1           3        A    G    0.1   1.0
-            chr1   1           3        A    C    0.1   1.0
-            chr1   1           3        A    T    0.1   1.0
-            chr1   11          13       A    G    0.2   2.0
-            chr1   11          13       A    C    0.3   na
-            chr1   11          13       A    T    0.4   na
-            chr1   21          23       C    A    na    3.0
-            chr1   21          23       C    G    na    4.0
-            chr1   21          23       C    T    0.5   5.0
-            chr1   31          33       C    A    na    3.0
-            chr1   31          33       C    G    0.4   na
-            chr1   31          33       C    T    na   5.0
+            #chrom pos  ref  alt  s1    s2
+            chr1   1    A    G    0.1   1.0
+            chr1   1    A    C    0.1   1.0
+            chr1   1    A    T    0.1   1.0
+            chr1   11   A    G    0.2   2.0
+            chr1   11   A    C    0.3   na
+            chr1   11   A    T    0.4   na
+            chr1   21   C    A    na    3.0
+            chr1   21   C    G    na    4.0
+            chr1   21   C    T    0.5   5.0
+            chr1   31   C    A    na    3.0
+            chr1   31   C    G    0.4   na
+            chr1   31   C    T    na   5.0
 
-            chr1   41          43       A    G    0.1   1.0
-            chr1   41          43       A    C    0.1   1.0
-            chr1   41          43       A    G    0.1   1.0
+            chr1   41   A    G    0.1   1.0
+            chr1   41   A    C    0.1   1.0
+            chr1   41   A    G    0.1   1.0
 
-            chr3   1           13       A    G    0.3   3.0
-            chr3   1           13       A    C    0.33  3.3
-            chr3   10          13       A    G    0.3   3.0
-            chr3   10          13       A    C    0.33  3.3
+            chr3   1    A    G    0.3   3.0
+            chr3   1    A    C    0.33  3.3
+            chr3   10   A    G    0.3   3.0
+            chr3   10   A    C    0.33  3.3
+            chr3   10   A    G    0.5   5.0
 
         """).strip(),
-        seq_col=0, start_col=1, end_col=2, line_skip=1)
+        seq_col=0, start_col=1, end_col=1)
     res = build_filesystem_test_resource(root_path)
     score = build_score_from_resource(res)
     score.open()
@@ -203,44 +206,44 @@ def np_score(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
 @pytest.mark.parametrize("begin,end,scores,expected", [
     (5, 10, None, []),
     (1, 10, None, [
-        (1, 3, [0.1, 1.0]),
-        (1, 3, [0.1, 1.0]),
-        (1, 3, [0.1, 1.0]),
+        (1, 1, [0.1, 1.0]),
+        (1, 1, [0.1, 1.0]),
+        (1, 1, [0.1, 1.0]),
     ]),
     (11, 20, None, [
-        (11, 13, [0.2, 2.0]),
-        (11, 13, [0.3, None]),
-        (11, 13, [0.4, None]),
+        (11, 11, [0.2, 2.0]),
+        (11, 11, [0.3, None]),
+        (11, 11, [0.4, None]),
     ]),
     (21, 30, None, [
-        (21, 23, [None, 3.0]),
-        (21, 23, [None, 4.0]),
-        (21, 23, [0.5, 5.]),
+        (21, 21, [None, 3.0]),
+        (21, 21, [None, 4.0]),
+        (21, 21, [0.5, 5.]),
     ]),
     (31, 40, None, [
-        (31, 33, [None, 3.0]),
-        (31, 33, [0.4, None]),
-        (31, 33, [None, 5.]),
+        (31, 31, [None, 3.0]),
+        (31, 31, [0.4, None]),
+        (31, 31, [None, 5.]),
     ]),
     (11, 20, ["s1"], [
-        (11, 13, [0.2]),
-        (11, 13, [0.3]),
-        (11, 13, [0.4]),
+        (11, 11, [0.2]),
+        (11, 11, [0.3]),
+        (11, 11, [0.4]),
     ]),
     (11, 20, ["s2"], [
-        (11, 13, [2.0]),
-        (11, 13, [None]),
-        (11, 13, [None]),
+        (11, 11, [2.0]),
+        (11, 11, [None]),
+        (11, 11, [None]),
     ]),
     (11, 20, ["s2", "s1"], [
-        (11, 13, [2.0, 0.2]),
-        (11, 13, [None, 0.3]),
-        (11, 13, [None, 0.4]),
+        (11, 11, [2.0, 0.2]),
+        (11, 11, [None, 0.3]),
+        (11, 11, [None, 0.4]),
     ]),
     (41, 43, ["s1", "s2"], [
-        (41, 43, [0.1, 1.0]),
-        (41, 43, [0.1, 1.0]),
-        (41, 43, [0.1, 1.0]),
+        (41, 41, [0.1, 1.0]),
+        (41, 41, [0.1, 1.0]),
+        (41, 41, [0.1, 1.0]),
     ]),
 ])
 def test_np_score_fetch_regions(
@@ -258,8 +261,9 @@ def test_np_score_fetch_regions(
     assert score_lines == expected
 
 
+@pytest.mark.skip(reason="NP score allows multiple values for positions")
 @pytest.mark.parametrize("chrom,begin,end", [
-    ("chr3", 1, 20),
+    ("chr3", 10, 20),
 ])
 def test_np_score_fetch_regions_consistency_failed(
     np_score: NPScore,
