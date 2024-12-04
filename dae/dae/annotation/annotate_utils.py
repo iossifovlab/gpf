@@ -69,10 +69,13 @@ def produce_partfile_paths(
 
 
 def stringify(value: Any, *, vcf: bool = False) -> str:
+    """Format the value to a string for human-readable output."""
     if value is None:
         return "." if vcf else ""
     if isinstance(value, float):
         return f"{value:.3g}"
+    if isinstance(value, bool):
+        return "yes" if value else ""
     return str(value)
 
 
@@ -145,7 +148,7 @@ class AnnotationTool:
 
     def run(self) -> None:
         """Construct annotation tasks and process them."""
-        # FIXME Is this too eager? What if a reannotation pipeline is created
+        # Is this too eager? What if a reannotation pipeline is created
         # inside work() and the only caching that must be done is far smaller
         # than the entire new annotation config suggests?
         resource_ids: set[str] = {
