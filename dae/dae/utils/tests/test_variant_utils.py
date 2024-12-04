@@ -87,12 +87,32 @@ test_data.extend(
         ("Y", 57000000, Sex.M, 2),
         ("Y", 57217415, Sex.M, 2),
         ("Y", 60000000, Sex.M, 1),
+        ("X", 500, Sex.U, 1),
+        ("X", 10000, Sex.U, 2),
+        ("X", 105000, Sex.U, 2),
+        ("X", 2781479, Sex.U, 2),
+        ("X", 3000000, Sex.U, 1),
+        ("X", 155700000, Sex.U, 1),
+        ("X", 155701382, Sex.U, 2),
+        ("X", 156000000, Sex.U, 2),
+        ("X", 156030895, Sex.U, 2),
+        ("X", 200000000, Sex.U, 1),
+        ("Y", 500, Sex.U, 1),
+        ("Y", 10000, Sex.U, 2),
+        ("Y", 105000, Sex.U, 2),
+        ("Y", 2781479, Sex.U, 2),
+        ("Y", 3000000, Sex.U, 1),
+        ("Y", 56800000, Sex.U, 1),
+        ("Y", 56887902, Sex.U, 2),
+        ("Y", 56900000, Sex.U, 2),
+        ("Y", 57000000, Sex.U, 2),
+        ("Y", 57217415, Sex.U, 2),
+        ("Y", 60000000, Sex.U, 1),
         ("X", 500, Sex.F, 2),
-        ("Y", 500, Sex.F, 2),
         ("X", 155701382, Sex.F, 2),
-        ("Y", 2781479, Sex.F, 2),
+        ("X", 2781479, Sex.F, 2),
         ("X", 156030895, Sex.F, 2),
-        ("Y", 57217415, Sex.F, 2),
+        ("X", 57217415, Sex.F, 2),
     ),
 )
 
@@ -111,6 +131,12 @@ def test_get_locus_ploidy(
     expected: int,
 ) -> None:
     assert get_locus_ploidy(chrom, pos, sex, genome) == expected
+
+
+def test_get_locus_ploidy_y_chrom_female(genome: ReferenceGenome) -> None:
+    with pytest.raises(
+        ValueError, match="Chromosome Y identified for a female individual!"):
+        get_locus_ploidy("Y", 57217415, Sex.F, genome)
 
 
 @pytest.mark.parametrize("dna,expected", [
