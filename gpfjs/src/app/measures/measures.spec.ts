@@ -43,6 +43,11 @@ describe('ContinuousMeasure', () => {
     expect(continuosMeasures[1].min).toBe(3);
     expect(continuosMeasures[1].max).toBe(4);
   });
+
+  it('should return undefined when json array is invalid', () => {
+    const continuosMeasures = ContinuousMeasure.fromJsonArray(null);
+    expect(continuosMeasures).toBeUndefined();
+  });
 });
 
 describe('HistogramData', () => {
