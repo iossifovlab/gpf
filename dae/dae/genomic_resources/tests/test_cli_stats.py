@@ -75,6 +75,15 @@ class SomeTestImplementation(GenomicResourceImplementation):
             """,
         )
 
+    def get_statistics_info(self, **kwargs: Any) -> str:  # noqa: ARG002
+        """Construct the contents of the implementation's statistics
+        HTML info page."""
+        return textwrap.dedent(
+            """
+            <h1>Test page</h1>
+            """,
+        )
+
 
 class MockStatistics(ResourceStatistics):
     @staticmethod
