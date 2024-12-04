@@ -642,6 +642,7 @@ def parse_gtf_gene_models_format(
     nrows: int | None = None,
 ) -> bool:
     """Parse GTF gene models file format."""
+    assert not gene_models.transcript_models
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     expected_columns = [
         "seqname",
@@ -817,6 +818,7 @@ def infer_gene_model_parser(
                 "file format %s does not match; %s",
                 inferred_format, ex, exc_info=True)
 
+    gene_models.reset()
     logger.info("inferred file formats: %s", inferred_formats)
     if len(inferred_formats) == 1:
         return inferred_formats[0]
@@ -825,25 +827,6 @@ def infer_gene_model_parser(
         "can't find gene model parser; "
         "inferred file formats are %s", inferred_formats)
     return None
-
-
-def probe_file_format(gene_models: GeneModels) -> str | None:
-    """Probe gene models file format."""
-    resource = gene_models.resource
-    if not resource.get_type() == "gene_models":
-        raise ValueError(
-            f"unexpected type of genomic resource: {resource.get_type()} "
-            f"for {resource.resource_id}")
-
-    filename = resource.get_config()["filename"]
-    logger.debug("checing gene models %s file format", filename)
-    compression = False
-    if filename.endswith(".gz"):
-        compression = True
-    with resource.open_raw_file(
-            filename, mode="rt", compression=compression) as infile:
-
-        return infer_gene_model_parser(gene_models, infile)
 
 
 def load_gene_models(gene_models: GeneModels) -> GeneModels:
