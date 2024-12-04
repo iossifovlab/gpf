@@ -71,8 +71,8 @@ def test_create_federation_credentials_with_authorized_user(
             f"Basic "
             f"{credentials_res.data['credentials'].decode()}",  # type: ignore
         },
-        data={"grant_type": "client_credentials"},
-        content_type="application/json", format="json",
+        data="grant_type=client_credentials",
+        content_type="application/x-www-form-urlencoded",
     )
     assert token_res.status_code is status.HTTP_200_OK
     assert token_res.json().get("access_token") is not None
