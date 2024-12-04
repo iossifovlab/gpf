@@ -923,15 +923,16 @@ class NPScoreBase(GenomicScore):
     ) -> Generator[
             tuple[int, int, list[ScoreValue] | None], None, None]:
         """Return score values in a region."""
-        for line in self.fetch_region(chrom, pos_begin, pos_end, scores):
-            yield line[0], line[1], line[4]
+        for pos, _, _, values in self.fetch_region(
+                chrom, pos_begin, pos_end, scores):
+            yield pos, pos, values
 
     def fetch_region(
         self, chrom: str,
         pos_begin: int | None, pos_end: int | None,
         scores: list[str] | None = None,
     ) -> Generator[
-            tuple[int, int, str | None, str | None, list[ScoreValue] | None],
+            tuple[int, str | None, str | None, list[ScoreValue] | None],
             None, None]:
         """Return position score values in a region."""
         region_lines = self._fetch_region_lines(
@@ -941,14 +942,22 @@ class NPScoreBase(GenomicScore):
         if first_line is None:
             return
         left, right, val, line = first_line
+        if left != right:
+            raise ValueError(
+                f"value for a region in allele score "
+                f"{chrom}:{left}-{right}")
 
         returned_region: tuple[
             int, int, list[ScoreValue] | None,
             set[tuple[str | None, str | None]],
         ] = (left, right, val, {(line.ref, line.alt)})
-        yield (left, right, line.ref, line.alt, val)
+        yield (left, line.ref, line.alt, val)
 
         for left, right, val, line in region_lines:
+            if left != right:
+                raise ValueError(
+                    f"value for a region in allele score "
+                    f"{chrom}:{left}-{right}")
             returned_nucleotides = (line.ref, line.alt)
             if (left, right) == (returned_region[0], returned_region[1]):
                 if returned_nucleotides in returned_region[3]:
@@ -963,14 +972,14 @@ class NPScoreBase(GenomicScore):
                             f"and nucleotides {returned_nucleotides}")
 
                 returned_region[3].add((line.ref, line.alt))
-                yield (left, right, line.ref, line.alt, val)
+                yield (left, line.ref, line.alt, val)
                 continue
             prev_right = returned_region[1]
             if left < prev_right:
                 raise ValueError(
                     f"multiple values for positions [{left}, {prev_right}]")
             returned_region = (left, right, val, {(line.ref, line.alt)})
-            yield (left, right, line.ref, line.alt, val)
+            yield (left, line.ref, line.alt, val)
 
     def fetch_scores(
         self, chrom: str, position: int,

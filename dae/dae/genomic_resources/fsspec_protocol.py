@@ -616,7 +616,7 @@ class FsspecReadWriteProtocol(
         return local_state
 
     def build_content_file(self) -> list[dict[str, Any]]:
-        """Build the content of the repository (i.e '.CONTENTS' file)."""
+        """Build the content of the repository (i.e '.CONTENTS.json' file)."""
         content = [
             {
                 "id": res.resource_id,

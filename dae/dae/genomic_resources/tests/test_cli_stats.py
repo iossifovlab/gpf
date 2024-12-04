@@ -91,7 +91,7 @@ def build_test_implementation(
 
 
 @pytest.fixture(scope="module")
-def register_test_implementation() -> None:  # noqa: PT004
+def register_test_implementation() -> None:
     register_implementation("test_resource", build_test_implementation)
 
 
@@ -331,17 +331,17 @@ def test_stats_np_score(tmp_path: pathlib.Path) -> None:
     setup_tabix(
         tmp_path / "one" / "data.txt.gz",
         """
-        #chrom  pos_begin  pos_end reference  alternative  s1    s2
-        1      10         15       A          G            0.02  2
-        1      10         15       A          C            0.03  -1
-        1      10         15       A          T            0.04  4
-        1      16         19       C          G            0.03  3
-        1      16         19       C          T            0.04  EMPTY
-        1      16         19       C          A            0.05  0
-        2      16         19       C          A            0.03  3
-        2      16         19       C          T            0.04  3
-        2      16         19       C          G            0.05  4
-        """, seq_col=0, start_col=1, end_col=2)
+        #chrom pos_begin  reference  alternative  s1    s2
+        1      10         A          G            0.02  2
+        1      10         A          C            0.03  -1
+        1      10         A          T            0.04  4
+        1      16         C          G            0.03  3
+        1      16         C          T            0.04  EMPTY
+        1      16         C          A            0.05  0
+        2      16         C          A            0.03  3
+        2      16         C          T            0.04  3
+        2      16         C          G            0.05  4
+        """, seq_col=0, start_col=1, end_col=1)
 
     repo = build_filesystem_test_repository(tmp_path)
 
@@ -382,17 +382,18 @@ def test_stats_np_score(tmp_path: pathlib.Path) -> None:
     )
 
     assert len(cadd_raw_hist.bars) == 100
-    assert cadd_raw_hist.bars[2] == 6  # region [10-15]
-    assert cadd_raw_hist.bars[3] == 14  # region [10-15], 2x[16-19]
-    assert cadd_raw_hist.bars[4] == 14  # region [10-15], 2x[16-19]
-    assert cadd_raw_hist.bars[5] == 8  # region 2x[16-19]
-    assert cadd_raw_hist.bars.sum() == (6 + 14 + 14 + 8)
+    assert cadd_raw_hist.bars[2] == 1
+    assert cadd_raw_hist.bars[3] == 3
+    assert cadd_raw_hist.bars[4] == 3
+    assert cadd_raw_hist.bars[5] == 2
+    assert cadd_raw_hist.bars.sum() == (1 + 3 + 3 + 2)
 
     assert len(cadd_test_hist.bars) == 4
-    assert cadd_test_hist.bars[0] == 4  # region [16-19]
-    assert cadd_test_hist.bars[2] == 6  # region [10-15]
-    assert cadd_test_hist.bars[3] == 22  # region [10-15]
-    assert cadd_test_hist.bars.sum() == (4 + 6 + 22)
+    assert cadd_test_hist.bars[0] == 1
+    assert cadd_test_hist.bars[1] == 0
+    assert cadd_test_hist.bars[2] == 1
+    assert cadd_test_hist.bars[3] == 5
+    assert cadd_test_hist.bars.sum() == (1 + 1 + 5)
 
 
 def test_reference_genome_usage(

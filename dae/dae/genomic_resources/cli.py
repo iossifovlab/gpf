@@ -59,9 +59,9 @@ def _add_repository_resource_parameters_group(
         default=None,
         help="URL to the genomic resources repository. If not specified "
         "the tool assumes a local file system repository and starts looking "
-        "for .CONTENTS file from the current working directory up to the root "
-        "directory. If found the directory is assumed for root repository "
-        "directory; otherwise error is reported.")
+        "for .CONTENTS.json file from the current working directory up to the "
+        "root directory. If found the directory is assumed for root "
+        "repository directory; otherwise error is reported.")
     group.add_argument(
         "--grr", "--definition", "-g", type=str,
         default=None,

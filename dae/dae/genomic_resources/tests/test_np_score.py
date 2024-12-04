@@ -23,13 +23,13 @@ def test_the_simplest_np_score() -> None:
                   desc: ""
         """,
         "data.mem": """
-            chrom  pos_begin  pos_end  reference  alternative  s1
-            1      10         15       A          G            0.02
-            1      10         15       A          C            0.03
-            1      10         15       A          T            0.04
-            1      16         19       C          G            0.03
-            1      16         19       C          T            0.04
-            1      16         19       C          A            0.05
+            chrom  pos_begin reference  alternative  s1
+            1      10        A          G            0.02
+            1      10        A          C            0.03
+            1      10        A          T            0.04
+            1      16        C          G            0.03
+            1      16        C          T            0.04
+            1      16        C          A            0.05
         """,
     })
     assert res.get_type() == "np_score"
@@ -37,10 +37,10 @@ def test_the_simplest_np_score() -> None:
     score.open()
 
     assert score.get_all_scores() == ["cadd_raw"]
-    assert score.fetch_scores("1", 11, "A", "C") == [0.03]
+    assert score.fetch_scores("1", 10, "A", "C") == [0.03]
 
     assert score.fetch_scores_agg("1", 10, 11) == [0.04]
-    assert score.fetch_scores_agg("1", 15, 16) == [0.045]
+    assert score.fetch_scores_agg("1", 15, 16) == [0.05]
 
 
 def test_np_score_aggregation() -> None:
@@ -68,13 +68,13 @@ def test_np_score_aggregation() -> None:
                   name: s2
         """,
         "data.mem": convert_to_tab_separated("""
-            chrom  pos_begin  pos_end  reference  alternative  s1    s2
-            1      10         15       A          G            0.02  2
-            1      10         15       A          C            0.03  -1
-            1      10         15       A          T            0.04  4
-            1      16         19       C          G            0.03  3
-            1      16         19       C          T            0.04  EMPTY
-            1      16         19       C          A            0.05  0
+            chrom  pos_begin  reference  alternative  s1    s2
+            1      10         A          G            0.02  2
+            1      10         A          C            0.03  -1
+            1      10         A          T            0.04  4
+            1      16         C          G            0.03  3
+            1      16         C          T            0.04  EMPTY
+            1      16         C          A            0.05  0
         """),
     })
 
@@ -84,27 +84,22 @@ def test_np_score_aggregation() -> None:
 
     assert score.table.chrom_key == 0  # "chrom"
     assert score.table.pos_begin_key == 1  # "pos_begin"
-    assert score.table.pos_end_key == 2  # "pos_end"
+    assert score.table.pos_end_key == 1  # "pos_end"
 
     assert score.fetch_scores_agg(
-        "1", 14, 18, [NPScoreQuery("cadd_raw")]) == \
-        [(2 * 0.04 + 2 * 0.05) / 4.]
+        "1", 1, 18, [NPScoreQuery("cadd_raw")]) == [0.045]
 
     assert score.fetch_scores_agg(
-        "1", 14, 18, [NPScoreQuery("cadd_raw", "max")]) == \
-        [0.05]
+        "1", 1, 18, [NPScoreQuery("cadd_raw", "max")]) == [0.05]
 
     assert score.fetch_scores_agg(
-        "1", 14, 18, [NPScoreQuery("cadd_test")]) == \
-        [3.0]
+        "1", 1, 18, [NPScoreQuery("cadd_test")]) == [3.0]
 
     assert score.fetch_scores_agg(
-        "1", 14, 18, [NPScoreQuery("cadd_test", "min")]) == \
-        [1.5]
+        "1", 1, 18, [NPScoreQuery("cadd_test", "min")]) == [1.5]
 
     assert score.fetch_scores_agg(
-        "1", 14, 18, [NPScoreQuery("cadd_test", "min", "min")]) == \
-        [0]
+        "1", 1, 18, [NPScoreQuery("cadd_test", "min", "min")]) == [0]
 
 
 def test_np_score_fetch_region() -> None:
@@ -132,16 +127,17 @@ def test_np_score_fetch_region() -> None:
                   name: s2
         """,
         "data.mem": convert_to_tab_separated("""
-            chrom  pos_begin  pos_end  reference  alternative  s1    s2
-            1      10         15       A          C            0.03  -1
-            1      10         15       A          G            0.02  2
-            1      10         15       A          T            0.04  4
-            1      16         19       C          A            0.05  0
-            1      16         19       C          G            0.03  3
-            1      16         19       C          T            0.04  EMPTY
-            2      16         19       C          A            0.03  3
-            2      16         19       C          G            0.05  4
-            2      16         19       C          T            0.04  3
+            chrom  pos_begin  reference  alternative  s1    s2
+            1      10         A          C            0.03  -1
+            1      10         A          G            0.02  2
+            1      10         A          T            0.04  4
+            1      16         C          A            0.05  0
+            1      16         C          G            0.03  3
+            1      16         C          T            0.04  EMPTY
+
+            2      16         C          A            0.03  3
+            2      16         C          G            0.05  4
+            2      16         C          T            0.04  3
         """),
     })
     score = NPScore(res).open()
@@ -150,25 +146,19 @@ def test_np_score_fetch_region() -> None:
     # the alternatives column (previous columns are the same). That is why
     # the scores (freq) appear out of order
     assert list(score._fetch_region_values("1", 14, 16, ["cadd_raw"])) == [
-        (14, 15, [0.03]),
-        (14, 15, [0.02]),
-        (14, 15, [0.04]),
         (16, 16, [0.05]),
         (16, 16, [0.03]),
         (16, 16, [0.04]),
     ]
 
     assert list(score._fetch_region_values("1", 14, 16, ["cadd_test"])) == [
-        (14, 15, [None]),
-        (14, 15, [2]),
-        (14, 15, [4]),
         (16, 16, [0]),
         (16, 16, [3]),
         (16, 16, [None]),
     ]
 
     assert list(score._fetch_region_values("2", 13, 17, ["cadd_test"])) == [
-        (16, 17, [3]),
-        (16, 17, [4]),
-        (16, 17, [3]),
+        (16, 16, [3]),
+        (16, 16, [4]),
+        (16, 16, [3]),
     ]
