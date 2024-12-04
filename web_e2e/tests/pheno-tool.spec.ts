@@ -246,7 +246,8 @@ test.describe('Pheno tool download tests', () => {
   ].forEach(data => {
     test(`should check downloaded report with gene symbol ${data.geneSymbol}`, async({ page }) => {
       await page.locator('li#gene-symbols').click();
-      await page.locator('gpf-gene-symbols textarea').fill(data.geneSymbol);
+      await page.locator('gpf-gene-symbols textarea').focus();
+      await page.keyboard.type(data.geneSymbol);
 
       await page.locator('input#search-box').click();
       await page.getByText('i1.age').click();
