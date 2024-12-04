@@ -61,7 +61,9 @@ test.describe('Gene scores tests', () => {
     await expect(page.locator('input#to-input-field')).toHaveValue('16640');
 
     await page.locator('.histogram-from .step.up').click();
+    await page.waitForRequest(utils.backendUrl + '/api/v3/gene_scores/partitions');
     await page.locator('.histogram-to .step.down').click();
+    await page.waitForRequest(utils.backendUrl + '/api/v3/gene_scores/partitions');
     await expect(page.locator('input#from-input-field')).toHaveValue('111.927');
     await expect(page.locator('input#to-input-field')).toHaveValue('16529.073');
 
@@ -110,6 +112,8 @@ test.describe('Gene scores tests', () => {
         await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
         await page.click('#gene-scores');
         await page.locator('gpf-gene-scores select').selectOption(geneScore.desc);
+
+        await expect(page.locator('text#sumOfBarsLabel')).not.toContainText('~');
 
         await page.locator('gpf-effect-types').getByRole('button', { name: 'All' }).click();
         await page.getByRole('button', { name: 'Table Preview' }).click();
