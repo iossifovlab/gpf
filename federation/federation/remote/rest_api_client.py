@@ -53,8 +53,8 @@ class RESTClient:
             token_url,
             headers={"Authorization": f"Basic {self.credentials}",
                      "Cache-Control": "no-cache",
-                     "Content-Type": "application/json"},
-            json={"grant_type": "client_credentials"},
+                     "Content-Type": "application/x-www-form-urlencoded"},
+            data={"grant_type": "client_credentials"},
             timeout=self.DEFAULT_TIMEOUT,
         )
         if response.status_code != 200:
