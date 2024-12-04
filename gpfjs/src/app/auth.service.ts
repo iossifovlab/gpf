@@ -1,6 +1,6 @@
 /* eslint @typescript-eslint/naming-convention: 0 */
 import { Injectable, Inject } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { ConfigService } from './config/config.service';
 import { Observable, Subject, take, tap, catchError } from 'rxjs';
 import { APP_BASE_HREF } from '@angular/common';
@@ -11,7 +11,7 @@ import pkceChallenge from 'pkce-challenge';
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+  private readonly headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
   private readonly options = { headers: this.headers };
   public tokenExchangeSubject = new Subject<boolean>();
 
@@ -37,13 +37,17 @@ export class AuthService {
   }
 
   public requestAccessToken(code: string): Observable<object> {
-    return this.http.post(`${this.config.rootUrl}${this.baseHref}o/token/`, {
+    const params = new HttpParams({fromObject: {
       client_id: this.config.oauthClientId,
       code: code,
       grant_type: 'authorization_code',
       redirect_uri: `${window.location.origin}${this.baseHref}login`,
       code_verifier: localStorage.getItem('code_verifier'),
-    }, this.options).pipe(take(1), tap(res => {
+    }});
+
+    return this.http.post(
+      `${this.config.rootUrl}${this.baseHref}o/token/`, params, this.options,
+    ).pipe(take(1), tap(res => {
       this.setTokens(res);
       localStorage.removeItem('code_verifier');
       this.tokenExchangeSubject.next(true);
@@ -51,10 +55,14 @@ export class AuthService {
   }
 
   public revokeAccessToken(): Observable<object> {
-    return this.http.post(`${this.config.rootUrl}${this.baseHref}o/revoke_token/`, {
+    const params = new HttpParams({fromObject: {
       client_id: this.config.oauthClientId,
       token: this.accessToken,
-    }, this.options).pipe(take(1), tap({next: () => this.clearTokens()}));
+    }});
+
+    return this.http.post(
+      `${this.config.rootUrl}${this.baseHref}o/revoke_token/`, params, this.options,
+    ).pipe(take(1), tap({next: () => this.clearTokens()}));
   }
 
   public clearTokens(): void {
@@ -63,12 +71,16 @@ export class AuthService {
   }
 
   public refreshToken(): Observable<object> {
+    const params = new HttpParams({fromObject: {
+      grant_type: 'refresh_token',
+      client_id: this.config.oauthClientId,
+      refresh_token: this.refreshAccessToken,
+    }});
+
     if (this.refreshAccessToken !== '') {
-      return this.http.post(`${this.config.rootUrl}${this.baseHref}o/token/`, {
-        grant_type: 'refresh_token',
-        client_id: this.config.oauthClientId,
-        refresh_token: this.refreshAccessToken,
-      }, this.options).pipe(
+      return this.http.post(
+        `${this.config.rootUrl}${this.baseHref}o/token/`, params, this.options
+      ).pipe(
         take(1),
         tap(res => {
           this.setTokens(res);
