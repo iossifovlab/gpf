@@ -140,22 +140,8 @@ export class SummaryAllelesArray {
   }
 
   public addSummaryAllele(summaryAllele: SummaryAllele): void {
-    const alleleIndex = this.summaryAlleleIds.indexOf(summaryAllele.sauid);
-    if (alleleIndex !== -1) {
-      this.summaryAlleles[alleleIndex].numberOfFamilyVariants =
-        this.summaryAlleles[alleleIndex].numberOfFamilyVariants +
-        summaryAllele.numberOfFamilyVariants;
-
-      this.summaryAlleles[alleleIndex].seenAsDenovo =
-        this.summaryAlleles[alleleIndex].seenAsDenovo || summaryAllele.seenAsDenovo;
-      this.summaryAlleles[alleleIndex].seenInAffected =
-        this.summaryAlleles[alleleIndex].seenInAffected || summaryAllele.seenInAffected;
-      this.summaryAlleles[alleleIndex].seenInUnaffected =
-        this.summaryAlleles[alleleIndex].seenInUnaffected || summaryAllele.seenInUnaffected;
-    } else {
-      this.summaryAlleles.push(summaryAllele);
-      this.summaryAlleleIds.push(summaryAllele.sauid);
-    }
+    this.summaryAlleles.push(summaryAllele);
+    this.summaryAlleleIds.push(summaryAllele.sauid);
   }
 
   public get totalFamilyVariantsCount(): number {

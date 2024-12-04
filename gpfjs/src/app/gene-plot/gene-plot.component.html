@@ -67,5 +67,10 @@
       </div>
     </span>
   </div>
+  <div
+    class="card-header card-title too-many-variants-warning"
+    *ngIf="this.variantsArray.summaryAlleles.length > this.constants.maxDrawnVariants"
+    >Too many variants to render. Only {{ this.constants.maxDrawnVariants }} will be rendered.</div
+  >
   <div id="svg-container"></div>
 </div>

@@ -78,7 +78,8 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   public variantsCountDisplay: string;
-  public variantsCount = -1;
+  public familyVariantsCount: string;
+  public totalFamilyVariantsCount: number = 0;
 
   public ngOnInit(): void {
     this.store.select(selectDatasetId).pipe(
@@ -118,7 +119,10 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       }),
       this.queryService.streamingFinishedSubject.subscribe(() => {
         this.familyVariantsLoaded = true;
-        this.displayVariantsCount();
+        const count = this.genotypePreviewVariantsArray?.genotypePreviews.length;
+        if (count <= this.maxFamilyVariants) {
+          this.familyVariantsCount = `${count}`;
+        }
       }),
       this.variantUpdate$.pipe(debounceTime(750)).subscribe(() => {
         this.updateShownTablePreviewVariantsArray();
@@ -241,6 +245,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       ];
       this.loadingService.setLoadingStop();
       this.showResults = true;
+      this.totalFamilyVariantsCount = this.summaryVariantsArray.totalFamilyVariantsCount;
       this.updateVariants();
     });
   }
@@ -265,15 +270,9 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.summaryVariantsArrayFiltered = this.summaryVariantsFilter.filterSummaryVariantsArray(
       this.summaryVariantsArray
     );
-    this.variantUpdate$.next();
-  }
-
-  public displayVariantsCount(): string {
-    if (this.familyVariantsLoaded && this.variantsCount !== -1) {
-      return this.variantsCount.toString();
-    }
     const count = this.summaryVariantsArrayFiltered?.totalFamilyVariantsCount;
-    return count < 1000 && count !== 0 ? '~' + count.toString() : count.toString();
+    this.familyVariantsCount = count > 0 && count < this.maxFamilyVariants ? `~${count}` : `${count}`;
+    this.variantUpdate$.next();
   }
 
   public checkAffectedStatus(affectedStatus: string, value: boolean): void {
@@ -357,7 +356,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     const params = {
       datasetId: this.selectedDatasetId,
       geneSymbols: [this.geneSymbol.trim()],
-      maxVariantsCount: 10000,
+      maxVariantsCount: 100000,
       inheritanceTypeFilter: ['denovo', 'mendelian', 'omission', 'missing'],
     };
     if (this.summaryVariantsFilter.codingOnly) {
@@ -380,7 +379,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.selectedDataset, params, this.maxFamilyVariants + 1, () => {
         this.variantsCountDisplay =
           this.genotypePreviewVariantsArray?.getVariantsCountFormatted(this.maxFamilyVariants);
-        this.variantsCount = this.genotypePreviewVariantsArray?.getVariantsCount(this.maxFamilyVariants);
       }
     );
   }

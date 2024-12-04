@@ -80,3 +80,9 @@ label {
 .card {
   min-width: 1200px;
 }
+
+.too-many-variants-warning {
+  background-color: #fff8c5c7;
+  color: #4d4007de;
+  font-size: 14px;
+}

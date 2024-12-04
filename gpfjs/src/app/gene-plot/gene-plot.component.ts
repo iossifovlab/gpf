@@ -25,7 +25,7 @@ export class GenePlotComponent implements OnChanges {
   @Output() public selectedRegion = new EventEmitter<[number, number]>();
   @Output() public selectedFrequencies = new EventEmitter<[number, number]>();
 
-  private readonly constants = {
+  public readonly constants = {
     selectionColor: '#ADD8E6',
     svgContainerId: '#svg-container',
     xAxisTicks: 12,
@@ -45,7 +45,8 @@ export class GenePlotComponent implements OnChanges {
     margin: { top: 10, right: 45, left: 120, bottom: 20 },
     exonThickness: { normal: 4, collapsed: 9 },
     cdsThickness: { normal: 8, collapsed: 18 },
-    multipleChromosomesGap: 30
+    multipleChromosomesGap: 30,
+    maxDrawnVariants: 25000,
   };
 
   private readonly scale = {
@@ -231,9 +232,12 @@ export class GenePlotComponent implements OnChanges {
     // Update SVG element with newly-calculated height and clear all child elements
     this.svgElement
       .attr('viewBox', `0 0 ${this.svgWidth} ${this.svgHeight}`)
-      .select('#plot')
-      .selectAll('*')
-      .remove();
+      .attr('display', 'none');
+    this.plotElement.remove();
+
+    this.plotElement = this.svgElement.append('g')
+      .attr('id', 'plot')
+      .attr('transform', `translate(${this.constants.margin.left}, ${this.constants.margin.top})`);
 
     this.drawPlot();
 
@@ -242,6 +246,8 @@ export class GenePlotComponent implements OnChanges {
 
     this.drawVariants();
     this.drawGene();
+
+    this.svgElement.attr('display', 'unset');
   }
 
   public toggleCondenseIntrons(): void {
@@ -344,7 +350,17 @@ export class GenePlotComponent implements OnChanges {
   }
 
   private drawVariants(): void {
-    const variantsElement = this.plotElement.append('g').attr('id', 'variants');
+    const variantsElement = this.plotElement.append('g').attr('id', 'variants').attr('display', 'none');
+
+    /*
+    The following two variables - the counter and ratio, are used to draw every {ratio}-th
+    variant with the "other" effect type. The ratio is used as a modulo of the counter when
+    choosing whether to draw the variant, so as to distribute them evenly on the plot (if we were
+    to draw the first {maxDrawnVariants}-th variants, they'd all be to the left of the plot, as the
+    variants array is ordered by position.)
+    */
+    let otherVariantsCounter = 0;
+    const ratio = Math.max(1, Math.round(this.variantsArray.summaryAlleles.length / this.constants.maxDrawnVariants));
     for (const allele of this.variantsArray.summaryAlleles) {
       const allelePosition = this.scale.x(Math.max(allele.position, this.xDomain[0]));
       const alleleEndPosition = this.scale.x(Math.min(allele.endPosition, this.xDomain[1]));
@@ -387,9 +403,13 @@ export class GenePlotComponent implements OnChanges {
           alleleHeight - 0.5, 1, color, 1, alleleTitle
         );
       } else {
-        draw.dot(variantsElement, allelePosition, alleleHeight, color, alleleTitle);
+        if (otherVariantsCounter % ratio === 0 || allele.seenAsDenovo) {
+          draw.dot(variantsElement, allelePosition, alleleHeight, color, alleleTitle);
+        }
+        otherVariantsCounter++;
       }
     }
+    variantsElement.attr('display', 'unset');
   }
 
   private drawGene(): void {
