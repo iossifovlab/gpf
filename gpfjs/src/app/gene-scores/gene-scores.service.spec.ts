@@ -7,7 +7,7 @@ import { ConfigService } from 'app/config/config.service';
 import { GeneScoresService } from './gene-scores.service';
 import { HttpClient } from '@angular/common/http';
 import { lastValueFrom, of, take } from 'rxjs';
-import { CategoricalHistogram, GeneScore, NumberHistogram } from './gene-scores';
+import { CategoricalHistogram, GeneScore, NumberHistogram, Partitions } from './gene-scores';
 
 describe('GeneScoresService', () => {
   let service: GeneScoresService;
@@ -143,5 +143,29 @@ describe('GeneScoresService', () => {
 
     expect(httpGetSpy.mock.calls[0][0]).toBe('testUrl/gene_scores/histograms?ids=gene-score');
     expect(response).toStrictEqual([mockScoreObject]);
+  });
+
+  it('should get gene scores partitions', async() => {
+    const partitions = {
+      left: {
+        count: 0,
+        percent: 0
+      },
+      mid: {
+        count: 18459,
+        percent: 1
+      },
+      right: {
+        count: 0,
+        percent: 0
+      }
+    };
+
+    const httpPostSpy = jest.spyOn(HttpClient.prototype, 'post');
+    httpPostSpy.mockReturnValue(of(partitions));
+
+    const response = await lastValueFrom(service.getPartitions('scoreId', 0, 10).pipe(take(1)));
+    expect(httpPostSpy.mock.calls[0][0]).toBe('testUrl/gene_scores/partitions');
+    expect(response).toStrictEqual(new Partitions(0, 0, 18459, 1, 0, 0));
   });
 });
