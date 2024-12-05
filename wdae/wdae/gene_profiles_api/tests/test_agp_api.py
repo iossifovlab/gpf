@@ -1,151 +1,150 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-
 import pytest
+from box import Box
 from django.test.client import Client
+from gpf_instance.gpf_instance import WGPFInstance
+from pytest_mock import MockerFixture
+
+from dae.gene_profile.statistic import GPStatistic
+from dae.genomic_resources.gene_models.gene_models import Exon, TranscriptModel
 
 ROUTE_PREFIX = "/api/v3/gene_profiles"
 
 
-@pytest.mark.skip()
-def test_configuration(admin_client: Client) -> None:
+def test_configuration(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,
+    mocker: MockerFixture,
+) -> None:
+    mock_conf = {
+        "defaultDataset": "ALL_genotypes",
+        "geneLinks": [{
+            "name": "MockLink",
+            "url": "{gpf_prefix}/{gene}/{genome}/",
+        }],
+        "confDir": "/data",
+        "datasets": [{
+            "id": "MockDataset",
+        }],
+    }
+    mocker.patch.object(
+        t4c8_wgpf_instance, "get_wdae_gp_configuration",
+        return_value=mock_conf,
+    )
+
     response = admin_client.get(f"{ROUTE_PREFIX}/single-view/configuration")
 
     assert response.status_code == 200
+    assert response.data == mock_conf  # type: ignore
     print(response.data)  # type: ignore
 
-    assert len(
-        response.data["genomicScores"],  # type: ignore
-    ) == 2
 
-    assert len(
-        response.data["genomicScores"][0]["scores"],  # type: ignore
-    ) == 3
-    assert response.data["genomicScores"][0]["category"] == "protection_scores"  # type: ignore
+def test_get_statistic(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch.object(
+        t4c8_wgpf_instance, "get_gp_statistic",
+        return_value=GPStatistic("CHD8", [], {}, {}),
+    )
 
-    assert len(
-        response.data["genomicScores"][1]["scores"],  # type: ignore
-    ) == 3
-    assert response.data["genomicScores"][1]["category"] == "autism_scores"  # type: ignore
-
-    datasets = response.data["datasets"]  # type: ignore
-    assert len(datasets) == 1
-    assert datasets[0]["id"] == "iossifov_2014"
-    assert len(datasets[0]["statistics"]) == 2
-    assert len(datasets[0]["personSets"]) == 2
-    assert datasets[0]["personSets"] == [
-        {
-            "id": "autism",
-            "displayName": "autism",
-            "collectionId": "phenotype",
-            "description": "",
-            "parentsCount": 0,
-            "childrenCount": 11,
-            "statistics": [
-                {
-                    "id": "denovo_noncoding",
-                    "displayName": "Noncoding",
-                    "effects": ["noncoding"],
-                    "category": "denovo",
-                },
-                {
-                    "id": "denovo_missense",
-                    "displayName": "Missense",
-                    "effects": ["missense"],
-                    "category": "denovo",
-                },
-            ],
-        },
-        {
-            "id": "unaffected",
-            "displayName": "unaffected",
-            "collectionId": "phenotype",
-            "description": "",
-            "parentsCount": 22,
-            "childrenCount": 10,
-            "statistics": [
-                {
-                    "id": "denovo_noncoding",
-                    "displayName": "Noncoding",
-                    "effects": ["noncoding"],
-                    "category": "denovo",
-                },
-                {
-                    "id": "denovo_missense",
-                    "displayName": "Missense",
-                    "effects": ["missense"],
-                    "category": "denovo",
-                },
-            ],
-        },
-    ]
-
-
-@pytest.mark.skip()
-def test_get_statistic(admin_client: Client) -> None:
     response = admin_client.get(f"{ROUTE_PREFIX}/single-view/gene/CHD8")
+    assert response.data["geneSymbol"] == "CHD8"  # type: ignore
     assert response.status_code == 200
     print(response.data)  # type: ignore
 
 
-@pytest.mark.skip()
 def test_get_links(
     admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,
     monkeypatch: pytest.MonkeyPatch,
+    mocker: MockerFixture,
 ) -> None:
     """Test gene profile links."""
+    mocker.patch.object(
+        t4c8_wgpf_instance, "get_gp_statistic",
+        return_value=GPStatistic("CHD8", [], {}, {}),
+    )
+
+    mocker.patch.object(
+        t4c8_wgpf_instance, "get_genotype_data_config",
+        return_value=Box({"genome": "mock_genome"}),
+    )
+
+    mocker.patch.object(
+        t4c8_wgpf_instance, "get_transcript_models",
+        return_value=(
+            "CHD8", [
+                TranscriptModel("CHD8", "", "", "mock_chr", "", (0, 0), (0, 0),
+                    [Exon(1, 2, 0), Exon(3, 4, 0)]),
+                TranscriptModel("CHD8", "", "", "mock_chr", "", (0, 0), (0, 0),
+                    [Exon(5, 6, 0), Exon(7, 8, 0)]),
+                TranscriptModel("CHD8", "", "", "mock_chr", "", (0, 0), (0, 0),
+                    [Exon(9, 10, 0), Exon(11, 12, 0)]),
+            ],
+        ),
+    )
+
+    mocker.patch.object(
+        t4c8_wgpf_instance, "get_wdae_gp_configuration",
+        return_value={
+            "defaultDataset": "ALL_genotypes",
+            "geneLinks": [{
+                "name": "MockLink",
+                "url": (
+                    "{gpf_prefix}/{gene}/{genome}/"
+                    "{chromosome_prefix}/{chromosome}/"
+                    "{gene_start_position}/{gene_stop_position}"
+                ),
+            }],
+        },
+    )
+
+    monkeypatch.setenv("WDAE_PREFIX", "hg38")
+
     response = admin_client.get(f"{ROUTE_PREFIX}/single-view/gene/chd8")
     assert response.status_code == 200
     assert response.data["geneLinks"] == [  # type: ignore
         {
-            "name": "Link with prefix",
-            "url": "/datasets/CHD8",
-        },
-        {
-            "name": "Link with gene info",
-            "url": (
-                "https://site.com/CHD8?db=hg19"
-                "&position=chr14/21853353-21905457"
-            ),
+            "name": "MockLink",
+            "url": "hg38/CHD8/mock_genome/chr/mock_chr/1/12",
         },
     ]
 
-    monkeypatch.setenv("WDAE_PREFIX", "hg38")
-    response = admin_client.get(f"{ROUTE_PREFIX}/single-view/gene/CHD8")
-    assert response.status_code == 200
-    assert response.data["geneLinks"][0] == {  # type: ignore
-        "name": "Link with prefix",
-        "url": "hg38/datasets/CHD8",
-    }
     print(response.data["geneLinks"])  # type: ignore
 
 
-@pytest.mark.skip()
-def test_get_table_config(admin_client: Client) -> None:
-    response = admin_client.get(f"{ROUTE_PREFIX}/table/configuration")
-    assert response.status_code == 200
-    assert "defaultDataset" in response.data  # type: ignore
-    assert "columns" in response.data  # type: ignore
-    print(response.data)  # type: ignore
-
-
-@pytest.mark.skip()
-def test_get_statistics(admin_client: Client) -> None:
+def test_get_statistics(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch.object(
+        t4c8_wgpf_instance, "query_gp_statistics",
+        return_value=[
+            GPStatistic("CHD8", [], {}, {}).to_json(),
+            GPStatistic("DIABLO", [], {}, {}).to_json(),
+            GPStatistic("FARP1", [], {}, {}).to_json(),
+        ],
+    )
     response = admin_client.get(f"{ROUTE_PREFIX}/table/rows")
-    assert response.status_code == 200
+    assert response.data[0]["geneSymbol"] == "CHD8"  # type: ignore
+    assert response.data[1]["geneSymbol"] == "DIABLO"  # type: ignore
+    assert response.data[2]["geneSymbol"] == "FARP1"  # type: ignore
+
     print(response.data)  # type: ignore
 
 
-@pytest.mark.skip()
-def test_get_gene_symbols(admin_client: Client) -> None:
+def test_get_gene_symbols(
+    admin_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch.object(
+        t4c8_wgpf_instance, "list_gp_gene_symbols",
+        return_value=["CHD8", "DIABLO", "FARP1"],
+    )
     response = admin_client.get(f"{ROUTE_PREFIX}/table/gene_symbols")
     assert response.status_code == 200
-    assert response.data == ["CHD8"]  # type: ignore
-
-
-@pytest.mark.skip()
-def test_get_nonexisting_gene_symbols(admin_client: Client) -> None:
-    response = admin_client.get(
-        f"{ROUTE_PREFIX}/table/gene_symbols?symbol=DIABLO",
-    )
-    assert response.status_code == 200
-    assert response.data == []  # type: ignore
+    assert response.data == ["CHD8", "DIABLO", "FARP1"]  # type: ignore
