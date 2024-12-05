@@ -1,0 +1,22 @@
+vars:
+  instance_id: data_resttest
+
+instance_id: '%(instance_id)s'
+
+genotype_storage:
+  default: resttest_duckdb
+
+  storages:
+  - id: resttest_duckdb
+    storage_type: duckdb_parquet
+    base_dir: "%(wd)s/genotype_storage"
+
+studies:
+  dir: "studies"
+
+reference_genome:
+  resource_id: "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174"
+
+gene_models:
+  resource_id: "hg19/gene_models/refGene_v20190211"
+
