@@ -90,7 +90,6 @@ class WGPFInstance(GPFInstance):
             str, StudyWrapper,
         ] = {}
         self._gp_configuration: dict[str, Any] | None = None
-        self._gp_table_configuration: dict[str, Any] | None = None
         super().__init__(cast(Box, dae_config), dae_dir, **kwargs)
 
         self.visible_datasets = None
@@ -217,24 +216,17 @@ class WGPFInstance(GPFInstance):
             self.prepare_gp_configuration()
         return self._gp_configuration
 
-    def get_wdae_gp_table_configuration(self) -> dict[str, Any] | None:
-        if self._gp_table_configuration is None:
-            self.prepare_gp_configuration()
-        return self._gp_table_configuration
-
     def prepare_gp_configuration(self) -> None:
         """Prepare GP configuration for response ahead of time."""
         # pylint: disable=too-many-branches
         configuration = self.get_gp_configuration()
         if configuration is None:
             self._gp_configuration = {}
-            self._gp_table_configuration = {}
             return
 
         # Camelize snake_cased keys, excluding "datasets"
         # since its keys are dataset IDs
         json_config = to_response_json(configuration)
-        self._gp_configuration = json_config
         # pylint: disable=too-many-nested-blocks
         if len(configuration) > 0:
             if "datasets" in configuration:
@@ -304,129 +296,7 @@ class WGPFInstance(GPFInstance):
 
             json_config["pageSize"] = self._gene_profile_db.PAGE_SIZE
 
-            self._gp_configuration = json_config
-
-        self._gp_table_configuration = {}
-        if len(configuration) > 0:
-            table_config = {
-                "defaultDataset": configuration.get("default_dataset"),
-                "columns": [],
-                "pageSize": self._gene_profile_db.PAGE_SIZE,
-            }
-
-            table_config["columns"].append(
-                column("geneSymbol", "Gene", clickable="createTab"),
-            )
-
-            for category in configuration["gene_sets"]:
-                table_config["columns"].append(column(
-                    f"{category['category']}_rank",
-                    category["display_name"],
-                    visible=category.get("default_visible", True),
-                    meta=category.get("meta"),
-                    sortable=True,
-                    columns=[column(
-                        f"{category['category']}_rank.{gene_set['set_id']}",
-                        gene_set["set_id"],
-                        visible=gene_set.get("default_visible", True),
-                        meta=gene_set.get("meta"),
-                        display_vertical=True,
-                        sortable=True) for gene_set in category["sets"]
-                    ],
-                ))
-
-            for category in configuration["genomic_scores"]:
-                table_config["columns"].append(column(
-                    category["category"],
-                    category["display_name"],
-                    visible=category.get("default_visible", True),
-                    meta=category.get("meta"),
-                    columns=[column(
-                        f"{category['category']}."
-                        f"{genomic_score['score_name']}",
-                        genomic_score["score_name"],
-                        visible=genomic_score.get("default_visible", True),
-                        meta=genomic_score.get("meta"),
-                        display_vertical=True,
-                        sortable=True) for genomic_score in category["scores"]
-                    ],
-                ))
-
-            if "datasets" in configuration:
-                for dataset_id, dataset in configuration["datasets"].items():
-                    study_wrapper = self.get_wdae_wrapper(dataset_id)
-                    if study_wrapper is None:
-                        logger.error("missing dataset %s", dataset_id)
-                        continue
-                    display_name = dataset.get("display_name") \
-                        or study_wrapper.config.get("name") \
-                        or dataset_id
-                    dataset_col = column(
-                        f"{dataset_id}", display_name,
-                        visible=dataset.get("default_visible", True),
-                        meta=dataset.get("meta"),
-                    )
-                    for person_set in dataset.get("person_sets", []):
-                        set_id = person_set["set_name"]
-                        collection_id = person_set["collection_name"]
-                        person_set_collection = \
-                            study_wrapper.genotype_data.person_set_collections[
-                                collection_id
-                            ]
-                        set_name = \
-                            person_set_collection.person_sets[set_id].name
-                        stats = person_set_collection.get_stats()[set_id]
-                        dataset_col["columns"].append(column(
-                            f"{dataset_id}.{set_id}",
-                            f"{set_name} ({stats['children']})",
-                            visible=person_set.get("default_visible", True),
-                            meta=person_set.get("meta"),
-                            columns=[column(
-                                f"{dataset_id}.{set_id}.{statistic['id']}",
-                                statistic["display_name"],
-                                visible=statistic.get("default_visible", True),
-                                meta=statistic.get("meta"),
-                                clickable="goToQuery",
-                                sortable=True)
-
-                                for statistic in dataset["statistics"]
-                            ],
-                        ))
-                    table_config["columns"].append(dataset_col)
-
-            if configuration.get("order"):
-                category_order = ["geneSymbol", *configuration["order"]]
-                table_config["columns"].sort(
-                    key=lambda col: category_order.index(col["id"]),
-                )
-
-            self._gp_table_configuration = table_config
-
-
-def column(
-    col_id: str,
-    display_name: str,
-    *,
-    visible: bool = True,
-    clickable: str | None = None,
-    display_vertical: bool = False,
-    sortable: bool = False,
-    columns: list[dict[str, Any]] | None = None,
-    meta: str | None = None,
-) -> dict[str, Any]:
-    """Build columns descriptions."""
-    if columns is None:
-        columns = []
-    return {
-        "id": col_id,
-        "displayName": display_name,
-        "visible": visible,
-        "displayVertical": display_vertical,
-        "sortable": sortable,
-        "clickable": clickable,
-        "columns": columns,
-        "meta": meta,
-    }
+        self._gp_configuration = json_config
 
 
 def get_wgpf_instance_path(
