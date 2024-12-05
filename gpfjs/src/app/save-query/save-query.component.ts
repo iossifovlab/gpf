@@ -48,7 +48,7 @@ export class SaveQueryComponent implements OnInit {
 
     this.store.pipe(
       take(1),
-      switchMap(state => this.queryService.saveQuery(state, this.queryType).pipe(take(1))),
+      switchMap(state => this.queryService.saveQuery(state, this.queryType, 'saved').pipe(take(1))),
       switchMap((response: {uuid: string}) =>
         this.queryService.saveUserQuery(response.uuid, name, description).pipe(take(1)))
     ).subscribe((response: {uuid: string}) => {
@@ -76,7 +76,7 @@ export class SaveQueryComponent implements OnInit {
 
     this.store.pipe(
       take(1),
-      switchMap(state => this.queryService.saveQuery(state, this.queryType).pipe(take(1)))
+      switchMap(state => this.queryService.saveQuery(state, this.queryType, 'user').pipe(take(1)))
     ).subscribe({
       next: (response: {uuid: string}) => {
         this.urlUUID = response.uuid;

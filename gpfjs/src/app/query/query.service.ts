@@ -156,7 +156,7 @@ export class QueryService {
     return this.http.post(this.config.baseUrl + this.geneViewVariantsUrl, filter);
   }
 
-  public saveQuery(queryData: object, page: string): Observable<object> {
+  public saveQuery(queryData: object, page: string, origin: 'saved' | 'user' | 'system'): Observable<object> {
     const options = { headers: this.headers };
 
     queryData = {...queryData};
@@ -164,7 +164,8 @@ export class QueryService {
 
     const data = {
       data: queryData,
-      page: page
+      page: page,
+      origin: origin,
     };
 
     return this.http

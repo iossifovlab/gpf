@@ -54,8 +54,7 @@ export class EnrichmentTableRowComponent {
         delete queryData['geneSetsState'];
         delete queryData['geneScoresState'];
       }
-
-      this.queryService.saveQuery(queryData, 'genotype')
+      this.queryService.saveQuery(queryData, 'genotype', 'system')
         .pipe(take(1))
         .subscribe(urlObject => {
           const url = this.queryService.getLoadUrlFromResponse(urlObject);
