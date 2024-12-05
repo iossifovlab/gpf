@@ -8,6 +8,8 @@ import { GeneProfilesSingleViewConfig } from './gene-profiles-single-view/gene-p
 import { NgbConfig } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
 import { selectDatasetId } from './datasets/datasets.state';
+import { AuthService } from './auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'gpf-root',
@@ -20,6 +22,8 @@ export class AppComponent implements OnInit {
   public selectedDatasetId: string;
   public geneProfilesConfig: GeneProfilesSingleViewConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
+
+  public loadedUserInfo = null;
 
   @HostListener('window:keydown.home')
   public scrollToTop(): void {
@@ -36,9 +40,37 @@ export class AppComponent implements OnInit {
     private bnIdle: BnNgIdleService,
     private usersService: UsersService,
     private ngbConfig: NgbConfig,
+    private authService: AuthService,
+    private router: Router,
     protected store: Store,
   ) {
     this.ngbConfig.animation = false;
+
+    const url = new URL(window.location.href);
+    let state = url.searchParams.get('state');
+    let authCode = url.searchParams.get('code');
+    let redirectTo = null;
+    if (state) {
+      state = JSON.parse(atob(state));
+      if (state['came_from']) {
+        redirectTo = [state['came_from']];
+      }
+    }
+
+    if (authCode !== null) {
+      this.authService.requestAccessToken(authCode).pipe(
+        switchMap(() => this.usersService.getUserInfo()),
+      ).subscribe(res => {
+        this.loadedUserInfo = res;
+      })
+    } else {
+      this.usersService.getUserInfo().subscribe(res => {
+        this.loadedUserInfo = res;
+      })
+    }
+    if (redirectTo !== null) {
+      this.router.navigate(redirectTo);
+    }
   }
 
   public ngOnInit(): void {

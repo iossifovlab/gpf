@@ -1,62 +1,64 @@
 <!-- eslint-disable prettier/prettier -->
-<gpf-fullscreen-loading></gpf-fullscreen-loading>
-<div>
-  <div class="container-fluid" id="header">
-    <div class="row">
-      <div class="col-10" style="display: flex; align-items: center; padding-left: 0">
-        <img src="{{ imgPathPrefix }}logo-64x64.png" />
-        <h3 id="title" [title]="title">{{ title }}</h3>
-        <a
-          [routerLink]="'/home'"
+<ng-container *ngIf="loadedUserInfo !== null">
+  <gpf-fullscreen-loading></gpf-fullscreen-loading>
+  <div>
+    <div class="container-fluid" id="header">
+      <div class="row">
+        <div class="col-10" style="display: flex; align-items: center; padding-left: 0">
+          <img src="{{ imgPathPrefix }}logo-64x64.png" />
+          <h3 id="title" [title]="title">{{ title }}</h3>
+          <a
+            [routerLink]="'/home'"
+            routerLinkActive="highlighted-route"
+            title="Home"
+            id="home"
+            >Home</a
+          >
+          <a
+            *ngIf="geneProfilesConfig"
+            [routerLink]="'/gene-profiles'"
+            routerLinkActive="highlighted-route"
+            title="Gene Profiles"
+            id="gene-profiles"
+            >Gene Profiles</a
+          >
+          <a
+          [routerLink]="'/datasets/' + selectedDatasetId"
           routerLinkActive="highlighted-route"
-          title="Home"
-          id="home"
-          >Home</a
-        >
-        <a
-          *ngIf="geneProfilesConfig"
-          [routerLink]="'/gene-profiles'"
-          routerLinkActive="highlighted-route"
-          title="Gene Profiles"
-          id="gene-profiles"
-          >Gene Profiles</a
-        >
-        <a
-        [routerLink]="'/datasets/' + selectedDatasetId"
-        routerLinkActive="highlighted-route"
-        title="Datasets"
-        id="datasets">Datasets</a
-        >
-        <a
-          [routerLink]="'/about'"
-          routerLinkActive="highlighted-route"
-          title="About"
-          id="about">About</a
-        >
-        <a
-          *ngIf="('' | userInfo)?.isAdministrator"
-          [routerLink]="'/management'"
-          routerLinkActive="highlighted-route"
-          title="Management"
-          id="management"
-          >Management</a
-        >
-        <a
-          *ngIf="('' | userInfo)?.loggedIn"
-          [routerLink]="'/user-profile'"
-          routerLinkActive="highlighted-route"
-          title="User Profile"
-          id="user-profile"
-          >User Profile</a
-        >
-      </div>
-      <div class="col-2" style="padding-right: 0">
-        <gpf-users></gpf-users>
+          title="Datasets"
+          id="datasets">Datasets</a
+          >
+          <a
+            [routerLink]="'/about'"
+            routerLinkActive="highlighted-route"
+            title="About"
+            id="about">About</a
+          >
+          <a
+            *ngIf="loadedUserInfo.isAdministrator"
+            [routerLink]="'/management'"
+            routerLinkActive="highlighted-route"
+            title="Management"
+            id="management"
+            >Management</a
+          >
+          <a
+            *ngIf="loadedUserInfo.loggedIn"
+            [routerLink]="'/user-profile'"
+            routerLinkActive="highlighted-route"
+            title="User Profile"
+            id="user-profile"
+            >User Profile</a
+          >
+        </div>
+        <div class="col-2" style="padding-right: 0">
+          <gpf-users></gpf-users>
+        </div>
       </div>
     </div>
+    <div id="separator"></div>
+    <div class="sidenav-container">
+      <router-outlet style="display: flex; flex-direction: row"></router-outlet>
+    </div>
   </div>
-  <div id="separator"></div>
-  <div class="sidenav-container">
-    <router-outlet style="display: flex; flex-direction: row"></router-outlet>
-  </div>
-</div>
+</ng-container>

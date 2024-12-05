@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MarkdownEditorComponent } from './markdown-editor.component';
 import { MarkdownModule, MarkdownService } from 'ngx-markdown';
-import { UserInfoPipe } from 'app/users/user-info.pipe';
 import { UsersService } from 'app/users/users.service';
 import { HttpClient, HttpHandler } from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
@@ -14,7 +13,7 @@ describe('MarkdownEditorComponent', () => {
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
-      declarations: [MarkdownEditorComponent, UserInfoPipe],
+      declarations: [MarkdownEditorComponent],
       providers: [
         MarkdownService,
         UsersService,

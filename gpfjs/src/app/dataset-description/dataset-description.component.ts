@@ -5,6 +5,7 @@ import { Store } from '@ngrx/store';
 import { DatasetHierarchy } from 'app/datasets/datasets';
 import { zip } from 'rxjs';
 import { selectDatasetId } from 'app/datasets/datasets.state';
+import { UsersService } from 'app/users/users.service';
 
 @Component({
   selector: 'gpf-dataset-description',
@@ -14,12 +15,15 @@ import { selectDatasetId } from 'app/datasets/datasets.state';
 export class DatasetDescriptionComponent implements OnInit {
   public descriptionHierarchy: DatasetHierarchy;
   public editable: boolean;
-
+  public isUserAdmin = false;
 
   public constructor(
     private datasetsService: DatasetsService,
-    private store: Store
-  ) { }
+    private store: Store,
+    private usersService: UsersService,
+  ) {
+    this.isUserAdmin = usersService.cachedUserInfo().isAdministrator;
+  }
 
   public ngOnInit(): void {
     const subscription = this.store.select(selectDatasetId).pipe(

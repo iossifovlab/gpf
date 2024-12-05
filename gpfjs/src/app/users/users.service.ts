@@ -47,8 +47,7 @@ export class UsersService {
       take(1),
       switchMap(() => this.http.post(this.config.baseUrl + this.logoutUrl, {}, options)),
       tap(() => {
-        this.store.dispatch(reset());
-        window.location.href = this.locationStrategy.getBaseHref();
+        window.location.href = window.location.origin;
       })
     );
   }

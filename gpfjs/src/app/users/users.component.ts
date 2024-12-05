@@ -6,6 +6,7 @@ import { share, take } from 'rxjs/operators';
 import { AuthService } from 'app/auth.service';
 import { Router } from '@angular/router';
 import { APP_BASE_HREF } from '@angular/common';
+import { UserInfo } from './users';
 
 @Component({
   selector: 'gpf-users',
@@ -13,7 +14,7 @@ import { APP_BASE_HREF } from '@angular/common';
   styleUrls: ['./users.component.css'],
 })
 export class UsersComponent implements OnInit {
-  public userInfo$: Observable<any>;
+  public userInfo: UserInfo = null;
 
   public constructor(
     private usersService: UsersService,
@@ -25,7 +26,7 @@ export class UsersComponent implements OnInit {
 
   public ngOnInit(): void {
     this.reloadUserData();
-    this.userInfo$ = this.usersService.getUserInfoObservable().pipe(share());
+    this.userInfo = this.usersService.cachedUserInfo();
   }
 
   public reloadUserData(): void {

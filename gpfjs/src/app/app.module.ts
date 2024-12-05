@@ -82,7 +82,6 @@ import { genomicScoresReducer } from './genomic-scores-block/genomic-scores-bloc
 import { GenomicScoresBlockService } from './genomic-scores-block/genomic-scores-block.service';
 import { MarkdownModule } from 'ngx-markdown';
 import { UserManagementComponent } from './user-management/user-management.component';
-import { UserInfoPipe } from './users/user-info.pipe';
 import { UsersTableComponent } from './users-table/users-table.component';
 import { GroupsTableComponent } from './groups-table/groups-table.component';
 import { ManagementComponent } from './management/management.component';
@@ -141,7 +140,6 @@ import { JoinPipe } from './utils/join.pipe';
 import { LegendComponent } from './legend/legend.component';
 import { PedigreeComponent } from './pedigree/pedigree.component';
 import { AuthInterceptorService } from './auth-interceptor.service';
-import { AuthResolverService } from './auth-resolver.service';
 import { APP_BASE_HREF, PlatformLocation } from '@angular/common';
 import { CustomUrlSerializer } from './custom-url-serializer';
 import { ComparePipe } from './utils/compare.pipe';
@@ -157,7 +155,6 @@ import { ConfirmButtonComponent } from './confirm-button/confirm-button.componen
 import * as Sentry from '@sentry/angular-ivy';
 import { FederationCredentialsComponent } from './federation-credentials/federation-credentials.component';
 import { StudyFiltersTreeComponent } from './treelist-checkbox/treelist-checkbox.component';
-import { LoginComponent } from './login/login.component';
 import { DatasetsTreeService } from './datasets/datasets-tree.service';
 import { HelperModalComponent } from './helper-modal/helper-modal.component';
 import { HomeComponent } from './home/home.component';
@@ -187,11 +184,6 @@ import { CategoricalHistogramModule } from './categorical-histogram/categorical-
 import {MatMenuModule} from '@angular/material/menu';
 
 const appRoutes: Routes = [
-  {
-    path: 'login',
-    component: LoginComponent,
-    resolve: { _: AuthResolverService},
-  },
   {
     path: 'home',
     component: HomeComponent,
@@ -274,6 +266,10 @@ const appRoutes: Routes = [
     component: AboutComponent,
   },
   {
+    path: 'login',
+    redirectTo: 'home'
+  },
+  {
     path: '**',
     redirectTo: 'home'
   },
@@ -335,7 +331,6 @@ const appRoutes: Routes = [
     DatasetDescriptionComponent,
     GenomicScoresComponent,
     GenomicScoresBlockComponent,
-    UserInfoPipe,
     UserManagementComponent,
     UsersTableComponent,
     GroupsTableComponent,
@@ -393,7 +388,6 @@ const appRoutes: Routes = [
     ItemAddMenuComponent,
     FederationCredentialsComponent,
     StudyFiltersTreeComponent,
-    LoginComponent,
     HelperModalComponent,
     HomeComponent,
     AboutComponent,

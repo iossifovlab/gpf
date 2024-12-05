@@ -1,5 +1,6 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, Output } from '@angular/core';
 import { EditorOption } from 'angular-markdown-editor';
+import { UsersService } from 'app/users/users.service';
 import DOMPurify from 'dompurify';
 import { MarkdownService } from 'ngx-markdown';
 
@@ -17,6 +18,7 @@ export class MarkdownEditorComponent implements OnChanges {
   public markdown: string;
   public editMode = false;
   public loading = true;
+  public isUserAdmin = false;
 
   public editorOptions: EditorOption = {
     autofocus: true,
@@ -32,7 +34,10 @@ export class MarkdownEditorComponent implements OnChanges {
 
   public constructor(
     private markdownService: MarkdownService,
-  ) { }
+    private usersService: UsersService,
+  ) {
+    this.isUserAdmin = usersService.cachedUserInfo().isAdministrator;
+  }
 
   @HostListener('keydown', ['$event']) public onKeyDown($event: KeyboardEvent): void {
     if ($event.ctrlKey && $event.code === 'Enter') {

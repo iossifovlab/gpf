@@ -1,4 +1,4 @@
-<div class="container" *ngIf="('' | userInfo)?.isAdministrator || initialMarkdown">
+<div class="container" *ngIf="isUserAdmin || initialMarkdown">
   <div id="edit-container" *ngIf="!editMode">
     <div *ngIf="!initialMarkdown" id="empty-description">
       <span>Empty description. Write a description using the pencil button to the right.</span>
@@ -8,7 +8,7 @@
       <div *ngIf="!editMode && editable" id="edit-wrapper">
         <div style="position: relative">
           <span
-            *ngIf="('' | userInfo)?.isAdministrator"
+            *ngIf="isUserAdmin"
             (click)="editMode = true"
             id="edit-icon"
             class="material-symbols-outlined"
