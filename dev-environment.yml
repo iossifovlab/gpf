@@ -28,7 +28,6 @@ dependencies:
   - types-setuptools=67
   - types-toml=0.10
   - types-python-dateutil=2.8
-  - types-requests=2.27
   - invoke=2.2
   - gitpython=3.1
   - sphinx=7.3
@@ -47,3 +46,5 @@ dependencies:
     - esbonio
     - doc8
     - rstcheck
+    - types-requests-oauthlib
+    - types-requests
