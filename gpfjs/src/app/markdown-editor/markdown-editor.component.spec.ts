@@ -6,6 +6,17 @@ import { HttpClient, HttpHandler } from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
 import { StoreModule } from '@ngrx/store';
 import { APP_BASE_HREF } from '@angular/common';
+import { UserInfo } from 'app/users/users';
+
+class UsersServiceMock {
+  public cachedUserInfo(): UserInfo {
+    return {
+      email: "testmail@mail.com",
+      isAdministrator: true,
+      loggedIn: true,
+    }
+  }
+}
 
 describe('MarkdownEditorComponent', () => {
   let component: MarkdownEditorComponent;
@@ -16,7 +27,7 @@ describe('MarkdownEditorComponent', () => {
       declarations: [MarkdownEditorComponent],
       providers: [
         MarkdownService,
-        UsersService,
+        { provide: UsersService, useClass: UsersServiceMock },
         HttpClient,
         HttpHandler,
         ConfigService,

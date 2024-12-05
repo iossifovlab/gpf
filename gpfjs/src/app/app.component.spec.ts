@@ -20,14 +20,31 @@ import { UsersComponent } from './users/users.component';
 import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service';
 import { FormsModule } from '@angular/forms';
 import { APP_BASE_HREF } from '@angular/common';
-import { UserInfoPipe } from './users/user-info.pipe';
 import { StoreModule } from '@ngrx/store';
 import { datasetIdReducer } from './datasets/datasets.state';
+import { Observable, of } from 'rxjs';
+import { UserInfo } from './users/users';
 
 
 class MockDatasetsService {
   public getSelectedDataset(): object {
     return { id: 'testDataset' };
+  }
+}
+
+class UsersServiceMock {
+  private mockInfo = {
+      email: "testmail@mail.com",
+      isAdministrator: true,
+      loggedIn: true,
+  };
+
+  public getUserInfo(): Observable<UserInfo> {
+    return of(this.mockInfo);
+  }
+
+  public cachedUserInfo(): UserInfo {
+    return this.mockInfo;
   }
 }
 
@@ -49,7 +66,6 @@ describe('AppComponent', () => {
         PedigreeSelectorComponent,
         FullscreenLoadingComponent,
         UsersComponent,
-        UserInfoPipe
       ],
       imports: [
         NgbModule,
@@ -61,7 +77,7 @@ describe('AppComponent', () => {
       providers: [
         { provide: DatasetsService, useValue: datasetsServiceMock },
         ConfigService,
-        UsersService,
+        { provide: UsersService, useClass: UsersServiceMock },
         FullscreenLoadingService,
         { provide: APP_BASE_HREF, useValue: '' }
       ]

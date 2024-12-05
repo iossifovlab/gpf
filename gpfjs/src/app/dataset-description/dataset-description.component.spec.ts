@@ -12,6 +12,7 @@ import { Store, StoreModule } from '@ngrx/store';
 import { Observable, of } from 'rxjs';
 import { Dataset, GeneBrowser, DatasetHierarchy } from 'app/datasets/datasets';
 import { datasetIdReducer } from 'app/datasets/datasets.state';
+import { UserInfo } from 'app/users/users';
 
 class MarkdownServiceMock {
   public compile = (): void => null;
@@ -73,6 +74,16 @@ class DatasetsServiceMock {
   }
 }
 
+class UsersServiceMock {
+  public cachedUserInfo(): UserInfo {
+    return {
+      email: "testmail@mail.com",
+      isAdministrator: true,
+      loggedIn: true,
+    }
+  }
+}
+
 describe('DatasetDescriptionComponent', () => {
   let component: DatasetDescriptionComponent;
   let fixture: ComponentFixture<DatasetDescriptionComponent>;
@@ -85,7 +96,7 @@ describe('DatasetDescriptionComponent', () => {
       providers: [
         { provide: ActivatedRoute, useValue: new ActivatedRoute() },
         { provide: DatasetsService, useValue: datasetsServiceMock },
-        UsersService,
+        { provide: UsersService, useClass: UsersServiceMock },
         ConfigService,
         { provide: MarkdownService, useClass: MarkdownServiceMock },
         { provide: APP_BASE_HREF, useValue: '' }

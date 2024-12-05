@@ -202,7 +202,7 @@
               method="post">
               <input name="queryData" type="hidden" />
               <button
-                [disabled]="!this.totalFamilyVariantsCount"
+                [disabled]="familyVariantsCount === '0'"
                 class="btn btn-md btn-primary btn-right"
                 id="download-family-variants-button"
                 type="submit">
