@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Input, OnChanges, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { EditorOption } from 'angular-markdown-editor';
 import { UsersService } from 'app/users/users.service';
 import DOMPurify from 'dompurify';
@@ -9,7 +9,7 @@ import { MarkdownService } from 'ngx-markdown';
   templateUrl: './markdown-editor.component.html',
   styleUrls: ['./markdown-editor.component.css']
 })
-export class MarkdownEditorComponent implements OnChanges {
+export class MarkdownEditorComponent implements OnInit, OnChanges {
   @Input() public initialMarkdown: string;
   @Input() public editable = true;
 
@@ -35,14 +35,16 @@ export class MarkdownEditorComponent implements OnChanges {
   public constructor(
     private markdownService: MarkdownService,
     private usersService: UsersService,
-  ) {
-    this.isUserAdmin = usersService.cachedUserInfo().isAdministrator;
-  }
+  ) { }
 
   @HostListener('keydown', ['$event']) public onKeyDown($event: KeyboardEvent): void {
     if ($event.ctrlKey && $event.code === 'Enter') {
       this.save();
     }
+  }
+
+  public ngOnInit(): void {
+    this.isUserAdmin = this.usersService.cachedUserInfo().isAdministrator;
   }
 
   public ngOnChanges(): void {

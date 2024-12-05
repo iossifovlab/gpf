@@ -44,6 +44,9 @@ export class AppComponent implements OnInit {
     private router: Router,
     protected store: Store,
   ) {
+  }
+
+  public ngOnInit(): void {
     this.ngbConfig.animation = false;
 
     const url = new URL(window.location.href);
@@ -68,12 +71,7 @@ export class AppComponent implements OnInit {
         this.loadedUserInfo = res;
       })
     }
-    if (redirectTo !== null) {
-      this.router.navigate(redirectTo);
-    }
-  }
 
-  public ngOnInit(): void {
     this.bnIdle.startWatching(this.sessionTimeoutInSeconds)
       .pipe(
         switchMap(() => this.usersService.logout()),
@@ -87,5 +85,9 @@ export class AppComponent implements OnInit {
     this.geneProfilesService.getConfig().subscribe(res => {
       this.geneProfilesConfig = res;
     });
+
+    if (redirectTo !== null) {
+      this.router.navigate(redirectTo);
+    }
   }
 }

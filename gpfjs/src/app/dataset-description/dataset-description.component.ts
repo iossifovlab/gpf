@@ -21,11 +21,10 @@ export class DatasetDescriptionComponent implements OnInit {
     private datasetsService: DatasetsService,
     private store: Store,
     private usersService: UsersService,
-  ) {
-    this.isUserAdmin = usersService.cachedUserInfo().isAdministrator;
-  }
+  ) { }
 
   public ngOnInit(): void {
+    this.isUserAdmin = this.usersService.cachedUserInfo().isAdministrator;
     const subscription = this.store.select(selectDatasetId).pipe(
       take(1),
       switchMap(datasetIdState => this.datasetsService.getDataset(datasetIdState)),
