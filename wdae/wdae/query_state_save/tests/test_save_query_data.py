@@ -7,14 +7,14 @@ from query_state_save.models import PAGE_TYPE_OPTIONS
 
 
 def test_save_endpoint(query_save, simple_query_data):
-    url_code = query_save(simple_query_data, "genotype")
+    url_code = query_save(simple_query_data, "genotype", "user")
 
     assert url_code != ""
 
 
 @pytest.mark.parametrize("type", PAGE_TYPE_OPTIONS)
 def test_load_endpoint(query_save, query_load, simple_query_data, type):
-    url_code = query_save(simple_query_data, type)
+    url_code = query_save(simple_query_data, type, "user")
 
     loaded = query_load(url_code)
 
@@ -24,7 +24,7 @@ def test_load_endpoint(query_save, query_load, simple_query_data, type):
 
 def test_invalid_page_fails(db, user_client, simple_query_data):
     url = "/api/v3/query_state/save"
-    query = {"data": simple_query_data, "page": "alabala"}
+    query = {"data": simple_query_data, "page": "alabala", "origin": "user"}
 
     response = user_client.post(
         url, json.dumps(query), content_type="application/json", format="json",
