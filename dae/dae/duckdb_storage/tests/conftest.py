@@ -20,18 +20,27 @@ from dae.testing.foobar_import import foobar_gpf
 from dae.utils import fs_utils
 
 
-@pytest.fixture(
-    scope="module",
-    params=[
+def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
+    if "duckdb_storage_type" not in metafunc.fixturenames:
+        return
+    storage_types = [
+        "duckdb",
         "duckdb_legacy",
-        "duckdb_parquet", "duckdb",
-        "duckdb_s3_parquet", "duckdb_s3",
-    ])
+        "duckdb_parquet",
+    ]
+    if metafunc.config.getoption("enable_s3"):
+        storage_types.extend(["duckdb_s3", "duckdb_s3_parquet"])
+    metafunc.parametrize(
+        "duckdb_storage_type", storage_types, scope="module")
+
+
+@pytest.fixture(scope="module")
 def duckdb_storage_config(
+    duckdb_storage_type: str,
     tmp_path_factory: pytest.TempPathFactory,
-    request: pytest.FixtureRequest,
 ) -> dict:
-    storage_type = request.param
+    storage_type = duckdb_storage_type
+
     if storage_type in {"duckdb", "duckdb_legacy"}:
         storage_path = tmp_path_factory.mktemp(
             f"duckdb_storage_{storage_type}")
@@ -49,12 +58,12 @@ def duckdb_storage_config(
             "storage_type": "duckdb_parquet",
             "base_dir": str(storage_path),
         }
+
     assert storage_type in {"duckdb_s3", "duckdb_s3_parquet"}
 
     s3_endpoint = s3_test_server_endpoint()
     s3_filesystem = build_s3_test_filesystem(s3_endpoint)
     s3_test_bucket = build_s3_test_bucket(s3_filesystem)
-    storage_type = request.param
     if storage_type == "duckdb_s3_parquet":
         return {
             "id": f"dev_duckdb_storage_{storage_type}",
