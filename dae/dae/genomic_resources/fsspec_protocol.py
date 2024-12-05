@@ -632,6 +632,9 @@ class FsspecReadWriteProtocol(
         with self.filesystem.open(
                 content_filepath, "wt", encoding="utf8") as outfile:
             json.dump(content, outfile)
+        with self.filesystem.open(
+                content_filepath[:-5], "wt", encoding="utf8") as outfile:
+            yaml.safe_dump(content, outfile)
 
         return content
 
