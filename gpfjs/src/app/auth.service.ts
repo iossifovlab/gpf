@@ -13,7 +13,8 @@ import pkceChallenge from 'pkce-challenge';
 export class AuthService {
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
   private readonly options = { headers: this.headers };
-  public tokenExchangeSubject = new Subject<boolean>();
+
+  private authToken = null;
 
   public constructor(
     private http: HttpClient,
@@ -50,14 +51,13 @@ export class AuthService {
     ).pipe(take(1), tap(res => {
       this.setTokens(res);
       localStorage.removeItem('code_verifier');
-      this.tokenExchangeSubject.next(true);
     }));
   }
 
   public revokeAccessToken(): Observable<object> {
     const params = new HttpParams({fromObject: {
       client_id: this.config.oauthClientId,
-      token: this.accessToken,
+      token: this.authToken,
     }});
 
     return this.http.post(
@@ -103,5 +103,6 @@ export class AuthService {
   private setTokens(res: object): void {
     this.cookieService.set('access_token', res['access_token'] as string, {path: '/'});
     localStorage.setItem('refresh_token', res['refresh_token'] as string);
+    this.authToken = res['access_token'];
   }
 }

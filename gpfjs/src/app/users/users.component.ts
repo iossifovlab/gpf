@@ -1,8 +1,6 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { UsersService } from './users.service';
 import { ConfigService } from '../config/config.service';
-import { Observable } from 'rxjs';
-import { share, take } from 'rxjs/operators';
 import { AuthService } from 'app/auth.service';
 import { Router } from '@angular/router';
 import { APP_BASE_HREF } from '@angular/common';
@@ -25,12 +23,7 @@ export class UsersComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    this.reloadUserData();
     this.userInfo = this.usersService.cachedUserInfo();
-  }
-
-  public reloadUserData(): void {
-    this.usersService.getUserInfo().pipe(take(1)).subscribe();
   }
 
   public login(): void {
@@ -50,6 +43,6 @@ export class UsersComponent implements OnInit {
   }
 
   public logout(): void {
-    this.usersService.logout().subscribe(() => this.reloadUserData());
+    this.usersService.logout().subscribe(() => {});
   }
 }

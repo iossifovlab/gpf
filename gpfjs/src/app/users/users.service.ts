@@ -4,12 +4,9 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
 import { User, UserInfo } from './users';
-import { LocationStrategy } from '@angular/common';
-import { Store } from '@ngrx/store';
 import { catchError, map, tap, take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
 import { FederationCredential, FederationJson } from 'app/federation-credentials/federation-credentials';
-import { reset } from './state-actions';
 
 @Injectable()
 export class UsersService {
@@ -27,15 +24,8 @@ export class UsersService {
     private http: HttpClient,
     private config: ConfigService,
     private cookieService: CookieService,
-    private store: Store,
-    private locationStrategy: LocationStrategy,
     private authService: AuthService,
-  ) {
-    this.authService.tokenExchangeSubject.subscribe(() => {
-      // Refresh user data when a token arrives
-      this.getUserInfo().pipe(take(1)).subscribe(() => {});
-    });
-  }
+  ) { }
 
   public logout(): Observable<object> {
     const csrfToken = this.cookieService.get('csrftoken');
