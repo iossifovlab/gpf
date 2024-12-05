@@ -75,11 +75,8 @@ export class PhenoToolResultsChartComponent implements OnInit, OnChanges, AfterV
       svg.style.backgroundColor = 'white';
       svg.style.font = '16px Roboto, sans-serif, "Noto Sans Symbols 2", "Noto Sans Math"';
 
-      const XML = new XMLSerializer().serializeToString(svg);
-      const svgBlob = new Blob([XML], {
-        type: 'image/svg+xml;charset=utf-8'
-      });
-      const url = URL.createObjectURL(svgBlob);
+      const svgStr = new XMLSerializer().serializeToString(svg);
+
       const img = new Image();
       img.addEventListener('load', () => {
         const bbox = svg.getBBox();
@@ -93,13 +90,11 @@ export class PhenoToolResultsChartComponent implements OnInit, OnChanges, AfterV
         const context = canvas.getContext('2d');
         context.drawImage(img, 0, 0, width, height);
 
-        URL.revokeObjectURL(url);
-
         const a = document.getElementById('image-download') as HTMLAnchorElement;
         a.download = 'pheno-tool-report.png';
         a.href = canvas.toDataURL();
       });
-      img.src = url;
+      img.src = 'data:image/svg+xml;base64,'+ window.btoa(svgStr);
     }
   }
 }
