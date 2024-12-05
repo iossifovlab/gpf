@@ -50,6 +50,17 @@ cd /wd/rest_client/integration/fixtures/micro_iossifov2014
         --client-secret secret \
         --skip-authorization
 
+/opt/conda/bin/conda run -n gpf \
+    wdaemanage.py createapplication \
+        confidential client-credentials \
+        --user 2 \
+        --redirect-uris "http://resttest:21011/login" \
+        --name "testing rest client app1" \
+        --client-id resttest2 \
+        --client-secret secret \
+        --skip-authorization
+
+
 /opt/conda/bin/conda run --no-capture-output -n gpf \
     grr_cache_repo --grr /wd/rest_client/integration/grr_definition.yaml\
         --instance $DAE_DB_DIR/gpf_instance.yaml
