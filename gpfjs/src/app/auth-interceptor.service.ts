@@ -5,6 +5,7 @@ import {
 } from '@angular/common/http';
 import { Observable, Subject, throwError, catchError, switchMap, tap } from 'rxjs';
 import { AuthService } from './auth.service';
+import { UsersService } from './users/users.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,10 @@ export class AuthInterceptorService implements HttpInterceptor {
   private tokenRefreshedSource = new Subject<boolean>();
   private tokenRefreshed$ = this.tokenRefreshedSource.asObservable();
 
-  public constructor(private authService: AuthService) { }
+  public constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+  ) { }
 
   public intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const request = this.addAuthHeader(req);
@@ -39,6 +43,9 @@ export class AuthInterceptorService implements HttpInterceptor {
   ): Observable<HttpEvent<any>> {
     if (err.status !== 401) {
       return throwError(() => err);
+    }
+    if (this.usersService.isLoggingOut) {
+      return;
     }
     return this.refreshToken().pipe(
       switchMap(() => next.handle(this.addAuthHeader(req))),

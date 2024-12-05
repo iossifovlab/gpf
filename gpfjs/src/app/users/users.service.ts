@@ -20,6 +20,8 @@ export class UsersService {
 
   public usersStreamingFinishedSubject = new Subject();
 
+  public isLoggingOut = false;
+
   public constructor(
     private http: HttpClient,
     private config: ConfigService,
@@ -32,6 +34,8 @@ export class UsersService {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
+
+    this.isLoggingOut = true;
 
     return this.authService.revokeAccessToken().pipe(
       take(1),
