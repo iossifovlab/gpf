@@ -275,5 +275,13 @@ test.describe('App user access rights tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.multi, 'Dataset Statistics');
     await expect(page.locator('#register-alert')).not.toBeVisible();
   });
+
+  // tests robustness of the authentication process
+  test('should login and logout repeatedly', async({ page }) => {
+    for (let i = 0; i < 10; i++) {
+      await utils.loginAdmin(page);
+      await utils.logout(page);
+    }
+  });
 });
 
