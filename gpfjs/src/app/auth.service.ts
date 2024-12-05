@@ -59,10 +59,10 @@ export class AuthService {
       client_id: this.config.oauthClientId,
       token: this.authToken,
     }});
-
+    this.clearTokens();
     return this.http.post(
       `${this.config.rootUrl}${this.baseHref}o/revoke_token/`, params, this.options,
-    ).pipe(take(1), tap({next: () => this.clearTokens()}));
+    );
   }
 
   public clearTokens(): void {
