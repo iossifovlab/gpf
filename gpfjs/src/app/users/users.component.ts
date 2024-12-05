@@ -43,6 +43,7 @@ export class UsersComponent implements OnInit {
   }
 
   public logout(): void {
+    (document.getElementById("log-out-button") as HTMLButtonElement).disabled = true;
     this.usersService.logout().subscribe(() => {});
   }
 }
