@@ -291,8 +291,7 @@ EOT
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env LOCALSTACK_HOST="localstack" \
           --env AWS_ACCESS_KEY_ID="foo" \
-          --env AWS_SECRET_ACCESS_KEY="foo" \
-          --env WDAE_EMAIL_HOST="mailhog"
+          --env AWS_SECRET_ACCESS_KEY="foo"
 
         defer_ret build_run_ctx_reset ctx:ctx_dae_integ
 
