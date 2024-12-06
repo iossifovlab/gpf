@@ -220,6 +220,8 @@ class AnnotateVCFTool(AnnotationTool):
                             buff.append(attr)
 
                     for attribute, buff in zip(annotation_attributes, buffers):
+                        if attribute.internal:
+                            continue
                         if has_value.get(attribute.name, False):
                             vcf_var.info[attribute.name] = buff
                     out_file.write(vcf_var)
