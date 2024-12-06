@@ -266,6 +266,8 @@ const appRoutes: Routes = [
     component: AboutComponent,
   },
   {
+    /* This route is used by the backend as a
+       redirect URL for logging in via OAuth. */
     path: 'login',
     redirectTo: 'home'
   },

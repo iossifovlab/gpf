@@ -100,8 +100,11 @@ export class AuthService {
   }
 
   private setTokens(res: object): void {
-    this.cookieService.set('access_token', res['access_token'] as string, {path: '/'});
-    localStorage.setItem('refresh_token', res['refresh_token'] as string);
     this.authToken = res['access_token'] as string;
+    /* Storing the access token as a cookie allows authentication of requests
+       where setting the Authorization header is not possible, as the backend is
+       configured to look for the token in both the Authorization header and the cookies. */
+    this.cookieService.set('access_token', this.authToken, {path: '/'});
+    localStorage.setItem('refresh_token', res['refresh_token'] as string);
   }
 }

@@ -11,6 +11,20 @@ import { selectDatasetId } from './datasets/datasets.state';
 import { AuthService } from './auth.service';
 import { Router } from '@angular/router';
 
+function extractAuthParamsFromURL(): [string, string] {
+  const url = new URL(window.location.href);
+  const state = url.searchParams.get('state');
+  const authCode = url.searchParams.get('code');
+  let redirectTo: string = null;
+  if (state) {
+    const stateObj = JSON.parse(atob(state)) as object;
+    if (stateObj['came_from']) {
+      redirectTo = stateObj['came_from'] as string;
+    }
+  }
+  return [authCode, redirectTo];
+}
+
 @Component({
   selector: 'gpf-root',
   templateUrl: './app.component.html',
@@ -23,6 +37,10 @@ export class AppComponent implements OnInit {
   public geneProfilesConfig: GeneProfilesSingleViewConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
 
+  /* loadedUserInfo is used to determine if the user has
+     been successfully logged in. Only after a successful
+     login will the application render, as the app template uses
+     an *ngIf directive to test loadedUserInfo has been set. */
   public loadedUserInfo = null;
 
   @HostListener('window:keydown.home')
@@ -49,16 +67,7 @@ export class AppComponent implements OnInit {
   public ngOnInit(): void {
     this.ngbConfig.animation = false;
 
-    const url = new URL(window.location.href);
-    const state = url.searchParams.get('state');
-    const authCode = url.searchParams.get('code');
-    let redirectTo = null;
-    if (state) {
-      const stateObj = JSON.parse(atob(state)) as object;
-      if (stateObj['came_from']) {
-        redirectTo = stateObj['came_from'] as string;
-      }
-    }
+    const [authCode, redirectTo] = extractAuthParamsFromURL();
 
     if (authCode !== null) {
       this.authService.requestAccessToken(authCode).pipe(

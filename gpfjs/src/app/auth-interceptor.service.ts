@@ -45,6 +45,10 @@ export class AuthInterceptorService implements HttpInterceptor {
       return throwError(() => err);
     }
     if (this.usersService.isLoggingOut) {
+      /* If the application is in the midst of logging the user out,
+         do not attempt to refresh tokens or reload the application,
+         as this may interfere with the logout process and lead to
+         unexpected behaviour. */
       return;
     }
     return this.refreshToken().pipe(

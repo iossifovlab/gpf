@@ -20,6 +20,8 @@ export class UsersService {
 
   public usersStreamingFinishedSubject = new Subject();
 
+  /* This is used to indicate that the app is in the middle of logging out.
+     Currently used by the AuthInterceptor to avoid interrupting the logout process. */
   public isLoggingOut = false;
 
   public constructor(

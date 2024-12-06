@@ -43,6 +43,7 @@ export class UsersComponent implements OnInit {
   }
 
   public logout(): void {
+    // Disable the logout button to prevent clicking it multiple times, as well as to add an immediate visual response
     (document.getElementById('log-out-button') as HTMLButtonElement).disabled = true;
     this.usersService.logout().subscribe(() => {});
   }
