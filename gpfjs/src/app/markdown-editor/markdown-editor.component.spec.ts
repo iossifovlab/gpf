@@ -11,10 +11,10 @@ import { UserInfo } from 'app/users/users';
 class UsersServiceMock {
   public cachedUserInfo(): UserInfo {
     return {
-      email: "testmail@mail.com",
+      email: 'testmail@mail.com',
       isAdministrator: true,
       loggedIn: true,
-    }
+    };
   }
 }
 

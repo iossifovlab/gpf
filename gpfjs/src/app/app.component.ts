@@ -50,13 +50,13 @@ export class AppComponent implements OnInit {
     this.ngbConfig.animation = false;
 
     const url = new URL(window.location.href);
-    let state = url.searchParams.get('state');
-    let authCode = url.searchParams.get('code');
+    const state = url.searchParams.get('state');
+    const authCode = url.searchParams.get('code');
     let redirectTo = null;
     if (state) {
-      state = JSON.parse(atob(state));
-      if (state['came_from']) {
-        redirectTo = [state['came_from']];
+      const stateObj = JSON.parse(atob(state)) as object;
+      if (stateObj['came_from']) {
+        redirectTo = stateObj['came_from'] as string;
       }
     }
 
@@ -65,11 +65,11 @@ export class AppComponent implements OnInit {
         switchMap(() => this.usersService.getUserInfo()),
       ).subscribe(res => {
         this.loadedUserInfo = res;
-      })
+      });
     } else {
       this.usersService.getUserInfo().subscribe(res => {
         this.loadedUserInfo = res;
-      })
+      });
     }
 
     this.bnIdle.startWatching(this.sessionTimeoutInSeconds)
@@ -87,7 +87,7 @@ export class AppComponent implements OnInit {
     });
 
     if (redirectTo !== null) {
-      this.router.navigate(redirectTo);
+      this.router.navigate([redirectTo]);
     }
   }
 }

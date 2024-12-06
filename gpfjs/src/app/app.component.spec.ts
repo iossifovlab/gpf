@@ -34,9 +34,9 @@ class MockDatasetsService {
 
 class UsersServiceMock {
   private mockInfo = {
-      email: "testmail@mail.com",
-      isAdministrator: true,
-      loggedIn: true,
+    email: 'testmail@mail.com',
+    isAdministrator: true,
+    loggedIn: true,
   };
 
   public getUserInfo(): Observable<UserInfo> {

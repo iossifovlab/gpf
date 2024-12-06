@@ -2,7 +2,7 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { ConfigService } from './config/config.service';
-import { Observable, Subject, take, tap, catchError } from 'rxjs';
+import { Observable, take, tap, catchError } from 'rxjs';
 import { APP_BASE_HREF } from '@angular/common';
 import { CookieService } from 'ngx-cookie-service';
 import pkceChallenge from 'pkce-challenge';
@@ -14,7 +14,7 @@ export class AuthService {
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
   private readonly options = { headers: this.headers };
 
-  private authToken = null;
+  private authToken: string = null;
 
   public constructor(
     private http: HttpClient,
@@ -103,6 +103,6 @@ export class AuthService {
   private setTokens(res: object): void {
     this.cookieService.set('access_token', res['access_token'] as string, {path: '/'});
     localStorage.setItem('refresh_token', res['refresh_token'] as string);
-    this.authToken = res['access_token'];
+    this.authToken = res['access_token'] as string;
   }
 }
