@@ -55,6 +55,20 @@ def mailhog_url(request: pytest.FixtureRequest) -> str:
     return f"{parsed.scheme}://{parsed.netloc}{path}"
 
 
+@pytest.fixture
+def oauth_admin() -> RESTClient:
+    confidential_session = GPFConfidentialClient(
+        base_url="http://resttest:21011",
+        client_id="resttest1",
+        client_secret="secret",  # noqa: S106
+        redirect_uri="http://resttest:21011/login",
+    )
+
+    client = RESTClient(confidential_session)
+    client.login()
+    return client
+
+
 @pytest.fixture(
     params=["basic", "oauth2_confidential_client"],
 )
