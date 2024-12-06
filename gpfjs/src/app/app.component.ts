@@ -70,21 +70,16 @@ export class AppComponent implements OnInit {
     const [authCode, redirectTo] = extractAuthParamsFromURL();
 
     if (authCode !== null) {
-      this.authService.requestAccessToken(authCode).pipe(
-        switchMap(() => this.usersService.getUserInfo()),
-      ).subscribe(res => {
-        this.loadedUserInfo = res;
+      this.authService.requestAccessToken(authCode).pipe().subscribe(() => {
+        this.loadedUserInfo = this.usersService.cachedUserInfo();
       });
     } else {
-      this.usersService.getUserInfo().subscribe(res => {
-        this.loadedUserInfo = res;
-      });
+      this.loadedUserInfo = this.usersService.cachedUserInfo();
     }
 
     this.bnIdle.startWatching(this.sessionTimeoutInSeconds)
       .pipe(
-        switchMap(() => this.usersService.logout()),
-        switchMap(() => this.usersService.getUserInfo()),
+        switchMap(() => this.usersService.logout())
       ).subscribe();
 
     this.store.select(selectDatasetId).subscribe(datasetId => {

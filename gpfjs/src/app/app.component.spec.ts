@@ -22,7 +22,6 @@ import { FormsModule } from '@angular/forms';
 import { APP_BASE_HREF } from '@angular/common';
 import { StoreModule } from '@ngrx/store';
 import { datasetIdReducer } from './datasets/datasets.state';
-import { Observable, of } from 'rxjs';
 import { UserInfo } from './users/users';
 
 
@@ -38,10 +37,6 @@ class UsersServiceMock {
     isAdministrator: true,
     loggedIn: true,
   };
-
-  public getUserInfo(): Observable<UserInfo> {
-    return of(this.mockInfo);
-  }
 
   public cachedUserInfo(): UserInfo {
     return this.mockInfo;
