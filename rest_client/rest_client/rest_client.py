@@ -1,5 +1,6 @@
 import logging
 import urllib.parse
+from collections.abc import Iterator
 from typing import Any, Protocol, cast
 
 import requests
@@ -151,19 +152,16 @@ class GPFConfidentialClient:
         **kwargs: Any,
     ) -> requests.Response:
         """Get request."""
-        if self.token is None:
-            self.authenticate()
         headers = headers or {}
         headers["Authorization"] = f"Bearer {self.token}"
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
 
-        with requests.get(
-                    url,
-                    headers=headers,
-                    timeout=timeout,
-                    **kwargs,
-                ) as response:
-            return response
+        return requests.get(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
 
     def post(
         self, url: str,
@@ -171,19 +169,16 @@ class GPFConfidentialClient:
         **kwargs: Any,
     ) -> requests.Response:
         """Post request."""
-        if self.token is None:
-            self.authenticate()
         headers = headers or {}
         headers["Authorization"] = f"Bearer {self.token}"
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
 
-        with requests.post(
-                    url,
-                    headers=headers,
-                    timeout=timeout,
-                    **kwargs,
-                ) as response:
-            return response
+        return requests.post(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
 
     def put(
         self, url: str,
@@ -197,13 +192,12 @@ class GPFConfidentialClient:
         headers["Authorization"] = f"Bearer {self.token}"
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
 
-        with requests.put(
-                    url,
-                    headers=headers,
-                    timeout=timeout,
-                    **kwargs,
-                ) as response:
-            return response
+        return requests.put(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
 
 
 class GPFBasicAuth:
@@ -259,13 +253,12 @@ class GPFBasicAuth:
         headers = headers or {}
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
 
-        with self.session.get(
-                    url,
-                    headers=headers,
-                    timeout=timeout,
-                    **kwargs,
-                ) as response:
-            return response
+        return self.session.get(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
 
     def post(
         self, url: str,
@@ -276,13 +269,12 @@ class GPFBasicAuth:
         headers = headers or {}
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
 
-        with self.session.post(
-                    url,
-                    headers=headers,
-                    timeout=timeout,
-                    **kwargs,
-                ) as response:
-            return response
+        return self.session.post(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
 
     def put(
         self, url: str,
@@ -293,13 +285,12 @@ class GPFBasicAuth:
         headers = headers or {}
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
 
-        with self.session.put(
-                    url,
-                    headers=headers,
-                    timeout=timeout,
-                    **kwargs,
-                ) as response:
-            return response
+        return self.session.put(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
 
 
 class RESTClient:
@@ -434,3 +425,65 @@ class RESTClient:
 
         if response.status_code != 200:
             raise OSError(f"Revoke permission failed: {response.text}")
+
+    def search_users(self, search: str) -> list[dict]:
+        """Search for users in the GPF users REST API."""
+        response = self.session.get(
+            f"{self.base_url}/api/v3/users?page=1&search={search}")
+        if response.status_code != 200:
+            raise OSError(f"Search user failed: {response.text}")
+        return cast(list[dict], response.json())
+
+    def initiate_forgotten_password(self, username: str) -> None:
+        """Initiate forgotten password reset."""
+        body = {
+            "email": username,
+        }
+        response = self.session.post(
+            f"{self.base_url}/api/v3/users/forgotten_password", json=body)
+        if response.status_code != 200:
+            raise OSError(
+                f"Initiate forgotten password reset failed: {response.text}")
+
+    def initiate_password_reset_old(self, user_id: int) -> None:
+        """Initiate password reset."""
+        reset_password_url = \
+            f"{self.base_url}/api/v3/users/{user_id}/password_reset"
+
+        response = self.session.post(
+            reset_password_url,
+            json={})
+        if response.status_code != 204:
+            raise OSError(
+                f"Initiate old password reset failed: {response.text}")
+
+    def query_genotype_browser(
+        self, query: dict,
+        chunk_size: int = 512,
+    ) -> Iterator[Any]:
+        """Perform a genotype browser query to the GPF API."""
+        url = f"{self.base_url}/api/v3/genotype_browser/query"
+        response = self.session.post(
+            url,
+            json=query,
+            headers={"Content-Type": "application/json"},
+            stream=True,
+        )
+        if response.status_code != 200:
+            raise OSError(f"Query failed: {response.text}")
+        return response.iter_content(chunk_size=chunk_size)
+
+    def query_summary_variants(
+        self, query: dict,
+    ) -> list:
+        """Perform a summary variants query to the GPF API."""
+        url = f"{self.base_url}/api/v3/gene_view/query_summary_variants"
+        with self.session.post(
+                    url,
+                    json=query,
+                    headers={"Content-Type": "application/json"},
+                ) as response:
+
+            if response.status_code != 200:
+                raise OSError(f"Query failed: {response.text}")
+            return cast(list[dict], response.json())

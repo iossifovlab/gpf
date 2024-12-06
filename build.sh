@@ -115,6 +115,20 @@ function main() {
     gpf_dev_image_ref="$(e docker_img_gpf_dev)"
   }
 
+  build_stage "Prepare GRR config"
+  {
+    build_run_local bash -c "mkdir -p ./cache"
+    build_run_local bash -c "touch ./cache/grr_definition.yaml"
+    build_run_local bash -c 'cat > ./cache/grr_definition.yaml << EOT
+id: "default"
+type: "url"
+url: "https://grr.seqpipe.org/"
+cache_dir: "/wd/cache/grrCache"
+EOT
+'
+
+  }
+
   build_stage "Create network"
   {
     # create network
