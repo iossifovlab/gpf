@@ -268,9 +268,13 @@ def trim_parsimonious(pos: int, ref: str, alt: str) -> tuple[int, str, str]:
 
 def get_locus_ploidy(
         chrom: str, pos: int, sex: Sex, genome: ReferenceGenome) -> int:
+    """Return the number of ploidy at a given position in a chromosome."""
+    if chrom == "Y" and sex == Sex.F:
+        raise ValueError("Chromosome Y identified for a female individual!")
 
-    if chrom in ("chrX", "X") and sex == Sex.M and \
-            not genome.is_pseudoautosomal(chrom, pos):
+    if chrom in ("chrX", "X", "chrY", "Y") \
+        and sex in (Sex.M, Sex.U) \
+        and not genome.is_pseudoautosomal(chrom, pos):
         return 1
     return 2
 
