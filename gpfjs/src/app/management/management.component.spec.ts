@@ -1,11 +1,10 @@
-import { of } from 'rxjs';
-
 import { ManagementComponent } from './management.component';
+
 
 describe('ManagementComponent', () => {
   let component: ManagementComponent;
   const usersService = {
-    getUserInfoObservable: jest.fn()
+    cachedUserInfo: jest.fn()
   };
   const routerMock = {
     navigate: jest.fn()
@@ -21,19 +20,19 @@ describe('ManagementComponent', () => {
 
   it('should initialize', () => {
     const routerNavigateSpy = jest.spyOn(routerMock, 'navigate');
-    const getUserInfoSpy = jest.spyOn(usersService, 'getUserInfoObservable');
+    const cachedUserInfoSpy = jest.spyOn(usersService, 'cachedUserInfo');
 
-    getUserInfoSpy.mockReturnValue(of({isAdministrator: true}));
+    cachedUserInfoSpy.mockReturnValue({isAdministrator: true});
     component.ngOnInit();
     expect(routerNavigateSpy).not.toHaveBeenCalled();
 
-    getUserInfoSpy.mockReturnValue(of({isAdministrator: false}));
+    cachedUserInfoSpy.mockReturnValue({isAdministrator: false});
     component.ngOnInit();
     expect(routerNavigateSpy).toHaveBeenCalledWith(['/']);
 
     routerNavigateSpy.mockReset();
 
-    getUserInfoSpy.mockReturnValue(of(undefined));
+    cachedUserInfoSpy.mockReturnValue(undefined);
     component.ngOnInit();
     expect(routerNavigateSpy).toHaveBeenCalledWith(['/']);
   });
