@@ -95,6 +95,19 @@ def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
                 - position_score: one
                 - position_score: four
             """,
+            "annotation_internal_attributes.yaml": """
+                - position_score:
+                    resource_id: one
+                    attributes:
+                    - source: score
+                      name: score_1
+                - position_score:
+                    resource_id: four
+                    attributes:
+                    - source: score
+                      name: score_4
+                      internal: true
+            """,
             "grr.yaml": f"""
                 id: mm
                 type: dir
@@ -872,3 +885,72 @@ def test_annotate_vcf_float_precision(
     with pysam.VariantFile(str(out_file)) as vcf_file:
         result = [vcf.info["score"][0] for vcf in vcf_file.fetch()]
     assert result == ["0.123"]
+
+
+def test_annotate_columns_internal_attributes(
+        annotate_directory_fixture: pathlib.Path) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore_1\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation_internal_attributes.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    cli_columns([
+        str(a) for a in [
+            in_file, annotation_file, "--grr", grr_file, "-o", out_file,
+            "-w", work_dir,
+            "-j", 1,
+        ]
+    ])
+    out_file_content = get_file_content_as_string(str(out_file))
+    assert out_file_content == out_expected_content
+
+
+def test_annotate_vcf_internal_attributes(
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##contig=<ID=chr1>
+        #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT m1  d1  c1
+        chr1   23  .  C   T   .    .      .    GT     0/1 0/0 0/0
+        chr1   24  .  C   A   .    .      .    GT     0/0 0/1 0/0
+    """)
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.vcf"
+    out_file = root_path / "out.vcf"
+    workdir = root_path / "output"
+    annotation_file = root_path / "annotation_internal_attributes.yaml"
+    grr_file = root_path / "grr.yaml"
+
+    setup_vcf(in_file, in_content)
+
+    cli_vcf([
+        str(a) for a in [
+            in_file, annotation_file,
+            "--grr", grr_file,
+            "-o", out_file,
+            "-w", workdir,
+            "-j", 1,
+        ]
+    ])
+
+    # pylint: disable=no-member
+    with pysam.VariantFile(str(out_file)) as vcf_file:
+        for rec in vcf_file.fetch():
+            assert "score_1" in rec.info
+            assert "score_4" not in rec.info
