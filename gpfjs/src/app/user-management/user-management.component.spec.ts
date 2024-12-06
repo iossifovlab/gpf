@@ -7,7 +7,7 @@ import { UsersService } from 'app/users/users.service';
 
 import { UserManagementComponent } from './user-management.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { User } from 'app/users/users';
+import { User, UserInfo } from 'app/users/users';
 import { Observable, of } from 'rxjs';
 import { UserGroup } from 'app/users-groups/users-groups';
 import { DatasetPermissions } from 'app/datasets-table/datasets-table';
@@ -53,15 +53,12 @@ class UsersServiceMock {
     return of(pageBody);
   }
 
-  public getUserInfo(): Observable<User> {
-    return of(new User(
-      1,
-      'userMame',
-      'userEmail',
-      ['group'],
-      true,
-      [{datasetId: 'datasetId', datasetName: 'datasetName'}]
-    ));
+  public cachedUserInfo(): UserInfo {
+    return {
+      email: 'userEmail',
+      isAdministrator: false,
+      loggedIn: true
+    };
   }
 }
 
