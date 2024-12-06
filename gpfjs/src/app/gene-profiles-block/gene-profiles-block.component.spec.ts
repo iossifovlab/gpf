@@ -19,7 +19,7 @@ import { GeneProfilesColumn, GeneProfilesTableConfig } from 'app/gene-profiles-t
 import { geneProfilesReducer } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { cloneDeep } from 'lodash';
 import { Store, StoreModule } from '@ngrx/store';
-import { User } from 'app/users/users';
+import { UserInfo } from 'app/users/users';
 import { GeneProfileSingleViewComponent } from 'app/gene-profiles-single-view/gene-profiles-single-view.component';
 
 
@@ -108,23 +108,12 @@ class GeneProfilesServiceMock {
 }
 
 class UsersServiceMock {
-  public cachedUserInfo(): object {
-    return {loggedIn: true};
-  }
-
-  public getUserInfoObservable(): Observable<object> {
-    return of({});
-  }
-
-  public getUserInfo(): Observable<User> {
-    return of(new User(
-      1,
-      'userMame',
-      'userEmail',
-      ['group'],
-      true,
-      [{datasetId: 'datasetId', datasetName: 'datasetName'}]
-    ));
+  public cachedUserInfo(): UserInfo {
+    return {
+      email: 'userEmail',
+      isAdministrator: false,
+      loggedIn: true
+    };
   }
 }
 
