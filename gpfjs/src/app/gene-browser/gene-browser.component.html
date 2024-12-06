@@ -183,7 +183,7 @@
           <input
             id="unique-family-variants-checkbox"
             type="checkbox"
-            [disabled]="!isUniqueFamilyFilterEnabled || !this.totalFamilyVariantsCount"
+            [disabled]="!isUniqueFamilyFilterEnabled || !this.summaryVariantsArrayFiltered?.totalFamilyVariantsCount"
             (click)="checkUniqueFamilyVariantsFilter()" />
         </div>
         <div id="family-variants-wrapper">
@@ -191,7 +191,7 @@
             <span class="d-none d-xl-inline">Family variants:</span>
             <span class="d-none d-md-inline d-xl-none d-xxl-none">FV:</span>
             <span id="family-variants-count">
-              <span>{{ familyVariantsCount }} / {{ this.totalFamilyVariantsCount }}</span>
+              <span>{{ familyVariantsCount }} / {{ this.summaryVariantsArray.totalFamilyVariantsCount }}</span>
             </span>
           </span>
           <div *ngIf="selectedGene">
@@ -202,7 +202,7 @@
               method="post">
               <input name="queryData" type="hidden" />
               <button
-                [disabled]="familyVariantsCount === '0'"
+                [disabled]="!this.summaryVariantsArrayFiltered?.totalFamilyVariantsCount"
                 class="btn btn-md btn-primary btn-right"
                 id="download-family-variants-button"
                 type="submit">
