@@ -29,8 +29,10 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
 
     def __init__(self, pipeline: AnnotationPipeline, info: AnnotatorInfo):
 
-        genome_resrouce_id = info.parameters.get("genome")
-        if genome_resrouce_id is None:
+        genome_resource_id = info.parameters.get("genome") or \
+            (pipeline.preamble.input_reference_genome
+             if pipeline.preamble is not None else None)
+        if genome_resource_id is None:
             genome = get_genomic_context().get_reference_genome()
             if genome is None:
                 raise ValueError(
@@ -38,7 +40,7 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
                     f"specified and a genome is missing in "
                     f"the context.")
         else:
-            resource = pipeline.repository.get_resource(genome_resrouce_id)
+            resource = pipeline.repository.get_resource(genome_resource_id)
             genome = build_reference_genome_from_resource(resource)
         assert isinstance(genome, ReferenceGenome)
 
