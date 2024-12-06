@@ -94,7 +94,7 @@ export class PhenoToolResultsChartComponent implements OnInit, OnChanges, AfterV
         a.download = 'pheno-tool-report.png';
         a.href = canvas.toDataURL();
       });
-      img.src = 'data:image/svg+xml;base64,'+ window.btoa(svgStr);
+      img.src = 'data:image/svg+xml;base64,'+ window.btoa(unescape(encodeURIComponent(svgStr)));
     }
   }
 }

@@ -3,7 +3,9 @@
 </div>
 <div style="display: flex; justify-content: center; max-height: 700px; min-width: 1000px">
   <svg [attr.max-width]="width" [attr.max-height]="height" [attr.viewBox]="getViewBox()">
-    <text x="40%" y="20" class="description">{{ phenoToolResults.description }}</text>
+    <text x="50%" y="20" alignment-baseline="middle" text-anchor="middle" class="description">
+      {{ phenoToolResults.description }}
+    </text>
 
     <text x="0" y="70">with hit</text>
     <text x="0" y="90">without hit</text>
