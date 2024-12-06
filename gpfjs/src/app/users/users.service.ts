@@ -37,10 +37,11 @@ export class UsersService {
 
     this.isLoggingOut = true;
 
-    return this.authService.revokeAccessToken().pipe(
+    return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options).pipe(
       take(1),
-      switchMap(() => this.http.post(this.config.baseUrl + this.logoutUrl, {}, options)),
+      switchMap(() => this.authService.revokeAccessToken()),
       tap(() => {
+        this.authService.clearTokens();
         window.location.href = window.location.origin;
       })
     );

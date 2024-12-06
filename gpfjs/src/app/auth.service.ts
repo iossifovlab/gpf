@@ -24,7 +24,7 @@ export class AuthService {
   ) { }
 
   public get accessToken(): string {
-    return this.cookieService.get('access_token') || '';
+    return this.authToken || '';
   }
 
   public get refreshAccessToken(): string {
@@ -59,7 +59,6 @@ export class AuthService {
       client_id: this.config.oauthClientId,
       token: this.authToken,
     }});
-    this.clearTokens();
     return this.http.post(
       `${this.config.rootUrl}${this.baseHref}o/revoke_token/`, params, this.options,
     );
