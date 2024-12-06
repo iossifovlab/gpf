@@ -2,7 +2,7 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { ConfigService } from './config/config.service';
-import { Observable, Subject, take, tap, catchError } from 'rxjs';
+import { Observable, take, tap, catchError } from 'rxjs';
 import { APP_BASE_HREF } from '@angular/common';
 import { CookieService } from 'ngx-cookie-service';
 import pkceChallenge from 'pkce-challenge';
@@ -13,7 +13,8 @@ import pkceChallenge from 'pkce-challenge';
 export class AuthService {
   private readonly headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
   private readonly options = { headers: this.headers };
-  public tokenExchangeSubject = new Subject<boolean>();
+
+  private authToken: string = null;
 
   public constructor(
     private http: HttpClient,
@@ -23,7 +24,7 @@ export class AuthService {
   ) { }
 
   public get accessToken(): string {
-    return this.cookieService.get('access_token') || '';
+    return this.authToken || '';
   }
 
   public get refreshAccessToken(): string {
@@ -50,19 +51,17 @@ export class AuthService {
     ).pipe(take(1), tap(res => {
       this.setTokens(res);
       localStorage.removeItem('code_verifier');
-      this.tokenExchangeSubject.next(true);
     }));
   }
 
   public revokeAccessToken(): Observable<object> {
     const params = new HttpParams({fromObject: {
       client_id: this.config.oauthClientId,
-      token: this.accessToken,
+      token: this.authToken,
     }});
-
     return this.http.post(
       `${this.config.rootUrl}${this.baseHref}o/revoke_token/`, params, this.options,
-    ).pipe(take(1), tap({next: () => this.clearTokens()}));
+    );
   }
 
   public clearTokens(): void {
@@ -101,7 +100,11 @@ export class AuthService {
   }
 
   private setTokens(res: object): void {
-    this.cookieService.set('access_token', res['access_token'] as string, {path: '/'});
+    this.authToken = res['access_token'] as string;
+    /* Storing the access token as a cookie allows authentication of requests
+       where setting the Authorization header is not possible, as the backend is
+       configured to look for the token in both the Authorization header and the cookies. */
+    this.cookieService.set('access_token', this.authToken, {path: '/'});
     localStorage.setItem('refresh_token', res['refresh_token'] as string);
   }
 }

@@ -8,6 +8,22 @@ import { GeneProfilesSingleViewConfig } from './gene-profiles-single-view/gene-p
 import { NgbConfig } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
 import { selectDatasetId } from './datasets/datasets.state';
+import { AuthService } from './auth.service';
+import { Router } from '@angular/router';
+
+function extractAuthParamsFromURL(): [string, string] {
+  const url = new URL(window.location.href);
+  const state = url.searchParams.get('state');
+  const authCode = url.searchParams.get('code');
+  let redirectTo: string = null;
+  if (state) {
+    const stateObj = JSON.parse(atob(state)) as object;
+    if (stateObj['came_from']) {
+      redirectTo = stateObj['came_from'] as string;
+    }
+  }
+  return [authCode, redirectTo];
+}
 
 @Component({
   selector: 'gpf-root',
@@ -20,6 +36,12 @@ export class AppComponent implements OnInit {
   public selectedDatasetId: string;
   public geneProfilesConfig: GeneProfilesSingleViewConfig;
   private sessionTimeoutInSeconds = 7 * 24 * 60 * 60; // 1 week
+
+  /* loadedUserInfo is used to determine if the user has
+     been successfully logged in. Only after a successful
+     login will the application render, as the app template uses
+     an *ngIf directive to test loadedUserInfo has been set. */
+  public loadedUserInfo = null;
 
   @HostListener('window:keydown.home')
   public scrollToTop(): void {
@@ -36,12 +58,29 @@ export class AppComponent implements OnInit {
     private bnIdle: BnNgIdleService,
     private usersService: UsersService,
     private ngbConfig: NgbConfig,
+    private authService: AuthService,
+    private router: Router,
     protected store: Store,
   ) {
-    this.ngbConfig.animation = false;
   }
 
   public ngOnInit(): void {
+    this.ngbConfig.animation = false;
+
+    const [authCode, redirectTo] = extractAuthParamsFromURL();
+
+    if (authCode !== null) {
+      this.authService.requestAccessToken(authCode).pipe(
+        switchMap(() => this.usersService.getUserInfo()),
+      ).subscribe(res => {
+        this.loadedUserInfo = res;
+      });
+    } else {
+      this.usersService.getUserInfo().subscribe(res => {
+        this.loadedUserInfo = res;
+      });
+    }
+
     this.bnIdle.startWatching(this.sessionTimeoutInSeconds)
       .pipe(
         switchMap(() => this.usersService.logout()),
@@ -55,5 +94,9 @@ export class AppComponent implements OnInit {
     this.geneProfilesService.getConfig().subscribe(res => {
       this.geneProfilesConfig = res;
     });
+
+    if (redirectTo !== null) {
+      this.router.navigate([redirectTo]);
+    }
   }
 }

@@ -1,11 +1,10 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { UsersService } from './users.service';
 import { ConfigService } from '../config/config.service';
-import { Observable } from 'rxjs';
-import { share, take } from 'rxjs/operators';
 import { AuthService } from 'app/auth.service';
 import { Router } from '@angular/router';
 import { APP_BASE_HREF } from '@angular/common';
+import { UserInfo } from './users';
 
 @Component({
   selector: 'gpf-users',
@@ -13,7 +12,7 @@ import { APP_BASE_HREF } from '@angular/common';
   styleUrls: ['./users.component.css'],
 })
 export class UsersComponent implements OnInit {
-  public userInfo$: Observable<any>;
+  public userInfo: UserInfo = null;
 
   public constructor(
     private usersService: UsersService,
@@ -24,12 +23,7 @@ export class UsersComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    this.reloadUserData();
-    this.userInfo$ = this.usersService.getUserInfoObservable().pipe(share());
-  }
-
-  public reloadUserData(): void {
-    this.usersService.getUserInfo().pipe(take(1)).subscribe();
+    this.userInfo = this.usersService.cachedUserInfo();
   }
 
   public login(): void {
@@ -49,6 +43,8 @@ export class UsersComponent implements OnInit {
   }
 
   public logout(): void {
-    this.usersService.logout().subscribe(() => this.reloadUserData());
+    // Disable the logout button to prevent clicking it multiple times, as well as to add an immediate visual response
+    (document.getElementById('log-out-button') as HTMLButtonElement).disabled = true;
+    this.usersService.logout().subscribe(() => {});
   }
 }

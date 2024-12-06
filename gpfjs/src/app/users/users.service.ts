@@ -4,12 +4,9 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie-service';
 import { User, UserInfo } from './users';
-import { LocationStrategy } from '@angular/common';
-import { Store } from '@ngrx/store';
 import { catchError, map, tap, take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
 import { FederationCredential, FederationJson } from 'app/federation-credentials/federation-credentials';
-import { reset } from './state-actions';
 
 @Injectable()
 export class UsersService {
@@ -23,19 +20,16 @@ export class UsersService {
 
   public usersStreamingFinishedSubject = new Subject();
 
+  /* This is used to indicate that the app is in the middle of logging out.
+     Currently used by the AuthInterceptor to avoid interrupting the logout process. */
+  public isLoggingOut = false;
+
   public constructor(
     private http: HttpClient,
     private config: ConfigService,
     private cookieService: CookieService,
-    private store: Store,
-    private locationStrategy: LocationStrategy,
     private authService: AuthService,
-  ) {
-    this.authService.tokenExchangeSubject.subscribe(() => {
-      // Refresh user data when a token arrives
-      this.getUserInfo().pipe(take(1)).subscribe(() => {});
-    });
-  }
+  ) { }
 
   public logout(): Observable<object> {
     const csrfToken = this.cookieService.get('csrftoken');
@@ -43,12 +37,14 @@ export class UsersService {
     const headers = { 'X-CSRFToken': csrfToken };
     const options = { headers: headers, withCredentials: true };
 
-    return this.authService.revokeAccessToken().pipe(
+    this.isLoggingOut = true;
+
+    return this.http.post(this.config.baseUrl + this.logoutUrl, {}, options).pipe(
       take(1),
-      switchMap(() => this.http.post(this.config.baseUrl + this.logoutUrl, {}, options)),
+      switchMap(() => this.authService.revokeAccessToken()),
       tap(() => {
-        this.store.dispatch(reset());
-        window.location.href = this.locationStrategy.getBaseHref();
+        this.authService.clearTokens();
+        window.location.href = window.location.origin;
       })
     );
   }
