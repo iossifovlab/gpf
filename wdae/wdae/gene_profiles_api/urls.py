@@ -4,11 +4,6 @@ from gene_profiles_api import table_views, views
 
 urlpatterns = [
     re_path(
-        r"^/table/configuration/?$",
-        table_views.TableConfigurationView.as_view(),
-        name="gp_table_configuration",
-    ),
-    re_path(
         r"^/table/rows/?$",
         table_views.TableRowsView.as_view(),
         name="gp_table_rows",

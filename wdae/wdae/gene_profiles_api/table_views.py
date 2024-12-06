@@ -11,16 +11,6 @@ from rest_framework.request import Request
 LOGGER = logging.getLogger(__name__)
 
 
-class TableConfigurationView(QueryBaseView):
-    @method_decorator(etag(get_instance_timestamp_etag))
-    def get(self, _request):
-        configuration = self.gpf_instance.get_wdae_gp_table_configuration()
-        if configuration is None:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        return Response(configuration)
-
-
 class TableRowsView(QueryBaseView):
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(self, request):
