@@ -151,8 +151,6 @@ class GPFConfidentialClient:
         **kwargs: Any,
     ) -> requests.Response:
         """Get request."""
-        if self.token is None:
-            self.authenticate()
         headers = headers or {}
         headers["Authorization"] = f"Bearer {self.token}"
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
@@ -171,8 +169,6 @@ class GPFConfidentialClient:
         **kwargs: Any,
     ) -> requests.Response:
         """Post request."""
-        if self.token is None:
-            self.authenticate()
         headers = headers or {}
         headers["Authorization"] = f"Bearer {self.token}"
         timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
@@ -434,3 +430,34 @@ class RESTClient:
 
         if response.status_code != 200:
             raise OSError(f"Revoke permission failed: {response.text}")
+
+    def search_users(self, search: str) -> list[dict]:
+        """Search for users in the GPF users REST API."""
+        response = self.session.get(
+            f"{self.base_url}/api/v3/users?page=1&search={search}")
+        if response.status_code != 200:
+            raise OSError(f"Search user failed: {response.text}")
+        return cast(list[dict], response.json())
+
+    def initiate_forgotten_password(self, username: str) -> None:
+        """Initiate forgotten password reset."""
+        body = {
+            "email": username,
+        }
+        response = self.session.post(
+            f"{self.base_url}/api/v3/users/forgotten_password", json=body)
+        if response.status_code != 200:
+            raise OSError(
+                f"Initiate forgotten password reset failed: {response.text}")
+
+    def initiate_password_reset_old(self, user_id: int) -> None:
+        """Initiate password reset."""
+        reset_password_url = \
+            f"{self.base_url}/api/v3/users/{user_id}/password_reset"
+
+        response = self.session.post(
+            reset_password_url,
+            json={})
+        if response.status_code != 204:
+            raise OSError(
+                f"Initiate old password reset failed: {response.text}")
