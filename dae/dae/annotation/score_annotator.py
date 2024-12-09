@@ -167,7 +167,8 @@ class PositionScoreAnnotatorBase(GenomicScoreAnnotatorBase):
         pass
 
     def annotate(
-        self, annotatable: Annotatable | None, _: dict[str, Any],
+        self, annotatable: Annotatable | None,
+        context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
 
         if annotatable is None:
@@ -360,7 +361,8 @@ variant frequencies, etc.
         return [sagg.get_final() for sagg in scores_agg]
 
     def annotate(
-        self, annotatable: Annotatable | None, _: dict[str, Any],
+        self, annotatable: Annotatable | None,
+        context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
 
         if annotatable is None:
