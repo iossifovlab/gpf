@@ -70,11 +70,15 @@ export class AppComponent implements OnInit {
     const [authCode, redirectTo] = extractAuthParamsFromURL();
 
     if (authCode !== null) {
-      this.authService.requestAccessToken(authCode).pipe().subscribe(() => {
-        this.loadedUserInfo = this.usersService.cachedUserInfo();
+      this.authService.requestAccessToken(authCode).pipe(
+        switchMap(() => this.usersService.getUserInfo()),
+      ).subscribe(res => {
+        this.loadedUserInfo = res;
       });
     } else {
-      this.loadedUserInfo = this.usersService.cachedUserInfo();
+      this.usersService.getUserInfo().subscribe(res => {
+        this.loadedUserInfo = res;
+      });
     }
 
     this.bnIdle.startWatching(this.sessionTimeoutInSeconds)

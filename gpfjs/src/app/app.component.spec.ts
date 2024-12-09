@@ -23,6 +23,7 @@ import { APP_BASE_HREF } from '@angular/common';
 import { StoreModule } from '@ngrx/store';
 import { datasetIdReducer } from './datasets/datasets.state';
 import { UserInfo } from './users/users';
+import { Observable, of } from 'rxjs';
 
 
 class MockDatasetsService {
@@ -37,6 +38,10 @@ class UsersServiceMock {
     isAdministrator: true,
     loggedIn: true,
   };
+
+  public getUserInfo(): Observable<UserInfo> {
+    return of(this.mockInfo);
+  }
 
   public cachedUserInfo(): UserInfo {
     return this.mockInfo;
