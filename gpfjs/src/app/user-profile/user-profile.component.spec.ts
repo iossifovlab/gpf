@@ -11,10 +11,20 @@ import { APP_BASE_HREF } from '@angular/common';
 
 import { UserProfileComponent } from './user-profile.component';
 import { StoreModule } from '@ngrx/store';
-
+import { UserInfo } from 'app/users/users';
+class UsersServiceMock {
+  public cachedUserInfo(): UserInfo {
+    return {
+      email: 'userEmail',
+      isAdministrator: false,
+      loggedIn: true
+    };
+  }
+}
 describe('UserProfileComponent', () => {
   let component: UserProfileComponent;
   let fixture: ComponentFixture<UserProfileComponent>;
+  const usersServiceMock = new UsersServiceMock();
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
@@ -22,8 +32,10 @@ describe('UserProfileComponent', () => {
         UserProfileComponent,
       ],
       providers: [
-        QueryService, ConfigService, UsersService, ResizeService, DatasetsService,
-        { provide: APP_BASE_HREF, useValue: '' }
+        QueryService, ConfigService, ResizeService, DatasetsService,
+        { provide: APP_BASE_HREF, useValue: '' },
+        { provide: UsersService, useValue: usersServiceMock },
+
       ],
       imports: [
         RouterTestingModule, HttpClientTestingModule, NgbNavModule, StoreModule.forRoot({})

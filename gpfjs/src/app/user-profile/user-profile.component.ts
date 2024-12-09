@@ -1,8 +1,8 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
 import { QueryService } from '../query/query.service';
 import { UsersService } from '../users/users.service';
+import { UserInfo } from 'app/users/users';
 
 export class UserSavedQuery {
   public constructor(
@@ -19,9 +19,7 @@ export class UserSavedQuery {
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.css']
 })
-export class UserProfileComponent implements OnInit, OnDestroy {
-  private subscription: Subscription;
-
+export class UserProfileComponent implements OnInit {
   public genotypeQueries: Array<UserSavedQuery>;
   public phenotoolQueries: Array<UserSavedQuery>;
   public enrichmentQueries: Array<UserSavedQuery>;
@@ -34,17 +32,11 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   ) {}
 
   public ngOnInit(): void {
-    this.subscription = this.usersService.getUserInfoObservable()
-      .subscribe((userInfo: { loggedIn: boolean }) => this.loadUserProfile(userInfo));
+    const userInfo = this.usersService.cachedUserInfo();
+    this.loadUserProfile(userInfo);
   }
 
-  public ngOnDestroy(): void {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
-  }
-
-  private loadUserProfile(userInfo: { loggedIn: boolean }): void {
+  private loadUserProfile(userInfo: UserInfo): void {
     if (userInfo.loggedIn) {
       this.showTemplate = true;
       this.updateQueries();

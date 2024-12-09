@@ -8,10 +8,17 @@ import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 
 import { PhenoToolMeasureComponent } from './pheno-tool-measure.component';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store, StoreModule } from '@ngrx/store';
 import { phenoToolMeasureReducer } from './pheno-tool-measure.state';
+import { Dataset } from 'app/datasets/datasets';
+
+class MockDatasetService {
+  public getDatasets(): Observable<Dataset[]> {
+    return of([] as Dataset[]);
+  }
+}
 
 describe('PhenoToolMeasureComponent', () => {
   let component: PhenoToolMeasureComponent;
@@ -29,8 +36,9 @@ describe('PhenoToolMeasureComponent', () => {
         HttpHandler,
         ConfigService,
         UsersService,
-        DatasetsService,
-        { provide: APP_BASE_HREF, useValue: '' }
+        { provide: APP_BASE_HREF, useValue: '' },
+        { provide: DatasetsService, useValue: new MockDatasetService() },
+
       ],
       imports: [RouterTestingModule, StoreModule.forRoot({phenoToolMeasure: phenoToolMeasureReducer})],
       schemas: [NO_ERRORS_SCHEMA]

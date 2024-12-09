@@ -1,10 +1,9 @@
-import { Observable } from 'rxjs';
 import { Component, OnInit, Input, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { QueryService } from '../query/query.service';
 import { NgbDropdown, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { UsersService } from '../users/users.service';
 import { Store} from '@ngrx/store';
-import { share, switchMap, take } from 'rxjs/operators';
+import { switchMap, take } from 'rxjs/operators';
 import { environment } from 'environments/environment';
 import { UserInfo } from 'app/users/users';
 
@@ -22,7 +21,7 @@ export class SaveQueryComponent implements OnInit {
   @ViewChild('copiedTooltip') public copiedTooltip: NgbTooltip;
   @ViewChild(NgbDropdown) private dropdown: NgbDropdown;
 
-  public userInfo$: Observable<UserInfo>;
+  public userInfo: UserInfo;
 
   private urlUUID: string;
   public url: string;
@@ -39,7 +38,7 @@ export class SaveQueryComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    this.userInfo$ = this.usersService.getUserInfoObservable().pipe(share());
+    this.userInfo = this.usersService.cachedUserInfo();
   }
 
   public saveUserQuery(name: string, description: string): void {

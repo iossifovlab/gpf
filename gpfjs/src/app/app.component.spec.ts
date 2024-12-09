@@ -22,8 +22,8 @@ import { FormsModule } from '@angular/forms';
 import { APP_BASE_HREF } from '@angular/common';
 import { StoreModule } from '@ngrx/store';
 import { datasetIdReducer } from './datasets/datasets.state';
-import { Observable, of } from 'rxjs';
 import { UserInfo } from './users/users';
+import { Observable, of } from 'rxjs';
 
 
 class MockDatasetsService {

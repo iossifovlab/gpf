@@ -1,16 +1,15 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
 
 import { UsersService } from '../users/users.service';
+import { UserInfo } from 'app/users/users';
 
 @Component({
   selector: 'gpf-management',
   templateUrl: './management.component.html',
   styleUrls: ['./management.component.css']
 })
-export class ManagementComponent implements OnInit, OnDestroy {
-  private subscription: Subscription;
+export class ManagementComponent implements OnInit {
   public showTemplate = false;
 
   public constructor(
@@ -19,18 +18,12 @@ export class ManagementComponent implements OnInit, OnDestroy {
   ) { }
 
   public ngOnInit(): void {
-    this.subscription = this.usersService.getUserInfoObservable()
-      .subscribe(userInfo => this.checkUserInfo(userInfo));
+    const user: UserInfo = this.usersService.cachedUserInfo();
+    this.checkUserInfo(user);
   }
 
-  public ngOnDestroy(): void {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
-  }
-
-  private checkUserInfo(value): void {
-    if (value?.isAdministrator) {
+  private checkUserInfo(user: UserInfo): void {
+    if (user?.isAdministrator) {
       this.showTemplate = true;
     } else {
       this.router.navigate(['/']);

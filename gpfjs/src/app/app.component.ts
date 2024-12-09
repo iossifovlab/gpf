@@ -83,8 +83,7 @@ export class AppComponent implements OnInit {
 
     this.bnIdle.startWatching(this.sessionTimeoutInSeconds)
       .pipe(
-        switchMap(() => this.usersService.logout()),
-        switchMap(() => this.usersService.getUserInfo()),
+        switchMap(() => this.usersService.logout())
       ).subscribe();
 
     this.store.select(selectDatasetId).subscribe(datasetId => {

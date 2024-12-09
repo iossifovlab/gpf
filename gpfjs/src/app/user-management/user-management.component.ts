@@ -5,8 +5,8 @@ import { UserGroup } from 'app/users-groups/users-groups';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { environment } from 'environments/environment';
 import { Observable, Subscription, of } from 'rxjs';
-import { catchError, take } from 'rxjs/operators';
-import { User, UserInfo } from '../users/users';
+import { catchError } from 'rxjs/operators';
+import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
 
 type TableName = 'USERS' | 'GROUPS' | 'DATASETS';
@@ -45,9 +45,7 @@ export class UserManagementComponent implements OnInit {
     this.focusSearchBox();
     this.updateCurrentTable();
 
-    this.usersService.getUserInfo().pipe(take(1)).subscribe((currentUser: UserInfo) => {
-      this.currentUserEmail = currentUser.email;
-    });
+    this.currentUserEmail = this.usersService.cachedUserInfo().email;
   }
 
   public search(value: string): void {

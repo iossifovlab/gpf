@@ -10,7 +10,7 @@ import { Store, StoreModule } from '@ngrx/store';
 import { GeneProfiles } from './gene-profiles-table.state';
 import { TruncatePipe } from 'app/utils/truncate.pipe';
 import { Location } from '@angular/common';
-import { User } from 'app/users/users';
+import { UserInfo } from 'app/users/users';
 import { UsersService } from 'app/users/users.service';
 
 const column1 = {
@@ -237,15 +237,12 @@ const genesMock = [
 /* eslint-enable */
 
 class UsersServiceMock {
-  public getUserInfo(): Observable<User> {
-    return of(new User(
-      1,
-      'userMame',
-      'userEmail',
-      ['group'],
-      true,
-      [{datasetId: 'datasetId', datasetName: 'datasetName'}]
-    ));
+  public cachedUserInfo(): UserInfo {
+    return {
+      email: 'userEmail',
+      isAdministrator: false,
+      loggedIn: true
+    };
   }
 }
 
