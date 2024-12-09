@@ -1,4 +1,4 @@
-import { Observable, Subject, ReplaySubject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
@@ -15,7 +15,6 @@ export class UsersService {
   private readonly resetPasswordUrl = 'users/forgotten_password';
   private readonly usersUrl = 'users';
 
-  private userInfo$ = new ReplaySubject<UserInfo>(1);
   private lastUserInfo: UserInfo = null;
 
   public usersStreamingFinishedSubject = new Subject();
@@ -53,17 +52,12 @@ export class UsersService {
     return this.lastUserInfo;
   }
 
-  public getUserInfoObservable(): Observable<UserInfo> {
-    return this.userInfo$.asObservable();
-  }
-
   public getUserInfo(): Observable<UserInfo> {
     const options = { withCredentials: true };
 
     return this.http.get<UserInfo>(this.config.baseUrl + this.userInfoUrl, options).pipe(
       map(res => res),
       tap((userInfo: UserInfo) => {
-        this.userInfo$.next(userInfo);
         this.lastUserInfo = userInfo;
       })
     );
