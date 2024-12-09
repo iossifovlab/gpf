@@ -3,9 +3,8 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, ReplaySubject, zip, of } from 'rxjs';
 
 import { Dataset, DatasetHierarchy } from '../datasets/datasets';
-import { UsersService } from '../users/users.service';
 import { ConfigService } from '../config/config.service';
-import { distinctUntilChanged, map, take } from 'rxjs/operators';
+import { map, take } from 'rxjs/operators';
 import { DatasetPermissions } from 'app/datasets-table/datasets-table';
 
 @Injectable()
@@ -23,15 +22,9 @@ export class DatasetsService {
 
   public constructor(
     private http: HttpClient,
-    private config: ConfigService,
-    private usersService: UsersService
+    private config: ConfigService
   ) {
-    this.usersService.getUserInfoObservable().pipe(
-      map(user => user['email'] as string || ''),
-      distinctUntilChanged()
-    ).subscribe(() => {
-      this.reloadAllDatasets();
-    });
+    this.reloadAllDatasets();
   }
 
   public getDatasets(): Observable<Dataset[]> {
