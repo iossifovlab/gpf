@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import abc
 import copy
+import enum
 import logging
 from collections.abc import Callable, Generator, Iterator
 from dataclasses import dataclass
@@ -72,7 +73,6 @@ class ScoreDef:
     desc: str  # string that will be interpretted as md
     value_type: str  # "str", "int", "float"
     pos_aggregator: str | None     # a valid aggregator type
-    nuc_aggregator: str | None     # a valid aggregator type
     allele_aggregator: str | None  # a valid aggregator type
 
     small_values_desc: str | None
@@ -90,7 +90,6 @@ class _ScoreDef:
     desc: str  # string that will be interpretted as md
     value_type: str  # "str", "int", "float"
     pos_aggregator: str | None     # a valid aggregator type
-    nuc_aggregator: str | None     # a valid aggregator type
     allele_aggregator: str | None  # a valid aggregator type
 
     small_values_desc: str | None
@@ -111,7 +110,6 @@ class _ScoreDef:
             self.desc,
             self.value_type,
             self.pos_aggregator,
-            self.nuc_aggregator,
             self.allele_aggregator,
             self.small_values_desc,
             self.large_values_desc,
@@ -133,12 +131,6 @@ class _ScoreDef:
             "str": "concatenate",
             "bool": None,
         }
-        default_nuc_aggregators = {
-            "float": "max",
-            "int": "max",
-            "str": "concatenate",
-            "bool": None,
-        }
         default_allele_aggregators = {
             "float": "max",
             "int": "max",
@@ -147,8 +139,6 @@ class _ScoreDef:
         }
         if self.pos_aggregator is None:
             self.pos_aggregator = default_pos_aggregators[self.value_type]
-        if self.nuc_aggregator is None:
-            self.nuc_aggregator = default_nuc_aggregators[self.value_type]
         if self.allele_aggregator is None:
             self.allele_aggregator = \
                 default_allele_aggregators[self.value_type]
@@ -222,13 +212,6 @@ class PositionScoreQuery:
 
 
 @dataclass
-class NPScoreQuery:
-    score: str
-    position_aggregator: str | None = None
-    nucleotide_aggregator: str | None = None
-
-
-@dataclass
 class AlleleScoreQuery:
     score: str
     position_aggregator: str | None = None
@@ -242,20 +225,13 @@ class PositionScoreAggr:
 
 
 @dataclass
-class NPScoreAggr:
-    score: str
-    position_aggregator: Aggregator
-    nucleotide_aggregator: Aggregator
-
-
-@dataclass
 class AlleleScoreAggr:
     score: str
     position_aggregator: Aggregator
     allele_aggregator: Aggregator
 
 
-ScoreQuery = PositionScoreQuery | NPScoreQuery | AlleleScoreQuery
+ScoreQuery = PositionScoreQuery | AlleleScoreQuery
 
 
 class GenomicScore(ResourceConfigValidationMixin):
@@ -402,7 +378,6 @@ class GenomicScore(ResourceConfigValidationMixin):
                     "del_prefix": {"type": "string", "excludes": "add_prefix"},
                 }},
             }},
-            "allow_multiple_values": {"type": "boolean", "default": False},
             "scores": scores_schema,
             "default_annotation": {
                 "type": ["dict", "list"], "allow_unknown": True,
@@ -426,14 +401,21 @@ class GenomicScore(ResourceConfigValidationMixin):
             col_index = int(col_index_str) if col_index_str else None
 
             hist_conf = build_histogram_config(score_conf)
+            nuc_aggregator = score_conf.get("nucleotide_aggregator")
+            allele_aggregator = score_conf.get("allele_aggregator")
+            if nuc_aggregator is not None:
+                logger.warning(
+                    "Use of 'nucleotide_aggregator' is deprecated, use "
+                    "'allele_aggregator' instead.")
+                assert allele_aggregator is None
+                allele_aggregator = nuc_aggregator
 
             score_def = _ScoreDef(
                 score_id=score_conf["id"],
                 desc=score_conf.get("desc", ""),
                 value_type=score_conf.get("type"),
                 pos_aggregator=score_conf.get("position_aggregator"),
-                nuc_aggregator=score_conf.get("nucleotide_aggregator"),
-                allele_aggregator=score_conf.get("allele_aggregator"),
+                allele_aggregator=allele_aggregator,
                 small_values_desc=score_conf.get("small_values_desc"),
                 large_values_desc=score_conf.get("large_values_desc"),
                 col_name=col_name,
@@ -478,7 +460,6 @@ class GenomicScore(ResourceConfigValidationMixin):
                 value_parser=value_parser,
                 na_values=(),
                 pos_aggregator=None,
-                nuc_aggregator=None,
                 allele_aggregator=None,
                 small_values_desc=None,
                 large_values_desc=None,
@@ -552,9 +533,6 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     def get_config(self) -> dict[str, Any]:
         return self.config
-
-    def allow_multiple_values(self) -> bool:
-        return bool(self.config.get("allow_multiple_values", False))
 
     def get_default_annotation_attributes(self) -> list[Any]:
         """Collect default annotation attributes."""
@@ -713,7 +691,10 @@ class GenomicScore(ResourceConfigValidationMixin):
         scores: list[str] | None = None,
     ) -> Generator[
             tuple[int, int, list[ScoreValue] | None], None, None]:
-        """Return score values in a region."""
+        """Return score values in a region.
+
+        This method is used for calculation of score statistics.
+        """
 
     @lru_cache(maxsize=64)
     def get_number_range(
@@ -788,10 +769,9 @@ class PositionScore(GenomicScore):
                 logger.warning(
                     "multiple values for positions %s:%s-%s",
                     chrom, left, right)
-                if not self.allow_multiple_values():
-                    raise ValueError(
-                        f"multiple values for positions "
-                        f"{chrom}:{left}-{right}")
+                raise ValueError(
+                    f"multiple values for positions "
+                    f"{chrom}:{left}-{right}")
             returned_region = (left, right, val)
             yield (left, right, val)
 
@@ -831,18 +811,25 @@ class PositionScore(GenomicScore):
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
 
+        if scores is None:
+            scores = self.get_all_scores()
+        else:
+            scores = [
+                s.score if isinstance(s, PositionScoreQuery) else s
+                for s in scores]
+        assert all(isinstance(s, str) for s in scores)
+
         lines = list(self._fetch_lines(chrom, position, position))
         if not lines:
             return None
 
-        if len(lines) > 1 and not self.allow_multiple_values():
+        if len(lines) > 1:
             logger.warning(
                 "multiple values for positions %s:%s",
                 chrom, position)
-            if not self.allow_multiple_values():
-                raise ValueError(
-                    f"multiple values ({len(lines)}) for positions "
-                    f"{chrom}:{position}")
+            raise ValueError(
+                f"multiple values ({len(lines)}) for positions "
+                f"{chrom}:{position}")
 
         line = lines[0]
 
@@ -850,11 +837,21 @@ class PositionScore(GenomicScore):
         return [line.get_score(scr) for scr in requested_scores]
 
     def _build_scores_agg(
-        self, scores: list[PositionScoreQuery],
+        self, scores: list[str] | list[PositionScoreQuery],
     ) -> list[PositionScoreAggr]:
         score_aggs = []
         aggregator_type: str | None
         for score in scores:
+            if isinstance(score, str):
+                aggregator_type = self.score_definitions[score].pos_aggregator
+                assert aggregator_type is not None
+                score_aggs.append(PositionScoreAggr(
+                    score,
+                    build_aggregator(aggregator_type),
+                ))
+                continue
+
+            assert isinstance(score, PositionScoreQuery)
             if score.position_aggregator is not None:
                 aggregator_type = score.position_aggregator
             else:
@@ -870,7 +867,7 @@ class PositionScore(GenomicScore):
 
     def fetch_scores_agg(  # pylint: disable=too-many-arguments,too-many-locals
             self, chrom: str, pos_begin: int, pos_end: int,
-            scores: list[PositionScoreQuery] | None = None,
+            scores: list[str] | list[PositionScoreQuery] | None = None,
     ) -> list[Aggregator]:
         """Fetch score values in a region and aggregates them.
 
@@ -884,7 +881,8 @@ class PositionScore(GenomicScore):
         """
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
-                f"{chrom} is not among the available chromosomes.")
+                f"{chrom} is not among the "
+                f"available chromosomes.")
         if scores is None:
             scores = [
                 PositionScoreQuery(score_id)
@@ -909,12 +907,88 @@ class PositionScore(GenomicScore):
         return [squery.position_aggregator for squery in score_aggs]
 
 
-class NPScoreBase(GenomicScore):
-    """Base class for NPScore and AlleleScore.
+class AlleleScore(GenomicScore):
+    """Defines allele genomic scores."""
 
-    Implements common methods for NPScore and AlleleScore.
-    NPScore and AlleleScore inherit from this class.
-    """
+    class Mode(enum.Enum):
+        """Allele score mode."""
+
+        SUBSTITUTIONS = 1
+        ALLELES = 2
+
+        @staticmethod
+        def from_name(name: str) -> AlleleScore.Mode:
+            if name == "substitutions":
+                return AlleleScore.Mode.SUBSTITUTIONS
+            if name == "alleles":
+                return AlleleScore.Mode.ALLELES
+            raise ValueError(f"unknown allele mode: {name}")
+
+    def __init__(self, resource: GenomicResource):
+        if resource.get_type() not in {"allele_score", "np_score"}:
+            raise ValueError(
+                "The resrouce provided to AlleleScore should be of"
+                f"'allele_score' type, not a '{resource.get_type()}'")
+        if resource.get_type() == "np_score":
+            logger.warning(
+                "The resource type `np_score` is deprecated. "
+                "Please use `allele_score` instead for resource %s.",
+                resource.get_id())
+        super().__init__(resource)
+        if self.config.get("allele_score_mode") is None:
+            if resource.get_type() == "np_score":
+                self.mode = AlleleScore.Mode.SUBSTITUTIONS
+            elif resource.get_type() == "allele_score":
+                self.mode = AlleleScore.Mode.ALLELES
+            else:
+                raise ValueError(
+                    f"unknown resource type {resource.get_type()}")
+        else:
+            self.mode = AlleleScore.Mode.from_name(
+                self.config.get("allele_score_mode", "substitutions"))
+
+    def substitutions_mode(self) -> bool:
+        """Return True if the score is in substitutions mode."""
+        return self.mode == AlleleScore.Mode.SUBSTITUTIONS
+
+    def alleles_mode(self) -> bool:
+        """Return True if the score is in alleles mode."""
+        return self.mode == AlleleScore.Mode.ALLELES
+
+    @staticmethod
+    def get_schema() -> dict[str, Any]:
+        schema = copy.deepcopy(GenomicScore.get_schema())
+
+        schema["allele_score_mode"] = {
+            "type": "string",
+            "allowed": ["substitutions", "alleles"],
+        }
+        schema["table"]["schema"]["reference"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"},
+            },
+        }
+        schema["table"]["schema"]["alternative"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"},
+            },
+        }
+        schema["table"]["schema"]["variant"] = {
+            "type": "dict", "schema": {
+                "index": {"type": "integer"},
+                "name": {"type": "string", "excludes": "index"},
+            },
+        }
+        scores_schema = schema["scores"]["schema"]["schema"]
+        scores_schema["position_aggregator"] = AGGREGATOR_SCHEMA
+        scores_schema["allele_aggregator"] = AGGREGATOR_SCHEMA
+        scores_schema["nucleotide_aggregator"] = AGGREGATOR_SCHEMA
+        return schema
+
+    def open(self) -> AlleleScore:
+        return cast(AlleleScore, super().open())
 
     def _fetch_region_values(
         self, chrom: str,
@@ -961,15 +1035,10 @@ class NPScoreBase(GenomicScore):
             returned_nucleotides = (line.ref, line.alt)
             if (left, right) == (returned_region[0], returned_region[1]):
                 if returned_nucleotides in returned_region[3]:
-                    logger.warning(
+                    logger.info(
                         "multiple values for positions %s:%s-%s "
                         "and nucleotides %s",
                         chrom, left, right, returned_nucleotides)
-                    if not self.allow_multiple_values():
-                        raise ValueError(
-                            f"multiple values for positions "
-                            f"{chrom}:{left}-{right} "
-                            f"and nucleotides {returned_nucleotides}")
 
                 returned_region[3].add((line.ref, line.alt))
                 yield (left, line.ref, line.alt, val)
@@ -1006,149 +1075,6 @@ class NPScoreBase(GenomicScore):
             return None
         requested_scores = scores or self.get_all_scores()
         return [selected_line.get_score(sc) for sc in requested_scores]
-
-
-class NPScore(NPScoreBase):
-    """Defines nucleotide-position genomic score."""
-
-    def __init__(self, resource: GenomicResource):
-        if resource.get_type() != "np_score":
-            raise ValueError("The resrouce provided to NPScore should be of"
-                             f"'np_score' type, not a '{resource.get_type()}'")
-        super().__init__(resource)
-
-    @staticmethod
-    def get_schema() -> dict[str, Any]:
-        schema = copy.deepcopy(GenomicScore.get_schema())
-        schema["allow_multiple_values"] = {"type": "boolean", "default": True}
-        schema["table"]["schema"]["reference"] = {
-            "type": "dict", "schema": {
-                "index": {"type": "integer"},
-                "name": {"type": "string", "excludes": "index"},
-            },
-        }
-        schema["table"]["schema"]["alternative"] = {
-            "type": "dict", "schema": {
-                "index": {"type": "integer"},
-                "name": {"type": "string", "excludes": "index"},
-            },
-        }
-
-        scores_schema = schema["scores"]["schema"]["schema"]
-        scores_schema["position_aggregator"] = AGGREGATOR_SCHEMA
-        scores_schema["nucleotide_aggregator"] = AGGREGATOR_SCHEMA
-        return schema
-
-    def open(self) -> NPScore:
-        return cast(NPScore, super().open())
-
-    def _build_scores_agg(
-            self, score_queries: list[NPScoreQuery]) -> list[NPScoreAggr]:
-        score_aggs = []
-        for squery in score_queries:
-            scr_def = self.score_definitions[squery.score]
-            if squery.position_aggregator is not None:
-                aggregator_type = squery.position_aggregator
-            else:
-                assert scr_def.pos_aggregator is not None
-                aggregator_type = scr_def.pos_aggregator
-            position_aggregator = build_aggregator(aggregator_type)
-
-            if squery.nucleotide_aggregator is not None:
-                aggregator_type = squery.nucleotide_aggregator
-            else:
-                assert scr_def.nuc_aggregator is not None
-                aggregator_type = scr_def.nuc_aggregator
-            nucleotide_aggregator = build_aggregator(aggregator_type)
-            score_aggs.append(
-                NPScoreAggr(
-                    squery.score, position_aggregator, nucleotide_aggregator))
-        return score_aggs
-
-    def fetch_scores_agg(
-            self, chrom: str, pos_begin: int, pos_end: int,
-            scores: list[NPScoreQuery] | None = None,
-    ) -> list[Aggregator]:
-        """Fetch score values in a region and aggregates them."""
-        # pylint: disable=too-many-locals
-        if chrom not in self.get_all_chromosomes():
-            raise ValueError(
-                f"{chrom} is not among the available chromosomes for "
-                f"NP Score resource {self.resource_id}")
-
-        if scores is None:
-            scores = [
-                NPScoreQuery(score_id)
-                for score_id in self.get_all_scores()]
-
-        score_aggs = self._build_scores_agg(scores)
-
-        score_lines = list(self._fetch_lines(chrom, pos_begin, pos_end))
-        if not score_lines:
-            return [sagg.position_aggregator for sagg in score_aggs]
-
-        def aggregate_nucleotides() -> None:
-            for sagg in score_aggs:
-                sagg.position_aggregator.add(
-                    sagg.nucleotide_aggregator.get_final())
-                sagg.nucleotide_aggregator.clear()
-
-        last_pos: int = score_lines[0].pos_begin
-        for line in score_lines:
-            if line.pos_begin != last_pos:
-                aggregate_nucleotides()
-
-            for sagg in score_aggs:
-                val = line.get_score(sagg.score)
-                left = (
-                    max(pos_begin, line.pos_begin)
-                )
-                right = (
-                    min(pos_end, line.pos_end)
-                )
-                for _ in range(left, right + 1):
-                    sagg.nucleotide_aggregator.add(val)
-            last_pos = line.pos_begin
-        aggregate_nucleotides()
-
-        return [sagg.position_aggregator for sagg in score_aggs]
-
-
-class AlleleScore(NPScoreBase):
-    """Defines allele genomic scores."""
-
-    def __init__(self, resource: GenomicResource):
-        if resource.get_type() != "allele_score":
-            raise ValueError(
-                "The resrouce provided to AlleleScore should be of"
-                f"'allele_score' type, not a '{resource.get_type()}'")
-        super().__init__(resource)
-
-    @staticmethod
-    def get_schema() -> dict[str, Any]:
-        schema = copy.deepcopy(GenomicScore.get_schema())
-        schema["table"]["schema"]["reference"] = {
-            "type": "dict", "schema": {
-                "index": {"type": "integer"},
-                "name": {"type": "string", "excludes": "index"},
-            },
-        }
-        schema["table"]["schema"]["alternative"] = {
-            "type": "dict", "schema": {
-                "index": {"type": "integer"},
-                "name": {"type": "string", "excludes": "index"},
-            },
-        }
-        schema["table"]["schema"]["variant"] = {
-            "type": "dict", "schema": {
-                "index": {"type": "integer"},
-                "name": {"type": "string", "excludes": "index"},
-            },
-        }
-        return schema
-
-    def open(self) -> AlleleScore:
-        return cast(AlleleScore, super().open())
 
     def _build_scores_agg(
         self, score_queries: list[AlleleScoreQuery],
@@ -1230,7 +1156,11 @@ def build_score_from_resource(
     if resource.get_type() == "position_score":
         return PositionScore(resource)
     if resource.get_type() == "np_score":
-        return NPScore(resource)
+        logger.warning(
+            "The resource type `np_score` is deprecated. "
+            "Please use `allele_score` instead for resource %s.",
+            resource.get_id())
+        return AlleleScore(resource)
     if resource.get_type() == "allele_score":
         return AlleleScore(resource)
 

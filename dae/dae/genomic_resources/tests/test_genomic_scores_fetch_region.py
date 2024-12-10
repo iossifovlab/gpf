@@ -6,7 +6,6 @@ import pytest
 
 from dae.genomic_resources.genomic_scores import (
     AlleleScore,
-    NPScore,
     PositionScore,
     ScoreValue,
     build_score_from_resource,
@@ -138,12 +137,12 @@ def test_position_score_get_region_scores(
 
 
 @pytest.fixture(scope="module")
-def np_score(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
+def np_score(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
     root_path = tmp_path_factory.mktemp("np_score")
     setup_directories(
         root_path, {
         "genomic_resource.yaml": """
-            type: np_score
+            type: allele_score
             table:
                 filename: data.txt.gz
                 format: tabix
@@ -200,7 +199,7 @@ def np_score(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
     assert "s1" in score.score_definitions
     assert "s2" in score.score_definitions
 
-    return cast(NPScore, score)
+    return cast(AlleleScore, score)
 
 
 @pytest.mark.parametrize("begin,end,scores,expected", [
@@ -247,7 +246,7 @@ def np_score(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
     ]),
 ])
 def test_np_score_fetch_regions(
-    np_score: NPScore,
+    np_score: AlleleScore,
     begin: int | None,
     end: int | None,
     scores: list[str] | None,
@@ -266,7 +265,7 @@ def test_np_score_fetch_regions(
     ("chr3", 10, 20),
 ])
 def test_np_score_fetch_regions_consistency_failed(
-    np_score: NPScore,
+    np_score: AlleleScore,
     chrom: str,
     begin: int | None,
     end: int | None,
@@ -276,7 +275,7 @@ def test_np_score_fetch_regions_consistency_failed(
 
 
 @pytest.fixture(scope="module")
-def np_score2(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
+def np_score2(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
     root_path = tmp_path_factory.mktemp("np_score")
     setup_directories(
         root_path, {
@@ -338,7 +337,7 @@ def np_score2(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
     assert "s1" in score.score_definitions
     assert "s2" in score.score_definitions
 
-    return cast(NPScore, score)
+    return cast(AlleleScore, score)
 
 
 @pytest.mark.parametrize("begin,end,scores,expected", [
@@ -395,7 +394,7 @@ def np_score2(tmp_path_factory: pytest.TempPathFactory) -> NPScore:
     ]),
 ])
 def test_np_score2_fetch_regions(
-    np_score2: NPScore,
+    np_score2: AlleleScore,
     begin: int | None,
     end: int | None,
     scores: list[str] | None,
@@ -526,86 +525,3 @@ def test_allele_score_fetch_regions(
         allele_score._fetch_region_values("chr1", begin, end, scores=scores))
     assert len(score_lines) == len(expected)
     assert score_lines == expected
-
-
-@pytest.mark.parametrize("chrom,begin,end", [
-    ("chr2", 1, 10),
-    ("chr3", 1, 20),
-])
-def test_allele_score_fetch_regions_consistency_failed(
-    allele_score: AlleleScore,
-    chrom: str,
-    begin: int | None,
-    end: int | None,
-) -> None:
-    with pytest.raises(ValueError, match="multiple values for positions"):
-        list(allele_score._fetch_region_values(chrom, begin, end))
-
-
-@pytest.fixture(scope="module")
-def position_multiscore(
-    tmp_path_factory: pytest.TempPathFactory,
-) -> PositionScore:
-    root_path = tmp_path_factory.mktemp("position_score")
-    setup_directories(
-        root_path, {
-            "genomic_resource.yaml": """
-                type: position_score
-                table:
-                  filename: data.txt.gz
-                  format: tabix
-                  header_mode: none
-                  chrom:
-                    index: 0
-                  pos_begin:
-                    index: 1
-                  pos_end:
-                    index: 2
-                allow_multiple_values: true
-                scores:
-                - id: s1
-                  index: 3
-                  type: float
-                - id: s2
-                  index: 4
-                  type: float
-            """,
-        })
-    setup_tabix(
-        root_path / "data.txt.gz",
-        textwrap.dedent("""
-        chr1     11        13       1.0    10.0
-        chr1     21        23       2.0    na
-        chr1     31        33       3.0    30.0
-        chr1     41        43       na     40.0
-        chr1     51        53       na     na
-
-        chr2     61        73       6.0    60.0
-        chr2     71        73       7.0    70.0
-
-        chr3     61        73       6.0    60.0
-        chr3     73        73       7.0    70.0
-        """).strip(),
-        seq_col=0, start_col=1, end_col=2)
-    res = build_filesystem_test_resource(root_path)
-    score = build_score_from_resource(res)
-    score.open()
-    assert len(score.score_definitions) == 2
-    assert "s1" in score.score_definitions
-    assert "s2" in score.score_definitions
-    return cast(PositionScore, score)
-
-
-@pytest.mark.parametrize("chrom,begin,end", [
-    ("chr2", 60, 120),
-    ("chr3", 60, 120),
-])
-def test_position_multiscore_fetch_region(
-    position_multiscore: PositionScore,
-    chrom: str,
-    begin: int | None,
-    end: int | None,
-) -> None:
-
-    lines = list(position_multiscore._fetch_region_values(chrom, begin, end))
-    assert len(lines) == 2
