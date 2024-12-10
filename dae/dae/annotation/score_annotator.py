@@ -153,53 +153,12 @@ class GenomicScoreAnnotatorBase(Annotator):
         """Construct score aggregator documentation."""
 
 
-class PositionScoreAnnotatorBase(GenomicScoreAnnotatorBase):
-    """Defines position score base annotator class."""
-
-    @abc.abstractmethod
-    def _fetch_substitution_scores(self, allele: VCFAllele) \
-            -> list[Any] | None:
-        pass
-
-    @abc.abstractmethod
-    def _fetch_aggregated_scores(
-            self, chrom: str, pos_begin: int, pos_end: int) -> list[Any]:
-        pass
-
-    def annotate(
-        self, annotatable: Annotatable | None,
-        context: dict[str, Any],  # noqa: ARG002
-    ) -> dict[str, Any]:
-
-        if annotatable is None:
-            return self._empty_result()
-
-        if annotatable.chromosome not in self.score.get_all_chromosomes():
-            return self._empty_result()
-
-        if annotatable.type == Annotatable.Type.SUBSTITUTION:
-            assert isinstance(annotatable, VCFAllele)
-            scores = self._fetch_substitution_scores(annotatable)
-        else:
-            if len(annotatable) > self._region_length_cutoff:
-                scores = None
-            else:
-                scores = self._fetch_aggregated_scores(
-                    annotatable.chrom, annotatable.pos, annotatable.pos_end)
-        if not scores:
-            return self._empty_result()
-
-        return dict(zip(
-                [att.name for att in self.attributes],
-                scores, strict=True))
-
-
 def build_position_score_annotator(pipeline: AnnotationPipeline,
                                    info: AnnotatorInfo) -> Annotator:
     return PositionScoreAnnotator(pipeline, info)
 
 
-class PositionScoreAnnotator(PositionScoreAnnotatorBase):
+class PositionScoreAnnotator(GenomicScoreAnnotatorBase):
     """This class implements the position_score annotator.
 
     The position_score
@@ -262,6 +221,33 @@ phastCons, phyloP, FitCons2, etc.
             chrom, pos_begin, pos_end, self.position_score_queries,
         )
         return [sagg.get_final() for sagg in scores_agg]
+
+    def annotate(
+        self, annotatable: Annotatable | None,
+        context: dict[str, Any],  # noqa: ARG002
+    ) -> dict[str, Any]:
+
+        if annotatable is None:
+            return self._empty_result()
+
+        if annotatable.chromosome not in self.score.get_all_chromosomes():
+            return self._empty_result()
+
+        if annotatable.type == Annotatable.Type.SUBSTITUTION:
+            assert isinstance(annotatable, VCFAllele)
+            scores = self._fetch_substitution_scores(annotatable)
+        else:
+            if len(annotatable) > self._region_length_cutoff:
+                scores = None
+            else:
+                scores = self._fetch_aggregated_scores(
+                    annotatable.chrom, annotatable.pos, annotatable.pos_end)
+        if not scores:
+            return self._empty_result()
+
+        return dict(zip(
+                [att.name for att in self.attributes],
+                scores, strict=True))
 
 
 def build_np_score_annotator(pipeline: AnnotationPipeline,
