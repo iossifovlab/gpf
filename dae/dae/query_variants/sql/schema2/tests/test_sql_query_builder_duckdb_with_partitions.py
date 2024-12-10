@@ -11,19 +11,17 @@ from dae.studies.study import GenotypeData
 from dae.utils.regions import Region
 
 
-@pytest.fixture()
+@pytest.fixture
 def duckdb2_variants(
     t4c8_study_2: GenotypeData,
 ) -> DuckDb2Variants:
-    duckdb_variants = cast(
+    return cast(
         DuckDb2Variants,
         t4c8_study_2._backend,  # type: ignore
     )
-    duckdb_variants.query_builder.GENE_REGIONS_HEURISTIC_EXTEND = 0
-    return duckdb_variants
 
 
-@pytest.fixture()
+@pytest.fixture
 def query_builder(
     duckdb2_variants: DuckDb2Variants,
 ) -> SqlQueryBuilder:
@@ -41,17 +39,20 @@ def test_coding_bin_heuristics_query(
     params: dict[str, Any],
     coding_bin: int | None,
     query_builder: SqlQueryBuilder,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    queries = query_builder.build_summary_variants_query(**params)
-    assert queries is not None
-    assert len(queries) > 0
-    query = queries[0]
+    with monkeypatch.context() as m:
+        m.setattr(query_builder, "GENE_REGIONS_HEURISTIC_EXTEND", 0)
+        assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
+        queries = query_builder.build_summary_variants_query(**params)
+        assert queries is not None
+        assert len(queries) > 0
+        query = queries[0]
 
-    if coding_bin is None:
-        assert "coding_bin" not in query
-    else:
-        assert f"sa.coding_bin = {coding_bin}" in query
+        if coding_bin is None:
+            assert "coding_bin" not in query
+        else:
+            assert f"sa.coding_bin = {coding_bin}" in query
 
 
 @pytest.mark.parametrize("params, region_bins", [
@@ -65,19 +66,22 @@ def test_region_bin_heuristics_query(
     params: dict[str, Any],
     region_bins: list[str] | None,
     query_builder: SqlQueryBuilder,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    queries = query_builder.build_summary_variants_query(**params)
-    assert queries is not None
-    assert len(queries) > 0
-    query = queries[0]
+    with monkeypatch.context() as m:
+        m.setattr(query_builder, "GENE_REGIONS_HEURISTIC_EXTEND", 0)
+        assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
+        queries = query_builder.build_summary_variants_query(**params)
+        assert queries is not None
+        assert len(queries) > 0
+        query = queries[0]
 
-    if region_bins is None:
-        assert "region_bin" not in query
-    else:
-        assert "sa.region_bin" in query
-        for region_bin in region_bins:
-            assert f"'{region_bin}'" in query
+        if region_bins is None:
+            assert "region_bin" not in query
+        else:
+            assert "sa.region_bin" in query
+            for region_bin in region_bins:
+                assert f"'{region_bin}'" in query
 
 
 @pytest.mark.parametrize("params, frequency_bins", [
@@ -97,18 +101,21 @@ def test_frequency_bin_heuristics_query(
     params: dict[str, Any],
     frequency_bins: str | None,
     query_builder: SqlQueryBuilder,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    queries = query_builder.build_summary_variants_query(**params)
-    assert queries is not None
-    assert len(queries) > 0
-    query = queries[0]
+    with monkeypatch.context() as m:
+        m.setattr(query_builder, "GENE_REGIONS_HEURISTIC_EXTEND", 0)
+        assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
+        queries = query_builder.build_summary_variants_query(**params)
+        assert queries is not None
+        assert len(queries) > 0
+        query = queries[0]
 
-    if frequency_bins is None:
-        assert "frequency_bin" not in query
-    else:
-        assert "sa.frequency_bin" in query
-        assert f"sa.frequency_bin IN {frequency_bins}" in query
+        if frequency_bins is None:
+            assert "frequency_bin" not in query
+        else:
+            assert "sa.frequency_bin" in query
+            assert f"sa.frequency_bin IN {frequency_bins}" in query
 
 
 @pytest.mark.parametrize("params, coding_bin", [
@@ -122,18 +129,21 @@ def test_coding_bin_heuristics_family_query(
     params: dict[str, Any],
     coding_bin: int | None,
     query_builder: SqlQueryBuilder,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    queries = query_builder.build_family_variants_query(**params)
-    assert queries is not None
-    assert len(queries) > 0
-    query = queries[0]
+    with monkeypatch.context() as m:
+        m.setattr(query_builder, "GENE_REGIONS_HEURISTIC_EXTEND", 0)
+        assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
+        queries = query_builder.build_family_variants_query(**params)
+        assert queries is not None
+        assert len(queries) > 0
+        query = queries[0]
 
-    if coding_bin is None:
-        assert "coding_bin" not in query
-    else:
-        assert f"sa.coding_bin = {coding_bin}" in query
-        assert f"fa.coding_bin = {coding_bin}" in query
+        if coding_bin is None:
+            assert "coding_bin" not in query
+        else:
+            assert f"sa.coding_bin = {coding_bin}" in query
+            assert f"fa.coding_bin = {coding_bin}" in query
 
 
 @pytest.mark.parametrize("params, count, region_bins", [
@@ -149,17 +159,20 @@ def test_region_bin_heuristics_family_query(
     count: int,
     region_bins: list[str],
     query_builder: SqlQueryBuilder,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    queries = query_builder.build_family_variants_query(**params)
-    assert queries is not None
-    assert len(queries) == count
-    query = queries[0]
+    with monkeypatch.context() as m:
+        m.setattr(query_builder, "GENE_REGIONS_HEURISTIC_EXTEND", 0)
+        assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
+        queries = query_builder.build_family_variants_query(**params)
+        assert queries is not None
+        assert len(queries) == count
+        query = queries[0]
 
-    assert "sa.region_bin" in query
-    assert "fa.region_bin" in query
-    for region_bin in region_bins:
-        assert f"'{region_bin}'" in query
+        assert "sa.region_bin" in query
+        assert "fa.region_bin" in query
+        for region_bin in region_bins:
+            assert f"'{region_bin}'" in query
 
 
 def test_region_bin_heuristics_batched_query(
@@ -187,19 +200,22 @@ def test_frequency_bin_heuristics_family_query(
     params: dict[str, Any],
     frequency_bins: str | None,
     query_builder: SqlQueryBuilder,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
-    queries = query_builder.build_family_variants_query(**params)
-    assert queries is not None
-    assert len(queries) > 0
-    query = queries[0]
+    with monkeypatch.context() as m:
+        m.setattr(query_builder, "GENE_REGIONS_HEURISTIC_EXTEND", 0)
+        assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
+        queries = query_builder.build_family_variants_query(**params)
+        assert queries is not None
+        assert len(queries) > 0
+        query = queries[0]
 
-    if frequency_bins is None:
-        assert "frequency_bin" not in query
-    else:
-        assert "sa.frequency_bin" in query
-        assert "fa.frequency_bin" in query
-        assert f"fa.frequency_bin IN {frequency_bins}" in query
+        if frequency_bins is None:
+            assert "frequency_bin" not in query
+        else:
+            assert "sa.frequency_bin" in query
+            assert "fa.frequency_bin" in query
+            assert f"fa.frequency_bin IN {frequency_bins}" in query
 
 
 def test_duckdb2_variants_simple(duckdb2_variants: DuckDb2Variants) -> None:
@@ -210,6 +226,68 @@ def test_duckdb2_variants_simple(duckdb2_variants: DuckDb2Variants) -> None:
 
     fvs = list(duckdb2_variants.query_variants())
     assert len(fvs) == 12
+
+
+@pytest.mark.parametrize("params, region_bins, region_borders", [
+    ({"genes": ["t4"]}, {"chr1_0"}, {5, 85}),
+    ({"genes": ["c8"]}, {"chr1_0", "chr1_1", "chr1_2"}, {100, 205}),
+])
+def test_gene_regions_heuristics_summary_query(
+    params: dict[str, Any],
+    region_bins: set[str],
+    region_borders: set[int],
+    query_builder: SqlQueryBuilder,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with monkeypatch.context() as m:
+        m.setattr(query_builder, "GENE_REGIONS_HEURISTIC_EXTEND", 0)
+        assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
+        queries = query_builder.build_summary_variants_query(**params)
+        assert queries is not None
+        assert len(queries) == 1
+
+        query = queries[0]
+
+        assert "sa.chromosome" in query
+        assert "sa.position" in query
+        assert "sa.end_position" in query
+
+        assert "sa.region_bin" in query
+        for region_bin in region_bins:
+            assert f"'{region_bin}'" in query
+        for border in region_borders:
+            assert f"{border}" in query
+
+
+@pytest.mark.parametrize("params, region_bins, region_borders", [
+    ({"genes": ["t4"]}, {"chr1_0"}, {5, 85}),
+    ({"genes": ["c8"]}, {"chr1_0", "chr1_1", "chr1_2"}, {100, 205}),
+])
+def test_gene_regions_heuristics_family_query(
+    params: dict[str, Any],
+    region_bins: set[str],
+    region_borders: set[int],
+    query_builder: SqlQueryBuilder,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with monkeypatch.context() as m:
+        m.setattr(query_builder, "GENE_REGIONS_HEURISTIC_EXTEND", 0)
+        assert query_builder.GENE_REGIONS_HEURISTIC_EXTEND == 0
+        queries = query_builder.build_family_variants_query(**params)
+        assert queries is not None
+        assert len(queries) == 1
+
+        query = queries[0]
+
+        assert "sa.chromosome" in query
+        assert "sa.position" in query
+        assert "sa.end_position" in query
+
+        assert "sa.region_bin" in query
+        for region_bin in region_bins:
+            assert f"'{region_bin}'" in query
+        for border in region_borders:
+            assert f"{border}" in query
 
 
 @pytest.mark.parametrize("params, count", [

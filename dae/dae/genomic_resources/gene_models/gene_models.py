@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from typing import Any, cast
+from typing import Any
 
 from dae.genomic_resources import GenomicResource
 from dae.genomic_resources.fsspec_protocol import build_local_resource
@@ -531,11 +531,8 @@ class GeneModels(
         if not relabel:
             assert map_file is not None
             with open(map_file) as infile:
-                relabel = cast(
-                    dict[str, str],
-                    {
-                        line.strip("\n\r").split()[:2] for line in infile
-                    },
+                relabel = dict(
+                    line.strip("\n\r").split()[:2]for line in infile
                 )
 
         self.utr_models = {
@@ -669,7 +666,7 @@ def create_regions_from_genes(
 
     gene_regions = collapse(gene_regions)
     if not regions:
-        regions = gene_regions
+        regions = gene_regions or None
     else:
         result = []
         for gene_region in gene_regions:

@@ -801,7 +801,8 @@ class SqlQueryBuilder(QueryBuilderBase):
     ) -> Select:
         """Build a summary variant query."""
         query = self.summary_base()
-
+        if genes is not None:
+            regions = self.build_gene_regions(genes, regions)
         if regions is not None:
             clause = self.regions(regions)
             query = query.where(replace_placeholders(
