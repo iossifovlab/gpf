@@ -2,6 +2,7 @@ import logging
 from copy import copy
 from typing import Any
 
+from box import Box
 import duckdb
 import sqlglot
 from sqlalchemy import (  # type: ignore
@@ -36,7 +37,7 @@ class GeneProfileDB:
 
     def __init__(
         self,
-        configuration: dict,
+        configuration: Box | None,
         dbfile: str,
         clear: bool = False,
     ):
@@ -44,7 +45,6 @@ class GeneProfileDB:
         self.engine = create_engine(f"sqlite:///{dbfile}")
         duckdb.execute("INSTALL sqlite;")
         duckdb.execute("LOAD sqlite;")
-        self.duckdb_connection = duckdb.connect(f"{dbfile}")
         self.metadata = MetaData()
         self.configuration = \
             GeneProfileDB.build_configuration(configuration)
@@ -265,7 +265,11 @@ class GeneProfileDB:
             query = query.limit(self.PAGE_SIZE).offset(
                 self.PAGE_SIZE * (page - 1),
             )
-        with self.duckdb_connection.cursor() as cursor:
+
+        # Can't have multiple connections with sqlite db alive when
+        # one of those does a 'write' action. That's why connect here:
+        duckdb_connection = duckdb.connect(f"{self.dbfile}", read_only=True)
+        with duckdb_connection.cursor() as cursor:
             return cursor.execute(
                 to_duckdb_transpile(query),
             ).df().round(decimals=2).fillna(0).to_dict("records")
