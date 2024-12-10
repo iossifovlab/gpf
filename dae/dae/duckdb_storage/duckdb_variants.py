@@ -188,7 +188,7 @@ class DuckDbVariants(SqlSchema2Variants):
         with self._get_connection_factory() as connection:
             result = connection.execute(query).fetchall()
             for row in result:
-                schema_content = row[0]
+                schema_content = cast(str, row[0])
         return dict(line.split("|") for line in schema_content.split("\n"))
 
     def _fetch_family_schema(self) -> dict[str, str]:
@@ -201,10 +201,12 @@ class DuckDbVariants(SqlSchema2Variants):
         with self._get_connection_factory() as connection:
             rows = connection.execute(query).fetchall()
             for row in rows:
-                schema_content = row[0]
+                schema_content = cast(str, row[0])
         return dict(line.split("|") for line in schema_content.split("\n"))
 
-    def _fetch_schema(self, _table: str) -> dict[str, str]:
+    def _fetch_schema(
+        self, table: str,  # noqa: ARG002
+    ) -> dict[str, str]:
         return {}
 
     def _fetch_pedigree(self) -> pd.DataFrame:
