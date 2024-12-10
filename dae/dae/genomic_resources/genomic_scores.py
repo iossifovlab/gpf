@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import abc
 import copy
+import enum
 import logging
 from collections.abc import Callable, Generator, Iterator
 from dataclasses import dataclass
@@ -909,6 +910,20 @@ class PositionScore(GenomicScore):
 class AlleleScore(GenomicScore):
     """Defines allele genomic scores."""
 
+    class Mode(enum.Enum):
+        """Allele score mode."""
+
+        SUBSTITUTIONS = 1
+        ALLELES = 2
+
+        @staticmethod
+        def from_name(name: str) -> AlleleScore.Mode:
+            if name == "substitutions":
+                return AlleleScore.Mode.SUBSTITUTIONS
+            if name == "alleles":
+                return AlleleScore.Mode.ALLELES
+            raise ValueError(f"unknown allele mode: {name}")
+
     def __init__(self, resource: GenomicResource):
         if resource.get_type() not in {"allele_score", "np_score"}:
             raise ValueError(
@@ -920,12 +935,25 @@ class AlleleScore(GenomicScore):
                 "Please use `allele_score` instead for resource %s.",
                 resource.get_id())
         super().__init__(resource)
+        self.mode = AlleleScore.Mode.from_name(
+            self.config.get("allele_score_mode", "substitutions"))
+
+    def substitutions_mode(self) -> bool:
+        """Return True if the score is in substitutions mode."""
+        return self.mode == AlleleScore.Mode.SUBSTITUTIONS
+
+    def alleles_mode(self) -> bool:
+        """Return True if the score is in alleles mode."""
+        return self.mode == AlleleScore.Mode.ALLELES
 
     @staticmethod
     def get_schema() -> dict[str, Any]:
         schema = copy.deepcopy(GenomicScore.get_schema())
 
-        schema["substitutions_only"] = {"type": "boolean", "default": True}
+        schema["allele_score_mode"] = {
+            "type": "string", "default": "substitutions",
+            "allowed": ["substitutions", "alleles"],
+        }
         schema["table"]["schema"]["reference"] = {
             "type": "dict", "schema": {
                 "index": {"type": "integer"},
@@ -952,9 +980,6 @@ class AlleleScore(GenomicScore):
 
     def open(self) -> AlleleScore:
         return cast(AlleleScore, super().open())
-
-    def substitutions_only(self) -> bool:
-        return bool(self.config.get("substitutions_only", True))
 
     def _fetch_region_values(
         self, chrom: str,

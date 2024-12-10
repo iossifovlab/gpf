@@ -64,7 +64,7 @@ def test_allele_score_with_default_score_annotation(
             "allele_score": {
                 GR_CONF_FILE_NAME: """
                     type: allele_score
-                    substitutions_only: false
+                    allele_score_mode: alleles
                     table:
                         filename: data.txt
                         reference:
@@ -130,7 +130,7 @@ def test_allele_annotator_add_chrom_prefix_vcf_table(
             "allele_score1": {
                 "genomic_resource.yaml": textwrap.dedent("""
                     type: allele_score
-                    substitutions_only: false
+                    allele_score_mode: alleles
                     table:
                         filename: data.vcf.gz
                         format: vcf_info

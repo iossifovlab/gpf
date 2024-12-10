@@ -270,7 +270,6 @@ class AlleleScoreAnnotator(GenomicScoreAnnotatorBase):
         resource = get_genomic_resource(
             pipeline, info, {"np_score", "allele_score"})
         self.allele_score = AlleleScore(resource)
-        self.substitutions_only = self.allele_score.substitutions_only()
 
         super().__init__(pipeline, info, self.allele_score)
         self.allele_score_queries = []
@@ -357,11 +356,11 @@ variant frequencies, etc.
         if annotatable.chromosome not in self.score.get_all_chromosomes():
             return self._empty_result()
 
-        if self.substitutions_only and \
+        if self.allele_score.substitutions_mode() and \
                     annotatable.type == Annotatable.Type.SUBSTITUTION:
             assert isinstance(annotatable, VCFAllele)
             scores = self._fetch_substitution_scores(annotatable)
-        elif not self.substitutions_only and \
+        elif self.allele_score.alleles_mode() and \
                 isinstance(annotatable, VCFAllele):
             scores = self._fetch_vcf_allele_score(annotatable)
         else:
