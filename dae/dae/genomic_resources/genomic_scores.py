@@ -935,8 +935,17 @@ class AlleleScore(GenomicScore):
                 "Please use `allele_score` instead for resource %s.",
                 resource.get_id())
         super().__init__(resource)
-        self.mode = AlleleScore.Mode.from_name(
-            self.config.get("allele_score_mode", "substitutions"))
+        if self.config.get("allele_score_mode") is None:
+            if resource.get_type() == "np_score":
+                self.mode = AlleleScore.Mode.SUBSTITUTIONS
+            elif resource.get_type() == "allele_score":
+                self.mode = AlleleScore.Mode.ALLELES
+            else:
+                raise ValueError(
+                    f"unknown resource type {resource.get_type()}")
+        else:
+            self.mode = AlleleScore.Mode.from_name(
+                self.config.get("allele_score_mode", "substitutions"))
 
     def substitutions_mode(self) -> bool:
         """Return True if the score is in substitutions mode."""
@@ -951,7 +960,7 @@ class AlleleScore(GenomicScore):
         schema = copy.deepcopy(GenomicScore.get_schema())
 
         schema["allele_score_mode"] = {
-            "type": "string", "default": "substitutions",
+            "type": "string",
             "allowed": ["substitutions", "alleles"],
         }
         schema["table"]["schema"]["reference"] = {
