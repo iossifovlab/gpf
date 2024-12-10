@@ -267,6 +267,7 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
                 "-i", cast(str, input_file.name),
                 "-o", cast(str, out_file.name),
                 "--tab", "--cache",
+                "--offline",
                 "--dir", str(self.vep_cache_dir),
                 "--everything",
                 "--symbol",
