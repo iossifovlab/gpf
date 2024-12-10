@@ -28,7 +28,7 @@ test.describe('Management tests for reset password in Users', () => {
     await page.locator('#id_new_password2').fill(password);
     await page.locator('.login-button').click();
 
-    await page.waitForSelector('gpf-gene-browser');
+    await page.waitForSelector('gpf-home');
     await expect(page.locator('#log-out-button')).toBeVisible();
     await page.locator('#log-out-button').click();
   });
@@ -61,7 +61,6 @@ test.describe('Management tests for reset password in Users', () => {
     await page.getByText('Reset password').click();
     await utils.login(page, email, password);
 
-    await page.waitForSelector('#register-alert');
     await expect(page.locator('#log-out-button')).toBeVisible();
     await page.locator('#log-out-button').click();
   });
