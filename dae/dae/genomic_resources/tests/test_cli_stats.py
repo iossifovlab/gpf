@@ -300,7 +300,6 @@ def test_stats_np_score(tmp_path: pathlib.Path) -> None:
                 table:
                     filename: data.txt.gz
                     format: tabix
-                allow_multiple_values: false
                 scores:
                     - id: cadd_raw
                       type: float

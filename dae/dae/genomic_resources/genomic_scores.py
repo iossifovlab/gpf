@@ -377,7 +377,6 @@ class GenomicScore(ResourceConfigValidationMixin):
                     "del_prefix": {"type": "string", "excludes": "add_prefix"},
                 }},
             }},
-            "allow_multiple_values": {"type": "boolean", "default": False},
             "scores": scores_schema,
             "default_annotation": {
                 "type": ["dict", "list"], "allow_unknown": True,
@@ -533,9 +532,6 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     def get_config(self) -> dict[str, Any]:
         return self.config
-
-    def allow_multiple_values(self) -> bool:
-        return bool(self.config.get("allow_multiple_values", False))
 
     def get_default_annotation_attributes(self) -> list[Any]:
         """Collect default annotation attributes."""
@@ -772,10 +768,9 @@ class PositionScore(GenomicScore):
                 logger.warning(
                     "multiple values for positions %s:%s-%s",
                     chrom, left, right)
-                if not self.allow_multiple_values():
-                    raise ValueError(
-                        f"multiple values for positions "
-                        f"{chrom}:{left}-{right}")
+                raise ValueError(
+                    f"multiple values for positions "
+                    f"{chrom}:{left}-{right}")
             returned_region = (left, right, val)
             yield (left, right, val)
 
@@ -808,42 +803,37 @@ class PositionScore(GenomicScore):
 
     def fetch_scores(
         self, chrom: str, position: int,
-        scores: list[str] | list[PositionScoreQuery] | None = None,
+        scores: list[str] | None = None,
     ) -> list[ScoreValue] | None:
         """Fetch score values at specific genomic position."""
         if chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
 
-        if not self.allow_multiple_values():
-            if scores is None:
-                scores = self.get_all_scores()
-            else:
-                scores = [
-                    s.score if isinstance(s, PositionScoreQuery) else s
-                    for s in scores]
-            assert all(isinstance(s, str) for s in scores)
+        if scores is None:
+            scores = self.get_all_scores()
+        else:
+            scores = [
+                s.score if isinstance(s, PositionScoreQuery) else s
+                for s in scores]
+        assert all(isinstance(s, str) for s in scores)
 
-            lines = list(self._fetch_lines(chrom, position, position))
-            if not lines:
-                return None
+        lines = list(self._fetch_lines(chrom, position, position))
+        if not lines:
+            return None
 
-            if len(lines) > 1 and not self.allow_multiple_values():
-                logger.warning(
-                    "multiple values for positions %s:%s",
-                    chrom, position)
-                if not self.allow_multiple_values():
-                    raise ValueError(
-                        f"multiple values ({len(lines)}) for positions "
-                        f"{chrom}:{position}")
+        if len(lines) > 1:
+            logger.warning(
+                "multiple values for positions %s:%s",
+                chrom, position)
+            raise ValueError(
+                f"multiple values ({len(lines)}) for positions "
+                f"{chrom}:{position}")
 
-            line = lines[0]
+        line = lines[0]
 
-            requested_scores = scores or self.get_all_scores()
-            return [line.get_score(scr) for scr in requested_scores]
-
-        aggs = self.fetch_scores_agg(chrom, position, position, scores)
-        return [agg.get_final() for agg in aggs]
+        requested_scores = scores or self.get_all_scores()
+        return [line.get_score(scr) for scr in requested_scores]
 
     def _build_scores_agg(
         self, scores: list[str] | list[PositionScoreQuery],
@@ -935,7 +925,6 @@ class AlleleScore(GenomicScore):
     def get_schema() -> dict[str, Any]:
         schema = copy.deepcopy(GenomicScore.get_schema())
 
-        schema["allow_multiple_values"] = {"type": "boolean", "default": True}
         schema["substitutions_only"] = {"type": "boolean", "default": True}
         schema["table"]["schema"]["reference"] = {
             "type": "dict", "schema": {
@@ -1012,15 +1001,10 @@ class AlleleScore(GenomicScore):
             returned_nucleotides = (line.ref, line.alt)
             if (left, right) == (returned_region[0], returned_region[1]):
                 if returned_nucleotides in returned_region[3]:
-                    logger.warning(
+                    logger.info(
                         "multiple values for positions %s:%s-%s "
                         "and nucleotides %s",
                         chrom, left, right, returned_nucleotides)
-                    if not self.allow_multiple_values():
-                        raise ValueError(
-                            f"multiple values for positions "
-                            f"{chrom}:{left}-{right} "
-                            f"and nucleotides {returned_nucleotides}")
 
                 returned_region[3].add((line.ref, line.alt))
                 yield (left, line.ref, line.alt, val)
