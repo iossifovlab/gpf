@@ -1,13 +1,20 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+
 import pytest
 
+from dae.gpf_instance import GPFInstance
+from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing import acgt_gpf, setup_pedigree, setup_vcf
+from dae.utils.regions import Region
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture()
-def trio_families(tmp_path_factory):
+@pytest.fixture
+def trio_families(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> FamiliesData:
     root_path = tmp_path_factory.mktemp(
         "vcf_add_chrom_trio_families")
     ped_path = setup_pedigree(
@@ -22,19 +29,18 @@ def trio_families(tmp_path_factory):
     return loader.load()
 
 
-@pytest.fixture()
-def trio_gpf(tmp_path_factory):
+@pytest.fixture
+def trio_gpf(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp(
         "vcf_acgt_gpf_instance")
-    gpf_instance = acgt_gpf(root_path)
-    return gpf_instance
+    return acgt_gpf(root_path)
 
 
-@pytest.fixture()
-def trio_vcf(tmp_path_factory):
+@pytest.fixture
+def trio_vcf(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
     root_path = tmp_path_factory.mktemp(
         "vcf_add_chrom_trio")
-    vcf_path = setup_vcf(
+    return setup_vcf(
         root_path / "trio_data" / "in.vcf.gz",
         """
         ##fileformat=VCFv4.2
@@ -56,8 +62,6 @@ def trio_vcf(tmp_path_factory):
         2      7   .  G   T    .    .      .    GT     0/1 0/0 0/1
         """)
 
-    return vcf_path
-
 
 @pytest.mark.parametrize(
     "region,count",
@@ -68,15 +72,19 @@ def trio_vcf(tmp_path_factory):
     ],
 )
 def test_add_chrom_reset_region(
-        trio_families, trio_gpf, trio_vcf,
-        region, count):
+    trio_families: FamiliesData,
+    trio_gpf: GPFInstance,
+    trio_vcf: pathlib.Path,
+    region: str,
+    count: int,
+) -> None:
 
     loader = VcfLoader(
         trio_families, [str(trio_vcf)], trio_gpf.reference_genome,
         params={
             "add_chrom_prefix": "chr",
         })
-    loader.reset_regions(region)
+    loader.reset_regions([Region.from_str(region)])
     alt_alleles = [
         sv.alt_alleles[0] for sv, _ in loader.full_variants_iterator()]
 

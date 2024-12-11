@@ -13,6 +13,7 @@ from dae.genomic_resources.reference_genome import (
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
 from dae.tools.stats_liftover import save_liftover_stats
+from dae.utils.regions import Region
 from dae.utils.variant_utils import mat2str
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.family_variant import FamilyAllele
@@ -114,9 +115,9 @@ def main(
     summary_filename = f"{args.output_prefix}.txt"
     toomany_filename = f"{args.output_prefix}-TOOMANY.txt"
     if args.region is not None:
-        region = args.region
+        region = Region.from_str(args.region)
         logger.info("resetting regions (region): %s", region)
-        variants_loader.reset_regions(region)
+        variants_loader.reset_regions([region])
         summary_filename = f"{args.output_prefix}-{region}.txt"
         toomany_filename = f"{args.output_prefix}-TOOMANY-{region}.txt"
 

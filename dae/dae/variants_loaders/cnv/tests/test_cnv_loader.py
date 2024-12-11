@@ -9,20 +9,20 @@ from dae.genomic_resources.testing import setup_denovo, setup_pedigree
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing.acgt_import import acgt_gpf
+from dae.utils.regions import Region
 from dae.variants_loaders.cnv.loader import CNVLoader
 
 
 @pytest.fixture(scope="module")
 def gpf_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("acgt_instance")
-    gpf_instance = acgt_gpf(root_path)
-    return gpf_instance
+    return acgt_gpf(root_path)
 
 
 @pytest.fixture(scope="module")
 def cnv_ped(tmp_path_factory: pytest.TempPathFactory) -> Any:
     root_path = tmp_path_factory.mktemp("cnv_ped_variants")
-    ped_path = setup_pedigree(
+    return setup_pedigree(
         root_path / "cnv_data" / "in.ped",
         """
         familyId  personId  dadId  momId  sex  status  role
@@ -35,15 +35,13 @@ def cnv_ped(tmp_path_factory: pytest.TempPathFactory) -> Any:
         f2        f2.p1     f2.fa  f2.mo  1    2       prb
         """)
 
-    return ped_path
-
 
 @pytest.fixture(scope="module")
 def variants_file(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Path:
     root_path = tmp_path_factory.mktemp("acgt_instance")
-    cnv_path = setup_denovo(
+    return setup_denovo(
         root_path / "cnv_data" / "in.tsv",
         """
         family_id location    variant  best_state
@@ -52,8 +50,6 @@ def variants_file(
         f2        chr2:51-70  CNV+     2||2||3
         f2        chr2:81-100 CNV-     2||2||1
         """)
-
-    return cnv_path
 
 
 def test_cnv_loader(
@@ -84,7 +80,7 @@ def summary_variants_duplication(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Path:
     root_path = tmp_path_factory.mktemp("acgt_instance")
-    cnv_path = setup_denovo(
+    return setup_denovo(
         root_path / "cnv_data" / "in.tsv",
         """
         family_id location    variant  best_state
@@ -94,8 +90,6 @@ def summary_variants_duplication(
         f2        chr2:81-100 CNV-     2||2||1
         f2        chr1:31-50  CNV-     2||2||1
         """)
-
-    return cnv_path
 
 
 def test_cnv_loader_avoids_summary_variants_duplication(
@@ -120,8 +114,7 @@ def test_cnv_loader_avoids_summary_variants_duplication(
     for sv, fvs_ in loader.full_variants_iterator():
         print(sv, fvs)
         svs.append(sv)
-        for fv in fvs_:
-            fvs.append(fv)
+        fvs.extend(fvs_)
 
     print(len(fvs))
     assert len(svs) == 4
@@ -135,7 +128,7 @@ def variants_file_alt(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Path:
     root_path = tmp_path_factory.mktemp("acgt_instance")
-    cnv_path = setup_denovo(
+    return setup_denovo(
         root_path / "cnv_data" / "in.tsv",
         """
         person_id  chr    start      stop      variant_type
@@ -146,8 +139,6 @@ def variants_file_alt(
         f1.fa      chr1   66         68        Dup_Germline
         f1.mo      chr15  93         96        Dup
         """)
-
-    return cnv_path
 
 
 def test_cnv_loader_alt(
@@ -184,7 +175,7 @@ def variants_file_best_state(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Path:
     root_path = tmp_path_factory.mktemp("acgt_instance")
-    cnv_path = setup_denovo(
+    return setup_denovo(
         root_path / "cnv_data" / "in.tsv",
         """
         person_id  chr      start       stop        variant_type
@@ -193,8 +184,6 @@ def variants_file_best_state(
         f1.p1	   chr15	23	        29	        Dup
         f1.s1	   chr15	55	        59	        Dup
         """)
-
-    return cnv_path
 
 
 def test_cnv_loader_alt_best_state(
@@ -221,11 +210,10 @@ def test_cnv_loader_alt_best_state(
 
     svs = []
     fvs: list[Any] = []
-    for sv, _fvs in loader.full_variants_iterator():
+    for sv, fvs_ in loader.full_variants_iterator():
         print(sv, fvs)
         svs.append(sv)
-        for fv in _fvs:
-            fvs.append(fv)
+        fvs.extend(fvs_)
 
     assert len(svs) == 4
     assert len(fvs) == 4
@@ -237,7 +225,7 @@ def variants_file_alt_2(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Path:
     root_path = tmp_path_factory.mktemp("acgt_instance")
-    cnv_path = setup_denovo(
+    return setup_denovo(
         root_path / "cnv_data" / "in.tsv",
         """
         person_id  location     variant
@@ -246,8 +234,6 @@ def variants_file_alt_2(
         f1.s1      chr2:77-79	deletion
         f1.p1      chr2:98-99	deletion
         """)
-
-    return cnv_path
 
 
 def test_cnv_loader_alt_2(
@@ -271,17 +257,16 @@ def test_cnv_loader_alt_2(
 
     svs = []
     fvs: list[Any] = []
-    for sv, _fvs in loader.full_variants_iterator():
+    for sv, fvs_ in loader.full_variants_iterator():
         print(sv, fvs)
         svs.append(sv)
-        for fv in _fvs:
-            fvs.append(fv)
+        fvs.extend(fvs_)
 
     assert len(svs) == 4
     assert len(fvs) == 4
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_cnv_loader(gpf_instance: GPFInstance) -> Any:
     def ctor(
             cnv_ped: Path,
@@ -304,7 +289,7 @@ def variants_file_2(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> Path:
     root_path = tmp_path_factory.mktemp("acgt_instance")
-    cnv_path = setup_denovo(
+    return setup_denovo(
         root_path / "cnv_data" / "in.tsv",
         """
         family_id	location	              variant	best_state
@@ -315,8 +300,6 @@ def variants_file_2(
         f1          chr1:44-48	              CNV-	    2||2||1||2
         f1          chr1:91-95                CNV+	    2||1||2||2
         """)
-
-    return cnv_path
 
 
 def test_chromosomes_have_adjusted_chrom_add(
@@ -389,13 +372,13 @@ def test_reset_regions_with_adjusted_chrom_add(
         "cnv_family_id": "family_id",
         "cnv_best_state": "best_state",
     })
-    regions = ["chrchr1"]
+    regions = [Region.from_str("chrchr1")]
     loader.reset_regions(regions)
 
     variants = list(loader.full_variants_iterator())
     assert len(variants) > 0
     unique_chroms = np.unique([sv.chromosome for sv, _ in variants])
-    assert (unique_chroms == regions).all()
+    assert (unique_chroms == [str(r) for r in regions]).all()
 
 
 def test_reset_regions_with_adjusted_chrom_del(
@@ -408,10 +391,10 @@ def test_reset_regions_with_adjusted_chrom_del(
         "cnv_family_id": "family_id",
         "cnv_best_state": "best_state",
     })
-    regions = ["1"]
+    regions = [Region.from_str("1")]
     loader.reset_regions(regions)
 
     variants = list(loader.full_variants_iterator())
     assert len(variants) > 0
     unique_chroms = np.unique([sv.chromosome for sv, _ in variants])
-    assert (unique_chroms == regions).all()
+    assert (unique_chroms == [str(r) for r in regions]).all()

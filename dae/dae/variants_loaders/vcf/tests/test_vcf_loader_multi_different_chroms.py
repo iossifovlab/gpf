@@ -6,18 +6,18 @@ from dae.genomic_resources.testing import setup_pedigree, setup_vcf
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing.acgt_import import acgt_gpf
+from dae.utils.regions import Region
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture()
+@pytest.fixture
 def gpf_instance(
         tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("instance")
-    gpf_instance = acgt_gpf(root_path)
-    return gpf_instance
+    return acgt_gpf(root_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def quad_ped(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> str:
@@ -33,7 +33,7 @@ def quad_ped(
     return str(ped_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def multi_contig_vcf(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> str:
@@ -61,7 +61,7 @@ def multi_contig_vcf(
     return str(vcf_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def multi_contig_vcf_gz(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> str:
@@ -89,7 +89,7 @@ def multi_contig_vcf_gz(
     return str(vcf_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def multi_generational_ped(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> str:
@@ -108,7 +108,7 @@ def multi_generational_ped(
     return str(ped_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def multi_contig_chr_vcf(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> str:
@@ -136,7 +136,7 @@ def multi_contig_chr_vcf(
     return str(vcf_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def multi_contig_chr_vcf_gz(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> str:
@@ -178,7 +178,8 @@ def test_chromosomes_have_adjusted_chrom_add_prefix(
         gpf_instance.reference_genome,
         params={"add_chrom_prefix": "chr"})
 
-    assert loader.chromosomes == ["chrchr1", "chrchr2", "chrchr3", "chrchr4"]
+    assert set(loader.chromosomes) == {
+        "chrchr1", "chrchr2", "chrchr3", "chrchr4"}
 
 
 def test_chromosomes_have_adjusted_chrom_del_prefix(
@@ -196,7 +197,7 @@ def test_chromosomes_have_adjusted_chrom_del_prefix(
         params={"del_chrom_prefix": "chr"},
     )
 
-    assert loader.chromosomes == ["1", "2", "3", "4"]
+    assert set(loader.chromosomes) == {"1", "2", "3", "4"}
 
 
 def test_variants_have_adjusted_chrom_add_prefix(
@@ -260,7 +261,7 @@ def test_reset_regions_with_adjusted_chrom_add_prefix(
     )
     regions = ["chrchr1", "chrchr2"]
 
-    loader.reset_regions(regions)
+    loader.reset_regions([Region.from_str(reg) for reg in regions])
 
     variants = list(loader.full_variants_iterator())
     assert len(variants) > 0
@@ -283,7 +284,7 @@ def test_reset_regions_with_adjusted_chrom_del_prefix(
         params={"del_chrom_prefix": "chr"})
     regions = ["1", "2"]
 
-    loader.reset_regions(regions)
+    loader.reset_regions([Region.from_str(reg) for reg in regions])
 
     variants = list(loader.full_variants_iterator())
     assert len(variants) > 0

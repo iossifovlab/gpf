@@ -5,7 +5,7 @@ import argparse
 import itertools
 import logging
 from collections import Counter
-from collections.abc import Callable, Generator, Iterator
+from collections.abc import Callable, Generator, Iterator, Sequence
 from typing import Any, cast
 from urllib.parse import urlparse
 
@@ -18,6 +18,7 @@ from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Family
 from dae.utils import fs_utils
 from dae.utils.helpers import str2bool
+from dae.utils.regions import Region
 from dae.utils.variant_utils import (
     is_all_reference_genotype,
     is_all_unknown_genotype,
@@ -34,6 +35,29 @@ from dae.variants_loaders.raw.loader import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def vcffile_chromosomes(filename: str) -> list[str]:
+    """Return list of all chromosomes from VCF file."""
+    seqnames = []
+    with pysam.VariantFile(filename) as vcf:
+        seqnames = [str(c) for c in vcf.header.contigs]
+
+    tabix_index_filename = fs_utils.tabix_index_filename(filename)
+    if tabix_index_filename is None:
+        return seqnames
+
+    try:
+        # pylint: disable=no-member
+        assert tabix_index_filename is not None
+        tabix_index_filename = fs_utils.sign(tabix_index_filename)
+        with pysam.Tabixfile(
+            fs_utils.sign(filename),
+            index=tabix_index_filename,
+        ) as tbx:
+            return list(tbx.contigs)
+    except Exception:  # noqa: BLE001
+        return seqnames
 
 
 class VcfFamiliesGenotypes(FamiliesGenotypes):
@@ -56,6 +80,12 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         genotypes: list[tuple[int, ...]] = []
         for person in family.members_in_order:
             vcf_index = samples_index.get(person.sample_id)
+            if vcf_index is None:
+                logger.warning(
+                    "sample %s not found in VCF files", person.sample_id)
+                genotypes.append((fill_value, fill_value))
+                continue
+
             assert vcf_index is not None, (person, self.vcf_variants)
 
             vcf_variant = self.vcf_variants[vcf_index]
@@ -133,7 +163,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             vcf_files: list[str],
             genome: ReferenceGenome,
-            regions: list[str] | None = None,
+            regions: list[Region] | None = None,
             params: dict[str, Any] | None = None,
             **_kwargs: Any):
         params = params or {}
@@ -292,7 +322,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             )
 
     def _build_vcf_iterators(
-        self, region: str | None,
+        self, region: Region | None,
     ) -> list[Iterator[pysam.VariantRecord]]:
         if region is None:
             return [
@@ -301,7 +331,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             ]
 
         return [
-            vcf.fetch(region=self._unadjust_chrom_prefix(region))
+            vcf.fetch(region=self._unadjust_chrom_prefix(str(region)))
             for vcf in self.vcfs]
 
     def _init_chromosome_order(self) -> None:
@@ -543,7 +573,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         summary_index = initial_summary_index
         for region in self.regions:
-            if region is not None and "HLA" in region:
+            if region is not None and "HLA" in region.chrom:
                 logger.warning("skipping odd chromosomal region: %s", region)
                 continue
 
@@ -621,7 +651,7 @@ class VcfLoader(VariantsGenotypesLoader):
         families: FamiliesData,
         vcf_files: list[str],
         genome: ReferenceGenome,
-        regions: list[str] | None = None,
+        regions: list[Region] | None = None,
         params: dict[str, Any] | None = None,
         **kwargs: Any,  # noqa: ARG002
     ):
@@ -634,6 +664,7 @@ class VcfLoader(VariantsGenotypesLoader):
             filenames=all_filenames,
             transmission_type=TransmissionType.transmitted,
             genome=genome,
+            regions=regions,
             expect_genotype=True,
             expect_best_state=False,
             params=params)
@@ -642,18 +673,65 @@ class VcfLoader(VariantsGenotypesLoader):
         logger.debug("loader passed VCF files %s", vcf_files)
         logger.debug("collected VCF files: %s, %s", all_filenames, filenames)
 
-        self.vcf_files = vcf_files
-        self.vcf_loaders = []
-        if vcf_files:
-            for vcf_files_batch in filenames:
-                if vcf_files_batch:
-                    vcf_families = families.copy()
-                    vcf_loader = SingleVcfLoader(
-                        vcf_families, vcf_files_batch,
-                        genome, regions=regions, params=params)
-                    self.vcf_loaders.append(vcf_loader)
+        assert vcf_files
 
-        pedigree_mode = params.get("vcf_pedigree_mode", "fixed")
+        self.vcf_files = vcf_files
+        self.files_batches = filenames
+
+        self.vcf_loaders: list[SingleVcfLoader] | None = None
+
+    def _filter_files_batches(
+        self,
+        files_batches: list[list[str]],
+        regions: Sequence[Region | None],
+    ) -> list[list[str]]:
+        if regions == [None]:
+            return files_batches
+        result: list[list[str]] = []
+        region_chromosomes = {r.chrom for r in regions if r is not None}
+        for batch in files_batches:
+            for filename in batch:
+                chromosomes = {
+                    self._adjust_chrom_prefix(c)
+                    for c in vcffile_chromosomes(filename)
+                }
+                if set(chromosomes).intersection(region_chromosomes):
+                    result.append(batch)
+                    break
+        return result
+
+    def _init_vcf_loaders(
+        self,
+    ) -> None:
+        self.vcf_loaders = []
+        files_batches = self._filter_files_batches(
+            self.files_batches,
+            self.regions,
+        )
+        if len(files_batches) == 0:
+            logger.warning(
+                "no VCF files found for regions %s", self.regions)
+            return
+        if len(files_batches) == 1 and len(files_batches[0]) == 1:
+            vcf_loader = SingleVcfLoader(
+                self.families, files_batches[0],
+                self.genome,
+                params=self.params)
+            vcf_loader.reset_regions(self.regions)
+            self.vcf_loaders.append(vcf_loader)
+            return
+
+        for vcf_files_batch in files_batches:
+            if vcf_files_batch:
+                vcf_families = self.families.copy()
+                vcf_loader = SingleVcfLoader(
+                    vcf_families, vcf_files_batch,
+                    self.genome,
+                    params=self.params)
+                vcf_loader.reset_regions(self.regions)
+                self.vcf_loaders.append(vcf_loader)
+
+        pedigree_mode = self.params.get("vcf_pedigree_mode", "fixed")
         if pedigree_mode == "intersection":
             self.families = self._families_intersection()
         elif pedigree_mode == "union":
@@ -668,6 +746,7 @@ class VcfLoader(VariantsGenotypesLoader):
                 len(vcf_families.real_persons), vcf_loader.filenames)
 
     def _families_intersection(self) -> FamiliesData:
+        assert self.vcf_loaders is not None
         logger.warning("families intersection run...")
         families = self.vcf_loaders[0].families
         for vcf_loader in self.vcf_loaders:
@@ -688,6 +767,7 @@ class VcfLoader(VariantsGenotypesLoader):
         return families
 
     def _families_union(self) -> FamiliesData:
+        assert self.vcf_loaders is not None
         logger.warning("families union run...")
         families = self.vcf_loaders[0].families
         for fpid, person in families.persons.items():
@@ -712,6 +792,8 @@ class VcfLoader(VariantsGenotypesLoader):
         return families
 
     def close(self) -> None:
+        if self.vcf_loaders is None:
+            return
         for vcf_loader in self.vcf_loaders:
             vcf_loader.close()
 
@@ -857,21 +939,25 @@ class VcfLoader(VariantsGenotypesLoader):
     @property
     def chromosomes(self) -> list[str]:
         """Return list of all chromosomes from VCF files."""
-        assert len(self.vcf_loaders) > 0
-        all_chromosomes = []
-        for loader in self.vcf_loaders:
-            for chrom in loader.chromosomes:
-                if chrom not in all_chromosomes:
-                    all_chromosomes.append(chrom)
-        return all_chromosomes
+        result: set[str] = set()
+        for filname in self.filenames:
+            result.update(vcffile_chromosomes(filname))
+        return [self._adjust_chrom_prefix(chrom) for chrom in result]
 
-    def reset_regions(self, regions: str | list[str] | None) -> None:
-        for single_loader in self.vcf_loaders:
-            single_loader.reset_regions(regions)
+    def reset_regions(
+        self,
+        regions: list[Region] | Sequence[Region | None] | None,
+    ) -> None:
+        super().reset_regions(regions)
+        self.vcf_loaders = None
 
     def _full_variants_iterator_impl(
         self,
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
+        if self.vcf_loaders is None:
+            self._init_vcf_loaders()
+
+        assert self.vcf_loaders is not None
         summary_index = 0
         for vcf_loader in self.vcf_loaders:
             # pylint: disable=protected-access

@@ -37,6 +37,7 @@ from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.task_graph.graph import TaskGraph
 from dae.utils import fs_utils
+from dae.utils.regions import Region
 from dae.utils.statistics import StatsCollection
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -244,7 +245,8 @@ class ImportProject:
         assert loader_type is not None
         loader = self._get_variant_loader(loader_type, reference_genome)
         if bucket is not None and bucket.region_bin != "all":
-            loader.reset_regions(bucket.regions)
+            loader.reset_regions(
+                [Region.from_str(reg) for reg in bucket.regions])
         return loader
 
     def get_input_filenames(self, bucket: Bucket) -> list[str]:

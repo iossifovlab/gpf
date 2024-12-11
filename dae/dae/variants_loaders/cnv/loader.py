@@ -167,7 +167,7 @@ class CNVLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             cnv_filenames: list[str | Path | TextIO],
             genome: ReferenceGenome,
-            regions: list[str] | None = None,
+            regions: list[Region] | None = None,
             params: dict[str, Any] | None = None):
 
         if params is None:
@@ -191,7 +191,6 @@ class CNVLoader(VariantsGenotypesLoader):
         logger.info("CNV loader params: %s", params)
         self.genome = genome
         self.set_attribute("source_type", "cnv")
-        self.reset_regions(regions)
 
         assert isinstance(cnv_filenames, list)
         assert len(cnv_filenames) == 1
@@ -299,25 +298,15 @@ class CNVLoader(VariantsGenotypesLoader):
         ))
         return arguments
 
-    def reset_regions(self, regions: str | list[str] | None) -> None:
-        super().reset_regions(regions)
-
-        result = []
-        for reg in self.regions:
-            if reg is None:
-                continue
-            result.append(Region.from_str(reg))
-        self.regions = result  # type: ignore
-
     def _is_in_regions(self, summary_variant: SummaryVariant) -> bool:
-        if len(self.regions) == 0:
+        if self.regions == [None]:
             return True
         isin = [
-            r.isin(  # type: ignore
+            True if r is None else r.isin(
                 self._adjust_chrom_prefix(summary_variant.chrom),
                 summary_variant.position,
             )
-            for r in self.regions if r is not None
+            for r in self.regions
         ]
         return any(isin)
 
