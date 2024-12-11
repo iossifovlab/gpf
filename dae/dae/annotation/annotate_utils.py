@@ -169,4 +169,5 @@ class AnnotationTool:
 
         self.work()
 
-        TaskGraphCli.process_graph(self.task_graph, **vars(self.args))
+        if len(self.task_graph.tasks) > 0:
+            TaskGraphCli.process_graph(self.task_graph, **vars(self.args))
