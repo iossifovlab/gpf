@@ -40,12 +40,11 @@ class ReannotateInstanceTool(AnnotationTool):
             help="Output which studies will be reannotated"
                  " without carrying out the reannotation.",
         )
-        # TODO Implement --full-reannotation after it is  # noqa: FIX002
-        # implemented in annotate_schema2_parquet
         parser.add_argument(
             "-i", "--full-reannotation",
             help="Ignore any previous annotation and run "
                  " a full reannotation.",
+            action="store_true",
         )
 
         CLIAnnotationContext.add_context_arguments(parser)
@@ -128,6 +127,7 @@ class ReannotateInstanceTool(AnnotationTool):
             graph = Schema2ImportStorage.generate_reannotate_task_graph(
                 self.gpf_instance, study_dir,
                 self.args.region_size, self.args.allow_repeated_attributes,
+                full_reannotation=self.args.full_reannotation,
             )
             TaskGraphCli.process_graph(graph, **vars(self.args))
 
