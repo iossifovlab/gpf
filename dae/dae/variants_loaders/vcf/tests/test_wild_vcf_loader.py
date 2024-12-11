@@ -1,6 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import List
-
 import pytest
 
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
@@ -10,15 +8,14 @@ from dae.testing.acgt_import import acgt_gpf
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture()
+@pytest.fixture
 def gpf_instance(
         tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("instance")
-    gpf_instance = acgt_gpf(root_path)
-    return gpf_instance
+    return acgt_gpf(root_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def multivcf_ped(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("multivcf")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
@@ -48,10 +45,10 @@ def multivcf_ped(tmp_path_factory: pytest.TempPathFactory) -> str:
     return str(ped_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def multivcf_missing(
     tmp_path_factory: pytest.TempPathFactory,
-) -> List[str]:
+) -> list[str]:
     path_list = []
 
     root_path = tmp_path_factory.mktemp("multivcf_missing1_chr1")
@@ -121,7 +118,7 @@ def multivcf_missing(
 
 def test_wild_vcf_loader_simple(
     multivcf_ped: str,
-    multivcf_missing: List[str],
+    multivcf_missing: list[str],
     gpf_instance: GPFInstance,
 ) -> None:
     ped_file = multivcf_ped
@@ -137,10 +134,11 @@ def test_wild_vcf_loader_simple(
     )
     assert variants_loader is not None
 
-    assert len(variants_loader.vcf_loaders) == 2
-
     indexes = []
     for sv, _fvs in variants_loader.full_variants_iterator():
         indexes.append(sv.summary_index)
 
     assert indexes == list(range(len(indexes)))
+
+    assert variants_loader.vcf_loaders is not None
+    assert len(variants_loader.vcf_loaders) == 2

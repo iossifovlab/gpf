@@ -80,6 +80,12 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         genotypes: list[tuple[int, ...]] = []
         for person in family.members_in_order:
             vcf_index = samples_index.get(person.sample_id)
+            if vcf_index is None:
+                logger.warning(
+                    "sample %s not found in VCF files", person.sample_id)
+                genotypes.append((fill_value, fill_value))
+                continue
+
             assert vcf_index is not None, (person, self.vcf_variants)
 
             vcf_variant = self.vcf_variants[vcf_index]
@@ -670,19 +676,18 @@ class VcfLoader(VariantsGenotypesLoader):
         assert vcf_files
 
         self.vcf_files = vcf_files
+        self.files_batches = filenames
 
         self.vcf_loaders: list[SingleVcfLoader] | None = None
-        self._init_vcf_loaders(filenames, families)
 
     def _init_vcf_loaders(
-        self, file_batches: list[list[str]],
-        families: FamiliesData,
+        self,
     ) -> None:
         self.vcf_loaders = []
 
-        for vcf_files_batch in file_batches:
+        for vcf_files_batch in self.files_batches:
             if vcf_files_batch:
-                vcf_families = families.copy()
+                vcf_families = self.families.copy()
                 vcf_loader = SingleVcfLoader(
                     vcf_families, vcf_files_batch,
                     self.genome,
@@ -898,14 +903,10 @@ class VcfLoader(VariantsGenotypesLoader):
     @property
     def chromosomes(self) -> list[str]:
         """Return list of all chromosomes from VCF files."""
-        assert self.vcf_loaders is not None
-        assert len(self.vcf_loaders) > 0
-        all_chromosomes = []
-        for loader in self.vcf_loaders:
-            for chrom in loader.chromosomes:
-                if chrom not in all_chromosomes:
-                    all_chromosomes.append(chrom)
-        return all_chromosomes
+        result: set[str] = set()
+        for filname in self.filenames:
+            result.update(vcffile_chromosomes(filname))
+        return [self._adjust_chrom_prefix(chrom) for chrom in result]
 
     def reset_regions(
         self,
@@ -921,6 +922,9 @@ class VcfLoader(VariantsGenotypesLoader):
     def _full_variants_iterator_impl(
         self,
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
+        if self.vcf_loaders is None:
+            self._init_vcf_loaders()
+
         assert self.vcf_loaders is not None
         summary_index = 0
         for vcf_loader in self.vcf_loaders:

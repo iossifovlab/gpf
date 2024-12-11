@@ -178,7 +178,8 @@ def test_chromosomes_have_adjusted_chrom_add_prefix(
         gpf_instance.reference_genome,
         params={"add_chrom_prefix": "chr"})
 
-    assert loader.chromosomes == ["chrchr1", "chrchr2", "chrchr3", "chrchr4"]
+    assert set(loader.chromosomes) == {
+        "chrchr1", "chrchr2", "chrchr3", "chrchr4"}
 
 
 def test_chromosomes_have_adjusted_chrom_del_prefix(
@@ -196,7 +197,7 @@ def test_chromosomes_have_adjusted_chrom_del_prefix(
         params={"del_chrom_prefix": "chr"},
     )
 
-    assert loader.chromosomes == ["1", "2", "3", "4"]
+    assert set(loader.chromosomes) == {"1", "2", "3", "4"}
 
 
 def test_variants_have_adjusted_chrom_add_prefix(
