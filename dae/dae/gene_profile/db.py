@@ -4,6 +4,7 @@ from typing import Any
 
 from box import Box
 import duckdb
+import numpy as np
 import sqlglot
 from sqlalchemy import (  # type: ignore
     Column,
@@ -93,17 +94,25 @@ class GeneProfileDB:
 
         return copy(configuration)
 
-    def get_gp(self, gene_symbol) -> GPStatistic | None:
+    def get_gp(self, gene_symbol: str) -> GPStatistic | None:
         """
         Query a GP by gene_symbol and return the row as statistic.
 
         Returns None if gene_symbol is not found within the DB.
         """
-        table = self.gp_table
-        query = table.select()
-        query = query.where(table.c.symbol_name.ilike(gene_symbol))
-        with self.engine.begin() as connection:
-            row = connection.execute(query).fetchone()
+        table_glot = self.gp_table_glot
+        query = sqlglot.select("*").from_(table_glot)
+        query = query.where(
+            sqlglot.column(
+                "symbol_name",
+                table=table_glot.alias_or_name,
+            ).ilike(f"%{gene_symbol}%"),
+        )
+        duckdb_connection = duckdb.connect(f"{self.dbfile}", read_only=True)
+        with duckdb_connection.cursor() as cursor:
+            row = cursor.execute(
+                to_duckdb_transpile(query),
+            ).df().round(decimals=2).replace([np.nan], [None]).to_dict("records")[0]
             if not row:
                 return None
             return self.gp_from_table_row_single_view(row)
@@ -155,7 +164,6 @@ class GeneProfileDB:
         """Create an GPStatistic from single view row."""
         # pylint: disable=too-many-locals
         config = self.configuration
-        row = row._mapping  # pylint: disable=protected-access
         gene_symbol = row["symbol_name"]
         genomic_scores: Dict[str, Dict] = {}
         for gs_category in config["genomic_scores"]:
