@@ -111,7 +111,8 @@ const geneSetsCollectionMock = [
 class MockGeneSetsService {
   public provide = true;
 
-  public getGeneSets(): Observable<GeneSet[]> {
+  // eslint-disable-next-line @stylistic/max-len, @typescript-eslint/no-unused-vars
+  public getGeneSets(selectedGeneSetsCollection: string, searchTerm: string, geneSetsTypes: object): Observable<GeneSet[]> {
     if (this.provide) {
       return of([new GeneSet('name1', 2, 'desc3', 'download4'), new GeneSet('name5', 6, 'desc7', 'download8')]);
     } else {
@@ -133,6 +134,11 @@ class MockGeneSetsService {
     } else {
       return of(undefined);
     }
+  }
+
+  public getGeneSetDownloadLink(collectionName: string, geneSetName: string, types: SelectedDenovoTypes[]): string {
+    return 'geneSetsCollection=' + collectionName + '&geneSet=' +
+      geneSetName + '&geneSetsTypes=' + JSON.stringify(types);
   }
 }
 
@@ -458,7 +464,7 @@ describe('GeneSetsComponent', () => {
     expect(component.modifiedDatasetIds).toStrictEqual(new Set<string>(['deNovo']));
   });
 
-  it('should remove the only collection of a dataset removing the last type' +
+  it('should remove the only collection of a dataset, removing the last type' +
     ' and remove the dataset from current selected types object', () => {
     jest.useFakeTimers();
 
@@ -587,8 +593,7 @@ describe('GeneSetsComponent', () => {
   });
 
   it('should create denovo modal hierarchy', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       datasetHierarchyMock,
       visibleDatasetsMock,
@@ -644,8 +649,7 @@ describe('GeneSetsComponent', () => {
   });
 
   it('should not create denovo modal hierarchy when datasets hierarchy nodes are invalid', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       [null],
       visibleDatasetsMock,
@@ -662,9 +666,8 @@ describe('GeneSetsComponent', () => {
     expect(component.denovoDatasetsHierarchy).toStrictEqual([]);
   });
 
-  it('should restore gene sets types', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+  it('should restore collection, gene set and types', () => {
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       datasetHierarchyMock,
       visibleDatasetsMock,
@@ -688,9 +691,28 @@ describe('GeneSetsComponent', () => {
     expect(component.modifiedDatasetIds).toStrictEqual(new Set<string>(['SFARI_SSC_WGS_CSHL']));
   });
 
+  it('should not restore gene set when there is no collection in state', () => {
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
+    jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
+      datasetHierarchyMock,
+      visibleDatasetsMock,
+      denovoGeneSetsMock,
+      'datasetId',
+      {
+        geneSet: new GeneSet('geneSet1', 10, 'geneSet1', 'download'),
+        geneSetsCollection: null,
+        geneSetsTypes: []
+      }
+    ]));
+    const searchSpy = jest.spyOn(component, 'onSearch');
+
+    component.ngOnInit();
+    expect(component.selectedGeneSet).toBeNull();
+    expect(searchSpy).toHaveBeenCalledWith();
+  });
+
   it('should select first person set type from the first dataset as default', () => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const rxjs = jest.requireActual('rxjs');
+    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of([
       datasetHierarchyMock,
       visibleDatasetsMock,
@@ -708,5 +730,49 @@ describe('GeneSetsComponent', () => {
     expect(component.activeDataset.datasetId).toBe('SSC_genotypes');
     expect(component.datasetsList).toContain('SSC_genotypes: phenotype: autism');
     expect(component.modifiedDatasetIds).toStrictEqual(new Set<string>(['SSC_genotypes']));
+  });
+
+  it('should get download link', () => {
+    component.currentGeneSetsCollection = new GeneSetsCollection('collection1', 'desc', []);
+    component.currentGeneSet = new GeneSet('geneSet1', 10, 'desc2', 'download');
+    component.currentGeneSetsTypes = [];
+    expect(component.getDownloadLink()).toBe('geneSetsCollection=collection1&geneSet=geneSet1&geneSetsTypes=[]');
+  });
+
+  it('should check if search is trigger on keyboard event', () => {
+    const searchSpy = jest.spyOn(component, 'onSearch');
+
+    let event = new KeyboardEvent('keydown', {key: 'ArrowLeft'});
+    component.onKeyboardEvent(event);
+    expect(searchSpy).not.toHaveBeenCalledWith();
+
+    event = new KeyboardEvent('keydown', {key: 'a'});
+    component.onKeyboardEvent(event);
+    expect(searchSpy).toHaveBeenCalledWith();
+  });
+
+  it('should toggle dropdown', () => {
+    component['dropdownTrigger'] = {panelOpen: true, closePanel: jest.fn()} as never as MatAutocompleteTrigger;
+    const closeSpy = jest.spyOn(component['dropdownTrigger'], 'closePanel');
+    component.openCloseDropdown();
+    expect(component.isDropdownOpen).toBe(false);
+    expect(closeSpy).toHaveBeenCalledWith();
+
+    component['dropdownTrigger'] = {panelOpen: false, openPanel: jest.fn()} as never as MatAutocompleteTrigger;
+    const openSpy = jest.spyOn(component['dropdownTrigger'], 'openPanel');
+    component.openCloseDropdown();
+    expect(component.isDropdownOpen).toBe(true);
+    expect(openSpy).toHaveBeenCalledWith();
+  });
+
+  it('should reset selected gene set', () => {
+    component.searchQuery = 'searchValue';
+    component.selectedGeneSet = new GeneSet('geneSet1', 10, 'desc', 'download');
+    component.isDropdownOpen = false;
+
+    component.reset();
+    expect(component.searchQuery).toBe('');
+    expect(component.selectedGeneSet).toBeNull();
+    expect(component.isDropdownOpen).toBe(true);
   });
 });

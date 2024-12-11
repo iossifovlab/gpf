@@ -199,4 +199,11 @@ describe('CategoricalHistogramComponent', () => {
     component.startX = 215;
     expect(component.sliderStartIndex).toBe(0);
   });
+
+  it('should redraw histogram when changes are detected', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const redrawHistogramSpy = jest.spyOn(component as any, 'redrawHistogram');
+    component.ngOnChanges();
+    expect(redrawHistogramSpy).toHaveBeenCalledWith();
+  });
 });

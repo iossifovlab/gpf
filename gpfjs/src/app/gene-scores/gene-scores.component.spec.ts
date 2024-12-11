@@ -149,6 +149,19 @@ describe('GeneScoresComponent', () => {
     }));
   });
 
+  it('should reset categorical histogram view if the view is not switched', () => {
+    const dispatchSpy = jest.spyOn(component['store'], 'dispatch');
+    component.selectedCategoricalHistogramView = 'click selector';
+    component.categoricalValues = ['name1', 'name2', 'name3'];
+
+    component.switchCategoricalHistogramView('click selector' as CategoricalHistogramView);
+
+    expect(component.selectedCategoricalHistogramView).toBe('click selector');
+    expect(component.categoricalValues).toStrictEqual(['name1', 'name2', 'name3']);
+
+    expect(dispatchSpy).not.toHaveBeenCalledWith();
+  });
+
   it('should set default categorical histogram view', () => {
     const scoreWithValuesOrder = new GeneScore('desc', 'help', 'score1', new CategoricalHistogram(
       [

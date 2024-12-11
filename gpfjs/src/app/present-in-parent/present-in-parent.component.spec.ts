@@ -55,7 +55,7 @@ describe('PresentInParentComponent', () => {
     component.updateRarityIntervalStart(6);
     expect(component.rarityIntervalStart).toBe(6);
     expect(component.rarityIntervalEnd).toBeUndefined();
-    expect(updateStateSpy).toHaveBeenCalled();
+    expect(updateStateSpy).toHaveBeenCalledWith();
   });
 
   it('should update rarity interval end', () => {
@@ -66,7 +66,7 @@ describe('PresentInParentComponent', () => {
     component.updateRarityIntervalEnd(100);
     expect(component.rarityIntervalEnd).toBe(100);
     expect(component.rarityIntervalStart).toBeUndefined();
-    expect(updateStateSpy).toHaveBeenCalled();
+    expect(updateStateSpy).toHaveBeenCalledWith();
   });
 
   it('should update rarity type', () => {
@@ -88,6 +88,48 @@ describe('PresentInParentComponent', () => {
     expect(component.rarityIntervalStart).toBe(0);
     expect(component.rarityIntervalEnd).toBe(1);
     expect(updateStateSpy).toHaveBeenCalledTimes(3);
+  });
+
+  it('should set default rarity type and intervals when no values were selected', () => {
+    component.rarityIntervalStart = undefined;
+    component.rarityIntervalEnd = undefined;
+    component.selectedValues = null;
+    component.selectedRarityType = '';
+    const updateStateSpy = jest.spyOn(component, 'updateState');
+
+    component.updatePresentInParent(new Set<string>([]));
+    expect(component.rarityIntervalStart).toBe(0);
+    expect(component.rarityIntervalEnd).toBe(1);
+    expect(component.selectedRarityType).toBe('ultraRare');
+    expect(updateStateSpy).toHaveBeenCalledWith();
+  });
+
+  it('should not set rarity type when selecting "neither"', () => {
+    component.rarityIntervalStart = undefined;
+    component.rarityIntervalEnd = undefined;
+    component.selectedValues = null;
+    component.selectedRarityType = '';
+    const updateStateSpy = jest.spyOn(component, 'updateState');
+
+    component.updatePresentInParent(new Set(['neither']));
+    expect(component.rarityIntervalStart).toBeUndefined();
+    expect(component.rarityIntervalEnd).toBeUndefined();
+    expect(component.selectedRarityType).toBe('');
+    expect(updateStateSpy).toHaveBeenCalledWith();
+  });
+
+  it('should set default rarity type when selecting more than one values', () => {
+    component.rarityIntervalStart = undefined;
+    component.rarityIntervalEnd = undefined;
+    component.selectedValues = null;
+    component.selectedRarityType = '';
+    const updateStateSpy = jest.spyOn(component, 'updateState');
+
+    component.updatePresentInParent(new Set(['father only', 'neither']));
+    expect(component.rarityIntervalStart).toBeUndefined();
+    expect(component.rarityIntervalEnd).toBeUndefined();
+    expect(component.selectedRarityType).toBe('ultraRare');
+    expect(updateStateSpy).toHaveBeenCalledWith();
   });
 
   it('should update state', () => {
