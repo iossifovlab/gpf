@@ -36,6 +36,29 @@ from dae.variants_loaders.raw.loader import (
 logger = logging.getLogger(__name__)
 
 
+def vcffile_chromosomes(filename: str) -> list[str]:
+    """Return list of all chromosomes from VCF file."""
+    seqnames = []
+    with pysam.VariantFile(filename) as vcf:
+        seqnames = [str(c) for c in vcf.header.contigs]
+
+    tabix_index_filename = fs_utils.tabix_index_filename(filename)
+    if tabix_index_filename is None:
+        return seqnames
+
+    try:
+        # pylint: disable=no-member
+        assert tabix_index_filename is not None
+        tabix_index_filename = fs_utils.sign(tabix_index_filename)
+        with pysam.Tabixfile(
+            fs_utils.sign(filename),
+            index=tabix_index_filename,
+        ) as tbx:
+            return list(tbx.contigs)
+    except Exception:  # noqa: BLE001
+        return seqnames
+
+
 class VcfFamiliesGenotypes(FamiliesGenotypes):
     """Class for family genotypes build vrom VCF variant."""
 
@@ -642,16 +665,31 @@ class VcfLoader(VariantsGenotypesLoader):
         logger.debug("loader passed VCF files %s", vcf_files)
         logger.debug("collected VCF files: %s, %s", all_filenames, filenames)
 
+        assert vcf_files
+
         self.vcf_files = vcf_files
+
+        self.vcf_loaders: list[SingleVcfLoader] | None = None
+        self._init_vcf_loaders(
+            filenames, families, genome,
+            regions=regions, params=params)
+
+    def _init_vcf_loaders(
+        self, file_batches: list[list[str]],
+        families: FamiliesData,
+        genome: ReferenceGenome,
+        regions: list[str] | None,
+        params: dict[str, Any],
+    ) -> None:
         self.vcf_loaders = []
-        if vcf_files:
-            for vcf_files_batch in filenames:
-                if vcf_files_batch:
-                    vcf_families = families.copy()
-                    vcf_loader = SingleVcfLoader(
-                        vcf_families, vcf_files_batch,
-                        genome, regions=regions, params=params)
-                    self.vcf_loaders.append(vcf_loader)
+
+        for vcf_files_batch in file_batches:
+            if vcf_files_batch:
+                vcf_families = families.copy()
+                vcf_loader = SingleVcfLoader(
+                    vcf_families, vcf_files_batch,
+                    genome, regions=regions, params=params)
+                self.vcf_loaders.append(vcf_loader)
 
         pedigree_mode = params.get("vcf_pedigree_mode", "fixed")
         if pedigree_mode == "intersection":
@@ -668,6 +706,7 @@ class VcfLoader(VariantsGenotypesLoader):
                 len(vcf_families.real_persons), vcf_loader.filenames)
 
     def _families_intersection(self) -> FamiliesData:
+        assert self.vcf_loaders is not None
         logger.warning("families intersection run...")
         families = self.vcf_loaders[0].families
         for vcf_loader in self.vcf_loaders:
@@ -688,6 +727,7 @@ class VcfLoader(VariantsGenotypesLoader):
         return families
 
     def _families_union(self) -> FamiliesData:
+        assert self.vcf_loaders is not None
         logger.warning("families union run...")
         families = self.vcf_loaders[0].families
         for fpid, person in families.persons.items():
@@ -712,6 +752,8 @@ class VcfLoader(VariantsGenotypesLoader):
         return families
 
     def close(self) -> None:
+        if self.vcf_loaders is None:
+            return
         for vcf_loader in self.vcf_loaders:
             vcf_loader.close()
 
@@ -857,6 +899,7 @@ class VcfLoader(VariantsGenotypesLoader):
     @property
     def chromosomes(self) -> list[str]:
         """Return list of all chromosomes from VCF files."""
+        assert self.vcf_loaders is not None
         assert len(self.vcf_loaders) > 0
         all_chromosomes = []
         for loader in self.vcf_loaders:
@@ -866,12 +909,14 @@ class VcfLoader(VariantsGenotypesLoader):
         return all_chromosomes
 
     def reset_regions(self, regions: str | list[str] | None) -> None:
+        assert self.vcf_loaders is not None
         for single_loader in self.vcf_loaders:
             single_loader.reset_regions(regions)
 
     def _full_variants_iterator_impl(
         self,
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
+        assert self.vcf_loaders is not None
         summary_index = 0
         for vcf_loader in self.vcf_loaders:
             # pylint: disable=protected-access
