@@ -107,7 +107,7 @@ class CLIArgument:
         parser.add_argument(self.argument_name, **kwargs)  # type: ignore
 
     def build_option(
-        self, params: dict, *,
+        self, params: dict[str, str], *,
         use_defaults: bool = False,
     ) -> str | None:
         """Build an option."""
@@ -120,14 +120,16 @@ class CLIArgument:
                         if value == self.default_value:
                             continue
                         if self.raw:
-                            value = value.encode("unicode-escape")\
-                                .decode().replace("\\\\", "\\")
+                            value = value.encode(
+                                "unicode-escape",
+                            ).decode().replace("\\\\", "\\")
                         return f'{self.argument_name} "{value}"'
                     if use_defaults and self.default_value is not None:
                         value = self.default_value
                         if self.raw:
-                            value = value.encode("unicode-escape")\
-                                .decode().replace("\\\\", "\\")
+                            value = value.encode(
+                                "unicode-escape",
+                            ).decode().replace("\\\\", "\\")
                         return f'{self.argument_name} "{value}"'
                 else:
                     return f"{self.argument_name}"
@@ -353,19 +355,18 @@ class VariantsLoaderDecorator(VariantsLoader):
 
     @classmethod
     def build_cli_arguments(cls, params: dict) -> str:
-        return cls.variants_loader.build_cli_arguments(params)
+        raise NotImplementedError
 
     @classmethod
     def cli_defaults(cls) -> dict[str, Any]:
-        return cls.variants_loader.cli_defaults()
+        raise NotImplementedError
 
     @classmethod
     def cli_arguments(
         cls, parser: argparse.ArgumentParser, *,
         options_only: bool = False,
     ) -> None:
-        cls.variants_loader.cli_arguments(
-            parser, options_only=options_only)
+        raise NotImplementedError
 
     def build_arguments_dict(self) -> dict:
         return self.variants_loader.build_arguments_dict()
