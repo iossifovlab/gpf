@@ -1,8 +1,9 @@
 import argparse
 import pathlib
-from typing import Any
+from typing import Any, cast
 
 from dae.annotation.annotate_utils import AnnotationTool
+from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.context import CLIAnnotationContext
 from dae.duckdb_storage.duckdb_genotype_storage import (
     DuckDbParquetStorage,
@@ -12,7 +13,7 @@ from dae.duckdb_storage.duckdb_storage_helpers import (
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage
-from dae.studies.study import GenotypeData
+from dae.studies.study import GenotypeData, GenotypeDataStudy
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
@@ -71,14 +72,41 @@ class ReannotateInstanceTool(AnnotationTool):
         return genotype_storage
 
     @staticmethod
+    def _is_study_annotation_up_to_date(
+        study_id: str,
+        gpf_instance: GPFInstance,
+    ) -> bool:
+        canonical = set(gpf_instance.get_annotation_pipeline().get_info())
+        study = gpf_instance.get_genotype_data(study_id)
+        assert study is not None
+        assert not study.is_group
+        study = cast(GenotypeDataStudy, study)
+        storage = gpf_instance.genotype_storages.get_genotype_storage(
+            study.config.genotype_storage.id,
+        )
+        backend = study.backend
+        if storage.storage_type == "duckdb_parquet":
+            raw = backend.fetch_annotation()
+        elif storage.storage_type == "parquet":
+            raw = backend.loader.meta["annotation_pipeline"]
+        else:
+            raise ValueError(f"Invalid storage type {storage.storage_type}")
+        raw = raw.strip()
+        annotation = load_pipeline_from_yaml(raw, gpf_instance.grr)
+        new_infos = set(annotation.get_info())
+        return new_infos == canonical
+
+    @staticmethod
     def _is_reannotatable(
         study: GenotypeData,
         gpf_instance: GPFInstance,
     ) -> bool:
         genotype_storage = ReannotateInstanceTool._get_genotype_storage(
             study, gpf_instance)
-
-        return genotype_storage.storage_type in {"duckdb_parquet", "parquet"}
+        annotation_ok = ReannotateInstanceTool._is_study_annotation_up_to_date(
+            study.study_id, gpf_instance)
+        return genotype_storage.storage_type in {"duckdb_parquet", "parquet"} \
+            and not annotation_ok
 
     @staticmethod
     def _get_parquet_dir(
@@ -111,10 +139,11 @@ class ReannotateInstanceTool(AnnotationTool):
             for study in self.gpf_instance.get_all_genotype_data()
             if self._is_reannotatable(study, self.gpf_instance)
         ]
-        # TODO When constructing reannotatable_data, maybe for  # noqa: FIX002
-        # each study we could check the contents of the constructed
-        # ReannotationPipeline? so for studies with empty ReannotationPipelines
-        # (i.e. no reannotation needed) they would not be displayed
+
+        if not reannotatable_data:
+            print("Nothing to be done.")
+            return
+
         print("Studies to be reannotated:")
         for study in reannotatable_data:
             print(f"-> {study.study_id}")
