@@ -198,7 +198,7 @@ test.describe('App user access rights tests', () => {
     await page.locator('#id_new_password1').fill(userData.normal.password + '!!__3456');
     await page.locator('#id_new_password2').fill(userData.normal.password + '!!__3456');
     await page.locator('input[value="Reset password"]').click();
-    await expect(page).toHaveURL(`${utils.frontendUrl}/datasets/ALL_genotypes/dataset-description`);
+    await expect(page).toHaveURL(`${utils.frontendUrl}/home`);
 
     await utils.login(page, email, userData.normal.password + '!!__3456');
 
@@ -252,7 +252,7 @@ test.describe('App user access rights tests', () => {
     await page.locator('#id_new_password2').fill(userData.normal.password + '!!__3456');
     await page.locator('input[value="Reset password"]').click();
 
-    await expect(page).toHaveURL(`${utils.frontendUrl}/datasets/ALL_genotypes/dataset-description`);
+    await expect(page).toHaveURL(`${utils.frontendUrl}/home`);
 
     await utils.login(page, email, userData.normal.password + '!!__3456');
     await expect(page.locator('#register-alert')).not.toBeVisible();
@@ -274,6 +274,14 @@ test.describe('App user access rights tests', () => {
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.multi, 'Dataset Statistics');
     await expect(page.locator('#register-alert')).not.toBeVisible();
+  });
+
+  // tests robustness of the authentication process
+  test('should login and logout repeatedly', async({ page }) => {
+    for (let i = 0; i < 10; i++) {
+      await utils.loginAdmin(page);
+      await utils.logout(page);
+    }
   });
 });
 
