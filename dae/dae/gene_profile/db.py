@@ -293,20 +293,36 @@ class GeneProfileDB:
             symbol_like - Which gene symbol to search for, supports
             incomplete search
         """
-        table = self.gp_table
+        table_glot = self.gp_table_glot
 
-        query = select(table.c.symbol_name)
+        query = sqlglot.select(
+            sqlglot.column(
+                "symbol_name",
+                table=table_glot.alias_or_name,
+            )
+        ).from_(table_glot)
         if symbol_like:
-            query = query.where(table.c.symbol_name.like(f"{symbol_like}%"))
+            query = query.where(
+                sqlglot.column(
+                    "symbol_name",
+                    table=table_glot.alias_or_name,
+                ).ilike(f"{symbol_like}%"),
+            )
 
-        query = query.order_by(table.c.symbol_name.asc())
+        query = query.order_by("symbol_name ASC")
 
         if page is not None:
             query = query.limit(self.PAGE_SIZE).offset(
                 self.PAGE_SIZE * (page - 1),
             )
-        with self.engine.begin() as connection:
-            return [row[0] for row in connection.execute(query).fetchall()]
+
+        duckdb_connection = duckdb.connect(f"{self.dbfile}", read_only=True)
+        with duckdb_connection.cursor() as cursor:
+            return [
+                row["symbol_name"] for row in cursor.execute(
+                    to_duckdb_transpile(query),
+                ).df().round(decimals=2).fillna(0).to_dict("records")
+            ]
 
     def drop_gp_table(self):
         with self.engine.begin() as connection:
