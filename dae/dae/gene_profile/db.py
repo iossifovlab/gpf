@@ -1,7 +1,10 @@
 import logging
 from copy import copy
-from typing import Any, Dict
+from typing import Any
 
+from box import Box
+import duckdb
+import sqlglot
 from sqlalchemy import (  # type: ignore
     Column,
     Float,
@@ -11,11 +14,11 @@ from sqlalchemy import (  # type: ignore
     Table,
     create_engine,
     inspect,
-    nullslast,
 )
-from sqlalchemy.sql import asc, desc, insert, select
+from sqlalchemy.sql import insert, select
 
 from dae.gene_profile.statistic import GPStatistic
+from dae.utils.sql_utils import to_duckdb_transpile
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +35,16 @@ class GeneProfileDB:
 
     PAGE_SIZE = 50
 
-    def __init__(self, configuration, dbfile, clear=False):
+    def __init__(
+        self,
+        configuration: Box | None,
+        dbfile: str,
+        clear: bool = False,
+    ):
         self.dbfile = dbfile
         self.engine = create_engine(f"sqlite:///{dbfile}")
+        duckdb.execute("INSTALL sqlite;")
+        duckdb.execute("LOAD sqlite;")
         self.metadata = MetaData()
         self.configuration = \
             GeneProfileDB.build_configuration(configuration)
@@ -99,11 +109,10 @@ class GeneProfileDB:
             return self.gp_from_table_row_single_view(row)
 
     # FIXME: Too many locals, refactor?
-    def gp_from_table_row(self, row) -> dict:
+    def gp_from_table_row(self, row: dict) -> dict:
         # pylint: disable=too-many-locals
         """Build an GPStatistic from internal DB row."""
         config = self.configuration
-        row = row._mapping  # pylint: disable=protected-access
         result = {}
 
         result["geneSymbol"] = row["symbol_name"]
@@ -113,7 +122,8 @@ class GeneProfileDB:
             for score in gs_category["scores"]:
                 score_name = score["score_name"]
                 value = row[f"{category_name}_{score_name}"]
-                result[".".join([category_name, score_name])] = value
+                result[".".join([category_name, score_name])] = \
+                    value or None
 
         for gs_category in config["gene_sets"]:
             category_name = gs_category["category"]
@@ -199,7 +209,7 @@ class GeneProfileDB:
             genomic_scores, variant_counts,
         )
 
-    def _transform_sort_by(self, sort_by):
+    def _transform_sort_by(self, sort_by: str) -> str:
         sort_by_tokens = sort_by.split(".")
         if sort_by.startswith("gene_set_"):
             sort_by = sort_by.replace("gene_set_", "", 1)
@@ -216,7 +226,13 @@ class GeneProfileDB:
                 sort_by = ".".join((collection_id, sort_by_tokens[1]))
         return sort_by.replace(".", "_")
 
-    def query_gps(self, page, symbol_like=None, sort_by=None, order=None):
+    def query_gps(
+        self,
+        page: int,
+        symbol_like: str | None = None,
+        sort_by: str | None = None,
+        order: str | None = None,
+    ) -> list:
         """
         Perform paginated query and return list of GPs.
 
@@ -227,25 +243,36 @@ class GeneProfileDB:
             sort_by - Column to sort by
             order - "asc" or "desc"
         """
-        table = self.gp_table
+        table_glot = self.gp_table_glot
 
-        query = table.select()
+        query = sqlglot.select("*").from_(table_glot)
         if symbol_like:
-            query = query.where(table.c.symbol_name.like(f"%{symbol_like}%"))
+            query = query.where(
+                sqlglot.column(
+                    "symbol_name",
+                    table=table_glot.alias_or_name,
+                ).ilike(f"%{symbol_like}%"),
+            )
 
         if sort_by is not None:
             if order is None:
                 order = "desc"
             sort_by = self._transform_sort_by(sort_by)
-            query_order_func = desc if order == "desc" else asc
-            query = query.order_by(nullslast(query_order_func(sort_by)))
+            order = "DESC" if order == "desc" else "ASC"
+            query = query.order_by(f'"{sort_by}" {order}')
 
         if page is not None:
             query = query.limit(self.PAGE_SIZE).offset(
                 self.PAGE_SIZE * (page - 1),
             )
-        with self.engine.begin() as connection:
-            return connection.execute(query).fetchall()
+
+        # Can't have multiple connections with sqlite db alive when
+        # one of those does a 'write' action. That's why connect here:
+        duckdb_connection = duckdb.connect(f"{self.dbfile}", read_only=True)
+        with duckdb_connection.cursor() as cursor:
+            return cursor.execute(
+                to_duckdb_transpile(query),
+            ).df().round(decimals=2).fillna(0).to_dict("records")
 
     def list_symbols(
         self, page: int, symbol_like: str | None = None,
@@ -324,7 +351,7 @@ class GeneProfileDB:
                     columns[rate_col_name] = Column(rate_col_name, Float())
         return columns
 
-    def _create_gp_table(self):
+    def _create_gp_table(self) -> None:
         columns = self._gp_table_columns().values()
 
         self.gp_table = Table(
@@ -332,6 +359,8 @@ class GeneProfileDB:
             self.metadata,
             *columns,
         )
+
+        self.gp_table_glot = sqlglot.table("gene_profile")
 
         self.metadata.create_all(self.engine)
 
