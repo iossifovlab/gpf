@@ -680,12 +680,48 @@ class VcfLoader(VariantsGenotypesLoader):
 
         self.vcf_loaders: list[SingleVcfLoader] | None = None
 
+    def _filter_files_batches(
+        self,
+        files_batches: list[list[str]],
+        regions: Sequence[Region | None],
+    ) -> list[list[str]]:
+        if regions == [None]:
+            return files_batches
+        result: list[list[str]] = []
+        region_chromosomes = {r.chrom for r in regions if r is not None}
+        for batch in files_batches:
+            for filename in batch:
+                chromosomes = {
+                    self._adjust_chrom_prefix(c)
+                    for c in vcffile_chromosomes(filename)
+                }
+                if set(chromosomes).intersection(region_chromosomes):
+                    result.append(batch)
+                    break
+        return result
+
     def _init_vcf_loaders(
         self,
     ) -> None:
         self.vcf_loaders = []
+        files_batches = self._filter_files_batches(
+            self.files_batches,
+            self.regions,
+        )
+        if len(files_batches) == 0:
+            logger.warning(
+                "no VCF files found for regions %s", self.regions)
+            return
+        if len(files_batches) == 1 and len(files_batches[0]) == 1:
+            vcf_loader = SingleVcfLoader(
+                self.families, files_batches[0],
+                self.genome,
+                params=self.params)
+            vcf_loader.reset_regions(self.regions)
+            self.vcf_loaders.append(vcf_loader)
+            return
 
-        for vcf_files_batch in self.files_batches:
+        for vcf_files_batch in files_batches:
             if vcf_files_batch:
                 vcf_families = self.families.copy()
                 vcf_loader = SingleVcfLoader(
@@ -913,11 +949,7 @@ class VcfLoader(VariantsGenotypesLoader):
         regions: list[Region] | Sequence[Region | None] | None,
     ) -> None:
         super().reset_regions(regions)
-        if self.vcf_loaders is None:
-            return
-
-        for single_loader in self.vcf_loaders:
-            single_loader.reset_regions(regions)
+        self.vcf_loaders = None
 
     def _full_variants_iterator_impl(
         self,
