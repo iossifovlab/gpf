@@ -5,7 +5,7 @@ import argparse
 import itertools
 import logging
 from collections import Counter
-from collections.abc import Callable, Generator, Iterator
+from collections.abc import Callable, Generator, Iterator, Sequence
 from typing import Any, cast
 from urllib.parse import urlparse
 
@@ -18,6 +18,7 @@ from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Family
 from dae.utils import fs_utils
 from dae.utils.helpers import str2bool
+from dae.utils.regions import Region
 from dae.utils.variant_utils import (
     is_all_reference_genotype,
     is_all_unknown_genotype,
@@ -156,7 +157,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             vcf_files: list[str],
             genome: ReferenceGenome,
-            regions: list[str] | None = None,
+            regions: list[Region] | None = None,
             params: dict[str, Any] | None = None,
             **_kwargs: Any):
         params = params or {}
@@ -315,7 +316,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             )
 
     def _build_vcf_iterators(
-        self, region: str | None,
+        self, region: Region | None,
     ) -> list[Iterator[pysam.VariantRecord]]:
         if region is None:
             return [
@@ -324,7 +325,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             ]
 
         return [
-            vcf.fetch(region=self._unadjust_chrom_prefix(region))
+            vcf.fetch(region=self._unadjust_chrom_prefix(str(region)))
             for vcf in self.vcfs]
 
     def _init_chromosome_order(self) -> None:
@@ -566,7 +567,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         summary_index = initial_summary_index
         for region in self.regions:
-            if region is not None and "HLA" in region:
+            if region is not None and "HLA" in region.chrom:
                 logger.warning("skipping odd chromosomal region: %s", region)
                 continue
 
@@ -644,7 +645,7 @@ class VcfLoader(VariantsGenotypesLoader):
         families: FamiliesData,
         vcf_files: list[str],
         genome: ReferenceGenome,
-        regions: list[str] | None = None,
+        regions: list[Region] | None = None,
         params: dict[str, Any] | None = None,
         **kwargs: Any,  # noqa: ARG002
     ):
@@ -657,6 +658,7 @@ class VcfLoader(VariantsGenotypesLoader):
             filenames=all_filenames,
             transmission_type=TransmissionType.transmitted,
             genome=genome,
+            regions=regions,
             expect_genotype=True,
             expect_best_state=False,
             params=params)
@@ -670,16 +672,11 @@ class VcfLoader(VariantsGenotypesLoader):
         self.vcf_files = vcf_files
 
         self.vcf_loaders: list[SingleVcfLoader] | None = None
-        self._init_vcf_loaders(
-            filenames, families, genome,
-            regions=regions, params=params)
+        self._init_vcf_loaders(filenames, families)
 
     def _init_vcf_loaders(
         self, file_batches: list[list[str]],
         families: FamiliesData,
-        genome: ReferenceGenome,
-        regions: list[str] | None,
-        params: dict[str, Any],
     ) -> None:
         self.vcf_loaders = []
 
@@ -688,10 +685,12 @@ class VcfLoader(VariantsGenotypesLoader):
                 vcf_families = families.copy()
                 vcf_loader = SingleVcfLoader(
                     vcf_families, vcf_files_batch,
-                    genome, regions=regions, params=params)
+                    self.genome,
+                    params=self.params)
+                vcf_loader.reset_regions(self.regions)
                 self.vcf_loaders.append(vcf_loader)
 
-        pedigree_mode = params.get("vcf_pedigree_mode", "fixed")
+        pedigree_mode = self.params.get("vcf_pedigree_mode", "fixed")
         if pedigree_mode == "intersection":
             self.families = self._families_intersection()
         elif pedigree_mode == "union":
@@ -908,8 +907,14 @@ class VcfLoader(VariantsGenotypesLoader):
                     all_chromosomes.append(chrom)
         return all_chromosomes
 
-    def reset_regions(self, regions: str | list[str] | None) -> None:
-        assert self.vcf_loaders is not None
+    def reset_regions(
+        self,
+        regions: list[Region] | Sequence[Region | None] | None,
+    ) -> None:
+        super().reset_regions(regions)
+        if self.vcf_loaders is None:
+            return
+
         for single_loader in self.vcf_loaders:
             single_loader.reset_regions(regions)
 

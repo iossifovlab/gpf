@@ -7,8 +7,9 @@ import logging
 import os
 import sys
 import time
+from collections.abc import Callable
 from copy import copy
-from typing import Any, Callable
+from typing import Any
 from urllib.parse import urlparse
 
 import fsspec
@@ -27,6 +28,7 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Family
 from dae.utils import fs_utils
+from dae.utils.regions import Region
 from dae.utils.variant_utils import GenotypeType
 from dae.variants.family_variant import (
     FamilyAllele,
@@ -162,7 +164,11 @@ class ParquetWriter:
             logger.info(
                 "resetting regions (rb: %s): %s",
                 bucket.region_bin, bucket.regions)
-            variants_loader.reset_regions(bucket.regions)
+            if bucket.regions is None:
+                variants_loader.reset_regions(None)
+            else:
+                variants_loader.reset_regions(
+                    [Region.from_str(reg) for reg in bucket.regions])
 
         rows = project.get_row_group_size()
         logger.debug("argv.rows: %s", rows)

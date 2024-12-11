@@ -2,10 +2,11 @@
 import numpy as np
 import pytest
 
+from dae.utils.regions import Region
 from dae.variants_loaders.dae.loader import DenovoLoader
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_denovo_loader(gpf_instance_2013, fixture_dirname, fake_families):
     def ctor(input_filename, additional_params):
         params = {
@@ -66,7 +67,7 @@ def test_reset_regions_with_adjusted_chrom(simple_denovo_loader,
     prefix = params.get("add_chrom_prefix", "")
     regions = [f"{prefix}1", f"{prefix}2"]
 
-    loader.reset_regions(regions)
+    loader.reset_regions([Region.from_str(reg) for reg in regions])
 
     variants = list(loader.full_variants_iterator())
     assert len(variants) > 0

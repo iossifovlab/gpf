@@ -72,7 +72,7 @@ class DenovoLoader(VariantsGenotypesLoader):
             families: FamiliesData,
             denovo_filename: str,
             genome: ReferenceGenome,
-            regions: list[str] | None = None,
+            regions: list[Region] | None = None,
             params: dict[str, Any] | None = None, *,
             sort: bool = True) -> None:
         super().__init__(
@@ -127,21 +127,11 @@ class DenovoLoader(VariantsGenotypesLoader):
     def chromosomes(self) -> list[str]:
         return self._chromosomes
 
-    def reset_regions(self, regions: str | list[str] | None) -> None:
-        super().reset_regions(regions)
-
-        result: list[Region | None] = []
-        for reg in self.regions:
-            if reg is None:
-                result.append(reg)
-            else:
-                result.append(Region.from_str(reg))
-        self.regions = result  # type: ignore
-        logger.debug("denovo reset regions: %s", self.regions)
-
     def _is_in_regions(self, summary_variant: SummaryVariant) -> bool:
+        if self.regions is None or len(self.regions) == 0:
+            return True
         isin = [
-            r.isin(  # type: ignore
+            r.isin(
                 self._adjust_chrom_prefix(summary_variant.chrom),
                 summary_variant.position,
             )
@@ -580,7 +570,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                 if "family_id" in temp_df.columns:
                     family_id = variant[4]  # type: ignore
                     variant_families = {
-                        families.persons[(family_id, pid)].family_id
+                        families.persons[family_id, pid].family_id
                         for pid in person_ids}
                 else:
                     variant_families = set()
@@ -1030,7 +1020,7 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
                         as too_tbf:
 
                     region_unadjusted = (
-                        self._unadjust_chrom_prefix(region)
+                        self._unadjust_chrom_prefix(str(region))
                         if region is not None
                         else None
                     )

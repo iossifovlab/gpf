@@ -9,13 +9,14 @@ from dae.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing import convert_to_tab_separated
+from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance
 from dae.variants.core import Allele
 from dae.variants.family_variant import FamilyAllele
 from dae.variants_loaders.cnv.loader import CNVLoader
 
 
-@pytest.fixture()
+@pytest.fixture
 def abn_families() -> FamiliesData:
     ped_content = io.StringIO(convert_to_tab_separated(
         """
@@ -28,16 +29,15 @@ def abn_families() -> FamiliesData:
     return families
 
 
-@pytest.fixture()
+@pytest.fixture
 def canvas_cnv() -> TextIO:
-    content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
+    return io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
         study_id  family_id  person_id  location            variant
         st1       f1         p1         1:10000000-2000000  LOSS
         st1       f2         p2         2:10000000-2000000  GAIN
         """,
     )))
-    return content
 
 
 @pytest.mark.parametrize(
@@ -144,7 +144,7 @@ def test_cnv_loader_regions(
     variants = list(loader.full_variants_iterator())
     assert len(variants) == 2
 
-    loader.reset_regions([region])
+    loader.reset_regions([Region.from_str(region)])
     family_variants = list(loader.family_variants_iterator())
     assert len(family_variants) == expected
 
@@ -170,7 +170,7 @@ def test_cnv_loader_constructor_regions(
 
     loader = CNVLoader(
         abn_families, [canvas_cnv], gpf_instance_2013.reference_genome,
-        regions=[region],
+        regions=[Region.from_str(region)],
         params={
             "cnv_person_id": "person_id",
             "cnv_location": "location",
@@ -227,6 +227,6 @@ def test_cnv_loader_del_chrom_prefix_regions(
     variants = list(loader.full_variants_iterator())
     assert len(variants) == 2
 
-    loader.reset_regions([region])
+    loader.reset_regions([Region.from_str(region)])
     family_variants = list(loader.family_variants_iterator())
     assert len(family_variants) == expected

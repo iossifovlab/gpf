@@ -23,6 +23,7 @@ from dae.effect_annotation.effect import AlleleEffects
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Family
+from dae.utils.regions import Region
 from dae.utils.variant_utils import best2gt, get_locus_ploidy
 from dae.variants.attributes import GeneticModel, Sex, TransmissionType
 from dae.variants.family_variant import (
@@ -295,7 +296,10 @@ class VariantsLoader(CLILoader):
     def set_attribute(self, key: str, value: Any) -> None:
         self._attributes[key] = value
 
-    def reset_regions(self, regions: str | list[str] | None) -> None:
+    def reset_regions(
+        self,
+        regions: list[Region] | Sequence[Region | None] | None,
+    ) -> None:
         pass
 
     @property
@@ -720,7 +724,7 @@ class VariantsGenotypesLoader(VariantsLoader):
             filenames: str | list[str],
             genome: ReferenceGenome,
             transmission_type: TransmissionType = TransmissionType.transmitted,
-            regions: list[str] | None = None, *,
+            regions: list[Region] | None = None, *,
             expect_genotype: bool = True,
             expect_best_state: bool = False,
             params: dict[str, Any] | None = None) -> None:
@@ -733,11 +737,9 @@ class VariantsGenotypesLoader(VariantsLoader):
             genome=genome,
             params=params)
 
-        self.regions: Sequence[str | None]
-        if regions is None or isinstance(regions, str):
-            self.regions = [regions]
-        else:
-            self.regions = regions
+        self.regions: Sequence[Region | None] = [None]
+        if regions is not None:
+            self.reset_regions(regions)
 
         self._adjust_chrom_prefix = lambda chrom: chrom
         self._unadjust_chrom_prefix = lambda chrom: chrom
@@ -774,18 +776,18 @@ class VariantsGenotypesLoader(VariantsLoader):
     def _full_variants_iterator_impl(self) -> FullVariantsIterator:
         pass
 
-    def reset_regions(self, regions: str | list[str] | None) -> None:
+    def reset_regions(
+        self,
+        regions: list[Region] | Sequence[Region | None] | None,
+    ) -> None:
         if regions is None:
-            self.regions = []
+            self.regions = [None]
             return
 
-        if isinstance(regions, str):
-            regions = [regions]
-        assert isinstance(regions, list), regions
-        regions = [
-            r for r in regions if r is not None and "HLA" not in r
-        ]
-        self.regions = regions
+        self.regions = list(filter(
+            lambda r: r is None or "HLA" not in r.chrom,
+            regions,
+        ))
 
     @classmethod
     def _get_diploid_males(cls, family_variant: FamilyVariant) -> list[bool]:
