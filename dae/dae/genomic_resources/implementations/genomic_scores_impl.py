@@ -85,36 +85,66 @@ class GenomicScoreImplementation(
         return InfoImplementationMixin.get_info(self)
 
     def add_statistics_build_tasks(
-        self,
-        task_graph: TaskGraph,
-        **kwargs: Any,
+        self, task_graph: TaskGraph, **kwargs: Any,
+    ) -> list[Task]:
+        region_size = kwargs.get("region_size", 1_000_000)
+
+        if region_size > 0:
+            return self._multitask_statistics(task_graph, **kwargs)
+
+        return [
+            task_graph.create_task(
+                f"{self.resource.resource_id}_calc_statistics",
+                GenomicScoreImplementation._singletask_statistics,
+                [self.resource],
+                [],
+            ),
+        ]
+
+    @staticmethod
+    def _singletask_statistics(
+        resource: GenomicResource,
+    ) -> dict[str, Histogram]:
+        impl = build_score_implementation_from_resource(resource)
+        all_min_max_scores, all_hist_confs = \
+            GenomicScoreImplementation._unpack_score_defs(resource)
+        with impl.score.open():
+            chroms = impl.score.get_all_chromosomes()
+
+        min_max = {}
+        if all_min_max_scores:
+            min_max_parts = [
+                GenomicScoreImplementation._do_min_max(
+                    resource, all_min_max_scores, chrom, None, None)
+                for chrom in chroms
+            ]
+            min_max = GenomicScoreImplementation._merge_min_max(
+                all_min_max_scores, *min_max_parts)
+
+        all_hist_confs = GenomicScoreImplementation._update_hist_confs(
+            all_hist_confs, min_max)
+
+        histograms = GenomicScoreImplementation._merge_histograms(
+            resource,
+            all_hist_confs,
+            *[
+                GenomicScoreImplementation._do_histogram(
+                    resource, all_hist_confs, chrom, None, None,
+                )
+                for chrom in chroms
+            ],
+        )
+        return GenomicScoreImplementation._save_histograms(resource, histograms)
+
+    def _multitask_statistics(
+        self, task_graph: TaskGraph, **kwargs: Any,
     ) -> list[Task]:
         with self.score.open():
             region_size = kwargs.get("region_size", 1_000_000)
             grr = kwargs.get("grr")
 
-            all_min_max_scores = []
-            all_hist_confs: dict[str, HistogramConfig] = {}
-
-            impl = build_score_implementation_from_resource(self.resource)
-            for score_id, score_def in impl.score.score_definitions.items():
-                if score_def.hist_conf is not None:
-                    hist_conf = score_def.hist_conf
-                else:
-                    hist_conf = build_default_histogram_conf(
-                        score_def.value_type)
-                if isinstance(hist_conf, NullHistogramConfig):
-                    all_hist_confs[score_id] = hist_conf
-                    continue
-
-                if isinstance(hist_conf, CategoricalHistogramConfig):
-                    all_hist_confs[score_id] = hist_conf
-                    continue
-
-                assert isinstance(hist_conf, NumberHistogramConfig)
-                if not hist_conf.has_view_range():
-                    all_min_max_scores.append(score_id)
-                all_hist_confs[score_id] = hist_conf
+            all_min_max_scores, all_hist_confs = \
+                self._unpack_score_defs(self.resource)
 
             min_max_task = None
             if all_min_max_scores:
@@ -135,6 +165,35 @@ class GenomicScoreImplementation(
         if isinstance(self.score.table, TabixGenomicPositionTable):
             files.add(f"{self.score.table.definition.filename}.tbi")
         return files
+
+    @staticmethod
+    def _unpack_score_defs(
+        resource: GenomicResource,
+    ) -> tuple[list[str], dict[str, HistogramConfig]]:
+        """Extracts scores with min/max and histogram configs for a score."""
+        impl = build_score_implementation_from_resource(resource)
+        all_min_max_scores = []
+        all_hist_confs: dict[str, HistogramConfig] = {}
+        with impl.score.open():
+            for score_id, score_def in impl.score.score_definitions.items():
+                if score_def.hist_conf is not None:
+                    hist_conf = score_def.hist_conf
+                else:
+                    hist_conf = build_default_histogram_conf(
+                        score_def.value_type)
+                if isinstance(hist_conf, NullHistogramConfig):
+                    all_hist_confs[score_id] = hist_conf
+                    continue
+
+                if isinstance(hist_conf, CategoricalHistogramConfig):
+                    all_hist_confs[score_id] = hist_conf
+                    continue
+
+                assert isinstance(hist_conf, NumberHistogramConfig)
+                if not hist_conf.has_view_range():
+                    all_min_max_scores.append(score_id)
+                all_hist_confs[score_id] = hist_conf
+        return all_min_max_scores, all_hist_confs
 
     @staticmethod
     def _get_reference_genome_cached(
@@ -248,7 +307,9 @@ class GenomicScoreImplementation(
     def _do_min_max(
         resource: GenomicResource,
         score_ids: list[str],
-        chrom: str, start: int, end: int,
+        chrom: str,
+        start: int | None,
+        end: int | None,
     ) -> dict[str, MinMaxValue]:
         impl = build_score_implementation_from_resource(resource)
         result = {
@@ -351,7 +412,9 @@ class GenomicScoreImplementation(
     def _do_histogram(
         resource: GenomicResource,
         all_hist_confs: dict[str, HistogramConfig],
-        chrom: str, start: int, end: int,
+        chrom: str,
+        start: int | None,
+        end: int | None,
     ) -> dict[str, Histogram]:
         impl = build_score_implementation_from_resource(resource)
         result: dict[str, Histogram] = {}
