@@ -112,7 +112,7 @@ class GeneProfileDB:
         with duckdb_connection.cursor() as cursor:
             row = cursor.execute(
                 to_duckdb_transpile(query),
-            ).df().round(decimals=2).replace([np.nan], [None]).to_dict("records")[0]
+            ).df().replace([np.nan], [None]).to_dict("records")[0]
             if not row:
                 return None
             return self.gp_from_table_row_single_view(row)
@@ -280,7 +280,7 @@ class GeneProfileDB:
         with duckdb_connection.cursor() as cursor:
             return cursor.execute(
                 to_duckdb_transpile(query),
-            ).df().round(decimals=2).fillna(0).to_dict("records")
+            ).df().fillna(0).to_dict("records")
 
     def list_symbols(
         self, page: int, symbol_like: str | None = None,
@@ -321,7 +321,7 @@ class GeneProfileDB:
             return [
                 row["symbol_name"] for row in cursor.execute(
                     to_duckdb_transpile(query),
-                ).df().round(decimals=2).fillna(0).to_dict("records")
+                ).df().fillna(0).to_dict("records")
             ]
 
     def drop_gp_table(self):
