@@ -26,7 +26,7 @@ from dae.utils.variant_utils import (
 from dae.variants.attributes import Sex
 
 
-@pytest.fixture()
+@pytest.fixture
 def genome(tmp_path: pathlib.Path) -> ReferenceGenome:
     root_path = tmp_path
     setup_directories(root_path, {
@@ -115,11 +115,6 @@ test_data.extend(
         ("X", 57217415, Sex.F, 2),
     ),
 )
-
-# test_data_chr_prefix = list(
-#     map(lambda x: ("chr" + x[0], x[1], x[2], x[3]), test_data)
-# )
-# test_data.extend(test_data_chr_prefix)
 
 
 @pytest.mark.parametrize("chrom,pos,sex,expected", [*test_data])
