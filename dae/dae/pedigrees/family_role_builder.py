@@ -60,31 +60,31 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
         self._assign_roles_step_parents_and_half_siblings(proband)
         self._assign_unknown_roles()
 
-    @classmethod
-    def _set_person_role(cls, person: Person, role: Role) -> None:
+    def _set_person_role(self, person: Person, role: Role) -> None:
         assert isinstance(person, Person)
         assert isinstance(role, Role)
-        if person.role is None or person.role == Role.unknown:
-            if role != person.role:
-                logger.info(
-                    "changing role for %s from %s to %s",
-                    person, person.role, role)
-                # pylint: disable=protected-access
-                person._role = role
-                person._attributes["role"] = role
+        if (person.role is None or person.role == Role.unknown) and \
+                role != person.role:
+            logger.info(
+                "changing role for %s from %s to %s",
+                person, person.role, role)
+            # pylint: disable=protected-access
+            person._role = role  # noqa: SLF001
+            person._attributes["role"] = role  # noqa: SLF001
 
     def _get_family_proband(self) -> Person | None:
         probands = self.family.get_members_with_roles([Role.prb])
         if len(probands) > 0:
             return probands[0]
         for person in self.family.full_members:
-            is_proband = person.get_attr("proband", False)
-            # assert isinstance(is_proband, bool), is_proband
+            is_proband = person.get_attr("proband", default=False)
             if is_proband:
                 return person
 
         affected = self.family.get_members_with_statuses([Status.affected])
-        affected = [p for p in affected if p.has_parent()]
+        affected = [
+            p for p in affected
+            if self.family.member_has_parent(p.person_id, allow_missing=True)]
 
         if len(affected) > 0:
             return affected[0]
@@ -94,7 +94,8 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
         matings = {}
 
         for person_id, person in self.family.persons.items():
-            if person.has_parent():
+            if self.family.member_has_parent(
+                    person.person_id, allow_missing=True):
 
                 parents_mating_id = Mating.parents_id(person)
                 if parents_mating_id not in matings:
@@ -136,15 +137,19 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
                 self._set_person_role(person, Role.spouse)
 
     def _assign_roles_parents(self, proband: Person) -> None:
-        if not proband.has_parent():
+        if not self.family.member_has_parent(
+                proband.person_id, allow_missing=True):
             return
-        if proband.mom is not None:
-            self._set_person_role(proband.mom, Role.mom)
-        if proband.dad is not None:
-            self._set_person_role(proband.dad, Role.dad)
+        mom = self.family.persons.get(proband.mom_id)
+        if mom is not None:
+            self._set_person_role(mom, Role.mom)
+        dad = self.family.persons.get(proband.dad_id)
+        if dad is not None:
+            self._set_person_role(dad, Role.dad)
 
     def _assign_roles_siblings(self, proband: Person) -> None:
-        if not proband.has_parent():
+        if not self.family.member_has_parent(
+                proband.person_id, allow_missing=True):
             return
         parents_mating = self.family_matings[Mating.parents_id(proband)]
         for person_id in parents_mating.children:
@@ -153,14 +158,20 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
                 self._set_person_role(person, Role.sib)
 
     def _assign_roles_paternal(self, proband: Person) -> None:
-        if proband.dad is None or not proband.dad.has_parent():
+        if not self.family.member_has_dad(
+                proband.person_id, allow_missing=True):
+            return
+        dad = self.family.persons[proband.dad_id]
+        if not self.family.member_has_parent(
+                dad.person_id, allow_missing=True):
             return
 
-        dad = proband.dad
-        if dad.dad is not None:
-            self._set_person_role(dad.dad, Role.paternal_grandfather)
-        if dad.mom is not None:
-            self._set_person_role(dad.mom, Role.paternal_grandmother)
+        gd = self.family.persons.get(dad.dad_id)
+        if gd is not None:
+            self._set_person_role(gd, Role.paternal_grandfather)
+        gm = self.family.persons.get(dad.mom_id)
+        if gm is not None:
+            self._set_person_role(gm, Role.paternal_grandmother)
 
         grandparents_mating_id = Mating.parents_id(dad)
         grandparents_mating = self.family_matings[grandparents_mating_id]
@@ -180,14 +191,20 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
                     self._set_person_role(cousin, Role.paternal_cousin)
 
     def _assign_roles_maternal(self, proband: Person) -> None:
-        if proband.mom is None or not proband.mom.has_parent():
+        if not self.family.member_has_mom(
+                proband.person_id, allow_missing=True):
+            return
+        mom = self.family.persons[proband.mom_id]
+        if not self.family.member_has_parent(
+                mom.person_id, allow_missing=True):
             return
 
-        mom = proband.mom
-        if mom.dad is not None:
-            self._set_person_role(mom.dad, Role.maternal_grandfather)
-        if mom.mom is not None:
-            self._set_person_role(mom.mom, Role.maternal_grandmother)
+        gd = self.family.persons.get(mom.dad_id)
+        if gd is not None:
+            self._set_person_role(gd, Role.maternal_grandfather)
+        gm = self.family.persons.get(mom.mom_id)
+        if gm is not None:
+            self._set_person_role(gm, Role.maternal_grandmother)
 
         grandparents_mating_id = Mating.parents_id(mom)
         grandparents_mating = self.family_matings[grandparents_mating_id]
@@ -221,12 +238,14 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
     def _assign_roles_step_parents_and_half_siblings(
         self, proband: Person,
     ) -> None:
-        if proband.mom is None or proband.dad is None:
+        if not self.family.member_has_parent(
+                proband.person_id, allow_missing=True):
             return
-        if proband.mom is not None:
+        mom = self.family.persons.get(proband.mom_id)
+        if mom is not None:
             mom_mates = filter(
-                lambda x: x.dad_id != proband.dad.person_id,  # type: ignore
-                self._find_parent_matings(proband.mom),
+                lambda x: x.dad_id != proband.dad_id,
+                self._find_parent_matings(mom),
             )
             for mating in mom_mates:
                 if mating.dad_id is None:
@@ -239,10 +258,11 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
                     self._set_person_role(
                         halfsibling, Role.maternal_half_sibling,
                     )
-        if proband.dad is not None:
+        dad = self.family.persons.get(proband.dad_id)
+        if dad is not None:
             dad_mates = filter(
-                lambda x: x.mom_id != proband.mom.person_id,  # type: ignore
-                self._find_parent_matings(proband.dad),
+                lambda x: x.mom_id != proband.mom_id,
+                self._find_parent_matings(dad),
             )
             for mating in dad_mates:
                 if mating.mom_id is None:

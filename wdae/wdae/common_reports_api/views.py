@@ -121,7 +121,7 @@ class FamilyCounterDownloadView(QueryBaseView, DatasetAccessRightsView):
         })
 
         tsv = FamiliesLoader.to_tsv(counter_families_data)
-        lines = map(lambda x: x + "\n", tsv.strip().split("\n"))
+        lines = [f"{ln}\n" for ln in tsv.strip().split("\n")]
 
         response = StreamingHttpResponse(
             lines,
@@ -146,8 +146,6 @@ class FamiliesDataDownloadView(QueryBaseView, DatasetAccessRightsView):
         if tags_query is None:
             return study_families
 
-        result = {}
-
         or_mode = tags_query.get("orMode")
         if or_mode is None or not isinstance(or_mode, bool):
             raise ValueError("Invalid mode or none specified")
@@ -160,11 +158,15 @@ class FamiliesDataDownloadView(QueryBaseView, DatasetAccessRightsView):
             raise ValueError("Invalid exclude or none specified")
         exclude_tags = {FamilyTag.from_label(label) for label in exclude_tags}
 
-        for family_id, family in study_families.items():
+        result = {
+            family_id: family
+            for family_id, family in study_families.items()
             if check_family_tags_query(
-                family, or_mode, include_tags, exclude_tags,
-            ):
-                result[family_id] = family
+                family, or_mode=or_mode,
+                include_tags=include_tags,
+                exclude_tags=exclude_tags,
+            )
+        }
 
         return FamiliesData.from_families(result)
 
@@ -179,7 +181,7 @@ class FamiliesDataDownloadView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         tsv = FamiliesLoader.to_tsv(study.families)
-        lines = map(lambda x: x + "\n", tsv.strip().split("\n"))
+        lines = [f"{ln}\n" for ln in tsv.strip().split("\n")]
 
         response = StreamingHttpResponse(
             lines,
@@ -215,7 +217,7 @@ class FamiliesDataDownloadView(QueryBaseView, DatasetAccessRightsView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         tsv = FamiliesLoader.to_tsv(result)
-        lines = map(lambda x: x + "\n", tsv.strip().split("\n"))
+        lines = [f"{ln}\n" for ln in tsv.strip().split("\n")]
 
         response = StreamingHttpResponse(
             lines,

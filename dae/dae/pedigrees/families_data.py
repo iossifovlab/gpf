@@ -303,7 +303,7 @@ class FamiliesData(Mapping[str, Family]):
             person
             for fam in self._families.values()
             for person in fam.members_in_order
-            if person.is_parent()
+            if fam.member_is_parent(person.person_id)
         ]
 
     def persons_with_parents(self) -> list[Person]:
@@ -312,7 +312,7 @@ class FamiliesData(Mapping[str, Family]):
             person
             for fam in self._families.values()
             for person in fam.members_in_order
-            if person.has_both_parents() and not person.has_missing_parent()
+            if fam.member_has_both_parents(person.person_id)
         ]
 
     def persons_with_roles(
