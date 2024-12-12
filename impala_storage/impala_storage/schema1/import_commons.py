@@ -20,6 +20,7 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.dict_utils import recursive_dict_update
+from dae.utils.regions import Region
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.raw.loader import (
@@ -1095,12 +1096,15 @@ class Variants2ParquetTool:
                 )
                 logger.info(
                     "resetting regions (rb: %s): %s", argv.region_bin, regions)
-                variants_loader.reset_regions(regions)
+
+                variants_loader.reset_regions(
+                    [Region.from_str(reg) for reg in regions])
 
         elif argv.regions is not None:
             regions = argv.regions
             logger.info("resetting regions (region): %s", regions)
-            variants_loader.reset_regions(regions)
+            variants_loader.reset_regions(
+                [Region.from_str(reg) for reg in regions])
 
         variants_loader = cls._build_variants_loader_pipeline(
             gpf_instance, argv, variants_loader,
