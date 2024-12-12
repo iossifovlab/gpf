@@ -126,6 +126,9 @@ class CnvCollectionImplementation(GenomicResourceImplementation,
     def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002
         return InfoImplementationMixin.get_info(self)
 
+    def get_statistics_info(self, **kwargs: Any) -> str:  # noqa: ARG002
+        return InfoImplementationMixin.get_statistics_info(self)
+
     @property
     def files(self) -> set[str]:
         cnv_collection = CnvCollection(self.resource)

@@ -50,6 +50,9 @@ class EnrichmentBackgroundResourceImplementation(
     def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002
         return InfoImplementationMixin.get_info(self)
 
+    def get_statistics_info(self, **kwargs: Any) -> str:  # noqa: ARG002
+        return InfoImplementationMixin.get_statistics_info(self)
+
     def calc_info_hash(self) -> bytes:
         return b"placeholder"
 
