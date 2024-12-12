@@ -273,7 +273,7 @@ class PersonSet:
         if self._children is None:
             self._children = []
             for person in self.persons.values():
-                if person.is_child():
+                if person.is_child:
                     self._children.append(person)
         return self._children
 
@@ -315,7 +315,7 @@ class PersonSet:
 
     def get_parents(self) -> Generator[Person, None, None]:
         for person in self.persons.values():
-            if person.is_parent():
+            if person.is_parent:
                 yield person
 
     def to_json(self) -> dict[str, Any]:

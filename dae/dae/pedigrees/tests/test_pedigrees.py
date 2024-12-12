@@ -18,12 +18,6 @@ def test_pedigree_member(member4: Person) -> None:
 
     assert member4.get_attr("person_id") == "id2"
     assert member4.get_attr("sex") == Sex.M
-    # assert member['phenotype'] == 'affected'
-
-    # assert sorted(list(member.keys())) == sorted([
-    #     "family_id", "person_id", "sample_id", "sex", "role", "status",
-    #     "mom_id", "dad_id", "layout", "generated", # "phenotype"
-    # ])
 
 
 def test_pedigree(family2: Family, member1: Person, member2: Person) -> None:
@@ -149,24 +143,6 @@ def test_family3_connections(family3: Family) -> None:
     assert sorted(ids) == sorted(["id3", "mom3", "mom3.father"])
 
 
-# def test_family_connections_add_missing_members(family2, family3):
-
-#     family2._members_in_order = list(filter(
-#         lambda member: member.person_id != 'mom2', family2.members_in_order
-#     ))
-#     prb = list(filter(
-#         lambda member: member.person_id == 'id2', family2.members_in_order
-#     ))
-#     assert len(prb) == 1
-#     prb[0].mother = '0'
-#     assert len(family2) == 2
-#     FamilyConnections.add_missing_members(family2)
-#     assert len(family2.members) == 3
-#     ids = [member.person_id for member in family2.members]
-#     assert len(ids) == 3
-#     assert sorted(ids) == sorted(['id2', 'dad2', 'dad2.mother'])
-
-
 def test_family_connections_from_family1_simple(family1: Family) -> None:
     family_connections = FamilyConnections.from_family(family1)
     assert family_connections is not None
@@ -259,18 +235,6 @@ def test_family_connections_from_family_do_not_add_members(
         FamilyConnections.from_family(family3, add_missing_members=False)
         is None
     )
-
-    # family2._members_in_order = list(filter(
-    #     lambda member: member.person_id != 'mom2', family2.members_in_order
-    # ))
-    # prb = list(filter(
-    #     lambda member: member.person_id == 'id2', family2.members_in_order
-    # ))
-    # assert len(prb) == 1
-    # prb[0].mother = '0'
-    # print(len(family2))
-    # assert FamilyConnections.from_family(
-    #     family2, add_missing_members=False) is None
 
 
 def test_reading_pedigree_file(pedigree_test: FamiliesData) -> None:

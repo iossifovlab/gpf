@@ -632,7 +632,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         number_of_siblings = 0
         for family in self.families.values():
             for person in family.members_in_order:
-                if not person.is_child():
+                if not family.member_is_child(person.person_id):
                     continue
                 if person.role == Role.prb:
                     number_of_probands += 1

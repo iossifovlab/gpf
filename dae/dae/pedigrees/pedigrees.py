@@ -151,7 +151,7 @@ class FamilyConnections:
                 )
                 new_members.append(father.member)
 
-        unique_new_members_ids = set([])
+        unique_new_members_ids = set()
         unique_new_members = []
         for person in new_members:
             if person.person_id in unique_new_members_ids:
@@ -160,12 +160,10 @@ class FamilyConnections:
             unique_new_members_ids.add(person.person_id)
 
         family.add_members(unique_new_members)
-        # role_builder = FamilyRoleBuilder(family)
-        # role_builder.build_roles()
 
     @classmethod
     def from_family(
-        cls, family: Family,
+        cls, family: Family, *,
         add_missing_members: bool = True,
     ) -> FamilyConnections | None:
         """Build family connections object from a family."""
@@ -181,7 +179,8 @@ class FamilyConnections:
             individual = id_to_individual[member.person_id]
             individual.member = member
 
-            if not member.has_both_parents():
+            if not family.member_has_both_parents(
+                member.person_id, allow_missing=True):
                 continue
 
             mother = id_to_individual[member.mom_id]
@@ -310,8 +309,6 @@ class FamilyConnections:
     @property
     def members(self) -> list[Person]:
         assert self.family is not None
-        # for person in self.family.full_members:
-        #     yield self.id_to_individual[person.person_id]
         return self.family.full_members
 
     def add_ranks(self) -> None:
@@ -327,7 +324,7 @@ class FamilyConnections:
                     is_rank_set = True
                     break
             if not is_rank_set:
-                list(self.id_to_individual.values())[0].add_rank(0)
+                next(iter(self.id_to_individual.values())).add_rank(0)
             self._fix_ranks()
 
     def _fix_ranks(self) -> None:
@@ -583,7 +580,8 @@ class Realization:
         max_width: int = 3,
         _cached_active_vertices: set[IndividualGroup] | None = None,
         _cached_maximal_set: set[IndividualGroup] | None = None,
-        _graph_neighbors_cache: dict[IndividualGroup, set[IndividualGroup]] | None = None,
+        _graph_neighbors_cache: dict[
+            IndividualGroup, set[IndividualGroup]] | None = None,
         _cached_dangling_set: set[IndividualGroup] | None = None,
         _cached_vertex_degree: dict[IndividualGroup, int] | None = None,
     ) -> None:
@@ -609,7 +607,6 @@ class Realization:
         self._cached_vertex_degree = _cached_vertex_degree
 
         if _graph_neighbors_cache is None:
-            # print("_graph_neighbors_cache recomputed")
             _graph_neighbors_cache = {
                 v: set(self.graph.neighbors(v)) for v in self.graph.nodes()
             }
@@ -620,7 +617,7 @@ class Realization:
         return Realization(
             self.graph,
             self.forbidden_graph,
-            list(map(copy.copy, self.intervals)),  # type: ignore
+            list(map(copy.copy, self.intervals)),
             copy.copy(self.domain),
             self.max_width,
             self._cached_active_vertices,
@@ -684,33 +681,28 @@ class Realization:
         temp_realization = Realization(
             self.graph,
             self.forbidden_graph,
-            self.intervals + [IntervalForVertex(new_vertex)],
-            self.domain + [new_vertex],
+            [*self.intervals, IntervalForVertex(new_vertex)],
+            [*self.domain, new_vertex],
             _graph_neighbors_cache=self._graph_neighbors_cache,
         )
 
         if self._has_forbidden_edge(new_vertex):
-            # print("_has_forbidden_edge!")
             return False
 
         if self._is_active_bounded(temp_realization, new_vertex):
             return False
 
         # pylint: disable=protected-access
-        if temp_realization._exceeds_max_width():
-            # print("max width reached!")
+        if temp_realization._exceeds_max_width():  # noqa: SLF001
             return False
 
         if not self._old_dangling_same(new_vertex, temp_realization):
-            # print("_old_dangling_same!")
             return False
 
         if not self._new_dangling_valid(new_vertex, temp_realization):
-            # print("_new_dangling_valid!")
             return False
 
         if not self._new_active_valid(new_vertex, temp_realization):
-            # print("_new_active_valid!")
             return False
 
         assert self.get_active_vertices().issubset(self.get_maximal_set())
@@ -721,9 +713,9 @@ class Realization:
         self, new_realization: Realization,
         new_vertex: IndividualGroup,
     ) -> bool:
-        if len(self.get_active_vertices()) == self.max_width - 1:
-            if new_vertex not in self.dangling_set():
-                return True
+        if len(self.get_active_vertices()) == self.max_width - 1 and \
+                new_vertex not in self.dangling_set():
+            return True
 
         active_vertices = self.get_active_vertices().intersection(
             new_realization.get_active_vertices(),
@@ -828,10 +820,7 @@ class Realization:
 
     def is_active_vertex(self, vertex: IndividualGroup) -> bool:
         neighbors = self._graph_neighbors_cache[vertex]
-        for v in neighbors:
-            if v not in self._domain_set:
-                return True
-        return False
+        return any(v not in self._domain_set for v in neighbors)
 
     def get_active_vertices(self) -> set[IndividualGroup]:
         """Return a set of active vertices in the domain.
@@ -864,11 +853,11 @@ class Realization:
         if self._cached_dangling_set:
             return self._cached_dangling_set
 
-        self._cached_dangling_set = set(
+        self._cached_dangling_set = {
             v
             for active in self.get_active_vertices()
             for v in self.dangling(active)
-        )
+        }
 
         return self._cached_dangling_set
 
@@ -1001,10 +990,6 @@ class SandwichSolver:
                     sorted(forbidden_graph.edges()), count):
 
                 logger.debug("trying to remove edges: %s", edges_to_remove)
-                # if count == 2:
-                #     return
-
-                # print(("removing", edges_to_remove))
 
                 current_forbidden_graph = copy_graph(forbidden_graph)
                 current_forbidden_graph.remove_edges_from(edges_to_remove)
@@ -1018,7 +1003,6 @@ class SandwichSolver:
                 result = SandwichSolver.try_solve(current_instance)
 
                 if result:
-                    # print(("removed:", count))  # , edges_to_remove)
                     return result
         return []
 
@@ -1049,7 +1033,7 @@ class SandwichSolver:
                     sandwich_instance.forbidden_graph,
                     [IntervalForVertex(vertex)],
                     [vertex],
-                    _graph_neighbors_cache=initial_realization[
+                    _graph_neighbors_cache=initial_realization[  # noqa: SLF001
                         0
                     ]._graph_neighbors_cache
                     if i > 0
@@ -1081,7 +1065,6 @@ class SandwichSolver:
                 realization.domain,
             )
 
-            # other_vertices = sorted(other_vertices, key=str)
             can_extend_f = realization.can_extend
 
             for vertex in other_vertices:

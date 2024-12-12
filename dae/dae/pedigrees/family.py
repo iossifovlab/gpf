@@ -146,6 +146,8 @@ class Person:
 
             self.unset_tag(tag)
         self.redefine()
+        self.is_child: bool = False
+        self.is_parent: bool = False
 
     def redefine(self) -> None:
         # pylint: disable=too-many-branches
@@ -176,8 +178,6 @@ class Person:
         if self.dad_id == "0":
             self.dad_id = None
             self._attributes["dad_id"] = None
-        self.mom: Person | None = None
-        self.dad: Person | None = None
         assert self.mom_id is None or isinstance(self.mom_id, str), \
             (self, self._attributes)
         assert self.dad_id is None or isinstance(self.dad_id, str), \
@@ -271,38 +271,6 @@ class Person:
     @property
     def sample_index(self) -> int | None:
         return cast(int | None, self._attributes.get("sample_index", None))
-
-    def has_mom(self) -> bool:
-        return self.mom is not None
-
-    def has_dad(self) -> bool:
-        return self.dad is not None
-
-    def has_parent(self) -> bool:
-        return self.has_dad() or self.has_mom()
-
-    def has_both_parents(self) -> bool:
-        return self.has_dad() and self.has_mom()
-
-    def has_missing_parent(self) -> bool:
-        if self.dad is None or self.mom is None:
-            return True
-        assert self.dad is not None
-        assert self.mom is not None
-        return self.dad.missing or self.mom.missing
-
-    def is_child(self) -> bool:
-        return not self.missing \
-            and self.has_both_parents() \
-            and not self.has_missing_parent()
-
-    def is_parent(self) -> bool:
-        return not self.missing \
-            and (self.dad is None or self.dad.missing) \
-            and (self.mom is None or self.mom.missing)
-
-    def has_no_parent(self) -> bool:
-        return self.dad is None or self.mom is None
 
     def has_attr(self, key: str) -> bool:
         return key in self._attributes
@@ -427,13 +395,13 @@ class Family:
     def _connect_family(self) -> None:
         index = 0
         for member in self.persons.values():
-            member.mom = self.get_member(member.mom_id)
-            member.dad = self.get_member(member.dad_id)
             if member.missing:
                 member.set_attr("member_index", -1)
             else:
                 member.set_attr("member_index", index)
                 index += 1
+            member.is_child = self.member_is_child(member.person_id)
+            member.is_parent = self.member_is_parent(member.person_id)
 
     @staticmethod
     def from_persons(persons: list[Person]) -> Family:
@@ -529,6 +497,59 @@ class Family:
 
     def has_members(self) -> bool:
         return len(self.members_in_order) > 0
+
+    def member_has_mom(
+        self, person_id: str, *,
+        allow_missing: bool = False,
+    ) -> bool:
+        """Check if a member has mom."""
+        member = self.persons[person_id]
+        if member.mom_id is None or member.mom_id not in self.persons:
+            return False
+        mom = self.persons[member.mom_id]
+        if allow_missing:
+            return True
+        return not mom.missing
+
+    def member_has_dad(
+        self, person_id: str, *,
+        allow_missing: bool = False,
+    ) -> bool:
+        """Check if a member has dad."""
+        member = self.persons[person_id]
+        if member.dad_id is None or member.dad_id not in self.persons:
+            return False
+        dad = self.persons[member.dad_id]
+        if allow_missing:
+            return True
+        return not dad.missing
+
+    def member_has_parent(
+            self, person_id: str, *,
+            allow_missing: bool = False,
+    ) -> bool:
+        return self.member_has_mom(person_id, allow_missing=allow_missing) or \
+            self.member_has_dad(person_id, allow_missing=allow_missing)
+
+    def member_has_both_parents(
+        self, person_id: str, *,
+        allow_missing: bool = False,
+    ) -> bool:
+        return self.member_has_mom(person_id, allow_missing=allow_missing) and \
+            self.member_has_dad(person_id, allow_missing=allow_missing)
+
+    def member_is_child(self, person_id: str) -> bool:
+        member = self.persons[person_id]
+        if member.missing:
+            return False
+        return self.member_has_both_parents(person_id)
+
+    def member_is_parent(self, person_id: str) -> bool:
+        member = self.persons[person_id]
+        if member.missing:
+            return False
+        return not self.member_has_dad(person_id) and \
+            not self.member_has_mom(person_id)
 
     @property
     def members_ids(self) -> list[str]:
