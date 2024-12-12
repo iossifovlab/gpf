@@ -118,6 +118,14 @@ class GenomicResourceImplementation(ABC):
 class InfoImplementationMixin:
     """Mixin that provides generic template info page generation interface."""
 
+    @dataclass
+    class FileEntry:
+        """Provides an entry into manifest object."""
+
+        name: str
+        size: str
+        md5: str | None
+
     resource: GenomicResource
 
     def get_template(self) -> Template:
@@ -139,23 +147,25 @@ class InfoImplementationMixin:
         """
         template_data = self._get_template_data()
 
-        @dataclass
-        class FileEntry:
-            """Provides an entry into manifest object."""
-
-            name: str
-            size: str
-            md5: str | None
-
         template_data["resource_files"] = [
-            FileEntry(entry.name, convert_size(entry.size), entry.md5)
+            self.FileEntry(entry.name, convert_size(entry.size), entry.md5)
             for entry in self.resource.get_manifest().entries.values()
             if not entry.name.startswith("statistics")
             and entry.name != "index.html"]
         template_data["resource_files"].append(
-            FileEntry("statistics/", "", ""))
+            self.FileEntry("statistics/", "", ""))
+        return template_data
+
+    def get_statistics_template_data(self) -> dict:
+        """
+        Return a data dictionary to be used by the statistics template.
+
+        Will transform the description in the meta section using markdown.
+        """
+        template_data = self._get_template_data()
+
         template_data["statistic_files"] = [
-            FileEntry(
+            self.FileEntry(
                 entry.name.removeprefix("statistics/"),
                 convert_size(entry.size),
                 entry.md5,
@@ -176,7 +186,7 @@ class InfoImplementationMixin:
 
     def get_statistics_info(self) -> str:
         """Construct the contents of the implementation's HTML info page."""
-        template_data = self.get_template_data()
+        template_data = self.get_statistics_template_data()
         return self.get_template().render(
             resource=self.resource,
             markdown=markdown,
