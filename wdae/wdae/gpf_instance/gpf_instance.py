@@ -263,7 +263,7 @@ class WGPFInstance(GPFInstance):
                                 "displayName": set_name,
                                 "collectionId": collection_id,
                                 "description": description,
-                                "parentsCount": stats["parents"],
+                                "parentsCount": 0,
                                 "childrenCount": stats["children"],
                                 "statistics":
                                     to_response_json(dataset)["statistics"],

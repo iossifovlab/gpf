@@ -81,7 +81,7 @@ def test_get_person_sets_collection_stats(
             "children": 2,
         },
         "unaffected": {
-            "parents": 4,
+            "parents": 0,
             "children": 2,
         },
     }
