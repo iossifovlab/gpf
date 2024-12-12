@@ -123,8 +123,19 @@ class FamiliesData(Mapping[str, Family]):
         self.persons_by_person_id: dict[str, list[Person]] = defaultdict(list)
         self.persons: dict[tuple[str, str], Person] = {}
         self._broken: dict[str, Family] = {}
-        self._person_ids_with_parents = None
         self._real_persons: dict[tuple[str, str], Person] | None = None
+
+    def __deepcopy__(self, memo: dict[int, Any]) -> FamiliesData:
+        families_data = FamiliesData()
+        families_data._families = copy.deepcopy(  # noqa: SLF001
+            self._families, memo)
+        families_data._real_persons = copy.deepcopy(  # noqa: SLF001
+            self._real_persons, memo)
+        families_data.persons = copy.deepcopy(self.persons, memo)
+        families_data.persons_by_person_id = copy.deepcopy(
+            self.persons_by_person_id, memo)
+
+        return families_data
 
     def redefine(self) -> None:
         """Rebuild all families."""
@@ -265,7 +276,7 @@ class FamiliesData(Mapping[str, Family]):
 
     def copy(self) -> FamiliesData:
         """Build a copy of a families data object."""
-        return FamiliesData.from_pedigree_df(self.ped_df)
+        return copy.deepcopy(self)
 
     def __getitem__(self, family_id: str) -> Family:
         return self._families[family_id]
