@@ -237,7 +237,6 @@ describe('GeneProfileSingleViewComponent', () => {
       displayName: 'person set',
       collectionId: 'collectionId',
       description: '',
-      parentsCount: 2,
       childrenCount: 0,
       defaultVisible: true,
       shown: [],

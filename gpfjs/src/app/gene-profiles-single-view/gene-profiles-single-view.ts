@@ -72,7 +72,6 @@ export class GeneProfilesDatasetPersonSet {
   public displayName: string;
   public collectionId: string;
   public description: string;
-  public parentsCount: number;
   public childrenCount: number;
   public defaultVisible = true;
 

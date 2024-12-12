@@ -71,7 +71,6 @@ const config = {
           displayName: 'autism',
           collectionId: 'phenotype',
           description: '',
-          parentsCount: 9836,
           childrenCount: 21775,
           statistics: [
             {

@@ -72,7 +72,6 @@ const config = {
           displayName: 'autism',
           collectionId: 'phenotype',
           description: '',
-          parentsCount: 9836,
           childrenCount: 21775,
           statistics: [
             {
@@ -206,7 +205,6 @@ describe('GeneProfilesBlockComponent', () => {
         description: '',
         displayName: 'autism',
         id: 'autism',
-        parentsCount: 9836,
         shown: [],
         statistics: [{
           category: 'denovo',
