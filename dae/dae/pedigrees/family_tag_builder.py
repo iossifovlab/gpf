@@ -1,6 +1,6 @@
 """Helper class for tagging families."""
-from collections.abc import Iterable
-from typing import Any, Callable
+from collections.abc import Callable, Iterable
+from typing import Any, ClassVar
 
 from dae.pedigrees.family import Family, FamilyTag, Person
 from dae.variants.attributes import Role, Sex, Status
@@ -28,11 +28,10 @@ def _get_prb(family: Family) -> Person | None:
 
 
 def _get_sibs(family: Family) -> Iterable[Person]:
-    result = []
-    for person in family.members_in_order:
-        if person.role == Role.sib:
-            result.append(person)
-    return result
+    return [
+        person for person in family.members_in_order
+        if person.role == Role.sib
+    ]
 
 
 def set_tag(family: Family, tag: FamilyTag) -> None:
@@ -53,14 +52,12 @@ def set_attr(family: Family, label: str, value: Any) -> None:
 
 
 def check_tag(family: Family, tag: FamilyTag) -> bool:
-    for person in family.persons.values():
-        if not person.has_tag(tag):
-            return False
-    return True
+    return all(person.has_tag(tag) for person in family.persons.values())
 
 
 def check_family_tags_query(
-    family: Family, or_mode: bool,
+    family: Family, *,
+    or_mode: bool,
     include_tags: set[FamilyTag],
     exclude_tags: set[FamilyTag],
 ) -> bool:
@@ -69,18 +66,12 @@ def check_family_tags_query(
         for tag in include_tags:
             if check_tag(family, tag):
                 return True
-        for tag in exclude_tags:
-            if not check_tag(family, tag):
-                return True
-        return False
+        return any(not check_tag(family, tag) for tag in exclude_tags)
 
     for tag in include_tags:
         if not check_tag(family, tag):
             return False
-    for tag in exclude_tags:
-        if check_tag(family, tag):
-            return False
-    return True
+    return all(not check_tag(family, tag) for tag in exclude_tags)
 
 
 def check_nuclear_family(family: Family) -> bool:
@@ -94,7 +85,7 @@ def check_nuclear_family(family: Family) -> bool:
         return False
     children = [
         person for person in family.members_in_order
-        if person.is_child()
+        if family.member_is_child(person.person_id)
     ]
     if not children:
         return False
@@ -106,7 +97,7 @@ def check_nuclear_family(family: Family) -> bool:
         if person.person_id in {mom.person_id, dad.person_id}:
             continue
 
-        if not person.has_both_parents():
+        if not family.member_has_both_parents(person.person_id):
             return False
         if person.mom_id != mom.person_id \
                 or person.dad_id != dad.person_id:
@@ -127,10 +118,7 @@ def tag_nuclear_family(family: Family) -> bool:
 def check_quad_family(family: Family) -> bool:
     if len(family) != 4:
         return False
-    if not check_nuclear_family(family):
-        return False
-
-    return True
+    return check_nuclear_family(family)
 
 
 def tag_quad_family(family: Family) -> bool:
@@ -145,10 +133,7 @@ def tag_quad_family(family: Family) -> bool:
 def check_trio_family(family: Family) -> bool:
     if len(family) != 3:
         return False
-    if not check_nuclear_family(family):
-        return False
-
-    return True
+    return check_nuclear_family(family)
 
 
 def tag_trio_family(family: Family) -> bool:
@@ -254,10 +239,7 @@ def tag_affected_prb_family(family: Family) -> bool:
 
 
 def check_affected_sib_family(family: Family) -> bool:
-    for sib in _get_sibs(family):
-        if sib.status == Status.affected:
-            return True
-    return False
+    return any(sib.status == Status.affected for sib in _get_sibs(family))
 
 
 def tag_affected_sib_family(family: Family) -> bool:
@@ -318,10 +300,7 @@ def tag_unaffected_prb_family(family: Family) -> bool:
 
 
 def check_unaffected_sib_family(family: Family) -> bool:
-    for sib in _get_sibs(family):
-        if sib.status == Status.unaffected:
-            return True
-    return False
+    return any(sib.status == Status.unaffected for sib in _get_sibs(family))
 
 
 def tag_unaffected_sib_family(family: Family) -> bool:
@@ -366,9 +345,7 @@ def tag_female_prb_family(family: Family) -> bool:
 
 
 def check_missing_mom_family(family: Family) -> bool:
-    if _get_mom(family) is None:
-        return True
-    return False
+    return _get_mom(family) is None
 
 
 def tag_missing_mom_family(family: Family) -> bool:
@@ -381,9 +358,7 @@ def tag_missing_mom_family(family: Family) -> bool:
 
 
 def check_missing_dad_family(family: Family) -> bool:
-    if _get_dad(family) is None:
-        return True
-    return False
+    return _get_dad(family) is None
 
 
 def tag_missing_dad_family(family: Family) -> bool:
@@ -400,17 +375,17 @@ def _build_family_type_full(family: Family) -> str:
     family_type.append(str(len(family.members_in_order)))
     members_by_role_and_sex = sorted(
         family.members_in_order, key=lambda p: f"{p.role}.{p.sex}")
-    for person in members_by_role_and_sex:
-        family_type.append(
-            f"{person.role}.{person.sex}.{person.status}",
-        )
+    family_type.extend([
+        f"{person.role}.{person.sex}.{person.status}"
+        for person in members_by_role_and_sex
+    ])
     return ":".join(family_type)
 
 
 class FamilyTagsBuilder:
     """Class used ot apply all tags to a family."""
 
-    TAGS: dict[FamilyTag, Callable[[Family], bool]] = {
+    TAGS: ClassVar[dict[FamilyTag, Callable[[Family], bool]]] = {
         FamilyTag.NUCLEAR: tag_nuclear_family,
         FamilyTag.QUAD: tag_quad_family,
         FamilyTag.TRIO: tag_trio_family,

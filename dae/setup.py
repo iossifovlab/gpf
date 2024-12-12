@@ -127,7 +127,6 @@ setuptools.setup(
     import_tools=dae.import_tools.cli:main
     generate_gene_profile=dae.gene_profile.generate_gene_profile:main
     generate_common_report=dae.common_reports.generate_common_report:main
-    generate_families_cache=dae.pedigrees.generate_families_cache:main
     generate_denovo_gene_sets=dae.gene_sets.generate_denovo_gene_sets:main
 
     build_coding_length_enrichment_background=dae.enrichment_tool.build_coding_length_enrichment_background:cli
