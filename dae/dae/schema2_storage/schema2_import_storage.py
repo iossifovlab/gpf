@@ -277,6 +277,8 @@ class Schema2ImportStorage(ImportStorage):
         study_dir: str,
         region_size: int,
         allow_repeated_attributes: bool,  # noqa: FBT001
+        *,
+        full_reannotation: bool = False,
     ) -> TaskGraph:
         """Generate TaskGraph for reannotation of a given study."""
         graph = TaskGraph()
@@ -296,6 +298,7 @@ class Schema2ImportStorage(ImportStorage):
             gpf_instance.grr,
             region_size,
             allow_repeated_attributes,
+            full_reannotation=full_reannotation,
         )
         produce_schema2_merging_tasks(
             graph,
