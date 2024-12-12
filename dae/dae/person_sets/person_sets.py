@@ -8,7 +8,6 @@ sets based on what value they have in a given mapping.
 from __future__ import annotations
 
 import logging
-from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -227,7 +226,6 @@ class ChildrenStats:
     male: int
     female: int
     unspecified: int
-    parents: int
 
     @property
     def total(self) -> int:
@@ -308,15 +306,9 @@ class PersonSet:
                 len(children_by_sex.male),
                 len(children_by_sex.female),
                 len(children_by_sex.unspecified),
-                len(list(self.get_parents())),
             )
         assert self._children_stats is not None
         return self._children_stats
-
-    def get_parents(self) -> Generator[Person, None, None]:
-        for person in self.persons.values():
-            if person.is_parent:
-                yield person
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -703,10 +695,9 @@ class PersonSetCollection:
         result = {}
         for set_id, person_set in self.person_sets.items():
             children_stats = person_set.get_children_stats()
-            parents = children_stats.parents
             children = children_stats.total
             result[set_id] = {
-                "parents": parents,
+                "parents": 0,
                 "children": children,
             }
         return result
