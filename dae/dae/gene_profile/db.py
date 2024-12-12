@@ -2,10 +2,10 @@ import logging
 from copy import copy
 from typing import Any
 
-from box import Box
 import duckdb
 import numpy as np
 import sqlglot
+from box import Box
 from sqlalchemy import (  # type: ignore
     Column,
     Float,
@@ -16,7 +16,7 @@ from sqlalchemy import (  # type: ignore
     create_engine,
     inspect,
 )
-from sqlalchemy.sql import insert, select
+from sqlalchemy.sql import insert
 
 from dae.gene_profile.statistic import GPStatistic
 from dae.utils.sql_utils import to_duckdb_transpile
@@ -100,17 +100,17 @@ class GeneProfileDB:
 
         Returns None if gene_symbol is not found within the DB.
         """
-        table_glot = self.gp_table_glot
-        query = sqlglot.select("*").from_(table_glot)
+        table = self.gp_table_glot
+        query = sqlglot.select("*").from_(table)
         query = query.where(
             sqlglot.column(
                 "symbol_name",
-                table=table_glot.alias_or_name,
+                table=table.alias_or_name,
             ).ilike(f"%{gene_symbol}%"),
         )
-        duckdb_connection = duckdb.connect(f"{self.dbfile}", read_only=True)
-        with duckdb_connection.cursor() as cursor:
-            row = cursor.execute(
+        query = query.limit(self.PAGE_SIZE)
+        with duckdb.connect(f"{self.dbfile}", read_only=True) as connection:
+            row = connection.execute(
                 to_duckdb_transpile(query),
             ).df().replace([np.nan], [None]).to_dict("records")[0]
             if not row:
@@ -160,12 +160,12 @@ class GeneProfileDB:
         return result
 
     # FIXME: Too many locals, refactor?
-    def gp_from_table_row_single_view(self, row) -> GPStatistic:
+    def gp_from_table_row_single_view(self, row: dict) -> GPStatistic:
         """Create an GPStatistic from single view row."""
         # pylint: disable=too-many-locals
         config = self.configuration
         gene_symbol = row["symbol_name"]
-        genomic_scores: Dict[str, Dict] = {}
+        genomic_scores: dict[str, dict] = {}
         for gs_category in config["genomic_scores"]:
             category_name = gs_category["category"]
             genomic_scores[category_name] = {}
@@ -251,14 +251,14 @@ class GeneProfileDB:
             sort_by - Column to sort by
             order - "asc" or "desc"
         """
-        table_glot = self.gp_table_glot
+        table = self.gp_table_glot
 
-        query = sqlglot.select("*").from_(table_glot)
+        query = sqlglot.select("*").from_(table)
         if symbol_like:
             query = query.where(
                 sqlglot.column(
                     "symbol_name",
-                    table=table_glot.alias_or_name,
+                    table=table.alias_or_name,
                 ).ilike(f"%{symbol_like}%"),
             )
 
@@ -276,11 +276,10 @@ class GeneProfileDB:
 
         # Can't have multiple connections with sqlite db alive when
         # one of those does a 'write' action. That's why connect here:
-        duckdb_connection = duckdb.connect(f"{self.dbfile}", read_only=True)
-        with duckdb_connection.cursor() as cursor:
-            return cursor.execute(
+        with duckdb.connect(f"{self.dbfile}", read_only=True) as connection:
+            return connection.execute(
                 to_duckdb_transpile(query),
-            ).df().fillna(0).to_dict("records")
+            ).df().replace([np.nan], [None]).to_dict("records")
 
     def list_symbols(
         self, page: int, symbol_like: str | None = None,
@@ -293,19 +292,19 @@ class GeneProfileDB:
             symbol_like - Which gene symbol to search for, supports
             incomplete search
         """
-        table_glot = self.gp_table_glot
+        table = self.gp_table_glot
 
         query = sqlglot.select(
             sqlglot.column(
                 "symbol_name",
-                table=table_glot.alias_or_name,
-            )
-        ).from_(table_glot)
+                table=table.alias_or_name,
+            ),
+        ).from_(table)
         if symbol_like:
             query = query.where(
                 sqlglot.column(
                     "symbol_name",
-                    table=table_glot.alias_or_name,
+                    table=table.alias_or_name,
                 ).ilike(f"{symbol_like}%"),
             )
 
@@ -316,12 +315,11 @@ class GeneProfileDB:
                 self.PAGE_SIZE * (page - 1),
             )
 
-        duckdb_connection = duckdb.connect(f"{self.dbfile}", read_only=True)
-        with duckdb_connection.cursor() as cursor:
+        with duckdb.connect(f"{self.dbfile}", read_only=True) as connection:
             return [
-                row["symbol_name"] for row in cursor.execute(
+                row["symbol_name"] for row in connection.execute(
                     to_duckdb_transpile(query),
-                ).df().fillna(0).to_dict("records")
+                ).df().replace([np.nan], [None]).to_dict("records")
             ]
 
     def drop_gp_table(self):
