@@ -154,7 +154,6 @@ class Person:
         self.person_id: str = self._attributes["person_id"]
         self.fpid: tuple[str, str] = (self.family_id, self.person_id)
 
-        self.family: Family | None = None
         self.sample_id: str = self._attributes.get("sample_id", self.person_id)
 
         self._sex = Sex.from_name(self._attributes["sex"])
@@ -428,7 +427,6 @@ class Family:
     def _connect_family(self) -> None:
         index = 0
         for member in self.persons.values():
-            member.family = self
             member.mom = self.get_member(member.mom_id)
             member.dad = self.get_member(member.dad_id)
             if member.missing:
@@ -456,7 +454,6 @@ class Family:
 
         # pylint: disable=protected-access
         family._connect_family()  # noqa: SLF001
-        assert all(p.family is not None for p in family.persons.values())
 
         return family
 
