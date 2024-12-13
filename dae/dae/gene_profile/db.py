@@ -110,12 +110,12 @@ class GeneProfileDB:
         )
         query = query.limit(self.PAGE_SIZE)
         with duckdb.connect(f"{self.dbfile}", read_only=True) as connection:
-            row = connection.execute(
+            rows = connection.execute(
                 to_duckdb_transpile(query),
-            ).df().replace([np.nan], [None]).to_dict("records")[0]
-            if not row:
+            ).df().replace([np.nan], [None]).to_dict("records")
+            if len(rows) == 0:
                 return None
-            return self.gp_from_table_row_single_view(row)
+            return self.gp_from_table_row_single_view(rows[0])
 
     # FIXME: Too many locals, refactor?
     def gp_from_table_row(self, row: dict) -> dict:
