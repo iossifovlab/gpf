@@ -44,6 +44,11 @@ class AnnotationPipelineImplementation(
         self.pipeline = load_pipeline_from_yaml(self.raw, grr)
         return InfoImplementationMixin.get_info(self)
 
+    def get_statistics_info(self, **kwargs: Any) -> str:
+        grr = kwargs["repo"]
+        self.pipeline = load_pipeline_from_yaml(self.raw, grr)
+        return InfoImplementationMixin.get_statistics_info(self)
+
     def get_template(self) -> Template:
         return Template(textwrap.dedent("""
             {% extends base %}
