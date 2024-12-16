@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 import logging
-import pathlib
+from pathlib import Path
 from threading import Lock
+from typing import Any, cast
 
 from box import Box
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
-from dae.configuration.schemas.phenotype_data import (
-    groups_file_schema,
-    pheno_conf_schema,
-)
-from dae.pheno.pheno_data import PhenotypeData, PhenotypeGroup, PhenotypeStudy
+from dae.configuration.schemas.phenotype_data import pheno_conf_schema
+from dae.pheno.pheno_data import PhenotypeData, load_phenotype_data
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +31,7 @@ class PhenoRegistry:
         self._cache[study.pheno_id] = study
 
     def register_phenotype_data(
-        self, phenotype_data: PhenotypeData, lock: bool = True,
+        self, phenotype_data: PhenotypeData, *, lock: bool = True,
     ) -> None:
         """Register a phenotype data study."""
         if lock:
@@ -41,48 +39,6 @@ class PhenoRegistry:
                 self._register_study(phenotype_data)
         else:
             self._register_study(phenotype_data)
-
-    @classmethod
-    def load_pheno_data(cls, path: pathlib.Path) -> PhenotypeData:
-        """Create a PhenotypeStudy object from a configuration file."""
-        if not path.is_file() or (
-            not path.name.endswith(".yaml")
-            and not path.name.endswith(".conf")
-        ):
-            raise ValueError("Invalid PhenotypeStudy path")
-        config = GPFConfigParser.load_config(str(path), pheno_conf_schema)
-        pheno_id = config["phenotype_data"]["name"]
-        logger.info("creating phenotype data <%s>", pheno_id)
-        return PhenotypeStudy(
-            pheno_id,
-            config["phenotype_data"]["dbfile"],
-            config=config["phenotype_data"],
-        )
-
-    @classmethod
-    def load_pheno_groups(
-        cls, path: pathlib.Path,
-        registry: PhenoRegistry,
-    ) -> list[PhenotypeGroup]:
-        """
-        Load groups from groups file.
-
-        Groups file should be a config file named 'groups.yaml' in the base
-        Pheno DB directory.
-        """
-        if not path.is_file() or path.suffix not in (".yaml", ".conf") \
-                or path.stem != "groups":
-            raise ValueError("Invalid groups config file.")
-        config = GPFConfigParser.load_config(str(path), groups_file_schema)
-        return [
-            PhenotypeGroup(
-                group.pheno_id, [
-                    registry.get_phenotype_data(child)
-                    for child in group.children
-                ],
-            ) for group in config.pheno_groups
-        ]
-
 
     def has_phenotype_data(self, data_id: str) -> bool:
         with self.CACHE_LOCK:
@@ -101,3 +57,47 @@ class PhenoRegistry:
 
     def get_all_phenotype_data(self) -> list[PhenotypeData]:
         return list(self._cache.values())
+
+    @staticmethod
+    def from_directory(pheno_data_dir: Path) -> PhenoRegistry:
+        """Create a registry with all phenotype studies in a directory."""
+        registry = PhenoRegistry()
+        logger.info("pheno registry created: %s", id(registry))
+        pheno_configs = [
+            Path(c) for c in
+            GPFConfigParser.collect_directory_configs(
+                str(pheno_data_dir),
+            )
+        ]
+
+        configurations: dict[str, Box] = {}
+        groups: list[str] = []
+
+        with PhenoRegistry.CACHE_LOCK:
+            for config_path in pheno_configs:
+                logger.info(
+                    "loading phenotype data from config: %s", config_path,
+                )
+                config = GPFConfigParser.load_config(
+                    str(config_path), pheno_conf_schema,
+                )
+                pheno_id = config["name"]
+                configurations[pheno_id] = config
+                if config["type"] == "group":
+                    groups.append(pheno_id)
+                    continue
+                registry.register_phenotype_data(
+                    load_phenotype_data(config),
+                    lock=False,
+                )
+            for group in groups:
+                group_config = configurations[group]
+                registry.register_phenotype_data(
+                    load_phenotype_data(
+                        group_config,
+                        cast(list[dict[str, Any]], configurations.values()),
+                    ),
+                    lock=False,
+                )
+
+        return registry

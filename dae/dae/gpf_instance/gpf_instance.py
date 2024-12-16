@@ -37,7 +37,10 @@ from dae.genomic_resources.gene_models import GeneModels, TranscriptModel
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_scores.scores import GenomicScoresRegistry
-from dae.pheno.pheno_data import PhenotypeData, get_pheno_db_dir
+from dae.pheno.pheno_data import (
+    PhenotypeData,
+    get_pheno_db_dir,
+)
 from dae.pheno.registry import PhenoRegistry
 from dae.pheno_tool.pheno_tool_adapter import (
     PhenoToolAdapter,
@@ -204,34 +207,7 @@ class GPFInstance:
     @cached_property
     def _pheno_registry(self) -> PhenoRegistry:
         pheno_data_dir = get_pheno_db_dir(self.dae_config)
-        registry = PhenoRegistry()
-        logger.info("pheno registry created: %s", id(registry))
-        pheno_configs = GPFConfigParser.collect_directory_configs(
-            pheno_data_dir,
-        )
-        pheno_groups_config: Path | None = None
-
-        with PhenoRegistry.CACHE_LOCK:
-            for config in pheno_configs:
-                config_path = Path(config)
-                if config_path.stem == "groups":
-                    # Groups file should be loaded at the end
-                    pheno_groups_config = config_path
-                    continue
-                logger.info("loading phenotype data from config: %s", config)
-                registry.register_phenotype_data(
-                    PhenoRegistry.load_pheno_data(config_path),
-                    lock=False,
-                )
-
-        if pheno_groups_config:
-            print("Loading groups")
-            for group in PhenoRegistry.load_pheno_groups(
-                pheno_groups_config, registry,
-            ):
-                registry.register_phenotype_data(group, lock=False)
-
-        return registry
+        return PhenoRegistry.from_directory(Path(pheno_data_dir))
 
     @cached_property
     def gene_scores_db(self) -> Any:
