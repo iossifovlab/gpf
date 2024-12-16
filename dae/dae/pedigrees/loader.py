@@ -499,6 +499,9 @@ class FamiliesLoader(CLILoader):
             },
         )
 
+        if ped_no_role:
+            ped_df["role"] = pd.Series(index=ped_df.index, data=None)
+
         if not set(PED_COLUMNS_REQUIRED) <= set(ped_df.columns):
             missing_columns = set(PED_COLUMNS_REQUIRED).difference(
                 set(ped_df.columns),
