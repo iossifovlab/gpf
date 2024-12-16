@@ -152,11 +152,10 @@ def generate_phenotype_data_config(
     dbfile = os.path.join("%(wd)s", os.path.basename(args.pheno_db_filename))
     config = {
         "vars": {"wd": "."},
-        "phenotype_data": {
-            "name": args.pheno_name,
-            "dbfile": dbfile,
-            "browser_images_url": "static/images/",
-        },
+        "type": "study",
+        "name": args.pheno_name,
+        "dbfile": dbfile,
+        "browser_images_url": "static/images/",
     }
     if regressions:
         regressions_dict = regressions.to_dict()
