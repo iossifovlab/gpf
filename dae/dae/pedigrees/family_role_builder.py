@@ -63,14 +63,17 @@ class FamilyRoleBuilder:  # pylint: disable=too-few-public-methods
     def _set_person_role(self, person: Person, role: Role) -> None:
         assert isinstance(person, Person)
         assert isinstance(role, Role)
-        if (person.role is None or person.role == Role.unknown) and \
-                role != person.role:
+        if role == person.role:
+            logger.debug("person %s already has role %s", person, role)
+            return
+        if not (person.role is None or person.role == Role.unknown):
             logger.info(
                 "changing role for %s from %s to %s",
                 person, person.role, role)
-            # pylint: disable=protected-access
-            person._role = role  # noqa: SLF001
-            person._attributes["role"] = role  # noqa: SLF001
+
+        # pylint: disable=protected-access
+        person._role = role  # noqa: SLF001
+        person._attributes["role"] = role  # noqa: SLF001
 
     def _get_family_proband(self) -> Person | None:
         probands = self.family.get_members_with_roles([Role.prb])
