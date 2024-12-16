@@ -6,6 +6,7 @@ import operator
 import pathlib
 import warnings
 from collections import defaultdict
+from collections.abc import Callable
 from functools import partial
 from typing import Any, TextIO
 
@@ -343,7 +344,8 @@ class FamiliesLoader(CLILoader):
         for col in header:
             assert isinstance(col[0], int), col[0]
         header = tuple(sorted(header, key=operator.itemgetter(0)))  # type: ignore
-        return zip(*header, strict=True)  # type: ignore
+        _, file_header = zip(*header, strict=True)
+        return file_header
 
     @staticmethod
     def flexible_pedigree_read(
@@ -373,7 +375,7 @@ class FamiliesLoader(CLILoader):
         if isinstance(ped_no_header, str):
             ped_no_header = str2bool(ped_no_header)
 
-        converters = {
+        converters: dict[str | int, Callable[[str], Any]] = {
             ped_generated: str2bool,
             ped_not_sequenced: str2bool,
             ped_proband: str2bool,
@@ -410,7 +412,7 @@ class FamiliesLoader(CLILoader):
             )
 
             if ped_no_header:
-                _, file_header = FamiliesLoader._produce_header_from_indices(
+                file_header = FamiliesLoader._produce_header_from_indices(
                     ped_family=ped_family,
                     ped_person=ped_person,
                     ped_mom=ped_mom,
@@ -438,7 +440,8 @@ class FamiliesLoader(CLILoader):
                 ped_not_sequenced = PEDIGREE_COLUMN_NAMES["not_sequenced"]
                 ped_sample_id = PEDIGREE_COLUMN_NAMES["sample id"]
                 ped_df = read_csv_func(
-                    pedigree_filepath, header=None, names=file_header,
+                    pedigree_filepath, header=None,
+                    names=file_header,
                 )
             else:
                 ped_df = read_csv_func(pedigree_filepath)
@@ -450,38 +453,39 @@ class FamiliesLoader(CLILoader):
         if ped_sample_id in ped_df:
             if ped_generated in ped_df or ped_not_sequenced in ped_df:
 
-                def fill_sample_id(rec):  # type: ignore
+                def fill_sample_id(rec: pd.Series) -> pd.Series:
                     if not pd.isna(rec.sample_id):
-                        return rec.sample_id
+                        return pd.Series([rec.sample_id])
                     if rec.generated or rec.not_sequenced:
-                        return None
-                    return rec.personId
+                        return pd.Series([None])
+                    return pd.Series([rec.personId])
 
             else:
 
-                def fill_sample_id(rec):  # type: ignore
+                def fill_sample_id(rec: pd.Series) -> pd.Series:
                     if not pd.isna(rec.sample_id):
-                        return rec.sample_id
-                    return rec.personId
+                        return pd.Series([rec.sample_id])
+                    return pd.Series([rec.personId])
 
-            sample_ids = ped_df.apply(  # type: ignore
-                fill_sample_id, axis=1, result_type="reduce",
+            sample_ids = ped_df.apply(
+                fill_sample_id, axis=1,
+                result_type="reduce",
             )
-            ped_df[ped_sample_id] = sample_ids  # type: ignore
+            ped_df[ped_sample_id] = sample_ids
         else:
             sample_ids = pd.Series(
-                data=ped_df[ped_person].values)  # type: ignore
-            ped_df[ped_sample_id] = sample_ids  # type: ignore
+                data=ped_df[ped_person].values)
+            ped_df[ped_sample_id] = sample_ids
         if ped_generated in ped_df:
-            ped_df[ped_generated] = ped_df[  # type: ignore
+            ped_df[ped_generated] = ped_df[
                 ped_generated].apply(
                     lambda v: v or None)
         if ped_not_sequenced in ped_df:
-            ped_df[ped_not_sequenced] = ped_df[  # type: ignore
+            ped_df[ped_not_sequenced] = ped_df[
                 ped_not_sequenced].apply(
                     lambda v: v or None)
 
-        ped_df = ped_df.rename(  # type: ignore
+        ped_df = ped_df.rename(
             columns={
                 ped_family: PEDIGREE_COLUMN_NAMES["family"],
                 ped_person: PEDIGREE_COLUMN_NAMES["person"],
@@ -495,17 +499,16 @@ class FamiliesLoader(CLILoader):
             },
         )
 
-        if not set(PED_COLUMNS_REQUIRED) <= set(
-                ped_df.columns):  # type: ignore
+        if not set(PED_COLUMNS_REQUIRED) <= set(ped_df.columns):
             missing_columns = set(PED_COLUMNS_REQUIRED).difference(
-                set(ped_df.columns),  # type: ignore
+                set(ped_df.columns),
             )
             message = ", ".join(missing_columns)
             print(f"pedigree file missing columns {message}")
             raise ValueError(
                 f"pedigree file missing columns {message}",
             )
-        return ped_df  # type: ignore
+        return ped_df
 
     @staticmethod
     def load_simple_families_file(

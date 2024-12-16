@@ -170,11 +170,11 @@ class Person:
         self._attributes["role"] = self._role
         self._attributes["status"] = self._status
 
-        self.mom_id = self.get_attr("mom_id")
+        self.mom_id: str | None = self.get_attr("mom_id")
         if self.mom_id == "0":
             self.mom_id = None
             self._attributes["mom_id"] = None
-        self.dad_id = self.get_attr("dad_id")
+        self.dad_id: str | None = self.get_attr("dad_id")
         if self.dad_id == "0":
             self.dad_id = None
             self._attributes["dad_id"] = None
@@ -596,8 +596,7 @@ class Family:
     def get_members_with_statuses(
         self, statuses: list[Status],
     ) -> list[Person]:
-        if not isinstance(statuses[0], Status):
-            statuses = [Status.from_name(status) for status in statuses]
+        assert all(isinstance(status, Status) for status in statuses)
         return list(
             filter(lambda m: m.status in statuses, self.members_in_order),
         )

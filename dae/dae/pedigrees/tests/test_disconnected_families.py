@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import os
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 
@@ -11,7 +11,7 @@ from dae.variants.attributes import Role
 
 
 @pytest.fixture(scope="session")
-def families_loader(request: pytest.FixtureRequest) -> Callable:
+def families_loader() -> Callable[[str], FamiliesData]:
 
     def builder(relpath: str) -> FamiliesData:
         filename = os.path.join(
@@ -19,13 +19,14 @@ def families_loader(request: pytest.FixtureRequest) -> Callable:
             "fixtures", relpath,
         )
         loader = FamiliesLoader(filename, ped_sep=",")
-        families = loader.load()
-        return families
+        return loader.load()
 
     return builder
 
 
-def test_not_connected_aunts(families_loader: Callable) -> None:
+def test_not_connected_aunts(
+    families_loader: Callable[[str], FamiliesData],
+) -> None:
     families = families_loader("test_not_connected_aunts.csv")
     assert families is not None
 
@@ -47,7 +48,9 @@ def test_not_connected_aunts(families_loader: Callable) -> None:
         print(comp, type(comp))
 
 
-def test_not_connected_aunts_roles(families_loader: Callable) -> None:
+def test_not_connected_aunts_roles(
+    families_loader: Callable[[str], FamiliesData],
+) -> None:
     families = families_loader("test_not_connected_aunts.csv")
     assert families is not None
 
@@ -68,4 +71,5 @@ def test_not_connected_aunts_roles(families_loader: Callable) -> None:
     assert aunt.role == Role.unknown
 
     aunt_mating = fam.get_member("aunt1.father")
+    assert aunt_mating is not None
     assert aunt_mating.role == Role.unknown
