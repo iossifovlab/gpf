@@ -1,5 +1,6 @@
 import argparse
 import csv
+import gzip
 import logging
 import os
 import re
@@ -9,15 +10,13 @@ import time
 import traceback
 from collections import defaultdict
 from collections.abc import Callable
-from copy import copy
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, TextIO, cast
 
 import duckdb
 import pandas as pd
 import sqlglot
 import yaml
-from box import Box
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
@@ -27,12 +26,10 @@ from dae.pedigrees.loader import (
 )
 from dae.pheno.common import ImportConfig, InferenceConfig
 from dae.pheno.db import safe_db_name
-from dae.pheno.pheno_data import PhenotypeStudy
 from dae.pheno.prepare.measure_classifier import (
     ClassifierReport,
     classification_reference_impl,
 )
-from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
 from dae.task_graph.executor import task_graph_run_with_results
 from dae.task_graph.graph import TaskGraph
@@ -164,9 +161,9 @@ def generate_phenotype_data_config(
     if regressions:
         regressions_dict = regressions.to_dict()
         for reg in regressions_dict["regression"].values():
-            if reg["measure_name"] is None:
+            if "measure_name" in reg and reg["measure_name"] is None:
                 del reg["measure_name"]
-            if reg["measure_names"] is None:
+            if "measure_names" in reg and reg["measure_names"] is None:
                 del reg["measure_names"]
         config["regression"] = regressions_dict["regression"]
     return config
@@ -268,7 +265,7 @@ def import_pheno_data(args: Any) -> None:
         instruments["pheno_common"] = [Path(args.pedigree).absolute()]
 
     instrument_measure_names = read_instrument_measure_names(
-        instruments, tab_separated=args.tab_separated,
+        instruments, args.person_column, tab_separated=args.tab_separated,
     )
 
     print(f"DONE {time.time() - start}")
@@ -288,6 +285,7 @@ def import_pheno_data(args: Any) -> None:
         instrument_measure_names,
         inference_configs,
         args.person_column,
+        tab_separated=args.tab_separated,
     )
 
     def default_row() -> dict[str, Any]:
@@ -323,8 +321,8 @@ def import_pheno_data(args: Any) -> None:
                         parameters=[
                             m_id,
                             report.db_name,
-                            report.measure_name,
-                            report.instrument_name,
+                            report.measure_name.strip(),
+                            report.instrument_name.strip(),
                             description,
                             report.measure_type.value,
                             report.count_with_values,
@@ -396,8 +394,7 @@ def read_and_classify_measure(
     instrument_filepaths: list[Path], instrument_name: str,
     measure_name: str, person_id_column: str, db_name: str,
     inference_config: InferenceConfig,
-    *,
-    tab_separated: bool = False,
+    tab_separated: bool = False,  # noqa: FBT001,FBT002
 ) -> tuple[dict[str, Any], ClassifierReport]:
     """Read a measure's values and classify from an instrument file."""
     output = {}
@@ -417,7 +414,7 @@ def read_and_classify_measure(
         return val
 
     for instrument_filepath in instrument_filepaths:
-        with instrument_filepath.open() as csvfile:
+        with open_file(instrument_filepath) as csvfile:
             reader = csv.DictReader(
                 filter(lambda x: x.strip() != "", csvfile),
                 delimiter="\t"
@@ -553,8 +550,15 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
             cursor.execute(to_duckdb_transpile(query))
 
 
+def open_file(filepath: Path) -> TextIO:
+    if ".gz" in filepath.suffixes:
+        return gzip.open(filepath, "rt", encoding="utf-8-sig")
+    return filepath.open()
+
+
 def read_instrument_measure_names(
     instruments: dict[str, list[Path]],
+    person_column: str,
     *,
     tab_separated: bool = False,
 ) -> dict[str, list[str]]:
@@ -565,13 +569,15 @@ def read_instrument_measure_names(
             if tab_separated or instrument_name == "pheno_common" \
             else ","
         file_to_read = instrument_files[0]
-        with file_to_read.open() as csvfile:
+        with open_file(file_to_read) as csvfile:
             reader = filter(
                 lambda line: len(line) != 0,
                 csv.reader(csvfile, delimiter=delimiter),
             )
             header = next(reader)
-            instrument_measure_names[instrument_name] = header[1:]
+            instrument_measure_names[instrument_name] = list(
+                filter(lambda col: col != person_column, header[1:]),
+            )
     return instrument_measure_names
 
 
@@ -723,6 +729,8 @@ def create_import_tasks(
     instrument_measure_names: dict[str, list[str]],
     inference_configs: dict[str, Any],
     person_column: str,
+    *,
+    tab_separated: bool = False,
 ) -> None:
     """Add measure tasks for importing pheno data."""
     for instrument_name, instrument_filenames in instruments.items():
@@ -740,12 +748,13 @@ def create_import_tasks(
             if inference_config.skip:
                 continue
 
-            if measure_name in table_column_names:
+            db_name = safe_db_name(measure_name)
+
+            if db_name in table_column_names:
                 seen_col_names[measure_name] += 1
                 db_name = f"{measure_name}_{seen_col_names[measure_name]}"
             else:
                 seen_col_names[measure_name] += 1
-                db_name = measure_name
 
             table_column_names.append(db_name)
             m_id = safe_db_name(f"{instrument_name}.{measure_name}")
@@ -760,6 +769,7 @@ def create_import_tasks(
                     person_column,
                     db_name,
                     inference_config,
+                    tab_separated,
                 ],
                 [],
             )
