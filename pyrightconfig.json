@@ -1,0 +1,12 @@
+{
+    "include": [
+        "dae",
+        "wdae",
+    ],
+    "exclude": [
+        "**/__pycache__",
+        "dae/docs",
+        "wdae/docs",
+    ],
+    "pythonVersion": "3.11",
+}
