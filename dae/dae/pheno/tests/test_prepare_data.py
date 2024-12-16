@@ -18,7 +18,11 @@ from dae.variants.attributes import Role, Sex
 def test_augment_measure(
     fake_phenotype_data: PhenotypeStudy, output_dir: Path,
 ) -> None:
-    prep = PreparePhenoBrowserBase(fake_phenotype_data, output_dir)
+    images_dir = output_dir / "images"
+    prep = PreparePhenoBrowserBase(
+        fake_phenotype_data, output_dir,
+        images_dir=images_dir,
+    )
     regressand = fake_phenotype_data.get_measure("i1.m1")
     regressor = fake_phenotype_data.get_measure("i1.age")
     df = prep._augment_measure_values_df(
@@ -45,7 +49,11 @@ def test_augment_measure(
 def test_augment_measure_regressor_no_instrument_name(
     fake_phenotype_data: PhenotypeStudy, output_dir: Path,
 ) -> None:
-    prep = PreparePhenoBrowserBase(fake_phenotype_data, output_dir)
+    images_dir = output_dir / "images"
+    prep = PreparePhenoBrowserBase(
+        fake_phenotype_data, output_dir,
+        images_dir=images_dir,
+    )
     regressand = fake_phenotype_data.get_measure("i1.m1")
     regressor = fake_phenotype_data.get_measure("i1.age")
     exp_df = prep._augment_measure_values_df(
@@ -75,7 +83,11 @@ def test_augment_measure_regressor_no_instrument_name(
 def test_augment_measure_with_identical_measures(
     fake_phenotype_data: PhenotypeStudy, output_dir: Path,
 ) -> None:
-    prep = PreparePhenoBrowserBase(fake_phenotype_data, output_dir)
+    images_dir = output_dir / "images"
+    prep = PreparePhenoBrowserBase(
+        fake_phenotype_data, output_dir,
+        images_dir=images_dir,
+    )
     regressand = fake_phenotype_data.get_measure("i1.age")
     regressor = fake_phenotype_data.get_measure("i1.age")
     df = prep._augment_measure_values_df(
@@ -87,7 +99,11 @@ def test_augment_measure_with_identical_measures(
 def test_augment_measure_with_nonexistent_regressor(
     fake_phenotype_data: PhenotypeStudy, output_dir: Path,
 ) -> None:
-    prep = PreparePhenoBrowserBase(fake_phenotype_data, output_dir)
+    images_dir = output_dir / "images"
+    prep = PreparePhenoBrowserBase(
+        fake_phenotype_data, output_dir,
+        images_dir=images_dir,
+    )
     regressand = fake_phenotype_data.get_measure("i2.m1")
     regressor = fake_phenotype_data.get_measure("i1.age")
     regressor.instrument_name = None
@@ -158,7 +174,11 @@ def test_build_regression(
         side_effect=fake_augment_df,
     )
 
-    prep = PreparePhenoBrowserBase(fake_phenotype_data, output_dir)
+    images_dir = output_dir / "images"
+    prep = PreparePhenoBrowserBase(
+        fake_phenotype_data, output_dir,
+        images_dir=images_dir,
+    )
     regressand = fake_phenotype_data.get_measure("i1.m1")
     regressor = fake_phenotype_data.get_measure("i1.age")
     jitter = 0.32403423849
@@ -199,7 +219,11 @@ def test_build_regression_min_vals(
         side_effect=fake_augment_df,
     )
 
-    prep = PreparePhenoBrowserBase(fake_phenotype_data, output_dir)
+    images_dir = output_dir / "images"
+    prep = PreparePhenoBrowserBase(
+        fake_phenotype_data, output_dir,
+        images_dir=images_dir,
+    )
     regressand = fake_phenotype_data.get_measure("i1.m1")
     regressor = fake_phenotype_data.get_measure("i1.age")
     jitter = 0.32403423849
@@ -247,7 +271,11 @@ def test_build_regression_min_unique_vals(
         side_effect=fake_augment_df,
     )
 
-    prep = PreparePhenoBrowserBase(fake_phenotype_data, output_dir)
+    images_dir = output_dir / "images"
+    prep = PreparePhenoBrowserBase(
+        fake_phenotype_data, output_dir,
+        images_dir=images_dir,
+    )
     regressand = fake_phenotype_data.get_measure("i1.m1")
     regressor = fake_phenotype_data.get_measure("i1.age")
     jitter = 0.32403423849
@@ -261,7 +289,11 @@ def test_build_regression_identical_measures(
     fake_phenotype_data: PhenotypeStudy,
     output_dir: Path,
 ) -> None:
-    prep = PreparePhenoBrowserBase(fake_phenotype_data, output_dir)
+    images_dir = output_dir / "images"
+    prep = PreparePhenoBrowserBase(
+        fake_phenotype_data, output_dir,
+        images_dir=images_dir,
+    )
     regressand = fake_phenotype_data.get_measure("i1.age")
     regressor = fake_phenotype_data.get_measure("i1.age")
     jitter = 0.32403423849
@@ -285,7 +317,11 @@ def test_build_regression_aug_df_is_none(
         side_effect=fake_augment_df,
     )
 
-    prep = PreparePhenoBrowserBase(fake_phenotype_data, output_dir)
+    images_dir = output_dir / "images"
+    prep = PreparePhenoBrowserBase(
+        fake_phenotype_data, output_dir,
+        images_dir=images_dir,
+    )
     regressand = fake_phenotype_data.get_measure("i1.m1")
     regressor = fake_phenotype_data.get_measure("i1.age")
     jitter = 0.32403423849
@@ -332,8 +368,10 @@ def test_handle_regressions(
     reg = GPFConfigParser.load_config(
         fake_phenotype_data_config, pheno_conf_schema,
     )
+    images_dir = output_dir / "images"
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, output_dir, reg,
+        images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
 
@@ -382,8 +420,10 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
     reg = GPFConfigParser.load_config(
         fake_phenotype_data_config, pheno_conf_schema,
     )
+    images_dir = output_dir / "images"
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, output_dir, reg,
+        images_dir=images_dir,
     )
     regressand_categorical = fake_phenotype_data.get_measure("i1.m5")
     regression_measures_categorical = prep.get_regression_measures(
@@ -422,8 +462,10 @@ def test_handle_regressions_regressand_is_regressor(
     reg = GPFConfigParser.load_config(
         fake_phenotype_data_config, pheno_conf_schema,
     )
+    images_dir = output_dir / "images"
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, output_dir, reg,
+        images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.age")
     regression_measures = prep.get_regression_measures(regressand)
@@ -461,8 +503,10 @@ def test_handle_regressions_default_jitter(
     reg = GPFConfigParser.load_config(
         fake_phenotype_data_config, pheno_conf_schema,
     )
+    images_dir = output_dir / "images"
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, output_dir, reg,
+        images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
 
