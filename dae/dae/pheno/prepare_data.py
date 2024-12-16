@@ -63,7 +63,7 @@ class PreparePhenoBrowserBase:
         self.pheno_id = self.phenotype_data.pheno_id
         self.pheno_regressions = pheno_regressions
         if self.pheno_regressions is not None:
-            for reg_data in self.pheno_regressions.regression.values():
+            for reg_data in self.pheno_regressions.values():
                 if "measure_names" in reg_data:
                     reg_data["measure_name"] = reg_data["measure_names"][0]
 
@@ -310,11 +310,10 @@ class PreparePhenoBrowserBase:
         self, measure_name: str,
         instrument_name: str | None,
     ) -> bool:
-        if self.pheno_regressions is None or \
-                self.pheno_regressions.regression is None:
+        if self.pheno_regressions is None:
             return False
 
-        for reg in self.pheno_regressions.regression.values():
+        for reg in self.pheno_regressions.values():
             if measure_name == reg.measure_name:
                 if (
                     instrument_name
@@ -359,7 +358,7 @@ class PreparePhenoBrowserBase:
         )
 
         if self.pheno_regressions:
-            for reg_id, reg_data in self.pheno_regressions.regression.items():
+            for reg_id, reg_data in self.pheno_regressions.items():
                 browser.save_regression(
                     {
                         "regression_id": reg_id,
@@ -402,7 +401,7 @@ class PreparePhenoBrowserBase:
         regression_measures: dict[str, tuple[Box, Measure]] = {}
         if self.pheno_regressions is None:
             return regression_measures
-        for reg_id, reg in self.pheno_regressions.regression.items():
+        for reg_id, reg in self.pheno_regressions.items():
             measure_names = reg.measure_names
             if measure_names is None:
                 assert reg.measure_name is not None

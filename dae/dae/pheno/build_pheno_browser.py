@@ -65,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
     pheno_data = registry.get_phenotype_data(args.phenotype_data_id)
     kwargs = vars(args)
 
-    regressions = pheno_data.config.regressions
+    regressions = pheno_data.config.regression
 
     build_pheno_browser(pheno_data, regressions, **kwargs)
 
