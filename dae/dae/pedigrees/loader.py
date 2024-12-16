@@ -124,13 +124,13 @@ class FamiliesLoader(CLILoader):
     @staticmethod
     def _build_families_roles(
         families: FamiliesData,
-        pedigree_format: dict[str, Any],
+        pedigree_params: dict[str, Any],
     ) -> None:
         has_unknown_roles = any(
             p.role is None  # or p.role == Role.unknown
             for p in families.persons.values())
 
-        if has_unknown_roles or pedigree_format.get("ped_no_role"):
+        if has_unknown_roles or pedigree_params.get("ped_no_role"):
             for family in families.values():
                 logger.debug("building family roles: %s", family.family_id)
                 role_build = FamilyRoleBuilder(family)
