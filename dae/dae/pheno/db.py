@@ -298,7 +298,7 @@ def safe_db_name(name: str) -> str:
     if name == "":
         raise ValueError("The name cannot be empty")
     name = name.replace(".", "_").replace("-", "_").replace(" ", "_").lower()
-    name = name.replace("/", "_")
+    name = name.replace("/", "_").strip()
     if name[0].isdigit():
         name = f"_{name}"
     return name
