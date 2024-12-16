@@ -11,9 +11,11 @@ from itertools import chain, islice
 from pathlib import Path
 from typing import Any, cast
 
+import duckdb
 import pandas as pd
 from box import Box
 
+from dae.pheno.browser import PhenoBrowser
 from dae.pheno.common import MeasureType
 from dae.pheno.db import PhenoDb
 from dae.utils.helpers import isnan
@@ -744,3 +746,29 @@ class PhenotypeGroup(PhenotypeData):
                     roles,
                 ))
         return pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+
+
+def load_phenotype_data(
+    config: dict[str, Any], extra_configs: list[dict[str, Any]] | None = None,
+) -> PhenotypeStudy | PhenotypeGroup:
+    if config["type"] == "study":
+        return PhenotypeStudy(
+            config["name"],
+            config["dbfile"],
+            config,
+        )
+    if extra_configs is None:
+        raise ValueError(
+            "Tried creating a group without extra configs passed!",
+        )
+    children_names = config["children"]
+    children = []
+    for extra_config in extra_configs:
+        if extra_config["name"] not in children_names:
+            continue
+        if extra_config["type"] == "study":
+            children.append(load_phenotype_data(extra_config))
+        else:
+            children.append(load_phenotype_data(extra_config, extra_configs))
+
+    return PhenotypeGroup(config["name"], cast(list[PhenotypeData], children))
