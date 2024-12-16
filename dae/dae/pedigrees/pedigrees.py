@@ -5,7 +5,7 @@ import copy
 import itertools
 import logging
 from collections import defaultdict, deque
-from collections.abc import Iterable, Iterator
+from collections.abc import Container, Iterable, Iterator
 from functools import reduce
 from typing import Any, cast
 
@@ -182,6 +182,8 @@ class FamilyConnections:
             if not family.member_has_both_parents(
                 member.person_id, allow_missing=True):
                 continue
+            assert member.mom_id is not None
+            assert member.dad_id is not None
 
             mother = id_to_individual[member.mom_id]
             father = id_to_individual[member.dad_id]
@@ -218,11 +220,11 @@ class FamilyConnections:
         mating_units = self.get_mating_units()
         sibship_units = self.get_sibship_units()
 
-        all_vertices: set[IndividualGroup] = \
+        all_vertices: Container[IndividualGroup] = \
             individuals | mating_units | sibship_units
 
         # Ea-: individuals of same rank should not intersect
-        same_rank_edges = {
+        same_rank_edges: set[tuple[IndividualGroup, IndividualGroup]] = {
             (i1, i2)
             for i1 in individuals
             for i2 in individuals
@@ -231,14 +233,14 @@ class FamilyConnections:
         # Allow intersection of individuals who have the same mate. This allows
         # drawing of pedigrees with the curved link when there is a person
         # with more than 2 mates.
-        multiple_partners_edges = {
+        multiple_partners_edges: set[
+                tuple[IndividualGroup, IndividualGroup]] = {
             (i1, i2)
             for i1 in individuals
             for i2 in [m.other_parent(i1) for m in i1.mating_units]
             if len(i1.mating_units) > 2
         }
         same_rank_edges -= multiple_partners_edges
-        same_rank_edges = set(map(tuple, same_rank_edges))  # type: ignore
 
         # Eb+: mating units and individuals in them should intersect
         mating_edges = {
@@ -295,16 +297,15 @@ class FamilyConnections:
         }
         intergenerational_edges -= mates_siblings_edges
 
-        required_set: set[tuple[IndividualGroup, IndividualGroup]] = \
+        required_set: Container[tuple[IndividualGroup, IndividualGroup]] = \
             mating_edges | sibship_edges | mates_siblings_edges
         forbidden_set: set[tuple[IndividualGroup, IndividualGroup]] = \
-            same_rank_edges \
-            | same_generation_not_mates \
-            | same_generation_not_siblings \
-            | intergenerational_edges
+            same_rank_edges.union(same_generation_not_mates).union(
+                    same_generation_not_siblings).union(
+                        intergenerational_edges)
 
         return SandwichInstance.from_sets(
-            all_vertices, required_set, forbidden_set)
+            set(all_vertices), set(required_set), set(forbidden_set))
 
     @property
     def members(self) -> list[Person]:

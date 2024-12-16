@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Callable, cast
+from collections.abc import Callable
+from typing import cast
 
 import pytest
 
@@ -8,7 +9,6 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.variants.attributes import Role
 
 
-# TODO: Organize into 1 test
 @pytest.mark.parametrize(
     "ped_file",
     ["pedigrees/pedigree_no_role_A.ped", "pedigrees/pedigree_no_role_B.ped"],
