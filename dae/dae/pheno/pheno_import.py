@@ -208,11 +208,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     try:
-        if not args.browser_only:
-            import_pheno_data(args)
-
-        if not args.import_only:
-            build_browser(args)
+        import_pheno_data(args)
     except KeyboardInterrupt:
         return 0
     except ValueError as e:
@@ -359,57 +355,19 @@ def import_pheno_data(args: Any) -> None:
 
     connection.close()
 
-
-def build_pheno_browser(
-    dbfile: str, pheno_name: str, output_dir: str,
-    pheno_regressions: Box | None = None, **kwargs: Any,
-) -> None:
-    """Calculate and save pheno browser values to db."""
-
-    phenodb = PhenotypeStudy(
-        pheno_name, dbfile=dbfile, read_only=False,
-    )
-
-    images_dir = os.path.join(output_dir, "images")
-    os.makedirs(images_dir, exist_ok=True)
-
-    prep = PreparePhenoBrowserBase(
-        pheno_name, phenodb, output_dir, pheno_regressions, images_dir)
-    prep.run(**kwargs)
-
-
-def build_browser(
-    args: argparse.Namespace,
-) -> None:
-    """Perform browser data build step."""
     if args.regression:
         regressions = GPFConfigParser.load_config(
             args.regression, regression_conf_schema,
         )
     else:
         regressions = None
-    output_dir = args.output
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
 
-    kwargs = copy(vars(args))
-    pheno_db_filename = args.pheno_db_filename
-    del kwargs["pheno_db_filename"]
-    pheno_name = args.pheno_name
-    del kwargs["pheno_name"]
-
-    build_pheno_browser(
-        pheno_db_filename,
-        pheno_name,
-        output_dir,
-        regressions,
-        **kwargs,
+    output_config = yaml.dump(
+        generate_phenotype_data_config(args, regressions),
     )
 
-    config = yaml.dump(generate_phenotype_data_config(args, regressions))
-
-    pheno_conf_path = Path(output_dir, f"{pheno_name}.yaml")
-    pheno_conf_path.write_text(config)
+    pheno_conf_path = Path(config.output, f"{args.pheno_name}.yaml")
+    pheno_conf_path.write_text(output_config)
 
 
 def collect_instruments(dirname: str) -> dict[str, Any]:
@@ -583,66 +541,11 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
         """,
     ))
 
-    create_variable_browser = sqlglot.parse(textwrap.dedent(
-        """
-        CREATE TABLE variable_browser(
-            measure_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
-            instrument_name VARCHAR NOT NULL,
-            measure_name VARCHAR NOT NULL,
-            measure_type INT NOT NULL,
-            description VARCHAR,
-            values_domain VARCHAR,
-            figure_distribution_small VARCHAR,
-            figure_distribution VARCHAR
-        );
-        CREATE UNIQUE INDEX variable_browser_measure_id_idx
-            ON variable_browser (measure_id);
-        CREATE INDEX variable_browser_instrument_name_idx
-            ON variable_browser (instrument_name);
-        CREATE INDEX variable_browser_measure_name_idx
-            ON variable_browser (measure_name);
-        """,
-    ))
-
-    create_regression = sqlglot.parse(textwrap.dedent(
-        """
-        CREATE TABLE regression(
-            regression_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
-            instrument_name VARCHAR,
-            measure_name VARCHAR NOT NULL,
-            display_name VARCHAR,
-        );
-        CREATE UNIQUE INDEX regression_regression_id_idx
-            ON regression (regression_id);
-        """,
-    ))
-
-    create_regression_values = sqlglot.parse(textwrap.dedent(
-        """
-        CREATE TABLE regression_values(
-            regression_id VARCHAR NOT NULL,
-            measure_id VARCHAR NOT NULL,
-            figure_regression VARCHAR,
-            figure_regression_small VARCHAR,
-            pvalue_regression_male DOUBLE,
-            pvalue_regression_female DOUBLE,
-            PRIMARY KEY (regression_id, measure_id)
-        );
-        CREATE INDEX regression_values_regression_id_idx
-            ON regression_values (regression_id);
-        CREATE INDEX regression_values_measure_id_idx
-            ON regression_values (measure_id);
-        """,
-    ))
-
     queries = [
         *create_instrument,
         *create_measure,
         *create_family,
         *create_person,
-        *create_variable_browser,
-        *create_regression,
-        *create_regression_values,
     ]
 
     with connection.cursor() as cursor:
