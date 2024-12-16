@@ -44,12 +44,12 @@ pipeline {
             enabledForFailure: true, aggregatingResults: false,
             tools: [
               flake8(pattern: 'test-results/ruff_report', reportEncoding: 'UTF-8', id: 'ruff', name: 'Ruff'),
-              myPy(pattern: 'test-results/mypy_dae_report', reportEncoding: 'UTF-8', id: 'mypy-dae', name: 'MyPy - dae'),
-              myPy(pattern: 'test-results/mypy_dae_tests_report', reportEncoding: 'UTF-8', id: 'mypy-dae-tests', name: 'MyPy - dae integration'),
-              myPy(pattern: 'test-results/mypy_wdae_report', reportEncoding: 'UTF-8', id: 'mypy-wdae', name: 'MyPy - wdae'),
-              myPy(pattern: 'test-results/mypy_impala_report', reportEncoding: 'UTF-8', id: 'mypy-impala', name: 'MyPy - impala'),
-              myPy(pattern: 'test-results/mypy_impala2_report', reportEncoding: 'UTF-8', id: 'mypy-impala2', name: 'MyPy - impala2'),
-              myPy(pattern: 'test-results/mypy_gcp_report', reportEncoding: 'UTF-8', id: 'mypy-gcp', name: 'MyPy - GCP'),
+              pyLint(pattern: 'test-results/pyright_dae_report', reportEncoding: 'UTF-8', id: 'pyright-dae', name: 'Pyright - dae'),
+              pyLint(pattern: 'test-results/pyright_dae_tests_report', reportEncoding: 'UTF-8', id: 'pyright-dae-tests', name: 'Pyright - dae integration'),
+              pyLint(pattern: 'test-results/pyright_wdae_report', reportEncoding: 'UTF-8', id: 'pyright-wdae', name: 'Pyright - wdae'),
+              pyLint(pattern: 'test-results/pyright_impala_report', reportEncoding: 'UTF-8', id: 'pyright-impala', name: 'Pyright - impala'),
+              pyLint(pattern: 'test-results/pyright_impala2_report', reportEncoding: 'UTF-8', id: 'pyright-impala2', name: 'Pyright - impala2'),
+              pyLint(pattern: 'test-results/pyright_gcp_report', reportEncoding: 'UTF-8', id: 'pyright-gcp', name: 'Pyright - GCP'),
               pyLint(pattern: 'test-results/pylint_gpf_report', reportEncoding: 'UTF-8')
             ],
             qualityGates: [[threshold: 1, type: 'DELTA', unstable: true]]

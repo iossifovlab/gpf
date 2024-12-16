@@ -179,70 +179,71 @@ EOT
       pylint dae/dae impala_storage/impala_storage  $wdae_files -f parseable --reports=no -j 4 \
           --exit-zero > /wd/results/pylint_gpf_report || true'
 
-    # mypy
+    # pyright
     build_run_detached bash -c '
-      cd /wd/dae;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy dae \
-          --exclude dae/docs/ \
-          --exclude dae/docs/conf.py \
-          --pretty \
-          --show-error-context \
-          --no-incremental \
-          > /wd/results/mypy_dae_report || true'
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf pyright dae \
+          --outputjson \
+          > /wd/results/pyright_dae_report_raw.json || true'
 
     build_run_detached bash -c '
-      cd /wd/dae;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy tests \
-          --exclude dae/docs/ \
-          --exclude dae/docs/conf.py \
-          --pretty \
-          --show-error-context \
-          --no-incremental \
-          > /wd/results/mypy_dae_tests_report || true'
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf pyright tests \
+          --outputjson \
+          > /wd/results/pyright_dae_tests_report_raw.json || true'
 
     build_run_detached bash -c '
-      cd /wd/wdae;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy wdae \
-          --exclude wdae/docs/ \
-          --exclude wdae/docs/conf.py \
-          --exclude wdae/conftest.py \
-          --pretty \
-          --show-error-context \
-          --no-incremental \
-          > /wd/results/mypy_wdae_report || true'
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf pyright wdae \
+          --outputjson \
+          > /wd/results/pyright_wdae_report_raw.json || true'
 
     build_run_detached bash -c '
-      cd /wd/impala_storage;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy impala_storage \
-          --pretty \
-          --show-error-context \
-          --no-incremental \
-          > /wd/results/mypy_impala_report || true'
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf pyright impala \
+          --outputjson \
+          > /wd/results/pyright_impala_report_raw.json || true'
 
     build_run_detached bash -c '
-      cd /wd/impala2_storage;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy impala2_storage \
-          --pretty \
-          --show-error-context \
-          --no-incremental \
-          > /wd/results/mypy_impala2_report || true'
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf pyright impala2 \
+          --outputjson \
+          > /wd/results/pyright_impala2_report_raw.json || true'
 
     build_run_detached bash -c '
-      cd /wd/gcp_storage;
-      /opt/conda/bin/conda run --no-capture-output -n gpf mypy gcp_storage \
-          --pretty \
-          --show-error-context \
-          --no-incremental \
-          > /wd/results/mypy_gcp_report || true'
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf pyright gcp_storage \
+          --outputjson \
+          > /wd/results/pyright_gcp_report_raw.json || true'
 
     build_run_container wait
 
-    build_run_local cp ./results/mypy_dae_report \
-      ./results/mypy_dae_tests_report \
-      ./results/mypy_wdae_report \
-      ./results/mypy_impala_report \
-      ./results/mypy_impala2_report \
-      ./results/mypy_gcp_report \
+    build_run bash -c '
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
+          results/pyright_dae_report_raw.json > results/pyright_dae_report || true'
+    build_run bash -c '
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
+          results/pyright_dae_tests_report_raw.json > results/pyright_dae_tests_report || true'
+    build_run bash -c '
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
+          results/pyright_wdae_report_raw.json > results/pyright_wdae_report || true'
+    build_run bash -c '
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
+          results/pyright_impala_report_raw.json > results/pyright_impala_report || true'
+    build_run bash -c '
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
+          results/pyright_impala2_report_raw.json > results/pyright_impala2_report || true'
+    build_run bash -c '
+      cd /wd;
+      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
+          results/pyright_gcp_report_raw.json > results/pyright_gcp_report || true'
+
+    build_run_local cp ./results/pyright_*_report \
       ./results/ruff_report \
       ./results/pylint_gpf_report \
       ./test-results/
@@ -509,7 +510,7 @@ EOT
           --exclude .DS_Store \
           --exclude conftest.py \
           --exclude gpf_wdae.egg-info \
-          --exclude mypy.ini \
+          --exclude pyrightconfig.json \
           --exclude pylintrc \
           --transform "s,^,gpf/," \
           dae/ wdae/ impala_storage/ impala2_storage \
