@@ -1,7 +1,6 @@
 import logging
 import os
-import pathlib
-import shutil
+from pathlib import Path
 from typing import Any, cast
 
 import matplotlib as mpl
@@ -19,8 +18,11 @@ from dae.pheno.graphs import (
 )
 from dae.pheno.pheno_data import (
     Measure,
+    PhenotypeData,
+    PhenotypeGroup,
     PhenotypeStudy,
     get_pheno_browser_images_dir,
+    load_phenotype_data,
 )
 from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
 from dae.task_graph.executor import task_graph_run_with_results
@@ -41,26 +43,24 @@ class PreparePhenoBrowserBase:
 
     def __init__(
         self,
-        pheno_name: str,
-        phenotype_data: PhenotypeStudy,
-        output_dir: str,
+        phenotype_data: PhenotypeData,
+        output_dir: Path,
         pheno_regressions: Box | None = None,
-        images_dir: str | None = None,
+        images_dir: Path | None = None,
     ) -> None:
-        assert os.path.exists(output_dir)
+        assert output_dir.exists()
         self.output_dir = output_dir
         if images_dir is None:
-            images_dir = get_pheno_browser_images_dir()
-        if not os.path.exists(images_dir):
-            os.makedirs(images_dir)
+            images_dir = Path(get_pheno_browser_images_dir())
+        if not images_dir.exists():
+            images_dir.mkdir(exist_ok=True)
 
         assert os.path.exists(images_dir)
-
-        self.pheno_id = pheno_name
 
         self.images_dir = images_dir
 
         self.phenotype_data = phenotype_data
+        self.pheno_id = self.phenotype_data.pheno_id
         self.pheno_regressions = pheno_regressions
         if self.pheno_regressions is not None:
             for reg_data in self.pheno_regressions.regression.values():
@@ -74,7 +74,7 @@ class PreparePhenoBrowserBase:
 
     @staticmethod
     def _augment_measure_values_df(
-        phenotype_data: PhenotypeStudy,
+        phenotype_data: PhenotypeStudy | PhenotypeGroup,
         augment: Measure, augment_name: str,
         measure: Measure,
     ) -> pd.DataFrame | None:
@@ -168,7 +168,7 @@ class PreparePhenoBrowserBase:
     @classmethod
     def build_regression(
         cls,
-        phenotype_data: PhenotypeStudy,
+        phenotype_data: PhenotypeStudy | PhenotypeGroup,
         images_dir: str,
         dependent_measure: Measure,
         independent_measure: Measure,
@@ -325,13 +325,42 @@ class PreparePhenoBrowserBase:
                 return True
         return False
 
+    def collect_child_configs(self, study: PhenotypeGroup) -> list[Any]:
+        configs = []
+        for child in study.children:
+            if child.config["type"] == "study":
+                configs.append(child.config)
+            elif child.config["type"] == "group":
+                configs.extend(
+                    self.collect_child_configs(cast(PhenotypeGroup, child)),
+                )
+            else:
+                raise ValueError(
+                    f"Unknown config type {child.config['type']} "
+                    f"for {child.config['name']}",
+                )
+        return configs
+
     def run(self, **kwargs: Any) -> None:
         """Run browser preparations for all measures in a phenotype data."""
-        db = self.phenotype_data.db
+        config = self.phenotype_data.config
+
+        if config["type"] == "study":
+            extra_configs = []
+        elif config["type"] == "group":
+            group = cast(PhenotypeGroup, self.phenotype_data)
+            extra_configs = self.collect_child_configs(group)
+        else:
+            raise ValueError(
+                f"Unknown config type {config['type']} for {config['name']}",
+            )
+        browser = PhenotypeData.create_browser(
+            self.phenotype_data, read_only=False,
+        )
 
         if self.pheno_regressions:
             for reg_id, reg_data in self.pheno_regressions.regression.items():
-                db.save_regression(
+                browser.save_regression(
                     {
                         "regression_id": reg_id,
                         "instrument_name": reg_data.instrument_name,
@@ -339,16 +368,14 @@ class PreparePhenoBrowserBase:
                         "display_name": reg_data.display_name,
                     },
                 )
-        with db.connection.cursor() as cursor:
+        with browser.connection.cursor() as cursor:
             cursor.execute("CHECKPOINT")
 
         graph = TaskGraph()
 
-        temp_dbfile_name = os.path.join(kwargs["output"], "tempdb.duckdb")
-        shutil.copyfile(db.dbfile, temp_dbfile_name)
         for instrument in list(self.phenotype_data.instruments.values()):
             for measure in list(instrument.measures.values()):
-                self.add_measure_task(graph, measure, temp_dbfile_name)
+                self.add_measure_task(graph, measure, config, extra_configs)
 
         task_cache = TaskCache.create(
             force=kwargs.get("force"),
@@ -359,14 +386,14 @@ class PreparePhenoBrowserBase:
             try:
                 for result in task_graph_run_with_results(graph, xtor):
                     measure, regressions = result
-                    db.save(cast(dict[str, str | None], measure))
+                    browser.save(cast(dict[str, str | None], measure))
                     if regressions is None:
                         continue
                     for regression in regressions:
-                        db.save_regression_values(regression)
-            except Exception:
+                        browser.save_regression_values(regression)
+            except Exception as e:
                 logger.exception("Failed to create images")
-        pathlib.Path(temp_dbfile_name).unlink()
+                raise RuntimeError("Failed to create images") from e
 
     def get_regression_measures(
         self, measure: Measure,
@@ -399,7 +426,8 @@ class PreparePhenoBrowserBase:
         return regression_measures
 
     def add_measure_task(
-            self, graph: TaskGraph, measure: Measure, dbfile: str,
+            self, graph: TaskGraph, measure: Measure, pheno_config: Box,
+            extra_configs: list[Box],
     ) -> None:
 
         regression_measures = self.get_regression_measures(measure)
@@ -408,8 +436,8 @@ class PreparePhenoBrowserBase:
             PreparePhenoBrowserBase.do_measure_build,
             [
                 self.pheno_id,
-                dbfile,
-                self.phenotype_data.config,
+                pheno_config,
+                extra_configs,
                 measure,
                 self.images_dir,
                 regression_measures,
@@ -421,15 +449,15 @@ class PreparePhenoBrowserBase:
     def do_measure_build(
         cls,
         pheno_id: str,
-        dbfile: str,
-        db_config: Box | None,
+        pheno_config: Box,
+        extra_configs: list[Box],
         measure: Measure,
         images_dir: str,
         regression_measures: dict[str, tuple[Box, Measure]],
     ) -> tuple[dict[str, Any], list[dict[str, Any]] | None]:
         """Create images and regressions for a given measure."""
-        pheno_data = PhenotypeStudy(
-            pheno_id, dbfile, db_config, read_only=True,
+        pheno_data = load_phenotype_data(
+            pheno_config, cast(list[dict[str, Any]], extra_configs),
         )
         df = pheno_data.get_people_measure_values_df(
             [measure.measure_id],
