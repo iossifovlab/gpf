@@ -1,8 +1,10 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 from typing import Any
 
+import pytest
+
 from dae.pheno.common import MeasureType
-from dae.pheno.db import PhenoDb
+from dae.pheno.db import PhenoDb, safe_db_name
 from dae.pheno.registry import PhenoRegistry
 
 
@@ -320,3 +322,24 @@ def test_split_into_groups(fake_phenodb_file_copy: str) -> None:
     assert len(groups[3]) == 25
     assert groups[3][0] == "measure_76"
     assert groups[3][-1] == "measure_100"
+
+
+@pytest.mark.parametrize("iinput,expected", [
+    ("abc", "abc"),
+    ("ABC", "abc"),
+    ("abc1", "abc1"),
+    ("1abc", "_1abc"),
+    (" 1abc", "_1abc"),
+    ("a b c", "a_b_c"),
+    ("a.b.c", "a_b_c"),
+    ("a-b-c", "a_b_c"),
+    ("a/b/c", "a_b_c"),
+    ("a.b.c a/b/c a-b-c", "a_b_c_a_b_c_a_b_c"),
+])
+def test_safe_db_name(iinput: str, expected: str) -> None:
+    assert safe_db_name(iinput) == expected
+
+
+def test_safe_db_name_invalid() -> None:
+    with pytest.raises(ValueError, match="empty"):
+        assert safe_db_name("")
