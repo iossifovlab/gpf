@@ -66,10 +66,12 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
     def __init__(
         self, loader: SingleVcfLoader,
         vcf_variants: list[pysam.VariantRecord | None],
+        all_genotypes: dict[str, tuple[int, ...]],
     ):
         super().__init__()
         self.loader = loader
         self.vcf_variants = vcf_variants
+        self.all_genotypes = all_genotypes
         self.known_independent_genotypes: list[np.ndarray] = []
 
     def _collect_family_genotype(
@@ -595,12 +597,17 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
                 vcf_iterator_idexes_to_advance = []
                 vcf_gt_variants = []
+                all_genotypes: dict[str, tuple[int, ...]] = {}
                 for idx, vcf_variant in enumerate(vcf_variants):
                     if self._compare_vcf_variants_eq(
                         current_vcf_variant, vcf_variant,
                     ):
                         vcf_gt_variants.append(vcf_variant)
                         vcf_iterator_idexes_to_advance.append(idx)
+                        assert vcf_variant is not None
+                        for sample_id in vcf_variant.header.samples:
+                            gt = vcf_variant.samples.get(sample_id)["GT"]
+                            all_genotypes[sample_id] = gt
                     else:
                         vcf_gt_variants.append(None)
 
@@ -611,7 +618,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                         current_summary_variant)
 
                 family_genotypes = VcfFamiliesGenotypes(
-                    self, vcf_gt_variants)
+                    self, vcf_gt_variants, all_genotypes)
                 family_variants = []
 
                 for fam, genotype, best_state in family_genotypes \
