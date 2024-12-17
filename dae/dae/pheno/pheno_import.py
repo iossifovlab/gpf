@@ -185,10 +185,6 @@ def main(argv: list[str] | None = None) -> int:
     if args.pheno_name is None:
         raise ValueError("missing pheno db name")
 
-    args.pheno_db_filename = os.path.join(
-        args.output, f"{args.pheno_name}.db",
-    )
-
     try:
         import_pheno_data(args)
     except KeyboardInterrupt:
@@ -208,6 +204,10 @@ def main(argv: list[str] | None = None) -> int:
 def import_pheno_data(args: Any) -> None:
     """Import pheno data into DuckDB."""
     os.makedirs(args.output, exist_ok=True)
+
+    args.pheno_db_filename = os.path.join(
+        args.output, f"{args.pheno_name}.db",
+    )
 
     if os.path.exists(args.pheno_db_filename):
         if args.force:
