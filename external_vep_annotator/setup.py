@@ -4,7 +4,7 @@ import setuptools
 import versioneer
 
 setuptools.setup(
-    name="gpf_external_demo_annotator",
+    name="gpf_vep_annotator",
     version=versioneer.get_version(),  # type: ignore
     cmdclass=versioneer.get_cmdclass(),  # type: ignore
     author="Lubomir Chorbadjiev",
