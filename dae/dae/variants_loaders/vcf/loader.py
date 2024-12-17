@@ -70,35 +70,31 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         super().__init__()
         self.loader = loader
         self.all_genotypes = all_genotypes
-        self.known_independent_genotypes: list[np.ndarray] = []
+        self.known_independent_genotypes: list[tuple[int, int]] = []
 
     def _collect_family_genotype(
         self, family: Family,
         fill_value: int,
-    ) -> list[tuple[int, ...]]:
-        genotypes: list[tuple[int, ...]] = []
+    ) -> tuple[list[tuple[int, int]], list[tuple[int, int]]]:
+        genotypes: list[tuple[int, int]] = []
+        independent_genotypes: list[tuple[int, int]] = []
         for person in family.members_in_order:
-            sample_genotype = self.all_genotypes.get(person.sample_id) or \
-                (fill_value, fill_value)
-            if len(sample_genotype) == 1:
-                sample_genotype = (sample_genotype[0], -2)
-            assert len(sample_genotype) == 2, (
-                family, person, sample_genotype)
-            sample_genotype = tuple(map(  # noqa: C417
-                lambda g: g if g is not None else -1,
-                sample_genotype))
-            genotypes.append(sample_genotype)
-        return genotypes
-
-    def _collect_known_independent_genotypes(
-        self, family: Family, genotype: np.ndarray,
-    ) -> None:
-        for index, person in enumerate(family.members_in_order):
-            if person.person_id not in self.loader.independent_persons:
-                continue
-            self.known_independent_genotypes.append(
-                genotype[:, index],
+            sg: tuple[int, int] = cast(
+                tuple[int, int],
+                self.all_genotypes.get(person.sample_id) or
+                (fill_value, fill_value))
+            if len(sg) == 1:
+                sg = (sg[0], -2)
+            assert len(sg) == 2, (
+                family, person, sg)
+            sg = (
+                sg[0] if sg[0] is not None else -1,
+                sg[1] if sg[1] is not None else -1,
             )
+            genotypes.append(sg)
+            if person.person_id in self.loader.independent_persons:
+                independent_genotypes.append(sg)
+        return genotypes, independent_genotypes
 
     def family_genotype_iterator(
         self,
@@ -109,8 +105,8 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         fill_value = self.loader._fill_missing_value  # noqa: SLF001
 
         for family in self.loader.families.values():
-            family_genotype = self._collect_family_genotype(
-                family, fill_value)
+            family_genotype, independent_genotypes = \
+                self._collect_family_genotype(family, fill_value)
 
             if len(family_genotype) == 0:
                 continue
@@ -124,7 +120,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
                 if not self.loader.include_unknown_person_genotypes:
                     continue
             else:
-                self._collect_known_independent_genotypes(family, genotype)
+                self.known_independent_genotypes.extend(independent_genotypes)
 
             if is_all_unknown_genotype(genotype) and \
                     not self.loader.include_unknown_family_genotypes:
