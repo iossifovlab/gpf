@@ -37,7 +37,7 @@ dependencies:
   - sphinxcontrib-httpdomain
   - monkeytype
   - parquet-tools
-  - pip
+  - pip=24.1.2
   - ipython
   - pip:
     - sphinx-autorun
