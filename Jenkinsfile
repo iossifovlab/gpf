@@ -44,17 +44,10 @@ pipeline {
             enabledForFailure: true, aggregatingResults: false,
             tools: [
               flake8(pattern: 'test-results/ruff_report', reportEncoding: 'UTF-8', id: 'ruff', name: 'Ruff'),
-              pyLint(pattern: 'test-results/pyright_dae_report', reportEncoding: 'UTF-8', id: 'pyright-dae', name: 'Pyright - dae'),
-              pyLint(pattern: 'test-results/pyright_dae_tests_report', reportEncoding: 'UTF-8', id: 'pyright-dae-tests', name: 'Pyright - dae integration'),
-              pyLint(pattern: 'test-results/pyright_wdae_report', reportEncoding: 'UTF-8', id: 'pyright-wdae', name: 'Pyright - wdae'),
-              pyLint(pattern: 'test-results/pyright_impala_report', reportEncoding: 'UTF-8', id: 'pyright-impala', name: 'Pyright - impala'),
-              pyLint(pattern: 'test-results/pyright_impala2_report', reportEncoding: 'UTF-8', id: 'pyright-impala2', name: 'Pyright - impala2'),
-              pyLint(pattern: 'test-results/pyright_gcp_report', reportEncoding: 'UTF-8', id: 'pyright-gcp', name: 'Pyright - GCP'),
-              pyLint(pattern: 'test-results/pylint_gpf_report', reportEncoding: 'UTF-8')
+              pyLint(pattern: 'test-results/pyright_report', reportEncoding: 'UTF-8', id: 'pyright', name: 'Pyright'),
+              pyLint(pattern: 'test-results/pylint_report', reportEncoding: 'UTF-8')
             ],
             qualityGates: [[threshold: 1, type: 'DELTA', unstable: true]]
-            //, ignoreQualityGate: true
-            //, ignoreFailedBuilds: true
           )
 
           publishHTML (target : [allowMissing: true,
@@ -64,30 +57,6 @@ pipeline {
             reportFiles: 'index.html',
             reportName: 'gpf-coverage-report',
             reportTitles: 'gpf-coverage-report'])
-
-          // publishHTML (target : [allowMissing: false,
-          //   alwaysLinkToLastBuild: true,
-          //   keepAll: true,
-          //   reportDir: 'test-results/mypy_dae_html_report',
-          //   reportFiles: 'index.html',
-          //   reportName: 'dae-mypy-report',
-          //   reportTitles: 'dae-mypy-report'])
-
-          // publishHTML (target : [allowMissing: false,
-          //   alwaysLinkToLastBuild: true,
-          //   keepAll: true,
-          //   reportDir: 'test-results/mypy_wdae_html_report',
-          //   reportFiles: 'index.html',
-          //   reportName: 'wdae-mypy-report',
-          //   reportTitles: 'wdae-mypy-report'])
-
-        //   publishHTML (target : [allowMissing: true,
-        //     alwaysLinkToLastBuild: true,
-        //     keepAll: true,
-        //     reportDir: 'test-results/',
-        //     reportFiles: 'bandit_*dae_report.html',
-        //     reportName: 'bandit-dae-report',
-        //     reportTitles: 'bandit-dae-report'])
 
           publishHTML (target : [allowMissing: true,
             alwaysLinkToLastBuild: true,

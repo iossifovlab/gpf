@@ -7,6 +7,8 @@
         "**/__pycache__",
         "dae/docs",
         "wdae/docs",
+        "**/migrations",
+        "**/build",
     ],
     "pythonVersion": "3.11",
 }
