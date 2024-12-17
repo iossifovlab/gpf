@@ -616,8 +616,10 @@ def write_results(
             output_table_df = pd.DataFrame(
                 table).transpose().rename_axis("person_id").reset_index()
 
-            output_table_df = output_table_df.merge(
-                ped_df[["person_id", "family_id", "role", "status", "sex"]],
+            output_table_df = ped_df[
+                ["person_id", "family_id", "role", "status", "sex"]
+            ].merge(
+                output_table_df,
                 on="person_id", how="left",
             )
 
