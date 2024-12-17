@@ -697,6 +697,9 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
 
 def safe_db_name(name: str) -> str:
+    """Convert a string to a db-friendly string."""
+    if name == "":
+        raise ValueError("The name cannot be empty")
     name = name.replace(".", "_").replace("-", "_").replace(" ", "_").lower()
     name = name.replace("/", "_")
     if name[0].isdigit():
