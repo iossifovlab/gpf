@@ -1,5 +1,6 @@
 import argparse
 import csv
+import gzip
 import logging
 import os
 import re
@@ -9,15 +10,13 @@ import time
 import traceback
 from collections import defaultdict
 from collections.abc import Callable
-from copy import copy
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, TextIO, cast
 
 import duckdb
 import pandas as pd
 import sqlglot
 import yaml
-from box import Box
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
@@ -27,12 +26,10 @@ from dae.pedigrees.loader import (
 )
 from dae.pheno.common import ImportConfig, InferenceConfig
 from dae.pheno.db import safe_db_name
-from dae.pheno.pheno_data import PhenotypeStudy
 from dae.pheno.prepare.measure_classifier import (
     ClassifierReport,
     classification_reference_impl,
 )
-from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
 from dae.task_graph.executor import task_graph_run_with_results
 from dae.task_graph.graph import TaskGraph
@@ -155,18 +152,17 @@ def generate_phenotype_data_config(
     dbfile = os.path.join("%(wd)s", os.path.basename(args.pheno_db_filename))
     config = {
         "vars": {"wd": "."},
-        "phenotype_data": {
-            "name": args.pheno_name,
-            "dbfile": dbfile,
-            "browser_images_url": "static/images/",
-        },
+        "type": "study",
+        "name": args.pheno_name,
+        "dbfile": dbfile,
+        "browser_images_url": "static/images/",
     }
     if regressions:
         regressions_dict = regressions.to_dict()
         for reg in regressions_dict["regression"].values():
-            if reg["measure_name"] is None:
+            if "measure_name" in reg and reg["measure_name"] is None:
                 del reg["measure_name"]
-            if reg["measure_names"] is None:
+            if "measure_names" in reg and reg["measure_names"] is None:
                 del reg["measure_names"]
         config["regression"] = regressions_dict["regression"]
     return config
@@ -208,11 +204,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     try:
-        if not args.browser_only:
-            import_pheno_data(args)
-
-        if not args.import_only:
-            build_browser(args)
+        import_pheno_data(args)
     except KeyboardInterrupt:
         return 0
     except ValueError as e:
@@ -272,7 +264,7 @@ def import_pheno_data(args: Any) -> None:
         instruments["pheno_common"] = [Path(args.pedigree).absolute()]
 
     instrument_measure_names = read_instrument_measure_names(
-        instruments, tab_separated=args.tab_separated,
+        instruments, args.person_column, tab_separated=args.tab_separated,
     )
 
     print(f"DONE {time.time() - start}")
@@ -292,6 +284,7 @@ def import_pheno_data(args: Any) -> None:
         instrument_measure_names,
         inference_configs,
         args.person_column,
+        tab_separated=args.tab_separated,
     )
 
     def default_row() -> dict[str, Any]:
@@ -327,8 +320,8 @@ def import_pheno_data(args: Any) -> None:
                         parameters=[
                             m_id,
                             report.db_name,
-                            report.measure_name,
-                            report.instrument_name,
+                            report.measure_name.strip(),
+                            report.instrument_name.strip(),
                             description,
                             report.measure_type.value,
                             report.count_with_values,
@@ -359,57 +352,19 @@ def import_pheno_data(args: Any) -> None:
 
     connection.close()
 
-
-def build_pheno_browser(
-    dbfile: str, pheno_name: str, output_dir: str,
-    pheno_regressions: Box | None = None, **kwargs: Any,
-) -> None:
-    """Calculate and save pheno browser values to db."""
-
-    phenodb = PhenotypeStudy(
-        pheno_name, dbfile=dbfile, read_only=False,
-    )
-
-    images_dir = os.path.join(output_dir, "images")
-    os.makedirs(images_dir, exist_ok=True)
-
-    prep = PreparePhenoBrowserBase(
-        pheno_name, phenodb, output_dir, pheno_regressions, images_dir)
-    prep.run(**kwargs)
-
-
-def build_browser(
-    args: argparse.Namespace,
-) -> None:
-    """Perform browser data build step."""
     if args.regression:
         regressions = GPFConfigParser.load_config(
             args.regression, regression_conf_schema,
         )
     else:
         regressions = None
-    output_dir = args.output
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
 
-    kwargs = copy(vars(args))
-    pheno_db_filename = args.pheno_db_filename
-    del kwargs["pheno_db_filename"]
-    pheno_name = args.pheno_name
-    del kwargs["pheno_name"]
-
-    build_pheno_browser(
-        pheno_db_filename,
-        pheno_name,
-        output_dir,
-        regressions,
-        **kwargs,
+    output_config = yaml.dump(
+        generate_phenotype_data_config(args, regressions),
     )
 
-    config = yaml.dump(generate_phenotype_data_config(args, regressions))
-
-    pheno_conf_path = Path(output_dir, f"{pheno_name}.yaml")
-    pheno_conf_path.write_text(config)
+    pheno_conf_path = Path(config.output, f"{args.pheno_name}.yaml")
+    pheno_conf_path.write_text(output_config)
 
 
 def collect_instruments(dirname: str) -> dict[str, Any]:
@@ -438,8 +393,7 @@ def read_and_classify_measure(
     instrument_filepaths: list[Path], instrument_name: str,
     measure_name: str, person_id_column: str, db_name: str,
     inference_config: InferenceConfig,
-    *,
-    tab_separated: bool = False,
+    tab_separated: bool = False,  # noqa: FBT001,FBT002
 ) -> tuple[dict[str, Any], ClassifierReport]:
     """Read a measure's values and classify from an instrument file."""
     output = {}
@@ -459,7 +413,7 @@ def read_and_classify_measure(
         return val
 
     for instrument_filepath in instrument_filepaths:
-        with instrument_filepath.open() as csvfile:
+        with open_file(instrument_filepath) as csvfile:
             reader = csv.DictReader(
                 filter(lambda x: x.strip() != "", csvfile),
                 delimiter="\t"
@@ -583,66 +537,11 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
         """,
     ))
 
-    create_variable_browser = sqlglot.parse(textwrap.dedent(
-        """
-        CREATE TABLE variable_browser(
-            measure_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
-            instrument_name VARCHAR NOT NULL,
-            measure_name VARCHAR NOT NULL,
-            measure_type INT NOT NULL,
-            description VARCHAR,
-            values_domain VARCHAR,
-            figure_distribution_small VARCHAR,
-            figure_distribution VARCHAR
-        );
-        CREATE UNIQUE INDEX variable_browser_measure_id_idx
-            ON variable_browser (measure_id);
-        CREATE INDEX variable_browser_instrument_name_idx
-            ON variable_browser (instrument_name);
-        CREATE INDEX variable_browser_measure_name_idx
-            ON variable_browser (measure_name);
-        """,
-    ))
-
-    create_regression = sqlglot.parse(textwrap.dedent(
-        """
-        CREATE TABLE regression(
-            regression_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
-            instrument_name VARCHAR,
-            measure_name VARCHAR NOT NULL,
-            display_name VARCHAR,
-        );
-        CREATE UNIQUE INDEX regression_regression_id_idx
-            ON regression (regression_id);
-        """,
-    ))
-
-    create_regression_values = sqlglot.parse(textwrap.dedent(
-        """
-        CREATE TABLE regression_values(
-            regression_id VARCHAR NOT NULL,
-            measure_id VARCHAR NOT NULL,
-            figure_regression VARCHAR,
-            figure_regression_small VARCHAR,
-            pvalue_regression_male DOUBLE,
-            pvalue_regression_female DOUBLE,
-            PRIMARY KEY (regression_id, measure_id)
-        );
-        CREATE INDEX regression_values_regression_id_idx
-            ON regression_values (regression_id);
-        CREATE INDEX regression_values_measure_id_idx
-            ON regression_values (measure_id);
-        """,
-    ))
-
     queries = [
         *create_instrument,
         *create_measure,
         *create_family,
         *create_person,
-        *create_variable_browser,
-        *create_regression,
-        *create_regression_values,
     ]
 
     with connection.cursor() as cursor:
@@ -650,8 +549,15 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
             cursor.execute(to_duckdb_transpile(query))
 
 
+def open_file(filepath: Path) -> TextIO:
+    if ".gz" in filepath.suffixes:
+        return gzip.open(filepath, "rt", encoding="utf-8-sig")
+    return filepath.open()
+
+
 def read_instrument_measure_names(
     instruments: dict[str, list[Path]],
+    person_column: str,
     *,
     tab_separated: bool = False,
 ) -> dict[str, list[str]]:
@@ -662,13 +568,15 @@ def read_instrument_measure_names(
             if tab_separated or instrument_name == "pheno_common" \
             else ","
         file_to_read = instrument_files[0]
-        with file_to_read.open() as csvfile:
+        with open_file(file_to_read) as csvfile:
             reader = filter(
                 lambda line: len(line) != 0,
                 csv.reader(csvfile, delimiter=delimiter),
             )
             header = next(reader)
-            instrument_measure_names[instrument_name] = header[1:]
+            instrument_measure_names[instrument_name] = list(
+                filter(lambda col: col != person_column, header[1:]),
+            )
     return instrument_measure_names
 
 
@@ -708,8 +616,10 @@ def write_results(
             output_table_df = pd.DataFrame(
                 table).transpose().rename_axis("person_id").reset_index()
 
-            output_table_df = output_table_df.merge(
-                ped_df[["person_id", "family_id", "role", "status", "sex"]],
+            output_table_df = ped_df[
+                ["person_id", "family_id", "role", "status", "sex"]
+            ].merge(
+                output_table_df,
                 on="person_id", how="left",
             )
 
@@ -820,6 +730,8 @@ def create_import_tasks(
     instrument_measure_names: dict[str, list[str]],
     inference_configs: dict[str, Any],
     person_column: str,
+    *,
+    tab_separated: bool = False,
 ) -> None:
     """Add measure tasks for importing pheno data."""
     for instrument_name, instrument_filenames in instruments.items():
@@ -837,12 +749,13 @@ def create_import_tasks(
             if inference_config.skip:
                 continue
 
-            if measure_name in table_column_names:
+            db_name = safe_db_name(measure_name)
+
+            if db_name in table_column_names:
                 seen_col_names[measure_name] += 1
                 db_name = f"{measure_name}_{seen_col_names[measure_name]}"
             else:
                 seen_col_names[measure_name] += 1
-                db_name = measure_name
 
             table_column_names.append(db_name)
             m_id = safe_db_name(f"{instrument_name}.{measure_name}")
@@ -857,6 +770,7 @@ def create_import_tasks(
                     person_column,
                     db_name,
                     inference_config,
+                    tab_separated,
                 ],
                 [],
             )

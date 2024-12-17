@@ -11,9 +11,11 @@ from itertools import chain, islice
 from pathlib import Path
 from typing import Any, cast
 
+import duckdb
 import pandas as pd
 from box import Box
 
+from dae.pheno.browser import PhenoBrowser
 from dae.pheno.common import MeasureType
 from dae.pheno.db import PhenoDb
 from dae.utils.helpers import isnan
@@ -190,15 +192,41 @@ class Measure:
 class PhenotypeData(ABC):
     """Base class for all phenotype data studies and datasets."""
 
-    def __init__(self, pheno_id: str, config: Box | None) -> None:
+    def __init__(
+        self, pheno_id: str, config: Box,
+    ) -> None:
         self._pheno_id: str = pheno_id
         self.config = config
         self._measures: dict[str, Measure] = {}
         self._instruments: dict[str, Instrument] = {}
+        self._browser: PhenoBrowser | None = None
 
     @property
     def pheno_id(self) -> str:
         return self._pheno_id
+
+    @staticmethod
+    def create_browser(
+        pheno_data: PhenotypeData, *, read_only: bool = True,
+    ) -> PhenoBrowser:
+        """Load pheno browser from pheno configuration."""
+        db_dir = Path(pheno_data.config.dbfile).parent.resolve()
+        browser_dbfile = db_dir / "browser.db"
+        if not read_only and not browser_dbfile.exists():
+            conn = duckdb.connect(browser_dbfile, read_only=False)
+            conn.checkpoint()
+            PhenoBrowser.create_browser_tables(conn)
+            conn.close()
+        return PhenoBrowser(
+            str(browser_dbfile),
+            read_only=read_only,
+        )
+
+    @property
+    def browser(self) -> PhenoBrowser:
+        if self._browser is None:
+            self._browser = PhenotypeData.create_browser(self)
+        return self._browser
 
     @property
     def measures(self) -> dict[str, Measure]:
@@ -399,7 +427,7 @@ class PhenotypeStudy(PhenotypeData):
 
     def __init__(
             self, pheno_id: str, dbfile: str,
-            config: Box | None = None, *, read_only: bool = True) -> None:
+            config: dict | None = None, *, read_only: bool = True) -> None:
         super().__init__(pheno_id, config)
 
         self.db = PhenoDb(dbfile, read_only=read_only)
@@ -492,20 +520,21 @@ class PhenotypeStudy(PhenotypeData):
         )
 
     def get_regressions(self) -> dict[str, Any]:
-        return self.db.regression_display_names_with_ids
+        return self.browser.regression_display_names_with_ids
 
     def get_regression_ids(self) -> list[str]:
-        return self.db.regression_ids
+        return self.browser.regression_ids
 
     def _get_pheno_images_base_url(self) -> str | None:
-        return None if self.config is None \
-            else self.config.get("browser_images_url")
+        if self.config is None:
+            return None
+        return cast(str | None, self.config.get("browser_images_url"))
 
     def get_measures_info(self) -> dict[str, Any]:
         return {
             "base_image_url": self._get_pheno_images_base_url(),
-            "has_descriptions": self.db.has_descriptions,
-            "regression_names": self.db.regression_display_names,
+            "has_descriptions": self.browser.has_descriptions,
+            "regression_names": self.browser.regression_display_names,
         }
 
     def search_measures(
@@ -516,7 +545,7 @@ class PhenotypeStudy(PhenotypeData):
         sort_by: str | None = None,
         order_by:  str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
-        measures = self.db.search_measures(
+        measures = self.browser.search_measures(
             instrument,
             search_term,
             page,
@@ -565,7 +594,7 @@ class PhenotypeStudy(PhenotypeData):
         search_term: str | None,
         page: int | None = None,
     ) -> int:
-        return self.db.count_measures(
+        return self.browser.count_measures(
             instrument,
             search_term,
             page,
@@ -717,3 +746,35 @@ class PhenotypeGroup(PhenotypeData):
                     roles,
                 ))
         return pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+
+
+def load_phenotype_data(
+    config: dict[str, Any], extra_configs: list[dict[str, Any]] | None = None,
+) -> PhenotypeStudy | PhenotypeGroup:
+    """Instantiate phenotype data from provided configuration."""
+    if config["type"] not in ("study", "group"):
+        raise ValueError(
+            f"Unknown config type {config['type']} for {config['name']}",
+        )
+
+    if config["type"] == "study":
+        return PhenotypeStudy(
+            config["name"],
+            config["dbfile"],
+            config,
+        )
+    if extra_configs is None:
+        raise ValueError(
+            "Tried creating a group without extra configs passed!",
+        )
+    children_names = config["children"]
+    children = []
+    for extra_config in extra_configs:
+        if extra_config["name"] not in children_names:
+            continue
+        if extra_config["type"] == "study":
+            children.append(load_phenotype_data(extra_config))
+        else:
+            children.append(load_phenotype_data(extra_config, extra_configs))
+
+    return PhenotypeGroup(config["name"], cast(list[PhenotypeData], children))

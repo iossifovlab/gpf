@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+from pathlib import Path
+
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
 from dae.pheno.pheno_data import PhenotypeStudy
@@ -43,11 +45,13 @@ def test_pheno_regressions_from_conf_path(regressions_conf: str) -> None:
 
 
 def test_has_regression_measure(
-    fake_phenotype_data: PhenotypeStudy, output_dir: str, regressions_conf: str,
+    fake_phenotype_data: PhenotypeStudy, output_dir: Path,
+    regressions_conf: str,
 ) -> None:
     reg = GPFConfigParser.load_config(regressions_conf, regression_conf_schema)
     prep = PreparePhenoBrowserBase(
-        "fake", fake_phenotype_data, output_dir, reg,
+        fake_phenotype_data, output_dir, reg["regression"],
+        output_dir / "images",
     )
 
     expected_reg_measures = [

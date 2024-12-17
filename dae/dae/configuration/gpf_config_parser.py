@@ -245,7 +245,7 @@ class GPFConfigParser:
                 default_config = cls.parse_and_interpolate_file(
                     default_config_filename)
 
-            conf_dir = os.path.dirname(filename)
+            conf_dir = os.path.abspath(os.path.dirname(filename))
             return cls.process_config(
                 config, schema, default_config, conf_dir)
         except ValueError:

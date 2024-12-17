@@ -12,6 +12,7 @@ from dae.genomic_resources.repository import (
     GenomicResourceRepo,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.pheno.build_pheno_browser import main as build_browser
 from dae.pheno.pheno_import import main as pheno_import
 from dae.studies.study import GenotypeData
 from dae.testing import (
@@ -857,6 +858,13 @@ s4,121.0199895975403,39.74107684421966,77.32212831797972,51.37116746952451,36.55
         "-o", str(instance_path / "pheno" / "study_1_pheno"),
         "--task-status-dir", str(pheno_path / "status"),
         "--regression", str(pheno_path / "regressions.yaml"),
+    ])
+    build_browser([
+        str(instance_path / "pheno" / "study_1_pheno"),
+        "--phenotype-data-id", "study_1_pheno",
+        "-j", "1",
+        "--force",
+        "--task-status-dir", str(pheno_path / "status"),
     ])
 
 

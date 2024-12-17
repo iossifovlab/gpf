@@ -15,25 +15,35 @@ regression_conf_schema = {
     },
 }
 
-phenotype_data_schema = {
-    "enabled": {"type": "boolean", "default": True},
-    "name": {"type": "string"},
-    "dbfile": {
-        "type": "string",
-        "check_with": validate_existing_path,
-        "coerce": "abspath",
-    },
-    "browser_images_url": {"type": "string"},
-}
-
 pheno_conf_schema = {
+    "name": {"type": "string", "required": True},
+    "enabled": {"type": "boolean", "default": True},
+    "type": {
+        "type": "string",
+        "allowed": ["study", "group"],
+    },
     "conf_dir": {
         "type": "string",
         "check_with": validate_existing_path,
         "coerce": "abspath",
         "required": True,
     },
-    "phenotype_data": {"type": "dict", "schema": phenotype_data_schema},
+    "dbfile": {
+        "type": "string",
+        "check_with": validate_existing_path,
+        "coerce": "abspath",
+        "dependencies": {
+            "type": ["study"],
+        },
+    },
+    "children": {
+        "type": "list",
+        "schema": {"type": "string"},
+        "dependencies": {
+            "type": ["group"],
+        },
+    },
+    "browser_images_url": {"type": "string"},
     **regression_conf_schema,
 }
 
