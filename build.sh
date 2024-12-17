@@ -158,9 +158,10 @@ EOT
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
     defer_ret build_run_ctx_reset
 
-    for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-      build_run_container bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
-        pip install -e .'
+    for d in dae wdae dae_conftests impala_storage impala2_storage gcp_storage external_demo_annotator external_vep_annotator; do
+      build_run_container bash -c \
+        '/opt/conda/bin/conda run --no-capture-output -n gpf \
+            pip install -e "'"${d}"'"'
     done
 
     # ruff
@@ -177,75 +178,26 @@ EOT
       wdae_files=$(find wdae/wdae -name "*.py" -not -path "**/migrations/*");
       /opt/conda/bin/conda run --no-capture-output -n gpf
       pylint dae/dae impala_storage/impala_storage  $wdae_files -f parseable --reports=no -j 4 \
-          --exit-zero > /wd/results/pylint_gpf_report || true'
+          --exit-zero > /wd/results/pylint_report || true'
 
     # pyright
     build_run_detached bash -c '
       cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf pyright dae \
+      /opt/conda/bin/conda run --no-capture-output -n gpf 
+          pyright dae wdae impala_storage impala2_storage gcp_storage external_demo_annotator external_vep_annotator \
           --outputjson \
-          > /wd/results/pyright_dae_report_raw.json || true'
-
-    build_run_detached bash -c '
-      cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf pyright tests \
-          --outputjson \
-          > /wd/results/pyright_dae_tests_report_raw.json || true'
-
-    build_run_detached bash -c '
-      cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf pyright wdae \
-          --outputjson \
-          > /wd/results/pyright_wdae_report_raw.json || true'
-
-    build_run_detached bash -c '
-      cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf pyright impala \
-          --outputjson \
-          > /wd/results/pyright_impala_report_raw.json || true'
-
-    build_run_detached bash -c '
-      cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf pyright impala2 \
-          --outputjson \
-          > /wd/results/pyright_impala2_report_raw.json || true'
-
-    build_run_detached bash -c '
-      cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf pyright gcp_storage \
-          --outputjson \
-          > /wd/results/pyright_gcp_report_raw.json || true'
+          > /wd/results/pyright_report_raw.json || true'
 
     build_run_container wait
 
     build_run bash -c '
       cd /wd;
       /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
-          results/pyright_dae_report_raw.json > results/pyright_dae_report || true'
-    build_run bash -c '
-      cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
-          results/pyright_dae_tests_report_raw.json > results/pyright_dae_tests_report || true'
-    build_run bash -c '
-      cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
-          results/pyright_wdae_report_raw.json > results/pyright_wdae_report || true'
-    build_run bash -c '
-      cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
-          results/pyright_impala_report_raw.json > results/pyright_impala_report || true'
-    build_run bash -c '
-      cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
-          results/pyright_impala2_report_raw.json > results/pyright_impala2_report || true'
-    build_run bash -c '
-      cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf python scripts/convert_pyright_output.py \
-          results/pyright_gcp_report_raw.json > results/pyright_gcp_report || true'
+          results/pyright_report_raw.json > results/pyright_report || true'
 
-    build_run_local cp ./results/pyright_*_report \
+    build_run_local cp ./results/pyright_report \
       ./results/ruff_report \
-      ./results/pylint_gpf_report \
+      ./results/pylint_report \
       ./test-results/
   }
 
@@ -267,8 +219,9 @@ EOT
         defer_ret build_run_ctx_reset ctx:ctx_dae
 
         for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-          build_run_container ctx:ctx_dae bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
-            pip install -e .'
+          build_run_container ctx:ctx_dae bash -c \
+            '/opt/conda/bin/conda run --no-capture-output -n gpf \
+                pip install -e "'"${d}"'"'
         done
 
         build_run_detached ctx:ctx_dae bash -c '
@@ -297,9 +250,12 @@ EOT
         defer_ret build_run_ctx_reset ctx:ctx_dae_integ
 
         for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-          build_run_container ctx:ctx_dae_integ bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
-            pip install -e .'
+          build_run_container ctx:ctx_dae_integ bash -c \
+            '/opt/conda/bin/conda run --no-capture-output -n gpf \
+                pip install -e "'"${d}"'"'
         done
+
+        build_run_attach 
 
         build_run_detached ctx:ctx_dae_integ bash -c '
             cd /wd/dae/tests;
@@ -322,15 +278,15 @@ EOT
           --network "${ctx_network["network_id"]}" \
           --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-          --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
           --env WDAE_EMAIL_HOST="mailhog"
 
         defer_ret build_run_ctx_reset ctx:ctx_wdae
 
         for d in /wd/dae /wd/wdae /wd/dae_conftests; do
-          build_run_container ctx:ctx_wdae bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
-            pip install -e .'
+          build_run_container ctx:ctx_wdae bash -c \
+            '/opt/conda/bin/conda run --no-capture-output -n gpf \
+                pip install -e "'"${d}"'"'
         done
 
         build_run_detached ctx:ctx_wdae bash -c '
@@ -352,7 +308,6 @@ EOT
           --network "${ctx_network["network_id"]}" \
           --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-          --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
           --env AWS_ACCESS_KEY_ID="foo" \
           --env AWS_SECRET_ACCESS_KEY="foo" \
@@ -361,8 +316,9 @@ EOT
         defer_ret build_run_ctx_reset ctx:ctx_demo
 
         for d in /wd/dae /wd/wdae /wd/dae_conftests /wd/external_demo_annotator; do
-          build_run_container ctx:ctx_demo bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
-            pip install -e .'
+          build_run_container ctx:ctx_demo bash -c \
+            '/opt/conda/bin/conda run --no-capture-output -n gpf \
+                pip install -e "'"${d}"'"'
         done
 
         build_run_detached ctx:ctx_demo bash -c '
@@ -383,7 +339,6 @@ EOT
           --network "${ctx_network["network_id"]}" \
           --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
-          --env TEST_REMOTE_HOST="gpfremote" \
           --env LOCALSTACK_HOST="localstack" \
           --env AWS_ACCESS_KEY_ID="foo" \
           --env AWS_SECRET_ACCESS_KEY="foo" \
@@ -392,8 +347,9 @@ EOT
         defer_ret build_run_ctx_reset ctx:ctx_vep
 
         for d in /wd/dae /wd/wdae /wd/dae_conftests /wd/external_vep_annotator; do
-          build_run_container ctx:ctx_vep bash -c 'cd "'"${d}"'"; /opt/conda/bin/conda run --no-capture-output -n gpf \
-            pip install -e .'
+          build_run_container ctx:ctx_vep bash -c \
+            '/opt/conda/bin/conda run --no-capture-output -n gpf \
+                pip install -e "'"${d}"'"'
         done
 
         build_run_detached ctx:ctx_vep bash -c '
