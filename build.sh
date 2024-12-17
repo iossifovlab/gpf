@@ -160,7 +160,8 @@ EOT
 
     for d in dae wdae dae_conftests impala_storage impala2_storage gcp_storage external_demo_annotator external_vep_annotator; do
       build_run_container bash -c \
-        '/opt/conda/bin/conda run --no-capture-output -n gpf \
+        'cd /wd;
+        /opt/conda/bin/conda run --no-capture-output -n gpf \
             pip install -e "'"${d}"'"'
     done
 
