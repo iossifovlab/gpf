@@ -20,7 +20,9 @@ def _convert_to_pylint(diag: dict) -> str:
 
 
 def main(filepath: str):
-    report = json.loads(pathlib.Path(filepath).read_text())
+    if not (raw := pathlib.Path(filepath).read_text()):
+        return
+    report = json.loads(raw)
     for part in report["generalDiagnostics"]:
         print(_convert_to_pylint(part))
 
