@@ -751,6 +751,12 @@ class PhenotypeGroup(PhenotypeData):
 def load_phenotype_data(
     config: dict[str, Any], extra_configs: list[dict[str, Any]] | None = None,
 ) -> PhenotypeStudy | PhenotypeGroup:
+    """Instantiate phenotype data from provided configuration."""
+    if config["type"] not in ("study", "group"):
+        raise ValueError(
+            f"Unknown config type {config['type']} for {config['name']}",
+        )
+
     if config["type"] == "study":
         return PhenotypeStudy(
             config["name"],
