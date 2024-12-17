@@ -165,6 +165,8 @@ EOT
             pip install -e "'"${d}"'"'
     done
 
+    build_run_attach
+
     # ruff
     build_run_detached bash -c '
       cd /wd;
@@ -184,7 +186,7 @@ EOT
     # pyright
     build_run_detached bash -c '
       cd /wd;
-      /opt/conda/bin/conda run --no-capture-output -n gpf 
+      /opt/conda/bin/conda run --no-capture-output -n gpf \
           pyright dae wdae impala_storage impala2_storage gcp_storage external_demo_annotator external_vep_annotator \
           --outputjson \
           > /wd/results/pyright_report_raw.json || true'
