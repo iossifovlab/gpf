@@ -9,7 +9,6 @@ channels:
   - bioconda
   - iossifovlab
 dependencies:
-  - versioneer=0.29
   - dask-kubernetes=2024.5
   - duckdb-cli=1.1.3
   - coverage=7.6
