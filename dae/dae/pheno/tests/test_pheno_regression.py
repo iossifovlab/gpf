@@ -47,7 +47,7 @@ def test_has_regression_measure(
 ) -> None:
     reg = GPFConfigParser.load_config(regressions_conf, regression_conf_schema)
     prep = PreparePhenoBrowserBase(
-        "fake", fake_phenotype_data, output_dir, reg,
+        fake_phenotype_data, output_dir, reg,
     )
 
     expected_reg_measures = [

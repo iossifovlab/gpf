@@ -1,9 +1,9 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import os
-import pathlib
 import shutil
 import tempfile
 from collections.abc import Generator
+from pathlib import Path
 
 import duckdb
 import pandas as pd
@@ -58,7 +58,7 @@ def fake_pheno_db_dir(fake_dae_conf: Box) -> str:
     return get_pheno_db_dir(fake_dae_conf)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def clean_pheno_db_dir(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("clean_pheno")
     destination = os.path.join(root_path, "clean_fake")
@@ -79,15 +79,14 @@ def fake_instrument_filename() -> str:
 
 @pytest.fixture(scope="session")
 def fi1_df(fake_instrument_filename: str) -> pd.DataFrame:
-    df = pd.read_csv(
+    return pd.read_csv(
         fake_instrument_filename, low_memory=False, encoding="utf-8",
     )
-    return df
 
 
 @pytest.fixture(scope="session")
 def fi1_db(
-        fi1_df: pd.DataFrame,
+        fi1_df: pd.DataFrame,  # noqa: ARG001
 ) -> Generator[tuple[duckdb.DuckDBPyConnection, str], None, None]:
     connection = duckdb.connect(":memory:")
     connection.sql("CREATE TABLE fi1_data AS FROM (SELECT * FROM fi1_df)")
@@ -97,19 +96,7 @@ def fi1_db(
 
 @pytest.fixture(scope="session")
 def fake_pheno_db(fake_pheno_db_dir: str) -> PhenoRegistry:
-    pheno_configs = GPFConfigParser.collect_directory_configs(
-        fake_pheno_db_dir,
-    )
-
-    pheno_registry = PhenoRegistry()
-
-    with PhenoRegistry.CACHE_LOCK:
-        for config in pheno_configs:
-            pheno_registry.register_phenotype_data(
-                PhenoRegistry.load_pheno_data(pathlib.Path(config)),
-                lock=False,
-            )
-    return pheno_registry
+    return PhenoRegistry.from_directory(fake_pheno_db_dir)
 
 
 @pytest.fixture(scope="session")
@@ -119,8 +106,7 @@ def fake_phenotype_data_config() -> str:
 
 @pytest.fixture(scope="session")
 def fake_phenotype_data(fake_pheno_db: PhenoRegistry) -> PhenotypeData:
-    data = fake_pheno_db.get_phenotype_data("fake")
-    return data
+    return fake_pheno_db.get_phenotype_data("fake")
 
 
 @pytest.fixture(scope="session")
@@ -140,7 +126,7 @@ def fake_phenotype_data_i1_dbfile() -> str:
 @pytest.fixture(scope="session")
 def fake_phenotype_data_browser_dbfile() -> str:
     return relative_to_this_folder(
-        "fixtures/fake_phenoDB/main_fake/fake_browser.db",
+        "fixtures/fake_phenoDB/main_fake/browser.db",
     )
 
 
@@ -150,7 +136,7 @@ def dummy_pheno_missing_files_conf() -> str:
 
 
 @pytest.fixture(scope="session")
-def fake_pheno_config(fake_dae_conf: str) -> Box:
+def fake_pheno_config(fake_dae_conf: Box) -> Box:
     return GPFConfigParser.load_directory_configs(
         fake_dae_conf.phenotype_data.dir, pheno_conf_schema,
     )
@@ -163,15 +149,14 @@ def fake_background_filename() -> str:
 
 @pytest.fixture(scope="session")
 def fake_background_df(fake_background_filename: str) -> pd.DataFrame:
-    df = pd.read_csv(
+    return pd.read_csv(
         fake_background_filename, low_memory=False, encoding="utf-8",
     )
-    return df
 
 
 @pytest.fixture(scope="session")
 def fake_background_db(
-    fake_background_df: pd.DataFrame,
+    fake_background_df: pd.DataFrame,  # noqa: ARG001
 ) -> Generator[tuple[duckdb.DuckDBPyConnection, str], None, None]:
     connection = duckdb.connect(":memory:")
     connection.sql(
@@ -190,16 +175,12 @@ def test_config(temp_dbfile: str) -> Box:
 
 
 @pytest.fixture()
-def temp_dbfile(request) -> str:
+def temp_dbfile() -> Generator[str, None, None]:
     dirname = tempfile.mkdtemp(suffix="_ped", prefix="pheno_db_")
 
-    def fin():
-        shutil.rmtree(dirname)
+    yield os.path.join(dirname, "test_output.db")
 
-    request.addfinalizer(fin)
-
-    output = os.path.join(dirname, "test_output.db")
-    return output
+    shutil.rmtree(dirname)
 
 
 @pytest.fixture()
@@ -213,14 +194,12 @@ def invalid_descriptions() -> str:
 
 
 @pytest.fixture()
-def output_dir(request) -> str:
+def output_dir() -> Generator[Path, None, None]:
     tmpdir = tempfile.mkdtemp(prefix="pheno_browser")
 
-    def fin():
-        shutil.rmtree(tmpdir)
+    yield Path(tmpdir)
 
-    request.addfinalizer(fin)
-    return tmpdir
+    shutil.rmtree(tmpdir)
 
 
 @pytest.fixture(scope="session")
@@ -229,14 +208,10 @@ def regressions_conf() -> str:
 
 
 @pytest.fixture()
-def temp_dirname_figures(request) -> str:
+def temp_dirname_figures() -> Generator[str, None, None]:
     dirname = tempfile.mkdtemp(suffix="_plots", prefix="figures_")
-
-    def fin():
-        shutil.rmtree(dirname)
-
-    request.addfinalizer(fin)
-    return dirname
+    yield dirname
+    shutil.rmtree(dirname)
 
 
 @pytest.fixture()
@@ -247,6 +222,20 @@ def fake_phenodb_file_copy(
     temp_dbfile = os.path.join(output_dir, "phenodb.db")
     shutil.copy(
         fake_phenotype_data_i1_dbfile,
+        temp_dbfile,
+    )
+
+    return temp_dbfile
+
+
+@pytest.fixture()
+def fake_browserdb_file_copy(
+    output_dir: str,
+    fake_phenotype_data_browser_dbfile,
+) -> str:
+    temp_dbfile = os.path.join(output_dir, "browser.db")
+    shutil.copy(
+        fake_phenotype_data_browser_dbfile,
         temp_dbfile,
     )
 
