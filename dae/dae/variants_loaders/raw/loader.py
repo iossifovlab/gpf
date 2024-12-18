@@ -126,7 +126,7 @@ class CLIArgument:
                             ).decode().replace("\\\\", "\\")
                         return f'{self.argument_name} "{value}"'
                     if use_defaults and self.default_value is not None:
-                        value = self.default_value
+                        value = str(self.default_value)
                         if self.raw:
                             value = value.encode(
                                 "unicode-escape",
@@ -828,10 +828,11 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_best_state(
-            cls,
-            family_variant: FamilyVariant,
-            genome: ReferenceGenome, *,
-            force: bool = True) -> np.ndarray | None:
+        cls,
+        family_variant: FamilyVariant,
+        genome: ReferenceGenome, *,
+        force: bool = True,
+    ) -> np.ndarray | None:
         assert family_variant.gt is not None
 
         male_ploidy = get_locus_ploidy(

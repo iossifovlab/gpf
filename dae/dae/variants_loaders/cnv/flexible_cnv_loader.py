@@ -1,7 +1,7 @@
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Callable, TextIO
+from typing import Any, TextIO
 
 import numpy as np
 
@@ -163,7 +163,7 @@ def _cnv_person_id_to_best_state(
                 persons.append(person)
                 family_ids.add(person.family_id)
             assert len(family_ids) == 1, family_ids
-            family = families[list(family_ids)[0]]
+            family = families[next(iter(family_ids))]
 
         chrom = result["chrom"]
         pos = result["pos"]
@@ -198,13 +198,6 @@ def _configure_cnv_best_state(
         cnv_best_state: str | None = None) -> None:
     """Configure header and transformers that handle CNV family genotypes."""
     if cnv_person_id is not None:
-        # if cnv_family_id is not None and cnv_best_state is not None:
-        #     raise ValueError(
-        #         f"mixed configuration of cnv best state: "
-        #         f"person_id({cnv_person_id}) <-> "
-        #         f"family_id({cnv_family_id}) and "
-        #         f"best_state({cnv_best_state})"
-        #     )
         person_index = header.index(cnv_person_id)
         header[person_index] = "person_id"
 
@@ -356,12 +349,11 @@ def flexible_cnv_loader(
         return line.strip("\n\r").split(cnv_sep)
 
     if isinstance(filepath_or_buffer, (str, Path)):
-        infile = open(filepath_or_buffer, "rt")
+        infile = open(filepath_or_buffer, "rt")  # noqa: SIM115
     else:
         infile = filepath_or_buffer  # type: ignore
 
     with infile as infile:
-        # FIXME don't throw StopIteration and fix the next line
         line = next(infile)  # pylint: disable=stop-iteration-return
         header = line_splitter(line)
 
@@ -385,5 +377,4 @@ def flexible_cnv_loader(
             filters=[],
         )
 
-        for record in variant_generator:
-            yield record
+        yield from variant_generator

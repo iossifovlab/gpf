@@ -6,7 +6,7 @@ import os
 import warnings
 from collections.abc import Generator
 from contextlib import closing
-from typing import Any
+from typing import Any, BinaryIO, cast
 
 import fsspec
 import numpy as np
@@ -170,7 +170,7 @@ class DenovoLoader(VariantsGenotypesLoader):
                     (fv.gt,
                      fv._genetic_model,  # noqa: SLF001
                     ) = self._calc_genotype(fv, self.genome)
-                    for fa in fv.alleles:
+                    for fa in fv.family_alleles:
                         fa.gt = fv.gt
                         # pylint: disable=protected-access
                         fa._genetic_model = fv.genetic_model  # noqa: SLF001
@@ -877,7 +877,8 @@ class DaeTransmittedLoader(VariantsGenotypesLoader):
 
     @staticmethod
     def _load_column_names(filename: str) -> list[str]:
-        with fsspec.open(filename) as rawfile, gzip.open(rawfile) as infile:
+        with fsspec.open(filename) as rawfile, \
+                gzip.open(cast(BinaryIO, rawfile)) as infile:
             return (
                 infile.readline().decode("utf-8").strip().split("\t")
             )
