@@ -62,7 +62,7 @@ export class GeneProfilesBlockComponent implements OnInit {
     const genomicScores = config.genomicScores;
 
     geneProfilesTableConfig.columns.push(
-      new GeneProfilesColumn('createTab', [], 'Gene', false, 'geneSymbol', null, false, true)
+      new GeneProfilesColumn('createTab', [], 'Gene', false, 'geneSymbol', null, false, true, null)
     );
 
     geneSets.forEach(geneSet => {
@@ -95,7 +95,8 @@ export class GeneProfilesBlockComponent implements OnInit {
           `${geneSet.category}_rank.${set.setId}`,
           set.meta,
           true,
-          set.defaultVisible
+          set.defaultVisible,
+          null
         )
       );
     });
@@ -108,7 +109,8 @@ export class GeneProfilesBlockComponent implements OnInit {
       `${geneSet.category}_rank`,
       null,
       true,
-      geneSet.defaultVisible
+      geneSet.defaultVisible,
+      null
     );
   }
 
@@ -124,7 +126,8 @@ export class GeneProfilesBlockComponent implements OnInit {
           `${genomicScore.category}.${score.scoreName}`,
           score.meta,
           true,
-          score.defaultVisible
+          score.defaultVisible,
+          score.format
         ));
     });
 
@@ -136,7 +139,8 @@ export class GeneProfilesBlockComponent implements OnInit {
       genomicScore.category,
       null,
       false,
-      genomicScore.defaultVisible
+      genomicScore.defaultVisible,
+      null
     );
   }
 
@@ -154,7 +158,8 @@ export class GeneProfilesBlockComponent implements OnInit {
             `${dataset.id}.${set.id}.${statistic.id}`,
             null,
             true,
-            statistic.defaultVisible
+            statistic.defaultVisible,
+            null
           )
         );
       });
@@ -168,13 +173,14 @@ export class GeneProfilesBlockComponent implements OnInit {
           `${dataset.id}.${set.id}`,
           null,
           false,
-          set.defaultVisible
+          set.defaultVisible,
+          null
         )
       );
     });
 
     return new GeneProfilesColumn(
-      null, personSetsColumns, dataset.displayName, false, dataset.id, dataset.meta, false, dataset.defaultVisible
+      null, personSetsColumns, dataset.displayName, false, dataset.id, dataset.meta, false, dataset.defaultVisible, null
     );
   }
 

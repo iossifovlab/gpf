@@ -18,6 +18,7 @@ export class GeneProfilesColumn {
   public displayVertical: boolean;
   public clickable: string | null;
   public meta: string | null;
+  public format: string;
 
   public parent?: GeneProfilesColumn = null;
   public gridColumn?: string = null;
@@ -34,7 +35,8 @@ export class GeneProfilesColumn {
     id: string,
     meta: string,
     sortable: boolean,
-    visibility: boolean
+    visibility: boolean,
+    format: string
   ) {
     this.clickable = clickable;
     this.columns = columns;
@@ -44,6 +46,7 @@ export class GeneProfilesColumn {
     this.meta = meta;
     this.sortable = sortable;
     this.visibility = visibility;
+    this.format = format;
   }
 
   public get visibility(): boolean {
