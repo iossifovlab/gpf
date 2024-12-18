@@ -297,7 +297,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             vcf.close()
 
     def _init_vcf_readers(self) -> None:
-        self.vcfs = []
+        self.vcfs: list[pysam.VariantFile] = []
         logger.debug("SingleVcfLoader input files: %s", self.filenames)
 
         for file in self.filenames:
@@ -346,7 +346,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         """Return list of all chromosomes from VCF file(s)."""
         assert len(self.vcfs) > 0
 
-        seqnames = list(self.vcfs[0].header.contigs)
+        seqnames = [str(c) for c in self.vcfs[0].header.contigs]
         filename = self.filenames[0]
         tabix_index_filename = fs_utils.tabix_index_filename(filename)
         if tabix_index_filename is None:
@@ -361,7 +361,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 fs_utils.sign(filename),
                 index=index_filename,
             ) as tbx:
-                res = list(tbx.contigs)
+                res = [str(c) for c in tbx.contigs]
         except Exception:  # noqa: BLE001
             res = seqnames
 

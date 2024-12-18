@@ -8,7 +8,7 @@ import os
 import pathlib
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Generator, Sequence
+from collections.abc import Callable, Generator, Sequence
 from enum import Enum
 from typing import (
     Any,
@@ -741,8 +741,8 @@ class VariantsGenotypesLoader(VariantsLoader):
         if regions is not None:
             self.reset_regions(regions)
 
-        self._adjust_chrom_prefix = lambda chrom: chrom
-        self._unadjust_chrom_prefix = lambda chrom: chrom
+        self._adjust_chrom_prefix: Callable[[str], str] = lambda chrom: chrom
+        self._unadjust_chrom_prefix: Callable[[str], str] = lambda chrom: chrom
         if params.get("add_chrom_prefix", None):
             self._chrom_prefix = params["add_chrom_prefix"]
             self._adjust_chrom_prefix = self._add_chrom_prefix
