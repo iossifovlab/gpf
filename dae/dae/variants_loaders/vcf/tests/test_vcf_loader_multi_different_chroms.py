@@ -2,19 +2,33 @@
 import numpy as np
 import pytest
 
-from dae.genomic_resources.testing import setup_pedigree, setup_vcf
-from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.testing import (
+    setup_genome,
+    setup_pedigree,
+    setup_vcf,
+)
 from dae.pedigrees.loader import FamiliesLoader
-from dae.testing.acgt_import import acgt_gpf
 from dae.utils.regions import Region
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture
-def gpf_instance(
-        tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
-    root_path = tmp_path_factory.mktemp("instance")
-    return acgt_gpf(root_path)
+@pytest.fixture(scope="module")
+def genome(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> ReferenceGenome:
+    root_path = tmp_path_factory.mktemp("genome")
+    return setup_genome(
+        root_path / "acgt_gpf" / "genome" / "allChr.fa",
+        f"""
+        >chr1
+        {25 * "ACGT"}
+        >chr2
+        {25 * "ACGT"}
+        >chr3
+        {25 * "ACGT"}
+        """,
+    )
 
 
 @pytest.fixture
@@ -167,7 +181,7 @@ def multi_contig_chr_vcf_gz(
 def test_chromosomes_have_adjusted_chrom_add_prefix(
     quad_ped: str,
     multi_contig_vcf: str,
-    gpf_instance: GPFInstance,
+    genome: ReferenceGenome,
 ) -> None:
     ped_file = quad_ped
 
@@ -175,7 +189,7 @@ def test_chromosomes_have_adjusted_chrom_add_prefix(
     loader = VcfLoader(
         family_loader,
         [multi_contig_vcf],
-        gpf_instance.reference_genome,
+        genome,
         params={"add_chrom_prefix": "chr"})
 
     assert set(loader.chromosomes) == {
@@ -185,7 +199,7 @@ def test_chromosomes_have_adjusted_chrom_add_prefix(
 def test_chromosomes_have_adjusted_chrom_del_prefix(
     multi_generational_ped: str,
     multi_contig_chr_vcf: str,
-    gpf_instance: GPFInstance,
+    genome: ReferenceGenome,
 ) -> None:
     ped_file = multi_generational_ped
 
@@ -193,7 +207,7 @@ def test_chromosomes_have_adjusted_chrom_del_prefix(
     loader = VcfLoader(
         family_loader,
         [multi_contig_chr_vcf],
-        gpf_instance.reference_genome,
+        genome,
         params={"del_chrom_prefix": "chr"},
     )
 
@@ -203,7 +217,7 @@ def test_chromosomes_have_adjusted_chrom_del_prefix(
 def test_variants_have_adjusted_chrom_add_prefix(
     quad_ped: str,
     multi_contig_vcf: str,
-    gpf_instance: GPFInstance,
+    genome: ReferenceGenome,
 ) -> None:
     ped_file = quad_ped
 
@@ -211,7 +225,7 @@ def test_variants_have_adjusted_chrom_add_prefix(
     loader = VcfLoader(
         family_loader,
         [multi_contig_vcf],
-        gpf_instance.reference_genome,
+        genome,
         params={"add_chrom_prefix": "chr"},
     )
 
@@ -226,7 +240,7 @@ def test_variants_have_adjusted_chrom_add_prefix(
 def test_variants_have_adjusted_chrom_del_prefix(
     multi_generational_ped: str,
     multi_contig_chr_vcf: str,
-    gpf_instance: GPFInstance,
+    genome: ReferenceGenome,
 ) -> None:
     ped_file = multi_generational_ped
 
@@ -234,7 +248,7 @@ def test_variants_have_adjusted_chrom_del_prefix(
     loader = VcfLoader(
         family_loader,
         [multi_contig_chr_vcf],
-        gpf_instance.reference_genome,
+        genome,
         params={"del_chrom_prefix": "chr"})
 
     list(loader.full_variants_iterator())
@@ -248,7 +262,7 @@ def test_variants_have_adjusted_chrom_del_prefix(
 def test_reset_regions_with_adjusted_chrom_add_prefix(
     quad_ped: str,
     multi_contig_vcf_gz: str,
-    gpf_instance: GPFInstance,
+    genome: ReferenceGenome,
 ) -> None:
     ped_file = quad_ped
 
@@ -256,7 +270,7 @@ def test_reset_regions_with_adjusted_chrom_add_prefix(
     loader = VcfLoader(
         family_loader,
         [multi_contig_vcf_gz],
-        gpf_instance.reference_genome,
+        genome,
         params={"add_chrom_prefix": "chr"},
     )
     regions = ["chrchr1", "chrchr2"]
@@ -272,7 +286,7 @@ def test_reset_regions_with_adjusted_chrom_add_prefix(
 def test_reset_regions_with_adjusted_chrom_del_prefix(
     quad_ped: str,
     multi_contig_chr_vcf_gz: str,
-    gpf_instance: GPFInstance,
+    genome: ReferenceGenome,
 ) -> None:
     ped_file = quad_ped
     family_loader = FamiliesLoader(ped_file).load()
@@ -280,7 +294,7 @@ def test_reset_regions_with_adjusted_chrom_del_prefix(
     loader = VcfLoader(
         family_loader,
         [multi_contig_chr_vcf_gz],
-        gpf_instance.reference_genome,
+        genome,
         params={"del_chrom_prefix": "chr"})
     regions = ["1", "2"]
 

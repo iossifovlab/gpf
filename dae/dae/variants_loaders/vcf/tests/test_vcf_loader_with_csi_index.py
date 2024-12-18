@@ -1,14 +1,12 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+
 import pytest
 
-from dae.genomic_resources.repository_factory import (
-    build_genomic_resource_repository,
-)
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing import (
-    setup_empty_gene_models,
     setup_genome,
-    setup_gpf_instance,
     setup_pedigree,
     setup_vcf,
 )
@@ -16,10 +14,12 @@ from dae.variants_loaders.vcf.loader import VcfLoader
 
 
 @pytest.fixture(scope="module")
-def import_vcf_data(tmp_path_factory):
+def import_vcf_data(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> tuple[ReferenceGenome, pathlib.Path, pathlib.Path]:
     root_path = tmp_path_factory.mktemp("vcf2parquet_contigs_problem")
 
-    setup_genome(
+    genome = setup_genome(
         root_path / "acgt_gpf" / "genome" / "allChr.fa",
         f"""
         >chr1
@@ -30,19 +30,6 @@ def import_vcf_data(tmp_path_factory):
         {25 * "ACGT"}
         """,
     )
-    setup_empty_gene_models(
-        root_path / "acgt_gpf" / "empty_gene_models" / "empty_genes.txt")
-    local_repo = build_genomic_resource_repository({
-        "id": "acgt_local",
-        "type": "directory",
-        "directory": str(root_path / "acgt_gpf"),
-    })
-
-    gpf_instance = setup_gpf_instance(
-        root_path / "gpf_instance",
-        reference_genome_id="genome",
-        gene_models_id="empty_gene_models",
-        grr=local_repo)
     ped_path = setup_pedigree(
         root_path / "study_1" / "in.ped",
         """
@@ -66,11 +53,11 @@ def import_vcf_data(tmp_path_factory):
         chr2   1   .  A   T    .    .      .    GT     0/1 0/0 0/1 0/0 0/0 0/1
         chr2   2   .  A   T    .    .      .    GT     0/0 0/0 0/0 0/0 0/0 0/1
         """, csi=True)
-    return (gpf_instance, ped_path, vcf_path)
+    return (genome, ped_path, vcf_path)
 
 
-def test_vcf_loader_with_csi_index(import_vcf_data, tmp_path_factory):
-    gpf_instance, ped_path, vcf_path = import_vcf_data
+def test_vcf_loader_with_csi_index(import_vcf_data):
+    genome, ped_path, vcf_path = import_vcf_data
 
     families_loader = FamiliesLoader(str(ped_path))
     families = families_loader.load()
@@ -78,7 +65,7 @@ def test_vcf_loader_with_csi_index(import_vcf_data, tmp_path_factory):
     loader = VcfLoader(
         families,
         [str(vcf_path)],
-        gpf_instance.reference_genome,
+        genome,
         params={
             "vcf_include_reference_genotypes": True,
             "vcf_include_unknown_family_genotypes": True,

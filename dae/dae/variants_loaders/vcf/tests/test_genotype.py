@@ -1,21 +1,31 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pathlib
 
 import numpy as np
 import pytest
 
-from dae.studies.study import GenotypeData
-from dae.testing import setup_pedigree, setup_vcf, vcf_study
-from dae.testing.alla_import import alla_gpf
+from dae.pedigrees.loader import FamiliesLoader
+from dae.testing import (
+    setup_genome,
+    setup_pedigree,
+    setup_vcf,
+)
 from dae.utils.regions import Region
+from dae.variants_loaders.vcf.loader import VcfLoader
 
 
 @pytest.fixture(scope="module")
-def a_study(
-        tmp_path_factory: pytest.TempPathFactory) -> GenotypeData:
+def study_loader(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> VcfLoader:
     root_path = tmp_path_factory.mktemp(
         "genotype_tests")
-    gpf_instance = alla_gpf(root_path)
+    genome = setup_genome(
+        root_path / "genome" / "chr.fa",
+        f"""
+        >chr1
+        {100 * "A"}
+        """)
+
     ped_path = setup_pedigree(
         root_path / "vcf_data" / "in.ped",
         """
@@ -35,46 +45,26 @@ f        ch3      dad   mom   2   1      sib
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##contig=<ID=chrA>
 #CHROM POS ID REF ALT   QUAL FILTER INFO  FORMAT mom dad ch1 ch2 ch3 gma gpa
-chrA   1   .  A   G,C   .    .      .     GT     0/0 0/0 0/0 0/0 0/0 0/0 0/0
 chrA   2   .  A   G,C   .    .      .     GT     0/2 0/0 0/0 0/0 0/0 0/0 0/0
-chrA   3   .  A   G,C   .    .      .     GT     ./. ./. ./. ./. ./. ./. ./.
-chrA   4   .  A   G,C   .    .      .     GT     0/1 0/0 0/0 0/0 0/2 0/0 0/0
-chrA   5   .  A   G,C   .    .      .     GT     0/0 0/0 ./. 0/0 0/0 0/0 0/0
-chrA   6   .  A   G     .    .      .     GT     0/0 0/0 ./. 0/0 0/0 0/0 0/0
-chrA   7   .  A   G     .    .      .     GT     0/0 0/0 ./. 0/0 0/1 0/0 0/0
-chrA   8   .  A   G     .    .      .     GT     0/0 0/0 0/0 1/1 0/1 0/0 0/0
-chrA   9   .  A   G     .    .      .     GT     0/0 0/0 0/0 0/1 0/0 0/0 1/1
 chrA   10  .  A   GC,CC,CT,CC . .   .     GT     2/3 2/2 2/2 2/2 2/2 2/2 2/2
         """)
 
-    study = vcf_study(
-        root_path,
-        "a", pathlib.Path(ped_path),
-        [pathlib.Path(vcf_path)],
-        gpf_instance,
-        project_config_update={
-            "input": {
-                "vcf": {
-                    "include_reference_genotypes": True,
-                    "include_unknown_family_genotypes": True,
-                    "include_unknown_person_genotypes": True,
-                    "denovo_mode": "denovo",
-                    "omission_mode": "omission",
-                },
-            },
-            "processing_config": {
-                "include_reference": True,
-            },
-        })
-    return study
+    families = FamiliesLoader(ped_path).load()
+    return VcfLoader(
+        families,
+        [str(vcf_path)],
+        genome,
+    )
 
 
-def test_11540_gt(a_study: GenotypeData) -> None:
+def test_11540_gt(study_loader: VcfLoader) -> None:
+    study_loader.reset_regions([Region("chrA", 2, 2)])
+    all_variants = list(study_loader.full_variants_iterator())
+    assert len(all_variants) == 1
+    _sv, fvs = all_variants[0]
+    assert len(fvs) == 1
+    v = fvs[0]
 
-    vs = list(a_study.query_variants(regions=[Region("chrA", 2, 2)]))
-    assert len(vs) == 1
-
-    v = vs[0]
     assert v.position == 2
 
     print(v.gt)
@@ -103,7 +93,10 @@ def test_11540_gt(a_study: GenotypeData) -> None:
         [0, 0],
         [0, 0],
         [0, 0]]
-    assert all(eg == g for (eg, g) in zip(expected_genotype, v.genotype))
+    assert all(
+        eg == g
+        for (eg, g) in zip(expected_genotype, v.genotype, strict=True)
+    )
 
     expected_family_genotype = [
         [0, 0],
@@ -115,14 +108,18 @@ def test_11540_gt(a_study: GenotypeData) -> None:
         [0, 0]]
     assert all(
         eg == g
-        for (eg, g) in zip(expected_family_genotype, v.family_genotype))
+        for (eg, g) in zip(
+            expected_family_genotype, v.family_genotype, strict=True))
 
 
-def test_11540_family_alleles(a_study: GenotypeData) -> None:
-    vs = list(a_study.query_variants(regions=[Region("chrA", 2, 2)]))
-    assert len(vs) == 1
+def test_11540_family_alleles(study_loader: VcfLoader) -> None:
+    study_loader.reset_regions([Region("chrA", 2, 2)])
+    all_variants = list(study_loader.full_variants_iterator())
+    assert len(all_variants) == 1
+    _sv, fvs = all_variants[0]
+    assert len(fvs) == 1
+    v = fvs[0]
 
-    v = vs[0]
     assert v.position == 2
     assert len(v.alt_alleles) == 1
 
@@ -134,12 +131,14 @@ def test_11540_family_alleles(a_study: GenotypeData) -> None:
     assert v.family_allele_indexes == [0, 1]
 
 
-def test_11548_gt(a_study: GenotypeData) -> None:
+def test_11548_gt(study_loader: VcfLoader) -> None:
+    study_loader.reset_regions([Region("chrA", 10, 10)])
+    all_variants = list(study_loader.full_variants_iterator())
+    assert len(all_variants) == 1
+    _sv, fvs = all_variants[0]
+    assert len(fvs) == 1
+    v = fvs[0]
 
-    vs = list(a_study.query_variants(regions=[Region("chrA", 10, 10)]))
-    assert len(vs) == 1
-
-    v = vs[0]
     assert v.position == 10
 
     print(v.gt)
@@ -171,7 +170,9 @@ def test_11548_gt(a_study: GenotypeData) -> None:
         [2, 2],
         [2, 2],
         [2, 2]]
-    assert all(eg == g for (eg, g) in zip(expected_genotype, v.genotype))
+    assert all(
+        eg == g
+        for (eg, g) in zip(expected_genotype, v.genotype, strict=True))
 
     expected_family_genotype = [
         [1, 1],
@@ -183,4 +184,5 @@ def test_11548_gt(a_study: GenotypeData) -> None:
         [1, 1]]
     assert all(
         eg == g
-        for (eg, g) in zip(expected_family_genotype, v.family_genotype))
+        for (eg, g) in zip(
+            expected_family_genotype, v.family_genotype, strict=True))
