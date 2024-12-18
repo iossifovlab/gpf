@@ -4,8 +4,17 @@ from collections.abc import Callable
 import numpy as np
 import pytest
 
-from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
+    build_reference_genome_from_resource,
+)
+from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.testing import (
+    build_filesystem_test_resource,
+    setup_directories,
+)
 from dae.pedigrees.family import Family
+from dae.testing import setup_genome
 from dae.utils.variant_utils import best2gt, mat2str
 from dae.variants.attributes import GeneticModel
 from dae.variants.family_variant import (
@@ -16,13 +25,47 @@ from dae.variants.variant import SummaryAllele, SummaryVariant
 from dae.variants_loaders.raw.loader import VariantsGenotypesLoader
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
+def genome(tmp_path_factory: pytest.TempPathFactory) -> ReferenceGenome:
+    root_path = tmp_path_factory.mktemp("genome")
+    setup_genome(
+        root_path / "chr.fa",
+        f"""
+        >1
+        {25 * "ACGT"}
+        >2
+        {25 * "ACGT"}
+        >X
+        {25 * "ACGT"}
+        >Y
+        {25 * "ACGT"}
+        """,
+    )
+
+    setup_directories(root_path, {
+        GR_CONF_FILE_NAME: """
+            type: genome
+            filename: chr.fa
+            PARS:
+                X:
+                    - "X:50-60"
+                    - "X:90-100"
+                Y:
+                    - "Y:50-60"
+                    - "Y:90-100"
+        """,
+    })
+    res = build_filesystem_test_resource(root_path)
+    return build_reference_genome_from_resource(res)
+
+
+@pytest.fixture(scope="module")
 def sv1() -> SummaryVariant:
     return SummaryVariant(
         [
-            SummaryAllele("1", 11539, "T", None, 0, 0),
-            SummaryAllele("1", 11539, "T", "TA", 0, 1),
-            SummaryAllele("1", 11539, "T", "TG", 0, 2),
+            SummaryAllele("1", 4, "T", None, 0, 0),
+            SummaryAllele("1", 4, "T", "TA", 0, 1),
+            SummaryAllele("1", 4, "T", "TG", 0, 2),
         ],
     )
 
@@ -43,7 +86,7 @@ def fv1(
 
 
 @pytest.mark.parametrize(
-    "gt,best_state",
+    "gt,expected",
     [
         (np.array([[0, 0, 1], [0, 0, 2]], dtype="int8"), "220/001/001"),
         (np.array([[0, 0, 1], [0, 0, 0]], dtype="int8"), "221/001/000"),
@@ -63,7 +106,7 @@ def test_family_variant_simple_best_st(
 
 
 @pytest.mark.parametrize(
-    "gt,best_state",
+    "gt,expected",
     [
         (np.array([[-1, 0, 1], [0, 0, 2]], dtype="int8"), "?20/?01/?01"),
         (np.array([[-1, 0, 1], [0, 0, 0]], dtype="int8"), "?21/?01/?00"),
@@ -81,7 +124,7 @@ def test_family_variant_unknown_simple_best_st(
 
 
 @pytest.mark.parametrize(
-    "gt,expected_best_state",
+    "gt,expected",
     [
         (np.array([[0, 0, 1], [0, 0, 2]], dtype="int8"), "220/001/001"),
         (np.array([[0, 0, 1], [0, 0, 0]], dtype="int8"), "221/001/000"),
@@ -93,17 +136,17 @@ def test_family_variant_full_best_st(
         fv1: Callable[[np.ndarray | None, np.ndarray | None], FamilyVariant],
         gt: np.ndarray,
         expected: str,
-        gpf_instance_2013: GPFInstance,
+        genome: ReferenceGenome,
 ) -> None:
     v = fv1(gt, None)
     best_state = VariantsGenotypesLoader._calc_best_state(
-        v, gpf_instance_2013.reference_genome)
+        v, genome)
     assert best_state is not None
     assert mat2str(best_state) == expected
 
 
 @pytest.mark.parametrize(
-    "gt,expected_best_state",
+    "gt,expected",
     [
         (np.array([[-1, 0, 1], [0, 0, 2]], dtype="int8"), "?20/?01/?01"),
         (np.array([[-1, 0, 1], [0, 0, 0]], dtype="int8"), "?21/?01/?00"),
@@ -115,11 +158,10 @@ def test_family_variant_unknown_full_best_st(
     fv1: Callable[[np.ndarray | None, np.ndarray | None], FamilyVariant],
     gt: np.ndarray,
     expected: str,
-    gpf_instance_2013: GPFInstance,
+    genome: ReferenceGenome,
 ) -> None:
     v = fv1(gt, None)
-    best_state = VariantsGenotypesLoader._calc_best_state(
-        v, gpf_instance_2013.reference_genome)
+    best_state = VariantsGenotypesLoader._calc_best_state(v, genome)
     assert best_state is not None
     assert mat2str(best_state) == expected
 
@@ -176,11 +218,11 @@ def test_family_variant_best2gt(
     gt: np.ndarray,
     gm: GeneticModel,
     fv1: Callable[[np.ndarray | None, np.ndarray | None], FamilyVariant],
-    gpf_instance_2013: GPFInstance,
+    genome: ReferenceGenome,
 ) -> None:
     v = fv1(None, best_state)
     genotype, genetic_model = VariantsGenotypesLoader._calc_genotype(
-        v, gpf_instance_2013.reference_genome,
+        v, genome,
     )
     print(genotype, genetic_model)
 
@@ -188,24 +230,24 @@ def test_family_variant_best2gt(
     assert genetic_model == gm
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def sv_x1() -> SummaryVariant:
     return SummaryVariant(
         [
-            SummaryAllele("X", 154931050, "T", None, 0, 0),
-            SummaryAllele("X", 154931050, "T", "A", 0, 1),
-            SummaryAllele("X", 154931050, "T", "G", 0, 2),
+            SummaryAllele("X", 52, "T", None, 0, 0),
+            SummaryAllele("X", 52, "T", "A", 0, 1),
+            SummaryAllele("X", 52, "T", "G", 0, 2),
         ],
     )
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def sv_x2() -> SummaryVariant:
     return SummaryVariant(
         [
-            SummaryAllele("X", 3_000_000, "C", None, 0, 0),
-            SummaryAllele("X", 3_000_000, "C", "A", 0, 1),
-            SummaryAllele("X", 3_000_000, "C", "A", 0, 2),
+            SummaryAllele("X", 2, "C", None, 0, 0),
+            SummaryAllele("X", 2, "C", "A", 0, 1),
+            SummaryAllele("X", 2, "C", "A", 0, 2),
         ],
     )
 
@@ -268,15 +310,13 @@ def test_family_variant_x_best2gt(
     gm2: GeneticModel,
     fv_x1: Callable[[np.ndarray | None, np.ndarray | None], FamilyVariant],
     fv_x2: Callable[[np.ndarray | None, np.ndarray | None], FamilyVariant],
-    gpf_instance_2013: GPFInstance,
+    genome: ReferenceGenome,
 ) -> None:
-    genomic_sequence = gpf_instance_2013.reference_genome
-
     fv1 = fv_x1(None, best_state)
     fv2 = fv_x2(None, best_state)
 
     genotype, genetic_model = VariantsGenotypesLoader._calc_genotype(
-        fv1, genomic_sequence,
+        fv1, genome,
     )
     print(genotype, genetic_model)
 
@@ -284,7 +324,7 @@ def test_family_variant_x_best2gt(
     assert genetic_model == gm1
 
     genotype, genetic_model = VariantsGenotypesLoader._calc_genotype(
-        fv2, genomic_sequence,
+        fv2, genome,
     )
     print(genotype, genetic_model)
 
@@ -333,26 +373,24 @@ def test_family_variant_x_gt2best_st(
     gm1: GeneticModel,
     bs2: str,
     gm2: GeneticModel,
-    gpf_instance_2013: GPFInstance,
+    genome: ReferenceGenome,
 ) -> None:
-
-    genomic_sequence = gpf_instance_2013.reference_genome
 
     v = fv_x1(gt, None)
     best_state = VariantsGenotypesLoader._calc_best_state(
-        v, genomic_sequence)
+        v, genome)
     assert best_state is not None
     assert mat2str(best_state) == bs1
     genetic_model = VariantsGenotypesLoader._calc_genetic_model(
-        v, genomic_sequence)
+        v, genome)
     assert genetic_model == gm1
 
     v = fv_x2(gt, None)
     best_state = VariantsGenotypesLoader._calc_best_state(
-        v, genomic_sequence)
+        v, genome)
     assert best_state is not None
     assert mat2str(best_state) == bs2
 
     genetic_model = VariantsGenotypesLoader._calc_genetic_model(
-        v, genomic_sequence)
+        v, genome)
     assert genetic_model == gm2
