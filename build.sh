@@ -165,8 +165,6 @@ EOT
             pip install -e "'"${d}"'"'
     done
 
-    build_run_attach
-
     # ruff
     build_run_detached bash -c '
       cd /wd;
