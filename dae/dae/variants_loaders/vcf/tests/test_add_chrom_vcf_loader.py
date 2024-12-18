@@ -3,10 +3,10 @@ import pathlib
 
 import pytest
 
-from dae.gpf_instance import GPFInstance
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.testing import acgt_gpf, setup_pedigree, setup_vcf
+from dae.testing import setup_genome, setup_pedigree, setup_vcf
 from dae.utils.regions import Region
 from dae.variants_loaders.vcf.loader import VcfLoader
 
@@ -30,10 +30,19 @@ def trio_families(
 
 
 @pytest.fixture
-def trio_gpf(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
-    root_path = tmp_path_factory.mktemp(
-        "vcf_acgt_gpf_instance")
-    return acgt_gpf(root_path)
+def trio_genome(tmp_path_factory: pytest.TempPathFactory) -> ReferenceGenome:
+    root_path = tmp_path_factory.mktemp("genome")
+    return setup_genome(
+        root_path / "acgt_gpf" / "genome" / "allChr.fa",
+        f"""
+        >chr1
+        {25 * "ACGT"}
+        >chr2
+        {25 * "ACGT"}
+        >chr3
+        {25 * "ACGT"}
+        """,
+    )
 
 
 @pytest.fixture
@@ -73,14 +82,14 @@ def trio_vcf(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
 )
 def test_add_chrom_reset_region(
     trio_families: FamiliesData,
-    trio_gpf: GPFInstance,
+    trio_genome: ReferenceGenome,
     trio_vcf: pathlib.Path,
     region: str,
     count: int,
 ) -> None:
 
     loader = VcfLoader(
-        trio_families, [str(trio_vcf)], trio_gpf.reference_genome,
+        trio_families, [str(trio_vcf)], trio_genome,
         params={
             "add_chrom_prefix": "chr",
         })

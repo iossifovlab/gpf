@@ -8,7 +8,7 @@ import os
 import pathlib
 import time
 from abc import ABC, abstractmethod
-from collections.abc import Generator, Sequence
+from collections.abc import Callable, Generator, Sequence
 from enum import Enum
 from typing import (
     Any,
@@ -126,7 +126,7 @@ class CLIArgument:
                             ).decode().replace("\\\\", "\\")
                         return f'{self.argument_name} "{value}"'
                     if use_defaults and self.default_value is not None:
-                        value = self.default_value
+                        value = str(self.default_value)
                         if self.raw:
                             value = value.encode(
                                 "unicode-escape",
@@ -741,8 +741,8 @@ class VariantsGenotypesLoader(VariantsLoader):
         if regions is not None:
             self.reset_regions(regions)
 
-        self._adjust_chrom_prefix = lambda chrom: chrom
-        self._unadjust_chrom_prefix = lambda chrom: chrom
+        self._adjust_chrom_prefix: Callable[[str], str] = lambda chrom: chrom
+        self._unadjust_chrom_prefix: Callable[[str], str] = lambda chrom: chrom
         if params.get("add_chrom_prefix", None):
             self._chrom_prefix = params["add_chrom_prefix"]
             self._adjust_chrom_prefix = self._add_chrom_prefix
@@ -828,10 +828,11 @@ class VariantsGenotypesLoader(VariantsLoader):
 
     @classmethod
     def _calc_best_state(
-            cls,
-            family_variant: FamilyVariant,
-            genome: ReferenceGenome, *,
-            force: bool = True) -> np.ndarray | None:
+        cls,
+        family_variant: FamilyVariant,
+        genome: ReferenceGenome, *,
+        force: bool = True,
+    ) -> np.ndarray | None:
         assert family_variant.gt is not None
 
         male_ploidy = get_locus_ploidy(

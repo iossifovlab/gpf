@@ -8,21 +8,11 @@ from dae.genomic_resources.testing import (
     build_s3_test_filesystem,
     setup_vcf,
 )
-from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.testing.acgt_import import acgt_gpf
 from dae.utils import fs_utils
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture()
-def gpf_instance(
-        tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
-    root_path = tmp_path_factory.mktemp("instance")
-    gpf_instance = acgt_gpf(root_path)
-    return gpf_instance
-
-
-@pytest.fixture()
+@pytest.fixture
 def vcf_vc_file(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[str, str, str]:

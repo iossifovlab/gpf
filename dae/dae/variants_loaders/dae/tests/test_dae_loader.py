@@ -76,6 +76,7 @@ def dae_transmitted(
 def test_dae_transmitted_loader_simple(
     dae_transmitted: DaeTransmittedLoader,
 ) -> None:
+    read_counts = None
     for fv in dae_transmitted.family_variants_iterator():
         assert fv.gt is not None
         print(fv, mat2str(fv.best_state), mat2str(fv.gt))

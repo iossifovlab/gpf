@@ -11,35 +11,14 @@ from dae.variants.attributes import Inheritance
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 
-@pytest.fixture()
+@pytest.fixture
 def gpf_instance(
         tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("instance")
-    gpf_instance = acgt_gpf(root_path)
-    return gpf_instance
+    return acgt_gpf(root_path)
 
 
-# def test_transform_vcf_genotype():
-#     genotypes = [
-#         [0, 0, False],
-#         [0, 1, False],
-#         [1, 0, False],
-#         [1, 1, False],
-#         [0, True],
-#         [1, True],
-#     ]
-#     expected = np.array([
-#         [0, 0, 1, 1, 0, 1],
-#         [0, 1, 0, 1, -2, -2],
-#         [False, False, False, False, True, True]
-#     ], dtype=GenotypeType)
-
-#     assert np.array_equal(
-#         expected, VcfLoader.transform_vcf_genotypes(genotypes)
-#     )
-
-
-@pytest.fixture()
+@pytest.fixture
 def inheritance_trio_denovo_omission(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[str, str]:
@@ -60,7 +39,7 @@ def inheritance_trio_denovo_omission(
     chr1	1   	.	T	G	.	    .   	INH=OMI	GT	    0/0 	1/0 	1/1
     chr1	5   	.	T	G	.	    .   	INH=DEN	GT	    1/1 	1/1 	1/0
     chr1	12  	.	T	G	.	    .   	INH=DEN	GT	    1/1 	1/1 	0/1
-    """)
+    """)  # noqa: E501
 
     return (str(ped_path), str(vcf_path))
 
@@ -100,11 +79,11 @@ def test_vcf_denovo_mode(
     variants = list(vcf_loader.family_variants_iterator())
     assert len(variants) == total
     for fv in variants:
-        for fa in fv.alleles:
+        for fa in fv.family_alleles:
             print(fa, fa.inheritance_in_members)
             assert set(
                 fa.inheritance_in_members,
-            ) & unexpected_inheritance == set([])
+            ) & unexpected_inheritance == set()
 
 
 @pytest.mark.parametrize(
@@ -144,15 +123,15 @@ def test_vcf_omission_mode(
     variants = list(vcf_loader.family_variants_iterator())
     assert len(variants) == total
     for fv in variants:
-        for fa in fv.alleles:
+        for fa in fv.family_alleles:
             print(20 * "-")
             print(fa, fa.inheritance_in_members)
             assert set(
                 fa.inheritance_in_members,
-            ) & unexpected_inheritance == set([])
+            ) & unexpected_inheritance == set()
 
 
-@pytest.fixture()
+@pytest.fixture
 def f1_test(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[str, str]:
@@ -200,10 +179,10 @@ def f1_test(
 )
 def test_vcf_loader_params(
     f1_test: tuple[str, str],
-    vcf_include_reference_genotypes: bool,
-    vcf_include_unknown_family_genotypes: bool,
-    vcf_include_unknown_person_genotypes: bool,
-    count: bool,
+    vcf_include_reference_genotypes: bool,  # noqa: FBT001
+    vcf_include_unknown_family_genotypes: bool,  # noqa: FBT001
+    vcf_include_unknown_person_genotypes: bool,  # noqa: FBT001
+    count: int,
     gpf_instance: GPFInstance,
 ) -> None:
     params = {
@@ -225,7 +204,7 @@ def test_vcf_loader_params(
     assert len(variants) == count
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_family(tmp_path_factory: pytest.TempPathFactory) -> tuple[str, str]:
     root_path = tmp_path_factory.mktemp("simple_family")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
