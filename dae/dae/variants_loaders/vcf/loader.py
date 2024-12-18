@@ -19,11 +19,6 @@ from dae.pedigrees.family import Family
 from dae.utils import fs_utils
 from dae.utils.helpers import str2bool
 from dae.utils.regions import Region
-from dae.utils.variant_utils import (
-    is_all_reference_genotype,
-    is_all_unknown_genotype,
-    is_unknown_genotype,
-)
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import SummaryVariant, SummaryVariantFactory
@@ -75,9 +70,17 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
     def _collect_family_genotype(
         self, family: Family,
         fill_value: int,
-    ) -> tuple[list[tuple[int, int]], list[tuple[int, int]]]:
+    ) -> tuple[
+            list[tuple[int, int]],
+            list[tuple[int, int]],
+            tuple[bool, bool, bool],
+        ]:
         genotypes: list[tuple[int, int]] = []
         independent_genotypes: list[tuple[int, int]] = []
+        all_reference = True
+        all_unknown = True
+        has_unknown = False
+
         for person in family.members_in_order:
             sg: tuple[int, int] = cast(
                 tuple[int, int],
@@ -91,10 +94,20 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
                 sg[0] if sg[0] is not None else -1,
                 sg[1] if sg[1] is not None else -1,
             )
+            if sg != (0, 0):
+                all_reference = False
+            if sg != (-1, -1):
+                all_unknown = False
+            if sg[0] == -1 or sg[1] == -1:
+                has_unknown = True
+
             genotypes.append(sg)
             if person.person_id in self.loader.independent_persons:
                 independent_genotypes.append(sg)
-        return genotypes, independent_genotypes
+        return (
+            genotypes,
+            independent_genotypes,
+            (all_reference, all_unknown, has_unknown))
 
     def family_genotype_iterator(
         self,
@@ -105,7 +118,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
         fill_value = self.loader._fill_missing_value  # noqa: SLF001
 
         for family in self.loader.families.values():
-            family_genotype, independent_genotypes = \
+            family_genotype, independent_genotypes, gt_type = \
                 self._collect_family_genotype(family, fill_value)
 
             if len(family_genotype) == 0:
@@ -115,18 +128,18 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             genotype = genotype.T
             assert len(genotype.shape) == 2, (genotype, family)
             assert genotype.shape[0] == 2
-
-            if is_unknown_genotype(genotype):
+            all_reference, all_unknown, has_unknown = gt_type
+            if has_unknown:
                 if not self.loader.include_unknown_person_genotypes:
                     continue
             else:
                 self.known_independent_genotypes.extend(independent_genotypes)
 
-            if is_all_unknown_genotype(genotype) and \
+            if all_unknown and \
                     not self.loader.include_unknown_family_genotypes:
                 continue
 
-            if is_all_reference_genotype(genotype) and \
+            if all_reference and \
                     not self.loader.include_reference_genotypes:
                 continue
 
