@@ -118,20 +118,6 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         metavar="<person column>",
     )
 
-    parser.add_argument(
-        "--continue",
-        dest="browser_only",
-        help="Perform the second browser generation step on an existing DB.",
-        action="store_true",
-    )
-
-    parser.add_argument(
-        "--import-only",
-        dest="import_only",
-        help="Perform the data import step only.",
-        action="store_true",
-    )
-
     TaskGraphCli.add_arguments(parser, use_commands=False)
 
     return parser
@@ -199,10 +185,6 @@ def main(argv: list[str] | None = None) -> int:
     if args.pheno_name is None:
         raise ValueError("missing pheno db name")
 
-    args.pheno_db_filename = os.path.join(
-        args.output, f"{args.pheno_name}.db",
-    )
-
     try:
         import_pheno_data(args)
     except KeyboardInterrupt:
@@ -222,6 +204,10 @@ def main(argv: list[str] | None = None) -> int:
 def import_pheno_data(args: Any) -> None:
     """Import pheno data into DuckDB."""
     os.makedirs(args.output, exist_ok=True)
+
+    args.pheno_db_filename = os.path.join(
+        args.output, f"{args.pheno_name}.db",
+    )
 
     if os.path.exists(args.pheno_db_filename):
         if args.force:

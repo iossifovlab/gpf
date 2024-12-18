@@ -106,6 +106,7 @@ setuptools.setup(
     annotate_schema2_parquet=dae.annotation.annotate_schema2_parquet:cli
     reannotate_instance=dae.annotation.reannotate_instance:cli
     pheno_import=dae.pheno.pheno_import:main
+    import_tools_pheno=dae.pheno.import_tools:main
     build_pheno_browser=dae.pheno.build_pheno_browser:main
 
 
