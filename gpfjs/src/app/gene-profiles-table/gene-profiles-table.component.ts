@@ -198,8 +198,10 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
     this.leaves.forEach((leaf: GeneProfilesColumn) => {
       if (leaf.format) {
         this.genes.forEach(gene => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
           const value = gene[leaf.id];
           if (value) {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             gene[leaf.id] = sprintf(leaf.format, value);
           }
         });
