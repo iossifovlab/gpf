@@ -12,6 +12,12 @@ from dae.pheno.pheno_data import (
 
 
 @pytest.fixture
+def mock_sort(mocker: pytest_mock.MockerFixture) -> MagicMock:
+    return mocker.patch(
+        "dae.pheno.pheno_data._sort_group_children", autospec=True,
+    )
+
+@pytest.fixture
 def mock_classes(
     mocker: pytest_mock.MockerFixture,
 ) -> tuple[MagicMock, MagicMock]:
@@ -21,6 +27,7 @@ def mock_classes(
 
 def test_load_phenotype_data_study(
     mock_classes: tuple[MagicMock, MagicMock],
+    mock_sort: MagicMock,  # noqa: ARG001
 ) -> None:
     study_mock, _ = mock_classes
     config = {

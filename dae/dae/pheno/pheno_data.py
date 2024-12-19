@@ -748,6 +748,18 @@ class PhenotypeGroup(PhenotypeData):
         return pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
 
 
+def _sort_group_children(
+    children_names: list[str], children: list[PhenotypeData],
+) -> None:
+    children_name_order = {
+        name: idx for idx, name in enumerate(children_names)
+    }
+
+    children.sort(
+        key=lambda pheno_data: children_name_order[pheno_data.pheno_id],
+    )
+
+
 def load_phenotype_data(
     config: dict[str, Any], extra_configs: list[dict[str, Any]] | None = None,
 ) -> PhenotypeStudy | PhenotypeGroup:
@@ -776,13 +788,5 @@ def load_phenotype_data(
             children.append(load_phenotype_data(extra_config))
         else:
             children.append(load_phenotype_data(extra_config, extra_configs))
-
-    children_name_order = {
-        name: idx for idx, name in enumerate(children_names)
-    }
-
-    children.sort(
-        key=lambda pheno_data: children_name_order[pheno_data.pheno_id],
-    )
 
     return PhenotypeGroup(config["name"], cast(list[PhenotypeData], children))
