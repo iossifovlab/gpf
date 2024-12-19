@@ -117,14 +117,14 @@ class UsersServiceMock {
 }
 
 /* eslint-disable @stylistic/max-len */
-const geneColumn = new GeneProfilesColumn('createTab', [], 'Gene', false, 'geneSymbol', null, false, true);
-const geneSetSetsCol = new GeneProfilesColumn(null, [], 'SFARI ALL', true, 'autism_gene_sets_rank.SFARI ALL', null, true, true);
-const geneSetCol = new GeneProfilesColumn(null, [geneSetSetsCol], 'Autism Gene Sets', false, 'autism_gene_sets_rank', null, true, true);
-const geneScoreScoresCol = new GeneProfilesColumn(null, [], 'SFARI gene score', true, 'autism_scores.SFARI gene score', null, true, true);
-const geneScoreCol = new GeneProfilesColumn(null, [geneScoreScoresCol], 'Autism Scores', false, 'autism_scores', null, false, true);
-const datasetPersonSetsStatisticsCol = new GeneProfilesColumn('goToQuery', [], 'dn LGDs', false, 'sequencing_de_novo.autism.denovo_lgds', null, true, true);
-const datasetPersonSetsCol = new GeneProfilesColumn(null, [datasetPersonSetsStatisticsCol], 'autism (21775)', false, 'sequencing_de_novo.autism', null, false, true);
-const datasetCol = new GeneProfilesColumn(null, [datasetPersonSetsCol], 'Sequencing de Novo', false, 'sequencing_de_novo', null, false, true);
+const geneColumn = new GeneProfilesColumn('createTab', [], 'Gene', false, 'geneSymbol', null, false, true, null);
+const geneSetSetsCol = new GeneProfilesColumn(null, [], 'SFARI ALL', true, 'autism_gene_sets_rank.SFARI ALL', null, true, true, null);
+const geneSetCol = new GeneProfilesColumn(null, [geneSetSetsCol], 'Autism Gene Sets', false, 'autism_gene_sets_rank', null, true, true, null);
+const geneScoreScoresCol = new GeneProfilesColumn(null, [], 'SFARI gene score', true, 'autism_scores.SFARI gene score', null, true, true, '%s');
+const geneScoreCol = new GeneProfilesColumn(null, [geneScoreScoresCol], 'Autism Scores', false, 'autism_scores', null, false, true, null);
+const datasetPersonSetsStatisticsCol = new GeneProfilesColumn('goToQuery', [], 'dn LGDs', false, 'sequencing_de_novo.autism.denovo_lgds', null, true, true, null);
+const datasetPersonSetsCol = new GeneProfilesColumn(null, [datasetPersonSetsStatisticsCol], 'autism (21775)', false, 'sequencing_de_novo.autism', null, false, true, null);
+const datasetCol = new GeneProfilesColumn(null, [datasetPersonSetsCol], 'Sequencing de Novo', false, 'sequencing_de_novo', null, false, true, null);
 /* eslint-enable @stylistic/max-len */
 
 const geneProfilesTableConfigMock= new GeneProfilesTableConfig();
