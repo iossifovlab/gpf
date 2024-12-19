@@ -92,16 +92,14 @@ def sample_gp() -> GPStatistic:
         },
     }
     variant_counts = {
-        "iossifov_2014": {
-            "autism": {
-                "denovo_noncoding": {"count": 53, "rate": 1},
-                "denovo_missense": {"count": 21, "rate": 2},
-            },
-            "unaffected": {
-                "denovo_noncoding": {"count": 43, "rate": 3},
-                "denovo_missense": {"count": 51, "rate": 4},
-            },
-        },
+        "iossifov_2014_autism_denovo_noncoding": 53,
+        "iossifov_2014_autism_denovo_noncoding_rate": 1,
+        "iossifov_2014_autism_denovo_missense": 21,
+        "iossifov_2014_autism_denovo_missense_rate": 2,
+        "iossifov_2014_unaffected_denovo_noncoding": 43,
+        "iossifov_2014_unaffected_denovo_noncoding_rate": 3,
+        "iossifov_2014_unaffected_denovo_missense": 51,
+        "iossifov_2014_unaffected_denovo_missense_rate": 4,
     }
     return GPStatistic(
         "CHD8", gene_sets, genomic_scores, variant_counts,

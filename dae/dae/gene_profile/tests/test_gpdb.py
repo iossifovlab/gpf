@@ -2,7 +2,8 @@
 import pathlib
 
 import box
-from sqlalchemy import inspect
+import duckdb
+from pytest import approx
 
 from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.statistic import GPStatistic
@@ -18,15 +19,18 @@ def test_gpdb_table_building(
         gp_config,
         gpdb_filename,
     )
-    inspector = inspect(gpdb.engine)
 
     cols = []
-    for column in inspector.get_columns("gene_profile"):
-        cols.append(column["name"])
+    with duckdb.connect(gpdb_filename, read_only=True) as connection:
+        cols = [
+            row["column_name"] for row in connection.execute(
+                f"DESCRIBE {gpdb.table.alias_or_name}",
+            ).df().to_dict("records")
+        ]
     print(cols)
 
     assert set(cols).difference(
-        set([
+        [
             "symbol_name",
             "relevant_gene_sets_rank",
             "main_FMRP Darnell",
@@ -45,7 +49,7 @@ def test_gpdb_table_building(
             "iossifov_2014_autism_denovo_missense",
             "iossifov_2014_autism_denovo_noncoding_rate",
             "iossifov_2014_autism_denovo_noncoding",
-        ]),
+        ],
     ) == set()
 
 
@@ -70,24 +74,24 @@ def test_gpdb_insert_and_get_gp(
     assert gp.genomic_scores["autism_scores"] == {
         "SFARI gene score": {"value": 1.0, "format": "%s"},
         "RVIS_rank": {"value": 193.0, "format": "%s"},
-        "RVIS": {"value": -2.34, "format": "%s"},
+        "RVIS": {"value": approx(-2.34), "format": "%s"},
     }
 
     assert gp.genomic_scores["protection_scores"] == {
         "SFARI gene score": {"value": 1.0, "format": "%s"},
         "RVIS_rank": {"value": 193.0, "format": "%s"},
-        "RVIS": {"value": -2.34, "format": "%s"},
+        "RVIS": {"value": approx(-2.34), "format": "%s"},
     }
 
     assert gp.variant_counts == {
         "iossifov_2014": {
             "autism": {
-                "denovo_noncoding": {"count": 0, "rate": 0},
-                "denovo_missense": {"count": 0, "rate": 0},
+                "denovo_missense": {"count": 21, "rate": 2},
+                "denovo_noncoding": {"count": 53, "rate": 1},
             },
             "unaffected": {
-                "denovo_noncoding": {"count": 0, "rate": 0},
-                "denovo_missense": {"count": 0, "rate": 0},
+                "denovo_missense": {"count": 51, "rate": 4},
+                "denovo_noncoding": {"count": 43, "rate": 3},
             },
         },
     }
