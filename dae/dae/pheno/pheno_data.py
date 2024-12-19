@@ -777,4 +777,12 @@ def load_phenotype_data(
         else:
             children.append(load_phenotype_data(extra_config, extra_configs))
 
+    children_name_order = {
+        name: idx for idx, name in enumerate(children_names)
+    }
+
+    children.sort(
+        key=lambda pheno_data: children_name_order[pheno_data.pheno_id],
+    )
+
     return PhenotypeGroup(config["name"], cast(list[PhenotypeData], children))
