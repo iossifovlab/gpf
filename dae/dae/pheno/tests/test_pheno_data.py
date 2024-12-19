@@ -17,6 +17,7 @@ def mock_sort(mocker: pytest_mock.MockerFixture) -> MagicMock:
         "dae.pheno.pheno_data._sort_group_children", autospec=True,
     )
 
+
 @pytest.fixture
 def mock_classes(
     mocker: pytest_mock.MockerFixture,
