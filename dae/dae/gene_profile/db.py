@@ -4,19 +4,20 @@ from typing import Any
 
 import duckdb
 import numpy as np
-import sqlglot
 from box import Box
-from sqlalchemy import (  # type: ignore
-    Column,
-    Float,
-    Integer,
-    MetaData,
-    String,
-    Table,
-    create_engine,
-    inspect,
+from sqlglot import column, select, table
+from sqlglot.expressions import (
+    ColumnConstraint,
+    ColumnDef,
+    Create,
+    DataType,
+    PrimaryKeyColumnConstraint,
+    Schema,
+    delete,
+    insert,
+    update,
+    values,
 )
-from sqlalchemy.sql import insert
 
 from dae.gene_profile.statistic import GPStatistic
 from dae.utils.sql_utils import to_duckdb_transpile
@@ -43,10 +44,6 @@ class GeneProfileDB:
         clear: bool = False,
     ):
         self.dbfile = dbfile
-        self.engine = create_engine(f"sqlite:///{dbfile}")
-        duckdb.execute("INSTALL sqlite;")
-        duckdb.execute("LOAD sqlite;")
-        self.metadata = MetaData()
         self.configuration = \
             GeneProfileDB.build_configuration(configuration)
         self._create_gp_table()
@@ -63,7 +60,7 @@ class GeneProfileDB:
                     self.gene_sets_categories[full_gene_set_id] = category_name
 
     @classmethod
-    def build_configuration(cls, configuration):
+    def build_configuration(cls, configuration: Box | None) -> Box:
         """
         Perform a transformation on a given configuration.
 
@@ -100,12 +97,11 @@ class GeneProfileDB:
 
         Returns None if gene_symbol is not found within the DB.
         """
-        table = self.gp_table_glot
-        query = sqlglot.select("*").from_(table)
+        query = select("*").from_(self.table)
         query = query.where(
-            sqlglot.column(
+            column(
                 "symbol_name",
-                table=table.alias_or_name,
+                table=self.table.alias_or_name,
             ).ilike(f"%{gene_symbol}%"),
         )
         query = query.limit(self.PAGE_SIZE)
@@ -190,7 +186,7 @@ class GeneProfileDB:
 
         variant_counts = {}
         for dataset_id, filters in config["datasets"].items():
-            current_counts: Dict[str, Dict] = {}
+            current_counts: dict[str, dict] = {}
             for person_set in filters["person_sets"]:
                 set_name = person_set["set_name"]
                 for statistic in filters["statistics"]:
@@ -251,14 +247,12 @@ class GeneProfileDB:
             sort_by - Column to sort by
             order - "asc" or "desc"
         """
-        table = self.gp_table_glot
-
-        query = sqlglot.select("*").from_(table)
+        query = select("*").from_(self.table)
         if symbol_like:
             query = query.where(
-                sqlglot.column(
+                column(
                     "symbol_name",
-                    table=table.alias_or_name,
+                    table=self.table.alias_or_name,
                 ).ilike(f"%{symbol_like}%"),
             )
 
@@ -292,19 +286,17 @@ class GeneProfileDB:
             symbol_like - Which gene symbol to search for, supports
             incomplete search
         """
-        table = self.gp_table_glot
-
-        query = sqlglot.select(
-            sqlglot.column(
+        query = select(
+            column(
                 "symbol_name",
-                table=table.alias_or_name,
+                table=self.table.alias_or_name,
             ),
-        ).from_(table)
+        ).from_(self.table)
         if symbol_like:
             query = query.where(
-                sqlglot.column(
+                column(
                     "symbol_name",
-                    table=table.alias_or_name,
+                    table=self.table.alias_or_name,
                 ).ilike(f"{symbol_like}%"),
             )
 
@@ -322,24 +314,49 @@ class GeneProfileDB:
                 ).df().replace([np.nan], [None]).to_dict("records")
             ]
 
-    def drop_gp_table(self):
-        with self.engine.begin() as connection:
+    def drop_gp_table(self) -> None:
+        with duckdb.connect(f"{self.dbfile}") as connection:
             connection.execute("DROP TABLE IF EXISTS gene_profile")
             connection.commit()
 
-    def gp_table_exists(self):
-        insp = inspect(self.engine)
-        with self.engine.begin() as connection:
-            has_gp_table = insp.dialect.has_table(
-                connection, "gene_profile",
-            )
-            return has_gp_table
+    def gp_table_exists(self) -> bool:
+        """Checks if gp table exists"""
+        duckdb_tables = "duckdb_tables"
+        query = select(
+            column(
+                "table_name",
+                table=duckdb_tables,
+            ),
+        ).from_(duckdb_tables).where(
+            column(
+                "table_name",
+                table=duckdb_tables,
+            ).like("gene_profile"),
+        ).limit(1)
+        with duckdb.connect(f"{self.dbfile}", read_only=True) as connection:
+            rows = connection.execute(
+                to_duckdb_transpile(query),
+            ).df().to_dict("records")
+
+            return len(rows) == 1
 
     # FIXME: Too many locals, refactor?
-    def _gp_table_columns(self):  # pylint: disable=too-many-locals
-        columns = {}
-        columns["symbol_name"] = \
-            Column("symbol_name", String(64), primary_key=True)
+    def _gp_table_columns(
+        self, *,
+        with_types: bool = True,
+    ) -> list[ColumnDef]:  # pylint: disable=too-many-locals
+        columns = []
+        constraints = [ColumnConstraint(kind=PrimaryKeyColumnConstraint())] \
+            if with_types else []
+        columns.append(
+            ColumnDef(
+                this="symbol_name",
+                kind=DataType(
+                    this=DataType.Type.VARCHAR,
+                ) if with_types else None,
+                constraints=constraints,
+            ),
+        )
         if len(self.configuration) == 0:
             return columns
         for category in self.configuration["gene_sets"]:
@@ -347,72 +364,114 @@ class GeneProfileDB:
 
             rank_col = f"{category_name}_rank"
 
-            columns[rank_col] = Column(rank_col, Integer())
+            columns.append(
+                ColumnDef(
+                    this=f'"{rank_col}"',
+                    kind=DataType(
+                        this=DataType.Type.INT,
+                    ) if with_types else None,
+                ),
+            )
             for gene_set in category["sets"]:
                 set_id = gene_set["set_id"]
                 collection_id = gene_set["collection_id"]
                 full_set_id = f"{collection_id}_{set_id}"
-                columns[full_set_id] = Column(full_set_id, Integer())
+                columns.append(
+                    ColumnDef(
+                        this=f'"{full_set_id}"',
+                        kind=DataType(
+                            this=DataType.Type.INT,
+                        ) if with_types else None,
+                    ),
+                )
 
         for category in self.configuration["genomic_scores"]:
             category_name = category["category"]
             for score in category["scores"]:
                 score_name = score["score_name"]
                 col = f"{category_name}_{score_name}"
-                columns[col] = Column(col, Float())
+                columns.append(
+                    ColumnDef(
+                        this=f'"{col}"',
+                        kind=DataType(
+                            this=DataType.Type.FLOAT,
+                        ) if with_types else None,
+                    ),
+                )
 
-        for dataset_id in self.configuration["datasets"].keys():
+        for dataset_id in self.configuration["datasets"]:
             config_section = self.configuration["datasets"][dataset_id]
             for person_set in config_section["person_sets"]:
                 set_name = person_set["set_name"]
                 for stat in config_section["statistics"]:
                     stat_id = stat["id"]
                     column_name = f"{dataset_id}_{set_name}_{stat_id}"
-                    columns[column_name] = Column(column_name, Float())
+                    columns.append(
+                        ColumnDef(
+                            this=f'"{column_name}"',
+                            kind=DataType(
+                                this=DataType.Type.FLOAT,
+                            ) if with_types else None,
+                        ),
+                    )
                     rate_col_name = f"{column_name}_rate"
-                    columns[rate_col_name] = Column(rate_col_name, Float())
+                    columns.append(
+                        ColumnDef(
+                            this=f'"{rate_col_name}"',
+                            kind=DataType(
+                                this=DataType.Type.FLOAT,
+                            ) if with_types else None,
+                        ),
+                    )
         return columns
 
     def _create_gp_table(self) -> None:
-        columns = self._gp_table_columns().values()
-
-        self.gp_table = Table(
-            "gene_profile",
-            self.metadata,
-            *columns,
+        self.table = table("gene_profile")
+        self.schema = Schema(
+            this=self.table,
+            expressions=self._gp_table_columns(),
         )
 
-        self.gp_table_glot = sqlglot.table("gene_profile")
+        query = Create(this=self.schema, kind="TABLE", exists=True)
+        with duckdb.connect(f"{self.dbfile}") as connection:
+            connection.execute(to_duckdb_transpile(query))
 
-        self.metadata.create_all(self.engine)
-
-    def _clear_gp_table(self, connection=None):
-        query = self.gp_table.delete()
+    def _clear_gp_table(
+        self,
+        connection: duckdb.DuckDBPyConnection | None = None,
+    ) -> None:
+        query = delete(self.table)
         if connection is not None:
-            connection.execute(query)
+            connection.execute(to_duckdb_transpile(query))
             return
 
-        with self.engine.begin() as conn:
-            conn.execute(query)
-            conn.commit()
+        with duckdb.connect(f"{self.dbfile}") as connection:
+            connection.execute(to_duckdb_transpile(query))
 
-    def insert_gp(self, gp, connection=None):
+    def insert_gp(
+        self,
+        gp: GPStatistic,
+        connection: duckdb.DuckDBPyConnection | None = None,
+    ) -> None:
         """Insert a GP into the DB."""
         insert_map = self._create_insert_map(gp)
+        query = insert(
+            values([tuple(insert_map.values())]),
+            self.table,
+            columns=list(insert_map.keys()),
+        )
         if connection is not None:
-            connection.execute(
-                insert(self.gp_table).values(**insert_map),
-            )
+            connection.execute(to_duckdb_transpile(query))
             return
 
-        with self.engine.begin() as conn:
-            conn.execute(
-                insert(self.gp_table).values(**insert_map),
-            )
-            conn.commit()
+        with duckdb.connect(f"{self.dbfile}") as connection:
+            connection.execute(to_duckdb_transpile(query))
 
     # FIXME: Too many locals, refactor?
-    def _create_insert_map(self, gp):  # pylint: disable=too-many-locals
+    def _create_insert_map(
+        self,
+        gp: GPStatistic,
+    ) -> dict:  # pylint: disable=too-many-locals
         insert_map = {
             "symbol_name": gp.gene_symbol,
         }
@@ -439,17 +498,16 @@ class GeneProfileDB:
             for score_id, score in scores.items():
                 insert_map[f"{category}_{score_id}"] = score
 
-        for study_id, ps_counts in gp.variant_counts.items():
-            for person_set_id, eff_type_counts in ps_counts.items():
-                for eff_type, count in eff_type_counts.items():
-                    count_col = f"{study_id}_{person_set_id}_{eff_type}"
-                    insert_map[count_col] = 0
-                    insert_map[f"{count_col}_rate"] = 0
+        insert_map.update(dict(gp.variant_counts.items()))
+
         return insert_map
 
-    def insert_gps(self, gps):
+    def insert_gps(
+        self,
+        gps: dict,
+    ) -> None:
         """Insert multiple GPStatistics into the DB."""
-        with self.engine.begin() as connection:
+        with duckdb.connect(f"{self.dbfile}") as connection:
             self._clear_gp_table(connection)
             gp_count = len(gps)
             for idx, gp in enumerate(gps, 1):
@@ -462,10 +520,16 @@ class GeneProfileDB:
             connection.commit()
 
     def update_gps_with_values(self, gs_values: dict[str, Any]) -> None:
-        with self.engine.begin() as connection:
+        """Update gp statistic with values"""
+        with duckdb.connect(f"{self.dbfile}") as connection:
             for gs, values in gs_values.items():
-                update = self.gp_table.update().values(**values).where(
-                    self.gp_table.c.symbol_name == gs,
+                query = update(
+                    self.table,
+                    values,
+                    where=column(
+                        "symbol_name",
+                        table=self.table.alias_or_name,
+                    ).eq(gs),
                 )
-                connection.execute(update)
+                connection.execute(to_duckdb_transpile(query))
             connection.commit()
