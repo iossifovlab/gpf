@@ -11,18 +11,24 @@ def test_position_allele():
     assert allele.end_position == 3
 
 
-@pytest.mark.parametrize("allele,end_position,allele_type", [
-    (("1", 1, "C", "A"), 1, Allele.Type.substitution),
-    (("1", 1, "C", "CA"), 1, Allele.Type.small_insertion),
-    (("1", 1, "CA", "C"), 2, Allele.Type.small_deletion),
-    (("1", 1, "CA", "AC"), 2, Allele.Type.complex),
-    (("1", 1, "C", None), 1, Allele.Type.position),
+@pytest.mark.parametrize("allele,position,end_position,allele_type", [
+    (("1", 1, "C", "A"), 1, 1, Allele.Type.substitution),
+    (("1", 1, "C", "CA"), 1, 1, Allele.Type.small_insertion),
+    (("1", 1, "CA", "C"), 1, 2, Allele.Type.small_deletion),
+    (("1", 1, "CA", "AC"), 1, 2, Allele.Type.complex),
+    (("1", 1, "C", None), 1, 1, Allele.Type.position),
+    (("1", 1, "CA", "CG"), 2, 2, Allele.Type.substitution),
 ])
-def test_vcf_allele(allele, end_position, allele_type):
-    allele = Allele.build_vcf_allele(*allele)
-    assert allele.position == 1
-    assert allele.end_position == end_position
-    assert allele.allele_type == allele_type
+def test_vcf_allele(
+    allele: tuple,
+    position: int,
+    end_position: int,
+    allele_type: Allele.Type,
+) -> None:
+    result = Allele.build_vcf_allele(*allele)
+    assert result.position == position
+    assert result.end_position == end_position
+    assert result.allele_type == allele_type
 
 
 def test_to_records():

@@ -106,19 +106,16 @@ class Allele:
                 self._allele_type = Allele.Type.position
                 self._pos_end = self._pos
             elif self._ref and self._alt:
+                pos, ref, alt = trim_parsimonious(pos, self._ref, self._alt)
 
-                if len(self._ref) == 1 and len(self._alt) == 1:
+                if len(ref) == 1 and len(alt) == 1:
 
                     self._allele_type = Allele.Type.substitution
 
-                elif len(self._ref) == 1 and len(self._alt) > 1 and \
-                        self._ref[0] == self._alt[0]:
-
+                elif len(ref) == 1 and len(alt) > 1 and ref[0] == alt[0]:
                     self._allele_type = Allele.Type.small_insertion
 
-                elif len(self._ref) > 1 and len(self._alt) == 1 and \
-                        self._ref[0] == self._alt[0]:
-
+                elif len(ref) > 1 and len(alt) == 1 and ref[0] == alt[0]:
                     self._allele_type = Allele.Type.small_deletion
 
                 else:
@@ -194,7 +191,10 @@ class Allele:
 
     @staticmethod
     def build_vcf_allele(
-            chrom: str, pos: int, ref: str, alt: str) -> Allele:
+        chrom: str, pos: int, ref: str, alt: str,
+    ) -> Allele:
+        if ref is not None and alt is not None:
+            pos, ref, alt = trim_parsimonious(pos, ref, alt)
         return Allele(chrom, pos, ref=ref, alt=alt)
 
     @staticmethod
