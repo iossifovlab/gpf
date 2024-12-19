@@ -25,6 +25,7 @@ import {
   setGeneProfilesSortBy,
   setGeneProfilesValues } from './gene-profiles-table.state';
 import { UsersService } from 'app/users/users.service';
+import { sprintf } from 'sprintf-js';
 
 @Component({
   selector: 'gpf-gene-profiles-table',
@@ -192,6 +193,20 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
     this.fillTable();
   }
 
+
+  private formatGenomicValues(): void {
+    this.leaves.forEach((leaf: GeneProfilesColumn) => {
+      if (leaf.format) {
+        this.genes.forEach(gene => {
+          const value = gene[leaf.id];
+          if (value) {
+            gene[leaf.id] = sprintf(leaf.format, value);
+          }
+        });
+      }
+    });
+  }
+
   private fillTable(): void {
     const geneProfilesRequests = [];
     this.pageIndex = 1;
@@ -221,6 +236,7 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
       this.showNothingFound = !this.genes.length;
       this.showInitialLoading = false;
       this.showSearchLoading = false;
+      this.formatGenomicValues();
     }));
   }
 
@@ -321,6 +337,7 @@ export class GeneProfilesTableComponent extends ComponentValidator implements On
       .subscribe(res => {
         this.genes = this.genes.concat(res);
         this.loadMoreGenes = Boolean(res.length); // stop making requests if the last response was empty
+        this.formatGenomicValues();
       }));
   }
 
