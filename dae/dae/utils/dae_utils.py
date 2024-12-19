@@ -63,10 +63,10 @@ def split_iterable(
 
 def join_line(line: list[str | list[str]], sep: str = "\t") -> str:
     """Join an iterable representing a line into a string."""
-    flattened_line = map(
-        lambda v: "; ".join(v) if isinstance(v, list) else v,  # type: ignore
-        line)
-    none_as_str_line = map(
-        lambda v: "" if v is None or v == "None" else str(v),
-        flattened_line)
+    flattened_line = [
+        "; ".join(v) if isinstance(v, list) else v
+        for v in line]
+    none_as_str_line = [
+        "" if v is None or v == "None" else str(v)
+        for v in flattened_line]
     return sep.join(none_as_str_line) + "\n"

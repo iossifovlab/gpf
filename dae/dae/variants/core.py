@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from enum import Enum
+from typing import ClassVar
 
 from dae.annotation.annotatable import Annotatable, CNVAllele, VCFAllele
 from dae.utils.variant_utils import trim_parsimonious
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 class Allele:
     """Class representing alleles."""
 
-    TYPE_DISPLAY_NAME = {
+    TYPE_DISPLAY_NAME: ClassVar[dict[str, str]] = {
         "substitution": "sub",
         "small_insertion": "ins",
         "small_deletion": "del",
@@ -100,7 +101,8 @@ class Allele:
         if allele_type is not None:
             self._allele_type = allele_type
         else:
-            if (not self._pos_end and not self._ref and not self._alt) or (self._ref and not self._alt):
+            if (not self._pos_end and not self._ref and not self._alt) or \
+                    (self._ref and not self._alt):
                 self._allele_type = Allele.Type.position
                 self._pos_end = self._pos
             elif self._ref and self._alt:
@@ -143,14 +145,14 @@ class Allele:
                 self.chrom, self.position, self.end_position,
                 Annotatable.Type.LARGE_DELETION)
         if Allele.Type.substitution == self.allele_type:
-            assert self.reference is not None and \
-                self.alternative is not None
+            assert self.reference is not None
+            assert self.alternative is not None
             pos, ref, alt = trim_parsimonious(
                 self.position, self.reference, self.alternative)
             return VCFAllele(self.chrom, pos, ref, alt)
         if Allele.Type.indel & self.allele_type:
-            assert self.reference is not None and \
-                self.alternative is not None
+            assert self.reference is not None
+            assert self.alternative is not None
             pos, ref, alt = trim_parsimonious(
                 self.position, self.reference, self.alternative)
             return VCFAllele(self.chrom, pos, ref, alt)
