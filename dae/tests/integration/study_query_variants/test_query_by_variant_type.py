@@ -39,6 +39,7 @@ chrA   2   .  A   C     .    .      .    GT     0/1 0/1 0/1
 chrA   3   .  A   AA    .    .      .    GT     0/0 0/1 0/1
 chrA   4   .  AA  A     .    .      .    GT     0/0 0/1 0/1
 chrA   5   .  AAA CCC   .    .      .    GT     0/0 0/1 0/1
+chrA   6   .  AA  AC    .    .      .    GT     0/0 0/1 0/1
         """)
 
     return vcf_study(
@@ -65,21 +66,21 @@ chrA   5   .  AAA CCC   .    .      .    GT     0/0 0/1 0/1
 @pytest.mark.parametrize(
     "begin, end, variant_type, count",
     [
-        (1, 9, None, 5),
-        (1, 9, "sub", 2),
+        (1, 9, None, 6),
+        (1, 9, "sub", 3),
         (1, 9, "ins", 1),
         (1, 9, "del", 1),
         (1, 9, "complex", 1),
         (1, 9, "comp", 1),
         (1, 9, "ins or del", 2),
-        (1, 9, "sub or del", 3),
-        (1, 9, "sub or ins", 3),
-        (1, 9, "sub or complex", 3),
+        (1, 9, "sub or del", 4),
+        (1, 9, "sub or ins", 4),
+        (1, 9, "sub or complex", 4),
         (1, 9, "ins or del or complex", 3),
-        (1, 9, "sub or ins or del or complex", 5),
-        (1, 9, "sub or comp", 3),
+        (1, 9, "sub or ins or del or complex", 6),
+        (1, 9, "sub or comp", 4),
         (1, 9, "ins or del or comp", 3),
-        (1, 9, "sub or ins or del or comp", 5),
+        (1, 9, "sub or ins or del or comp", 6),
     ],
 )
 def test_query_by_variant_type(
