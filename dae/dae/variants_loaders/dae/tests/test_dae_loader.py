@@ -15,17 +15,13 @@ from dae.utils.variant_utils import mat2str, str2mat
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader
 
 
-@pytest.fixture
-def root_path(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    return tmp_path_factory.mktemp("denovo_foobar_gpf_instance")
-
-
-@pytest.fixture
-def gpf_instance(root_path: Path) -> GPFInstance:
+@pytest.fixture(scope="session")
+def gpf_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
+    root_path = tmp_path_factory.mktemp("foobar_gpf_instance")
     return foobar_gpf(root_path)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def families_data() -> FamiliesData:
     return build_families_data("""
         familyId personId dadId	 momId	sex status role
@@ -39,8 +35,9 @@ def families_data() -> FamiliesData:
     """)
 
 
-@pytest.fixture
-def summary_data(root_path: Path) -> Path:
+@pytest.fixture(scope="session")
+def summary_data(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    root_path = tmp_path_factory.mktemp("dae_data")
     summary_data, _toomany_data = setup_dae_transmitted(
         root_path,
         textwrap.dedent("""
@@ -59,7 +56,7 @@ bar 11       sub(A->G) f1:1121/1101:38||4||83||25/16||23||0||16/0||0||0||0;f2:21
     return summary_data
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def dae_transmitted(
     gpf_instance: GPFInstance,
     families_data: FamiliesData,

@@ -1,14 +1,26 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import numpy as np
+import pathlib
+from collections.abc import Callable
+
 import pytest
 
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.pedigrees.families_data import FamiliesData
 from dae.utils.regions import Region
 from dae.variants_loaders.dae.loader import DenovoLoader
 
 
 @pytest.fixture
-def simple_denovo_loader(gpf_instance_2013, fixture_dirname, fake_families):
-    def ctor(input_filename, additional_params):
+def denovo_loader(
+    denovo_families: FamiliesData,
+) -> Callable[
+        [pathlib.Path, dict[str, str], ReferenceGenome], DenovoLoader]:
+
+    def ctor(
+        denovo_filename: pathlib.Path,
+        additional_params: dict[str, str],
+        genome: ReferenceGenome,
+    ) -> DenovoLoader:
         params = {
             "denovo_chrom": "chrom",
             "denovo_pos": "pos",
@@ -18,63 +30,136 @@ def simple_denovo_loader(gpf_instance_2013, fixture_dirname, fake_families):
             "denovo_best_state": "bestState",
             **additional_params,
         }
-        denovo_filename = fixture_dirname(input_filename)
         return DenovoLoader(
-            fake_families, denovo_filename,
-            genome=gpf_instance_2013.reference_genome, params=params,
+            denovo_families,
+            str(denovo_filename),
+            genome=genome,
+            params=params,
         )
+
     return ctor
 
 
-@pytest.mark.parametrize("input_filename, params", [
-    ("denovo_import/variants_VCF_style.tsv", {"add_chrom_prefix": "chr"}),
-    ("denovo_import/variants_VCF_style_chr.tsv", {"del_chrom_prefix": "chr"}),
-])
-def test_chromosomes_have_adjusted_chrom(simple_denovo_loader,
-                                         input_filename, params):
-    loader = simple_denovo_loader(input_filename, params)
-
-    prefix = params.get("add_chrom_prefix", "")
-    assert loader.chromosomes == [f"{prefix}1", f"{prefix}2", f"{prefix}3",
-                                  f"{prefix}4"]
+def test_loader_chromosome_names(
+    denovo_loader: Callable[
+        [pathlib.Path, dict[str, str], ReferenceGenome], DenovoLoader],
+    denovo_vcf_style: pathlib.Path,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
+    loader = denovo_loader(denovo_vcf_style, {}, acgt_genome_19)
+    assert loader.chromosomes == ["1", "2", "3"]
 
 
-@pytest.mark.parametrize("input_filename, params", [
-    ("denovo_import/variants_VCF_style.tsv", {"add_chrom_prefix": "chr"}),
-    ("denovo_import/variants_VCF_style_chr.tsv", {"del_chrom_prefix": "chr"}),
-])
-def test_variants_have_adjusted_chrom(simple_denovo_loader,
-                                      input_filename, params):
-    loader = simple_denovo_loader(input_filename, params)
-    is_add = "add_chrom_prefix" in params
+def test_loader_chromosome_names_add_prefix(
+    denovo_loader: Callable[
+        [pathlib.Path, dict[str, str], ReferenceGenome], DenovoLoader],
+    denovo_vcf_style: pathlib.Path,
+    acgt_genome_38: ReferenceGenome,
+) -> None:
+    loader = denovo_loader(
+        denovo_vcf_style, {"add_chrom_prefix": "chr"}, acgt_genome_38)
+    assert loader.chromosomes == ["chr1", "chr2", "chr3"]
+
+
+def test_loader_chromosome_names_del_prefix(
+    denovo_loader: Callable[
+        [pathlib.Path, dict[str, str], ReferenceGenome], DenovoLoader],
+    denovo_vcf_style_chr: pathlib.Path,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
+    loader = denovo_loader(
+        denovo_vcf_style_chr, {"del_chrom_prefix": "chr"}, acgt_genome_19)
+    assert loader.chromosomes == ["1", "2", "3"]
+
+
+def test_variants_chromosome_names(
+    denovo_loader: Callable[
+        [pathlib.Path, dict[str, str], ReferenceGenome], DenovoLoader],
+    denovo_vcf_style: pathlib.Path,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
+    loader = denovo_loader(denovo_vcf_style, {}, acgt_genome_19)
+    variants = list(loader.full_variants_iterator())
+    assert len(variants) == 4
+    chromsomes = {sv.chromosome for sv, _ in variants}
+    assert chromsomes == {"1", "2", "3"}
+
+
+def test_variants_chromosome_names_del_prefix(
+    denovo_loader: Callable[
+        [pathlib.Path, dict[str, str], ReferenceGenome], DenovoLoader],
+    acgt_genome_19: ReferenceGenome,
+    denovo_vcf_style_chr: pathlib.Path,
+) -> None:
+    loader = denovo_loader(
+        denovo_vcf_style_chr, {"del_chrom_prefix": "chr"}, acgt_genome_19)
+    variants = list(loader.full_variants_iterator())
+    assert len(variants) == 4
+    chromsomes = {sv.chromosome for sv, _ in variants}
+    assert chromsomes == {"1", "2", "3"}
+
+
+def test_variants_chromosome_names_add_prefix(
+    denovo_loader: Callable[
+        [pathlib.Path, dict[str, str], ReferenceGenome], DenovoLoader],
+    acgt_genome_38: ReferenceGenome,
+    denovo_vcf_style: pathlib.Path,
+) -> None:
+    loader = denovo_loader(
+        denovo_vcf_style, {"add_chrom_prefix": "chr"}, acgt_genome_38)
+    variants = list(loader.full_variants_iterator())
+    assert len(variants) == 4
+    chromsomes = {sv.chromosome for sv, _ in variants}
+    assert chromsomes == {"chr1", "chr2", "chr3"}
+
+
+def test_reset_regions_with_chrom(
+    denovo_loader: Callable[
+        [pathlib.Path, dict[str, str], ReferenceGenome], DenovoLoader],
+    denovo_vcf_style: pathlib.Path,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
+    loader = denovo_loader(denovo_vcf_style, {}, acgt_genome_19)
+    regions = [Region.from_str("1"), Region.from_str("2")]
+
+    loader.reset_regions(regions)
 
     variants = list(loader.full_variants_iterator())
-    assert len(variants) > 0
-    for summary_variant, _ in variants:
-        if is_add:
-            assert summary_variant.chromosome.startswith("chr")
-        else:
-            assert not summary_variant.chromosome.startswith("chr")
+    assert len(variants) == 3
+    assert {sv.chromosome for sv, _ in variants} == {"1", "2"}
 
 
-@pytest.mark.parametrize("input_filename, params", [
-    ("denovo_import/variants_VCF_style.tsv", {"add_chrom_prefix": "chr"}),
-    ("denovo_import/variants_VCF_style_chr.tsv", {"del_chrom_prefix": "chr"}),
-])
-def test_reset_regions_with_adjusted_chrom(simple_denovo_loader,
-                                           input_filename, params):
-    loader = simple_denovo_loader(input_filename, params)
-    prefix = params.get("add_chrom_prefix", "")
-    regions = [f"{prefix}1", f"{prefix}2"]
+def test_reset_regions_with_chrom_del_prefix(
+    denovo_loader: Callable[
+        [pathlib.Path, dict[str, str], ReferenceGenome], DenovoLoader],
+    acgt_genome_19: ReferenceGenome,
+    denovo_vcf_style_chr: pathlib.Path,
+) -> None:
+    loader = denovo_loader(
+        denovo_vcf_style_chr, {"del_chrom_prefix": "chr"}, acgt_genome_19)
+    regions = [Region.from_str("1"), Region.from_str("2")]
 
-    loader.reset_regions([Region.from_str(reg) for reg in regions])
+    loader.reset_regions(regions)
 
     variants = list(loader.full_variants_iterator())
-    assert len(variants) > 0
-    unique_chroms = np.unique([sv.chromosome for sv, _ in variants])
-    assert (unique_chroms == regions).all()
+    assert len(variants) == 3
+    assert {sv.chromosome for sv, _ in variants} == {"1", "2"}
 
-    for sv, _ in variants:
-        assert sv.position is not None
-        assert sv.end_position is not None
-        assert sv.position == sv.end_position
+
+def test_reset_regions_with_chrom_add_prefix(
+    denovo_loader: Callable[
+        [pathlib.Path, dict[str, str], ReferenceGenome], DenovoLoader],
+    acgt_genome_38: ReferenceGenome,
+    denovo_vcf_style: pathlib.Path,
+) -> None:
+    loader = denovo_loader(
+        denovo_vcf_style,
+        {"add_chrom_prefix": "chr"},
+        acgt_genome_38)
+    regions = [Region.from_str("chr1"), Region.from_str("chr2")]
+
+    loader.reset_regions(regions)
+
+    variants = list(loader.full_variants_iterator())
+    assert len(variants) == 3
+    assert {sv.chromosome for sv, _ in variants} == {"chr1", "chr2"}

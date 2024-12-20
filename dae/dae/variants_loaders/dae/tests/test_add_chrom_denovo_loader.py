@@ -1,13 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+
 import pytest
 
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.testing import acgt_gpf, setup_denovo, setup_pedigree
+from dae.testing import setup_denovo, setup_pedigree
 from dae.variants_loaders.dae.loader import DenovoLoader
 
 
-@pytest.fixture()
-def trio_families(tmp_path_factory):
+@pytest.fixture(scope="session")
+def trio_families(tmp_path_factory: pytest.TempPathFactory) -> FamiliesData:
     root_path = tmp_path_factory.mktemp(
         "denovo_add_chrom_trio_families")
     ped_path = setup_pedigree(
@@ -22,19 +26,11 @@ def trio_families(tmp_path_factory):
     return loader.load()
 
 
-@pytest.fixture()
-def trio_gpf(tmp_path_factory):
-    root_path = tmp_path_factory.mktemp(
-        "denovo_acgt_gpf_instance")
-    gpf_instance = acgt_gpf(root_path)
-    return gpf_instance
-
-
-@pytest.fixture()
-def trio_denovo(tmp_path_factory):
+@pytest.fixture(scope="session")
+def trio_denovo(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
     root_path = tmp_path_factory.mktemp(
         "denovo_add_chrom_trio")
-    denovo_path = setup_denovo(
+    return setup_denovo(
         root_path / "trio_data" / "in.tsv",
         """
           familyId  location  variant    bestState
@@ -42,7 +38,6 @@ def trio_denovo(tmp_path_factory):
           f1        2:2       ins(AA)    2||2||1/0||0||1
         """,
     )
-    return denovo_path
 
 
 @pytest.mark.parametrize(
@@ -53,11 +48,19 @@ def trio_denovo(tmp_path_factory):
     ],
 )
 def test_add_chrom_denovo_loader(
-        trio_gpf, trio_families, trio_denovo,
-        variant_index, chrom, pos, ref, alt):
+    acgt_genome_38: ReferenceGenome,
+    trio_families: FamiliesData,
+    trio_denovo: pathlib.Path,
+    variant_index: int,
+    chrom: str,
+    pos: int,
+    ref: str,
+    alt: str,
+) -> None:
 
     loader = DenovoLoader(
-        trio_families, str(trio_denovo), trio_gpf.reference_genome,
+        trio_families, str(trio_denovo),
+        genome=acgt_genome_38,
         params={
             "add_chrom_prefix": "chr",
         })

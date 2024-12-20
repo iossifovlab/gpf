@@ -1,14 +1,13 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
-from collections.abc import Callable
 from typing import cast
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from dae.gpf_instance import GPFInstance
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing import alla_gpf, setup_denovo, setup_pedigree
@@ -16,6 +15,26 @@ from dae.utils.variant_utils import GenotypeType, mat2str
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants_loaders.dae.loader import DenovoLoader
+
+
+@pytest.fixture
+def expected_df() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "chrom": ["1", "2", "2", "3"],
+            "position": [1, 1, 5, 1],
+            "reference": ["A", "A", "A", "A"],
+            "alternative": ["T", "T", "T", "T"],
+            "family_id": ["f1", "f1", "f2", "f3"],
+            "genotype": [None, None, None, None],
+            "best_state": [
+                np.array([[2, 2, 1, 2], [0, 0, 1, 0]]),
+                np.array([[2, 2, 1, 2], [0, 0, 1, 0]]),
+                np.array([[2, 2, 1], [0, 0, 1]]),
+                np.array([[1], [1]]),
+            ],
+        },
+    )
 
 
 def compare_variant_dfs(
@@ -52,37 +71,40 @@ def compare_variant_dfs(
 
 
 def test_produce_genotype(
-        fake_families: FamiliesData,
-        gpf_instance_2013: GPFInstance) -> None:
-    expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 1, 1]])
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
+    expected_output = np.array([[0, 0, 0, 0], [0, 0, 1, 1]])
     output = DenovoLoader.produce_genotype(
-        "1", 123123, gpf_instance_2013.reference_genome,
-        fake_families["f1"], ["f1.p1", "f1.s2"],
+        "1", 1, acgt_genome_19,
+        denovo_families["f1"], ["p1", "s1"],
     )
     assert np.array_equal(output, expected_output)
     assert output.dtype == GenotypeType
 
 
 def test_produce_genotype_no_people_with_variants(
-        fake_families: FamiliesData,
-        gpf_instance_2013: GPFInstance) -> None:
-    expected_output = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
+    expected_output = np.array([[0, 0, 0, 0], [0, 0, 0, 0]])
     output = DenovoLoader.produce_genotype(
-        "1", 123123, gpf_instance_2013.reference_genome,
-        fake_families["f1"], [],
+        "1", 1, acgt_genome_19,
+        denovo_families["f1"], [],
     )
     assert np.array_equal(output, expected_output)
     assert output.dtype == GenotypeType
 
 
 def test_families_instance_type_assertion(
-        fixture_dirname: Callable[[str], str],
-        fake_families: FamiliesData,
-        gpf_instance_2013: GPFInstance) -> None:
+    denovo_dae_style: pathlib.Path,
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
     error_message = "families must be an instance of FamiliesData!"
-    filename = fixture_dirname("denovo_import/variants_DAE_style.tsv")
     loader = DenovoLoader(
-        fake_families, filename, gpf_instance_2013.reference_genome)
+        denovo_families, str(denovo_dae_style),
+        genome=acgt_genome_19)
     with pytest.raises(AssertionError) as excinfo:
         loader.flexible_denovo_load(
             None,  # type: ignore
@@ -96,50 +118,36 @@ def test_families_instance_type_assertion(
 
 
 def test_read_variants_dae_style(
-        fixture_dirname: Callable[[str], str],
-        fake_families: FamiliesData,
-        gpf_instance_2013: GPFInstance) -> None:
-    filename = fixture_dirname("denovo_import/variants_DAE_style.tsv")
+    denovo_dae_style: pathlib.Path,
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+    expected_df: pd.DataFrame,
+) -> None:
     loader = DenovoLoader(
-        fake_families, filename, gpf_instance_2013.reference_genome)
+        denovo_families, str(denovo_dae_style),
+        genome=acgt_genome_19)
     res_df = loader.flexible_denovo_load(
-        filename,
-        gpf_instance_2013.reference_genome,
-        families=fake_families,
+        str(denovo_dae_style),
+        acgt_genome_19,
+        families=denovo_families,
         denovo_location="location",
         denovo_variant="variant",
         denovo_family_id="familyId",
         denovo_best_state="bestState",
     )
 
-    expected_df = pd.DataFrame(
-        {
-            "chrom": ["1", "2", "2", "3", "4"],
-            "position": [123, 234, 234, 345, 456],
-            "reference": ["A", "T", "G", "G", "G"],
-            "alternative": ["G", "A", "A", "A", "A"],
-            "family_id": ["f1", "f1", "f2", "f3", "f4"],
-            "genotype": [None, None, None, None, None],
-            "best_state": [
-                np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
-                np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
-                np.array([[2, 2, 2, 1], [0, 0, 0, 1]]),
-                np.array([[1], [1]]),
-                np.array([[1, 1], [1, 1]]),
-            ],
-        },
-    )
-
     assert compare_variant_dfs(res_df, expected_df)
 
 
 def test_read_variants_a_la_vcf_style(
-        fixture_dirname: Callable[[str], str],
-        fake_families: FamiliesData,
-        gpf_instance_2013: GPFInstance) -> None:
-    filename = fixture_dirname("denovo_import/variants_VCF_style.tsv")
+    denovo_vcf_style: pathlib.Path,
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+    expected_df: pd.DataFrame,
+) -> None:
     loader = DenovoLoader(
-        fake_families, filename, gpf_instance_2013.reference_genome,
+        denovo_families, str(denovo_vcf_style),
+        acgt_genome_19,
         params={
             "denovo_chrom": "chrom",
             "denovo_pos": "pos",
@@ -149,9 +157,9 @@ def test_read_variants_a_la_vcf_style(
             "denovo_best_state": "bestState",
         })
     res_df = loader.flexible_denovo_load(
-        filename,
-        gpf_instance_2013.reference_genome,
-        families=fake_families,
+        str(denovo_vcf_style),
+        acgt_genome_19,
+        families=denovo_families,
         denovo_chrom="chrom",
         denovo_pos="pos",
         denovo_ref="ref",
@@ -160,34 +168,25 @@ def test_read_variants_a_la_vcf_style(
         denovo_best_state="bestState",
     )
 
-    expected_df = pd.DataFrame(
-        {
-            "chrom": ["1", "2", "2", "3", "4"],
-            "position": [123, 234, 234, 345, 456],
-            "reference": ["A", "T", "G", "G", "G"],
-            "alternative": ["G", "A", "A", "A", "A"],
-            "family_id": ["f1", "f1", "f2", "f3", "f4"],
-            "genotype": [None, None, None, None, None],
-            "best_state": [
-                np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
-                np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
-                np.array([[2, 2, 2, 1], [0, 0, 0, 1]]),
-                np.array([[1], [1]]),
-                np.array([[1, 1], [1, 1]]),
-            ],
-        },
-    )
-
     assert compare_variant_dfs(res_df, expected_df)
 
 
 def test_read_variants_mixed_a(
-        fixture_dirname: Callable[[str], str],
-        fake_families: FamiliesData,
-        gpf_instance_2013: GPFInstance) -> None:
-    filename = fixture_dirname("denovo_import/variants_mixed_style_A.tsv")
+    tmp_path: pathlib.Path,
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+    expected_df: pd.DataFrame,
+) -> None:
+    filename = setup_denovo(tmp_path / "mixed_style_A.tsv", textwrap.dedent("""
+familyId location ref  alt  bestState
+f1       1:1      A    T    2||2||1||2/0||0||1||0
+f1       2:1      A    T    2||2||1||2/0||0||1||0
+f2       2:5      A    T    2||2||1/0||0||1
+f3       3:1      A    T    1/1
+"""))
+
     loader = DenovoLoader(
-        fake_families, filename, gpf_instance_2013.reference_genome,
+        denovo_families, str(filename), acgt_genome_19,
         params={
             "denovo_location": "location",
             "denovo_ref": "ref",
@@ -196,9 +195,9 @@ def test_read_variants_mixed_a(
             "denovo_best_state": "bestState",
         })
     res_df = loader.flexible_denovo_load(
-        filename,
-        gpf_instance_2013.reference_genome,
-        families=fake_families,
+        str(filename),
+        acgt_genome_19,
+        families=denovo_families,
         denovo_location="location",
         denovo_ref="ref",
         denovo_alt="alt",
@@ -206,34 +205,27 @@ def test_read_variants_mixed_a(
         denovo_best_state="bestState",
     )
 
-    expected_df = pd.DataFrame(
-        {
-            "chrom": ["1", "2", "2", "3", "4"],
-            "position": [123, 234, 234, 345, 456],
-            "reference": ["A", "T", "G", "G", "G"],
-            "alternative": ["G", "A", "A", "A", "A"],
-            "family_id": ["f1", "f1", "f2", "f3", "f4"],
-            "genotype": [None, None, None, None, None],
-            "best_state": [
-                np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
-                np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
-                np.array([[2, 2, 2, 1], [0, 0, 0, 1]]),
-                np.array([[1], [1]]),
-                np.array([[1, 1], [1, 1]]),
-            ],
-        },
-    )
-
     assert compare_variant_dfs(res_df, expected_df)
 
 
 def test_read_variants_mixed_b(
-        fixture_dirname: Callable[[str], str],
-        fake_families: FamiliesData,
-        gpf_instance_2013: GPFInstance) -> None:
-    filename = fixture_dirname("denovo_import/variants_mixed_style_B.tsv")
+    tmp_path: pathlib.Path,
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+    expected_df: pd.DataFrame,
+) -> None:
+    filename = setup_denovo(tmp_path / "mixed_style_A.tsv", textwrap.dedent("""
+familyId chrom pos variant     bestState
+f1       1     1   sub(A->T)   2||2||1||2/0||0||1||0
+f1       2     1   sub(A->T)   2||2||1||2/0||0||1||0
+f2       2     5   sub(A->T)   2||2||1/0||0||1
+f3       3     1   sub(A->T)   1/1
+"""))
+
     loader = DenovoLoader(
-        fake_families, filename, gpf_instance_2013.reference_genome,
+        denovo_families,
+        str(filename),
+        acgt_genome_19,
         params={
             "denovo_chrom": "chrom",
             "denovo_pos": "pos",
@@ -242,9 +234,9 @@ def test_read_variants_mixed_b(
             "denovo_best_state": "bestState",
         })
     res_df = loader.flexible_denovo_load(
-        filename,
-        gpf_instance_2013.reference_genome,
-        families=fake_families,
+        str(filename),
+        acgt_genome_19,
+        families=denovo_families,
         denovo_chrom="chrom",
         denovo_pos="pos",
         denovo_variant="variant",
@@ -252,42 +244,22 @@ def test_read_variants_mixed_b(
         denovo_best_state="bestState",
     )
 
-    expected_df = pd.DataFrame(
-        {
-            "chrom": ["1", "2", "2", "3", "4"],
-            "position": [123, 234, 234, 345, 456],
-            "reference": ["A", "T", "G", "G", "G"],
-            "alternative": ["G", "A", "A", "A", "A"],
-            "family_id": ["f1", "f1", "f2", "f3", "f4"],
-            "genotype": [None, None, None, None, None],
-            "best_state": [
-                np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
-                np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
-                np.array([[2, 2, 2, 1], [0, 0, 0, 1]]),
-                np.array([[1], [1]]),
-                np.array([[1, 1], [1, 1]]),
-            ],
-        },
-    )
-
     assert compare_variant_dfs(res_df, expected_df)
 
 
-@pytest.mark.parametrize(
-    "filename",
-    [
-        ("denovo_import/variants_personId_single.tsv"),
-        ("denovo_import/variants_personId_list.tsv"),
-    ],
-)
-def test_read_variants_person_ids(
-        filename: str,
-        fixture_dirname: Callable[[str], str],
-        fake_families: FamiliesData,
-        gpf_instance_2013: GPFInstance) -> None:
-    filename = fixture_dirname(filename)
+def test_read_variants_person_ids_multiline(
+    tmp_path: pathlib.Path,
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
+    filename = setup_denovo(tmp_path / "multi_person.tsv", textwrap.dedent("""
+personId chrom pos  ref alt
+p1       1     1    A   T
+s1       1     1    A   T
+"""))
     loader = DenovoLoader(
-        fake_families, filename, gpf_instance_2013.reference_genome,
+        denovo_families, str(filename),
+        acgt_genome_19,
         params={
             "denovo_chrom": "chrom",
             "denovo_pos": "pos",
@@ -296,9 +268,9 @@ def test_read_variants_person_ids(
             "denovo_person_id": "personId",
         })
     res_df = loader.flexible_denovo_load(
-        filename,
-        gpf_instance_2013.reference_genome,
-        families=fake_families,
+        str(filename),
+        acgt_genome_19,
+        families=denovo_families,
         denovo_chrom="chrom",
         denovo_pos="pos",
         denovo_ref="ref",
@@ -306,47 +278,90 @@ def test_read_variants_person_ids(
         denovo_person_id="personId",
     )
 
+    assert len(res_df) == 1
+
     expected_df = pd.DataFrame(
         {
-            "chrom": ["1", "2", "2", "3", "4"],
-            "position": [123, 234, 235, 345, 456],
-            "reference": ["A", "T", "G", "G", "G"],
-            "alternative": ["G", "A", "A", "A", "A"],
-            "family_id": ["f1", "f1", "f2", "f3", "f4"],
+            "chrom": ["1"],
+            "position": [1],
+            "reference": ["A"],
+            "alternative": ["T"],
+            "family_id": ["f1"],
             "genotype": [
-                np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 1]]),
-                np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
-                np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
-                np.array([[0], [1]]),
-                np.array([[0, 0], [1, 1]]),
+                np.array([[0, 0, 0, 0], [0, 0, 1, 1]]),
             ],
-            "best_state": [None, None, None, None, None],
+            "best_state": [None],
         },
     )
 
-    print(res_df)
-    print(expected_df)
+    assert compare_variant_dfs(res_df, expected_df)
 
-    res_df = res_df.sort_values(["chrom", "position", "reference"])
-    res_df = res_df.reset_index(drop=True)
-    expected_df = expected_df.sort_values(["chrom", "position", "reference"])
-    expected_df = expected_df.reset_index(drop=True)
 
-    print(res_df)
-    print(expected_df)
+def test_read_variants_person_ids_list(
+    tmp_path: pathlib.Path,
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
+    filename = setup_denovo(tmp_path / "multi_person.tsv", textwrap.dedent("""
+personId chrom pos  ref alt
+p1,s1    1     1    A   T
+"""))
+    loader = DenovoLoader(
+        denovo_families, str(filename),
+        acgt_genome_19,
+        params={
+            "denovo_chrom": "chrom",
+            "denovo_pos": "pos",
+            "denovo_ref": "ref",
+            "denovo_alt": "alt",
+            "denovo_person_id": "personId",
+        })
+    res_df = loader.flexible_denovo_load(
+        str(filename),
+        acgt_genome_19,
+        families=denovo_families,
+        denovo_chrom="chrom",
+        denovo_pos="pos",
+        denovo_ref="ref",
+        denovo_alt="alt",
+        denovo_person_id="personId",
+    )
+
+    assert len(res_df) == 1
+
+    expected_df = pd.DataFrame(
+        {
+            "chrom": ["1"],
+            "position": [1],
+            "reference": ["A"],
+            "alternative": ["T"],
+            "family_id": ["f1"],
+            "genotype": [
+                np.array([[0, 0, 0, 0], [0, 0, 1, 1]]),
+            ],
+            "best_state": [None],
+        },
+    )
 
     assert compare_variant_dfs(res_df, expected_df)
 
 
 def test_read_variants_different_separator(
-        fixture_dirname: Callable[[str], str],
-        fake_families: FamiliesData,
-        gpf_instance_2013: GPFInstance) -> None:
-    filename = fixture_dirname(
-        "denovo_import/variants_different_separator.dsv",
-    )
+    tmp_path: pathlib.Path,
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+    expected_df: pd.DataFrame,
+) -> None:
+    filename = setup_denovo(tmp_path / "separator.tsv", textwrap.dedent("""
+familyId$chrom$pos$ref$alt$bestState
+f1$1$1$A$T$2||2||1||2/0||0||1||0
+f1$2$1$A$T$2||2||1||2/0||0||1||0
+f2$2$5$A$T$2||2||1/0||0||1
+f3$3$1$A$T$1/1
+"""))
+
     loader = DenovoLoader(
-        fake_families, filename, gpf_instance_2013.reference_genome,
+        denovo_families, str(filename), acgt_genome_19,
         params={
             "denovo_sep": "$",
             "denovo_chrom": "chrom",
@@ -357,9 +372,9 @@ def test_read_variants_different_separator(
             "denovo_best_state": "bestState",
         })
     res_df = loader.flexible_denovo_load(
-        filename,
-        gpf_instance_2013.reference_genome,
-        families=fake_families,
+        str(filename),
+        acgt_genome_19,
+        families=denovo_families,
         denovo_sep="$",
         denovo_chrom="chrom",
         denovo_pos="pos",
@@ -369,36 +384,24 @@ def test_read_variants_different_separator(
         denovo_best_state="bestState",
     )
 
-    expected_df = pd.DataFrame(
-        {
-            "chrom": ["1", "2", "2", "3", "4"],
-            "position": [123, 234, 234, 345, 456],
-            "reference": ["A", "T", "G", "G", "G"],
-            "alternative": ["G", "A", "A", "A", "A"],
-            "family_id": ["f1", "f1", "f2", "f3", "f4"],
-            "genotype": [None, None, None, None, None],
-            "best_state": [
-                np.array([[2, 2, 1, 2, 1], [0, 0, 1, 0, 1]]),
-                np.array([[2, 2, 1, 2, 2], [0, 0, 1, 0, 0]]),
-                np.array([[2, 2, 2, 1], [0, 0, 0, 1]]),
-                np.array([[1], [1]]),
-                np.array([[1, 1], [1, 1]]),
-            ],
-        },
-    )
-
     assert compare_variant_dfs(res_df, expected_df)
 
 
 def test_read_variants_with_genotype(
-        fixture_dirname: Callable[[str], str],
-        fake_families: FamiliesData,
-        gpf_instance_2013: GPFInstance) -> None:
-    filename = fixture_dirname(
-        "denovo_import/variants_VCF_genotype.tsv",
-    )
+    tmp_path: pathlib.Path,
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
+    filename = setup_denovo(tmp_path / "separator.tsv", textwrap.dedent("""
+familyId chrom pos  ref alt genotype
+f1       1     1    A   T   0/0,0/0,0/1,0/0
+f1       2     1    A   T   0/0,0/0,0/1,0/0
+f2       2     5    A   T   0/0,0/0,0/1
+f3       3     1    A   T   0/1
+"""))
     loader = DenovoLoader(
-        fake_families, filename, gpf_instance_2013.reference_genome,
+        denovo_families, str(filename),
+        acgt_genome_19,
         params={
             "denovo_chrom": "chrom",
             "denovo_pos": "pos",
@@ -408,9 +411,9 @@ def test_read_variants_with_genotype(
             "denovo_genotype": "genotype",
         })
     res_df = loader.flexible_denovo_load(
-        filename,
-        gpf_instance_2013.reference_genome,
-        families=fake_families,
+        str(filename),
+        acgt_genome_19,
+        families=denovo_families,
         denovo_chrom="chrom",
         denovo_pos="pos",
         denovo_ref="ref",
@@ -420,46 +423,41 @@ def test_read_variants_with_genotype(
     )
 
     expected_df = pd.DataFrame(
-        {
-            "chrom": ["1", "2", "2", "3", "4"],
-            "position": [123, 234, 234, 345, 456],
-            "reference": ["A", "T", "G", "G", "G"],
-            "alternative": ["G", "A", "A", "A", "A"],
-            "family_id": ["f1", "f1", "f2", "f3", "f4"],
-            "genotype": [
-                np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 1]]),
-                np.array([[0, 0, 0, 0, 0], [0, 0, 1, 0, 0]]),
-                np.array([[0, 0, 0, 0], [0, 0, 0, 1]]),
-                np.array([[0], [1]]),
-                np.array([[0, 0], [1, 1]]),
-            ],
-            "best_state": [
-                None,
-                None,
-                None,
-                None,
-                None,
-            ],
-        },
-    )
+    {
+        "chrom": ["1", "2", "2", "3"],
+        "position": [1, 1, 5, 1],
+        "reference": ["A", "A", "A", "A"],
+        "alternative": ["T", "T", "T", "T"],
+        "family_id": ["f1", "f1", "f2", "f3"],
+        "genotype": [
+            np.array([[0, 0, 0, 0], [0, 0, 1, 0]]),
+            np.array([[0, 0, 0, 0], [0, 0, 1, 0]]),
+            np.array([[0, 0, 0], [0, 0, 1]]),
+            np.array([[0], [1]]),
+        ],
+        "best_state": [
+            None, None, None, None,
+        ],
+    },
+)
 
     assert compare_variant_dfs(res_df, expected_df)
 
 
 def test_read_variants_genome_assertion(
-        fixture_dirname: Callable[[str], str],
-        fake_families: FamiliesData,
-        gpf_instance_2013: GPFInstance) -> None:
-    filename = fixture_dirname("denovo_import/variants_DAE_style.tsv")
-
+    denovo_dae_style: pathlib.Path,
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
     loader = DenovoLoader(
-        fake_families, filename, gpf_instance_2013.reference_genome)
+        denovo_families, str(denovo_dae_style),
+        acgt_genome_19)
 
     with pytest.raises(AssertionError) as excinfo:
         loader.flexible_denovo_load(
-            filename,
+            str(denovo_dae_style),
             None,  # type: ignore
-            families=fake_families,
+            families=denovo_families,
             denovo_location="location",
             denovo_variant="variant",
             denovo_family_id="familyId",
@@ -469,184 +467,7 @@ def test_read_variants_genome_assertion(
     assert str(excinfo.value) == "You must provide a genome object!"
 
 
-@pytest.mark.parametrize(
-    "filename,params",
-    [
-        (
-            "variants_DAE_style.tsv",
-            {
-                "denovo_location": "location",
-                "denovo_variant": "variant",
-                "denovo_family_id": "familyId",
-                "denovo_best_state": "bestState",
-            },
-        ),
-        (
-            "variants_VCF_style.tsv",
-            {
-                "denovo_chrom": "chrom",
-                "denovo_pos": "pos",
-                "denovo_ref": "ref",
-                "denovo_alt": "alt",
-                "denovo_family_id": "familyId",
-                "denovo_best_state": "bestState",
-            },
-        ),
-        (
-            "variants_mixed_style_A.tsv",
-            {
-                "denovo_location": "location",
-                "denovo_ref": "ref",
-                "denovo_alt": "alt",
-                "denovo_family_id": "familyId",
-                "denovo_best_state": "bestState",
-            },
-        ),
-        (
-            "variants_mixed_style_B.tsv",
-            {
-                "denovo_chrom": "chrom",
-                "denovo_pos": "pos",
-                "denovo_variant": "variant",
-                "denovo_family_id": "familyId",
-                "denovo_best_state": "bestState",
-            },
-        ),
-        (
-            "variants_personId_single.tsv",
-            {
-                "denovo_chrom": "chrom",
-                "denovo_pos": "pos",
-                "denovo_ref": "ref",
-                "denovo_alt": "alt",
-                "denovo_person_id": "personId",
-            },
-        ),
-        (
-            "variants_personId_list.tsv",
-            {
-                "denovo_chrom": "chrom",
-                "denovo_pos": "pos",
-                "denovo_ref": "ref",
-                "denovo_alt": "alt",
-                "denovo_person_id": "personId",
-            },
-        ),
-        (
-            "variants_different_separator.dsv",
-            {
-                "denovo_sep": "$",
-                "denovo_chrom": "chrom",
-                "denovo_pos": "pos",
-                "denovo_ref": "ref",
-                "denovo_alt": "alt",
-                "denovo_family_id": "familyId",
-                "denovo_best_state": "bestState",
-            },
-        ),
-    ],
-)
-def test_denovo_loader(
-        filename: str, params: dict[str, str],
-        fixture_dirname: Callable[[str], str],
-        fake_families: FamiliesData,
-        gpf_instance_2013: GPFInstance) -> None:
-    denovo_filename = fixture_dirname(f"denovo_import/{filename}")
-    variants_loader = DenovoLoader(
-        fake_families, denovo_filename,
-        genome=gpf_instance_2013.reference_genome, params=params,
-        sort=False,
-    )
-
-    variants = list(variants_loader.full_variants_iterator())
-    print(variants)
-
-    def falt_allele(index: int) -> FamilyAllele:
-        return cast(FamilyAllele, variants[index][1][0].alt_alleles[0])
-
-    fa = falt_allele(0)
-    print(fa, fa.variant_in_members, fa.inheritance_in_members)
-    assert fa.inheritance_in_members[2] == Inheritance.denovo
-    assert fa.inheritance_in_members[4] == Inheritance.denovo
-    assert fa.inheritance_in_members == [
-        Inheritance.unknown,
-        Inheritance.unknown,
-        Inheritance.denovo,
-        Inheritance.missing,
-        Inheritance.denovo,
-    ]
-
-    fa = falt_allele(1)
-    print(fa, fa.variant_in_members, fa.inheritance_in_members)
-    assert fa.inheritance_in_members[2] == Inheritance.denovo
-    assert fa.inheritance_in_members == [
-        Inheritance.unknown,
-        Inheritance.unknown,
-        Inheritance.denovo,
-        Inheritance.missing,
-        Inheritance.missing,
-    ]
-
-    fa = falt_allele(2)
-    print(fa, fa.variant_in_members, fa.inheritance_in_members)
-    assert fa.inheritance_in_members[3] == Inheritance.denovo
-    assert fa.inheritance_in_members == [
-        Inheritance.unknown,
-        Inheritance.unknown,
-        Inheritance.missing,
-        Inheritance.denovo,
-    ]
-
-    fa = falt_allele(3)
-    print(fa, fa.variant_in_members, fa.inheritance_in_members)
-
-    assert fa.inheritance_in_members[0] == Inheritance.denovo
-    assert fa.inheritance_in_members == [Inheritance.denovo]
-
-    fa = falt_allele(4)
-    print(fa, fa.variant_in_members, fa.inheritance_in_members)
-
-    assert fa.inheritance_in_members[0] == Inheritance.denovo
-    assert fa.inheritance_in_members == [
-        Inheritance.denovo,
-        Inheritance.denovo,
-    ]
-
-
-def test_denovo_loader_avoids_duplicates(
-        fixture_dirname: Callable[[str], str],
-        fake_families: FamiliesData,
-        gpf_instance_2013: GPFInstance) -> None:
-    denovo_filename = fixture_dirname(
-        "denovo_import/variants_VCF_style_dup.tsv",
-    )
-    params = {
-        "denovo_chrom": "chrom",
-        "denovo_pos": "pos",
-        "denovo_ref": "ref",
-        "denovo_alt": "alt",
-        "denovo_family_id": "familyId",
-        "denovo_best_state": "bestState",
-    }
-    variants_loader = DenovoLoader(
-        fake_families, denovo_filename,
-        genome=gpf_instance_2013.reference_genome, params=params,
-    )
-
-    variants_iter = variants_loader.full_variants_iterator()
-
-    svs = []
-    fvs: list[FamilyVariant] = []
-    for sv, fvs_ in variants_iter:
-        print(sv, fvs)
-        svs.append(sv)
-        fvs.extend(fvs_)
-
-    assert len(svs) == 3
-    assert len(fvs) == 4
-
-
-@pytest.fixture()
+@pytest.fixture
 def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
     ped_path = setup_pedigree(
         tmp_path / "pedigree.ped",
@@ -788,3 +609,105 @@ def test_denovo_loader_new(
         Inheritance.denovo,
     ]
     assert mat2str(fa.best_state) == "1/1"
+
+
+def test_denovo_loader_avoids_duplicates(
+    tmp_path: pathlib.Path,
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
+    filename = setup_denovo(
+        tmp_path / "in.tsv", textwrap.dedent("""
+familyId chrom pos  ref alt bestState
+f1       1     1    A   T   2||2||1||2/0||0||1||0
+f1       2     1    A   T   2||2||1||2/0||0||1||0
+f2       2     1    A   T   2||2||1/0||0||1
+f3       3     1    A   T   1/1
+"""))
+
+    params = {
+        "denovo_chrom": "chrom",
+        "denovo_pos": "pos",
+        "denovo_ref": "ref",
+        "denovo_alt": "alt",
+        "denovo_family_id": "familyId",
+        "denovo_best_state": "bestState",
+    }
+    variants_loader = DenovoLoader(
+        denovo_families, str(filename),
+        genome=acgt_genome_19,
+        params=params,
+    )
+
+    variants_iter = variants_loader.full_variants_iterator()
+
+    svs = []
+    fvs: list[FamilyVariant] = []
+    for sv, fvs_ in variants_iter:
+        print(sv, fvs)
+        svs.append(sv)
+        fvs.extend(fvs_)
+
+    assert len(svs) == 3
+    assert len(fvs) == 4
+
+
+def test_denovo_loader(
+    denovo_dae_style: pathlib.Path,
+    denovo_families: FamiliesData,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
+    params = {
+        "denovo_location": "location",
+        "denovo_variant": "variant",
+        "denovo_family_id": "familyId",
+        "denovo_best_state": "bestState",
+    }
+
+    variants_loader = DenovoLoader(
+        denovo_families, str(denovo_dae_style),
+        genome=acgt_genome_19,
+        params=params,
+        sort=False,
+    )
+
+    variants = list(variants_loader.full_variants_iterator())
+    print(variants)
+
+    def falt_allele(index: int) -> FamilyAllele:
+        return cast(FamilyAllele, variants[index][1][0].alt_alleles[0])
+
+    fa = falt_allele(0)
+    print(fa, fa.variant_in_members, fa.inheritance_in_members)
+    assert fa.inheritance_in_members[2] == Inheritance.denovo
+    assert fa.inheritance_in_members == [
+        Inheritance.unknown,
+        Inheritance.unknown,
+        Inheritance.denovo,
+        Inheritance.missing,
+    ]
+
+    fa = falt_allele(1)
+    print(fa, fa.variant_in_members, fa.inheritance_in_members)
+    assert fa.inheritance_in_members[2] == Inheritance.denovo
+    assert fa.inheritance_in_members == [
+        Inheritance.unknown,
+        Inheritance.unknown,
+        Inheritance.denovo,
+        Inheritance.missing,
+    ]
+
+    fa = falt_allele(2)
+    print(fa, fa.variant_in_members, fa.inheritance_in_members)
+    assert fa.inheritance_in_members[2] == Inheritance.denovo
+    assert fa.inheritance_in_members == [
+        Inheritance.unknown,
+        Inheritance.unknown,
+        Inheritance.denovo,
+    ]
+
+    fa = falt_allele(3)
+    print(fa, fa.variant_in_members, fa.inheritance_in_members)
+
+    assert fa.inheritance_in_members[0] == Inheritance.denovo
+    assert fa.inheritance_in_members == [Inheritance.denovo]
