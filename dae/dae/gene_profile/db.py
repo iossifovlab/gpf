@@ -25,7 +25,7 @@ from dae.utils.sql_utils import to_duckdb_transpile
 logger = logging.getLogger(__name__)
 
 
-class GeneProfileDB:
+class GeneProfileReadDB:
     """
     Class for managing the gene profile database.
 
@@ -39,17 +39,14 @@ class GeneProfileDB:
 
     def __init__(
         self,
-        configuration: Box | None,
+        configuration: Box | dict | None,
         dbfile: str,
-        clear: bool = False,
     ):
         self.dbfile = dbfile
         self.configuration = \
-            GeneProfileDB.build_configuration(configuration)
-        self._create_gp_table()
+            GeneProfileWriteDB.build_configuration(configuration)
+        self.table = table("gene_profile")
         self.gene_sets_categories = {}
-        if clear:
-            self._clear_gp_table()
         if len(self.configuration.keys()):
             for category in self.configuration["gene_sets"]:
                 category_name = category["category"]
@@ -59,37 +56,6 @@ class GeneProfileDB:
                     full_gene_set_id = f"{collection_id}_{set_id}"
                     self.gene_sets_categories[full_gene_set_id] = category_name
 
-    @classmethod
-    def build_configuration(cls, configuration: Box | None) -> Box:
-        """
-        Perform a transformation on a given configuration.
-
-        The configuration is transformed to an internal version with more
-        specific information on order and ranks.
-        """
-        if configuration is None:
-            return {}
-        order = configuration.get("order")
-        order_keys = []
-        for gene_set in configuration["gene_sets"]:
-            order_keys.append(gene_set["category"] + "_rank")
-        for genomic_score in configuration["genomic_scores"]:
-            order_keys.append(genomic_score["category"])
-        for dataset_id in configuration["datasets"].keys():
-            order_keys.append(dataset_id)
-        if order is None:
-            configuration["order"] = order_keys
-        else:
-            total_categories_count = \
-                len(configuration["gene_sets"]) + \
-                len(configuration["genomic_scores"]) + \
-                len(configuration["datasets"])
-            assert all(x in order_keys for x in order), "Given GP order " \
-                "has invalid entries"
-            assert len(order) == total_categories_count, "Given GP order " \
-                "is missing items"
-
-        return copy(configuration)
 
     def get_gp(self, gene_symbol: str) -> GPStatistic | None:
         """
@@ -313,6 +279,69 @@ class GeneProfileDB:
                     to_duckdb_transpile(query),
                 ).df().replace([np.nan], [None]).to_dict("records")
             ]
+
+
+class GeneProfileWriteDB:
+    """
+    Class for managing the gene profile database.
+
+    Uses SQLite for DB management and supports loading
+    and storing to filesystem.
+    Has to be supplied a configuration and a path to which to read/write
+    the SQLite DB.
+    """
+
+    def __init__(
+        self,
+        configuration: Box | dict | None,
+        dbfile: str,
+    ):
+        self.dbfile = dbfile
+        self.configuration = \
+            GeneProfileWriteDB.build_configuration(configuration)
+        self._create_gp_table()
+        self.gene_sets_categories = {}
+        self._clear_gp_table()
+        if len(self.configuration.keys()):
+            for category in self.configuration["gene_sets"]:
+                category_name = category["category"]
+                for gene_set in category["sets"]:
+                    collection_id = gene_set["collection_id"]
+                    set_id = gene_set["set_id"]
+                    full_gene_set_id = f"{collection_id}_{set_id}"
+                    self.gene_sets_categories[full_gene_set_id] = category_name
+
+    @classmethod
+    def build_configuration(cls, configuration: Box | dict | None) -> dict:
+        """
+        Perform a transformation on a given configuration.
+
+        The configuration is transformed to an internal version with more
+        specific information on order and ranks.
+        """
+        if configuration is None:
+            return {}
+        order = configuration.get("order")
+        order_keys = []
+        for gene_set in configuration["gene_sets"]:
+            order_keys.append(gene_set["category"] + "_rank")
+        for genomic_score in configuration["genomic_scores"]:
+            order_keys.append(genomic_score["category"])
+        for dataset_id in configuration["datasets"].keys():
+            order_keys.append(dataset_id)
+        if order is None:
+            configuration["order"] = order_keys
+        else:
+            total_categories_count = \
+                len(configuration["gene_sets"]) + \
+                len(configuration["genomic_scores"]) + \
+                len(configuration["datasets"])
+            assert all(x in order_keys for x in order), "Given GP order " \
+                "has invalid entries"
+            assert len(order) == total_categories_count, "Given GP order " \
+                "is missing items"
+
+        return copy(configuration)
 
     def drop_gp_table(self) -> None:
         with duckdb.connect(f"{self.dbfile}") as connection:

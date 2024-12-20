@@ -9,7 +9,7 @@ from typing import Any, Dict, Set, cast
 from box import Box
 
 from dae.effect_annotation.effect import expand_effect_types
-from dae.gene_profile.db import GeneProfileDB
+from dae.gene_profile.db import GeneProfileWriteDB
 from dae.gene_profile.statistic import GPStatistic
 from dae.gene_sets.gene_sets_db import GeneSet
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -295,10 +295,9 @@ def main(
 
     collections_gene_sets = []
 
-    gpdb = GeneProfileDB(
+    gpdb = GeneProfileWriteDB(
         config.to_dict(),
         args.dbfile,
-        clear=True,
     )
 
     for gs_category in config.gene_sets:
