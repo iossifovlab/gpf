@@ -12,25 +12,25 @@ def test_cli_defaults_does_not_include_positionals() -> None:
     class TestLoader(CLILoader):
         @classmethod
         def _arguments(cls) -> list[CLIArgument]:
-            arguments = []
-            arguments.append(CLIArgument(
-                "positional",
-                value_type=str,
-                metavar="<positional>",
-                help_text="Some positional argument",
-            ))
-            arguments.append(CLIArgument(
-                "--kwarg1",
-                default_value=1,
-                help_text="First kwarg",
-            ))
-            arguments.append(CLIArgument(
-                "--kwarg2",
-                default_value=2,
-                help_text="Second kwarg",
-            ))
-            return arguments
+            return [
+                CLIArgument(
+                    "positional",
+                    value_type=str,
+                    metavar="<positional>",
+                    help_text="Some positional argument",
+                ),
+                CLIArgument(
+                    "--kwarg1",
+                    default_value=1,
+                    help_text="First kwarg",
+                ),
+                CLIArgument(
+                    "--kwarg2",
+                    default_value=2,
+                    help_text="Second kwarg",
+                ),
+            ]
 
     loader = TestLoader()
     defaults = loader.cli_defaults()
-    assert set(defaults.keys()) == set(["kwarg1", "kwarg2"])
+    assert set(defaults.keys()) == {"kwarg1", "kwarg2"}

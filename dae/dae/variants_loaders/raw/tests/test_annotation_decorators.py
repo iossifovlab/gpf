@@ -7,7 +7,7 @@ from dae.variants_loaders.raw.loader import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def iossifov2014_decorated(iossifov2014_loader, annotation_pipeline_internal):
     variants_loader, families_loader = iossifov2014_loader
     variants_loader = AnnotationPipelineDecorator(
