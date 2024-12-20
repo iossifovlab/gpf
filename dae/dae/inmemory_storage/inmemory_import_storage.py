@@ -9,14 +9,16 @@ from dae.import_tools.import_tools import (
     ImportStorage,
     save_study_config,
 )
+from dae.inmemory_storage.stored_annotation_decorator import (
+    StoredAnnotationDecorator,
+)
 from dae.task_graph.graph import TaskGraph
 from dae.variants_loaders.raw.loader import (
-    StoredAnnotationDecorator,
     VariantsGenotypesLoader,
     VariantsLoader,
 )
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class InmemoryImportStorage(ImportStorage):
@@ -66,9 +68,7 @@ class InmemoryImportStorage(ImportStorage):
         cls, project: ImportProject,
         variants_loader: VariantsGenotypesLoader,
     ) -> VariantsLoader:
-        result_loader = project.build_variants_loader_pipeline(
-            variants_loader)
-        return result_loader
+        return project.build_variants_loader_pipeline(variants_loader)
 
     @classmethod
     def _do_copy_variants(
@@ -83,7 +83,7 @@ class InmemoryImportStorage(ImportStorage):
         if loader_type is None:
             loader_types = project.get_variant_loader_types()
         else:
-            loader_types = set([loader_type])
+            loader_types = {loader_type}
 
         destination_dir = cls._get_destination_study_dir(project)
 
@@ -116,7 +116,7 @@ class InmemoryImportStorage(ImportStorage):
                 construct_destination_filename,
                 variants_loader.variants_filenames))
             variants_config.append({
-                "path": " ".join(config_filenames),  # FIXME: switch to list
+                "path": " ".join(config_filenames),
                 "params": variants_loader.build_arguments_dict(),
                 "format": variants_type,
             })
