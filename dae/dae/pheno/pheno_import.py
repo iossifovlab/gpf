@@ -1,9 +1,9 @@
 import argparse
 import csv
+import glob
 import gzip
 import logging
 import os
-import re
 import sys
 import textwrap
 import time
@@ -24,7 +24,7 @@ from dae.pedigrees.family import ALL_FAMILY_TAG_LABELS
 from dae.pedigrees.loader import (
     FamiliesLoader,
 )
-from dae.pheno.common import ImportConfig, InferenceConfig
+from dae.pheno.common import DataDictionary, InferenceConfig, PhenoImportConfig
 from dae.pheno.db import safe_db_name
 from dae.pheno.prepare.measure_classifier import (
     ClassifierReport,
@@ -132,14 +132,16 @@ def verify_phenotype_data_name(input_name: str) -> str:
 
 
 def generate_phenotype_data_config(
-    args: argparse.Namespace, regressions: Any,
-) -> dict[str, Any]:
+    pheno_name: str,
+    pheno_db_filename: str,
+    regressions: Any,
+) -> str:
     """Construct phenotype data configuration from command line arguments."""
-    dbfile = os.path.join("%(wd)s", os.path.basename(args.pheno_db_filename))
+    dbfile = os.path.join("%(wd)s", os.path.basename(pheno_db_filename))
     config = {
         "vars": {"wd": "."},
         "type": "study",
-        "name": args.pheno_name,
+        "name": pheno_name,
         "dbfile": dbfile,
         "browser_images_url": "static/images/",
     }
@@ -151,22 +153,48 @@ def generate_phenotype_data_config(
             if "measure_names" in reg and reg["measure_names"] is None:
                 del reg["measure_names"]
         config["regression"] = regressions_dict["regression"]
-    return config
+    return yaml.dump(config)
 
 
-def parse_phenotype_data_config(args: argparse.Namespace) -> ImportConfig:
-    """Construct phenotype data configuration from command line arguments."""
-    config = ImportConfig()
-    config.verbose = args.verbose
-    config.instruments_dir = args.instruments
-    config.instruments_tab_separated = args.tab_separated
+def transform_cli_args(args: argparse.Namespace) -> PhenoImportConfig:
+    """Create a pheno import config instance from CLI arguments."""
+    result = {}
 
-    config.pedigree = args.pedigree
-    config.output = args.output
+    result["id"] = args.pheno_name
+    delattr(args, "pheno_name")
 
-    config.db_filename = args.pheno_db_filename
+    result["input_dir"] = os.getcwd()
 
-    return config
+    result["output_dir"] = args.output
+    delattr(args, "output")
+
+    result["instrument_files"] = [args.instruments]
+    delattr(args, "instruments")
+
+    result["pedigree"] = args.pedigree
+    delattr(args, "pedigree")
+
+    result["tab_separated"] = args.tab_separated
+    delattr(args, "tab_separated")
+
+    result["skip_pedigree_measures"] = args.skip_pheno_common
+    delattr(args, "skip_pheno_common")
+
+    result["inference_config"] = args.inference_config
+    delattr(args, "inference_config")
+
+    result["data_dictionary"] = {
+        "file": args.data_dictionary,
+    }
+    delattr(args, "data_dictionary")
+
+    result["regression_config"] = args.regression
+    delattr(args, "regression")
+
+    result["person_column"] = args.person_column
+    delattr(args, "person_column")
+
+    return PhenoImportConfig.model_validate(result)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -186,7 +214,8 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError("missing pheno db name")
 
     try:
-        import_pheno_data(args)
+        import_config = transform_cli_args(args)
+        import_pheno_data(import_config, args)
     except KeyboardInterrupt:
         return 0
     except ValueError as e:
@@ -201,56 +230,60 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def import_pheno_data(args: Any) -> None:
+def import_pheno_data(
+    config: PhenoImportConfig,
+    task_graph_args: argparse.Namespace,
+    *,
+    force: bool = False,
+) -> None:
     """Import pheno data into DuckDB."""
-    os.makedirs(args.output, exist_ok=True)
+    os.makedirs(config.output_dir, exist_ok=True)
 
-    args.pheno_db_filename = os.path.join(
-        args.output, f"{args.pheno_name}.db",
-    )
+    pheno_db_filename = os.path.join(config.output_dir, f"{config.id}.db")
 
-    if os.path.exists(args.pheno_db_filename):
-        if args.force:
-            os.remove(args.pheno_db_filename)
-        else:
+    if os.path.exists(pheno_db_filename):
+        if not force:
             print(
-                f"Pheno DB already exists at {args.pheno_db_filename}!\n"
+                f"Pheno DB already exists at {pheno_db_filename}!\n"
                 "Use --force or specify another directory.",
             )
             sys.exit(1)
+        os.remove(pheno_db_filename)
 
-    config = parse_phenotype_data_config(args)
-    os.makedirs(os.path.join(config.output, "parquet"), exist_ok=True)
+    os.makedirs(os.path.join(config.output_dir, "parquet"), exist_ok=True)
 
+    # INFERENCE CONFIGS
     inference_configs: dict[str, Any] = {}
-    if args.inference_config:
-        inference_configs = yaml.safe_load(
-            Path(args.inference_config).read_text(),
-        )
-    inference_configs = load_inference_configs(args.inference_config)
+    if config.inference_config is not None:
+        if isinstance(config.inference_config, str):
+            inference_configs = load_inference_configs(
+                config.input_dir, config.inference_config)
+        else:
+            inference_configs = config.inference_config
     add_pheno_common_inference(inference_configs)
 
-    connection = duckdb.connect(args.pheno_db_filename)
-
+    connection = duckdb.connect(pheno_db_filename)
     create_tables(connection)
 
     print("READING PEDIGREE")
     start = time.time()
 
-    ped_df = read_pedigree(connection, args.pedigree)
+    ped_df = read_pedigree(connection, config.input_dir, config.pedigree)
 
     print(f"DONE {time.time() - start}")
 
     print("READING COLUMNS FROM INSTRUMENT FILE")
     start = time.time()
 
-    instruments = collect_instruments(args.instruments)
+    instruments = collect_instruments(config.input_dir, config.instrument_files)
 
-    if not args.skip_pheno_common:
-        instruments["pheno_common"] = [Path(args.pedigree).absolute()]
+    if not config.skip_pedigree_measures:
+        instruments["pheno_common"] = [Path(config.pedigree).absolute()]
 
     instrument_measure_names = read_instrument_measure_names(
-        instruments, args.person_column, tab_separated=args.tab_separated,
+        instruments,
+        config.person_column,
+        tab_separated=config.tab_separated,
     )
 
     print(f"DONE {time.time() - start}")
@@ -261,16 +294,16 @@ def import_pheno_data(args: Any) -> None:
     task_graph = TaskGraph()
 
     task_cache = TaskCache.create(
-        force=args.force,
-        cache_dir=args.task_status_dir,
+        force=task_graph_args.force,
+        cache_dir=task_graph_args.task_status_dir,
     )
 
     create_import_tasks(
         task_graph, instruments,
         instrument_measure_names,
         inference_configs,
-        args.person_column,
-        tab_separated=args.tab_separated,
+        config.person_column,
+        tab_separated=config.tab_separated,
     )
 
     def default_row() -> dict[str, Any]:
@@ -282,8 +315,11 @@ def import_pheno_data(args: Any) -> None:
         for instr in instruments
     }
     imported_instruments = set()
-    description_builder = load_descriptions(args.data_dictionary)
-    with TaskGraphCli.create_executor(task_cache, **vars(args)) as xtor:
+    description_builder = load_descriptions(
+        config.input_dir, config.data_dictionary)
+    with TaskGraphCli.create_executor(
+        task_cache, **vars(task_graph_args),
+    ) as xtor:
         try:
             for result in task_graph_run_with_results(task_graph, xtor):
                 values, report = result
@@ -338,40 +374,52 @@ def import_pheno_data(args: Any) -> None:
 
     connection.close()
 
-    if args.regression:
-        regressions = GPFConfigParser.load_config(
-            args.regression, regression_conf_schema,
-        )
-    else:
-        regressions = None
+    regressions = None
+    if config.regression_config is not None:
+        if isinstance(config.regression_config, str):
+            regressions = GPFConfigParser.load_config(
+                str(Path(config.input_dir, config.regression_config)),
+                regression_conf_schema,
+            )
+        else:
+            regressions = config.regression_config
 
-    output_config = yaml.dump(
-        generate_phenotype_data_config(args, regressions),
-    )
+    output_config = generate_phenotype_data_config(
+        config.id, pheno_db_filename, regressions)
 
-    pheno_conf_path = Path(config.output, f"{args.pheno_name}.yaml")
+    pheno_conf_path = Path(config.output_dir, f"{config.id}.yaml")
     pheno_conf_path.write_text(output_config)
 
 
-def collect_instruments(dirname: str) -> dict[str, Any]:
-    """Collect all instrument files in a directory."""
-    regexp = re.compile("(?P<instrument>.*)(?P<ext>\\.csv.*)")
+def collect_instruments(
+    input_dir: str,
+    paths: list[str],
+) -> dict[str, list[Path]]:
+    """Collect all instrument files from a list of paths."""
+    all_filenames: list[Path] = []
+    for raw_path in paths:
+        path = Path(input_dir, raw_path)
+        if "*" in raw_path:
+            all_filenames.extend(
+                Path(res).absolute()
+                for res in glob.glob(str(path), recursive=True))
+        elif path.is_file():
+            all_filenames.append(path.absolute())
+        elif path.is_dir():
+            for root, _, filenames in os.walk(path):
+                all_filenames.extend(Path(root, filename).absolute()
+                                     for filename in filenames)
+
     instruments = defaultdict(list)
-    for root, _dirnames, filenames in os.walk(dirname):
-        for filename in filenames:
-            basename = os.path.basename(filename).lower()
-            res = regexp.match(basename)
-            if not res:
-                logger.debug(
-                    "filename %s is not an instrument; skipping...",
-                    basename)
-                continue
+    for filename in all_filenames:
+        basename = filename.name.split(".")[0]
+        if filename.suffixes[0] not in (".csv", ".txt"):
             logger.debug(
-                "instrument matched: %s; file extension: %s",
-                res.group("instrument"), res.group("ext"))
-            instruments[res.group("instrument")].append(
-                Path(root, filename).absolute(),
-            )
+                "filename %s is not an instrument; skipping...", filename)
+            continue
+        logger.debug("instrument matched: %s", filename.name)
+        instruments[basename].append(filename)
+
     return instruments
 
 
@@ -449,12 +497,13 @@ def add_pheno_common_inference(
 
 
 def load_inference_configs(
+    input_dir: str,
     inference_config_filepath: str | None,
 ) -> dict[str, Any]:
     """Load import inference configuration file."""
     if inference_config_filepath:
         return cast(dict[str, Any], yaml.safe_load(
-            Path(inference_config_filepath).read_text(),
+            Path(input_dir, inference_config_filepath).read_text(),
         ))
     return {}
 
@@ -567,15 +616,18 @@ def read_instrument_measure_names(
 
 
 def read_pedigree(
-    connection: duckdb.DuckDBPyConnection, pedigree_filepath: str,
+    connection: duckdb.DuckDBPyConnection,
+    input_dir: str,
+    pedigree_filepath: str,
 ) -> pd.DataFrame:
     """
     Read a pedigree file into a pandas DataFrame
 
     Also imports the pedigree data into the database.
     """
+
     ped_df = FamiliesLoader.flexible_pedigree_read(
-        pedigree_filepath, enums_as_values=True,
+        Path(input_dir, pedigree_filepath), enums_as_values=True,
     )
 
     with connection.cursor() as cursor:
@@ -637,12 +689,20 @@ def write_results(
 
 
 def load_descriptions(
-    description_path: str | None,
+    input_dir: str,
+    config: DataDictionary | None,
 ) -> Callable | None:
     """Load measure descriptions."""
+    if not config:
+        return None
+
+    # TODO Implement support for other modes of setting
+    # the data dictionary - `instrument_files` and `dictionary`
+    description_path = config.file
+
     if not description_path:
         return None
-    absolute_path = Path(description_path).absolute()
+    absolute_path = Path(input_dir, description_path).absolute()
     assert absolute_path.exists(), absolute_path
 
     data = pd.read_csv(absolute_path, sep="\t")
