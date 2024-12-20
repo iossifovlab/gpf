@@ -1,5 +1,4 @@
-import { HttpClient } from '@angular/common/http';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { environment } from 'environments/environment';
@@ -13,10 +12,8 @@ describe('GeneService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [ConfigService],
-      imports: [
-        HttpClientTestingModule,
-      ]
+      providers: [ConfigService, provideHttpClient()],
+      imports: []
     });
     jest.clearAllMocks();
     service = TestBed.inject(GeneService);

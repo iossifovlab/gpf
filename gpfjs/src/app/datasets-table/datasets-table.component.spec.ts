@@ -3,7 +3,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { DatasetsTableComponent } from './datasets-table.component';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Observable, lastValueFrom, of } from 'rxjs';
 import { DatasetPermissions } from './datasets-table';
 import * as lodash from 'lodash';
@@ -87,11 +87,11 @@ describe('DatasetsTableComponent', () => {
       providers: [
         DatasetsService,
         { provide: UsersGroupsService, useValue: usersGroupsServiceMock },
-        { provide: DatasetsService, useValue: datasetsServiceMock }
+        { provide: DatasetsService, useValue: datasetsServiceMock },
+        provideHttpClientTesting()
       ],
       imports: [
         RouterTestingModule,
-        HttpClientTestingModule,
         StoreModule.forRoot({})
       ],
     }).compileComponents();

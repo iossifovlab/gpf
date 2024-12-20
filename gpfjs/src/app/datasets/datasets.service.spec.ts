@@ -1,9 +1,9 @@
 import { TestBed, waitForAsync } from '@angular/core/testing';
 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { UsersService } from 'app/users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Dataset, GeneBrowser, PersonSet, PersonSetCollection, PersonSetCollections } from './datasets';
@@ -64,12 +64,14 @@ describe('DatasetService', () => {
   beforeEach(waitForAsync(() => {
     const configMock = { baseUrl: 'testUrl/' };
     TestBed.configureTestingModule({
-      imports: [StoreModule.forRoot({}), RouterTestingModule, HttpClientTestingModule],
+      imports: [StoreModule.forRoot({}), RouterTestingModule],
       providers: [
         DatasetsService,
         UsersService,
         {provide: ConfigService, useValue: configMock},
-        { provide: APP_BASE_HREF, useValue: '' }
+        { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClient(),
+        provideHttpClientTesting()
       ],
       declarations: [],
     }).compileComponents();

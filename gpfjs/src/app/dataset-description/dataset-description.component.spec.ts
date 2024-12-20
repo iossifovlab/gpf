@@ -1,4 +1,4 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -99,9 +99,10 @@ describe('DatasetDescriptionComponent', () => {
         { provide: UsersService, useClass: UsersServiceMock },
         ConfigService,
         { provide: MarkdownService, useClass: MarkdownServiceMock },
-        { provide: APP_BASE_HREF, useValue: '' }
+        { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClientTesting()
       ],
-      imports: [RouterTestingModule, HttpClientTestingModule, StoreModule.forRoot({datasetId: datasetIdReducer})]
+      imports: [RouterTestingModule, StoreModule.forRoot({datasetId: datasetIdReducer})]
     }).compileComponents();
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

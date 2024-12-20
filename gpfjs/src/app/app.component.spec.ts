@@ -11,7 +11,6 @@ import { GenesBlockComponent } from './genes-block/genes-block.component';
 import { PedigreeSelectorComponent } from './pedigree-selector/pedigree-selector.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { EffecttypesColumnComponent } from './effect-types/effect-types-column.component';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ConfigService } from './config/config.service';
 import { UsersService } from './users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -24,6 +23,7 @@ import { StoreModule } from '@ngrx/store';
 import { datasetIdReducer } from './datasets/datasets.state';
 import { UserInfo } from './users/users';
 import { Observable, of } from 'rxjs';
+import { provideHttpClient } from '@angular/common/http';
 
 
 class MockDatasetsService {
@@ -69,7 +69,6 @@ describe('AppComponent', () => {
       ],
       imports: [
         NgbModule,
-        HttpClientTestingModule,
         RouterTestingModule,
         FormsModule,
         StoreModule.forRoot({datasetId: datasetIdReducer})
@@ -79,7 +78,8 @@ describe('AppComponent', () => {
         ConfigService,
         { provide: UsersService, useClass: UsersServiceMock },
         FullscreenLoadingService,
-        { provide: APP_BASE_HREF, useValue: '' }
+        { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClient()
       ]
     });
     TestBed.compileComponents();

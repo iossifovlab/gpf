@@ -1,4 +1,4 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -46,10 +46,14 @@ describe('GeneScoresComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [
-        StoreModule.forRoot({geneScores: geneScoresReducer}), HttpClientTestingModule, NgbNavModule
+        StoreModule.forRoot({geneScores: geneScoresReducer}), NgbNavModule
       ],
       declarations: [GeneScoresComponent],
-      providers: [{provide: GeneScoresService, useValue: mockGeneScoresService}, ConfigService],
+      providers: [
+        {provide: GeneScoresService, useValue: mockGeneScoresService},
+        ConfigService,
+        provideHttpClientTesting()
+      ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 

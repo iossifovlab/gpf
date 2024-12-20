@@ -1,11 +1,11 @@
 import { APP_BASE_HREF } from '@angular/common';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { StoreModule } from '@ngrx/store';
 import { ConfigService } from 'app/config/config.service';
 import { GeneScoresService } from './gene-scores.service';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { lastValueFrom, of, take } from 'rxjs';
 import { CategoricalHistogram, GeneScore, NumberHistogram, Partitions } from './gene-scores';
 
@@ -14,11 +14,13 @@ describe('GeneScoresService', () => {
   beforeEach(() => {
     const configMock = { baseUrl: 'testUrl/' };
     TestBed.configureTestingModule({
-      imports: [StoreModule.forRoot({}), RouterTestingModule, HttpClientTestingModule],
+      imports: [StoreModule.forRoot({}), RouterTestingModule],
       providers: [
         GeneScoresService,
         {provide: ConfigService, useValue: configMock},
-        { provide: APP_BASE_HREF, useValue: '' }
+        { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClient(),
+        provideHttpClientTesting()
       ],
       declarations: [],
     }).compileComponents();

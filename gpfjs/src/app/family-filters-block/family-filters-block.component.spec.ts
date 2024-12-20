@@ -7,7 +7,7 @@ import { PedigreeData } from 'app/genotype-preview-model/genotype-preview';
 import { VariantReportsService } from 'app/variant-reports/variant-reports.service';
 import { HttpResponse } from '@angular/common/http';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
@@ -269,14 +269,16 @@ describe('FamilyFiltersBlockComponent', () => {
           familyIds: familyIdsReducer,
           familyTags: familyTagsReducer,
           personFilters: personFiltersReducer
-        }),
-        HttpClientTestingModule],
+        })
+      ],
       providers: [
         DatasetsService,
         ConfigService,
         UsersService,
         { provide: VariantReportsService, useValue: variantReportsServiceMock },
-        { provide: APP_BASE_HREF, useValue: '' }]
+        { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClientTesting()
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(FamilyFiltersBlockComponent);

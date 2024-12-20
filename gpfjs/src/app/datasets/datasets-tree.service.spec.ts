@@ -1,13 +1,14 @@
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { UsersService } from 'app/users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { APP_BASE_HREF } from '@angular/common';
 import { Dataset } from './datasets';
 import { DatasetNode } from 'app/dataset-node/dataset-node';
 import { StoreModule } from '@ngrx/store';
+import { provideHttpClient } from '@angular/common/http';
 
 const datasetNodeMock1 = new DatasetNode(new Dataset('id1',
   null, ['id11', 'id12'], null, null, null, null, null,
@@ -35,12 +36,14 @@ describe('DatasetService', () => {
   beforeEach(waitForAsync(() => {
     const configMock = { baseUrl: 'testUrl/' };
     TestBed.configureTestingModule({
-      imports: [StoreModule.forRoot({}), RouterTestingModule, HttpClientTestingModule],
+      imports: [StoreModule.forRoot({}), RouterTestingModule],
       providers: [
         DatasetsTreeService,
         UsersService,
         {provide: ConfigService, useValue: configMock},
-        { provide: APP_BASE_HREF, useValue: '' }
+        { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClient(),
+        provideHttpClientTesting()
       ],
       declarations: [],
     }).compileComponents();

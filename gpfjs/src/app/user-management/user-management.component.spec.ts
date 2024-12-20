@@ -1,10 +1,9 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { UsersTableComponent } from 'app/users-table/users-table.component';
 import { UsersService } from 'app/users/users.service';
-
 import { UserManagementComponent } from './user-management.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { User, UserInfo } from 'app/users/users';
@@ -96,10 +95,10 @@ describe('UserManagementComponent', () => {
       providers: [
         { provide: UsersService, useValue: usersServiceMock },
         { provide: UsersGroupsService, useValue: usersGroupsServiceMock },
-        { provide: DatasetsService, useValue: datasetsServiceMock }
+        { provide: DatasetsService, useValue: datasetsServiceMock },
+        provideHttpClientTesting()
       ],
       imports: [
-        HttpClientTestingModule,
         NgbNavModule,
         FormsModule,
         RouterTestingModule

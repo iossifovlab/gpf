@@ -1,4 +1,3 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -18,6 +17,7 @@ import {
   removePersonFilter,
   updateFamilyFilter,
   updatePersonFilter } from 'app/person-filters/person-filters.state';
+import { provideHttpClient } from '@angular/common/http';
 
 const mockPersonAndFamilyFiltersState = {
   familyFilters: [
@@ -95,10 +95,11 @@ describe('CategoricalFilterComponent', () => {
         { provide: PhenoBrowserService, useValue: mockPhenoBrowserService },
         ConfigService,
         UsersService,
-        { provide: APP_BASE_HREF, useValue: '' }
+        { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClient()
       ],
       imports: [
-        HttpClientTestingModule, RouterTestingModule, FormsModule,
+        RouterTestingModule, FormsModule,
         StoreModule.forRoot({datasetId: datasetIdReducer})
       ]
     }).compileComponents();

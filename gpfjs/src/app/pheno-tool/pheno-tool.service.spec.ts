@@ -1,5 +1,5 @@
-import { HttpClient } from '@angular/common/http';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { HttpClient, provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { of } from 'rxjs';
@@ -15,9 +15,9 @@ describe('PhenoToolService', () => {
       providers: [
         { provide: ConfigService, useValue: configMock },
         { provide: APP_BASE_HREF, useValue: '' },
-        HttpClientTestingModule, PhenoToolService
+        provideHttpClient(), provideHttpClientTesting(), PhenoToolService
       ],
-      imports: [HttpClientTestingModule],
+      imports: [],
     });
 
     service = TestBed.inject(PhenoToolService);

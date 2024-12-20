@@ -1,4 +1,3 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { lastValueFrom, of } from 'rxjs';
@@ -8,14 +7,15 @@ import {
   GeneProfilesGene
 } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { take } from 'rxjs/operators';
+import { provideHttpClient } from '@angular/common/http';
 
 describe('GeneProfilesService', () => {
   let service: GeneProfilesService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [ConfigService],
-      imports: [HttpClientTestingModule]
+      providers: [ConfigService, provideHttpClient()],
+      imports: []
     });
     service = TestBed.inject(GeneProfilesService);
   });

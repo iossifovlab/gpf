@@ -1,8 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-
 import { ConfigService } from './config/config.service';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { lastValueFrom, of, take } from 'rxjs';
 import { InstanceService } from './instance.service';
 import { environment } from '../environments/environment';
@@ -12,10 +10,8 @@ describe('InstanceService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [ConfigService],
-      imports: [
-        HttpClientTestingModule,
-      ]
+      providers: [ConfigService, provideHttpClient()],
+      imports: []
     });
     service = TestBed.inject(InstanceService);
   });

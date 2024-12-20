@@ -1,4 +1,4 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
@@ -8,10 +8,10 @@ import { QueryService } from 'app/query/query.service';
 import { ResizeService } from 'app/table/resize.service';
 import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
-
 import { UserProfileComponent } from './user-profile.component';
 import { StoreModule } from '@ngrx/store';
 import { UserInfo } from 'app/users/users';
+import { provideHttpClient } from '@angular/common/http';
 class UsersServiceMock {
   public cachedUserInfo(): UserInfo {
     return {
@@ -35,10 +35,12 @@ describe('UserProfileComponent', () => {
         QueryService, ConfigService, ResizeService, DatasetsService,
         { provide: APP_BASE_HREF, useValue: '' },
         { provide: UsersService, useValue: usersServiceMock },
+        provideHttpClient(),
+        provideHttpClientTesting()
 
       ],
       imports: [
-        RouterTestingModule, HttpClientTestingModule, NgbNavModule, StoreModule.forRoot({})
+        RouterTestingModule, NgbNavModule, StoreModule.forRoot({})
       ]
     }).compileComponents();
 

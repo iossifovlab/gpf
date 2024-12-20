@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { DatasetsComponent } from 'app/datasets/datasets.component';
 import { UsersService } from 'app/users/users.service';
 import { ConfigService } from 'app/config/config.service';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { APP_BASE_HREF } from '@angular/common';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { RouterModule } from '@angular/router';
@@ -129,10 +129,11 @@ describe('StudyFiltersComponent', () => {
         { provide: DatasetsComponent, useValue: DatasetsComponentMock },
         { provide: DatasetsService, useValue: datasetsServiceMock },
         { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClientTesting()
       ],
       imports: [
         NgbNavModule, NgbModule, FormsModule,
-        StoreModule.forRoot({studyFilters: studyTypesReducer}), HttpClientTestingModule,
+        StoreModule.forRoot({studyFilters: studyTypesReducer}),
         RouterModule.forRoot([])
       ],
       schemas: [NO_ERRORS_SCHEMA],

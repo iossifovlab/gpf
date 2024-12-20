@@ -1,18 +1,24 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { QueryService } from './query.service';
 import { RouterModule } from '@angular/router';
 import { APP_BASE_HREF } from '@angular/common';
+import { provideHttpClient } from '@angular/common/http';
 
 describe('QueryService', () => {
   let service: QueryService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [ConfigService, QueryService, { provide: APP_BASE_HREF, useValue: '' }],
+      providers: [
+        ConfigService,
+        QueryService,
+        { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClient(),
+        provideHttpClientTesting()
+      ],
       imports: [
-        HttpClientTestingModule,
         RouterModule.forRoot([])
       ]
     });

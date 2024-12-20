@@ -1,8 +1,9 @@
 // Import the necessary modules and dependencies
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { ConfigService } from '../config/config.service';
 import { EnrichmentModelsService, EnrichmentModels } from './enrichment-models.service';
+import { provideHttpClient } from '@angular/common/http';
 
 describe('EnrichmentModelsService', () => {
   let service: EnrichmentModelsService;
@@ -11,8 +12,8 @@ describe('EnrichmentModelsService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [EnrichmentModelsService, ConfigService]
+      imports: [],
+      providers: [EnrichmentModelsService, ConfigService, provideHttpClient(), provideHttpClientTesting()]
     });
     service = TestBed.inject(EnrichmentModelsService);
     httpMock = TestBed.inject(HttpTestingController);

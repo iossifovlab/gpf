@@ -1,4 +1,4 @@
-import { HttpClientTestingModule} from '@angular/common/http/testing';
+import { provideHttpClientTesting} from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { UsersGroupsService } from 'app/users-groups/users-groups.service';
 import { DatasetPermissions } from 'app/datasets-table/datasets-table';
@@ -126,11 +126,10 @@ describe('GroupsTableComponent', () => {
       providers: [
         { provide: UsersService, useValue: usersServiceMock },
         { provide: UsersGroupsService, useValue: usersGroupsServiceMock },
-        { provide: DatasetsService, useValue: datasetsServiceMock }
+        { provide: DatasetsService, useValue: datasetsServiceMock },
+        provideHttpClientTesting()
       ],
-      imports: [
-        HttpClientTestingModule
-      ]
+      imports: []
     }).compileComponents();
 
     fixture = TestBed.createComponent(GroupsTableComponent);

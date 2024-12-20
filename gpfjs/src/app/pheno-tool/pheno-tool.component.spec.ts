@@ -1,4 +1,4 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -14,7 +14,7 @@ import { MeasuresService } from 'app/measures/measures.service';
 import { GeneSymbolsComponent } from 'app/gene-symbols/gene-symbols.component';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { HttpResponse } from '@angular/common/http';
+import { HttpResponse, provideHttpClient } from '@angular/common/http';
 import { PhenoToolResults } from './pheno-tool-results';
 import { Dataset, GenotypeBrowser, PersonFilter } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -74,9 +74,10 @@ describe('PhenoToolComponent', () => {
         UsersService,
         FullscreenLoadingService,
         MeasuresService,
+        provideHttpClient(),
+        provideHttpClientTesting()
       ],
       imports: [
-        HttpClientTestingModule,
         RouterTestingModule,
         StoreModule.forRoot({
           errors: errorsReducer,

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DatasetsComponent } from './datasets.component';
 import { UsersService } from 'app/users/users.service';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
 import { APP_BASE_HREF } from '@angular/common';
 import { DatasetsService } from './datasets.service';
@@ -78,14 +78,14 @@ describe('DatasetComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [
-        HttpClientTestingModule,
         StoreModule.forRoot({expandedDatasets: expandedDatasetsReducer}),
         RouterTestingModule
       ],
       providers: [
         UsersService, ConfigService,
         { provide: DatasetsService, useValue: new MockDatasetService() },
-        { provide: APP_BASE_HREF, useValue: '' }
+        { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClientTesting()
       ],
       declarations: [DatasetsComponent]
     }).compileComponents();

@@ -7,7 +7,7 @@ import { EffectTypesComponent } from '../effect-types/effect-types.component';
 import { PedigreeSelectorComponent } from '../pedigree-selector/pedigree-selector.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { UsersService } from 'app/users/users.service';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
@@ -38,10 +38,10 @@ describe('GenotypeBlockComponent', () => {
         DatasetsService,
         UsersService,
         ConfigService,
+        provideHttpClientTesting()
       ],
       imports: [
         NgbModule,
-        HttpClientTestingModule,
         RouterTestingModule,
         StoreModule.forRoot({
           variantTypes: variantTypesReducer,

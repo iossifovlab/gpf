@@ -3,7 +3,7 @@ import { GenotypeBrowserComponent } from './genotype-browser.component';
 import { QueryService } from 'app/query/query.service';
 import { ConfigService } from 'app/config/config.service';
 import { RouterTestingModule } from '@angular/router/testing';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { APP_BASE_HREF } from '@angular/common';
 import { FullscreenLoadingService } from 'app/fullscreen-loading/fullscreen-loading.service';
 import { DatasetsService } from 'app/datasets/datasets.service';
@@ -371,10 +371,11 @@ describe('GenotypeBrowserComponent', () => {
         VariantTypesComponent,
         GenesBlockComponent,
         RegionsBlockComponent,
-        { provide: APP_BASE_HREF, useValue: '' }
+        { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClientTesting()
       ],
       imports: [
-        HttpClientTestingModule, RouterTestingModule, NgbNavModule, FormsModule,
+        RouterTestingModule, NgbNavModule, FormsModule,
         StoreModule.forRoot({
           familyIds: familyIdsReducer,
           familyTags: familyTagsReducer,

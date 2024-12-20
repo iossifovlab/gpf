@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { VariantTypesComponent } from './variant-types.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -23,8 +23,9 @@ describe('VariantTypesComponent', () => {
         DatasetsService,
         ConfigService,
         UsersService,
+        provideHttpClientTesting()
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, StoreModule.forRoot({variantTypes: variantTypesReducer})]
+      imports: [RouterTestingModule, StoreModule.forRoot({variantTypes: variantTypesReducer})]
     })
       .compileComponents();
 
