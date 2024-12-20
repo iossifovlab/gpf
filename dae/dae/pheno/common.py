@@ -26,19 +26,34 @@ class InferenceConfig(BaseModel):
     measure_type: str | None = None
 
 
-class ImportConfig(BaseModel):
-    """Pheno import tool configuration."""
-    model_config = ConfigDict(extra="forbid")
+class DataDictionary(BaseModel):
+    file: str | None = None
+    instrument_files: list[str] | None = None
 
-    report_only: bool = False
-    instruments_tab_separated: bool = False
-    person_column: str = "personId"
-    db_filename: str = "pheno.db"
-    default_inference: InferenceConfig = InferenceConfig()
-    output: str = "output"
-    verbose: int = 0
-    instruments_dir: str = ""
-    pedigree: str = ""
+    # {Instrument -> {Measure -> Description}}
+    dictionary: dict[str, dict[str, str]] | None = None
+
+
+class RegressionMeasure(BaseModel):
+    instrument_name: str
+    measure_name: str
+    jitter: float
+    display_name: str
+
+
+class PhenoImportConfig(BaseModel):
+    """Pheno import config."""
+    id: str
+    input_dir: str
+    output_dir: str
+    instrument_files: list[str]
+    pedigree: str
+    person_column: str
+    tab_separated: bool = False
+    skip_pedigree_measures: bool = False
+    inference_config: str | dict[str, InferenceConfig] | None = None
+    data_dictionary: DataDictionary | None = None
+    regression_config: str | dict[str, RegressionMeasure] | None = None
 
 
 class MeasureType(enum.Enum):

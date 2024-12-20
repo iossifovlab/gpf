@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
 import textwrap
 from pathlib import Path
 
@@ -8,13 +9,13 @@ from dae.genomic_resources.testing import (
     setup_directories,
 )
 from dae.pheno.pheno_data import PhenotypeStudy
-from dae.pheno.pheno_import import main
+from dae.pheno.pheno_import import collect_instruments, main
 from dae.testing import (
     setup_pedigree,
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def import_data_fixture(
         tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[Path, Path, Path, Path]:
@@ -111,4 +112,30 @@ def test_import_no_pheno_common(
         "instr1.m1",
         "instr1.m2",
         "instr1.m3",
+    }
+
+
+def test_collect_instruments(tmp_path: pathlib.Path) -> None:
+    setup_directories(tmp_path, {
+        "instrument_1.csv": "asdf",
+        "subdir_1": {
+            "instrument_2.txt": "asdf",
+        },
+        "subdir_2": {
+            "subsubdir": {
+                "instrument_3.txt": "asdf",
+            },
+        },
+    })
+    instruments = collect_instruments(
+        str(tmp_path),
+        ["instrument_1.csv", "subdir_1", "subdir_2/**/*.txt"],
+    )
+    assert instruments == {
+        "instrument_1": [pathlib.Path(
+            tmp_path, "instrument_1.csv")],
+        "instrument_2": [pathlib.Path(
+            tmp_path, "subdir_1", "instrument_2.txt")],
+        "instrument_3": [pathlib.Path(
+            tmp_path, "subdir_2", "subsubdir", "instrument_3.txt")],
     }
