@@ -3,7 +3,7 @@
 import os
 import pathlib
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -154,7 +154,9 @@ def pytest_sessionstart(session: pytest.Session) -> None:
 
         if storage_types:
             assert not storage_config_filename
-            selected_storages = _select_storage_factories_by_type(storage_types)
+            assert storage_types is not None
+            selected_storages = _select_storage_factories_by_type(
+                cast(list[str], storage_types))
             if not selected_storages:
                 raise ValueError(
                     f"unsupported genotype storage type(s): {storage_types}")
@@ -162,8 +164,9 @@ def pytest_sessionstart(session: pytest.Session) -> None:
 
         elif storage_config_filename:
             import yaml  # pylint: disable=import-outside-toplevel
+            assert storage_config_filename is not None
             storage_config = yaml.safe_load(
-                pathlib.Path(storage_config_filename).read_text())
+                pathlib.Path(cast(str, storage_config_filename)).read_text())
             storage_type = storage_config["storage_type"]
             storage_factory = get_genotype_storage_factory(storage_type)
 
