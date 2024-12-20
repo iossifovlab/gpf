@@ -491,6 +491,7 @@ def add_pheno_common_inference(
         "missing",
     ]
     default_cols.extend(ALL_FAMILY_TAG_LABELS)
+    default_cols.append("tag_family_type_full")
     for col in default_cols:
         entry = f"pheno_common.{col}"
         config[entry] = {"skip": True}
