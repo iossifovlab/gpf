@@ -6,9 +6,9 @@ import pytest
 from box import Box
 from pytest_mock import MockerFixture
 
-from dae.gene_sets.gene_sets_db import GeneSet
-from dae.gene_profile.db import GeneProfileDB
+from dae.gene_profile.db import GeneProfileReadDB, GeneProfileWriteDB
 from dae.gene_profile.statistic import GPStatistic
+from dae.gene_sets.gene_sets_db import GeneSet
 from dae.gpf_instance import GPFInstance
 from dae.testing.alla_import import alla_gpf
 
@@ -140,16 +140,20 @@ def gp_gpf_instance(
             ["CHD8"]))
 
     gpf_instance._gene_profile_db = \
-        GeneProfileDB(
+        GeneProfileReadDB(
             gpf_instance._gene_profile_config,
             gpdb_filename,
-            clear=True,
         )
     print(gpdb_filename)
-    gpf_instance._gene_profile_db.insert_gp(sample_gp)
 
     return gpf_instance
 
+@pytest.fixture()
+def gpdb_write(
+        tmp_path: pathlib.Path,
+        gp_config: Box) -> GeneProfileWriteDB:
+    gpdb_filename = str(tmp_path / "gpdb")
+    return GeneProfileWriteDB(gp_config, gpdb_filename)
 
 @pytest.fixture()
 def local_gpf_instance(
@@ -192,13 +196,12 @@ def local_gpf_instance(
         "get_gene_set_ids",
         return_value=main_gene_sets,
     )
+
     gpf_instance._gene_profile_db = \
-        GeneProfileDB(
+        GeneProfileReadDB(
             gpf_instance._gene_profile_config,
             gpdb_filename,
-            clear=True,
         )
     print(gpdb_filename)
-    gpf_instance._gene_profile_db.insert_gp(sample_gp)
 
     return gpf_instance

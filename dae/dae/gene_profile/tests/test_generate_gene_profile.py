@@ -6,7 +6,7 @@ import textwrap
 import pytest
 import yaml
 
-from dae.gene_profile.db import GeneProfileDB
+from dae.gene_profile.db import GeneProfileReadDB
 from dae.gene_profile.generate_gene_profile import main
 from dae.genomic_resources.testing import (
     setup_directories,
@@ -276,10 +276,9 @@ def test_generate_gene_profile(
 
     gpf_instance = gp_gpf_instance(gp_config, tmp_path)
     main(gpf_instance, argv)
-    gpdb = GeneProfileDB(
+    gpdb = GeneProfileReadDB(
         gpf_instance._gene_profile_config,
         gpdb_filename,
-        clear=False,
     )
 
     t4 = gpdb.get_gp("t4")

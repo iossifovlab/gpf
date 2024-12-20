@@ -5,7 +5,7 @@ import box
 import duckdb
 from pytest import approx
 
-from dae.gene_profile.db import GeneProfileDB
+from dae.gene_profile.db import GeneProfileWriteDB
 from dae.gene_profile.statistic import GPStatistic
 from dae.gpf_instance import GPFInstance
 
@@ -15,10 +15,7 @@ def test_gpdb_table_building(
     gp_config: box.Box,
 ) -> None:
     gpdb_filename = str(tmp_path / "gpdb")
-    gpdb = GeneProfileDB(
-        gp_config,
-        gpdb_filename,
-    )
+    gpdb = GeneProfileWriteDB(gp_config, gpdb_filename)
 
     cols = []
     with duckdb.connect(gpdb_filename, read_only=True) as connection:
@@ -54,16 +51,12 @@ def test_gpdb_table_building(
 
 
 def test_gpdb_insert_and_get_gp(
-        tmp_path: pathlib.Path,
         gp_gpf_instance: GPFInstance,
-        sample_gp: GPStatistic,
-        gp_config: box.Box) -> None:
+        gpdb_write: GeneProfileWriteDB,
+        sample_gp: GPStatistic) -> None:
 
-    gpdb_filename = str(tmp_path / "gpdb")
-    gpdb = GeneProfileDB(
-        gp_config, gpdb_filename, clear=True)
-    gpdb.insert_gp(sample_gp)
-    gp = gpdb.get_gp("CHD8")
+    gpdb_write.insert_gp(sample_gp)
+    gp = gp_gpf_instance._gene_profile_db.get_gp("CHD8")
 
     assert gp is not None
 
@@ -99,11 +92,13 @@ def test_gpdb_insert_and_get_gp(
 
 def test_gpdb_sort(
         gp_gpf_instance: GPFInstance,
+        gpdb_write: GeneProfileWriteDB,
         sample_gp: GPStatistic) -> None:
+    gpdb_write.insert_gp(sample_gp)
     sample_gp.gene_symbol = "CHD7"
     sample_scores = sample_gp.genomic_scores
     sample_scores["protection_scores"]["SFARI gene score"] = -11
-    gp_gpf_instance._gene_profile_db.insert_gp(sample_gp)
+    gpdb_write.insert_gp(sample_gp)
     stats_unsorted = gp_gpf_instance.query_gp_statistics(1)
     stats_sorted = gp_gpf_instance.query_gp_statistics(
         1, sort_by="protection_scores_SFARI gene score", order="asc",
@@ -128,11 +123,13 @@ def test_gpdb_sort(
 
 def test_gpdb_symbol_search(
         gp_gpf_instance: GPFInstance,
+        gpdb_write: GeneProfileWriteDB,
         sample_gp: GPStatistic) -> None:
+    gpdb_write.insert_gp(sample_gp)
     sample_gp.gene_symbol = "CHD7"
-    gp_gpf_instance._gene_profile_db.insert_gp(sample_gp)
+    gpdb_write.insert_gp(sample_gp)
     sample_gp.gene_symbol = "TESTCHD"
-    gp_gpf_instance._gene_profile_db.insert_gp(sample_gp)
+    gpdb_write.insert_gp(sample_gp)
 
     all_symbols = gp_gpf_instance._gene_profile_db.list_symbols(1)
     assert len(all_symbols) == 3
