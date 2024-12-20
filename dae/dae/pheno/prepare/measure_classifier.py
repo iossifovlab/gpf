@@ -1,9 +1,13 @@
 import enum
+import itertools
+from collections.abc import Sequence
 from typing import Any, cast
 
 import numpy as np
 from box import Box
+from pydantic import BaseModel
 
+from dae.genomic_resources.histogram import Histogram, NullHistogram
 from dae.pheno.common import InferenceConfig, MeasureType
 from dae.pheno.utils.commons import remove_annoying_characters
 
@@ -266,3 +270,122 @@ def classification_reference_impl(
         return numeric_values, report
 
     return measure_values, report
+
+
+class InferenceReport(BaseModel):
+    """Inference results report."""
+    value_type: type
+    histogram_type: Histogram
+    count_total: int
+    count_with_values: int
+    count_without_values: int
+    count_unique_values: int
+    min_value: float | int | None
+    max_value: float | int | None
+    values_domain: str
+
+
+def convert_to_float(value: int | float | None) -> float | None:
+    try:
+        if value is not None:
+            return float(value)
+    except ValueError:
+        return None
+    return value
+
+
+def inference_reference_impl(
+    values: list[str | None], config: InferenceConfig,
+) -> tuple[
+    list[float | None] | list[int | None] | list[str | None],
+    InferenceReport,
+]:
+    """Infer value and histogram type for a list of values."""
+    current_value_type: type[int] | type[float] = int
+    unique_values: set[str] = set()
+    numeric_values: list[int | float | None] = []
+    unique_numeric_values = set()
+    min_value: int | float | None = None
+    max_value: int | float | None = None
+    count_total = len(values)
+    numeric_count = 0
+    none_count = 0
+
+    for val in values:
+        if val is None:
+            none_count += 1
+            numeric_values.append(None)
+            continue
+        unique_values.add(val)
+        try:
+            num_value = current_value_type(val)
+            numeric_values.append(num_value)
+            numeric_count += 1
+            unique_numeric_values.add(num_value)
+            if min_value is None or min_value > num_value:
+                min_value = num_value
+            if max_value is None or max_value < num_value:
+                max_value = num_value
+        except ValueError:
+            if current_value_type is int:
+                to_float = convert_to_float(num_value)
+                if to_float is not None:
+                    current_value_type = float
+                    numeric_values = list(
+                        map(convert_to_float, numeric_values),
+                    )
+                    numeric_values.append(to_float)
+                    numeric_count += 1
+                    unique_numeric_values.add(to_float)
+                    if min_value is None or min_value > to_float:
+                        min_value = to_float
+                    if max_value is None or max_value < to_float:
+                        max_value = to_float
+                    break
+                numeric_values.append(None)
+            else:
+                numeric_values.append(None)
+
+    value_type: type[int] | type[float] | type[str] = current_value_type
+    total_with_values = count_total - none_count
+    non_numeric_count = total_with_values - numeric_count
+
+    non_numeric = (
+        1.0 * non_numeric_count / total_with_values
+    )
+
+    transformed_values: (
+        Sequence[float | None] | Sequence[int | None] | Sequence[str | None]
+    )
+
+    if non_numeric > config.non_numeric_cutoff:
+        value_type = str
+        min_value = None
+        max_value = None
+        domain_values = list(itertools.islice(
+            [v for v in unique_values if v.strip() != ""],
+            0,
+            20,
+        ))
+        values_domain = ", ".join(sorted(domain_values))
+        count_unique_values = len(unique_values)
+        transformed_values = values
+    else:
+        none_count = non_numeric_count
+        values_domain = f"[{min_value}, {max_value}]"
+        count_unique_values = len(unique_numeric_values)
+        transformed_values = numeric_values
+
+    report = InferenceReport.model_validate({
+        "value_type": value_type,
+        "histogram_type": NullHistogram,
+        "count_total": count_total,
+        "count_with_values": total_with_values,
+        "count_without_values": none_count,
+        "count_unique_values": count_unique_values,
+        "min_value": min_value,
+        "max_value": max_value,
+        "values_domain": values_domain,
+    })
+
+    return transformed_values, report
