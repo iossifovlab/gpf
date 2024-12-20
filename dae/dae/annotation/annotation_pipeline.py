@@ -402,7 +402,8 @@ class InputAnnotableAnnotatorDecorator(AnnotatorDecorator):
                 self.input_annotatable_name)
 
     def annotate(
-        self, _: Annotatable | None, context: dict[str, Any],
+        self, annotatable: Annotatable | None,  # noqa: ARG002
+        context: dict[str, Any],
     ) -> dict[str, Any]:
 
         input_annotatable = context[self.input_annotatable_name]

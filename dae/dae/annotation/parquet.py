@@ -87,8 +87,9 @@ def annotate_parquet(
     )
 
     writer = VariantsParquetWriter(
-        output_dir, pipeline.get_attributes(),
-        loader.partition_descriptor,
+        output_dir,
+        annotation_pipeline=pipeline,
+        partition_descriptor=loader.partition_descriptor,
         bucket_index=bucket_idx,
     )
 
