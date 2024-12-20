@@ -12,13 +12,15 @@ from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
 from dae.inmemory_storage.raw_variants import RawMemoryVariants
 from dae.inmemory_storage.stored_annotation_decorator import (
-    StoredAnnotationDecorator,
+    build_annotation_filename,
+    load_stored_annotation,
 )
 from dae.pedigrees.loader import FamiliesLoader
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.raw.loader import (
-    VariantsGenotypesLoader,
     VariantsLoader,
 )
 from dae.variants_loaders.vcf.loader import VcfLoader
@@ -93,7 +95,7 @@ class InmemoryGenotypeStorage(GenotypeStorage):
         elapsed = time.time() - start
         logger.info("families loaded in in %.2f sec", elapsed)
 
-        loaders = []
+        full_variants: list[tuple[SummaryVariant, list[FamilyVariant]]] = []
         for file_conf in config.genotype_storage.files.variants:
             start = time.time()
             variants_filename = file_conf.path
@@ -112,7 +114,7 @@ class InmemoryGenotypeStorage(GenotypeStorage):
                     genome,
                     params=variants_params,
                 )
-                annotation_filename = variants_filenames[0]
+                annotation_filename = variants_loader.filenames[0]
             if file_conf.format == "denovo":
                 variants_loader = DenovoLoader(
                     families,
@@ -140,14 +142,17 @@ class InmemoryGenotypeStorage(GenotypeStorage):
                     genome,
                     params=variants_params,
                 )
+                annotation_filename = variants_filenames[0]
             if variants_loader is None:
                 raise ValueError(
                     f"unknown variant file format: {file_conf.format}")
 
-            variants_loader = StoredAnnotationDecorator.decorate(
-                cast(VariantsGenotypesLoader, variants_loader),
-                annotation_filename,
-            )
-            loaders.append(variants_loader)
+            annotation_filename = build_annotation_filename(
+                annotation_filename)
 
-        return RawMemoryVariants(loaders, families)
+            full_variants.extend(
+                load_stored_annotation(
+                    variants_loader, annotation_filename,
+                ))
+
+        return RawMemoryVariants(full_variants, families)

@@ -10,7 +10,8 @@ from dae.import_tools.import_tools import (
     save_study_config,
 )
 from dae.inmemory_storage.stored_annotation_decorator import (
-    StoredAnnotationDecorator,
+    build_annotation_filename,
+    save_annotation_file,
 )
 from dae.task_graph.graph import TaskGraph
 from dae.variants_loaders.raw.loader import (
@@ -104,12 +105,12 @@ class InmemoryImportStorage(ImportStorage):
                 if os.path.exists(f"{source_filename}.tbi"):
                     cls._copy_to_filesystem_storage(
                         project, f"{source_filename}.tbi")
+            annotation_pipeline = project.build_annotation_pipeline()
 
-            annotation_filename = StoredAnnotationDecorator\
-                .build_annotation_filename(dest_filenames[0])
-            StoredAnnotationDecorator.save_annotation_file(
-                cls._decorate_variants_loader(
-                    project, variants_loader),  # type: ignore
+            annotation_filename = build_annotation_filename(dest_filenames[0])
+            save_annotation_file(
+                variants_loader,
+                annotation_pipeline,
                 annotation_filename)
 
             config_filenames = list(map(
