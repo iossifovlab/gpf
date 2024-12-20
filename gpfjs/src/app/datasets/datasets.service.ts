@@ -63,7 +63,9 @@ export class DatasetsService {
       url += `&${searchParams.toString()}`;
     }
 
-    return this.http.get(url).pipe(
+    const options = { withCredentials: true };
+
+    return this.http.get(url, options).pipe(
       map((response) => {
         if (response === null) {
           return [] as DatasetPermissions[];

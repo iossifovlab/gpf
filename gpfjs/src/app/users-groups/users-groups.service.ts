@@ -30,7 +30,9 @@ export class UsersGroupsService {
       url += `&${searchParams.toString()}`;
     }
 
-    return this.http.get<UserGroup[]>(url).pipe(
+    const options = { withCredentials: true };
+
+    return this.http.get<UserGroup[]>(url, options).pipe(
       map((response) => {
         if (response === null) {
           return [] as UserGroup[];

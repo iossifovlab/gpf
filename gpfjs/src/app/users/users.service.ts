@@ -155,7 +155,9 @@ export class UsersService {
       url += `&${searchParams.toString()}`;
     }
 
-    return this.http.get<User[]>(url).pipe(
+    const options = { withCredentials: true };
+
+    return this.http.get<User[]>(url, options).pipe(
       map((response) => {
         if (response === null) {
           return [] as User[];
