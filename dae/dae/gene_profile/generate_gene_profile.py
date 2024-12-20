@@ -332,7 +332,7 @@ def main(
     person_ids: Dict[str, Any] = {}
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
-        assert genotype_data is not None
+        assert genotype_data is not None, dataset_id
         genotype_data_children = {
             p.person_id
             for p in genotype_data.families.persons_with_parents()
