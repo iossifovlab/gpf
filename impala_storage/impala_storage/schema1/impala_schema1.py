@@ -66,7 +66,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             S1VariantsWriter)
         elapsed = time.time() - start
         logger.info("prepare pedigree elapsed %.2f sec", elapsed)
-        project.stats[("elapsed", "pedigree")] = elapsed
+        project.stats["elapsed", "pedigree"] = elapsed
 
     @classmethod
     def _do_write_meta(cls, project: ImportProject) -> None:
@@ -116,7 +116,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         logger.info(
             "prepare variants for bucket %s elapsed %.2f sec",
             bucket, elapsed)
-        project.stats[("elapsed", f"variants {bucket}")] = elapsed
+        project.stats["elapsed", f"variants {bucket}"] = elapsed
 
     @classmethod
     def _variant_partitions(
@@ -166,7 +166,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             partition_description)
         elapsed = time.time() - start
         logger.info("load in hdfs elapsed %.2f sec", elapsed)
-        project.stats[("elapsed", "hdfs")] = elapsed
+        project.stats["elapsed", "hdfs"] = elapsed
 
     @classmethod
     def _do_load_in_impala(cls, project: ImportProject) -> None:
@@ -207,7 +207,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             variants_schema=variants_schema)
         elapsed = time.time() - start
         logger.info("load in impala elapsed %.2f sec", elapsed)
-        project.stats[("elapsed", "impala")] = elapsed
+        project.stats["elapsed", "impala"] = elapsed
 
     @staticmethod
     def _construct_variants_table(study_id: str) -> str:
@@ -251,7 +251,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             config)
         elapsed = time.time() - start
         logger.info("study config elapsed %.2f sec", elapsed)
-        project.stats[("elapsed", "study_config")] = elapsed
+        project.stats["elapsed", "study_config"] = elapsed
 
     def generate_import_task_graph(self, project: ImportProject) -> TaskGraph:
         graph = TaskGraph()
