@@ -28,6 +28,7 @@ from dae.genomic_resources.group_repository import GenomicResourceGroupRepo
 from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )
+from dae.import_tools.annotation_decorators import AnnotationPipelineDecorator
 from dae.import_tools.import_tools import (
     ImportProject,
     construct_import_annotation_pipeline,
@@ -36,7 +37,6 @@ from dae.inmemory_storage.raw_variants import RawMemoryVariants
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.helpers import study_id_from_path
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
-from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 logger = logging.getLogger(__name__)

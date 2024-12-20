@@ -30,6 +30,9 @@ from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
 from dae.gpf_instance import GPFInstance
+from dae.import_tools.annotation_decorators import (
+    AnnotationPipelineDecorator,
+)
 from dae.parquet.partition_descriptor import (
     PartitionDescriptor,
 )
@@ -41,10 +44,7 @@ from dae.utils.regions import Region
 from dae.utils.statistics import StatsCollection
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
-from dae.variants_loaders.raw.loader import (
-    AnnotationPipelineDecorator,
-    VariantsLoader,
-)
+from dae.variants_loaders.raw.loader import VariantsLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 logger = logging.getLogger(__name__)
