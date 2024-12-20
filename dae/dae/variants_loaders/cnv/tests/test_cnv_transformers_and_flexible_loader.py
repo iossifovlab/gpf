@@ -4,7 +4,7 @@ import textwrap
 
 import pytest
 
-from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
 from dae.testing import convert_to_tab_separated
 from dae.utils.variant_utils import mat2str
@@ -22,9 +22,9 @@ from dae.variants_loaders.raw.flexible_variant_loader import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def cnv_dae() -> io.StringIO:
-    content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
+    return io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
         family_id  location               variant  best_state
         f1         1:1590681-1628197      CNV+     2||2||2||3
@@ -33,7 +33,6 @@ def cnv_dae() -> io.StringIO:
         f1         X:153576690-153779907  CNV+     2||1||2||2
         """,
     )))
-    return content
 
 
 def test_cnv_dae_location(cnv_dae: io.StringIO) -> None:
@@ -132,7 +131,7 @@ def test_cnv_unexpeced_variant_to_variant_type(
 
     transformer = _cnv_variant_to_variant_type(
         cnv_plus_values, cnv_minus_values)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="unexpected CNV variant type: CNV"):
         transformer({"variant": variant})
 
 
@@ -147,12 +146,12 @@ def test_cnv_unexpeced_variant_to_variant_type(
 def test_cnv_dae_best_state(
     families: FamiliesData,
     cnv_dae: io.StringIO,
-    gpf_instance_2013: GPFInstance,
+    acgt_genome_19: ReferenceGenome,
     index: int,
     expected: str,
 ) -> None:
 
-    genome = gpf_instance_2013.reference_genome
+    genome = acgt_genome_19
     next(cnv_dae)
 
     transformers = [
@@ -176,9 +175,9 @@ def test_cnv_dae_best_state(
     assert mat2str(result["best_state"]) == expected
 
 
-@pytest.fixture()
+@pytest.fixture
 def cnv_person_id() -> io.StringIO:
-    content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
+    return io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
         person_id    location               variant
         f1.s2        1:1590681-1628197      CNV+
@@ -188,7 +187,6 @@ def cnv_person_id() -> io.StringIO:
         f1.p1        X:153576690-153779907  CNV+
         """,
     )))
-    return content
 
 
 @pytest.mark.parametrize(
@@ -203,12 +201,12 @@ def cnv_person_id() -> io.StringIO:
 def test_cnv_person_id_best_state(
     families: FamiliesData,
     cnv_person_id: io.StringIO,
-    gpf_instance_2013: GPFInstance,
+    acgt_genome_19: ReferenceGenome,
     index: int,
     expected: str,
 ) -> None:
 
-    genome = gpf_instance_2013.reference_genome
+    genome = acgt_genome_19
     next(cnv_person_id)
 
     transformers = [
@@ -232,9 +230,9 @@ def test_cnv_person_id_best_state(
     assert mat2str(result["best_state"]) == expected
 
 
-@pytest.fixture()
+@pytest.fixture
 def cnv_vcf() -> io.StringIO:
-    content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
+    return io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
         person_id  chr  pos         pos_end      variant
         f1.s2      1    1590681     1628197      CNV+
@@ -243,7 +241,6 @@ def cnv_vcf() -> io.StringIO:
         f1.p1      X    153576690   153779907    CNV+
         """,
     )))
-    return content
 
 
 @pytest.mark.parametrize(
@@ -257,12 +254,12 @@ def cnv_vcf() -> io.StringIO:
 def test_cnv_vcf_position(
     families: FamiliesData,
     cnv_vcf: io.StringIO,
-    gpf_instance_2013: GPFInstance,
+    acgt_genome_19: ReferenceGenome,
     index: int,
     expected: str,
 ) -> None:
 
-    genome = gpf_instance_2013.reference_genome
+    genome = acgt_genome_19
     next(cnv_vcf)
 
     transformers = [
@@ -289,11 +286,12 @@ def test_cnv_vcf_position(
 def test_cnv_loader_simple(
     families: FamiliesData,
     cnv_dae: io.StringIO,
-    gpf_instance_2013: GPFInstance,
+    acgt_genome_19: ReferenceGenome,
 ) -> None:
 
     generator = flexible_cnv_loader(
-        cnv_dae, families, gpf_instance_2013.reference_genome,
+        cnv_dae, families,
+        genome=acgt_genome_19,
         regions=[])
     result = list(generator)
     assert len(result) == 4

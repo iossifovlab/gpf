@@ -5,7 +5,6 @@ import textwrap
 import pytest
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.families_data import FamiliesData
 from dae.testing import convert_to_tab_separated
 from dae.utils.variant_utils import mat2str
@@ -13,13 +12,8 @@ from dae.variants.core import Allele
 from dae.variants_loaders.cnv.flexible_cnv_loader import flexible_cnv_loader
 
 
-@pytest.fixture()
-def genome(gpf_instance_2013: GPFInstance) -> ReferenceGenome:
-    return gpf_instance_2013.reference_genome
-
-
 @pytest.mark.parametrize(
-    # params: (cnv_family_id, cnv_location, cnv_variant_type, cnv_best_state)
+    # params - cnv_family_id, cnv_location, cnv_variant_type, cnv_best_state
     "content,params", [
         (
             """
@@ -43,7 +37,7 @@ def genome(gpf_instance_2013: GPFInstance) -> ReferenceGenome:
 )
 def test_legacy_dae_cnv_variants(
     families: FamiliesData,
-    genome: ReferenceGenome,
+    acgt_genome_19: ReferenceGenome,
     content: str,
     params: tuple,
 ) -> None:
@@ -51,7 +45,7 @@ def test_legacy_dae_cnv_variants(
     cnv_family_id, cnv_locatioin, cnv_variant_type, cnv_best_state = params
 
     loader = flexible_cnv_loader(
-        data, families, genome, regions=[],
+        data, families, acgt_genome_19, regions=[],
         cnv_location=cnv_locatioin,
         cnv_family_id=cnv_family_id,
         cnv_best_state=cnv_best_state,
@@ -69,7 +63,7 @@ def test_legacy_dae_cnv_variants(
 
 
 @pytest.mark.parametrize(
-    # params: (cnv_person_id, cnv_chrom, cnv_start, cnv_end, cnv_variant_type)
+    # params - cnv_person_id, cnv_chrom, cnv_start, cnv_end, cnv_variant_type
     "content,params", [
         (
             """
@@ -93,7 +87,7 @@ def test_legacy_dae_cnv_variants(
 )
 def test_vcf_like_cnv_variants(
     families: FamiliesData,
-    genome: ReferenceGenome,
+    acgt_genome_19: ReferenceGenome,
     content: str,
     params: tuple,
 ) -> None:
@@ -101,7 +95,7 @@ def test_vcf_like_cnv_variants(
     (cnv_person_id, cnv_chrom, cnv_start, cnv_end, cnv_variant_type) = params
 
     loader = flexible_cnv_loader(
-        data, families, genome, regions=[],
+        data, families, acgt_genome_19, regions=[],
         cnv_person_id=cnv_person_id,
         cnv_chrom=cnv_chrom,
         cnv_start=cnv_start,
@@ -121,24 +115,6 @@ def test_vcf_like_cnv_variants(
 
 @pytest.mark.parametrize(
     "header,params", [
-        # # mix family_id/best_state with person_id
-        # (
-        #     "family_id  person_id  location  variant  best_state",
-        #     {
-        #         "cnv_family_id": "family_id",
-        #         "cnv_person_id": "person_id"
-        #     }
-        # ),
-
-        # # mix family_id/best_state with person_id
-        # (
-        #     "family_id  person_id  location  variant  best_state",
-        #     {
-        #         "cnv_best_state": "best_state",
-        #         "cnv_person_id": "person_id"
-        #     }
-        # ),
-
         # mix location with vcf-like position
         (
             "person_id  location chrom pos pos_end variant  best_state",
@@ -234,15 +210,17 @@ def test_flexible_cnv_variants_bad_configs(
     header: str,
     params: dict[str, str],
     families: FamiliesData,
-    genome: ReferenceGenome,
+    acgt_genome_19: ReferenceGenome,
 ) -> None:
     content = io.StringIO(convert_to_tab_separated(header))
-    with pytest.raises(ValueError):
+    with pytest.raises(
+            ValueError,
+            match=r"'.*' is not in list|mixed variant location"):
         next(
             flexible_cnv_loader(
                 content,
                 families,
-                genome,
-                regions=[],
+                acgt_genome_19,
+acgt_genome_19=[],
                 **params),  # type: ignore
         )
