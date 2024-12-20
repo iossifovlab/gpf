@@ -8,14 +8,14 @@
   },
   "compilerOptions": {
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
     "outDir": "./dist/out-tsc",
+    "esModuleInterop": true,
     "baseUrl": "src",
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "node",
     "experimentalDecorators": true,
-    "target": "es2018",
+    "target": "ES2022",
     "typeRoots": [
       "node_modules/@types"
     ],
@@ -24,6 +24,7 @@
       "dom"
     ],
     "noImplicitThis": true,
-    "strictBindCallApply": true
+    "strictBindCallApply": true,
+    "useDefineForClassFields": false
     }
 }
