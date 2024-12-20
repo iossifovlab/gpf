@@ -24,7 +24,7 @@ from dae.enrichment_tool.enrichment_builder import (
     EnrichmentBuilder,
 )
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
-from dae.gene_profile.db import GeneProfileReadDB
+from dae.gene_profile.db import GeneProfileDB
 from dae.gene_profile.statistic import GPStatistic
 from dae.gene_scores.gene_scores import GeneScore
 from dae.gene_scores.gene_scores import ScoreDesc as GeneScoreDesc
@@ -266,11 +266,11 @@ class GPFInstance:
         )
 
     @cached_property
-    def _gene_profile_db(self) -> GeneProfileReadDB:
+    def _gene_profile_db(self) -> GeneProfileDB:
         config = None if self._gene_profile_config is None else\
             self._gene_profile_config.to_dict()
 
-        return GeneProfileReadDB(
+        return GeneProfileDB(
             config,
             os.path.join(self.dae_dir, "gpdb"),
         )

@@ -25,7 +25,7 @@ from dae.utils.sql_utils import to_duckdb_transpile
 logger = logging.getLogger(__name__)
 
 
-class GeneProfileReadDB:
+class GeneProfileDB:
     """
     Class for managing the gene profile database.
 
@@ -44,7 +44,7 @@ class GeneProfileReadDB:
     ):
         self.dbfile = dbfile
         self.configuration = \
-            GeneProfileWriteDB.build_configuration(configuration)
+            GeneProfileDBWriter.build_configuration(configuration)
         self.table = table("gene_profile")
         self.gene_sets_categories = {}
         if len(self.configuration.keys()):
@@ -281,7 +281,7 @@ class GeneProfileReadDB:
             ]
 
 
-class GeneProfileWriteDB:
+class GeneProfileDBWriter:
     """
     Class for managing the gene profile database.
 
@@ -298,7 +298,7 @@ class GeneProfileWriteDB:
     ):
         self.dbfile = dbfile
         self.configuration = \
-            GeneProfileWriteDB.build_configuration(configuration)
+            GeneProfileDBWriter.build_configuration(configuration)
         self._create_gp_table()
         self.gene_sets_categories = {}
         self._clear_gp_table()

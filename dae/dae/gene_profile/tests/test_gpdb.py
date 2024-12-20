@@ -5,7 +5,7 @@ import box
 import duckdb
 from pytest import approx
 
-from dae.gene_profile.db import GeneProfileWriteDB
+from dae.gene_profile.db import GeneProfileDBWriter
 from dae.gene_profile.statistic import GPStatistic
 from dae.gpf_instance import GPFInstance
 
@@ -15,7 +15,7 @@ def test_gpdb_table_building(
     gp_config: box.Box,
 ) -> None:
     gpdb_filename = str(tmp_path / "gpdb")
-    gpdb = GeneProfileWriteDB(gp_config, gpdb_filename)
+    gpdb = GeneProfileDBWriter(gp_config, gpdb_filename)
 
     cols = []
     with duckdb.connect(gpdb_filename, read_only=True) as connection:
@@ -52,7 +52,7 @@ def test_gpdb_table_building(
 
 def test_gpdb_insert_and_get_gp(
         gp_gpf_instance: GPFInstance,
-        gpdb_write: GeneProfileWriteDB,
+        gpdb_write: GeneProfileDBWriter,
         sample_gp: GPStatistic) -> None:
 
     gpdb_write.insert_gp(sample_gp)
@@ -92,7 +92,7 @@ def test_gpdb_insert_and_get_gp(
 
 def test_gpdb_sort(
         gp_gpf_instance: GPFInstance,
-        gpdb_write: GeneProfileWriteDB,
+        gpdb_write: GeneProfileDBWriter,
         sample_gp: GPStatistic) -> None:
     gpdb_write.insert_gp(sample_gp)
     sample_gp.gene_symbol = "CHD7"
@@ -123,7 +123,7 @@ def test_gpdb_sort(
 
 def test_gpdb_symbol_search(
         gp_gpf_instance: GPFInstance,
-        gpdb_write: GeneProfileWriteDB,
+        gpdb_write: GeneProfileDBWriter,
         sample_gp: GPStatistic) -> None:
     gpdb_write.insert_gp(sample_gp)
     sample_gp.gene_symbol = "CHD7"

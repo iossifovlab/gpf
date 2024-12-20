@@ -5,7 +5,7 @@ import pytest
 from box import Box
 from pytest_mock import MockerFixture
 
-from dae.gene_profile.db import GeneProfileReadDB, GeneProfileWriteDB
+from dae.gene_profile.db import GeneProfileDB, GeneProfileDBWriter
 from dae.gene_profile.exporter import cli_export
 from dae.gene_profile.statistic import GPStatistic
 from dae.gpf_instance import GPFInstance
@@ -20,7 +20,7 @@ def two_rows_gp(
 ) -> GPFInstance:
     root_path = tmp_path
     gpdb_filename = str(root_path / "gpdb")
-    gpdb = GeneProfileWriteDB(gp_config, gpdb_filename)
+    gpdb = GeneProfileDBWriter(gp_config, gpdb_filename)
     gpdb.insert_gp(sample_gp)
 
     sample_gp.gene_symbol = "CHD7"
@@ -31,7 +31,7 @@ def two_rows_gp(
     mocker.patch.object(
         gp_gpf_instance,
         "_gene_profile_db",
-        GeneProfileReadDB(gp_config, gpdb_filename),
+        GeneProfileDB(gp_config, gpdb_filename),
     )
 
     return gp_gpf_instance
