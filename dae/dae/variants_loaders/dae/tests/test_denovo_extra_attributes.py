@@ -1,26 +1,56 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+
 import pytest
 
+from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
+from dae.testing import setup_denovo, setup_pedigree
 from dae.variants_loaders.dae.loader import DenovoLoader
-from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator
 
 
-@pytest.fixture()
-def denovo_extra_attr_loader(
-        fixture_dirname, gpf_instance_2013, annotation_pipeline_internal):
+@pytest.fixture(scope="session")
+def trio_families(tmp_path_factory: pytest.TempPathFactory) -> FamiliesData:
+    root_path = tmp_path_factory.mktemp(
+        "denovo_add_chrom_trio_families")
+    ped_path = setup_pedigree(
+        root_path / "trio_data" / "in.ped",
+        """
+        familyId personId dadId	 momId	sex status role
+        f1       m1       0      0      2   1      mom
+        f1       d1       0      0      1   1      dad
+        f1       p1       d1     m1     1   2      prb
+        """)
+    loader = FamiliesLoader(ped_path)
+    return loader.load()
 
-    families_filename = fixture_dirname("backends/iossifov_extra_attrs.ped")
-    variants_filename = fixture_dirname("backends/iossifov_extra_attrs.tsv")
 
-    families = FamiliesLoader.load_simple_families_file(families_filename)
-
-    variants_loader = DenovoLoader(
-        families, variants_filename, gpf_instance_2013.reference_genome)
-
-    return AnnotationPipelineDecorator(
-        variants_loader, annotation_pipeline_internal,
+@pytest.fixture(scope="session")
+def trio_denovo(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
+    root_path = tmp_path_factory.mktemp(
+        "denovo_add_chrom_trio")
+    return setup_denovo(
+        root_path / "trio_data" / "in.tsv",
+        """
+          familyId  location  variant    bestState       someAttr
+          f1        chr1:2    del(2)     2||2||1/0||0||1 someAttr1
+          f1        chr2:2    ins(AA)    2||2||1/0||0||1 someAttr2
+        """,
     )
+
+
+@pytest.fixture
+def denovo_extra_attr_loader(
+    acgt_genome_38: ReferenceGenome,
+    trio_families: FamiliesData,
+    trio_denovo: pathlib.Path,
+) -> DenovoLoader:
+
+    return DenovoLoader(
+        trio_families,
+        str(trio_denovo),
+        genome=acgt_genome_38)
 
 
 def test_denovo_extra_attributes(denovo_extra_attr_loader):
@@ -37,10 +67,10 @@ def test_denovo_extra_attributes(denovo_extra_attr_loader):
     for fa in fv.alt_alleles:
         print(fa, fa.attributes, fa.summary_attributes)
         assert "someAttr" in fa.attributes
-        assert fa.get_attribute("someAttr") == "asdf"
+        assert fa.get_attribute("someAttr") == "someAttr1"
 
     fv = fvs[-1]
     for fa in fv.alt_alleles:
         print(fa.attributes, fa.summary_attributes)
         assert "someAttr" in fa.attributes
-        assert fa.get_attribute("someAttr") == "adhglsfh"
+        assert fa.get_attribute("someAttr") == "someAttr2"
