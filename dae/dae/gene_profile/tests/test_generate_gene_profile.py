@@ -279,7 +279,6 @@ def test_generate_gene_profile(
     gpdb = GeneProfileDB(
         gpf_instance._gene_profile_config,
         gpdb_filename,
-        clear=False,
     )
 
     t4 = gpdb.get_gp("t4")

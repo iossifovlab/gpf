@@ -9,9 +9,9 @@ from typing import Any, Dict, Set, cast
 from box import Box
 
 from dae.effect_annotation.effect import expand_effect_types
-from dae.gene_sets.gene_sets_db import GeneSet
-from dae.gene_profile.db import GeneProfileDB
+from dae.gene_profile.db import GeneProfileDBWriter
 from dae.gene_profile.statistic import GPStatistic
+from dae.gene_sets.gene_sets_db import GeneSet
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.person_sets import PSCQuery
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -54,6 +54,15 @@ def generate_gp(
             scores[category_name][gene_score_name] = value
 
     variant_counts: dict[str, Any] = {}
+    for dataset_id, value in config["datasets"].items():
+        statistics = value["statistics"]
+        person_sets = value["person_sets"]
+        for person_set in person_sets:
+            for statistic in statistics:
+                col = f'{dataset_id}_{person_set["set_name"]}_{statistic["id"]}'
+                col_rate = f"{col}_rate"
+                variant_counts[col] = 0
+                variant_counts[col_rate] = 0
 
     return gene_symbol, GPStatistic(
         gene_symbol, sets_in,
@@ -286,10 +295,9 @@ def main(
 
     collections_gene_sets = []
 
-    gpdb = GeneProfileDB(
+    gpdb = GeneProfileDBWriter(
         config.to_dict(),
         args.dbfile,
-        clear=True,
     )
 
     for gs_category in config.gene_sets:
@@ -324,7 +332,7 @@ def main(
     person_ids: Dict[str, Any] = {}
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
-        assert genotype_data is not None
+        assert genotype_data is not None, dataset_id
         genotype_data_children = {
             p.person_id
             for p in genotype_data.families.persons_with_parents()

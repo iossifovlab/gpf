@@ -6,9 +6,9 @@ import pytest
 from box import Box
 from pytest_mock import MockerFixture
 
-from dae.gene_sets.gene_sets_db import GeneSet
-from dae.gene_profile.db import GeneProfileDB
+from dae.gene_profile.db import GeneProfileDB, GeneProfileDBWriter
 from dae.gene_profile.statistic import GPStatistic
+from dae.gene_sets.gene_sets_db import GeneSet
 from dae.gpf_instance import GPFInstance
 from dae.testing.alla_import import alla_gpf
 
@@ -92,16 +92,14 @@ def sample_gp() -> GPStatistic:
         },
     }
     variant_counts = {
-        "iossifov_2014": {
-            "autism": {
-                "denovo_noncoding": {"count": 53, "rate": 1},
-                "denovo_missense": {"count": 21, "rate": 2},
-            },
-            "unaffected": {
-                "denovo_noncoding": {"count": 43, "rate": 3},
-                "denovo_missense": {"count": 51, "rate": 4},
-            },
-        },
+        "iossifov_2014_autism_denovo_noncoding": 53,
+        "iossifov_2014_autism_denovo_noncoding_rate": 1,
+        "iossifov_2014_autism_denovo_missense": 21,
+        "iossifov_2014_autism_denovo_missense_rate": 2,
+        "iossifov_2014_unaffected_denovo_noncoding": 43,
+        "iossifov_2014_unaffected_denovo_noncoding_rate": 3,
+        "iossifov_2014_unaffected_denovo_missense": 51,
+        "iossifov_2014_unaffected_denovo_missense_rate": 4,
     }
     return GPStatistic(
         "CHD8", gene_sets, genomic_scores, variant_counts,
@@ -145,13 +143,17 @@ def gp_gpf_instance(
         GeneProfileDB(
             gpf_instance._gene_profile_config,
             gpdb_filename,
-            clear=True,
         )
     print(gpdb_filename)
-    gpf_instance._gene_profile_db.insert_gp(sample_gp)
 
     return gpf_instance
 
+@pytest.fixture()
+def gpdb_write(
+        tmp_path: pathlib.Path,
+        gp_config: Box) -> GeneProfileDBWriter:
+    gpdb_filename = str(tmp_path / "gpdb")
+    return GeneProfileDBWriter(gp_config, gpdb_filename)
 
 @pytest.fixture()
 def local_gpf_instance(
@@ -194,13 +196,12 @@ def local_gpf_instance(
         "get_gene_set_ids",
         return_value=main_gene_sets,
     )
+
     gpf_instance._gene_profile_db = \
         GeneProfileDB(
             gpf_instance._gene_profile_config,
             gpdb_filename,
-            clear=True,
         )
     print(gpdb_filename)
-    gpf_instance._gene_profile_db.insert_gp(sample_gp)
 
     return gpf_instance

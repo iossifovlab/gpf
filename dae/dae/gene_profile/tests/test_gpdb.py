@@ -2,9 +2,10 @@
 import pathlib
 
 import box
-from sqlalchemy import inspect
+import duckdb
+from pytest import approx
 
-from dae.gene_profile.db import GeneProfileDB
+from dae.gene_profile.db import GeneProfileDBWriter
 from dae.gene_profile.statistic import GPStatistic
 from dae.gpf_instance import GPFInstance
 
@@ -14,19 +15,19 @@ def test_gpdb_table_building(
     gp_config: box.Box,
 ) -> None:
     gpdb_filename = str(tmp_path / "gpdb")
-    gpdb = GeneProfileDB(
-        gp_config,
-        gpdb_filename,
-    )
-    inspector = inspect(gpdb.engine)
+    gpdb = GeneProfileDBWriter(gp_config, gpdb_filename)
 
     cols = []
-    for column in inspector.get_columns("gene_profile"):
-        cols.append(column["name"])
+    with duckdb.connect(gpdb_filename, read_only=True) as connection:
+        cols = [
+            row["column_name"] for row in connection.execute(
+                f"DESCRIBE {gpdb.table.alias_or_name}",
+            ).df().to_dict("records")
+        ]
     print(cols)
 
     assert set(cols).difference(
-        set([
+        [
             "symbol_name",
             "relevant_gene_sets_rank",
             "main_FMRP Darnell",
@@ -45,21 +46,17 @@ def test_gpdb_table_building(
             "iossifov_2014_autism_denovo_missense",
             "iossifov_2014_autism_denovo_noncoding_rate",
             "iossifov_2014_autism_denovo_noncoding",
-        ]),
+        ],
     ) == set()
 
 
 def test_gpdb_insert_and_get_gp(
-        tmp_path: pathlib.Path,
         gp_gpf_instance: GPFInstance,
-        sample_gp: GPStatistic,
-        gp_config: box.Box) -> None:
+        gpdb_write: GeneProfileDBWriter,
+        sample_gp: GPStatistic) -> None:
 
-    gpdb_filename = str(tmp_path / "gpdb")
-    gpdb = GeneProfileDB(
-        gp_config, gpdb_filename, clear=True)
-    gpdb.insert_gp(sample_gp)
-    gp = gpdb.get_gp("CHD8")
+    gpdb_write.insert_gp(sample_gp)
+    gp = gp_gpf_instance._gene_profile_db.get_gp("CHD8")
 
     assert gp is not None
 
@@ -70,24 +67,24 @@ def test_gpdb_insert_and_get_gp(
     assert gp.genomic_scores["autism_scores"] == {
         "SFARI gene score": {"value": 1.0, "format": "%s"},
         "RVIS_rank": {"value": 193.0, "format": "%s"},
-        "RVIS": {"value": -2.34, "format": "%s"},
+        "RVIS": {"value": approx(-2.34), "format": "%s"},
     }
 
     assert gp.genomic_scores["protection_scores"] == {
         "SFARI gene score": {"value": 1.0, "format": "%s"},
         "RVIS_rank": {"value": 193.0, "format": "%s"},
-        "RVIS": {"value": -2.34, "format": "%s"},
+        "RVIS": {"value": approx(-2.34), "format": "%s"},
     }
 
     assert gp.variant_counts == {
         "iossifov_2014": {
             "autism": {
-                "denovo_noncoding": {"count": 0, "rate": 0},
-                "denovo_missense": {"count": 0, "rate": 0},
+                "denovo_missense": {"count": 21, "rate": 2},
+                "denovo_noncoding": {"count": 53, "rate": 1},
             },
             "unaffected": {
-                "denovo_noncoding": {"count": 0, "rate": 0},
-                "denovo_missense": {"count": 0, "rate": 0},
+                "denovo_missense": {"count": 51, "rate": 4},
+                "denovo_noncoding": {"count": 43, "rate": 3},
             },
         },
     }
@@ -95,11 +92,13 @@ def test_gpdb_insert_and_get_gp(
 
 def test_gpdb_sort(
         gp_gpf_instance: GPFInstance,
+        gpdb_write: GeneProfileDBWriter,
         sample_gp: GPStatistic) -> None:
+    gpdb_write.insert_gp(sample_gp)
     sample_gp.gene_symbol = "CHD7"
     sample_scores = sample_gp.genomic_scores
     sample_scores["protection_scores"]["SFARI gene score"] = -11
-    gp_gpf_instance._gene_profile_db.insert_gp(sample_gp)
+    gpdb_write.insert_gp(sample_gp)
     stats_unsorted = gp_gpf_instance.query_gp_statistics(1)
     stats_sorted = gp_gpf_instance.query_gp_statistics(
         1, sort_by="protection_scores_SFARI gene score", order="asc",
@@ -124,11 +123,13 @@ def test_gpdb_sort(
 
 def test_gpdb_symbol_search(
         gp_gpf_instance: GPFInstance,
+        gpdb_write: GeneProfileDBWriter,
         sample_gp: GPStatistic) -> None:
+    gpdb_write.insert_gp(sample_gp)
     sample_gp.gene_symbol = "CHD7"
-    gp_gpf_instance._gene_profile_db.insert_gp(sample_gp)
+    gpdb_write.insert_gp(sample_gp)
     sample_gp.gene_symbol = "TESTCHD"
-    gp_gpf_instance._gene_profile_db.insert_gp(sample_gp)
+    gpdb_write.insert_gp(sample_gp)
 
     all_symbols = gp_gpf_instance._gene_profile_db.list_symbols(1)
     assert len(all_symbols) == 3
