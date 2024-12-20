@@ -551,10 +551,10 @@ class GeneProfileDBWriter:
     def update_gps_with_values(self, gs_values: dict[str, Any]) -> None:
         """Update gp statistic with values"""
         with duckdb.connect(f"{self.dbfile}") as connection:
-            for gs, values in gs_values.items():
+            for gs, vals in gs_values.items():
                 query = update(
                     self.table,
-                    values,
+                    vals,
                     where=column(
                         "symbol_name",
                         table=self.table.alias_or_name,
