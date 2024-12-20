@@ -5,7 +5,7 @@ import textwrap
 
 import pytest
 
-from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
 from dae.testing import convert_to_tab_separated
@@ -18,7 +18,7 @@ from dae.variants_loaders.raw.flexible_variant_loader import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def families() -> FamiliesData:
     ped_content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
@@ -36,26 +36,25 @@ def families() -> FamiliesData:
     return families
 
 
-@pytest.fixture()
+@pytest.fixture
 def denovo_short() -> io.StringIO:
-    content = io.StringIO(convert_to_tab_separated(textwrap.dedent(
+    return io.StringIO(convert_to_tab_separated(textwrap.dedent(
         """
-        family_id  location      variant    bestState
-        f1         15:80137554   ins(A)     2||2||1||2/0||0||1||0
-        f2         3:56627768    del(4)     2||2||1/0||0||1
-        f1         4:83276456    sub(C->T)  2||2||1||2/0||0||1||0
+        family_id  location    variant    bestState
+        f1         3:6         ins(A)     2||2||1||2/0||0||1||0
+        f2         1:6         del(4)     2||2||1/0||0||1
+        f1         2:2         sub(C->T)  2||2||1||2/0||0||1||0
         """,
     )))
-    return content
 
 
 def test_families_simple(families: FamiliesData) -> None:
 
-    assert families.persons[("f1", "f1.m")].sex == Sex.female
-    assert families.persons[("f1", "f1.d")].sex == Sex.male
+    assert families.persons["f1", "f1.m"].sex == Sex.female
+    assert families.persons["f1", "f1.d"].sex == Sex.male
 
-    assert families.persons[("f1", "f1.m")].role == Role.mom
-    assert families.persons[("f1", "f1.d")].role == Role.dad
+    assert families.persons["f1", "f1.m"].role == Role.mom
+    assert families.persons["f1", "f1.d"].role == Role.dad
 
 
 def test_denovo_short_simple(denovo_short: io.StringIO) -> None:
@@ -73,12 +72,14 @@ def test_denovo_short_simple(denovo_short: io.StringIO) -> None:
 
 
 def test_denovo_short_location_variant_transformation(
-        denovo_short: io.StringIO, gpf_instance_2013: GPFInstance) -> None:
+    denovo_short: io.StringIO,
+    acgt_genome_19: ReferenceGenome,
+) -> None:
 
     next(denovo_short)
 
     transformers = [
-        location_variant_to_vcf_transformer(gpf_instance_2013.reference_genome),
+        location_variant_to_vcf_transformer(acgt_genome_19),
     ]
 
     generator = flexible_variant_loader(
@@ -92,20 +93,20 @@ def test_denovo_short_location_variant_transformation(
     assert len(results) == 3
 
     v = results[0]
-    assert v["chrom"] == "15"
-    assert v["pos"] == 80137553
-    assert v["ref"] == "T"
-    assert v["alt"] == "TA"
+    assert v["chrom"] == "3"
+    assert v["pos"] == 5
+    assert v["ref"] == "A"
+    assert v["alt"] == "AA"
 
     v = results[1]
-    assert v["chrom"] == "3"
-    assert v["pos"] == 56627767
-    assert v["ref"] == "AAAGT"
+    assert v["chrom"] == "1"
+    assert v["pos"] == 5
+    assert v["ref"] == "ACGTA"
     assert v["alt"] == "A"
 
     v = results[2]
-    assert v["chrom"] == "4"
-    assert v["pos"] == 83276456
+    assert v["chrom"] == "2"
+    assert v["pos"] == 2
     assert v["ref"] == "C"
     assert v["alt"] == "T"
 
