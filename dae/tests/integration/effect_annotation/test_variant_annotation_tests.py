@@ -1,28 +1,16 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import pytest
 
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.gpf_instance import GPFInstance
-
-
-@pytest.fixture
-def genomic_sequence_2013(gpf_instance_2013: GPFInstance) -> ReferenceGenome:
-    return gpf_instance_2013.reference_genome
-
-
-@pytest.fixture
-def gene_models_2013(gpf_instance_2013: GPFInstance) -> GeneModels:
-    return gpf_instance_2013.gene_models
 
 
 def test_synonymous_complex_var(
-    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels,
+    genome_2013: ReferenceGenome, gene_models_2013: GeneModels,
 ) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
-        genomic_sequence_2013,
+        genome_2013,
         location="1:897349",
         variant="complex(GG->AA)",
     )
@@ -40,10 +28,10 @@ def test_synonymous_complex_var(
 
 
 def test_just_next_to_splice_site_var(
-    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels,
+    genome_2013: ReferenceGenome, gene_models_2013: GeneModels,
 ) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gene_models_2013, genomic_sequence_2013,
+        gene_models_2013, genome_2013,
         location="5:86705101", variant="del(4)",
     )
 
@@ -65,11 +53,11 @@ def test_just_next_to_splice_site_var(
 
 
 def test_chr2_32853362_ins_var(
-    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels,
+    genome_2013: ReferenceGenome, gene_models_2013: GeneModels,
 ) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
-        genomic_sequence_2013,
+        genome_2013,
         location="6:157527729",
         variant="complex(CTGG->ATAG)",
     )
@@ -94,11 +82,11 @@ def test_chr2_32853362_ins_var(
 
 
 def test_chr5_75902128_sub_var(
-    genomic_sequence_2013: ReferenceGenome, gene_models_2013: GeneModels,
+    genome_2013: ReferenceGenome, gene_models_2013: GeneModels,
 ) -> None:
     effects = EffectAnnotator.annotate_variant(
         gene_models_2013,
-        genomic_sequence_2013,
+        genome_2013,
         location="5:75902128",
         variant="sub(C->T)",
     )

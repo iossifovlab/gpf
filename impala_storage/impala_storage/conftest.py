@@ -80,9 +80,9 @@ def vcf_variants_loaders(
         gpf_instance_2019,
     )
 
-    def builder(
+    def builder(  # pylint: disable=W0102
         path,
-        params={
+        params={  # noqa: B006
             "vcf_include_reference_genotypes": True,
             "vcf_include_unknown_family_genotypes": True,
             "vcf_include_unknown_person_genotypes": True,
