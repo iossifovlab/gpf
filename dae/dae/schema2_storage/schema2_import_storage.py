@@ -178,7 +178,7 @@ class Schema2ImportStorage(ImportStorage):
 
         variants_writer = VariantsParquetWriter(
             out_dir=layout.study,
-            annotation_schema=annotation_pipeline.get_attributes(),
+            annotation_pipeline=annotation_pipeline,
             partition_descriptor=cls._get_partition_description(project),
             bucket_index=bucket.index,
             row_group_size=row_group_size,

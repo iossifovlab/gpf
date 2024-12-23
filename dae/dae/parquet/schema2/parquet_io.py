@@ -9,7 +9,10 @@ import fsspec
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from dae.annotation.annotation_pipeline import AttributeInfo
+from dae.annotation.annotation_pipeline import (
+    AnnotationPipeline,
+    AttributeInfo,
+)
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
@@ -74,7 +77,7 @@ class ContinuousParquetFileWriter:
 
         self._writer = pq.ParquetWriter(
             filepath, self.schema,
-            compression=compression,
+            compression=compression,  # type: ignore
             filesystem=filesystem,
             use_compliant_nested_type=True,
             write_page_index=True,
@@ -171,7 +174,7 @@ class VariantsParquetWriter:
     def __init__(
         self,
         out_dir: str,
-        annotation_schema: list[AttributeInfo],
+        annotation_pipeline: AnnotationPipeline,
         partition_descriptor: PartitionDescriptor,
         *,
         serializer: VariantsDataSerializer | None = None,
@@ -198,7 +201,7 @@ class VariantsParquetWriter:
         self.data_writers: dict[str, ContinuousParquetFileWriter] = {}
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
-        self.annotation_schema = annotation_schema
+        self.annotation_pipeline = annotation_pipeline
 
     def _build_family_filename(
         self, allele: FamilyAllele, *,
@@ -234,7 +237,7 @@ class VariantsParquetWriter:
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 filename,
-                self.annotation_schema,
+                self.annotation_pipeline.get_attributes(),
                 filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_family",
@@ -253,7 +256,7 @@ class VariantsParquetWriter:
         if filename not in self.data_writers:
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 filename,
-                self.annotation_schema,
+                self.annotation_pipeline.get_attributes(),
                 filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_summary",
