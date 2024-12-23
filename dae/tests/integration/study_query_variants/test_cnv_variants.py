@@ -11,7 +11,7 @@ from dae.testing.alla_import import alla_gpf
 from dae.utils.regions import Region
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def imported_study(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],

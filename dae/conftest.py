@@ -263,7 +263,7 @@ def _generate_genotype_storage_fixtures(metafunc: pytest.Metafunc) -> None:
         "genotype_storage_factory",
         storage_factories.values(),
         ids=storage_factories.keys(),
-        scope="module")
+        scope="session")
 
 
 def _generate_grr_schemes_fixtures(metafunc: pytest.Metafunc) -> None:
