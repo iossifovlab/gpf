@@ -1,4 +1,3 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigService } from 'app/config/config.service';
@@ -21,6 +20,7 @@ import { cloneDeep } from 'lodash';
 import { Store, StoreModule } from '@ngrx/store';
 import { UserInfo } from 'app/users/users';
 import { GeneProfileSingleViewComponent } from 'app/gene-profiles-single-view/gene-profiles-single-view.component';
+import { provideHttpClient } from '@angular/common/http';
 
 
 const config = {
@@ -149,10 +149,11 @@ describe('GeneProfilesBlockComponent', () => {
         UsersService,
         { provide: APP_BASE_HREF, useValue: '' },
         { provide: GeneProfilesService, useValue: geneProfilesServiceMock },
-        { provide: UsersService, useValue: usersServiceMock }
+        { provide: UsersService, useValue: usersServiceMock },
+        provideHttpClient()
       ],
       imports: [
-        HttpClientTestingModule, NgbNavModule, RouterTestingModule, FormsModule,
+        NgbNavModule, RouterTestingModule, FormsModule,
         StoreModule.forRoot({geneProfiles: geneProfilesReducer})
       ]
     }).compileComponents();

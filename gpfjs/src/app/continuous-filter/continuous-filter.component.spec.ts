@@ -1,4 +1,4 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { HistogramData } from 'app/measures/measures';
@@ -88,8 +88,8 @@ describe('ContinuousFilterComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [ContinuousFilterComponent],
-      providers: [{provide: MeasuresService, useValue: measuresServiceMock}, ConfigService],
-      imports: [HttpClientTestingModule, StoreModule.forRoot()]
+      providers: [{provide: MeasuresService, useValue: measuresServiceMock}, ConfigService, provideHttpClientTesting()],
+      imports: [StoreModule.forRoot()]
     })
       .compileComponents();
 

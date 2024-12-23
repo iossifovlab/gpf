@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { VariantReportsService } from './variant-reports.service';
-import { HttpClientModule} from '@angular/common/http';
+import { provideHttpClient} from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
 import { APP_BASE_HREF } from '@angular/common';
 
@@ -11,10 +11,11 @@ describe('VariantReportsService', () => {
   beforeEach(() => {
     const configMock = { baseUrl: 'testUrl/' };
     TestBed.configureTestingModule({
-      imports: [HttpClientModule],
+      imports: [],
       providers: [VariantReportsService,
         { provide: ConfigService, useValue: configMock },
         { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClient()
       ]
     });
 

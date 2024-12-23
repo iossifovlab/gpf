@@ -1,4 +1,3 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, NavigationStart, Router, Event } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -17,7 +16,7 @@ import { SummaryAllelesArray, SummaryAllelesFilter } from './summary-variants';
 import { GenePlotComponent } from 'app/gene-plot/gene-plot.component';
 import { GenotypePreviewTableComponent } from 'app/genotype-preview-table/genotype-preview-table.component';
 import { APP_BASE_HREF } from '@angular/common';
-import { HttpResponse } from '@angular/common/http';
+import { HttpResponse, provideHttpClient } from '@angular/common/http';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import {
   MAT_AUTOCOMPLETE_SCROLL_STRATEGY,
@@ -110,10 +109,10 @@ describe('GeneBrowserComponent', () => {
         {provide: GeneService, useValue: new MockGeneService()},
         {provide: DatasetsService, useValue: mockDatasetsService},
         {provide: APP_BASE_HREF, useValue: ''},
-        {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
+        {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''},
+        provideHttpClient()
       ],
       imports: [
-        HttpClientTestingModule,
         RouterTestingModule,
         StoreModule.forRoot({geneSymbols: geneSymbolsReducer}),
         NgbModule,

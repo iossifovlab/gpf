@@ -1,4 +1,4 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
@@ -190,7 +190,7 @@ describe('GeneSetsComponent', () => {
       declarations: [GeneSetsComponent],
       imports: [
         StoreModule.forRoot({geneSets: geneSetsReducer}),
-        HttpClientTestingModule, RouterTestingModule,
+        RouterTestingModule,
         NgbAccordionModule, NgbNavModule,
         CommonModule,
         BrowserModule,
@@ -204,7 +204,8 @@ describe('GeneSetsComponent', () => {
         { provide: GeneSetsService, useValue: geneSetsServiceMock },
         { provide: DatasetsTreeService, useValue: datasetsTreeServiceMock },
         { provide: DatasetsService, useValue: datasetsServiceMock },
-        { provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: '' }
+        { provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: '' },
+        provideHttpClientTesting()
       ], schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 

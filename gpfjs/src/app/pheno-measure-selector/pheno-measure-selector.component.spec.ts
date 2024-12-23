@@ -1,4 +1,4 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -52,10 +52,10 @@ describe('PhenoMeasureSelectorComponent', () => {
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
         UsersService,
-        {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''}
+        {provide: MAT_AUTOCOMPLETE_SCROLL_STRATEGY, useValue: ''},
+        provideHttpClientTesting()
       ],
       imports: [
-        HttpClientTestingModule,
         RouterTestingModule,
         StoreModule.forRoot({}),
         MatAutocompleteOrigin,

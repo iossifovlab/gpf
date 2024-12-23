@@ -10,7 +10,7 @@ import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype
 import { map } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
 import { AuthService } from 'app/auth.service';
-const oboe = require('oboe');
+import oboe from 'oboe';
 
 @Injectable()
 export class QueryService {

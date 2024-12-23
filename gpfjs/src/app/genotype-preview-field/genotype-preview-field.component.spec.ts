@@ -4,7 +4,7 @@ import { GenotypePreviewFieldComponent } from './genotype-preview-field.componen
 import { PedigreeChartComponent } from 'app/pedigree-chart/pedigree-chart.component';
 import { PedigreeChartMemberComponent } from 'app/pedigree-chart/pedigree-chart-member.component';
 import { DatasetsService } from 'app/datasets/datasets.service';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
 import { UsersService } from 'app/users/users.service';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -21,8 +21,8 @@ describe('GenotypePreviewFieldComponent', () => {
         PedigreeChartComponent,
         PedigreeChartMemberComponent
       ],
-      providers: [DatasetsService, ConfigService, UsersService],
-      imports: [HttpClientTestingModule, RouterTestingModule]
+      providers: [DatasetsService, ConfigService, UsersService, provideHttpClientTesting()],
+      imports: [RouterTestingModule]
     }).compileComponents();
     fixture = TestBed.createComponent(GenotypePreviewFieldComponent);
     component = fixture.componentInstance;

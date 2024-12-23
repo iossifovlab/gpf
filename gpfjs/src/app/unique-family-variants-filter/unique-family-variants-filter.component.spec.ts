@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UniqueFamilyVariantsFilterComponent } from './unique-family-variants-filter.component';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient } from '@angular/common/http';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
 import { ConfigService } from 'app/config/config.service';
@@ -22,9 +22,13 @@ describe('UniqueFamilyVariantsFilterComponent', () => {
   beforeEach(async() => {
     await TestBed.configureTestingModule({
       declarations: [UniqueFamilyVariantsFilterComponent],
-      providers: [{provide: DatasetsService, useValue: new DatasetsServiceMock()}, DatasetsTreeService, ConfigService],
+      providers: [
+        { provide: DatasetsService, useValue: new DatasetsServiceMock() },
+        DatasetsTreeService,
+        ConfigService,
+        provideHttpClient()
+      ],
       imports: [
-        HttpClientModule,
         StoreModule.forRoot({
           uniqueFamilyVariantsFilter: uniqueFamilyVariantsFilterReducer,
           datasetId: datasetIdReducer}),

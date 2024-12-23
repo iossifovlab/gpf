@@ -1,10 +1,9 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
-
 import { MeasuresService } from './measures.service';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { of, lastValueFrom, take } from 'rxjs';
 import { ContinuousMeasure, HistogramData } from './measures';
 import { environment } from 'environments/environment';
@@ -15,8 +14,8 @@ describe('MeasuresService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [MeasuresService, ConfigService],
-      imports: [HttpClientTestingModule, RouterTestingModule]
+      providers: [MeasuresService, ConfigService, provideHttpClient(), provideHttpClientTesting()],
+      imports: [RouterTestingModule]
     });
 
     service = TestBed.inject(MeasuresService);

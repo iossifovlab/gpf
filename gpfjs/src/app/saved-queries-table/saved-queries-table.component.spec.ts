@@ -1,4 +1,4 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
@@ -57,9 +57,10 @@ describe('SavedQueriesTableComponent', () => {
         ResizeService,
         DatasetsService,
         UsersService,
-        { provide: APP_BASE_HREF, useValue: '' }
+        { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClientTesting()
       ],
-      imports: [RouterTestingModule, HttpClientTestingModule, StoreModule.forRoot()]
+      imports: [RouterTestingModule, StoreModule.forRoot()]
     }).compileComponents();
 
     fixture = TestBed.createComponent(SavedQueriesTableComponent);

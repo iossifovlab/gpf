@@ -1,4 +1,4 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { ActivatedRoute } from '@angular/router';
@@ -30,8 +30,9 @@ describe('GeneProfileSingleViewWrapperComponent', () => {
         ConfigService,
         {provide: GeneProfilesService, useValue: new MockGeneProfilesService()},
         {provide: ActivatedRoute, useValue: new MockActivatedRoute()},
+        provideHttpClientTesting()
       ],
-      imports: [HttpClientTestingModule]
+      imports: []
     }).compileComponents();
 
     fixture = TestBed.createComponent(GeneProfileSingleViewWrapperComponent);

@@ -4,7 +4,7 @@ import { Dataset } from 'app/datasets/datasets';
 import { StudyFiltersTreeComponent } from './treelist-checkbox.component';
 import { FormsModule } from '@angular/forms';
 import { DatasetsTreeService } from 'app/datasets/datasets-tree.service';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient } from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
 
 const datasetNodeMock1 = new DatasetNode(new Dataset('id1',
@@ -31,9 +31,9 @@ describe('StudyFiltersTreeComponent', () => {
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
-      imports: [FormsModule, HttpClientModule],
+      imports: [FormsModule],
       declarations: [StudyFiltersTreeComponent],
-      providers: [DatasetsTreeService, ConfigService]
+      providers: [DatasetsTreeService, ConfigService, provideHttpClient()]
     }).compileComponents();
 
     fixture = TestBed.createComponent(StudyFiltersTreeComponent);

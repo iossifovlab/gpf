@@ -1,5 +1,5 @@
 import { APP_BASE_HREF } from '@angular/common';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
@@ -118,10 +118,10 @@ describe('UsersTableComponent', () => {
         ConfigService,
         { provide: APP_BASE_HREF, useValue: '' },
         { provide: UsersService, useValue: usersServiceMock },
-        { provide: UsersGroupsService, useValue: usersGroupsServiceMock }
+        { provide: UsersGroupsService, useValue: usersGroupsServiceMock },
+        provideHttpClientTesting()
       ],
       imports: [
-        HttpClientTestingModule,
         RouterTestingModule,
         StoreModule.forRoot({})
       ]

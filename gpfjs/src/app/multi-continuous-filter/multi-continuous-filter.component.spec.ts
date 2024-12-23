@@ -1,4 +1,4 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
@@ -64,7 +64,7 @@ describe('MultiContinuousFilterComponent', () => {
       providers: [
         MultiContinuousFilterComponent,
         {provide: MeasuresService, useValue: {getContinuousMeasures: (): Observable<PhenoMeasure[]> => of()}},
-        HttpClientTestingModule,
+        provideHttpClientTesting(),
         ConfigService,
         {provide: DatasetsService, useValue: mockDatasetsService},
         UsersService,

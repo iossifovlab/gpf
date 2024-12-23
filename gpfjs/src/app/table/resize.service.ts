@@ -1,7 +1,7 @@
 // Based on https://stackoverflow.com/questions/40776351/what-is-the-best-way-to-listen-for-component-resize-events-within-an-angular2-co
 
 import { Injectable, NgZone } from '@angular/core';
-import * as elementResizeDetectorMaker from 'element-resize-detector';
+import elementResizeDetectorMaker from 'element-resize-detector';
 
 @Injectable()
 export class ResizeService {

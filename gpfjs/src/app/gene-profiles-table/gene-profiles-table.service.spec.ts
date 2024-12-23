@@ -1,4 +1,4 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
 import { of } from 'rxjs';
@@ -6,6 +6,7 @@ import { GeneProfilesTableService } from './gene-profiles-table.service';
 import { UsersService } from 'app/users/users.service';
 import { APP_BASE_HREF } from '@angular/common';
 import { StoreModule } from '@ngrx/store';
+import { provideHttpClient } from '@angular/common/http';
 
 class UsersServiceMock {
   public cachedUserInfo(): object {
@@ -21,9 +22,11 @@ describe('GeneProfilesTableService', () => {
     TestBed.configureTestingModule({
       providers: [ConfigService,
         { provide: UsersService, useValue: usersServiceMock},
-        { provide: APP_BASE_HREF, useValue: '' }
+        { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClient(),
+        provideHttpClientTesting()
       ],
-      imports: [HttpClientTestingModule, StoreModule.forRoot({})]
+      imports: [StoreModule.forRoot({})]
     });
     service = TestBed.inject(GeneProfilesTableService);
 

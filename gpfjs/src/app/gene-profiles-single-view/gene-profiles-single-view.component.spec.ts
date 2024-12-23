@@ -1,4 +1,4 @@
-import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ConfigService } from 'app/config/config.service';
@@ -25,6 +25,7 @@ import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.
 import { setStudyTypes } from 'app/study-types/study-types.state';
 import { GenomicScore } from 'app/genotype-browser/genotype-browser';
 import { selectGeneProfiles, setGeneProfilesOpenedTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
+import { provideHttpClient } from '@angular/common/http';
 
 class QueryServiceMock {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -51,9 +52,11 @@ describe('GeneProfileSingleViewComponent', () => {
         ConfigService, GeneScoresService, DatasetsService,
         UsersService,
         {provide: QueryService, useValue: queryServiceMock },
-        { provide: APP_BASE_HREF, useValue: '' }
+        { provide: APP_BASE_HREF, useValue: '' },
+        provideHttpClient(),
+        provideHttpClientTesting()
       ],
-      imports: [HttpClientTestingModule, RouterTestingModule, StoreModule.forRoot({})]
+      imports: [RouterTestingModule, StoreModule.forRoot({})]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GeneProfileSingleViewComponent);

@@ -2,9 +2,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { EnrichmentModelsComponent } from './enrichment-models.component';
 import { EnrichmentModelsService } from './enrichment-models.service';
 import { of } from 'rxjs/internal/observable/of';
-import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ConfigService } from 'app/config/config.service';
 import { Store, StoreModule } from '@ngrx/store';
+import { provideHttpClient } from '@angular/common/http';
 
 describe('EnrichmentModelsComponent', () => {
   let component: EnrichmentModelsComponent;
@@ -16,8 +16,8 @@ describe('EnrichmentModelsComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       declarations: [EnrichmentModelsComponent],
-      providers: [EnrichmentModelsService, ConfigService],
-      imports: [StoreModule.forRoot({}), HttpClientTestingModule]
+      providers: [EnrichmentModelsService, ConfigService, provideHttpClient()],
+      imports: [StoreModule.forRoot({})]
     });
     fixture = TestBed.createComponent(EnrichmentModelsComponent);
     component = fixture.componentInstance;
