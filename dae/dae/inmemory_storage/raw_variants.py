@@ -1,7 +1,6 @@
 import abc
 import logging
 import queue
-import time
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import closing
 from functools import reduce
@@ -20,7 +19,6 @@ from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import SummaryAllele, SummaryVariant
-from dae.variants_loaders.raw.loader import VariantsLoader
 
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 logger = logging.getLogger(__name__)
@@ -618,32 +616,17 @@ class RawMemoryVariants(RawFamilyVariants):
     """Store variants in memory."""
 
     def __init__(
-        self, loaders: list[VariantsLoader],
+        self, full_variants: list[tuple[SummaryVariant, list[FamilyVariant]]],
         families: FamiliesData,
     ) -> None:
         super().__init__(families)
-        self.variants_loaders = loaders
-        if len(loaders) > 0:
-            self._full_variants: list[
-                tuple[SummaryVariant, list[FamilyVariant]]] | None = None
-        else:
-            logger.debug("no variants to load")
-            self._full_variants = []
+        self._full_variants = full_variants
 
     @property
     def full_variants(
         self,
     ) -> list[tuple[SummaryVariant, list[FamilyVariant]]]:
         """Return the full list of variants."""
-        if self._full_variants is None:
-            start = time.time()
-            self._full_variants = []
-            for loader in self.variants_loaders:
-                for sv, fvs in loader.full_variants_iterator():
-                    self._full_variants.append((sv, fvs))
-
-            elapsed = time.time() - start
-            logger.debug("variants loaded in in %.2f sec", elapsed)
         return self._full_variants
 
     def full_variants_iterator(

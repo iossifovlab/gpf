@@ -4,12 +4,18 @@ from __future__ import annotations
 import logging
 import os
 import pathlib
+import time
 from typing import (
     ClassVar,
 )
 
+import numpy as np
+import pandas as pd
+
 from dae.annotation.annotation_pipeline import AnnotationPipeline, AttributeInfo
 from dae.effect_annotation.effect import AlleleEffects
+from dae.variants.family_variant import FamilyVariant
+from dae.variants.variant import SummaryVariant
 from dae.variants_loaders.raw.loader import (
     FullVariantsIterator,
     VariantsLoader,
@@ -195,6 +201,115 @@ def variants_loader_annotate_and_save(
 
                 outfile.write(sep.join(line))
                 outfile.write("\n")
+
+
+def _convert_array_of_strings(token: str) -> list[str] | None:
+    if not token:
+        return None
+    token = token.strip()
+    return [w.strip() for w in token.split(SEP1)]
+
+
+def _convert_string(token: str) -> str | None:
+    if not token:
+        return None
+    return token
+
+
+def _load_annotation_file(
+    annotation_filename: str,
+    sep: str = "\t",
+) -> pd.DataFrame:
+    assert os.path.exists(annotation_filename)
+    with open(annotation_filename, "r", encoding="utf8") as infile:
+        annot_df = pd.read_csv(
+            infile,
+            sep=sep,
+            index_col=False,
+            dtype={
+                "chrom": str,
+                "position": np.int32,
+            },
+            converters={
+                "cshl_variant": _convert_string,
+                "effects": _convert_string,
+                "effect_gene_genes": _convert_array_of_strings,
+                "effect_gene_types": _convert_array_of_strings,
+                "effect_details_transcript_ids": _convert_array_of_strings,
+                "effect_details_details": _convert_array_of_strings,
+            },
+            encoding="utf-8",
+        ).replace({np.nan: None})
+    special_columns = set(annot_df.columns) & {
+        "alternative", "effect_type",
+    }
+
+    for col in special_columns:
+        annot_df[col] = (
+            annot_df[col]
+            .astype(object)
+            .where(pd.notna(annot_df[col]), None)
+        )
+    return annot_df
+
+
+def variants_loader_load_annotation(
+    variants_loader: VariantsLoader,
+    annotation_filename: str,
+    sep: str = "\t",
+) -> list[tuple[SummaryVariant, list[FamilyVariant]]]:
+    """Load variants and stored annotation file."""
+    if not os.path.exists(annotation_filename):
+        logger.warning("stored annotation missing %s", annotation_filename)
+        return list(variants_loader.full_variants_iterator())
+
+    result = []
+    variant_iterator = variants_loader.full_variants_iterator()
+    start = time.time()
+    annot_df = _load_annotation_file(annotation_filename, sep=sep)
+
+    elapsed = time.time() - start
+    logger.info(
+        "Storred annotation file (%s) loaded in in %.2f sec",
+        annotation_filename, elapsed)
+
+    start = time.time()
+    records = annot_df.to_dict(orient="records")
+    index = 0
+
+    while index < len(records):
+        sumary_variant, family_variants = next(
+            variant_iterator, (None, None))
+        if sumary_variant is None:
+            break
+        assert family_variants is not None
+
+        variant_records = []
+
+        current_record = records[index]
+        assert "summary_index" in current_record, \
+            list(current_record.keys())
+
+        while current_record["summary_index"] == \
+                sumary_variant.summary_index:
+            variant_records.append(current_record)
+            index += 1
+            if index >= len(records):
+                break
+            current_record = records[index]
+
+        assert len(variant_records) > 0, sumary_variant
+
+        for sallele in sumary_variant.alleles:
+            sallele.update_attributes(
+                variant_records[sallele.allele_index])  # type: ignore
+        result.append((sumary_variant, family_variants))
+
+    elapsed = time.time() - start
+    logger.info(
+        "Storred annotation file (%s) parsed in %.2f sec",
+        annotation_filename, elapsed)
+    return result
 
 
 class AnnotationDecorator(VariantsLoaderDecorator):

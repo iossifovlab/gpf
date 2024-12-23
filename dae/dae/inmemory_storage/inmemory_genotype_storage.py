@@ -10,15 +10,15 @@ from dae.configuration.utils import validate_path
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.inmemory_storage.raw_variants import RawMemoryVariants
-from dae.inmemory_storage.stored_annotation_decorator import (
-    StoredAnnotationDecorator,
+from dae.import_tools.annotation_decorators import (
+    build_annotation_filename,
+    variants_loader_load_annotation,
 )
+from dae.inmemory_storage.raw_variants import RawMemoryVariants
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.raw.loader import (
-    VariantsGenotypesLoader,
     VariantsLoader,
 )
 from dae.variants_loaders.vcf.loader import VcfLoader
@@ -93,7 +93,7 @@ class InmemoryGenotypeStorage(GenotypeStorage):
         elapsed = time.time() - start
         logger.info("families loaded in in %.2f sec", elapsed)
 
-        loaders = []
+        result = []
         for file_conf in config.genotype_storage.files.variants:
             start = time.time()
             variants_filename = file_conf.path
@@ -144,10 +144,9 @@ class InmemoryGenotypeStorage(GenotypeStorage):
                 raise ValueError(
                     f"unknown variant file format: {file_conf.format}")
 
-            variants_loader = StoredAnnotationDecorator.decorate(
-                cast(VariantsGenotypesLoader, variants_loader),
-                annotation_filename,
-            )
-            loaders.append(variants_loader)
+            full_variants = variants_loader_load_annotation(
+                variants_loader,
+                build_annotation_filename(annotation_filename))
+            result.extend(full_variants)
 
-        return RawMemoryVariants(loaders, families)
+        return RawMemoryVariants(result, families)
