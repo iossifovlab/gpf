@@ -337,20 +337,6 @@ def annotation_scores_dirname():
     return relative_to_this_test_folder("fixtures/annotation_pipeline/")
 
 
-@pytest.fixture()
-def annotation_pipeline_vcf(gpf_instance_2013):
-    filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
-    return load_pipeline_from_file(filename, gpf_instance_2013.grr)
-
-
-@pytest.fixture()
-def annotation_pipeline_internal(gpf_instance_2013):
-    filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
-    pipeline = load_pipeline_from_file(filename, gpf_instance_2013.grr)
-    pipeline.open()
-    return pipeline
-
-
 def from_prefix_denovo(prefix):
     denovo_filename = f"{prefix}.txt"
     family_filename = f"{prefix}_families.ped"

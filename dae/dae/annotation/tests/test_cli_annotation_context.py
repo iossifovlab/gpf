@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import argparse
 import os
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 from pytest_mock import MockerFixture
@@ -13,7 +13,7 @@ from dae.genomic_resources.genomic_context import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def context_fixture(
         fixture_dirname: Callable[[str], str],
         mocker: MockerFixture) -> GenomicContext:
@@ -37,7 +37,7 @@ def context_fixture(
 
 def test_cli_genomic_context_reference_genome(
         fixture_dirname: Callable[[str], str],
-        context_fixture: GenomicContext) -> None:
+        context_fixture: GenomicContext) -> None:  # noqa
     # Given
     parser = argparse.ArgumentParser(
         description="Test CLI genomic context",
