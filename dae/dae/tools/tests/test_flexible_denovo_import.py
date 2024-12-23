@@ -6,7 +6,6 @@ from collections.abc import Callable
 import pytest
 
 from dae.genotype_storage import GenotypeStorage
-from dae.gpf_instance import GPFInstance
 from dae.testing.foobar_import import foobar_gpf
 from dae.tools.simple_study_import import main
 
@@ -17,63 +16,6 @@ def resources_dir(request: pytest.FixtureRequest) -> pathlib.Path:
         os.path.dirname(os.path.realpath(request.module.__file__)),
         "resources")
     return pathlib.Path(resources_path)
-
-
-@pytest.mark.skip(reason="wrong reference genome")
-@pytest.mark.parametrize(
-    "storage_id",
-    [
-        "genotype_impala",
-        "genotype_impala_2",
-        "genotype_filesystem",
-    ],
-)
-def test_import_iossifov2014_filesystem(
-    tmp_path_factory: pytest.TempPathFactory,
-    storage_id: str,
-    fixture_dirname: Callable[[str], str],
-) -> None:
-    root_path = tmp_path_factory.mktemp(storage_id)
-    foobar_gpf(root_path)
-    gpf_instance = GPFInstance.build(
-        root_path / "gpf_instance" / "gpf_instance.yaml")
-
-    pedigree_filename = \
-        fixture_dirname("dae_iossifov2014/iossifov2014_families.ped")
-    denovo_filename = \
-        fixture_dirname("dae_iossifov2014/iossifov2014.txt")
-
-    study_id = f"test_denovo_iossifov2014_{storage_id}"
-
-    argv = [
-        pedigree_filename,
-        "--id",
-        study_id,
-        "--skip-reports",
-        "--denovo-file",
-        denovo_filename,
-        "--denovo-location",
-        "location",
-        "--denovo-variant",
-        "variant",
-        "--denovo-family-id",
-        "familyId",
-        "--denovo-best-state",
-        "bestState",
-        "--genotype-storage",
-        storage_id,
-        "-o",
-        str(root_path / "output"),
-    ]
-
-    main(argv, gpf_instance)
-
-    gpf_instance.reload()
-    study = gpf_instance.get_genotype_data(study_id)
-    assert study is not None
-
-    vs = list(study.query_variants())
-    assert len(vs) == 16
 
 
 def test_flexible_denovo_default(

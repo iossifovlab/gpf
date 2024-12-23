@@ -260,20 +260,6 @@ def test_np_score_fetch_regions(
     assert score_lines == expected
 
 
-@pytest.mark.skip(reason="NP score allows multiple values for positions")
-@pytest.mark.parametrize("chrom,begin,end", [
-    ("chr3", 10, 20),
-])
-def test_np_score_fetch_regions_consistency_failed(
-    np_score: AlleleScore,
-    chrom: str,
-    begin: int | None,
-    end: int | None,
-) -> None:
-    with pytest.raises(ValueError, match="multiple values for positions"):
-        list(np_score._fetch_region_values(chrom, begin, end))
-
-
 @pytest.fixture(scope="module")
 def np_score2(tmp_path_factory: pytest.TempPathFactory) -> AlleleScore:
     root_path = tmp_path_factory.mktemp("np_score")
