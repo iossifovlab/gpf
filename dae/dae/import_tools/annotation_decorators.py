@@ -5,9 +5,6 @@ import logging
 import os
 import pathlib
 import time
-from typing import (
-    ClassVar,
-)
 
 import numpy as np
 import pandas as pd
@@ -63,8 +60,7 @@ def build_annotation_filename(filename: str) -> str:
 
 
 def has_annotation_file(variants_filename: str) -> bool:
-    annotation_filename = AnnotationDecorator\
-        .build_annotation_filename(variants_filename)
+    annotation_filename = build_annotation_filename(variants_filename)
     return os.path.exists(annotation_filename)
 
 
@@ -312,50 +308,7 @@ def variants_loader_load_annotation(
     return result
 
 
-class AnnotationDecorator(VariantsLoaderDecorator):
-    """Base class for annotators."""
-
-    SEP1 = "!"
-    SEP2 = "|"
-    SEP3 = ":"
-
-    CLEAN_UP_COLUMNS: ClassVar[set[str]] = {
-        "alternatives_data",
-        "family_variant_index",
-        "family_id",
-        "variant_sexes",
-        "variant_roles",
-        "variant_inheritance",
-        "variant_in_member",
-        "genotype_data",
-        "best_state_data",
-        "genetic_model_data",
-        "inheritance_data",
-        "frequency_data",
-        "genomic_scores_data",
-        "effect_type",
-        "effect_gene",
-    }
-
-    @staticmethod
-    def build_annotation_filename(filename: str) -> str:
-        """Return the corresponding annotation file for filename."""
-        return build_annotation_filename(filename)
-
-    @staticmethod
-    def has_annotation_file(variants_filename: str) -> bool:
-        return has_annotation_file(variants_filename)
-
-    @staticmethod
-    def save_annotation_file(
-        variants_loader: AnnotationPipelineDecorator,
-        filename: str, sep: str = "\t",
-    ) -> None:
-        """Save annotation file."""
-        save_annotation_file(variants_loader, filename, sep)
-
-
-class AnnotationPipelineDecorator(AnnotationDecorator):
+class AnnotationPipelineDecorator(VariantsLoaderDecorator):
     """Annotate variants by processing them through an annotation pipeline."""
 
     def __init__(
