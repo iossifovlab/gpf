@@ -5,7 +5,6 @@ import logging
 import os
 import pathlib
 from typing import (
-    Any,
     ClassVar,
 )
 
@@ -162,44 +161,6 @@ class AnnotationDecorator(VariantsLoaderDecorator):
     ) -> None:
         """Save annotation file."""
         save_annotation_file(variants_loader, filename, sep)
-
-
-class EffectAnnotationDecorator(AnnotationDecorator):
-    """Annotate variants with an effect."""
-
-    def __init__(
-        self, variants_loader: VariantsLoader,
-        effect_annotator: AnnotationPipeline,
-    ):
-        super().__init__(variants_loader)
-
-        self.set_attribute(
-            "extra_attributes",
-            variants_loader.get_attribute("extra_attributes"),
-        )
-
-        self.effect_annotator = effect_annotator
-
-    def full_variants_iterator(self) -> FullVariantsIterator:
-        self.effect_annotator.open()
-
-        for (summary_variant, family_variants) in \
-                self.variants_loader.full_variants_iterator():
-            for sallele in summary_variant.alt_alleles:
-                context: dict[str, Any] = {}
-                attributes = self.effect_annotator.annotate(
-                    sallele.get_annotatable(), context)
-                assert "allele_effects" in attributes, attributes
-                allele_effects = attributes["allele_effects"]
-                assert isinstance(allele_effects, AlleleEffects), \
-                    (type(allele_effects), allele_effects)
-                # pylint: disable=protected-access
-                sallele._effects = allele_effects  # noqa: SLF001
-            yield summary_variant, family_variants
-
-    def close(self) -> None:
-        self.effect_annotator.close()
-        super().close()
 
 
 class AnnotationPipelineDecorator(AnnotationDecorator):
