@@ -37,6 +37,7 @@ from dae.schema2_storage.schema2_layout import (
 )
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils import fs_utils
+from dae.utils.regions import Region
 from dae.variants_loaders.parquet.loader import ParquetLoader
 
 logger = logging.getLogger(__name__)
@@ -168,7 +169,8 @@ class Schema2ImportStorage(ImportStorage):
             logger.info(
                 "resetting regions (rb: %s): %s",
                 bucket.region_bin, bucket.regions)
-            variants_loader.reset_regions(bucket.regions)
+            variants_loader.reset_regions([
+                Region.from_str(r) for r in bucket.regions])
 
         row_group_size = project.get_row_group_size()
         logger.debug("argv.rows: %s", row_group_size)

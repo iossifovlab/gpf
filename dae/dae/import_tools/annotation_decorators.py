@@ -97,17 +97,94 @@ def save_annotation_file(
         outfile.write(sep.join(header))
         outfile.write("\n")
 
-        for summary_variant, _ in variants_loader.full_variants_iterator():
-            for allele_index, summary_allele in enumerate(
-                    summary_variant.alleles):
+        for sv, _ in variants_loader.full_variants_iterator():
+            for allele_index, sa in enumerate(sv.alleles):
 
                 line = []
-                rec = summary_allele.attributes
+                rec = sa.attributes
                 rec["allele_index"] = allele_index
 
                 line_values = [
                     *[rec.get(col, "") for col in common_columns],
-                    summary_allele.effects,
+                    sa.effects,
+                    *[rec.get(col, "") for col in other_columns],
+                ]
+
+                line = [
+                    str(value) if value is not None else ""
+                    for value in line_values
+                ]
+
+                outfile.write(sep.join(line))
+                outfile.write("\n")
+
+
+def variants_loader_annotate_and_save(
+    variants_loader: VariantsLoader,
+    annotation_pipeline: AnnotationPipeline,
+    annotation_filename: str,
+    sep: str = "\t",
+) -> None:
+    """Annotate variants and save annotation to a file."""
+    common_columns = [
+        "chrom",
+        "position",
+        "reference",
+        "alternative",
+        "bucket_index",
+        "summary_index",
+        "allele_index",
+        "allele_count",
+    ]
+
+    annotation_schema = annotation_pipeline.get_attributes()
+    other_columns = list(
+        filter(
+            lambda name: name not in common_columns
+            and name not in CLEAN_UP_COLUMNS,
+            [attr.name for attr in annotation_schema],
+        ),
+    )
+
+    header = common_columns.copy()
+    header.extend(["effects"])
+    header.extend(other_columns)
+
+    with open(annotation_filename, "w", encoding="utf8") as outfile, \
+            annotation_pipeline.open() as pipeline:
+
+        outfile.write(sep.join(header))
+        outfile.write("\n")
+
+        internal_attributes = {
+            attr.name for attr in pipeline.get_attributes()
+            if attr.internal
+        }
+
+        for (sv, _fv) in variants_loader.full_variants_iterator():
+            for sa in sv.alt_alleles:
+                attributes = annotation_pipeline.annotate(sa.get_annotatable())
+                if "allele_effects" in attributes:
+                    allele_effects = attributes["allele_effects"]
+                    assert isinstance(allele_effects, AlleleEffects), \
+                        attributes
+                    # pylint: disable=protected-access
+                    sa._effects = allele_effects  # noqa: SLF001
+                    del attributes["allele_effects"]
+                public_attributes = {
+                    key: value for key, value in attributes.items()
+                    if key not in internal_attributes
+                }
+                sa.update_attributes(public_attributes)
+            for allele_index, sa in enumerate(sv.alleles):
+
+                line = []
+                rec = sa.attributes
+                rec["allele_index"] = allele_index
+
+                line_values = [
+                    *[rec.get(col, "") for col in common_columns],
+                    sa.effects,
                     *[rec.get(col, "") for col in other_columns],
                 ]
 

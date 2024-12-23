@@ -4,19 +4,16 @@ import shutil
 from typing import Any
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
+from dae.import_tools.annotation_decorators import (
+    build_annotation_filename,
+    variants_loader_annotate_and_save,
+)
 from dae.import_tools.import_tools import (
     ImportProject,
     ImportStorage,
     save_study_config,
 )
-from dae.inmemory_storage.stored_annotation_decorator import (
-    StoredAnnotationDecorator,
-)
 from dae.task_graph.graph import TaskGraph
-from dae.variants_loaders.raw.loader import (
-    VariantsGenotypesLoader,
-    VariantsLoader,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -64,13 +61,6 @@ class InmemoryImportStorage(ImportStorage):
         }
 
     @classmethod
-    def _decorate_variants_loader(
-        cls, project: ImportProject,
-        variants_loader: VariantsGenotypesLoader,
-    ) -> VariantsLoader:
-        return project.build_variants_loader_pipeline(variants_loader)
-
-    @classmethod
     def _do_copy_variants(
             cls, project: ImportProject,
             loader_type: str | None = None) -> list[dict[str, Any]]:
@@ -105,12 +95,10 @@ class InmemoryImportStorage(ImportStorage):
                     cls._copy_to_filesystem_storage(
                         project, f"{source_filename}.tbi")
 
-            annotation_filename = StoredAnnotationDecorator\
-                .build_annotation_filename(dest_filenames[0])
-            StoredAnnotationDecorator.save_annotation_file(
-                cls._decorate_variants_loader(
-                    project, variants_loader),  # type: ignore
-                annotation_filename)
+            annotation_pipeline = project.build_annotation_pipeline()
+            annotation_filename = build_annotation_filename(dest_filenames[0])
+            variants_loader_annotate_and_save(
+                variants_loader, annotation_pipeline, annotation_filename)
 
             config_filenames = list(map(
                 construct_destination_filename,
