@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import argparse
 import os
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 
@@ -12,7 +12,7 @@ from impala_storage.schema1.import_commons import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def cli_parse(gpf_instance_2013: GPFInstance) -> Callable:
     def parser(argv: list[str]) -> argparse.Namespace:
         parser = BatchImporter.cli_arguments_parser(gpf_instance_2013)
@@ -21,7 +21,7 @@ def cli_parse(gpf_instance_2013: GPFInstance) -> Callable:
     return parser
 
 
-@pytest.fixture()
+@pytest.fixture
 def importer(
     gpf_instance_2013: GPFInstance,
     hdfs_host: str, impala_host: str,
@@ -39,7 +39,7 @@ def importer(
         "hdfs": {
             "host": hdfs_host,
             "port": 8020,
-            "base_dir": "/tmp/test_genotype_impala"},
+            "base_dir": "/tmp/test_genotype_impala"},  # noqa: S108
     }
     gpf_instance_2013.genotype_storages.register_storage_config(
         storage_config,

@@ -15,6 +15,7 @@ from jinja2 import Template
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.import_tools.annotation_decorators import AnnotationPipelineDecorator
 from dae.import_tools.import_tools import construct_import_annotation_pipeline
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
@@ -24,7 +25,6 @@ from dae.utils.regions import Region
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.raw.loader import (
-    AnnotationPipelineDecorator,
     VariantsLoader,
 )
 from dae.variants_loaders.vcf.loader import VcfLoader

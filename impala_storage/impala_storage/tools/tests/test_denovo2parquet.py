@@ -2,7 +2,7 @@
 
 import glob
 import os
-from typing import Callable
+from collections.abc import Callable
 
 import pyarrow.parquet as pq
 from box import Box
