@@ -13,6 +13,7 @@ from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     AttributeInfo,
 )
+from dae.effect_annotation.effect import AlleleEffects
 from dae.parquet.helpers import url_to_pyarrow_fs
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.parquet.schema2.serializers import AlleleParquetSerializer
@@ -283,108 +284,45 @@ class VariantsParquetWriter:
         # pylint: disable=too-many-locals,too-many-branches
         family_index = 0
         summary_index = 0
-        for summary_index, (
-            summary_variant,
-            family_variants,
-        ) in enumerate(full_variants_iterator):
-            assert summary_index < 1_000_000_000, \
-                "too many summary variants"
-            num_fam_alleles_written = 0
-            seen_in_status = summary_variant.allele_count * [0]
-            seen_as_denovo = summary_variant.allele_count * [False]
-            family_variants_count = summary_variant.allele_count * [0]
-            sj_base_index = self._calc_sj_base_index(summary_index)
+        internal_attributes = {
+            attribute.name
+            for attribute in self.annotation_pipeline.get_attributes()
+            if attribute.internal
+        }
 
-            for fv in family_variants:
-                family_index += 1
-                assert fv.gt is not None
+        with self.annotation_pipeline.open() as pipeline:
+            for summary_index, (
+                summary_variant,
+                family_variants,
+            ) in enumerate(full_variants_iterator):
+                assert summary_index < 1_000_000_000, \
+                    "too many summary variants"
+                self._annotate_summary_variant(
+                    pipeline,
+                    summary_variant,
+                    internal_attributes)
 
-                if is_all_reference_genotype(fv.gt) and \
-                        not self.include_reference:
-                    continue
+                sj_base_index = self._calc_sj_base_index(summary_index)
 
-                fv.summary_index = summary_index
-                fv.family_index = family_index
-
-                allele_indexes = set()
-                for fa in fv.alleles:
-                    assert fa.allele_index not in allele_indexes
-                    allele_indexes.add(fa.allele_index)
-
-                    extra_atts = {
-                        "bucket_index": self.bucket_index,
-                        "family_index": family_index,
-                        "sj_index": sj_base_index + fa.allele_index,
-                    }
-                    fa.update_attributes(extra_atts)
-
-                family_variant_data_json = self.serializer.serialize_family(fv)
-
-                family_alleles = []
-                if is_unknown_genotype(fv.gt) or \
-                        is_all_reference_genotype(fv.gt):
-                    assert fv.ref_allele.allele_index == 0
-                    family_alleles.append(fv.ref_allele)
-                    num_fam_alleles_written += 1
-                elif self.include_reference:
-                    family_alleles.append(fv.ref_allele)
-
-                family_alleles.extend(fv.alt_alleles)
-
-                for aa in family_alleles:
-                    fa = cast(FamilyAllele, aa)
-                    seen_in_status[fa.allele_index] = functools.reduce(
-                        lambda t, s: t | s.value,
-                        filter(None, fa.allele_in_statuses),
-                        seen_in_status[fa.allele_index])
-                    inheritance = list(
-                        filter(
-                            lambda v: v not in {
-                                None,
-                                Inheritance.unknown, Inheritance.missing},
-                            fa.inheritance_in_members))
-
-                    sad = any(
-                        i == Inheritance.denovo
-                        for i in inheritance)
-
-                    seen_as_denovo[fa.allele_index] = \
-                        sad or seen_as_denovo[fa.allele_index]
-
-                    family_bin_writer = self._get_bin_writer_family(
-                        fa, seen_as_denovo=sad)
-                    family_bin_writer.append_family_allele(
-                        fa, family_variant_data_json,
-                    )
-
-                    family_variants_count[fa.allele_index] += 1
-                    num_fam_alleles_written += 1
-
-            # don't store summary alleles withouth family ones
-            if num_fam_alleles_written > 0:
-                summary_variant.summary_index = summary_index
-                summary_variant.ref_allele.update_attributes(
-                    {"bucket_index": self.bucket_index})
-                summary_variant.update_attributes({
-                    "seen_in_status": seen_in_status[1:],
-                    "seen_as_denovo": seen_as_denovo[1:],
-                    "family_variants_count": family_variants_count[1:],
-                    "family_alleles_count": family_variants_count[1:],
-                    "bucket_index": [self.bucket_index],
-                })
-                self.write_summary_variant(
-                    summary_variant, sj_base_index=sj_base_index,
+                num_fam_alleles_written = self._write_family_variants(
+                    family_index, summary_index, sj_base_index,
+                    summary_variant, family_variants,
                 )
+                if num_fam_alleles_written > 0:
+                    self.write_summary_variant(
+                            summary_variant,
+                            sj_base_index=sj_base_index,
+                        )
 
-            if summary_index % 1000 == 0 and summary_index > 0:
-                elapsed = time.time() - self.start
-                logger.info(
-                    "progress bucked %s; "
-                    "summary variants: %s; family variants: %s; "
-                    "elapsed time: %0.2f sec",
-                    self.bucket_index,
-                    summary_index, family_index,
-                    elapsed)
+                if summary_index % 1000 == 0 and summary_index > 0:
+                    elapsed = time.time() - self.start
+                    logger.info(
+                        "progress bucked %s; "
+                        "summary variants: %s; family variants: %s; "
+                        "elapsed time: %0.2f sec",
+                        self.bucket_index,
+                        summary_index, family_index,
+                        elapsed)
 
         filenames = list(self.data_writers.keys())
 
@@ -398,9 +336,120 @@ class VariantsParquetWriter:
             elapsed)
         return filenames
 
+    def _write_family_variants(
+            self, family_index,
+            summary_index,
+            sj_base_index,
+            summary_variant,
+            family_variants,
+    ) -> int:
+        num_fam_alleles_written = 0
+        seen_in_status = summary_variant.allele_count * [0]
+        seen_as_denovo = summary_variant.allele_count * [False]
+        family_variants_count = summary_variant.allele_count * [0]
+
+        for fv in family_variants:
+            family_index += 1
+            assert fv.gt is not None
+
+            if is_all_reference_genotype(fv.gt) and \
+                    not self.include_reference:
+                continue
+            fv.summary_index = summary_index
+            fv.family_index = family_index
+
+            allele_indexes = set()
+            for fa in fv.alleles:
+                assert fa.allele_index not in allele_indexes
+                allele_indexes.add(fa.allele_index)
+
+                extra_atts = {
+                        "bucket_index": self.bucket_index,
+                        "family_index": family_index,
+                        "sj_index": sj_base_index + fa.allele_index,
+                    }
+                fa.update_attributes(extra_atts)
+
+            family_variant_data_json = self.serializer.serialize_family(fv)
+
+            family_alleles = []
+            if is_unknown_genotype(fv.gt) or \
+                        is_all_reference_genotype(fv.gt):
+                assert fv.ref_allele.allele_index == 0
+                family_alleles.append(fv.ref_allele)
+                num_fam_alleles_written += 1
+            elif self.include_reference:
+                family_alleles.append(fv.ref_allele)
+
+            family_alleles.extend(fv.alt_alleles)
+
+            for aa in family_alleles:
+                fa = cast(FamilyAllele, aa)
+                seen_in_status[fa.allele_index] = functools.reduce(
+                        lambda t, s: t | s.value,
+                        filter(None, fa.allele_in_statuses),
+                        seen_in_status[fa.allele_index])
+                inheritance = list(
+                        filter(
+                            lambda v: v not in {
+                                None,
+                                Inheritance.unknown, Inheritance.missing},
+                            fa.inheritance_in_members))
+
+                sad = any(
+                        i == Inheritance.denovo
+                        for i in inheritance)
+
+                seen_as_denovo[fa.allele_index] = \
+                        sad or seen_as_denovo[fa.allele_index]
+
+                family_bin_writer = self._get_bin_writer_family(
+                        fa, seen_as_denovo=sad)
+                family_bin_writer.append_family_allele(
+                        fa, family_variant_data_json,
+                    )
+
+                family_variants_count[fa.allele_index] += 1
+                num_fam_alleles_written += 1
+
+            # don't store summary alleles withouth family ones
+        if num_fam_alleles_written > 0:
+            summary_variant.summary_index = summary_index
+            summary_variant.ref_allele.update_attributes(
+                    {"bucket_index": self.bucket_index})
+            summary_variant.update_attributes({
+                    "seen_in_status": seen_in_status[1:],
+                    "seen_as_denovo": seen_as_denovo[1:],
+                    "family_variants_count": family_variants_count[1:],
+                    "family_alleles_count": family_variants_count[1:],
+                    "bucket_index": [self.bucket_index],
+                })
+        return num_fam_alleles_written
+
     def close(self) -> None:
         for bin_writer in self.data_writers.values():
             bin_writer.close()
+
+    @staticmethod
+    def _annotate_summary_variant(
+        annotation_pipeline: AnnotationPipeline,
+        summary_variant: SummaryVariant,
+        internal_attributes: set[str],
+    ) -> None:
+        for sallele in summary_variant.alt_alleles:
+            attributes = annotation_pipeline.annotate(
+                sallele.get_annotatable())
+            if "allele_effects" in attributes:
+                allele_effects = attributes["allele_effects"]
+                assert isinstance(allele_effects, AlleleEffects), attributes
+                # pylint: disable=protected-access
+                sallele._effects = allele_effects  # noqa: SLF001
+                del attributes["allele_effects"]
+            public_attributes = {
+                key: value for key, value in attributes.items()
+                if key not in internal_attributes
+            }
+            sallele.update_attributes(public_attributes)
 
     def write_summary_variant(
         self, summary_variant: SummaryVariant,

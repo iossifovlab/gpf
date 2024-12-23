@@ -162,10 +162,8 @@ class Schema2ImportStorage(ImportStorage):
         gpf_instance = project.get_gpf_instance()
         variants_loader = project.get_variant_loader(
             bucket, reference_genome=gpf_instance.reference_genome)
-        variants_loader = project.build_variants_loader_pipeline(
-            variants_loader,
-        )
-        if bucket.region_bin is not None and bucket.region_bin != "none":
+        if bucket.region_bin is not None and \
+                bucket.region_bin not in {"none", "all"}:
             logger.info(
                 "resetting regions (rb: %s): %s",
                 bucket.region_bin, bucket.regions)
