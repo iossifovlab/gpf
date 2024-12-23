@@ -5,7 +5,8 @@ import pytest
 from dae.annotation.annotatable import Annotatable
 from dae.effect_annotation.annotator import EffectAnnotator
 from dae.effect_annotation.effect import AnnotationEffect
-from dae.gpf_instance import GPFInstance
+from dae.genomic_resources.gene_models import GeneModels
+from dae.genomic_resources.reference_genome import ReferenceGenome
 
 
 @pytest.mark.parametrize(
@@ -30,13 +31,14 @@ from dae.gpf_instance import GPFInstance
     ],
 )
 def test_cnv_simple(
-        gpf_instance_2019: GPFInstance,
+        gene_models_2019: GeneModels,
+        genome_2019: ReferenceGenome,
         variant_type: Annotatable.Type,
         location: str, expected_effect_type: str,
         expected_effect_genes: list[tuple[str, str]]) -> None:
     effects = EffectAnnotator.annotate_variant(
-        gpf_instance_2019.gene_models,
-        gpf_instance_2019.reference_genome,
+        gene_models_2019,
+        genome_2019,
         location=location,
         variant_type=variant_type,
     )

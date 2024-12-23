@@ -16,6 +16,7 @@ from dae.genomic_resources.genomic_context import (
     GenomicContext,
     get_genomic_context,
 )
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
@@ -929,4 +930,36 @@ chr1   119 SYN  A   G   .    .      .    GT     0/0    0/0    0/0  0/1  0/0    0
                 },
             },
         },
+    )
+
+
+@pytest.fixture(scope="session")
+def acgt_genome_38(tmp_path_factory: pytest.TempPathFactory) -> ReferenceGenome:
+    root_path = tmp_path_factory.mktemp("acgt_genome")
+    return setup_genome(
+        root_path / "allChr.fa",
+        f"""
+        >chr1
+        {25 * "ACGT"}
+        >chr2
+        {25 * "ACGT"}
+        >chr3
+        {25 * "ACGT"}
+        """,
+    )
+
+
+@pytest.fixture(scope="session")
+def acgt_genome_19(tmp_path_factory: pytest.TempPathFactory) -> ReferenceGenome:
+    root_path = tmp_path_factory.mktemp("acgt_genome_19")
+    return setup_genome(
+        root_path / "allChr.fa",
+        f"""
+        >1
+        {25 * "ACGT"}
+        >2
+        {25 * "ACGT"}
+        >3
+        {25 * "ACGT"}
+        """,
     )

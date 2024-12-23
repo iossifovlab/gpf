@@ -32,7 +32,7 @@ def test_variants_db_can_create_study_from_config(
 
 def test_variants_db_studies_simple(
     dae_config_fixture: Box,
-    gpf_instance_2013: GPFInstance,
+    t4c8_instance: GPFInstance,
     genotype_storage_registry: GenotypeStorageRegistry,
     fixtures_dir: str,
 ) -> None:
@@ -45,8 +45,8 @@ def test_variants_db_studies_simple(
 
     vdb = VariantsDb(
         dae_config_fixture,
-        gpf_instance_2013.reference_genome,
-        gpf_instance_2013.gene_models,
+        t4c8_instance.reference_genome,
+        t4c8_instance.gene_models,
         genotype_storage_registry,
     )
     assert vdb is not None
@@ -54,7 +54,7 @@ def test_variants_db_studies_simple(
 
 def test_variants_db_genotype_data_groups_simple(
     dae_config_fixture: Box,
-    gpf_instance_2013: GPFInstance,
+    t4c8_instance: GPFInstance,
     genotype_storage_registry: GenotypeStorageRegistry,
     fixtures_dir: str,
 ) -> None:
@@ -67,8 +67,8 @@ def test_variants_db_genotype_data_groups_simple(
 
     vdb = VariantsDb(
         dae_config_fixture,
-        gpf_instance_2013.reference_genome,
-        gpf_instance_2013.gene_models,
+        t4c8_instance.reference_genome,
+        t4c8_instance.gene_models,
         genotype_storage_registry,
     )
     assert vdb is not None

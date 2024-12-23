@@ -41,10 +41,7 @@ from dae.utils.regions import Region
 from dae.utils.statistics import StatsCollection
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
-from dae.variants_loaders.raw.loader import (
-    AnnotationPipelineDecorator,
-    VariantsLoader,
-)
+from dae.variants_loaders.raw.loader import VariantsLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 logger = logging.getLogger(__name__)
@@ -440,19 +437,6 @@ class ImportProject:
             .get("processing_config", {}) \
             .get("parquet_row_group_size", 50_000)
         return cast(int, res)
-
-    def build_variants_loader_pipeline(
-        self, variants_loader: VariantsLoader,
-    ) -> VariantsLoader:
-        """Create an annotation pipeline around variants_loader."""
-        annotation_pipeline = self.build_annotation_pipeline()
-        if annotation_pipeline is not None:
-            variants_loader = cast(
-                VariantsLoader,
-                AnnotationPipelineDecorator(
-                    variants_loader, annotation_pipeline,
-                ))
-        return variants_loader
 
     def _storage_type(self) -> str:
         if not self._has_destination():

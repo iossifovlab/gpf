@@ -2,7 +2,7 @@
 
 import glob
 import os
-from typing import Callable
+from collections.abc import Callable
 
 import pyarrow.parquet as pq
 from box import Box
@@ -40,7 +40,6 @@ def test_dae2parquet_transmitted(
     schema = pqfile.schema
     assert "effect_gene_symbols" in schema.names
     assert "effect_types" in schema.names
-    # assert "effect_data" in schema.names
 
 
 def test_dae2parquet_dae_partition(

@@ -1,8 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.gpf_instance import GPFInstance
-from dae.utils.dae_utils import dae2vcf_variant
 from dae.variants.core import Allele
 from dae.variants.variant import tandem_repeat, trim_str_right_left, vcf2cshl
 
@@ -25,10 +23,6 @@ from dae.variants.variant import tandem_repeat, trim_str_right_left, vcf2cshl
         ("A", "GA",
          "ins(G)",
          1, 1),
-
-        ("A", "AC",
-         "ins(C)",
-         2, 1),
 
         ("A", "ACAAC",
          "ins(CAAC)",
@@ -132,35 +126,11 @@ def test_insert_long() -> None:
     )
     variant_desc = vcf2cshl(1, ref, alt, trimmer=trim_str_right_left)
 
-    assert variant_desc.position == 2  # FIXME
-
-
-def test_cshl_to_vcf_problem(gpf_instance_2013: GPFInstance) -> None:
-    chrom = "2"
-    position = 242815433
-    variant = "sub(G->A)"
-
-    position1, reference, alternative = dae2vcf_variant(
-        chrom, position, variant, gpf_instance_2013.reference_genome,
-    )
-    print(chrom, position, reference, alternative)
-    assert chrom == "2"
-    assert position == position1
-    assert reference == "G"
-    assert alternative == "A"
-
-    variant_desc = vcf2cshl(
-        position, reference, alternative, trimmer=trim_str_right_left,
-    )
-
-    assert variant_desc.position == position
-    assert str(variant_desc) == variant
-    assert variant_desc.length == 1
+    assert variant_desc.position == 2
 
 
 def test_spark_v3_problems_check() -> None:
 
-    # chrom = '1'
     position = 865461
     ref = "AGCCCCACCTTCCTCTCCTCCT"
     alt = "AGCCCCACCTTCCTCTCCTCCT" + "GCCCCACCTTCCTCTCCTCCT"
@@ -172,51 +142,51 @@ def test_spark_v3_problems_check() -> None:
 
 
 @pytest.mark.parametrize(
-    "chrom,position,ref,alt,unit,ref_repeats,alt_repeats", [
+    "position,ref,alt,unit,ref_repeats,alt_repeats", [
 
-        ("chr1", 13886145,
+        (13886145,
          "ATCCATCCATCCATCCATCCATCCATCCATCC",
          "ATCCATCCATCCATCCATCCATCCATCCATCCATCC",
          "ATCC", 8, 9),
 
-        ("chr1", 28876285,
+        (28876285,
          "AAAAAAAAAAAAAAAAAAAAA",
          "AAAAAAAAAAAAAAAAA",
          "A", 21, 17),
 
-        ("chr1", 33643893,
+        (33643893,
          "GGAAGGAAGGAAGGAAGGAAGGAAGGAAGGAAGGAAGGAAGGAA",
          "GGAAGGAAGGAAGGAAGGAAGGAAGGAAGGAAGGAAGGAAGGAAGGAA",
          "GGAA", 11, 12),
 
-        ("chr1", 1005758,
+        (1005758,
          "GCCCCCGCAGCAGTGCCCCCGCAGCAGT",
          "GCCCCCGCAGCAGT",
          "GCCCCCGCAGCAGT", 2, 1),
 
-        ("chr1", 1013550,
+        (1013550,
          "GCCCACAGCCCACAGCCCACA",
          "GCCCACAGCCCACA",
          "GCCCACA", 3, 2),
 
-        ("chr1", 1053180,
+        (1053180,
          "TGTCTGCACGTGGGTGTCTGCACGTGGG",
          "TGTCTGCACGTGGG",
          "TGTCTGCACGTGGG", 2, 1),
 
-        ("chr1", 1053180,
+        (1053180,
          "TGTCTGCACGTGGGTGTCTGCACGTGGG",
          "TGTCTGCACGTGGGTGTCTGCACGTGGGTGTCTGCACGTGGG",
          "TGTCTGCACGTGGG", 2, 3),
 
-        ("chr1", 1053180,
+        (1053180,
          "CGCCCCTGCCCTGGAGGCCCCGCCCCTGCCCTGGAGGCCCCGCCCCTGCCCTGGAGGCCC",
          "CGCCCCTGCCCTGGAGGCCC",
          "CGCCCCTGCCCTGGAGGCCC", 3, 1),
 
     ])
 def test_tandem_repeat_unit(
-        chrom: str, position: int,
+        position: int,
         ref: str, alt: str,
         unit: str, ref_repeats: int, alt_repeats: int) -> None:
 

@@ -10,13 +10,15 @@ from dae.configuration.utils import validate_path
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
+from dae.inmemory_storage.annotation_serialization import (
+    build_annotation_filename,
+    variants_loader_load_annotation,
+)
 from dae.inmemory_storage.raw_variants import RawMemoryVariants
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.raw.loader import (
-    StoredAnnotationDecorator,
-    VariantsGenotypesLoader,
     VariantsLoader,
 )
 from dae.variants_loaders.vcf.loader import VcfLoader
@@ -54,15 +56,15 @@ class InmemoryGenotypeStorage(GenotypeStorage):
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:
         config = super().validate_and_normalize_config(config)
-        validator = Validator(cls.VALIDATION_SCHEMA)
-        if not validator.validate(config):
+        validator = Validator(cls.VALIDATION_SCHEMA)  # type: ignore
+        if not validator.validate(config):  # type: ignore
             logger.error(
                 "wrong config format for inmemory genotype storage: %s",
-                validator.errors)
+                validator.errors)  # type: ignore
             raise ValueError(
                 f"wrong config format for inmemory storage: "
-                f"{validator.errors}")
-        return cast(dict, validator.document)
+                f"{validator.errors}")  # type: ignore
+        return cast(dict, validator.document)  # type: ignore
 
     def start(self) -> GenotypeStorage:
         return self
@@ -91,14 +93,14 @@ class InmemoryGenotypeStorage(GenotypeStorage):
         elapsed = time.time() - start
         logger.info("families loaded in in %.2f sec", elapsed)
 
-        loaders = []
+        result = []
         for file_conf in config.genotype_storage.files.variants:
             start = time.time()
             variants_filename = file_conf.path
             variants_params = file_conf.params.to_dict()
             logger.debug(
                 "variant params: %s; %s", variants_filename, variants_params)
-            variants_loader: VariantsLoader
+            variants_loader: VariantsLoader | None = None
             annotation_filename = variants_filename
             if file_conf.format == "vcf":
                 variants_filenames = [
@@ -138,11 +140,13 @@ class InmemoryGenotypeStorage(GenotypeStorage):
                     genome,
                     params=variants_params,
                 )
+            if variants_loader is None:
+                raise ValueError(
+                    f"unknown variant file format: {file_conf.format}")
 
-            variants_loader = StoredAnnotationDecorator.decorate(
-                cast(VariantsGenotypesLoader, variants_loader),
-                annotation_filename,
-            )
-            loaders.append(variants_loader)
+            full_variants = variants_loader_load_annotation(
+                variants_loader,
+                build_annotation_filename(annotation_filename))
+            result.extend(full_variants)
 
-        return RawMemoryVariants(loaders, families)
+        return RawMemoryVariants(result, families)

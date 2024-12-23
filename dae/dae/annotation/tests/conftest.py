@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import os
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 
@@ -15,6 +15,6 @@ def work_dir() -> str:
     return relative_to_this_test_folder("fixtures")
 
 
-@pytest.fixture()
+@pytest.fixture
 def annotation_config(fixture_dirname: Callable[[str], str]) -> str:
     return fixture_dirname("annotation.yaml")

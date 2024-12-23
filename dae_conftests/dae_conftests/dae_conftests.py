@@ -4,7 +4,6 @@ import glob
 import logging
 import os
 import shutil
-import sys
 import tempfile
 from io import StringIO
 from pathlib import Path
@@ -30,14 +29,10 @@ from dae.genomic_resources.reference_genome import (
 )
 from dae.import_tools.import_tools import (
     ImportProject,
-    construct_import_annotation_pipeline,
 )
 from dae.inmemory_storage.raw_variants import RawMemoryVariants
 from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.helpers import study_id_from_path
-from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
-from dae.variants_loaders.raw.loader import AnnotationPipelineDecorator
-from dae.variants_loaders.vcf.loader import VcfLoader
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +44,7 @@ def relative_to_this_test_folder(path):
 
 
 @pytest.fixture(scope="session")
-def fixture_dirname(request):
+def fixture_dirname():
     def builder(relpath):
         return relative_to_this_test_folder(os.path.join("fixtures", relpath))
 
@@ -342,20 +337,6 @@ def annotation_scores_dirname():
     return relative_to_this_test_folder("fixtures/annotation_pipeline/")
 
 
-@pytest.fixture()
-def annotation_pipeline_vcf(gpf_instance_2013):
-    filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
-    return load_pipeline_from_file(filename, gpf_instance_2013.grr)
-
-
-@pytest.fixture()
-def annotation_pipeline_internal(gpf_instance_2013):
-    filename = relative_to_this_test_folder(IMPORT_ANNOTATION_CONFIG)
-    pipeline = load_pipeline_from_file(filename, gpf_instance_2013.grr)
-    pipeline.open()
-    return pipeline
-
-
 def from_prefix_denovo(prefix):
     denovo_filename = f"{prefix}.txt"
     family_filename = f"{prefix}_families.ped"
@@ -419,49 +400,6 @@ def dae_transmitted_config():
     return config.dae
 
 
-@pytest.fixture()
-def dae_transmitted(
-    dae_transmitted_config, gpf_instance_2013, annotation_pipeline_internal,
-):
-
-    families = FamiliesLoader.load_simple_families_file(
-        dae_transmitted_config.family_filename,
-    )
-
-    variants_loader = DaeTransmittedLoader(
-        families,
-        dae_transmitted_config.summary_filename,
-        genome=gpf_instance_2013.reference_genome,
-        regions=None,
-    )
-    return AnnotationPipelineDecorator(
-        variants_loader, annotation_pipeline_internal,
-    )
-
-
-@pytest.fixture()
-def iossifov2014_loader(
-        fixture_dirname,
-        gpf_instance_2013, annotation_pipeline_internal):
-
-    family_filename = fixture_dirname(
-        "dae_iossifov2014/iossifov2014_families.ped")
-    denovo_filename = fixture_dirname(
-        "dae_iossifov2014/iossifov2014.txt")
-
-    families_loader = FamiliesLoader(family_filename)
-    families = families_loader.load()
-
-    variants_loader = DenovoLoader(
-        families, denovo_filename,
-        gpf_instance_2013.reference_genome,
-    )
-
-    return AnnotationPipelineDecorator(
-        variants_loader, annotation_pipeline_internal,
-    ), families_loader
-
-
 @pytest.fixture(scope="session")
 def vcf_loader_data():
     def builder(path):
@@ -478,102 +416,12 @@ def vcf_loader_data():
 
 
 @pytest.fixture(scope="session")
-def vcf_variants_loaders(
-        vcf_loader_data, gpf_instance_2019):
-
-    annotation_pipeline = construct_import_annotation_pipeline(
-        gpf_instance_2019,
-    )
-
-    def builder(
-        path,
-        params={
-            "vcf_include_reference_genotypes": True,
-            "vcf_include_unknown_family_genotypes": True,
-            "vcf_include_unknown_person_genotypes": True,
-            "vcf_denovo_mode": "denovo",
-            "vcf_omission_mode": "omission",
-        },
-    ):
-        config = vcf_loader_data(path)
-
-        families_loader = FamiliesLoader(config.pedigree)
-        families = families_loader.load()
-
-        loaders = []
-
-        if config.denovo:
-            denovo_loader = DenovoLoader(
-                families,
-                config.denovo,
-                gpf_instance_2019.reference_genome,
-                params={
-                    "denovo_genotype": "genotype",
-                    "denovo_family_id": "family",
-                    "denovo_chrom": "chrom",
-                    "denovo_pos": "pos",
-                    "denovo_ref": "ref",
-                    "denovo_alt": "alt",
-                },
-            )
-            loaders.append(AnnotationPipelineDecorator(
-                denovo_loader, annotation_pipeline))
-
-        vcf_loader = VcfLoader(
-            families,
-            [config.vcf],
-            gpf_instance_2019.reference_genome,
-            params=params,
-        )
-
-        loaders.append(AnnotationPipelineDecorator(
-            vcf_loader, annotation_pipeline,
-        ))
-
-        return loaders
-
-    return builder
-
-
-@pytest.fixture(scope="session")
-def variants_vcf(vcf_variants_loaders):
-    def builder(
-        path,
-        params={
-            "vcf_include_reference_genotypes": True,
-            "vcf_include_unknown_family_genotypes": True,
-            "vcf_include_unknown_person_genotypes": True,
-            "vcf_denovo_mode": "denovo",
-            "vcf_omission_mode": "omission",
-        },
-    ):
-
-        loaders = vcf_variants_loaders(path, params=params)
-        assert len(loaders) > 0
-        fvars = RawMemoryVariants(loaders, loaders[0].families)
-        return fvars
-
-    return builder
-
-
-@pytest.fixture(scope="session")
 def variants_mem():
     def builder(loader):
         fvars = RawMemoryVariants([loader], loader.families)
         return fvars
 
     return builder
-
-
-@pytest.fixture()
-def variants_implementations(variants_vcf):
-    impls = {"variants_vcf": variants_vcf}
-    return impls
-
-
-@pytest.fixture()
-def variants_impl(variants_implementations):
-    return lambda impl_name: variants_implementations[impl_name]
 
 
 @pytest.fixture(scope="session")
@@ -662,44 +510,6 @@ def _import_project_from_prefix_config(
     return ImportProject.build_from_config(project, gpf_instance=gpf_instance)
 
 
-# @pytest.fixture(scope="session")
-# def iossifov2014_import(
-#         gpf_instance_2013,
-#         fixture_dirname,
-#         tmp_path_factory,
-#         impala_host,
-#         impala_genotype_storage,
-#         reimport):
-
-#     study_id = "iossifov_we2014_test"
-#     from dae.impala_storage.helpers.impala_helpers import ImpalaHelpers
-
-#     impala_helpers = ImpalaHelpers(
-#         impala_hosts=[impala_host], impala_port=21050)
-
-#     (variant_table, pedigree_table) = \
-#         impala_genotype_storage.study_tables(
-#             FrozenBox({"id": study_id}))
-
-#     if not reimport and \
-#             impala_helpers.check_table(
-#                 impala_test_dbname(), variant_table) and \
-#             impala_helpers.check_table(
-#                 impala_test_dbname(), pedigree_table):
-#         return
-
-#     gpf_instance_2013.genotype_storages.register_genotype_storage(
-#         impala_genotype_storage)
-#     config = from_prefix_denovo(
-#         fixture_dirname("dae_iossifov2014/iossifov2014"))
-
-#     root_path = tmp_path_factory.mktemp(
-#         f"{study_id}_{impala_genotype_storage.get_db()}")
-#     import_project = _import_project_from_prefix_config(
-#         config, root_path, gpf_instance_2013, study_id=study_id)
-#     run_with_project(import_project)
-
-
 @pytest.fixture(scope="session")
 def dae_calc_gene_sets(request, fixtures_gpf_instance):
     genotype_data_names = ["f1_group", "f2_group", "f3_group"]
@@ -752,55 +562,3 @@ def grr_fixture(fixture_dirname):
     }
 
     return build_genomic_resource_repository(repositories)
-
-
-# @pytest.fixture(scope="session")
-# def s3_moto_server_url():
-#     """Start a moto (i.e. mocked) s3 server and return its URL."""
-#     # pylint: disable=protected-access,import-outside-toplevel
-#     if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-#         os.environ["AWS_SECRET_ACCESS_KEY"] = "foo"
-#     if "AWS_ACCESS_KEY_ID" not in os.environ:
-#         os.environ["AWS_ACCESS_KEY_ID"] = "foo"
-#     # from moto.server import ThreadedMotoServer  # type: ignore
-#     # server = ThreadedMotoServer(ip_address="", port=0)
-#     # server.start()
-#     # server_address = server._server.server_address
-
-#     host = os.environ.get("LOCALSTACK_HOST", "localhost")
-#     yield f"http://{host}:4566"
-
-#     # server.stop()
-
-
-# @pytest.fixture(scope="session")
-# def s3_client(s3_moto_server_url):
-#     """Return a boto client connected to the moto server."""
-#     from botocore.session import Session  # type: ignore
-
-#     session = Session()
-#     client = session.create_client("s3", endpoint_url=s3_moto_server_url)
-#     return client
-
-
-# @pytest.fixture()
-# def s3_filesystem(s3_moto_server_url):
-#     from s3fs.core import S3FileSystem  # type: ignore
-
-#     S3FileSystem.clear_instance_cache()
-#     s3 = S3FileSystem(anon=False,
-#                       client_kwargs={"endpoint_url": s3_moto_server_url})
-#     s3.invalidate_cache()
-#     yield s3
-
-
-# @pytest.fixture()
-# def s3_tmp_bucket_url(s3_client, s3_filesystem):
-#     """Create a bucket called 'test-bucket' and return its URL."""
-#     with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
-#         bucket_url = f"s3:/{tmp_path}"
-#         s3_filesystem.mkdir(bucket_url, acl="public-read")
-
-#         yield bucket_url
-
-#         s3_filesystem.rm(bucket_url, recursive=True)

@@ -18,6 +18,10 @@ from dae.parquet.parquet_writer import merge_variants_parquets
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.task_graph.graph import TaskGraph
 from dae.utils import fs_utils
+from dae.variants_loaders.raw.loader import VariantsLoader
+from impala_storage.schema1.annotation_decorator import (
+    AnnotationPipelineDecorator,
+)
 from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
 from impala_storage.schema1.parquet_io import ParquetWriter
 from impala_storage.schema1.parquet_io import (
@@ -66,7 +70,22 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             S1VariantsWriter)
         elapsed = time.time() - start
         logger.info("prepare pedigree elapsed %.2f sec", elapsed)
-        project.stats[("elapsed", "pedigree")] = elapsed
+        project.stats["elapsed", "pedigree"] = elapsed
+
+    @classmethod
+    def build_variants_loader_pipeline(
+        cls, variants_loader: VariantsLoader,
+        project: ImportProject,
+    ) -> VariantsLoader:
+        """Create an annotation pipeline around variants_loader."""
+        annotation_pipeline = project.build_annotation_pipeline()
+        if annotation_pipeline is not None:
+            variants_loader = cast(
+                VariantsLoader,
+                AnnotationPipelineDecorator(
+                    variants_loader, annotation_pipeline,
+                ))
+        return variants_loader
 
     @classmethod
     def _do_write_meta(cls, project: ImportProject) -> None:
@@ -79,8 +98,9 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         variants_loader = project.get_variant_loader(
             loader_type=loader_type,
             reference_genome=gpf_instance.reference_genome)
-        variants_loader = project.build_variants_loader_pipeline(
+        variants_loader = cls.build_variants_loader_pipeline(
             variants_loader,
+            project,
         )
         ParquetWriter.write_meta(
             out_dir,
@@ -102,8 +122,9 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         loader_type = next(iter(loader_types))
         variants_loader = project.get_variant_loader(
             bucket, loader_type, gpf_instance.reference_genome)
-        variants_loader = project.build_variants_loader_pipeline(
+        variants_loader = cls.build_variants_loader_pipeline(
             variants_loader,
+            project,
         )
         ParquetWriter.write_variants(
             out_dir,
@@ -116,7 +137,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
         logger.info(
             "prepare variants for bucket %s elapsed %.2f sec",
             bucket, elapsed)
-        project.stats[("elapsed", f"variants {bucket}")] = elapsed
+        project.stats["elapsed", f"variants {bucket}"] = elapsed
 
     @classmethod
     def _variant_partitions(
@@ -166,7 +187,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             partition_description)
         elapsed = time.time() - start
         logger.info("load in hdfs elapsed %.2f sec", elapsed)
-        project.stats[("elapsed", "hdfs")] = elapsed
+        project.stats["elapsed", "hdfs"] = elapsed
 
     @classmethod
     def _do_load_in_impala(cls, project: ImportProject) -> None:
@@ -207,7 +228,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             variants_schema=variants_schema)
         elapsed = time.time() - start
         logger.info("load in impala elapsed %.2f sec", elapsed)
-        project.stats[("elapsed", "impala")] = elapsed
+        project.stats["elapsed", "impala"] = elapsed
 
     @staticmethod
     def _construct_variants_table(study_id: str) -> str:
@@ -251,7 +272,7 @@ class ImpalaSchema1ImportStorage(ImportStorage):
             config)
         elapsed = time.time() - start
         logger.info("study config elapsed %.2f sec", elapsed)
-        project.stats[("elapsed", "study_config")] = elapsed
+        project.stats["elapsed", "study_config"] = elapsed
 
     def generate_import_task_graph(self, project: ImportProject) -> TaskGraph:
         graph = TaskGraph()

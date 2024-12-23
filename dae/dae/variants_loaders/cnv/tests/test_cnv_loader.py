@@ -5,18 +5,11 @@ from typing import Any
 import numpy as np
 import pytest
 
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.testing import setup_denovo, setup_pedigree
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
-from dae.testing.acgt_import import acgt_gpf
 from dae.utils.regions import Region
 from dae.variants_loaders.cnv.loader import CNVLoader
-
-
-@pytest.fixture(scope="module")
-def gpf_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
-    root_path = tmp_path_factory.mktemp("acgt_instance")
-    return acgt_gpf(root_path)
 
 
 @pytest.fixture(scope="module")
@@ -55,13 +48,13 @@ def variants_file(
 def test_cnv_loader(
         variants_file: Path,
         cnv_ped: Any,
-        gpf_instance: GPFInstance,
+        acgt_genome_38: ReferenceGenome,
 ) -> None:
     families = FamiliesLoader.load_simple_families_file(cnv_ped)
     assert families is not None
 
     loader = CNVLoader(
-        families, [str(variants_file)], gpf_instance.reference_genome,
+        families, [str(variants_file)], acgt_genome_38,
         params={
             "cnv_family_id": "family_id",
             "cnv_best_state": "best_state",
@@ -95,7 +88,7 @@ def summary_variants_duplication(
 def test_cnv_loader_avoids_summary_variants_duplication(
         summary_variants_duplication: Path,
         cnv_ped: Any,
-        gpf_instance: GPFInstance,
+        acgt_genome_38: ReferenceGenome,
 ) -> None:
     families = FamiliesLoader.load_simple_families_file(cnv_ped)
     assert families is not None
@@ -103,7 +96,8 @@ def test_cnv_loader_avoids_summary_variants_duplication(
     loader = CNVLoader(
         families, [
             str(summary_variants_duplication),
-        ], gpf_instance.reference_genome,
+        ],
+        genome=acgt_genome_38,
         params={
             "cnv_family_id": "family_id",
             "cnv_best_state": "best_state",
@@ -144,13 +138,14 @@ def variants_file_alt(
 def test_cnv_loader_alt(
         variants_file_alt: Path,
         cnv_ped: Path,
-        gpf_instance: GPFInstance,
+        acgt_genome_38: ReferenceGenome,
 ) -> None:
     families = FamiliesLoader.load_simple_families_file(cnv_ped)
     assert families is not None
 
     loader = CNVLoader(
-        families, [str(variants_file_alt)], gpf_instance.reference_genome,
+        families, [str(variants_file_alt)],
+        genome=acgt_genome_38,
         params={
             "cnv_chrom": "chr",
             "cnv_start": "start",
@@ -189,14 +184,14 @@ def variants_file_best_state(
 def test_cnv_loader_alt_best_state(
         variants_file_best_state: Path,
         cnv_ped: Any,
-        gpf_instance: GPFInstance,
+        acgt_genome_38: ReferenceGenome,
 ) -> None:
     families = FamiliesLoader.load_simple_families_file(cnv_ped)
     assert families is not None
 
     loader = CNVLoader(
         families, [str(variants_file_best_state)],
-        gpf_instance.reference_genome,
+        genome=acgt_genome_38,
         params={
             "cnv_chrom": "chr",
             "cnv_start": "start",
@@ -239,13 +234,14 @@ def variants_file_alt_2(
 def test_cnv_loader_alt_2(
         variants_file_alt_2: Path,
         cnv_ped: Any,
-        gpf_instance: GPFInstance,
+        acgt_genome_38: ReferenceGenome,
 ) -> None:
     families = FamiliesLoader.load_simple_families_file(cnv_ped)
     assert families is not None
 
     loader = CNVLoader(
-        families, [str(variants_file_alt_2)], gpf_instance.reference_genome,
+        families, [str(variants_file_alt_2)],
+        genome=acgt_genome_38,
         params={
             "cnv_location": "location",
             "cnv_variant_type": "variant",
@@ -267,7 +263,9 @@ def test_cnv_loader_alt_2(
 
 
 @pytest.fixture
-def simple_cnv_loader(gpf_instance: GPFInstance) -> Any:
+def simple_cnv_loader(
+    acgt_genome_38: ReferenceGenome,
+) -> Any:
     def ctor(
             cnv_ped: Path,
             cnf_filename: Path,
@@ -279,7 +277,8 @@ def simple_cnv_loader(gpf_instance: GPFInstance) -> Any:
         params = additional_params
         return CNVLoader(
             families, [str(cnf_filename)],
-            genome=gpf_instance.reference_genome, params=params,
+            genome=acgt_genome_38,
+            params=params,
         )
     return ctor
 

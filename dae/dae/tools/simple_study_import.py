@@ -8,8 +8,6 @@ import time
 
 from box import Box
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline
-from dae.annotation.effect_annotator import EffectAnnotatorAdapter
 from dae.common_reports import generate_common_report
 from dae.gene_sets import generate_denovo_gene_sets
 from dae.gpf_instance.gpf_instance import GPFInstance
@@ -19,11 +17,6 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
-from dae.variants_loaders.raw.loader import (
-    AnnotationPipelineDecorator,
-    EffectAnnotationDecorator,
-    VariantsLoader,
-)
 from dae.variants_loaders.vcf.loader import VcfLoader
 
 logger = logging.getLogger("simple_study_import")
@@ -133,21 +126,6 @@ def cli_arguments(
     CNVLoader.cli_arguments(parser, options_only=True)
 
     return parser.parse_args(argv or sys.argv[1:])
-
-
-def _decorate_loader(
-    variants_loader: VariantsLoader,
-    effect_annotator: EffectAnnotatorAdapter,
-    annotation_pipeline: AnnotationPipeline,
-) -> VariantsLoader:
-    variants_loader = EffectAnnotationDecorator(
-        variants_loader, effect_annotator)  # type: ignore
-
-    if annotation_pipeline is not None:
-        variants_loader = AnnotationPipelineDecorator(
-            variants_loader, annotation_pipeline)
-
-    return variants_loader
 
 
 def build_import_project(

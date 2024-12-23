@@ -10,6 +10,15 @@ from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorage,
     GenotypeStorageRegistry,
 )
+from dae.import_tools.import_tools import (
+    construct_import_annotation_pipeline,
+)
+from dae.pedigrees.loader import FamiliesLoader
+from dae.variants_loaders.dae.loader import DenovoLoader
+from dae.variants_loaders.vcf.loader import VcfLoader
+from impala_storage.schema1.annotation_decorator import (
+    AnnotationPipelineDecorator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -61,3 +70,61 @@ def impala_genotype_storage(
     yield registry.get_genotype_storage("impala_test_storage")
 
     registry.shutdown()
+
+
+@pytest.fixture(scope="session")
+def vcf_variants_loaders(
+        vcf_loader_data, gpf_instance_2019):
+
+    annotation_pipeline = construct_import_annotation_pipeline(
+        gpf_instance_2019,
+    )
+
+    def builder(  # pylint: disable=W0102
+        path,
+        params={  # noqa: B006
+            "vcf_include_reference_genotypes": True,
+            "vcf_include_unknown_family_genotypes": True,
+            "vcf_include_unknown_person_genotypes": True,
+            "vcf_denovo_mode": "denovo",
+            "vcf_omission_mode": "omission",
+        },
+    ):
+        config = vcf_loader_data(path)
+
+        families_loader = FamiliesLoader(config.pedigree)
+        families = families_loader.load()
+
+        loaders = []
+
+        if config.denovo:
+            denovo_loader = DenovoLoader(
+                families,
+                config.denovo,
+                gpf_instance_2019.reference_genome,
+                params={
+                    "denovo_genotype": "genotype",
+                    "denovo_family_id": "family",
+                    "denovo_chrom": "chrom",
+                    "denovo_pos": "pos",
+                    "denovo_ref": "ref",
+                    "denovo_alt": "alt",
+                },
+            )
+            loaders.append(AnnotationPipelineDecorator(
+                denovo_loader, annotation_pipeline))
+
+        vcf_loader = VcfLoader(
+            families,
+            [config.vcf],
+            gpf_instance_2019.reference_genome,
+            params=params,
+        )
+
+        loaders.append(AnnotationPipelineDecorator(
+            vcf_loader, annotation_pipeline,
+        ))
+
+        return loaders
+
+    return builder

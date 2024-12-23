@@ -24,12 +24,14 @@ from dae.utils.regions import Region
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.raw.loader import (
-    AnnotationPipelineDecorator,
     VariantsLoader,
 )
 from dae.variants_loaders.vcf.loader import VcfLoader
 from impala_storage.helpers.partition_helper import MakefilePartitionHelper
 from impala_storage.helpers.rsync_helpers import RsyncHelpers
+from impala_storage.schema1.annotation_decorator import (
+    AnnotationPipelineDecorator,
+)
 from impala_storage.schema1.parquet_io import (
     ParquetWriter,
     VariantsParquetWriter,
