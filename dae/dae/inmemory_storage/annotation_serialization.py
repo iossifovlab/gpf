@@ -9,14 +9,12 @@ import time
 import numpy as np
 import pandas as pd
 
-from dae.annotation.annotation_pipeline import AnnotationPipeline, AttributeInfo
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.effect_annotation.effect import AlleleEffects
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
 from dae.variants_loaders.raw.loader import (
-    FullVariantsIterator,
     VariantsLoader,
-    VariantsLoaderDecorator,
 )
 
 logger = logging.getLogger(__name__)
@@ -57,68 +55,6 @@ def build_annotation_filename(filename: str) -> str:
     filename = filename.replace(suffix, replace_with)
 
     return f"{filename}-eff.txt"
-
-
-def has_annotation_file(variants_filename: str) -> bool:
-    annotation_filename = build_annotation_filename(variants_filename)
-    return os.path.exists(annotation_filename)
-
-
-def save_annotation_file(
-    variants_loader: AnnotationPipelineDecorator,
-    filename: str, sep: str = "\t",
-) -> None:
-    """Save annotation file."""
-    common_columns = [
-        "chrom",
-        "position",
-        "reference",
-        "alternative",
-        "bucket_index",
-        "summary_index",
-        "allele_index",
-        "allele_count",
-    ]
-
-    if variants_loader.annotation_schema is not None:
-        other_columns = list(
-            filter(
-                lambda name: name not in common_columns
-                and name not in CLEAN_UP_COLUMNS,
-                [attr.name for attr in variants_loader.annotation_schema],
-            ),
-        )
-    else:
-        other_columns = []
-
-    header = common_columns.copy()
-    header.extend(["effects"])
-    header.extend(other_columns)
-
-    with open(filename, "w", encoding="utf8") as outfile:
-        outfile.write(sep.join(header))
-        outfile.write("\n")
-
-        for sv, _ in variants_loader.full_variants_iterator():
-            for allele_index, sa in enumerate(sv.alleles):
-
-                line = []
-                rec = sa.attributes
-                rec["allele_index"] = allele_index
-
-                line_values = [
-                    *[rec.get(col, "") for col in common_columns],
-                    sa.effects,
-                    *[rec.get(col, "") for col in other_columns],
-                ]
-
-                line = [
-                    str(value) if value is not None else ""
-                    for value in line_values
-                ]
-
-                outfile.write(sep.join(line))
-                outfile.write("\n")
 
 
 def variants_loader_annotate_and_save(
@@ -306,59 +242,3 @@ def variants_loader_load_annotation(
         "Storred annotation file (%s) parsed in %.2f sec",
         annotation_filename, elapsed)
     return result
-
-
-class AnnotationPipelineDecorator(VariantsLoaderDecorator):
-    """Annotate variants by processing them through an annotation pipeline."""
-
-    def __init__(
-        self, variants_loader: VariantsLoader,
-        annotation_pipeline: AnnotationPipeline,
-    ) -> None:
-        super().__init__(variants_loader)
-
-        self.annotation_pipeline = annotation_pipeline
-        logger.debug(
-            "creating annotation pipeline decorator with "
-            "annotation pipeline: %s", annotation_pipeline.get_attributes())
-
-        self.set_attribute("annotation_schema", self.annotation_schema)
-        self.set_attribute(
-            "extra_attributes",
-            variants_loader.get_attribute("extra_attributes"),
-        )
-
-    @property
-    def annotation_schema(self) -> list[AttributeInfo]:
-        return self.annotation_pipeline.get_attributes()
-
-    def full_variants_iterator(
-        self,
-    ) -> FullVariantsIterator:
-        with self.annotation_pipeline.open() as annotation_pipeline:
-            internal_attributes = {
-                attr.name for attr in self.annotation_pipeline.get_attributes()
-                if attr.internal
-            }
-
-            for (summary_variant, family_variants) in \
-                    self.variants_loader.full_variants_iterator():
-                for sallele in summary_variant.alt_alleles:
-                    attributes = annotation_pipeline.annotate(
-                        sallele.get_annotatable())
-                    if "allele_effects" in attributes:
-                        allele_effects = attributes["allele_effects"]
-                        assert isinstance(allele_effects, AlleleEffects), \
-                            attributes
-                        # pylint: disable=protected-access
-                        sallele._effects = allele_effects  # noqa: SLF001
-                        del attributes["allele_effects"]
-                    public_attributes = {
-                        key: value for key, value in attributes.items()
-                        if key not in internal_attributes
-                    }
-                    sallele.update_attributes(public_attributes)
-                yield summary_variant, family_variants
-
-    def close(self) -> None:
-        self.annotation_pipeline.close()

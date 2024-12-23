@@ -10,7 +10,7 @@ from dae.configuration.utils import validate_path
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genotype_storage.genotype_storage import GenotypeStorage
-from dae.import_tools.annotation_decorators import (
+from dae.inmemory_storage.annotation_serialization import (
     build_annotation_filename,
     variants_loader_load_annotation,
 )

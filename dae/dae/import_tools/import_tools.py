@@ -30,9 +30,6 @@ from dae.genotype_storage.genotype_storage_registry import (
     GenotypeStorageRegistry,
 )
 from dae.gpf_instance import GPFInstance
-from dae.import_tools.annotation_decorators import (
-    AnnotationPipelineDecorator,
-)
 from dae.parquet.partition_descriptor import (
     PartitionDescriptor,
 )
@@ -440,19 +437,6 @@ class ImportProject:
             .get("processing_config", {}) \
             .get("parquet_row_group_size", 50_000)
         return cast(int, res)
-
-    def build_variants_loader_pipeline(
-        self, variants_loader: VariantsLoader,
-    ) -> VariantsLoader:
-        """Create an annotation pipeline around variants_loader."""
-        annotation_pipeline = self.build_annotation_pipeline()
-        if annotation_pipeline is not None:
-            variants_loader = cast(
-                VariantsLoader,
-                AnnotationPipelineDecorator(
-                    variants_loader, annotation_pipeline,
-                ))
-        return variants_loader
 
     def _storage_type(self) -> str:
         if not self._has_destination():

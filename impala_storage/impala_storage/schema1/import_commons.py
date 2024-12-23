@@ -15,7 +15,6 @@ from jinja2 import Template
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.study_config_builder import StudyConfigBuilder
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.import_tools.annotation_decorators import AnnotationPipelineDecorator
 from dae.import_tools.import_tools import construct_import_annotation_pipeline
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
@@ -30,6 +29,9 @@ from dae.variants_loaders.raw.loader import (
 from dae.variants_loaders.vcf.loader import VcfLoader
 from impala_storage.helpers.partition_helper import MakefilePartitionHelper
 from impala_storage.helpers.rsync_helpers import RsyncHelpers
+from impala_storage.schema1.annotation_decorator import (
+    AnnotationPipelineDecorator,
+)
 from impala_storage.schema1.parquet_io import (
     ParquetWriter,
     VariantsParquetWriter,

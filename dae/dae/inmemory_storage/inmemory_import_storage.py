@@ -4,14 +4,14 @@ import shutil
 from typing import Any
 
 from dae.configuration.study_config_builder import StudyConfigBuilder
-from dae.import_tools.annotation_decorators import (
-    build_annotation_filename,
-    variants_loader_annotate_and_save,
-)
 from dae.import_tools.import_tools import (
     ImportProject,
     ImportStorage,
     save_study_config,
+)
+from dae.inmemory_storage.annotation_serialization import (
+    build_annotation_filename,
+    variants_loader_annotate_and_save,
 )
 from dae.task_graph.graph import TaskGraph
 
