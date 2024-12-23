@@ -7,7 +7,12 @@ import numpy as np
 from box import Box
 from pydantic import BaseModel
 
-from dae.genomic_resources.histogram import Histogram, NullHistogram
+from dae.genomic_resources.histogram import (
+    CategoricalHistogram,
+    Histogram,
+    NullHistogram,
+    NumberHistogram,
+)
 from dae.pheno.common import InferenceConfig, MeasureType
 from dae.pheno.utils.commons import remove_annoying_characters
 
@@ -275,7 +280,8 @@ def classification_reference_impl(
 class InferenceReport(BaseModel):
     """Inference results report."""
     value_type: type
-    histogram_type: Histogram
+    histogram_type: type[Histogram]
+    min_individuals: int
     count_total: int
     count_with_values: int
     count_without_values: int
@@ -387,5 +393,33 @@ def inference_reference_impl(
         "max_value": max_value,
         "values_domain": values_domain,
     })
+
+    if (
+        config.min_individuals is not None and
+        report.count_with_values < config.min_individuals
+    ):
+        report.histogram_type = NullHistogram
+
+    is_numeric = report.value_type is not str
+
+    if is_numeric:
+        if (
+            config.continuous.min_rank is not None and
+            report.count_unique_values >= config.continuous.min_rank
+        ):
+            report.histogram_type = NumberHistogram
+        if (
+            config.ordinal.min_rank is not None and
+            report.count_unique_values >= config.ordinal.min_rank
+        ):
+            report.histogram_type = CategoricalHistogram
+    elif (
+        report.count_unique_values is not None
+        and config.categorical.min_rank is not None
+        and config.categorical.max_rank is not None
+        and report.count_unique_values >= config.categorical.min_rank
+        and report.count_unique_values <= config.categorical.max_rank
+    ):
+        report.histogram_type = CategoricalHistogram
 
     return transformed_values, report
