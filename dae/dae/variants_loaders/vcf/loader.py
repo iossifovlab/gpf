@@ -450,10 +450,6 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         logger.info(
             "persons changed to not_sequenced %s in %s",
             len(not_sequenced), self.filenames)
-        self.families_samples_indexes = [
-            (family, family.samples_index)
-            for family in self.families.values()
-        ]
 
     def _compare_vcf_variants_gt(
         self, lhs: pysam.VariantRecord | None,
