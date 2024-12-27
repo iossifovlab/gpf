@@ -1,4 +1,10 @@
 [run]
-omit=*/tests/*
+omit=
+    */tests/*
+    */_version.py
+    conftest.py
+    */conftest.py
+    */demo_graphs_cli.py
+
 branch=true
 
