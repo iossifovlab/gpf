@@ -7,29 +7,10 @@ from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource,
 )
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.testing import build_inmemory_test_resource
 from dae.genomic_resources.variant_utils import (
     maximally_extend_variant,
     normalize_variant,
 )
-from dae.testing import convert_to_tab_separated
-
-
-@pytest.fixture()
-def example_1_genome() -> ReferenceGenome:
-    # Example from
-    # https://genome.sph.umich.edu/wiki/File:Normalization_mnp.png
-
-    res = build_inmemory_test_resource({
-        "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
-        "chr.fa": convert_to_tab_separated("""
-                >1
-                GGGGCATGGGG
-
-        """),
-        "chr.fa.fai": "1\t11\t3\t11\t12\n",
-    })
-    return build_reference_genome_from_resource(res)
 
 
 @pytest.mark.parametrize("beg,end,seq", [
@@ -39,30 +20,13 @@ def example_1_genome() -> ReferenceGenome:
     (4, 8, "GCATG"),
     (5, 7, "CAT"),
 ])
-def test_example_1_genome_basic(
-        example_1_genome: ReferenceGenome,
+def test_normalize_genome_1_basic(
+        normalize_genome_1: ReferenceGenome,
         beg: int, end: int, seq: str) -> None:
-    with example_1_genome.open() as genome:
+    with normalize_genome_1.open() as genome:
         assert genome.get_chrom_length("1") == 11
 
         assert genome.get_sequence("1", beg, end) == seq
-
-
-@pytest.fixture()
-def example_2_genome() -> ReferenceGenome:
-    # Example from
-    # https://genome.sph.umich.edu/wiki/File:Normalization_str.png
-
-    res = build_inmemory_test_resource({
-        "genomic_resource.yaml": "{type: genome, filename: chr.fa}",
-        "chr.fa": convert_to_tab_separated("""
-                >1
-                GGGCACACACAGGG
-
-        """),
-        "chr.fa.fai": "1\t14\t3\t14\t15\n",
-    })
-    return build_reference_genome_from_resource(res)
 
 
 @pytest.mark.parametrize("beg,end,seq", [
@@ -74,10 +38,10 @@ def example_2_genome() -> ReferenceGenome:
     (3, 5, "GCA"),
     (3, 3, "G"),
 ])
-def test_example_2_genome_basic(
-        example_2_genome: ReferenceGenome,
+def test_noramalize_genome_basic_2(
+        normalize_genome_2: ReferenceGenome,
         beg: int, end: int, seq: str) -> None:
-    with example_2_genome.open() as genome:
+    with normalize_genome_2.open() as genome:
         assert genome.get_chrom_length("1") == 14
 
         assert genome.get_sequence("1", beg, end) == seq
@@ -90,9 +54,9 @@ def test_example_2_genome_basic(
     (5, "CAT", "TGC"),
 ])
 def test_example_1_normalize(
-        example_1_genome: ReferenceGenome,
+        normalize_genome_1: ReferenceGenome,
         pos: int, ref: str, alt: str) -> None:
-    with example_1_genome.open() as genome:
+    with normalize_genome_1.open() as genome:
         check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
         assert ref == check_ref
 
@@ -113,10 +77,10 @@ def test_example_1_normalize(
     (3, "GCA", "G"),
 ])
 def test_example_2_normalize(
-        example_2_genome: ReferenceGenome,
+        normalize_genome_2: ReferenceGenome,
         pos: int, ref: str, alt: str) -> None:
 
-    with example_2_genome.open() as genome:
+    with normalize_genome_2.open() as genome:
         check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
         assert ref == check_ref
 
@@ -135,10 +99,10 @@ def test_example_2_normalize(
     (3, "GCA", ["G", "CCA"]),
 ])
 def test_example_2_normalize_variant(
-        example_2_genome: ReferenceGenome,
+        normalize_genome_2: ReferenceGenome,
         pos: int, ref: str, alts: list[str]) -> None:
 
-    with example_2_genome.open() as genome:
+    with normalize_genome_2.open() as genome:
         check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
         assert ref == check_ref
 
@@ -161,10 +125,10 @@ def test_example_2_normalize_variant(
     (3, "GCA", "G"),
 ])
 def test_example_2_maximally_extend_variant(
-        example_2_genome: ReferenceGenome,
+        normalize_genome_2: ReferenceGenome,
         pos: int, ref: str, alt: str) -> None:
 
-    with example_2_genome.open() as genome:
+    with normalize_genome_2.open() as genome:
         check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
         assert ref == check_ref
 
@@ -184,10 +148,10 @@ def test_example_2_maximally_extend_variant(
     (4, "CA", "CA", 4, "C", "C"),
 ])
 def test_normalize_novariant_allele(
-        example_2_genome: ReferenceGenome,
+        normalize_genome_2: ReferenceGenome,
         pos: int, ref: str, alt: str,
         epos: int, eref: str, ealt: str) -> None:
-    with example_2_genome.open() as genome:
+    with normalize_genome_2.open() as genome:
 
         check_ref = genome.get_sequence("1", pos, pos + len(ref) - 1)
         assert ref == check_ref

@@ -6,12 +6,11 @@ import pytest
 
 from dae.annotation.annotatable import VCFAllele
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
-from dae.annotation.annotation_pipeline import AnnotationPipeline, AnnotatorInfo
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.annotation.score_annotator import AlleleScoreAnnotator
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
-    GenomicResourceRepo,
 )
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
@@ -21,28 +20,76 @@ from dae.genomic_resources.testing import (
 )
 
 
+@pytest.fixture
+def annotation_pipeline(tmp_path: pathlib.Path) -> AnnotationPipeline:
+    root_path = tmp_path
+    setup_directories(
+        root_path / "grr", {
+            "allele_score": {
+                GR_CONF_FILE_NAME: """
+                    type: allele_score
+                    allele_score_mode: alleles
+                    table:
+                        filename: data.txt
+                        reference:
+                          name: reference
+                        alternative:
+                          name: alternative
+                    scores:
+                        - id: ID
+                          type: str
+                          desc: "variant ID"
+                          name: ID
+                        - id: freq
+                          type: float
+                          desc: ""
+                          name: freq
+                    default_annotation:
+                    - source: freq
+                      name: allele_freq
+
+                """,
+                "data.txt": convert_to_tab_separated("""
+                    chrom  pos_begin  reference  alternative ID  freq
+                    1      10         A          G           ag  0.02
+                    1      10         A          C           ac  0.03
+                    1      10         A          T           at  0.04
+                    1      16         CA         G           .   0.03
+                    1      16         C          T           ct  0.04
+                    1      16         C          A           ca  0.05
+                    1      16         C          CA          ca  1.0
+                    1      16         C          CG          ca  2.0
+                """),
+            },
+        })
+    local_repo = build_genomic_resource_repository({
+        "id": "allele_score_local",
+        "type": "directory",
+        "directory": str(root_path / "grr"),
+    })
+    annotation_configuration = textwrap.dedent("""
+        - allele_score:
+            resource_id: allele_score
+    """)
+    return load_pipeline_from_yaml(annotation_configuration, local_repo)
+
+
 def test_allele_score_annotator_attributes(
-        grr_fixture: GenomicResourceRepo) -> None:
+    annotation_pipeline: AnnotationPipeline,
+) -> None:
 
-    pipeline = AnnotationPipeline(grr_fixture)
-    annotator = AlleleScoreAnnotator(
-        pipeline, AnnotatorInfo("allele_score", [],
-                                {"resource_id": "hg38/TESTFreq"}))
-    pipeline.add_annotator(annotator)
+    pipeline = annotation_pipeline
+    annotator = pipeline.annotators[0]
 
+    assert isinstance(annotator, AlleleScoreAnnotator)
     assert not annotator.is_open()
 
     attributes = annotator.get_info().attributes
-    assert len(attributes) == 2
-    assert attributes[0].name == "alt_freq"
-    assert attributes[0].source == "altFreq"
+    assert len(attributes) == 1
+    assert attributes[0].name == "allele_freq"
+    assert attributes[0].source == "freq"
     assert attributes[0].type == "float"
     assert attributes[0].description == ""
-
-    assert attributes[1].name == "alt_freq2"
-    assert attributes[1].source == "altFreq2"
-    assert attributes[1].type == "float"
-    assert attributes[1].description == ""
 
 
 @pytest.mark.parametrize("variant, expected", [
@@ -56,8 +103,9 @@ def test_allele_score_annotator_attributes(
     (("1", 16, "C", "CA"), 1.0),
 ])
 def test_allele_score_with_default_score_annotation(
-        variant: tuple, expected: float,
-        tmp_path: pathlib.Path) -> None:
+    variant: tuple, expected: float,
+    tmp_path: pathlib.Path,
+) -> None:
     root_path = tmp_path
     setup_directories(
         root_path / "grr", {

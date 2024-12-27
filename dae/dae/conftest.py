@@ -16,7 +16,10 @@ from dae.genomic_resources.genomic_context import (
     GenomicContext,
     get_genomic_context,
 )
-from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
+    build_reference_genome_from_resource_id,
+)
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
@@ -963,3 +966,45 @@ def acgt_genome_19(tmp_path_factory: pytest.TempPathFactory) -> ReferenceGenome:
         {25 * "ACGT"}
         """,
     )
+
+
+@pytest.fixture(scope="session")
+def t4c8_grr(tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
+    root_path = tmp_path_factory.mktemp("t4c8_grr")
+    t4c8_genome(root_path)
+    t4c8_genes(root_path)
+    root_path2 = root_path / "2"
+    t4c8_genome(root_path2)
+    t4c8_genes(root_path2)
+
+    setup_genome(root_path / "normalize_genome_1/all.fa", textwrap.dedent("""
+        >1
+        GGGGCATGGGG
+    """))
+    setup_genome(root_path / "normalize_genome_2/all.fa", textwrap.dedent("""
+        >1
+        GGGCACACACAGGG
+    """))
+
+    setup_genome(root_path / "tr_genome/all.fa", textwrap.dedent("""
+        >1
+        ATTTTTTTTTTTTTTTTTTTTTTTTTTT
+    """))
+
+    return build_genomic_resource_repository({
+        "id": "t4c8_grr",
+        "type": "directory",
+        "directory": str(root_path),
+    })
+
+
+@pytest.fixture(scope="session")
+def normalize_genome_1(t4c8_grr: GenomicResourceRepo) -> ReferenceGenome:
+    return build_reference_genome_from_resource_id(
+        "normalize_genome_1", t4c8_grr)
+
+
+@pytest.fixture(scope="session")
+def normalize_genome_2(t4c8_grr: GenomicResourceRepo) -> ReferenceGenome:
+    return build_reference_genome_from_resource_id(
+        "normalize_genome_2", t4c8_grr)

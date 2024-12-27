@@ -66,8 +66,10 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
         self.genome.open()
         return super().open()
 
-    def _do_annotate(self, annotatable: Annotatable, _: dict[str, Any]) \
-            -> dict[str, Any]:
+    def _do_annotate(
+        self, annotatable: Annotatable,
+        context: dict[str, Any],  # noqa: ARG002
+    ) -> dict[str, Any]:
         if not isinstance(annotatable, VCFAllele):
             return {"normalized_allele": annotatable}
 
