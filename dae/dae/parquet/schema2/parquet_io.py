@@ -304,10 +304,11 @@ class VariantsParquetWriter:
 
                 sj_base_index = self._calc_sj_base_index(summary_index)
 
-                num_fam_alleles_written = self._write_family_variants(
-                    family_index, summary_index, sj_base_index,
-                    summary_variant, family_variants,
-                )
+                family_index, num_fam_alleles_written = \
+                    self._write_family_variants(
+                        family_index, summary_index, sj_base_index,
+                        summary_variant, family_variants,
+                    )
                 if num_fam_alleles_written > 0:
                     self.write_summary_variant(
                             summary_variant,
@@ -342,7 +343,7 @@ class VariantsParquetWriter:
             sj_base_index,
             summary_variant,
             family_variants,
-    ) -> int:
+    ) -> tuple[int, int]:
         num_fam_alleles_written = 0
         seen_in_status = summary_variant.allele_count * [0]
         seen_as_denovo = summary_variant.allele_count * [False]
@@ -424,7 +425,7 @@ class VariantsParquetWriter:
                     "family_alleles_count": family_variants_count[1:],
                     "bucket_index": [self.bucket_index],
                 })
-        return num_fam_alleles_written
+        return family_index, num_fam_alleles_written
 
     def close(self) -> None:
         for bin_writer in self.data_writers.values():
