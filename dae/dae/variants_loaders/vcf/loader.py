@@ -405,7 +405,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
             if person.sample_id in vcf_samples:
                 continue
-            if self.fixed_pedigree:
+            if self.fixed_pedigree and not person.not_sequenced:
                 counters["missing"] += 1
             else:
                 if not person.generated and not person.not_sequenced:
