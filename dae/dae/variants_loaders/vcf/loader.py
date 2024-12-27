@@ -381,7 +381,6 @@ class SingleVcfLoader(VariantsGenotypesLoader):
 
         logger.info("vcf samples (all): %s", len(vcf_samples))
 
-        vcf_samples_order = [list(vcf.header.samples) for vcf in self.vcfs]
         vcf_samples = set(vcf_samples)
         logger.info("vcf samples (set): %s", len(vcf_samples))
         pedigree_samples = set(self.families.pedigree_samples())
@@ -397,7 +396,6 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         assert vcf_samples.issubset(pedigree_samples)
         logger.info("vcf samples (matched): %s", len(vcf_samples))
 
-        seen = set()
         not_sequenced = set()
         counters: Counter = Counter()
         for person in self.families.persons.values():
@@ -406,21 +404,10 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 continue
 
             if person.sample_id in vcf_samples:
-                if person.sample_id in seen:
-                    continue
-                for vcf_index, samples_order in enumerate(vcf_samples_order):
-                    if person.sample_id in samples_order:
-                        person.set_attr(
-                            "sample_index",
-                            (
-                                vcf_index,
-                                samples_order.index(person.sample_id),
-                            ),
-                        )
-                        seen.add(person.sample_id)
-                        counters["found"] += 1
-                        break
-            elif not self.fixed_pedigree:
+                continue
+            if self.fixed_pedigree:
+                counters["missing"] += 1
+            else:
                 if not person.generated and not person.not_sequenced:
                     not_sequenced.add(person.person_id)
                     person.set_attr("not_sequenced", value=True)
@@ -428,32 +415,14 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                     logger.info(
                         "person %s marked as "
                         "'not_sequenced';", person.person_id)
-            else:
-                if not person.missing:
-                    logger.info(
-                        "person %s marked as missing", person)
-
-                    person.set_attr(
-                        "sample_index",
-                        (
-                            None,
-                            None,
-                        ),
-                    )
-                    person.set_attr("missing", value=True)
-                    counters["missing"] += 1
-                counters["missing"] += 1
 
         logger.info("people stats: %s", counters)
 
-        self.families.redefine()
-        logger.info(
-            "persons changed to not_sequenced %s in %s",
-            len(not_sequenced), self.filenames)
-        self.families_samples_indexes = [
-            (family, family.samples_index)
-            for family in self.families.values()
-        ]
+        if not_sequenced:
+            logger.info(
+                "persons changed to not_sequenced %s in %s",
+                len(not_sequenced), self.filenames)
+            self.families.redefine()
 
     def _compare_vcf_variants_gt(
         self, lhs: pysam.VariantRecord | None,
@@ -672,6 +641,8 @@ class VcfLoader(VariantsGenotypesLoader):
 
         self.vcf_files = vcf_files
         self.files_batches = filenames
+        self.fixed_pedigree = params.get("vcf_pedigree_mode", "fixed") == \
+            "fixed"
 
         self.vcf_loaders: list[SingleVcfLoader] | None = None
 
@@ -718,7 +689,10 @@ class VcfLoader(VariantsGenotypesLoader):
 
         for vcf_files_batch in files_batches:
             if vcf_files_batch:
-                vcf_families = self.families.copy()
+                if self.fixed_pedigree:
+                    vcf_families = self.families
+                else:
+                    vcf_families = self.families.copy()
                 vcf_loader = SingleVcfLoader(
                     vcf_families, vcf_files_batch,
                     self.genome,
@@ -742,6 +716,9 @@ class VcfLoader(VariantsGenotypesLoader):
 
     def _families_intersection(self) -> FamiliesData:
         assert self.vcf_loaders is not None
+        if len(self.vcf_loaders) == 1:
+            return self.vcf_loaders[0].families
+
         logger.warning("families intersection run...")
         families = self.vcf_loaders[0].families
         for vcf_loader in self.vcf_loaders:
@@ -763,6 +740,9 @@ class VcfLoader(VariantsGenotypesLoader):
 
     def _families_union(self) -> FamiliesData:
         assert self.vcf_loaders is not None
+        if len(self.vcf_loaders) == 1:
+            return self.vcf_loaders[0].families
+
         logger.warning("families union run...")
         families = self.vcf_loaders[0].families
         for fpid, person in families.persons.items():
