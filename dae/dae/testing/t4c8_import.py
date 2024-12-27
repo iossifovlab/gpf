@@ -3,6 +3,7 @@ import pathlib
 
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
+from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
@@ -58,17 +59,24 @@ def t4c8_genes(root_path: pathlib.Path) -> GeneModels:
         GMM_CONTENT, fileformat="refflat")
 
 
-def t4c8_gpf(
-        root_path: pathlib.Path,
-        storage: GenotypeStorage | None = None) -> GPFInstance:
+def t4c8_grr(
+    root_path: pathlib.Path,
+) -> GenomicResourceRepo:
     t4c8_genome(root_path)
     t4c8_genes(root_path)
 
-    local_repo = build_genomic_resource_repository({
+    return build_genomic_resource_repository({
         "id": "t4c8_local",
         "type": "directory",
         "directory": str(root_path),
     })
+
+
+def t4c8_gpf(
+    root_path: pathlib.Path,
+    storage: GenotypeStorage | None = None,
+) -> GPFInstance:
+    local_repo = t4c8_grr(root_path)
 
     gpf_instance = setup_gpf_instance(
         root_path / "gpf_instance",

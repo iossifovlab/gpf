@@ -8,7 +8,13 @@ from typing import Any
 import pytest
 
 from dae.genomic_resources.fsspec_protocol import FsspecRepositoryProtocol
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+    GenomicResourceRepo,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
 from dae.genomic_resources.testing import (
     build_filesystem_test_protocol,
     build_http_test_protocol,
@@ -17,6 +23,10 @@ from dae.genomic_resources.testing import (
     copy_proto_genomic_resources,
     s3_test_protocol,
     setup_directories,
+)
+from dae.testing.t4c8_import import (
+    t4c8_genes,
+    t4c8_genome,
 )
 
 logger = logging.getLogger(__name__)
@@ -27,7 +37,7 @@ def alabala_gz() -> bytes:
     return gzip.compress(b"alabala")
 
 
-@pytest.fixture()
+@pytest.fixture
 def content_fixture(alabala_gz: bytes) -> dict[str, Any]:
     demo_gtf_content = "TP53\tchr3\t300\t200"
 
@@ -69,7 +79,7 @@ def content_fixture(alabala_gz: bytes) -> dict[str, Any]:
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def fsspec_proto(
     content_fixture: dict[str, Any],
     tmp_path_factory: pytest.TempPathFactory,
@@ -101,3 +111,18 @@ def fsspec_proto(
         return
 
     raise ValueError(f"unexpected protocol scheme: <{grr_scheme}>")
+
+
+@pytest.fixture(scope="session")
+def t4c8_grr(tmp_path_factory: pytest.TempPathFactory) -> GenomicResourceRepo:
+    root_path = tmp_path_factory.mktemp("t4c8_grr")
+    t4c8_genome(root_path)
+    t4c8_genes(root_path)
+    root_path2 = root_path / "2"
+    t4c8_genome(root_path2)
+    t4c8_genes(root_path2)
+    return build_genomic_resource_repository({
+        "id": "t4c8_grr",
+        "type": "directory",
+        "directory": str(root_path),
+    })

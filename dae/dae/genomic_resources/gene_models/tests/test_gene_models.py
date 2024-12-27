@@ -24,7 +24,7 @@ from dae.genomic_resources.testing import (
 from dae.testing.t4c8_import import t4c8_genes
 
 
-@pytest.fixture()
+@pytest.fixture
 def fixture_dirname() -> Callable:
     def _fixture_dirname(filename: str) -> str:
         return os.path.join(
@@ -35,7 +35,7 @@ def fixture_dirname() -> Callable:
     return _fixture_dirname
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_gene_models(tmp_path: pathlib.Path) -> GeneModels:
     return t4c8_genes(tmp_path / "gene_models")
 
@@ -182,7 +182,7 @@ def test_gene_models_from_default_with_transcript_orig_id(
         assert transcript_model.tr_id != transcript_model.tr_name
 
 
-@ pytest.mark.parametrize(
+@pytest.mark.parametrize(
     "filename,file_format",
     [
         ("gene_models/test_ref_flat.txt", "refflat"),
@@ -207,7 +207,7 @@ def test_load_gene_models_from_file(
     assert gene_models is not None
 
 
-@ pytest.mark.parametrize(
+@pytest.mark.parametrize(
     "filename,file_format,expected",
     [
         ("gene_models/test_ref_flat.txt", None, "refflat"),
@@ -309,7 +309,7 @@ def test_save_load_gene_models_from_file(
     fixture_dirname: Callable,
     filename: str,
     file_format: str,
-    temp_filename: str,
+    tmp_path: pathlib.Path,
 ) -> None:
 
     filename = fixture_dirname(filename)
@@ -318,7 +318,7 @@ def test_save_load_gene_models_from_file(
     gene_models.load()
     assert gene_models is not None
     assert len(gene_models.transcript_models) > 0
-
+    temp_filename = str(tmp_path / "gene_models.txt")
     save_as_default_gene_models(gene_models, temp_filename, gzipped=False)
 
     gene_models1 = build_gene_models_from_file(
