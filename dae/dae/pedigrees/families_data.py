@@ -5,7 +5,6 @@ import logging
 from collections import defaultdict
 from collections.abc import (
     ItemsView,
-    Iterable,
     Iterator,
     KeysView,
     Mapping,
@@ -325,30 +324,6 @@ class FamiliesData(Mapping[str, Family]):
             for person in fam.members_in_order
             if fam.member_has_both_parents(person.person_id)
         ]
-
-    def persons_with_roles(
-        self,
-        roles: list[Role] | None = None,
-        family_ids: Iterable[str] | None = None,
-    ) -> list[Person]:
-        """Return list of persons matching the specified roles."""
-        if family_ids is None:
-            persons = self.real_persons.values()
-        else:
-            persons = filter(
-                lambda p: p.family_id in set(family_ids),  # type: ignore
-                self.real_persons.values())
-
-        if roles is None:
-            return list(persons)
-
-        if not isinstance(roles[0], Role):
-            roles_q = {Role.from_name(role) for role in roles}
-        else:
-            roles_q = set(roles)
-
-        return list(
-            filter(lambda m: m.role in roles_q, persons))
 
     def families_of_persons(self, person_ids: set[str]) -> set[str]:
         family_ids: set[str] = set()

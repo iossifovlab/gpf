@@ -95,9 +95,10 @@ class FamilyConnections:
                 continue
             if member.mom_id is None:
                 assert member.dad_id is not None
+                mom_id = member.dad_id + ".mother"
                 if member.dad_id not in missing_mother_fathers:
                     missing_mother_fathers[member.dad_id] = Person(
-                        person_id=member.dad_id + ".mother",
+                        person_id=mom_id,
                         family_id=family.family_id,
                         mom_id="0",
                         dad_id="0",
@@ -107,12 +108,13 @@ class FamilyConnections:
                         generated=True,
                     )
                     new_members.append(missing_mother_fathers[member.dad_id])
-                member.mom_id = member.dad_id + ".mother"
+                member.mom_id = mom_id
             elif member.dad_id is None:
                 assert member.mom_id is not None
+                dad_id = member.mom_id + ".father"
                 if member.mom_id not in missing_father_mothers:
                     missing_father_mothers[member.mom_id] = Person(
-                        person_id=member.mom_id + ".father",
+                        person_id=dad_id,
                         family_id=family.family_id,
                         mom_id="0",
                         dad_id="0",
@@ -122,7 +124,7 @@ class FamilyConnections:
                         generated=True,
                     )
                     new_members.append(missing_father_mothers[member.mom_id])
-                member.dad_id = member.mom_id + ".father"
+                member.dad_id = dad_id
 
             mother = id_to_individual[member.mom_id]
             father = id_to_individual[member.dad_id]
