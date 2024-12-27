@@ -666,9 +666,10 @@ class VcfLoader(VariantsGenotypesLoader):
                     break
         return result
 
-    def _init_vcf_loaders(
+    def init_vcf_loaders(
         self,
     ) -> None:
+        """Initialize VCF loaders."""
         self.vcf_loaders = []
         files_batches = self._filter_files_batches(
             self.files_batches,
@@ -930,7 +931,7 @@ class VcfLoader(VariantsGenotypesLoader):
         self,
     ) -> Generator[tuple[SummaryVariant, list[FamilyVariant]], None, None]:
         if self.vcf_loaders is None:
-            self._init_vcf_loaders()
+            self.init_vcf_loaders()
 
         assert self.vcf_loaders is not None
         summary_index = 0

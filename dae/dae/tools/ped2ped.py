@@ -55,6 +55,7 @@ def _handle_vcf_files(
             params=variants_params,
             genome=genome,
         )
+        variants_loader.init_vcf_loaders()
 
         families = variants_loader.families
     return families
