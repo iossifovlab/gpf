@@ -565,6 +565,10 @@ class ImportProject:
         if processing_chromsomes is None:
             return None
         reference_genome = self.get_gpf_instance().reference_genome
+        if "all" in processing_chromsomes:
+            return [
+                chrom for chrom in reference_genome.chromosomes
+            ]
         return [
             chrom for chrom in processing_chromsomes
             if chrom in reference_genome.chromosomes
