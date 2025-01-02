@@ -172,7 +172,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
         assert len(vcf_files)
         self.set_attribute("source_type", "vcf")
 
-        fill_in_mode = params.get("vcf_multi_loader_fill_in_mode", "reference")
+        fill_in_mode = params.get("vcf_multi_loader_fill_in_mode", "unknown")
         if fill_in_mode == "reference":
             self._fill_missing_value: int = 0
         elif fill_in_mode == "unknown":
@@ -181,7 +181,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             logger.warning(
                 "unexpected `vcf_multi_loader_fill_in_mode` value%s; "
                 "expected values are `reference` or `unknown`", fill_in_mode)
-            self._fill_missing_value = 0
+            self._fill_missing_value = -1
 
         self.fixed_pedigree = params.get("vcf_pedigree_mode", "fixed") == \
             "fixed"
@@ -203,8 +203,6 @@ class SingleVcfLoader(VariantsGenotypesLoader):
             params.get("vcf_include_unknown_family_genotypes", False))
         self.include_unknown_person_genotypes = str2bool(
             params.get("vcf_include_unknown_person_genotypes", False))
-        self.multi_loader_fill_in_mode = params.get(
-            "vcf_multi_loader_fill_in_mode", "reference")
 
     def _init_denovo_mode(self) -> None:
         denovo_mode = self.params.get("vcf_denovo_mode", "possible_denovo")
@@ -806,7 +804,7 @@ class VcfLoader(VariantsGenotypesLoader):
         ))
         arguments.append(CLIArgument(
             "--vcf-multi-loader-fill-in-mode",
-            default_value="reference",
+            default_value="unknown",
             help_text="used for multi VCF files loader "
             "to fill missing genotypes; "
             "supported values are `reference` or `unknown`"
