@@ -246,7 +246,7 @@ class ContinuousParquetFileWriter:
                 os.makedirs(dirname, exist_ok=True)
             self.dirname = dirname
 
-        filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
+        filesystem, filepath = url_to_pyarrow_fs(filepath)
         self._writer = pq.ParquetWriter(
             filepath, self.schema, compression="snappy", filesystem=filesystem,
             version="1.0",

@@ -1,44 +1,36 @@
 import logging
-from typing import cast
 from urllib.parse import urlparse
 
 import pyarrow as pa
 import pyarrow.parquet as pq
 from fsspec.core import url_to_fs
-from fsspec.spec import AbstractFileSystem
+from pyarrow import fs as pafs
 
 logger = logging.getLogger(__name__)
 
 
 def url_to_pyarrow_fs(
-        filename: str,
-        filesystem: AbstractFileSystem | None = None) -> pa.fs.FileSystem:
+    filename: str,
+) -> tuple[pafs.FileSystem | None, str]:
     """Turn URL into pyarrow filesystem instance.
 
     Parameters
     ----------
     filename : str
         The fsspec-compatible URL
-    filesystem : fsspec.FileSystem
-        An fsspec filesystem for ``filename``.
 
     Returns
     -------
     filesystem : pyarrow.fs.FileSystem
         The new filesystem discovered from ``filename`` and ``filesystem``.
     """
-    if isinstance(filesystem, pa.fs.FileSystem):
-        return filesystem, filename
 
-    if filesystem is None:
-        if urlparse(filename).scheme:
-            fsspec_fs, path = url_to_fs(filename)
-            pa_fs = pa.fs.PyFileSystem(pa.fs.FSSpecHandler(fsspec_fs))
-            return pa_fs, path
-        return None, filename
-
-    pa_fs = pa.fs.PyFileSystem(pa.fs.FSSpecHandler(filesystem))
-    return pa_fs, filename
+    if urlparse(filename).scheme:
+        fsspec_fs, path = url_to_fs(filename)
+        pa_fs = pafs.PyFileSystem(
+            pafs.FSSpecHandler(fsspec_fs))  # type: ignore
+        return pa_fs, path
+    return None, filename
 
 
 def merge_parquets(
@@ -117,10 +109,12 @@ def _try_merge_parquets(
 
     batches = []
     batches_row_count = 0
+    parq_file = None
+
     for in_file in in_files:
         in_fs, in_fn = url_to_pyarrow_fs(in_file)
         if in_fs is None:
-            in_fs = pa.fs.LocalFileSystem()
+            in_fs = pafs.LocalFileSystem()
         try:
             with in_fs.open_input_file(in_fn) as parquet_native_file:
                 parq_file = pq.ParquetFile(parquet_native_file)
@@ -129,8 +123,8 @@ def _try_merge_parquets(
                     out_parquet = pq.ParquetWriter(
                         out_filename, parq_file.schema_arrow,
                         filesystem=out_filesystem,
-                        compression=compression,
-                        version=parqet_version,
+                        compression=compression,  # type: ignore
+                        version=parqet_version,  # type: ignore
                     )
                 for batch in parq_file.iter_batches():
                     batches.append(batch)
@@ -148,16 +142,29 @@ def _try_merge_parquets(
             logger.warning(
                 "missing chunk parquet file: %s", in_file)
 
-    _merge_flush_batches(batches, out_parquet)
+    if len(batches) > 0:
+        assert parq_file is not None
+        if out_parquet is None:
+            out_filesystem, out_filename = url_to_pyarrow_fs(out_file)
+            out_parquet = pq.ParquetWriter(
+                out_filename, parq_file.schema_arrow,
+                filesystem=out_filesystem,
+                compression=compression,  # type: ignore
+                version=parqet_version,  # type: ignore
+            )
+        table = pa.Table.from_batches(batches)
+        out_parquet.write_table(table)
+
     batches = []
     batches_row_count = 0
 
-    cast(pq.ParquetWriter, out_parquet).close()
+    if out_parquet is not None:
+        out_parquet.close()
 
     if delete_in_files:
         for in_file in in_files:
             try:
                 fs, path = url_to_fs(in_file)
                 fs.rm_file(path)
-            except FileNotFoundError:  # noqa: PERF203
+            except FileNotFoundError:
                 logger.warning("missing chunk parquet file: %s", in_file)
