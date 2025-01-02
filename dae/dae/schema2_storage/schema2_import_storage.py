@@ -52,6 +52,8 @@ def schema2_project_dataset_layout(
 class Schema2ImportStorage(ImportStorage):
     """Import logic for data in the Impala Schema 1 format."""
 
+    BATCH_SIZE = 1_000
+
     @staticmethod
     def _get_partition_description(
             project: ImportProject,
@@ -170,7 +172,7 @@ class Schema2ImportStorage(ImportStorage):
             variants_loader.reset_regions([
                 Region.from_str(r) for r in bucket.regions])
 
-        row_group_size = project.get_row_group_size()
+        row_group_size = cls.BATCH_SIZE
         logger.debug("argv.rows: %s", row_group_size)
         annotation_pipeline = project.build_annotation_pipeline()
 

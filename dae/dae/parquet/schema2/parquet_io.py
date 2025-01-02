@@ -5,7 +5,6 @@ import time
 from collections.abc import Iterator
 from typing import Any, cast
 
-import fsspec
 import pyarrow as pa
 import pyarrow.parquet as pq
 
@@ -42,14 +41,13 @@ class ContinuousParquetFileWriter:
     enough data. Automatically dumps leftover data when closing into the file
     """
 
-    BATCH_ROWS = 1_000
+    BATCH_ROWS = 500
     DEFAULT_COMPRESSION = "SNAPPY"
 
     def __init__(
         self,
         filepath: str,
         annotation_schema: list[AttributeInfo],
-        filesystem: fsspec.AbstractFileSystem | None = None,
         row_group_size: int = 10_000,
         schema: str = "schema",
         blob_column: str | None = None,
@@ -68,7 +66,7 @@ class ContinuousParquetFileWriter:
             os.makedirs(dirname, exist_ok=True)
         self.dirname = dirname
 
-        filesystem, filepath = url_to_pyarrow_fs(filepath, filesystem)
+        filesystem, filepath = url_to_pyarrow_fs(filepath)
         compression: str | dict[str, str] = self.DEFAULT_COMPRESSION
         if blob_column is not None:
             compression = {}
@@ -85,7 +83,7 @@ class ContinuousParquetFileWriter:
         )
         self.row_group_size = row_group_size
         self._batches: list[pa.RecordBatch] = []
-        self._data: dict[str, Any] | None = None
+        self._data: dict[str, list] | None = None
         self.data_reset()
 
     def data_reset(self) -> None:
@@ -96,13 +94,14 @@ class ContinuousParquetFileWriter:
         return len(self._data["bucket_index"])
 
     def build_table(self) -> pa.Table:
-        logger.info(
+        logger.debug(
             "writing %s rows to parquet %s",
             sum(len(b) for b in self._batches),
             self.filepath)
         return pa.Table.from_batches(self._batches, self.schema)
 
     def build_batch(self) -> pa.RecordBatch:
+        assert self._data is not None
         return pa.RecordBatch.from_pydict(self._data, self.schema)
 
     def _write_batch(self) -> None:
@@ -182,7 +181,6 @@ class VariantsParquetWriter:
         bucket_index: int = 1,
         row_group_size: int = 10_000,
         include_reference: bool = False,
-        filesystem: fsspec.AbstractFileSystem | None = None,
     ) -> None:
         self.out_dir = out_dir
 
@@ -194,7 +192,6 @@ class VariantsParquetWriter:
         assert self.bucket_index < 1_000_000, "bad bucket index"
 
         self.row_group_size = row_group_size
-        self.filesystem = filesystem
 
         self.include_reference = include_reference
 
@@ -239,7 +236,6 @@ class VariantsParquetWriter:
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 filename,
                 self.annotation_pipeline.get_attributes(),
-                filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_family",
                 blob_column="family_variant_data",
@@ -258,7 +254,6 @@ class VariantsParquetWriter:
             self.data_writers[filename] = ContinuousParquetFileWriter(
                 filename,
                 self.annotation_pipeline.get_attributes(),
-                filesystem=self.filesystem,
                 row_group_size=self.row_group_size,
                 schema="schema_summary",
                 blob_column="summary_variant_data",

@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import os
 
-import fsspec
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -19,7 +18,7 @@ from dae.utils import fs_utils
 logger = logging.getLogger(__name__)
 
 
-def pedigree_parquet_schema() -> pa.schema:
+def pedigree_parquet_schema() -> pa.Schema:
     """Return the schema for pedigree parquet file."""
     fields = [
         pa.field("family_id", pa.string()),
@@ -40,8 +39,8 @@ def pedigree_parquet_schema() -> pa.schema:
 
 
 def add_missing_parquet_fields(
-    pps: pa.schema, ped_df: pd.DataFrame,
-) -> tuple[pd.DataFrame, pa.schema]:
+    pps: pa.Schema, ped_df: pd.DataFrame,
+) -> tuple[pd.DataFrame, pa.Schema]:
     """Add missing parquet fields."""
     missing_fields = set(ped_df.columns.values) - set(pps.names)
 
@@ -87,9 +86,9 @@ def fill_family_bins(
 
 
 def save_ped_df_to_parquet(
-        ped_df: pd.DataFrame, filename: str,
-        filesystem: fsspec.AbstractFileSystem | None = None,
-        parquet_version: str | None = None) -> None:
+    ped_df: pd.DataFrame, filename: str,
+    parquet_version: str | None = None,
+) -> None:
     """Save ped_df as a parquet file named filename."""
     ped_df = ped_df.copy()
 
@@ -107,12 +106,12 @@ def save_ped_df_to_parquet(
     ped_df, pps = add_missing_parquet_fields(pps, ped_df)
 
     table = pa.Table.from_pandas(ped_df, schema=pps)
-    filesystem, filename = url_to_pyarrow_fs(filename, filesystem)
+    filesystem, filename = url_to_pyarrow_fs(filename)
 
     pq.write_table(
         table, filename,
         filesystem=filesystem,
-        version=parquet_version,
+        version=parquet_version,  # type: ignore
     )
 
 
@@ -120,7 +119,7 @@ def merge_variants_parquets(
     partition_descriptor: PartitionDescriptor,
     variants_dir: str,
     partitions: list[tuple[str, str]],
-    row_group_size: int = 25_000,
+    row_group_size: int = 50_000,
     parquet_version: str | None = None,
 ) -> None:
     """Merge parquet files in variants_dir."""
@@ -144,7 +143,7 @@ def merge_variants_parquets(
                 parquet_files.pop(i)
                 break
 
-    if len(parquet_files) > 1:
+    if len(parquet_files) > 0:
         logger.info(
             "Merging %d files in %s", len(parquet_files), variants_dir,
         )
