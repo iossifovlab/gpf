@@ -14,7 +14,7 @@ from dae.import_tools import cli, import_tools
 from dae.testing.acgt_import import acgt_gpf
 
 
-@pytest.fixture()
+@pytest.fixture
 def gpf_fixture(tmp_path: pathlib.Path) -> GPFInstance:
     return acgt_gpf(tmp_path / "gpf")
 
@@ -75,7 +75,7 @@ def test_import_task_bin_size(
         study_dir,
         "summary/region_bin=chr1_1/frequency_bin=0")
     parquet_files = [
-        "summary_region_bin_chr1_1_frequency_bin_0_bucket_index_000003.parquet",
+        "merged_region_bin_chr1_1_frequency_bin_0.parquet",
     ]
     assert set(os.listdir(out_dir)) == set(parquet_files)
     _assert_variants(

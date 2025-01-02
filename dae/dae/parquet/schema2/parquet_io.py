@@ -41,7 +41,7 @@ class ContinuousParquetFileWriter:
     enough data. Automatically dumps leftover data when closing into the file
     """
 
-    BATCH_ROWS = 1_000
+    BATCH_ROWS = 500
     DEFAULT_COMPRESSION = "SNAPPY"
 
     def __init__(
