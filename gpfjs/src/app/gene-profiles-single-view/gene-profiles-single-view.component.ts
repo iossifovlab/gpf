@@ -8,7 +8,6 @@ import { GeneScoresService } from '../gene-scores/gene-scores.service';
 import { CategoricalHistogram, GeneScore, NumberHistogram } from 'app/gene-scores/gene-scores';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { switchMap, take } from 'rxjs/operators';
-import { Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { QueryService } from 'app/query/query.service';
 import { GenomicScore } from 'app/genotype-browser/genotype-browser';
@@ -23,6 +22,7 @@ import { selectGeneProfiles, setGeneProfilesOpenedTabs } from 'app/gene-profiles
 import { setStudyTypes } from 'app/study-types/study-types.state';
 import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { cloneDeep } from 'lodash';
+import { GeneProfilesTableService } from 'app/gene-profiles-table/gene-profiles-table.service';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -63,9 +63,9 @@ export class GeneProfileSingleViewComponent implements OnInit {
   public constructor(
     private geneProfilesService: GeneProfilesService,
     private geneScoresService: GeneScoresService,
-    private router: Router,
     private queryService: QueryService,
     private store: Store,
+    private geneProfilesTableService: GeneProfilesTableService
   ) { }
 
   public errorModal = false;
@@ -132,7 +132,21 @@ export class GeneProfileSingleViewComponent implements OnInit {
       },
       error: () => {
         this.errorModal = true;
+        this.removeFromState();
       }
+    });
+  }
+
+  private removeFromState(): void {
+    let tabs = [] as string[];
+
+    this.store.select(selectGeneProfiles).pipe(take(1)).subscribe(state => {
+      tabs = state.openedTabs;
+
+      tabs = tabs.filter(tab => tab !== this.geneSymbol);
+
+      this.store.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
+      this.geneProfilesTableService.saveUserGeneProfilesState();
     });
   }
 
@@ -255,18 +269,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
   public errorModalBack(): void {
     this.errorModal = false;
-
-    let tabs = [] as string[];
-
-    this.store.select(selectGeneProfiles).pipe(take(1)).subscribe(state => {
-      tabs = state.openedTabs;
-
-      const index = tabs.indexOf(this.geneSymbol, 0);
-      tabs.splice(index, 1);
-
-      this.store.dispatch(setGeneProfilesOpenedTabs({ openedTabs: tabs }));
-      this.router.navigate(['/gene-profiles']);
-    });
+    window.location.assign('/gene-profiles');
   }
 
   public isNumberHistogram(arg: object): arg is NumberHistogram {

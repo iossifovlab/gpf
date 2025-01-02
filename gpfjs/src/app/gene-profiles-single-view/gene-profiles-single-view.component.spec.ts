@@ -113,13 +113,6 @@ describe('GeneProfileSingleViewComponent', () => {
     component.ngOnInit();
     expect(component['gene$']).toStrictEqual(geneMock);
     expect(component.isGeneInSFARI).toBeFalsy();
-
-    getGeneSpy.mockReturnValueOnce(throwError(() => {
-      new Error('FAIL');
-    }));
-
-    component.ngOnInit();
-    expect(component.errorModal).toBe(true);
   });
 
   it('should get autism score gene score', () => {
@@ -302,17 +295,37 @@ describe('GeneProfileSingleViewComponent', () => {
 
   it('should go back from error modal', () => {
     jest.clearAllMocks();
-    const dispatchSpy = jest.spyOn(store, 'dispatch');
-    const selectSpy = jest.spyOn(store, 'select').mockReturnValueOnce(of({openedTabs: ['tab1', 'tab2', 'tab3']}));
-    const routerSpy = jest.spyOn(component['router'], 'navigate');
+
+    Object.defineProperty(window, 'location', {
+      value: { assign: jest.fn() }
+    });
+
+    const locationAssignSpy = jest.spyOn(window.location, 'assign').mockImplementation();
 
     component.errorModal = true;
     Object.defineProperty(component, 'geneSymbol', {value: 'tab2' });
     component.errorModalBack();
 
     expect(component.errorModal).toBe(false);
+    expect(locationAssignSpy).toHaveBeenCalledWith('/gene-profiles');
+  });
+
+  it('should remove invalid gene from state and show error modal', () => {
+    const getGeneSpy = jest.spyOn(component['geneProfilesService'], 'getGene');
+    const dispatchSpy = jest.spyOn(store, 'dispatch');
+    const selectSpy = jest.spyOn(store, 'select').mockReturnValueOnce(of({openedTabs: ['tab1', 'tab2', 'tab3']}));
+
+    component.errorModal = false;
+    Object.defineProperty(component, 'geneSymbol', {value: 'tab2' });
+
+    getGeneSpy.mockReturnValueOnce(throwError(() => {
+      new Error('FAIL');
+    }));
+
+    component.ngOnInit();
+
+    expect(component.errorModal).toBe(true);
     expect(selectSpy).toHaveBeenCalledWith(selectGeneProfiles);
     expect(dispatchSpy).toHaveBeenCalledWith(setGeneProfilesOpenedTabs({ openedTabs: ['tab1', 'tab3'] }));
-    expect(routerSpy).toHaveBeenCalledWith(['/gene-profiles']);
   });
 });
