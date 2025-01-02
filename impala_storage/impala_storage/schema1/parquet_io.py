@@ -81,8 +81,7 @@ class AbstractVariantsParquetWriter(abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def build_pedigree_writer() -> Callable[
-            [pd.DataFrame, str, fsspec.AbstractFileSystem | None], None]:
+    def build_pedigree_writer() -> Callable[[pd.DataFrame, str], None]:
         """Build a variants parquet writer object."""
 
 
@@ -103,8 +102,7 @@ class ParquetWriterBuilder(Protocol):
         """Build a variants parquet writer object."""
 
     @staticmethod
-    def build_pedigree_writer() -> Callable[
-            [pd.DataFrame, str, fsspec.AbstractFileSystem | None], None]:
+    def build_pedigree_writer() -> Callable[[pd.DataFrame, str], None]:
         """Build a variants parquet writer object."""
 
 
@@ -125,7 +123,7 @@ class ParquetWriter:
         if dirname:
             os.makedirs(dirname, exist_ok=True)
         pedigree_writer = parquet_writer_builder.build_pedigree_writer()
-        pedigree_writer(families.ped_df, pedigree_filename, None)
+        pedigree_writer(families.ped_df, pedigree_filename)
 
     @staticmethod
     def variants_to_parquet(
@@ -353,8 +351,7 @@ class VariantsParquetWriter(AbstractVariantsParquetWriter):
         )
 
     @staticmethod
-    def build_pedigree_writer() -> Callable[
-            [pd.DataFrame, str, fsspec.AbstractFileSystem | None], None]:
+    def build_pedigree_writer() -> Callable[[pd.DataFrame, str], None]:
         """Build a variants parquet writer object."""
         return functools.partial(
             save_ped_df_to_parquet,
