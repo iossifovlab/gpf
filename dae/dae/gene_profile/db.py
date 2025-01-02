@@ -42,6 +42,10 @@ class GeneProfileDB:
         configuration: Box | dict | None,
         dbfile: str,
     ):
+        # Support legacy sqlite gpdb
+        duckdb.execute("INSTALL sqlite;")
+        duckdb.execute("LOAD sqlite;")
+
         self.dbfile = dbfile
         self.configuration = \
             GeneProfileDBWriter.build_configuration(configuration)
@@ -296,6 +300,10 @@ class GeneProfileDBWriter:
         configuration: Box | dict | None,
         dbfile: str,
     ):
+        # Support legacy sqlite gpdb
+        duckdb.execute("INSTALL sqlite;")
+        duckdb.execute("LOAD sqlite;")
+
         self.dbfile = dbfile
         self.configuration = \
             GeneProfileDBWriter.build_configuration(configuration)
