@@ -22,6 +22,7 @@ dependencies:
   - pytest-doctestplus=1.2
   - pylint=3.2
   - pyright=1.1.390
+  - pyarrow-stubs
   - pandas-stubs=2.1
   - django-stubs=5.0.2
   - types-pyyaml=6.0
