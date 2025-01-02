@@ -560,7 +560,8 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                 if col1.dtype == float:
                     diff = (col1 - col2).abs() > 1e-6
                 else:
-                    diff = col1[col1 != col2]
+                    diff = col1 != col2
+
                 print(variants.loc[diff], file=out)
 
             return out.getvalue()
@@ -620,13 +621,13 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                 expected = expected_df[col_name][idx]
                 result = variants_df[col_name][idx]
 
-                if isinstance(expected, np.float64) and \
+                if expected.dtype == float and \
                         np.isclose(expected, result):
                     continue
 
-                if isinstance(expected, str) and expected == result:
+                if expected.dtype == str and expected == result:
                     continue
-                if isinstance(expected, np.float64) and \
+                if expected.dtype == float and \
                         np.isnan(expected) and np.isnan(result):
                     continue
 
@@ -749,10 +750,10 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
         self, case: dict[str, Any],
         study: GenotypeData,
     ) -> tuple[TestResult, TestResult | None]:
-        try:
-            study_id = self.expectations["study"]
-            params = self._case_query_params(case)
+        study_id = self.expectations["study"]
+        params = self._case_query_params(case)
 
+        try:
             if study is None:
                 test_result = TestResult(
                     expectation=self.expectations,
