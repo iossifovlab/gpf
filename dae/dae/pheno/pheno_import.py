@@ -10,6 +10,7 @@ import time
 import traceback
 from collections import defaultdict
 from collections.abc import Callable
+from itertools import chain
 from pathlib import Path
 from typing import Any, TextIO, cast
 
@@ -321,8 +322,9 @@ def import_pheno_data(
         task_cache, **vars(task_graph_args),
     ) as xtor:
         try:
-            for result in task_graph_run_with_results(task_graph, xtor):
-                values, report = result
+            task_result_chain = chain.from_iterable(
+                task_graph_run_with_results(task_graph, xtor))
+            for (values, report) in task_result_chain:
                 table = instrument_tables[report.instrument_name]
                 for p_id, value in values.items():
                     table[p_id][report.db_name] = value
@@ -423,28 +425,33 @@ def collect_instruments(
     return instruments
 
 
+def _transform_value(val: str | bool) -> str | None:  # noqa: FBT001
+    if val == "":
+        return None
+    if val == "True":
+        return "1.0"
+    if val == "False":
+        return "0.0"
+    if isinstance(val, bool):
+        return str(int(val))
+    return val
+
+
 def read_and_classify_measure(
-    instrument_filepaths: list[Path], instrument_name: str,
-    measure_name: str, person_id_column: str, db_name: str,
-    inference_config: InferenceConfig,
+    instrument_filepaths: list[Path],
+    instrument_name: str,
+    group_measure_names: list[str],
+    person_id_column: str,
+    group_db_name: list[str],
+    group_inf_configs: list[InferenceConfig],
     tab_separated: bool = False,  # noqa: FBT001,FBT002
-) -> tuple[dict[str, Any], ClassifierReport]:
+) -> list[tuple[dict[str, Any], ClassifierReport]]:
     """Read a measure's values and classify from an instrument file."""
-    output = {}
+    transformed_measures = defaultdict(dict)
+    output = []
 
     if instrument_name == "pheno_common":
         person_id_column = "personId"
-
-    def transform_value(val: str) -> str | None:
-        if val == "":
-            return None
-        if val == "True":
-            return "1.0"
-        if val == "False":
-            return "0.0"
-        if isinstance(val, bool):
-            return str(int(val))
-        return val
 
     for instrument_filepath in instrument_filepaths:
         with open_file(instrument_filepath) as csvfile:
@@ -457,18 +464,29 @@ def read_and_classify_measure(
 
             for row in reader:
                 person_id = row[person_id_column]
-                output[person_id] = transform_value(row[measure_name])
+                for measure_name in group_measure_names:
+                    transformed_measures[measure_name][person_id] = \
+                        _transform_value(row[measure_name])
 
-    values, report = classification_reference_impl(
-        list(output.values()), inference_config,
-    )
-    report.instrument_name = instrument_name
-    report.measure_name = measure_name
-    report.db_name = db_name
+    m_zip = zip(group_measure_names,
+                group_db_name,
+                group_inf_configs,
+                strict=True)
 
-    for idx, person_id in enumerate(output):
-        output[person_id] = values[idx]
-    return output, report
+    for (m_name, m_dbname, m_infconf) in m_zip:
+        values, report = classification_reference_impl(
+            list(transformed_measures[m_name].values()), m_infconf,
+        )
+        report.instrument_name = instrument_name
+        report.measure_name = m_name
+        report.db_name = m_dbname
+        pid_to_val = {
+            person_id: values[idx]
+            for idx, person_id in enumerate(transformed_measures[m_name])
+        }
+        output.append((pid_to_val, report))
+
+    return output
 
 
 def add_pheno_common_inference(
@@ -788,39 +806,43 @@ def create_import_tasks(
         ]
         measure_names = instrument_measure_names[instrument_name]
 
+        group_measure_names = []
+        group_db_names = []
+        group_inf_configs = []
+
         for measure_name in measure_names:
             inference_config = merge_inference_configs(
                 inference_configs, instrument_name, measure_name,
             )
-
             if inference_config.skip:
                 continue
 
             db_name = safe_db_name(measure_name)
-
             if db_name in table_column_names:
                 seen_col_names[measure_name] += 1
                 db_name = f"{measure_name}_{seen_col_names[measure_name]}"
             else:
                 seen_col_names[measure_name] += 1
-
             table_column_names.append(db_name)
-            m_id = safe_db_name(f"{instrument_name}.{measure_name}")
 
-            task_graph.create_task(
-                f"{m_id}_read_and_classify",
-                read_and_classify_measure,
-                [
-                    instrument_filenames,
-                    instrument_name,
-                    measure_name,
-                    person_column,
-                    db_name,
-                    inference_config,
-                    tab_separated,
-                ],
-                [],
-            )
+            group_measure_names.append(measure_name)
+            group_db_names.append(db_name)
+            group_inf_configs.append(inference_config)
+
+        task_graph.create_task(
+            f"{instrument_name}_read_and_classify",
+            read_and_classify_measure,
+            [
+                instrument_filenames,
+                instrument_name,
+                group_measure_names,
+                person_column,
+                group_db_names,
+                group_inf_configs,
+                tab_separated,
+            ],
+            [],
+        )
 
 
 if __name__ == "__main__":
