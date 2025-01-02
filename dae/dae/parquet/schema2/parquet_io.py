@@ -94,7 +94,7 @@ class ContinuousParquetFileWriter:
         return len(self._data["bucket_index"])
 
     def build_table(self) -> pa.Table:
-        logger.info(
+        logger.debug(
             "writing %s rows to parquet %s",
             sum(len(b) for b in self._batches),
             self.filepath)
