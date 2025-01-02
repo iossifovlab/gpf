@@ -8,7 +8,9 @@ from typing import Any
 import pytest
 
 from dae.genomic_resources.fsspec_protocol import FsspecRepositoryProtocol
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME
+from dae.genomic_resources.repository import (
+    GR_CONF_FILE_NAME,
+)
 from dae.genomic_resources.testing import (
     build_filesystem_test_protocol,
     build_http_test_protocol,
@@ -27,7 +29,7 @@ def alabala_gz() -> bytes:
     return gzip.compress(b"alabala")
 
 
-@pytest.fixture()
+@pytest.fixture
 def content_fixture(alabala_gz: bytes) -> dict[str, Any]:
     demo_gtf_content = "TP53\tchr3\t300\t200"
 
@@ -69,7 +71,7 @@ def content_fixture(alabala_gz: bytes) -> dict[str, Any]:
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def fsspec_proto(
     content_fixture: dict[str, Any],
     tmp_path_factory: pytest.TempPathFactory,

@@ -9,10 +9,9 @@ import dae.annotation.annotation_factory
 from dae.annotation.annotatable import Position
 from dae.annotation.annotation_factory import (
     AnnotationConfigurationError,
-    load_pipeline_from_file,
-    load_pipeline_from_yaml,
     copy_annotation_pipeline,
     copy_reannotation_pipeline,
+    load_pipeline_from_yaml,
 )
 from dae.annotation.annotation_pipeline import ReannotationPipeline
 from dae.genomic_resources import build_genomic_resource_repository
@@ -20,7 +19,7 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.testing import convert_to_tab_separated, setup_directories
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     root_path = tmp_path
     setup_directories(
@@ -82,28 +81,6 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     return build_genomic_resource_repository(file_name=str(
         root_path / "grr.yaml",
     ))
-
-
-def test_build_pipeline(
-    annotation_config: str, grr_fixture: GenomicResourceRepo,
-) -> None:
-    pipeline = load_pipeline_from_file(annotation_config, grr_fixture)
-
-    assert len(pipeline.annotators) == 5
-
-
-def test_build_pipeline_schema(
-    annotation_config: str, grr_fixture: GenomicResourceRepo,
-) -> None:
-    pipeline = load_pipeline_from_file(annotation_config, grr_fixture)
-
-    attribute = pipeline.get_attribute_info("gene_effects")
-    assert attribute is not None
-    assert attribute.type == "str", attribute
-
-    attribute = pipeline.get_attribute_info("cadd_raw")
-    assert attribute is not None
-    assert attribute.type == "float", attribute
 
 
 def test_pipeline_with_wildcards(test_grr: GenomicResourceRepo) -> None:

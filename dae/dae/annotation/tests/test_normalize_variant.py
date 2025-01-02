@@ -19,9 +19,6 @@ from dae.genomic_resources.reference_genome import (
     build_reference_genome_from_resource_id,
 )
 from dae.genomic_resources.repository import GenomicResourceRepo
-from dae.genomic_resources.repository_factory import (
-    build_genomic_resource_repository,
-)
 from dae.genomic_resources.testing import (
     build_filesystem_test_repository,
     setup_genome,
@@ -29,7 +26,7 @@ from dae.genomic_resources.testing import (
 from dae.testing.t4c8_import import GENOME_CONTENT
 
 
-@pytest.fixture()
+@pytest.fixture
 def grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     setup_genome(tmp_path / "t4c8_genome_implicit_A" / "chrAll.fa",
                  GENOME_CONTENT)
@@ -42,36 +39,34 @@ def test_normalize_allele_annotator_config() -> None:
     _, pipeline_config = AnnotationConfigParser.parse_str(
         textwrap.dedent("""
         - normalize_allele_annotator:
-            genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
+            genome: t4c8_genome
         """),
     )
 
     assert pipeline_config[0].type == "normalize_allele_annotator"
 
-    assert pipeline_config[0].parameters["genome"] == \
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome"
+    assert pipeline_config[0].parameters["genome"] == "t4c8_genome"
 
 
 @pytest.mark.parametrize("pos,ref,alt", [
-    (20_006, "TGC", "T"),  # normalized
-    (20_005, "GTGC", "GT"),
-    (20_006, "TGCTC", "TTC"),
-    (20_004, "GGTGC", "GGT"),
-    (20_007, "GC", ""),
+    (4, "GCAT", "GTGC"),
+    (5, "CATG", "TGCG"),
+    (4, "GCATG", "GTGCG"),
+    (5, "CAT", "TGC"),
 ])
 def test_normalize_allele_annotator_pipeline(
-        grr_fixture: GenomicResourceRepo,
+        t4c8_grr: GenomicResourceRepo,
         pos: int, ref: str, alt: str) -> None:
     config = textwrap.dedent("""
         - normalize_allele_annotator:
-            genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
+            genome: normalize_genome_1
             attributes:
             - source: normalized_allele
               name: normalized_allele
               internal: False
         """)
 
-    annotation_pipeline = load_pipeline_from_yaml(config, grr_fixture)
+    annotation_pipeline = load_pipeline_from_yaml(config, t4c8_grr)
 
     with annotation_pipeline.open() as pipeline:
         assert len(pipeline.annotators) == 1
@@ -80,39 +75,39 @@ def test_normalize_allele_annotator_pipeline(
         assert annotator.get_info().type == "normalize_allele_annotator"
         assert isinstance(annotator, NormalizeAlleleAnnotator)
 
-        assert annotator.genome.get_sequence("1", 20_001, 20_010) ==  \
-            "CCTGGTGCTC"
+        assert annotator.genome.get_sequence("1", 1, 10) == "GGGGCATGGG"
 
         allele = VCFAllele("1", pos, ref, alt)
         result = pipeline.annotate(allele)
 
         norm = result["normalized_allele"]
 
-        assert norm.pos == 20_006
-        assert norm.ref == "TGC"
-        assert norm.alt == "T"
+        assert norm.pos == 5
+        assert norm.ref == "CAT"
+        assert norm.alt == "TGC"
 
 
 @pytest.mark.parametrize("pos,ref,alt, npos, nref, nalt", [
-    (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTTT", 1_948_770, "AT", "A"),
-    (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTT", 1_948_770, "ATT", "A"),
-    (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTTTTT", 1_948_770, "A", "AT"),
-    (1_948_771, "TTTTTTTTTTTT", "TTTTTTTTTTTTTT", 1_948_770, "A", "ATT"),
+    (2, "TTTTTTTTTTTT", "TTTTTTTTTTT", 1, "AT", "A"),
+    (2, "TTTTTTTTTTTT", "TTTTTTTTTT", 1, "ATT", "A"),
+    (2, "TTTTTTTTTTTT", "TTTTTTTTTTTTT", 1, "A", "AT"),
+    (2, "TTTTTTTTTTTT", "TTTTTTTTTTTTTT", 1, "A", "ATT"),
 ])
 def test_normalize_tandem_repeats(
-        pos: int, ref: str, alt: str,
-        npos: int, nref: str, nalt: str) -> None:
+    pos: int, ref: str, alt: str,
+    npos: int, nref: str, nalt: str,
+    t4c8_grr: GenomicResourceRepo,
+) -> None:
     config = textwrap.dedent("""
         - normalize_allele_annotator:
-            genome: hg38/genomes/GRCh38-hg38
+            genome: tr_genome
             attributes:
             - source: normalized_allele
               name: normalized_allele
               internal: False
         """)
 
-    grr = build_genomic_resource_repository()
-
+    grr = t4c8_grr
     annotation_pipeline = load_pipeline_from_yaml(config, grr)
 
     with annotation_pipeline.open() as pipeline:
@@ -125,9 +120,9 @@ def test_normalize_tandem_repeats(
         assert isinstance(annotator, NormalizeAlleleAnnotator)
 
         assert annotator.genome.get_sequence(
-            "chrX", 1_948_771, 1_948_782) == "TTTTTTTTTTTT"
+            "1", 2, 15) == "TTTTTTTTTTTTTT"
 
-        allele = VCFAllele("chrX", pos, ref, alt)
+        allele = VCFAllele("1", pos, ref, alt)
         result = pipeline.annotate(allele)
 
         norm = result["normalized_allele"]
@@ -138,13 +133,14 @@ def test_normalize_tandem_repeats(
 
 
 def test_normalize_allele_annotator_pipeline_schema(
-        grr_fixture: GenomicResourceRepo) -> None:
+    t4c8_grr: GenomicResourceRepo,
+) -> None:
     config = textwrap.dedent("""
         - normalize_allele_annotator:
-            genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
+            genome: tr_genome
         """)
 
-    annotation_pipeline = load_pipeline_from_yaml(config, grr_fixture)
+    annotation_pipeline = load_pipeline_from_yaml(config, t4c8_grr)
 
     attributes = annotation_pipeline.get_attributes()
     assert len(attributes) == 1
@@ -153,22 +149,23 @@ def test_normalize_allele_annotator_pipeline_schema(
 
 
 def test_normalize_allele_annotator_resources(
-        grr_fixture: GenomicResourceRepo) -> None:
+    t4c8_grr: GenomicResourceRepo,
+) -> None:
     config = textwrap.dedent("""
         - normalize_allele_annotator:
-            genome: hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome
+            genome: tr_genome
             attributes:
             - source: normalized_allele
               name: normalized_allele
               internal: False
         """)
 
-    annotation_pipeline = load_pipeline_from_yaml(config, grr_fixture)
+    annotation_pipeline = load_pipeline_from_yaml(config, t4c8_grr)
 
     with annotation_pipeline.open() as pipeline:
         annotator = pipeline.annotators[0]
         assert {res.get_id() for res in annotator.resources} == {
-            "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/genome",
+            "tr_genome",
         }
 
 

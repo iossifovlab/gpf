@@ -1,7 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import argparse
 import os
-from typing import Callable
+import pathlib
+from typing import cast
 
 import pytest
 import pytest_mock
@@ -30,11 +31,12 @@ from dae.genomic_resources.repository import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def context_fixture(
-    fixture_dirname: Callable, mocker: pytest_mock.MockerFixture,
+    tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
 ) -> GenomicContext:
-    conf_dir = fixture_dirname("")
+    conf_dir = str(tmp_path / "conf")
     home_dir = os.environ["HOME"]
     mocker.patch("os.environ", {
         "DAE_DB_DIR": conf_dir,
@@ -53,10 +55,10 @@ def context_fixture(
 
 
 def test_get_reference_genome_ok(
-    grr_fixture: GenomicResourceProtocolRepo,
+    t4c8_grr: GenomicResourceRepo,
 ) -> None:
     # Given
-    res = grr_fixture.get_resource("hg38/GRCh38-hg38/genome")
+    res = t4c8_grr.get_resource("t4c8_genome")
     genome: ReferenceGenome | None = \
         build_reference_genome_from_resource(res)
 
@@ -72,7 +74,7 @@ def test_get_reference_genome_ok(
     # Then
     assert genome is not None
     assert isinstance(genome, ReferenceGenome)
-    assert genome.resource.resource_id == "hg38/GRCh38-hg38/genome"
+    assert genome.resource.resource_id == "t4c8_genome"
 
 
 def test_get_reference_genome_missing() -> None:
@@ -103,9 +105,11 @@ def test_get_reference_genome_bad() -> None:
         context.get_reference_genome()
 
 
-def test_get_gene_models_ok(grr_fixture: GenomicResourceProtocolRepo) -> None:
-    res = grr_fixture.get_resource(
-        "hg38/GRCh38-hg38/gene_models/refSeq_20200330")
+def test_get_gene_models_ok(
+    t4c8_grr: GenomicResourceRepo,
+) -> None:
+    res = t4c8_grr.get_resource(
+        "t4c8_genes")
     gene_models: GeneModels | None = \
         build_gene_models_from_resource(res).load()
 
@@ -119,7 +123,7 @@ def test_get_gene_models_ok(grr_fixture: GenomicResourceProtocolRepo) -> None:
     assert gene_models is not None
     assert isinstance(gene_models, GeneModels)
     assert gene_models.resource.resource_id == \
-        "hg38/GRCh38-hg38/gene_models/refSeq_20200330"
+        "t4c8_genes"
 
 
 def test_get_gene_models_missing() -> None:
@@ -145,11 +149,11 @@ def test_get_gene_models_bad() -> None:
         context.get_gene_models()
 
 
-def test_get_grr_ok(grr_fixture: GenomicResourceProtocolRepo) -> None:
+def test_get_grr_ok(t4c8_grr: GenomicResourceRepo) -> None:
     # Given
     context = SimpleGenomicContext(
         context_objects={
-            "genomic_resources_repository": grr_fixture,
+            "genomic_resources_repository": t4c8_grr,
         },
         source=("grr_context", ))
 
@@ -190,9 +194,13 @@ def test_get_grr_bad() -> None:
 
 
 def test_cli_genomic_context_reference_genome(
-    fixture_dirname: Callable,
+    t4c8_grr: GenomicResourceRepo,
 ) -> None:
     # Given
+    file_url = cast(GenomicResourceProtocolRepo, t4c8_grr).proto.get_url()
+    assert file_url.startswith("file:///")
+    grr_dirname = file_url[7:]
+
     parser = argparse.ArgumentParser(
         description="Test CLI genomic context",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -200,8 +208,8 @@ def test_cli_genomic_context_reference_genome(
     CLIGenomicContext.add_context_arguments(parser)
 
     argv = [
-        "--grr-directory", fixture_dirname("genomic_resources"),
-        "--ref", "hg38/GRCh38-hg38/genome",
+        "--grr-directory", grr_dirname,
+        "--ref", "t4c8_genome",
     ]
 
     # When
@@ -215,11 +223,17 @@ def test_cli_genomic_context_reference_genome(
     genome = context.get_reference_genome()
     assert genome is not None
     assert isinstance(genome, ReferenceGenome)
-    assert genome.resource.resource_id == "hg38/GRCh38-hg38/genome"
+    assert genome.resource.resource_id == "t4c8_genome"
 
 
-def test_cli_genomic_context_gene_models(fixture_dirname: Callable) -> None:
+def test_cli_genomic_context_gene_models(
+    t4c8_grr: GenomicResourceRepo,
+) -> None:
     # Given
+    file_url = cast(GenomicResourceProtocolRepo, t4c8_grr).proto.get_url()
+    assert file_url.startswith("file:///")
+    grr_dirname = file_url[7:]
+
     parser = argparse.ArgumentParser(
         description="Test CLI genomic context",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -227,8 +241,8 @@ def test_cli_genomic_context_gene_models(fixture_dirname: Callable) -> None:
     CLIGenomicContext.add_context_arguments(parser)
 
     argv = [
-        "--grr-directory", fixture_dirname("genomic_resources"),
-        "--genes", "hg38/GRCh38-hg38/gene_models/refSeq_20200330",
+        "--grr-directory", grr_dirname,
+        "--genes", "t4c8_genes",
     ]
 
     # When
@@ -243,16 +257,15 @@ def test_cli_genomic_context_gene_models(fixture_dirname: Callable) -> None:
     assert gene_models is not None
     assert isinstance(gene_models, GeneModels)
     assert gene_models.resource.resource_id == \
-        "hg38/GRCh38-hg38/gene_models/refSeq_20200330"
+        "t4c8_genes"
 
 
-@pytest.fixture()
+@pytest.fixture
 def contexts(
-    grr_fixture: GenomicResourceProtocolRepo,
+    t4c8_grr: GenomicResourceProtocolRepo,
 ) -> tuple[SimpleGenomicContext, SimpleGenomicContext]:
     gene_models1 = build_gene_models_from_resource(
-        grr_fixture.get_resource(
-            "hg38/GRCh38-hg38/gene_models/refSeq_20200330")).load()
+        t4c8_grr.get_resource("t4c8_genes")).load()
 
     context1 = SimpleGenomicContext(
         context_objects={
@@ -260,9 +273,8 @@ def contexts(
         },
         source=("gene_models1", ))
     gene_models2 = build_gene_models_from_resource(
-        grr_fixture.get_resource(
-            "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/"
-            "gene_models/refGene_201309")).load()
+        t4c8_grr.get_resource(
+            "2/t4c8_genes")).load()
 
     context2 = SimpleGenomicContext(
         context_objects={
@@ -273,7 +285,7 @@ def contexts(
 
 
 def test_register_context(
-    context_fixture: PriorityGenomicContext,
+    context_fixture: PriorityGenomicContext,  # noqa: ARG001
     contexts: tuple[SimpleGenomicContext, SimpleGenomicContext],
 ) -> None:
     # Given:
@@ -286,13 +298,11 @@ def test_register_context(
 
     # Then
     assert gene_models is not None
-    assert gene_models.resource.resource_id == \
-        "hg19/GATK_ResourceBundle_5777_b37_phiX174_short/" \
-        "gene_models/refGene_201309"
+    assert gene_models.resource.resource_id == "2/t4c8_genes"
 
 
 def test_register_context_provider(
-    context_fixture: PriorityGenomicContext,
+    context_fixture: PriorityGenomicContext,  # noqa: ARG001
     contexts: tuple[SimpleGenomicContext, SimpleGenomicContext],
 ) -> None:
     # Given:
@@ -316,5 +326,4 @@ def test_register_context_provider(
 
     # Then
     assert gene_models is not None
-    assert gene_models.resource.resource_id == \
-        "hg38/GRCh38-hg38/gene_models/refSeq_20200330"
+    assert gene_models.resource.resource_id == "t4c8_genes"
