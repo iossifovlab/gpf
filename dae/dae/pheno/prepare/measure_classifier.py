@@ -386,6 +386,7 @@ def inference_reference_impl(
     report = InferenceReport.model_validate({
         "value_type": value_type,
         "histogram_type": NullHistogram,
+        "min_individuals": config.min_individuals,
         "count_total": count_total,
         "count_with_values": total_with_values,
         "count_without_values": none_count,
