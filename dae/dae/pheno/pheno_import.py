@@ -812,7 +812,7 @@ def merge_inference_configs(
 ) -> InferenceConfig:
     """Merge configs by order of specificity"""
     inference_config = InferenceConfig()
-    current_config = inference_config.dict()
+    current_config = inference_config.model_dump()
 
     if "*.*" in inference_configs:
         update_config = inference_configs["*.*"]
@@ -832,7 +832,7 @@ def merge_inference_configs(
         ]
         current_config.update(update_config)
 
-    return InferenceConfig.parse_obj(current_config)
+    return InferenceConfig.model_validate(current_config)
 
 
 def create_import_tasks(
