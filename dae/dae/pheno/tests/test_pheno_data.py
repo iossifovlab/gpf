@@ -28,8 +28,9 @@ def mock_classes(
 
 def test_load_phenotype_data_study(
     mock_classes: tuple[MagicMock, MagicMock],
-    mock_sort: MagicMock,  # noqa: ARG001
+    mock_sort: MagicMock,
 ) -> None:
+    assert mock_sort is not None
     study_mock, _ = mock_classes
     config = {
         "name": "test",
@@ -43,7 +44,9 @@ def test_load_phenotype_data_study(
 
 def test_load_phenotype_data_group(
     mock_classes: tuple[MagicMock, MagicMock],
+    mock_sort: MagicMock,
 ) -> None:
+    assert mock_sort is not None
     study_mock, group_mock = mock_classes
     config = {
         "name": "test_group",

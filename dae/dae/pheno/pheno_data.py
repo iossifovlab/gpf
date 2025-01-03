@@ -789,4 +789,5 @@ def load_phenotype_data(
         else:
             children.append(load_phenotype_data(extra_config, extra_configs))
 
+    _sort_group_children(children_names, children)
     return PhenotypeGroup(config["name"], cast(list[PhenotypeData], children))
