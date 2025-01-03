@@ -18,18 +18,28 @@ import duckdb
 import pandas as pd
 import sqlglot
 import yaml
+from pydantic import BaseModel
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
+from dae.genomic_resources.histogram import (
+    CategoricalHistogram,
+    NumberHistogram,
+)
 from dae.pedigrees.family import ALL_FAMILY_TAG_LABELS
 from dae.pedigrees.loader import (
     FamiliesLoader,
 )
-from dae.pheno.common import DataDictionary, InferenceConfig, PhenoImportConfig
+from dae.pheno.common import (
+    DataDictionary,
+    InferenceConfig,
+    MeasureType,
+    PhenoImportConfig,
+)
 from dae.pheno.db import safe_db_name
 from dae.pheno.prepare.measure_classifier import (
-    ClassifierReport,
-    classification_reference_impl,
+    InferenceReport,
+    inference_reference_impl,
 )
 from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
 from dae.task_graph.executor import task_graph_run_with_results
@@ -336,10 +346,14 @@ def import_pheno_data(
                         report.measure_name,
                     )
 
+                value_type = report.inference_report.value_type.__name__
+                histogram_type = \
+                    report.inference_report.histogram_type.__name__
+
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "INSERT INTO measure VALUES ("
-                        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
+                        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
                         ")",
                         parameters=[
                             m_id,
@@ -348,12 +362,16 @@ def import_pheno_data(
                             report.instrument_name.strip(),
                             description,
                             report.measure_type.value,
-                            report.count_with_values,
+                            value_type,
+                            histogram_type,
+                            report.inference_report.count_with_values,
                             "",
-                            report.min_value,
-                            report.max_value,
-                            report.values_domain.replace("'", "''"),
-                            report.rank,
+                            report.inference_report.min_value,
+                            report.inference_report.max_value,
+                            report.inference_report.values_domain.replace(
+                                "'", "''",
+                            ),
+                            report.inference_report.count_unique_values,
                         ],
                     )
                 imported_instruments.add(report.instrument_name)
@@ -437,6 +455,14 @@ def _transform_value(val: str | bool) -> str | None:  # noqa: FBT001
     return val
 
 
+class MeasureReport(BaseModel):
+    measure_name: str
+    instrument_name: str
+    db_name: str
+    measure_type: MeasureType
+    inference_report: InferenceReport
+
+
 def read_and_classify_measure(
     instrument_filepaths: list[Path],
     instrument_name: str,
@@ -445,7 +471,7 @@ def read_and_classify_measure(
     group_db_name: list[str],
     group_inf_configs: list[InferenceConfig],
     tab_separated: bool = False,  # noqa: FBT001,FBT002
-) -> list[tuple[dict[str, Any], ClassifierReport]]:
+) -> list[tuple[dict[str, Any], MeasureReport]]:
     """Read a measure's values and classify from an instrument file."""
     transformed_measures = defaultdict(dict)
     output = []
@@ -474,9 +500,26 @@ def read_and_classify_measure(
                 strict=True)
 
     for (m_name, m_dbname, m_infconf) in m_zip:
-        values, report = classification_reference_impl(
+        values, inference_report = inference_reference_impl(
             list(transformed_measures[m_name].values()), m_infconf,
         )
+
+        m_type: MeasureType = MeasureType.raw
+        if inference_report.histogram_type == NumberHistogram:
+            m_type = MeasureType.continuous
+        elif inference_report.histogram_type == CategoricalHistogram:
+            if inference_report.value_type is str:
+                m_type = MeasureType.categorical
+            else:
+                m_type = MeasureType.ordinal
+
+        report = MeasureReport.model_validate({
+            "measure_name": instrument_name,
+            "instrument_name": m_name,
+            "db_name": m_dbname,
+            "measure_type": m_type,
+            "inference_report": inference_report,
+        })
         report.instrument_name = instrument_name
         report.measure_name = m_name
         report.db_name = m_dbname
@@ -549,6 +592,8 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
             instrument_name VARCHAR NOT NULL,
             description VARCHAR,
             measure_type INT,
+            value_type VARCHAR,
+            histogram_type VARCHAR,
             individuals INT,
             default_filter VARCHAR,
             min_value FLOAT,
