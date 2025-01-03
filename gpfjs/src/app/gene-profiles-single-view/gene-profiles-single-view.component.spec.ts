@@ -296,18 +296,14 @@ describe('GeneProfileSingleViewComponent', () => {
   it('should go back from error modal', () => {
     jest.clearAllMocks();
 
-    Object.defineProperty(window, 'location', {
-      value: { assign: jest.fn() }
-    });
-
-    const locationAssignSpy = jest.spyOn(window.location, 'assign').mockImplementation();
+    const routerSpy = jest.spyOn(component['router'], 'navigate');
 
     component.errorModal = true;
     Object.defineProperty(component, 'geneSymbol', {value: 'tab2' });
     component.errorModalBack();
 
     expect(component.errorModal).toBe(false);
-    expect(locationAssignSpy).toHaveBeenCalledWith('/gene-profiles');
+    expect(routerSpy).toHaveBeenCalledWith(['/gene-profiles']);
   });
 
   it('should remove invalid gene from state and show error modal', () => {

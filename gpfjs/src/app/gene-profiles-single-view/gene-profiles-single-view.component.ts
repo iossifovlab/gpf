@@ -23,6 +23,7 @@ import { setStudyTypes } from 'app/study-types/study-types.state';
 import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { cloneDeep } from 'lodash';
 import { GeneProfilesTableService } from 'app/gene-profiles-table/gene-profiles-table.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -65,7 +66,8 @@ export class GeneProfileSingleViewComponent implements OnInit {
     private geneScoresService: GeneScoresService,
     private queryService: QueryService,
     private store: Store,
-    private geneProfilesTableService: GeneProfilesTableService
+    private geneProfilesTableService: GeneProfilesTableService,
+    private router: Router
   ) { }
 
   public errorModal = false;
@@ -269,7 +271,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
   public errorModalBack(): void {
     this.errorModal = false;
-    window.location.assign('/gene-profiles');
+    this.router.navigate(['/gene-profiles']);
   }
 
   public isNumberHistogram(arg: object): arg is NumberHistogram {
