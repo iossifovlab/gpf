@@ -550,6 +550,7 @@ def add_pheno_common_inference(
         "proband",
         "not_sequenced",
         "missing",
+        "member_index",
     ]
     default_cols.extend(ALL_FAMILY_TAG_LABELS)
     default_cols.append("tag_family_type_full")
