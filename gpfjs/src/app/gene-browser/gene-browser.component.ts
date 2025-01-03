@@ -336,12 +336,15 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
   }
 
   private get requestParams(): Record<string, unknown> {
+    const summaryVariantsIdsToSend =
+    this.summaryVariantsArrayFiltered.summaryAlleleIds.length < this.maxFamilyVariants ?
+      this.summaryVariantsArrayFiltered.summaryAlleleIds : null;
     return {
       ...this.summaryVariantsFilter.queryParams,
       geneSymbols: [this.selectedGene.geneSymbol],
       datasetId: this.selectedDatasetId,
       regions: this.selectedGene.getRegionString(...this.summaryVariantsFilter.selectedRegion),
-      summaryVariantIds: this.summaryVariantsArrayFiltered.summaryAlleleIds,
+      summaryVariantIds: summaryVariantsIdsToSend,
       frequencyScores: [{
         metric: this.geneBrowserConfig.frequencyColumn,
         rangeStart: this.summaryVariantsFilter.minFreq,
