@@ -100,6 +100,41 @@ def convert_to_float(value: int | float | str | None) -> float | None:
     return value
 
 
+def determine_histogram_type(
+    report: InferenceReport, config: InferenceConfig,
+) -> type[Histogram]:
+    """Given an inference report and a configuration, return histogram type."""
+    if (
+        config.min_individuals is not None and
+        report.count_with_values < config.min_individuals
+    ):
+        return NullHistogram
+
+    is_numeric = report.value_type is not str
+
+    if is_numeric:
+        if (
+            config.continuous.min_rank is not None and
+            report.count_unique_values >= config.continuous.min_rank
+        ):
+            return NumberHistogram
+        if (
+            config.ordinal.min_rank is not None and
+            report.count_unique_values >= config.ordinal.min_rank
+        ):
+            return CategoricalHistogram
+    elif (
+        report.count_unique_values is not None
+        and config.categorical.min_rank is not None
+        and config.categorical.max_rank is not None
+        and report.count_unique_values >= config.categorical.min_rank
+        and report.count_unique_values <= config.categorical.max_rank
+    ):
+        return CategoricalHistogram
+
+    return NullHistogram
+
+
 def inference_reference_impl(
     values: list[str | None], config: InferenceConfig,
 ) -> tuple[
@@ -196,32 +231,6 @@ def inference_reference_impl(
         "values_domain": values_domain,
     })
 
-    if (
-        config.min_individuals is not None and
-        report.count_with_values < config.min_individuals
-    ):
-        report.histogram_type = NullHistogram
-
-    is_numeric = report.value_type is not str
-
-    if is_numeric:
-        if (
-            config.continuous.min_rank is not None and
-            report.count_unique_values >= config.continuous.min_rank
-        ):
-            report.histogram_type = NumberHistogram
-        if (
-            config.ordinal.min_rank is not None and
-            report.count_unique_values >= config.ordinal.min_rank
-        ):
-            report.histogram_type = CategoricalHistogram
-    elif (
-        report.count_unique_values is not None
-        and config.categorical.min_rank is not None
-        and config.categorical.max_rank is not None
-        and report.count_unique_values >= config.categorical.min_rank
-        and report.count_unique_values <= config.categorical.max_rank
-    ):
-        report.histogram_type = CategoricalHistogram
+    report.histogram_type = determine_histogram_type(report, config)
 
     return transformed_values, report
