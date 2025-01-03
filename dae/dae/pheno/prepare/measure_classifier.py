@@ -291,7 +291,7 @@ class InferenceReport(BaseModel):
     values_domain: str
 
 
-def convert_to_float(value: int | float | None) -> float | None:
+def convert_to_float(value: int | float | str | None) -> float | None:
     try:
         if value is not None:
             return float(value)
@@ -318,6 +318,7 @@ def inference_reference_impl(
     none_count = 0
 
     for val in values:
+        num_value: None | int | float = None
         if val is None:
             none_count += 1
             numeric_values.append(None)
@@ -334,7 +335,7 @@ def inference_reference_impl(
                 max_value = num_value
         except ValueError:
             if current_value_type is int:
-                to_float = convert_to_float(num_value)
+                to_float = convert_to_float(val)
                 if to_float is not None:
                     current_value_type = float
                     numeric_values = list(
