@@ -33,7 +33,7 @@ def main(
 
     gpdb = GeneProfileDBWriter(
         config.to_dict(),
-        os.path.join(os.getenv("DAE_DB_DIR", "./"), "gpdb"),
+        os.path.join(os.getenv("DAE_DB_DIR", "./"), "gpdb.duckdb"),
     )
 
     table_name = "gene_profile"

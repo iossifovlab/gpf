@@ -270,9 +270,14 @@ class GPFInstance:
         config = None if self._gene_profile_config is None else\
             self._gene_profile_config.to_dict()
 
+        # In case of sqlite db still used
+        if os.path.isfile(os.path.join(self.dae_dir, "gpdb.duckdb")):
+            db_name = "gpdb.duckdb"
+        else:
+            db_name = "gpdb"
         return GeneProfileDB(
             config,
-            os.path.join(self.dae_dir, "gpdb"),
+            os.path.join(self.dae_dir, db_name),
         )
 
     def reload(self) -> None:
