@@ -274,6 +274,7 @@ class GPFInstance:
         if os.path.isfile(os.path.join(self.dae_dir, "gpdb.duckdb")):
             db_name = "gpdb.duckdb"
         else:
+            logger.warning("Using legacy sqlite gpdb!")
             db_name = "gpdb"
         return GeneProfileDB(
             config,
