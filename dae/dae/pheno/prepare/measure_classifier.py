@@ -175,7 +175,7 @@ def inference_reference_impl(
     none_count = 0
 
     for val in values:
-        num_value: None | int | float = None
+        num_value: int | float | None = None
         if val is None:
             none_count += 1
             numeric_values.append(None)
