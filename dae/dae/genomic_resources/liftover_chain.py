@@ -56,8 +56,9 @@ class LiftoverChain(ResourceConfigValidationMixin):
             self.target_genome_id = labels.get("target_genome")
 
     def close(self) -> None:
-        del self.liftover
-        self.liftover = None
+        if self.liftover is not None:
+            del self.liftover
+            self.liftover = None
 
     def open(self) -> LiftoverChain:
         filename: str = self.resource.get_config()["filename"]
