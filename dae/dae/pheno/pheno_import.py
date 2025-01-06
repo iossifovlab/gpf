@@ -18,18 +18,29 @@ import duckdb
 import pandas as pd
 import sqlglot
 import yaml
+from pydantic import BaseModel
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
+from dae.genomic_resources.histogram import (
+    CategoricalHistogram,
+    NumberHistogram,
+)
 from dae.pedigrees.family import ALL_FAMILY_TAG_LABELS
 from dae.pedigrees.loader import (
     FamiliesLoader,
 )
-from dae.pheno.common import DataDictionary, InferenceConfig, PhenoImportConfig
+from dae.pheno.common import (
+    DataDictionary,
+    InferenceConfig,
+    MeasureType,
+    PhenoImportConfig,
+)
 from dae.pheno.db import safe_db_name
 from dae.pheno.prepare.measure_classifier import (
-    ClassifierReport,
-    classification_reference_impl,
+    InferenceReport,
+    determine_histogram_type,
+    inference_reference_impl,
 )
 from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
 from dae.task_graph.executor import task_graph_run_with_results
@@ -276,7 +287,9 @@ def import_pheno_data(
     print("READING COLUMNS FROM INSTRUMENT FILE")
     start = time.time()
 
-    instruments = collect_instruments(config.input_dir, config.instrument_files)
+    instruments = collect_instruments(
+        config.input_dir, config.instrument_files,
+    )
 
     if not config.skip_pedigree_measures:
         instruments["pheno_common"] = [Path(config.pedigree).absolute()]
@@ -307,6 +320,52 @@ def import_pheno_data(
         tab_separated=config.tab_separated,
     )
 
+    print(f"DONE {time.time() - start}")
+
+    print("WRITING RESULTS")
+    start = time.time()
+
+    imported_instruments, instrument_tables = handle_measure_inference_tasks(
+        connection, config, task_graph, task_cache, task_graph_args,
+        list(instruments.keys()),
+    )
+
+    for k in list(instrument_tables.keys()):
+        if k not in imported_instruments:
+            del instrument_tables[k]
+
+    write_results(connection, instrument_tables, ped_df)
+
+    print(f"DONE {time.time() - start}")
+
+    connection.close()
+
+    regressions = None
+    if config.regression_config is not None:
+        if isinstance(config.regression_config, str):
+            regressions = GPFConfigParser.load_config(
+                str(Path(config.input_dir, config.regression_config)),
+                regression_conf_schema,
+            )
+        else:
+            regressions = config.regression_config
+
+    output_config = generate_phenotype_data_config(
+        config.id, pheno_db_filename, regressions)
+
+    pheno_conf_path = Path(config.output_dir, f"{config.id}.yaml")
+    pheno_conf_path.write_text(output_config)
+
+
+def handle_measure_inference_tasks(
+    connection: duckdb.DuckDBPyConnection,
+    config: PhenoImportConfig,
+    task_graph: TaskGraph,
+    task_cache: TaskCache,
+    task_graph_args: argparse.Namespace,
+    instruments: list[str],
+) -> tuple[set[str], dict[str, Any]]:
+    """Read the output of the measure inference tasks into dictionaries."""
     def default_row() -> dict[str, Any]:
         def none_val() -> None:
             return None
@@ -336,10 +395,14 @@ def import_pheno_data(
                         report.measure_name,
                     )
 
+                value_type = report.inference_report.value_type.__name__
+                histogram_type = \
+                    report.inference_report.histogram_type.__name__
+
                 with connection.cursor() as cursor:
                     cursor.execute(
                         "INSERT INTO measure VALUES ("
-                        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
+                        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
                         ")",
                         parameters=[
                             m_id,
@@ -348,49 +411,23 @@ def import_pheno_data(
                             report.instrument_name.strip(),
                             description,
                             report.measure_type.value,
-                            report.count_with_values,
+                            value_type,
+                            histogram_type,
+                            report.inference_report.count_with_values,
                             "",
-                            report.min_value,
-                            report.max_value,
-                            report.values_domain.replace("'", "''"),
-                            report.rank,
+                            report.inference_report.min_value,
+                            report.inference_report.max_value,
+                            report.inference_report.values_domain.replace(
+                                "'", "''",
+                            ),
+                            report.inference_report.count_unique_values,
                         ],
                     )
                 imported_instruments.add(report.instrument_name)
 
         except Exception:
             logger.exception("Failed to classify measure")
-
-    print(f"DONE {time.time() - start}")
-
-    print("WRITING RESULTS")
-    start = time.time()
-
-    for k in list(instrument_tables.keys()):
-        if k not in imported_instruments:
-            del instrument_tables[k]
-
-    write_results(connection, instrument_tables, ped_df)
-
-    print(f"DONE {time.time() - start}")
-
-    connection.close()
-
-    regressions = None
-    if config.regression_config is not None:
-        if isinstance(config.regression_config, str):
-            regressions = GPFConfigParser.load_config(
-                str(Path(config.input_dir, config.regression_config)),
-                regression_conf_schema,
-            )
-        else:
-            regressions = config.regression_config
-
-    output_config = generate_phenotype_data_config(
-        config.id, pheno_db_filename, regressions)
-
-    pheno_conf_path = Path(config.output_dir, f"{config.id}.yaml")
-    pheno_conf_path.write_text(output_config)
+    return imported_instruments, instrument_tables
 
 
 def collect_instruments(
@@ -437,6 +474,14 @@ def _transform_value(val: str | bool) -> str | None:  # noqa: FBT001
     return val
 
 
+class MeasureReport(BaseModel):
+    measure_name: str
+    instrument_name: str
+    db_name: str
+    measure_type: MeasureType
+    inference_report: InferenceReport
+
+
 def read_and_classify_measure(
     instrument_filepaths: list[Path],
     instrument_name: str,
@@ -445,7 +490,7 @@ def read_and_classify_measure(
     group_db_name: list[str],
     group_inf_configs: list[InferenceConfig],
     tab_separated: bool = False,  # noqa: FBT001,FBT002
-) -> list[tuple[dict[str, Any], ClassifierReport]]:
+) -> list[tuple[dict[str, Any], MeasureReport]]:
     """Read a measure's values and classify from an instrument file."""
     transformed_measures = defaultdict(dict)
     output = []
@@ -474,9 +519,29 @@ def read_and_classify_measure(
                 strict=True)
 
     for (m_name, m_dbname, m_infconf) in m_zip:
-        values, report = classification_reference_impl(
-            list(transformed_measures[m_name].values()), m_infconf,
+        m_values = list(transformed_measures[m_name].values())
+        values, inference_report = inference_reference_impl(
+            m_values, m_infconf,
         )
+
+        inference_report.histogram_type = \
+            determine_histogram_type(inference_report, m_infconf)
+        m_type: MeasureType = MeasureType.raw
+        if inference_report.histogram_type == NumberHistogram:
+            m_type = MeasureType.continuous
+        elif inference_report.histogram_type == CategoricalHistogram:
+            if inference_report.value_type is str:
+                m_type = MeasureType.categorical
+            else:
+                m_type = MeasureType.ordinal
+
+        report = MeasureReport.model_validate({
+            "measure_name": instrument_name,
+            "instrument_name": m_name,
+            "db_name": m_dbname,
+            "measure_type": m_type,
+            "inference_report": inference_report,
+        })
         report.instrument_name = instrument_name
         report.measure_name = m_name
         report.db_name = m_dbname
@@ -507,6 +572,7 @@ def add_pheno_common_inference(
         "proband",
         "not_sequenced",
         "missing",
+        "member_index",
     ]
     default_cols.extend(ALL_FAMILY_TAG_LABELS)
     default_cols.append("tag_family_type_full")
@@ -549,6 +615,8 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
             instrument_name VARCHAR NOT NULL,
             description VARCHAR,
             measure_type INT,
+            value_type VARCHAR,
+            histogram_type VARCHAR,
             individuals INT,
             default_filter VARCHAR,
             min_value FLOAT,
@@ -766,7 +834,7 @@ def merge_inference_configs(
 ) -> InferenceConfig:
     """Merge configs by order of specificity"""
     inference_config = InferenceConfig()
-    current_config = inference_config.dict()
+    current_config = inference_config.model_dump()
 
     if "*.*" in inference_configs:
         update_config = inference_configs["*.*"]
@@ -786,7 +854,7 @@ def merge_inference_configs(
         ]
         current_config.update(update_config)
 
-    return InferenceConfig.parse_obj(current_config)
+    return InferenceConfig.model_validate(current_config)
 
 
 def create_import_tasks(

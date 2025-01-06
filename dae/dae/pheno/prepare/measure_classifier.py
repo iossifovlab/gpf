@@ -1,76 +1,19 @@
 import enum
+import itertools
+from collections.abc import Sequence
 from typing import Any, cast
 
 import numpy as np
-from box import Box
+from pydantic import BaseModel
 
-from dae.pheno.common import InferenceConfig, MeasureType
+from dae.genomic_resources.histogram import (
+    CategoricalHistogram,
+    Histogram,
+    NullHistogram,
+    NumberHistogram,
+)
+from dae.pheno.common import InferenceConfig
 from dae.pheno.utils.commons import remove_annoying_characters
-
-
-class ClassifierReport:
-    """Class used to collect clissifier reports."""
-
-    MAX_CHARS = 32
-    DISTRIBUTION_CUTOFF = 20
-
-    def __init__(self) -> None:
-        self.instrument_name: str | None = None
-        self.measure_name: str | None = None
-        self.measure_type: str | None = None
-        self.count_total: int | None = None
-        self.count_with_values: int | None = None
-        self.count_without_values: int | None = None
-        self.count_with_numeric_values: int | None = None
-        self.count_with_non_numeric_values: int | None = None
-        self.count_unique_values: int | None = None
-        self.count_unique_numeric_values: int | None = None
-
-        self.value_max_len: int | None = None
-
-        self.unique_values: list[Any] | None = None
-        self.numeric_values: list[float | None] | np.ndarray | None = None
-        self.distribution: Any = None
-
-        self.min_value: int | None = None
-        self.max_value: int | None = None
-        self.values_domain: str | None = None
-        self.rank: int | None = None
-        self.db_name: str | None = None
-
-    def set_measure(self, measure: Box) -> "ClassifierReport":
-        self.instrument_name = measure.instrument_name
-        self.measure_name = measure.measure_name
-        self.measure_type = measure.measure_type.name
-        return self
-
-    @staticmethod
-    def short_attributes() -> list[str]:
-        return [
-            "instrument_name",
-            "measure_name",
-            "measure_type",
-            "count_total",
-            "count_with_values",
-            "count_with_numeric_values",
-            "count_with_non_numeric_values",
-            "count_without_values",
-            "count_unique_values",
-            "count_unique_numeric_values",
-            "value_max_len",
-        ]
-
-    def __repr__(self) -> str:
-        return self.log_line(short=True)
-
-    def log_line(self, *, short: bool = False) -> str:
-        """Construct a log line in clissifier report."""
-        attributes = self.short_attributes()
-        if not short:
-            attributes.append("values_domain")
-        values = [str(getattr(self, attr)).strip() for attr in attributes]
-        values = [v.replace("\n", " ") for v in values]
-        return "\t".join(values)
 
 
 def is_nan(val: Any) -> bool:
@@ -134,135 +77,239 @@ def convert_to_string(val: Any) -> str | None:
     return str(val)
 
 
-class MeasureClassifier:
-    """Defines a measure classification report."""
+class InferenceReport(BaseModel):
+    """Inference results report."""
+    value_type: type
+    histogram_type: type[Histogram]
+    min_individuals: int
+    count_total: int
+    count_with_values: int
+    count_without_values: int
+    count_unique_values: int
+    min_value: float | int | None
+    max_value: float | int | None
+    values_domain: str
 
-    def __init__(self, config: InferenceConfig):
-        self.config = config
 
-    def classify(self, rep: ClassifierReport) -> MeasureType:
-        """Classify a measure based on classification report."""
-        conf = self.config
+def convert_to_float(value: int | float | str | None) -> float | None:
+    try:
+        if value is not None:
+            return float(value)
+    except ValueError:
+        return None
+    return value
 
+
+def convert_to_int(value: int | float | str | None) -> int | None:
+    try:
+        if value is not None:
+            return int(value)
+    except ValueError:
+        return None
+    return value
+
+
+def determine_histogram_type(
+    report: InferenceReport, config: InferenceConfig,
+) -> type[Histogram]:
+    """Given an inference report and a configuration, return histogram type."""
+    if config.histogram_type is not None:
+        if config.histogram_type == "number":
+            return NumberHistogram
+        if config.histogram_type == "categorical":
+            return CategoricalHistogram
+        return NullHistogram
+
+    if (
+        config.min_individuals is not None and
+        report.count_with_values < config.min_individuals
+    ):
+        return NullHistogram
+
+    is_numeric = report.value_type is not str
+
+    if is_numeric:
         if (
-            conf.min_individuals is not None and
-            rep.count_with_values is not None and
-            rep.count_with_values < conf.min_individuals
+            config.continuous.min_rank is not None and
+            report.count_unique_values >= config.continuous.min_rank
         ):
-            return MeasureType.raw
-
-        non_numeric = (
-            1.0 * cast(int, rep.count_with_non_numeric_values)
-        ) / cast(int, rep.count_with_values)
-
-        if non_numeric <= conf.non_numeric_cutoff:
-            if (
-                rep.count_unique_numeric_values is not None and
-                conf.continuous.min_rank is not None and
-                rep.count_unique_numeric_values >= conf.continuous.min_rank
-            ):
-                return MeasureType.continuous
-            if (
-                rep.count_unique_numeric_values is not None and
-                conf.ordinal.min_rank is not None and
-                rep.count_unique_numeric_values >= conf.ordinal.min_rank
-            ):
-                return MeasureType.ordinal
-
-            return MeasureType.raw
-
+            return NumberHistogram
         if (
-            rep.count_unique_values is not None
-            and conf.categorical.min_rank is not None
-            and conf.categorical.max_rank is not None
-            and rep.count_unique_values >= conf.categorical.min_rank
-            and rep.count_unique_values <= conf.categorical.max_rank
-            # and rep.value_max_len <= conf.value_max_len
+            config.ordinal.min_rank is not None and
+            report.count_unique_values >= config.ordinal.min_rank
         ):
-            return MeasureType.categorical
+            return CategoricalHistogram
+    elif (
+        report.count_unique_values is not None
+        and config.categorical.min_rank is not None
+        and config.categorical.max_rank is not None
+        and report.count_unique_values >= config.categorical.min_rank
+        and report.count_unique_values <= config.categorical.max_rank
+    ):
+        return CategoricalHistogram
 
-        return MeasureType.raw
+    return NullHistogram
 
 
-def classification_reference_impl(
-    measure_values: list[str | None], config: InferenceConfig,
-) -> tuple[list[Any], ClassifierReport]:
-    """Reference implementation for measure classification."""
-    report = ClassifierReport()
+TransformedValuesType = \
+    list[float | None] | list[int | None] | list[str | None]
+
+
+def inference_reference_impl(
+    values: list[str | None], config: InferenceConfig,
+) -> tuple[
+    TransformedValuesType,
+    InferenceReport,
+]:
+    """Infer value and histogram type for a list of values."""
+    if config.value_type is not None:
+        return force_type_inference(values, config)
+    current_value_type: type[int] | type[float] = int
     unique_values: set[str] = set()
-    numeric_values: list[float | None] = []
+    numeric_values: list[int | float | None] = []
     unique_numeric_values = set()
-    report.count_total = len(measure_values)
+    min_value: int | float | None = None
+    max_value: int | float | None = None
+    count_total = len(values)
     numeric_count = 0
-    measure_type = None
     none_count = 0
 
-    if config.measure_type is not None:
-        measure_type = MeasureType.from_str(config.measure_type)
-
-    for val in measure_values:
+    for val in values:
+        num_value: None | int | float = None
         if val is None:
             none_count += 1
             numeric_values.append(None)
             continue
         unique_values.add(val)
         try:
-            num_value = float(val)
+            num_value = current_value_type(val)
             numeric_values.append(num_value)
             numeric_count += 1
             unique_numeric_values.add(num_value)
+            if min_value is None or min_value > num_value:
+                min_value = num_value
+            if max_value is None or max_value < num_value:
+                max_value = num_value
         except ValueError:
-            numeric_values.append(None)
+            if current_value_type is int:
+                to_float = convert_to_float(val)
+                if to_float is not None:
+                    current_value_type = float
+                    numeric_values = list(
+                        map(convert_to_float, numeric_values),
+                    )
+                    numeric_values.append(to_float)
+                    numeric_count += 1
+                    unique_numeric_values.add(to_float)
+                    if min_value is None or min_value > to_float:
+                        min_value = to_float
+                    if max_value is None or max_value < to_float:
+                        max_value = to_float
+                    continue
+                numeric_values.append(None)
+            else:
+                numeric_values.append(None)
 
-    report.numeric_values = numeric_values
-    report.count_with_values = len(measure_values) - none_count
-    report.count_without_values = none_count
-    report.count_with_numeric_values = numeric_count
-    report.count_with_non_numeric_values = \
-        report.count_with_values - report.count_with_numeric_values
-    report.unique_values = list(unique_values)
-    report.count_unique_values = len(report.unique_values)
-    report.count_unique_numeric_values = len(unique_numeric_values)
+    value_type: type[int] | type[float] | type[str] = current_value_type
+    total_with_values = count_total - none_count
+    non_numeric_count = total_with_values - numeric_count
 
-    assert (
-        report.count_total
-        == report.count_with_values
-        + report.count_without_values
+    non_numeric = (
+        1.0 * non_numeric_count / total_with_values
     )
-    assert (
-        report.count_with_values
-        == report.count_with_numeric_values
-        + report.count_with_non_numeric_values
+
+    transformed_values: (
+        Sequence[float | None] | Sequence[int | None] | Sequence[str | None]
     )
-    classifier = MeasureClassifier(config)
 
-    if measure_type is None:
-        measure_type = classifier.classify(report)
-    report.measure_type = measure_type
-
-    non_null_numeric_values = list(
-        filter(lambda x: x is not None, report.numeric_values))
-
-    if measure_type in {MeasureType.continuous, MeasureType.ordinal}:
-        if len(non_null_numeric_values) == 0:
-            raise ValueError(
-                "Measure is set as numeric but has no numeric values!",
-            )
-        report.min_value = np.min(cast(np.ndarray, non_null_numeric_values))
-        if isinstance(report.min_value, np.bool_):
-            report.min_value = np.int8(report.min_value)
-        report.max_value = np.max(cast(np.ndarray, non_null_numeric_values))
-        if isinstance(report.max_value, np.bool_):
-            report.max_value = np.int8(report.max_value)
-        report.values_domain = f"[{report.min_value}, {report.max_value}]"
+    if non_numeric > config.non_numeric_cutoff:
+        value_type = str
+        min_value = None
+        max_value = None
+        domain_values = list(itertools.islice(
+            [v for v in unique_values if v.strip() != ""],
+            0,
+            20,
+        ))
+        values_domain = ", ".join(sorted(domain_values))
+        count_unique_values = len(unique_values)
+        transformed_values = values
     else:
-        values = [v for v in report.unique_values if v.strip() != ""]
-        report.values_domain = ", ".join(sorted(values))
+        none_count = non_numeric_count
+        values_domain = f"[{min_value}, {max_value}]"
+        count_unique_values = len(unique_numeric_values)
+        transformed_values = numeric_values
 
-    report.rank = report.count_unique_values
+    report = InferenceReport.model_validate({
+        "value_type": value_type,
+        "histogram_type": NullHistogram,
+        "min_individuals": config.min_individuals,
+        "count_total": count_total,
+        "count_with_values": total_with_values,
+        "count_without_values": none_count,
+        "count_unique_values": count_unique_values,
+        "min_value": min_value,
+        "max_value": max_value,
+        "values_domain": values_domain,
+    })
 
-    if measure_type in [MeasureType.ordinal, MeasureType.continuous]:
-        assert len(measure_values) == len(numeric_values)
-        return numeric_values, report
+    return transformed_values, report
 
-    return measure_values, report
+
+def force_type_inference(
+    values: list[str | None], config: InferenceConfig,
+) -> tuple[TransformedValuesType, InferenceReport]:
+    """Perform type inference when a type is forced."""
+    count_total = len(values)
+    transformed_values: TransformedValuesType = values
+    if config.value_type == "str":
+        value_type = str
+    elif config.value_type == "int":
+        value_type = int
+        transformed_values = list(map(convert_to_int, values))
+    elif config.value_type == "float":
+        value_type = float
+        transformed_values = list(map(convert_to_float, values))
+    else:
+        raise ValueError("Invalid value type")
+
+    unique_values = set(transformed_values)
+
+    if value_type is str:
+        domain_values = list(itertools.islice(
+            [
+                v for v in cast(set[str | None], unique_values)
+                if v is not None and v.strip() != ""
+            ],
+            0,
+            20,
+        ))
+        min_value = None
+        max_value = None
+        values_domain = ", ".join(sorted(domain_values))
+    else:
+        non_null_values = cast(list[float | int], list(
+            filter(lambda x: x is not None, unique_values),
+        ))
+        min_value = min(non_null_values)
+        max_value = max(non_null_values)
+        values_domain = f"[{min_value}, {max_value}]"
+
+    count_without_values = len(list(
+        filter(lambda v: v is None, transformed_values),
+    ))
+    count_with_values = count_total - count_without_values
+    count_unique_values = len(set(values))
+    inference_report = InferenceReport.model_validate({
+        "value_type": value_type,
+        "histogram_type": NullHistogram,
+        "min_individuals": config.min_individuals,
+        "count_total": count_total,
+        "count_with_values": count_with_values,
+        "count_without_values": count_without_values,
+        "count_unique_values": count_unique_values,
+        "min_value": min_value,
+        "max_value": max_value,
+        "values_domain": values_domain,
+    })
+    return transformed_values, inference_report
