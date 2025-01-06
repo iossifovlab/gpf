@@ -23,7 +23,8 @@ class InferenceConfig(BaseModel):
     ordinal: RankRange = RankRange(min_rank=1)
     categorical: RankRange = RankRange(min_rank=1, max_rank=15)
     skip: bool = False
-    measure_type: str | None = None
+    value_type: str | None = None
+    histogram_type: str | None = None
 
 
 class DataDictionary(BaseModel):

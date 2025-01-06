@@ -1,7 +1,7 @@
 import enum
 import itertools
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 from pydantic import BaseModel
@@ -100,10 +100,26 @@ def convert_to_float(value: int | float | str | None) -> float | None:
     return value
 
 
+def convert_to_int(value: int | float | str | None) -> int | None:
+    try:
+        if value is not None:
+            return int(value)
+    except ValueError:
+        return None
+    return value
+
+
 def determine_histogram_type(
     report: InferenceReport, config: InferenceConfig,
 ) -> type[Histogram]:
     """Given an inference report and a configuration, return histogram type."""
+    if config.histogram_type is not None:
+        if config.histogram_type == "number":
+            return NumberHistogram
+        if config.histogram_type == "categorical":
+            return CategoricalHistogram
+        return NullHistogram
+
     if (
         config.min_individuals is not None and
         report.count_with_values < config.min_individuals
@@ -135,13 +151,19 @@ def determine_histogram_type(
     return NullHistogram
 
 
+TransformedValuesType = \
+    list[float | None] | list[int | None] | list[str | None]
+
+
 def inference_reference_impl(
     values: list[str | None], config: InferenceConfig,
 ) -> tuple[
-    list[float | None] | list[int | None] | list[str | None],
+    TransformedValuesType,
     InferenceReport,
 ]:
     """Infer value and histogram type for a list of values."""
+    if config.value_type is not None:
+        return force_type_inference(values, config)
     current_value_type: type[int] | type[float] = int
     unique_values: set[str] = set()
     numeric_values: list[int | float | None] = []
@@ -231,6 +253,63 @@ def inference_reference_impl(
         "values_domain": values_domain,
     })
 
-    report.histogram_type = determine_histogram_type(report, config)
-
     return transformed_values, report
+
+
+def force_type_inference(
+    values: list[str | None], config: InferenceConfig,
+) -> tuple[TransformedValuesType, InferenceReport]:
+    """Perform type inference when a type is forced."""
+    count_total = len(values)
+    transformed_values: TransformedValuesType = values
+    if config.value_type == "str":
+        value_type = str
+    elif config.value_type == "int":
+        value_type = int
+        transformed_values = list(map(convert_to_int, values))
+    elif config.value_type == "float":
+        value_type = float
+        transformed_values = list(map(convert_to_float, values))
+    else:
+        raise ValueError("Invalid value type")
+
+    unique_values = set(transformed_values)
+
+    if value_type is str:
+        domain_values = list(itertools.islice(
+            [
+                v for v in cast(set[str | None], unique_values)
+                if v is not None and v.strip() != ""
+            ],
+            0,
+            20,
+        ))
+        min_value = None
+        max_value = None
+        values_domain = ", ".join(sorted(domain_values))
+    else:
+        non_null_values = cast(list[float | int], list(
+            filter(lambda x: x is not None, unique_values),
+        ))
+        min_value = min(non_null_values)
+        max_value = max(non_null_values)
+        values_domain = f"[{min_value}, {max_value}]"
+
+    count_without_values = len(list(
+        filter(lambda v: v is None, transformed_values),
+    ))
+    count_with_values = count_total - count_without_values
+    count_unique_values = len(set(values))
+    inference_report = InferenceReport.model_validate({
+        "value_type": value_type,
+        "histogram_type": NullHistogram,
+        "min_individuals": config.min_individuals,
+        "count_total": count_total,
+        "count_with_values": count_with_values,
+        "count_without_values": count_without_values,
+        "count_unique_values": count_unique_values,
+        "min_value": min_value,
+        "max_value": max_value,
+        "values_domain": values_domain,
+    })
+    return transformed_values, inference_report

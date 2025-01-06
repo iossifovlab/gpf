@@ -39,6 +39,7 @@ from dae.pheno.common import (
 from dae.pheno.db import safe_db_name
 from dae.pheno.prepare.measure_classifier import (
     InferenceReport,
+    determine_histogram_type,
     inference_reference_impl,
 )
 from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
@@ -500,10 +501,13 @@ def read_and_classify_measure(
                 strict=True)
 
     for (m_name, m_dbname, m_infconf) in m_zip:
+        m_values = list(transformed_measures[m_name].values())
         values, inference_report = inference_reference_impl(
-            list(transformed_measures[m_name].values()), m_infconf,
+            m_values, m_infconf,
         )
 
+        inference_report.histogram_type = \
+            determine_histogram_type(inference_report, m_infconf)
         m_type: MeasureType = MeasureType.raw
         if inference_report.histogram_type == NumberHistogram:
             m_type = MeasureType.continuous
