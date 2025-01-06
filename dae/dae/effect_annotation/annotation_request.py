@@ -147,9 +147,7 @@ class BaseAnnotationRequest(abc.ABC):
             return ""
 
         last_index = pos + length - 1
-        seq = self._get_sequence(pos, last_index)
-
-        return seq
+        return self._get_sequence(pos, last_index)
 
     def get_coding_left(self, pos: int, length: int, index: int) -> str:
         """Return coding sequence to the left of a position."""
@@ -181,8 +179,7 @@ class BaseAnnotationRequest(abc.ABC):
         if length <= 0:
             return ""
         start_index = pos - length + 1
-        seq = self._get_sequence(start_index, pos)
-        return seq
+        return self._get_sequence(start_index, pos)
 
     @staticmethod
     def get_nucleotides_count_to_full_codon(length: int) -> int:
@@ -196,10 +193,10 @@ class BaseAnnotationRequest(abc.ABC):
 
         for i in codon:
             if i not in ["A", "C", "T", "G", "N"]:
-                print(
-                    "Codon can only contain: A, G, C, T, N letters, \
-                      this codon is: "
-                    + codon,
+                logger.warning(
+                    "Codon can only contain: A, G, C, T, N letters, "
+                    "this codon is: %s",
+                    codon,
                 )
                 return "?"
 
@@ -287,9 +284,7 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
             self.transcript_model.cds[0], self.transcript_model.cds[0] + 2,
         )
 
-        if codon == seq or codon in self.code.startCodons:
-            return True
-        return False
+        return codon == seq or codon in self.code.startCodons
 
     def get_frame(self, pos: int, index: int) -> int:
         """Return the frame of the annotation request."""
@@ -413,9 +408,7 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         )
 
         complement_codon = self.complement(codon[::-1])
-        if codon == seq or complement_codon in self.code.startCodons:
-            return True
-        return False
+        return codon == seq or complement_codon in self.code.startCodons
 
     def get_frame(self, pos: int, index: int) -> int:
         """Return the frame of the annotation request."""
