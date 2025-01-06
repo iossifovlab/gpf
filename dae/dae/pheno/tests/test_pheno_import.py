@@ -8,8 +8,9 @@ import pytest
 from dae.genomic_resources.testing import (
     setup_directories,
 )
+from dae.pheno.common import DataDictionary
 from dae.pheno.pheno_data import PhenotypeStudy
-from dae.pheno.pheno_import import collect_instruments, main
+from dae.pheno.pheno_import import collect_instruments, load_descriptions, main
 from dae.testing import (
     setup_pedigree,
 )
@@ -138,4 +139,97 @@ def test_collect_instruments(tmp_path: pathlib.Path) -> None:
             tmp_path, "subdir_1", "instrument_2.txt")],
         "instrument_3": [pathlib.Path(
             tmp_path, "subdir_2", "subsubdir", "instrument_3.txt")],
+    }
+
+
+def test_load_descriptions_file(tmp_path: pathlib.Path) -> None:
+    pathlib.Path(tmp_path, "descriptions.tsv").write_text(textwrap.dedent(
+    """instrumentName\tmeasureName\tmeasureId\tdescription
+       testInstrument1\tmeasure1\ttestInstrument1.measure1\tdescription one
+       testInstrument1\tmeasure2\ttestInstrument1.measure2\tdescription two
+       testInstrument2\tmeasure1\ttestInstrument2.measure1\tdescription three
+    """))
+
+    config = DataDictionary.model_validate({
+        "file": "descriptions.tsv",
+    })
+
+    assert load_descriptions(str(tmp_path), config) == {
+        "testInstrument1.measure1": "description one",
+        "testInstrument1.measure2": "description two",
+        "testInstrument2.measure1": "description three",
+    }
+
+
+def test_load_descriptions_instrument_files(tmp_path: pathlib.Path) -> None:
+    pathlib.Path(tmp_path, "i1_descriptions.tsv").write_text(textwrap.dedent(
+    """instrumentName\tmeasureName\tmeasureId\tdescription
+       testInstrument1\tmeasure1\ttestInstrument1.measure1\tdescription one
+       testInstrument1\tmeasure2\ttestInstrument1.measure2\tdescription two
+    """))
+
+    pathlib.Path(tmp_path, "i2_descriptions.tsv").write_text(textwrap.dedent(
+    """instrumentName\tmeasureName\tmeasureId\tdescription
+       testInstrument2\tmeasure1\ttestInstrument2.measure1\tdescription three
+    """))
+
+    config = DataDictionary.model_validate({
+        "instrument_files": ["i1_descriptions.tsv", "i2_descriptions.tsv"],
+    })
+
+    assert load_descriptions(str(tmp_path), config) == {
+        "testInstrument1.measure1": "description one",
+        "testInstrument1.measure2": "description two",
+        "testInstrument2.measure1": "description three",
+    }
+
+
+def test_load_descriptions_dictionary() -> None:
+    config = DataDictionary.model_validate({
+        "dictionary": {
+            "testInstrument1": {
+                "measure1": "description one",
+                "measure2": "description two",
+            },
+            "testInstrument2": {
+                "measure1": "description three",
+            },
+        },
+    })
+
+    assert load_descriptions("N/A", config) == {
+        "testInstrument1.measure1": "description one",
+        "testInstrument1.measure2": "description two",
+        "testInstrument2.measure1": "description three",
+    }
+
+
+def test_load_descriptions_mixed(tmp_path: pathlib.Path) -> None:
+    pathlib.Path(tmp_path, "descriptions.tsv").write_text(textwrap.dedent(
+    """instrumentName\tmeasureName\tmeasureId\tdescription
+       testInstrument1\tmeasure1\ttestInstrument1.measure1\tdescription one
+       testInstrument1\tmeasure2\ttestInstrument1.measure2\tdescription two
+       testInstrument2\tmeasure1\ttestInstrument2.measure1\tdescription three
+    """))
+
+    pathlib.Path(tmp_path, "i2_descriptions.tsv").write_text(textwrap.dedent(
+    """instrumentName\tmeasureName\tmeasureId\tdescription
+       testInstrument2\tmeasure2\ttestInstrument2.measure2\tdescription four
+    """))
+
+    config = DataDictionary.model_validate({
+        "file": "descriptions.tsv",
+        "instrument_files": ["i2_descriptions.tsv"],
+        "dictionary": {
+            "testInstrument1": {
+                "measure1": "description one updated",
+            },
+        },
+    })
+
+    assert load_descriptions(str(tmp_path), config) == {
+        "testInstrument1.measure1": "description one updated",
+        "testInstrument1.measure2": "description two",
+        "testInstrument2.measure1": "description three",
+        "testInstrument2.measure2": "description four",
     }

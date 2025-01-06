@@ -375,7 +375,7 @@ def handle_measure_inference_tasks(
         for instr in instruments
     }
     imported_instruments = set()
-    description_builder = load_descriptions(
+    descriptions = load_descriptions(
         config.input_dir, config.data_dictionary)
     with TaskGraphCli.create_executor(
         task_cache, **vars(task_graph_args),
@@ -389,10 +389,9 @@ def handle_measure_inference_tasks(
                     table[p_id][report.db_name] = value
                 m_id = f"{report.instrument_name}.{report.measure_name}"
                 description = ""
-                if description_builder:
-                    description = description_builder(
-                        report.instrument_name,
-                        report.measure_name,
+                if descriptions:
+                    description = descriptions.get(
+                        f"{report.instrument_name}.{report.measure_name}",
                     )
 
                 value_type = report.inference_report.value_type.__name__
@@ -778,53 +777,37 @@ def write_results(
 def load_descriptions(
     input_dir: str,
     config: DataDictionary | None,
-) -> Callable | None:
+) -> dict[str, str] | None:
     """Load measure descriptions."""
     if not config:
         return None
 
-    # TODO Implement support for other modes of setting
-    # the data dictionary - `instrument_files` and `dictionary`
-    description_path = config.file
+    descriptions: dict[str, str] = {}
 
-    if not description_path:
-        return None
-    absolute_path = Path(input_dir, description_path).absolute()
-    assert absolute_path.exists(), absolute_path
+    def read_from_file(path) -> dict[str, str]:
+        out = {}
+        abspath = Path(input_dir, path).absolute()
+        assert abspath.exists(), abspath
+        with open_file(abspath) as csvfile:
+            reader = csv.DictReader(csvfile, delimiter="\t")
+            for row in reader:
+                out[row["measureId"]] = row["description"]
+        return out
 
-    data = pd.read_csv(absolute_path, sep="\t")
+    if config.file:
+        descriptions.update(read_from_file(config.file))
 
-    class DescriptionDf:
-        """Phenotype database support for measure descriptions."""
+    if config.instrument_files:
+        for path in config.instrument_files:
+            descriptions.update(read_from_file(path))
 
-        def __init__(self, desc_df: pd.DataFrame):
-            self.desc_df = desc_df
-            header = list(desc_df)
-            assert all(
-                col in header
-                for col in [
-                    "instrumentName",
-                    "measureName",
-                    "measureId",
-                    "description",
-                ]
-            ), header
+    if config.dictionary:
+        for instrument, m_descs in config.dictionary.items():
+            for measure, description in m_descs.items():
+                measure_id = f"{instrument}.{measure}"
+                descriptions[measure_id] = description
 
-        def __call__(self, iname: str, mname: str) -> str | None:
-            if (
-                f"{iname}.{mname}"
-                not in self.desc_df["measureId"].to_numpy()
-            ):
-                return None
-            row = self.desc_df.query(
-
-                    "(instrumentName == @iname) and "
-                    "(measureName == @mname)",
-
-            )
-            return cast(str, row.iloc[0]["description"])
-
-    return DescriptionDf(data)
+    return descriptions
 
 
 def merge_inference_configs(
