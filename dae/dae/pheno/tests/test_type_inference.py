@@ -19,7 +19,6 @@ def test_valid_config_loads() -> None:
         continuous:
           max_rank: null
           min_rank: 10
-        measure_type: null
         min_individuals: 1
         non_numeric_cutoff: 0.06
         ordinal:
@@ -27,11 +26,11 @@ def test_valid_config_loads() -> None:
           min_rank: 1
         skip: false
         value_max_len: 32
-        measure_type: ordinal
+        histogram_type: categorical
         """,
     ))
 
-    assert InferenceConfig.parse_obj(config) is not None
+    assert InferenceConfig.model_validate(config) is not None
 
 
 def test_config_with_unknown_keys_errors() -> None:
@@ -43,7 +42,6 @@ def test_config_with_unknown_keys_errors() -> None:
         continuous:
           max_rank: null
           min_rank: 10
-        measure_type: null
         min_individuals: 1
         non_numeric_cutoff: 0.06
         ordinal:
@@ -51,13 +49,13 @@ def test_config_with_unknown_keys_errors() -> None:
           min_rank: 1
         skip: false
         value_max_len: 32
-        measure_type: ordinal
+        histogram_type: categorical
         some_key: asdf
         another_key: dkfhjldfjh
         """,
     ))
     with pytest.raises(ValidationError):
-        InferenceConfig.parse_obj(config)
+        InferenceConfig.model_validate(config)
 
 
 def test_merge() -> None:
@@ -70,7 +68,6 @@ def test_merge() -> None:
           continuous:
             max_rank: null
             min_rank: 10
-          measure_type: null
           min_individuals: 1
           non_numeric_cutoff: 0.06
           skip: false
@@ -82,7 +79,7 @@ def test_merge() -> None:
             min_rank: 2
 
         "*.some_measure":
-          measure_type: ordinal
+          histogram_type: categorical
 
         "another_instrument.some_measure":
           skip: true
@@ -97,7 +94,7 @@ def test_merge() -> None:
 
     assert config.categorical.max_rank == 16
     assert config.categorical.min_rank == 2
-    assert config.measure_type is None
+    assert config.histogram_type is None
     assert config.skip is False
 
     config = merge_inference_configs(
@@ -108,7 +105,7 @@ def test_merge() -> None:
 
     assert config.categorical.max_rank == 16
     assert config.categorical.min_rank == 2
-    assert config.measure_type == "ordinal"
+    assert config.histogram_type == "categorical"
     assert config.skip is False
 
     config = merge_inference_configs(
@@ -119,7 +116,7 @@ def test_merge() -> None:
 
     assert config.categorical.max_rank == 14
     assert config.categorical.min_rank == 1
-    assert config.measure_type is None
+    assert config.histogram_type is None
     assert config.skip is False
 
     config = merge_inference_configs(
@@ -130,5 +127,5 @@ def test_merge() -> None:
 
     assert config.categorical.max_rank == 14
     assert config.categorical.min_rank == 1
-    assert config.measure_type == "ordinal"
+    assert config.histogram_type == "categorical"
     assert config.skip is True
