@@ -205,7 +205,7 @@ def inference_reference_impl(
                         min_value = to_float
                     if max_value is None or max_value < to_float:
                         max_value = to_float
-                    break
+                    continue
                 numeric_values.append(None)
             else:
                 numeric_values.append(None)
