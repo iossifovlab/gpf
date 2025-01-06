@@ -41,9 +41,7 @@ def main(
 
     conn = sqlite3.connect(database=args.dbfile)
 
-    df = pd.read_sql(query, conn)
-
-    df.to_csv("gpdb_data.csv", index=False)
+    df = pd.read_sql(query, conn)  # noqa: F841
 
     with duckdb.connect(f"{gpdb.dbfile}") as connection:
-        connection.execute('COPY gene_profile FROM "gpdb_data.csv"')
+        connection.execute("INSERT INTO gene_profile SELECT * FROM df")
