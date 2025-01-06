@@ -287,7 +287,9 @@ def import_pheno_data(
     print("READING COLUMNS FROM INSTRUMENT FILE")
     start = time.time()
 
-    instruments = collect_instruments(config.input_dir, config.instrument_files)
+    instruments = collect_instruments(
+        config.input_dir, config.instrument_files,
+    )
 
     if not config.skip_pedigree_measures:
         instruments["pheno_common"] = [Path(config.pedigree).absolute()]
@@ -318,6 +320,52 @@ def import_pheno_data(
         tab_separated=config.tab_separated,
     )
 
+    print(f"DONE {time.time() - start}")
+
+    print("WRITING RESULTS")
+    start = time.time()
+
+    imported_instruments, instrument_tables = handle_measure_inference_tasks(
+        connection, config, task_graph, task_cache, task_graph_args,
+        list(instruments.keys()),
+    )
+
+    for k in list(instrument_tables.keys()):
+        if k not in imported_instruments:
+            del instrument_tables[k]
+
+    write_results(connection, instrument_tables, ped_df)
+
+    print(f"DONE {time.time() - start}")
+
+    connection.close()
+
+    regressions = None
+    if config.regression_config is not None:
+        if isinstance(config.regression_config, str):
+            regressions = GPFConfigParser.load_config(
+                str(Path(config.input_dir, config.regression_config)),
+                regression_conf_schema,
+            )
+        else:
+            regressions = config.regression_config
+
+    output_config = generate_phenotype_data_config(
+        config.id, pheno_db_filename, regressions)
+
+    pheno_conf_path = Path(config.output_dir, f"{config.id}.yaml")
+    pheno_conf_path.write_text(output_config)
+
+
+def handle_measure_inference_tasks(
+    connection: duckdb.DuckDBPyConnection,
+    config: PhenoImportConfig,
+    task_graph: TaskGraph,
+    task_cache: TaskCache,
+    task_graph_args: argparse.Namespace,
+    instruments: list[str],
+) -> tuple[set[str], dict[str, Any]]:
+    """Read the output of the measure inference tasks into dictionaries."""
     def default_row() -> dict[str, Any]:
         def none_val() -> None:
             return None
@@ -379,37 +427,7 @@ def import_pheno_data(
 
         except Exception:
             logger.exception("Failed to classify measure")
-
-    print(f"DONE {time.time() - start}")
-
-    print("WRITING RESULTS")
-    start = time.time()
-
-    for k in list(instrument_tables.keys()):
-        if k not in imported_instruments:
-            del instrument_tables[k]
-
-    write_results(connection, instrument_tables, ped_df)
-
-    print(f"DONE {time.time() - start}")
-
-    connection.close()
-
-    regressions = None
-    if config.regression_config is not None:
-        if isinstance(config.regression_config, str):
-            regressions = GPFConfigParser.load_config(
-                str(Path(config.input_dir, config.regression_config)),
-                regression_conf_schema,
-            )
-        else:
-            regressions = config.regression_config
-
-    output_config = generate_phenotype_data_config(
-        config.id, pheno_db_filename, regressions)
-
-    pheno_conf_path = Path(config.output_dir, f"{config.id}.yaml")
-    pheno_conf_path.write_text(output_config)
+    return imported_instruments, instrument_tables
 
 
 def collect_instruments(
