@@ -800,4 +800,6 @@ def load_phenotype_data(
         else:
             children.append(load_phenotype_data(extra_config, extra_configs))
 
-    return PhenotypeGroup(config["name"], cast(list[PhenotypeData], children))
+    return PhenotypeGroup(
+        config["name"], config, cast(list[PhenotypeData], children),
+    )
