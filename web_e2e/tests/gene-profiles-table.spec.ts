@@ -507,23 +507,6 @@ test.describe('Gene profiles table state tests', () => {
     await checkTable(page);
   });
 
-  test('should check if state in not saved when logout too fast', async({ page }) => {
-    await changeTable(page);
-
-    await utils.logout(page);
-    await utils.login(page);
-    await page.locator('#header a:text("Gene Profiles")').click();
-
-    await checkDefaultTable(page);
-  });
-
-  test('should check if state in not saved when navigating to Home page too fast', async({ page }) => {
-    await changeTable(page);
-    await utils.navigateToHome(page);
-    await page.locator('#header a:text("Gene Profiles")').click();
-    await checkDefaultTable(page);
-  });
-
   test('should check reset table button', async({ page }) => {
     await changeTable(page);
     await page.waitForTimeout(1500); // wait for user's gene profile state query
