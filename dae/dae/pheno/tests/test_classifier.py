@@ -64,6 +64,22 @@ def test_classify_default_categorical() -> None:
     ]
 
 
+def test_classify_all_none() -> None:
+    values: list[str | None] = [
+        None, None, None, None,
+    ]
+    config = InferenceConfig()
+
+    new_values, report = inference_reference_impl(values, config)
+
+    assert determine_histogram_type(report, config) == NullHistogram
+    assert report.value_type is int
+
+    assert new_values == [
+        None, None, None, None,
+    ]
+
+
 @pytest.mark.parametrize(
     (
         "forced_histogram_type,forced_value_type,"
