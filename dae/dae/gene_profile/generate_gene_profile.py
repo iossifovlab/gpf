@@ -268,7 +268,7 @@ def main(
     description = "Generate gene profile statistics tool"
     parser = argparse.ArgumentParser(description=description)
     VerbosityConfiguration.set_arguments(parser)
-    default_dbfile = os.path.join(os.getenv("DAE_DB_DIR", "./"), "gpdb")
+    default_dbfile = os.path.join(os.getenv("DAE_DB_DIR", "./"), "gpdb.duckdb")
     parser.add_argument("--dbfile", default=default_dbfile)
     parser.add_argument(
         "--gene-sets-genes",
