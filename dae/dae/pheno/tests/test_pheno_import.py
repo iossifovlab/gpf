@@ -6,7 +6,7 @@ from pathlib import Path
 
 import duckdb
 import pytest
-from sqlglot.expressions import select, table_
+from sqlglot.expressions import table_
 
 from dae.genomic_resources.testing import (
     setup_directories,
@@ -144,14 +144,23 @@ def test_write_and_read_manifest(
     ImportManifest.write_to_db(connection, table, import_config)
     end = time.time()
 
-    with connection.cursor() as cursor:
-        rows = cursor.execute(select("*").from_(table).sql()).fetchall()
+    manifest = ImportManifest.from_table(connection, table)[0]
 
-    manifest = ImportManifest.from_row(rows[0])
     assert manifest is not None
     assert manifest.unix_timestamp > start
     assert manifest.unix_timestamp < end
     assert manifest.import_config == import_config
+
+
+def test_empty_manifest_read(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    tmp_dir = tmp_path_factory.mktemp("pheno_import_manifest")
+    dbfile = tmp_dir / "db"
+    connection = duckdb.connect(dbfile)
+    table = table_("test")
+    out = ImportManifest.from_table(connection, table)
+    assert len(out) == 0
 
 
 def test_collect_instruments(tmp_path: pathlib.Path) -> None:
