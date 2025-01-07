@@ -164,8 +164,6 @@ Annotator to identify the effect of the variant on protein coding.
         else:
             effect_type = "unknown"
         effect = AnnotationEffect(effect_type)
-        # TODO: Ask, why is this expected in the
-        # test_regions_effect_annotations
         effect.length = len(annotatable)
         full_desc = AnnotationEffect.effects_description([effect])
         attributes.update({
@@ -179,7 +177,8 @@ Annotator to identify the effect of the variant on protein coding.
         return attributes
 
     def _do_annotate(
-        self, annotatable: Annotatable, _: dict[str, Any],
+        self, annotatable: Annotatable,
+        context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
         result: dict = {}
 

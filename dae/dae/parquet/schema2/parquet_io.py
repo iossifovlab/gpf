@@ -313,7 +313,7 @@ class VariantsParquetWriter:
                 if summary_index % 1000 == 0 and summary_index > 0:
                     elapsed = time.time() - self.start
                     logger.info(
-                        "progress bucked %s; "
+                        "progress bucket %s; "
                         "summary variants: %s; family variants: %s; "
                         "elapsed time: %0.2f sec",
                         self.bucket_index,
@@ -326,7 +326,7 @@ class VariantsParquetWriter:
 
         elapsed = time.time() - self.start
         logger.info(
-            "finished bucked %s; summary variants: %s; family variants: %s; "
+            "finished bucket %s; summary variants: %s; family variants: %s; "
             "elapsed time: %0.2f sec",
             self.bucket_index, summary_index, family_index,
             elapsed)

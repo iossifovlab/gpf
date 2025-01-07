@@ -2,7 +2,8 @@
 import abc
 import logging
 import textwrap
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from dae.annotation.annotation_config import AnnotatorInfo, AttributeInfo
 from dae.annotation.annotation_pipeline import (
@@ -119,8 +120,10 @@ Annotator to lift over a variant from one reference genome to another.
         self.chain.open()
         return super().open()
 
-    def _do_annotate(self, annotatable: Annotatable, _: dict[str, Any]) \
-            -> dict[str, Any]:
+    def _do_annotate(
+        self, annotatable: Annotatable,
+        context: dict[str, Any],  # noqa: ARG002
+    ) -> dict[str, Any]:
         assert annotatable is not None
 
         if annotatable.type == Annotatable.Type.POSITION:

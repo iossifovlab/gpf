@@ -9,7 +9,6 @@ import textwrap
 import time
 import traceback
 from collections import defaultdict
-from collections.abc import Callable
 from itertools import chain
 from pathlib import Path
 from typing import Any, TextIO, cast
