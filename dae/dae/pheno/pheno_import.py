@@ -18,6 +18,7 @@ import pandas as pd
 import sqlglot
 import yaml
 from pydantic import BaseModel
+from sqlglot.expressions import Table, insert
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
@@ -589,6 +590,45 @@ def load_inference_configs(
             Path(input_dir, inference_config_filepath).read_text(),
         ))
     return {}
+
+
+class ImportManifest(BaseModel):
+    """Import manifest for checking cache validity."""
+
+    unix_timestamp: float
+    import_config: PhenoImportConfig
+
+    @staticmethod
+    def from_row(row: tuple[Any, str]) -> "ImportManifest":
+        timestamp = float(row[0])
+        import_config = PhenoImportConfig.model_validate_json(row[1])
+        return ImportManifest(
+            unix_timestamp=timestamp,
+            import_config=import_config,
+        )
+
+    @staticmethod
+    def create_table(connection: duckdb.DuckDBPyConnection, table: Table):
+        """Create table for recording import manifests."""
+        query = sqlglot.parse_one(
+            f"CREATE TABLE {table.alias_or_name}"
+            " (unix_timestamp DOUBLE, import_config VARCHAR)",
+        ).sql()
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+
+    @staticmethod
+    def write_to_db(
+        connection: duckdb.DuckDBPyConnection,
+        table: Table,
+        import_config: PhenoImportConfig,
+    ):
+        """Write manifest into DB on given table."""
+        config_json = import_config.model_dump_json()
+        timestamp = time.time()
+        query = insert(f"VALUES ({timestamp}, '{config_json}')", table)
+        with connection.cursor() as cursor:
+            cursor.execute(to_duckdb_transpile(query)).fetchall()
 
 
 def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
