@@ -214,9 +214,12 @@ def inference_reference_impl(
     total_with_values = count_total - none_count
     non_numeric_count = total_with_values - numeric_count
 
-    non_numeric = (
-        1.0 * non_numeric_count / total_with_values
-    )
+    if total_with_values == 0:
+        non_numeric = 0.0
+    else:
+        non_numeric = (
+            1.0 * non_numeric_count / total_with_values
+        )
 
     transformed_values: (
         Sequence[float | None] | Sequence[int | None] | Sequence[str | None]
