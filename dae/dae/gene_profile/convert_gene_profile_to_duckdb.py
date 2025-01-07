@@ -1,6 +1,7 @@
 import argparse
 import os
 import sqlite3
+from pathlib import Path
 
 import duckdb
 import pandas as pd
@@ -18,8 +19,14 @@ def main(
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     description = "Gene profiles database converter from sqlite to duckdb"
     parser = argparse.ArgumentParser(description=description)
-    default_dbfile = os.path.join(os.getenv("DAE_DB_DIR", "./"), "gpdb")
+
+    dae_db_dir = Path(os.getenv("DAE_DB_DIR", "./"))
+
+    default_dbfile = str(dae_db_dir / "gpdb")
     parser.add_argument("--dbfile", default=default_dbfile)
+
+    default_output = str(dae_db_dir / "gpdb.duckdb")
+    parser.add_argument("--output", default=default_output)
 
     args = parser.parse_args(argv)
 
@@ -33,7 +40,7 @@ def main(
 
     gpdb = GeneProfileDBWriter(
         config.to_dict(),
-        os.path.join(os.getenv("DAE_DB_DIR", "./"), "gpdb.duckdb"),
+        args.output,
     )
 
     table_name = "gene_profile"
