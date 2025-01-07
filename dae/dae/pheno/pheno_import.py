@@ -18,7 +18,7 @@ import pandas as pd
 import sqlglot
 import yaml
 from pydantic import BaseModel
-from sqlglot.expressions import Table, insert
+from sqlglot.expressions import Table, insert, select, table_
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
@@ -37,6 +37,7 @@ from dae.pheno.common import (
     PhenoImportConfig,
 )
 from dae.pheno.db import safe_db_name
+from dae.pheno.pheno_data import PhenotypeData, PhenotypeGroup, PhenotypeStudy
 from dae.pheno.prepare.measure_classifier import (
     InferenceReport,
     determine_histogram_type,
@@ -52,6 +53,9 @@ logger = logging.getLogger(__name__)
 
 
 # ruff: noqa: S608
+
+
+IMPORT_METADATA_TABLE = table_("import_metadata")
 
 
 def pheno_cli_parser() -> argparse.ArgumentParser:
@@ -338,6 +342,10 @@ def import_pheno_data(
 
     print(f"DONE {time.time() - start}")
 
+    ImportManifest.create_table(connection, IMPORT_METADATA_TABLE)
+
+    ImportManifest.write_to_db(connection, IMPORT_METADATA_TABLE, config)
+
     connection.close()
 
     regressions = None
@@ -598,8 +606,13 @@ class ImportManifest(BaseModel):
     unix_timestamp: float
     import_config: PhenoImportConfig
 
+    def is_older_than(self, other: "ImportManifest") -> bool:
+        if self.unix_timestamp < other.unix_timestamp:
+            return True
+        return self.import_config != other.import_config
+
     @staticmethod
-    def from_row(row: tuple[Any, str]) -> "ImportManifest":
+    def from_row(row: tuple[str, Any, str]) -> "ImportManifest":
         timestamp = float(row[0])
         import_config = PhenoImportConfig.model_validate_json(row[1])
         return ImportManifest(
@@ -608,11 +621,43 @@ class ImportManifest(BaseModel):
         )
 
     @staticmethod
+    def from_table(
+        connection: duckdb.DuckDBPyConnection, table: Table,
+    ) -> list["ImportManifest"]:
+        with connection.cursor() as cursor:
+            table_row = cursor.execute(sqlglot.parse_one(
+                "SELECT * FROM information_schema.tables"
+                f" WHERE table_name = '{IMPORT_METADATA_TABLE.alias_or_name}'",
+            ).sql()).fetchone()
+            if table_row is None:
+                return []
+            rows = cursor.execute(select("*").from_(table).sql()).fetchall()
+        return [ImportManifest.from_row(row) for row in rows]
+
+    @staticmethod
+    def from_phenotype_data(
+        pheno_data: PhenotypeData,
+    ) -> list["ImportManifest"]:
+        """Collect all manifests in a phenotype data instance."""
+        is_group = pheno_data.config["type"] == "group"
+        if is_group:
+            leaves = cast(PhenotypeGroup, pheno_data).get_leaves()
+        else:
+            leaves = [cast(PhenotypeStudy, pheno_data)]
+
+        return [
+            ImportManifest.from_table(
+                leaf.db.connection, IMPORT_METADATA_TABLE,
+            )[0]
+            for leaf in leaves
+        ]
+
+    @staticmethod
     def create_table(connection: duckdb.DuckDBPyConnection, table: Table):
         """Create table for recording import manifests."""
         query = sqlglot.parse_one(
-            f"CREATE TABLE {table.alias_or_name}"
-            " (unix_timestamp DOUBLE, import_config VARCHAR)",
+            f"CREATE TABLE {table.alias_or_name} "
+            "(unix_timestamp DOUBLE, import_config VARCHAR)",
         ).sql()
         with connection.cursor() as cursor:
             cursor.execute(query)
@@ -626,7 +671,9 @@ class ImportManifest(BaseModel):
         """Write manifest into DB on given table."""
         config_json = import_config.model_dump_json()
         timestamp = time.time()
-        query = insert(f"VALUES ({timestamp}, '{config_json}')", table)
+        query = insert(
+            f"VALUES ({timestamp}, '{config_json}')", table,
+        )
         with connection.cursor() as cursor:
             cursor.execute(to_duckdb_transpile(query)).fetchall()
 
