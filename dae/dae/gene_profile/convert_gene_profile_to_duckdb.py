@@ -13,10 +13,10 @@ def main(
     gpf_instance: GPFInstance | None = None,
     argv: list[str] | None = None,
 ) -> None:
-    """Entry point for the generate GP script."""
+    """Simple gpdb converter from sqlite to duckdb."""
     # flake8: noqa: C901
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-    description = "Generate gene profile statistics tool"
+    description = "Gene profiles database converter from sqlite to duckdb"
     parser = argparse.ArgumentParser(description=description)
     default_dbfile = os.path.join(os.getenv("DAE_DB_DIR", "./"), "gpdb")
     parser.add_argument("--dbfile", default=default_dbfile)
