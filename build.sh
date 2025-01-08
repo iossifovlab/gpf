@@ -22,7 +22,7 @@ include libopt.sh
 function main() {
   local -A options
   libopt_parse options \
-    stage:all preset:fast clobber:allow_if_matching_values build_no:0 \
+    stage:all preset:slow clobber:allow_if_matching_values build_no:0 \
     generate_jenkins_init:no expose_ports:no -- "$@"
 
   local preset="${options["preset"]}"
