@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, cast
 
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
@@ -81,14 +81,14 @@ class EnrichmentTestView(QueryBaseView):
         self.enrichment_helper = EnrichmentHelper(self.gpf_instance.grr)
 
     @staticmethod
-    def _parse_gene_syms(query: dict[str, Any]) -> set[str]:
+    def _parse_gene_syms(query: dict[str, Any]) -> list[str]:
         gene_syms = query.get("geneSymbols")
         if gene_syms is None:
-            return set()
+            return []
 
         if isinstance(gene_syms, str):
             gene_syms = gene_syms.split(",")
-        return {g.strip() for g in gene_syms}
+        return [g.strip() for g in gene_syms]
 
     def enrichment_description(self, query: dict[str, Any]) -> str:
         """Build enrichment result description."""
@@ -130,7 +130,8 @@ class EnrichmentTestView(QueryBaseView):
 
     def post(self, request: Request) -> Response:
         """Run the enrichment test and return the result."""
-        query = expand_gene_set(request.data)
+        query = expand_gene_set(cast(dict, request.data))
+
         dataset_id = query.get("datasetId", None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)

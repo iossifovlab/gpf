@@ -152,7 +152,7 @@ def test_enrichment_test_with_gene_symbols(
     result = response.data  # type: ignore
 
     assert set(result.keys()) == {"desc", "result"}
-    assert result["desc"] == "Gene Symbols: C8,T4 (2)"
+    assert result["desc"] == "Gene Symbols: T4,C8 (2)"
     assert len(result["result"]) == 2
     assert len(result["result"][0]) == 18
     assert len(result["result"][1]) == 18
