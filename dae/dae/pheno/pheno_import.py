@@ -324,9 +324,7 @@ def import_pheno_data(
         tab_separated=config.tab_separated,
     )
 
-    print(f"DONE {time.time() - start}")
 
-    print("WRITING RESULTS")
     start = time.time()
 
     imported_instruments, instrument_tables = handle_measure_inference_tasks(
@@ -337,6 +335,9 @@ def import_pheno_data(
     for k in list(instrument_tables.keys()):
         if k not in imported_instruments:
             del instrument_tables[k]
+
+    print(f"DONE {time.time() - start}")
+    print("WRITING RESULTS")
 
     write_results(connection, instrument_tables, ped_df)
 
