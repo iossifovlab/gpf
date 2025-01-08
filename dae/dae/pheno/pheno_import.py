@@ -324,7 +324,6 @@ def import_pheno_data(
         tab_separated=config.tab_separated,
     )
 
-
     start = time.time()
 
     imported_instruments, instrument_tables = handle_measure_inference_tasks(
@@ -395,7 +394,7 @@ def handle_measure_inference_tasks(
             for (values, report) in task_result_chain:
                 table = instrument_tables[report.instrument_name]
                 for p_id, value in values.items():
-                    table[p_id][report.db_name] = value
+                    table[report.db_name][p_id] = value
                 m_id = f"{report.instrument_name}.{report.measure_name}"
                 description = ""
                 if descriptions:
@@ -435,6 +434,7 @@ def handle_measure_inference_tasks(
 
         except Exception:
             logger.exception("Failed to classify measure")
+
     return imported_instruments, instrument_tables
 
 
@@ -824,8 +824,7 @@ def write_results(
     """Write imported data into duckdb as measure value tables."""
     with connection.cursor() as cursor:
         for instrument_name, table in instrument_tables.items():
-            output_table_df = pd.DataFrame(
-                table).transpose().rename_axis("person_id").reset_index()
+            output_table_df = pd.DataFrame(table).rename_axis("person_id")
 
             output_table_df = ped_df[
                 ["person_id", "family_id", "role", "status", "sex"]
@@ -853,6 +852,7 @@ def write_results(
                     ('{instrument_name}', '{table_name}')
                 """),
             )
+
             cursor.execute(
                 textwrap.dedent(f"""
                     CREATE TABLE {table_name} AS
