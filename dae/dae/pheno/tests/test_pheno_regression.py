@@ -3,7 +3,7 @@ from pathlib import Path
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
-from dae.pheno.pheno_data import PhenotypeStudy
+from dae.pheno.pheno_data import PhenotypeData, PhenotypeStudy
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
 
 
@@ -49,8 +49,11 @@ def test_has_regression_measure(
     regressions_conf: str,
 ) -> None:
     reg = GPFConfigParser.load_config(regressions_conf, regression_conf_schema)
+    browser = PhenotypeData.create_browser(
+        fake_phenotype_data, read_only=False,
+    )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, output_dir, reg["regression"],
+        fake_phenotype_data, browser, output_dir, reg["regression"],
         output_dir / "images",
     )
 

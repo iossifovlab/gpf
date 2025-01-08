@@ -625,10 +625,11 @@ class ImportManifest(BaseModel):
     def from_table(
         connection: duckdb.DuckDBPyConnection, table: Table,
     ) -> list["ImportManifest"]:
+        """Read manifests from given table."""
         with connection.cursor() as cursor:
             table_row = cursor.execute(sqlglot.parse_one(
                 "SELECT * FROM information_schema.tables"
-                f" WHERE table_name = '{IMPORT_METADATA_TABLE.alias_or_name}'",
+                f" WHERE table_name = '{table.alias_or_name}'",
             ).sql()).fetchone()
             if table_row is None:
                 return []

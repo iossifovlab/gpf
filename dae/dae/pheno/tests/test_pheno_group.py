@@ -14,7 +14,7 @@ def fake_group(fake_pheno_db: PhenoRegistry) -> PhenotypeGroup:
     fake = fake_pheno_db.get_phenotype_data("fake")
     fake2 = fake_pheno_db.get_phenotype_data("fake2")
 
-    group = PhenotypeGroup("group", [fake, fake2])
+    group = PhenotypeGroup("group", {}, [fake, fake2])
     assert group is not None
     return group
 
