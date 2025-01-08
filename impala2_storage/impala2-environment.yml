@@ -10,6 +10,8 @@ channels:
   - bioconda
   - iossifovlab
 dependencies:
+  - numpy=1.26
+  - pybigwig=0.3.22
   - openjdk=8.0.312
   - hadoop=3.1.2
   - impyla=0.19.0
