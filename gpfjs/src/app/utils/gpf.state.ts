@@ -5,7 +5,7 @@ import { GeneScoresState, initialState as geneScoresInitialState } from 'app/gen
 import { PedigreeSelector, initialState as pedigreeSelectorInitialState } from 'app/pedigree-selector/pedigree-selector.state';
 import { PhenoToolMeasureState, initialState as phenoToolMeasureInitialState } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 import { PresentInParent, initialState as presentInParentInitialState } from 'app/present-in-parent/present-in-parent.state';
-import { initialState as genomicScoresInitialState } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { initialState as genomicScoresInitialState, GenomicScoreState } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { initialState as familyTagsInitialState } from 'app/family-tags/family-tags.state';
 import { initialState as personIdsInitialState } from 'app/person-ids/person-ids.state';
 import { initialState as personFiltersInitialState } from 'app/person-filters/person-filters.state';
@@ -22,7 +22,6 @@ import { initialState as regionsFilterInitialState } from 'app/regions-filter/re
 import { initialState as uniqueFamilyVariantsInitialState } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
 import { initialState as studyTypesInitialState } from 'app/study-types/study-types.state';
 import { initialState as familyIdsInitialState } from 'app/family-ids/family-ids.state';
-import { GenomicScoreInterface } from 'app/genotype-browser/genotype-browser';
 import { PersonFilterState } from 'app/person-filters/person-filters';
 import { FamilyTags } from 'app/family-tags/family-tags';
 import { cloneDeep } from 'lodash';
@@ -49,7 +48,7 @@ export interface State {
   pedigreeSelector: PedigreeSelector;
   geneProfiles: GeneProfiles;
   regionsFilter: string[];
-  genomicScores: GenomicScoreInterface[];
+  genomicScores: GenomicScoreState[];
   uniqueFamilyVariantsFilter: boolean;
   studyTypes: string[];
 }

@@ -1,4 +1,4 @@
-import { GenomicScore } from 'app/genotype-browser/genotype-browser';
+import { GenomicScoreState } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { Type } from 'class-transformer';
 
 export class GeneProfilesSingleViewConfig {
@@ -88,7 +88,7 @@ export class GeneProfilesDatasetStatistic {
   public category: string;
   public description: string;
   public variantTypes: string[];
-  public scores: GenomicScore[];
+  public scores: GenomicScoreState[];
   public defaultVisible: boolean;
 }
 
