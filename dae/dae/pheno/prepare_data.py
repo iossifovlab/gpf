@@ -336,6 +336,7 @@ class PreparePhenoBrowserBase:
             if child.config["type"] == "study":
                 configs.append(child.config)
             elif child.config["type"] == "group":
+                configs.append(child.config)
                 configs.extend(
                     self.collect_child_configs(cast(PhenotypeGroup, child)),
                 )
