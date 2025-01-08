@@ -2,10 +2,6 @@ import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import {
   Partitions,
   GeneScoresLocalState,
-  GeneScore,
-  CategoricalHistogram,
-  NumberHistogram,
-  CategoricalHistogramView
 } from './gene-scores';
 import { GeneScoresService } from './gene-scores.service';
 import { ReplaySubject, Observable, combineLatest, of } from 'rxjs';
@@ -21,6 +17,12 @@ import {
   setGeneScoreContinuous
 } from './gene-scores.state';
 import { cloneDeep } from 'lodash';
+import {
+  CategoricalHistogramView,
+  CategoricalHistogram,
+  NumberHistogram,
+  GenomicScore
+} from 'app/genomic-scores-block/genomic-scores-block';
 
 @Component({
   encapsulation: ViewEncapsulation.None, // TODO: What is this?
@@ -32,7 +34,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
   private partitions: Observable<Partitions>;
 
-  public geneScoresArray: GeneScore[];
+  public geneScoresArray: GenomicScore[];
   public rangesCounts: Observable<Array<number>>;
   public downloadUrl: string;
 
@@ -144,11 +146,11 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
     this.updateCategoricalHistogramState();
   }
 
-  public get selectedGeneScore(): GeneScore {
+  public get selectedGeneScore(): GenomicScore {
     return this.geneScoresLocalState.score;
   }
 
-  public set selectedGeneScore(selectedGeneScore: GeneScore) {
+  public set selectedGeneScore(selectedGeneScore: GenomicScore) {
     this.categoricalValues = [];
     this.geneScoresLocalState.score = selectedGeneScore;
     this.downloadUrl = this.getDownloadUrl();

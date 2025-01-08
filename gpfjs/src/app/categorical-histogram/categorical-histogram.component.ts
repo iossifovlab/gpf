@@ -9,7 +9,7 @@ import {
   EventEmitter,
   OnInit
 } from '@angular/core';
-import { CategoricalHistogram, CategoricalHistogramView } from 'app/gene-scores/gene-scores';
+import { CategoricalHistogram, CategoricalHistogramView } from 'app/genomic-scores-block/genomic-scores-block';
 
 import * as d3 from 'd3';
 

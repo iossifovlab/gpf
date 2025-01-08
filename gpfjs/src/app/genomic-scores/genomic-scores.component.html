@@ -21,22 +21,48 @@
   </div>
   <div class="col-sm-11">
     <gpf-histogram
-      *ngIf="selectedGenomicScores"
+      *ngIf="selectedGenomicScores && isNumberHistogram(selectedGenomicScores.histogram)"
       [width]="800"
       [height]="145"
       [marginLeft]="180"
-      [bins]="selectedGenomicScores.bins"
-      [bars]="selectedGenomicScores.bars"
+      [bins]="selectedGenomicScores.histogram.bins"
+      [bars]="selectedGenomicScores.histogram.bars"
       [domainMin]="domainMin"
       [domainMax]="domainMax"
-      [logScaleX]="selectedGenomicScores.logScaleX"
-      [logScaleY]="selectedGenomicScores.logScaleY"
-      [smallValuesDesc]="selectedGenomicScores.smallValuesDesc"
-      [largeValuesDesc]="selectedGenomicScores.largeValuesDesc"
+      [logScaleX]="selectedGenomicScores.histogram.logScaleX"
+      [logScaleY]="selectedGenomicScores.histogram.logScaleY"
+      [smallValuesDesc]="selectedGenomicScores.histogram.smallValuesDesc"
+      [largeValuesDesc]="selectedGenomicScores.histogram.largeValuesDesc"
       [(rangeStart)]="rangeStart"
       [(rangeEnd)]="rangeEnd"
       style="display: block; margin-top: 17px">
     </gpf-histogram>
+    <gpf-categorical-histogram
+      *ngIf="
+        selectedGenomicScores &&
+        isCategoricalHistogram(selectedGenomicScores.histogram) &&
+        selectedCategoricalHistogramView === 'click selector'
+      "
+      [width]="650"
+      [height]="145"
+      [histogram]="selectedGenomicScores.histogram"
+      [stateCategoricalNames]="categoricalValues"
+      [interactType]="selectedCategoricalHistogramView"
+      (selectCategoricalValues)="toggleCategoricalValues($event)">
+    </gpf-categorical-histogram>
+    <gpf-categorical-histogram
+      *ngIf="
+        selectedGenomicScores &&
+        isCategoricalHistogram(selectedGenomicScores.histogram) &&
+        selectedCategoricalHistogramView === 'range selector'
+      "
+      [width]="650"
+      [height]="145"
+      [histogram]="selectedGenomicScores.histogram"
+      [stateCategoricalNames]="categoricalValues"
+      [interactType]="selectedCategoricalHistogramView"
+      (selectCategoricalValues)="toggleCategoricalValues($event)">
+    </gpf-categorical-histogram>
     <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
   </div>
 </div>

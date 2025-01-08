@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 // eslint-disable-next-line no-restricted-imports
 import { Observable } from 'rxjs';
 
-import { GenomicScores } from './genomic-scores-block';
+import { GenomicScore } from './genomic-scores-block';
 import { ConfigService } from '../config/config.service';
 import { map } from 'rxjs/operators';
 
@@ -16,10 +16,10 @@ export class GenomicScoresBlockService {
     private config: ConfigService
   ) {}
 
-  public getGenomicScores(): Observable<GenomicScores[]> {
+  public getGenomicScores(): Observable<GenomicScore[]> {
     return this.http
       .get(this.config.baseUrl + this.genomicScoresUrl).pipe(
-        map((res: object[]) => GenomicScores.fromJsonArray(res))
+        map((res: object[]) => GenomicScore.fromJsonArray(res))
       );
   }
 }

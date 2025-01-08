@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { GenomicScoreState, GenomicScoresState } from '../genomic-scores/genomic-scores-store';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
-import { GenomicScores } from './genomic-scores-block';
+import { CategoricalHistogram, CategoricalHistogramView, GenomicScore, NumberHistogram } from './genomic-scores-block';
 import { Store} from '@ngrx/store';
 import { selectGenomicScores, setGenomicScores } from './genomic-scores-block.state';
 import { combineLatest, of } from 'rxjs';
@@ -17,7 +17,7 @@ import { ComponentValidator } from 'app/common/component-validator';
 export class GenomicScoresBlockComponent extends ComponentValidator implements OnInit {
   @ValidateNested()
   public genomicScoresState = new GenomicScoresState();
-  public genomicScoresArray: GenomicScores[];
+  public genomicScoresArray: GenomicScore[];
 
   public constructor(
     protected store: Store,
@@ -40,12 +40,14 @@ export class GenomicScoresBlockComponent extends ComponentValidator implements O
         // restore state
         for (const score of genomicScoresState) {
           const genomicScore = new GenomicScoreState();
-          genomicScore.score = this.genomicScoresArray.find(el => el.score === score['metric']);
+          genomicScore.score = this.genomicScoresArray.find(el => el.score === score['score']);
           genomicScore.rangeStart = score['rangeStart'];
           genomicScore.rangeEnd = score['rangeEnd'];
-          genomicScore.domainMin = genomicScore.score.bins[0];
+
+
+          genomicScore.domainMin = (genomicScore.score.histogram as NumberHistogram).bins[0];
           genomicScore.domainMax =
-            genomicScore.score.bins[genomicScore.score.bins.length - 1];
+            (genomicScore.score.histogram as NumberHistogram).bins[(genomicScore.score.histogram as NumberHistogram).bins.length - 1];
           this.genomicScoresState.genomicScoresState.push(genomicScore);
         }
       }
@@ -65,13 +67,27 @@ export class GenomicScoresBlockComponent extends ComponentValidator implements O
   }
 
   public updateState(): void {
-    const newState = this.genomicScoresState.genomicScoresState
+    const newState: any = this.genomicScoresState.genomicScoresState
       .filter(el => el.score)
-      .map(el => ({
-        metric: el.score.score,
-        rangeStart: el.rangeStart,
-        rangeEnd: el.rangeEnd
-      }));
+      .map(el => {
+        let values: { name: string; value: number; }[] = null;
+        let categoricalView: CategoricalHistogramView = null;
+        let histogramType = 'continuous';
+
+        if (el.score.histogram instanceof CategoricalHistogram) {
+          values = el.score.histogram.values;
+          // categoricalView = el.score.histogram.
+          histogramType = 'categorical';
+        }
+        return {
+          score: el.score.score,
+          rangeStart: el.rangeStart,
+          rangeEnd: el.rangeEnd,
+          histogramType: histogramType,
+          values: values,
+          categoricalView: categoricalView
+        };
+      });
 
     this.store.dispatch(setGenomicScores({genomicScores: newState}));
   }
