@@ -4,8 +4,8 @@
       <select
         required
         class="form-control"
-        [(ngModel)]="selectedGenomicScores"
-        [attr.title]="selectedGenomicScores.desc"
+        [(ngModel)]="selectedGenomicScore"
+        [attr.title]="selectedGenomicScore.desc"
         style="padding-right: 18px; text-overflow: ellipsis; white-space: nowrap">
         <option *ngFor="let genomicScores of genomicScoresArray" [ngValue]="genomicScores">
           <span>{{ genomicScores.desc ? genomicScores.desc : genomicScores.score }}</span>
@@ -15,50 +15,52 @@
     </div>
     <gpf-helper-modal
       style="height: 32px; margin-left: 4px"
-      [style.visibility]="this.genomicScoreState.score.help ? 'visible' : 'hidden'"
-      [modalContent]="this.genomicScoreState.score.help"
+      [style.visibility]="selectedGenomicScore.help ? 'visible' : 'hidden'"
+      [modalContent]="selectedGenomicScore.help"
       [isMarkdown]="true"></gpf-helper-modal>
   </div>
   <div class="col-sm-11">
     <gpf-histogram
-      *ngIf="selectedGenomicScores && isNumberHistogram(selectedGenomicScores.histogram)"
+      *ngIf="selectedGenomicScore && isNumberHistogram(selectedGenomicScore.histogram)"
       [width]="800"
       [height]="145"
       [marginLeft]="180"
-      [bins]="selectedGenomicScores.histogram.bins"
-      [bars]="selectedGenomicScores.histogram.bars"
+      [bins]="selectedGenomicScore.histogram.bins"
+      [bars]="selectedGenomicScore.histogram.bars"
       [domainMin]="domainMin"
       [domainMax]="domainMax"
-      [logScaleX]="selectedGenomicScores.histogram.logScaleX"
-      [logScaleY]="selectedGenomicScores.histogram.logScaleY"
-      [smallValuesDesc]="selectedGenomicScores.histogram.smallValuesDesc"
-      [largeValuesDesc]="selectedGenomicScores.histogram.largeValuesDesc"
-      [(rangeStart)]="rangeStart"
-      [(rangeEnd)]="rangeEnd"
+      [logScaleX]="selectedGenomicScore.histogram.logScaleX"
+      [logScaleY]="selectedGenomicScore.histogram.logScaleY"
+      [smallValuesDesc]="selectedGenomicScore.histogram.smallValuesDesc"
+      [largeValuesDesc]="selectedGenomicScore.histogram.largeValuesDesc"
+      [rangeStart]="genomicScoreState.rangeStart"
+      (rangeStart)="updateRangeStart($event)"
+      [rangeEnd]="genomicScoreState.rangeEnd"
+      (rangeEnd)="updateRangeEnd($event)"
       style="display: block; margin-top: 17px">
     </gpf-histogram>
     <gpf-categorical-histogram
       *ngIf="
-        selectedGenomicScores &&
-        isCategoricalHistogram(selectedGenomicScores.histogram) &&
+        selectedGenomicScore &&
+        isCategoricalHistogram(selectedGenomicScore.histogram) &&
         selectedCategoricalHistogramView === 'click selector'
       "
       [width]="650"
       [height]="145"
-      [histogram]="selectedGenomicScores.histogram"
+      [histogram]="selectedGenomicScore.histogram"
       [stateCategoricalNames]="categoricalValues"
       [interactType]="selectedCategoricalHistogramView"
       (selectCategoricalValues)="toggleCategoricalValues($event)">
     </gpf-categorical-histogram>
     <gpf-categorical-histogram
       *ngIf="
-        selectedGenomicScores &&
-        isCategoricalHistogram(selectedGenomicScores.histogram) &&
+        selectedGenomicScore &&
+        isCategoricalHistogram(selectedGenomicScore.histogram) &&
         selectedCategoricalHistogramView === 'range selector'
       "
       [width]="650"
       [height]="145"
-      [histogram]="selectedGenomicScores.histogram"
+      [histogram]="selectedGenomicScore.histogram"
       [stateCategoricalNames]="categoricalValues"
       [interactType]="selectedCategoricalHistogramView"
       (selectCategoricalValues)="toggleCategoricalValues($event)">

@@ -1,11 +1,14 @@
-import { IsNotEmpty, IsNumber, ValidateIf, ValidateNested } from 'class-validator';
+import { ArrayNotEmpty, IsNotEmpty, IsNumber, ValidateIf } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 
-import { GenomicScores } from '../genomic-scores-block/genomic-scores-block';
+import { CategoricalHistogramView } from '../genomic-scores-block/genomic-scores-block';
+import { GenomicScoreState } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { HistogramType } from 'app/gene-scores/gene-scores.state';
+import { GeneScoresComponent } from 'app/gene-scores/gene-scores.component';
 
-export class GenomicScoreState {
-  @IsNotEmpty() public score: GenomicScores;
+export class GenomicScoreLocalState implements GenomicScoreState {
+  @IsNotEmpty() public score: string;
 
   @ValidateIf(o => o.rangeStart !== null)
   @IsNumber()
@@ -22,29 +25,12 @@ export class GenomicScoreState {
   @IsLessThanOrEqual('domainMax')
   public rangeEnd: number;
 
-  public domainMin: number;
-  public domainMax: number;
+  public histogramType: HistogramType;
 
-  public changeDomain(score: GenomicScores): void {
-    this.domainMin = score.bins[0];
-    this.domainMax = score.bins[score.bins.length - 1];
-  }
-
-  public constructor(score?: GenomicScores) {
-    if (score) {
-      this.score = score;
-      this.changeDomain(score);
-    } else {
-      this.score = null;
-    }
-    this.rangeStart = null;
-    this.rangeEnd = null;
-  }
-}
-
-export class GenomicScoresState {
-  @ValidateNested({
-    each: true
-  })
-  public genomicScoresState: GenomicScoreState[] = [];
+  @ValidateIf(
+    (component: GeneScoresComponent) => component.isCategoricalHistogram(component.selectedGeneScore.histogram)
+  )
+  @ArrayNotEmpty({message: 'Please select at least one bar.'})
+  public values: string[] = [];
+  public categoricalView: CategoricalHistogramView;
 }

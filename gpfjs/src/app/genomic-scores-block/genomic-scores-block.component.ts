@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { GenomicScoreState, GenomicScoresState } from '../genomic-scores/genomic-scores-store';
+import { GenomicScoreLocalState } from '../genomic-scores/genomic-scores-store';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
-import { CategoricalHistogram, CategoricalHistogramView, GenomicScore, NumberHistogram } from './genomic-scores-block';
+import { CategoricalHistogram, GenomicScore } from './genomic-scores-block';
 import { Store} from '@ngrx/store';
 import { selectGenomicScores, setGenomicScores } from './genomic-scores-block.state';
 import { combineLatest, of } from 'rxjs';
@@ -15,8 +15,10 @@ import { ComponentValidator } from 'app/common/component-validator';
   styleUrls: ['./genomic-scores-block.component.css'],
 })
 export class GenomicScoresBlockComponent extends ComponentValidator implements OnInit {
-  @ValidateNested()
-  public genomicScoresState = new GenomicScoresState();
+  @ValidateNested({
+    each: true
+  })
+  public genomicScoresLocalState: GenomicScoreLocalState[] = [];
   public genomicScoresArray: GenomicScore[];
 
   public constructor(
@@ -39,56 +41,37 @@ export class GenomicScoresBlockComponent extends ComponentValidator implements O
       if (genomicScoresState.length > 0) {
         // restore state
         for (const score of genomicScoresState) {
-          const genomicScore = new GenomicScoreState();
-          genomicScore.score = this.genomicScoresArray.find(el => el.score === score['score']);
-          genomicScore.rangeStart = score['rangeStart'];
-          genomicScore.rangeEnd = score['rangeEnd'];
-
-
-          genomicScore.domainMin = (genomicScore.score.histogram as NumberHistogram).bins[0];
-          genomicScore.domainMax =
-            (genomicScore.score.histogram as NumberHistogram).bins[(genomicScore.score.histogram as NumberHistogram).bins.length - 1];
-          this.genomicScoresState.genomicScoresState.push(genomicScore);
+          this.genomicScoresLocalState.push(score);
         }
       }
     });
   }
 
   public addFilter(): void {
-    this.genomicScoresState.genomicScoresState.push(
-      new GenomicScoreState(this.genomicScoresArray[0])
-    );
+    const firstScore = new GenomicScoreLocalState();
+    firstScore.score = this.genomicScoresArray[0].score;
+    if (this.genomicScoresArray[0].histogram instanceof CategoricalHistogram) {
+      firstScore.histogramType = 'categorical';
+      firstScore.rangeStart = 0;
+      firstScore.rangeEnd = 0;
+      firstScore.values = this.genomicScoresArray[0].histogram.values.map(value => value.name);
+      firstScore.categoricalView = 'range selector';
+    } else {
+      firstScore.histogramType = 'continuous';
+      firstScore.rangeStart = this.genomicScoresArray[0].histogram.rangeMin;
+      firstScore.rangeEnd = this.genomicScoresArray[0].histogram.rangeMax;
+      firstScore.values = null;
+      firstScore.categoricalView = null;
+    }
+    this.genomicScoresLocalState.push(firstScore);
   }
 
-  public removeFilter(genomicScore: GenomicScoreState): void {
-    this.genomicScoresState.genomicScoresState = this.genomicScoresState
-      .genomicScoresState.filter(gs => gs !== genomicScore);
+  public removeFilter(genomicScore: GenomicScoreLocalState): void {
+    this.genomicScoresLocalState = this.genomicScoresLocalState.filter(gs => gs !== genomicScore);
     this.updateState();
   }
 
   public updateState(): void {
-    const newState: any = this.genomicScoresState.genomicScoresState
-      .filter(el => el.score)
-      .map(el => {
-        let values: { name: string; value: number; }[] = null;
-        let categoricalView: CategoricalHistogramView = null;
-        let histogramType = 'continuous';
-
-        if (el.score.histogram instanceof CategoricalHistogram) {
-          values = el.score.histogram.values;
-          // categoricalView = el.score.histogram.
-          histogramType = 'categorical';
-        }
-        return {
-          score: el.score.score,
-          rangeStart: el.rangeStart,
-          rangeEnd: el.rangeEnd,
-          histogramType: histogramType,
-          values: values,
-          categoricalView: categoricalView
-        };
-      });
-
-    this.store.dispatch(setGenomicScores({genomicScores: newState}));
+    this.store.dispatch(setGenomicScores({genomicScores: this.genomicScoresLocalState}));
   }
 }
