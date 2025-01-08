@@ -152,8 +152,8 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self.summary_allele.summary_index
 
     @summary_index.setter
-    def summary_index(self, val: int) -> None:
-        self.summary_allele.summary_index = val
+    def summary_index(self, summary_index: int) -> None:
+        self.summary_allele.summary_index = summary_index
 
     @property
     def family_index(self) -> int | None:
@@ -300,7 +300,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             if allele_index is not None:
                 gt[gt != allele_index] = -1
 
-            index = np.any(gt == allele_index, axis=0)
+            index = cast(np.ndarray, np.any(gt == allele_index, axis=0))
             assert len(index) == len(self.members_in_order)
 
             self._variant_in_members = [
