@@ -59,7 +59,7 @@ def is_convertible_to_numeric(val: Any) -> Convertible:
     return Convertible.non_numeric
 
 
-def convert_to_numeric(val: Any) -> float | np.float_:
+def convert_to_numeric(val: Any) -> float | np.float64:
     """Convert passed value to float."""
     if is_convertible_to_numeric(val) == Convertible.numeric:
         return float(val)

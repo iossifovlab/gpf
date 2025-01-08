@@ -485,10 +485,14 @@ class DenovoLoader(VariantsGenotypesLoader):
             raw_df = pd.read_csv(
                 filepath,
                 sep=denovo_sep,
-                converters={
-                    denovo_pos: lambda p: int(p) if p else None,
-                } if denovo_pos is not None else {},
-                dtype=str,
+                dtype={
+                    denovo_chrom: str,
+                    denovo_ref: str,
+                    denovo_alt: str,
+                    denovo_person_id: str,
+                    denovo_family_id: str,
+                    denovo_location: str,
+                },
                 comment="#",
                 encoding="utf-8",
                 na_filter=False)
