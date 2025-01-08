@@ -393,6 +393,7 @@ class FamiliesLoader(CLILoader):
                 ped_status: Status.from_name,
             })
         converters.update(dict.fromkeys(ALL_FAMILY_TAG_LABELS, str2bool))
+        dtypes = defaultdict(lambda: str)
 
         read_csv_func = partial(
             pd.read_csv,
@@ -400,7 +401,7 @@ class FamiliesLoader(CLILoader):
             index_col=False,
             skipinitialspace=True,
             converters=converters,
-            dtype=str,
+            dtype=dtypes,
             comment="#",
             encoding="utf-8",
         )

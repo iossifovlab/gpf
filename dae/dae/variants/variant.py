@@ -646,9 +646,9 @@ class SummaryVariant:
         return self.ref_allele.summary_index
 
     @summary_index.setter
-    def summary_index(self, val: int) -> None:
+    def summary_index(self, summary_index: int) -> None:
         for allele in self.alleles:
-            allele.summary_index = val
+            allele.summary_index = summary_index
 
     @property
     def alleles(self) -> list[SummaryAllele]:
