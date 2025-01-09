@@ -351,12 +351,11 @@ class PreparePhenoBrowserBase:
         """Run browser preparations for all measures in a phenotype data."""
         config = self.phenotype_data.config
 
-        if config["type"] == "study":
-            extra_configs = []
-        elif config["type"] == "group":
+        extra_configs = []
+        if config["type"] == "group":
             group = cast(PhenotypeGroup, self.phenotype_data)
             extra_configs = self.collect_child_configs(group)
-        else:
+        elif config["type"] != "study":
             raise ValueError(
                 f"Unknown config type {config['type']} for {config['name']}",
             )
