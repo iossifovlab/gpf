@@ -413,7 +413,7 @@ class PreparePhenoBrowserBase:
             if len(leaf_manifest) == 0:
                 logger.warning("%s has no import manifests", leaf.pheno_id)
                 continue
-            manifests.append(leaf_manifest)
+            manifests.append(leaf_manifest[0])
 
         ImportManifest.create_table(
             self.browser.connection, IMPORT_METADATA_TABLE,
