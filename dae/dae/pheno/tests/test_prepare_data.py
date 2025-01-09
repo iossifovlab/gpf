@@ -401,7 +401,7 @@ def test_handle_regressions(
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, output_dir,
-        images_dir=images_dir,
+        reg, images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
 
@@ -456,7 +456,7 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, output_dir,
-        images_dir=images_dir,
+        reg, images_dir=images_dir,
     )
     regressand_categorical = fake_phenotype_data.get_measure("i1.m5")
     regression_measures_categorical = prep.get_regression_measures(
@@ -545,7 +545,7 @@ def test_handle_regressions_default_jitter(
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, output_dir,
-        images_dir=images_dir,
+        reg, images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
 
