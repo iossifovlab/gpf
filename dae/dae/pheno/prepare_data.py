@@ -404,12 +404,17 @@ class PreparePhenoBrowserBase:
         else:
             leaves = [cast(PhenotypeStudy, self.phenotype_data)]
 
-        manifests = [
-            ImportManifest.from_table(
+        manifests = []
+
+        for leaf in leaves:
+            leaf_manifest = ImportManifest.from_table(
                 leaf.db.connection, IMPORT_METADATA_TABLE,
-            )[0]
-            for leaf in leaves
-        ]
+            )
+            if len(leaf_manifest) == 0:
+                logger.warning("%s has no import manifests", leaf.pheno_id)
+                continue
+            manifests.append(leaf_manifest)
+
         ImportManifest.create_table(
             self.browser.connection, IMPORT_METADATA_TABLE,
         )
