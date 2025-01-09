@@ -22,7 +22,7 @@ import { setStudyTypes } from 'app/study-types/study-types.state';
 import { cloneDeep } from 'lodash';
 import { GeneProfilesTableService } from 'app/gene-profiles-table/gene-profiles-table.service';
 import { Router } from '@angular/router';
-import { GenomicScoresState, setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { GenomicScoreState, setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -208,7 +208,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
       synonymous: ['synonymous'],
     };
 
-    const genomicScores: GenomicScoresState[] = [];
+    const genomicScores: GenomicScoreState[] = [];
     if (statistic.scores) {
       genomicScores[0] = cloneDeep(statistic.scores[0]);
     }

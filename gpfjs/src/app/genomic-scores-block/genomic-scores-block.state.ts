@@ -61,13 +61,26 @@ export const genomicScoresReducer = createReducer(
     }
     return scores;
   }),
-  // on(setGenomicScoresCategorical, (state, { score, values, categoricalView }) => ({
-  //   histogramType: 'categorical' as const,
-  //   score: score,
-  //   rangeStart: initialState.rangeStart,
-  //   rangeEnd: initialState.rangeEnd,
-  //   values: values,
-  //   categoricalView: categoricalView,
-  // })),
+  on(setGenomicScoresCategorical, (state, { score, values, categoricalView }) => {
+    const newGenomicScore = {
+      histogramType: 'categorical' as const,
+      score: score,
+      rangeStart: 0,
+      rangeEnd: 0,
+      values: values,
+      categoricalView: categoricalView,
+    };
+    const scores = [...state];
+    const scoreIndex = scores.findIndex(s => s.score === score);
+    if (!scores.length || scoreIndex === -1) {
+      scores.push(newGenomicScore);
+    } else {
+      const scoreCopy = cloneDeep(scores.at(scoreIndex));
+      scoreCopy.values = values;
+      scoreCopy.categoricalView = categoricalView;
+      scores[scoreIndex] = scoreCopy;
+    }
+    return scores;
+  }),
   on(reset, resetGenomicScores, state => cloneDeep(initialState)),
 );

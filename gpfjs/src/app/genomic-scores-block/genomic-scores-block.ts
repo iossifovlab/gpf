@@ -20,7 +20,7 @@ export class GenomicScore {
         values.push({name: key, value: json['histogram']['values'][key]});
       });
 
-      let valueOrder: string[] = null;
+      let valueOrder: string[] = [];
       if (json['histogram']['config']['value_order']?.length > 0) {
         valueOrder = json['histogram']['config']['value_order'];
       }

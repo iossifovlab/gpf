@@ -18,6 +18,25 @@
       [style.visibility]="selectedGenomicScore.help ? 'visible' : 'hidden'"
       [modalContent]="selectedGenomicScore.help"
       [isMarkdown]="true"></gpf-helper-modal>
+    <div *ngIf="isCategoricalHistogram(selectedGenomicScore.histogram)">
+      <button mat-icon-button [matMenuTriggerFor]="menu" id="view-menu-button">
+        <span>Mode</span>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button
+          mat-menu-item
+          (click)="switchCategoricalHistogramView('range selector')"
+          [ngClass]="{ 'selected-view': selectedCategoricalHistogramView === 'range selector' }"
+          >range selector
+        </button>
+        <button
+          mat-menu-item
+          (click)="switchCategoricalHistogramView('click selector')"
+          [ngClass]="{ 'selected-view': selectedCategoricalHistogramView === 'click selector' }"
+          >click selector
+        </button>
+      </mat-menu>
+    </div>
   </div>
   <div class="col-sm-11">
     <gpf-histogram

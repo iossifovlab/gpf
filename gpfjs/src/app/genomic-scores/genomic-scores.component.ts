@@ -80,6 +80,24 @@ export class GenomicScoresComponent implements OnInit {
     this.updateGenomicScoreEvent.emit();
   }
 
+
+  private updateCategoricalHistogramState(): void {
+    this.store.dispatch(setGenomicScoresCategorical({
+      score: this.selectedGenomicScore.score,
+      values: cloneDeep(this.categoricalValues),
+      categoricalView: this.selectedCategoricalHistogramView,
+    }));
+  }
+
+  public switchCategoricalHistogramView(view: CategoricalHistogramView): void {
+    if (view === this.selectedCategoricalHistogramView) {
+      return;
+    }
+    this.selectedCategoricalHistogramView = view;
+    this.categoricalValues = [];
+    this.updateCategoricalHistogramState();
+  }
+
   public toggleCategoricalValues(values: string[]): void {
     values.forEach(value => {
       const valueIndex = this.categoricalValues.findIndex(v => v === value);
