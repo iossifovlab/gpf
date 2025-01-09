@@ -96,7 +96,13 @@ class GeneSetCollection(
         config = resource.get_config()
         self.collection_id = self.config["id"]
         assert self.collection_id != "denovo"
-        assert resource.get_type() == "gene_set", "Invalid resource type"
+        if resource.get_type() not in {"gene_set_collection", "gene_set"}:
+            raise ValueError("Invalid resource type for gene set collection")
+        if resource.get_type() == "gene_set":
+            logger.warning(
+                "'gene_set' resource type is deprecated; "
+                "use 'gene_set_collection' instead")
+
         self.web_label = config.get("web_label", None)
         self.web_format_str = config.get("web_format_str", None)
         logger.debug("loading %s: %s", self.collection_id, config)
