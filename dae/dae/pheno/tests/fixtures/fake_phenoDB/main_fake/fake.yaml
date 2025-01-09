@@ -1,0 +1,15 @@
+name: fake
+type: study
+dbfile: fake.db
+
+regression:
+  age: 
+    instrument_name: i1
+    measure_name: age
+    jitter: 0.12
+    display_name: age
+  nviq:
+    instrument_name: i1
+    measure_name: iq
+    jitter: 0.13
+    display_name: nonverbal iq
