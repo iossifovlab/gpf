@@ -3,13 +3,12 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 from threading import Lock
-from typing import Any, cast
 
 from box import Box
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
-from dae.pheno.pheno_data import PhenotypeData, load_phenotype_data
+from dae.pheno.pheno_data import PhenotypeData, PhenotypeGroup, PhenotypeStudy
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +57,32 @@ class PhenoRegistry:
     def get_all_phenotype_data(self) -> list[PhenotypeData]:
         return list(self._cache.values())
 
+    def get_or_load(
+        self,
+        pheno_id: str,
+        pheno_configurations: dict[str, Box],
+    ) -> PhenotypeData:
+        """Return a phenotype data from the cache and load it if necessary."""
+        if pheno_id in self._cache:
+            return self._cache[pheno_id]
+
+        config = pheno_configurations[pheno_id]
+
+        if config["type"] == "study":
+            study = PhenotypeStudy(config["name"], config["dbfile"], config)
+            self.register_phenotype_data(study, lock=False)
+            return self._cache[pheno_id]
+
+        if config["type"] == "group":
+            children = [self.get_or_load(child, pheno_configurations)
+                        for child in config["children"]]
+            group = PhenotypeGroup(config["name"], config, children)
+            self.register_phenotype_data(group, lock=False)
+            return self._cache[pheno_id]
+
+        raise ValueError(f"Invalid type '{config['type']}'"
+                            f" in config for {pheno_id}")
+
     @staticmethod
     def from_directory(pheno_data_dir: Path) -> PhenoRegistry:
         """Create a registry with all phenotype studies in a directory."""
@@ -71,33 +96,16 @@ class PhenoRegistry:
         ]
 
         configurations: dict[str, Box] = {}
-        groups: list[str] = []
 
         with PhenoRegistry.CACHE_LOCK:
-            for config_path in pheno_configs:
-                logger.info(
-                    "loading phenotype data from config: %s", config_path,
-                )
+            for conf_path in pheno_configs:
+                logger.info("collecting phenotype data config: %s", conf_path)
                 config = GPFConfigParser.load_config(
-                    str(config_path), pheno_conf_schema,
-                )
-                pheno_id = config["name"]
-                configurations[pheno_id] = config
-                if config["type"] == "group":
-                    groups.append(pheno_id)
-                    continue
-                registry.register_phenotype_data(
-                    load_phenotype_data(config),
-                    lock=False,
-                )
-            for group in groups:
-                group_config = configurations[group]
-                registry.register_phenotype_data(
-                    load_phenotype_data(
-                        group_config,
-                        cast(list[dict[str, Any]], configurations.values()),
-                    ),
-                    lock=False,
-                )
+                    str(conf_path), pheno_conf_schema)
+                configurations[config["name"]] = config
+
+            for pheno_id in configurations:
+                logger.info("loading phenotype data config: %s", pheno_id)
+                registry.get_or_load(pheno_id, configurations)
 
         return registry
