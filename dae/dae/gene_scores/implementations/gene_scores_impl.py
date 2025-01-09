@@ -103,6 +103,8 @@ class GeneScoreImplementation(
                 if math.isnan(value):
                     continue
                 histogram.add_value(int(value))
+        else:
+            raise TypeError(f"Unknown histogram config: {hist_conf}")
 
         return histogram
 
