@@ -210,7 +210,7 @@ class PhenotypeData(ABC):
         pheno_data: PhenotypeData, *, read_only: bool = True,
     ) -> PhenoBrowser:
         """Load pheno browser from pheno configuration."""
-        db_dir = Path(pheno_data.config.dbfile).parent.resolve()
+        db_dir = Path(pheno_data.config["conf_dir"])
         browser_dbfile = db_dir / "browser.db"
         if not read_only and not browser_dbfile.exists():
             conn = duckdb.connect(browser_dbfile, read_only=False)
@@ -428,7 +428,7 @@ class PhenotypeStudy(PhenotypeData):
     def __init__(
             self, pheno_id: str, dbfile: str,
             config: dict | None = None, *, read_only: bool = True) -> None:
-        super().__init__(pheno_id, config)
+        super().__init__(pheno_id, cast(Box, config))
 
         self.db = PhenoDb(dbfile, read_only=read_only)
         self.config = config
@@ -605,15 +605,26 @@ class PhenotypeGroup(PhenotypeData):
     """Represents a group of phenotype data studies or groups."""
 
     def __init__(
-        self, pheno_id: str, children: list[PhenotypeData],
+        self, pheno_id: str, config: dict | None,
+        children: list[PhenotypeData],
     ) -> None:
-        super().__init__(pheno_id, None)
+        super().__init__(pheno_id, cast(Box, config))
         self.children = children
         instruments, measures = self._merge_instruments(
             [ph.instruments for ph in self.children])
         self._instruments.update(instruments)
 
         self._measures.update(measures)
+
+    def get_leaves(self) -> list[PhenotypeStudy]:
+        """Return all phenotype studies in the group."""
+        leaves = []
+        for child in self.children:
+            if child.config["type"] == "study":
+                leaves.append(child)
+            else:
+                leaves.extend(cast(PhenotypeGroup, child).get_leaves())
+        return leaves
 
     @staticmethod
     def _merge_instruments(
@@ -789,4 +800,6 @@ def load_phenotype_data(
         else:
             children.append(load_phenotype_data(extra_config, extra_configs))
 
-    return PhenotypeGroup(config["name"], cast(list[PhenotypeData], children))
+    return PhenotypeGroup(
+        config["name"], config, cast(list[PhenotypeData], children),
+    )

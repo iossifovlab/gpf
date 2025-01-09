@@ -1,16 +1,24 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
+import time
 from pathlib import Path
 
+import duckdb
 import pytest
+from sqlglot.expressions import table_
 
 from dae.genomic_resources.testing import (
     setup_directories,
 )
-from dae.pheno.common import DataDictionary
+from dae.pheno.common import DataDictionary, PhenoImportConfig
 from dae.pheno.pheno_data import PhenotypeStudy
-from dae.pheno.pheno_import import collect_instruments, load_descriptions, main
+from dae.pheno.pheno_import import (
+    ImportManifest,
+    collect_instruments,
+    load_descriptions,
+    main,
+)
 from dae.testing import (
     setup_pedigree,
 )
@@ -114,6 +122,45 @@ def test_import_no_pheno_common(
         "instr1.m2",
         "instr1.m3",
     }
+
+
+def test_write_and_read_manifest(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    tmp_dir = tmp_path_factory.mktemp("pheno_import_manifest")
+    dbfile = tmp_dir / "db"
+    connection = duckdb.connect(dbfile)
+    table = table_("test")
+    import_config = PhenoImportConfig(
+        id="asdf",
+        input_dir="test",
+        output_dir="test1",
+        instrument_files=["test"],
+        pedigree="test",
+        person_column="test",
+    )
+    ImportManifest.create_table(connection, table)
+    start = time.time()
+    ImportManifest.write_to_db(connection, table, import_config)
+    end = time.time()
+
+    manifest = ImportManifest.from_table(connection, table)[0]
+
+    assert manifest is not None
+    assert manifest.unix_timestamp > start
+    assert manifest.unix_timestamp < end
+    assert manifest.import_config == import_config
+
+
+def test_empty_manifest_read(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    tmp_dir = tmp_path_factory.mktemp("pheno_import_manifest")
+    dbfile = tmp_dir / "db"
+    connection = duckdb.connect(dbfile)
+    table = table_("test")
+    out = ImportManifest.from_table(connection, table)
+    assert len(out) == 0
 
 
 def test_collect_instruments(tmp_path: pathlib.Path) -> None:

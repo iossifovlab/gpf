@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from box import Box
 
+from dae.pheno.browser import PhenoBrowser
 from dae.pheno.common import MeasureType
 from dae.pheno.graphs import (
     draw_categorical_violin_distribution,
@@ -24,6 +25,7 @@ from dae.pheno.pheno_data import (
     get_pheno_browser_images_dir,
     load_phenotype_data,
 )
+from dae.pheno.pheno_import import IMPORT_METADATA_TABLE, ImportManifest
 from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
 from dae.task_graph.executor import task_graph_run_with_results
 from dae.task_graph.graph import TaskGraph
@@ -44,6 +46,7 @@ class PreparePhenoBrowserBase:
     def __init__(
         self,
         phenotype_data: PhenotypeData,
+        browser: PhenoBrowser,
         output_dir: Path,
         pheno_regressions: Box | None = None,
         images_dir: Path | None = None,
@@ -60,6 +63,7 @@ class PreparePhenoBrowserBase:
         self.images_dir = images_dir
 
         self.phenotype_data = phenotype_data
+        self.browser = browser
         self.pheno_id = self.phenotype_data.pheno_id
         self.pheno_regressions = pheno_regressions
         if self.pheno_regressions is not None:
@@ -211,10 +215,12 @@ class PreparePhenoBrowserBase:
             jitter,  # type: ignore
         )
         res["pvalue_regression_male"] = (
-            res_male.pvalues[1] if res_male is not None else None
+            res_male.pvalues[1]  # type: ignore
+            if res_male is not None
+            else None
         )
         res["pvalue_regression_female"] = (
-            res_female.pvalues[1]
+            res_female.pvalues[1]  # type: ignore
             if res_female is not None
             else None
         )
@@ -330,6 +336,7 @@ class PreparePhenoBrowserBase:
             if child.config["type"] == "study":
                 configs.append(child.config)
             elif child.config["type"] == "group":
+                configs.append(child.config)
                 configs.extend(
                     self.collect_child_configs(cast(PhenotypeGroup, child)),
                 )
@@ -344,22 +351,18 @@ class PreparePhenoBrowserBase:
         """Run browser preparations for all measures in a phenotype data."""
         config = self.phenotype_data.config
 
-        if config["type"] == "study":
-            extra_configs = []
-        elif config["type"] == "group":
+        extra_configs = []
+        if config["type"] == "group":
             group = cast(PhenotypeGroup, self.phenotype_data)
             extra_configs = self.collect_child_configs(group)
-        else:
+        elif config["type"] != "study":
             raise ValueError(
                 f"Unknown config type {config['type']} for {config['name']}",
             )
-        browser = PhenotypeData.create_browser(
-            self.phenotype_data, read_only=False,
-        )
 
         if self.pheno_regressions:
             for reg_id, reg_data in self.pheno_regressions.items():
-                browser.save_regression(
+                self.browser.save_regression(
                     {
                         "regression_id": reg_id,
                         "instrument_name": reg_data.instrument_name,
@@ -367,7 +370,7 @@ class PreparePhenoBrowserBase:
                         "display_name": reg_data.display_name,
                     },
                 )
-        with browser.connection.cursor() as cursor:
+        with self.browser.connection.cursor() as cursor:
             cursor.execute("CHECKPOINT")
 
         graph = TaskGraph()
@@ -385,14 +388,41 @@ class PreparePhenoBrowserBase:
             try:
                 for result in task_graph_run_with_results(graph, xtor):
                     measure, regressions = result
-                    browser.save(cast(dict[str, str | None], measure))
+                    self.browser.save(cast(dict[str, str | None], measure))
                     if regressions is None:
                         continue
                     for regression in regressions:
-                        browser.save_regression_values(regression)
+                        self.browser.save_regression_values(regression)
             except Exception as e:
                 logger.exception("Failed to create images")
                 raise RuntimeError("Failed to create images") from e
+
+        is_group = self.phenotype_data.config["type"] == "group"
+        if is_group:
+            leaves = cast(PhenotypeGroup, self.phenotype_data).get_leaves()
+        else:
+            leaves = [cast(PhenotypeStudy, self.phenotype_data)]
+
+        manifests = []
+
+        for leaf in leaves:
+            leaf_manifest = ImportManifest.from_table(
+                leaf.db.connection, IMPORT_METADATA_TABLE,
+            )
+            if len(leaf_manifest) == 0:
+                logger.warning("%s has no import manifests", leaf.pheno_id)
+                continue
+            manifests.append(leaf_manifest[0])
+
+        ImportManifest.create_table(
+            self.browser.connection, IMPORT_METADATA_TABLE,
+        )
+        for manifest in manifests:
+            ImportManifest.write_to_db(
+                self.browser.connection,
+                IMPORT_METADATA_TABLE,
+                manifest.import_config,
+            )
 
     def get_regression_measures(
         self, measure: Measure,
@@ -406,6 +436,7 @@ class PreparePhenoBrowserBase:
             if measure_names is None:
                 assert reg.measure_name is not None
                 measure_names = [reg.measure_name]
+            reg_measure = None
             for measure_name in measure_names:
                 reg_measure = self._get_measure_by_name(
                     measure_name,

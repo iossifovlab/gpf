@@ -58,7 +58,7 @@ def fake_pheno_db_dir(fake_dae_conf: Box) -> str:
     return get_pheno_db_dir(fake_dae_conf)
 
 
-@pytest.fixture()
+@pytest.fixture
 def clean_pheno_db_dir(tmp_path_factory: pytest.TempPathFactory) -> str:
     root_path = tmp_path_factory.mktemp("clean_pheno")
     destination = os.path.join(root_path, "clean_fake")
@@ -101,7 +101,7 @@ def fake_pheno_db(fake_pheno_db_dir: str) -> PhenoRegistry:
 
 @pytest.fixture(scope="session")
 def fake_phenotype_data_config() -> str:
-    return relative_to_this_folder("fixtures/fake_phenoDB/main_fake/fake.conf")
+    return relative_to_this_folder("fixtures/fake_phenoDB/main_fake/fake.yaml")
 
 
 @pytest.fixture(scope="session")
@@ -167,14 +167,14 @@ def fake_background_db(
     connection.sql("DROP TABLE fake_background_data")
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_config(temp_dbfile: str) -> Box:
     config = default_config()
     config.db.filename = temp_dbfile
     return Box(config.to_dict())
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_dbfile() -> Generator[str, None, None]:
     dirname = tempfile.mkdtemp(suffix="_ped", prefix="pheno_db_")
 
@@ -183,17 +183,17 @@ def temp_dbfile() -> Generator[str, None, None]:
     shutil.rmtree(dirname)
 
 
-@pytest.fixture()
+@pytest.fixture
 def valid_descriptions() -> str:
     return relative_to_this_folder("fixtures/descriptions_valid.tsv")
 
 
-@pytest.fixture()
+@pytest.fixture
 def invalid_descriptions() -> str:
     return relative_to_this_folder("fixtures/descriptions_invalid.tsv")
 
 
-@pytest.fixture()
+@pytest.fixture
 def output_dir() -> Generator[Path, None, None]:
     tmpdir = tempfile.mkdtemp(prefix="pheno_browser")
 
@@ -207,14 +207,14 @@ def regressions_conf() -> str:
     return relative_to_this_folder("fixtures/regressions.conf")
 
 
-@pytest.fixture()
+@pytest.fixture
 def temp_dirname_figures() -> Generator[str, None, None]:
     dirname = tempfile.mkdtemp(suffix="_plots", prefix="figures_")
     yield dirname
     shutil.rmtree(dirname)
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_phenodb_file_copy(
     output_dir: str,
     fake_phenotype_data_i1_dbfile: str,
@@ -228,7 +228,7 @@ def fake_phenodb_file_copy(
     return temp_dbfile
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_browserdb_file_copy(
     output_dir: str,
     fake_phenotype_data_browser_dbfile,

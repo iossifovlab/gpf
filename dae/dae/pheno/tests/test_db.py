@@ -267,6 +267,8 @@ def test_get_regression_names(fake_browserdb_file_copy: str) -> None:
     assert reg_names == {
         "test_regression": "a test regression with a display name",
         "test_regression2": "a second test regression with a display name",
+        "age": "age",
+        "nviq": "nonverbal iq",
     }
 
 
@@ -290,7 +292,8 @@ def test_regression_ids(fake_browserdb_file_copy: str) -> None:
     browser.save_regression(reg)
 
     reg_ids = browser.regression_ids
-    assert reg_ids == ["test_regression_1", "test_regression_2"]
+    for reg_id in ["test_regression_1", "test_regression_2"]:
+        assert reg_id in reg_ids
 
 
 def test_pheno_db_disabled(fake_pheno_db: PhenoRegistry) -> None:

@@ -18,6 +18,7 @@ import pandas as pd
 import sqlglot
 import yaml
 from pydantic import BaseModel
+from sqlglot.expressions import Table, insert, select, table_
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
@@ -36,6 +37,7 @@ from dae.pheno.common import (
     PhenoImportConfig,
 )
 from dae.pheno.db import safe_db_name
+from dae.pheno.pheno_data import PhenotypeData, PhenotypeGroup, PhenotypeStudy
 from dae.pheno.prepare.measure_classifier import (
     InferenceReport,
     determine_histogram_type,
@@ -51,6 +53,9 @@ logger = logging.getLogger(__name__)
 
 
 # ruff: noqa: S608
+
+
+IMPORT_METADATA_TABLE = table_("import_metadata")
 
 
 def pheno_cli_parser() -> argparse.ArgumentParser:
@@ -319,9 +324,6 @@ def import_pheno_data(
         tab_separated=config.tab_separated,
     )
 
-    print(f"DONE {time.time() - start}")
-
-    print("WRITING RESULTS")
     start = time.time()
 
     imported_instruments, instrument_tables = handle_measure_inference_tasks(
@@ -333,9 +335,16 @@ def import_pheno_data(
         if k not in imported_instruments:
             del instrument_tables[k]
 
+    print(f"DONE {time.time() - start}")
+    print("WRITING RESULTS")
+
     write_results(connection, instrument_tables, ped_df)
 
     print(f"DONE {time.time() - start}")
+
+    ImportManifest.create_table(connection, IMPORT_METADATA_TABLE)
+
+    ImportManifest.write_to_db(connection, IMPORT_METADATA_TABLE, config)
 
     connection.close()
 
@@ -385,7 +394,7 @@ def handle_measure_inference_tasks(
             for (values, report) in task_result_chain:
                 table = instrument_tables[report.instrument_name]
                 for p_id, value in values.items():
-                    table[p_id][report.db_name] = value
+                    table[report.db_name][p_id] = value
                 m_id = f"{report.instrument_name}.{report.measure_name}"
                 description = ""
                 if descriptions:
@@ -425,6 +434,7 @@ def handle_measure_inference_tasks(
 
         except Exception:
             logger.exception("Failed to classify measure")
+
     return imported_instruments, instrument_tables
 
 
@@ -591,6 +601,85 @@ def load_inference_configs(
     return {}
 
 
+class ImportManifest(BaseModel):
+    """Import manifest for checking cache validity."""
+
+    unix_timestamp: float
+    import_config: PhenoImportConfig
+
+    def is_older_than(self, other: "ImportManifest") -> bool:
+        if self.unix_timestamp < other.unix_timestamp:
+            return True
+        return self.import_config != other.import_config
+
+    @staticmethod
+    def from_row(row: tuple[str, Any, str]) -> "ImportManifest":
+        timestamp = float(row[0])
+        import_config = PhenoImportConfig.model_validate_json(row[1])
+        return ImportManifest(
+            unix_timestamp=timestamp,
+            import_config=import_config,
+        )
+
+    @staticmethod
+    def from_table(
+        connection: duckdb.DuckDBPyConnection, table: Table,
+    ) -> list["ImportManifest"]:
+        """Read manifests from given table."""
+        with connection.cursor() as cursor:
+            table_row = cursor.execute(sqlglot.parse_one(
+                "SELECT * FROM information_schema.tables"
+                f" WHERE table_name = '{table.alias_or_name}'",
+            ).sql()).fetchone()
+            if table_row is None:
+                return []
+            rows = cursor.execute(select("*").from_(table).sql()).fetchall()
+        return [ImportManifest.from_row(row) for row in rows]
+
+    @staticmethod
+    def from_phenotype_data(
+        pheno_data: PhenotypeData,
+    ) -> list["ImportManifest"]:
+        """Collect all manifests in a phenotype data instance."""
+        is_group = pheno_data.config["type"] == "group"
+        if is_group:
+            leaves = cast(PhenotypeGroup, pheno_data).get_leaves()
+        else:
+            leaves = [cast(PhenotypeStudy, pheno_data)]
+
+        return [
+            ImportManifest.from_table(
+                leaf.db.connection, IMPORT_METADATA_TABLE,
+            )[0]
+            for leaf in leaves
+        ]
+
+    @staticmethod
+    def create_table(connection: duckdb.DuckDBPyConnection, table: Table):
+        """Create table for recording import manifests."""
+        query = sqlglot.parse_one(
+            f"CREATE TABLE {table.alias_or_name} "
+            "(unix_timestamp DOUBLE, import_config VARCHAR)",
+        ).sql()
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+
+    @staticmethod
+    def write_to_db(
+        connection: duckdb.DuckDBPyConnection,
+        table: Table,
+        import_config: PhenoImportConfig,
+    ):
+        """Write manifest into DB on given table."""
+        config_json = import_config.model_dump_json()
+        timestamp = time.time()
+        query = insert(
+            f"VALUES ({timestamp}, '{config_json}')", table,
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(to_duckdb_transpile(query)).fetchall()
+
+
 def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
     """Create phenotype data tables in DuckDB."""
     create_instrument = sqlglot.parse(textwrap.dedent(
@@ -736,8 +825,7 @@ def write_results(
     """Write imported data into duckdb as measure value tables."""
     with connection.cursor() as cursor:
         for instrument_name, table in instrument_tables.items():
-            output_table_df = pd.DataFrame(
-                table).transpose().rename_axis("person_id").reset_index()
+            output_table_df = pd.DataFrame(table).rename_axis("person_id")
 
             output_table_df = ped_df[
                 ["person_id", "family_id", "role", "status", "sex"]
@@ -765,6 +853,7 @@ def write_results(
                     ('{instrument_name}', '{table_name}')
                 """),
             )
+
             cursor.execute(
                 textwrap.dedent(f"""
                     CREATE TABLE {table_name} AS
