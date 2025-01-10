@@ -207,10 +207,14 @@ class PhenotypeData(ABC):
 
     @staticmethod
     def create_browser(
-        pheno_data: PhenotypeData, *, read_only: bool = True,
+        pheno_data: PhenotypeData,
+        *,
+        output_dir: Path | None = None,
+        read_only: bool = True,
     ) -> PhenoBrowser:
         """Load pheno browser from pheno configuration."""
-        db_dir = Path(pheno_data.config["conf_dir"])
+        db_dir = output_dir if output_dir is not None else \
+                 Path(pheno_data.config["conf_dir"])
         browser_dbfile = db_dir / "browser.db"
         if not read_only and not browser_dbfile.exists():
             conn = duckdb.connect(browser_dbfile, read_only=False)
