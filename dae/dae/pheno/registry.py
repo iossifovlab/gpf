@@ -60,7 +60,7 @@ class PhenoRegistry:
     def get_or_load(
         self,
         pheno_id: str,
-        pheno_configurations: dict[str, Box],
+        pheno_configurations: dict[str, dict],
     ) -> PhenotypeData:
         """Return a phenotype data from the cache and load it if necessary."""
         if pheno_id in self._cache:
@@ -95,7 +95,7 @@ class PhenoRegistry:
             )
         ]
 
-        configurations: dict[str, Box] = {}
+        configurations: dict[str, dict] = {}
 
         with PhenoRegistry.CACHE_LOCK:
             for conf_path in pheno_configs:

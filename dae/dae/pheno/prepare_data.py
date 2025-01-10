@@ -23,9 +23,9 @@ from dae.pheno.pheno_data import (
     PhenotypeGroup,
     PhenotypeStudy,
     get_pheno_browser_images_dir,
-    load_phenotype_data,
 )
 from dae.pheno.pheno_import import IMPORT_METADATA_TABLE, ImportManifest
+from dae.pheno.registry import PhenoRegistry
 from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
 from dae.task_graph.executor import task_graph_run_with_results
 from dae.task_graph.graph import TaskGraph
@@ -330,14 +330,14 @@ class PreparePhenoBrowserBase:
                 return True
         return False
 
-    def collect_child_configs(self, study: PhenotypeGroup) -> list[Any]:
-        configs = []
+    def collect_child_configs(self, study: PhenotypeGroup) -> dict[str, dict]:
+        configs = {}
         for child in study.children:
             if child.config["type"] == "study":
-                configs.append(child.config)
+                configs[child.config["name"]] = child.config
             elif child.config["type"] == "group":
-                configs.append(child.config)
-                configs.extend(
+                configs[child.config["name"]] = child.config
+                configs.update(
                     self.collect_child_configs(cast(PhenotypeGroup, child)),
                 )
             else:
@@ -349,12 +349,15 @@ class PreparePhenoBrowserBase:
 
     def run(self, **kwargs: Any) -> None:
         """Run browser preparations for all measures in a phenotype data."""
-        config = self.phenotype_data.config
 
-        extra_configs = []
+        configurations: dict[str, dict] = {}
+
+        config = self.phenotype_data.config
+        configurations[config["name"]] = config
+
         if config["type"] == "group":
             group = cast(PhenotypeGroup, self.phenotype_data)
-            extra_configs = self.collect_child_configs(group)
+            configurations.update(self.collect_child_configs(group))
         elif config["type"] != "study":
             raise ValueError(
                 f"Unknown config type {config['type']} for {config['name']}",
@@ -377,7 +380,7 @@ class PreparePhenoBrowserBase:
 
         for instrument in list(self.phenotype_data.instruments.values()):
             for measure in list(instrument.measures.values()):
-                self.add_measure_task(graph, measure, config, extra_configs)
+                self.add_measure_task(graph, measure, configurations)
 
         task_cache = TaskCache.create(
             force=kwargs.get("force"),
@@ -456,18 +459,16 @@ class PreparePhenoBrowserBase:
         return regression_measures
 
     def add_measure_task(
-            self, graph: TaskGraph, measure: Measure, pheno_config: Box,
-            extra_configs: list[Box],
+        self, graph: TaskGraph, measure: Measure,
+        pheno_configs: dict[str, dict],
     ) -> None:
-
         regression_measures = self.get_regression_measures(measure)
         graph.create_task(
             f"build_{measure.measure_id}",
             PreparePhenoBrowserBase.do_measure_build,
             [
                 self.pheno_id,
-                pheno_config,
-                extra_configs,
+                pheno_configs,
                 measure,
                 self.images_dir,
                 regression_measures,
@@ -479,16 +480,14 @@ class PreparePhenoBrowserBase:
     def do_measure_build(
         cls,
         pheno_id: str,
-        pheno_config: Box,
-        extra_configs: list[Box],
+        pheno_configs: dict[str, dict],
         measure: Measure,
         images_dir: str,
         regression_measures: dict[str, tuple[Box, Measure]],
     ) -> tuple[dict[str, Any], list[dict[str, Any]] | None]:
         """Create images and regressions for a given measure."""
-        pheno_data = load_phenotype_data(
-            pheno_config, cast(list[dict[str, Any]], extra_configs),
-        )
+        registry = PhenoRegistry()
+        pheno_data = registry.get_or_load(pheno_id, pheno_configs)
         df = pheno_data.get_people_measure_values_df(
             [measure.measure_id],
         )

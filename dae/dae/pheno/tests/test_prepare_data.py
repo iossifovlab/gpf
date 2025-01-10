@@ -407,8 +407,13 @@ def test_handle_regressions(
 
     regression_measures = prep.get_regression_measures(regressand)
 
+    assert fake_phenotype_data.config is not None
+    configurations: dict[str, dict] = {
+        fake_phenotype_data.pheno_id: fake_phenotype_data.config,
+    }
+
     res = prep.do_measure_build(
-        fake_phenotype_data.pheno_id, fake_phenotype_data.config, [],
+        fake_phenotype_data.pheno_id, configurations,
         regressand, "test_dir", regression_measures,
     )
     assert len(res) == 2
@@ -467,13 +472,18 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
         regressand_raw,
     )
 
+    assert fake_phenotype_data.config is not None
+    configurations: dict[str, dict] = {
+        fake_phenotype_data.pheno_id: fake_phenotype_data.config,
+    }
+
     res = prep.do_measure_build(
-        fake_phenotype_data.pheno_id, fake_phenotype_data.config, [],
+        fake_phenotype_data.pheno_id, configurations,
         regressand_categorical, "test_dir", regression_measures_categorical,
     )
     assert res[1] is None
     res = prep.do_measure_build(
-        fake_phenotype_data.pheno_id, fake_phenotype_data.config, [],
+        fake_phenotype_data.pheno_id, configurations,
         regressand_raw, "test_dir", regression_measures_raw,
     )
     assert res[1] is None
@@ -483,7 +493,6 @@ def test_handle_regressions_regressand_is_regressor(
     mocker: pytest_mock.MockerFixture,
     fake_phenotype_data: PhenotypeStudy,
     output_dir: Path,
-    fake_phenotype_data_config: str,
 ) -> None:
     def fake_save_fig(*_args: Any) -> tuple[str | None, str | None]:
         return ("test1", "test2")
@@ -492,9 +501,6 @@ def test_handle_regressions_regressand_is_regressor(
         "PreparePhenoBrowserBase.save_fig",
         side_effect=fake_save_fig,
     )
-    reg = GPFConfigParser.load_config(
-        fake_phenotype_data_config, pheno_conf_schema,
-    )["regression"]
     images_dir = output_dir / "images"
     browser = PhenotypeData.create_browser(
         fake_phenotype_data, read_only=False,
@@ -506,8 +512,12 @@ def test_handle_regressions_regressand_is_regressor(
     regressand = fake_phenotype_data.get_measure("i1.age")
     regression_measures = prep.get_regression_measures(regressand)
 
+    assert fake_phenotype_data.config is not None
+    configurations: dict[str, dict] = {
+        fake_phenotype_data.pheno_id: fake_phenotype_data.config,
+    }
     res = prep.do_measure_build(
-        fake_phenotype_data.pheno_id, fake_phenotype_data.config, [],
+        fake_phenotype_data.pheno_id, configurations,
         regressand, "test_dir", regression_measures,
     )
     assert res[1] is None
@@ -551,8 +561,13 @@ def test_handle_regressions_default_jitter(
 
     regression_measures = prep.get_regression_measures(regressand)
 
+
+    assert fake_phenotype_data.config is not None
+    configurations: dict[str, dict] = {
+        fake_phenotype_data.pheno_id: fake_phenotype_data.config,
+    }
     prep.do_measure_build(
-        fake_phenotype_data.pheno_id, fake_phenotype_data.config, [],
+        fake_phenotype_data.pheno_id, configurations,
         regressand, "test_dir", regression_measures,
     )
 
