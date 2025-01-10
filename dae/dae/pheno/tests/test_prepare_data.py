@@ -20,7 +20,7 @@ def test_augment_measure(
 ) -> None:
     images_dir = tmp_path / "images"
     browser = PhenotypeData.create_browser(
-        fake_phenotype_data, read_only=False,
+        fake_phenotype_data, output_dir=tmp_path, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, tmp_path,
@@ -54,7 +54,7 @@ def test_augment_measure_regressor_no_instrument_name(
 ) -> None:
     images_dir = tmp_path / "images"
     browser = PhenotypeData.create_browser(
-        fake_phenotype_data, read_only=False,
+        fake_phenotype_data, output_dir=tmp_path, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, tmp_path,
@@ -91,7 +91,7 @@ def test_augment_measure_with_identical_measures(
 ) -> None:
     images_dir = tmp_path / "images"
     browser = PhenotypeData.create_browser(
-        fake_phenotype_data, read_only=False,
+        fake_phenotype_data, output_dir=tmp_path, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, tmp_path,
@@ -110,7 +110,7 @@ def test_augment_measure_with_nonexistent_regressor(
 ) -> None:
     images_dir = tmp_path / "images"
     browser = PhenotypeData.create_browser(
-        fake_phenotype_data, read_only=False,
+        fake_phenotype_data, output_dir=tmp_path, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, tmp_path,
@@ -188,7 +188,7 @@ def test_build_regression(
 
     images_dir = tmp_path / "images"
     browser = PhenotypeData.create_browser(
-        fake_phenotype_data, read_only=False,
+        fake_phenotype_data, output_dir=tmp_path, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, tmp_path,
@@ -236,7 +236,7 @@ def test_build_regression_min_vals(
 
     images_dir = tmp_path / "images"
     browser = PhenotypeData.create_browser(
-        fake_phenotype_data, read_only=False,
+        fake_phenotype_data, output_dir=tmp_path, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, tmp_path,
@@ -291,7 +291,7 @@ def test_build_regression_min_unique_vals(
 
     images_dir = tmp_path / "images"
     browser = PhenotypeData.create_browser(
-        fake_phenotype_data, read_only=False,
+        fake_phenotype_data, output_dir=tmp_path, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, tmp_path,
@@ -312,7 +312,7 @@ def test_build_regression_identical_measures(
 ) -> None:
     images_dir = tmp_path / "images"
     browser = PhenotypeData.create_browser(
-        fake_phenotype_data, read_only=False,
+        fake_phenotype_data, output_dir=tmp_path, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, tmp_path,
@@ -343,7 +343,7 @@ def test_build_regression_aug_df_is_none(
 
     images_dir = tmp_path / "images"
     browser = PhenotypeData.create_browser(
-        fake_phenotype_data, read_only=False,
+        fake_phenotype_data, output_dir=tmp_path, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, tmp_path,
@@ -397,7 +397,7 @@ def test_handle_regressions(
     )["regression"]
     images_dir = tmp_path / "images"
     browser = PhenotypeData.create_browser(
-        fake_phenotype_data, read_only=False,
+        fake_phenotype_data, output_dir=tmp_path, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, tmp_path,
@@ -457,7 +457,7 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
     )["regression"]
     images_dir = tmp_path / "images"
     browser = PhenotypeData.create_browser(
-        fake_phenotype_data, read_only=False,
+        fake_phenotype_data, output_dir=tmp_path, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, tmp_path,
@@ -503,7 +503,7 @@ def test_handle_regressions_regressand_is_regressor(
     )
     images_dir = tmp_path / "images"
     browser = PhenotypeData.create_browser(
-        fake_phenotype_data, read_only=False,
+        fake_phenotype_data, output_dir=tmp_path, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, tmp_path,
@@ -551,7 +551,7 @@ def test_handle_regressions_default_jitter(
     )["regression"]
     images_dir = tmp_path / "images"
     browser = PhenotypeData.create_browser(
-        fake_phenotype_data, read_only=False,
+        fake_phenotype_data, output_dir=tmp_path, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
         fake_phenotype_data, browser, tmp_path,
