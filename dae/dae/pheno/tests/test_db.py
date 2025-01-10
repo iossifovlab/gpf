@@ -10,8 +10,8 @@ from dae.pheno.db import safe_db_name
 from dae.pheno.registry import PhenoRegistry
 
 
-def test_browser_save(output_dir: str) -> None:
-    dbfile = Path(output_dir) / "browser.db"
+def test_browser_save(tmp_path: str) -> None:
+    dbfile = Path(tmp_path) / "browser.db"
     browser = PhenoBrowser(str(dbfile), read_only=False)
     assert browser is not None
 
@@ -34,8 +34,8 @@ def test_browser_save(output_dir: str) -> None:
     assert res["figure_distribution"] is None
 
 
-def test_browser_update(output_dir: str) -> None:
-    dbfile = Path(output_dir) / "browser.db"
+def test_browser_update(tmp_path: str) -> None:
+    dbfile = Path(tmp_path) / "browser.db"
     browser = PhenoBrowser(str(dbfile), read_only=False)
     assert browser is not None
 
@@ -59,8 +59,8 @@ def test_browser_update(output_dir: str) -> None:
     assert res["figure_distribution"] == "test_figure.png"
 
 
-def test_browser_has_descriptions(output_dir: str) -> None:
-    dbfile = Path(output_dir) / "browser.db"
+def test_browser_has_descriptions(tmp_path: str) -> None:
+    dbfile = Path(tmp_path) / "browser.db"
     browser = PhenoBrowser(str(dbfile), read_only=False)
     assert browser is not None
 

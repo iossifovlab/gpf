@@ -193,15 +193,6 @@ def invalid_descriptions() -> str:
     return relative_to_this_folder("fixtures/descriptions_invalid.tsv")
 
 
-@pytest.fixture
-def output_dir() -> Generator[Path, None, None]:
-    tmpdir = tempfile.mkdtemp(prefix="pheno_browser")
-
-    yield Path(tmpdir)
-
-    shutil.rmtree(tmpdir)
-
-
 @pytest.fixture(scope="session")
 def regressions_conf() -> str:
     return relative_to_this_folder("fixtures/regressions.conf")
@@ -216,27 +207,25 @@ def temp_dirname_figures() -> Generator[str, None, None]:
 
 @pytest.fixture
 def fake_phenodb_file_copy(
-    output_dir: str,
+    tmp_path: Path,
     fake_phenotype_data_i1_dbfile: str,
 ) -> str:
-    temp_dbfile = os.path.join(output_dir, "phenodb.db")
+    temp_dbfile = str(tmp_path / "phenodb.db")
     shutil.copy(
         fake_phenotype_data_i1_dbfile,
         temp_dbfile,
     )
-
     return temp_dbfile
 
 
 @pytest.fixture
 def fake_browserdb_file_copy(
-    output_dir: str,
+    tmp_path: Path,
     fake_phenotype_data_browser_dbfile,
 ) -> str:
-    temp_dbfile = os.path.join(output_dir, "browser.db")
+    temp_dbfile = str(tmp_path / "browser.db")
     shutil.copy(
         fake_phenotype_data_browser_dbfile,
         temp_dbfile,
     )
-
     return temp_dbfile
