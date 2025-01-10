@@ -7,28 +7,24 @@ import pytest_mock
 from dae.pheno.pheno_data import (
     PhenotypeGroup,
     PhenotypeStudy,
-    load_phenotype_data,
 )
-
-
-@pytest.fixture
-def mock_sort(mocker: pytest_mock.MockerFixture) -> MagicMock:
-    return mocker.patch(
-        "dae.pheno.pheno_data._sort_group_children", autospec=True,
-    )
+from dae.pheno.registry import PhenoRegistry
 
 
 @pytest.fixture
 def mock_classes(
     mocker: pytest_mock.MockerFixture,
 ) -> tuple[MagicMock, MagicMock]:
-    return mocker.patch("dae.pheno.pheno_data.PhenotypeStudy", autospec=True), \
-           mocker.patch("dae.pheno.pheno_data.PhenotypeGroup", autospec=True)
+    a, b = mocker.spy(PhenotypeStudy, "__init__"), \
+           mocker.spy(PhenotypeGroup, "__init__")
+    mocker.patch("dae.pheno.pheno_data.PhenoDb", autospec=True)
+    mocker.patch("dae.pheno.registry.PhenotypeStudy._get_measures_df")
+    mocker.patch("dae.pheno.registry.PhenotypeStudy._load_instruments")
+    return a, b
 
 
-def test_load_phenotype_data_study(
+def test_registry_get_or_load_study(
     mock_classes: tuple[MagicMock, MagicMock],
-    mock_sort: MagicMock,  # noqa: ARG001
 ) -> None:
     study_mock, _ = mock_classes
     config = {
@@ -36,21 +32,23 @@ def test_load_phenotype_data_study(
         "dbfile": "test.db",
         "type": "study",
     }
-    result = load_phenotype_data(config)
+    configurations = {"test": config}
+    registry = PhenoRegistry()
+    result = registry.get_or_load("test", configurations)
     assert isinstance(result, PhenotypeStudy)
     assert study_mock.call_count == 1
 
 
-def test_load_phenotype_data_group(
+def test_registry_get_or_load_group(
     mock_classes: tuple[MagicMock, MagicMock],
 ) -> None:
     study_mock, group_mock = mock_classes
-    config = {
-        "name": "test_group",
-        "type": "group",
-        "children": ["test_child_1", "test_child_2"],
-    }
-    children_configs = [
+    all_configs = [
+        {
+            "name": "test_group",
+            "type": "group",
+            "children": ["test_child_1", "test_child_2"],
+        },
         {
             "name": "test_child_1",
             "dbfile": "test1.db",
@@ -67,29 +65,18 @@ def test_load_phenotype_data_group(
             "type": "study",
         },
     ]
-    result = load_phenotype_data(config, children_configs)
+    configurations = {config["name"]: config for config in all_configs}
+    registry = PhenoRegistry()
+    result = registry.get_or_load("test_group", configurations)
     assert isinstance(result, PhenotypeGroup)
     assert group_mock.call_count == 2
     assert study_mock.call_count == 2
 
 
-def test_load_phenotype_data_group_no_children(
+def test_registry_get_or_load_invalid(
     mock_classes: tuple[MagicMock, MagicMock],  # noqa: ARG001
 ) -> None:
-    config = {
-        "name": "test",
-        "type": "group",
-    }
-    with pytest.raises(ValueError, match="without extra configs"):
-        load_phenotype_data(config)
-
-
-def test_load_phenotype_data_invalid(
-    mock_classes: tuple[MagicMock, MagicMock],  # noqa: ARG001
-) -> None:
-    config = {
-        "name": "test",
-        "type": "INVALIDTYPE",
-    }
-    with pytest.raises(ValueError, match="Unknown config type"):
-        load_phenotype_data(config)
+    configs = {"test": {"name": "test", "type": "INVALIDTYPE"}}
+    registry = PhenoRegistry()
+    with pytest.raises(ValueError, match="Invalid type"):
+        registry.get_or_load("test", configs)
