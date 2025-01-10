@@ -296,7 +296,9 @@ def import_pheno_data(
     )
 
     if not config.skip_pedigree_measures:
-        instruments["pheno_common"] = [Path(config.pedigree).absolute()]
+        instruments["pheno_common"] = [
+            Path(config.input_dir, config.pedigree).absolute(),
+        ]
 
     instrument_measure_names = read_instrument_measure_names(
         instruments,

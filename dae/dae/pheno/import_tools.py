@@ -37,8 +37,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = pheno_cli_parser()
     args = parser.parse_args(argv)
 
-    import_config = PhenoImportConfig.model_validate(
-        yaml.safe_load(pathlib.Path(args.project).read_text()))
+    project_path = pathlib.Path(args.project).absolute()
+    raw_config = yaml.safe_load(project_path.read_text())
+    raw_config["input_dir"] = \
+        str(project_path.parent / raw_config.get("input_dir", ""))
+    import_config = PhenoImportConfig.model_validate(raw_config)
     delattr(args, "project")
     import_pheno_data(import_config, args)
 
