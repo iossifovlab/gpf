@@ -343,6 +343,6 @@ def test_pheno_tool_download_valid_request(
             b"person_id,family_id,status,sex,"
             b"i1.m1,i1.age,i1.m1 ~ i1.age,missense\n"
         ),
-        b"p1,f1.1,affected,F,110.71113,166.33975600961486,0.0,1.0\n",
-        b"p3,f1.3,affected,F,96.63452,68.00148724003327,0.0,0.0\n",
+        b"p1,f1.1,affected,F,110.71113,166.33975,1e-05,1.0\n",
+        b"p3,f1.3,affected,F,96.63452,68.00149,1e-05,0.0\n",
     ]

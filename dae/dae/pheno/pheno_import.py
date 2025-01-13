@@ -9,16 +9,22 @@ import textwrap
 import time
 import traceback
 from collections import defaultdict
-from itertools import chain
 from pathlib import Path
 from typing import Any, TextIO, cast
 
 import duckdb
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 import sqlglot
 import yaml
 from pydantic import BaseModel
-from sqlglot.expressions import Table, insert, select, table_
+from sqlglot.expressions import (
+    Table,
+    insert,
+    select,
+    table_,
+)
 
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
@@ -246,6 +252,12 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+def get_output_parquet_files_dir(import_config: PhenoImportConfig) -> Path:
+    parquet_dir = Path(import_config.output_dir) / "parquet"
+    parquet_dir.mkdir(exist_ok=True)
+    return parquet_dir
+
+
 def import_pheno_data(
     config: PhenoImportConfig,
     task_graph_args: argparse.Namespace,
@@ -265,8 +277,6 @@ def import_pheno_data(
             )
             sys.exit(1)
         os.remove(pheno_db_filename)
-
-    os.makedirs(os.path.join(config.output_dir, "parquet"), exist_ok=True)
 
     # INFERENCE CONFIGS
     inference_configs: dict[str, Any] = {}
@@ -322,25 +332,19 @@ def import_pheno_data(
         task_graph, instruments,
         instrument_measure_names,
         inference_configs,
-        config.person_column,
-        tab_separated=config.tab_separated,
+        config,
     )
 
     start = time.time()
 
-    imported_instruments, instrument_tables = handle_measure_inference_tasks(
+    instrument_pq_files = handle_measure_inference_tasks(
         connection, config, task_graph, task_cache, task_graph_args,
-        list(instruments.keys()),
     )
-
-    for k in list(instrument_tables.keys()):
-        if k not in imported_instruments:
-            del instrument_tables[k]
 
     print(f"DONE {time.time() - start}")
     print("WRITING RESULTS")
 
-    write_results(connection, instrument_tables, ped_df)
+    write_results(connection, instrument_pq_files, ped_df)
 
     print(f"DONE {time.time() - start}")
 
@@ -373,71 +377,65 @@ def handle_measure_inference_tasks(
     task_graph: TaskGraph,
     task_cache: TaskCache,
     task_graph_args: argparse.Namespace,
-    instruments: list[str],
-) -> tuple[set[str], dict[str, Any]]:
+) -> dict[str, Path]:
     """Read the output of the measure inference tasks into dictionaries."""
-    def default_row() -> dict[str, Any]:
-        def none_val() -> None:
-            return None
-        return defaultdict(none_val)
-    instrument_tables: dict[str, Any] = {
-        instr: defaultdict(default_row)
-        for instr in instruments
-    }
-    imported_instruments = set()
+
+    instrument_pq_files: dict[str, Path] = {}
     descriptions = load_descriptions(
         config.input_dir, config.data_dictionary)
     with TaskGraphCli.create_executor(
         task_cache, **vars(task_graph_args),
     ) as xtor:
         try:
-            task_result_chain = chain.from_iterable(
-                task_graph_run_with_results(task_graph, xtor))
-            for (values, report) in task_result_chain:
-                table = instrument_tables[report.instrument_name]
-                for p_id, value in values.items():
-                    table[report.db_name][p_id] = value
-                m_id = f"{report.instrument_name}.{report.measure_name}"
-                description = ""
-                if descriptions:
-                    description = descriptions.get(
-                        f"{report.instrument_name}.{report.measure_name}",
-                    )
+            task_results = task_graph_run_with_results(task_graph, xtor)
+            for (filepath, reports) in task_results:
+                current_instrument = None
+                for report in reports.values():
+                    if current_instrument is None:
+                        current_instrument = report.instrument_name
+                        instrument_pq_files[current_instrument] = filepath
 
-                value_type = report.inference_report.value_type.__name__
-                histogram_type = \
-                    report.inference_report.histogram_type.__name__
+                    assert report.instrument_name == current_instrument
+                    m_id = f"{report.instrument_name}.{report.measure_name}"
+                    description = ""
+                    if descriptions:
+                        description = descriptions.get(
+                            f"{report.instrument_name}.{report.measure_name}",
+                        )
 
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        "INSERT INTO measure VALUES ("
-                        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
-                        ")",
-                        parameters=[
-                            m_id,
-                            report.db_name,
-                            report.measure_name.strip(),
-                            report.instrument_name.strip(),
-                            description,
-                            report.measure_type.value,
-                            value_type,
-                            histogram_type,
-                            report.inference_report.count_with_values,
-                            "",
-                            report.inference_report.min_value,
-                            report.inference_report.max_value,
-                            report.inference_report.values_domain.replace(
-                                "'", "''",
-                            ),
-                            report.inference_report.count_unique_values,
-                        ],
-                    )
-                imported_instruments.add(report.instrument_name)
+                    value_type = report.inference_report.value_type.__name__
+                    histogram_type = \
+                        report.inference_report.histogram_type.__name__
+
+                    with connection.cursor() as cursor:
+                        cursor.execute(
+                            "INSERT INTO measure VALUES ("
+                            "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
+                            ")",
+                            parameters=[
+                                m_id,
+                                report.db_name,
+                                report.measure_name.strip(),
+                                report.instrument_name.strip(),
+                                description,
+                                report.measure_type.value,
+                                value_type,
+                                histogram_type,
+                                report.inference_report.count_with_values,
+                                "",
+                                report.inference_report.min_value,
+                                report.inference_report.max_value,
+                                report.inference_report.values_domain.replace(
+                                    "'", "''",
+                                ),
+                                report.inference_report.count_unique_values,
+                            ],
+                        )
 
         except Exception:
             logger.exception("Failed to classify measure")
 
-    return imported_instruments, instrument_tables
+    return instrument_pq_files
 
 
 def collect_instruments(
@@ -496,14 +494,17 @@ def read_and_classify_measure(
     instrument_filepaths: list[Path],
     instrument_name: str,
     group_measure_names: list[str],
-    person_id_column: str,
+    import_config: PhenoImportConfig,
     group_db_name: list[str],
     group_inf_configs: list[InferenceConfig],
-    tab_separated: bool = False,  # noqa: FBT001,FBT002
-) -> list[tuple[dict[str, Any], MeasureReport]]:
+) -> tuple[Path, dict[str, MeasureReport]]:
     """Read a measure's values and classify from an instrument file."""
+
+    person_id_column = import_config.person_column
+    tab_separated = import_config.tab_separated
     transformed_measures = defaultdict(dict)
-    output = []
+    seen_person_ids = set()
+    person_ids = []
 
     if instrument_name == "pheno_common":
         person_id_column = "personId"
@@ -519,6 +520,9 @@ def read_and_classify_measure(
 
             for row in reader:
                 person_id = row[person_id_column]
+                if person_id not in seen_person_ids:
+                    person_ids.append(person_id)
+                seen_person_ids.add(person_id)
                 for measure_name in group_measure_names:
                     transformed_measures[measure_name][person_id] = \
                         _transform_value(row[measure_name])
@@ -527,6 +531,9 @@ def read_and_classify_measure(
                 group_db_name,
                 group_inf_configs,
                 strict=True)
+
+    output_table = {"person_id": person_ids}
+    reports = {}
 
     for (m_name, m_dbname, m_infconf) in m_zip:
         m_values = list(transformed_measures[m_name].values())
@@ -555,13 +562,78 @@ def read_and_classify_measure(
         report.instrument_name = instrument_name
         report.measure_name = m_name
         report.db_name = m_dbname
-        pid_to_val = {
-            person_id: values[idx]
-            for idx, person_id in enumerate(transformed_measures[m_name])
-        }
-        output.append((pid_to_val, report))
+        output_table[m_dbname] = [
+            values[idx] for idx, _ in enumerate(transformed_measures[m_name])
+        ]
 
-    return output
+        reports[m_name] = report
+
+    parquet_dir = get_output_parquet_files_dir(import_config)
+
+    out_file = parquet_dir / instrument_name
+
+    out_file = write_to_parquet(
+        instrument_name, out_file, reports, output_table,
+    )
+
+    return (out_file, reports)
+
+
+def write_to_parquet(
+    instrument_name: str,
+    filepath: Path,
+    reports: dict[str, MeasureReport],
+    values_table: dict[str, list[Any]],
+) -> Path:
+    """Write inferred instrument measure values to parquet file."""
+    column_order = []
+    string_cols = set()
+
+    fields = []
+
+    fields.append(
+        pa.field(
+            "person_id",
+            pa.string(),
+        ),
+    )
+
+    for report in reports.values():
+        if report.instrument_name != instrument_name:
+            raise ValueError(
+                f"Failed to create instrument table for {instrument_name}, ",
+                f"measure {report.measure_name} is of a different instrument: "
+                f"{report.instrument_name}",
+            )
+        val_type = report.inference_report.value_type
+        if val_type is int:
+            col_dtype = pa.int32()
+        elif val_type is float:
+            col_dtype = pa.float32()
+        elif val_type is str:
+            col_dtype = pa.string()
+            string_cols.add(report.measure_name)
+        else:
+            raise ValueError(f"Unsupported value type {val_type}")
+
+        column_order.append(report.measure_name)
+        fields.append(pa.field(report.db_name, col_dtype))
+
+    schema = pa.schema(
+        fields,
+    )
+
+    writer = pq.ParquetWriter(
+        filepath, schema,
+    )
+
+    batch = pa.RecordBatch.from_pydict(values_table, schema)  # type: ignore
+
+    table = pa.Table.from_batches([batch], schema)
+
+    writer.write_table(table)
+
+    return filepath
 
 
 def add_pheno_common_inference(
@@ -821,33 +893,13 @@ def read_pedigree(
 
 def write_results(
     connection: duckdb.DuckDBPyConnection,
-    instrument_tables: dict[str, Any],
+    instrument_pq_files: dict[str, Path],
     ped_df: pd.DataFrame,
 ) -> None:
     """Write imported data into duckdb as measure value tables."""
+    assert ped_df is not None
     with connection.cursor() as cursor:
-        for instrument_name, table in instrument_tables.items():
-            output_table_df = pd.DataFrame(table).rename_axis("person_id")
-
-            output_table_df = ped_df[
-                ["person_id", "family_id", "role", "status", "sex"]
-            ].merge(
-                output_table_df,
-                on="person_id", how="left",
-            )
-
-            cols = output_table_df.columns.tolist()
-
-            # Reorder columns so that pedigree columns are first
-            output_table_df = \
-                output_table_df[cols[0:1] + cols[-4:] + cols[1:-4]]
-
-            output_table_df.drop(
-                output_table_df[
-                    ~output_table_df["person_id"].isin(ped_df["person_id"])
-                ].index,
-            )
-
+        for instrument_name, pq_file in instrument_pq_files.items():
             table_name = safe_db_name(f"{instrument_name}_measure_values")
             cursor.execute(
                 textwrap.dedent(f"""
@@ -856,12 +908,19 @@ def write_results(
                 """),
             )
 
-            cursor.execute(
-                textwrap.dedent(f"""
-                    CREATE TABLE {table_name} AS
-                    SELECT * FROM output_table_df
-                """),
+            query = (
+                f"CREATE TABLE {table_name} AS ("
+                "SELECT "
+                "ped_df.person_id, ped_df.family_id, "
+                "ped_df.role, ped_df.status, ped_df.sex, "
+                "pq_table.* EXCLUDE (person_id) "
+                "FROM ped_df "
+                f"RIGHT JOIN read_parquet('{pq_file!s}') as pq_table ON "
+                "ped_df.person_id = pq_table.person_id"
+                ")"
             )
+
+            connection.execute(query)
 
 
 def load_descriptions(
@@ -935,11 +994,10 @@ def create_import_tasks(
     instruments: dict[str, Any],
     instrument_measure_names: dict[str, list[str]],
     inference_configs: dict[str, Any],
-    person_column: str,
-    *,
-    tab_separated: bool = False,
+    import_config: PhenoImportConfig,
 ) -> None:
     """Add measure tasks for importing pheno data."""
+
     for instrument_name, instrument_filenames in instruments.items():
         seen_col_names: dict[str, int] = defaultdict(int)
         table_column_names = [
@@ -977,10 +1035,9 @@ def create_import_tasks(
                 instrument_filenames,
                 instrument_name,
                 group_measure_names,
-                person_column,
+                import_config,
                 group_db_names,
                 group_inf_configs,
-                tab_separated,
             ],
             [],
         )
