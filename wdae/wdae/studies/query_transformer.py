@@ -111,8 +111,7 @@ class QueryTransformer:
     @staticmethod
     def _transform_present_in_child_and_parent_inheritance(
         present_in_child: set[str],
-        present_in_parent: set[str], *,
-        show_all_unknown: bool = False,
+        present_in_parent: set[str],
     ) -> str:
 
         inheritance = None
@@ -128,9 +127,8 @@ class QueryTransformer:
                 Inheritance.mendelian,
                 Inheritance.missing,
                 Inheritance.omission,
+                Inheritance.unknown,
             ]
-            if show_all_unknown:
-                inheritance.append(Inheritance.unknown)
 
         result = ",".join([str(inh) for inh in inheritance])
         return f"any({result})"
@@ -393,13 +391,6 @@ class QueryTransformer:
 
             self._add_inheritance_to_query(query, kwargs)
             kwargs.pop("inheritanceTypeFilter")
-        else:
-            inheritance = \
-                self._transform_present_in_child_and_parent_inheritance(
-                    present_in_child, present_in_parent,
-                    show_all_unknown=show_all_unknown)
-
-            self._add_inheritance_to_query(inheritance, kwargs)
 
         if "genomicScores" in kwargs:
             genomic_scores = kwargs.pop("genomicScores", [])
