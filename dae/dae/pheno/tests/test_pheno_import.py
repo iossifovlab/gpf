@@ -188,6 +188,9 @@ def test_collect_instruments(tmp_path: pathlib.Path) -> None:
             delimiter="\t",
             person_column="VIP_id",
         ),
+        InstrumentConfig(
+            path="instrument_not_so_special.csv",
+        ),
     ]
 
     instruments = collect_instruments(
@@ -224,6 +227,12 @@ def test_collect_instruments(tmp_path: pathlib.Path) -> None:
             "The Special Instrument",
             "\t",
             "VIP_id",
+        ),
+        ImportInstrument(
+            [pathlib.Path(tmp_path, "instrument_not_so_special.csv")],
+            "instrument_not_so_special",
+            ",",
+            "person_id",
         ),
     ]
 

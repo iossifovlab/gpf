@@ -44,9 +44,9 @@ class RegressionMeasure(BaseModel):
 
 class InstrumentConfig(BaseModel):
     path: str
-    instrument: str
-    delimiter: str
-    person_column: str
+    instrument: str | None = None
+    delimiter: str | None = None
+    person_column: str | None = None
 
 
 class PhenoImportConfig(BaseModel):

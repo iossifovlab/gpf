@@ -480,11 +480,20 @@ def collect_instruments(
 
     def handle_conf(conf: InstrumentConfig):
         path = Path(import_config.input_dir, conf.path).absolute()
+        instrument = conf.instrument \
+            if conf.instrument is not None \
+            else path.name.split(".")[0]
+        delimiter = conf.delimiter \
+            if conf.delimiter is not None \
+            else ","
+        person_column = conf.person_column \
+            if conf.person_column is not None \
+            else import_config.person_column
         if conf.instrument not in all_instruments:
-            all_instruments[conf.instrument] = ImportInstrument(
-                [], conf.instrument, conf.delimiter, conf.person_column,
+            all_instruments[instrument] = ImportInstrument(
+                [], instrument, delimiter, person_column,
             )
-        all_instruments[conf.instrument].files.append(path)
+        all_instruments[instrument].files.append(path)
 
     for config in import_config.instrument_files:
         if isinstance(config, str):
