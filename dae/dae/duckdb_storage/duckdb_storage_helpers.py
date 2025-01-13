@@ -123,7 +123,7 @@ def _create_table_partitioned(
             CREATE TABLE {table_name} AS
             SELECT * FROM
             parquet_scan('{dataset_path}', hive_partitioning = 1)
-        """
+        """  # noqa: S608
         logger.info("query: %s", query)
         cursor.sql(query)
 
