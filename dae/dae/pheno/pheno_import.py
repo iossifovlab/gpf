@@ -963,7 +963,8 @@ def load_descriptions(
         with open_file(abspath) as csvfile:
             reader = csv.DictReader(csvfile, delimiter="\t")
             for row in reader:
-                out[row["measureId"]] = row["description"]
+                measure_id = f"{row['instrumentName']}.{row['measureName']}"
+                out[measure_id] = row["description"]
         return out
 
     if config.file:

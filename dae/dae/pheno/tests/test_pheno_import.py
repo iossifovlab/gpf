@@ -229,12 +229,12 @@ def test_collect_instruments(tmp_path: pathlib.Path) -> None:
 
 
 def test_load_descriptions_file(tmp_path: pathlib.Path) -> None:
-    pathlib.Path(tmp_path, "descriptions.tsv").write_text(textwrap.dedent(
-    """instrumentName\tmeasureName\tmeasureId\tdescription
-       testInstrument1\tmeasure1\ttestInstrument1.measure1\tdescription one
-       testInstrument1\tmeasure2\ttestInstrument1.measure2\tdescription two
-       testInstrument2\tmeasure1\ttestInstrument2.measure1\tdescription three
-    """))
+    pathlib.Path(tmp_path, "descriptions.tsv").write_text(
+        "instrumentName\tmeasureName\tmeasureId\tdescription\n"
+        "testInstrument1\tmeasure1\ttestInstrument1.measure1\tdescription one\n"
+        "testInstrument1\tmeasure2\ttestInstrument1.measure2\tdescription two\n"
+        "testInstrument2\tmeasure1\ttestInstrument2.measure1\tdescription three"  # noqa: COM812
+    )
 
     config = DataDictionary.model_validate({
         "file": "descriptions.tsv",
@@ -248,16 +248,16 @@ def test_load_descriptions_file(tmp_path: pathlib.Path) -> None:
 
 
 def test_load_descriptions_instrument_files(tmp_path: pathlib.Path) -> None:
-    pathlib.Path(tmp_path, "i1_descriptions.tsv").write_text(textwrap.dedent(
-    """instrumentName\tmeasureName\tmeasureId\tdescription
-       testInstrument1\tmeasure1\ttestInstrument1.measure1\tdescription one
-       testInstrument1\tmeasure2\ttestInstrument1.measure2\tdescription two
-    """))
+    pathlib.Path(tmp_path, "i1_descriptions.tsv").write_text(
+       "instrumentName\tmeasureName\tmeasureId\tdescription\n"
+       "testInstrument1\tmeasure1\ttestInstrument1.measure1\tdescription one\n"
+       "testInstrument1\tmeasure2\ttestInstrument1.measure2\tdescription two"  # noqa: COM812
+    )
 
-    pathlib.Path(tmp_path, "i2_descriptions.tsv").write_text(textwrap.dedent(
-    """instrumentName\tmeasureName\tmeasureId\tdescription
-       testInstrument2\tmeasure1\ttestInstrument2.measure1\tdescription three
-    """))
+    pathlib.Path(tmp_path, "i2_descriptions.tsv").write_text(
+      "instrumentName\tmeasureName\tmeasureId\tdescription\n"
+      "testInstrument2\tmeasure1\ttestInstrument2.measure1\tdescription three"  # noqa: COM812
+    )
 
     config = DataDictionary.model_validate({
         "instrument_files": ["i1_descriptions.tsv", "i2_descriptions.tsv"],
@@ -291,17 +291,17 @@ def test_load_descriptions_dictionary() -> None:
 
 
 def test_load_descriptions_mixed(tmp_path: pathlib.Path) -> None:
-    pathlib.Path(tmp_path, "descriptions.tsv").write_text(textwrap.dedent(
-    """instrumentName\tmeasureName\tmeasureId\tdescription
-       testInstrument1\tmeasure1\ttestInstrument1.measure1\tdescription one
-       testInstrument1\tmeasure2\ttestInstrument1.measure2\tdescription two
-       testInstrument2\tmeasure1\ttestInstrument2.measure1\tdescription three
-    """))
+    pathlib.Path(tmp_path, "descriptions.tsv").write_text(
+        "instrumentName\tmeasureName\tmeasureId\tdescription\n"
+        "testInstrument1\tmeasure1\ttestInstrument1.measure1\tdescription one\n"
+        "testInstrument1\tmeasure2\ttestInstrument1.measure2\tdescription two\n"
+        "testInstrument2\tmeasure1\ttestInstrument2.measure1\tdescription three"  # noqa: COM812
+    )
 
-    pathlib.Path(tmp_path, "i2_descriptions.tsv").write_text(textwrap.dedent(
-    """instrumentName\tmeasureName\tmeasureId\tdescription
-       testInstrument2\tmeasure2\ttestInstrument2.measure2\tdescription four
-    """))
+    pathlib.Path(tmp_path, "i2_descriptions.tsv").write_text(
+      "instrumentName\tmeasureName\tmeasureId\tdescription\n"
+      "testInstrument2\tmeasure2\ttestInstrument2.measure2\tdescription four"  # noqa: COM812
+    )
 
     config = DataDictionary.model_validate({
         "file": "descriptions.tsv",
