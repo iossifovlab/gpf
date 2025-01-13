@@ -42,12 +42,19 @@ class RegressionMeasure(BaseModel):
     display_name: str
 
 
+class InstrumentConfig(BaseModel):
+    path: str
+    instrument: str
+    delimiter: str
+    person_column: str
+
+
 class PhenoImportConfig(BaseModel):
     """Pheno import config."""
     id: str
     input_dir: str
     output_dir: str
-    instrument_files: list[str]
+    instrument_files: list[str | InstrumentConfig]
     pedigree: str
     person_column: str
     tab_separated: bool = False

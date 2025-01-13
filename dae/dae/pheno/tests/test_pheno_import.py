@@ -11,9 +11,10 @@ from sqlglot.expressions import table_
 from dae.genomic_resources.testing import (
     setup_directories,
 )
-from dae.pheno.common import DataDictionary, PhenoImportConfig
+from dae.pheno.common import DataDictionary, InstrumentConfig, PhenoImportConfig
 from dae.pheno.pheno_data import PhenotypeStudy
 from dae.pheno.pheno_import import (
+    ImportInstrument,
     ImportManifest,
     collect_instruments,
     load_descriptions,
@@ -174,19 +175,57 @@ def test_collect_instruments(tmp_path: pathlib.Path) -> None:
                 "instrument_3.txt": "asdf",
             },
         },
+        "instrument_special.csv": "asdf",
     })
+
+    instrument_files: list[str | InstrumentConfig] = [
+        "instrument_1.csv",
+        "subdir_1",
+        "subdir_2/**/*.txt",
+        InstrumentConfig(
+            path="instrument_special.csv",
+            instrument="The Special Instrument",
+            delimiter="\t",
+            person_column="VIP_id",
+        ),
+    ]
+
     instruments = collect_instruments(
-        str(tmp_path),
-        ["instrument_1.csv", "subdir_1", "subdir_2/**/*.txt"],
+        PhenoImportConfig(
+            id="test",
+            input_dir=str(tmp_path),
+            output_dir="N/A",
+            instrument_files=instrument_files,
+            pedigree="N/A",
+            person_column="person_id",
+        ),
     )
-    assert instruments == {
-        "instrument_1": [pathlib.Path(
-            tmp_path, "instrument_1.csv")],
-        "instrument_2": [pathlib.Path(
-            tmp_path, "subdir_1", "instrument_2.txt")],
-        "instrument_3": [pathlib.Path(
-            tmp_path, "subdir_2", "subsubdir", "instrument_3.txt")],
-    }
+    assert instruments == [
+        ImportInstrument(
+            [pathlib.Path(tmp_path, "instrument_1.csv")],
+            "instrument_1",
+            ",",
+            "person_id",
+        ),
+        ImportInstrument(
+            [pathlib.Path(tmp_path, "subdir_1", "instrument_2.txt")],
+            "instrument_2",
+            ",",
+            "person_id",
+        ),
+        ImportInstrument(
+            [pathlib.Path(tmp_path, "subdir_2", "subsubdir", "instrument_3.txt")],  # noqa: E501
+            "instrument_3",
+            ",",
+            "person_id",
+        ),
+        ImportInstrument(
+            [pathlib.Path(tmp_path, "instrument_special.csv")],
+            "The Special Instrument",
+            "\t",
+            "VIP_id",
+        ),
+    ]
 
 
 def test_load_descriptions_file(tmp_path: pathlib.Path) -> None:

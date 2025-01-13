@@ -9,6 +9,7 @@ import textwrap
 import time
 import traceback
 from collections import defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, TextIO, cast
 
@@ -39,6 +40,7 @@ from dae.pedigrees.loader import (
 from dae.pheno.common import (
     DataDictionary,
     InferenceConfig,
+    InstrumentConfig,
     MeasureType,
     PhenoImportConfig,
 )
@@ -62,6 +64,14 @@ logger = logging.getLogger(__name__)
 
 
 IMPORT_METADATA_TABLE = table_("import_metadata")
+
+
+@dataclass
+class ImportInstrument:
+    files: list[Path]
+    name: str
+    delimiter: str
+    person_column: str
 
 
 def pheno_cli_parser() -> argparse.ArgumentParser:
@@ -301,20 +311,17 @@ def import_pheno_data(
     print("READING COLUMNS FROM INSTRUMENT FILE")
     start = time.time()
 
-    instruments = collect_instruments(
-        config.input_dir, config.instrument_files,
-    )
+    instruments = collect_instruments(config)
 
     if not config.skip_pedigree_measures:
-        instruments["pheno_common"] = [
-            Path(config.input_dir, config.pedigree).absolute(),
-        ]
+        instruments.append(ImportInstrument(
+            [Path(config.input_dir, config.pedigree).absolute()],
+            "pheno_common",
+            "\t",
+            config.person_column,
+        ))
 
-    instrument_measure_names = read_instrument_measure_names(
-        instruments,
-        config.person_column,
-        tab_separated=config.tab_separated,
-    )
+    instrument_measure_names = read_instrument_measure_names(instruments)
 
     print(f"DONE {time.time() - start}")
 
@@ -439,35 +446,56 @@ def handle_measure_inference_tasks(
 
 
 def collect_instruments(
-    input_dir: str,
-    paths: list[str],
-) -> dict[str, list[Path]]:
-    """Collect all instrument files from a list of paths."""
-    all_filenames: list[Path] = []
-    for raw_path in paths:
-        path = Path(input_dir, raw_path)
+    import_config: PhenoImportConfig,
+) -> list[ImportInstrument]:
+    """Collect all instrument files for a given import config."""
+
+    all_instruments: dict[str, ImportInstrument] = {}
+
+    def handle_path(raw_path: str):
+        path = Path(import_config.input_dir, raw_path)
+        matched_paths: list[Path] = []
         if "*" in raw_path:
-            all_filenames.extend(
+            matched_paths.extend(
                 Path(res).absolute()
                 for res in glob.glob(str(path), recursive=True))
         elif path.is_file():
-            all_filenames.append(path.absolute())
+            matched_paths.append(path.absolute())
         elif path.is_dir():
             for root, _, filenames in os.walk(path):
-                all_filenames.extend(Path(root, filename).absolute()
-                                     for filename in filenames)
+                matched_paths.extend(Path(root, filename).absolute()
+                                    for filename in filenames)
 
-    instruments = defaultdict(list)
-    for filename in all_filenames:
-        basename = filename.name.split(".")[0]
-        if filename.suffixes[0] not in (".csv", ".txt"):
-            logger.debug(
-                "filename %s is not an instrument; skipping...", filename)
-            continue
-        logger.debug("instrument matched: %s", filename.name)
-        instruments[basename].append(filename)
+        matched_paths = list(filter(lambda m: m.suffixes[0] in (".csv", ".txt"),
+                                    matched_paths))
 
-    return instruments
+        for match in matched_paths:
+            logger.debug("instrument matched: %s", match.name)
+            instrument_name = match.name.split(".")[0]
+            if instrument_name not in all_instruments:
+                all_instruments[instrument_name] = ImportInstrument(
+                    [], instrument_name, ",", import_config.person_column,
+                )
+            all_instruments[instrument_name].files.append(match)
+
+    def handle_conf(conf: InstrumentConfig):
+        path = Path(import_config.input_dir, conf.path).absolute()
+        if conf.instrument not in all_instruments:
+            all_instruments[conf.instrument] = ImportInstrument(
+                [], conf.instrument, conf.delimiter, conf.person_column,
+            )
+        all_instruments[conf.instrument].files.append(path)
+
+    for config in import_config.instrument_files:
+        if isinstance(config, str):
+            handle_path(config)
+        elif isinstance(config, InstrumentConfig):
+            handle_conf(config)
+        else:
+            raise TypeError(f"Encountered invalid type while processing"
+                            f"instrument configurations - {type(config)}")
+
+    return list(all_instruments.values())
 
 
 def _transform_value(val: str | bool) -> str | None:  # noqa: FBT001
@@ -839,27 +867,22 @@ def open_file(filepath: Path) -> TextIO:
 
 
 def read_instrument_measure_names(
-    instruments: dict[str, list[Path]],
-    person_column: str,
-    *,
-    tab_separated: bool = False,
+    instruments: list[ImportInstrument],
 ) -> dict[str, list[str]]:
     """Read the headers of all the instrument files."""
     instrument_measure_names = {}
-    for instrument_name, instrument_files in instruments.items():
-        delimiter = "\t" \
-            if tab_separated or instrument_name == "pheno_common" \
-            else ","
-        file_to_read = instrument_files[0]
+    for instrument in instruments:
+        file_to_read = instrument.files[0]
         with open_file(file_to_read) as csvfile:
             reader = filter(
                 lambda line: len(line) != 0,
-                csv.reader(csvfile, delimiter=delimiter),
+                csv.reader(csvfile, delimiter=instrument.delimiter),
             )
             header = next(reader)
-            instrument_measure_names[instrument_name] = list(
-                filter(lambda col: col != person_column, header[1:]),
-            )
+            instrument_measure_names[instrument.name] = [
+                col for col in header[1:]
+                if col != instrument.person_column
+            ]
     return instrument_measure_names
 
 
@@ -991,19 +1014,18 @@ def merge_inference_configs(
 
 def create_import_tasks(
     task_graph: TaskGraph,
-    instruments: dict[str, Any],
+    instruments: list[ImportInstrument],
     instrument_measure_names: dict[str, list[str]],
     inference_configs: dict[str, Any],
     import_config: PhenoImportConfig,
 ) -> None:
     """Add measure tasks for importing pheno data."""
-
-    for instrument_name, instrument_filenames in instruments.items():
+    for instrument in instruments:
         seen_col_names: dict[str, int] = defaultdict(int)
         table_column_names = [
             "person_id", "family_id", "role", "status", "sex",
         ]
-        measure_names = instrument_measure_names[instrument_name]
+        measure_names = instrument_measure_names[instrument.name]
 
         group_measure_names = []
         group_db_names = []
@@ -1011,7 +1033,7 @@ def create_import_tasks(
 
         for measure_name in measure_names:
             inference_config = merge_inference_configs(
-                inference_configs, instrument_name, measure_name,
+                inference_configs, instrument.name, measure_name,
             )
             if inference_config.skip:
                 continue
@@ -1029,11 +1051,11 @@ def create_import_tasks(
             group_inf_configs.append(inference_config)
 
         task_graph.create_task(
-            f"{instrument_name}_read_and_classify",
+            f"{instrument.name}_read_and_classify",
             read_and_classify_measure,
             [
-                instrument_filenames,
-                instrument_name,
+                instrument.files,
+                instrument.name,
                 group_measure_names,
                 import_config,
                 group_db_names,
