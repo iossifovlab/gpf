@@ -900,8 +900,6 @@ def write_results(
     assert ped_df is not None
     with connection.cursor() as cursor:
         for instrument_name, pq_file in instrument_pq_files.items():
-            connection.execute("INSTALL parquet")
-            connection.execute("LOAD parquet")
             table_name = safe_db_name(f"{instrument_name}_measure_values")
             cursor.execute(
                 textwrap.dedent(f"""
