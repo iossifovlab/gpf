@@ -206,7 +206,7 @@ def transform_cli_args(args: argparse.Namespace) -> PhenoImportConfig:
     result["pedigree"] = args.pedigree
     delattr(args, "pedigree")
 
-    result["tab_separated"] = args.tab_separated
+    result["delimiter"] = "\t" if args.tab_separated else ","
     delattr(args, "tab_separated")
 
     result["skip_pedigree_measures"] = args.skip_pheno_common
@@ -474,7 +474,10 @@ def collect_instruments(
             instrument_name = match.name.split(".")[0]
             if instrument_name not in all_instruments:
                 all_instruments[instrument_name] = ImportInstrument(
-                    [], instrument_name, ",", import_config.person_column,
+                    [],
+                    instrument_name,
+                    import_config.delimiter,
+                    import_config.person_column,
                 )
             all_instruments[instrument_name].files.append(match)
 
@@ -485,7 +488,7 @@ def collect_instruments(
             else path.name.split(".")[0]
         delimiter = conf.delimiter \
             if conf.delimiter is not None \
-            else ","
+            else import_config.delimiter
         person_column = conf.person_column \
             if conf.person_column is not None \
             else import_config.person_column
@@ -538,7 +541,6 @@ def read_and_classify_measure(
     """Read a measure's values and classify from an instrument file."""
 
     person_id_column = import_config.person_column
-    tab_separated = import_config.tab_separated
     transformed_measures = defaultdict(dict)
     seen_person_ids = set()
     person_ids = []
@@ -547,12 +549,14 @@ def read_and_classify_measure(
         person_id_column = "personId"
 
     for instrument_filepath in instrument_filepaths:
+        delimiter = import_config.delimiter
+        if instrument_name == "pheno_common":
+            delimiter = "\t"
+
         with open_file(instrument_filepath) as csvfile:
             reader = csv.DictReader(
                 filter(lambda x: x.strip() != "", csvfile),
-                delimiter="\t"
-                if tab_separated or instrument_name == "pheno_common"
-                else ",",
+                delimiter=delimiter,
             )
 
             for row in reader:

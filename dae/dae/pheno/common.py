@@ -57,7 +57,7 @@ class PhenoImportConfig(BaseModel):
     instrument_files: list[str | InstrumentConfig]
     pedigree: str
     person_column: str
-    tab_separated: bool = False
+    delimiter: str = ","
     skip_pedigree_measures: bool = False
     inference_config: str | dict[str, InferenceConfig] | None = None
     data_dictionary: DataDictionary | None = None

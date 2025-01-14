@@ -200,6 +200,7 @@ def test_collect_instruments(tmp_path: pathlib.Path) -> None:
             output_dir="N/A",
             instrument_files=instrument_files,
             pedigree="N/A",
+            delimiter=",",
             person_column="person_id",
         ),
     )
