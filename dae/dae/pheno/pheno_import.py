@@ -947,7 +947,8 @@ def write_results(
                 "pq_table.* EXCLUDE (person_id) "
                 "FROM ped_df "
                 f"RIGHT JOIN read_parquet('{pq_file!s}') as pq_table ON "
-                "ped_df.person_id = pq_table.person_id"
+                "ped_df.person_id = pq_table.person_id "
+                "WHERE ped_df.person_id IS NOT NULL"
                 ")"
             )
 
