@@ -44,6 +44,7 @@ from dae.pheno.common import (
     MeasureDescriptionsConfig,
     MeasureType,
     PhenoImportConfig,
+    RegressionMeasure,
 )
 from dae.pheno.db import safe_db_name
 from dae.pheno.pheno_data import PhenotypeData, PhenotypeGroup, PhenotypeStudy
@@ -159,7 +160,7 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
 def generate_phenotype_data_config(
     pheno_name: str,
     pheno_db_filename: str,
-    regressions: Any,
+    regressions: dict[str, RegressionMeasure],
 ) -> str:
     """Construct phenotype data configuration from command line arguments."""
     dbfile = os.path.join("%(wd)s", os.path.basename(pheno_db_filename))
@@ -170,14 +171,16 @@ def generate_phenotype_data_config(
         "dbfile": dbfile,
         "browser_images_url": "static/images/",
     }
+    config["regression"] = {
+        reg_id: reg_measure.model_dump()
+        for reg_id, reg_measure in regressions.items()
+    }
     if regressions:
-        regressions_dict = regressions.to_dict()
-        for reg in regressions_dict["regression"].values():
+        for reg in config["regression"].values():
             if "measure_name" in reg and reg["measure_name"] is None:
                 del reg["measure_name"]
             if "measure_names" in reg and reg["measure_names"] is None:
                 del reg["measure_names"]
-        config["regression"] = regressions_dict["regression"]
     return yaml.dump(config)
 
 
