@@ -99,8 +99,8 @@ Annotator to lift over a variant from one reference genome to another.
             info.attributes = [AttributeInfo(
                 "liftover_annotatable",
                 "liftover_annotatable",
-                True,  # noqa FTB003
-                {},
+                internal=True,
+                parameters={},
             )]
         super().__init__(pipeline, info, {
             "liftover_annotatable": ("annotatable", "Lifted over allele."),

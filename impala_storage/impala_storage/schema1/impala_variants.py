@@ -458,7 +458,10 @@ class ImpalaVariants:
             for name, type_name in schema_desc.items():
                 py_type, _ = self.TYPE_MAP[type_name]
                 attr = AttributeInfo(
-                    name, "table schema", False, {}, py_type)  # noqa
+                    name, "table schema",
+                    internal=False,
+                    parameters={},
+                    _type=py_type)
                 schema.append(attr)
 
             return schema

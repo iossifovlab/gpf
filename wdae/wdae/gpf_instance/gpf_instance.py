@@ -240,9 +240,9 @@ class WGPFInstance(GPFInstance):
                             dataset_id)
                         continue
 
+                    person_sets_config = []
                     if "person_sets" in dataset:
                         # Attach person set counts
-                        person_sets_config = []
                         collections = study_wrapper.genotype_data
 
                         for person_set in dataset["person_sets"]:

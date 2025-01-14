@@ -33,14 +33,17 @@ class CnvCollectionAnnotator(Annotator):
         if cnv_filter_str is not None:
             try:
                 # pylint: disable=eval-used
-                self.cnv_filter = eval(f"lambda cnv: { cnv_filter_str }")
+                self.cnv_filter = eval(  # noqa: S307
+                    f"lambda cnv: { cnv_filter_str }")
             except Exception as error:
                 raise ValueError(
                     f"The cnv_filter |{cnv_filter_str}| is "
                     f"sytactically invalid.", error) from error
 
         if not info.attributes:
-            info.attributes = [AttributeInfo("count", "count", False, {})]
+            info.attributes = [AttributeInfo(
+                "count", "count",
+                internal=False, parameters={})]
 
         source_type_desc = {
             "count": ("int", "The number of CNVs overlapping with "
@@ -69,7 +72,7 @@ class CnvCollectionAnnotator(Annotator):
                     small values: {res_attribute_def.small_values_desc},
                     large_values: {res_attribute_def.large_values_desc}
                     aggregator: {aggregator}
-                """
+                """  # noqa: SLF001
 
                 self.cnv_attributes[attribute_def.name] = \
                     (attribute, aggregator)
@@ -93,7 +96,8 @@ class CnvCollectionAnnotator(Annotator):
         super().close()
 
     def annotate(
-        self, annotatable: Annotatable | None, _: dict[str, Any],
+        self, annotatable: Annotatable | None,
+        context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
         if annotatable is None:
             return self._empty_result()

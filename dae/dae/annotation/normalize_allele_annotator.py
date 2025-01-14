@@ -50,8 +50,8 @@ class NormalizeAlleleAnnotator(AnnotatorBase):
                 AttributeInfo(
                     "normalized_allele",
                     "normalized_allele",
-                    True,  # noqa FBT003
-                    {})]
+                    internal=True,
+                    parameters={})]
         super().__init__(pipeline, info, {
             "normalized_allele": ("annotatable", "Normalized allele."),
         })

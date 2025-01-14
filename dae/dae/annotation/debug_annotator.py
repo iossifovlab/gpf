@@ -16,7 +16,8 @@ class HelloWorldAnnotator(Annotator):
         super().__init__(pipeline, info)
 
     def annotate(
-        self, _annotatable: Annotatable | None, _context: dict[str, Any],
+        self, annotatable: Annotatable | None,  # noqa: ARG002
+        context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
         result = {}
         for attribute_config in self._info.attributes:
@@ -29,7 +30,10 @@ def build_annotator(pipeline: AnnotationPipeline,
                     info: AnnotatorInfo) -> Annotator:
     """Create an example hello world annotator."""
     if not info.attributes:
-        info.attributes = [AttributeInfo("hi", "hi", False, {})]
+        info.attributes = [AttributeInfo(
+            "hi", "hi",
+            internal=False,
+            parameters={})]
 
     for attribute_info in info.attributes:
         if attribute_info.source != "hi":

@@ -1,8 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-from typing import Callable, cast
+from collections.abc import Callable
+from typing import cast
 
 import pytest
-import pytest_mock
 
 from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.configuration.gpf_config_parser import FrozenBox
@@ -10,8 +10,6 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.cli import run_with_project
 from dae.import_tools.import_tools import ImportProject
 from dae.pedigrees.loader import FamiliesLoader
-
-# from dae.annotation.schema import Schema
 from dae.variants.family_variant import FamilyAllele
 from dae.variants_loaders.dae.loader import DenovoLoader
 from impala_storage.schema1.impala_genotype_storage import ImpalaGenotypeStorage
@@ -56,25 +54,27 @@ def extra_attrs_impala(
         project, gpf_instance=gpf_instance_2013)
     run_with_project(import_project)
 
-    fvars = impala_genotype_storage.build_backend(
+    return impala_genotype_storage.build_backend(
         FrozenBox({"id": study_id}), gpf_instance_2013.reference_genome,
         gpf_instance_2013.gene_models,
     )
 
-    return fvars
-
 
 def test_all_properties_in_blob(
     vcf_variants_loaders: Callable,
-    impala_genotype_storage: ImpalaGenotypeStorage,
+    impala_genotype_storage: ImpalaGenotypeStorage,  # noqa: ARG001
 ) -> None:
     loader = vcf_variants_loaders("backends/quads_f1")[0]
 
-    fv = list(loader.full_variants_iterator())[0][1][0]
+    fv = next(iter(loader.full_variants_iterator()))[1][0]
     family = loader.families.get(fv.family_id)
     schema: list[AttributeInfo] = []
     print(schema)
-    schema.append(AttributeInfo("some_score", "test", False, {}, "float"))
+    schema.append(AttributeInfo(
+        "some_score", "test",
+        internal=False,
+        parameters={},
+        _type="float"))
     fv.update_attributes({"some_score": [1.24]})
 
     serializer = AlleleParquetSerializer(schema)
@@ -173,23 +173,26 @@ def test_extra_attributes_loading_with_person_id(
 
 def test_extra_attributes_impala(extra_attrs_impala: ImpalaVariants) -> None:
     variants = extra_attrs_impala.query_variants()
-    first_variant = list(variants)[0]
+    first_variant = next(iter(variants))
     assert first_variant.get_attribute("someAttr")[0] == "asdf"
 
 
 def test_build_allele_batch_dict(
     vcf_variants_loaders: Callable,
-    impala_genotype_storage: ImpalaGenotypeStorage,
-    mocker: pytest_mock.MockerFixture,
+    impala_genotype_storage: ImpalaGenotypeStorage,  # noqa: ARG001
 ) -> None:
     loader = vcf_variants_loaders("backends/effects_trio")[-1]
 
-    fv = list(loader.full_variants_iterator())[0][1][0]
+    fv = next(iter(loader.full_variants_iterator()))[1][0]
     family = loader.families.get(fv.family_id)
     assert family, fv.family_id
 
     schema: list[AttributeInfo] = []
-    schema.append(AttributeInfo("some_score", "test", False, {}, "float"))
+    schema.append(AttributeInfo(
+        "some_score", "test",
+        internal=False,
+        parameters={},
+        _type="float"))
     fv.update_attributes({"some_score": [1.24]})
 
     serializer = AlleleParquetSerializer(schema)
