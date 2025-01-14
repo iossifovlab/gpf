@@ -18,6 +18,7 @@ import { resetErrors, setErrors } from 'app/common/errors.state';
 @Component({
   selector: 'gpf-genomic-scores',
   templateUrl: './genomic-scores.component.html',
+  styleUrls: ['./genomic-scores.component.css']
 })
 export class GenomicScoresComponent implements OnInit {
   @Input() public selectedGenomicScore: GenomicScore;
