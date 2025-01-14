@@ -1,35 +1,34 @@
 import { Component, OnInit } from '@angular/core';
-import { GenomicScoreLocalState } from '../genomic-scores/genomic-scores-store';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
 import { CategoricalHistogram, GenomicScore } from './genomic-scores-block';
 import { Store} from '@ngrx/store';
-import { selectGenomicScores, setGenomicScores } from './genomic-scores-block.state';
+import {
+  GenomicScoreState,
+  removeGenomicScore,
+  selectGenomicScores,
+  setGenomicScoresCategorical,
+  setGenomicScoresContinuous
+} from './genomic-scores-block.state';
 import { combineLatest, of } from 'rxjs';
 import { switchMap, take } from 'rxjs/operators';
-import { ValidateNested } from 'class-validator';
-import { ComponentValidator } from 'app/common/component-validator';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-genomic-scores-block',
   templateUrl: './genomic-scores-block.component.html',
   styleUrls: ['./genomic-scores-block.component.css'],
 })
-export class GenomicScoresBlockComponent extends ComponentValidator implements OnInit {
-  @ValidateNested({
-    each: true
-  })
-  public genomicScoresLocalState: GenomicScoreLocalState[] = [];
-  public genomicScoresArray: GenomicScore[];
+export class GenomicScoresBlockComponent implements OnInit {
+  public selectedGenomicScores: {score: GenomicScore, state: GenomicScoreState}[] = [];
+  public unusedGenomicScores: GenomicScore[];
+  public allGenomicScores: GenomicScore[];
 
   public constructor(
     protected store: Store,
     private genomicScoresBlockService: GenomicScoresBlockService,
-  ) {
-    super(store, 'genomicScores', selectGenomicScores);
-  }
+  ) { }
 
   public ngOnInit(): void {
-    super.ngOnInit();
     this.genomicScoresBlockService.getGenomicScores().pipe(
       take(1),
       switchMap(genomicScores => combineLatest([
@@ -37,41 +36,96 @@ export class GenomicScoresBlockComponent extends ComponentValidator implements O
         this.store.select(selectGenomicScores)
       ]))
     ).pipe(take(1)).subscribe(([genomicScores, genomicScoresState]) => {
-      this.genomicScoresArray = genomicScores;
+      this.allGenomicScores = genomicScores;
       if (genomicScoresState.length > 0) {
         // restore state
-        for (const score of genomicScoresState) {
-          this.genomicScoresLocalState.push(score);
+        for (const state of genomicScoresState) {
+          this.selectedGenomicScores.push({
+            score: genomicScores.find(score => score.score === state.score),
+            state: state,
+          });
         }
+        // set visible scores after restore
+        this.unusedGenomicScores = this.allGenomicScores
+          .filter(gs => !this.selectedGenomicScores.find(selected => selected.state.score === gs.score));
+      } else {
+        this.unusedGenomicScores = [...this.allGenomicScores];
       }
+      this.unusedGenomicScores.sort((a, b) => a.score.localeCompare(b.score));
     });
   }
 
-  public addFilter(): void {
-    const firstScore = new GenomicScoreLocalState();
-    firstScore.score = this.genomicScoresArray[0].score;
-    if (this.genomicScoresArray[0].histogram instanceof CategoricalHistogram) {
-      firstScore.histogramType = 'categorical';
-      firstScore.rangeStart = 0;
-      firstScore.rangeEnd = 0;
-      firstScore.values = this.genomicScoresArray[0].histogram.values.map(value => value.name);
-      firstScore.categoricalView = 'range selector';
+  private createScoreDefaultState(score: GenomicScore): GenomicScoreState {
+    const state: GenomicScoreState = {
+      histogramType: null,
+      score: null,
+      rangeStart: null,
+      rangeEnd: null,
+      values: null,
+      categoricalView: null,
+    };
+    state.score = score.score;
+    if (score.histogram instanceof CategoricalHistogram) {
+      state.histogramType = 'categorical';
+      state.rangeStart = null;
+      state.rangeEnd = null;
+      state.values = score.histogram.values.map(value => value.name);
+      state.categoricalView = 'range selector';
     } else {
-      firstScore.histogramType = 'continuous';
-      firstScore.rangeStart = this.genomicScoresArray[0].histogram.rangeMin;
-      firstScore.rangeEnd = this.genomicScoresArray[0].histogram.rangeMax;
-      firstScore.values = null;
-      firstScore.categoricalView = null;
+      state.histogramType = 'continuous';
+      state.rangeStart = score.histogram.rangeMin;
+      state.rangeEnd = score.histogram.rangeMax;
+      state.values = null;
+      state.categoricalView = null;
     }
-    this.genomicScoresLocalState.push(firstScore);
+    return state;
   }
 
-  public removeFilter(genomicScore: GenomicScoreLocalState): void {
-    this.genomicScoresLocalState = this.genomicScoresLocalState.filter(gs => gs !== genomicScore);
-    this.updateState();
+  public addFilter(): void {
+    const defaultState = this.createScoreDefaultState(this.unusedGenomicScores[0]);
+    this.selectedGenomicScores.push({
+      score: this.unusedGenomicScores[0],
+      state: defaultState,
+    });
+    this.unusedGenomicScores.splice(0, 1);
+    this.addToState(cloneDeep(defaultState));
   }
 
-  public updateState(): void {
-    this.store.dispatch(setGenomicScores({genomicScores: this.genomicScoresLocalState}));
+  public changeFilter(change: {old: string, new: string}): void {
+    // Add the old genomic score to the unused list
+    const oldIndex = this.selectedGenomicScores.findIndex(selected => selected.score.score === change.old);
+    this.unusedGenomicScores.push(this.selectedGenomicScores[oldIndex].score);
+    this.unusedGenomicScores.sort((a, b) => a.score.localeCompare(b.score));
+
+    // Add the unused genomic score to the selected and update the state
+    this.removeFromState(this.selectedGenomicScores[oldIndex].state);
+    const newIndex = this.unusedGenomicScores.findIndex(unused => unused.score === change.new);
+    const defaultState = this.createScoreDefaultState(this.unusedGenomicScores[newIndex]);
+    this.selectedGenomicScores[oldIndex] = {
+      score: this.unusedGenomicScores[newIndex],
+      state: defaultState,
+    };
+    this.addToState(cloneDeep(defaultState));
+    this.unusedGenomicScores.splice(newIndex, 1);
+  }
+
+  public removeFromState(genomicScore: GenomicScoreState): void {
+    this.store.dispatch(removeGenomicScore({genomicScoreName: genomicScore.score}));
+  }
+
+  public addToState(state: GenomicScoreState): void {
+    if (state.histogramType === 'continuous') {
+      this.store.dispatch(setGenomicScoresContinuous({
+        score: state.score,
+        rangeStart: state.rangeStart,
+        rangeEnd: state.rangeEnd,
+      }));
+    } else if (state.histogramType === 'categorical') {
+      this.store.dispatch(setGenomicScoresCategorical({
+        score: state.score,
+        values: state.values,
+        categoricalView: state.categoricalView,
+      }));
+    }
   }
 }

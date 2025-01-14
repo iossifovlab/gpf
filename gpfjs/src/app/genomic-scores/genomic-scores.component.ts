@@ -1,34 +1,34 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { environment } from 'environments/environment';
-import { ReplaySubject } from 'rxjs';
+import { ReplaySubject} from 'rxjs';
 import {
   CategoricalHistogram,
   CategoricalHistogramView,
   GenomicScore,
   NumberHistogram
 } from '../genomic-scores-block/genomic-scores-block';
-import { GenomicScoreLocalState } from './genomic-scores-store';
-import { ArrayNotEmpty } from 'class-validator';
 import { cloneDeep } from 'lodash';
 import { Store } from '@ngrx/store';
-import { setGenomicScoresCategorical } from 'app/genomic-scores-block/genomic-scores-block.state';
+import {
+  GenomicScoreState,
+  setGenomicScoresCategorical,
+} from 'app/genomic-scores-block/genomic-scores-block.state';
+import { resetErrors, setErrors } from 'app/common/errors.state';
 
 @Component({
   selector: 'gpf-genomic-scores',
   templateUrl: './genomic-scores.component.html',
 })
 export class GenomicScoresComponent implements OnInit {
-  @Input() public index: number;
-  @Input() public genomicScoreState: GenomicScoreLocalState;
-  @Input() public errors: string[];
-  @Input() public genomicScoresArray: GenomicScore[];
-  @Output() public updateGenomicScoreEvent = new EventEmitter();
-  public selectedGenomicScore: GenomicScore;
+  @Input() public selectedGenomicScore: GenomicScore;
+  @Input() public initialState: GenomicScoreState;
+  public localState: GenomicScoreState;
+  @Input() public otherGenomicScores: GenomicScore[];
+  @Output() public changeGenomicScore = new EventEmitter<{ old: string, new: string }>();
+  @Output() public updateState = new EventEmitter<GenomicScoreState>();
+  public errors: string[] = [];
 
-  @ArrayNotEmpty({message: 'Please select at least one bar.'})
-  public categoricalValues: string[] = [];
-  public selectedCategoricalHistogramView: CategoricalHistogramView = 'range selector';
-
+  // Refactor needed, not removal.
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
 
   public imgPathPrefix = environment.imgPathPrefix;
@@ -38,21 +38,17 @@ export class GenomicScoresComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    if (!this.genomicScoreState.score) {
-      this.selectedGenomicScore = this.genomicScoresArray[0];
-    } else {
-      this.selectedGenomicScore = this.genomicScoresArray.find(score => score.score === this.genomicScoreState.score);
-    }
+    this.localState = this.initialState;
   }
 
   public updateRangeStart(range): void {
-    this.genomicScoreState.rangeStart = range as number;
-    this.updateGenomicScoreEvent.emit();
+    this.localState.rangeStart = range as number;
+    this.updateHistogramState();
   }
 
   public updateRangeEnd(range): void {
-    this.genomicScoreState.rangeEnd = range as number;
-    this.updateGenomicScoreEvent.emit();
+    this.localState.rangeEnd = range as number;
+    this.updateHistogramState();
   }
 
   public get domainMin(): number {
@@ -64,53 +60,41 @@ export class GenomicScoresComponent implements OnInit {
     return (this.selectedGenomicScore.histogram as NumberHistogram).bins[lastIndex];
   }
 
-  private updateLabels(): void {
-    this.rangeChanges.next([
-      this.genomicScoreState.score,
-      this.genomicScoreState.rangeStart,
-      this.genomicScoreState.rangeEnd
-    ]);
+  public updateSelectedGenomicScore(newGenomicScore: GenomicScore): void {
+    this.changeGenomicScore.emit({
+      old: this.selectedGenomicScore.score,
+      new: newGenomicScore.score
+    });
   }
 
-  public updateSelectedGenomicScore(selectedGenomicScore: GenomicScore): void {
-    this.genomicScoreState.score = selectedGenomicScore.score;
-    this.genomicScoreState.rangeStart = null;
-    this.genomicScoreState.rangeEnd = null;
-    this.updateLabels();
-    this.updateGenomicScoreEvent.emit();
-  }
-
-
-  private updateCategoricalHistogramState(): void {
-    this.store.dispatch(setGenomicScoresCategorical({
-      score: this.selectedGenomicScore.score,
-      values: cloneDeep(this.categoricalValues),
-      categoricalView: this.selectedCategoricalHistogramView,
-    }));
+  private updateHistogramState(): void {
+    this.validateState(this.localState);
+    this.updateState.emit(this.localState);
   }
 
   public switchCategoricalHistogramView(view: CategoricalHistogramView): void {
-    if (view === this.selectedCategoricalHistogramView) {
+    if (view === this.localState.categoricalView) {
       return;
     }
-    this.selectedCategoricalHistogramView = view;
-    this.categoricalValues = [];
-    this.updateCategoricalHistogramState();
+    this.localState.categoricalView = view;
+    this.localState.values = [];
+    this.updateHistogramState();
   }
 
   public toggleCategoricalValues(values: string[]): void {
     values.forEach(value => {
-      const valueIndex = this.categoricalValues.findIndex(v => v === value);
+      const valueIndex = this.localState.values.findIndex(v => v === value);
       if (valueIndex === -1) {
-        this.categoricalValues.push(value);
+        this.localState.values.push(value);
       } else {
-        this.categoricalValues.splice(valueIndex, 1);
+        this.localState.values.splice(valueIndex, 1);
       }
     });
+    this.validateState(this.localState);
     this.store.dispatch(setGenomicScoresCategorical({
-      score: this.genomicScoreState.score,
-      values: cloneDeep(this.categoricalValues),
-      categoricalView: this.selectedCategoricalHistogramView,
+      score: this.localState.score,
+      values: cloneDeep(this.localState.values),
+      categoricalView: this.localState.categoricalView,
     }));
   }
 
@@ -120,5 +104,51 @@ export class GenomicScoresComponent implements OnInit {
 
   public isCategoricalHistogram(arg: object): arg is CategoricalHistogram {
     return arg instanceof CategoricalHistogram;
+  }
+
+  private validateState(state: GenomicScoreState): void {
+    this.errors = [];
+    if (!state.score) {
+      this.errors.push('Empty score names are invalid.');
+    }
+    if (this.isNumberHistogram(this.selectedGenomicScore.histogram)) {
+      if (state.rangeStart !== null) {
+        if (typeof state.rangeStart !== 'number') {
+          this.errors.push('Range start should be a number.');
+        }
+        if (state.rangeStart > state.rangeEnd) {
+          this.errors.push('Range start should be less than or equal to range end.');
+        }
+        if (state.rangeStart < this.selectedGenomicScore.histogram.rangeMin) {
+          this.errors.push('Range start should be more than or equal to domain min.');
+        }
+      }
+      if (state.rangeEnd !== null) {
+        if (typeof state.rangeEnd !== 'number') {
+          this.errors.push('Range end should be a number.');
+        }
+        if (state.rangeEnd < state.rangeStart) {
+          this.errors.push('Range end should be more than or equal to range start.');
+        }
+        if (state.rangeEnd > this.selectedGenomicScore.histogram.rangeMax) {
+          this.errors.push('Range end should be less than or equal to domain max.');
+        }
+      }
+    }
+    if (this.isCategoricalHistogram(this.selectedGenomicScore.histogram)) {
+      if (!state.values.length) {
+        this.errors.push('Please select at least one bar.');
+      }
+    }
+
+    if (this.errors.length) {
+      this.store.dispatch(setErrors({
+        errors: {
+          componentId: 'genomicScores', errors: cloneDeep(this.errors)
+        }
+      }));
+    } else {
+      this.store.dispatch(resetErrors({componentId: 'genomicScores'}));
+    }
   }
 }

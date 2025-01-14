@@ -1,6 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { reset } from 'app/users/state-actions';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isEqual } from 'lodash';
 import { CategoricalHistogramView } from './genomic-scores-block';
 import { HistogramType } from 'app/gene-scores/gene-scores.state';
 
@@ -31,6 +31,11 @@ export const setGenomicScoresContinuous = createAction(
 export const setGenomicScoresCategorical = createAction(
   '[Genotype] Set score with categorical histogram data',
   props<{score: string, values: string[], categoricalView: CategoricalHistogramView}>()
+);
+
+export const removeGenomicScore = createAction(
+  '[Genotype] Remove score with histogram data',
+  props<{genomicScoreName: string}>()
 );
 
 export const resetGenomicScores = createAction(
@@ -65,8 +70,8 @@ export const genomicScoresReducer = createReducer(
     const newGenomicScore = {
       histogramType: 'categorical' as const,
       score: score,
-      rangeStart: 0,
-      rangeEnd: 0,
+      rangeStart: null,
+      rangeEnd: null,
       values: values,
       categoricalView: categoricalView,
     };
@@ -81,6 +86,9 @@ export const genomicScoresReducer = createReducer(
       scores[scoreIndex] = scoreCopy;
     }
     return scores;
+  }),
+  on(removeGenomicScore, (state, {genomicScoreName}) => {
+    return [...state].filter(score => score.score !== genomicScoreName);
   }),
   on(reset, resetGenomicScores, state => cloneDeep(initialState)),
 );

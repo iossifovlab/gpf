@@ -164,6 +164,7 @@ import { FamilyTagsComponent } from './family-tags/family-tags.component';
 import { familyTagsReducer } from './family-tags/family-tags.state';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatInputModule } from '@angular/material/input';
+import {MatSelectModule} from '@angular/material/select';
 import { datasetIdReducer } from './datasets/datasets.state';
 import { StoreModule } from '@ngrx/store';
 import { errorsReducer } from './common/errors.state';
@@ -182,6 +183,7 @@ import { regionsFiltersReducer } from './regions-filter/regions-filter.state';
 import { uniqueFamilyVariantsFilterReducer } from './unique-family-variants-filter/unique-family-variants-filter.state';
 import { CategoricalHistogramModule } from './categorical-histogram/categorical-histogram.module';
 import {MatMenuModule} from '@angular/material/menu';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 const appRoutes: Routes = [
   {
@@ -412,6 +414,8 @@ bootstrap: [AppComponent], imports: [BrowserModule,
   ScrollingModule,
   AngularMarkdownEditorModule.forRoot(),
   MatAutocompleteModule,
+  MatFormFieldModule,
+  MatSelectModule,
   MatInputModule,
   MatMenuModule,
   NoopAnimationsModule,
