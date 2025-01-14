@@ -404,11 +404,7 @@ def handle_measure_inference_tasks(
 
                     assert report.instrument_name == current_instrument
                     m_id = f"{report.instrument_name}.{report.measure_name}"
-                    description = ""
-                    if descriptions:
-                        description = descriptions.get(
-                            f"{report.instrument_name}.{report.measure_name}",
-                        )
+                    description = descriptions.get(m_id, "")
 
                     value_type = report.inference_report.value_type.__name__
                     histogram_type = \
@@ -531,8 +527,7 @@ class MeasureReport(BaseModel):
 
 
 def read_and_classify_measure(
-    instrument_filepaths: list[Path],
-    instrument_name: str,
+    instrument: ImportInstrument,
     group_measure_names: list[str],
     import_config: PhenoImportConfig,
     group_db_name: list[str],
@@ -545,12 +540,12 @@ def read_and_classify_measure(
     seen_person_ids = set()
     person_ids = []
 
-    if instrument_name == "pheno_common":
+    if instrument.name == "pheno_common":
         person_id_column = "personId"
 
-    for instrument_filepath in instrument_filepaths:
-        delimiter = import_config.delimiter
-        if instrument_name == "pheno_common":
+    for instrument_filepath in instrument.files:
+        delimiter = instrument.delimiter
+        if instrument.name == "pheno_common":
             delimiter = "\t"
 
         with open_file(instrument_filepath) as csvfile:
@@ -594,13 +589,13 @@ def read_and_classify_measure(
                 m_type = MeasureType.ordinal
 
         report = MeasureReport.model_validate({
-            "measure_name": instrument_name,
+            "measure_name": instrument.name,
             "instrument_name": m_name,
             "db_name": m_dbname,
             "measure_type": m_type,
             "inference_report": inference_report,
         })
-        report.instrument_name = instrument_name
+        report.instrument_name = instrument.name
         report.measure_name = m_name
         report.db_name = m_dbname
         output_table[m_dbname] = [
@@ -611,10 +606,10 @@ def read_and_classify_measure(
 
     parquet_dir = get_output_parquet_files_dir(import_config)
 
-    out_file = parquet_dir / instrument_name
+    out_file = parquet_dir / instrument.name
 
     out_file = write_to_parquet(
-        instrument_name, out_file, reports, output_table,
+        instrument.name, out_file, reports, output_table,
     )
 
     return (out_file, reports)
@@ -962,12 +957,13 @@ def write_results(
 def load_descriptions(
     input_dir: str,
     config: DataDictionary | None,
-) -> dict[str, str] | None:
+) -> dict[str, str]:
     """Load measure descriptions."""
-    if not config:
-        return None
 
     descriptions: dict[str, str] = {}
+
+    if not config:
+        return descriptions
 
     def read_from_file(path) -> dict[str, str]:
         out = {}
@@ -1068,8 +1064,7 @@ def create_import_tasks(
             f"{instrument.name}_read_and_classify",
             read_and_classify_measure,
             [
-                instrument.files,
-                instrument.name,
+                instrument,
                 group_measure_names,
                 import_config,
                 group_db_names,
