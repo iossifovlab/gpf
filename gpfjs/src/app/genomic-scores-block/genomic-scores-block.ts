@@ -88,9 +88,12 @@ export class CategoricalHistogram {
     public readonly displayedValuesCount: number = null,
     public readonly displayedValuesPercent: number = null,
   ) {
-    values.sort((a, b) => {
-      return valueOrder.indexOf(a.name) - valueOrder.indexOf(b.name);
-    });
+    if (valueOrder) {
+      values.sort((a, b) => {
+        return valueOrder.indexOf(a.name) - valueOrder.indexOf(b.name);
+      });
+    }
+
 
     let maxShown = values.length;
     if (displayedValuesCount) {

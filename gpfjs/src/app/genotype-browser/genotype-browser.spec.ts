@@ -1,4 +1,5 @@
-import { BrowserQueryFilter, GenomicScore, PersonSetCollection } from './genotype-browser';
+import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
+import { BrowserQueryFilter, PersonSetCollection } from './genotype-browser';
 
 describe('BrowserQueryFilter', () => {
   it('should create from json', () => {
@@ -26,21 +27,5 @@ describe('PersonSetCollection', () => {
       id: 'id1',
       checkedValues: ['check1', 'check2']
     }));
-  });
-});
-
-describe('GenomicScore', () => {
-  it('should create from json', () => {
-    expect(new GenomicScore('1', 2, 3)).toStrictEqual(GenomicScore.fromJson({
-      metric: '1', rangeStart: 2, rangeEnd: 3
-    }));
-  });
-
-  it('should create from json array', () => {
-    expect([new GenomicScore('1', 2, 3), new GenomicScore('4', 5, 6)]).toStrictEqual(GenomicScore.fromJsonArray([
-      { metric: '1', rangeStart: 2, rangeEnd: 3 },
-      { metric: '4', rangeStart: 5, rangeEnd: 6 }
-    ]
-    ));
   });
 });
