@@ -79,21 +79,80 @@ class BaseGeneSetCollection(abc.ABC):
         raise NotImplementedError
 
 
-class GeneSetCollection(
+class GeneSetCollectionImpl(
     GenomicResourceImplementation,
-    ResourceConfigValidationMixin,
     InfoImplementationMixin,
+):
+    """Class used to represent gene sets collection resource implementations."""
+
+    def get_template(self) -> Template:
+        return Template(textwrap.dedent("""
+            {% extends base %}
+            {% block content %}
+            <hr>
+            <h2>Gene set ID: {{ data["id"] }}</h2>
+            {% if data["format"] == "directory" %}
+            <h3>Gene sets directory:</h3>
+            <a href="{{ data["directory"] }}">
+            {{ data["directory"] }}
+            </a>
+            {% else %}
+            <h3>Gene sets file:</h3>
+            <a href="{{ data["filename"] }}">
+            {{ data["filename"] }}
+            </a>
+            {% endif %}
+            <p>Format: {{ data["format"] }}</p>
+            {% if data["web_label"] %}
+            <p>Web label: {{ data["web_label"] }}</p>
+            {% endif %}
+            {% if data["web_format_str"] %}
+            <p>Web label: {{ data["web_format_str"] }}</p>
+            {% endif %}
+            {% endblock %}
+        """))
+
+    def _get_template_data(self) -> dict:
+        info = copy.deepcopy(self.config)
+        if "meta" in info:
+            info["meta"] = markdown(str(info["meta"]))
+        return info
+
+    def calc_info_hash(self) -> bytes:
+        return b"placeholder"
+
+    def calc_statistics_hash(self) -> bytes:
+        return b"placeholder"
+
+    def add_statistics_build_tasks(
+        self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
+    ) -> list[Task]:
+        return []
+
+    def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002
+        return InfoImplementationMixin.get_info(self)
+
+    def get_statistics_info(self, **kwargs: Any) -> str:  # noqa: ARG002
+        return InfoImplementationMixin.get_statistics_info(self)
+
+
+class GeneSetCollection(
+    ResourceConfigValidationMixin,
     BaseGeneSetCollection,
 ):
     """Class representing a collection of gene sets in a resource."""
 
     def __init__(self, resource: GenomicResource) -> None:
-        super().__init__(resource)
+        super().__init__()
 
-        self.config = self.validate_and_normalize_schema(
-            self.config, resource,
-        )
         config = resource.get_config()
+        if config is None:
+            raise ValueError(
+                f"genomic resource {resource.resource_id} not configured")
+        self.resource = resource
+        self.config = self.validate_and_normalize_schema(
+            config, resource,
+        )
         self.collection_id = self.config["id"]
         assert self.collection_id != "denovo"
         if resource.get_type() not in {"gene_set_collection", "gene_set"}:
@@ -192,39 +251,6 @@ class GeneSetCollection(
     def get_all_gene_sets(self) -> list[GeneSet]:
         return list(self.gene_sets.values())
 
-    def get_template(self) -> Template:
-        return Template(textwrap.dedent("""
-            {% extends base %}
-            {% block content %}
-            <hr>
-            <h2>Gene set ID: {{ data["id"] }}</h2>
-            {% if data["format"] == "directory" %}
-            <h3>Gene sets directory:</h3>
-            <a href="{{ data["directory"] }}">
-            {{ data["directory"] }}
-            </a>
-            {% else %}
-            <h3>Gene sets file:</h3>
-            <a href="{{ data["filename"] }}">
-            {{ data["filename"] }}
-            </a>
-            {% endif %}
-            <p>Format: {{ data["format"] }}</p>
-            {% if data["web_label"] %}
-            <p>Web label: {{ data["web_label"] }}</p>
-            {% endif %}
-            {% if data["web_format_str"] %}
-            <p>Web label: {{ data["web_format_str"] }}</p>
-            {% endif %}
-            {% endblock %}
-        """))
-
-    def _get_template_data(self) -> dict:
-        info = copy.deepcopy(self.config)
-        if "meta" in info:
-            info["meta"] = markdown(str(info["meta"]))
-        return info
-
     @staticmethod
     def get_schema() -> dict[str, Any]:
         return {
@@ -237,12 +263,6 @@ class GeneSetCollection(
             "web_format_str": {"type": "string"},
 
         }
-
-    def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002
-        return InfoImplementationMixin.get_info(self)
-
-    def get_statistics_info(self, **kwargs: Any) -> str:  # noqa: ARG002
-        return InfoImplementationMixin.get_statistics_info(self)
 
     def calc_info_hash(self) -> bytes:
         return b"placeholder"
@@ -385,3 +405,11 @@ def build_gene_set_collection_from_resource_id(
         grr = build_genomic_resource_repository()
     return build_gene_set_collection_from_resource(
         grr.get_resource(resource_id))
+
+
+def build_gene_set_collection_implementation_from_resource(
+    resource: GenomicResource,
+) -> GenomicResourceImplementation:
+    if resource is None:
+        raise ValueError(f"missing resource {resource}")
+    return GeneSetCollectionImpl(resource)
