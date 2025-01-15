@@ -3,23 +3,26 @@
     <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
       <div class="nav-title-custom">Genomic scores</div>
       <li ngbNavItem>
-        <a *ngIf="genomicScoresArray?.length > 0" ngbNavLink>
+        <a *ngIf="allGenomicScores?.length > 0" ngbNavLink>
           <gpf-add-button (addFilter)="addFilter()"></gpf-add-button>
         </a>
-        <span *ngIf="genomicScoresArray?.length === 0" style="opacity: 75%"><i>No genomic scores available</i></span>
+        <span *ngIf="allGenomicScores?.length === 0" style="opacity: 75%"><i>No genomic scores available</i></span>
       </li>
     </ul>
-    <div *ngIf="genomicScoresArray?.length > 0" class="card-block">
-      <div *ngFor="let score of genomicScoresState.genomicScoresState; let i = index">
+    <div *ngIf="allGenomicScores?.length > 0" class="card-block">
+      <div *ngFor="let selectedScore of selectedGenomicScores; let i = index">
         <span style="display: block; position: relative; overflow: hidden; border-top: 1px solid rgba(0, 0, 0, 0.17)">
           <div style="position: absolute; right: 0px; top: 18px; height: 30px">
-            <gpf-remove-button [field]="score" (removeFilter)="removeFilter($event)"></gpf-remove-button>
+            <gpf-remove-button
+              [field]="selectedScore"
+              (removeFilter)="removeFromState($event.state)"></gpf-remove-button>
           </div>
           <gpf-genomic-scores
-            [genomicScoreState]="score"
-            [errors]="errors"
-            [genomicScoresArray]="genomicScoresArray"
-            (updateGenomicScoreEvent)="updateState()">
+            [selectedGenomicScore]="selectedScore.score"
+            [initialState]="selectedScore.state"
+            [otherGenomicScores]="unusedGenomicScores"
+            (updateState)="addToState($event)"
+            (changeGenomicScore)="changeFilter($event)">
           </gpf-genomic-scores>
         </span>
       </div>

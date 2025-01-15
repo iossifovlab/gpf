@@ -5,12 +5,11 @@ import {
 } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { Observable, of, zip } from 'rxjs';
 import { GeneScoresService } from '../gene-scores/gene-scores.service';
-import { CategoricalHistogram, GeneScore, NumberHistogram } from 'app/gene-scores/gene-scores';
+import { CategoricalHistogram, GenomicScore, NumberHistogram } from 'app/genomic-scores-block/genomic-scores-block';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { switchMap, take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { QueryService } from 'app/query/query.service';
-import { GenomicScore } from 'app/genotype-browser/genotype-browser';
 import { LGDS } from 'app/effect-types/effect-types';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
 import { setVariantTypes } from 'app/variant-types/variant-types.state';
@@ -20,10 +19,10 @@ import { setPresentInParent } from 'app/present-in-parent/present-in-parent.stat
 import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
 import { selectGeneProfiles, setGeneProfilesOpenedTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { setStudyTypes } from 'app/study-types/study-types.state';
-import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { cloneDeep } from 'lodash';
 import { GeneProfilesTableService } from 'app/gene-profiles-table/gene-profiles-table.service';
 import { Router } from '@angular/router';
+import { GenomicScoreState, setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -39,7 +38,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
   public compactView = false;
   public showTemplate = true;
 
-  public genomicScoresGeneScores: {category: string; scores: GeneScore[]}[] = [];
+  public genomicScoresGeneScores: {category: string; scores: GenomicScore[]}[] = [];
   public gene$: Observable<GeneProfilesGene>;
 
   public histogramOptions = {
@@ -105,14 +104,14 @@ export class GeneProfileSingleViewComponent implements OnInit {
         });
 
         let scores: string;
-        const geneScoresObservables: Observable<GeneScore[]>[] = [];
+        const geneScoresObservables: Observable<GenomicScore[]>[] = [];
         for (const genomicScore of gene.genomicScores) {
           scores = [...genomicScore.scores.map(score => score.id)].join(',');
           geneScoresObservables.push(
             this.geneScoresService.getGeneScores(scores)
           );
         }
-        const genomicScoresObservables: Observable<[string, GeneScore[]]>[] = [];
+        const genomicScoresObservables: Observable<[string, GenomicScore[]]>[] = [];
         for (let k = 0; k < geneScoresObservables.length; k++) {
           genomicScoresObservables.push(
             zip(
@@ -152,7 +151,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
     });
   }
 
-  public getGeneScoreByKey(category: string, key: string): GeneScore {
+  public getGeneScoreByKey(category: string, key: string): GenomicScore {
     return this.genomicScoresGeneScores
       .find(genomicScoresCategory => genomicScoresCategory.category === category).scores
       .find(score => score.score === key);
@@ -209,13 +208,9 @@ export class GeneProfileSingleViewComponent implements OnInit {
       synonymous: ['synonymous'],
     };
 
-    const genomicScores: GenomicScore[] = [];
+    const genomicScores: GenomicScoreState[] = [];
     if (statistic.scores) {
-      genomicScores[0] = new GenomicScore(
-        statistic.scores[0]['name'] as string,
-        statistic.scores[0]['min'] as number,
-        statistic.scores[0]['max'] as number,
-      );
+      genomicScores[0] = cloneDeep(statistic.scores[0]);
     }
 
     const presentInChildValues = ['proband only', 'proband and sibling', 'sibling only'];

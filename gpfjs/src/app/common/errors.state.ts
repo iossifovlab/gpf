@@ -37,16 +37,17 @@ export const errorsReducer = createReducer(
       return updatedState;
     }
 
-    errors.errors.forEach(e => {
-      if (!state[currentIndex].errors.includes(e)) {
-        state[currentIndex].errors.push(e);
-      }
-    });
-
     updatedState[currentIndex] = {
       componentId: state[currentIndex].componentId,
       errors: [...state[currentIndex].errors]
     };
+
+    errors.errors.forEach(e => {
+      if (!state[currentIndex].errors.includes(e)) {
+        updatedState[currentIndex].errors.push(e);
+      }
+    });
+
     return updatedState;
   }),
   on(resetErrors, (state, { componentId }) => state.filter(s => s.componentId !== componentId)),

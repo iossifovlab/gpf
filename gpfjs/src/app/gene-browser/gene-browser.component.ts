@@ -346,7 +346,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       regions: this.selectedGene.getRegionString(...this.summaryVariantsFilter.selectedRegion),
       summaryVariantIds: summaryVariantsIdsToSend,
       frequencyScores: [{
-        metric: this.geneBrowserConfig.frequencyColumn,
+        score: this.geneBrowserConfig.frequencyColumn,
         rangeStart: this.summaryVariantsFilter.minFreq,
         rangeEnd: this.summaryVariantsFilter.maxFreq,
       }],

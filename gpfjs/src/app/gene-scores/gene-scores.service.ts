@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { GeneScore, Partitions } from './gene-scores';
+import { Partitions } from './gene-scores';
 import { ConfigService } from '../config/config.service';
 import { map } from 'rxjs/operators';
+import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
 
 @Injectable()
 export class GeneScoresService {
@@ -15,13 +16,13 @@ export class GeneScoresService {
     private config: ConfigService
   ) {}
 
-  public getGeneScores(geneScoresIds?: string): Observable<GeneScore[]> {
+  public getGeneScores(geneScoresIds?: string): Observable<GenomicScore[]> {
     let url = this.config.baseUrl + this.geneScoresUrl + '/histograms';
     if (geneScoresIds) {
       const searchParams = new HttpParams().set('ids', geneScoresIds);
       url += `?${searchParams.toString()}`;
     }
-    return this.http.get(url).pipe(map((res: GeneScore[]) => GeneScore.fromJsonArray(res)));
+    return this.http.get(url).pipe(map((res: GenomicScore[]) => GenomicScore.fromJsonArray(res)));
   }
 
   public getPartitions(score: string, min: number, max: number): Observable<Partitions> {

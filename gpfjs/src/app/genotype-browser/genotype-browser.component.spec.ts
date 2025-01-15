@@ -144,7 +144,7 @@ const genotypeBrowserStateResult = {
   geneSymbols: ['chd8'],
   regions: ['regionFrom-regionTo'],
   genomicScores: [{
-    metric: 'phylop100way',
+    score: 'phylop100way',
     rangeStart: -14.9,
     rangeEnd: 4.899999999999999
   }],
@@ -287,7 +287,7 @@ const allStatesMock = [
   ['regionFrom-regionTo'],
   [
     {
-      metric: 'phylop100way',
+      score: 'phylop100way',
       rangeStart: -14.9,
       rangeEnd: 4.899999999999999
     }

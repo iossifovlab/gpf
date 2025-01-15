@@ -9,7 +9,7 @@ import {
   EventEmitter,
   OnInit
 } from '@angular/core';
-import { CategoricalHistogram, CategoricalHistogramView } from 'app/gene-scores/gene-scores';
+import { CategoricalHistogram, CategoricalHistogramView } from 'app/genomic-scores-block/genomic-scores-block';
 
 import * as d3 from 'd3';
 
@@ -60,6 +60,8 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       maxShown = this.histogram.displayedValuesCount;
     } else if (this.histogram.displayedValuesPercent) {
       maxShown = Math.floor(this.histogram.values.length / 100 * this.histogram.displayedValuesPercent);
+    } else {
+      maxShown = 100;
     }
 
     const otherSum = this.histogram.values

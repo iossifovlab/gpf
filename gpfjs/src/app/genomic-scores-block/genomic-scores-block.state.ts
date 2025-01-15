@@ -1,15 +1,41 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
-import { GenomicScoreInterface } from 'app/genotype-browser/genotype-browser';
 import { reset } from 'app/users/state-actions';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isEqual } from 'lodash';
+import { CategoricalHistogramView } from './genomic-scores-block';
+import { HistogramType } from 'app/gene-scores/gene-scores.state';
 
-export const initialState: GenomicScoreInterface[] = [];
+export interface GenomicScoreState {
+  histogramType: HistogramType;
+  score: string;
+  rangeStart: number;
+  rangeEnd: number;
+  values: string[];
+  categoricalView: CategoricalHistogramView;
+}
 
-export const selectGenomicScores = createFeatureSelector<GenomicScoreInterface[]>('genomicScores');
+export const initialState: GenomicScoreState[] = [];
+
+
+export const selectGenomicScores = createFeatureSelector<GenomicScoreState[]>('genomicScores');
 
 export const setGenomicScores = createAction(
   '[Genotype] Set genomic scores',
-  props<{ genomicScores: GenomicScoreInterface[] }>()
+  props<{ genomicScores: GenomicScoreState[] }>()
+);
+
+export const setGenomicScoresContinuous = createAction(
+  '[Genotype] Set score with continuous histogram data',
+  props<{score: string, rangeStart: number, rangeEnd: number}>()
+);
+
+export const setGenomicScoresCategorical = createAction(
+  '[Genotype] Set score with categorical histogram data',
+  props<{score: string, values: string[], categoricalView: CategoricalHistogramView}>()
+);
+
+export const removeGenomicScore = createAction(
+  '[Genotype] Remove score with histogram data',
+  props<{genomicScoreName: string}>()
 );
 
 export const resetGenomicScores = createAction(
@@ -19,5 +45,50 @@ export const resetGenomicScores = createAction(
 export const genomicScoresReducer = createReducer(
   initialState,
   on(setGenomicScores, (state, {genomicScores}) => cloneDeep(genomicScores)),
+  on(setGenomicScoresContinuous, (state, { score, rangeStart, rangeEnd }) => {
+    const newGenomicScore = {
+      histogramType: 'continuous' as const,
+      score: score,
+      rangeStart: rangeStart,
+      rangeEnd: rangeEnd,
+      values: null,
+      categoricalView: null,
+    };
+    const scores = [...state];
+    const scoreIndex = scores.findIndex(s => s.score === score);
+    if (!scores.length || scoreIndex === -1) {
+      scores.push(newGenomicScore);
+    } else {
+      const scoreCopy = cloneDeep(scores.at(scoreIndex));
+      scoreCopy.rangeStart = rangeStart;
+      scoreCopy.rangeEnd = rangeEnd;
+      scores[scoreIndex] = scoreCopy;
+    }
+    return scores;
+  }),
+  on(setGenomicScoresCategorical, (state, { score, values, categoricalView }) => {
+    const newGenomicScore = {
+      histogramType: 'categorical' as const,
+      score: score,
+      rangeStart: null,
+      rangeEnd: null,
+      values: values,
+      categoricalView: categoricalView,
+    };
+    const scores = [...state];
+    const scoreIndex = scores.findIndex(s => s.score === score);
+    if (!scores.length || scoreIndex === -1) {
+      scores.push(newGenomicScore);
+    } else {
+      const scoreCopy = cloneDeep(scores.at(scoreIndex));
+      scoreCopy.values = values;
+      scoreCopy.categoricalView = categoricalView;
+      scores[scoreIndex] = scoreCopy;
+    }
+    return scores;
+  }),
+  on(removeGenomicScore, (state, {genomicScoreName}) => {
+    return [...state].filter(score => score.score !== genomicScoreName);
+  }),
   on(reset, resetGenomicScores, state => cloneDeep(initialState)),
 );

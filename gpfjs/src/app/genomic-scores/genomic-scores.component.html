@@ -1,42 +1,91 @@
-<div class="panel" style="display: flex; flex-wrap: wrap; justify-content: center; border-top: 0">
-  <div class="col-sm-9" style="display: flex; padding: 0 12px 0 12px; align-items: center">
+<div
+  class="panel"
+  style="display: flex; flex-wrap: wrap; justify-content: center; border-top: 0"
+  *ngIf="selectedGenomicScore && localState">
+  <div class="col-sm-9" style="display: flex; padding: 0 12px 0 12px">
     <div class="select-wrapper">
-      <select
-        required
-        class="form-control"
-        [(ngModel)]="selectedGenomicScores"
-        [attr.title]="selectedGenomicScores.desc"
-        style="padding-right: 18px; text-overflow: ellipsis; white-space: nowrap">
-        <option *ngFor="let genomicScores of genomicScoresArray" [ngValue]="genomicScores">
-          <span>{{ genomicScores.desc ? genomicScores.desc : genomicScores.score }}</span>
-        </option>
-      </select>
-      <span class="material-symbols-outlined select-dropdown-icon">arrow_drop_down</span>
+      <mat-form-field>
+        <mat-select disableRipple [title]="selectedGenomicScore.desc" [placeholder]="selectedGenomicScore.desc">
+          <mat-option
+            *ngFor="let genomicScore of otherGenomicScores"
+            [value]="genomicScore.desc"
+            (click)="updateSelectedGenomicScore(genomicScore)"
+            >{{ genomicScore.desc }}</mat-option
+          >
+        </mat-select>
+      </mat-form-field>
     </div>
     <gpf-helper-modal
-      style="height: 32px; margin-left: 4px"
-      [style.visibility]="this.genomicScoreState.score.help ? 'visible' : 'hidden'"
-      [modalContent]="this.genomicScoreState.score.help"
+      style="height: 32px; margin-left: 4px; margin-top: 5px"
+      [style.visibility]="selectedGenomicScore.help ? 'visible' : 'hidden'"
+      [modalContent]="selectedGenomicScore.help"
       [isMarkdown]="true"></gpf-helper-modal>
+    <div *ngIf="isCategoricalHistogram(selectedGenomicScore.histogram)">
+      <button mat-icon-button [matMenuTriggerFor]="menu" id="view-menu-button">
+        <span>Mode</span>
+      </button>
+      <mat-menu #menu="matMenu">
+        <button
+          mat-menu-item
+          (click)="switchCategoricalHistogramView('range selector')"
+          [ngClass]="{ 'selected-view': localState.categoricalView === 'range selector' }"
+          >range selector
+        </button>
+        <button
+          mat-menu-item
+          (click)="switchCategoricalHistogramView('click selector')"
+          [ngClass]="{ 'selected-view': localState.categoricalView === 'click selector' }"
+          >click selector
+        </button>
+      </mat-menu>
+    </div>
   </div>
   <div class="col-sm-11">
     <gpf-histogram
-      *ngIf="selectedGenomicScores"
+      *ngIf="selectedGenomicScore && isNumberHistogram(selectedGenomicScore.histogram)"
       [width]="800"
       [height]="145"
       [marginLeft]="180"
-      [bins]="selectedGenomicScores.bins"
-      [bars]="selectedGenomicScores.bars"
+      [bins]="selectedGenomicScore.histogram.bins"
+      [bars]="selectedGenomicScore.histogram.bars"
       [domainMin]="domainMin"
       [domainMax]="domainMax"
-      [logScaleX]="selectedGenomicScores.logScaleX"
-      [logScaleY]="selectedGenomicScores.logScaleY"
-      [smallValuesDesc]="selectedGenomicScores.smallValuesDesc"
-      [largeValuesDesc]="selectedGenomicScores.largeValuesDesc"
-      [(rangeStart)]="rangeStart"
-      [(rangeEnd)]="rangeEnd"
+      [logScaleX]="selectedGenomicScore.histogram.logScaleX"
+      [logScaleY]="selectedGenomicScore.histogram.logScaleY"
+      [smallValuesDesc]="selectedGenomicScore.histogram.smallValuesDesc"
+      [largeValuesDesc]="selectedGenomicScore.histogram.largeValuesDesc"
+      [rangeStart]="localState.rangeStart"
+      (rangeStartChange)="updateRangeStart($event)"
+      [rangeEnd]="localState.rangeEnd"
+      (rangeEndChange)="updateRangeEnd($event)"
       style="display: block; margin-top: 17px">
     </gpf-histogram>
+    <gpf-categorical-histogram
+      *ngIf="
+        selectedGenomicScore &&
+        isCategoricalHistogram(selectedGenomicScore.histogram) &&
+        localState.categoricalView === 'click selector'
+      "
+      [width]="650"
+      [height]="145"
+      [histogram]="selectedGenomicScore.histogram"
+      [stateCategoricalNames]="localState.values"
+      [interactType]="localState.categoricalView"
+      (selectCategoricalValues)="toggleCategoricalValues($event)">
+    </gpf-categorical-histogram>
+    <gpf-categorical-histogram
+      *ngIf="
+        selectedGenomicScore &&
+        isCategoricalHistogram(selectedGenomicScore.histogram) &&
+        localState.categoricalView === 'range selector'
+      "
+      [width]="650"
+      [height]="145"
+      [histogram]="selectedGenomicScore.histogram"
+      [stateCategoricalNames]="localState.values"
+      [interactType]="localState.categoricalView"
+      (selectCategoricalValues)="toggleCategoricalValues($event)">
+    </gpf-categorical-histogram>
     <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
   </div>
 </div>

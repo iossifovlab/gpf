@@ -7,7 +7,8 @@ import { ConfigService } from 'app/config/config.service';
 import { GeneScoresService } from './gene-scores.service';
 import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { lastValueFrom, of, take } from 'rxjs';
-import { CategoricalHistogram, GeneScore, NumberHistogram, Partitions } from './gene-scores';
+import { Partitions } from './gene-scores';
+import { GenomicScore, NumberHistogram, CategoricalHistogram } from 'app/genomic-scores-block/genomic-scores-block';
 
 describe('GeneScoresService', () => {
   let service: GeneScoresService;
@@ -70,7 +71,7 @@ describe('GeneScoresService', () => {
     };
 
 
-    const mockScoreObject = new GeneScore(
+    const mockScoreObject = new GenomicScore(
       'LGD rank - Gene rank after sorting by LGD vulnerability score',
       'Gene rank after sorting by LGD vulnerability score',
       'LGD_rank',
@@ -121,7 +122,7 @@ describe('GeneScoresService', () => {
     };
 
 
-    const mockScoreObject = new GeneScore(
+    const mockScoreObject = new GenomicScore(
       'gene-score - Evidence strength supporting a gene\'s association with autism',
       'Evidence strength supporting a gene\'s association with autism',
       'gene-score',

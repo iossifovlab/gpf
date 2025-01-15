@@ -1,7 +1,8 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
 import { reset } from 'app/users/state-actions';
-import { CategoricalHistogramView } from './gene-scores';
+import { CategoricalHistogramView } from 'app/genomic-scores-block/genomic-scores-block';
+
 
 export type HistogramType = 'continuous' | 'categorical';
 

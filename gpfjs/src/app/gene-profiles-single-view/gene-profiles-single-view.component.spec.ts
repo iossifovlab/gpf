@@ -21,9 +21,8 @@ import { setPresentInChild } from 'app/present-in-child/present-in-child.state';
 import { setPresentInParent } from 'app/present-in-parent/present-in-parent.state';
 import { setVariantTypes } from 'app/variant-types/variant-types.state';
 import { setPedigreeSelector } from 'app/pedigree-selector/pedigree-selector.state';
-import { setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { GenomicScoreState, setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { setStudyTypes } from 'app/study-types/study-types.state';
-import { GenomicScore } from 'app/genotype-browser/genotype-browser';
 import { selectGeneProfiles, setGeneProfilesOpenedTabs } from 'app/gene-profiles-table/gene-profiles-table.state';
 import { provideHttpClient } from '@angular/common/http';
 
@@ -268,7 +267,11 @@ describe('GeneProfileSingleViewComponent', () => {
     );
 
     expect(dispatchSpy.mock.calls).toStrictEqual([
-      [setGenomicScores({genomicScores: [new GenomicScore('a', 0, 10)]})],
+      [setGenomicScores({genomicScores: [{
+        score: 'a',
+        rangeStart: 0,
+        rangeEnd: 10
+      } as GenomicScoreState]})],
       [setEffectTypes({effectTypes: ['intron']})],
       [setVariantTypes({variantTypes: ['type1', 'type2']})],
       [setGeneSymbols({geneSymbols: ['chd8']})],
