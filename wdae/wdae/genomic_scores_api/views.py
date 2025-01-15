@@ -7,8 +7,6 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from dae.genomic_resources.histogram import NumberHistogram
-
 
 class GenomicScoresView(QueryBaseView):
     """View for genomic scores database for the instance."""
@@ -19,36 +17,15 @@ class GenomicScoresView(QueryBaseView):
         res = []
         registry = self.gpf_instance.genomic_scores
         for score_id, score in registry.get_scores():
-            if isinstance(score.hist, NumberHistogram):
-                res.append({
-                    "score": score_id,
-                    "name": score.name,
-                    "desc": score.description,
-                    "bars": score.hist.bars,
-                    "bins": score.hist.bins,
-                    "xscale":
-                        "log" if score.hist.config.x_log_scale else "linear",
-                    "yscale":
-                        "log" if score.hist.config.y_log_scale else "linear",
-                    "range": score.hist.view_range,
-                    "help": score.help,
-                    "small_values_desc": score.small_values_desc,
-                    "large_values_desc": score.large_values_desc,
-                })
-            else:
-                res.append({
-                    "score": score_id,
-                    "name": score.name,
-                    "desc": score.name,
-                    "bars": None,
-                    "bins": None,
-                    "xscale": None,
-                    "yscale": None,
-                    "range": None,
-                    "help": score.description,
-                    "small_values_desc": None,
-                    "large_values_desc": None,
-                })
+            res.append({
+                "score": score_id,
+                "desc": score.description,
+                "histogram": score.hist.to_dict(),
+                "help": score.help,
+                "small_values_desc": score.small_values_desc,
+                "large_values_desc": score.large_values_desc,
+            })
+
         return Response(res)
 
 

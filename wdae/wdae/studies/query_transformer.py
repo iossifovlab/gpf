@@ -33,11 +33,19 @@ class QueryTransformer:
         self.effect_types_mixin = EffectTypesMixin()
         self.gpf_instance = study_wrapper.gpf_instance
 
-    def _transform_genomic_scores(
+    def _transform_genomic_scores_continuous(
         self, genomic_scores: list[dict],
     ) -> list[tuple[str, tuple[int | None, int | None]]]:
         return [
-            (score["metric"], (score["rangeStart"], score["rangeEnd"]))
+            (score["score"], (score["rangeStart"], score["rangeEnd"]))
+            for score in genomic_scores
+        ]
+
+    def _transform_genomic_scores_categorical(
+        self, genomic_scores: list[dict],
+    ) -> list[tuple[str, list[str | None]]]:
+        return [
+            (score["score"], score["values"])
             for score in genomic_scores
         ]
 
@@ -397,14 +405,18 @@ class QueryTransformer:
             if "real_attr_filter" not in kwargs:
                 kwargs["real_attr_filter"] = []
             kwargs["real_attr_filter"].extend(
-                self._transform_genomic_scores(genomic_scores))
+                self._transform_genomic_scores_continuous(genomic_scores))
+            if "categorical_value_filter" not in kwargs:
+                kwargs["categorical_value_filter"] = []
+            kwargs["categorical_value_filter"].extend(
+                self._transform_genomic_scores_categorical(genomic_scores))
 
         if "frequencyScores" in kwargs:
             frequency_scores = kwargs.pop("frequencyScores", [])
             if "frequency_filter" not in kwargs:
                 kwargs["frequency_filter"] = []
             kwargs["frequency_filter"].extend(
-                self._transform_genomic_scores(frequency_scores))
+                self._transform_genomic_scores_continuous(frequency_scores))
 
         if "geneScores" in kwargs:
             gene_scores = kwargs.pop("geneScores", {})
