@@ -7,8 +7,6 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from dae.genomic_resources.histogram import NumberHistogram
-
 
 class GenomicScoresView(QueryBaseView):
     """View for genomic scores database for the instance."""
