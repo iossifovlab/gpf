@@ -221,8 +221,9 @@ def transform_cli_args(args: argparse.Namespace) -> PhenoImportConfig:
     }
     delattr(args, "data_dictionary")
 
-    result["regression_config"] = args.regression
-    delattr(args, "regression")
+    if args.regression:
+        result["study_config"] = {"regressions": args.regression}
+        delattr(args, "regression")
 
     result["person_column"] = args.person_column
     delattr(args, "person_column")
