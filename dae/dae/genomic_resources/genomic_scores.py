@@ -68,7 +68,6 @@ SCORE_TYPE_PARSERS = {
 class ScoreDef:
     """Score configuration definition."""
 
-    # pylint: disable=too-many-instance-attributes
     score_id: str
     desc: str  # string that will be interpretted as md
     value_type: str  # "str", "int", "float"
@@ -1149,6 +1148,78 @@ class AlleleScore(GenomicScore):
         return [sagg.position_aggregator for sagg in score_aggs]
 
 
+@dataclass
+class CNV:
+    """Copy number object from a cnv_collection."""
+
+    chrom: str
+    pos_begin: int
+    pos_end: int
+    attributes: dict[str, Any]
+
+    @property
+    def size(self) -> int:
+        return self.pos_end - self.pos_begin
+
+
+class CnvCollection(GenomicScore):
+    """A collection of CNVs."""
+
+    def __init__(self, resource: GenomicResource):
+        if resource.get_type() != "cnv_collection":
+            raise ValueError(
+                "The resource provided to CnvCollection should be of"
+                f"'cnv_collection' type, not a '{resource.get_type()}'")
+        super().__init__(resource)
+
+    @staticmethod
+    def get_schema() -> dict[str, Any]:
+        schema = copy.deepcopy(GenomicScore.get_schema())
+        scores_schema = schema["scores"]["schema"]["schema"]
+        scores_schema["allele_aggregator"] = AGGREGATOR_SCHEMA
+        return schema
+
+    def open(self) -> CnvCollection:
+        return cast(CnvCollection, super().open())
+
+    def _fetch_region_values(
+        self, chrom: str,
+        pos_begin: int | None, pos_end: int | None,
+        scores: list[str] | None = None,
+    ) -> Generator[
+            tuple[int, int, list[ScoreValue] | None], None, None]:
+        """Return score values in a region."""
+        for start, stop, values, _ in self._fetch_region_lines(
+                chrom, pos_begin, pos_end, scores):
+            yield start, stop, values
+
+    def fetch_cnvs(
+        self, chrom: str,
+        start: int, stop: int,
+        scores: list[str] | None = None,
+    ) -> list[CNV]:
+        """Return list of CNVs that overlap with the provided region."""
+        if not self.is_open():
+            raise ValueError(f"The resource <{self.resource_id} is not open")
+        cnvs: list = []
+        if chrom not in self.table.get_chromosomes():
+            return cnvs
+
+        lines = list(self._fetch_lines(chrom, start, stop))
+        if not lines:
+            return cnvs
+
+        requested_scores = scores or self.get_all_scores()
+
+        for line in lines:
+            attributes = {}
+            for score_id in requested_scores:
+                attributes[score_id] = line.get_score(score_id)
+            cnvs.append(CNV(line.chrom, line.pos_begin, line.pos_end,
+                            attributes))
+        return cnvs
+
+
 def build_score_from_resource(
     resource: GenomicResource,
 ) -> GenomicScore:
@@ -1163,6 +1234,9 @@ def build_score_from_resource(
         return AlleleScore(resource)
     if resource.get_type() == "allele_score":
         return AlleleScore(resource)
+
+    if resource.get_type() == "cnv_collection":
+        return CnvCollection(resource)
 
     raise ValueError(f"Resource {resource.get_id()} is not of score type")
 

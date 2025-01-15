@@ -90,7 +90,7 @@ class GenomicPositionTable(abc.ABC):
                 if "del_prefix" in mapping:
                     pref = mapping.del_prefix
                     new_chromosomes = [
-                        ch[len(pref):] if ch.startswith(pref) else ch
+                        ch.removeprefix(pref)
                         for ch in new_chromosomes
                     ]
 

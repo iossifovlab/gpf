@@ -235,7 +235,7 @@ class GenomicScoreImplementation(
             self.resource.get_labels().get("reference_genome"),
         )
         ref_genome = self._get_reference_genome_cached(grr, ref_genome_id)
-        chrom_length: int | None
+        chrom_length: int | None = None
         for chrom in self.score.get_all_chromosomes():
             if ref_genome is not None and chrom in ref_genome.chromosomes:
                 chrom_length = ref_genome.get_chrom_length(chrom)

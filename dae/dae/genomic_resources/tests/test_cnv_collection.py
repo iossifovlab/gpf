@@ -1,6 +1,8 @@
 # pylint: disable=C0116
 
-from dae.genomic_resources.cnv_collection import CnvCollection
+from dae.genomic_resources.genomic_scores import (
+    CnvCollection,
+)
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME
 from dae.genomic_resources.testing import build_inmemory_test_resource
 

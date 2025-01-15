@@ -51,7 +51,7 @@ setuptools.setup(
     genome=dae.genomic_resources.implementations.reference_genome_impl:ReferenceGenomeImplementation
     vcf_info=dae.genomic_resources.vcf_info_score:build_vcf_info_from_resource
     gene_models=dae.genomic_resources.implementations.gene_models_impl:GeneModelsImpl
-    cnv_collection=dae.genomic_resources.cnv_collection:CnvCollectionImplementation
+    cnv_collection=dae.genomic_resources.implementations.cnv_collection_impl:CnvCollectionImplementation
     gene_weights_enrichment_background=dae.enrichment_tool.resource_implementations.enrichment_resource_impl:build_gene_weights_enrichment_background
     samocha_enrichment_background=dae.enrichment_tool.resource_implementations.enrichment_resource_impl:build_samocha_enrichment_background
     annotation_pipeline=dae.genomic_resources.implementations.annotation_pipeline_impl:AnnotationPipelineImplementation

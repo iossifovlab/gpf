@@ -7,7 +7,7 @@ from dae.annotation.annotation_pipeline import (
     Annotator,
 )
 from dae.genomic_resources.aggregators import build_aggregator
-from dae.genomic_resources.cnv_collection import CnvCollection
+from dae.genomic_resources.genomic_scores import CnvCollection
 
 
 def build_cnv_collection_annotator(pipeline: AnnotationPipeline,
@@ -54,12 +54,14 @@ class CnvCollectionAnnotator(Annotator):
         for attribute_def in info.attributes:
             if attribute_def.source.startswith("attribute."):
                 attribute = attribute_def.source[len("attribute."):]
-                if attribute not in self.cnv_collection.score_defs:
+                if attribute not in self.cnv_collection.score_definitions:
                     raise ValueError(f"The attribute {attribute} is not "
                                      "supported for the cnvs in the"
                                      "cnv_collection "
                                      f"{cnv_collection_resrouce_id}")
-                res_attribute_def = self.cnv_collection.score_defs[attribute]
+                res_attribute_def = self.cnv_collection\
+                    .get_score_definition(attribute)
+                assert res_attribute_def is not None
                 if "aggregator" in attribute_def.parameters:
                     aggregator = attribute_def.parameters["aggregator"]
                 else:
