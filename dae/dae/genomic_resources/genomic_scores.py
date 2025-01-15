@@ -1168,7 +1168,7 @@ class CnvCollection(GenomicScore):
     def __init__(self, resource: GenomicResource):
         if resource.get_type() != "cnv_collection":
             raise ValueError(
-                "The resource provided to CnvCollection should be of"
+                "The resource provided to CnvCollection should be of "
                 f"'cnv_collection' type, not a '{resource.get_type()}'")
         super().__init__(resource)
 
@@ -1200,7 +1200,7 @@ class CnvCollection(GenomicScore):
     ) -> list[CNV]:
         """Return list of CNVs that overlap with the provided region."""
         if not self.is_open():
-            raise ValueError(f"The resource <{self.resource_id} is not open")
+            raise ValueError(f"The resource <{self.resource_id}> is not open")
         cnvs: list = []
         if chrom not in self.table.get_chromosomes():
             return cnvs
