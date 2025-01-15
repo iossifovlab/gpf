@@ -304,7 +304,7 @@ describe('GeneBrowserComponent', () => {
       datasetId: 'testDatasetId',
       regions: '',
       summaryVariantIds: [],
-      genomicScores: [{ metric: 'testColumn', rangeStart: null, rangeEnd: 100 }],
+      genomicScores: [{ score: 'testColumn', rangeStart: null, rangeEnd: 100 }],
       download: true
     }));
     expect(mockEvent.target.submit).toHaveBeenCalledTimes(1);
