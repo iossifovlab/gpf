@@ -171,6 +171,7 @@ class GeneSetCollection(
 
     @property
     def files(self) -> set[str]:
+        """Return a list of resource files the implementation utilises."""
         res = set()
         config = self.resource.get_config()
         collection_format = config["format"]
