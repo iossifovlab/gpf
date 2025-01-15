@@ -60,6 +60,8 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       maxShown = this.histogram.displayedValuesCount;
     } else if (this.histogram.displayedValuesPercent) {
       maxShown = Math.floor(this.histogram.values.length / 100 * this.histogram.displayedValuesPercent);
+    } else {
+      maxShown = 100;
     }
 
     const otherSum = this.histogram.values
