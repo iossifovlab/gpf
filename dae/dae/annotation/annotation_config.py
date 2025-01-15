@@ -77,7 +77,8 @@ class ParamsUsageMonitor(Mapping):
 class AttributeInfo:
     """Defines annotation attribute configuration."""
 
-    def __init__(self, name: str, source: str, internal: bool,
+    def __init__(self, name: str, source: str, *,
+                 internal: bool,
                  parameters: ParamsUsageMonitor | dict[str, Any],
                  _type: str = "str", description: str = "",
                  documentation: str | None = None):
@@ -408,7 +409,10 @@ class AnnotationConfigParser:
 
         parameters = {k: v for k, v in attribute_config.items()
                       if k not in ["name", "source", "internal"]}
-        return AttributeInfo(name, source, internal, parameters)
+        return AttributeInfo(
+            name, source,
+            internal=internal,
+            parameters=parameters)
 
     @staticmethod
     def parse_raw_attributes(

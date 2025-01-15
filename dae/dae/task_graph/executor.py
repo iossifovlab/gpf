@@ -6,10 +6,10 @@ import time
 import traceback
 from abc import abstractmethod
 from collections import deque
-from collections.abc import Generator, Iterator
+from collections.abc import Callable, Generator, Iterator
 from copy import copy
 from types import TracebackType
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from dask.distributed import Client, Future
 
@@ -313,7 +313,9 @@ class DaskExecutor(AbstractTaskGraphExecutor):
     MIN_QUEUE_SIZE = 700
 
     def _queue_size(self) -> int:
-        n_workers = cast(int, sum(self._client.ncores().values()))
+        n_workers = cast(
+            int,
+            sum(self._client.ncores().values()))  # type: ignore
         return max(self.MIN_QUEUE_SIZE, 2 * n_workers)
 
     def _schedule_tasks(self, currently_running: set[Future]) -> set[Future]:
@@ -333,8 +335,9 @@ class DaskExecutor(AbstractTaskGraphExecutor):
 
         not_completed = self._schedule_tasks(not_completed)
         while not_completed:
-            completed, not_completed = \
-                wait(not_completed, return_when="FIRST_COMPLETED")
+            completed, not_completed = wait(
+                not_completed,
+                return_when="FIRST_COMPLETED")  # type: ignore
 
             for future in completed:
                 try:

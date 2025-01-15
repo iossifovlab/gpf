@@ -344,17 +344,15 @@ def import_pheno_data(
         config,
     )
 
-    start = time.time()
-
     instrument_pq_files = handle_measure_inference_tasks(
         connection, config, task_graph, task_cache, task_graph_args,
     )
 
     print(f"DONE {time.time() - start}")
+
+    start = time.time()
     print("WRITING RESULTS")
-
     write_results(connection, instrument_pq_files, ped_df)
-
     print(f"DONE {time.time() - start}")
 
     ImportManifest.create_table(connection, IMPORT_METADATA_TABLE)

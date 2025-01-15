@@ -18,7 +18,7 @@ from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.testing import convert_to_tab_separated, setup_directories
 
 
-@pytest.fixture()
+@pytest.fixture
 def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     root_path = tmp_path
     setup_directories(
@@ -237,12 +237,15 @@ def test_annotator_config_with_attributes() -> None:
 
     assert pipeline_config == \
         [AnnotatorInfo("annotator", [
-            AttributeInfo("att1", "att1", False, {}),
-            AttributeInfo("att2", "att2", False, {}),
-            AttributeInfo("att3", "some_score", False, {}),
-            AttributeInfo("att4", "some_score", False, {"att_param": "foo"}),
-            AttributeInfo("att5", "att5", True, {"att_param": "raz"}),
-            AttributeInfo("att6", "att6", False, {})],
+            AttributeInfo("att1", "att1", internal=False, parameters={}),
+            AttributeInfo("att2", "att2", internal=False, parameters={}),
+            AttributeInfo("att3", "some_score",
+                          internal=False, parameters={}),
+            AttributeInfo("att4", "some_score",
+                          internal=False, parameters={"att_param": "foo"}),
+            AttributeInfo("att5", "att5",
+                          internal=True, parameters={"att_param": "raz"}),
+            AttributeInfo("att6", "att6", internal=False, parameters={})],
             {}, annotator_id="A0")]
 
 
@@ -257,8 +260,8 @@ def test_annotator_config_with_params_and_attributes() -> None:
 
     assert pipeline_config == \
         [AnnotatorInfo("annotator", [
-            AttributeInfo("att1", "att1", False, {}),
-            AttributeInfo("att2", "att2", False, {}),
+            AttributeInfo("att1", "att1", internal=False, parameters={}),
+            AttributeInfo("att2", "att2", internal=False, parameters={}),
         ], {
             "resource_id": "resource",
         }, annotator_id="A0")]
@@ -290,10 +293,14 @@ def test_effect_annotator_extra_attributes() -> None:
 
     assert pipeline_config == [
         AnnotatorInfo("effect_annotator", [
-            AttributeInfo("list_of_genes", "genes", True, {"format": "list"}),
-            AttributeInfo("genes", "genes", False, {"format": "str"}),
-            AttributeInfo("genes_LGD", "genes_LGD", False, {}),
-            AttributeInfo("genes_missense", "genes_missense", False, {})], {
+            AttributeInfo("list_of_genes", "genes",
+                          internal=True, parameters={"format": "list"}),
+            AttributeInfo("genes", "genes",
+                          internal=False, parameters={"format": "str"}),
+            AttributeInfo("genes_LGD", "genes_LGD",
+                          internal=False, parameters={}),
+            AttributeInfo("genes_missense", "genes_missense",
+                          internal=False, parameters={})], {
             "gene_models": "hg38/gene_models/refSeq_20200330",
             "genome": "hg38/genomes/GRCh38-hg38",
             "promoter_len": 100}, annotator_id="A0",

@@ -915,8 +915,8 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
             if status == 0:
                 logger.info("GRR <%s> is consistent", repo_url)
                 return
-        except ValueError as ex:
-            logger.error("%s", ex)  # noqa: TRY400
+        except ValueError:
+            logger.exception("unexpected exception")
             status = 1
         logger.warning("inconsistent GRR <%s> state", repo_url)
         sys.exit(status)
