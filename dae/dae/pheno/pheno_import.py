@@ -362,14 +362,18 @@ def import_pheno_data(
     connection.close()
 
     regressions = None
-    if config.regression_config is not None:
-        if isinstance(config.regression_config, str):
+    regression_config = None
+    if config.study_config is not None:
+        regression_config = config.study_config.regressions
+
+    if regression_config is not None:
+        if isinstance(regression_config, str):
             regressions = GPFConfigParser.load_config(
-                str(Path(config.input_dir, config.regression_config)),
+                str(Path(config.input_dir, regression_config)),
                 regression_conf_schema,
             )
         else:
-            regressions = config.regression_config
+            regressions = regression_config
 
     output_config = generate_phenotype_data_config(
         config.id, pheno_db_filename, regressions)

@@ -37,9 +37,13 @@ class DataDictionary(BaseModel):
 
 class RegressionMeasure(BaseModel):
     instrument_name: str
-    measure_name: str
+    measure_names: list[str]
     jitter: float
     display_name: str
+
+
+class StudyConfig(BaseModel):
+    regressions: str | dict[str, RegressionMeasure] | None = None
 
 
 class InstrumentConfig(BaseModel):
@@ -61,7 +65,7 @@ class PhenoImportConfig(BaseModel):
     skip_pedigree_measures: bool = False
     inference_config: str | dict[str, InferenceConfig] | None = None
     data_dictionary: DataDictionary | None = None
-    regression_config: str | dict[str, RegressionMeasure] | None = None
+    study_config: StudyConfig | None = None
 
 
 class MeasureType(enum.Enum):
