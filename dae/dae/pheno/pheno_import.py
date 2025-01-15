@@ -38,9 +38,10 @@ from dae.pedigrees.loader import (
     FamiliesLoader,
 )
 from dae.pheno.common import (
-    DataDictionary,
+    DataDictionaryConfig,
     InferenceConfig,
     InstrumentConfig,
+    MeasureDescriptionsConfig,
     MeasureType,
     PhenoImportConfig,
 )
@@ -958,36 +959,39 @@ def write_results(
             connection.execute(query)
 
 
+def load_description_file(
+    input_dir: str,
+    config: DataDictionaryConfig,
+) -> dict[str, str]:
+    """Load measure descriptions for single data dictionary."""
+    out = {}
+    abspath = Path(input_dir, config.path).absolute()
+    assert abspath.exists(), abspath
+    with open_file(abspath) as csvfile:
+        reader = csv.DictReader(csvfile, delimiter=config.delimiter)
+        for row in reader:
+            instrument_name = config.instrument or row[config.instrument_column]
+            measure_name = row[config.measure_column]
+            measure_id = f"{instrument_name}.{measure_name}"
+            out[measure_id] = row[config.description_column]
+    return out
+
+
 def load_descriptions(
     input_dir: str,
-    config: DataDictionary | None,
+    config: MeasureDescriptionsConfig | None,
 ) -> dict[str, str]:
-    """Load measure descriptions."""
-
+    """Load measure descriptions from given configuration."""
     descriptions: dict[str, str] = {}
 
     if not config:
         return descriptions
 
-    def read_from_file(path) -> dict[str, str]:
-        out = {}
-        abspath = Path(input_dir, path).absolute()
-        assert abspath.exists(), abspath
-        with open_file(abspath) as csvfile:
-            reader = csv.DictReader(csvfile, delimiter="\t")
-            for row in reader:
-                measure_id = f"{row['instrumentName']}.{row['measureName']}"
-                out[measure_id] = row["description"]
-        return out
+    if config.files is not None:
+        for datadictfile in config.files:
+            descriptions.update(load_description_file(input_dir, datadictfile))
 
-    if config.file:
-        descriptions.update(read_from_file(config.file))
-
-    if config.instrument_files:
-        for path in config.instrument_files:
-            descriptions.update(read_from_file(path))
-
-    if config.dictionary:
+    if config.dictionary is not None:
         for instrument, m_descs in config.dictionary.items():
             for measure, description in m_descs.items():
                 measure_id = f"{instrument}.{measure}"

@@ -11,7 +11,11 @@ from sqlglot.expressions import table_
 from dae.genomic_resources.testing import (
     setup_directories,
 )
-from dae.pheno.common import DataDictionary, InstrumentConfig, PhenoImportConfig
+from dae.pheno.common import (
+    InstrumentConfig,
+    MeasureDescriptionsConfig,
+    PhenoImportConfig,
+)
 from dae.pheno.pheno_data import PhenotypeStudy
 from dae.pheno.pheno_import import (
     ImportInstrument,
@@ -238,39 +242,23 @@ def test_collect_instruments(tmp_path: pathlib.Path) -> None:
     ]
 
 
-def test_load_descriptions_file(tmp_path: pathlib.Path) -> None:
-    pathlib.Path(tmp_path, "descriptions.tsv").write_text(
-        "instrumentName\tmeasureName\tmeasureId\tdescription\n"
-        "testInstrument1\tmeasure1\ttestInstrument1.measure1\tdescription one\n"
-        "testInstrument1\tmeasure2\ttestInstrument1.measure2\tdescription two\n"
-        "testInstrument2\tmeasure1\ttestInstrument2.measure1\tdescription three"  # noqa: COM812
-    )
-
-    config = DataDictionary.model_validate({
-        "file": "descriptions.tsv",
-    })
-
-    assert load_descriptions(str(tmp_path), config) == {
-        "testInstrument1.measure1": "description one",
-        "testInstrument1.measure2": "description two",
-        "testInstrument2.measure1": "description three",
-    }
-
-
-def test_load_descriptions_instrument_files(tmp_path: pathlib.Path) -> None:
+def test_load_descriptions_files(tmp_path: pathlib.Path) -> None:
     pathlib.Path(tmp_path, "i1_descriptions.tsv").write_text(
-       "instrumentName\tmeasureName\tmeasureId\tdescription\n"
-       "testInstrument1\tmeasure1\ttestInstrument1.measure1\tdescription one\n"
-       "testInstrument1\tmeasure2\ttestInstrument1.measure2\tdescription two"  # noqa: COM812
+       "instrumentName\tmeasureName\tdescription\n"
+       "testInstrument1\tmeasure1\tdescription one\n"
+       "testInstrument1\tmeasure2\tdescription two"  # noqa: COM812
     )
 
     pathlib.Path(tmp_path, "i2_descriptions.tsv").write_text(
-      "instrumentName\tmeasureName\tmeasureId\tdescription\n"
-      "testInstrument2\tmeasure1\ttestInstrument2.measure1\tdescription three"  # noqa: COM812
+      "instrumentName\tmeasureName\tdescription\n"
+      "testInstrument2\tmeasure1\tdescription three"  # noqa: COM812
     )
 
-    config = DataDictionary.model_validate({
-        "instrument_files": ["i1_descriptions.tsv", "i2_descriptions.tsv"],
+    config = MeasureDescriptionsConfig.model_validate({
+        "files": [
+            {"path": "i1_descriptions.tsv"},
+            {"path": "i2_descriptions.tsv"},
+        ],
     })
 
     assert load_descriptions(str(tmp_path), config) == {
@@ -281,7 +269,7 @@ def test_load_descriptions_instrument_files(tmp_path: pathlib.Path) -> None:
 
 
 def test_load_descriptions_dictionary() -> None:
-    config = DataDictionary.model_validate({
+    config = MeasureDescriptionsConfig.model_validate({
         "dictionary": {
             "testInstrument1": {
                 "measure1": "description one",
@@ -302,20 +290,22 @@ def test_load_descriptions_dictionary() -> None:
 
 def test_load_descriptions_mixed(tmp_path: pathlib.Path) -> None:
     pathlib.Path(tmp_path, "descriptions.tsv").write_text(
-        "instrumentName\tmeasureName\tmeasureId\tdescription\n"
-        "testInstrument1\tmeasure1\ttestInstrument1.measure1\tdescription one\n"
-        "testInstrument1\tmeasure2\ttestInstrument1.measure2\tdescription two\n"
-        "testInstrument2\tmeasure1\ttestInstrument2.measure1\tdescription three"  # noqa: COM812
+        "instrumentName\tmeasureName\tdescription\n"
+        "testInstrument1\tmeasure1\tdescription one\n"
+        "testInstrument1\tmeasure2\tdescription two\n"
+        "testInstrument2\tmeasure1\tdescription three"  # noqa: COM812
     )
 
     pathlib.Path(tmp_path, "i2_descriptions.tsv").write_text(
-      "instrumentName\tmeasureName\tmeasureId\tdescription\n"
-      "testInstrument2\tmeasure2\ttestInstrument2.measure2\tdescription four"  # noqa: COM812
+      "instrumentName\tmeasureName\tdescription\n"
+      "testInstrument2\tmeasure2\tdescription four"  # noqa: COM812
     )
 
-    config = DataDictionary.model_validate({
-        "file": "descriptions.tsv",
-        "instrument_files": ["i2_descriptions.tsv"],
+    config = MeasureDescriptionsConfig.model_validate({
+        "files": [
+            {"path": "descriptions.tsv"},
+            {"path": "i2_descriptions.tsv"},
+        ],
         "dictionary": {
             "testInstrument1": {
                 "measure1": "description one updated",
@@ -328,4 +318,30 @@ def test_load_descriptions_mixed(tmp_path: pathlib.Path) -> None:
         "testInstrument1.measure2": "description two",
         "testInstrument2.measure1": "description three",
         "testInstrument2.measure2": "description four",
+    }
+
+
+def test_load_descriptions_file_with_overrides(tmp_path: pathlib.Path) -> None:
+    pathlib.Path(tmp_path, "descriptions.tsv").write_text(
+        "instrumentName,m_name,m_desc\n"
+        "testInstrument1,measure1,description one\n"
+        "testInstrument1,measure2,description two\n"
+        "testInstrument2,measure1,description three"  # noqa: COM812
+    )
+
+    config = MeasureDescriptionsConfig.model_validate({
+        "files": [
+            {
+                "path": "descriptions.tsv",
+                "delimiter": ",",
+                "instrument": "theSpecialInstrument",
+                "measure_column": "m_name",
+                "description_column": "m_desc",
+            },
+        ],
+    })
+
+    assert load_descriptions(str(tmp_path), config) == {
+        "theSpecialInstrument.measure1": "description three",
+        "theSpecialInstrument.measure2": "description two",
     }

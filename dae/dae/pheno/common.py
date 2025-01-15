@@ -27,9 +27,17 @@ class InferenceConfig(BaseModel):
     histogram_type: str | None = None
 
 
-class DataDictionary(BaseModel):
-    file: str | None = None
-    instrument_files: list[str] | None = None
+class DataDictionaryConfig(BaseModel):
+    path: str
+    instrument: str | None = None
+    delimiter: str = "\t"
+    instrument_column: str = "instrumentName"
+    measure_column: str = "measureName"
+    description_column: str = "description"
+
+
+class MeasureDescriptionsConfig(BaseModel):
+    files: list[DataDictionaryConfig] | None = None
 
     # {Instrument -> {Measure -> Description}}
     dictionary: dict[str, dict[str, str]] | None = None
@@ -64,7 +72,7 @@ class PhenoImportConfig(BaseModel):
     delimiter: str = ","
     skip_pedigree_measures: bool = False
     inference_config: str | dict[str, InferenceConfig] | None = None
-    data_dictionary: DataDictionary | None = None
+    data_dictionary: MeasureDescriptionsConfig | None = None
     study_config: StudyConfig | None = None
 
 
