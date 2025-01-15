@@ -242,7 +242,8 @@ class GenomicScoresRegistry:
         result = []
 
         for score_id, score in self.scores.items():
-            result.append((score_id, score))
+            if score.hist.type != "null_histogram":
+                result.append((score_id, score))
 
         return result
 
