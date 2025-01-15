@@ -15,89 +15,102 @@ This configuration is then passed to the ``import_tools_pheno`` CLI tool, which 
 Import project configuration format
 ###################################
 
-* ``id`` - the name of the produced DB file and the phenotype data ID which will be generated.
-* ``input_dir`` - the root directory to which all other paths in the config (with the exception of ``output_dir``) are considered relative to.
-* ``output_dir`` - the directory in which to produce the output.
-* ``instrument_files`` - a list of paths to instrument files and/or directories that contain instrument files. Shell-like wildcards with ``*`` can be used.
-* ``pedigree`` - path to the pedigree file to use for import.
-* ``person_column`` - the name of the column containing the person ID in the instrument CSV files. All files are expected to use the same column name for person IDs.
-* ``tab_separated`` - whether the instrument files use tabs for delimiters. The default value is ``False``.
-* ``skip_pedigree_measure`` - flag to skip the building of the pheno common instrument. The default value is ``False``.
-* ``data_dictionary`` - a nested configuration specifying the sources for measure descriptions. Optional.
-* ``inference_config`` - the configuration to use for measure type inference. Can be either a path to a YAML-formatted configuration file or a directly embedded configuration. Optional.
-* ``regression_config`` - the configuration to use for building regressions. Can be either a path to a YAML or TOML-formatted configuration file or a directly embedded configuration. Optional.
-
-Data dictionary config fields
-+++++++++++++++++++++++++++++
-
-* ``file`` - path to a data dictionary file. Optional.
-* ``instrument_files`` - list of paths to separate data dictionary files. Optional.
-* ``dictionary`` - directly-embedded data dictionary. Optional.
-
-If the same measure is found in multiple sources, the priority is in the following order: ``dictionary``, ``instrument_files``, ``file``.
-
-Regression config fields
-++++++++++++++++++++++++
-
-* ``instrument_name``
-* ``measure_name``
-* ``jitter``
-* ``display_name``
-
-Inference config fields
-+++++++++++++++++++++++
-
-For further information about each field, see :ref:`Measure classification` and :ref:`Inference parameters`.
-
-* ``min_individuals``
-* ``non_numeric_cutoff``
-* ``value_max_len``
-* ``continuous``
-* ``ordinal``
-* ``categorical``
-* ``skip``
-* ``value_type``
-* ``histogram_type``
-
-Example import project configuration
-++++++++++++++++++++++++++++++++++++
-
 .. code:: yaml
 
-    id: pheno_data_id
+    # Required. The ID to use for the output phenotype data. Also determines the name of the produced .db file.
+    id: pheno_data_id  
+
+    # Optional. The root directory to which all other paths in the config, are considered relative to (except `output_dir`).
+    # Accepts both relative and absolute paths. Relative paths will be resolved from the location of the import configuration.
+    # If omitted, the directory in which the config is located will be considered as the input dir.
     input_dir: /home/user/pheno_data
+
+    # Required. The directory in which to produce the output.
+    # Accepts both relative and absolute paths. Relative paths will be resolved from the location of the import configuration.
+    output_dir: /home/user/pheno_result
+
+    # Required. A list of string paths or nested configurations; these will be the sources from which instruments are read.
+    # * String paths can be files, directories or glob-style patterns with wildcards. Valid instrument files are files which
+    #   end with a ".csv" or ".txt" extension. These instruments will receive a name according to their filename (without the file extension)
+    #   and the expected delimiter and person ID column will be the defaults from the configuration.
+    # * Nested configurations allow for overriding the instrument name, delimiter and person ID column, but can only point
+    #   to a single file. None of the override options are mandatory.
     instrument_files:
       - work/instruments
       - work/some_instrument.csv
       - work/more_instruments/**/*.txt
+      - path: work/other_instruments/i1.tsv
+        instrument: instrument_1
+        delimiter: "\t"
+        person_column: p_id
+      - path: work/other_instruments/i1_part_two.csv
+        instrument: instrument_1
+
+    # Required. Path to the pedigree file to use for import.
     pedigree: work/pedigree.ped
+
+    # Required. The default name of the column containing the person ID in the instrument CSV files.
     person_column: subject_id
-    tab_separated: False
+
+    # Optional. The default delimiter to expect in instrument files. The default value is ",".
+    delimiter: ","
+
+    # Optional. Flag to skip the building of the pheno common instrument. The default value is `False`.
     skip_pedigree_measures: False
+
+    # Optional. A nested configuration that specifies the sources for measure descriptions.
+    # Two fields are provided: `files` and `dictionary`:
+    # * `files` is a list of nested configurations for each file containing measure descriptions.
+    #   Unless overriden, files are expected to be comma-separated files with columns "instrumentName", "measureName" and "description".
+    # * `dictionary` is used for manual input of measure descriptions. These will override any measure descriptions from `files`.
     data_dictionary:
-      file: work/data_dictionary.csv
-      instrument_files:
-        - work/instruments/data_dict_1.csv
-        - work/instruments/data_dict_2.csv
+      files:
+        - path: "work/instruments/data_dict_1.csv"
+        - path: "work/instruments/data_dict_2.tsv"
+          delimiter: "\t"
+          instrument_column: "i_mame"
+          measure_column: "m_name"
+          descritpion_column: "desc"
+          # This override will ignore any instrument name column in the file and use the value provided below for ALL rows in the file.
+          instrument: "some_instrument_name"
+
       dictionary:
         instrument_1:
           measure_1: "description of a measure"
         instrument_2:
           measure_2: "another description of a measure"
-    inference_config: work/inference.conf
-    regression_config:
-      age:
-        display_name: age
-        instrument_name: pheno_common
-        jitter: 0.1
-        measure_name: age_measure
-      measure_1:
-        display_name: measure number one
-        instrument_name: instrument_1
-        jitter: 0.1
-        measure_name: measure_1
-    output_dir: /home/user/pheno_result
 
+    # Optional. The configuration to use for measure type inference. Can be either a path to a YAML-formatted configuration file or a directly embedded configuration.
+    inference_config: work/inference.conf
+    # Nested configuration usage example below. (This is only for the purposes of an example, you CANNOT specify both a file and a nested configuration at the same time.)
+    inference_config:
+      "*.*":
+        min_individuals: 1
+        non_numeric_cutoff: 0.06
+        value_max_len: 32
+        continuous:
+          min_rank: 10
+        ordinal:
+          min_rank: 1
+        categorical:
+          min_rank: 1
+          max_rank: 15
+        skip: false
+        measure_type: null
+
+    # Optional. The contents of this section will be written to the output data's config file.
+    study_config:
+      regression_config:
+        age:
+          display_name: age
+          instrument_name: pheno_common
+          jitter: 0.1
+          measure_name: age_measure
+        measure_1:
+          display_name: measure number one
+          instrument_name: instrument_1
+          jitter: 0.1
+          measure_name: measure_1
 
 Running the ``import_tools_pheno`` CLI tool
 ###########################################
