@@ -51,6 +51,7 @@ export class GenomicScore {
     });
   }
 
+
   public constructor(
     public readonly desc: string,
     public readonly help: string,
@@ -87,30 +88,7 @@ export class CategoricalHistogram {
     public readonly logScaleY: boolean,
     public readonly displayedValuesCount: number = null,
     public readonly displayedValuesPercent: number = null,
-  ) {
-    if (valueOrder) {
-      values.sort((a, b) => {
-        return valueOrder.indexOf(a.name) - valueOrder.indexOf(b.name);
-      });
-    }
-
-
-    let maxShown = values.length;
-    if (displayedValuesCount) {
-      maxShown = displayedValuesCount;
-    } else if (displayedValuesPercent) {
-      maxShown = Math.floor(values.length / 100 * displayedValuesPercent);
-    } else {
-      maxShown = 100;
-    }
-
-    const otherSum = values
-      .splice(maxShown, values.length)
-      .reduce((acc, v) => acc + v.value, 0);
-    if (otherSum !== 0) {
-      values.push({name: 'other', value: otherSum});
-    }
-  }
+  ) { }
 }
 
 export type CategoricalHistogramView = 'range selector' | 'click selector';

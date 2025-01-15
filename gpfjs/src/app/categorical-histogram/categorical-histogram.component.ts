@@ -51,6 +51,24 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
                      | d3.ScaleLogarithmic<number, number, never>;
 
   public ngOnInit(): void {
+    this.histogram.values.sort((a, b) => {
+      return this.histogram.valueOrder.indexOf(a.name) - this.histogram.valueOrder.indexOf(b.name);
+    });
+
+    let maxShown = this.histogram.values.length;
+    if (this.histogram.displayedValuesCount) {
+      maxShown = this.histogram.displayedValuesCount;
+    } else if (this.histogram.displayedValuesPercent) {
+      maxShown = Math.floor(this.histogram.values.length / 100 * this.histogram.displayedValuesPercent);
+    }
+
+    const otherSum = this.histogram.values
+      .splice(maxShown, this.histogram.values.length)
+      .reduce((acc, v) => acc + v.value, 0);
+    if (otherSum !== 0) {
+      this.histogram.values.push({name: 'other', value: otherSum});
+    }
+
     this.sliderStartIndex = 0;
     this.sliderEndIndex = this.histogram.values.length - 1;
     this.redrawHistogram();
