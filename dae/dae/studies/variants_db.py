@@ -256,25 +256,25 @@ class VariantsDb:
             dae_config: Box,
             genome: ReferenceGenome,
             gene_models: GeneModels,
-            genotype_storage_factory: GenotypeStorageRegistry) -> None:
+            storage_registry: GenotypeStorageRegistry) -> None:
 
         self.dae_config = dae_config
 
         assert genome is not None
         assert gene_models is not None
 
-        assert genotype_storage_factory is not None
+        assert storage_registry is not None
 
         self.genome = genome
         self.gene_models = gene_models
-        self.genotype_storage_factory = genotype_storage_factory
+        self.storage_registry = storage_registry
 
         self.reload()
 
     def reload(self) -> None:
         """Load all studies and groups again."""
-        self._genotype_study_cache: dict[str, GenotypeData] = {}
-        self._genotype_group_cache: dict[str, GenotypeData] = {}
+        self._genotype_study_cache: dict[str, GenotypeDataStudy] = {}
+        self._genotype_group_cache: dict[str, GenotypeDataGroup] = {}
 
         genotype_study_configs = self._load_study_configs()
         genotype_group_configs = self._load_group_configs()
@@ -394,7 +394,7 @@ class VariantsDb:
             for genotype_study in self._genotype_study_cache.values()
         ]
 
-    def get_all_genotype_studies(self) -> list[GenotypeDataStudy | Any]:
+    def get_all_genotype_studies(self) -> list[GenotypeDataStudy]:
         return list(self._genotype_study_cache.values())
 
     def get_genotype_group(self, group_id: str) -> GenotypeData | None:
@@ -475,18 +475,16 @@ class VariantsDb:
 
     def _make_genotype_study(
         self, study_config: Box,
-    ) -> GenotypeData | None:
+    ) -> GenotypeDataStudy | None:
         if study_config is None:
             return None
 
-        genotype_storage = self.genotype_storage_factory.get_genotype_storage(
+        genotype_storage = self.storage_registry.get_genotype_storage(
             study_config.genotype_storage.id,
         )
 
         if genotype_storage is None:
-            storage_ids = (
-                self.genotype_storage_factory.get_genotype_storage_ids()
-            )
+            storage_ids = self.storage_registry.get_all_genotype_storage_ids()
             logger.error(
                 "unknown genotype storage id: %s; Known ones: %s",
                 study_config.genotype_storage.id,
@@ -570,8 +568,10 @@ class VariantsDb:
                 "replacing genotype group instance %s", genotype_data.study_id)
 
         if genotype_data.is_group:
+            assert isinstance(genotype_data, GenotypeDataGroup)
             self._genotype_group_cache[genotype_data.study_id] = genotype_data
         else:
+            assert isinstance(genotype_data, GenotypeDataStudy)
             self._genotype_study_cache[genotype_data.study_id] = genotype_data
 
     def unregister_genotype_data(self, genotype_data: GenotypeData) -> None:
