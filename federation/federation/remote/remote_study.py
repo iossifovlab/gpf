@@ -5,7 +5,10 @@ from dae.common_reports.common_report import CommonReport
 from dae.configuration.gpf_config_parser import FrozenBox
 from dae.pedigrees.families_data import FamiliesData, tag_families_data
 from dae.pedigrees.family import Family, Person
-from dae.person_sets import PersonSetCollection
+from dae.person_sets import (
+    PersonSetCollection,
+    PSCQuery,
+)
 from dae.person_sets.person_sets import parse_person_set_collection_config
 from dae.studies.study import GenotypeData
 from dae.utils.regions import Region
@@ -78,7 +81,8 @@ class RemoteGenotypeData(GenotypeData):
         self._person_set_collections = \
             self._build_person_set_collections(pscs_config, self._families)
 
-    def _build_person_set_collections(
+    # pylint: disable=arguments-renamed
+    def _build_person_set_collections(  # type: ignore[override]
         self, pscs_config: dict[str, Any] | None,
         _families: FamiliesData,
     ) -> dict[str, PersonSetCollection]:
@@ -95,7 +99,7 @@ class RemoteGenotypeData(GenotypeData):
             result[psc.id] = psc
         return result
 
-    def _build_person_set_collection(
+    def _build_person_set_collection(  # type: ignore[override]
         self, psc_config: dict[str, Any],
         families: FamiliesData,
     ) -> PersonSetCollection:
@@ -122,7 +126,7 @@ class RemoteGenotypeData(GenotypeData):
         effect_types: list[str] | None = None,
         family_ids: Iterable[str] | None = None,
         person_ids: Iterable[str] | None = None,
-        person_set_collection: tuple[str, list[str]] | None = None,
+        person_set_collection: PSCQuery | None = None,
         inheritance: str | list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
@@ -134,7 +138,6 @@ class RemoteGenotypeData(GenotypeData):
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: Iterable[str] | None = None,
-        pedigree_fields: list[str] | None = None,
         unique_family_variants: bool = True,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:

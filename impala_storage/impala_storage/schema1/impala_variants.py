@@ -199,9 +199,11 @@ class ImpalaVariants:
             do_join = True
         query_builder = FamilyVariantsQueryBuilder(
             self.db, self.variants_table, self.pedigree_table,
-            self.schema, self.table_properties,
-            self.pedigree_schema,
-            self.families, gene_models=self.gene_models,
+            variants_schema=self.schema,
+            table_properties=self.table_properties,
+            pedigree_schema=self.pedigree_schema,
+            families=self.families,
+            gene_models=self.gene_models,
             do_join=do_join,
         )
         director = ImpalaQueryDirector(query_builder)

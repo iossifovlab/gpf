@@ -22,10 +22,10 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         self,
         dialect: Dialect,
         db: str | None,
-        family_variant_table: str | None,
+        family_variant_table: str | None,  # noqa: ARG002
         summary_allele_table: str,
         pedigree_table: str,
-        family_variant_schema: TableSchema,
+        family_variant_schema: TableSchema,  # noqa: ARG002
         summary_allele_schema: TableSchema,
         table_properties: dict | None,
         pedigree_schema: TableSchema,
@@ -75,7 +75,7 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         pass
 
     def _build_where(
-        self,
+        self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
@@ -90,8 +90,7 @@ class SummaryQueryBuilder(BaseQueryBuilder):
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        pedigree_fields: tuple | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> None:
         # pylint: disable=too-many-arguments,too-many-locals,unused-argument
         inheritance = None

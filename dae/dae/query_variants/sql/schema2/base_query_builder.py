@@ -174,7 +174,6 @@ class BaseQueryBuilder(ABC):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        pedigree_fields: tuple | None = None,
     ) -> str:
         # pylint: disable=too-many-arguments,too-many-locals,unused-argument
         """Build an SQL query in the correct order."""
@@ -198,7 +197,6 @@ class BaseQueryBuilder(ABC):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            pedigree_fields=pedigree_fields,
         )
 
         self._build_group_by()
@@ -223,13 +221,6 @@ class BaseQueryBuilder(ABC):
     ) -> None:
         """Build join clause."""
 
-    def _build_where_pedigree_fields(
-        self,
-        pedigree_fields: tuple | None,  # noqa: ARG002
-    ) -> str:
-        # pylint: disable=unused-argument
-        return ""
-
     def _build_where(
         self, *,
         regions: list[Region] | None = None,
@@ -246,7 +237,6 @@ class BaseQueryBuilder(ABC):
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> None:
         # pylint: disable=too-many-arguments,too-many-locals,unused-argument
@@ -265,7 +255,6 @@ class BaseQueryBuilder(ABC):
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            pedigree_fields=pedigree_fields,
         )
         self._add_to_product(where_clause)
 
@@ -285,7 +274,6 @@ class BaseQueryBuilder(ABC):
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> str:
         # pylint: disable=too-many-arguments,too-many-branches,unused-argument
@@ -382,7 +370,6 @@ class BaseQueryBuilder(ABC):
             self._build_family_bin_heuristic(family_ids, person_ids),
             self._build_coding_heuristic(effect_types),
             self._build_region_bin_heuristic(regions),
-            self._build_where_pedigree_fields(pedigree_fields),
         ])
 
         where = [w for w in where if w]
@@ -694,7 +681,7 @@ class BaseQueryBuilder(ABC):
 
     def _build_frequency_bin_heuristic(
         self, *,
-        inheritance: None | str | list[str],
+        inheritance: str | list[str] | None,
         ultra_rare: bool | None,
         frequency_filter: RealAttrFilterType | None,
     ) -> str:
@@ -715,7 +702,7 @@ class BaseQueryBuilder(ABC):
             "frequency_bin", frequency_bins, 4)
 
     def _build_coding_heuristic(
-        self, effect_types: None | set[str] | list[str],
+        self, effect_types: set[str] | list[str] | None,
     ) -> str:
         assert self.partition_config is not None
         if effect_types is None:

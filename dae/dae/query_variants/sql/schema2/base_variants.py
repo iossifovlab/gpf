@@ -207,11 +207,9 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> QueryRunner:
         """Build a query selecting the appropriate family variants."""
-        do_join_pedigree = bool(pedigree_fields)
         do_join_allele_in_members = person_ids is not None
 
         assert self.family_variant_table is not None
@@ -228,13 +226,12 @@ class SqlSchema2Variants(QueryVariantsBase):
             self.family_variant_table,
             self.summary_allele_table,
             self.pedigree_table,
-            self.family_variant_schema,
-            self.summary_allele_schema,
-            self.partition_descriptor.to_dict(),
-            self.pedigree_schema,
-            self.families,
+            family_variant_schema=self.family_variant_schema,
+            summary_allele_schema=self.summary_allele_schema,
+            table_properties=self.partition_descriptor.to_dict(),
+            pedigree_schema=self.pedigree_schema,
+            families=self.families,
             gene_models=self.gene_models,
-            do_join_pedigree=do_join_pedigree,
             do_join_allele_in_members=do_join_allele_in_members,
         )
 
@@ -254,7 +251,6 @@ class SqlSchema2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=query_limit,
-            pedigree_fields=pedigree_fields,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
         deserialize_row = self._deserialize_family_variant
@@ -353,7 +349,6 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> Generator[FamilyVariant, None, None]:
         """Query family variants."""
@@ -380,7 +375,6 @@ class SqlSchema2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=request_limit,
-            pedigree_fields=pedigree_fields,
         )
         result = QueryResult(runners=[runner], limit=limit)
 

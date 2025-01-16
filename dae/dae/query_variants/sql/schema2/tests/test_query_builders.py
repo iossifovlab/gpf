@@ -98,7 +98,7 @@ def families(resources_dir: pathlib.Path) -> FamiliesData:
     return FamiliesData.from_pedigree_df(ped_df)
 
 
-@pytest.fixture()
+@pytest.fixture
 def family_query_builder(families: FamiliesData) -> FamilyQueryBuilder:
     dialect = Dialect()
 
@@ -114,11 +114,10 @@ def family_query_builder(families: FamiliesData) -> FamilyQueryBuilder:
         pedigree_schema=PEDIGREE_SCHEMA,
         families=families,
         gene_models=None,
-        do_join_pedigree=False,
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def summary_query_builder(families: FamiliesData) -> SummaryQueryBuilder:
     dialect = Dialect()
 

@@ -80,7 +80,6 @@ class QueryVariantsBase(abc.ABC):
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: list[str] | None = None,
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,
     ) -> QueryRunner:
         # pylint: disable=too-many-arguments
@@ -104,7 +103,6 @@ class QueryVariantsBase(abc.ABC):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments

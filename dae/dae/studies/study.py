@@ -204,12 +204,10 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: Iterable[str] | None = None,
-        pedigree_fields: list[str] | None = None,
         **kwargs: Any,
     ) -> QueryResult | None:
         """Build a query result."""
         # pylint: disable=too-many-locals,too-many-arguments
-        del pedigree_fields  # Unused argument
 
         if person_ids is not None and not person_ids:
             return None
@@ -236,7 +234,6 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         runners = []
         logger.debug("query leaf studies...")
         for genotype_study in self._get_query_leaf_studies(study_filters):
-            person_sets_query = None
             query_person_ids = set(person_ids) \
                 if person_ids is not None else None
 
@@ -283,7 +280,6 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     return_reference=return_reference,
                     return_unknown=return_unknown,
                     limit=limit,
-                    pedigree_fields=person_sets_query,
                     **kwargs,
                 )
             runner.set_study_id(genotype_study.study_id)
@@ -329,7 +325,6 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: Iterable[str] | None = None,
-        pedigree_fields: list[str] | None = None,
         unique_family_variants: bool = True,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
@@ -352,7 +347,6 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             return_unknown=return_unknown,
             limit=limit,
             study_filters=study_filters,
-            pedigree_fields=pedigree_fields,
             **kwargs,
         )
         if result is None:

@@ -376,7 +376,6 @@ class DuckDb2Variants(QueryVariantsBase):
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,
     ) -> QueryRunner:
         # pylint: disable=too-many-arguments
@@ -403,7 +402,6 @@ class DuckDb2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=query_limit,
-            pedigree_fields=pedigree_fields,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
 
@@ -455,7 +453,6 @@ class DuckDb2Variants(QueryVariantsBase):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
@@ -482,7 +479,6 @@ class DuckDb2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=query_limit,
-            pedigree_fields=pedigree_fields,
             **kwargs,
         )
         result = QueryResult(runners=[runner], limit=limit)

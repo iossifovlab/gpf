@@ -22,14 +22,13 @@ class FamilyQueryBuilder(BaseQueryBuilder):
         db: str,
         family_variant_table: str,
         summary_allele_table: str,
-        pedigree_table: str,
+        pedigree_table: str, *,
         family_variant_schema: TableSchema,
         summary_allele_schema: TableSchema,
         table_properties: dict | None,
         pedigree_schema: TableSchema,
         families: FamiliesData,
         gene_models: GeneModels | None = None,
-        do_join_pedigree: bool = False,
         do_join_allele_in_members: bool = False,
     ):
         # pylint: disable=too-many-arguments
@@ -49,8 +48,6 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             families,
             gene_models=gene_models,
         )
-
-        self.do_join_pedigree = do_join_pedigree
         self.do_join_allele_in_members = do_join_allele_in_members
 
     def _query_columns(self) -> list[str]:
@@ -63,19 +60,17 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             "family_variant_data": "fa.family_variant_data",
         }
 
-        columns = list(self.select_accessors.values())
-        return columns
+        return list(self.select_accessors.values())
 
     def _build_join(
         self, genes: list[str] | None = None,
         effect_types: list[str] | None = None,
     ) -> None:
 
-        if self.do_join_allele_in_members or self.do_join_pedigree:
+        if self.do_join_allele_in_members:
             self._add_to_product(
                 self.dialect.build_array_join("fa.allele_in_members", "pi"))
 
-        if self.do_join_pedigree:
             pedigree_table = self.dialect.build_table_name(
                 self.pedigree_table, self.db)
             pi_ref = "pi" + self.dialect.array_item_suffix()
@@ -98,36 +93,6 @@ class FamilyQueryBuilder(BaseQueryBuilder):
             return f"{Sex.from_name(value).value}"
 
         return f"'{value}'"
-
-    def _build_where_pedigree_fields(
-        self,
-        pedigree_fields: tuple[list[dict[str, str]], list[dict[str, str]]] | None,
-    ) -> str:
-        if not pedigree_fields:
-            return ""
-        result = []
-
-        query = []
-        for positive_fields in pedigree_fields[0]:
-            for key, value in positive_fields.items():
-                str_value = self._pedigree_column_value(key, value)
-                query.append(
-                    f"pedigree.{key} = {str_value}",
-                )
-        if query:
-            result.append(" OR ".join(query))
-
-        query = []
-        for negative_fields in pedigree_fields[1]:
-            for key, value in negative_fields.items():
-                str_value = self._pedigree_column_value(key, value)
-                query.append(
-                    f"pedigree.{key} != {str_value}",
-                )
-        if query:
-            result.append(" AND ".join(query))
-
-        return " AND ".join(f"( {r} )" for r in result)
 
     def _build_from(self) -> None:
         summary_table_name = self.dialect.build_table_name(
