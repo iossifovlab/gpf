@@ -13,7 +13,6 @@ from box import Box
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
-from dae.pheno.common import default_config
 from dae.pheno.pheno_data import PhenotypeData, get_pheno_db_dir
 from dae.pheno.registry import PhenoRegistry
 
@@ -165,13 +164,6 @@ def fake_background_db(
     )
     yield connection, "fake_background_data"
     connection.sql("DROP TABLE fake_background_data")
-
-
-@pytest.fixture
-def test_config(temp_dbfile: str) -> Box:
-    config = default_config()
-    config.db.filename = temp_dbfile
-    return Box(config.to_dict())
 
 
 @pytest.fixture

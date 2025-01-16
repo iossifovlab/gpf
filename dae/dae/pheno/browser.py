@@ -6,11 +6,10 @@ from functools import reduce
 from typing import Any
 
 import duckdb
-import pandas as pd
 import sqlglot
 from duckdb import ConstraintException
-from sqlglot import column, expressions, select, table
-from sqlglot.expressions import Count, delete, insert, update, values
+from sqlglot import column, expressions, select
+from sqlglot.expressions import Count, delete, insert, table_, update, values
 
 from dae.pheno.common import MeasureType
 from dae.utils.sql_utils import to_duckdb_transpile
@@ -29,9 +28,9 @@ class PhenoBrowser:
             f"{dbfile}", read_only=read_only)
         if not read_only:
             PhenoBrowser.create_browser_tables(self.connection)
-        self.variable_browser = table("variable_browser")
-        self.regressions = table("regression")
-        self.regression_values = table("regression_values")
+        self.variable_browser = table_("variable_browser")
+        self.regressions = table_("regression")
+        self.regression_values = table_("regression_values")
 
     @staticmethod
     def create_browser_tables(conn: duckdb.DuckDBPyConnection) -> None:
@@ -95,20 +94,6 @@ class PhenoBrowser:
         with conn.cursor() as cursor:
             for query in queries:
                 cursor.execute(to_duckdb_transpile(query))
-
-    def enable_write(self) -> None:
-        self.connection.close()
-        self.connection = duckdb.connect(self.dbfile, read_only=False)
-
-    def get_browser_measure(self, measure_id: str) -> dict | None:
-        """Get measure description from phenotype browser database."""
-        query = to_duckdb_transpile(select("variable_browser.*",
-        ).from_(self.variable_browser).where("measure_id").eq(measure_id))
-        with self.connection.cursor() as cursor:
-            rows = cursor.execute(query).df()
-            if not rows.empty:
-                return rows.to_dict("records")[0]
-            return None
 
     def save(self, v: dict[str, Any]) -> None:
         """Save measure values into the database."""
@@ -414,17 +399,6 @@ class PhenoBrowser:
         with self.connection.cursor() as cursor:
             rows = cursor.execute(query_str).fetchall()
             return int(rows[0][0])
-
-    def search_measures_df(
-        self, instrument_name: str | None = None,
-        keyword: str | None = None,
-    ) -> pd.DataFrame:
-        """Find measures and return a dataframe with values."""
-        query = to_duckdb_transpile(
-            self.build_measures_query(instrument_name, keyword)[0])
-        # execute query and .df()
-
-        return self.connection.execute(query).df()
 
     @property
     def regression_ids(self) -> list[str]:
