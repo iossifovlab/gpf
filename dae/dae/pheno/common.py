@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import enum
-from pprint import pprint
 
-from box import Box
 from pydantic import BaseModel, ConfigDict
 
 
@@ -102,66 +100,3 @@ class MeasureType(enum.Enum):
     @staticmethod
     def is_text(measure_type: MeasureType) -> bool:
         return not MeasureType.is_numeric(measure_type)
-
-
-def default_config() -> Box:
-    """Construct phenotype database preparation configuration."""
-    config = {
-        "report_only": False,
-        "parallel": 4,
-        "family": {"composite_key": False},
-        "instruments": {"tab_separated": False, "dir": "."},
-        "person": {
-            "role": {
-                "type": "column",
-                "column": "role",
-                "mapping": "INTERNAL",
-            },
-            "column": None,
-        },
-        "db": {"filename": "pheno.db"},
-        "skip": {"measures": []},
-        "classification": {
-            "min_individuals": 1,
-            "non_numeric_cutoff": 0.06,
-            "value_max_len": 32,
-            "continuous": {"min_rank": 10},
-            "ordinal": {"min_rank": 1},
-            "categorical": {"min_rank": 1, "max_rank": 15},
-        },
-        "output": "output",
-    }
-
-    return Box(config)
-
-
-def check_phenotype_data_config(config: InferenceConfig) -> bool:
-    """Check phenotype database preparation config for consistency."""
-    categorical = config.categorical.min_rank
-    if categorical and categorical < 1:
-        print("categorical min rank expected to be > 0")
-        return False
-    ordinal = config.ordinal.min_rank
-    if ordinal and categorical and ordinal < categorical:
-        print("ordinal min rank expected to be >= categorical min rank")
-        return False
-    continuous = config.continuous.min_rank
-    if continuous and ordinal and continuous < ordinal:
-        print("continuous min rank expected to be >= ordinal min rank")
-        return False
-
-    individuals = config.min_individuals
-    if individuals < 1:
-        print("minimal number of individuals expected to be >= 1")
-        return False
-
-    return True
-
-
-def dump_config(config: InferenceConfig) -> None:
-    """Print phenotype database preparation configuration."""
-    print("--------------------------------------------------------")
-    print("CLASSIFICATION BOUNDARIES:")
-    print("--------------------------------------------------------")
-    pprint(config.dict())  # noqa: T203
-    print("--------------------------------------------------------")

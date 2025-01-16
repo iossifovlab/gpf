@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from functools import reduce
-from pathlib import Path
 from typing import Any, cast
 
 import duckdb
 import pandas as pd
-from sqlglot import column, expressions, select, table
+from sqlglot import column, expressions, select
+from sqlglot.expressions import table_
 
 from dae.pheno.common import MeasureType
 from dae.utils.sql_utils import glot_and, to_duckdb_transpile
@@ -23,29 +23,11 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         self.dbfile = dbfile
         self.connection = duckdb.connect(
             f"{dbfile}", read_only=read_only)
-        self.family = table("family")
-        self.person = table("person")
-        self.measure = table("measure")
-        self.instrument = table("instrument")
+        self.family = table_("family")
+        self.person = table_("person")
+        self.measure = table_("measure")
+        self.instrument = table_("instrument")
         self.instrument_values_tables = self.find_instrument_values_tables()
-
-    @staticmethod
-    def verify_pheno_folder(folder: Path) -> None:
-        """Verify integrity of a pheno db folder."""
-        parquet_folder = folder / "parquet"
-        assert parquet_folder.exists()
-        family_file = parquet_folder / "family.parquet"
-        assert family_file.exists()
-        person_file = parquet_folder / "person.parquet"
-        assert person_file.exists()
-        instrument_file = parquet_folder / "instrument.parquet"
-        assert instrument_file.exists()
-        measure_file = parquet_folder / "measure.parquet"
-        assert measure_file.exists()
-        instruments_dir = parquet_folder / "instruments"
-        assert instruments_dir.exists()
-        assert instruments_dir.is_dir()
-        assert len(list(instruments_dir.glob("*"))) > 0
 
     def find_instrument_values_tables(self) -> dict[str, expressions.Table]:
         """
@@ -62,7 +44,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         with self.connection.cursor() as cursor:
             results = cursor.execute(query).fetchall()
 
-        return {i_name: table(t_name) for i_name, t_name in results}
+        return {i_name: table_(t_name) for i_name, t_name in results}
 
     def get_measures_df(
         self,
@@ -140,7 +122,8 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         for measure_id in measure_ids:
             instrument, _ = measure_id.split(".", maxsplit=1)
-            instrument_table = table(generate_instrument_table_name(instrument))
+            instrument_table = table_(
+                generate_instrument_table_name(instrument))
             instrument_tables[instrument] = instrument_table
 
         union_queries = [

@@ -156,14 +156,6 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def verify_phenotype_data_name(input_name: str) -> str:
-    phenotype_data_name = os.path.normpath(input_name)
-    # check that the given pheno name is not a directory path
-    split_path = os.path.split(phenotype_data_name)
-    assert not split_path[0], f"'{phenotype_data_name}' is a directory path!"
-    return phenotype_data_name
-
-
 def generate_phenotype_data_config(
     pheno_name: str,
     pheno_db_filename: str,

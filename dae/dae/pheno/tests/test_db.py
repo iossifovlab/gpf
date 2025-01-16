@@ -25,7 +25,7 @@ def test_browser_save(tmp_path: str) -> None:
 
     browser.save(v)
 
-    res = browser.get_browser_measure("test.measure")
+    res = next(browser.search_measures(keyword="test.measure"))
     assert res is not None
 
     assert res["measure_id"] == "test.measure"
@@ -51,7 +51,7 @@ def test_browser_update(tmp_path: str) -> None:
     v["figure_distribution"] = "test_figure.png"
     browser.save(v)
 
-    res = browser.get_browser_measure("test.measure")
+    res = next(browser.search_measures(keyword="test.measure"))
     assert res is not None
     assert res["measure_id"] == "test.measure"
     assert res["instrument_name"] == "test"
@@ -126,15 +126,14 @@ def test_search_measures_get_by_instrument(
         read_only=True,
     )
     assert browser is not None
-    measure_df = browser.search_measures_df("i1", None)
-    assert len(measure_df) == 12
-    for _, row in measure_df.iterrows():
+    measures = list(browser.search_measures("i1", None))
+    assert len(measures) == 12
+    for row in measures:
         assert row["instrument_name"] == "i1"
 
-    measure_df = browser.search_measures_df("i2", None)
-    assert len(measure_df) == 3
-    print(measure_df)
-    for _, row in measure_df.iterrows():
+    measures = list(browser.search_measures("i2", None))
+    assert len(measures) == 3
+    for row in measures:
         assert row["instrument_name"] == "i2"
 
 
@@ -146,9 +145,9 @@ def test_search_measures_by_keyword_in_description(
         read_only=True,
     )
     assert browser is not None
-    measure_df = browser.search_measures_df(None, "number")
-    assert len(measure_df) == 3
-    for _, row in measure_df.iterrows():
+    measures = list(browser.search_measures(None, "number"))
+    assert len(measures) == 3
+    for row in measures:
         assert "number" in row["description"]
 
 
@@ -160,10 +159,10 @@ def test_search_measures_by_keyword_in_measure_id(
         read_only=True,
     )
     assert browser is not None
-    measure_df = browser.search_measures_df(None, "i1.m2")
-    assert len(measure_df) == 1
-    assert measure_df.iloc[0]["measure_name"] == "m2"
-    assert measure_df.iloc[0]["instrument_name"] == "i1"
+    measures = list(browser.search_measures(None, "i1.m2"))
+    assert len(measures) == 1
+    assert measures[0]["measure_name"] == "m2"
+    assert measures[0]["instrument_name"] == "i1"
 
 
 def test_search_measures_by_keyword_in_measure_name(
@@ -174,12 +173,12 @@ def test_search_measures_by_keyword_in_measure_name(
         read_only=True,
     )
     assert browser is not None
-    measure_df = browser.search_measures_df(None, "m2")
-    assert len(measure_df) == 2
-    assert measure_df.iloc[0]["measure_name"] == "m2"
-    assert measure_df.iloc[0]["instrument_name"] == "i1"
-    assert measure_df.iloc[1]["measure_name"] == "m2"
-    assert measure_df.iloc[1]["instrument_name"] == "i2"
+    measures = list(browser.search_measures(None, "m2"))
+    assert len(measures) == 2
+    assert measures[0]["measure_name"] == "m2"
+    assert measures[0]["instrument_name"] == "i1"
+    assert measures[1]["measure_name"] == "m2"
+    assert measures[1]["instrument_name"] == "i2"
 
 
 def test_search_measures_by_keyword_in_instrument_name(
@@ -191,12 +190,12 @@ def test_search_measures_by_keyword_in_instrument_name(
     )
     assert browser is not None
 
-    measure_df = browser.search_measures_df(None, "i")
-    assert len(measure_df) == 17
+    measures = list(browser.search_measures(None, "i"))
+    assert len(measures) == 17
 
-    measure_df = browser.search_measures_df(None, "i1")
-    assert len(measure_df) == 12
-    for _, row in measure_df.iterrows():
+    measures = list(browser.search_measures(None, "i1"))
+    assert len(measures) == 12
+    for row in measures:
         assert row["instrument_name"] == "i1"
 
 
@@ -228,19 +227,19 @@ def test_db_search_character_escaping(
     browser.save(val1)
     browser.save(val2)
 
-    res = browser.search_measures_df(keyword="test_one")
+    res = list(browser.search_measures(keyword="test_one"))
     assert res is not None
     assert len(res) == 1
-    assert res["measure_id"][0] == "test_one.measure1"
-    assert res["instrument_name"][0] == "test_one"
-    assert res["measure_name"][0] == "measure1"
+    assert res[0]["measure_id"] == "test_one.measure1"
+    assert res[0]["instrument_name"] == "test_one"
+    assert res[0]["measure_name"] == "measure1"
 
-    res = browser.search_measures_df(keyword="test%two")
+    res = list(browser.search_measures(keyword="test%two"))
     assert res is not None
     assert len(res) == 1
-    assert res["measure_id"][0] == "test%two.measure2"
-    assert res["instrument_name"][0] == "test%two"
-    assert res["measure_name"][0] == "measure2"
+    assert res[0]["measure_id"] == "test%two.measure2"
+    assert res[0]["instrument_name"] == "test%two"
+    assert res[0]["measure_name"] == "measure2"
 
 
 def test_get_regression_names(fake_browserdb_file_copy: str) -> None:
