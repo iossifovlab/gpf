@@ -142,6 +142,7 @@ class BaseQueryBuilder(ABC):
         inheritance: list[str] | str | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
@@ -202,6 +203,10 @@ class BaseQueryBuilder(ABC):
                     self.where_accessors["variant_in_sexes"], sexes, sex_query,
                 ),
             )
+        if affected_statuses is not None:
+            # we do not have `variant_in_statuses` in the schema1
+            raise ValueError("Schema1 does not support affected status queres")
+
         if variant_type is not None:
             where.append(
                 self._build_bitwise_attr_where(

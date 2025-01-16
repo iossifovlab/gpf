@@ -6,7 +6,7 @@ from typing import Any, cast
 
 from dae.genomic_resources.gene_models import GeneModels
 from dae.genomic_resources.reference_genome import ReferenceGenome
-from dae.query_variants.base_query_variants import QueryVariantsBase
+from dae.query_variants.base_query_variants import QueryVariants
 
 logger = logging.getLogger(__name__)
 
@@ -77,5 +77,5 @@ class GenotypeStorage(abc.ABC):
         study_config: dict,
         genome: ReferenceGenome,
         gene_models: GeneModels,
-    ) -> QueryVariantsBase:
+    ) -> QueryVariants:
         """Construct a query backend for this genotype storage."""

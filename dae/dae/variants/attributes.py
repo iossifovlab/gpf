@@ -103,7 +103,7 @@ class Role(enum.Enum):
     step_dad = 1 << 23
     spouse = 1 << 24
 
-    unknown = 0
+    unknown = 1 << 25
 
     @property
     def display_name(self) -> str:
@@ -143,7 +143,10 @@ class Role(enum.Enum):
 
     @staticmethod
     def from_value(val: int) -> Role:
-        return Role(int(val))
+        val = int(val)
+        if val == 0:
+            return Role.unknown
+        return Role(val)
 
     @staticmethod
     def not_role(value: int) -> int:
@@ -155,7 +158,7 @@ class Sex(enum.Enum):
 
     M = 1
     F = 2
-    U = 0
+    U = 4
 
     # pylint: disable=invalid-name
     male = M
@@ -182,17 +185,25 @@ class Sex(enum.Enum):
         raise ValueError(f"unexpected sex name: {name}")
 
     @staticmethod
+    def _internal_value(value: int) -> int:
+        return 4 if value == 0 else value
+
+    @staticmethod
+    def _external_value(value: int) -> int:
+        return 0 if value == 4 else value
+
+    @staticmethod
     def to_value(name: int | str | None) -> int:
         sex = Sex.from_name(name)
-        return sex.value
+        return Sex._external_value(sex.value)
 
     @staticmethod
     def to_name(value: int) -> str:
-        return Sex(value).name
+        return Sex(Sex._internal_value(value)).name
 
     @staticmethod
     def from_value(val: int) -> Sex:
-        return Sex(int(val))
+        return Sex(Sex._internal_value(int(val)))
 
     def __repr__(self) -> str:
         return self.name
@@ -221,7 +232,7 @@ class Status(enum.Enum):
     # pylint: disable=invalid-name
     unaffected = 1
     affected = 2
-    unspecified = 0
+    unspecified = 4
 
     @staticmethod
     def from_name(name: int | str | None) -> Status:
@@ -243,17 +254,25 @@ class Status(enum.Enum):
         raise ValueError(f"unexpected status type: {name}")
 
     @staticmethod
+    def _internal_value(value: int) -> int:
+        return 4 if value == 0 else value
+
+    @staticmethod
+    def _external_value(value: int) -> int:
+        return 0 if value == 4 else value
+
+    @staticmethod
     def to_value(name: int | str | None) -> int:
         status = Status.from_name(name)
-        return status.value
+        return Status._external_value(status.value)
 
     @staticmethod
     def to_name(value: int) -> str:
-        return Status(value).name
+        return Status(Status._internal_value(value)).name
 
     @staticmethod
     def from_value(val: int) -> Status:
-        return Status(int(val))
+        return Status(Status._internal_value(int(val)))
 
     def __repr__(self) -> str:
         return self.name

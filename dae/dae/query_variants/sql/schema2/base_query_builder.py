@@ -15,6 +15,7 @@ from dae.query_variants.attributes_query import (
     QueryTransformerMatcher,
     QueryTreeToSQLBitwiseTransformer,
     TreeNode,
+    affected_status_query,
     inheritance_query,
     role_query,
     sex_query,
@@ -167,6 +168,7 @@ class BaseQueryBuilder(ABC):
         inheritance: str | list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
@@ -191,6 +193,7 @@ class BaseQueryBuilder(ABC):
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
@@ -231,6 +234,7 @@ class BaseQueryBuilder(ABC):
         inheritance: str | list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
@@ -249,6 +253,7 @@ class BaseQueryBuilder(ABC):
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
@@ -268,6 +273,7 @@ class BaseQueryBuilder(ABC):
         inheritance: str | list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
@@ -335,6 +341,13 @@ class BaseQueryBuilder(ABC):
             where.append(
                 self._build_bitwise_attr_where(
                     self.where_accessors["allele_in_sexes"], sexes, sex_query,
+                ),
+            )
+        if affected_statuses is not None:
+            where.append(
+                self._build_bitwise_attr_where(
+                    self.where_accessors["allele_in_statuses"],
+                    affected_statuses, affected_status_query,
                 ),
             )
         if variant_type is not None:
@@ -554,7 +567,8 @@ class BaseQueryBuilder(ABC):
             )
 
         transformer = QueryTreeToSQLBitwiseTransformer(
-            column_name, self.dialect.use_bit_and_function(),
+            column_name,
+            use_bit_and_function=self.dialect.use_bit_and_function(),
         )
         return cast(str, transformer.transform(parsed))
 

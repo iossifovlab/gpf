@@ -2,15 +2,15 @@
 from __future__ import annotations
 
 import enum
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from functools import reduce
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from lark import InlineTransformer, Lark
 from lark.reconstruct import Reconstructor
 from lark.visitors import Interpreter
 
-from dae.variants.attributes import Inheritance, Role, Sex
+from dae.variants.attributes import Inheritance, Role, Sex, Status
 from dae.variants.core import Allele
 from dae.variants.variant import allele_type_from_name
 
@@ -92,9 +92,6 @@ class Matcher:
             array = set(array)
         return self.matcher(array)
 
-    # def pretty(self):
-    #     return self.tree.pretty()
-
     def query_str(self) -> None:
         self._reconstructor.reconstruct(self.tree)
 
@@ -112,22 +109,9 @@ class BaseQueryTransformerMatcher:
         )
         self.transformer2: BaseTreeTransformer
 
-    # def parse(self, expression):
-    #     return self.parser.parse(expression)
-
     def transform_query_string_to_tree(self, expression: str) -> QNode:
         parsed = self.parser.parse(expression)
         return cast(QNode, self.transformer.transform(parsed))
-
-    # def transform(self, tree):
-    #     return self.transform_tree_to_matcher(
-    #           self.transformer.transform(tree))
-
-    # def transform_tree_to_matcher(self, tree):
-    #     return self.transformer2.transform(tree)  # type: ignore
-
-    # def parse_and_transform(self, expression):
-    #     return self.transform(self.parse(expression))
 
 
 class StringQueryToTreeTransformer(InlineTransformer):
@@ -143,18 +127,6 @@ class StringQueryToTreeTransformer(InlineTransformer):
             self.token_converter = lambda x: x
         else:
             self.token_converter = token_converter
-
-    # def less_than(self, *args):
-    #     return LessThanNode(args[0])
-
-    # def more_than(self, *args):
-    #     return GreaterThanNode(args[0])
-
-    # def less_than_eq(self, *args):
-    #     return LessThanEqNode(args[0])
-
-    # def more_than_eq(self, *args):
-    #     return GreaterThanEqNode(args[0])
 
     def arg(self, *args: Any) -> QNode:
         return ContainsNode(args[0])
@@ -175,22 +147,11 @@ class StringQueryToTreeTransformer(InlineTransformer):
         assert len(args) == 1
         return args[0]
 
-    # def eq(self, *args):
-    #     # pylint: disable=invalid-name
-    #     return EqualsNode(args)
-
     def any(self, *args: QNode) -> QNode:
         return OrNode(args)
 
     def all(self, *args: QNode) -> QNode:
         return AndNode(args)
-
-
-# class Leaf:
-#     # pylint: disable=invalid-name
-#     def __init__(self, op, value):
-#         self.value = value
-#         self.op = op
 
 
 class LeafNode:
@@ -215,8 +176,8 @@ class OrNode(TreeNode):
 
 
 class NotNode(TreeNode):
-    def __init__(self, children):  # type: ignore
-        super().__init__([children])
+    def __init__(self, child: QNode):
+        super().__init__([child])
 
 
 class EqualsNode(LeafNode):
@@ -259,18 +220,6 @@ class QueryTreeToLambdaTransformer(BaseTreeTransformer):
     # pylint: disable=invalid-name
     """Transforma all nodes to python lambda functions."""
 
-    # def LessThanNode(self, arg):
-    #     return lambda x: x > arg
-
-    # def GreaterThanNode(self, arg):
-    #     return lambda x: x < arg
-
-    # def LessThanEqNode(self, arg):
-    #     return lambda x: x >= arg
-
-    # def GreaterThanEqNode(self, arg):
-    #     return lambda x: x <= arg
-
     def ContainsNode(self, arg: Any) -> Callable[[Any], bool]:
         return lambda x: arg in x
 
@@ -305,29 +254,6 @@ class QueryTreeToBitwiseLambdaTransformer(BaseTreeTransformer):
     def ContainsNode(self, arg: Any) -> Callable[[Any], bool]:
         return lambda vals: any(arg & v for v in vals if v is not None)
 
-    # def LessThanNode(self, arg):
-    #     raise NotImplementedError("unexpected bitwise query")
-
-    # def GreaterThanNode(self, arg):
-    #     raise NotImplementedError("unexpected bitwise query")
-
-    # def LessThanEqNode(self, arg):
-    #     raise NotImplementedError("unexpected bitwise query")
-
-    # def GreaterThanEqNode(self, arg):
-    #     raise NotImplementedError("unexpected bitwise query")
-
-    # def ElementOfNode(self, arg):
-    #     return lambda x: any(x & a for a in arg)
-
-    # def EqualsNode(self, arg):
-    #     return lambda val: all(val & a for a in arg)
-
-    # def NotNode(self, children):
-    #     assert len(children) == 1
-    #     child = children[0]
-    #     return lambda x: not child(x)
-
     def AndNode(
         self, children: list[Callable[[Any], bool]],
     ) -> Callable[[Any], bool]:
@@ -348,6 +274,14 @@ def roles_converter(arg: str | Role) -> Role | None:
 def sex_converter(arg: str | Sex) -> Sex | None:
     if not isinstance(arg, Sex):
         return Sex.from_name(arg)
+    return arg
+
+
+def affected_status_converter(
+    arg: str | Status,
+) -> Status | None:
+    if not isinstance(arg, Status):
+        return Status.from_name(arg)
     return arg
 
 
@@ -379,76 +313,11 @@ class QueryTreeToSQLTransformer(BaseTreeTransformer):
             return str(arg.value)
         return str(arg)
 
-    # def LessThanNode(self, arg):
-    #     return self.column_name + " > " + self.token_converter(arg)
 
-    # def GreaterThanNode(self, arg):
-    #     return self.column_name + " < " + self.token_converter(arg)
-
-    # def LessThanEqNode(self, arg):
-    #     return self.column_name + " >= " + self.token_converter(arg)
-
-    # def GreaterThanEqNode(self, arg):
-    #     return self.column_name + " <= " + self.token_converter(arg)
-
-    # def ContainsNode(self, arg):
-    #     return self.column_name + " = " + self.token_converter(arg)
-
-    # def ElementOfNode(self, arg):
-    #     return self.column_name + " IN " + self.token_converter(arg)
-
-    # def EqualsNode(self, arg):
-    #     return self.column_name + " = " + self.token_converter(arg)
-
-    # @staticmethod
-    # def NotNode(children):
-    #     assert len(children) == 1
-    #     return "NOT (" + children[0] + ")"
-
-    # @staticmethod
-    # def AndNode(children):
-    #     return "(" + reduce((lambda x, y: x + " AND " + y), children) + ")"
-
-    # @staticmethod
-    # def OrNode(children):
-    #     return "(" + reduce((lambda x, y: x + " OR " + y), children) + ")"
-
-
-# class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
-#     """I don't know what this class does. Please edit if you do."""
-
-#     def ContainsNode(self, arg):
-#         return (
-#             "array_contains("
-#             + self.column_name
-#             + ", "
-#             + self.token_converter(arg)
-#             + ")"
-#         )
-
-#     def ElementOfNode(self, arg):
-#         if not arg:
-#             return self.column_name + " IS NULL"
-#         return (
-#             self.column_name
-#             + " IN ("
-#             + ",".join([self.token_converter(a) for a in arg])
-#             + ")"
-#         )
-
-#     def EqualsNode(self, arg):
-#         arg = [self.token_converter(a) for a in arg]
-#         return (
-#             "concat_ws('|',"
-#             + self.column_name
-#             + ")"
-#             + " = concat_ws('|', array("
-#             + reduce((lambda x, y: x + ", " + y), arg)
-#             + "))"
-#         )
-
-
-def get_bit_and_str(arg1: Any, arg2: Any, use_bit_and_function: bool) -> str:
+def get_bit_and_str(
+    arg1: Any, arg2: Any, *,
+    use_bit_and_function: bool,
+) -> str:
     if use_bit_and_function:
         return f"BITAND({arg1}, {arg2})"
     return f"({arg1} & {arg2})"
@@ -456,37 +325,21 @@ def get_bit_and_str(arg1: Any, arg2: Any, use_bit_and_function: bool) -> str:
 
 class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
     """I don't know what this class does. Please edit if you do."""
+    # pylint: disable=invalid-name
 
-    def __init__(self, column_name: str, use_bit_and_function: bool = True):
+    def __init__(
+        self, column_name: str, *,
+        use_bit_and_function: bool = True,
+    ):
         super().__init__(column_name)
         self.use_bit_and_function = use_bit_and_function
 
     def ContainsNode(self, arg: Any) -> str:
         converted_token = self.token_converter(arg)
-        bit_op = get_bit_and_str(self.column_name, converted_token,
-                                 self.use_bit_and_function)
+        bit_op = get_bit_and_str(
+            self.column_name, converted_token,
+            use_bit_and_function=self.use_bit_and_function)
         return f"{bit_op} != 0"
-
-    # def LessThanNode(self, arg):
-    #     raise NotImplementedError("unexpected bitwise query")
-
-    # def GreaterThanNode(self, arg):
-    #     raise NotImplementedError("unexpected bitwise query")
-
-    # def LessThanEqNode(self, arg):
-    #     raise NotImplementedError("unexpected bitwise query")
-
-    # def GreaterThanEqNode(self, arg):
-    #     raise NotImplementedError("unexpected bitwise query")
-
-    # def ElementOfNode(self, arg):
-    #     converted_token = self.token_converter(arg)
-    #     bit_op = get_bit_and_str(self.column_name, converted_token,
-    #                              self.use_bit_and_function)
-    #     return f"{bit_op} != 0"
-
-    # def EqualsNode(self, arg):
-    #     return self.column_name + " = " + self.token_converter(arg)
 
     @staticmethod
     def NotNode(children: list[str]) -> str:
@@ -495,41 +348,11 @@ class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
 
     @staticmethod
     def AndNode(children: list[str]) -> str:
-        res = reduce(lambda x, y: f"({x}) AND ({y})", children)
-        return res
+        return reduce(lambda x, y: f"({x}) AND ({y})", children)
 
     @staticmethod
     def OrNode(children: list[str]) -> str:
-        res = reduce(lambda x, y: f"({x}) OR ({y})", children)
-        return res
-
-
-# class StringQueryToTreeTransformerWrapper:
-#     """No idea what this is supposed to do. Please edit."""
-
-#     def __init__(self, parser=PARSER, token_converter=None):
-#         self.parser = parser
-#         self.transformer = StringQueryToTreeTransformer(
-#             parser, token_converter
-#         )
-
-#     def parse(self, expression):
-#         return self.parser.parse(expression)
-
-#     def transform(self, tree):
-#         return self.transformer.transform(tree)
-
-#     def parse_and_transform(self, expression):
-#         return self.transform(self.parse(expression))
-
-
-# class StringListQueryToTreeTransformer:
-#     """No idea what this is supposed to do. Please edit."""
-
-#     @staticmethod
-#     def parse_and_transform(expression):
-#         assert isinstance(expression, list)
-#         return ElementOfNode(expression)
+        return reduce(lambda x, y: f"({x}) OR ({y})", children)
 
 
 class BitwiseTreeTransformer(Interpreter):
@@ -540,21 +363,6 @@ class BitwiseTreeTransformer(Interpreter):
         super().__init__()
         self.parser = PARSER
         self.token_converter = token_converter
-
-    # def less_than(self, *args):
-    #     raise NotImplementedError()
-
-    # def more_than(self, *args):
-    #     raise NotImplementedError()
-
-    # def less_than_eq(self, *args):
-    #     raise NotImplementedError()
-
-    # def more_than_eq(self, *args):
-    #     raise NotImplementedError()
-
-    # def eq(self, *args):
-    #     raise NotImplementedError()
 
     def arg(self, *args: QNode) -> QNode:
         return ContainsNode(args[0])
@@ -571,16 +379,6 @@ class BitwiseTreeTransformer(Interpreter):
     def logical_or(self, *args: QNode) -> QNode:
         return OrNode(args)
 
-    # def start(self, *args):
-    #     assert len(args) == 1
-    #     return args[0]
-
-    # def any(self, *args):
-    #     return OrNode(args)
-
-    # def all(self, *args):
-    #     return AndNode(args)
-
 
 class QueryTransformerMatcher(BaseQueryTransformerMatcher):
     """No idea what this is supposed to do. Please edit."""
@@ -588,10 +386,10 @@ class QueryTransformerMatcher(BaseQueryTransformerMatcher):
     def __init__(
         self, parser: Lark = PARSER,
         token_converter: Callable[[Any], Any] | None = None,
-        transformer2: BaseTreeTransformer = QueryTreeToLambdaTransformer(),
+        transformer2: BaseTreeTransformer | None = None,
     ):
         super().__init__(parser, token_converter)
-        self.transformer2 = transformer2
+        self.transformer2 = transformer2 or QueryTreeToLambdaTransformer()
 
     def transform_tree_to_matcher(self, tree: QNode) -> Matcher:
         matcher = self.transformer2.transform(tree)
@@ -601,6 +399,9 @@ class QueryTransformerMatcher(BaseQueryTransformerMatcher):
 role_query = QueryTransformerMatcher(token_converter=roles_converter)
 
 sex_query = QueryTransformerMatcher(token_converter=sex_converter)
+
+affected_status_query = QueryTransformerMatcher(
+    token_converter=affected_status_converter)
 
 inheritance_query = QueryTransformerMatcher(
     token_converter=inheritance_converter,

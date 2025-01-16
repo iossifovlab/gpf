@@ -18,14 +18,12 @@ RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 logger = logging.getLogger(__name__)
 
 
-class QueryVariantsBase(abc.ABC):
-    """Base class variants' query interface."""
+class QueryVariants(abc.ABC):
+    """Abstract class for querying variants interface."""
 
-    RUNNER_CLASS: type[QueryRunner]
-
-    def __init__(self, families: FamiliesData) -> None:
-        self.families = families
-        self.serializer = VariantsDataSerializer.build_serializer()
+    @abc.abstractmethod
+    def has_affected_status_queries(self) -> bool:
+        """Return True if the storage supports affected status queries."""
 
     @abc.abstractmethod
     def build_summary_variants_query_runner(
@@ -41,7 +39,7 @@ class QueryVariantsBase(abc.ABC):
         return_unknown: bool | None = None,
         limit: int | None = None,
         **kwargs: Any,
-    ) -> QueryRunner:
+    ) -> QueryRunner | None:
         """Create query runner for searching summary variants."""
 
     @abc.abstractmethod
@@ -72,6 +70,7 @@ class QueryVariantsBase(abc.ABC):
         inheritance: list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
@@ -81,7 +80,7 @@ class QueryVariantsBase(abc.ABC):
         limit: int | None = None,
         study_filters: list[str] | None = None,
         **kwargs: Any,
-    ) -> QueryRunner:
+    ) -> QueryRunner | None:
         # pylint: disable=too-many-arguments
         """Create a query runner for searching family variants."""
 
@@ -96,6 +95,7 @@ class QueryVariantsBase(abc.ABC):
         inheritance: list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
@@ -107,6 +107,20 @@ class QueryVariantsBase(abc.ABC):
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
         """Execute the family variants query and yields family variants."""
+
+
+class QueryVariantsBase(QueryVariants):
+    """Base class variants for Schema2 query interface."""
+
+    RUNNER_CLASS: type[QueryRunner]
+
+    def __init__(self, families: FamiliesData) -> None:
+        self.families = families
+        self.serializer = VariantsDataSerializer.build_serializer()
+
+    def has_affected_status_queries(self):
+        """Schema2 do support affected status queries."""
+        return True
 
     def deserialize_summary_variant(
         self, sv_data: bytes,

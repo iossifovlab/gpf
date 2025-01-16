@@ -25,6 +25,7 @@ from dae.person_sets import (
     PSCQuery,
     parse_person_set_collections_study_config,
 )
+from dae.query_variants.base_query_variants import QueryVariantsBase
 from dae.query_variants.query_runners import QueryResult
 from dae.utils.regions import Region
 from dae.variants.attributes import Role
@@ -190,12 +191,13 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
-        family_ids: Iterable[str] | None = None,
-        person_ids: Iterable[str] | None = None,
+        family_ids: list[str] | None = None,
+        person_ids: list[str] | None = None,
         person_set_collection: PSCQuery | None = None,
         inheritance: str | list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: list[tuple] | None = None,
         ultra_rare: bool | None = None,
@@ -203,7 +205,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        study_filters: Iterable[str] | None = None,
+        study_filters: list[str] | None = None,
         **kwargs: Any,
     ) -> QueryResult | None:
         """Build a query result."""
@@ -269,10 +271,13 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     genes=genes,
                     effect_types=effect_types,
                     family_ids=family_ids,
-                    person_ids=query_person_ids,
-                    inheritance=inheritance,
+                    person_ids=None if query_person_ids is None
+                    else list(query_person_ids),
+                    inheritance=None if inheritance is None
+                    else list(inheritance),
                     roles=roles,
                     sexes=sexes,
+                    affected_statuses=affected_statuses,
                     variant_type=variant_type,
                     real_attr_filter=real_attr_filter,
                     ultra_rare=ultra_rare,
@@ -282,7 +287,6 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     limit=limit,
                     **kwargs,
                 )
-            runner.set_study_id(genotype_study.study_id)
 
             if runner is None:
                 logger.debug(
@@ -290,7 +294,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     genotype_study.study_id)
                 continue
 
-            runner.study_id = genotype_study.study_id
+            runner.set_study_id(genotype_study.study_id)
             logger.debug("runner created")
 
             study_name = genotype_study.name
@@ -311,12 +315,13 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
-        family_ids: Iterable[str] | None = None,
-        person_ids: Iterable[str] | None = None,
+        family_ids: list[str] | None = None,
+        person_ids: list[str] | None = None,
         person_set_collection: PSCQuery | None = None,
         inheritance: str | list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: list[tuple] | None = None,
         ultra_rare: bool | None = None,
@@ -324,11 +329,13 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        study_filters: Iterable[str] | None = None,
+        study_filters: list[str] | None = None,
         unique_family_variants: bool = True,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         """Query and return generator containing variants."""
+        if isinstance(inheritance, str):
+            inheritance = [inheritance]
         result = self.query_result_variants(
             regions=regions,
             genes=genes,
@@ -339,6 +346,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
@@ -423,7 +431,9 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     limit=limit,
                     **kwargs,
                 )
-            runner.study_id = genotype_study.study_id
+            if runner is None:
+                continue
+            runner.set_study_id(genotype_study.study_id)
             runners.append(runner)
 
         if len(runners) == 0:
@@ -806,7 +816,7 @@ class GenotypeDataGroup(GenotypeData):
 class GenotypeDataStudy(GenotypeData):
     """Represents a singular genotype data study."""
 
-    def __init__(self, config: Box, backend: Any):
+    def __init__(self, config: Box, backend: QueryVariantsBase):
         super().__init__(config, [self])
         self._backend = backend
         self. _person_set_collections = self._build_person_set_collections(
@@ -817,7 +827,7 @@ class GenotypeDataStudy(GenotypeData):
         self.is_remote = False
 
     @property
-    def backend(self) -> Any:
+    def backend(self) -> QueryVariantsBase:
         return self._backend
 
     @property

@@ -23,6 +23,7 @@ from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
 from dae.query_variants.attributes_query import (
     QueryTreeToSQLBitwiseTransformer,
+    affected_status_query,
     role_query,
     sex_query,
 )
@@ -255,6 +256,27 @@ class QueryBuilderBase:
         with duckdb.connect(":memory:") as con:
             query = QueryBuilderBase.build_sexes_query(
                 sexes_query, str(value))
+            res = con.execute(f"SELECT {query}").fetchall()
+            assert len(res) == 1
+            assert len(res[0]) == 1
+
+            return cast(bool, res[0][0])
+
+    @staticmethod
+    def build_statuses_query(statuses_query: str, attr: str) -> str:
+        """Build affected status query."""
+        parsed = affected_status_query.transform_query_string_to_tree(
+            statuses_query)
+        transformer = QueryTreeToSQLBitwiseTransformer(
+            attr, use_bit_and_function=False)
+        return cast(str, transformer.transform(parsed))
+
+    @staticmethod
+    def check_statuses_query_value(statuses_query: str, value: int) -> bool:
+        """Check if value matches a given affected statuses query."""
+        with duckdb.connect(":memory:") as con:
+            query = QueryBuilderBase.build_statuses_query(
+                statuses_query, str(value))
             res = con.execute(f"SELECT {query}").fetchall()
             assert len(res) == 1
             assert len(res[0]) == 1
@@ -869,6 +891,14 @@ class SqlQueryBuilder(QueryBuilderBase):
                 sexes_query, "fa.allele_in_sexes"))
 
     @staticmethod
+    def statuses(
+        statuses_query: str,
+    ) -> Condition:
+        return condition(
+            SqlQueryBuilder.build_statuses_query(
+                statuses_query, "fa.allele_in_statuses"))
+
+    @staticmethod
     def inheritance(
         inheritance_query: str | Sequence[str],
     ) -> Condition:
@@ -912,6 +942,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         inheritance: str | Sequence[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
     ) -> Select:
         """Build a family subclause query."""
         query = self.family_base()
@@ -923,6 +954,9 @@ class SqlQueryBuilder(QueryBuilderBase):
             query = query.where(clause)
         if sexes is not None:
             clause = self.sexes(sexes)
+            query = query.where(clause)
+        if affected_statuses is not None:
+            clause = self.statuses(affected_statuses)
             query = query.where(clause)
         if family_ids is not None or person_ids is not None:
             if person_ids is not None:
@@ -1134,6 +1168,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         inheritance: Sequence[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
@@ -1161,6 +1196,7 @@ class SqlQueryBuilder(QueryBuilderBase):
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_statuses=affected_statuses,
         )
 
         batched_heuristics = self.calc_batched_heuristics(

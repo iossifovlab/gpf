@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
-from sqlglot import diff, exp, parse_one, table
+from sqlglot import diff, exp, parse_one
 from sqlglot.diff import Keep
 from sqlglot.executor import execute
 from sqlglot.expressions import replace_placeholders
@@ -92,7 +92,7 @@ PEDIGREE_SCHEMA = {
 }
 
 
-@pytest.fixture()
+@pytest.fixture
 def sql_schema() -> Schema:
     return ensure_schema(
         {
@@ -103,7 +103,7 @@ def sql_schema() -> Schema:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def sql_builder(
     sql_schema: Schema,
     t4c8_genes: GeneModels,
@@ -138,26 +138,6 @@ def sql_equal(
         0 if isinstance(e, Keep) else 1
         for e in edit
     ) == 0
-
-
-def test_summary_simple(sql_builder: SqlQueryBuilder) -> None:
-    assert sql_builder is not None
-    query = sql_builder.summary_base()
-    assert query is not None
-
-    assert query.sql(pretty=False) == (
-            "SELECT * FROM summary_table AS sa"
-        )
-
-    t = query.find(exp.Table)
-    assert t is not None
-    assert t.name == "summary_table"
-    assert t.alias == "sa"
-
-    t.replace(table("summary2"))
-    assert query.sql(pretty=False) == (
-            "SELECT * FROM summary2"
-        )
 
 
 def test_summary_replace_table(sql_builder: SqlQueryBuilder) -> None:
@@ -513,4 +493,58 @@ def test_check_inheritance_denovo_only(
     sql_builder: SqlQueryBuilder,
 ) -> None:
     result = sql_builder.check_inheritance_denovo_only(inheritance)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "statuses_query,value,expected", [
+        ("affected", 1, False),
+        ("affected", 2, True),
+        ("affected", 3, True),
+        ("affected and unaffected", 1, False),
+        ("affected or unaffected", 2, True),
+        ("affected and unaffected", 3, True),
+        ("all(affected, unaffected)", 1, False),
+        ("any(affected, unaffected)", 2, True),
+        ("all(affected, unaffected)", 3, True),
+        ("unspecified", 0, False),
+        ("unspecified", 4, True),
+        ("all(affected, unspecified)", 4, False),
+        ("any(affected, unspecified)", 4, True),
+        ("all(affected, unspecified)", 6, True),
+    ])
+def test_check_statuses_query_values(
+    statuses_query: str,
+    value: int,
+    expected: bool,  # noqa: FBT001
+    sql_builder: SqlQueryBuilder,
+) -> None:
+    result = sql_builder.check_statuses_query_value(statuses_query, value)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "sexes_query,value,expected", [
+        ("male", 1, True),
+        ("male", 2, False),
+        ("male", 3, True),
+        ("male and female", 1, False),
+        ("male or female", 2, True),
+        ("male and female", 3, True),
+        ("all(male, female)", 1, False),
+        ("any(male, female)", 2, True),
+        ("all(male, female)", 3, True),
+        ("unspecified", 0, False),
+        ("unspecified", 4, True),
+        ("all(male, unspecified)", 4, False),
+        ("any(male, unspecified)", 4, True),
+        ("all(male, unspecified)", 5, True),
+    ])
+def test_check_sexes_query_values(
+    sexes_query: str,
+    value: int,
+    expected: bool,  # noqa: FBT001
+    sql_builder: SqlQueryBuilder,
+) -> None:
+    result = sql_builder.check_sexes_query_value(sexes_query, value)
     assert result == expected
