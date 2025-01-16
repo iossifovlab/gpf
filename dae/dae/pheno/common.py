@@ -6,6 +6,8 @@ from pydantic import BaseModel, ConfigDict
 
 
 class RankRange(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     min_rank: int | None = None
     max_rank: int | None = None
 
@@ -26,6 +28,9 @@ class InferenceConfig(BaseModel):
 
 
 class DataDictionaryConfig(BaseModel):
+    """Pydantic model for data dictionary config entries."""
+    model_config = ConfigDict(extra="forbid")
+
     path: str
     instrument: str | None = None
     delimiter: str = "\t"
@@ -35,6 +40,8 @@ class DataDictionaryConfig(BaseModel):
 
 
 class MeasureDescriptionsConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     files: list[DataDictionaryConfig] | None = None
 
     # {Instrument -> {Measure -> Description}}
@@ -42,6 +49,8 @@ class MeasureDescriptionsConfig(BaseModel):
 
 
 class RegressionMeasure(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     instrument_name: str
     measure_names: list[str]
     jitter: float
@@ -49,10 +58,14 @@ class RegressionMeasure(BaseModel):
 
 
 class StudyConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     regressions: str | dict[str, RegressionMeasure] | None = None
 
 
 class InstrumentConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     path: str
     instrument: str | None = None
     delimiter: str | None = None
@@ -61,6 +74,8 @@ class InstrumentConfig(BaseModel):
 
 class PhenoImportConfig(BaseModel):
     """Pheno import config."""
+    model_config = ConfigDict(extra="forbid")
+
     id: str
     input_dir: str
     output_dir: str
