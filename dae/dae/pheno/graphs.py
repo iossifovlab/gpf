@@ -74,17 +74,6 @@ class GraphColumn:
         return GraphColumn(label, roles, status, df_roles_status)
 
 
-def names(col1, col2):
-    name1 = col1.split(".")[-1]
-    name2 = col2.split(".")[-1]
-    return (name1, name2)
-
-
-def male_female_colors():
-    [color_male, color_female] = gender_palette()
-    return color_male, color_female
-
-
 def male_female_legend(color_male, color_female, ax=None):
     """Consturct a legend for female graph."""
     if ax is None:
@@ -108,7 +97,8 @@ def draw_linregres(df, col1, col2, jitter: int | None = None, ax=None):
     dmale = df[df.sex == Sex.male]
     dfemale = df[df.sex == Sex.female]
 
-    name1, name2 = names(col1, col2)
+    name1 = col1.split(".")[-1]
+    name2 = col2.split(".")[-1]
     ax.set_xlabel(name1)
     ax.set_ylabel(name2)
 
@@ -173,29 +163,6 @@ def draw_linregres(df, col1, col2, jitter: int | None = None, ax=None):
     return res_male, res_female
 
 
-def draw_distribution(df, measure_id, ax=None):
-    """Draw measure distribution."""
-    if ax is None:
-        ax = plt.gca()
-
-    color_male, color_female = male_female_colors()
-    ax.hist(
-        [
-            df[df.sex == Sex.female][measure_id],
-            df[df.sex == Sex.male][measure_id],
-        ],
-        color=[color_female, color_male],
-        stacked=True,
-        bins=20,
-        normed=False,
-    )
-    male_female_legend(color_male, color_female, ax)
-
-    ax.set_xlabel(measure_id)
-    ax.set_ylabel("count")
-    plt.tight_layout()
-
-
 def column_counts(column):
     """Collect counts for a graph column."""
     counts = {
@@ -219,13 +186,11 @@ def role_labels(ordered_columns):
 
 
 def gender_palette_light():
-    palette = diverging_palette(240, 10, s=80, l=77, n=2)
-    return palette
+    return diverging_palette(240, 10, s=80, l=77, n=2)
 
 
 def gender_palette():
-    palette = diverging_palette(240, 10, s=80, l=50, n=2)
-    return palette
+    return diverging_palette(240, 10, s=80, l=50, n=2)
 
 
 def set_figure_size(figure, x_count):
@@ -366,7 +331,7 @@ def draw_categorical_violin_distribution(
 
     df = df.copy()
 
-    color_male, color_female = male_female_colors()
+    color_male, color_female = gender_palette()
 
     numerical_measure_name = measure_id + "_numerical"
     if not numerical_categories:
