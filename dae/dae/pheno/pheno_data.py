@@ -151,23 +151,6 @@ class Measure:
 
         return mes
 
-    @classmethod
-    def from_json(cls, json: dict[str, Any]) -> Measure:
-        """Create `Measure` object from a JSON representation."""
-        assert json["measureType"] is not None
-
-        mes = Measure(json["measureId"], json["measureName"])
-        mes.instrument_name = json["instrumentName"]
-        mes.measure_name = json["measureName"]
-        mes.measure_type = MeasureType.from_str(json["measureType"])
-        mes.description = json["description"]
-        mes.default_filter = json["defaultFilter"]
-        mes.values_domain = json.get("valuesDomain")
-        mes.min_value = json.get("minValue")
-        mes.max_value = json.get("maxValue")
-
-        return mes
-
     def to_json(self) -> dict[str, Any]:
         """Return measure description in JSON freindly format."""
         result: dict[str, Any] = {}
@@ -487,20 +470,6 @@ class PhenotypeStudy(PhenotypeData):
 
         return instruments
 
-    def _build_default_filter_clause(
-        self, measure: Measure, default_filter: str,
-    ) -> str | None:
-        if default_filter == "skip" or measure.default_filter is None:
-            return None
-        if default_filter == "apply":
-            return f"value {measure.default_filter}"
-        if default_filter == "invert":
-            return f"NOT (value {measure.default_filter})"
-
-        raise ValueError(
-            f"bad default_filter value: {default_filter}",
-        )
-
     def get_people_measure_values(
         self,
         measure_ids: list[str],
@@ -525,9 +494,6 @@ class PhenotypeStudy(PhenotypeData):
 
     def get_regressions(self) -> dict[str, Any]:
         return self.browser.regression_display_names_with_ids
-
-    def get_regression_ids(self) -> list[str]:
-        return self.browser.regression_ids
 
     def _get_pheno_images_base_url(self) -> str | None:
         if self.config is None:
@@ -563,7 +529,7 @@ class PhenotypeStudy(PhenotypeData):
                 cast(MeasureType, measure["measure_type"]).name
 
             measure["regressions"] = []
-            for reg_id in self.get_regression_ids():
+            for reg_id in self.browser.regression_ids:
                 reg = {
                     "regression_id": reg_id,
                     "measure_id": measure["measure_id"],
