@@ -28,7 +28,7 @@ export class GeneProfilesService {
           if (Object.keys(res).length === 0) {
             return;
           }
-          return plainToClass(GeneProfilesSingleViewConfig, res);
+          return GeneProfilesSingleViewConfig.fromJson(res);
         })
       );
   }

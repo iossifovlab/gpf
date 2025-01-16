@@ -9,6 +9,101 @@ import {
 import { take } from 'rxjs/operators';
 import { provideHttpClient } from '@angular/common/http';
 
+const mockConfigJson = {
+  defaultDataset: 'ALL_genotypes',
+  geneLinks: [
+    {
+      name: 'Gene Browser',
+      url: 'datasets/ALL_genotypes/gene-browser/{gene}'
+    }
+  ],
+  order: [
+    {
+      section: null,
+      id: 'autism_gene_sets_rank'
+    },
+    {
+      section: 'genomicScores',
+      id: 'autism_scores'
+    },
+    {
+      section: 'datasets',
+      id: 'sequencing_de_novo'
+    }
+  ],
+  geneSets: [
+    {
+      category: 'autism_gene_sets',
+      displayName: 'Autism Gene Sets',
+      sets: [
+        {
+          setId: 'SFARI ALL',
+          collectionId: 'sfari',
+          defaultVisible: true
+        }
+      ],
+      defaultVisible: true
+    }
+  ],
+  genomicScores: [
+    {
+      category: 'autism_scores',
+      displayName: 'Autism Gene Scores',
+      scores: [
+        {
+          scoreName: 'SFARI gene score',
+          format: '%s',
+          defaultVisible: true
+        }
+      ],
+      defaultVisible: true
+    }
+  ],
+  datasets: [
+    {
+      id: 'sequencing_de_novo',
+      displayName: 'Sequencing de Novo',
+      defaultVisible: true,
+      statistics: [
+        {
+          id: 'denovo_lgds',
+          description: 'de Novo LGDs',
+          displayName: 'dn LGDs',
+          effects: [
+            'LGDs'
+          ],
+          category: 'denovo',
+          defaultVisible: true
+        }
+      ],
+      personSets: [
+        {
+          id: 'autism',
+          displayName: 'autism',
+          collectionId: 'phenotype',
+          description: '',
+          parentsCount: 0,
+          childrenCount: 21795,
+          statistics: [
+            {
+              id: 'denovo_lgds',
+              description: 'de Novo LGDs',
+              displayName: 'dn LGDs',
+              effects: [
+                'LGDs'
+              ],
+              category: 'denovo',
+              defaultVisible: true
+            }
+          ]
+        }
+      ]
+    },
+  ],
+  confDir: '/data',
+  pageSize: 50
+};
+
 describe('GeneProfilesService', () => {
   let service: GeneProfilesService;
 
@@ -26,14 +121,26 @@ describe('GeneProfilesService', () => {
 
   it('should get config', async() => {
     const getConfigSpy = jest.spyOn(service['http'], 'get');
-    getConfigSpy.mockReturnValue(of({ mockConfigProperty: 'mockConfigValue' }));
+    getConfigSpy.mockReturnValue(of(mockConfigJson));
 
     const resultConfig = service.getConfig();
 
     expect(getConfigSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['configUrl']);
-    const res = await lastValueFrom(resultConfig.pipe(take(1)));
-    expect(res['mockConfigProperty']).toBe('mockConfigValue');
-    expect(res).toBeInstanceOf(GeneProfilesSingleViewConfig);
+    const config = await lastValueFrom(resultConfig.pipe(take(1)));
+    expect(config).toBeInstanceOf(GeneProfilesSingleViewConfig);
+    expect(config.geneLinkTemplates[0]).toStrictEqual({
+      name: 'Gene Browser',
+      url: 'datasets/ALL_genotypes/gene-browser/{gene}'
+    });
+    expect(config.order[1].id).toBe('autism_scores');
+    expect(config.geneSets[0].displayName).toBe('Autism Gene Sets');
+    expect(config.geneSets[0].sets[0].setId).toBe('SFARI ALL');
+    expect(config.genomicScores[0].displayName).toBe('Autism Gene Scores');
+    expect(config.genomicScores[0].scores[0].scoreName).toBe('SFARI gene score');
+    expect(config.datasets[0].id).toBe('sequencing_de_novo');
+    expect(config.datasets[0].statistics[0].id).toBe('denovo_lgds');
+    expect(config.datasets[0].personSets[0].id).toBe('autism');
+    expect(config.datasets[0].personSets[0].statistics[0].id).toBe('denovo_lgds');
   });
 
   it('should get invalid config response', async() => {

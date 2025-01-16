@@ -268,7 +268,6 @@ describe('HomeComponent', () => {
   it('should open sinle view', () => {
     component.loadingFinished = true;
     component.content = [];
-    component.geneProfilesConfig = new GeneProfilesSingleViewConfig();
     fixture.detectChanges();
 
     let geneSymbols = 'CHD8';
@@ -287,7 +286,6 @@ describe('HomeComponent', () => {
   it('should not open sinle view', () => {
     component.loadingFinished = true;
     component.content = [];
-    component.geneProfilesConfig = new GeneProfilesSingleViewConfig();
     const getGeneSpy = jest.spyOn(mockGeneService, 'getGene');
 
     fixture.detectChanges();
@@ -301,7 +299,6 @@ describe('HomeComponent', () => {
 
     component.loadingFinished = true;
     component.content = [];
-    component.geneProfilesConfig = new GeneProfilesSingleViewConfig();
     fixture.detectChanges();
 
     let geneSymbols = '   ';
