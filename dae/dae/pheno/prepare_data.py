@@ -71,14 +71,9 @@ class PreparePhenoBrowserBase:
                 if "measure_names" in reg_data:
                     reg_data["measure_name"] = reg_data["measure_names"][0]
 
-    def load_measure(self, measure: Measure) -> pd.DataFrame:
-        return self.phenotype_data.get_people_measure_values_df(
-            [measure.measure_id],
-        )
-
     @staticmethod
     def _augment_measure_values_df(
-        phenotype_data: PhenotypeStudy | PhenotypeGroup,
+        phenotype_data: PhenotypeData,
         augment: Measure, augment_name: str,
         measure: Measure,
     ) -> pd.DataFrame | None:
@@ -150,7 +145,7 @@ class PreparePhenoBrowserBase:
 
     @classmethod
     def save_fig(
-            cls, pheno_id: str, images_dir: str, measure: Measure, suffix: str,
+        cls, pheno_id: str, images_dir: str, measure: Measure, suffix: str,
     ) -> tuple[str | None, str | None]:
         """Save measure figures."""
         if "/" in measure.measure_id:
@@ -172,7 +167,7 @@ class PreparePhenoBrowserBase:
     @classmethod
     def build_regression(
         cls,
-        phenotype_data: PhenotypeStudy | PhenotypeGroup,
+        phenotype_data: PhenotypeData,
         images_dir: str,
         dependent_measure: Measure,
         independent_measure: Measure,
@@ -290,18 +285,6 @@ class PreparePhenoBrowserBase:
             ) = cls.save_fig(pheno_id, images_dir, measure, "distribution")
 
         return res
-
-    def dump_browser_variable(self, var: dict[str, Any]) -> None:
-        """Print browser measure description."""
-        print("-------------------------------------------")
-        print(var["measure_id"])
-        print("-------------------------------------------")
-        print(f"instrument:  {var['instrument_name']}")
-        print(f"measure:     {var['measure_name']}")
-        print(f"type:        {var['measure_type']}")
-        print(f"description: {var['description']}")
-        print(f"domain:      {var['values_domain']}")
-        print("-------------------------------------------")
 
     def _get_measure_by_name(
         self, measure_name: str, instrument_name: str,
