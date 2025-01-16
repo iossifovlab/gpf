@@ -100,7 +100,7 @@ Import project configuration format
 
     # Optional. The contents of this section will be written to the output data's config file.
     study_config:
-      regression_config:
+      regressions:
         age:
           display_name: age
           instrument_name: pheno_common
