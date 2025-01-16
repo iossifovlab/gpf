@@ -199,6 +199,9 @@ def transform_cli_args(args: argparse.Namespace) -> PhenoImportConfig:
     result["pedigree"] = args.pedigree
     delattr(args, "pedigree")
 
+    result["person_column"] = args.person_column
+    delattr(args, "person_column")
+
     result["delimiter"] = "\t" if args.tab_separated else ","
     delattr(args, "tab_separated")
 
@@ -208,17 +211,15 @@ def transform_cli_args(args: argparse.Namespace) -> PhenoImportConfig:
     result["inference_config"] = args.inference_config
     delattr(args, "inference_config")
 
-    result["data_dictionary"] = {
-        "file": args.data_dictionary,
-    }
-    delattr(args, "data_dictionary")
+    if args.data_dictionary:
+        result["data_dictionary"] = {
+            "files": [{"path": args.data_dictionary}],
+        }
+        delattr(args, "data_dictionary")
 
     if args.regression:
         result["study_config"] = {"regressions": args.regression}
         delattr(args, "regression")
-
-    result["person_column"] = args.person_column
-    delattr(args, "person_column")
 
     return PhenoImportConfig.model_validate(result)
 
