@@ -24,17 +24,17 @@ export const setGenomicScores = createAction(
 );
 
 export const setGenomicScoresContinuous = createAction(
-  '[Genotype] Set score with continuous histogram data',
+  '[Genotype] Set genomic score with continuous histogram data',
   props<{score: string, rangeStart: number, rangeEnd: number}>()
 );
 
 export const setGenomicScoresCategorical = createAction(
-  '[Genotype] Set score with categorical histogram data',
+  '[Genotype] Set genomic score with categorical histogram data',
   props<{score: string, values: string[], categoricalView: CategoricalHistogramView}>()
 );
 
 export const removeGenomicScore = createAction(
-  '[Genotype] Remove score with histogram data',
+  '[Genotype] Remove genomic score with histogram data',
   props<{genomicScoreName: string}>()
 );
 
