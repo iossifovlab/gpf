@@ -10,7 +10,7 @@ from dae.person_sets import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def person_set_collection_config() -> dict:
     content = textwrap.dedent(
         """

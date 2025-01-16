@@ -8,6 +8,7 @@ sets based on what value they have in a given mapping.
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -334,6 +335,14 @@ class PersonSet:
             json["color"],
             persons,
         )
+
+
+@dataclass
+class PSCQuery:
+    """Person set collection query."""
+
+    psc_id: str
+    selected_person_sets: set[str]
 
 
 class PersonSetCollection:
@@ -727,10 +736,125 @@ class PersonSetCollection:
             return None
         return {fpid[1] for fpid in fpids}
 
+    def _pedigree_query_selected_person_sets(self, query):
+        selected_person_sets = set(query.selected_person_sets)
+        available_person_sets = set(self.person_sets.keys())
+        available_person_sets.add(self.default.id)
+        unknown = query.selected_person_sets.difference(
+            available_person_sets)
 
-@dataclass
-class PSCQuery:
-    """Person set collection query."""
+        if unknown:
+            logger.info(
+                "person set collection query contains unknown person sets: %s",
+                unknown)
+            selected_person_sets = selected_person_sets & available_person_sets
+        return selected_person_sets
 
-    psc_id: str
-    selected_person_sets: set[str]
+    def _pedigree_query_all_fields(self):
+        return [
+            source.source for source in self.config.sources
+        ]
+
+    def _pedigree_query_has_unsupported_fields(self) -> bool:
+        supported_fields = {"sex", "role", "status"}
+
+        unsupported_fields = set(
+            self._pedigree_query_all_fields()).difference(supported_fields)
+        if unsupported_fields:
+            logger.info(
+                "queries over pedigree field <%s> are not supported",
+                unsupported_fields)
+            return True
+        return False
+
+    def _pedigree_query_all_values(self) -> dict[str, list[str]]:
+        result = defaultdict(list)
+        for psc in self.config.domain:
+            for field, value in zip(
+                    self._pedigree_query_all_fields(),
+                    psc.values,
+                    strict=True):
+                result[field].append(value)
+        return result
+
+    def _pedigree_query_check_multi_field_multi_value(
+            self, result, default_result,
+        ) -> bool:
+        if len(result) + len(default_result) > 1:
+            multi_values_count = 0
+            for values in result.values():
+                if len(values) > 1:
+                    multi_values_count += 1
+            for values in default_result.values():
+                if len(values) > 1:
+                    multi_values_count += 1
+            return multi_values_count > 1
+
+        return False
+
+    def _pedigree_query_map_queries(
+        self, result_query: dict[str, str],
+    ) -> dict[str, str]:
+        field_to_query = {
+            "sex": "sexes",
+            "role": "roles",
+            "status": "affected_statuses",
+        }
+        return {
+            field_to_query[field]: query
+            for field, query in result_query.items()
+        }
+
+    def transform_pedigree_queries(
+        self, query: PSCQuery,
+    ) -> dict[str, str] | None:
+        """Transform person set collection query into query variants."""
+        if query.psc_id != self.id:
+            raise ValueError(
+                f"Query for PersonSetCollection {query.psc_id} "
+                f"on PersonSetCollection {self.id}")
+        if not self.is_pedigree_only():
+            return None
+        selected_person_sets = self._pedigree_query_selected_person_sets(query)
+        if not selected_person_sets:
+            return {}
+
+        if self._pedigree_query_has_unsupported_fields():
+            return None
+
+        result = defaultdict(set)
+        default_result = defaultdict(set)
+
+        for ps_id in selected_person_sets:
+            if ps_id == self.default.id:
+                # handle default person set
+                for field, values in self._pedigree_query_all_values().items():
+                    default_result[field].update(values)
+                continue
+            for field, value in zip(
+                    [s.source for s in self.config.sources],
+                    self.person_sets[ps_id].values,
+                    strict=True):
+                result[field].add(str(value))
+
+        # Since we alwayes do OR between queries on differenc fields we
+        # can't support fully queries that use multiple on multiple fields
+        if self._pedigree_query_check_multi_field_multi_value(
+                result, default_result):
+            return None
+
+        default_queries = {
+            field: " and ".join([f"(not {v})" for v in sorted(values)])
+            for field, values in default_result.items()
+        }
+        result_queries = {}
+        for field, values in result.items():
+            temp = f"any({','.join(sorted(values))})"
+            if field not in default_queries:
+                result_queries[field] = temp
+            else:
+                result_queries[field] = f"{temp} or ({default_queries[field]})"
+        for field, value in default_queries.items():
+            if field not in result_queries:
+                result_queries[field] = f"({value})"
+        return self._pedigree_query_map_queries(result_queries)

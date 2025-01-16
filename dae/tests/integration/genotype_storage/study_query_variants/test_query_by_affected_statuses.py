@@ -55,6 +55,7 @@ def imported_study(
         ("affected", 3),
         ("affected or unaffected", 4),
         ("affected and unaffected", 2),
+        ("(not affected) and (not unaffected) and (not unspecified)", 0),
     ],
 )
 def test_query_by_affected_statues(
