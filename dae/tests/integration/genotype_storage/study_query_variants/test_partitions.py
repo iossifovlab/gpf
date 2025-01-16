@@ -16,12 +16,12 @@ from dae.testing.foobar_import import foobar_gpf
 from dae.utils.regions import Region
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def imported_study(
-    tmp_path: pathlib.Path,
+    tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeData:
-    root_path = tmp_path
+    root_path = tmp_path_factory.mktemp("partitions_imported_study")
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(
         root_path / "gpf_instance",
