@@ -28,18 +28,18 @@ export const selectGeneScores =
   createFeatureSelector<GeneScoresState>('geneScores');
 
 export const setGeneScoreContinuous = createAction(
-  '[Genotype] Set score with continuous histogram data',
+  '[Genotype] Set gene score with continuous histogram data',
   props<{score: string, rangeStart: number, rangeEnd: number}>()
 );
 
 export const setGeneScoreCategorical = createAction(
-  '[Genotype] Set score with categorical histogram data',
+  '[Genotype] Set gene score with categorical histogram data',
 
   props<{score: string, values: string[], categoricalView: CategoricalHistogramView}>()
 );
 
 export const resetGeneScoresValues = createAction(
-  '[Genotype] Reset geneScores values'
+  '[Genotype] Reset gene scores values'
 );
 
 export const geneScoresReducer = createReducer(
