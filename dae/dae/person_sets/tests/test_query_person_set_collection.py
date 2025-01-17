@@ -31,7 +31,7 @@ def test_phenotype_psc_query(
 
 
 @pytest.mark.parametrize("query, count", [
-    (PSCQuery("status", {"affected", "unaffected", "unknown"}), None),
+    (PSCQuery("status", {"affected", "unaffected", "unknown"}), 9),
     (PSCQuery("status", {"affected"}), 5),
 ])
 def test_status_psc_query(

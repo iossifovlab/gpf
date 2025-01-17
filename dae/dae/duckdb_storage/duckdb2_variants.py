@@ -19,15 +19,15 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.query_variants.base_query_variants import QueryVariantsBase
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.query_variants.sql.schema2.sql_query_builder import (
+    CategoricalAttrFilterType,
     Db2Layout,
+    RealAttrFilterType,
     SqlQueryBuilder,
 )
 from dae.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
-
-RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 
 logger = logging.getLogger(__name__)
 
@@ -260,14 +260,21 @@ class DuckDb2Variants(QueryVariantsBase):
         effect_types: list[str] | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
         **kwargs: Any,
-    ) -> QueryRunner:
+    ) -> QueryRunner | None:
         """Create query runner for searching summary variants."""
+        if self.layout.summary is None:
+            logger.warning(
+                "no summary table defined in the layout: %s",
+                self.layout)
+            return None
+
         if limit is None or limit < 0:
             query_limit = None
             limit = -1
@@ -280,6 +287,7 @@ class DuckDb2Variants(QueryVariantsBase):
             effect_types=effect_types,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
@@ -318,6 +326,7 @@ class DuckDb2Variants(QueryVariantsBase):
         effect_types: list[str] | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
@@ -338,6 +347,7 @@ class DuckDb2Variants(QueryVariantsBase):
             effect_types=effect_types,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
@@ -345,6 +355,8 @@ class DuckDb2Variants(QueryVariantsBase):
             limit=query_limit,
             **kwargs,
         )
+        if runner is None:
+            return
 
         result = QueryResult(runners=[runner], limit=limit)
         result.start()
@@ -368,19 +380,26 @@ class DuckDb2Variants(QueryVariantsBase):
         inheritance: list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,
-    ) -> QueryRunner:
+    ) -> QueryRunner | None:
         # pylint: disable=too-many-arguments
         """Create a query runner for searching family variants."""
+        if self.layout.summary is None or self.layout.family is None:
+            logger.warning(
+                "no summary of family table defined in the layout: %s",
+                self.layout)
+            return None
+
         if limit is None or limit < 0:
             query_limit = None
             limit = -1
@@ -396,14 +415,15 @@ class DuckDb2Variants(QueryVariantsBase):
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=query_limit,
-            pedigree_fields=pedigree_fields,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
 
@@ -450,12 +470,12 @@ class DuckDb2Variants(QueryVariantsBase):
         sexes: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
@@ -477,14 +497,17 @@ class DuckDb2Variants(QueryVariantsBase):
             sexes=sexes,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=query_limit,
-            pedigree_fields=pedigree_fields,
             **kwargs,
         )
+        if runner is None:
+            return
+
         result = QueryResult(runners=[runner], limit=limit)
 
         result.start()

@@ -1,5 +1,4 @@
 from collections.abc import Iterable
-from typing import List
 
 from dae.utils.regions import Region
 from impala_storage.schema1.family_variants_query_builder import (
@@ -21,15 +20,16 @@ class ImpalaQueryDirector:
         self.query_builder = query_builder
 
     def build_query(
-            self,
-            regions: List[Region] | None = None,
-            genes: List[str] | None = None,
-            effect_types: List[str] | None = None,
+            self, *,
+            regions: list[Region] | None = None,
+            genes: list[str] | None = None,
+            effect_types: list[str] | None = None,
             family_ids: Iterable[str] | None = None,
             person_ids: Iterable[str] | None = None,
-            inheritance: List[str] | str | None = None,
+            inheritance: list[str] | str | None = None,
             roles: str | None = None,
             sexes: str | None = None,
+            affected_statuses: str | None = None,
             variant_type: str | None = None,
             real_attr_filter: RealAttrFilterType | None = None,
             ultra_rare: bool | None = None,
@@ -58,6 +58,7 @@ class ImpalaQueryDirector:
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,

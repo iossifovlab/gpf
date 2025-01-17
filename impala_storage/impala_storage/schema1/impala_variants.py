@@ -13,6 +13,7 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
+from dae.query_variants.base_query_variants import QueryVariants
 from dae.query_variants.query_runners import QueryResult
 from dae.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status
@@ -35,7 +36,7 @@ logger = logging.getLogger(__name__)
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 
 
-class ImpalaVariants:
+class ImpalaVariants(QueryVariants):
     # pylint: disable=too-many-instance-attributes
     """A backend implementing an impala backend."""
 
@@ -85,6 +86,10 @@ class ImpalaVariants:
             "rare_boundary": 0,
         }
         self._fetch_tblproperties()
+
+    def has_affected_status_queries(self):
+        """Schema1 does not support affected status queries."""
+        return False
 
     def connection(self) -> pool.PoolProxiedConnection:
         return self._impala_helpers.connection()
@@ -176,6 +181,7 @@ class ImpalaVariants:
         inheritance: list[str] | str | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
@@ -199,9 +205,11 @@ class ImpalaVariants:
             do_join = True
         query_builder = FamilyVariantsQueryBuilder(
             self.db, self.variants_table, self.pedigree_table,
-            self.schema, self.table_properties,
-            self.pedigree_schema,
-            self.families, gene_models=self.gene_models,
+            variants_schema=self.schema,
+            table_properties=self.table_properties,
+            pedigree_schema=self.pedigree_schema,
+            families=self.families,
+            gene_models=self.gene_models,
             do_join=do_join,
         )
         director = ImpalaQueryDirector(query_builder)
@@ -216,6 +224,7 @@ class ImpalaVariants:
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
@@ -245,6 +254,7 @@ class ImpalaVariants:
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,

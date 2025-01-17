@@ -16,12 +16,12 @@ from dae.testing.foobar_import import foobar_gpf
 from dae.utils.regions import Region
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def imported_study(
-    tmp_path: pathlib.Path,
+    tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeData:
-    root_path = tmp_path
+    root_path = tmp_path_factory.mktemp("partitions_imported_study")
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(
         root_path / "gpf_instance",
@@ -89,12 +89,12 @@ def imported_study(
     "family_ids,count",
     [
         (None, 8),
-        ({"f1"}, 5),
-        ({"f2"}, 3),
+        (["f1"], 5),
+        (["f2"], 3),
     ],
 )
 def test_query_family_id(
-    family_ids: set[str] | None, count: int,
+    family_ids: list[str] | None, count: int,
     imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(family_ids=family_ids))
@@ -105,17 +105,17 @@ def test_query_family_id(
     "person_ids,count",
     [
         (None, 8),
-        ({"m1"}, 2),
-        ({"d1"}, 3),
-        ({"p1"}, 4),
-        ({"s1"}, 2),
-        ({"m2"}, 3),
-        ({"d2"}, 2),
-        ({"p2"}, 2),
+        (["m1"], 2),
+        (["d1"], 3),
+        (["p1"], 4),
+        (["s1"], 2),
+        (["m2"], 3),
+        (["d2"], 2),
+        (["p2"], 2),
     ],
 )
 def test_query_person_id(
-    person_ids: set[str] | None, count: int, imported_study: GenotypeData,
+    person_ids: list[str] | None, count: int, imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(person_ids=person_ids))
     assert len(vs) == count
@@ -172,7 +172,7 @@ def test_query_complex(imported_study: GenotypeData) -> None:
         imported_study.
             query_variants(
                 effect_types=["noStart"],
-                person_ids={"s1"},
+                person_ids=["s1"],
                 frequency_filter=[("af_allele_freq", (10, 27))],
                 regions=[Region("bar", 3, 17)],
                 genes=["g2"],
@@ -210,7 +210,7 @@ def test_wdae_get_all_from_genotype_browser(
         inheritance=["not possible_denovo and not possible_omission",
                      "any(denovo,mendelian,missing,omission)"],
         real_attr_filter=[],
-        study_filters={"partitoned_vcf"},
+        study_filters=["partitoned_vcf"],
         inheritanceTypeFilter=[],
         studyTypes=["we", "wg", "tg"],
         familyTypes=["trio", "quad", "multigenerational", "simplex",

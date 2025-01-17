@@ -12,12 +12,13 @@ from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.alla_import import alla_gpf
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def dataset(
-    tmp_path: pathlib.Path,
+    tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeDataGroup:
-    root_path = tmp_path
+    root_path = tmp_path_factory.mktemp(
+        "test_dataset_query_by_person_set_collection")
     gpf_instance = alla_gpf(root_path, genotype_storage_factory(root_path))
 
     ped_path1 = setup_pedigree(
@@ -77,9 +78,9 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                         },
                     ],
                     "default": {
-                        "color": "#aaaaaa",
-                        "id": "unspecified",
-                        "name": "unspecified",
+                        "color": "#cccccc",
+                        "id": "unknown",
+                        "name": "unknown",
                     },
                     "domain": [
                         {
@@ -96,6 +97,14 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                             "name": "unaffected",
                             "values": [
                                 "unaffected",
+                            ],
+                        },
+                        {
+                            "color": "#aaaaaa",
+                            "id": "unspecified",
+                            "name": "unspecified",
+                            "values": [
+                                "unspecified",
                             ],
                         },
                     ],
@@ -122,9 +131,9 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                         },
                     ],
                     "default": {
-                        "color": "#aaaaaa",
-                        "id": "unspecified",
-                        "name": "unspecified",
+                        "color": "#cccccc",
+                        "id": "unknown",
+                        "name": "unknown",
                     },
                     "domain": [
                         {
@@ -143,7 +152,16 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                                 "unaffected",
                             ],
                         },
+                        {
+                            "color": "#aaaaaa",
+                            "id": "unspecified",
+                            "name": "unspecified",
+                            "values": [
+                                "unspecified",
+                            ],
+                        },
                     ],
+
                 },
                 "selected_person_set_collections": [
                     "phenotype",
@@ -170,17 +188,28 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                       name: developmental disorder
                       values:
                       - affected
+                    - color: 'ff0000'
+                      id: autism
+                      name: autism
+                      values:
+                      - affected
                     - color: '#ffffff'
                       id: unaffected
                       name: unaffected
                       values:
                       - unaffected
-                    default:
-                      color: '#aaaaaa'
+                    - color: '#aaaaaa'
                       id: unspecified
                       name: unspecified
+                      values:
+                      - unspecified
+                    default:
+                      color: '#cccccc'
+                      id: unknown
+                      name: unknown
                 selected_person_set_collections:
-                - phenotype"""))
+                - phenotype"""),
+    )
 
 
 def test_dataset_build_person_set_collection(
@@ -195,13 +224,13 @@ def test_dataset_build_person_set_collection(
     assert len(psc.person_sets["unaffected"]) == 4
 
     all_persons = dataset.families.persons
-    person = all_persons[("f1", "ch1")]
+    person = all_persons["f1", "ch1"]
     assert person.get_attr("phenotype") == "developmental_disorder"
 
-    person = all_persons[("f2", "ch2")]
+    person = all_persons["f2", "ch2"]
     assert person.get_attr("phenotype") == "autism"
 
-    person = all_persons[("f1", "dad1")]
+    person = all_persons["f1", "dad1"]
     assert person.get_attr("phenotype") == "unaffected"
 
 
@@ -247,7 +276,7 @@ def test_query_by_person_ids(
 )
 def test_query_by_person_set_coolection(
     dataset: GenotypeDataGroup,
-    person_set_collection: tuple[str, list[str]] | None,
+    person_set_collection: PSCQuery | None,
     count: int,
 ) -> None:
     vs = list(dataset.query_variants(

@@ -21,7 +21,7 @@ def impala_storage() -> ImpalaGenotypeStorage:
         "id": "genotype_impala",
         "storage_type": "impala",
         "hdfs": {
-            "base_dir": "/tmp/test_data",
+            "base_dir": "/tmp/test_data",  # noqa: S108
             "host": "localhost",
             "port": 8020,
             "replication": 1,
@@ -44,8 +44,7 @@ def t4c8_instance(
     impala_storage: ImpalaGenotypeStorage,
 ) -> GPFInstance:
     root_path = tmp_path_factory.mktemp("t4c8_instance")
-    gpf_instance = t4c8_gpf(root_path, impala_storage)
-    return gpf_instance
+    return t4c8_gpf(root_path, impala_storage)
 
 
 @pytest.fixture(scope="module")
@@ -104,13 +103,12 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
         },
     }
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
         t4c8_instance,
         project_config_update=project_config_update,
     )
-    return study
 
 
 @pytest.fixture(scope="module")
@@ -128,18 +126,17 @@ def impala_query_builder(
     impala_variants: ImpalaVariants,
 ) -> FamilyVariantsQueryBuilder:
     assert impala_variants.schema is not None
-    query_builder = FamilyVariantsQueryBuilder(
+    return FamilyVariantsQueryBuilder(
         impala_variants.db,
         impala_variants.variants_table,
         impala_variants.pedigree_table,
-        impala_variants.schema,
-        impala_variants.table_properties,
-        impala_variants.pedigree_schema,
-        impala_variants.families,
+        variants_schema=impala_variants.schema,
+        table_properties=impala_variants.table_properties,
+        pedigree_schema=impala_variants.pedigree_schema,
+        families=impala_variants.families,
         gene_models=impala_variants.gene_models,
         do_join=True,
     )
-    return query_builder
 
 
 def test_build_frequency_bin_heuristic(

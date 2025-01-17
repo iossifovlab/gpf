@@ -5,6 +5,7 @@ from typing import Any, cast
 from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.annotation.context import CLIAnnotationContext
+from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from dae.duckdb_storage.duckdb_genotype_storage import (
     DuckDbParquetStorage,
 )
@@ -12,6 +13,7 @@ from dae.duckdb_storage.duckdb_storage_helpers import (
     PARQUET_SCAN,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.parquet_storage.storage import ParquetLoaderVariants
 from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage
 from dae.studies.study import GenotypeData, GenotypeDataStudy
 from dae.task_graph.cli_tools import TaskGraphCli
@@ -86,9 +88,10 @@ class ReannotateInstanceTool(AnnotationTool):
         )
         backend = study.backend
         if storage.storage_type == "duckdb_parquet":
-            raw = backend.fetch_annotation()
+            raw = cast(DuckDb2Variants, backend).fetch_annotation()
         elif storage.storage_type == "parquet":
-            raw = backend.loader.meta["annotation_pipeline"]
+            meta = cast(ParquetLoaderVariants, backend).loader.meta
+            raw = meta["annotation_pipeline"]
         else:
             raise ValueError(f"Invalid storage type {storage.storage_type}")
         raw = raw.strip()

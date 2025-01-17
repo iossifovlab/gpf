@@ -20,14 +20,13 @@ g2        tx3  bar   -      3       20    3        15     1         3          1
 
 
 def foobar_genes(root_path: pathlib.Path) -> GeneModels:
-    genes = setup_gene_models(
+    return setup_gene_models(
         root_path / "foobar_genes" / "genes.txt",
         GMM_CONTENT, fileformat="refflat")
-    return genes
 
 
 def foobar_genome(root_path: pathlib.Path) -> ReferenceGenome:
-    genome = setup_genome(
+    return setup_genome(
         root_path / "foobar_genome" / "chrAll.fa",
         """
             >foo
@@ -40,7 +39,6 @@ def foobar_genome(root_path: pathlib.Path) -> ReferenceGenome:
             NN
         """,
     )
-    return genome
 
 
 def foobar_gpf(

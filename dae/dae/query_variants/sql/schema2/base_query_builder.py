@@ -15,6 +15,7 @@ from dae.query_variants.attributes_query import (
     QueryTransformerMatcher,
     QueryTreeToSQLBitwiseTransformer,
     TreeNode,
+    affected_status_query,
     inheritance_query,
     role_query,
     sex_query,
@@ -29,6 +30,7 @@ from dae.variants.attributes import Inheritance
 
 logger = logging.getLogger(__name__)
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
+CategoricalAttrFilterType = list[tuple[str, list[str] | list[int] | None]]
 
 
 class Dialect:
@@ -57,6 +59,10 @@ class Dialect:
     @staticmethod
     def int_type() -> str:
         return "int"
+
+    @staticmethod
+    def string_type() -> str:
+        return "string"
 
     @staticmethod
     def escape_char() -> str:
@@ -167,14 +173,15 @@ class BaseQueryBuilder(ABC):
         inheritance: str | list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        pedigree_fields: tuple | None = None,
     ) -> str:
         # pylint: disable=too-many-arguments,too-many-locals,unused-argument
         """Build an SQL query in the correct order."""
@@ -192,13 +199,14 @@ class BaseQueryBuilder(ABC):
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            pedigree_fields=pedigree_fields,
         )
 
         self._build_group_by()
@@ -223,13 +231,6 @@ class BaseQueryBuilder(ABC):
     ) -> None:
         """Build join clause."""
 
-    def _build_where_pedigree_fields(
-        self,
-        pedigree_fields: tuple | None,  # noqa: ARG002
-    ) -> str:
-        # pylint: disable=unused-argument
-        return ""
-
     def _build_where(
         self, *,
         regions: list[Region] | None = None,
@@ -240,13 +241,14 @@ class BaseQueryBuilder(ABC):
         inheritance: str | list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> None:
         # pylint: disable=too-many-arguments,too-many-locals,unused-argument
@@ -259,13 +261,14 @@ class BaseQueryBuilder(ABC):
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
-            pedigree_fields=pedigree_fields,
         )
         self._add_to_product(where_clause)
 
@@ -279,13 +282,14 @@ class BaseQueryBuilder(ABC):
         inheritance: str | list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> str:
         # pylint: disable=too-many-arguments,too-many-branches,unused-argument
@@ -349,6 +353,13 @@ class BaseQueryBuilder(ABC):
                     self.where_accessors["allele_in_sexes"], sexes, sex_query,
                 ),
             )
+        if affected_statuses is not None:
+            where.append(
+                self._build_bitwise_attr_where(
+                    self.where_accessors["allele_in_statuses"],
+                    affected_statuses, affected_status_query,
+                ),
+            )
         if variant_type is not None:
             where.append(
                 self._build_bitwise_attr_where(
@@ -359,6 +370,11 @@ class BaseQueryBuilder(ABC):
             )
         if real_attr_filter is not None:
             where.append(self._build_real_attr_where(real_attr_filter))
+
+        if categorical_attr_filter is not None:
+            where.append(self._build_categorical_attr_where(
+                categorical_attr_filter))
+
         if frequency_filter is not None:
             where.append(
                 self._build_real_attr_where(
@@ -382,7 +398,6 @@ class BaseQueryBuilder(ABC):
             self._build_family_bin_heuristic(family_ids, person_ids),
             self._build_coding_heuristic(effect_types),
             self._build_region_bin_heuristic(regions),
-            self._build_where_pedigree_fields(pedigree_fields),
         ])
 
         where = [w for w in where if w]
@@ -463,6 +478,48 @@ class BaseQueryBuilder(ABC):
                 query.append(
                     f"({attr_name} >= {left} AND {attr_name} <= {right})",
                 )
+        return " AND ".join(query)
+
+    def _build_categorical_attr_where(
+        self, categorical_attr_filter: CategoricalAttrFilterType,
+    ) -> str:
+        query = []
+        for attr_name, values in categorical_attr_filter:
+            if attr_name not in self.combined_columns:
+                query.append("false")
+                continue
+            assert attr_name in self.combined_columns
+            assert (
+                self.combined_columns[attr_name] == self.dialect.string_type()
+                or self.combined_columns[attr_name].startswith(
+                    self.dialect.int_type())
+            ), f"{attr_name} - {self.combined_columns}"
+
+            attr_name = self.where_accessors[attr_name]
+
+            if values is None:
+                query.append(f"({attr_name} is null)")
+            elif len(values) == 0:
+                query.append(f"({attr_name} is not null)")
+            elif all(isinstance(v, str) for v in values):
+                conditions = [
+                    f"{attr_name} = {self.QUOTE}{v}{self.QUOTE}"
+                    for v in values
+                ]
+                query.append(
+                    " OR ".join(conditions),
+                )
+            elif all(isinstance(v, int) for v in values):
+                conditions = [
+                    f"{attr_name} = {v}"
+                    for v in values
+                ]
+                query.append(
+                    " OR ".join(conditions),
+                )
+            else:
+                raise TypeError(
+                    f"unexpected type in categorical filter: {values}")
         return " AND ".join(query)
 
     def _build_ultra_rare_where(self, *, ultra_rare: bool) -> str:
@@ -567,7 +624,8 @@ class BaseQueryBuilder(ABC):
             )
 
         transformer = QueryTreeToSQLBitwiseTransformer(
-            column_name, self.dialect.use_bit_and_function(),
+            column_name,
+            use_bit_and_function=self.dialect.use_bit_and_function(),
         )
         return cast(str, transformer.transform(parsed))
 
@@ -694,7 +752,7 @@ class BaseQueryBuilder(ABC):
 
     def _build_frequency_bin_heuristic(
         self, *,
-        inheritance: None | str | list[str],
+        inheritance: str | list[str] | None,
         ultra_rare: bool | None,
         frequency_filter: RealAttrFilterType | None,
     ) -> str:
@@ -715,7 +773,7 @@ class BaseQueryBuilder(ABC):
             "frequency_bin", frequency_bins, 4)
 
     def _build_coding_heuristic(
-        self, effect_types: None | set[str] | list[str],
+        self, effect_types: set[str] | list[str] | None,
     ) -> str:
         assert self.partition_config is not None
         if effect_types is None:

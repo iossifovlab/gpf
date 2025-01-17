@@ -9,6 +9,7 @@ from typing import Any, cast
 from dae.pedigrees.families_data import FamiliesData
 from dae.query_variants.attributes_query import (
     Matcher,
+    affected_status_query,
     inheritance_query,
     role_query,
     sex_query,
@@ -222,7 +223,7 @@ class RawFamilyVariants(abc.ABC):
         return False
 
     @classmethod
-    def filter_allele(
+    def filter_allele(  # noqa: C901
         cls,
         allele: FamilyAllele, *,
         genes: list[str] | None = None,
@@ -231,6 +232,7 @@ class RawFamilyVariants(abc.ABC):
         inheritance: Sequence[Matcher] | None = None,
         roles: Matcher | None = None,
         sexes: Matcher | None = None,
+        affected_statuses: Matcher | None = None,
         variant_type: Matcher | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
@@ -278,6 +280,11 @@ class RawFamilyVariants(abc.ABC):
             if allele.is_reference_allele:
                 return False
             if not sexes.match(allele.variant_in_sexes):
+                return False
+        if affected_statuses is not None:
+            if allele.is_reference_allele:
+                return False
+            if not affected_statuses.match(allele.variant_in_statuses):
                 return False
         return True
 
@@ -463,49 +470,7 @@ class RawFamilyVariants(abc.ABC):
         cls, **kwargs: Any,
     ) -> Callable[[FamilyVariant], FamilyVariant | None]:
         """Return a function that filters variants."""
-        if kwargs.get("roles") is not None:
-            parsed = kwargs["roles"]
-            if isinstance(parsed, list):
-                parsed = f"any({','.join(parsed)})"
-            if isinstance(parsed, str):
-                parsed = role_query.transform_query_string_to_tree(parsed)
-
-            kwargs["roles"] = role_query.transform_tree_to_matcher(parsed)
-
-        if kwargs.get("sexes") is not None:
-            parsed = kwargs["sexes"]
-            if isinstance(parsed, str):
-                parsed = sex_query.transform_query_string_to_tree(parsed)
-
-            kwargs["sexes"] = sex_query.transform_tree_to_matcher(parsed)
-
-        if kwargs.get("inheritance") is not None:
-            parsed = kwargs["inheritance"]
-            if isinstance(parsed, str):
-                parsed = [
-                    inheritance_query.transform_query_string_to_tree(parsed),
-                ]
-            elif isinstance(parsed, list):
-                parsed = [
-                    inheritance_query.transform_query_string_to_tree(p)
-                    for p in parsed
-                ]
-
-            kwargs["inheritance"] = [
-                inheritance_query.transform_tree_to_matcher(p)
-                for p in parsed
-            ]
-
-        if kwargs.get("variant_type") is not None:
-            parsed = kwargs["variant_type"]
-            if isinstance(kwargs["variant_type"], str):
-                parsed = variant_type_query.transform_query_string_to_tree(
-                    parsed,
-                )
-
-            kwargs[
-                "variant_type"
-            ] = variant_type_query.transform_tree_to_matcher(parsed)
+        kwargs = cls._transform_family_variants_kwargs(kwargs)
 
         return_reference = kwargs.get("return_reference", False)
         return_unknown = kwargs.get("return_unknown", False)
@@ -547,6 +512,65 @@ class RawFamilyVariants(abc.ABC):
 
         return filter_func
 
+    @classmethod
+    def _transform_family_variants_kwargs(
+        cls, kwargs: dict[str, Any],
+    ) -> dict[str, Any]:
+        if kwargs.get("roles") is not None:
+            parsed = kwargs["roles"]
+            if isinstance(parsed, list):
+                parsed = f"any({','.join(parsed)})"
+            if isinstance(parsed, str):
+                parsed = role_query.transform_query_string_to_tree(parsed)
+
+            kwargs["roles"] = role_query.transform_tree_to_matcher(parsed)
+
+        if kwargs.get("sexes") is not None:
+            parsed = kwargs["sexes"]
+            if isinstance(parsed, str):
+                parsed = sex_query.transform_query_string_to_tree(parsed)
+
+            kwargs["sexes"] = sex_query.transform_tree_to_matcher(parsed)
+
+        if kwargs.get("affected_statuses") is not None:
+            parsed = kwargs["affected_statuses"]
+            if isinstance(parsed, str):
+                parsed = affected_status_query\
+                    .transform_query_string_to_tree(parsed)
+
+            kwargs["affected_statuses"] = affected_status_query\
+                .transform_tree_to_matcher(parsed)
+
+        if kwargs.get("inheritance") is not None:
+            parsed = kwargs["inheritance"]
+            if isinstance(parsed, str):
+                parsed = [
+                    inheritance_query.transform_query_string_to_tree(parsed),
+                ]
+            elif isinstance(parsed, list):
+                parsed = [
+                    inheritance_query.transform_query_string_to_tree(p)
+                    for p in parsed
+                ]
+
+            kwargs["inheritance"] = [
+                inheritance_query.transform_tree_to_matcher(p)
+                for p in parsed
+            ]
+
+        if kwargs.get("variant_type") is not None:
+            parsed = kwargs["variant_type"]
+            if isinstance(kwargs["variant_type"], str):
+                parsed = variant_type_query.transform_query_string_to_tree(
+                    parsed,
+                )
+
+            kwargs[
+                "variant_type"
+            ] = variant_type_query.transform_tree_to_matcher(parsed)
+
+        return kwargs
+
     def build_family_variants_query_runner(
         self, *,
         regions: list[Region] | None = None,
@@ -557,6 +581,7 @@ class RawFamilyVariants(abc.ABC):
         inheritance: Sequence[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
@@ -576,6 +601,7 @@ class RawFamilyVariants(abc.ABC):
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
@@ -621,6 +647,9 @@ class RawMemoryVariants(RawFamilyVariants):
     ) -> None:
         super().__init__(families)
         self._full_variants = full_variants
+
+    def has_affected_status_queries(self) -> bool:
+        return False
 
     @property
     def full_variants(

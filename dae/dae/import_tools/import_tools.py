@@ -192,6 +192,10 @@ class ImportProject:
                 return True
         return False
 
+    def has_variants(self) -> bool:
+        """Check if the resulting imported study has any variants."""
+        return any(self.get_variant_loader_types())
+
     def get_variant_loader_chromosomes(
             self, loader_type: str | None = None) -> list[str]:
         """Collect all chromosomes available in input files."""

@@ -14,7 +14,7 @@ from dae.person_sets import (
 from dae.testing import setup_pedigree
 
 
-@pytest.fixture()
+@pytest.fixture
 def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
 
     ped_path = setup_pedigree(
@@ -38,7 +38,7 @@ def families_fixture(tmp_path: pathlib.Path) -> FamiliesData:
     return families
 
 
-@pytest.fixture()
+@pytest.fixture
 def phenotype_psc(
     families_fixture: FamiliesData,
 ) -> PersonSetCollection:
@@ -60,16 +60,21 @@ def phenotype_psc(
             values:
             - unaffected
             color: '#ffffff'
-          default:
-            id: unspecified
+          - id: unspecified
             name: unspecified
+            values:
+            - unspecified
             color: '#aaaaaa'
+          default:
+            id: unknown
+            name: unknown
+            color: '#cccccc'
         """)
     config = parse_person_set_collection_config(yaml.safe_load(content))
     return PersonSetCollection.from_families(config, families_fixture)
 
 
-@pytest.fixture()
+@pytest.fixture
 def status_psc(
     families_fixture: FamiliesData,
 ) -> PersonSetCollection:
@@ -91,16 +96,21 @@ def status_psc(
             values:
             - unaffected
             color: '#ffffff'
+          - id: unspecified
+            name: unspecified
+            values:
+            - unspecified
+            color: '#aaaaaa'
           default:
             id: unknown
             name: unknown
-            color: '#aaaaaa'
+            color: '#cccccc'
         """)
     config = parse_person_set_collection_config(yaml.safe_load(content))
     return PersonSetCollection.from_families(config, families_fixture)
 
 
-@pytest.fixture()
+@pytest.fixture
 def status_sex_psc(
     families_fixture: FamiliesData,
 ) -> PersonSetCollection:

@@ -1,14 +1,14 @@
 import logging
 import time
+from collections.abc import Callable
 from contextlib import closing
-from typing import Any, Callable
+from typing import Any
 
 import impala
 from impala.hiveserver2 import HiveServer2Connection
 from sqlalchemy import exc
 from sqlalchemy.pool import QueuePool
 
-# from dae.utils.debug_closing import closing
 from dae.query_variants.query_runners import QueryRunner
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class ImpalaQueryRunner(QueryRunner):
                     "(%s) connection created; pool status %s",
                     self.study_id,
                     self.connection_pool.status())
-                return connection
+                return connection  # noqa: TRY300
             except exc.TimeoutError:
                 elapsed = time.time() - started
                 logger.debug(
@@ -57,8 +57,8 @@ class ImpalaQueryRunner(QueryRunner):
                         self.study_id, elapsed)
                     return None
             except BaseException:  # pylint: disable=broad-except
-                logger.error(
-                    "(%s) unexpected exception", self.study_id, exc_info=True)
+                logger.exception(
+                    "(%s) unexpected exception", self.study_id)
                 return None
 
     def run(self) -> None:
@@ -121,9 +121,9 @@ class ImpalaQueryRunner(QueryRunner):
                             break
 
                 except Exception as ex:  # pylint: disable=broad-except
-                    logger.error(
-                        "exception in runner (%s) run: %s",
-                        self.study_id, type(ex), exc_info=True)
+                    logger.exception(
+                        "exception in runner (%s) run",
+                        self.study_id)
                     self.put_value_in_result_queue(ex)
         logger.debug(
             "(%s) runner connection closed", self.study_id)

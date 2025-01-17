@@ -1,6 +1,6 @@
 import logging
-from collections.abc import Iterable
-from typing import Any, Callable, Dict, List
+from collections.abc import Callable, Iterable
+from typing import Any
 
 from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.genomic_resources.gene_models import GeneModels
@@ -18,7 +18,9 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
     """Build queries related to family variants."""
 
     def __init__(
-        self, db: str, variants_table: str, pedigree_table: str,
+        self, db: str,
+        variants_table: str,
+        pedigree_table: str, *,
         variants_schema: list[AttributeInfo],
         table_properties: dict[str, Any],
         pedigree_schema: dict[str, str],
@@ -60,14 +62,11 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             self.select_accessors["extra_attributes"] = \
                 "variants.extra_attributes"
         if not self.do_join:
-            # pylint: disable=unused-variable
-            for k, v in self.select_accessors.items():
+            for k in self.select_accessors:
                 self.select_accessors[k] = k
-        columns = list(self.select_accessors.values())
+        return list(self.select_accessors.values())
 
-        return columns
-
-    def _where_accessors(self) -> Dict[str, str]:
+    def _where_accessors(self) -> dict[str, str]:
         accessors = super()._where_accessors()
 
         if self.do_join:
@@ -113,23 +112,23 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
 
         if len(positive) > 0:
             assert len(negative) == 0
-            clause = []
-            for person_set_clause in pedigree_where_clause(
-                    positive, "="):  # type: ignore
-                clause.append(" AND ".join(person_set_clause))
-            pedigree_where = " OR ".join([
+            clause = [
+                " AND ".join(person_set_clause)
+                for person_set_clause in pedigree_where_clause(
+                    positive, "=")  # type: ignore
+            ]
+            return " OR ".join([
                 f"( {wc} )" for wc in clause])
-            return pedigree_where
 
         if len(negative) > 0:
             assert len(positive) == 0
-            clause = []
-            for person_set_clause in pedigree_where_clause(
-                    negative, "!="):  # type: ignore
-                clause.append(" OR ".join(person_set_clause))
-            pedigree_where = " AND ".join([
+            clause = [
+                " OR ".join(person_set_clause)
+                for person_set_clause in pedigree_where_clause(
+                    negative, "!=")  # type: ignore
+            ]
+            return " AND ".join([
                 f"( {wc} )" for wc in clause])
-            return pedigree_where
 
         logger.error(
             "unexpected pedigree_fields argument: %s",
@@ -138,26 +137,25 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
 
     # pylint: disable=arguments-differ,too-many-arguments
     def build_where(
-        self,
-        regions: List[Region] | None = None,
-        genes: List[str] | None = None,
-        effect_types: List[str] | None = None,
+        self, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
         family_ids: Iterable[str] | None = None,
         person_ids: Iterable[str] | None = None,
-        inheritance: List[str] | str | None = None,
+        inheritance: list[str] | str | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
-        pedigree_fields: tuple[list[str], list[str]] | None = None,
-        **kwargs: Any,
+        **kwargs: Any,  # noqa: ARG002
     ) -> None:
         # pylint: disable=unused-argument
-        logger.info("pedigree fields: %s", pedigree_fields)
         where_clause = self._base_build_where(
             regions=regions,
             genes=genes,
@@ -167,6 +165,7 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
@@ -178,16 +177,6 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
 
         if not self.do_join:
             return
-
-        if pedigree_fields is not None and len(pedigree_fields) > 0:
-            if where_clause:
-                pedigree_where = "AND ( "
-            else:
-                pedigree_where = "WHERE ( "
-
-            pedigree_where += self._build_pedigree_where(pedigree_fields)
-            pedigree_where += " )"
-            self._add_to_product(pedigree_where)
 
         if where_clause:
             in_members = "AND variants.variant_in_members = pedigree.person_id"
@@ -241,8 +230,8 @@ class FamilyVariantsQueryBuilder(BaseQueryBuilder):
             family = self.families.get(family_id)
             if family is None:
                 return None
-            v = serializer.deserialize_family_variant(
+            return serializer.deserialize_family_variant(
                 variant_data, family, extra_attributes,
             )
-            return v
+
         return deserialize_row

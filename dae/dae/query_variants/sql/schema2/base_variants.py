@@ -23,6 +23,7 @@ from dae.variants.variant import SummaryVariant
 logger = logging.getLogger(__name__)
 
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
+CategoricalAttrFilterType = list[tuple[str, list[str] | list[int] | None]]
 
 
 # pylint: disable=too-many-instance-attributes
@@ -123,14 +124,19 @@ class SqlSchema2Variants(QueryVariantsBase):
         effect_types: list[str] | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
         **kwargs: Any,  # noqa: ARG002
-    ) -> QueryRunner:
+    ) -> QueryRunner | None:
         """Build a query selecting the appropriate summary variants."""
+        if self.summary_allele_table is None:
+            logger.warning(
+                "No summary allele table defined in %s", self.db)
+            return None
         assert self.summary_allele_table is not None
         query_builder = SummaryQueryBuilder(
             self.dialect,
@@ -157,6 +163,7 @@ class SqlSchema2Variants(QueryVariantsBase):
             effect_types=effect_types,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
@@ -199,19 +206,25 @@ class SqlSchema2Variants(QueryVariantsBase):
         inheritance: list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,  # noqa: ARG002
-    ) -> QueryRunner:
+    ) -> QueryRunner | None:
         """Build a query selecting the appropriate family variants."""
-        do_join_pedigree = bool(pedigree_fields)
+        if self.family_variant_table is None \
+                or self.summary_allele_table is None:
+            logger.warning(
+                "No family or summary allele table defined in %s", self.db)
+            return None
+
         do_join_allele_in_members = person_ids is not None
 
         assert self.family_variant_table is not None
@@ -228,13 +241,12 @@ class SqlSchema2Variants(QueryVariantsBase):
             self.family_variant_table,
             self.summary_allele_table,
             self.pedigree_table,
-            self.family_variant_schema,
-            self.summary_allele_schema,
-            self.partition_descriptor.to_dict(),
-            self.pedigree_schema,
-            self.families,
+            family_variant_schema=self.family_variant_schema,
+            summary_allele_schema=self.summary_allele_schema,
+            table_properties=self.partition_descriptor.to_dict(),
+            pedigree_schema=self.pedigree_schema,
+            families=self.families,
             gene_models=self.gene_models,
-            do_join_pedigree=do_join_pedigree,
             do_join_allele_in_members=do_join_allele_in_members,
         )
 
@@ -247,14 +259,15 @@ class SqlSchema2Variants(QueryVariantsBase):
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=query_limit,
-            pedigree_fields=pedigree_fields,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
         deserialize_row = self._deserialize_family_variant
@@ -320,6 +333,8 @@ class SqlSchema2Variants(QueryVariantsBase):
             return_unknown=return_unknown,
             limit=request_limit,
         )
+        if runner is None:
+            return
 
         result = QueryResult(runners=[runner], limit=limit)
         result.start()
@@ -346,6 +361,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         inheritance: list[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
+        affected_status: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
@@ -353,7 +369,6 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        pedigree_fields: tuple | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> Generator[FamilyVariant, None, None]:
         """Query family variants."""
@@ -373,6 +388,7 @@ class SqlSchema2Variants(QueryVariantsBase):
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
+            affected_status=affected_status,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
             ultra_rare=ultra_rare,
@@ -380,8 +396,10 @@ class SqlSchema2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=request_limit,
-            pedigree_fields=pedigree_fields,
         )
+        if runner is None:
+            return
+
         result = QueryResult(runners=[runner], limit=limit)
 
         result.start()

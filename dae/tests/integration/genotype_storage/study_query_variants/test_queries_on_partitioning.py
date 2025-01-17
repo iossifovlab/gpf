@@ -90,7 +90,7 @@ chr1   122  .  A   C,AC .    .      .    GT     0/1  0/1  0/1 0/2  0/2  0/2
     )
 
 
-@pytest.mark.no_gs_impala()
+@pytest.mark.no_gs_impala
 def test_variants_simple(study_2p: GenotypeData) -> None:
     svs = list(study_2p.query_summary_variants())
     assert len(svs) == 6
@@ -99,7 +99,7 @@ def test_variants_simple(study_2p: GenotypeData) -> None:
     assert len(fvs) == 12
 
 
-@pytest.mark.no_gs_impala()
+@pytest.mark.no_gs_impala
 @pytest.mark.parametrize("params, count", [
     ({"genes": ["t4"]}, 2),
     ({"genes": ["c8"]}, 5),
@@ -130,7 +130,7 @@ def test_query_family_variants_counting(
     assert len(fvs) == count
 
 
-@pytest.mark.no_gs_impala()
+@pytest.mark.no_gs_impala
 @pytest.mark.parametrize("params, count", [
     ({"genes": ["t4"]}, 1),
     ({"genes": ["c8"]}, 3),
@@ -161,7 +161,7 @@ def test_query_summary_variants_counting(
     assert len(svs) == count
 
 
-@pytest.mark.no_gs_impala()
+@pytest.mark.no_gs_impala
 @pytest.mark.parametrize("params, count", [
     ({}, 12),
     ({"roles": "prb"}, 9),
@@ -180,7 +180,7 @@ def test_query_family_variants_by_role(
     assert len(fvs) == count
 
 
-@pytest.mark.no_gs_impala()
+@pytest.mark.no_gs_impala
 @pytest.mark.parametrize("params, count", [
     ({}, 12),
     ({"sexes": "M"}, 11),
@@ -198,7 +198,7 @@ def test_query_family_variants_by_sex(
     assert len(fvs) == count
 
 
-@pytest.mark.no_gs_impala()
+@pytest.mark.no_gs_impala
 @pytest.mark.parametrize("params, count", [
     ({}, 12),
     ({"inheritance": ["missing"]}, 7),
@@ -218,7 +218,7 @@ def test_query_family_variants_by_inheritance(
     assert len(fvs) == count
 
 
-@pytest.mark.no_gs_impala()
+@pytest.mark.no_gs_impala
 @pytest.mark.parametrize("params, count", [
     ({}, 12),
     ({"variant_type": "sub"}, 10),
@@ -234,7 +234,7 @@ def test_query_family_variants_by_variant_type(
     assert len(fvs) == count
 
 
-@pytest.mark.no_gs_impala()
+@pytest.mark.no_gs_impala
 @pytest.mark.parametrize("params, count", [
     ({}, 12),
     ({"person_ids": ["ch3"]}, 5),

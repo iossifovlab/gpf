@@ -141,26 +141,31 @@ class InheritanceTransformer(Transformer):
         return Primitive(mask)
 
     def all(self, items: list) -> Expression:
+        """Construct an `all` expression from items."""
         assert len(items) == 1
         assert isinstance(items[0], Primitive)
         mask = items[0].value
-        bit_op = get_bit_and_str(mask, self.attr_name,
-                                 self.use_bit_and_function)
+        bit_op = get_bit_and_str(
+            mask, self.attr_name,
+            use_bit_and_function=self.use_bit_and_function)
         return Expression(f"{bit_op} = {mask}")
 
     def any(self, items: list) -> Expression:
+        """Construct an `any` expression from items."""
         assert len(items) == 1
         assert isinstance(items[0], Primitive)
         mask = items[0].value
-        bit_op = get_bit_and_str(mask, self.attr_name,
-                                 self.use_bit_and_function)
+        bit_op = get_bit_and_str(
+            mask, self.attr_name,
+            use_bit_and_function=self.use_bit_and_function)
         return Expression(f"{bit_op} != 0")
 
     def _process_list(self, items: list) -> list[str]:
         expressions: list[str] = []
         for atom in items:
-            bit_op = get_bit_and_str(atom.value, self.attr_name,
-                                     self.use_bit_and_function)
+            bit_op = get_bit_and_str(
+                atom.value, self.attr_name,
+                use_bit_and_function=self.use_bit_and_function)
 
             if isinstance(atom, Primitive):
                 expressions.append(
@@ -171,7 +176,7 @@ class InheritanceTransformer(Transformer):
             elif isinstance(atom, Expression):
                 expressions.append(atom.expression)
             else:
-                raise ValueError(f"unexpected expression {atom}")
+                raise TypeError(f"unexpected expression {atom}")
         return expressions
 
     def logical_or(self, items: list) -> Expression:
@@ -186,13 +191,15 @@ class InheritanceTransformer(Transformer):
         """Construct an Expression from items."""
         if len(items) == 1 and isinstance(items[0], Primitive):
             mask = items[0].value
-            bit_op = get_bit_and_str(mask, self.attr_name,
-                                     self.use_bit_and_function)
+            bit_op = get_bit_and_str(
+                mask, self.attr_name,
+                use_bit_and_function=self.use_bit_and_function)
             return Expression(f"{bit_op} != 0")
         if len(items) == 1 and isinstance(items[0], NegPrimitive):
             mask = items[0].value
-            bit_op = get_bit_and_str(mask, self.attr_name,
-                                     self.use_bit_and_function)
+            bit_op = get_bit_and_str(
+                mask, self.attr_name,
+                use_bit_and_function=self.use_bit_and_function)
             return Expression(f"{bit_op} = 0")
         if len(items) == 1 and isinstance(items[0], Expression):
             return items[0]
