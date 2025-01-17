@@ -78,9 +78,9 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                         },
                     ],
                     "default": {
-                        "color": "#aaaaaa",
-                        "id": "unspecified",
-                        "name": "unspecified",
+                        "color": "#cccccc",
+                        "id": "unknown",
+                        "name": "unknown",
                     },
                     "domain": [
                         {
@@ -97,6 +97,14 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                             "name": "unaffected",
                             "values": [
                                 "unaffected",
+                            ],
+                        },
+                        {
+                            "color": "#aaaaaa",
+                            "id": "unspecified",
+                            "name": "unspecified",
+                            "values": [
+                                "unspecified",
                             ],
                         },
                     ],
@@ -123,9 +131,9 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                         },
                     ],
                     "default": {
-                        "color": "#aaaaaa",
-                        "id": "unspecified",
-                        "name": "unspecified",
+                        "color": "#cccccc",
+                        "id": "unknown",
+                        "name": "unknown",
                     },
                     "domain": [
                         {
@@ -144,7 +152,16 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                                 "unaffected",
                             ],
                         },
+                        {
+                            "color": "#aaaaaa",
+                            "id": "unspecified",
+                            "name": "unspecified",
+                            "values": [
+                                "unspecified",
+                            ],
+                        },
                     ],
+
                 },
                 "selected_person_set_collections": [
                     "phenotype",
@@ -171,17 +188,28 @@ chrA   6   .  A   C     .    .      .    GT     0/0  0/1  0/0
                       name: developmental disorder
                       values:
                       - affected
+                    - color: 'ff0000'
+                      id: autism
+                      name: autism
+                      values:
+                      - affected
                     - color: '#ffffff'
                       id: unaffected
                       name: unaffected
                       values:
                       - unaffected
-                    default:
-                      color: '#aaaaaa'
+                    - color: '#aaaaaa'
                       id: unspecified
                       name: unspecified
+                      values:
+                      - unspecified
+                    default:
+                      color: '#cccccc'
+                      id: unknown
+                      name: unknown
                 selected_person_set_collections:
-                - phenotype"""))
+                - phenotype"""),
+    )
 
 
 def test_dataset_build_person_set_collection(

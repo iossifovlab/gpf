@@ -648,6 +648,9 @@ class RawMemoryVariants(RawFamilyVariants):
         super().__init__(families)
         self._full_variants = full_variants
 
+    def has_affected_status_queries(self) -> bool:
+        return False
+
     @property
     def full_variants(
         self,

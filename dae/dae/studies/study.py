@@ -8,6 +8,7 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Generator, Iterable
 from contextlib import closing
+from dataclasses import dataclass
 from os.path import basename, exists
 from typing import Any, cast
 
@@ -33,6 +34,16 @@ from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class PSCQueryAdjustments:
+    """Query adjustments from person set collection query."""
+
+    affected_statues: str | None
+    sexes: str | None
+    roles: str | None
+    person_ids: list[str] | None
 
 
 class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
@@ -186,6 +197,81 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         logger.debug("studies to query: %s", [st.study_id for st in leafs])
         return leafs
 
+    def _psc_query_adjustments(
+        self, genotype_study: GenotypeDataStudy,
+        psc_query: PSCQuery | None,
+        affected_statuses: str | None,
+        roles: str | None,
+        sexes: str | None,
+        person_ids: list[str] | None,
+    ) -> PSCQueryAdjustments | None:
+        """Adjust genotype_data query based on person set collection query."""
+        if psc_query is None:
+            # nothing to adjust
+            return PSCQueryAdjustments(
+                affected_statues=affected_statuses,
+                roles=roles,
+                sexes=sexes,
+                person_ids=person_ids,
+            )
+        psc = genotype_study.get_person_set_collection(psc_query.psc_id)
+        if psc is None:
+            logger.info(
+                "study %s does not have person set collection %s; "
+                "skipping", genotype_study.study_id, psc_query.psc_id)
+            return None
+        psc_queries = None
+        if genotype_study.backend.has_affected_status_queries():
+            psc_queries = psc.transform_pedigree_queries(psc_query)
+
+        adj_affected_statuses = None
+        adj_sexes = None
+        adj_roles = None
+        adj_person_ids = set(person_ids) if person_ids is not None else None
+
+        if psc_queries is not None:
+            if not psc_queries:
+                # no persons matching the query
+                return None
+
+            def _adj_query(query_name: str, query: str | None) -> str | None:
+                if query_name not in psc_queries:
+                    return query
+                if query is None:
+                    return psc_queries[query_name]
+                return f"({query}) and ({psc_queries[query_name]})"
+
+            adj_affected_statuses = _adj_query(
+                "affected_statuses", affected_statuses)
+            adj_sexes = _adj_query("sexes", sexes)
+            adj_roles = _adj_query("roles", roles)
+
+        else:
+            psc_person_ids = psc.query_person_ids(psc_query)
+            if psc_person_ids is not None:
+                if len(psc_person_ids) == 0:
+                    # no persons matching the query
+                    return None
+                if adj_person_ids is not None:
+                    adj_person_ids = adj_person_ids & psc_person_ids
+                else:
+                    adj_person_ids = psc_person_ids
+            if adj_person_ids is not None and len(adj_person_ids) == 0:
+                logger.debug(
+                    "Study %s can't match any person to filter %s... "
+                    "skipping",
+                    genotype_study.study_id,
+                    psc_query)
+                return None
+
+        return PSCQueryAdjustments(
+            affected_statues=adj_affected_statuses,
+            roles=adj_roles,
+            sexes=adj_sexes,
+            person_ids=None if adj_person_ids is None
+            else list(adj_person_ids),
+        )
+
     def query_result_variants(
         self, *,
         regions: list[Region] | None = None,
@@ -213,6 +299,8 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
         if person_ids is not None and not person_ids:
             return None
+        if isinstance(inheritance, str):
+            inheritance = [inheritance]
 
         if effect_types:
             effect_types = expand_effect_types(effect_types)
@@ -235,34 +323,17 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
 
         runners = []
         logger.debug("query leaf studies...")
+
         for genotype_study in self._get_query_leaf_studies(study_filters):
-            query_person_ids = set(person_ids) \
-                if person_ids is not None else None
-
             psc_query = person_set_collection
-            if psc_query is not None:
-                assert isinstance(psc_query, PSCQuery)
-                psc = genotype_study.get_person_set_collection(psc_query.psc_id)
-                if psc is None:
-                    # this study does not have requested person set collection
-                    continue
-                assert psc is not None
-                psc_person_ids = psc.query_person_ids(psc_query)
-                if psc_person_ids is not None:
-                    if len(psc_person_ids) == 0:
-                        # no persons matching the query
-                        continue
-                    if query_person_ids is not None:
-                        query_person_ids = query_person_ids & psc_person_ids
-                    else:
-                        query_person_ids = psc_person_ids
-
-            if query_person_ids is not None and len(query_person_ids) == 0:
-                logger.debug(
-                    "Study %s can't match any person to filter %s... "
-                    "skipping",
-                    genotype_study.study_id,
-                    psc_query)
+            psc_adjustments = self._psc_query_adjustments(
+                genotype_study, psc_query,
+                affected_statuses=affected_statuses,
+                roles=roles,
+                sexes=sexes,
+                person_ids=person_ids,
+            )
+            if psc_adjustments is None:
                 continue
 
             runner = genotype_study.backend\
@@ -271,13 +342,11 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
                     genes=genes,
                     effect_types=effect_types,
                     family_ids=family_ids,
-                    person_ids=None if query_person_ids is None
-                    else list(query_person_ids),
-                    inheritance=None if inheritance is None
-                    else list(inheritance),
-                    roles=roles,
-                    sexes=sexes,
-                    affected_statuses=affected_statuses,
+                    person_ids=psc_adjustments.person_ids,
+                    inheritance=inheritance,
+                    roles=psc_adjustments.roles,
+                    sexes=psc_adjustments.sexes,
+                    affected_statuses=psc_adjustments.affected_statues,
                     variant_type=variant_type,
                     real_attr_filter=real_attr_filter,
                     ultra_rare=ultra_rare,
