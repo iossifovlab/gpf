@@ -30,6 +30,7 @@ from dae.variants.attributes import Inheritance
 
 logger = logging.getLogger(__name__)
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
+CategoricalAttrFilterType = list[tuple[str, list[str] | list[int] | None]]
 
 
 class Dialect:
@@ -58,6 +59,10 @@ class Dialect:
     @staticmethod
     def int_type() -> str:
         return "int"
+
+    @staticmethod
+    def string_type() -> str:
+        return "string"
 
     @staticmethod
     def escape_char() -> str:
@@ -171,6 +176,7 @@ class BaseQueryBuilder(ABC):
         affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
@@ -196,6 +202,7 @@ class BaseQueryBuilder(ABC):
             affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
@@ -237,6 +244,7 @@ class BaseQueryBuilder(ABC):
         affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
@@ -256,6 +264,7 @@ class BaseQueryBuilder(ABC):
             affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
@@ -276,6 +285,7 @@ class BaseQueryBuilder(ABC):
         affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
@@ -360,6 +370,11 @@ class BaseQueryBuilder(ABC):
             )
         if real_attr_filter is not None:
             where.append(self._build_real_attr_where(real_attr_filter))
+
+        if categorical_attr_filter is not None:
+            where.append(self._build_categorical_attr_where(
+                categorical_attr_filter))
+
         if frequency_filter is not None:
             where.append(
                 self._build_real_attr_where(
@@ -463,6 +478,48 @@ class BaseQueryBuilder(ABC):
                 query.append(
                     f"({attr_name} >= {left} AND {attr_name} <= {right})",
                 )
+        return " AND ".join(query)
+
+    def _build_categorical_attr_where(
+        self, categorical_attr_filter: CategoricalAttrFilterType,
+    ) -> str:
+        query = []
+        for attr_name, values in categorical_attr_filter:
+            if attr_name not in self.combined_columns:
+                query.append("false")
+                continue
+            assert attr_name in self.combined_columns
+            assert (
+                self.combined_columns[attr_name] == self.dialect.string_type()
+                or self.combined_columns[attr_name].startswith(
+                    self.dialect.int_type())
+            ), f"{attr_name} - {self.combined_columns}"
+
+            attr_name = self.where_accessors[attr_name]
+
+            if values is None:
+                query.append(f"({attr_name} is null)")
+            elif len(values) == 0:
+                query.append(f"({attr_name} is not null)")
+            elif all(isinstance(v, str) for v in values):
+                conditions = [
+                    f"{attr_name} = {self.QUOTE}{v}{self.QUOTE}"
+                    for v in values
+                ]
+                query.append(
+                    " OR ".join(conditions),
+                )
+            elif all(isinstance(v, int) for v in values):
+                conditions = [
+                    f"{attr_name} = {v}"
+                    for v in values
+                ]
+                query.append(
+                    " OR ".join(conditions),
+                )
+            else:
+                raise TypeError(
+                    f"unexpected type in categorical filter: {values}")
         return " AND ".join(query)
 
     def _build_ultra_rare_where(self, *, ultra_rare: bool) -> str:

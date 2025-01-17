@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import logging
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -43,6 +44,7 @@ logger = logging.getLogger(__name__)
 # A type describing a schema as expected by the query builders
 TableSchema = dict[str, str]
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
+CategoricalAttrFilterType = list[tuple[str, list[str] | list[int] | None]]
 
 
 # family_variant_table & summary_allele_table are mandatory
@@ -774,16 +776,6 @@ class SqlQueryBuilder(QueryBuilderBase):
         return result
 
     @staticmethod
-    def _real_attr(
-        attr: str,
-        value_range: tuple[float | None, float | None],
-    ) -> Condition:
-        return SqlQueryBuilder._real_attr_filter(
-            attr, value_range,
-            is_frequency=False,
-        )
-
-    @staticmethod
     def real_attr(
         real_attrs: RealAttrFilterType,
     ) -> Condition:
@@ -804,6 +796,42 @@ class SqlQueryBuilder(QueryBuilderBase):
         return result
 
     @staticmethod
+    def _categorical_attr_filter(
+        attr: str,
+        values: list[str] | list[int] | None,
+    ) -> Condition:
+        """Create real attribute condition."""
+        if values is None:
+            return condition(f"sa.{attr} IS NULL")
+
+        if len(values) == 0:
+            return condition(f"sa.{attr} IS NOT NULL")
+
+        if all(isinstance(v, str) for v in values):
+            return condition(" OR ".join(f"sa.{attr} = '{v}'" for v in values))
+
+        if all(isinstance(v, int) for v in values):
+            return condition(" OR ".join(f"sa.{attr} = {v}" for v in values))
+        raise TypeError(f"values must be all str or all int: {values}")
+
+    @staticmethod
+    def categorical_attr(
+        categorical_attrs: CategoricalAttrFilterType,
+    ) -> Condition:
+        """Build real attributes filter where condition."""
+        assert len(categorical_attrs) > 0
+        conditions = list(itertools.starmap(
+            SqlQueryBuilder._categorical_attr_filter,
+            categorical_attrs,
+        ))
+        if len(conditions) == 1:
+            return conditions[0]
+        result = conditions[0]
+        for cond in conditions[1:]:
+            result = result.and_(cond)
+        return result
+
+    @staticmethod
     def ultra_rare() -> Condition:
         return SqlQueryBuilder._real_attr_filter(
             "af_allele_count", (None, 1),
@@ -816,6 +844,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         effect_types: list[str] | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
@@ -835,6 +864,10 @@ class SqlQueryBuilder(QueryBuilderBase):
             ))
         if real_attr_filter:
             clause = self.real_attr(real_attr_filter)
+            query = query.where(clause)
+
+        if categorical_attr_filter:
+            clause = self.categorical_attr(categorical_attr_filter)
             query = query.where(clause)
         if frequency_filter:
             clause = self.frequency(frequency_filter)
@@ -1087,6 +1120,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         effect_types: list[str] | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
@@ -1100,6 +1134,7 @@ class SqlQueryBuilder(QueryBuilderBase):
             effect_types=effect_types,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
@@ -1171,6 +1206,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
@@ -1185,6 +1221,7 @@ class SqlQueryBuilder(QueryBuilderBase):
             effect_types=effect_types,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,

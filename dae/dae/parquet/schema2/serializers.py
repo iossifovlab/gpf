@@ -108,6 +108,7 @@ class AlleleParquetSerializer:
         annotation_type_to_pa_type = {
             "float": pa.float32(),
             "int": pa.int32(),
+            "str": pa.string(),
         }
 
         if annotation_schema is not None:

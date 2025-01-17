@@ -10,10 +10,11 @@ from dae.gpf_instance import GPFInstance
 
 
 def setup_gpf_instance(
-        out_path: pathlib.Path,
-        reference_genome_id: str | None = None,
-        gene_models_id: str | None = None,
-        grr: GenomicResourceRepo | None = None) -> GPFInstance:
+    out_path: pathlib.Path,
+    reference_genome_id: str | None = None,
+    gene_models_id: str | None = None,
+    grr: GenomicResourceRepo | None = None,
+) -> GPFInstance:
     """Set up a GPF instance using prebuild genome, gene models, etc."""
     if not (out_path / "gpf_instance.yaml").exists():
         setup_directories(

@@ -23,6 +23,7 @@ from dae.variants.variant import SummaryVariant
 logger = logging.getLogger(__name__)
 
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
+CategoricalAttrFilterType = list[tuple[str, list[str] | list[int] | None]]
 
 
 # pylint: disable=too-many-instance-attributes
@@ -123,6 +124,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         effect_types: list[str] | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
@@ -161,6 +163,7 @@ class SqlSchema2Variants(QueryVariantsBase):
             effect_types=effect_types,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
@@ -206,6 +209,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
@@ -258,6 +262,7 @@ class SqlSchema2Variants(QueryVariantsBase):
             affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,

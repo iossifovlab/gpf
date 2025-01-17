@@ -19,15 +19,15 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.query_variants.base_query_variants import QueryVariantsBase
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.query_variants.sql.schema2.sql_query_builder import (
+    CategoricalAttrFilterType,
     Db2Layout,
+    RealAttrFilterType,
     SqlQueryBuilder,
 )
 from dae.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
-
-RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 
 logger = logging.getLogger(__name__)
 
@@ -260,6 +260,7 @@ class DuckDb2Variants(QueryVariantsBase):
         effect_types: list[str] | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
@@ -286,6 +287,7 @@ class DuckDb2Variants(QueryVariantsBase):
             effect_types=effect_types,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
@@ -324,6 +326,7 @@ class DuckDb2Variants(QueryVariantsBase):
         effect_types: list[str] | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
@@ -344,6 +347,7 @@ class DuckDb2Variants(QueryVariantsBase):
             effect_types=effect_types,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
@@ -379,6 +383,7 @@ class DuckDb2Variants(QueryVariantsBase):
         affected_statuses: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
@@ -413,6 +418,7 @@ class DuckDb2Variants(QueryVariantsBase):
             affected_statuses=affected_statuses,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
@@ -464,6 +470,7 @@ class DuckDb2Variants(QueryVariantsBase):
         sexes: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
+        categorical_attr_filter: CategoricalAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
@@ -490,6 +497,7 @@ class DuckDb2Variants(QueryVariantsBase):
             sexes=sexes,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
+            categorical_attr_filter=categorical_attr_filter,
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
