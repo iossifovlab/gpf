@@ -266,8 +266,14 @@ class DuckDb2Variants(QueryVariantsBase):
         return_unknown: bool | None = None,
         limit: int | None = None,
         **kwargs: Any,
-    ) -> QueryRunner:
+    ) -> QueryRunner | None:
         """Create query runner for searching summary variants."""
+        if self.layout.summary is None:
+            logger.warning(
+                "no summary table defined in the layout: %s",
+                self.layout)
+            return None
+
         if limit is None or limit < 0:
             query_limit = None
             limit = -1
@@ -345,6 +351,8 @@ class DuckDb2Variants(QueryVariantsBase):
             limit=query_limit,
             **kwargs,
         )
+        if runner is None:
+            return
 
         result = QueryResult(runners=[runner], limit=limit)
         result.start()
@@ -378,9 +386,15 @@ class DuckDb2Variants(QueryVariantsBase):
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
         **kwargs: Any,
-    ) -> QueryRunner:
+    ) -> QueryRunner | None:
         # pylint: disable=too-many-arguments
         """Create a query runner for searching family variants."""
+        if self.layout.summary is None or self.layout.family is None:
+            logger.warning(
+                "no summary of family table defined in the layout: %s",
+                self.layout)
+            return None
+
         if limit is None or limit < 0:
             query_limit = None
             limit = -1
@@ -483,6 +497,9 @@ class DuckDb2Variants(QueryVariantsBase):
             limit=query_limit,
             **kwargs,
         )
+        if runner is None:
+            return
+
         result = QueryResult(runners=[runner], limit=limit)
 
         result.start()

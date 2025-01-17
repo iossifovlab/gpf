@@ -129,8 +129,12 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_unknown: bool | None = None,
         limit: int | None = None,
         **kwargs: Any,  # noqa: ARG002
-    ) -> QueryRunner:
+    ) -> QueryRunner | None:
         """Build a query selecting the appropriate summary variants."""
+        if self.summary_allele_table is None:
+            logger.warning(
+                "No summary allele table defined in %s", self.db)
+            return None
         assert self.summary_allele_table is not None
         query_builder = SummaryQueryBuilder(
             self.dialect,
@@ -209,8 +213,14 @@ class SqlSchema2Variants(QueryVariantsBase):
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
         **kwargs: Any,  # noqa: ARG002
-    ) -> QueryRunner:
+    ) -> QueryRunner | None:
         """Build a query selecting the appropriate family variants."""
+        if self.family_variant_table is None \
+                or self.summary_allele_table is None:
+            logger.warning(
+                "No family or summary allele table defined in %s", self.db)
+            return None
+
         do_join_allele_in_members = person_ids is not None
 
         assert self.family_variant_table is not None
@@ -318,6 +328,8 @@ class SqlSchema2Variants(QueryVariantsBase):
             return_unknown=return_unknown,
             limit=request_limit,
         )
+        if runner is None:
+            return
 
         result = QueryResult(runners=[runner], limit=limit)
         result.start()
@@ -380,6 +392,9 @@ class SqlSchema2Variants(QueryVariantsBase):
             return_unknown=return_unknown,
             limit=request_limit,
         )
+        if runner is None:
+            return
+
         result = QueryResult(runners=[runner], limit=limit)
 
         result.start()

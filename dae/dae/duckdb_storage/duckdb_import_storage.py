@@ -116,9 +116,9 @@ class AbstractDuckDbImportStorage(Schema2ImportStorage, abc.ABC):
 class DuckDbLegacyImportStorage(AbstractDuckDbImportStorage):
     """Import logic for data in the DuckDb Schema 2 format."""
 
-    @classmethod
+    @staticmethod
     def _do_import_dataset(
-        cls, project: ImportProject,
+        project: ImportProject,
     ) -> Schema2DatasetLayout:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(
@@ -140,9 +140,9 @@ class DuckDbLegacyImportStorage(AbstractDuckDbImportStorage):
 class DuckDbParquetImportStorage(AbstractDuckDbImportStorage):
     """Import logic for data in the DuckDb Schema 2 format."""
 
-    @classmethod
+    @staticmethod
     def _do_import_dataset(
-        cls, project: ImportProject,
+        project: ImportProject,
     ) -> Schema2DatasetLayout:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(
@@ -157,15 +157,24 @@ class DuckDbParquetImportStorage(AbstractDuckDbImportStorage):
             project.get_partition_descriptor(),
         )
         fs_utils.copy(dest_layout.study, layout.study)
-        return dest_layout
+        if project.has_variants():
+            return dest_layout
+        return Schema2DatasetLayout(
+            dest_layout.study,
+            pedigree=dest_layout.pedigree,
+            summary=None,
+            family=None,
+            meta=dest_layout.meta,
+            base_dir=dest_layout.base_dir,
+        )
 
 
 class DuckDbS3ParquetImportStorage(AbstractDuckDbImportStorage):
     """Import logic for data in the DuckDb Schema 2 format."""
 
-    @classmethod
+    @staticmethod
     def _do_import_dataset(
-        cls, project: ImportProject,
+        project: ImportProject,
     ) -> Schema2DatasetLayout:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(
@@ -182,15 +191,24 @@ class DuckDbS3ParquetImportStorage(AbstractDuckDbImportStorage):
         s3_fs = create_s3_filesystem(genotype_storage.config.endpoint_url)
         s3_fs.put(layout.study, dest_layout.study, recursive=True)
 
-        return dest_layout
+        if project.has_variants():
+            return dest_layout
+        return Schema2DatasetLayout(
+            dest_layout.study,
+            pedigree=dest_layout.pedigree,
+            summary=None,
+            family=None,
+            meta=dest_layout.meta,
+            base_dir=dest_layout.base_dir,
+        )
 
 
 class DuckDbImportStorage(AbstractDuckDbImportStorage):
     """Import logic for data in the DuckDb Schema 2 format."""
 
-    @classmethod
+    @staticmethod
     def _do_import_dataset(
-        cls, project: ImportProject,
+        project: ImportProject,
     ) -> Schema2DatasetLayout:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(
@@ -233,9 +251,9 @@ class DuckDbImportStorage(AbstractDuckDbImportStorage):
 class DuckDbS3ImportStorage(AbstractDuckDbImportStorage):
     """Import logic for data in the DuckDb Schema 2 format."""
 
-    @classmethod
+    @staticmethod
     def _do_import_dataset(
-        cls, project: ImportProject,
+        project: ImportProject,
     ) -> Schema2DatasetLayout:
         genotype_storage = project.get_genotype_storage()
         assert isinstance(
