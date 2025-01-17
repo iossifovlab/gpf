@@ -171,6 +171,9 @@ def generate_phenotype_data_config(
         "dbfile": dbfile,
         "browser_images_url": "static/images/",
     }
+    if regressions is None:
+        return yaml.dump(config)
+
     config["regression"] = {
         reg_id: reg_measure.model_dump()
         for reg_id, reg_measure in regressions.items()
@@ -364,10 +367,17 @@ def import_pheno_data(
 
     if regression_config is not None:
         if isinstance(regression_config, str):
-            regressions = GPFConfigParser.load_config(
-                str(Path(config.input_dir, regression_config)),
-                regression_conf_schema,
-            )
+            reg_file = Path(config.input_dir, regression_config)
+            with reg_file.open("r") as file:
+                regs = yaml.safe_load(file)
+            if not isinstance(regs, dict):
+                raise TypeError(
+                    "Invalid regressions file, should be a dictionary",
+                )
+            regressions = {
+                reg_id: RegressionMeasure.model_validate(reg)
+                for reg_id, reg in regs["regression"].items()
+            }
         else:
             regressions = regression_config
 
