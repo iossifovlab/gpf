@@ -26,7 +26,7 @@ test.describe('Pheno browser tests', () => {
     });
   });
 
-  test('should filter the right rows when typing "1" in the sarchbox', async({ page }) => {
+  test('should filter the right rows when typing "m" in the searchbox', async({ page }) => {
     await expect(page.locator('.instrument-cell')).toHaveCount(7);
 
     await page.locator('input.form-control').fill('m');

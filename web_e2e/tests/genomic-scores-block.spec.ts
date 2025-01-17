@@ -21,7 +21,12 @@ test.describe('Genomic scores tests', () => {
   });
 
   test('should enter filter data and check how it affects the histogram', async({ page }) => {
+    const mpcScore = 'mpc - Missense badness, PolyPhen-2, and Constraint. ' +
+      'A deleteriousness prediction score for missense variants';
     await page.locator('#add-filter').click();
+    await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
+    await page.locator(`mat-option:has-text("${mpcScore}")`).click();
+
     await page.locator('input#from-input-field').clear();
     await page.locator('input#from-input-field').fill('0.3');
     await expect(page.locator('text.partitions-text').nth(0)).toHaveText('~21727789 (32.46%)');
@@ -31,9 +36,12 @@ test.describe('Genomic scores tests', () => {
     await expect(page.locator('text.partitions-text').nth(1)).toHaveText('~9402408 (14.05%)');
     await expect(page.locator('text.partitions-text').nth(2)).toHaveText('~35798106 (53.49%)');
 
-    await page.locator('#add-filter').click();
-    await page.locator('gpf-genomic-scores select').nth(1).selectOption('exome_gnomad_af_percent - ' +
-    'Alternative allele frequency in the whole gnomAD exome samples v2.1.1 as percent');
+    const exomeGnomadScore = 'exome_gnomad_af_percent - ' +
+      'Alternative allele frequency in the whole gnomAD exome samples v2.1.1 as percent';
+    await page.locator('gpf-genomic-scores-block >> #add-filter').click();
+    await page.locator('gpf-genomic-scores-block >> mat-form-field').nth(1).click();
+    await page.locator(`mat-option:has-text("${exomeGnomadScore}")`).click();
+
     await page.locator('input#from-input-field').nth(1).clear();
     await page.locator('input#from-input-field').nth(1).fill('9.7944');
     await expect(page.locator('text.partitions-text').nth(3)).toHaveText('~17113188 (99.46%)');
@@ -52,7 +60,12 @@ test.describe('Genomic scores tests', () => {
   test('should test download', async({ page }) => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype browser');
 
+    const mpcScore = 'mpc - Missense badness, PolyPhen-2, and Constraint. ' +
+    'A deleteriousness prediction score for missense variants';
     await page.locator('#add-filter').click();
+    await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
+    await page.locator(`mat-option:has-text("${mpcScore}")`).click();
+
     await page.locator('input#from-input-field').clear();
     await page.locator('input#from-input-field').fill('1.25');
 
