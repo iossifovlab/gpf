@@ -102,18 +102,18 @@ def draw_linregres(df, col1, col2, jitter: int | None = None, ax=None):
     ax.set_xlabel(name1)
     ax.set_ylabel(name2)
 
+    male_x = dmale[[col1]]
+    male_y = dmale[col2]
     try:
-        male_x = dmale[[col1]]
-        y = dmale[col2]  # pylint: disable=invalid-name
-        res_male = LinearRegression().fit(male_x.to_numpy(), y)
+        res_male = LinearRegression().fit(male_x.to_numpy(), male_y)
     except ValueError:
         traceback.print_exc()
         res_male = None
 
+    female_x = dfemale[[col1]]
+    female_y = dfemale[col2]
     try:
-        female_x = dfemale[[col1]]
-        y = dfemale[col2]  # pylint: disable=invalid-name
-        res_female = LinearRegression().fit(female_x.to_numpy(), y)
+        res_female = LinearRegression().fit(female_x.to_numpy(), female_y)
     except ValueError:
         traceback.print_exc()
         res_female = None
@@ -132,16 +132,16 @@ def draw_linregres(df, col1, col2, jitter: int | None = None, ax=None):
 
     color_male, color_female = gender_palette_light()
     ax.plot(
-        dmale[col1].values + jmale1,
-        dmale[col2].values + jmale2,
+        dmale[col1].to_numpy() + jmale1,
+        dmale[col2].to_numpy() + jmale2,
         ".",
         color=color_male,
         ms=4,
         label="male",
     )
     ax.plot(
-        dfemale[col1].values + jfemale1,
-        dfemale[col2].values + jfemale2,
+        dfemale[col1].to_numpy() + jfemale1,
+        dfemale[col2].to_numpy() + jfemale2,
         ".",
         color=color_female,
         ms=4,
@@ -151,12 +151,12 @@ def draw_linregres(df, col1, col2, jitter: int | None = None, ax=None):
     if res_male:
         ax.plot(
             dmale[col1].values,
-            res_male.predict(male_x), color=color_male,
+            res_male.predict(male_x.to_numpy()), color=color_male,
         )
     if res_female:
         ax.plot(
             dfemale[col1].values,
-            res_female.predict(female_x), color=color_female,
+            res_female.predict(female_x.to_numpy()), color=color_female,
         )
     male_female_legend(color_male, color_female, ax)
     plt.tight_layout()
