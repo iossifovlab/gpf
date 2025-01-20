@@ -40,7 +40,7 @@ ROLES_GRAPHS_DEFINITION = {
 
 
 class GraphColumn:
-    """Build a colum to produce a graph from it."""
+    """Build a column to produce a graph from it."""
 
     def __init__(self, name, roles, status, df):
         self.name = name
@@ -255,13 +255,16 @@ def draw_measure_violinplot(
 
     set_figure_size(fig, len(columns))
 
+    df_with_column_names.sex = df_with_column_names.sex.apply(
+        lambda s: s.name if s != Sex.unspecified else "M")
+
     violinplot(
         data=df_with_column_names,
         x="column_name",
         y=measure_id,
         hue="sex",
         order=column_names,
-        hue_order=[Sex.male, Sex.female],
+        hue_order=[Sex.male.name, Sex.female.name],
         linewidth=1,
         split=True,
         density_norm="count",
@@ -270,9 +273,6 @@ def draw_measure_violinplot(
         saturation=1,
     )
 
-    df_with_column_names.sex = df_with_column_names.sex.apply(
-        lambda s: s if s != Sex.unspecified else Sex.male)
-
     palette = gender_palette_light()
     stripplot(
         data=df_with_column_names,
@@ -280,7 +280,7 @@ def draw_measure_violinplot(
         y=measure_id,
         hue="sex",
         order=column_names,
-        hue_order=[Sex.male, Sex.female],
+        hue_order=[Sex.male.name, Sex.female.name],
         jitter=0.025,
         size=2,
         palette=palette,
@@ -346,32 +346,32 @@ def draw_categorical_violin_distribution(
             values_domain,
         ) = _enumerate_by_natural_order(df, measure_id)
     values_domain = values_domain[:max_categories]
-    y_locations = np.arange(len(values_domain))
+    bin_edges = np.arange(len(values_domain))
 
     columns = get_columns_to_draw(roles_definition, df)
     if len(columns) == 0:
         return False
 
-    bin_edges = y_locations
-    centers = bin_edges
     heights = 0.8
 
-    hist_range = (np.min(y_locations), np.max(y_locations))
+    hist_range = (
+        float(np.min(bin_edges)),
+        float(np.max(bin_edges)),
+    )
 
     binned_datasets = []
 
     for column in columns:
-        df_role = column.df
-
-        df_male = df_role[df_role.sex == Sex.male]
-        df_female = df_role[df_role.sex == Sex.female]
-
-        male_data = df_male[numerical_measure_name].to_numpy()
-        female_data = df_female[numerical_measure_name].to_numpy()
+        male_data = column.df[
+            column.df.sex == Sex.male
+        ][numerical_measure_name].to_numpy()
+        female_data = column.df[
+            column.df.sex == Sex.female
+        ][numerical_measure_name].to_numpy()
 
         binned_datasets.append(
             [
-                np.histogram(d, range=hist_range, bins=len(y_locations))[0]
+                np.histogram(d, range=hist_range, bins=len(bin_edges))[0]
                 for d in [male_data, female_data]
             ],
         )
@@ -384,17 +384,17 @@ def draw_categorical_violin_distribution(
         0, len(columns) * 2 * binned_maximum, 2 * binned_maximum,
     )
 
-    _fig, ax = plt.subplots()
-    _fig.set_tight_layout(True)
-    set_figure_size(_fig, len(columns))
-    female_text_offeset = binned_maximum * 0.05
+    fig, ax = plt.subplots()
+    fig.set_layout_engine("tight")
+    set_figure_size(fig, len(columns))
+    female_text_offset = binned_maximum * 0.05
     for count, (male, female) in enumerate(binned_datasets):
         x_loc = x_locations[count]
 
         lefts = x_loc - male
-        ax.barh(centers, male, height=heights, left=lefts, color=color_male)
+        ax.barh(bin_edges, male, height=heights, left=lefts, color=color_male)
         ax.barh(
-            centers, female, height=heights, left=x_loc, color=color_female,
+            bin_edges, female, height=heights, left=x_loc, color=color_female,
         )
         # pylint: disable=invalid-name
         for y, (male_count, female_count) \
@@ -409,7 +409,7 @@ def draw_categorical_violin_distribution(
                 rotation_mode="anchor",
             )
             ax.text(
-                x_loc + female_count + female_text_offeset,
+                x_loc + female_count + female_text_offset,
                 y,
                 str(female_count),
                 horizontalalignment="center",
@@ -418,19 +418,18 @@ def draw_categorical_violin_distribution(
                 rotation_mode="anchor",
             )
 
-    ax.set_yticks(y_locations)
+    ax.set_yticks(bin_edges)
     ax.set_yticklabels([
         textwrap.fill(str(x), 20) if x is not None else
         textwrap.fill("None", 20)
         for x in values_domain
     ])
     ax.set_xlim(2 * -binned_maximum, len(columns) * 2 * binned_maximum)
-    ax.set_ylim(-1, np.max(y_locations) + 1)
+    ax.set_ylim(-1, np.max(bin_edges) + 1)
 
     ax.set_ylabel(measure_id)
     ax.set_xlabel("role")
-    labels = role_labels(columns)
-    plt.xticks(x_locations, labels)
+    plt.xticks(x_locations, role_labels(columns))
 
     male_female_legend(color_male, color_female, ax)
     return True
