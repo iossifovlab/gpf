@@ -18,7 +18,7 @@ class LinearRegression(LinearRegressionSK):
         self._pvalues: np.ndarray | None = None
         self._tvalues: np.ndarray | None = None
 
-    def fit(
+    def calc_regression(
         self, X: np.ndarray, y: pd.Series | np.ndarray,
         sample_weight: float | None = None,
     ) -> LinearRegression:

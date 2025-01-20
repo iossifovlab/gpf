@@ -285,7 +285,7 @@ class PhenoTool:
 
         x = df[normalize_by].to_numpy()
         y = df[measure_id]
-        fitted = LinearRegression().fit(x, y)
+        fitted = LinearRegression().calc_regression(x, y)
         resids = y - fitted.predict(x)
 
         dn = pd.Series(index=df.index, data=resids)
