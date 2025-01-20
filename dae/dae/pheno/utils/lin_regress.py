@@ -39,9 +39,13 @@ class LinearRegression(LinearRegressionSK):
         beta = np.dot(pinv_x, y)
         bse = np.sqrt(np.diag(cov_params))
 
-        tvalues = beta / bse
+        if np.any(bse == 0):
+            tvalues = beta * 0
+            pvalues = beta * 0
+        else:
+            tvalues = beta / bse
 
-        pvalues = t.sf(np.abs(tvalues), n - rank) * 2
+            pvalues = t.sf(np.abs(tvalues), n - rank) * 2
 
         self._tvalues = tvalues
         self._pvalues = pvalues
