@@ -23,14 +23,23 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
-        "pheno_dir", help="Path to pheno directory.",
+        "pheno_dir",
+        help=("Path to pheno directory. This is the directory which"
+              " contains ALL phenotype data for an instance."),
     )
-    parser.add_argument("--phenotype-data-id", help="Phenotype data ID")
-
-    parser.add_argument("-n", "--dry-run", action="store_true")
+    parser.add_argument(
+        "--phenotype-data-id",
+        required=True,
+        help="ID of the phenotype data to build a browser database for.",
+    )
+    parser.add_argument(
+        "-n",
+        "--dry-run",
+        action="store_true",
+        help="Do not write any output to the filesystem.",
+    )
 
     TaskGraphCli.add_arguments(parser, use_commands=False)
-
     return parser
 
 
@@ -92,8 +101,6 @@ def main(argv: list[str] | None = None) -> int:
     """Run phenotype import tool."""
     if argv is None:
         argv = sys.argv[1:]
-
-        # Setup argument parser
 
     parser = pheno_cli_parser()
     args = parser.parse_args(argv)
