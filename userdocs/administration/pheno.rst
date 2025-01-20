@@ -2,9 +2,11 @@ Phenotype Database Tools
 ========================
 
 Importing a phenotype database for use with the GPF system can be done either with an import project configuration or
-with the help of the ``pheno_import`` tool.
+with the help of the ``pheno_import`` tool. Either of these will produce a DuckDB database containing the phenotype data.
 
-Either of these will produce a DuckDB database containing the phenotype data.
+A derivative database is used to provide a summary of the phenotype data, as well as regressions by certain measures, for use
+with the web application GPFJS. This derivative database is called a "phenotype browser database" or "phenotype browser cache"
+and is created with a separate tool - ``build_pheno_browser``.
 
 Importing via import project configuration
 ******************************************
@@ -122,7 +124,6 @@ as well as parameters relating to the usage of Dask:
 
     $ import_tools_pheno --help
 
-
 Importing via ``pheno_import`` tool
 ***********************************
 
@@ -181,6 +182,18 @@ To import the phenotype database into the GPF system you need to use the
   phenotype databases in the output directory.
 
 You can use ``-h`` option to see all options supported by the ``pheno_import`` tool.
+
+Building the phenotype browser database
+***************************************
+
+The ``build_pheno_browser`` tool is used to create the phenotype browser database.
+
+This tool is also capable of determining whether an existing phenotype browser database is in
+need of re-calculation - if the DB file is up-to-date, it will not be rebuilt.
+
+.. runblock:: console
+
+    $ build_pheno_browser --help
 
 The data dictionary file
 ************************
@@ -262,7 +275,7 @@ Any measures named ``bala`` outside of ``ala`` will have a ``non_numeric_cutoff`
 a ``min_individuals`` of 1, any inside ``ala`` will have ``min_individuals`` set to 2.
 
 Inference parameters
-********************
+####################
 
 * ``min_individuals`` - The minimum amount of people in the instrument required for its measures to be classified,
   any amount under this will classify all instrument measures as ``raw``.
@@ -288,7 +301,7 @@ Inference parameters
 
 
 How classification works
-************************
+########################
 
 The measure classification works through the ``inference_reference_impl`` function.
 
