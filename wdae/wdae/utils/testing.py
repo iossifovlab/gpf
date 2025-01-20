@@ -837,12 +837,14 @@ s4,121.0199895975403,39.74107684421966,77.32212831797972,51.37116746952451,36.55
         regression:
           age:
             instrument_name: "i1"
-            measure_name: "age"
+            measure_names:
+              - "age"
             display_name: "Age"
             jitter: 0.1
           iq:
             instrument_name: "i1"
-            measure_name: "iq"
+            measure_names:
+              - "iq"
             display_name: "Non verbal IQ"
             jitter: 0.1
         """),
