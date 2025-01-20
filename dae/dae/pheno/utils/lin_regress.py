@@ -19,24 +19,25 @@ class LinearRegression(LinearRegressionSK):
         self._tvalues: np.ndarray | None = None
 
     def calc_regression(
-        self, X: np.ndarray, y: pd.Series | np.ndarray,
+        self, x_values: np.ndarray, y_values: pd.Series | np.ndarray,
         sample_weight: float | None = None,
     ) -> LinearRegression:
-        super().fit(X, y, sample_weight)
-        n = len(y)  # pylint: disable=invalid-name
+        """Calculate regression for given X and Y values."""
+        super().fit(x_values, y_values, sample_weight)
+        n = len(y_values)  # pylint: disable=invalid-name
 
-        x_consts = np.column_stack([np.ones(X.shape[0]), X])
+        x_consts = np.column_stack([np.ones(x_values.shape[0]), x_values])
         pinv_x, rank = sp.linalg.pinv(x_consts, return_rank=True)
 
         df_resid = x_consts.shape[0] - np.linalg.matrix_rank(x_consts)
 
-        resid = y - self.predict(X)
+        resid = y_values - self.predict(x_values)
 
         scale = np.dot(resid, resid) / df_resid
 
         cov_params = np.dot(pinv_x, pinv_x.T) * scale
 
-        beta = np.dot(pinv_x, y)
+        beta = np.dot(pinv_x, y_values)
         bse = np.sqrt(np.diag(cov_params))
 
         if np.any(bse == 0):
