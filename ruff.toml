@@ -34,7 +34,8 @@ exclude = [
     "*temp*",
     "data-hg19*",
     "docs",
-    "migrations"
+    "migrations",
+    "*.ipynb",
 ]
 
 line-length = 80
