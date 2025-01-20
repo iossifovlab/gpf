@@ -501,11 +501,11 @@ class MeasureReport(BaseModel):
 
 def read_and_classify_measure(
     instrument: ImportInstrument,
-    group_measure_names: list[str],
+    measure_names: list[str],
     descriptions: dict[str, str],
     import_config: PhenoImportConfig,
-    group_db_name: list[str],
-    group_inf_configs: list[InferenceConfig],
+    db_names: list[str],
+    inf_configs: list[InferenceConfig],
 ) -> tuple[str, Path, Path]:
     """Read a measure's values and classify from an instrument file."""
 
@@ -533,20 +533,61 @@ def read_and_classify_measure(
                 if person_id not in seen_person_ids:
                     person_ids.append(person_id)
                 seen_person_ids.add(person_id)
-                for measure_name in group_measure_names:
+                for measure_name in measure_names:
                     transformed_measures[measure_name][person_id] = \
                         _transform_value(row[measure_name])
 
-    m_zip = zip(group_measure_names,
-                group_db_name,
-                group_inf_configs,
-                strict=True)
+    output_table, reports = infer_measures(
+        instrument,
+        person_ids,
+        measure_names,
+        db_names,
+        inf_configs,
+        transformed_measures,
+    )
 
-    output_table = {"person_id": person_ids}
+    output_base_dir = get_output_parquet_files_dir(import_config)
+    values_parquet_dir = output_base_dir / "values"
+    values_parquet_dir.mkdir(exist_ok=True)
+    reports_parquet_dir = output_base_dir / "reports"
+    reports_parquet_dir.mkdir(exist_ok=True)
+
+    out_file = values_parquet_dir / f"{instrument.name}.parquet"
+
+    out_file = write_to_parquet(
+        instrument.name, out_file, reports, output_table,
+    )
+
+    reports_out_file = reports_parquet_dir / f"{instrument.name}.parquet"
+
+    reports_out_file = write_reports_to_parquet(
+        reports_out_file,
+        reports,
+        descriptions,
+    )
+
+    return (instrument.name, out_file, reports_out_file)
+
+
+def infer_measures(
+    instrument: ImportInstrument,
+    person_ids: list[str],
+    measure_names: list[str],
+    db_names: list[str],
+    inf_configs: list[InferenceConfig],
+    measure_person_values: dict[str, dict[str, Any]],
+) -> tuple[dict[str, list[Any]], dict[str, MeasureReport]]:
+    """Perform inference for measure values of an instrument."""
+    output_table: dict[str, list[Any]] = {"person_id": person_ids}
     reports = {}
 
+    m_zip = zip(measure_names,
+                db_names,
+                inf_configs,
+                strict=True)
+
     for (m_name, m_dbname, m_infconf) in m_zip:
-        m_values = list(transformed_measures[m_name].values())
+        m_values = list(measure_person_values[m_name].values())
         values, inference_report = inference_reference_impl(
             m_values, m_infconf,
         )
@@ -573,32 +614,12 @@ def read_and_classify_measure(
         report.measure_name = m_name
         report.db_name = m_dbname
         output_table[m_dbname] = [
-            values[idx] for idx, _ in enumerate(transformed_measures[m_name])
+            values[idx] for idx, _ in enumerate(measure_person_values[m_name])
         ]
 
         reports[m_name] = report
 
-    output_base_dir = get_output_parquet_files_dir(import_config)
-    values_parquet_dir = output_base_dir / "values"
-    values_parquet_dir.mkdir(exist_ok=True)
-    reports_parquet_dir = output_base_dir / "reports"
-    reports_parquet_dir.mkdir(exist_ok=True)
-
-    out_file = values_parquet_dir / f"{instrument.name}.parquet"
-
-    out_file = write_to_parquet(
-        instrument.name, out_file, reports, output_table,
-    )
-
-    reports_out_file = reports_parquet_dir / f"{instrument.name}.parquet"
-
-    reports_out_file = write_reports_to_parquet(
-        reports_out_file,
-        reports,
-        descriptions,
-    )
-
-    return (instrument.name, out_file, reports_out_file)
+    return output_table, reports
 
 
 def write_to_parquet(
