@@ -46,21 +46,25 @@ def imported_study(
                       type: str
                       desc: "variant ID"
                       name: cat
+                    - id: icat
+                      type: int
+                      desc: "integer category"
+                      name: icat
                     - id: freq
                       type: float
                       desc: ""
                       name: freq
                 """),
                 "data.txt": convert_to_tab_separated("""
-                    chrom  pos_begin  reference  alternative cat   freq
-                    chr1   1          A          C           ac1_1 0.1
-                    chr1   2          A          C           ac1_2 0.2
-                    chr1   3          A          C           ac1_3 0.3
-                    chr1   4          A          C           ac1_4 0.4
-                    chr2   1          A          C           ac2_1 1.0
-                    chr2   2          A          C           ac2_2 2.0
-                    chr2   3          A          C           ac2_3 3.0
-                    chr2   4          A          C           ac2_4 4.0
+                    chrom  pos_begin  reference  alternative cat    icat freq
+                    chr1   1          A          C           ac1_1  1    0.1
+                    chr1   2          A          C           ac1_2  2    0.2
+                    chr1   3          A          C           ac1_3  3    0.3
+                    chr1   4          A          C           ac1_4  4    0.4
+                    chr2   1          A          C           ac2_1  1    1.0
+                    chr2   2          A          C           ac2_2  2    2.0
+                    chr2   3          A          C           ac2_3  3    3.0
+                    chr2   4          A          C           ac2_4  4    4.0
                 """),
             },
         })
@@ -163,6 +167,21 @@ chr2   6   .  A   C     .    .      .    GT     1/1  1/1  0/1
                 ("cat", []),
             ],
          }, 8),
+        ({
+            "categorical_attr_filter": [
+                ("icat", [4]),
+            ],
+         }, 2),
+        ({
+            "categorical_attr_filter": [
+                ("icat", [3]),
+            ],
+         }, 2),
+        ({
+            "categorical_attr_filter": [
+                ("icat", [3, 4]),
+            ],
+         }, 4),
     ],
 )
 def test_query_by_genomic_scores(

@@ -423,9 +423,9 @@ class ImpalaVariants(QueryVariants):
 
         ped_df = ped_df.rename(columns=columns)
 
-        ped_df.role = ped_df.role.apply(Role)  # type: ignore
-        ped_df.sex = ped_df.sex.apply(Sex)  # type: ignore
-        ped_df.status = ped_df.status.apply(Status)  # type: ignore
+        ped_df.role = ped_df.role.apply(Role.from_value)  # type: ignore
+        ped_df.sex = ped_df.sex.apply(Sex.from_value)  # type: ignore
+        ped_df.status = ped_df.status.apply(Status.from_value)  # type: ignore
 
         return ped_df
 
