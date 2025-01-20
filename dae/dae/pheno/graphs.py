@@ -84,7 +84,9 @@ def male_female_legend(color_male, color_female, ax=None):
 
     male_patch = mpatches.Patch(color=color_male, label="M")
     female_patch = mpatches.Patch(color=color_female, label="F")
-    ax.legend(handles=[male_patch, female_patch], title="Sex", loc="upper right")
+    ax.legend(
+        handles=[male_patch, female_patch], title="Sex", loc="upper right",
+    )
 
 
 def draw_linregres(df, col1, col2, jitter: int | None = None, ax=None):
@@ -165,14 +167,13 @@ def draw_linregres(df, col1, col2, jitter: int | None = None, ax=None):
 
 def column_counts(column):
     """Collect counts for a graph column."""
-    counts = {
+    return {
         "column_name": textwrap.fill(column.name, 9),
         "column_status": "$\\it{" + column.status.name + "}$",
         "column_total": column.all_count(),
         "male_total": column.males_count(),
         "female_total": column.females_count(),
     }
-    return counts
 
 
 def role_labels(ordered_columns):
@@ -200,7 +201,7 @@ def set_figure_size(figure, x_count):
 
 def _enumerate_by_count(df, column_name):
     occurrence_counts = df[column_name].value_counts(dropna=False)
-    occurrence_ordered = occurrence_counts.index.values.tolist()
+    occurrence_ordered = occurrence_counts.index.to_numpy().tolist()
     occurrences_map = {
         value: number for (number, value) in enumerate(occurrence_ordered)
     }
@@ -297,23 +298,22 @@ def get_columns_to_draw(roles, df):
     """Collect columns needed for graphs."""
     columns = []
     for role_name, role_subroles in roles.items():
-        for status in [Status.affected, Status.unaffected]:
-            columns.append(
-                GraphColumn.build(df, role_name, role_subroles, status),
-            )
+        columns.extend([
+            GraphColumn.build(df, role_name, role_subroles, status)
+            for status in [Status.affected, Status.unaffected]
+        ])
 
-    dfs = [
+    return [
         column
         for column in columns
         if column.all_count() >= ROLES_COUNT_CUTOFF
     ]
 
-    return dfs
-
 
 def draw_categorical_violin_distribution(
     df,
     measure_id,
+    *,
     roles_definition=None,
     ax=None,
     numerical_categories=False,
@@ -364,8 +364,8 @@ def draw_categorical_violin_distribution(
         df_male = df_role[df_role.sex == Sex.male]
         df_female = df_role[df_role.sex == Sex.female]
 
-        male_data = df_male[numerical_measure_name].values
-        female_data = df_female[numerical_measure_name].values
+        male_data = df_male[numerical_measure_name].to_numpy()
+        female_data = df_female[numerical_measure_name].to_numpy()
 
         binned_datasets.append(
             [
@@ -395,7 +395,8 @@ def draw_categorical_violin_distribution(
             centers, female, height=heights, left=x_loc, color=color_female,
         )
         # pylint: disable=invalid-name
-        for y, (male_count, female_count) in enumerate(zip(male, female)):
+        for y, (male_count, female_count) \
+                in enumerate(zip(male, female, strict=True)):
             ax.text(
                 x_loc - male_count,
                 y,
