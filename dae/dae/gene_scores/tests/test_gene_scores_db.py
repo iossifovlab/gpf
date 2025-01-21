@@ -15,7 +15,7 @@ from dae.genomic_resources.repository import (
 from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
-@pytest.fixture()
+@pytest.fixture
 def scores_repo() -> GenomicResourceRepo:
     return build_inmemory_test_repository({
         "RVIS_rank": {
@@ -79,7 +79,7 @@ def scores_repo() -> GenomicResourceRepo:
     })
 
 
-@pytest.fixture()
+@pytest.fixture
 def gene_scores_db(scores_repo: GenomicResourceRepo) -> GeneScoresDb:
     resources = [
         scores_repo.get_resource("LGD_rank"),
