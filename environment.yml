@@ -52,6 +52,7 @@ dependencies:
   - pyzstd=0.16
   - gunicorn=22.0
   - mysqlclient=2.2
+  - mysql-common=8.0
   - pydantic=2.8.2
   - requests=2.32.2
   - requests-oauthlib=2.0.0
