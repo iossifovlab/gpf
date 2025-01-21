@@ -15,12 +15,12 @@
     "declaration": false,
     "moduleResolution": "node",
     "experimentalDecorators": true,
-    "target": "ES2022",
+    "target": "ESNext",
     "typeRoots": [
       "node_modules/@types"
     ],
     "lib": [
-      "es2021",
+      "esnext",
       "dom"
     ],
     "noImplicitThis": true,
