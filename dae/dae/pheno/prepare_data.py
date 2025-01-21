@@ -419,9 +419,6 @@ class PreparePhenoBrowserBase:
             return regression_measures
         for reg_id, reg in self.pheno_regressions.items():
             measure_names = reg.measure_names
-            if measure_names is None:
-                assert reg.measure_name is not None
-                measure_names = [reg.measure_name]
             reg_measure = None
             for measure_name in measure_names:
                 reg_measure = self._get_measure_by_name(
