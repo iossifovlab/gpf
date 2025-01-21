@@ -105,15 +105,15 @@ Import project configuration format
       # A dictionary of measures against which to calculate regressions with other measures in the study.
       regressions:
         age:
-          display_name: age              # How to display the measure in the produced plot
-          instrument_name: pheno_common  # From which instrument to select the measure
-          jitter: 0.1                    # Jitter to spread out similar/identical values on the plot
           measure_name: age_measure      # The measure's name
+          instrument_name: pheno_common  # From which instrument to select the measure
+          display_name: age              # How to display the measure in the produced plot
+          jitter: 0.1                    # Jitter to spread out similar/identical values on the plot
         measure_1:
-          display_name: measure number one
-          instrument_name: instrument_1
-          jitter: 0.1
           measure_name: measure_1
+          instrument_name: instrument_1
+          display_name: measure number one
+          jitter: 0.1
 
 Running the ``import_tools_pheno`` CLI tool
 ###########################################
