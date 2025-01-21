@@ -102,12 +102,13 @@ Import project configuration format
 
     # Optional. The contents of this section will be written to the output data's config file.
     study_config:
+      # A dictionary of measures against which to calculate regressions with other measures in the study.
       regressions:
         age:
-          display_name: age
-          instrument_name: pheno_common
-          jitter: 0.1
-          measure_name: age_measure
+          display_name: age              # How to display the measure in the produced plot
+          instrument_name: pheno_common  # From which instrument to select the measure
+          jitter: 0.1                    # Jitter to spread out similar/identical values on the plot
+          measure_name: age_measure      # The measure's name
         measure_1:
           display_name: measure number one
           instrument_name: instrument_1
