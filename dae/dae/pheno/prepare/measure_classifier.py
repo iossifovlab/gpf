@@ -23,7 +23,7 @@ def is_nan(val: Any) -> bool:
     if isinstance(val, str) and val.strip() == "":
         return True
 
-    return type(val) in {float, np.float64, np.float32} and np.isnan(val)
+    return bool(type(val) in {float, np.float64, np.float32} and np.isnan(val))
 
 
 class Convertible(enum.Enum):

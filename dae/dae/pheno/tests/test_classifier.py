@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 from typing import Any
 
+import numpy as np
 import pytest
 
 from dae.genomic_resources.histogram import (
@@ -11,9 +12,53 @@ from dae.genomic_resources.histogram import (
 )
 from dae.pheno.common import InferenceConfig
 from dae.pheno.prepare.measure_classifier import (
+    Convertible,
+    convert_to_numeric,
+    convert_to_string,
     determine_histogram_type,
     inference_reference_impl,
+    is_convertible_to_numeric,
+    is_nan,
 )
+
+
+def test_is_nan() -> None:
+    assert is_nan(float("nan")) is True
+    assert is_nan(None) is True
+    assert is_nan("") is True
+    assert is_nan(1) is False
+    assert is_nan(1.7) is False
+    assert is_nan("sadkjhsfh") is False
+
+
+def test_is_convertable_to_numeric() -> None:
+    assert is_convertible_to_numeric(float("nan")) == Convertible.nan
+    assert is_convertible_to_numeric(None) == Convertible.nan
+    assert is_convertible_to_numeric("") == Convertible.nan
+    assert is_convertible_to_numeric(True) == Convertible.non_numeric  # noqa: FBT003
+    assert is_convertible_to_numeric(1234) == Convertible.numeric
+    assert is_convertible_to_numeric(1.7) == Convertible.numeric
+    assert is_convertible_to_numeric("1.7") == Convertible.numeric
+    assert is_convertible_to_numeric("1234") == Convertible.numeric
+    assert is_convertible_to_numeric("asdf") == Convertible.non_numeric
+
+
+def test_convert_to_numeric() -> None:
+    assert convert_to_numeric(123) == 123
+    assert convert_to_numeric(1.7) == 1.7
+    assert convert_to_numeric("123") == 123
+    assert convert_to_numeric("1.7") == 1.7
+    assert np.isnan(convert_to_numeric(None))
+    assert np.isnan(convert_to_numeric(""))
+    assert np.isnan(convert_to_numeric(True))  # noqa: FBT003
+
+
+def test_convert_to_string() -> None:
+    assert convert_to_string(123) == "123"
+    assert convert_to_string("test") == "test"
+    assert convert_to_string(None) is None
+    assert convert_to_string(True) == "True"  # noqa: FBT003
+    assert convert_to_string("") is None
 
 
 def test_classify_default_continuous() -> None:
