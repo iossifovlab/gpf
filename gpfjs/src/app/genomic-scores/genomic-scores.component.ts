@@ -28,6 +28,7 @@ export class GenomicScoresComponent implements OnInit {
   @Output() public changeGenomicScore = new EventEmitter<{ old: string, new: string }>();
   @Output() public updateState = new EventEmitter<GenomicScoreState>();
   public errors: string[] = [];
+  private categoricalValueMax = 1000;
 
   // Refactor needed, not removal.
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
@@ -136,6 +137,9 @@ export class GenomicScoresComponent implements OnInit {
     if (this.isCategoricalHistogram(this.selectedGenomicScore.histogram)) {
       if (!state.values.length) {
         this.errors.push('Please select at least one bar.');
+      }
+      if (state.values.length > this.categoricalValueMax) {
+        this.errors.push(`Please select less than ${this.categoricalValueMax} values.`);
       }
     }
 
