@@ -1,23 +1,56 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
+from pathlib import Path
+from typing import Any
 
 import pytest
+import pytest_mock
 
 from dae.gene_sets.gene_sets_db import (
     GeneSetCollection,
+    GeneSetCollectionImpl,
     GeneSetsDb,
     build_gene_set_collection_from_resource_id,
 )
+from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
 )
-from dae.genomic_resources.testing import build_inmemory_test_repository
+from dae.genomic_resources.testing import (
+    build_filesystem_test_repository,
+    build_inmemory_test_repository,
+    convert_to_tab_separated,
+    setup_directories,
+)
+from dae.task_graph.graph import TaskGraph
 
 
-@pytest.fixture()
-def gene_sets_repo() -> GenomicResourceRepo:
-    return build_inmemory_test_repository({
+@pytest.fixture
+def gene_sets_repo_fixture(
+    grr_contents,
+    tmp_path_factory: pytest.TempPathFactory,
+) -> tuple[Path, GenomicResourceRepo]:
+    root_path = tmp_path_factory.mktemp("gene_sets_repo_tests")
+    setup_directories(root_path, grr_contents)
+    return root_path, build_filesystem_test_repository(root_path)
+
+
+@pytest.fixture
+def gene_sets_repo_path(  # noqa: FURB118
+    gene_sets_repo_fixture,
+) -> Path:
+    return gene_sets_repo_fixture[0]
+
+
+@pytest.fixture
+def gene_sets_repo_in_memory(grr_contents) -> GenomicResourceRepo:
+    return build_inmemory_test_repository(grr_contents)
+
+
+@pytest.fixture
+def grr_contents() -> dict[str, Any]:
+    return {
         "main": {
             GR_CONF_FILE_NAME: textwrap.dedent("""
                 type: gene_set
@@ -83,17 +116,37 @@ def gene_sets_repo() -> GenomicResourceRepo:
                 "TEST_GENE_SET3\tsomedescription\tPOGZ\n"
             ),
         },
-    })
+        "test": {
+            GR_CONF_FILE_NAME: textwrap.dedent("""
+                type: gene_set
+                id: test_mapping
+                format: map
+                filename: test-map.txt
+                web_label: Test mapping
+                web_format_str: "key| (|count|)"
+            """),
+            "test-map.txt": convert_to_tab_separated("""
+                #geneNS tsym
+                POGZ    test:01||test:02
+                CHD8    test:02||test:03
+            """),
+            "test-mapnames.txt": convert_to_tab_separated("""
+                test:01  test_first
+                test:02  test_second
+                test:03  test_third
+            """),
+        },
+    }
 
 
-@pytest.fixture()
+@pytest.fixture
 def gene_sets_db(
-    gene_sets_repo: GenomicResourceRepo,
+    gene_sets_repo_in_memory: GenomicResourceRepo,
 ) -> GeneSetsDb:
     resources = [
-        gene_sets_repo.get_resource("main"),
-        gene_sets_repo.get_resource("test_mapping"),
-        gene_sets_repo.get_resource("test_gmt"),
+        gene_sets_repo_in_memory.get_resource("main"),
+        gene_sets_repo_in_memory.get_resource("test_mapping"),
+        gene_sets_repo_in_memory.get_resource("test_gmt"),
     ]
     gene_set_collections = [
         GeneSetCollection(r) for r in resources
@@ -102,9 +155,9 @@ def gene_sets_db(
 
 
 def test_gene_set_collection_main(
-    gene_sets_repo: GenomicResourceRepo,
+    gene_sets_repo_in_memory: GenomicResourceRepo,
 ) -> None:
-    resource = gene_sets_repo.get_resource("main")
+    resource = gene_sets_repo_in_memory.get_resource("main")
     gsc = GeneSetCollection(resource)
     gene_set = gsc.get_gene_set("main_candidates")
     assert gene_set is not None
@@ -286,9 +339,12 @@ def test_get_gene_set_collection_files(gene_sets_db: GeneSetsDb) -> None:
 
 
 def test_build_gene_set_collection_from_resource_id(
-    gene_sets_repo: GenomicResourceRepo,
+    gene_sets_repo_in_memory: GenomicResourceRepo,
 ) -> None:
-    gsc = build_gene_set_collection_from_resource_id("main", gene_sets_repo)
+    gsc = build_gene_set_collection_from_resource_id(
+        "main",
+        gene_sets_repo_in_memory,
+    )
     gene_set = gsc.get_gene_set("main_candidates")
     assert gene_set is not None
     assert gene_set["name"] == "main_candidates"
@@ -305,3 +361,43 @@ def test_build_gene_set_collection_from_resource_id(
         "PCSK2",
     }
     assert gene_set["desc"] == "Main Candidates"
+
+
+def test_add_statistics_build_tasks(
+    gene_sets_repo_in_memory: GenomicResourceRepo,
+) -> None:
+    build_gene_set_collection_from_resource_id("test", gene_sets_repo_in_memory)
+
+    res = gene_sets_repo_in_memory.get_resource("test")
+    assert res is not None
+
+    gene_sets_collection_impl = GeneSetCollectionImpl(res)
+    assert gene_sets_collection_impl is not None
+
+    graph = TaskGraph()
+    assert len(graph.tasks) == 0
+
+    gene_sets_collection_impl.add_statistics_build_tasks(graph)
+    assert len(graph.tasks) == 0
+
+
+def test_calc_statistics_hash(
+    gene_sets_repo_path: Path,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    calc_statistics_hash_mock = mocker.patch(
+        "dae.gene_sets.gene_sets_db.GeneSetCollectionImpl.calc_statistics_hash",
+        autospec=True,
+    )
+    calc_statistics_hash_mock.return_value = b""
+
+    add_statistics_build_tasks_mock = mocker.patch(
+        "dae.gene_sets.gene_sets_db.GeneSetCollectionImpl.add_statistics_build_tasks",
+        autospec=True,
+    )
+    add_statistics_build_tasks_mock.return_value = b""
+
+    cli_manage(["repo-repair", "-R", str(gene_sets_repo_path), "-j", "1"])
+
+    assert calc_statistics_hash_mock.called is True
+    assert add_statistics_build_tasks_mock.called is True
