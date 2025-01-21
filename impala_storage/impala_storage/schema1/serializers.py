@@ -96,11 +96,12 @@ def write_effects(
 
 def write_genotype(stream: io.BytesIO, genotype: np.ndarray) -> None:
     """Write genotype data to the stream."""
-    assert genotype.dtype == np.int8
+    s1genotype = genotype.astype(np.int8)
+    assert s1genotype.dtype == np.int8
 
-    rows, _ = genotype.shape
+    rows, _ = s1genotype.shape
     assert rows == 2
-    flat = genotype.flatten(order="F")
+    flat = s1genotype.flatten(order="F")
     buff = flat.tobytes()
 
     write_int32(stream, len(buff))
@@ -711,7 +712,7 @@ class AlleleParquetSerializer:
                 try:
                     write_string(stream, prop)
                     write_string(stream, variant.get_attribute(prop)[0])
-                except Exception:  # noqa: PERF203 pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-except
                     logger.exception(
                         "cant serialize property %s value for variant: %s; %s",
                         prop, variant, variant.get_attribute(prop)[0])
@@ -720,7 +721,7 @@ class AlleleParquetSerializer:
             stream.seek(0)
             output = stream.read()
             stream.close()
-            return output
+            return output  # noqa: TRY300
         except Exception:  # pylint: disable=broad-except
             logger.exception(
                 "problem storing extra attributes for variant %s: %s",
@@ -790,6 +791,7 @@ class AlleleParquetSerializer:
         allele_count = read_int8(stream)
         records = []
         inheritnace_in_members: dict[int, list[Inheritance]] = {}
+        allele_data = {}
         for _i in range(allele_count):
             allele_data = self.deserialize_allele(stream)
             allele_index = allele_data["allele_index"]

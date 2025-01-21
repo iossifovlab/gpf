@@ -124,7 +124,7 @@ class VcfFamiliesGenotypes(FamiliesGenotypes):
             if len(family_genotype) == 0:
                 continue
 
-            genotype = np.array(family_genotype, np.int8)
+            genotype = np.array(family_genotype, np.int64)
             genotype = genotype.T
             assert len(genotype.shape) == 2, (genotype, family)
             assert genotype.shape[0] == 2
@@ -569,7 +569,7 @@ class SingleVcfLoader(VariantsGenotypesLoader):
                 assert known_independent_genotypes is not None
 
                 independent_genotypes = np.array(
-                    known_independent_genotypes, np.int8).T
+                    known_independent_genotypes, np.int64).T
 
                 self._calc_allele_frequencies(
                     current_summary_variant,
