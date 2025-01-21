@@ -12,6 +12,7 @@ import {
 import { CategoricalHistogram, CategoricalHistogramView } from 'app/genomic-scores-block/genomic-scores-block';
 
 import * as d3 from 'd3';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-categorical-histogram',
@@ -31,9 +32,17 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   @Input() public showMinMaxInput: boolean;
 
   @Input() public histogram: CategoricalHistogram;
-  @Input() public stateCategoricalNames: string[] = [];
+  @Input() public initialSelectedValueNames: string[] = [];
 
-  private values: {name: string, value: number}[] = [];
+  // Values used as histogram bars
+  public values: {name: string, value: number}[] = [];
+  // Omitted values that are combined in one custom bar
+  public otherValueNames: string[] = [];
+  // Currently selected names of values
+  public selectedValueNames: string[] = [];
+
+  private maxShown: number;
+
   private svg: d3.Selection<SVGElement, unknown, null, undefined>;
 
   @Input() public isInteractive = true;
@@ -51,45 +60,75 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
                      | d3.ScaleLogarithmic<number, number, never>;
 
   public ngOnInit(): void {
-    this.histogram.values.sort((a, b) => {
-      return this.histogram.valueOrder.indexOf(a.name) - this.histogram.valueOrder.indexOf(b.name);
-    });
+    this.calculateMaxShown();
 
-    let maxShown = this.histogram.values.length;
-    if (this.histogram.displayedValuesCount) {
-      maxShown = this.histogram.displayedValuesCount;
-    } else if (this.histogram.displayedValuesPercent) {
-      maxShown = Math.floor(this.histogram.values.length / 100 * this.histogram.displayedValuesPercent);
-    } else {
-      maxShown = 100;
+    this.values = cloneDeep(this.histogram.values);
+    this.formatValues();
+
+    this.selectedValueNames = cloneDeep(this.initialSelectedValueNames);
+    this.formatSelectedValueNames();
+
+    // Select all values if no initial are provided and range selector mode is used
+    if (this.selectedValueNames.length === 0 && this.interactType === 'range selector') {
+      this.toggleValuesInRange(0, this.values.length);
     }
 
-    const otherSum = this.histogram.values
-      .splice(maxShown, this.histogram.values.length)
-      .reduce((acc, v) => acc + v.value, 0);
-    if (otherSum !== 0) {
-      this.histogram.values.push({name: 'other', value: otherSum});
-    }
-
+    // Redraw histogram
     this.sliderStartIndex = 0;
-    this.sliderEndIndex = this.histogram.values.length - 1;
+    this.sliderEndIndex = this.values.length - 1;
     this.redrawHistogram();
 
+    // Redraw histogram sliders if range selector mode
     if (this.interactType === 'range selector') {
-      if (this.stateCategoricalNames.length === 0) {
-        this.toggleValuesInRange(0, this.histogram.values.length);
-      } else {
-        this.stateCategoricalNames.sort((a, b) => {
-          return this.histogram.valueOrder.indexOf(a) - this.histogram.valueOrder.indexOf(b);
-        });
-
-        this.redrawSliders(this.stateCategoricalNames);
-      }
+      this.redrawSliders(this.selectedValueNames);
     }
   }
 
   public ngOnChanges(): void {
-    this.redrawHistogram();
+    if (this.values.length) {
+      this.selectedValueNames = cloneDeep(this.initialSelectedValueNames);
+      this.formatSelectedValueNames();
+      this.redrawHistogram();
+    }
+  }
+
+  private calculateMaxShown(): void {
+    this.maxShown = this.histogram.values.length;
+    if (this.histogram.displayedValuesCount) {
+      this.maxShown = this.histogram.displayedValuesCount;
+    } else if (this.histogram.displayedValuesPercent) {
+      this.maxShown = Math.floor(this.histogram.values.length / 100 * this.histogram.displayedValuesPercent);
+    } else {
+      this.maxShown = 100;
+    }
+  }
+
+  // Sort and combine other values
+  private formatValues(): void {
+    this.values.sort((a, b) => {
+      return this.histogram.valueOrder.indexOf(a.name) - this.histogram.valueOrder.indexOf(b.name);
+    });
+
+    if (this.maxShown < this.values.length) {
+      const otherValues = this.values
+        .splice(this.maxShown, this.values.length);
+      this.otherValueNames = otherValues.map(v => v.name);
+      const otherSum = otherValues.reduce((acc, v) => acc + v.value, 0);
+      this.values.push({name: 'Other values', value: otherSum});
+    }
+  }
+
+  // Sort and combine other values
+  private formatSelectedValueNames(): void {
+    this.selectedValueNames.sort((a, b) => {
+      return this.histogram.valueOrder.indexOf(a) - this.histogram.valueOrder.indexOf(b);
+    });
+    if (this.maxShown < this.histogram.values.length) {
+      const selectedOthers = this.selectedValueNames.splice(this.maxShown, this.histogram.values.length);
+      if (selectedOthers.length) {
+        this.selectedValueNames.push('Other values');
+      }
+    }
   }
 
   public singleScoreValueIsValid(): boolean {
@@ -111,11 +150,11 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
 
     this.xScale = d3.scaleBand()
       .padding(0.1)
-      .domain(this.histogram.values.map(v => v.name))
+      .domain(this.values.map(v => v.name))
       .range([0, width]);
 
     this.scaleYAxis = this.histogram.logScaleY ? d3.scaleLog() : d3.scaleLinear();
-    this.scaleYAxis.range([height, 0]).domain([1, d3.max(this.histogram.values.map(v => v.value))]);
+    this.scaleYAxis.range([height, 0]).domain([1, d3.max(this.values.map(v => v.value))]);
 
     this.redrawXAxis(svg, width, height);
 
@@ -124,7 +163,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     svg.append('g')
       .call(leftAxis);
     svg.selectAll('bar')
-      .data(this.histogram.values)
+      .data(this.values)
       .enter().append('rect')
       .style('fill', 'lightsteelblue')
       .attr('x', (v: { name: string, value: number }) => this.xScale(v.name))
@@ -148,15 +187,14 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
         element.srcElement.style.filter = 'none';
         element.srcElement.style.cursor = 'defualt';
       });
-
-      if (this.stateCategoricalNames.length > 0) {
-        this.stateCategoricalNames.forEach(name => {
-          svg.select(`[id="${name}"]`)
-            .style('fill', 'steelblue');
-        });
-      }
     }
 
+    if (this.selectedValueNames.length > 0) {
+      this.selectedValueNames.forEach(name => {
+        svg.select(`[id="${name}"]`)
+          .style('fill', 'steelblue');
+      });
+    }
     this.svg = svg;
   }
 
@@ -168,7 +206,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     const axisX: number[] = [0];
     const axisVals: string[] = [''];
 
-    this.histogram.values.forEach(value => {
+    this.values.forEach(value => {
       const leftX = this.xScale(value.name) + this.xScale.bandwidth() / 2;
       axisX.push(leftX);
       axisVals.push(value.name);
@@ -190,14 +228,17 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     } else {
       event.srcElement.style.fill = 'steelblue';
     }
-    this.selectCategoricalValues.emit([
-      event.srcElement.id
-    ]);
+
+    if (event.srcElement.id !== 'Other values') {
+      this.selectCategoricalValues.emit([event.srcElement.id]);
+    } else {
+      this.selectCategoricalValues.emit(this.otherValueNames);
+    }
   }
 
   private colorBars(): void {
     this.svg.selectAll('rect').style('fill', (b: {name: string, value: number}) => {
-      const i = this.histogram.values.findIndex(bar => bar.name === b.name);
+      const i = this.values.findIndex(bar => bar.name === b.name);
       return i < this.sliderStartIndex || i > this.sliderEndIndex
         ? 'lightsteelblue' : 'steelblue';
     });
@@ -211,9 +252,9 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   private redrawSliders(selectedValues: string[]): void {
     const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
 
-    this.sliderStartIndex = this.histogram.values.findIndex(v =>
+    this.sliderStartIndex = this.values.findIndex(v =>
       v.name === selectedValues[0]);
-    this.sliderEndIndex = this.histogram.values.findIndex(v =>
+    this.sliderEndIndex = this.values.findIndex(v =>
       v.name === selectedValues[selectedValues.length-1]);
 
     this.startX = this.xScale(selectedValues[0])
@@ -227,7 +268,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
 
   public get startX(): number {
     const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
-    const name = this.histogram.values.at(this.sliderStartIndex).name;
+    const name = this.values.at(this.sliderStartIndex).name;
     return this.xScale(name) - distBetweenBars / 2 - 1;
   }
 
@@ -245,7 +286,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
 
   public get endX(): number {
     const distBetweenBars = this.xScale.step() * this.xScale.paddingInner();
-    const name = this.histogram.values.at(this.sliderEndIndex).name;
+    const name = this.values.at(this.sliderEndIndex).name;
     return this.xScale(name) + this.xScale.bandwidth() + distBetweenBars / 2 - 1;
   }
 
@@ -280,9 +321,13 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   private toggleValuesInRange(a: number, b: number): void {
     const start = Math.min(a, b);
     const end = Math.max(a, b);
-    this.selectCategoricalValues.emit(
-      this.histogram.values.slice(start, end).map(v => v.name)
-    );
+    let toggled = this.values.slice(start, end).map(v => v.name);
+    const otherIndex = toggled.findIndex(name => name === 'Other values');
+    if (otherIndex !== -1) {
+      toggled.splice(otherIndex, 1);
+      toggled = [...toggled, ...this.otherValueNames];
+    }
+    this.selectCategoricalValues.emit(toggled);
     this.colorBars();
   }
 }

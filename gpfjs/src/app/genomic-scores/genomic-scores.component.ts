@@ -83,18 +83,15 @@ export class GenomicScoresComponent implements OnInit {
   }
 
   public toggleCategoricalValues(values: string[]): void {
-    values.forEach(value => {
-      const valueIndex = this.localState.values.findIndex(v => v === value);
-      if (valueIndex === -1) {
-        this.localState.values.push(value);
-      } else {
-        this.localState.values.splice(valueIndex, 1);
-      }
-    });
+    const oldValues: Set<string> = new Set([...this.localState.values]);
+    const newValues: Set<string> = new Set([...values]);
+
+    this.localState.values = Array.from(oldValues.symmetricDifference(newValues));
+    const cloned = cloneDeep(this.localState.values);
     this.validateState(this.localState);
     this.store.dispatch(setGenomicScoresCategorical({
       score: this.localState.score,
-      values: cloneDeep(this.localState.values),
+      values: cloned,
       categoricalView: this.localState.categoricalView,
     }));
   }
