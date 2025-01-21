@@ -19,7 +19,7 @@ from dae.genomic_resources.repository import (
 from dae.genomic_resources.testing import build_inmemory_test_repository
 
 
-@pytest.fixture()
+@pytest.fixture
 def scores_repo() -> GenomicResourceRepo:
     return build_inmemory_test_repository({
         "LinearHist": {
