@@ -105,9 +105,9 @@ Import project configuration format
       # A dictionary of measures against which to calculate regressions with other measures in the study.
       regressions:
         age:
-          measure_names:                 # The measures' names
-            - age_measure      
-          instrument_name: pheno_common  # From which instrument to select the measures
+          measure_names:                 # A list of measure names to try to find in any instrument. The first match will be taken to regress by.
+            - age_measure
+          instrument_name: pheno_common  # Optional. If this is specified, will take the first measure from the list above, and search the given instrument for it.
           display_name: age              # How to display the regression in the produced plot
           jitter: 0.1                    # Jitter to spread out similar/identical values on the plot
         measure_1:
