@@ -11,7 +11,6 @@ import { cloneDeep } from 'lodash';
 import { Store } from '@ngrx/store';
 import {
   GenomicScoreState,
-  setGenomicScoresCategorical,
 } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { resetErrors, setErrors } from 'app/common/errors.state';
 
@@ -41,6 +40,7 @@ export class GenomicScoresComponent implements OnInit {
 
   public ngOnInit(): void {
     this.localState = this.initialState;
+    this.validateState(this.localState);
   }
 
   public updateRangeStart(range): void {
@@ -78,23 +78,22 @@ export class GenomicScoresComponent implements OnInit {
     if (view === this.localState.categoricalView) {
       return;
     }
+    if (view === 'click selector') {
+      this.localState.values = [];
+    } else if (view === 'range selector' && this.isCategoricalHistogram(this.selectedGenomicScore.histogram)) {
+      this.localState.values = this.selectedGenomicScore.histogram.values.map(v => v.name);
+    }
     this.localState.categoricalView = view;
-    this.localState.values = [];
     this.updateHistogramState();
   }
 
   public toggleCategoricalValues(values: string[]): void {
-    const oldValues: Set<string> = new Set([...this.localState.values]);
-    const newValues: Set<string> = new Set([...values]);
+    const oldValues: Set<string> = new Set(this.localState.values);
+    const newValues: Set<string> = new Set(values);
 
     this.localState.values = Array.from(oldValues.symmetricDifference(newValues));
-    const cloned = cloneDeep(this.localState.values);
     this.validateState(this.localState);
-    this.store.dispatch(setGenomicScoresCategorical({
-      score: this.localState.score,
-      values: cloned,
-      categoricalView: this.localState.categoricalView,
-    }));
+    this.updateState.emit(this.localState);
   }
 
   public isNumberHistogram(arg: object): arg is NumberHistogram {

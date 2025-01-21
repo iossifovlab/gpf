@@ -173,7 +173,6 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
         v.value === 0 || v.value === undefined ? 0 : height - this.scaleYAxis(v.value))
       .attr('id', (v: { name: string, value: number }) => v.name);
 
-
     if (this.interactType === 'click selector') {
       svg.selectAll('rect').on('click', event => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
