@@ -48,17 +48,18 @@ os.makedirs(DEFAULT_WDAE_DIR, exist_ok=True)
 
 LOG_DIR = os.environ.get("WDAE_LOG_DIR", DEFAULT_WDAE_DIR)
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(
-            DEFAULT_WDAE_DIR, "wdae.sql"),
-        "USER": "",
-        "PASSWORD": "",
-        "HOST": "",
-        "PORT": "",
+if not os.environ.get("WDAE_DB_HOST"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.path.join(
+                DEFAULT_WDAE_DIR, "wdae.sql"),
+            "USER": "",
+            "PASSWORD": "",
+            "HOST": "",
+            "PORT": "",
+        }
     }
-}
 
 
 LOGGING["handlers"].update({  # type: ignore
