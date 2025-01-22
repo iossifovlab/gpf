@@ -406,9 +406,9 @@ class QueryTransformer:
                 kwargs["real_attr_filter"] = []
             kwargs["real_attr_filter"].extend(
                 self._transform_genomic_scores_continuous(genomic_scores))
-            if "categorical_value_filter" not in kwargs:
-                kwargs["categorical_value_filter"] = []
-            kwargs["categorical_value_filter"].extend(
+            if "categorical_attr_filter" not in kwargs:
+                kwargs["categorical_attr_filter"] = []
+            kwargs["categorical_attr_filter"].extend(
                 self._transform_genomic_scores_categorical(genomic_scores))
 
         if "frequencyScores" in kwargs:
