@@ -123,11 +123,13 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     this.selectedValueNames.sort((a, b) => {
       return this.histogram.valueOrder.indexOf(a) - this.histogram.valueOrder.indexOf(b);
     });
-    if (this.maxShown < this.histogram.values.length) {
-      const selectedOthers = this.selectedValueNames.splice(this.maxShown, this.histogram.values.length);
-      if (selectedOthers.length) {
-        this.selectedValueNames.push('Other values');
+    if (this.otherValueNames.length) {
+      const visibleValues = [...new Set(this.selectedValueNames).difference(new Set(this.otherValueNames))];
+
+      if (this.selectedValueNames.length - visibleValues.length === this.otherValueNames.length) {
+        visibleValues.push('Other values');
       }
+      this.selectedValueNames = visibleValues;
     }
   }
 
@@ -184,7 +186,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
         element.srcElement.style.cursor = 'pointer';
       }).on('mouseout', (element) => {
         element.srcElement.style.filter = 'none';
-        element.srcElement.style.cursor = 'defualt';
+        element.srcElement.style.cursor = 'default';
       });
     }
 

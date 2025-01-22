@@ -143,17 +143,27 @@ describe('CategoricalHistogramComponent', () => {
       true,
       2,
     );
-    component.initialSelectedValueNames = ['name3', 'name1'];
+    component.initialSelectedValueNames = ['name3', 'name2', 'name1'];
     component.interactType = 'click selector';
 
     component.ngOnInit();
-    expect(component.selectedValueNames).toStrictEqual(['name1', 'name3']);
+    expect(component.selectedValueNames).toStrictEqual(['name1', 'name2']);
 
-    const notSelectedBar: HTMLElement = (fixture.nativeElement as HTMLElement).querySelector('rect[id=name2]');
-    expect(notSelectedBar.style.fill).toBe('lightsteelblue');
+    let bar: HTMLElement;
+    bar = (fixture.nativeElement as HTMLElement).querySelector('rect[id=name1]');
+    expect(bar.style.fill).toBe('steelblue');
+    bar = (fixture.nativeElement as HTMLElement).querySelector('rect[id=name2]');
+    expect(bar.style.fill).toBe('steelblue');
 
-    const selectedBar: HTMLElement = (fixture.nativeElement as HTMLElement).querySelector('rect[id=name1]');
-    expect(selectedBar.style.fill).toBe('steelblue');
+    bar= (fixture.nativeElement as HTMLElement).querySelector('rect[id="Other values"]');
+    expect(bar.style.fill).toBe('lightsteelblue');
+
+    bar= (fixture.nativeElement as HTMLElement).querySelector('rect[id=name3]');
+    expect(bar).toBeNull();
+    bar = (fixture.nativeElement as HTMLElement).querySelector('rect[id=name4]');
+    expect(bar).toBeNull();
+    bar = (fixture.nativeElement as HTMLElement).querySelector('rect[id=name5]');
+    expect(bar).toBeNull();
   });
 
   it('should check if single score value is valid', () => {

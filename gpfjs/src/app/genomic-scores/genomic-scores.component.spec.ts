@@ -6,15 +6,15 @@ import { GenomicScoresComponent } from './genomic-scores.component';
 import { PopupComponent } from 'app/popup/popup.component';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
-import { Store, StoreModule } from '@ngrx/store';
+import { StoreModule } from '@ngrx/store';
 import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
-import { GenomicScoreState, setGenomicScoresCategorical } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { GenomicScoreState } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { CategoricalHistogram, GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
+import { MatMenuModule } from '@angular/material/menu';
 
 describe('GenomicScoresComponent', () => {
   let component: GenomicScoresComponent;
   let fixture: ComponentFixture<GenomicScoresComponent>;
-  let store: Store;
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
@@ -28,6 +28,7 @@ describe('GenomicScoresComponent', () => {
         FormsModule,
         MarkdownModule.forRoot(),
         StoreModule.forRoot({}),
+        MatMenuModule,
       ],
       schemas: [NO_ERRORS_SCHEMA]
     })
@@ -41,7 +42,6 @@ describe('GenomicScoresComponent', () => {
 
     component.errors = [];
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    store = TestBed.inject(Store);
 
     component.selectedGenomicScore = new GenomicScore(
       'desc',
@@ -61,6 +61,14 @@ describe('GenomicScoresComponent', () => {
         true,
       ),
     );
+    component.initialState = {
+      score: 'score',
+      histogramType: 'categorical',
+      rangeStart: null,
+      rangeEnd: null,
+      values: ['value1', 'value2', 'value3'],
+      categoricalView: 'range selector',
+    } as GenomicScoreState;
 
     fixture.detectChanges();
   });
@@ -79,15 +87,11 @@ describe('GenomicScoresComponent', () => {
       categoricalView: 'range selector',
     } as GenomicScoreState;
 
-    const dispatchSpy = jest.spyOn(store, 'dispatch').mockImplementation();
+    const updateStateSpy = jest.spyOn(component.updateState, 'emit').mockImplementation();
 
     expect(component.localState.values).toStrictEqual(['value1', 'value2', 'value3']);
     component.toggleCategoricalValues(['value2', 'value3', 'value4']);
     expect(component.localState.values).toStrictEqual(['value1', 'value4',]);
-    expect(dispatchSpy).toHaveBeenCalledWith(setGenomicScoresCategorical({
-      score: component.localState.score,
-      values: component.localState.values,
-      categoricalView: component.localState.categoricalView,
-    }));
+    expect(updateStateSpy).toHaveBeenCalledWith(component.localState);
   });
 });

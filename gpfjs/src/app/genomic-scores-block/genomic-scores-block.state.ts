@@ -1,6 +1,6 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { reset } from 'app/users/state-actions';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep } from 'lodash';
 import { CategoricalHistogramView } from './genomic-scores-block';
 import { HistogramType } from 'app/gene-scores/gene-scores.state';
 
