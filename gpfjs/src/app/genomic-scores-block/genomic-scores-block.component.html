@@ -3,8 +3,16 @@
     <ul ngbNav #nav="ngbNav" class="navbar bg-light nav-pills" style="justify-content: flex-start">
       <div class="nav-title-custom">Genomic scores</div>
       <li ngbNavItem>
-        <a *ngIf="allGenomicScores?.length > 0" ngbNavLink>
-          <gpf-add-button (addFilter)="addFilter()"></gpf-add-button>
+        <a *ngIf="allGenomicScores?.length > 0">
+          <mat-form-field>
+            <mat-select disableRipple [placeholder]="'Select filter'">
+              <mat-option
+                *ngFor="let genomicScore of unusedGenomicScores; let i = index"
+                (click)="addFilter(genomicScore, i)"
+                >{{ genomicScore.desc }}</mat-option
+              >
+            </mat-select>
+          </mat-form-field>
         </a>
         <span *ngIf="allGenomicScores?.length === 0" style="opacity: 75%"><i>No genomic scores available</i></span>
       </li>
@@ -20,9 +28,7 @@
           <gpf-genomic-scores
             [selectedGenomicScore]="selectedScore.score"
             [initialState]="selectedScore.state"
-            [otherGenomicScores]="unusedGenomicScores"
-            (updateState)="addToState($event)"
-            (changeGenomicScore)="changeFilter($event)">
+            (updateState)="addToState($event)">
           </gpf-genomic-scores>
         </span>
       </div>

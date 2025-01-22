@@ -81,13 +81,13 @@ export class GenomicScoresBlockComponent implements OnInit {
     return state;
   }
 
-  public addFilter(): void {
-    const defaultState = this.createScoreDefaultState(this.unusedGenomicScores[0]);
+  public addFilter(score: GenomicScore, index: number): void {
+    const defaultState = this.createScoreDefaultState(score);
     this.selectedGenomicScores.push({
-      score: this.unusedGenomicScores[0],
+      score: score,
       state: defaultState,
     });
-    this.unusedGenomicScores.splice(0, 1);
+    this.unusedGenomicScores.splice(index, 1);
     this.addToState(cloneDeep(defaultState));
   }
 

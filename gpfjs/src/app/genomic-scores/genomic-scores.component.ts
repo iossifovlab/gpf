@@ -23,8 +23,6 @@ export class GenomicScoresComponent implements OnInit {
   @Input() public selectedGenomicScore: GenomicScore;
   @Input() public initialState: GenomicScoreState;
   public localState: GenomicScoreState;
-  @Input() public otherGenomicScores: GenomicScore[];
-  @Output() public changeGenomicScore = new EventEmitter<{ old: string, new: string }>();
   @Output() public updateState = new EventEmitter<GenomicScoreState>();
   public errors: string[] = [];
   private categoricalValueMax = 1000;
@@ -60,13 +58,6 @@ export class GenomicScoresComponent implements OnInit {
   public get domainMax(): number {
     const lastIndex = (this.selectedGenomicScore.histogram as NumberHistogram).bins.length - 1;
     return (this.selectedGenomicScore.histogram as NumberHistogram).bins[lastIndex];
-  }
-
-  public updateSelectedGenomicScore(newGenomicScore: GenomicScore): void {
-    this.changeGenomicScore.emit({
-      old: this.selectedGenomicScore.score,
-      new: newGenomicScore.score
-    });
   }
 
   private updateHistogramState(): void {
