@@ -18,7 +18,7 @@ def imported_vcf_study(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp("test_query_by_frequencies_vcf")
+    root_path = tmp_path_factory.mktemp("test_query_without_variants")
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = alla_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
@@ -35,7 +35,7 @@ def imported_vcf_study(
 
     return vcf_study(
         root_path,
-        "minimal_vcf", ped_path, [],
+        "test_query_without_variants", ped_path, [],
         gpf_instance)
 
 

@@ -43,7 +43,7 @@ f2        chrA:81-100 CNV-     2||2||1
 
     return cnv_study(
         root_path,
-        "cnv_variants", pathlib.Path(ped_path),
+        "test_cnv_variants", pathlib.Path(ped_path),
         [pathlib.Path(cnv_path)],
         gpf_instance)
 

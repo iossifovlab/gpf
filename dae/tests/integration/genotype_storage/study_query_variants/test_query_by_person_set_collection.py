@@ -44,7 +44,7 @@ chrA   3   .  A   C     .    .      .    GT     0/0  0/1  0/0 1/1 0/1  0/0 0/0
 
     return vcf_study(
         root_path,
-        "psc_tios_vcf", pathlib.Path(ped_path),
+        "test_query_by_person_set_collection", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
         gpf_instance,
         project_config_update={
@@ -140,13 +140,13 @@ def test_study_build_person_set_collection(
     assert len(psc.person_sets["unaffected"]) == 4
 
     all_persons = imported_study.families.persons
-    person = all_persons[("f1", "ch1")]
+    person = all_persons["f1", "ch1"]
     assert person.get_attr("phenotype") == "autism"
 
-    person = all_persons[("f2", "ch2")]
+    person = all_persons["f2", "ch2"]
     assert person.get_attr("phenotype") == "autism"
 
-    person = all_persons[("f1", "dad1")]
+    person = all_persons["f1", "dad1"]
     assert person.get_attr("phenotype") == "unaffected"
 
 

@@ -49,7 +49,7 @@ chrA   6   .  A   G,C .    .      .    GT     0/0  2/2  2/2 0/0  0/0  0/0 0/0
 
     return vcf_study(
         root_path,
-        "unknown_vcf", pathlib.Path(ped_path),
+        "test_inheritance_unknown", pathlib.Path(ped_path),
         [vcf_path],
         gpf_instance,
         project_config_update={

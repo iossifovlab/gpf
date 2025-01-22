@@ -16,7 +16,7 @@ def imported_study(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp("query_by_variant_type")
+    root_path = tmp_path_factory.mktemp("test_query_by_variant_type")
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = alla_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
@@ -44,7 +44,7 @@ chrA   6   .  AA  AC    .    .      .    GT     0/0 0/1 0/1
 
     return vcf_study(
         root_path,
-        "query_by_variant_type", pathlib.Path(ped_path),
+        "test_query_by_variant_type", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
         gpf_instance,
         project_config_update={

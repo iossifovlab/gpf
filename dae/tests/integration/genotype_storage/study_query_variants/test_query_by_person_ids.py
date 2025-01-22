@@ -55,7 +55,7 @@ chrA   14   .  A   C,G,T .    .      .    GT     0/1  0/2  0/0 0/0 0/1  0/0 0/2
 
     return vcf_study(
         root_path,
-        "tios_vcf", pathlib.Path(ped_path),
+        "test_query_by_person_ids", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
         gpf_instance,
         project_config_update={

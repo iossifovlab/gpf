@@ -43,7 +43,7 @@ chrA   2   .  A   G     .    .      .    GT     1/1  1/1  0/0 1/1 0/0  1/1
 
     return vcf_study(
         root_path,
-        "minimal_vcf", ped_path, [vcf_path],
+        "test_query_by_family_ids", ped_path, [vcf_path],
         gpf_instance)
 
 

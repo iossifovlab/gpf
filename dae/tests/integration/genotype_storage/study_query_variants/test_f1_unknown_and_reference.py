@@ -43,7 +43,7 @@ bar    8   .  A   T,C,G .    .      .    GT     0/0 0/0 ./. 0/0
 
     return vcf_study(
         root_path,
-        "effects_trio_vcf", pathlib.Path(ped_path),
+        "test_f1_unknown_and_reference", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
         gpf_instance,
         project_config_update={

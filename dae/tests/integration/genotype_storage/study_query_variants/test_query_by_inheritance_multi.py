@@ -53,7 +53,7 @@ chrA   7   .  A   T   .    .      .    GT     1/1 0/0 0/0 0/0 0/1 0/0 1/1
 
     return vcf_study(
         root_path,
-        "inheritance_multi_vcf", pathlib.Path(ped_path),
+        "test_query_by_inheritance_multi", pathlib.Path(ped_path),
         [vcf_path],
         gpf_instance,
         project_config_update={

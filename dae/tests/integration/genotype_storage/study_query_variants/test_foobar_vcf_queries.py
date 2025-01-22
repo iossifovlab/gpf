@@ -40,7 +40,7 @@ def imported_study(
 
     return vcf_study(
         root_path,
-        "minimal_vcf", ped_path, [vcf_path],
+        "test_foobar_vcf_queries", ped_path, [vcf_path],
         gpf_instance)
 
 

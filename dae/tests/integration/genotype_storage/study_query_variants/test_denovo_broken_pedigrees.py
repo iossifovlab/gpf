@@ -13,7 +13,7 @@ from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele
 
 
-@pytest.fixture()
+@pytest.fixture
 def denovo_broken_pedigrees(
     tmp_path: pathlib.Path,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
@@ -42,7 +42,7 @@ def denovo_broken_pedigrees(
         tmp_path / "denovo_broken_pedigrees" / "genotype_storage")
     gpf = foobar_gpf(tmp_path, genotype_storage)
     return denovo_study(
-        tmp_path, "denovo_broken_pedigrees",
+        tmp_path, "test_denovo_broken_pedigrees",
         ped_path, [denovo_path],
         gpf)
 
