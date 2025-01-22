@@ -35,7 +35,7 @@ class SqlSchema2Variants(QueryVariantsBase):
     def __init__(
         self,
         dialect: Dialect,
-        db: str | None,
+        db: str | None, *,
         family_variant_table: str | None,
         summary_allele_table: str | None,
         pedigree_table: str,
@@ -60,6 +60,14 @@ class SqlSchema2Variants(QueryVariantsBase):
             .build_families_data_from_pedigree(ped_df)
         super().__init__(families)
 
+        self.partition_descriptor = PartitionDescriptor.parse_string(
+                self._fetch_tblproperties())
+
+        self.combined_columns = {}
+        self.summary_allele_schema = {}
+        self.family_variant_schema = {}
+        self.serializer = None
+
         if self.has_variants:
             self.summary_allele_schema = self._fetch_summary_schema()
             self.family_variant_schema = self._fetch_family_schema()
@@ -69,12 +77,9 @@ class SqlSchema2Variants(QueryVariantsBase):
                 **self.summary_allele_schema,
             }
 
-            self.partition_descriptor = PartitionDescriptor.parse_string(
-                self._fetch_tblproperties())
-
-        variants_data_schema = self._fetch_variants_data_schema()
-        self.serializer = VariantsDataSerializer.build_serializer(
-            variants_data_schema)
+            variants_data_schema = self._fetch_variants_data_schema()
+            self.serializer = VariantsDataSerializer.build_serializer(
+                variants_data_schema)
 
     def _fetch_summary_schema(self) -> dict[str, str]:
         assert self.summary_allele_table is not None

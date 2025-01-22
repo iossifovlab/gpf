@@ -15,7 +15,7 @@ def imported_study(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp("test_query_by_roles")
+    root_path = tmp_path_factory.mktemp("test_query_by_sexes")
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(root_path, genotype_storage)
     ped_path = setup_pedigree(
@@ -42,7 +42,7 @@ def imported_study(
 
     return vcf_study(
         root_path,
-        "minimal_vcf", ped_path, [vcf_path],
+        "test_query_by_sexes", ped_path, [vcf_path],
         gpf_instance)
 
 

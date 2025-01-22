@@ -44,7 +44,7 @@ bar    12  .  G   A,C,T .    .      .    GT     0/1 0/2 1/3 1/2
 
     return vcf_study(
         root_path,
-        "effects_trio_vcf", pathlib.Path(ped_path),
+        "test_f1_gene_effects", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
         gpf_instance,
         project_config_update={

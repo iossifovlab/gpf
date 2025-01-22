@@ -49,7 +49,7 @@ chrA   9   .  A   G,C   .    .      .    GT     2/0  2/0  2/0
 
     return vcf_study(
         root_path,
-        "inheritance_trio_vcf", pathlib.Path(ped_path),
+        "test_variants_genotype", pathlib.Path(ped_path),
         [vcf_path],
         gpf_instance,
         project_config_update={

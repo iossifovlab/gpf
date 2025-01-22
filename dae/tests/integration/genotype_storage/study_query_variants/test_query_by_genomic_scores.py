@@ -116,7 +116,7 @@ chr2   6   .  A   C     .    .      .    GT     1/1  1/1  0/1
 
     return vcf_study(
         root_path,
-        "genomics_scores_study", pathlib.Path(ped_path),
+        "test_query_by_genomic_scores", pathlib.Path(ped_path),
         [pathlib.Path(vcf_path)],
         gpf_instance)
 

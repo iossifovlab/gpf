@@ -52,15 +52,15 @@ class GcpGenotypeStorage(GenotypeStorage):
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:
         config = super().validate_and_normalize_config(config)
-        validator = Validator(cls.VALIDATION_SCHEMA)
-        if not validator.validate(config):
+        validator = Validator(cls.VALIDATION_SCHEMA)  # type: ignore
+        if not validator.validate(config):  # type: ignore
             logger.error(
                 "wrong config format for impala genotype storage: %s",
-                validator.errors)
+                validator.errors)  # type: ignore
             raise ValueError(
                 f"wrong config format for impala storage: "
-                f"{validator.errors}")
-        return cast(dict, validator.document)
+                f"{validator.errors}")  # type: ignore
+        return cast(dict, validator.document)  # type: ignore
 
     @classmethod
     def get_storage_types(cls) -> set[str]:
@@ -138,8 +138,9 @@ class GcpGenotypeStorage(GenotypeStorage):
         return PartitionDescriptor()
 
     def _upload_dataset_into_import_bucket(
-            self, study_id: str,
-            study_dataset: Schema2DatasetLayout) -> Schema2DatasetLayout:
+        self, study_id: str,
+        study_dataset: Schema2DatasetLayout,
+    ) -> Schema2DatasetLayout:
         """Upload a study dataset into import bucket."""
         assert self.fs is not None
         upload_path = fs_utils.join(
@@ -244,14 +245,14 @@ class GcpGenotypeStorage(GenotypeStorage):
 
         job_config.source_format = bigquery.SourceFormat.PARQUET
 
-        parquet_options = \
-            bigquery.format_options.ParquetOptions()
+        parquet_options = bigquery\
+            .format_options.ParquetOptions()  # type: ignore
         parquet_options.enable_list_inference = True
         job_config.parquet_options = parquet_options
 
         if partition_descriptor.has_summary_partitions():
-            hive_partitioning = \
-                bigquery.external_config.HivePartitioningOptions()
+            hive_partitioning = bigquery\
+                .external_config.HivePartitioningOptions()  # type: ignore
             hive_partitioning.mode = "CUSTOM"
             summary_partition = "/".join([
                 f"{{{bname}:{type_convertions[btype]}}}"
@@ -273,14 +274,14 @@ class GcpGenotypeStorage(GenotypeStorage):
         job_config = bigquery.LoadJobConfig()
         job_config.source_format = bigquery.SourceFormat.PARQUET
         job_config.autodetect = True
-        parquet_options = \
-            bigquery.format_options.ParquetOptions()
+        parquet_options = bigquery\
+            .format_options.ParquetOptions()  # type: ignore
         parquet_options.enable_list_inference = True
         job_config.parquet_options = parquet_options
 
         if partition_descriptor.has_family_partitions():
-            hive_partitioning = \
-                bigquery.external_config.HivePartitioningOptions()
+            hive_partitioning = bigquery\
+                .external_config.HivePartitioningOptions()  # type: ignore
             hive_partitioning.mode = "CUSTOM"
             family_partition = "/".join([
                 f"{{{bname}:{type_convertions[btype]}}}"
@@ -301,8 +302,9 @@ class GcpGenotypeStorage(GenotypeStorage):
         return tables_layout
 
     def gcp_import_dataset(
-            self, study_id: str,
-            study_layout: Schema2DatasetLayout) -> Schema2DatasetLayout:
+        self, study_id: str,
+        study_layout: Schema2DatasetLayout,
+    ) -> Schema2DatasetLayout:
         """Create pedigree and variant tables for a study."""
         if self.fs is None:
             self.start()

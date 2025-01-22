@@ -19,7 +19,7 @@ def study_2p(
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeData:
     param = request.param
-    study_id = f"study_2p_{param}"
+    study_id = f"test_queries_on_partitioning_{param}"
     root_path = tmp_path_factory.mktemp(study_id)
     genotype_storage = genotype_storage_factory(root_path)
     t4c8_instance = t4c8_gpf(root_path, genotype_storage)

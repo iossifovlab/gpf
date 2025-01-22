@@ -1,7 +1,8 @@
 import logging
 import queue
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from google.cloud.bigquery.client import Client
 

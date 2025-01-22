@@ -102,15 +102,15 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
     @classmethod
     def validate_and_normalize_config(cls, config: dict) -> dict:
         config = super().validate_and_normalize_config(config)
-        validator = Validator(cls.VALIDATION_SCHEMA)
-        if not validator.validate(config):
+        validator = Validator(cls.VALIDATION_SCHEMA)  # type: ignore
+        if not validator.validate(config):  # type: ignore
             logger.error(
                 "wrong config format for duckdb genotype storage: %s",
-                validator.errors)
+                validator.errors)  # type: ignore
             raise ValueError(
                 f"wrong config format for duckdb storage: "
-                f"{validator.errors}")
-        result = cast(dict, validator.document)
+                f"{validator.errors}")  # type: ignore
+        result = cast(dict, validator.document)  # type: ignore
         base_dir = result.get("base_dir")
         if base_dir and not (
                 os.path.isabs(base_dir) or fs_utils.is_s3url(base_dir)):
@@ -187,6 +187,7 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
         s3_secret_clause = self._s3_secret_clause()
         connection.sql(s3_secret_clause)
 
+        s3_attach_db_clause = ""
         try:
             if self.get_db() is not None:
                 # attach
@@ -419,7 +420,7 @@ class DuckDbLegacyStorage(GenotypeStorage, DuckDbConnectionFactory):
                 CREATE TABLE {table_name} AS
                 SELECT * FROM
                 parquet_scan('{dataset_path}', hive_partitioning = 1)
-            """
+            """  # noqa: S608
             logger.info("query: %s", query)
             cursor.sql(query)
 

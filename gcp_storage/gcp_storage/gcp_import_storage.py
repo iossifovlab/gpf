@@ -24,6 +24,7 @@ class GcpImportStorage(Schema2ImportStorage):
     def _do_import_dataset(cls, project: ImportProject) -> None:
         layout = load_schema2_dataset_layout(
             project.get_parquet_dataset_dir(),
+            has_variants=project.has_variants(),
         )
         genotype_storage = cast(
             GcpGenotypeStorage, project.get_genotype_storage())
@@ -36,7 +37,9 @@ class GcpImportStorage(Schema2ImportStorage):
         genotype_storage: GcpGenotypeStorage = \
             cast(GcpGenotypeStorage, project.get_genotype_storage())
         # pylint: disable=protected-access
-        study_tables = genotype_storage.study_tables({"id": project.study_id})
+        study_tables = genotype_storage.study_tables(
+            {"id": project.study_id},
+            has_variants=project.has_variants())
 
         if project.get_processing_parquet_dataset_dir() is not None:
             meta = cls.load_meta(project)
@@ -54,18 +57,19 @@ class GcpImportStorage(Schema2ImportStorage):
         study_config.update({
             "genotype_storage": {
                 "id": genotype_storage.storage_id,
-                "tables": {"pedigree": study_tables.pedigree},
+                "tables": {
+                    "pedigree": study_tables.pedigree,
+                    "meta": study_tables.meta,
+                },
             },
             "genotype_browser": {"enabled": False},
         })
-
         if study_tables.summary:
             assert study_tables.family is not None
             storage_config = cast(
                 dict[str, Any], study_config["genotype_storage"])
             storage_config["tables"]["summary"] = study_tables.summary
             storage_config["tables"]["family"] = study_tables.family
-            storage_config["tables"]["meta"] = study_tables.meta
             genotype_browser_config = cast(
                 dict[str, Any], study_config["genotype_browser"])
             genotype_browser_config["enabled"] = True

@@ -21,7 +21,7 @@ def imported_study(
     tmp_path_factory: pytest.TempPathFactory,
     genotype_storage_factory: Callable[[pathlib.Path], GenotypeStorage],
 ) -> GenotypeData:
-    root_path = tmp_path_factory.mktemp("partitions_imported_study")
+    root_path = tmp_path_factory.mktemp("test_partitions")
     genotype_storage = genotype_storage_factory(root_path)
     gpf_instance = foobar_gpf(
         root_path / "gpf_instance",
@@ -80,7 +80,7 @@ def imported_study(
 
     return vcf_study(
         root_path,
-        "partitoned_vcf", ped_path, [vcf_path],
+        "test_partitions", ped_path, [vcf_path],
         gpf_instance,
         project_config_update=project_config_update)
 
@@ -210,12 +210,10 @@ def test_wdae_get_all_from_genotype_browser(
         inheritance=["not possible_denovo and not possible_omission",
                      "any(denovo,mendelian,missing,omission)"],
         real_attr_filter=[],
-        study_filters=["partitoned_vcf"],
+        study_filters=["test_partitions"],
         inheritanceTypeFilter=[],
         studyTypes=["we", "wg", "tg"],
-        familyTypes=["trio", "quad", "multigenerational", "simplex",
-                     "multiplex", "other"],
         studyFilters=[],
-        datasetId="partitoned_vcf",
+        datasetId="test_partitions",
         unique_family_variants=False))
     assert len(res) == 8

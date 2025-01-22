@@ -54,7 +54,7 @@ def multi_study(
     ped_path, vcf_path = multi_vcf
 
     return vcf_study(
-        root_path, "best_state", ped_path, [vcf_path], gpf_instance)
+        root_path, "test_best_state", ped_path, [vcf_path], gpf_instance)
 
 
 @pytest.mark.parametrize("region, count, best_state", [

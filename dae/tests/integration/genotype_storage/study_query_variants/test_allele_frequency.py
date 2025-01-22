@@ -66,7 +66,8 @@ def freq_study(
     ped_path, vcf_path = freq_vcf
 
     return vcf_study(
-        root_path, "freq_vcf", ped_path, [vcf_path], gpf_instance,
+        root_path, "test_allele_frequency",
+        ped_path, [vcf_path], gpf_instance,
         project_config_update={
             "input": {
                 "vcf": {

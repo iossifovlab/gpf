@@ -21,7 +21,10 @@ class Schema2DatasetLayout:
         return self.summary is not None and self.family is not None
 
 
-def load_schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
+def load_schema2_dataset_layout(
+    study_dir: str, *,
+    has_variants: bool = True,
+) -> Schema2DatasetLayout:
     """
     Create dataset layout for a given directory.
 
@@ -33,6 +36,10 @@ def load_schema2_dataset_layout(study_dir: str) -> Schema2DatasetLayout:
 
     family_path = fs_utils.join(study_dir, "family")
     family = family_path if fs_utils.exists(family_path) else None
+
+    if not has_variants:
+        summary = None
+        family = None
 
     return Schema2DatasetLayout(
         study_dir,
