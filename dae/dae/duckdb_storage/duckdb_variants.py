@@ -143,11 +143,11 @@ class DuckDbVariants(SqlSchema2Variants):
         super().__init__(
             DuckDbQueryDialect(),
             db,
-            family_variant_table,
-            summary_allele_table,
-            pedigree_table,
-            meta_table,
-            gene_models)
+            family_variant_table=family_variant_table,
+            summary_allele_table=summary_allele_table,
+            pedigree_table=pedigree_table,
+            meta_table=meta_table,
+            gene_models=gene_models)
         assert pedigree_table, pedigree_table
         self.start_time = time.time()
 
