@@ -11,7 +11,6 @@ import { cloneDeep } from 'lodash';
 import { Store } from '@ngrx/store';
 import {
   GenomicScoreState,
-  setGenomicScoresCategorical,
 } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { resetErrors, setErrors } from 'app/common/errors.state';
 
@@ -28,6 +27,7 @@ export class GenomicScoresComponent implements OnInit {
   @Output() public changeGenomicScore = new EventEmitter<{ old: string, new: string }>();
   @Output() public updateState = new EventEmitter<GenomicScoreState>();
   public errors: string[] = [];
+  private categoricalValueMax = 1000;
 
   // Refactor needed, not removal.
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
@@ -40,6 +40,7 @@ export class GenomicScoresComponent implements OnInit {
 
   public ngOnInit(): void {
     this.localState = this.initialState;
+    this.validateState(this.localState);
   }
 
   public updateRangeStart(range): void {
@@ -77,26 +78,22 @@ export class GenomicScoresComponent implements OnInit {
     if (view === this.localState.categoricalView) {
       return;
     }
+    if (view === 'click selector') {
+      this.localState.values = [];
+    } else if (view === 'range selector' && this.isCategoricalHistogram(this.selectedGenomicScore.histogram)) {
+      this.localState.values = this.selectedGenomicScore.histogram.values.map(v => v.name);
+    }
     this.localState.categoricalView = view;
-    this.localState.values = [];
     this.updateHistogramState();
   }
 
   public toggleCategoricalValues(values: string[]): void {
-    values.forEach(value => {
-      const valueIndex = this.localState.values.findIndex(v => v === value);
-      if (valueIndex === -1) {
-        this.localState.values.push(value);
-      } else {
-        this.localState.values.splice(valueIndex, 1);
-      }
-    });
+    const oldValues: Set<string> = new Set(this.localState.values);
+    const newValues: Set<string> = new Set(values);
+
+    this.localState.values = Array.from(oldValues.symmetricDifference(newValues));
     this.validateState(this.localState);
-    this.store.dispatch(setGenomicScoresCategorical({
-      score: this.localState.score,
-      values: cloneDeep(this.localState.values),
-      categoricalView: this.localState.categoricalView,
-    }));
+    this.updateState.emit(this.localState);
   }
 
   public isNumberHistogram(arg: object): arg is NumberHistogram {
@@ -139,6 +136,9 @@ export class GenomicScoresComponent implements OnInit {
     if (this.isCategoricalHistogram(this.selectedGenomicScore.histogram)) {
       if (!state.values.length) {
         this.errors.push('Please select at least one bar.');
+      }
+      if (state.values.length > this.categoricalValueMax) {
+        this.errors.push(`Please select less than ${this.categoricalValueMax} values.`);
       }
     }
 

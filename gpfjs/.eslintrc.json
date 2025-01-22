@@ -122,7 +122,7 @@
         "@stylistic/dot-notation": "off",
         "@typescript-eslint/dot-notation": "off",
         "@typescript-eslint/explicit-function-return-type": "warn",
-        "@typescript-eslint/no-extra-parens": ["warn", "all", { "nestedBinaryExpressions": false }],
+        "@stylistic/no-extra-parens": ["warn", "all", { "nestedBinaryExpressions": false }],
         "@typescript-eslint/no-floating-promises": "off",
         "@typescript-eslint/member-ordering": "off",
         "@stylistic/semi": "warn",

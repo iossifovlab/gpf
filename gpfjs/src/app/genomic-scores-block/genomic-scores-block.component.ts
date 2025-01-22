@@ -118,6 +118,7 @@ export class GenomicScoresBlockComponent implements OnInit {
   }
 
   public addToState(state: GenomicScoreState): void {
+    state = cloneDeep(state);
     if (state.histogramType === 'continuous') {
       this.store.dispatch(setGenomicScoresContinuous({
         score: state.score,

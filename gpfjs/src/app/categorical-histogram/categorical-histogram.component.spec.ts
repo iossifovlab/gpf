@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { CategoricalHistogramComponent } from './categorical-histogram.component';
 import { CategoricalHistogram } from 'app/genomic-scores-block/genomic-scores-block';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 describe('CategoricalHistogramComponent', () => {
   let component: CategoricalHistogramComponent;
@@ -9,7 +10,8 @@ describe('CategoricalHistogramComponent', () => {
 
   beforeEach(async() => {
     await TestBed.configureTestingModule({
-      declarations: [CategoricalHistogramComponent]
+      declarations: [CategoricalHistogramComponent],
+      schemas: [NO_ERRORS_SCHEMA],
     })
       .compileComponents();
 
@@ -27,6 +29,7 @@ describe('CategoricalHistogramComponent', () => {
       'small value descriptions',
       true,
     );
+    component.initialSelectedValueNames = ['name1', 'name2', 'name3'];
 
     fixture.detectChanges();
   });
@@ -47,11 +50,12 @@ describe('CategoricalHistogramComponent', () => {
       'small value descriptions',
       true,
     );
+    component.initialSelectedValueNames = ['name1', 'name2', 'name3'];
 
     component.ngOnInit();
-    expect(component.histogram.values[0].name).toBe('name3');
-    expect(component.histogram.values[1].name).toBe('name1');
-    expect(component.histogram.values[2].name).toBe('name2');
+    expect(component.values[0].name).toBe('name3');
+    expect(component.values[1].name).toBe('name1');
+    expect(component.values[2].name).toBe('name2');
   });
 
   it('should init values with only a certain number of them displayed', () => {
@@ -71,10 +75,10 @@ describe('CategoricalHistogramComponent', () => {
     );
 
     component.ngOnInit();
-    expect(component.histogram.values[0].name).toBe('name1');
-    expect(component.histogram.values[1].name).toBe('name2');
-    expect(component.histogram.values[2].name).toBe('other');
-    expect(component.histogram.values[2].value).toBe(120);
+    expect(component.values[0].name).toBe('name1');
+    expect(component.values[1].name).toBe('name2');
+    expect(component.values[2].name).toBe('Other values');
+    expect(component.values[2].value).toBe(120);
   });
 
   it('should init values with only a percent fraction of them displayed', () => {
@@ -93,17 +97,17 @@ describe('CategoricalHistogramComponent', () => {
       null,
       60,
     );
-
+    fixture.detectChanges();
     component.ngOnInit();
-    expect(component.histogram.values[0].name).toBe('name1');
-    expect(component.histogram.values[1].name).toBe('name2');
-    expect(component.histogram.values[2].name).toBe('name3');
-    expect(component.histogram.values[3].name).toBe('other');
-    expect(component.histogram.values[3].value).toBe(90);
+    expect(component.values[0].name).toBe('name1');
+    expect(component.values[1].name).toBe('name2');
+    expect(component.values[2].name).toBe('name3');
+    expect(component.values[3].name).toBe('Other values');
+    expect(component.values[3].value).toBe(90);
   });
 
   it('should sort range values from state for categorical histogram', () => {
-    component.stateCategoricalNames = ['name5', 'name1', 'name3', 'name2', 'name4'];
+    component.initialSelectedValueNames = ['name5', 'name1', 'name3', 'name2', 'name4'];
     component.histogram = new CategoricalHistogram(
       [
         {name: 'name1', value: 10},
@@ -116,12 +120,12 @@ describe('CategoricalHistogramComponent', () => {
       'large value descriptions',
       'small value descriptions',
       true,
-      2,
+      3,
     );
     component.interactType = 'range selector';
 
     component.ngOnInit();
-    expect(component.stateCategoricalNames).toStrictEqual(['name1', 'name2', 'name3', 'name4', 'name5']);
+    expect(component.selectedValueNames).toStrictEqual(['name1', 'name2', 'name3', 'Other values']);
   });
 
   it('should color bars in steelblue with click selector view of categorial historam', () => {
@@ -139,17 +143,27 @@ describe('CategoricalHistogramComponent', () => {
       true,
       2,
     );
-    component.stateCategoricalNames = ['name3', 'name1'];
+    component.initialSelectedValueNames = ['name3', 'name2', 'name1'];
     component.interactType = 'click selector';
 
     component.ngOnInit();
-    expect(component.stateCategoricalNames).toStrictEqual(['name3', 'name1']);
+    expect(component.selectedValueNames).toStrictEqual(['name1', 'name2']);
 
-    const notSelectedBar: HTMLElement = (fixture.nativeElement as HTMLElement).querySelector('rect[id=name2]');
-    expect(notSelectedBar.style.fill).toBe('lightsteelblue');
+    let bar: HTMLElement;
+    bar = (fixture.nativeElement as HTMLElement).querySelector('rect[id=name1]');
+    expect(bar.style.fill).toBe('steelblue');
+    bar = (fixture.nativeElement as HTMLElement).querySelector('rect[id=name2]');
+    expect(bar.style.fill).toBe('steelblue');
 
-    const selectedBar: HTMLElement = (fixture.nativeElement as HTMLElement).querySelector('rect[id=name1]');
-    expect(selectedBar.style.fill).toBe('steelblue');
+    bar= (fixture.nativeElement as HTMLElement).querySelector('rect[id="Other values"]');
+    expect(bar.style.fill).toBe('lightsteelblue');
+
+    bar= (fixture.nativeElement as HTMLElement).querySelector('rect[id=name3]');
+    expect(bar).toBeNull();
+    bar = (fixture.nativeElement as HTMLElement).querySelector('rect[id=name4]');
+    expect(bar).toBeNull();
+    bar = (fixture.nativeElement as HTMLElement).querySelector('rect[id=name5]');
+    expect(bar).toBeNull();
   });
 
   it('should check if single score value is valid', () => {

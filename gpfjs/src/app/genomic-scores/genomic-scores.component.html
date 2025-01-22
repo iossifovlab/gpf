@@ -69,7 +69,7 @@
       [width]="650"
       [height]="145"
       [histogram]="selectedGenomicScore.histogram"
-      [stateCategoricalNames]="localState.values"
+      [initialSelectedValueNames]="localState.values"
       [interactType]="localState.categoricalView"
       (selectCategoricalValues)="toggleCategoricalValues($event)">
     </gpf-categorical-histogram>
@@ -82,7 +82,7 @@
       [width]="650"
       [height]="145"
       [histogram]="selectedGenomicScore.histogram"
-      [stateCategoricalNames]="localState.values"
+      [initialSelectedValueNames]="localState.values"
       [interactType]="localState.categoricalView"
       (selectCategoricalValues)="toggleCategoricalValues($event)">
     </gpf-categorical-histogram>
