@@ -32,6 +32,10 @@ class BigQueryDialect(Dialect):
         return "INT64"
 
     @staticmethod
+    def string_type() -> str:
+        return "STRING"
+
+    @staticmethod
     def float_type() -> str:
         return "FLOAT64"
 
