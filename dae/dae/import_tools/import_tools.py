@@ -194,6 +194,10 @@ class ImportProject:
 
     def has_variants(self) -> bool:
         """Check if the resulting imported study has any variants."""
+        parquet_dataset_dir = self.get_processing_parquet_dataset_dir()
+        if parquet_dataset_dir is not None:
+            return fs_utils.exists(
+                fs_utils.join(parquet_dataset_dir, "summary"))
         return any(self.get_variant_loader_types())
 
     def get_variant_loader_chromosomes(
