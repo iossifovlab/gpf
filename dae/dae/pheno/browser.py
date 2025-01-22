@@ -128,10 +128,9 @@ class PhenoBrowser:
         except ConstraintException:  # pylint: disable=broad-except
             regression_id = reg["regression_id"]
             del reg["regression_id"]
-            update_query = update(
+            update_query = to_duckdb_transpile(update(
                 self.regressions, reg,
-                where=f"regression_id = {regression_id}",
-            )
+            ).where("regression_id").eq(regression_id))
             with self.connection.cursor() as cursor:
                 cursor.execute(update_query)
 
@@ -151,13 +150,13 @@ class PhenoBrowser:
 
             del reg["regression_id"]
             del reg["measure_id"]
-            update_query = update(
+            update_query = to_duckdb_transpile(update(
                 self.regression_values, reg,
                 where=(
-                    f"regression_id = {regression_id} AND "
-                    f"measure_id = {measure_id}"
+                    f"regression_id = '{regression_id}' AND "
+                    f"measure_id = '{measure_id}'"
                 ),
-            )
+            ))
             with self.connection.cursor() as cursor:
                 cursor.execute(update_query)
 
