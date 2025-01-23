@@ -468,3 +468,42 @@ def test_query_complex_query(
     vs = list(study_wrapper.query_variants_wdae(
         query, [{"source": "location"}]))
     assert len(vs) == 2
+
+
+@pytest.mark.parametrize(
+    "present_in_child,present_in_parent,phenotypes,count", [
+        (["proband and sibling"], ["neither"], ["autism", "unaffected"], 2),
+        (["proband and sibling", "proband", "neither"],
+         ["mother and father", "neither"],
+         ["autism", "unaffected"], 6),
+        (["proband and sibling", "proband", "neither"],
+         ["mother and father", "neither"],
+         ["autism"], 4),
+        (["proband and sibling", "proband", "neither"],
+         ["mother and father", "neither"],
+         ["unaffected"], 6),
+    ],
+)
+def test_query_present_in_parent_and_present_in_child_and_phenotypes(
+    t4c8_study_1_wrapper: StudyWrapper,
+    present_in_child: list[str],
+    present_in_parent: list[str],
+    phenotypes: list[str],
+    count: int,
+) -> None:
+    study_wrapper = t4c8_study_1_wrapper
+    query = {
+        "presentInParent": {
+            "presentInParent": present_in_parent,
+        },
+        "presentInChild": present_in_child,
+        "personSetCollection": {
+            "id": "phenotype",
+            "checkedValues": phenotypes,
+        },
+    }
+    variants = list(study_wrapper.query_variants_wdae(
+        query, [{"source": "location"}]),
+    )
+
+    assert len(variants) == count
