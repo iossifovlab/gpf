@@ -397,7 +397,7 @@ class PhenoBrowser:
 
         with self.connection.cursor() as cursor:
             rows = cursor.execute(query_str).fetchall()
-            return int(rows[0][0])
+            return int(rows[0][0]) if rows else 0
 
     @property
     def regression_ids(self) -> list[str]:
