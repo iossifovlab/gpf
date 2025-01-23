@@ -208,13 +208,13 @@ def test_pheno_group_i1_i2_get_values_df(
         family_ids=family_ids, roles=roles)
 
     expected = pd.DataFrame({
-        "person_id": ["f1.p1", "f1.p1"],
-        "family_id": ["f1", "f1"],
-        "role": [Role.prb, Role.prb],
-        "status": [Status.affected, Status.affected],
-        "sex": [Sex.M, Sex.M],
-        "i1.iq": [86.41, None],
-        "i5.iq": [None, 86.41],
+        "person_id": ["f1.p1"],
+        "family_id": ["f1"],
+        "role": [Role.prb],
+        "status": [Status.affected],
+        "sex": [Sex.M],
+        "i1.iq": [86.41],
+        "i5.iq": [86.41],
     })
 
     pd.testing.assert_frame_equal(df, expected, atol=1e-2, check_dtype=False)
