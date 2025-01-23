@@ -30,6 +30,12 @@
               [ngClass]="{ 'selected-view': selectedCategoricalHistogramView === 'click selector' }"
               >click selector
             </button>
+            <button
+              mat-menu-item
+              (click)="switchCategoricalHistogramView('dropdown selector')"
+              [ngClass]="{ 'selected-view': selectedCategoricalHistogramView === 'dropdown selector' }"
+              >dropdown selector
+          </button>
           </mat-menu>
         </div>
       </div>

@@ -184,6 +184,7 @@ import { uniqueFamilyVariantsFilterReducer } from './unique-family-variants-filt
 import { CategoricalHistogramModule } from './categorical-histogram/categorical-histogram.module';
 import {MatMenuModule} from '@angular/material/menu';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { CategoricalValuesDropdownComponent } from './categorical-values-dropdown/categorical-values-dropdown.component';
 
 const appRoutes: Routes = [
   {
@@ -396,6 +397,7 @@ const appRoutes: Routes = [
   AboutComponent,
   MarkdownEditorComponent,
   FamilyTagsComponent,
+  CategoricalValuesDropdownComponent
 ],
 bootstrap: [AppComponent], imports: [BrowserModule,
   FormsModule,
@@ -445,7 +447,7 @@ bootstrap: [AppComponent], imports: [BrowserModule,
     genomicScores: genomicScoresReducer,
     uniqueFamilyVariantsFilter: uniqueFamilyVariantsFilterReducer,
     studyTypes: studyTypesReducer
-  })], providers: [
+  }),], providers: [
   CookieService,
   ConfigService,
   DatasetsService,
