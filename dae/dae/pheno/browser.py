@@ -165,7 +165,7 @@ class PhenoBrowser:
             keyword: str, col: expressions.Column) -> expressions.Escape:
         return expressions.Escape(this=col.ilike(keyword), expression="'/'")
 
-    def build_measures_query(
+    def _build_measures_query(
         self,
         instrument_name: str | None = None,
         keyword: str | None = None,
@@ -249,17 +249,13 @@ class PhenoBrowser:
                         )
                     regression_id, sex = regression
 
-                    reg_table = joined_tables[regression_id]
-                    if sex == "male":
-                        col_name = f"{regression_id}_pvalue_regression_male"
-                    else:
-                        if sex != "female":
-                            raise ValueError(
-                                f"{sort_by} is an invalid sort column",
-                            )
-                        col_name = f"{regression_id}_pvalue_regression_female"
-
-                    column_to_sort = column(col_name)
+                    if sex not in ("male", "female"):
+                        raise ValueError(
+                            f"{sort_by} is an invalid sort column",
+                        )
+                    column_to_sort = column(
+                        f"{regression_id}_pvalue_regression_{sex}",
+                    )
             if order_by == "desc":
                 query = query.order_by(f"{column_to_sort} DESC")
             else:
@@ -271,7 +267,7 @@ class PhenoBrowser:
 
         return query, reg_cols
 
-    def build_measures_count_query(
+    def _build_measures_count_query(
         self,
         instrument_name: str | None = None,
         keyword: str | None = None,
@@ -342,7 +338,7 @@ class PhenoBrowser:
         order_by:  str | None = None,
     ) -> Iterator[dict[str, Any]]:
         """Find measures by keyword search."""
-        query, reg_cols = self.build_measures_query(
+        query, reg_cols = self._build_measures_query(
             instrument_name,
             keyword,
             sort_by,
@@ -381,7 +377,7 @@ class PhenoBrowser:
         page: int | None = None,
     ) -> int:
         """Find measures by keyword search."""
-        query = self.build_measures_count_query(
+        query = self._build_measures_count_query(
             instrument_name,
             keyword,
         )
