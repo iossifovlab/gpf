@@ -2,21 +2,10 @@
   class="panel"
   style="display: flex; flex-wrap: wrap; justify-content: center; border-top: 0"
   *ngIf="selectedGenomicScore && localState">
-  <div class="col-sm-9" style="display: flex; padding: 0 12px 0 12px">
-    <div class="select-wrapper">
-      <mat-form-field>
-        <mat-select disableRipple [title]="selectedGenomicScore.desc" [placeholder]="selectedGenomicScore.desc">
-          <mat-option
-            *ngFor="let genomicScore of otherGenomicScores"
-            [value]="genomicScore.desc"
-            (click)="updateSelectedGenomicScore(genomicScore)"
-            >{{ genomicScore.desc }}</mat-option
-          >
-        </mat-select>
-      </mat-form-field>
-    </div>
+  <div style="display: flex; padding: 0 12px 0 12px">
+    <div class="title-wrapper">{{ selectedGenomicScore.desc }}</div>
     <gpf-helper-modal
-      style="height: 32px; margin-left: 4px; margin-top: 5px"
+      style="height: 32px; margin-left: 4px"
       [style.visibility]="selectedGenomicScore.help ? 'visible' : 'hidden'"
       [modalContent]="selectedGenomicScore.help"
       [isMarkdown]="true"></gpf-helper-modal>
