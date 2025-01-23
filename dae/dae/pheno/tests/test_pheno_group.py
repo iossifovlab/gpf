@@ -75,6 +75,17 @@ def test_pheno_group_get_people_measure_values_df(
     )
 
 
+def test_pheno_group_get_people_measure_values_df_mixed_measures_join(
+    fake_group: PhenotypeGroup,
+) -> None:
+    df = fake_group.get_people_measure_values_df(["i1.iq", "i5.iq"])
+
+    assert len(df) == 195
+
+    assert "i1.iq" in df
+    assert "i5.iq" in df
+
+
 @pytest.mark.parametrize(
     "roles,family_ids,person_ids",
     [
