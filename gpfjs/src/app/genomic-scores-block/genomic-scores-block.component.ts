@@ -12,6 +12,7 @@ import {
 import { combineLatest, of } from 'rxjs';
 import { switchMap, take } from 'rxjs/operators';
 import { cloneDeep } from 'lodash';
+import { resetErrors } from 'app/common/errors.state';
 
 @Component({
   selector: 'gpf-genomic-scores-block',
@@ -97,6 +98,7 @@ export class GenomicScoresBlockComponent implements OnInit {
     this.unusedGenomicScores.sort((a, b) => a.score.localeCompare(b.score));
     this.selectedGenomicScores.splice(oldIndex, 1);
     this.store.dispatch(removeGenomicScore({genomicScoreName: state.score}));
+    this.store.dispatch(resetErrors({componentId: `genomicScores: ${state.score}`}));
   }
 
   public addToState(state: GenomicScoreState): void {
