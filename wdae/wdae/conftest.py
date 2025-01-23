@@ -6,12 +6,13 @@ import os
 import pathlib
 from collections.abc import Generator
 from datetime import timedelta
+from typing import cast
 
 import pytest
 import pytest_mock
 from datasets_api.models import Dataset
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import AbstractUser, Group
 from django.test import Client
 from django.utils import timezone
 from gpf_instance.gpf_instance import (
@@ -48,11 +49,11 @@ logger = logging.getLogger(__name__)
 pytest_plugins = ["dae_conftests.dae_conftests"]
 
 
-@pytest.fixture()
+@pytest.fixture
 def hundred_users(
     db: None,  # noqa: ARG001
     user: WdaeUser,  # noqa: ARG001
-) -> list[WdaeUser]:
+) -> list[AbstractUser]:
     user_model = get_user_model()
     users_data = [
         user_model(
@@ -66,10 +67,10 @@ def hundred_users(
     return user_model.objects.bulk_create(users_data)
 
 
-@pytest.fixture()
+@pytest.fixture
 def user_without_password(
     db: None,  # noqa: ARG001
-) -> WdaeUser:
+) -> AbstractUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
         email="user_without_password@example.com",
@@ -83,10 +84,10 @@ def user_without_password(
     return new_user
 
 
-@pytest.fixture()
+@pytest.fixture
 def admin(
     db: None,  # noqa: ARG001
-) -> WdaeUser:
+) -> AbstractUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
         email="admin@example.com",
@@ -104,12 +105,12 @@ def admin(
     return new_user
 
 
-@pytest.fixture()
-def oauth_app(admin: WdaeUser) -> Application:
+@pytest.fixture
+def oauth_app(admin: AbstractUser) -> Application:
     application = get_application_model()
     new_application = application(
         name="testing client app",
-        user_id=admin.id,
+        user_id=admin.id,  # type: ignore
         client_type="confidential",
         authorization_grant_type="authorization-code",
         redirect_uris="http://localhost:4200/datasets",
@@ -117,10 +118,10 @@ def oauth_app(admin: WdaeUser) -> Application:
         client_secret="secret",  # noqa: S106
     )
     new_application.save()
-    return new_application
+    return cast(Application, new_application)
 
 
-@pytest.fixture()
+@pytest.fixture
 def tokens(
     admin: WdaeUser, user: WdaeUser, oauth_app: Application,
 ) -> tuple[AccessToken, AccessToken]:
@@ -141,11 +142,14 @@ def tokens(
     )
     user_access_token.save()
     admin_access_token.save()
-    return user_access_token, admin_access_token
+    return (
+        cast(AccessToken, user_access_token),
+        cast(AccessToken, admin_access_token),
+    )
 
 
-@pytest.fixture()
-def datasets(  # noqa: PT004
+@pytest.fixture
+def datasets(
     db: None,  # noqa: ARG001
 ) -> None:
     reload_datasets(get_wgpf_instance())
@@ -195,8 +199,8 @@ def enrichment_grr() -> GenomicResourceRepo:
     })
 
 
-@pytest.fixture()
-def use_common_reports(  # noqa: PT004
+@pytest.fixture
+def use_common_reports(
     wdae_gpf_instance: WGPFInstance,
 ) -> Generator[None, None, None]:
     all_configs = wdae_gpf_instance.get_all_common_report_configs()
@@ -217,7 +221,7 @@ def use_common_reports(  # noqa: PT004
             os.remove(temp_file)
 
 
-@pytest.fixture()
+@pytest.fixture
 def sample_dataset(
     db: None,  # noqa: ARG001
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001
@@ -225,7 +229,7 @@ def sample_dataset(
     return Dataset.objects.get(dataset_id="t4c8_dataset")
 
 
-@pytest.fixture()
+@pytest.fixture
 def hundred_groups(
     db: None,  # noqa: ARG001
     sample_dataset: Dataset,
@@ -248,10 +252,10 @@ def hundred_groups(
 # New style fixtures
 ###############################################################################
 
-@pytest.fixture()
+@pytest.fixture
 def user(
     db: None,  # noqa: ARG001
-) -> WdaeUser:
+) -> AbstractUser:
     user_model = get_user_model()
     new_user = user_model.objects.create(
         email="user@example.com",
@@ -266,23 +270,23 @@ def user(
     return new_user
 
 
-@pytest.fixture()
+@pytest.fixture
 def admin_client(
-    admin: WdaeUser,  # noqa: ARG001
+    admin: AbstractUser,  # noqa: ARG001
     tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> Client:
     return Client(HTTP_AUTHORIZATION="Bearer admin-token")
 
 
-@pytest.fixture()
+@pytest.fixture
 def user_client(
-    user: WdaeUser,  # noqa: ARG001
+    user: AbstractUser,  # noqa: ARG001
     tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> Client:
     return Client(HTTP_AUTHORIZATION="Bearer user-token")
 
 
-@pytest.fixture()
+@pytest.fixture
 def anonymous_client(
     client: Client,
     db: None,  # noqa: ARG001
@@ -330,6 +334,21 @@ def t4c8_study_1_wrapper(
 
 
 @pytest.fixture(scope="session")
+def t4c8_study_2_wrapper(
+    t4c8_instance: GPFInstance,
+) -> StudyWrapper:
+
+    data_study = t4c8_instance.get_genotype_data("t4c8_study_2")
+
+    return StudyWrapper(
+        data_study,
+        t4c8_instance._pheno_registry,  # noqa: SLF001
+        t4c8_instance.gene_scores_db,
+        t4c8_instance,
+    )
+
+
+@pytest.fixture(scope="session")
 def session_t4c8_wgpf_instance(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> WGPFInstance:
@@ -337,7 +356,7 @@ def session_t4c8_wgpf_instance(
     return setup_wgpf_instance(root_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_wgpf_instance(
     session_t4c8_wgpf_instance: WGPFInstance,
     db: None,  # noqa: ARG001
@@ -364,7 +383,7 @@ def t4c8_wgpf_instance(
     return session_t4c8_wgpf_instance
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_wgpf(
     tmp_path: pathlib.Path,
     db: None,  # noqa: ARG001

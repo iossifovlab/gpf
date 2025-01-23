@@ -249,6 +249,38 @@ def test_query_present_in_parent(
 
 
 @pytest.mark.parametrize(
+    "present_in_child,present_in_parent,count", [
+        (["proband and sibling"], ["neither"], 1),
+        (["proband only"], ["neither"], 2),
+        (["sibling only"], ["neither"], 1),
+        (["proband only", "sibling only"], ["neither"], 3),
+        (["proband only", "sibling only", "proband and sibling"],
+         ["neither"], 4),
+        (["proband only", "sibling only", "proband and sibling"],
+         ["father only"], 1),
+    ],
+)
+def test_query_present_in_parent_and_present_in_child(
+    t4c8_study_2_wrapper: StudyWrapper,
+    present_in_child: list[str],
+    present_in_parent: list[str],
+    count: int,
+) -> None:
+    study_wrapper = t4c8_study_2_wrapper
+    query = {
+        "presentInParent": {
+            "presentInParent": present_in_parent,
+        },
+        "presentInChild": present_in_child,
+    }
+    variants = list(study_wrapper.query_variants_wdae(
+        query, [{"source": "location"}]),
+    )
+
+    assert len(variants) == count
+
+
+@pytest.mark.parametrize(
     "option,count",
     [
         (

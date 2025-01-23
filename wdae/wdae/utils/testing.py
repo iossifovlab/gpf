@@ -288,7 +288,7 @@ f2.1     ch1      dad1  mom1  2   2      prb
 f2.3     mom3     0     0     2   1      mom
 f2.3     dad3     0     0     1   1      dad
 f2.3     ch3      dad3  mom3  2   2      prb
-f2.3     ch4      dad3  mom3  2   0      prb
+f2.3     ch4      dad3  mom3  2   0      sib
         """)
     vcf_path1 = setup_vcf(
         root_path / "t4c8_study_2" / "vcf" / "in.vcf.gz",
@@ -301,7 +301,7 @@ f2.3     ch4      dad3  mom3  2   0      prb
 #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT mom1 dad1 ch1 mom3 dad3 ch3 ch4
 chr1   5   .  A   C   .    .      .    GT     0/0  0/0  0/1 0/0  0/0  0/0 0/1
 chr1   6   .  C   G   .    .      .    GT     0/0  0/0  0/0 0/0  0/0  0/1 0/0
-chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
+chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/1 0/1
         """)
 
     project_config_update = {
