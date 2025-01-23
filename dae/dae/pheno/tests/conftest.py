@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from dae.pheno.browser import PhenoBrowser
 from dae.pheno.pheno_data import PhenotypeData
 from dae.pheno.registry import PhenoRegistry
 
@@ -36,6 +37,11 @@ def fake_phenotype_data_browser_dbfile() -> str:
     return relative_to_this_folder(
         "fixtures/fake_phenoDB/main_fake/browser.db",
     )
+
+
+@pytest.fixture(scope="session")
+def fake_pheno_browser(fake_phenotype_data_browser_dbfile: str) -> PhenoBrowser:
+    return PhenoBrowser(fake_phenotype_data_browser_dbfile)
 
 
 @pytest.fixture
