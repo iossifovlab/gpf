@@ -91,24 +91,6 @@ export class GenomicScoresBlockComponent implements OnInit {
     this.addToState(cloneDeep(defaultState));
   }
 
-  public changeFilter(change: {old: string, new: string}): void {
-    // Add the old genomic score to the unused list
-    const oldIndex = this.selectedGenomicScores.findIndex(selected => selected.score.score === change.old);
-    this.unusedGenomicScores.push(this.selectedGenomicScores[oldIndex].score);
-    this.unusedGenomicScores.sort((a, b) => a.score.localeCompare(b.score));
-
-    // Add the unused genomic score to the selected and update the state
-    this.store.dispatch(removeGenomicScore({genomicScoreName: this.selectedGenomicScores[oldIndex].state.score}));
-    const newIndex = this.unusedGenomicScores.findIndex(unused => unused.score === change.new);
-    const defaultState = this.createScoreDefaultState(this.unusedGenomicScores[newIndex]);
-    this.selectedGenomicScores[oldIndex] = {
-      score: this.unusedGenomicScores[newIndex],
-      state: defaultState,
-    };
-    this.addToState(cloneDeep(defaultState));
-    this.unusedGenomicScores.splice(newIndex, 1);
-  }
-
   public removeFromState(state: GenomicScoreState): void {
     const oldIndex = this.selectedGenomicScores.findIndex(selected => selected.score.score === state.score);
     this.unusedGenomicScores.push(this.selectedGenomicScores[oldIndex].score);
