@@ -125,7 +125,8 @@ class QueryTransformer:
         inheritance = None
         if present_in_child == {"neither"} and \
                 present_in_parent != {"neither"}:
-            inheritance = [Inheritance.mendelian, Inheritance.missing]
+            inheritance = [
+                Inheritance.mendelian, Inheritance.missing]
         elif present_in_child != {"neither"} and \
                 present_in_parent == {"neither"}:
             inheritance = [Inheritance.denovo]
@@ -386,19 +387,21 @@ class QueryTransformer:
                 if arg is not None:
                     kwargs[arg] = val
 
-        show_all_unknown = \
-            self.study_wrapper.config.genotype_browser.show_all_unknown
-
         if kwargs.get("inheritanceTypeFilter"):
             inheritance_types = set(kwargs["inheritanceTypeFilter"])
-            if show_all_unknown \
-                    and inheritance_types & {"mendelian", "missing"}:
+            if inheritance_types & {"mendelian", "missing"}:
                 inheritance_types.add("unknown")
 
             query = f"any({','.join(inheritance_types)})"
 
             self._add_inheritance_to_query(query, kwargs)
             kwargs.pop("inheritanceTypeFilter")
+        else:
+            inheritance = \
+                self._transform_present_in_child_and_parent_inheritance(
+                    present_in_child, present_in_parent)
+
+            self._add_inheritance_to_query(inheritance, kwargs)
 
         if "genomicScores" in kwargs:
             genomic_scores = kwargs.pop("genomicScores", [])

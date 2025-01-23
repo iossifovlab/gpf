@@ -224,9 +224,9 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         if genotype_study.backend.has_affected_status_queries():
             psc_queries = psc.transform_pedigree_queries(psc_query)
 
-        adj_affected_statuses = None
-        adj_sexes = None
-        adj_roles = None
+        adj_affected_statuses = affected_statuses
+        adj_sexes = sexes
+        adj_roles = roles
         adj_person_ids = set(person_ids) if person_ids is not None else None
 
         if psc_queries is not None:
