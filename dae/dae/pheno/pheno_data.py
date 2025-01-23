@@ -715,15 +715,24 @@ class PhenotypeGroup(PhenotypeData):
         family_ids: list[str] | None = None,
         roles: list[Role] | None = None,
     ) -> pd.DataFrame:
-        dfs: list[pd.DataFrame] = []
+        measures_dfs: list[tuple[list[str], pd.DataFrame]] = []
         for child in self.children:
             measures_in_child = list(
                 filter(child.has_measure, measure_ids))
             if len(measures_in_child) > 0:
-                dfs.append(child.get_people_measure_values_df(
+                df = child.get_people_measure_values_df(
                     measures_in_child,
                     person_ids,
                     family_ids,
                     roles,
-                ))
-        return pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+                )
+                measures_dfs.append((measures_in_child, df))
+
+        out_df = measures_dfs[0][1]
+        for measures, df in measures_dfs[1:]:
+            out_df = out_df.join(
+                df.set_index("person_id")[measures],
+                on="person_id",
+                how="inner",
+            )
+        return out_df
