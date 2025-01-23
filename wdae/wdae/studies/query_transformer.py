@@ -119,14 +119,14 @@ class QueryTransformer:
     @staticmethod
     def _transform_present_in_child_and_parent_inheritance(
         present_in_child: set[str],
-        present_in_parent: set[str], *,
-        show_all_unknown: bool = False,
+        present_in_parent: set[str],
     ) -> str:
 
         inheritance = None
         if present_in_child == {"neither"} and \
                 present_in_parent != {"neither"}:
-            inheritance = [Inheritance.mendelian, Inheritance.missing]
+            inheritance = [
+                Inheritance.mendelian, Inheritance.missing]
         elif present_in_child != {"neither"} and \
                 present_in_parent == {"neither"}:
             inheritance = [Inheritance.denovo]
@@ -138,8 +138,6 @@ class QueryTransformer:
                 Inheritance.omission,
                 Inheritance.unknown,
             ]
-            if show_all_unknown:
-                inheritance.append(Inheritance.unknown)
 
         result = ",".join([str(inh) for inh in inheritance])
         return f"any({result})"
@@ -389,13 +387,9 @@ class QueryTransformer:
                 if arg is not None:
                     kwargs[arg] = val
 
-        show_all_unknown = \
-            self.study_wrapper.config.genotype_browser.show_all_unknown
-
         if kwargs.get("inheritanceTypeFilter"):
             inheritance_types = set(kwargs["inheritanceTypeFilter"])
-            if show_all_unknown \
-                    and inheritance_types & {"mendelian", "missing"}:
+            if inheritance_types & {"mendelian", "missing"}:
                 inheritance_types.add("unknown")
 
             query = f"any({','.join(inheritance_types)})"
@@ -405,8 +399,7 @@ class QueryTransformer:
         else:
             inheritance = \
                 self._transform_present_in_child_and_parent_inheritance(
-                    present_in_child, present_in_parent,
-                    show_all_unknown=show_all_unknown)
+                    present_in_child, present_in_parent)
 
             self._add_inheritance_to_query(inheritance, kwargs)
 
