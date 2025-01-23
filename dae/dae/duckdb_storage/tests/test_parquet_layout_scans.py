@@ -16,7 +16,7 @@ from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.foobar_import import foobar_gpf
 
 
-@pytest.fixture()
+@pytest.fixture
 def duckdb_storage_parquet(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> DuckDbLegacyStorage:

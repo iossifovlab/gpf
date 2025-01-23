@@ -11,7 +11,7 @@ from dae.testing.import_helpers import denovo_study
 from dae.utils.regions import Region
 
 
-@pytest.fixture()
+@pytest.fixture
 def study(tmp_path: pathlib.Path) -> GenotypeData:
     root_path = tmp_path
     gpf_instance = foobar_gpf(root_path)

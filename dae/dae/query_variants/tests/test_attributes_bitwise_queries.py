@@ -2,10 +2,7 @@
 import pytest
 
 from dae.query_variants.attributes_query import (
-    PARSER,
-    BitwiseTreeTransformer,
     QueryTreeToSQLBitwiseTransformer,
-    inheritance_converter,
     inheritance_query,
 )
 
@@ -27,29 +24,3 @@ def test_bitwise_query(query, expected):
     result = transformer.transform(parsed)
     print(result)
     assert expected == result
-
-
-@pytest.mark.xfail(reason="FIXME: can't handle single 'mendelian' token")
-@pytest.mark.parametrize(
-    "query",
-    [
-        "not (mendelian or denovo)",
-        "mendelian",
-        "not mendelian",
-        "mendelian or denovo",
-        "mendelian or not denovo",
-        "not (mendelian or denovo)",
-        "not (mendelian and denovo)",
-        "not (mendelian or not denovo)",
-        "not (mendelian and not denovo)",
-    ],
-)
-def test_experiments_with_bitwise_grammar(query):
-    tree = PARSER.parse(query)
-    print()
-    print(tree.pretty())
-    print()
-
-    transformer = BitwiseTreeTransformer(inheritance_converter)
-    res = transformer.transform(tree)
-    print(res)

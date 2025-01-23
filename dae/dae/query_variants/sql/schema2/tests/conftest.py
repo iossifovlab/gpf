@@ -18,7 +18,7 @@ from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
 
 
-@pytest.fixture()
+@pytest.fixture
 def duckdb_storage(
     tmp_path: pathlib.Path,
 ) -> DuckDbStorage:
@@ -37,7 +37,7 @@ def duckdb_storage(
     return storage
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_instance(
     tmp_path: pathlib.Path,
     duckdb_storage: DuckDbStorage,
@@ -46,17 +46,17 @@ def t4c8_instance(
     return t4c8_gpf(root_path, duckdb_storage)
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_genes(t4c8_instance: GPFInstance) -> GeneModels:
     return t4c8_instance.gene_models
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_genome(t4c8_instance: GPFInstance) -> ReferenceGenome:
     return t4c8_instance.reference_genome
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_study_1(
     t4c8_instance: GPFInstance,
 ) -> GenotypeData:
@@ -98,14 +98,14 @@ chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
     return t4c8_instance.get_genotype_data("study_1")
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_families_1(
     t4c8_study_1: GenotypeData,
 ) -> FamiliesData:
     return t4c8_study_1.families
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_study_2(
     t4c8_instance: GPFInstance,
 ) -> GenotypeData:

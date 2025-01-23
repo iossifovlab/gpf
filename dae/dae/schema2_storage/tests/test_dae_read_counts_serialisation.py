@@ -12,7 +12,7 @@ from dae.utils.regions import Region
 from dae.utils.variant_utils import str2lists
 
 
-@pytest.fixture()
+@pytest.fixture
 def study(tmp_path: pathlib.Path) -> GenotypeData:
     gpf_instance = foobar_gpf(tmp_path)
     ped_path = setup_pedigree(

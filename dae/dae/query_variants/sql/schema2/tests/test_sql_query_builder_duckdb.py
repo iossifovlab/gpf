@@ -11,7 +11,7 @@ from dae.studies.study import GenotypeData
 from dae.utils.regions import Region
 
 
-@pytest.fixture()
+@pytest.fixture
 def duckdb2_variants(
     t4c8_study_1: GenotypeData,
 ) -> DuckDb2Variants:
@@ -19,11 +19,12 @@ def duckdb2_variants(
         DuckDb2Variants,
         t4c8_study_1._backend,  # type: ignore
     )
-    duckdb_variants.query_builder.GENE_REGIONS_HEURISTIC_EXTEND = 0
+    duckdb_variants.query_builder\
+        .GENE_REGIONS_HEURISTIC_EXTEND = 0  # type: ignore
     return duckdb_variants
 
 
-@pytest.fixture()
+@pytest.fixture
 def query_builder(
     duckdb2_variants: DuckDb2Variants,
 ) -> SqlQueryBuilder:
