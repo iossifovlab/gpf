@@ -29,7 +29,6 @@ describe('CategoricalHistogramComponent', () => {
       'small value descriptions',
       true,
     );
-    component.initialSelectedValueNames = ['name1', 'name2', 'name3'];
 
     fixture.detectChanges();
   });
