@@ -136,11 +136,11 @@ export class GenomicScoresComponent implements OnInit {
     if (this.errors.length) {
       this.store.dispatch(setErrors({
         errors: {
-          componentId: 'genomicScores', errors: cloneDeep(this.errors)
+          componentId: `genomicScores: ${this.selectedGenomicScore.score}`, errors: cloneDeep(this.errors)
         }
       }));
     } else {
-      this.store.dispatch(resetErrors({componentId: 'genomicScores'}));
+      this.store.dispatch(resetErrors({componentId: `genomicScores: ${this.selectedGenomicScore.score}`}));
     }
   }
 }
