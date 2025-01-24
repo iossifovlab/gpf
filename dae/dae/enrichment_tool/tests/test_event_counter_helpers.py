@@ -20,8 +20,8 @@ from dae.enrichment_tool.genotype_helper import (
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
             ],
@@ -31,14 +31,14 @@ from dae.enrichment_tool.genotype_helper import (
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f2", "child2")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
             ],
@@ -48,14 +48,14 @@ from dae.enrichment_tool.genotype_helper import (
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f1", "chr1:2:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
             ],
@@ -66,14 +66,14 @@ from dae.enrichment_tool.genotype_helper import (
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([GeneEffect("G1", "intronic")]),
+                        {("f2", "child2")},
+                        {GeneEffect("G1", "intronic")},
                     ),
                 ]),
             ],
@@ -83,20 +83,20 @@ from dae.enrichment_tool.genotype_helper import (
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f2", "child2")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f3", "chr1:3:A:C:f3", [
                     AlleleEvent(
-                        set([("f3", "child3")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f3", "child3")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
             ],
@@ -109,7 +109,7 @@ def test_filter_denovo_one_event_per_family(
     expected: list[list[str]],
 ) -> None:
     res = filter_denovo_one_event_per_family(
-        variant_events, set(["missense", "synonymous"]),
+        variant_events, {"missense", "synonymous"},
     )
 
     assert res == expected
@@ -121,8 +121,8 @@ def test_filter_denovo_one_event_per_family(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
             ],
@@ -132,14 +132,14 @@ def test_filter_denovo_one_event_per_family(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f2", "child2")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
             ],
@@ -149,20 +149,20 @@ def test_filter_denovo_one_event_per_family(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f2", "child2")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f3", "chr1:3:A:C:f3", [
                     AlleleEvent(
-                        set([("f3", "child3")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f3", "child3")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
             ],
@@ -172,23 +172,23 @@ def test_filter_denovo_one_event_per_family(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([
+                        {("f2", "child2")},
+                        {
                             GeneEffect("G1", "missense"),
                             GeneEffect("G2", "synonymous"),
-                        ]),
+                        },
                     ),
                 ]),
                 VariantEvent("f3", "chr1:3:A:C:f3", [
                     AlleleEvent(
-                        set([("f3", "child3")]),
-                        set([GeneEffect("G2", "missense")]),
+                        {("f3", "child3")},
+                        {GeneEffect("G2", "missense")},
                     ),
                 ]),
             ],
@@ -198,23 +198,23 @@ def test_filter_denovo_one_event_per_family(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([
+                        {("f2", "child2")},
+                        {
                             GeneEffect("G1", "missense"),
                             GeneEffect("G2", "synonymous"),
-                        ]),
+                        },
                     ),
                 ]),
                 VariantEvent("f3", "chr1:3:A:C:f3", [
                     AlleleEvent(
-                        set([("f3", "child3")]),
-                        set([GeneEffect("G2", "intergenic")]),
+                        {("f3", "child3")},
+                        {GeneEffect("G2", "intergenic")},
                     ),
                 ]),
             ],
@@ -227,7 +227,7 @@ def test_filter_denovo_one_gene_per_recurrent_events(
     expected: list[list[str]],
 ) -> None:
     res = filter_denovo_one_gene_per_recurrent_events(
-        variant_events, set(["missense", "synonymous"]),
+        variant_events, {"missense", "synonymous"},
     )
 
     assert res == expected
@@ -239,8 +239,8 @@ def test_filter_denovo_one_gene_per_recurrent_events(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
             ],
@@ -250,14 +250,14 @@ def test_filter_denovo_one_gene_per_recurrent_events(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f2", "child2")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
             ],
@@ -267,20 +267,20 @@ def test_filter_denovo_one_gene_per_recurrent_events(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f2", "child2")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f3", "chr1:3:A:C:f3", [
                     AlleleEvent(
-                        set([("f3", "child3")]),
-                        set([GeneEffect("G2", "missense")]),
+                        {("f3", "child3")},
+                        {GeneEffect("G2", "missense")},
                     ),
                 ]),
             ],
@@ -290,23 +290,23 @@ def test_filter_denovo_one_gene_per_recurrent_events(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([
+                        {("f2", "child2")},
+                        {
                             GeneEffect("G1", "missense"),
                             GeneEffect("G2", "synonymous"),
-                        ]),
+                        },
                     ),
                 ]),
                 VariantEvent("f3", "chr1:3:A:C:f3", [
                     AlleleEvent(
-                        set([("f3", "child3")]),
-                        set([GeneEffect("G2", "missense")]),
+                        {("f3", "child3")},
+                        {GeneEffect("G2", "missense")},
                     ),
                 ]),
             ],
@@ -316,23 +316,23 @@ def test_filter_denovo_one_gene_per_recurrent_events(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([
+                        {("f2", "child2")},
+                        {
                             GeneEffect("G1", "missense"),
                             GeneEffect("G2", "synonymous"),
-                        ]),
+                        },
                     ),
                 ]),
                 VariantEvent("f3", "chr1:3:A:C:f3", [
                     AlleleEvent(
-                        set([("f3", "child3")]),
-                        set([GeneEffect("G2", "intergenic")]),
+                        {("f3", "child3")},
+                        {GeneEffect("G2", "intergenic")},
                     ),
                 ]),
             ],
@@ -345,7 +345,7 @@ def test_filter_denovo_one_gene_per_events(
     expected: list[list[str]],
 ) -> None:
     res = filter_denovo_one_gene_per_events(
-        variant_events, set(["missense", "synonymous"]),
+        variant_events, {"missense", "synonymous"},
     )
 
     assert res == expected
@@ -357,8 +357,8 @@ def test_filter_denovo_one_gene_per_events(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
             ],
@@ -368,14 +368,14 @@ def test_filter_denovo_one_gene_per_events(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f2", "child2")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
             ],
@@ -385,20 +385,20 @@ def test_filter_denovo_one_gene_per_events(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f2", "child2")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f3", "chr1:3:A:C:f3", [
                     AlleleEvent(
-                        set([("f3", "child3")]),
-                        set([GeneEffect("G2", "missense")]),
+                        {("f3", "child3")},
+                        {GeneEffect("G2", "missense")},
                     ),
                 ]),
             ],
@@ -408,23 +408,23 @@ def test_filter_denovo_one_gene_per_events(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([
+                        {("f2", "child2")},
+                        {
                             GeneEffect("G1", "missense"),
                             GeneEffect("G2", "synonymous"),
-                        ]),
+                        },
                     ),
                 ]),
                 VariantEvent("f3", "chr1:3:A:C:f3", [
                     AlleleEvent(
-                        set([("f3", "child3")]),
-                        set([GeneEffect("G2", "missense")]),
+                        {("f3", "child3")},
+                        {GeneEffect("G2", "missense")},
                     ),
                 ]),
             ],
@@ -434,23 +434,23 @@ def test_filter_denovo_one_gene_per_events(
             [
                 VariantEvent("f1", "chr1:1:A:C:f1", [
                     AlleleEvent(
-                        set([("f1", "child1")]),
-                        set([GeneEffect("G1", "missense")]),
+                        {("f1", "child1")},
+                        {GeneEffect("G1", "missense")},
                     ),
                 ]),
                 VariantEvent("f2", "chr1:2:A:C:f2", [
                     AlleleEvent(
-                        set([("f2", "child2")]),
-                        set([
+                        {("f2", "child2")},
+                        {
                             GeneEffect("G1", "missense"),
                             GeneEffect("G2", "synonymous"),
-                        ]),
+                        },
                     ),
                 ]),
                 VariantEvent("f3", "chr1:3:A:C:f3", [
                     AlleleEvent(
-                        set([("f3", "child3")]),
-                        set([GeneEffect("G2", "intergenic")]),
+                        {("f3", "child3")},
+                        {GeneEffect("G2", "intergenic")},
                     ),
                 ]),
             ],
@@ -463,7 +463,7 @@ def test_get_sym_2_fn(
     expected: dict[str, int],
 ) -> None:
     res = get_sym_2_fn(
-        variant_events, set(["missense", "synonymous"]),
+        variant_events, {"missense", "synonymous"},
     )
 
     assert res == expected

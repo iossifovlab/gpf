@@ -40,12 +40,10 @@ def test_calc_stats(
     psc = f1_trio.get_person_set_collection("phenotype")
     assert psc is not None
 
-    # genotype_helper = GenotypeHelper(f1_trio, psc)
-    # children_stats = genotype_helper.get_children_stats("phenotype1")
     children_by_sex = psc.person_sets["phenotype1"].get_children_by_sex()
     variant_events = GenotypeHelper.collect_denovo_events(variants)
     enrichment_events = event_counter.events(
-        variant_events, children_by_sex, set(["missense", "synonymous"]),
+        variant_events, children_by_sex, {"missense", "synonymous"},
     )
 
     assert enrichment_events.all is not None

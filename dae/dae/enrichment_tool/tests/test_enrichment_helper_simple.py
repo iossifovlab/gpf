@@ -15,7 +15,7 @@ def test_gpf_fixture(gpf_fixture: GPFInstance) -> None:
 
 
 def test_get_study_background(
-    f1_trio: GenotypeData,
+    f1_trio: GenotypeData,  # noqa: ARG001
     gpf_fixture: GPFInstance,
 ) -> None:
     assert gpf_fixture.grr.repo_id == "enrichment_testing_repo"

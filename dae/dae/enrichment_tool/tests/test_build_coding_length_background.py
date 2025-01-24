@@ -10,7 +10,7 @@ from dae.genomic_resources.testing import setup_directories
 from dae.testing.t4c8_import import t4c8_genes
 
 
-@pytest.fixture()
+@pytest.fixture
 def grr_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     t4c8_genes(tmp_path / "grr")
     setup_directories(tmp_path, {

@@ -10,16 +10,15 @@ from dae.testing import setup_pedigree, setup_vcf, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_instance(
     tmp_path: pathlib.Path,
 ) -> GPFInstance:
     root_path = tmp_path
-    gpf_instance = t4c8_gpf(root_path)
-    return gpf_instance
+    return t4c8_gpf(root_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_study_1(t4c8_instance: GPFInstance) -> GenotypeData:
     root_path = pathlib.Path(t4c8_instance.dae_dir)
     ped_path = setup_pedigree(
@@ -47,18 +46,17 @@ chr1   119  .  A   G   .    .      .    GT     0/0  0/0  0/0 0/1  0/0  0/1
 chr1   122  .  A   C   .    .      .    GT     0/0  1/0  0/0 0/0  0/0  0/0
         """)
 
-    study = vcf_study(
+    return vcf_study(
         root_path,
         "study_1", ped_path, [vcf_path1],
         t4c8_instance,
     )
-    return study
 
 
 def test_build_ur_synonymous_background(
     tmp_path: pathlib.Path,
     t4c8_instance: GPFInstance,
-    t4c8_study_1: GenotypeData,
+    t4c8_study_1: GenotypeData,  # noqa: ARG001
 ) -> None:
 
     output = tmp_path / "ur_synonymous_background.tsv"

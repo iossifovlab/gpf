@@ -24,7 +24,7 @@ def test_filter_denovo_one_event_per_family(
     variant_events = GenotypeHelper.collect_denovo_events(variants)
 
     fv = filter_denovo_one_event_per_family(
-        variant_events, set(["missense", "synonymous"]),
+        variant_events, {"missense", "synonymous"},
     )
 
     assert len(fv) == 3
@@ -40,7 +40,7 @@ def test_filter_denovo_one_gene_per_recurrent_events(
     variant_events = GenotypeHelper.collect_denovo_events(variants)
 
     fv = filter_denovo_one_gene_per_recurrent_events(
-        variant_events, set(["missense", "synonymous"]),
+        variant_events, {"missense", "synonymous"},
     )
 
     assert len(fv) == 1
@@ -55,7 +55,7 @@ def test_filter_denovo_one_gene_per_events(f1_trio: GenotypeData) -> None:
     variant_events = GenotypeHelper.collect_denovo_events(variants)
 
     fv = filter_denovo_one_gene_per_events(
-        variant_events, set(["missense", "synonymous"]),
+        variant_events, {"missense", "synonymous"},
     )
 
     assert len(fv) == 2
@@ -69,14 +69,14 @@ def test_get_sym_2_fn(f1_trio: GenotypeData) -> None:
     assert len(variants) == 5
     variant_events = GenotypeHelper.collect_denovo_events(variants)
 
-    sym_2_fn = get_sym_2_fn(variant_events, set(["missense", "synonymous"]))
+    sym_2_fn = get_sym_2_fn(variant_events, {"missense", "synonymous"})
 
     assert len(sym_2_fn) == 2
     assert sym_2_fn["PLEKHN1"] == 1
     assert sym_2_fn["SAMD11"] == 2
 
 
-def test_filter_overlapping_events(f1_trio: GenotypeData) -> None:
+def test_filter_overlapping_events() -> None:
     overlapping_events = filter_overlapping_events(
         [["SAMD11"], ["SAMD11"], ["PLEKHN1"]], ["SAMD11", "POGZ"],
     )
@@ -85,7 +85,7 @@ def test_filter_overlapping_events(f1_trio: GenotypeData) -> None:
     assert overlapping_events == [["SAMD11"], ["SAMD11"]]
 
 
-def test_overlap_enrichment_result_dict(f1_trio: GenotypeData) -> None:
+def test_overlap_enrichment_result_dict() -> None:
     events = [["SAMD11"], ["SAMD11"], ["PLEKHN1"]]
     genes = ["PLEKHN1", "POGZ"]
 
@@ -125,10 +125,8 @@ def test_events_counter(f1_trio: GenotypeData) -> None:
     assert psc is not None
     variant_events = GenotypeHelper.collect_denovo_events(variants)
 
-    # genotype_helper = GenotypeHelper(f1_trio, psc)
-    # children_stats = gh.get_children_stats()
     children_by_sex = psc.person_sets["phenotype1"].get_children_by_sex()
-    effect_types = set(["missense", "synonymous"])
+    effect_types = {"missense", "synonymous"}
     event_counter = EventsCounter()
     print(children_by_sex)
     events = event_counter.events(
@@ -162,10 +160,8 @@ def test_gene_events_counter(f1_trio: GenotypeData) -> None:
     psc = f1_trio.get_person_set_collection("phenotype")
     assert psc is not None
 
-    # genotype_helper = GenotypeHelper(f1_trio, psc)
-    # children_stats = gh.get_children_stats()
     children_by_sex = psc.person_sets["phenotype1"].get_children_by_sex()
-    effect_types = set(["missense", "synonymous"])
+    effect_types = {"missense", "synonymous"}
     event_counter = GeneEventsCounter()
 
     variant_events = GenotypeHelper.collect_denovo_events(variants)
