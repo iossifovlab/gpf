@@ -106,21 +106,27 @@ def draw_linregres(df, col1, col2, jitter: int | None = None, ax=None):
 
     male_x = dmale[[col1]]
     male_y = dmale[col2]
-    try:
-        res_male = LinearRegression().calc_regression(
-            male_x.to_numpy(), male_y)
-    except ValueError:
-        traceback.print_exc()
+    if len(male_x) <= 2:
         res_male = None
+    else:
+        try:
+            res_male = LinearRegression().calc_regression(
+                male_x.to_numpy(), male_y)
+        except ValueError:
+            traceback.print_exc()
+            res_male = None
 
     female_x = dfemale[[col1]]
     female_y = dfemale[col2]
-    try:
-        res_female = LinearRegression().calc_regression(
-            female_x.to_numpy(), female_y)
-    except ValueError:
-        traceback.print_exc()
+    if len(female_x) <= 2:
         res_female = None
+    else:
+        try:
+            res_female = LinearRegression().calc_regression(
+                female_x.to_numpy(), female_y)
+        except ValueError:
+            traceback.print_exc()
+            res_female = None
 
     if jitter is None:
         jmale1 = jmale2 = np.zeros(len(dmale[col1]))
