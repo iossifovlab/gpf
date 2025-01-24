@@ -251,7 +251,7 @@ class ResponseTransformer:
     @staticmethod
     def _get_wdae_member(
             member: Person,
-            person_set_collection: PersonSetCollection,
+            psc: PersonSetCollection | None,
             best_st: str | int) -> list:
         return [
             member.family_id,
@@ -260,9 +260,7 @@ class ResponseTransformer:
             member.dad_id or "0",
             member.sex.short(),
             str(member.role),
-            PersonSetCollection.get_person_color(
-                member, person_set_collection,
-            ),
+            PersonSetCollection.get_person_color(member, psc),
             member.layout,
             (member.generated or member.not_sequenced),
             best_st,
@@ -270,12 +268,11 @@ class ResponseTransformer:
         ]
 
     def _generate_pedigree(
-        self, variant: FamilyVariant, collection_id: str,
+        self, variant: FamilyVariant,
+        psc_id: str | None,
     ) -> list:
         result = []
-        person_set_collection = self.study_wrapper.get_person_set_collection(
-            collection_id,
-        )
+        psc = self.study_wrapper.get_person_set_collection(psc_id)
         genotype = variant.family_genotype
 
         missing_members = set()
@@ -283,7 +280,7 @@ class ResponseTransformer:
             try:
                 result.append(
                     ResponseTransformer._get_wdae_member(
-                        member, person_set_collection,
+                        member, psc,
                         "/".join([
                             str(v) for v in filter(
                                 lambda g: g != 0, genotype[index],
@@ -298,8 +295,7 @@ class ResponseTransformer:
                     genotype, index, member)
 
         result.extend([
-            ResponseTransformer._get_wdae_member(
-                    member, person_set_collection, 0)
+            ResponseTransformer._get_wdae_member(member, psc, 0)
             for member in variant.family.full_members
             if (member.generated or member.not_sequenced) or (
                 member.person_id in missing_members)
@@ -323,7 +319,7 @@ class ResponseTransformer:
 
     def build_variant_row(
         self, v: SummaryVariant | FamilyVariant,
-        column_descs: list[dict], **kwargs: str,
+        column_descs: list[dict], **kwargs: str | None,
     ) -> list:
         """Construct response row for a variant."""
         # pylint: disable=too-many-branches
@@ -355,7 +351,7 @@ class ResponseTransformer:
                             assert col_format is not None
                             return str(col_format % val)
                         except Exception:  # noqa: BLE001
-                            logging.warning(
+                            logger.warning(
                                 "error formatting variant: %s (%s) (%s)",
                                 v, col_format, val, exc_info=True)
                             if math.isnan(val):
@@ -402,7 +398,7 @@ class ResponseTransformer:
                     row_variant.append(attribute)
 
             except (AttributeError, KeyError, Exception):
-                logging.exception("error build variant: %s", v)
+                logger.exception("error build variant: %s", v)
                 traceback.print_stack()
                 row_variant.append([""])
                 raise
@@ -411,10 +407,17 @@ class ResponseTransformer:
 
     @staticmethod
     def _gene_view_summary_download_variants_iterator(
-        variants: Iterable[SummaryVariant], frequency_column: str,
-    ) -> Generator[list, None, None]:
+        variants: Iterable[SummaryVariant],
+        frequency_column: str,
+        summary_variants_ids: set[str],
+    ) -> Generator[list[str | int | bool | None], None, None]:
         for v in variants:
             for aa in v.alt_alleles:
+                if summary_variants_ids is not None:
+                    svid = f"{aa.cshl_location}:{aa.cshl_variant}"
+                    if svid not in summary_variants_ids:
+                        continue
+
                 yield [
                     aa.cshl_location,
                     aa.position,
@@ -480,12 +483,10 @@ class ResponseTransformer:
             "seen_in_unaffected",
         ]
 
-        rows = filter(
-            lambda sa: f"{sa[0]}:{sa[6]}" in summary_variant_ids,
-            self._gene_view_summary_download_variants_iterator(
-                variants, frequency_column,
-            ),
-        )
+        rows = self._gene_view_summary_download_variants_iterator(
+                variants, frequency_column, summary_variant_ids,
+            )
+
         return map(join_line, itertools.chain([columns], rows))
 
     def variant_transformer(self) -> Callable[[FamilyVariant], FamilyVariant]:

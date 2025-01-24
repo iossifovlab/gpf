@@ -628,7 +628,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         return result
 
     def get_person_set_collection(
-        self, person_set_collection_id: str,
+        self, person_set_collection_id: str | None,
     ) -> PersonSetCollection | None:
         if person_set_collection_id is None:
             return None
@@ -701,7 +701,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         assert collection is not None
         for person_set in collection.person_sets.values():
             if len(person_set.persons) > 0:
-                phenotype += person_set.values  # noqa: PD011
+                phenotype += person_set.values
 
         study_type = (
             ",".join(self.study_type)

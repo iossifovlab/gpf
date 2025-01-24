@@ -30,6 +30,7 @@ CORS_ORIGIN_WHITELIST = [
 CORS_ALLOW_CREDENTIALS = True
 
 OPEN_REGISTRATION = False
+DISABLE_PERMISSIONS = True
 
 ########################################################
 
@@ -43,7 +44,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(
-            DEFAULT_WDAE_DIR, "wdae.sql"),
+            LOG_DIR, "wdae.sql"),
         "USER": "",
         "PASSWORD": "",
         "HOST": "",

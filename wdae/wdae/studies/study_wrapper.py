@@ -391,8 +391,8 @@ class StudyWrapper(StudyWrapperBase):
         seen = set()
         unique_family_variants = kwargs.get("unique_family_variants", False)
 
+        started = time.time()
         try:
-            started = time.time()
             logger.debug(
                 "study wrapper (%s) creating query_result_variants...",
                 self.name)
@@ -410,6 +410,8 @@ class StudyWrapper(StudyWrapperBase):
             logger.info(
                 "study wrapper (%s) variant result started in %0.3fsec",
                 self.name, elapsed)
+
+            psc_query = kwargs.get("person_set_collection", None)
 
             with closing(variants_result) as variants:
                 for variant in variants:
@@ -441,7 +443,6 @@ class StudyWrapper(StudyWrapperBase):
                                 f"reached",
                             ]
                         break
-                    psc_query = kwargs.get("person_set_collection", None)
                     row_variant = self.response_transformer.build_variant_row(
                         v, sources,
                         person_set_collection=psc_query.psc_id if psc_query

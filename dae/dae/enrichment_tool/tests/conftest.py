@@ -150,7 +150,7 @@ def grr() -> GenomicResourceRepo:
     })
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_fixture(tmp_path: pathlib.Path) -> GPFInstance:
     root_path = tmp_path
 

@@ -58,7 +58,7 @@ def test_calc_stats(
 
     variant_events = GenotypeHelper.collect_denovo_events(variants)
     enrichment_events = event_counter.events(
-        variant_events, children_by_sex, set(["missense", "synonymous"]),
+        variant_events, children_by_sex, {"missense", "synonymous"},
     )
 
     assert enrichment_events.all is not None
@@ -89,26 +89,21 @@ def test_calc_stats(
     )
 
     assert result.all.events == 2
-    # assert result.all.events == [["SAMD11"], ["SAMD11"]]
     assert result.all.expected == 30.0
     assert result.all.pvalue == pytest.approx(9.002e-11)
 
     assert result.rec.events == 1
-    # assert result.rec.events == [["SAMD11"]]
     assert result.rec.expected == 15.0
     assert result.rec.pvalue == pytest.approx(9.788e-6, rel=1e-3)
 
     assert result.male.events == 1
-    # assert result.male.events == [["SAMD11"]]
     assert result.male.expected == 15.0
     assert result.male.pvalue == pytest.approx(9.788e-06, rel=1e-3)
 
     assert result.female.events == 1
-    # assert result.female.events == [["SAMD11"]]
     assert result.female.expected == 15.0
     assert result.female.pvalue == pytest.approx(9.788e-06, rel=1e-3)
 
     assert result.unspecified.events == 0
-    # assert result.unspecified.events == []
     assert result.unspecified.expected == 0.0
     assert result.unspecified.pvalue == 1.0

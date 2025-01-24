@@ -124,7 +124,7 @@ def _parse_psc_domain(
         ps_config = parse_person_set_config(psc_id, domain)
         if len(ps_config.values) != len(psc_sources):
             raise ValueError(
-                f"Values count {ps_config.values} "  # noqa: PD011
+                f"Values count {ps_config.values} "
                 "mismatch for domain in person set collection: "
                 f"{psc_id}")
         psc_domain.append(ps_config)
@@ -412,16 +412,17 @@ class PersonSetCollection:
 
     @staticmethod
     def get_person_color(
-        person: Person, person_set_collection: PersonSetCollection,
+        person: Person,
+        psc: PersonSetCollection | None,
     ) -> str:
         """Get the hex color value for a Person in a PersonSetCollection."""
         if person.generated:
             return "#E0E0E0"
 
-        if person_set_collection is None:
+        if psc is None:
             return "#FFFFFF"
 
-        matching_person_set = person_set_collection.get_person_set_of_person(
+        matching_person_set = psc.get_person_set_of_person(
             person.fpid,
         )
         if matching_person_set is not None:
@@ -430,7 +431,7 @@ class PersonSetCollection:
         logger.warning(
             "Person <%s> could not be found in any"
             " domain of <%s>!",
-            person.fpid, person_set_collection.id,
+            person.fpid, psc.id,
         )
         return "#AAAAAA"
 
@@ -497,7 +498,7 @@ class PersonSetCollection:
             families_data,
         )
         value_to_id = {
-            ps_config.values: ps_config.id  # noqa: PD011
+            ps_config.values: ps_config.id
             for ps_config in psc_config.domain
         }
         logger.debug("person set collection value_to_id: %s", value_to_id)
@@ -649,7 +650,7 @@ class PersonSetCollection:
             domain.append({
                 "id": person_set.id,
                 "name": person_set.name,
-                "values": person_set.values,  # noqa: PD011
+                "values": person_set.values,
                 "color": person_set.color,
             })
         sources = [

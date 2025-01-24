@@ -48,7 +48,7 @@ def _add_host_port_group(parser: argparse.ArgumentParser) -> None:
 
     group.add_argument(
         "-H", "--host", type=str,
-        default="0.0.0.0",
+        default="0.0.0.0",  # noqa: S104
         help="The host IP address on which the GPF development server will "
         "listen for incoming connections.")
 
@@ -74,9 +74,7 @@ def _init_flag(wgpf_instance: WGPFInstance) -> pathlib.Path:
 def _check_is_initialized(wgpf_instance: WGPFInstance) -> bool:
     if not os.path.exists(wgpf_instance.dae_dir):
         return False
-    if _init_flag(wgpf_instance).exists():
-        return True
-    return False
+    return _init_flag(wgpf_instance).exists()
 
 
 def _run_init_command(
@@ -166,6 +164,11 @@ def cli(argv: list[str] | None = None) -> None:
         parser.print_help()
         sys.exit(1)
 
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.wgpf_settings")
+    django.setup()
+    settings.DISABLE_PERMISSIONS = True
+    settings.STUDIES_EAGER_LOADING = True
+
     # pylint: disable=import-outside-toplevel
     from gpf_instance import gpf_instance
     wgpf_instance = gpf_instance.get_wgpf_instance(args.gpf_instance)
@@ -174,12 +177,6 @@ def cli(argv: list[str] | None = None) -> None:
     if command not in {"init", "run"}:
         logger.error("unknown subcommand %s used in `wgpf`", command)
         sys.exit(1)
-
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.gpfjs_settings")
-
-    django.setup()
-    settings.DISABLE_PERMISSIONS = True
-    settings.STUDIES_EAGER_LOADING = True
 
     settings.DEFAULT_WDAE_DIR = os.path.join(
         wgpf_instance.dae_dir, "wdae")

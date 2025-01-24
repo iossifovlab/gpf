@@ -13,7 +13,7 @@ from dae.studies.study import GenotypeData
 from dae.testing import denovo_study, setup_denovo, setup_pedigree
 
 
-@pytest.fixture()
+@pytest.fixture
 def ped_1(tmp_path: pathlib.Path) -> pathlib.Path:
     return setup_pedigree(
         tmp_path / "input" / "ped_1" / "in.ped",
@@ -28,7 +28,7 @@ f1.3     ch3      dad3  mom3  2   2      prb
         """)
 
 
-@pytest.fixture()
+@pytest.fixture
 def denovo_1(tmp_path: pathlib.Path) -> pathlib.Path:
     return setup_denovo(
         tmp_path / "input" / "denovo_1" / "denovo.tsv",
@@ -46,7 +46,7 @@ f1.3      chr1:145  sub(C->T)  2||2||1/0||0||1
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def study_1(
     tmp_path: pathlib.Path,
     t4c8_fixture: GPFInstance,

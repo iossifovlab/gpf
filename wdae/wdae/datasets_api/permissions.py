@@ -45,7 +45,10 @@ def get_permissions_etag(
 class IsDatasetAllowed(permissions.BasePermission):
     """Checks the permissions to a dataset."""
 
-    def has_permission(self, request: HttpRequest, view: Any) -> bool:
+    def has_permission(  # type: ignore
+        self, request: HttpRequest,
+        view: Any,
+    ) -> bool:
         dataset_id = find_dataset_id_in_request(request)
 
         if dataset_id is None:
@@ -53,7 +56,7 @@ class IsDatasetAllowed(permissions.BasePermission):
 
         return self.has_object_permission(request, view, dataset_id)
 
-    def has_object_permission(
+    def has_object_permission(  # type: ignore
         self, request: HttpRequest, _view: Any, obj: str,
     ) -> bool:
         wgpf_instance = get_wgpf_instance()
@@ -214,6 +217,8 @@ class IsDatasetAllowed(permissions.BasePermission):
         """Return list of allowed datasets for a specific user."""
         wgpf_instance = get_wgpf_instance()
         dataset_ids = set(wgpf_instance.get_genotype_data_ids())
+        if settings.DISABLE_PERMISSIONS:
+            return dataset_ids
 
         if user.is_anonymous:
             db_datasets = {
