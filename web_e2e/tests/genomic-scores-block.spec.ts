@@ -13,7 +13,6 @@ test.describe('Genomic scores tests', () => {
   'and remove it after "remove filter" button click', async({ page }) => {
     await expect(page.locator('gpf-genomic-scores')).toBeHidden();
 
-    await page.locator('#add-filter').click();
     await expect(page.locator('gpf-genomic-scores')).toBeVisible();
 
     await page.locator('#remove-button').click();
@@ -23,7 +22,7 @@ test.describe('Genomic scores tests', () => {
   test('should enter filter data and check how it affects the histogram', async({ page }) => {
     const mpcScore = 'mpc - Missense badness, PolyPhen-2, and Constraint. ' +
       'A deleteriousness prediction score for missense variants';
-    await page.locator('#add-filter').click();
+
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${mpcScore}")`).click();
 
@@ -62,7 +61,7 @@ test.describe('Genomic scores tests', () => {
 
     const mpcScore = 'mpc - Missense badness, PolyPhen-2, and Constraint. ' +
     'A deleteriousness prediction score for missense variants';
-    await page.locator('#add-filter').click();
+
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${mpcScore}")`).click();
 
