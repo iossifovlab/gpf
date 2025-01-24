@@ -350,7 +350,9 @@ def get_wgpf_instance(
                     logger.warning("unable to create GPF instance")
 
     from django.conf import settings  # pylint: disable=import-outside-toplevel
-    gpf_testing = getattr(settings, "GPF_TESTING", False)
+    gpf_testing = False
+    if hasattr(settings, "GPF_TESTING"):
+        gpf_testing = getattr(settings, "GPF_TESTING", False)
 
     if _GPF_INSTANCE is None and not gpf_testing:
         raise ValueError("can't create the singleton WGPFInstance")

@@ -18,6 +18,7 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from studies.study_wrapper import StudyWrapperBase
+from users_api.models import WdaeUser
 
 from dae.studies.study import GenotypeData
 from datasets_api.permissions import (
@@ -70,6 +71,8 @@ def get_description_etag(
     request: Request, **_kwargs: dict[str, Any],
 ) -> str | None:
     """Get description etag."""
+    if request.parser_context is None:
+        return None
     dataset_id = request.parser_context["kwargs"]["dataset_id"]
 
     return get_cacheable_hash(f"{dataset_id}_description")
@@ -254,7 +257,8 @@ class DatasetConfigView(DatasetView):
 
     @method_decorator(etag(get_instance_timestamp_etag))
     def get(
-        self, _request: Request, dataset_id: str | None = None,
+        self, request: Request,  # noqa: ARG002
+        dataset_id: str | None = None,
     ) -> Response:
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -307,8 +311,9 @@ class DatasetDescriptionView(QueryBaseView):
                 {"error": "You have no permission to edit the description."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-
-        description = request.data.get("description")
+        description = ""
+        if isinstance(request.data, dict):
+            description = request.data.get("description", "")
         genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
         genotype_data.description = description
         calc_and_set_cacheable_hash(f"{dataset_id}_description",
@@ -333,8 +338,9 @@ class BaseDatasetPermissionsView(QueryBaseView):
             ).all()
             for user in users:
                 if user.email not in users_found:
+                    wdaeuser = cast(WdaeUser, user)
                     users_list += [
-                        {"name": user.name, "email": user.email},
+                        {"name": wdaeuser.name, "email": wdaeuser.email},
                     ]
                     users_found.add(user.email)
         users_list = sorted(users_list, key=itemgetter("email"))
@@ -485,16 +491,19 @@ class DatasetHierarchyView(QueryBaseView):
 
             return Response({"data": tree}, status=status.HTTP_200_OK)
 
-        genotype_datas = filter(lambda gd: gd and not gd.parents, [
+        study_wrappers = [
             self.gpf_instance.get_wdae_wrapper(genotype_data_id)
             for genotype_data_id in genotype_data_ids
-        ])
+        ]
+        study_wrappers = [
+            sw for sw in study_wrappers if sw is not None and not sw.parents
+        ]
+        assert all(sw is not None for sw in study_wrappers)
 
         trees = []
-
-        for gd in genotype_datas:
+        for wrapper in study_wrappers:
             tree = self.produce_tree(
-                gd,
+                wrapper.genotype_data,
                 genotype_data_ids,
                 permitted_datasets,
             )
