@@ -347,6 +347,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       summaryVariantIds: summaryVariantsIdsToSend,
       frequencyScores: [{
         score: this.geneBrowserConfig.frequencyColumn,
+        histogramType: 'continuous',
         rangeStart: this.summaryVariantsFilter.minFreq,
         rangeEnd: this.summaryVariantsFilter.maxFreq,
       }],
