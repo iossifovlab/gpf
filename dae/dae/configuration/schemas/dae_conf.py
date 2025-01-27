@@ -88,9 +88,14 @@ grr_schema = {
     }},
 }
 
-storage_schema = {
+genotype_storage_schema = {
     "storage_type": {"type": "string"},
     "id": {"type": "string"},
+}
+
+phenotype_storage_schema = {
+    "id": {"type": "string"},
+    "base_dir": {"type": "string"},
 }
 
 gene_scores_db_schema = {
@@ -142,7 +147,21 @@ dae_conf_schema = {
                 "type": "list",
                 "valuesrules": {
                     "type": "dict",
-                    "schema": storage_schema,
+                    "schema": genotype_storage_schema,
+                    "allow_unknown": True,
+                },
+            },
+        },
+    },
+    "phenotype_storage": {
+        "type": "dict",
+        "schema": {
+            "default": {"type": "string"},
+            "storages": {
+                "type": "list",
+                "valuesrules": {
+                    "type": "dict",
+                    "schema": phenotype_storage_schema,
                     "allow_unknown": True,
                 },
             },

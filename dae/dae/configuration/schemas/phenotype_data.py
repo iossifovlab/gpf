@@ -36,6 +36,10 @@ pheno_conf_schema = {
             "type": ["study"],
         },
     },
+    "phenotype_storage": {
+        "id": {"type": "string"},
+        "db": {"type": "string"},
+    },
     "children": {
         "type": "list",
         "schema": {"type": "string"},
