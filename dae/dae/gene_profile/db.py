@@ -5,7 +5,7 @@ from typing import Any
 import duckdb
 import numpy as np
 from box import Box
-from sqlglot import column, select, table
+from sqlglot import column, select
 from sqlglot.expressions import (
     ColumnConstraint,
     ColumnDef,
@@ -15,6 +15,7 @@ from sqlglot.expressions import (
     Schema,
     delete,
     insert,
+    table_,
     update,
     values,
 )
@@ -49,7 +50,7 @@ class GeneProfileDB:
         self.dbfile = dbfile
         self.configuration = \
             GeneProfileDBWriter.build_configuration(configuration)
-        self.table = table("gene_profile")
+        self.table = table_("gene_profile")
         self.gene_sets_categories = {}
         if len(self.configuration.keys()):
             for category in self.configuration["gene_sets"]:
@@ -59,7 +60,6 @@ class GeneProfileDB:
                     set_id = gene_set["set_id"]
                     full_gene_set_id = f"{collection_id}_{set_id}"
                     self.gene_sets_categories[full_gene_set_id] = category_name
-
 
     def get_gp(self, gene_symbol: str) -> GPStatistic | None:
         """
@@ -83,7 +83,6 @@ class GeneProfileDB:
                 return None
             return self.gp_from_table_row_single_view(rows[0])
 
-    # FIXME: Too many locals, refactor?
     def gp_from_table_row(self, row: dict) -> dict:
         # pylint: disable=too-many-locals
         """Build an GPStatistic from internal DB row."""
@@ -125,7 +124,6 @@ class GeneProfileDB:
 
         return result
 
-    # FIXME: Too many locals, refactor?
     def gp_from_table_row_single_view(self, row: dict) -> GPStatistic:
         """Create an GPStatistic from single view row."""
         # pylint: disable=too-many-locals
@@ -330,13 +328,15 @@ class GeneProfileDBWriter:
         if configuration is None:
             return {}
         order = configuration.get("order")
-        order_keys = []
-        for gene_set in configuration["gene_sets"]:
-            order_keys.append(gene_set["category"] + "_rank")
-        for genomic_score in configuration["genomic_scores"]:
-            order_keys.append(genomic_score["category"])
-        for dataset_id in configuration["datasets"].keys():
-            order_keys.append(dataset_id)
+        order_keys = [
+            gene_set["category"] + "_rank"
+            for gene_set in configuration["gene_sets"]
+        ]
+        order_keys.extend(
+            genomic_score["category"]
+            for genomic_score in configuration["genomic_scores"]
+        )
+        order_keys.extend(configuration["datasets"].keys())
         if order is None:
             configuration["order"] = order_keys
         else:
@@ -344,10 +344,10 @@ class GeneProfileDBWriter:
                 len(configuration["gene_sets"]) + \
                 len(configuration["genomic_scores"]) + \
                 len(configuration["datasets"])
-            assert all(x in order_keys for x in order), "Given GP order " \
-                "has invalid entries"
-            assert len(order) == total_categories_count, "Given GP order " \
-                "is missing items"
+            assert all(x in order_keys for x in order), \
+                "Given GP order has invalid entries"
+            assert len(order) == total_categories_count, \
+                "Given GP order is missing items"
 
         return copy(configuration)
 
@@ -377,7 +377,6 @@ class GeneProfileDBWriter:
 
             return len(rows) == 1
 
-    # FIXME: Too many locals, refactor?
     def _gp_table_columns(
         self, *,
         with_types: bool = True,
@@ -463,7 +462,7 @@ class GeneProfileDBWriter:
         return columns
 
     def _create_gp_table(self) -> None:
-        self.table = table("gene_profile")
+        self.table = table_("gene_profile")
         self.schema = Schema(
             this=self.table,
             expressions=self._gp_table_columns(),
@@ -504,12 +503,11 @@ class GeneProfileDBWriter:
         with duckdb.connect(f"{self.dbfile}") as connection:
             connection.execute(to_duckdb_transpile(query))
 
-    # FIXME: Too many locals, refactor?
     def _create_insert_map(
         self,
         gp: GPStatistic,
     ) -> dict:  # pylint: disable=too-many-locals
-        insert_map = {
+        insert_map: dict[str, str | int] = {
             "symbol_name": gp.gene_symbol,
         }
         gs_categories_count = {
