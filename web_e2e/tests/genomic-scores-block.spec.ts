@@ -9,9 +9,12 @@ test.describe('Genomic scores tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
   });
 
-  test('should display genomic scores panel after "add filter" button click ' +
+  test('should display genomic scores panel after selecting score ' +
   'and remove it after "remove filter" button click', async({ page }) => {
     await expect(page.locator('gpf-genomic-scores')).toBeHidden();
+
+    await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
+    await page.locator('mat-option').nth(0).click();
 
     await expect(page.locator('gpf-genomic-scores')).toBeVisible();
 
@@ -37,8 +40,8 @@ test.describe('Genomic scores tests', () => {
 
     const exomeGnomadScore = 'exome_gnomad_af_percent - ' +
       'Alternative allele frequency in the whole gnomAD exome samples v2.1.1 as percent';
-    await page.locator('gpf-genomic-scores-block >> #add-filter').click();
-    await page.locator('gpf-genomic-scores-block >> mat-form-field').nth(1).click();
+
+    await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${exomeGnomadScore}")`).click();
 
     await page.locator('input#from-input-field').nth(1).clear();
