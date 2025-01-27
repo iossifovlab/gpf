@@ -39,6 +39,7 @@ class QueryTransformer:
         return [
             (score["score"], (score["rangeStart"], score["rangeEnd"]))
             for score in genomic_scores
+            if score["histogramType"] == "continuous"
         ]
 
     def _transform_genomic_scores_categorical(
@@ -47,6 +48,7 @@ class QueryTransformer:
         return [
             (score["score"], score["values"])
             for score in genomic_scores
+            if score["histogramType"] == "categorical"
         ]
 
     def _transform_gene_scores(self, gene_scores: dict) -> list[str] | None:
