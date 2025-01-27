@@ -1,4 +1,5 @@
 import argparse
+import logging
 import sys
 
 from dae.import_tools.import_tools import ImportProject
@@ -11,9 +12,19 @@ from dae.task_graph.executor import (
 from dae.utils import fs_utils
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
+logger = logging.getLogger(__name__)
+
 
 def main(argv: list[str] | None = None) -> int:
     """Entry point for import tools when invoked as a cli tool."""
+    if argv is None:
+        argv = sys.argv
+        if not argv[0].endswith("import_genotypes"):
+            logger.warning(
+                "%s tool is deprecated! Use import_genotypes.",
+                argv[0],
+            )
+        argv = sys.argv[1:]
     parser = argparse.ArgumentParser(
         description="Import datasets into GPF",
         formatter_class=argparse.RawTextHelpFormatter,

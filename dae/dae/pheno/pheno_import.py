@@ -231,9 +231,15 @@ def transform_cli_args(args: argparse.Namespace) -> PhenoImportConfig:
 def main(argv: list[str] | None = None) -> int:
     """Run phenotype import tool."""
     if argv is None:
+        argv = sys.argv
+        if not argv[0].endswith("import_phenotypes"):
+            logger.warning(
+                "%s tool is deprecated! Use import_phenotypes.",
+                argv[0],
+            )
         argv = sys.argv[1:]
 
-        # Setup argument parser
+    # Setup argument parser
 
     parser = pheno_cli_parser()
     args = parser.parse_args(argv)
@@ -1218,4 +1224,9 @@ def write_reports_to_parquet(
 
 
 if __name__ == "__main__":
+    logger.warning(
+        "%s tool is deprecated! Use import_phenotypes.",
+        sys.argv[0],
+    )
+
     main(sys.argv[1:])

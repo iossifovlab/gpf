@@ -1,4 +1,5 @@
 import argparse
+import logging
 import pathlib
 import sys
 
@@ -7,6 +8,8 @@ import yaml
 from dae.pheno.common import PhenoImportConfig
 from dae.pheno.pheno_import import import_pheno_data
 from dae.task_graph.cli_tools import TaskGraphCli
+
+logger = logging.getLogger(__name__)
 
 
 def pheno_cli_parser() -> argparse.ArgumentParser:
@@ -33,6 +36,12 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     """Run phenotype import tool."""
     if argv is None:
+        argv = sys.argv
+        if not argv[0].endswith("import_phenotypes"):
+            logger.warning(
+                "%s tool is deprecated! Use import_phenotypes.",
+                argv[0],
+            )
         argv = sys.argv[1:]
     parser = pheno_cli_parser()
     args = parser.parse_args(argv)

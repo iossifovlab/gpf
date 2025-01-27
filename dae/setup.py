@@ -107,6 +107,7 @@ setuptools.setup(
     reannotate_instance=dae.annotation.reannotate_instance:cli
     pheno_import=dae.pheno.pheno_import:main
     import_tools_pheno=dae.pheno.import_tools:main
+    import_phenotypes=dae.pheno.import_tools:main
     build_pheno_browser=dae.pheno.build_pheno_browser:main
 
 
@@ -127,6 +128,7 @@ setuptools.setup(
     vcf_liftover=dae.tools.vcf_liftover:main
 
     import_tools=dae.import_tools.cli:main
+    import_genotypes=dae.import_tools.cli:main
     generate_gene_profile=dae.gene_profile.generate_gene_profile:main
     convert_gene_profile_to_duckdb=dae.gene_profile.convert_gene_profile_to_duckdb:main
     generate_common_report=dae.common_reports.generate_common_report:main
