@@ -66,12 +66,13 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     this.formatValues();
 
     // Select all values if no initial are provided and range selector mode is used
-    if (this.selectedValueNames.length === 0 && this.interactType === 'range selector') {
+    if (this.initialSelectedValueNames.length) {
+      this.selectedValueNames = cloneDeep(this.initialSelectedValueNames);
+      this.formatSelectedValueNames();
+    } else if (this.interactType === 'range selector') {
       this.selectedValueNames = this.values.map(v => v.name);
+      this.selectCategoricalValues.emit(this.histogram.values.map(v => v.name));
     }
-
-    this.selectedValueNames = cloneDeep(this.initialSelectedValueNames);
-    this.formatSelectedValueNames();
 
     // Redraw histogram
     this.sliderStartIndex = 0;
