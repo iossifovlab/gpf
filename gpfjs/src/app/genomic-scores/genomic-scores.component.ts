@@ -60,6 +60,11 @@ export class GenomicScoresComponent implements OnInit {
     return (this.selectedGenomicScore.histogram as NumberHistogram).bins[lastIndex];
   }
 
+  public replaceCategoricalValues(values: string[]): void {
+    this.localState.values = values;
+    this.updateHistogramState();
+  }
+
   private updateHistogramState(): void {
     this.validateState(this.localState);
     this.updateState.emit(this.localState);
@@ -83,8 +88,7 @@ export class GenomicScoresComponent implements OnInit {
     const newValues: Set<string> = new Set(values);
 
     this.localState.values = Array.from(oldValues.symmetricDifference(newValues));
-    this.validateState(this.localState);
-    this.updateState.emit(this.localState);
+    this.updateHistogramState();
   }
 
   public isNumberHistogram(arg: object): arg is NumberHistogram {

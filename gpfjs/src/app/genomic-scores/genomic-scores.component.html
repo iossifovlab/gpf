@@ -2,12 +2,12 @@
   class="panel"
   style="display: flex; flex-wrap: wrap; justify-content: center; border-top: 0"
   *ngIf="selectedGenomicScore && localState">
-  <div style="display: flex; padding: 0 12px 0 12px">
+  <div style="display: flex; align-items: baseline; padding: 0 12px 0 12px">
     <div class="title-wrapper">{{ selectedGenomicScore.desc }}</div>
 
     <ng-content *ngIf="localState.categoricalView !== 'dropdown selector'">
       <gpf-helper-modal
-        style="height: 32px; margin-left: 4px"
+        style="height: 32px; margin-left: 4px; align-self: flex-end"
         [style.visibility]="selectedGenomicScore.help ? 'visible' : 'hidden'"
         [modalContent]="selectedGenomicScore.help"
         [isMarkdown]="true"></gpf-helper-modal>
@@ -40,8 +40,17 @@
     </div>
   </div>
 
-  <div *ngIf="localState.categoricalView === 'dropdown selector'">
-    <gpf-categorical-values-dropdown [categoricalValues]="localState.values"></gpf-categorical-values-dropdown>
+  <div
+    *ngIf="
+      selectedGenomicScore &&
+      isCategoricalHistogram(selectedGenomicScore.histogram) &&
+      localState.categoricalView === 'dropdown selector'
+    "
+    style="width: 100%">
+    <gpf-categorical-values-dropdown
+      [initialState]="localState.values"
+      [histogram]="selectedGenomicScore.histogram"
+      (updateSelectedValues)="replaceCategoricalValues($event)"></gpf-categorical-values-dropdown>
   </div>
 
   <div *ngIf="localState.categoricalView !== 'dropdown selector'" class="col-sm-11">

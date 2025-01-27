@@ -1,0 +1,28 @@
+#search-box {
+  border-radius: 5px;
+  width: 40rem;
+}
+
+#categorical-values-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 15px;
+}
+
+#values-list {
+  width: 40rem;
+  margin-top: 15px;
+}
+
+.remove-value {
+  border: none;
+  background: none;
+  font-size: 22px;
+  color: red;
+  margin-top: -1px;
+}
+
+.value-wrapper {
+  display: flex;
+}

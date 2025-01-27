@@ -1,38 +1,42 @@
-<input
-  matAutocompleteOrigin
-  #categoricalValuesSearch="matAutocompleteOrigin"
-  #categoricalValuesSearchTrigger="matAutocompleteTrigger"
-  matInput
-  [matAutocomplete]="categoricalValuesDropdown"
-  [matAutocompleteConnectedTo]="categoricalValuesSearch"
-  #searchBox
-  id="search-box"
-  placeholder="Search categorical value"
-  autocomplete="off"
-  [(ngModel)]="searchCategoricalValue"
-  (keyup)="searchBoxInput$.next(searchCategoricalValue)"
-  spellcheck="false"
-  (focus)="categoricalValuesSearchTrigger.openPanel()"
-  (keydown.enter)="categoricalValuesSearchTrigger.closePanel()" />
+<div id="categorical-values-container">
+  <div>
+    <input
+      matAutocompleteOrigin
+      #categoricalValuesSearch="matAutocompleteOrigin"
+      #categoricalValuesSearchTrigger="matAutocompleteTrigger"
+      matInput
+      [matAutocomplete]="categoricalValuesDropdown"
+      [matAutocompleteConnectedTo]="categoricalValuesSearch"
+      #searchBox
+      id="search-box"
+      placeholder="Search categorical value"
+      autocomplete="off"
+      [(ngModel)]="searchValue"
+      (keyup)="searchBoxInput$.next(searchValue)"
+      spellcheck="false"
+      (focus)="categoricalValuesSearchTrigger.openPanel()"
+      (keydown.enter)="categoricalValuesSearchTrigger.closePanel()" />
 
-<mat-autocomplete #categoricalValuesDropdown="matAutocomplete" class="values-suggestions-dropdown">
-  <mat-option
-    *ngFor="let suggestion of valueSuggestions"
-    class="dropdown-item"
-    type="button"
-    (click)="selectCategoricalValue(suggestion)"
-    (onSelectionChange)="selectCategoricalValue(suggestion)"
-    [value]="suggestion">
-    <span>{{ suggestion }}</span>
-  </mat-option>
-</mat-autocomplete>
+    <mat-autocomplete #categoricalValuesDropdown="matAutocomplete" class="values-suggestions-dropdown">
+      <mat-option
+        *ngFor="let suggestion of valueSuggestions"
+        class="dropdown-item"
+        type="button"
+        (click)="addToSelected(suggestion)"
+        [value]="suggestion"
+        [disabled]="isSelected(suggestion)">
+        <span>{{ suggestion }}</span>
+      </mat-option>
+    </mat-autocomplete>
+  </div>
 
-<div id="values-list">
-  <span>Selected categorical values: </span>
-  <div *ngFor="let selectedValue of selectedValues">
-    <button (click)="removeFromSelected(selectedValue)" class="remove-value">
-      <span [id]="'remove-' + selectedValue" class="material-symbols-outlined">close</span>
-    </button>
-    {{ selectedValue }}
+  <div id="values-list">
+    <!-- <span>Selected categorical values: </span> -->
+    <div *ngFor="let selectedValue of selectedValues" class="value-wrapper">
+      <button (click)="removeFromSelected(selectedValue)" class="remove-value">
+        <span [id]="'remove-' + selectedValue" class="material-symbols-outlined">close</span>
+      </button>
+      {{ selectedValue }}
+    </div>
   </div>
 </div>
