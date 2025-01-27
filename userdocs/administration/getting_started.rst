@@ -86,16 +86,18 @@ This command is going to install GPF and all of its dependencies.
 Create an empty GPF instance
 ++++++++++++++++++++++++++++
 
-Create an empty directory named ``data-hg38-empty``:
+Create an empty directory named ``minimal_instance``:
 
 .. code-block:: bash
 
-    mkdir data-hg38-empty
+    mkdir minimal_instance
 
 and inside it, create a file named ``gpf_instance.yaml`` with the following
 content:
 
 .. code-block:: yaml
+
+    instance_id: minimal_instance
 
     reference_genome:
         resource_id: "hg38/genomes/GRCh38-hg38"
@@ -140,7 +142,7 @@ To stop the development GPF web server, you should press ``Ctrl-C`` - the usual
 keybinding for stopping long-running Linux commands in a terminal.
 
 
-.. warning:: 
+.. warning::
 
     The development web server run by ``wgpf run`` used in this guide
     is meant for development purposes only
@@ -353,11 +355,11 @@ have genomic variants for the same group of individuals ``helloworld.ped``.
 We can create a dataset (group of genotype studies) that include both studies.
 
 To this end create a directory ``datasets/helloworld`` inside the GPF instance
-directory ``data-hg38-empty``:
+directory ``minimal_instance``:
 
 .. code-block:: bash
 
-    cd data-hg38-empty
+    cd minimal_instance
     mkdir -p datasets/helloworld
 
 and place the following configuration file ``hellowrold.yaml`` inside that
