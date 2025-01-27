@@ -71,6 +71,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       this.formatSelectedValueNames();
     } else if (this.interactType === 'range selector') {
       this.selectedValueNames = this.values.map(v => v.name);
+      this.selectCategoricalValues.emit(this.histogram.values.map(v => v.name));
     }
 
     // Redraw histogram
