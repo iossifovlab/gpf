@@ -2,59 +2,58 @@ Release Notes
 =============
 
 * 2025.01.2
-  * Fix wgpf tool.
+    * Fix wgpf tool.
 
 * 2025.01.1
-  * Fix queries by present in child and present in parent.
+    * Fix queries by present in child and present in parent.
 
 * 2025.01.0
-  * Update the model for saving queries.
-  * Gene Browser performance optimization.
-  * Added support for downloading Phenotype Tool report image.
-  * Fix OAuth2 login request to use the proper encoding.
-  * Fix OAuth2 authentication.
-  * Bump version of Angular to v18.
-  * Fix gene profiles single view back navigation for gene not found.
-  * Support for categorical histograms in genomic scores user interface.
-  * Improved unit tests coverage for GPFjs.
-  * Bump versions of ECMAScript and TypeScript.
-  * Extention of GPF REST client to support more REST API endpoints.
-  * Switch to using DuckDb for gene profiles.
-  * Fix handling of internal annotation attributes in annotate_vcf.
-  * NormalizeAlleleAnnotator to support discovery of the reference genome
-    if not specified in the annotation pipeline.
-  * Change the VEP annotator plugin to use VEP in offline mode.
-  * Reorganization of genomic scores resources hierarchy.
-  * Reorganization of genomic scores annotators hierarchy.
-  * Fix gene regions heuristics.
-  * Performance improvements in VCF variant loader.
-  * Support for no region split in grr_manage.
-  * Implementation of GPF instance re-annotation tool.
-  * Reorganization of handling of pedigrees.
-  * Added index file in GRR statistics folders.
-  * Fixes in family roles builder class.
-  * Switch to using Pyright in GPF builds.
-  * Split of the phenotype data import into separate tools.
-  * Support for phenotype data import project.
-  * Performance improvements in import of VCF studies in Schema2.
-  * Fix calcuation of variant types in VCFAllele annotatable.
-  * Clean up of GPF unit tests.
-  * Reduction of memory footprint in Schema2 parquet writer.
-  * Reduction of memory footprint for import tools.
-  * Fix default `fill-in-mode` for VCF variant loader.
-  * Refactor phenotype import measure classification.
-  * Refactor tools for building phenotype browser cache.
-  * Refactor phenotype data registry.
-  * Bump GPF dependencies versions.
-  * Switch CNV collection to use genomic scores base class.
-  * Fix query variants for studies without variants.
-  * Support queries by affected status in Schema2 genotype storages.
-  * Support for queries by categorical genomic scores.
+    * Update the model for saving queries.
+    * Gene Browser performance optimization.
+    * Added support for downloading Phenotype Tool report image.
+    * Fix OAuth2 login request to use the proper encoding.
+    * Fix OAuth2 authentication.
+    * Bump version of Angular to v18.
+    * Fix gene profiles single view back navigation for gene not found.
+    * Support for categorical histograms in genomic scores user interface.
+    * Improved unit tests coverage for GPFjs.
+    * Bump versions of ECMAScript and TypeScript.
+    * Extention of GPF REST client to support more REST API endpoints.
+    * Switch to using DuckDb for gene profiles.
+    * Fix handling of internal annotation attributes in annotate_vcf.
+    * NormalizeAlleleAnnotator to support discovery of the reference genome if not specified in the annotation pipeline.
+    * Change the VEP annotator plugin to use VEP in offline mode.
+    * Reorganization of genomic scores resources hierarchy.
+    * Reorganization of genomic scores annotators hierarchy.
+    * Fix gene regions heuristics.
+    * Performance improvements in VCF variant loader.
+    * Support for no region split in grr_manage.
+    * Implementation of GPF instance re-annotation tool.
+    * Reorganization of handling of pedigrees.
+    * Added index file in GRR statistics folders.
+    * Fixes in family roles builder class.
+    * Switch to using Pyright in GPF builds.
+    * Split of the phenotype data import into separate tools.
+    * Support for phenotype data import project.
+    * Performance improvements in import of VCF studies in Schema2.
+    * Fix calcuation of variant types in VCFAllele annotatable.
+    * Clean up of GPF unit tests.
+    * Reduction of memory footprint in Schema2 parquet writer.
+    * Reduction of memory footprint for import tools.
+    * Fix default `fill-in-mode` for VCF variant loader.
+    * Refactor phenotype import measure classification.
+    * Refactor tools for building phenotype browser cache.
+    * Refactor phenotype data registry.
+    * Bump GPF dependencies versions.
+    * Switch CNV collection to use genomic scores base class.
+    * Fix query variants for studies without variants.
+    * Support queries by affected status in Schema2 genotype storages.
+    * Support for queries by categorical genomic scores.
 
 * 2024.12.2
-  * Fix the GTF gene models parser.
-  * Change the fetch_region method signature for genomic scores.
-  * Fix for usage of .CONTENTS file in GRR.
+    * Fix the GTF gene models parser.
+    * Change the fetch_region method signature for genomic scores.
+    * Fix for usage of .CONTENTS file in GRR.
 
 * 2024.12.1
     * Fix support for GRR contents file in YAML format
@@ -175,7 +174,7 @@ Release Notes
     * Fix bigWig genomic position table fetch method
     * Fix inmemory genomic position table handling of zero based scores
     * Fix handling of displayed_values_percent in categorical histograms
-  
+
 * 2024.9.1
     * Fix default number of bins in genomic scores histograms
     * Support case insensitive search in phenotype browser
