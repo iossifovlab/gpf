@@ -42,7 +42,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   @ValidateIf(
     (component: GeneScoresComponent) => component.isCategoricalHistogram(component.selectedGeneScore.histogram)
   )
-  @ArrayNotEmpty({message: 'Please select at least one bar.'})
+  @ArrayNotEmpty({message: 'Please select at least one value.'})
   public categoricalValues: string[] = [];
   public selectedCategoricalHistogramView: CategoricalHistogramView = 'range selector';
 
@@ -205,6 +205,11 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
       this.geneScoresLocalState.domainMin = histogram.bins[0];
       this.geneScoresLocalState.domainMax = histogram.bins[histogram.bins.length - 1];
     }
+  }
+
+  public replaceCategoricalValues(values: string[]): void {
+    this.categoricalValues = values;
+    this.updateCategoricalHistogramState();
   }
 
   public toggleCategoricalValues(values: string[]): void {

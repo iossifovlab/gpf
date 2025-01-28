@@ -44,7 +44,20 @@
       </div>
     </div>
 
-    <div class="col-sm-9">
+    <div
+      *ngIf="
+        selectedGeneScore &&
+        isCategoricalHistogram(selectedGeneScore.histogram) &&
+        selectedCategoricalHistogramView === 'dropdown selector'
+      "
+      style="width: 100%">
+      <gpf-categorical-values-dropdown
+        [initialState]="categoricalValues"
+        [histogram]="selectedGeneScore.histogram"
+        (updateSelectedValues)="replaceCategoricalValues($event)"></gpf-categorical-values-dropdown>
+    </div>
+
+    <div *ngIf="selectedCategoricalHistogramView !== 'dropdown selector'" class="col-sm-9">
       <gpf-histogram
         *ngIf="selectedGeneScore && isNumberHistogram(selectedGeneScore.histogram)"
         [width]="650"
@@ -85,6 +98,9 @@
         [interactType]="selectedCategoricalHistogramView"
         (selectCategoricalValues)="toggleCategoricalValues($event)">
       </gpf-categorical-histogram>
+    </div>
+
+    <div class="col-sm-9">
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
   </div>
