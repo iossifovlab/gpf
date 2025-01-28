@@ -24,7 +24,7 @@ def two_rows_gp(
     gpdb.insert_gp(sample_gp)
 
     sample_gp.gene_symbol = "CHD7"
-    sample_scores = sample_gp.genomic_scores
+    sample_scores = sample_gp.gene_scores
     sample_scores["protection_scores"]["SFARI gene score"] = -11
     gpdb.insert_gp(sample_gp)
 

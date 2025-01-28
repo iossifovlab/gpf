@@ -40,7 +40,7 @@ def generate_gp(
             gs_name = gs["name"]
             sets_in.append(f"{collection_id}_{gs_name}")
 
-    for category in config.genomic_scores:
+    for category in config.gene_scores:
         category_name = category["category"]
         scores[category_name] = {}
         for score in category["scores"]:

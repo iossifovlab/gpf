@@ -26,7 +26,7 @@ gene_set_schema = {
     },
 }
 
-genomic_score_schema = {
+gene_score_schema = {
     "type": "dict",
     "schema": {
         "score_name": {"type": "string", "regex": "^[^.\r\n]+$"},
@@ -50,12 +50,18 @@ variant_statistic_schema = {
         "description": {"type": "string"},
         "effects": {"type": "list", "schema": {"type": "string"}},
         "category": {"type": "string", "allowed": ["denovo", "rare"]},
-        "scores": {"type": "list", "schema": {
+        "genomic_scores": {"type": "list", "schema": {
             "type": "dict",
             "schema": {
                 "name": {"type": "string", "regex": "^[^.\r\n]+$"},
                 "min": {"type": "float", "default": None, "nullable": True},
                 "max": {"type": "float", "default": None, "nullable": True},
+                "values": {
+                  "type": "list",
+                  "default": None,
+                  "nullable": True,
+                  "schema": {"type": "string"},
+                },
             },
         }},
         "default_visible": {"type": "boolean", "default": True},
@@ -98,7 +104,7 @@ gene_profiles_config = {
         },
     },
     "description": {"type": "string"},
-    "genomic_scores": {
+    "gene_scores": {
         "type": "list",
         "required": True,
         "schema": {
@@ -107,7 +113,7 @@ gene_profiles_config = {
                 "category": {"type": "string", "regex": "^[^.\r\n]+$"},
                 "display_name": {"type": "string"},
                 "default_visible": {"type": "boolean", "default": True},
-                "scores": {"type": "list", "schema": genomic_score_schema},
+                "scores": {"type": "list", "schema": gene_score_schema},
             },
         },
     },

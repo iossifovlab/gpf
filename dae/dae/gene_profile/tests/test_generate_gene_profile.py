@@ -61,7 +61,7 @@ def gp_config() -> dict:
                 ],
             },
         ],
-        "genomic_scores": [
+        "gene_scores": [
             {
                 "category": "gene_score",
                 "display_name": "Test gene score",
@@ -293,7 +293,7 @@ def test_generate_gene_profile(
         "gene_sets_test_gene_set_3",
     ]
 
-    assert t4.genomic_scores == {
+    assert t4.gene_scores == {
         "gene_score": {
             "gene_score1": {
                 "format": "%s",
@@ -302,7 +302,7 @@ def test_generate_gene_profile(
         },
     }
 
-    assert c8.genomic_scores == {
+    assert c8.gene_scores == {
         "gene_score": {
             "gene_score1": {
                 "format": "%s",

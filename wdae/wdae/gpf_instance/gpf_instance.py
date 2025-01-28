@@ -203,7 +203,7 @@ class WGPFInstance(GPFInstance):
         for gene_set in configuration["geneSets"]:
             if gene_set["category"] == category:
                 return "geneSets"
-        for genomic_score in configuration["genomicScores"]:
+        for genomic_score in configuration["geneScores"]:
             if genomic_score["category"] == category:
                 return "genomicScores"
         for dataset in configuration["datasets"]:

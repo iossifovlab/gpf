@@ -90,7 +90,7 @@ def test_get_statistic(
     response = admin_client.get(f"{ROUTE_PREFIX}/single-view/gene/CHD8")
     assert response.data["geneSymbol"] == "CHD8"  # type: ignore
     assert response.data["geneSets"] == ["gene_set_1", "gene_set_2"]  # type: ignore
-    assert response.data["genomicScores"] == [{  # type: ignore
+    assert response.data["geneScores"] == [{  # type: ignore
         "id": "category_1",
         "scores": [{
             "id": "genomic_score_1",

@@ -11,17 +11,17 @@ class GPStatistic:
     def __init__(
         self, gene_symbol: str,
         gene_sets: List[str],
-        genomic_scores: dict,
+        gene_scores: dict,
         variant_counts: dict,
     ):
         self.gene_symbol = gene_symbol
         self.gene_sets = gene_sets
-        self.genomic_scores = genomic_scores
+        self.gene_scores = gene_scores
         self.variant_counts = variant_counts
 
     def _scores_to_json(self):
         result = []
-        for category_id, scores in self.genomic_scores.items():
+        for category_id, scores in self.gene_scores.items():
             subresult = {"id": category_id, "scores": []}
             for score_id, score in scores.items():
                 subresult["scores"].append({"id": score_id, **score})
@@ -47,6 +47,6 @@ class GPStatistic:
         return {
             "geneSymbol": self.gene_symbol,
             "geneSets": self.gene_sets,
-            "genomicScores": self._scores_to_json(),
+            "geneScores": self._scores_to_json(),
             "studies": self._variant_counts_to_json(),
         }
