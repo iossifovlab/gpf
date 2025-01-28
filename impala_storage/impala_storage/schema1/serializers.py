@@ -235,7 +235,7 @@ def read_in_sexes(stream: io.BytesIO) -> list[Sex | None]:
     for _i in range(length):
         is_not_none = read_int8(stream)
         if is_not_none:
-            out.append(Sex(read_int8(stream)))
+            out.append(Sex.from_value(read_int8(stream)))
         else:
             out.append(None)
     return out
@@ -248,7 +248,7 @@ def read_in_roles(stream: io.BytesIO) -> list[Role | None]:
     for _i in range(length):
         is_not_none = read_int8(stream)
         if is_not_none:
-            out.append(Role(read_int32(stream)))
+            out.append(Role.from_value(read_int32(stream)))
         else:
             out.append(None)
     return out
@@ -261,7 +261,7 @@ def read_inheritance(stream: io.BytesIO) -> list[Inheritance | None]:
     for _i in range(length):
         is_not_none = read_int8(stream)
         if is_not_none:
-            out.append(Inheritance(read_int32(stream)))
+            out.append(Inheritance.from_value(read_int32(stream)))
         else:
             out.append(None)
     return out
