@@ -17,9 +17,8 @@ def relative_to_this_folder(path: str) -> str:
 
 
 @pytest.fixture(scope="session")
-def fake_pheno_db() -> PhenoRegistry:
-    fake_pheno_db_dir = Path(relative_to_this_folder("fixtures/fake_phenoDB"))
-    return PhenoRegistry.from_directory(fake_pheno_db_dir)
+def fake_pheno_db_dir() -> Path:
+    return Path(relative_to_this_folder("fixtures/fake_phenoDB"))
 
 
 @pytest.fixture(scope="session")
