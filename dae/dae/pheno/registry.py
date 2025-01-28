@@ -3,8 +3,6 @@ from __future__ import annotations
 import logging
 from threading import Lock
 
-from box import Box
-
 from dae.pheno.pheno_data import PhenotypeData, PhenotypeGroup
 from dae.pheno.storage import PhenotypeStorageRegistry
 
@@ -52,12 +50,14 @@ class PhenoRegistry:
     ) -> None:
         """Register a configuration as a loadable phenotype data."""
         study_id = study_config["name"]
-        storage_id = study_config["phenotype_storage"]["id"]
-        if storage_id not in self._storage_registry:
-            raise ValueError(
-                f"Cannot register '{study_id}', storage '{storage_id}' "
-                "not present in storage registry!",
-            )
+        storage_config = study_config.get("phenotype_storage")
+        if storage_config is not None:
+            storage_id = study_config["phenotype_storage"]["id"]
+            if storage_id not in self._storage_registry:
+                raise ValueError(
+                    f"Cannot register '{study_id}', storage '{storage_id}' "
+                    "not present in storage registry!",
+                )
         if lock:
             with self.CACHE_LOCK:
                 self._study_configs[study_config["name"]] = study_config
@@ -71,9 +71,9 @@ class PhenoRegistry:
         else:
             return data_id in self._study_configs
 
-    def get_phenotype_data_config(self, data_id: str) -> Box | None:
+    def get_phenotype_data_config(self, data_id: str) -> dict | None:
         with self.CACHE_LOCK:
-            return self._cache[data_id].config
+            return self._study_configs[data_id]
 
     def get_phenotype_data_ids(self, *, lock: bool = True) -> list[str]:
         if lock:
@@ -84,7 +84,11 @@ class PhenoRegistry:
     def get_phenotype_data(
         self, data_id: str, *, lock: bool = True,
     ) -> PhenotypeData:
-        """Return """
+        """
+        Return an instance of phenotype data from the registry.
+
+        If the phenotype data hasn't been loaded it, load and cache.
+        """
         if lock:
             with self.CACHE_LOCK:
                 return self._get_or_load(data_id)
@@ -127,8 +131,9 @@ class PhenoRegistry:
 
     def _load_study(self, study_config: dict) -> PhenotypeData:
         pheno_id = study_config["name"]
-        study_storage_id = study_config.get("phenotype_storage")
-        if study_storage_id is not None:
+        study_storage_config = study_config.get("phenotype_storage")
+        if study_storage_config is not None:
+            study_storage_id = study_storage_config["id"]
             study_storage = self._storage_registry.get_phenotype_storage(
                 study_storage_id,
             )
@@ -143,6 +148,14 @@ class PhenoRegistry:
 
     def _load_group(self, study_config: dict) -> PhenotypeData:
         pheno_id = study_config["name"]
+        missing_children = set(study_config["children"]).difference(
+            set(self._study_configs),
+        )
+        if len(missing_children) > 0:
+            raise ValueError(
+                f"Cannot load group {pheno_id}; the following child studies "
+                f"{missing_children} are not registered",
+            )
         children = [
             self._get_or_load(child_id)
             for child_id in study_config["children"]
