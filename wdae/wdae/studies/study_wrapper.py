@@ -14,7 +14,6 @@ from dae.person_sets import PersonSetCollection
 from dae.pheno.pheno_data import PhenotypeData
 from dae.pheno.registry import PhenoRegistry
 from dae.studies.study import GenotypeData
-from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyAllele
 from studies.query_transformer import QueryTransformer
 from studies.response_transformer import ResponseTransformer
@@ -488,16 +487,3 @@ class StudyWrapper(StudyWrapperBase):
             transform_gene_view_summary_variant_download(
                 variants_from_studies, frequency_column, summary_variant_ids,
             )
-
-    @staticmethod
-    def _get_roles_value(allele: FamilyAllele, roles: list[str]) -> list[str]:
-        result = []
-        variant_in_members = allele.variant_in_members_objects
-        for role_name in roles:
-            for member in variant_in_members:
-                role = Role.from_name(role_name)
-                assert role is not None
-                if member.role == role:
-                    result.append(str(role) + member.sex.short())
-
-        return result
