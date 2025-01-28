@@ -12,3 +12,11 @@
   font-weight: bold;
   font-size: 16px;
 }
+
+.genomic-score-container {
+  width: 65vw;
+  display: flex;
+  padding: 0 12px;
+  align-items: center;
+  justify-content: center;
+}

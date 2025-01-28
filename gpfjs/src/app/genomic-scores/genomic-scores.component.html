@@ -2,7 +2,7 @@
   class="panel"
   style="display: flex; flex-wrap: wrap; justify-content: center; border-top: 0"
   *ngIf="selectedGenomicScore && localState">
-  <div style="display: flex; align-items: baseline; padding: 0 12px 0 12px">
+  <div class="genomic-score-container">
     <div class="title-wrapper">{{ selectedGenomicScore.desc }}</div>
 
     <ng-content *ngIf="localState.categoricalView !== 'dropdown selector'">
