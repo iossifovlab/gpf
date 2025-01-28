@@ -17,9 +17,10 @@ from query_base.query_base import QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import StudyWrapperBase
+from studies.study_wrapper import StudyWrapperBase, WDAEStudy
 from users_api.models import WdaeUser
 
+from dae.pheno.pheno_data import PhenotypeData
 from dae.studies.study import GenotypeData
 from datasets_api.permissions import (
     IsDatasetAllowed,
@@ -90,20 +91,21 @@ class DatasetView(QueryBaseView):
     def _collect_datasets_summary(
         self, user: User,
     ) -> list[dict[str, Any]]:
-        genotype_data = self.gpf_instance.get_genotype_data_ids()
+        genotype_data = self.gpf_instance.get_genotype_data_ids() + \
+                        self.gpf_instance.get_phenotype_data_ids()
 
-        datasets: list[StudyWrapperBase] = cast(
-            list[StudyWrapperBase],
-            filter(None, [
-                self.gpf_instance.get_wdae_wrapper(genotype_data_id)
-                for genotype_data_id in genotype_data
-            ]),
-        )
+        datasets: list[WDAEStudy] = list(filter(None, [
+            self.gpf_instance.get_wdae_wrapper(data_id)
+            for data_id in genotype_data
+        ]))
 
-        res = [
-            StudyWrapperBase.build_genotype_data_all_datasets(dataset.config)
-            for dataset in datasets
-        ]
+        res = []
+        for dataset in datasets:
+            if dataset.is_genotype:
+                res.append(StudyWrapperBase.build_genotype_data_all_datasets(
+                            dataset.genotype_data.config))
+            else:
+                res.append(self._collect_single_dataset(user, dataset))
 
         db_datasets = {
             ds.dataset_id: ds
@@ -126,6 +128,46 @@ class DatasetView(QueryBaseView):
 
         return res
 
+    def _collect_single_dataset(
+        self, user: User, dataset: WDAEStudy,
+    ) -> dict | None:
+
+        if dataset.is_genotype:
+            person_set_collection_configs = {
+                psc.id: psc.domain_json()
+                for psc in dataset.genotype_data.person_set_collections.values()
+            }
+            res = StudyWrapperBase.build_genotype_data_description(
+                self.gpf_instance,
+                dataset.genotype_data.config,
+                person_set_collection_configs,
+            )
+        else:
+            res = {
+                "id": dataset.phenotype_data.pheno_id,
+                "name": dataset.phenotype_data.pheno_id,
+                "genotype_browser": False,
+                "phenotype_browser": {"enabled": True},
+                "phenotype_tool": False,
+                "enrichment_tool": False,
+                "common_report": {"enabled": False},
+                "phenotype_data": dataset.phenotype_data.pheno_id,
+                "study_type": "Phenotype study",
+                "studies": [],
+                "has_present_in_child": False,
+                "has_present_in_parent": False,
+                "has_denovo": False,
+                "genome": None,
+                "chr_prefix": None,
+                "gene_browser": {"enabled": False},
+                "description_editable": False,
+            }
+
+        allowed_datasets = self.get_permitted_datasets(user)
+        res = augment_accessibility(res, allowed_datasets)
+        res = augment_with_groups(res)
+        return augment_with_parents(self.instance_id, res)
+
     @method_decorator(etag(get_permissions_etag))
     def get(
         self, request: Request, dataset_id: str | None = None,
@@ -136,29 +178,11 @@ class DatasetView(QueryBaseView):
         if dataset_id is None:
             return Response({"data": self._collect_datasets_summary(user)})
 
-        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-
-        if not dataset:
+        if (dataset := self.gpf_instance.get_wdae_wrapper(dataset_id)) is None:
             return Response({"error": f"Dataset {dataset_id} not found"},
                             status=status.HTTP_404_NOT_FOUND)
 
-        person_set_collection_configs = {
-            psc.id: psc.domain_json()
-            for psc in dataset.person_set_collections.values()
-        }
-        res = StudyWrapperBase.build_genotype_data_description(
-            self.gpf_instance,
-            dataset.config,
-            person_set_collection_configs,
-        )
-
-        allowed_datasets = self.get_permitted_datasets(user)
-
-        res = augment_accessibility(res, allowed_datasets)
-        res = augment_with_groups(res)
-        res = augment_with_parents(self.instance_id, res)
-
-        return Response({"data": res})
+        return Response({"data": self._collect_single_dataset(user, dataset)})
 
 
 class DatasetDetailsView(QueryBaseView):
@@ -168,22 +192,29 @@ class DatasetDetailsView(QueryBaseView):
     def get(self, _request: Request, dataset_id: str) -> Response:
         # pylint: disable=unused-argument
         """Return response for a specific dataset configuration details."""
-        genotype_data_config = \
-            self.gpf_instance.get_genotype_data_config(dataset_id)
-        if genotype_data_config is None:
+
+        wdae_study = self.gpf_instance.get_wdae_wrapper(dataset_id)
+
+        if wdae_study is None:
             return Response(
                 {"error": f"Dataset {dataset_id} not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        has_denovo = genotype_data_config.get("has_denovo", False)
+        if wdae_study.is_phenotype:
+            return Response({
+                "hasDenovo": False,
+                "genome": None,
+                "chrPrefix": None,
+            })
 
-        dataset_details = {
+        has_denovo = wdae_study.genotype_data.config.get("has_denovo", False)
+        return Response({
             "hasDenovo": has_denovo,
-            "genome": genotype_data_config.genome,
-            "chrPrefix": genotype_data_config.chr_prefix,
-        }
-        return Response(dataset_details)
+            "genome": wdae_study.genotype_data.config.genome,
+            "chrPrefix": wdae_study.genotype_data.config.chr_prefix,
+        })
+
 
 
 class DatasetPedigreeView(QueryBaseView):
@@ -252,19 +283,25 @@ class DatasetDescriptionView(QueryBaseView):
                 {"error": "No dataset id provided."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
-        if genotype_data is None:
+
+        wdae_study = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        if wdae_study is None:
             return Response(
                 {"error": f"Dataset {dataset_id} not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if get_cacheable_hash(dataset_id) is None:
-            calc_and_set_cacheable_hash(f"{dataset_id}_description",
-                               genotype_data.description)
+        if wdae_study.is_genotype:
+            genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
+            if get_cacheable_hash(dataset_id) is None:
+                calc_and_set_cacheable_hash(f"{dataset_id}_description",
+                                genotype_data.description)
+            description = genotype_data.description
+        else:
+            description = f"placeholder description for {dataset_id}"
 
         return Response(
-            {"description": genotype_data.description},
+            {"description": description},
             status=status.HTTP_200_OK,
         )
 
@@ -404,6 +441,24 @@ class DatasetPermissionsSingleView(BaseDatasetPermissionsView):
 class DatasetHierarchyView(QueryBaseView):
     """Provide the hierarchy of one dataset configured in the instance."""
 
+    def produce_tree_pheno(
+        self,
+        dataset: PhenotypeData,
+        permitted_datasets: set[str],
+    ):
+        has_rights = dataset.pheno_id in permitted_datasets
+        dataset_obj = Dataset.objects.get(dataset_id=dataset.pheno_id)
+        groups = dataset_obj.groups.all()
+        if "hidden" in [group.name for group in groups] and not has_rights:
+            return None
+
+        return {
+            "dataset": dataset.pheno_id,
+            "name": dataset.pheno_id,
+            "children": None,
+            "access_rights": has_rights,
+        }
+
     def produce_tree(
         self,
         dataset: GenotypeData,
@@ -446,13 +501,21 @@ class DatasetHierarchyView(QueryBaseView):
             IsDatasetAllowed.permitted_datasets(user, self.instance_id),
         )
 
-        if dataset_id:
-            genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
+        wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id) \
+                if dataset_id else None
 
-            tree = self.produce_tree(
-                genotype_data, genotype_data_ids, permitted_datasets,
-            )
-
+        if wrapper is not None:
+            if wrapper.is_genotype:
+                tree = self.produce_tree(
+                    wrapper.genotype_data,
+                    genotype_data_ids,
+                    permitted_datasets,
+                )
+            else:
+                tree = self.produce_tree_pheno(
+                    wrapper.phenotype_data,
+                    permitted_datasets,
+                )
             return Response({"data": tree}, status=status.HTTP_200_OK)
 
         study_wrappers = [
@@ -460,15 +523,28 @@ class DatasetHierarchyView(QueryBaseView):
             for genotype_data_id in genotype_data_ids
         ]
         study_wrappers = [
-            sw for sw in study_wrappers if sw is not None and not sw.parents
+            sw for sw in study_wrappers
+            if sw is not None and not sw.genotype_data.parents
         ]
-        assert all(sw is not None for sw in study_wrappers)
 
         trees = []
+
         for wrapper in study_wrappers:
             tree = self.produce_tree(
                 wrapper.genotype_data,
                 genotype_data_ids,
+                permitted_datasets,
+            )
+            if tree is not None:
+                trees.append(tree)
+
+        study_wrappers = filter(None, [
+            self.gpf_instance.get_wdae_wrapper(pheno_id)
+            for pheno_id in self.gpf_instance.get_phenotype_data_ids()
+        ])
+        for wrapper in study_wrappers:
+            tree = self.produce_tree_pheno(
+                wrapper.phenotype_data,
                 permitted_datasets,
             )
             if tree is not None:
@@ -486,5 +562,6 @@ class VisibleDatasetsView(QueryBaseView):
         # pylint: disable=unused-argument
         res = self.gpf_instance.get_visible_datasets()
         if not res:
-            res = sorted(self.gpf_instance.get_genotype_data_ids())
+            res = sorted(self.gpf_instance.get_genotype_data_ids()
+                         + self.gpf_instance.get_phenotype_data_ids())
         return Response(res)

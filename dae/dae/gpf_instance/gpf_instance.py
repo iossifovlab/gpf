@@ -425,12 +425,6 @@ class GPFInstance:
             genotype_data_id,
         ))
 
-    def register_genotype_data(self, genotype_data: GenotypeData) -> None:
-        self._variants_db.register_genotype_data(genotype_data)
-
-    def unregister_genotype_data(self, genotype_data: GenotypeData) -> None:
-        self._variants_db.unregister_genotype_data(genotype_data)
-
     # Phenotype data
     def get_phenotype_data_ids(self) -> list[str]:
         return self._pheno_registry.get_phenotype_data_ids()

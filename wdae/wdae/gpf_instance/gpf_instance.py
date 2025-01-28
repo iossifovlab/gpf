@@ -11,7 +11,7 @@ from threading import Lock
 from typing import Any, cast
 
 from box import Box
-from studies.study_wrapper import StudyWrapper, StudyWrapperBase
+from studies.study_wrapper import StudyWrapper, StudyWrapperBase, WDAEStudy
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
@@ -86,9 +86,7 @@ class WGPFInstance(GPFInstance):
         **kwargs: dict[str, Any],
     ) -> None:
         self._remote_study_db: None = None
-        self._study_wrappers: dict[
-            str, StudyWrapper,
-        ] = {}
+        self._study_wrappers: dict[str, WDAEStudy] = {}
         self._gp_configuration: dict[str, Any] | None = None
         super().__init__(cast(Box, dae_config), dae_dir, **kwargs)
 
@@ -121,41 +119,25 @@ class WGPFInstance(GPFInstance):
     def get_about_description_path(self) -> str:
         return cast(str, self.dae_config.gpfjs.about_description_file)
 
-    def register_genotype_data(
-        self, genotype_data: GenotypeData,
-        study_wrapper: StudyWrapperBase | None = None,
-    ) -> None:
-        super().register_genotype_data(genotype_data)
-
-        logger.debug("genotype data config; %s", genotype_data.study_id)
-
-        if study_wrapper is None:
-            study_wrapper = StudyWrapper(
-                genotype_data,
-                self._pheno_registry,
-                self.gene_scores_db,
-                self,
-            )
-        self._study_wrappers[
-            genotype_data.study_id] = study_wrapper  # type: ignore
-
-    def make_wdae_wrapper(
-        self, dataset_id: str,
-    ) -> StudyWrapper | None:
+    def make_wdae_wrapper(self, dataset_id: str) -> WDAEStudy | None:
         """Create and return wdae study wrapper."""
         genotype_data = self.get_genotype_data(dataset_id)
-        if genotype_data is None:
-            return None
-
-        return StudyWrapper(
-            genotype_data, self._pheno_registry, self.gene_scores_db, self,
-        )
+        if genotype_data is not None:
+            return StudyWrapper(
+                genotype_data, self._pheno_registry, self.gene_scores_db, self,
+            )
+        if self.has_phenotype_data(dataset_id):
+            return WDAEStudy(
+                genotype_data=None,
+                phenotype_data=self.get_phenotype_data(dataset_id),
+            )
+        return None
 
     def get_wdae_wrapper(
         self, dataset_id: str,
-    ) -> StudyWrapper | None:
+    ) -> WDAEStudy | None:
         """Return wdae study wrapper."""
-        wrapper: StudyWrapper | None = None
+        wrapper: WDAEStudy | None = None
         if dataset_id not in self._study_wrappers:
             wrapper = self.make_wdae_wrapper(dataset_id)
             if wrapper is not None:
@@ -195,7 +177,9 @@ class WGPFInstance(GPFInstance):
             dataset_id for dataset_id
             in self.visible_datasets
             if dataset_id in all_datasets
-        ]
+        ] + self.get_phenotype_data_ids()  # FIXME - This is a temporary fix to
+        #                                            allow all phenotype studies
+        #                                            to be seen
 
     def _gp_find_category_section(
         self, configuration: dict[str, Any], category: str,
@@ -363,6 +347,11 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
     """Recreate datasets permissions."""
     # pylint: disable=import-outside-toplevel
     from datasets_api.models import Dataset, DatasetHierarchy
+
+    for phenotype_data_id in gpf_instance.get_phenotype_data_ids():
+        Dataset.recreate_dataset_perm(phenotype_data_id)
+        Dataset.set_broken(phenotype_data_id, broken=False)
+        Dataset.update_name(phenotype_data_id, phenotype_data_id)
 
     for genotype_data_id in gpf_instance.get_genotype_data_ids():
         Dataset.recreate_dataset_perm(genotype_data_id)

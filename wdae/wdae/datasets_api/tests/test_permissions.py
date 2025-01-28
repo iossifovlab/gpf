@@ -128,60 +128,6 @@ def test_user_and_dataset_groups_getter_methods(
     assert get_user_groups(user) & get_dataset_groups(dataset)
 
 
-def test_unregistered_dataset_does_not_propagate_permissions(
-    custom_wgpf: WGPFInstance,
-) -> None:
-    """
-    Test for faulty permissions propagations.
-
-    Permissions were changed to return True for missing datasets, which
-    resulted in a bug where checking parent/child permissions would return
-    True when it shouldn't when a parent dataset suddenly disappears.
-    """
-    dataset1_wrapper = custom_wgpf.get_wdae_wrapper("dataset_1")
-    assert dataset1_wrapper is not None
-    assert dataset1_wrapper.is_group
-
-    dataset2_wrapper = custom_wgpf.get_wdae_wrapper("dataset_2")
-    assert dataset2_wrapper is not None
-    assert dataset2_wrapper.is_group
-
-    ds_config = Box(dataset1_wrapper.config.to_dict())
-    ds_config.studies = ("dataset_1", "dataset_2")
-    ds_config.id = "big_dataset"
-
-    dataset = GenotypeDataGroup(
-        ds_config, [dataset1_wrapper.genotype_data_study,
-                    dataset2_wrapper.genotype_data_study],
-    )
-    assert dataset is not None
-    assert dataset.study_id == "big_dataset"
-
-    dataset_wrapper = StudyWrapper(dataset, None, None, custom_wgpf)  # type: ignore
-    assert dataset_wrapper is not None
-    assert dataset_wrapper.is_group
-
-    Dataset.recreate_dataset_perm("big_dataset")
-
-    custom_wgpf.register_genotype_data(dataset)
-
-    assert "big_dataset" in custom_wgpf.get_genotype_data_ids()
-    assert custom_wgpf.get_genotype_data("big_dataset") is not None
-
-    custom_wgpf.unregister_genotype_data(dataset)
-    custom_wgpf.get_genotype_data("dataset_1")._parents = set()
-    custom_wgpf.get_genotype_data("dataset_2")._parents = set()
-
-    study1 = custom_wgpf.get_genotype_data("t4c8_study_1")
-    assert study1 is not None
-
-    assert not user_has_permission(
-        "t4c8_instance",
-        cast(User, AnonymousUser()),
-        study1.study_id,
-    )
-
-
 def test_nauser_user_and_dataset_groups_getter_methods(
     na_user: User,
     custom_wgpf: GenotypeData,  # noqa: ARG001 ; setup WGPF instance
