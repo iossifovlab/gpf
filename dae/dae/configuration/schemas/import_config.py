@@ -1,6 +1,6 @@
 from typing import Any
 
-from dae.configuration.schemas.dae_conf import storage_schema
+from dae.configuration.schemas.dae_conf import genotype_storage_schema
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
@@ -109,7 +109,7 @@ import_config_schema: dict[str, Any] = {
         "type": "dict",
         "anyof_schema": [
             {"storage_id": {"type": "string"}},
-            storage_schema,
+            genotype_storage_schema,
         ],
         "allow_unknown": True,
     },
