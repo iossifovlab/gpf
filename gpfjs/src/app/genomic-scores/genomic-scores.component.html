@@ -2,13 +2,17 @@
   class="panel"
   style="display: flex; flex-wrap: wrap; justify-content: center; border-top: 0"
   *ngIf="selectedGenomicScore && localState">
-  <div style="display: flex; padding: 0 12px 0 12px">
+  <div class="genomic-score-container">
     <div class="title-wrapper">{{ selectedGenomicScore.desc }}</div>
-    <gpf-helper-modal
-      style="height: 32px; margin-left: 4px"
-      [style.visibility]="selectedGenomicScore.help ? 'visible' : 'hidden'"
-      [modalContent]="selectedGenomicScore.help"
-      [isMarkdown]="true"></gpf-helper-modal>
+
+    <ng-content *ngIf="localState.categoricalView !== 'dropdown selector'">
+      <gpf-helper-modal
+        style="height: 32px; margin-left: 4px; align-self: flex-end"
+        [style.visibility]="selectedGenomicScore.help ? 'visible' : 'hidden'"
+        [modalContent]="selectedGenomicScore.help"
+        [isMarkdown]="true"></gpf-helper-modal>
+    </ng-content>
+
     <div *ngIf="isCategoricalHistogram(selectedGenomicScore.histogram)">
       <button mat-icon-button [matMenuTriggerFor]="menu" id="view-menu-button">
         <span>Mode</span>
@@ -26,10 +30,30 @@
           [ngClass]="{ 'selected-view': localState.categoricalView === 'click selector' }"
           >click selector
         </button>
+        <button
+          mat-menu-item
+          (click)="switchCategoricalHistogramView('dropdown selector')"
+          [ngClass]="{ 'selected-view': localState.categoricalView === 'dropdown selector' }"
+          >dropdown selector
+        </button>
       </mat-menu>
     </div>
   </div>
-  <div class="col-sm-11">
+
+  <div
+    *ngIf="
+      selectedGenomicScore &&
+      isCategoricalHistogram(selectedGenomicScore.histogram) &&
+      localState.categoricalView === 'dropdown selector'
+    "
+    style="width: 100%">
+    <gpf-categorical-values-dropdown
+      [initialState]="localState.values"
+      [histogram]="selectedGenomicScore.histogram"
+      (updateSelectedValues)="replaceCategoricalValues($event)"></gpf-categorical-values-dropdown>
+  </div>
+
+  <div *ngIf="localState.categoricalView !== 'dropdown selector'" class="col-sm-11">
     <gpf-histogram
       *ngIf="selectedGenomicScore && isNumberHistogram(selectedGenomicScore.histogram)"
       [width]="800"
@@ -75,6 +99,9 @@
       [interactType]="localState.categoricalView"
       (selectCategoricalValues)="toggleCategoricalValues($event)">
     </gpf-categorical-histogram>
+  </div>
+
+  <div class="col-sm-11">
     <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
   </div>
 </div>

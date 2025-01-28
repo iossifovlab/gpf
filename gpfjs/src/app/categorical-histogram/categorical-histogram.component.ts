@@ -222,6 +222,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       .call(
         d3.axisBottom(this.scaleXAxis)
       ).style('font-size', '12px');
+    svg.selectAll('text').style('text-anchor', 'start').attr('transform', 'rotate(45)');
   }
 
   private toggleValue(event: { srcElement: { id: string, style: { fill: string } } }): void {

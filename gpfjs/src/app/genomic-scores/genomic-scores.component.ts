@@ -37,7 +37,7 @@ export class GenomicScoresComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    this.localState = this.initialState;
+    this.localState = cloneDeep(this.initialState);
     this.validateState(this.localState);
   }
 
@@ -60,6 +60,11 @@ export class GenomicScoresComponent implements OnInit {
     return (this.selectedGenomicScore.histogram as NumberHistogram).bins[lastIndex];
   }
 
+  public replaceCategoricalValues(values: string[]): void {
+    this.localState.values = values;
+    this.updateHistogramState();
+  }
+
   private updateHistogramState(): void {
     this.validateState(this.localState);
     this.updateState.emit(this.localState);
@@ -69,7 +74,7 @@ export class GenomicScoresComponent implements OnInit {
     if (view === this.localState.categoricalView) {
       return;
     }
-    if (view === 'click selector') {
+    if (view === 'click selector' || view === 'dropdown selector') {
       this.localState.values = [];
     } else if (view === 'range selector' && this.isCategoricalHistogram(this.selectedGenomicScore.histogram)) {
       this.localState.values = this.selectedGenomicScore.histogram.values.map(v => v.name);
@@ -83,8 +88,7 @@ export class GenomicScoresComponent implements OnInit {
     const newValues: Set<string> = new Set(values);
 
     this.localState.values = Array.from(oldValues.symmetricDifference(newValues));
-    this.validateState(this.localState);
-    this.updateState.emit(this.localState);
+    this.updateHistogramState();
   }
 
   public isNumberHistogram(arg: object): arg is NumberHistogram {
@@ -126,7 +130,7 @@ export class GenomicScoresComponent implements OnInit {
     }
     if (this.isCategoricalHistogram(this.selectedGenomicScore.histogram)) {
       if (!state.values.length) {
-        this.errors.push('Please select at least one bar.');
+        this.errors.push('Please select at least one value.');
       }
       if (state.values.length > this.categoricalValueMax) {
         this.errors.push(`Please select less than ${this.categoricalValueMax} values.`);

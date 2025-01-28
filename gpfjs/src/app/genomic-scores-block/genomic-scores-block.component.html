@@ -5,9 +5,10 @@
       <li ngbNavItem>
         <a *ngIf="allGenomicScores?.length > 0">
           <mat-form-field>
-            <mat-select disableRipple [placeholder]="'Select filter'">
+            <mat-select disableRipple [placeholder]="'Select genomic score'">
               <mat-option
                 *ngFor="let genomicScore of unusedGenomicScores; let i = index"
+                [title]="genomicScore.desc"
                 (click)="addFilter(genomicScore, i)"
                 >{{ genomicScore.desc }}</mat-option
               >

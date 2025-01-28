@@ -184,6 +184,7 @@ import { uniqueFamilyVariantsFilterReducer } from './unique-family-variants-filt
 import { CategoricalHistogramModule } from './categorical-histogram/categorical-histogram.module';
 import {MatMenuModule} from '@angular/material/menu';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { CategoricalValuesDropdownComponent } from './categorical-values-dropdown/categorical-values-dropdown.component';
 
 const appRoutes: Routes = [
   {
@@ -396,6 +397,7 @@ const appRoutes: Routes = [
   AboutComponent,
   MarkdownEditorComponent,
   FamilyTagsComponent,
+  CategoricalValuesDropdownComponent
 ],
 bootstrap: [AppComponent], imports: [BrowserModule,
   FormsModule,
@@ -445,7 +447,7 @@ bootstrap: [AppComponent], imports: [BrowserModule,
     genomicScores: genomicScoresReducer,
     uniqueFamilyVariantsFilter: uniqueFamilyVariantsFilterReducer,
     studyTypes: studyTypesReducer
-  })], providers: [
+  }),], providers: [
   CookieService,
   ConfigService,
   DatasetsService,
@@ -474,7 +476,7 @@ bootstrap: [AppComponent], imports: [BrowserModule,
   { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorService, multi: true },
   {
     provide: APP_BASE_HREF,
-    useFactory: (s: PlatformLocation) => s.getBaseHrefFromDOM(),
+    useFactory: (s: PlatformLocation): string => s.getBaseHrefFromDOM(),
     deps: [PlatformLocation]
   },
   {
@@ -493,7 +495,7 @@ bootstrap: [AppComponent], imports: [BrowserModule,
   },
   {
     provide: APP_INITIALIZER,
-    useFactory: () => () => { },
+    useFactory: () => (): void => { },
     deps: [Sentry.TraceService],
     multi: true,
   },

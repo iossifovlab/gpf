@@ -91,5 +91,5 @@ export class CategoricalHistogram {
   ) { }
 }
 
-export type CategoricalHistogramView = 'range selector' | 'click selector';
+export type CategoricalHistogramView = 'range selector' | 'click selector' | 'dropdown selector';
 

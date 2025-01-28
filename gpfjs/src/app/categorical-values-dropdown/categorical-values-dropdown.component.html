@@ -1,0 +1,42 @@
+<div id="categorical-values-container">
+  <div>
+    <input
+      matAutocompleteOrigin
+      #categoricalValuesSearch="matAutocompleteOrigin"
+      #categoricalValuesSearchTrigger="matAutocompleteTrigger"
+      matInput
+      [matAutocomplete]="categoricalValuesDropdown"
+      [matAutocompleteConnectedTo]="categoricalValuesSearch"
+      #searchBox
+      id="search-box"
+      placeholder="Search categorical value"
+      autocomplete="off"
+      [(ngModel)]="searchValue"
+      (keyup)="searchBoxInput$.next(searchValue)"
+      spellcheck="false"
+      (focus)="categoricalValuesSearchTrigger.openPanel()"
+      (keydown.enter)="categoricalValuesSearchTrigger.closePanel()" />
+
+    <mat-autocomplete #categoricalValuesDropdown="matAutocomplete" class="values-suggestions-dropdown">
+      <mat-option
+        *ngFor="let suggestion of valueSuggestions"
+        class="dropdown-item"
+        type="button"
+        (click)="addToSelected(suggestion)"
+        (onSelectionChange)="addToSelected(suggestion)"
+        [title]="suggestion.name + ' (' + suggestion.value + ')'"
+        [disabled]="isSelected(suggestion)">
+        <span>{{ suggestion.name + ' (' + suggestion.value + ')' }}</span>
+      </mat-option>
+    </mat-autocomplete>
+  </div>
+
+  <div id="values-list">
+    <div *ngFor="let selectedValue of selectedValues" class="value-wrapper">
+      <button (click)="removeFromSelected(selectedValue.name)" class="remove-value">
+        <span [id]="'remove-' + selectedValue" class="material-symbols-outlined">close</span>
+      </button>
+      {{ selectedValue.name + ' (' + selectedValue.value + ')' }}
+    </div>
+  </div>
+</div>
