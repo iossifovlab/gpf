@@ -45,7 +45,7 @@ const mockConfigJson = {
       defaultVisible: true
     }
   ],
-  genomicScores: [
+  geneScores: [
     {
       category: 'autism_scores',
       displayName: 'Autism Gene Scores',
@@ -135,8 +135,8 @@ describe('GeneProfilesService', () => {
     expect(config.order[1].id).toBe('autism_scores');
     expect(config.geneSets[0].displayName).toBe('Autism Gene Sets');
     expect(config.geneSets[0].sets[0].setId).toBe('SFARI ALL');
-    expect(config.genomicScores[0].displayName).toBe('Autism Gene Scores');
-    expect(config.genomicScores[0].scores[0].scoreName).toBe('SFARI gene score');
+    expect(config.geneScores[0].displayName).toBe('Autism Gene Scores');
+    expect(config.geneScores[0].scores[0].scoreName).toBe('SFARI gene score');
     expect(config.datasets[0].id).toBe('sequencing_de_novo');
     expect(config.datasets[0].statistics[0].id).toBe('denovo_lgds');
     expect(config.datasets[0].personSets[0].id).toBe('autism');

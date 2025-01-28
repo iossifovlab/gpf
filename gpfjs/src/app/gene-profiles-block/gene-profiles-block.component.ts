@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import {
   GeneProfilesDataset,
   GeneProfilesGeneSetsCategory,
-  GeneProfilesGenomicScoresCategory,
+  GeneProfilesGeneScoresCategory,
   GeneProfilesSingleViewConfig} from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { map, take } from 'rxjs/operators';
@@ -59,7 +59,7 @@ export class GeneProfilesBlockComponent implements OnInit {
 
     const datasets = config.datasets;
     const geneSets = config.geneSets;
-    const genomicScores = config.genomicScores;
+    const geneScores = config.geneScores;
 
     geneProfilesTableConfig.columns.push(
       new GeneProfilesColumn('createTab', [], 'Gene', false, 'geneSymbol', null, false, true, null)
@@ -69,8 +69,8 @@ export class GeneProfilesBlockComponent implements OnInit {
       geneProfilesTableConfig.columns.push(this.createTableGeneSet(geneSet));
     });
 
-    genomicScores.forEach(genomicScore => {
-      geneProfilesTableConfig.columns.push(this.createTableGenomicScore(genomicScore));
+    geneScores.forEach(geneScore => {
+      geneProfilesTableConfig.columns.push(this.createTableGeneScore(geneScore));
     });
 
     datasets.forEach(dataset => {
@@ -114,16 +114,16 @@ export class GeneProfilesBlockComponent implements OnInit {
     );
   }
 
-  private createTableGenomicScore(genomicScore: GeneProfilesGenomicScoresCategory): GeneProfilesColumn {
+  private createTableGeneScore(geneScore: GeneProfilesGeneScoresCategory): GeneProfilesColumn {
     const innerColumns: GeneProfilesColumn[] = [];
-    genomicScore.scores.forEach(score => {
+    geneScore.scores.forEach(score => {
       innerColumns.push(
         new GeneProfilesColumn(
           null,
           [],
           score.scoreName,
           true,
-          `${genomicScore.category}.${score.scoreName}`,
+          `${geneScore.category}.${score.scoreName}`,
           score.meta,
           true,
           score.defaultVisible,
@@ -134,12 +134,12 @@ export class GeneProfilesBlockComponent implements OnInit {
     return new GeneProfilesColumn(
       null,
       innerColumns,
-      genomicScore.displayName,
+      geneScore.displayName,
       false,
-      genomicScore.category,
+      geneScore.category,
       null,
       false,
-      genomicScore.defaultVisible,
+      geneScore.defaultVisible,
       null
     );
   }

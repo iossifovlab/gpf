@@ -1,7 +1,7 @@
 import { Component, ElementRef, HostListener, Input, OnInit, ViewChild } from '@angular/core';
 import {
   GeneProfilesDatasetPersonSet, GeneProfilesDatasetStatistic, GeneProfilesGene,
-  GeneProfilesGenomicScores, GeneProfilesSingleViewConfig, GeneProfilesEffectType
+  GeneProfilesGeneScores, GeneProfilesSingleViewConfig, GeneProfilesEffectType
 } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { Observable, of, zip } from 'rxjs';
 import { GeneScoresService } from '../gene-scores/gene-scores.service';
@@ -38,7 +38,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
   public compactView = false;
   public showTemplate = true;
 
-  public genomicScoresGeneScores: {category: string; scores: GenomicScore[]}[] = [];
+  public geneScores: {category: string; scores: GenomicScore[]}[] = [];
   public gene$: Observable<GeneProfilesGene>;
 
   public histogramOptions = {
@@ -105,29 +105,29 @@ export class GeneProfileSingleViewComponent implements OnInit {
 
         let scores: string;
         const geneScoresObservables: Observable<GenomicScore[]>[] = [];
-        for (const genomicScore of gene.genomicScores) {
-          scores = [...genomicScore.scores.map(score => score.id)].join(',');
+        for (const geneScore of gene.geneScores) {
+          scores = [...geneScore.scores.map(score => score.id)].join(',');
           geneScoresObservables.push(
             this.geneScoresService.getGeneScores(scores)
           );
         }
-        const genomicScoresObservables: Observable<[string, GenomicScore[]]>[] = [];
+        const namedGeneScoresObservables: Observable<[string, GenomicScore[]]>[] = [];
         for (let k = 0; k < geneScoresObservables.length; k++) {
-          genomicScoresObservables.push(
+          namedGeneScoresObservables.push(
             zip(
-              of(gene.genomicScores[k].id),
+              of(gene.geneScores[k].id),
               geneScoresObservables[k]
             )
           );
         }
-        return zip(...genomicScoresObservables);
+        return zip(...namedGeneScoresObservables);
       }),
     ).subscribe({
-      next: (genomicScores) => {
-        for (const genomicScore of genomicScores) {
-          this.genomicScoresGeneScores.push({
-            category: genomicScore[0],
-            scores: genomicScore[1]
+      next: (geneScores) => {
+        for (const geneScore of geneScores) {
+          this.geneScores.push({
+            category: geneScore[0],
+            scores: geneScore[1]
           });
         }
       },
@@ -152,13 +152,13 @@ export class GeneProfileSingleViewComponent implements OnInit {
   }
 
   public getGeneScoreByKey(category: string, key: string): GenomicScore {
-    return this.genomicScoresGeneScores
-      .find(genomicScoresCategory => genomicScoresCategory.category === category).scores
+    return this.geneScores
+      .find(geneScoresCategory => geneScoresCategory.category === category).scores
       .find(score => score.score === key);
   }
 
-  public getSingleScoreValue(genomicScores: GeneProfilesGenomicScores[], categoryId: string, scoreId: string): number {
-    return genomicScores.find(category => category.id === categoryId).scores.find(score => score.id === scoreId).value;
+  public getSingleScoreValue(geneScores: GeneProfilesGeneScores[], categoryId: string, scoreId: string): number {
+    return geneScores.find(category => category.id === categoryId).scores.find(score => score.id === scoreId).value;
   }
 
   // Remove when GPF starts supporting string names for categorical histogram values
@@ -208,9 +208,9 @@ export class GeneProfileSingleViewComponent implements OnInit {
       synonymous: ['synonymous'],
     };
 
-    const genomicScores: GenomicScoreState[] = [];
+    const geneScores: GenomicScoreState[] = [];
     if (statistic.scores) {
-      genomicScores[0] = cloneDeep(statistic.scores[0]);
+      geneScores[0] = cloneDeep(statistic.scores[0]);
     }
 
     const presentInChildValues = ['proband only', 'proband and sibling', 'sibling only'];
@@ -245,7 +245,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
       }
     }));
     store.dispatch(setStudyTypes({studyTypes: ['we']}));
-    store.dispatch(setGenomicScores({genomicScores: genomicScores}));
+    store.dispatch(setGenomicScores({genomicScores: geneScores}));
 
     store.pipe(take(1)).subscribe(state => {
       const clonedState = cloneDeep(state);
