@@ -161,42 +161,6 @@ class DatasetView(QueryBaseView):
         return Response({"data": res})
 
 
-class StudiesView(QueryBaseView):
-    """View class for genotype data stuides and datasets."""
-
-    def _collect_datasets_summary(
-        self, user: User,
-    ) -> list[dict[str, Any]]:
-        genotype_data_ids = self.gpf_instance.get_genotype_data_ids()
-
-        datasets: list[StudyWrapperBase] = []
-        for genotype_data_id in genotype_data_ids:
-            study = self.gpf_instance.get_wdae_wrapper(genotype_data_id)
-            if study is None or study.is_group:
-                continue
-            datasets.append(study)
-
-        res = []
-        for dataset in datasets:
-            assert dataset is not None
-
-            res.append(
-                StudyWrapperBase.build_genotype_data_all_datasets(
-                    dataset.config))
-
-        allowed_datasets = self.get_permitted_datasets(user)
-
-        res = [augment_accessibility(ds, allowed_datasets) for ds in res]
-        res = [augment_with_groups(ds) for ds in res]
-        return [augment_with_parents(self.instance_id, ds) for ds in res]
-
-    @method_decorator(etag(get_permissions_etag))
-    def get(self, request: Request) -> Response:
-        user = request.user
-
-        return Response({"data": self._collect_datasets_summary(user)})
-
-
 class DatasetDetailsView(QueryBaseView):
     """Provide miscellaneous details for a given dataset."""
 
