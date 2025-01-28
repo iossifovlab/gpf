@@ -187,7 +187,7 @@ class ResponseTransformer:
     ) -> dict | None:
         if self._pheno_values is not None:
             return self._pheno_values
-        if not self.study_wrapper.phenotype_data \
+        if not self.study_wrapper.has_pheno_data \
            or not self.study_wrapper.config_columns.phenotype:
             return None
 

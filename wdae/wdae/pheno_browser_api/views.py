@@ -49,7 +49,7 @@ class PhenoInstrumentsView(QueryBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or dataset.phenotype_data is None:
+        if not dataset or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instruments = sorted(dataset.phenotype_data.get_instruments())
@@ -71,7 +71,7 @@ class PhenoMeasuresInfoView(QueryBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or dataset.phenotype_data is None:
+        if not dataset or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         res = dataset.phenotype_data.get_measures_info()
@@ -90,7 +90,7 @@ class PhenoMeasureDescriptionView(QueryBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or dataset.phenotype_data is None:
+        if not dataset or not dataset.has_pheno_data:
             return Response(
                 {"error": "Dataset not found"},
                 status=status.HTTP_404_NOT_FOUND,
@@ -120,7 +120,7 @@ class PhenoMeasuresView(QueryBaseView):
         dataset_id = request.query_params["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or dataset.phenotype_data is None:
+        if not dataset or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if (
@@ -177,8 +177,6 @@ class PhenoMeasuresDownload(QueryBaseView, DatasetAccessRightsView):
         buffer.seek(0)
         buffer.truncate(0)
 
-        assert dataset.phenotype_data is not None
-
         values_iterator = dataset.phenotype_data.get_people_measure_values(
             measure_ids)
 
@@ -209,7 +207,7 @@ class PhenoMeasuresDownload(QueryBaseView, DatasetAccessRightsView):
         dataset_id = data["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or dataset.phenotype_data is None:
+        if not dataset or not dataset.has_pheno_data:
             raise KeyError
 
         search_term = data.get("search_term", None)
@@ -244,7 +242,7 @@ class PhenoMeasuresDownload(QueryBaseView, DatasetAccessRightsView):
         dataset_id = data["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or dataset.phenotype_data is None:
+        if not dataset or not dataset.has_pheno_data:
             raise KeyError
 
         search_term = data.get("search_term", None)
@@ -317,7 +315,7 @@ class PhenoMeasuresCount(QueryBaseView, DatasetAccessRightsView):
         dataset_id = data["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or dataset.phenotype_data is None:
+        if not dataset or not dataset.has_pheno_data:
             raise KeyError
 
         search_term = data.get("search_term", None)
@@ -361,7 +359,7 @@ class PhenoMeasureValues(QueryBaseView, DatasetAccessRightsView):
         dataset_id = data["dataset_id"]
 
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or dataset.phenotype_data is None:
+        if not dataset or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         measure_ids = data.get("measure_ids", None)

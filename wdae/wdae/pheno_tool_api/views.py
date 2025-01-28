@@ -210,7 +210,7 @@ class PhenoToolPeopleValues(QueryBaseView, DatasetAccessRightsView):
         data = request.data
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or dataset.phenotype_data is None:
+        if not dataset or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         res_df = dataset.phenotype_data.get_people_measure_values_df(
@@ -240,7 +240,7 @@ class PhenoToolMeasure(QueryBaseView, DatasetAccessRightsView):
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or dataset.phenotype_data is None:
+        if not dataset or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         measure_id = params.get("measureId", None)
@@ -266,7 +266,7 @@ class PhenoToolMeasures(QueryBaseView, DatasetAccessRightsView):
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or dataset.phenotype_data is None:
+        if not dataset or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instrument = params.get("instrument", None)
@@ -312,7 +312,7 @@ class PhenoToolInstruments(QueryBaseView, DatasetAccessRightsView):
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-        if not dataset or dataset.phenotype_data is None:
+        if not dataset or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instruments = dataset.phenotype_data.instruments

@@ -21,11 +21,62 @@ from studies.response_transformer import ResponseTransformer
 logger = logging.getLogger(__name__)
 
 
-class StudyWrapperBase:
+class WDAEStudy:
+    """A genotype and phenotype data wrapper for use in the wdae module."""
+
+    def __init__(
+        self,
+        genotype_data: GenotypeData | None = None,
+        phenotype_data: PhenotypeData | None = None,
+    ):
+        if genotype_data is None and phenotype_data is None:
+            raise ValueError("Cannot create wrapper without providing data!")
+        self._genotype_data = genotype_data
+        self._phenotype_data = phenotype_data
+
+    @property
+    def genotype_data(self) -> GenotypeData:
+        if self._genotype_data is None:
+            raise ValueError
+        return self._genotype_data
+
+    @property
+    def phenotype_data(self) -> PhenotypeData:
+        if self._phenotype_data is None:
+            raise ValueError
+        return self._phenotype_data
+
+    @property
+    def is_genotype(self) -> bool:
+        return self._genotype_data is not None
+
+    @property
+    def is_phenotype(self) -> bool:
+        return self._genotype_data is None \
+               and self._phenotype_data is not None
+
+    @property
+    def has_pheno_data(self) -> bool:
+        return self._phenotype_data is not None
+
+    @property
+    def study_id(self) -> str:
+        if self.is_phenotype:
+            return self.phenotype_data.pheno_id
+        return self.genotype_data.study_id
+
+    @property
+    def description(self) -> str | None:
+        if self.is_phenotype:
+            return None
+        return self.genotype_data.description
+
+
+class StudyWrapperBase(WDAEStudy):
     """Defines WDAE wrapper class to DAE genotype data object."""
 
     def __init__(self, genotype_data: GenotypeData):
-        self.genotype_data = genotype_data
+        super().__init__(genotype_data, None)
         self.config = self.genotype_data.config
         assert self.config is not None, self.genotype_data.study_id
 
@@ -219,10 +270,6 @@ class StudyWrapperBase:
     ) -> Generator[list | None, None, None]:
         """Wrap query variants method for WDAE streaming."""
 
-    @abstractmethod
-    def has_pheno_data(self) -> bool:
-        raise NotImplementedError
-
 
 class StudyWrapper(StudyWrapperBase):
     """Genotype data study wrapper class for WDAE."""
@@ -311,11 +358,10 @@ class StudyWrapper(StudyWrapperBase):
             genotype_browser_config.summary_download_columns
 
     def _init_pheno(self, pheno_db: PhenoRegistry | None) -> None:
-        self.phenotype_data: PhenotypeData | None = None
         if pheno_db is None:
             return
         if self.config.phenotype_data:
-            self.phenotype_data = pheno_db.get_phenotype_data(
+            self._phenotype_data = pheno_db.get_phenotype_data(
                 self.config.phenotype_data,
             )
 
@@ -335,9 +381,6 @@ class StudyWrapper(StudyWrapperBase):
                         "column %s not defined in configuration", column_id)
                     return False
         return True
-
-    def has_pheno_data(self) -> bool:
-        return self.phenotype_data is not None
 
     @property
     def config_columns(self) -> Box:

@@ -24,10 +24,9 @@ class RemoteStudyWrapper(StudyWrapperBase):
 
         super().__init__(remote_genotype_data)
 
-        self.phenotype_data = None
         pheno_id = self.config.get("phenotype_data")
         if pheno_id:
-            self.phenotype_data = RemotePhenotypeData(
+            self._phenotype_data = RemotePhenotypeData(
                 pheno_id,
                 self.remote_study_id,
                 self.rest_client,
@@ -65,9 +64,6 @@ class RemoteStudyWrapper(StudyWrapperBase):
     @property
     def name(self) -> str:
         return self.remote_genotype_data.name
-
-    def has_pheno_data(self) -> bool:
-        return self.phenotype_data is not None
 
     def get_studies_ids(self, *, leaves: bool = True) -> list[str]:
         return self.remote_genotype_data.get_studies_ids(leaves=leaves)

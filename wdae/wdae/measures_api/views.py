@@ -27,7 +27,7 @@ class PhenoMeasuresView(QueryBaseView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
 
-        if dataset.phenotype_data is None:
+        if not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         assert measure_type in {"continuous", "categorical"}
@@ -65,7 +65,6 @@ class PhenoMeasureHistogramView(QueryBaseView):
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
-        assert dataset.phenotype_data is not None
         if "measure" in data \
                 and not dataset.phenotype_data.has_measure(data["measure"]):
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -116,7 +115,6 @@ class PhenoMeasurePartitionsView(QueryBaseView, DatasetAccessRightsView):
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
-        assert dataset.phenotype_data is not None
         assert "measure" in data
         pheno_measure = data["measure"]
 
@@ -163,7 +161,7 @@ class PhenoMeasureRegressionsView(QueryBaseView):
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
-        if dataset is None or dataset.phenotype_data is None:
+        if dataset is None or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         regressions = dataset.phenotype_data.get_regressions()
