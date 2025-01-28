@@ -55,6 +55,9 @@ class PhenotypeStorageRegistry:
         self._phenotype_storages: dict[str, PhenotypeStorage] = {}
         self._default_phenotype_storage: PhenotypeStorage | None = None
 
+    def __contains__(self, key: str) -> bool:
+        return key in self._phenotype_storages
+
     def register_storage_config(
             self, storage_config: dict[str, Any]) -> PhenotypeStorage:
         """Create a phenotype storage using storage config and registers it."""
