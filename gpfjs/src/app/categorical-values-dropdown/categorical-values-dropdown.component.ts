@@ -16,10 +16,11 @@ export class CategoricalValuesDropdownComponent implements OnInit {
   public searchBoxInput$: Subject<string> = new Subject();
   public categoricalValues: { name: string; value: number; }[] = [];
   public selectedValues: { name: string; value: number; }[] = [];
+  private suggestionsToShow = 50;
 
   public ngOnInit(): void {
     this.categoricalValues = this.histogram.values;
-    this.valueSuggestions = this.categoricalValues.slice(0, 10);
+    this.valueSuggestions = this.categoricalValues.slice(0, this.suggestionsToShow);
 
     if (this.initialState.length) {
       this.selectedValues = this.histogram.values.filter(v => this.initialState.includes(v.name));
@@ -27,7 +28,7 @@ export class CategoricalValuesDropdownComponent implements OnInit {
 
     this.searchBoxInput$.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {
       if (!this.searchValue) {
-        this.valueSuggestions = this.categoricalValues.slice(0, 10);
+        this.valueSuggestions = this.categoricalValues.slice(0, this.suggestionsToShow);
         return;
       }
       this.filterSuggestions();
@@ -39,7 +40,7 @@ export class CategoricalValuesDropdownComponent implements OnInit {
       const valueLowerCase = value.name.toLowerCase();
       const searchValueLowerCase = this.searchValue.toLowerCase();
       return valueLowerCase.startsWith(searchValueLowerCase);
-    }).slice(0, 10);
+    }).slice(0, this.suggestionsToShow);
   }
 
   public addToSelected(value: { name: string; value: number; }): void {
