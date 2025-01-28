@@ -23,20 +23,19 @@
         class="dropdown-item"
         type="button"
         (click)="addToSelected(suggestion)"
-        [value]="suggestion"
+        [value]="suggestion.name"
         [disabled]="isSelected(suggestion)">
-        <span>{{ suggestion }}</span>
+        <span>{{ suggestion.name + ' (' + suggestion.value + ')' }}</span>
       </mat-option>
     </mat-autocomplete>
   </div>
 
   <div id="values-list">
-    <!-- <span>Selected categorical values: </span> -->
     <div *ngFor="let selectedValue of selectedValues" class="value-wrapper">
-      <button (click)="removeFromSelected(selectedValue)" class="remove-value">
+      <button (click)="removeFromSelected(selectedValue.name)" class="remove-value">
         <span [id]="'remove-' + selectedValue" class="material-symbols-outlined">close</span>
       </button>
-      {{ selectedValue }}
+      {{ selectedValue.name + ' (' + selectedValue.value + ')' }}
     </div>
   </div>
 </div>

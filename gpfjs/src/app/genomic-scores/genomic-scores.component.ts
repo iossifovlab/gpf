@@ -37,7 +37,7 @@ export class GenomicScoresComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    this.localState = this.initialState;
+    this.localState = cloneDeep(this.initialState);
     this.validateState(this.localState);
   }
 
@@ -74,7 +74,7 @@ export class GenomicScoresComponent implements OnInit {
     if (view === this.localState.categoricalView) {
       return;
     }
-    if (view === 'click selector') {
+    if (view === 'click selector' || view === 'dropdown selector') {
       this.localState.values = [];
     } else if (view === 'range selector' && this.isCategoricalHistogram(this.selectedGenomicScore.histogram)) {
       this.localState.values = this.selectedGenomicScore.histogram.values.map(v => v.name);
@@ -130,7 +130,7 @@ export class GenomicScoresComponent implements OnInit {
     }
     if (this.isCategoricalHistogram(this.selectedGenomicScore.histogram)) {
       if (!state.values.length) {
-        this.errors.push('Please select at least one bar.');
+        this.errors.push('Please select at least one value.');
       }
       if (state.values.length > this.categoricalValueMax) {
         this.errors.push(`Please select less than ${this.categoricalValueMax} values.`);
