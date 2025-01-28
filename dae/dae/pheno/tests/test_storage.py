@@ -38,13 +38,13 @@ def fake_pheno_storage_registry(
 
 def test_storage_init(
     fake_pheno_storage: PhenotypeStorage,
-):
+) -> None:
     assert fake_pheno_storage is not None
 
 
 def test_storage_in_registry(
     fake_pheno_storage_registry: PhenotypeStorageRegistry,
-):
+) -> None:
     assert "fake_storage" in fake_pheno_storage_registry
     storage = fake_pheno_storage_registry.get_phenotype_storage("fake_storage")
     assert storage is not None
@@ -53,7 +53,7 @@ def test_storage_in_registry(
 def test_storage_register_new_storage_by_config(
     fake_pheno_storage_registry: PhenotypeStorageRegistry,
     empty_storage_config: dict,
-):
+) -> None:
     fake_pheno_storage_registry.register_storage_config(empty_storage_config)
 
     assert "storage1" in fake_pheno_storage_registry
@@ -65,7 +65,7 @@ def test_storage_register_new_storage_by_config(
 def test_storage_register_new_storages_by_section(
     fake_pheno_storage_registry: PhenotypeStorageRegistry,
     empty_storage_config: dict,
-):
+) -> None:
     configs = [
         {"id": f"storage{idx}", "base_dir": empty_storage_config["base_dir"]}
         for idx in range(1, 6)
@@ -92,7 +92,7 @@ def test_storage_register_new_storages_by_section(
 
 def test_registry_sets_default_storage(
     fake_pheno_storage_registry: PhenotypeStorageRegistry,
-):
+) -> None:
     default_storage = \
         fake_pheno_storage_registry.get_default_phenotype_storage()
 
@@ -102,7 +102,7 @@ def test_registry_sets_default_storage(
 def test_registry_overwrite_default_storage(
     fake_pheno_storage_registry: PhenotypeStorageRegistry,
     empty_storage: PhenotypeStorage,
-):
+) -> None:
     default_storage = \
         fake_pheno_storage_registry.get_default_phenotype_storage()
 
@@ -119,7 +119,7 @@ def test_registry_overwrite_default_storage(
 def test_registry_getters(
     fake_pheno_storage_registry: PhenotypeStorageRegistry,
     empty_storage: PhenotypeStorage,
-):
+) -> None:
     fake_pheno_storage_registry.register_phenotype_storage(empty_storage)
 
     storage = fake_pheno_storage_registry.get_phenotype_storage("fake_storage")
