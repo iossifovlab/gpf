@@ -199,6 +199,22 @@ class GPFConfigParser:
         return cast(dict, validator.document)
 
     @staticmethod
+    def process_config_raw(
+        config: dict[str, Any],
+        schema: dict,
+        default_config: dict[str, Any] | None = None,
+        conf_dir: str | None = None,
+    ) -> dict:
+        """
+        Pass an interpolated config to validation and prepare it for use.
+
+        default_config: interpolated configuration to use for defaults where
+        values in the main configuration are missing.
+        """
+        config = GPFConfigParser.merge_config(config, default_config)
+        return GPFConfigParser.validate_config(config, schema, conf_dir)
+
+    @staticmethod
     def process_config(
         config: dict[str, Any],
         schema: dict,
@@ -247,6 +263,38 @@ class GPFConfigParser:
 
             conf_dir = os.path.abspath(os.path.dirname(filename))
             return cls.process_config(
+                config, schema, default_config, conf_dir)
+        except ValueError:
+            logger.exception(
+                "unable to parse configuration: %s with default config %s "
+                "(%s) and schema %s", filename,
+                default_config_filename, default_config, schema)
+            raise
+
+    @classmethod
+    def load_config_dict(
+        cls,
+        filename: str,
+        schema: dict,
+        default_config_filename: str | None = None,
+        default_config: dict | None = None,
+    ) -> dict:
+        """Load a file and return a processed configuration."""
+        if not os.path.exists(filename):
+            raise ValueError(f"{filename} does not exist!")
+        logger.debug(
+            "loading config %s with default configuration file %s;",
+            filename, default_config_filename)
+
+        try:
+            config = cls.parse_and_interpolate_file(filename)
+            if default_config_filename:
+                assert default_config is None
+                default_config = cls.parse_and_interpolate_file(
+                    default_config_filename)
+
+            conf_dir = os.path.abspath(os.path.dirname(filename))
+            return cls.process_config_raw(
                 config, schema, default_config, conf_dir)
         except ValueError:
             logger.exception(
