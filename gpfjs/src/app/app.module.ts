@@ -476,7 +476,7 @@ bootstrap: [AppComponent], imports: [BrowserModule,
   { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorService, multi: true },
   {
     provide: APP_BASE_HREF,
-    useFactory: (s: PlatformLocation) => s.getBaseHrefFromDOM(),
+    useFactory: (s: PlatformLocation): string => s.getBaseHrefFromDOM(),
     deps: [PlatformLocation]
   },
   {
@@ -495,7 +495,7 @@ bootstrap: [AppComponent], imports: [BrowserModule,
   },
   {
     provide: APP_INITIALIZER,
-    useFactory: () => () => { },
+    useFactory: () => (): void => { },
     deps: [Sentry.TraceService],
     multi: true,
   },
