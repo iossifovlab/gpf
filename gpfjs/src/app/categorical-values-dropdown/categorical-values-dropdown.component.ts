@@ -26,7 +26,7 @@ export class CategoricalValuesDropdownComponent implements OnInit {
     }
 
     this.searchBoxInput$.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {
-      if (this.searchValue === '') {
+      if (!this.searchValue) {
         this.valueSuggestions = this.categoricalValues.slice(0, 10);
         return;
       }

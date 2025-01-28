@@ -23,7 +23,7 @@
         class="dropdown-item"
         type="button"
         (click)="addToSelected(suggestion)"
-        [value]="suggestion.name"
+        (onSelectionChange)="addToSelected(suggestion)"
         [disabled]="isSelected(suggestion)">
         <span>{{ suggestion.name + ' (' + suggestion.value + ')' }}</span>
       </mat-option>
