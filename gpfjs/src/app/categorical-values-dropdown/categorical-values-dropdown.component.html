@@ -24,6 +24,7 @@
         type="button"
         (click)="addToSelected(suggestion)"
         (onSelectionChange)="addToSelected(suggestion)"
+        [title]="suggestion.name + ' (' + suggestion.value + ')'"
         [disabled]="isSelected(suggestion)">
         <span>{{ suggestion.name + ' (' + suggestion.value + ')' }}</span>
       </mat-option>

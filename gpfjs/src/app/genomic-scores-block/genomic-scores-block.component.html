@@ -8,6 +8,7 @@
             <mat-select disableRipple [placeholder]="'Select genomic score'">
               <mat-option
                 *ngFor="let genomicScore of unusedGenomicScores; let i = index"
+                [title]="genomicScore.desc"
                 (click)="addFilter(genomicScore, i)"
                 >{{ genomicScore.desc }}</mat-option
               >
