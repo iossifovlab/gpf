@@ -64,13 +64,13 @@ def test_gpdb_insert_and_get_gp(
         "main_CHD8 target genes",
     ]
 
-    assert gp.genomic_scores["autism_scores"] == {
+    assert gp.gene_scores["autism_scores"] == {
         "SFARI gene score": {"value": 1.0, "format": "%s"},
         "RVIS_rank": {"value": 193.0, "format": "%s"},
         "RVIS": {"value": approx(-2.34), "format": "%s"},
     }
 
-    assert gp.genomic_scores["protection_scores"] == {
+    assert gp.gene_scores["protection_scores"] == {
         "SFARI gene score": {"value": 1.0, "format": "%s"},
         "RVIS_rank": {"value": 193.0, "format": "%s"},
         "RVIS": {"value": approx(-2.34), "format": "%s"},
@@ -96,7 +96,7 @@ def test_gpdb_sort(
         sample_gp: GPStatistic) -> None:
     gpdb_write.insert_gp(sample_gp)
     sample_gp.gene_symbol = "CHD7"
-    sample_scores = sample_gp.genomic_scores
+    sample_scores = sample_gp.gene_scores
     sample_scores["protection_scores"]["SFARI gene score"] = -11
     gpdb_write.insert_gp(sample_gp)
     stats_unsorted = gp_gpf_instance.query_gp_statistics(1)

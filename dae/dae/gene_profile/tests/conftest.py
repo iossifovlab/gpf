@@ -29,7 +29,7 @@ def gp_config() -> Box:
                 ],
             },
         ],
-        "genomic_scores": [
+        "gene_scores": [
             {
                 "category": "protection_scores",
                 "display_name": "Protection scores",
@@ -83,7 +83,7 @@ def gp_config() -> Box:
 @pytest.fixture()
 def sample_gp() -> GPStatistic:
     gene_sets = ["main_CHD8 target genes"]
-    genomic_scores = {
+    gene_scores = {
         "protection_scores": {
             "SFARI gene score": 1, "RVIS_rank": 193.0, "RVIS": -2.34,
         },
@@ -102,7 +102,7 @@ def sample_gp() -> GPStatistic:
         "iossifov_2014_unaffected_denovo_missense_rate": 4,
     }
     return GPStatistic(
-        "CHD8", gene_sets, genomic_scores, variant_counts,
+        "CHD8", gene_sets, gene_scores, variant_counts,
     )
 
 

@@ -91,7 +91,7 @@ class GeneProfileDB:
 
         result["geneSymbol"] = row["symbol_name"]
 
-        for gs_category in config["genomic_scores"]:
+        for gs_category in config["gene_scores"]:
             category_name = gs_category["category"]
             for score in gs_category["scores"]:
                 score_name = score["score_name"]
@@ -129,14 +129,14 @@ class GeneProfileDB:
         # pylint: disable=too-many-locals
         config = self.configuration
         gene_symbol = row["symbol_name"]
-        genomic_scores: dict[str, dict] = {}
-        for gs_category in config["genomic_scores"]:
+        gene_scores: dict[str, dict] = {}
+        for gs_category in config["gene_scores"]:
             category_name = gs_category["category"]
-            genomic_scores[category_name] = {}
+            gene_scores[category_name] = {}
             for score in gs_category["scores"]:
                 score_name = score["score_name"]
                 full_score_id = f"{category_name}_{score_name}"
-                genomic_scores[category_name][score_name] = {
+                gene_scores[category_name][score_name] = {
                     "value": row[full_score_id],
                     "format": score["format"],
                 }
@@ -178,7 +178,7 @@ class GeneProfileDB:
 
         return GPStatistic(
             gene_symbol, gene_sets,
-            genomic_scores, variant_counts,
+            gene_scores, variant_counts,
         )
 
     def _transform_sort_by(self, sort_by: str) -> str:
@@ -333,8 +333,8 @@ class GeneProfileDBWriter:
             for gene_set in configuration["gene_sets"]
         ]
         order_keys.extend(
-            genomic_score["category"]
-            for genomic_score in configuration["genomic_scores"]
+            gene_score["category"]
+            for gene_score in configuration["gene_scores"]
         )
         order_keys.extend(configuration["datasets"].keys())
         if order is None:
@@ -342,7 +342,7 @@ class GeneProfileDBWriter:
         else:
             total_categories_count = \
                 len(configuration["gene_sets"]) + \
-                len(configuration["genomic_scores"]) + \
+                len(configuration["gene_scores"]) + \
                 len(configuration["datasets"])
             assert all(x in order_keys for x in order), \
                 "Given GP order has invalid entries"
@@ -421,7 +421,7 @@ class GeneProfileDBWriter:
                     ),
                 )
 
-        for category in self.configuration["genomic_scores"]:
+        for category in self.configuration["gene_scores"]:
             category_name = category["category"]
             for score in category["scores"]:
                 score_name = score["score_name"]
@@ -529,7 +529,7 @@ class GeneProfileDBWriter:
         for category, count in gs_categories_count.items():
             insert_map[f"{category}_rank"] = count
 
-        for category, scores in gp.genomic_scores.items():
+        for category, scores in gp.gene_scores.items():
             for score_id, score in scores.items():
                 insert_map[f"{category}_{score_id}"] = score
 
