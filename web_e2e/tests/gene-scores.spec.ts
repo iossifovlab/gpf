@@ -159,9 +159,10 @@ test.describe('Gene scores categorical histogram tests', () => {
 
   test('should switch historgam selection modes', async({ page }) => {
     await page.getByRole('button', {name: 'Mode'}).click();
-    await expect(page.locator('.mat-mdc-menu-content').getByRole('menuitem')).toHaveCount(2);
+    await expect(page.locator('.mat-mdc-menu-content').getByRole('menuitem')).toHaveCount(3);
     await expect(page.getByRole('menuitem', {name: 'range selector'})).toBeVisible();
     await expect(page.getByRole('menuitem', {name: 'click selector'})).toBeVisible();
+    await expect(page.getByRole('menuitem', {name: 'dropdown selector'})).toBeVisible();
 
     await expect(page.getByRole('menuitem', {name: 'range selector'}))
       .toHaveCSS('background-color', 'rgb(42, 99, 149)');
@@ -173,6 +174,13 @@ test.describe('Gene scores categorical histogram tests', () => {
     await page.getByRole('button', {name: 'Mode'}).click();
     await expect(page.getByRole('menuitem', {name: 'click selector'}))
       .toHaveCSS('background-color', 'rgb(42, 99, 149)');
+
+    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+    await page.getByRole('button', {name: 'Mode'}).click();
+    await expect(page.getByRole('menuitem', {name: 'dropdown selector'}))
+      .toHaveCSS('background-color', 'rgb(42, 99, 149)');
+
+    await expect(page.locator('[gpf-categorical-histogram]')).not.toBeVisible();
   });
 
   test('should check switch selection mode button is not visible for other histograms', async({ page }) => {
@@ -224,14 +232,14 @@ test.describe('Gene scores categorical histogram tests', () => {
   test('should check historgam colors change in click selector mode', async({ page }) => {
     await page.getByRole('button', {name: 'Mode'}).click();
     await page.getByRole('menuitem', {name: 'click selector'}).click();
-    await expect(page.getByText('Please select at least one bar.')).toBeVisible();
+    await expect(page.getByText('Please select at least one value.')).toBeVisible();
 
     await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
     await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
     await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
 
     await page.locator('rect[id="1"]').click();
-    await expect(page.getByText('Please select at least one bar.')).not.toBeVisible();
+    await expect(page.getByText('Please select at least one value.')).not.toBeVisible();
     await page.locator('rect[id="2"]').click();
 
     await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(70, 130, 180)');
@@ -241,7 +249,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await page.locator('rect[id="1"]').click();
     await page.locator('rect[id="2"]').click();
 
-    await expect(page.getByText('Please select at least one bar.')).toBeVisible();
+    await expect(page.getByText('Please select at least one value.')).toBeVisible();
     await expect(page.locator('rect[id="1"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
     await expect(page.locator('rect[id="2"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
     await expect(page.locator('rect[id="3"]')).toHaveCSS('fill', 'rgb(176, 196, 222)');
