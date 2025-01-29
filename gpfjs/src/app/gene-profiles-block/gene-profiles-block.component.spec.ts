@@ -47,7 +47,7 @@ const config = {
       ]
     }
   ],
-  genomicScores: [
+  geneScores: [
     {
       category: 'autism_scores',
       defaultVisible: true,

@@ -12,7 +12,7 @@ export class GeneProfilesSingleViewConfig {
     public description: string,
     public geneLinkTemplates: {name: string; url: string}[],
     public geneSets: GeneProfilesGeneSetsCategory[],
-    public genomicScores: GeneProfilesGenomicScoresCategory[],
+    public geneScores: GeneProfilesGeneScoresCategory[],
     public datasets: GeneProfilesDataset[],
     public order: GeneProfilesOrder[],
     public pageSize: number,
@@ -25,7 +25,7 @@ export class GeneProfilesSingleViewConfig {
       json['description'],
       json['geneLinks']?.map(g => ({name: g['name'], url: g['url']})),
       json['geneSets']?.map(g => GeneProfilesGeneSetsCategory.fromJson(g)),
-      json['genomicScores']?.map(g => GeneProfilesGenomicScoresCategory.fromJson(g)),
+      json['geneScores']?.map(g => GeneProfilesGeneScoresCategory.fromJson(g)),
       json['datasets']?.map(d => GeneProfilesDataset.fromJson(d)),
       json['order']?.map(o => GeneProfilesOrder.fromJson(o)),
       json['pageSize'],
@@ -69,25 +69,25 @@ export class GeneProfilesGeneSet {
   }
 }
 
-export class GeneProfilesGenomicScoresCategory {
+export class GeneProfilesGeneScoresCategory {
   public constructor(
     public category: string,
     public displayName: string,
     public defaultVisible: boolean,
-    public scores: GeneProfilesGenomicScore[],
+    public scores: GeneProfilesGeneScore[],
   ) {}
 
-  public static fromJson(json): GeneProfilesGenomicScoresCategory {
-    return new GeneProfilesGenomicScoresCategory(
+  public static fromJson(json): GeneProfilesGeneScoresCategory {
+    return new GeneProfilesGeneScoresCategory(
       json['category'],
       json['displayName'],
       json['defaultVisible'],
-      json['scores'].map(s => GeneProfilesGenomicScore.fromJson(s)),
+      json['scores'].map(s => GeneProfilesGeneScore.fromJson(s)),
     );
   }
 }
 
-export class GeneProfilesGenomicScore {
+export class GeneProfilesGeneScore {
   public constructor(
     public scoreName: string,
     public format: string,
@@ -95,8 +95,8 @@ export class GeneProfilesGenomicScore {
     public defaultVisible: boolean,
   ) {}
 
-  public static fromJson(json): GeneProfilesGenomicScore {
-    return new GeneProfilesGenomicScore(
+  public static fromJson(json): GeneProfilesGeneScore {
+    return new GeneProfilesGeneScore(
       json['scoreName'],
       json['format'],
       json['meta'],
@@ -207,21 +207,21 @@ export class GeneProfilesGene {
   public geneSets: string[];
   public geneLinks: {name: string; url: string}[];
 
-  @Type(() => GeneProfilesGenomicScores)
-  public genomicScores: GeneProfilesGenomicScores[];
+  @Type(() => GeneProfilesGeneScores)
+  public geneScores: GeneProfilesGeneScores[];
 
   @Type(() => GeneProfilesStudy)
   public studies: GeneProfilesStudy[];
 }
 
-export class GeneProfilesGenomicScores {
+export class GeneProfilesGeneScores {
   public id: string;
 
-  @Type(() => GeneProfilesGenomicScoreWithValue)
-  public scores: GeneProfilesGenomicScoreWithValue[];
+  @Type(() => GeneProfilesGeneScoreWithValue)
+  public scores: GeneProfilesGeneScoreWithValue[];
 }
 
-export class GeneProfilesGenomicScoreWithValue {
+export class GeneProfilesGeneScoreWithValue {
   public id: string;
   public value: number;
   public format: string;

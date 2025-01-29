@@ -46,7 +46,7 @@ const config = {
       ]
     }
   ],
-  genomicScores: [
+  geneScores: [
     {
       category: 'autism_scores',
       defaultVisible: true,
@@ -93,7 +93,7 @@ const config = {
   ],
   order: [
     { section: null, id: 'autism_gene_sets_rank' },
-    { section: 'genomicScores', id: 'autism_scores' },
+    { section: 'geneScores', id: 'autism_scores' },
     { section: 'datasets', id: 'sequencing_de_novo' }
   ],
   pageSize: 5

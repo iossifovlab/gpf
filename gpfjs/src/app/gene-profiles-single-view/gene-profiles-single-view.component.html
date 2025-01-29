@@ -36,29 +36,26 @@
 
         <div [ngClass]="{ 'compare-wrapper': isInGeneCompare, compact: compactView }" class="wrapper">
           <table
-            *ngFor="let genomicScoreCategory of config.genomicScores"
-            [attr.id]="genomicScoreCategory.category"
-            class="gpf-basic-table genomic-scores-table">
-            <th [attr.colspan]="2">{{ genomicScoreCategory.displayName }}</th>
+            *ngFor="let geneScoreCategory of config.geneScores"
+            [attr.id]="geneScoreCategory.category"
+            class="gpf-basic-table gene-scores-table">
+            <th [attr.colspan]="2">{{ geneScoreCategory.displayName }}</th>
             <tr
-              *ngFor="let score of genomicScoreCategory.scores"
+              *ngFor="let score of geneScoreCategory.scores"
               class="card-block"
               style="border-bottom: 1px solid #dee2e6">
-              <ng-container *ngIf="genomicScoresGeneScores.length === gene.genomicScores.length">
+              <ng-container *ngIf="geneScores.length === gene.geneScores.length">
                 <td style="display: flex; flex-direction: column; align-items: center; border: 0; position: relative">
                   <gpf-helper-modal
                     style="scale: 85%; position: absolute; right: 2px; top: 2px"
                     [style.visibility]="
-                      getGeneScoreByKey(genomicScoreCategory.category, score.scoreName).help ? 'visible' : 'hidden'
+                      getGeneScoreByKey(geneScoreCategory.category, score.scoreName).help ? 'visible' : 'hidden'
                     "
-                    [modalContent]="getGeneScoreByKey(genomicScoreCategory.category, score.scoreName).help"
+                    [modalContent]="getGeneScoreByKey(geneScoreCategory.category, score.scoreName).help"
                     [isMarkdown]="true"></gpf-helper-modal>
 
                   <ng-container
-                    *ngIf="
-                      genomicScoresGeneScores &&
-                      getGeneScoreByKey(genomicScoreCategory.category, score.scoreName) as geneScore
-                    ">
+                    *ngIf="geneScores && getGeneScoreByKey(geneScoreCategory.category, score.scoreName) as geneScore">
                     <gpf-histogram
                       *ngIf="isNumberHistogram(geneScore.histogram)"
                       [style.width]="histogramOptions.width"
@@ -72,7 +69,7 @@
                       [showMinMaxInput]="false"
                       [isInteractive]="false"
                       [singleScoreValue]="
-                        getSingleScoreValue(gene.genomicScores, genomicScoreCategory.category, score.scoreName)
+                        getSingleScoreValue(gene.geneScores, geneScoreCategory.category, score.scoreName)
                       "
                       [marginLeft]="histogramOptions.marginLeft"
                       [marginTop]="histogramOptions.marginTop"
@@ -89,7 +86,7 @@
                       [isInteractive]="false"
                       [singleScoreValue]="
                         convertScoreValueToString(
-                          getSingleScoreValue(gene.genomicScores, genomicScoreCategory.category, score.scoreName)
+                          getSingleScoreValue(gene.geneScores, geneScoreCategory.category, score.scoreName)
                         )
                       ">
                     </gpf-categorical-histogram>
