@@ -167,6 +167,9 @@ dae_conf_schema = {
             },
         },
     },
+    "cache_path": {
+        "type": "string",
+    },
     "studies": {
         "type": "dict",
         "schema": config_reference_schema,
