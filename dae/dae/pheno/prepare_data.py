@@ -304,11 +304,11 @@ class PreparePhenoBrowserBase:
             return False
 
         for reg in self.pheno_regressions.values():
-            if measure_name == reg.measure_name:
+            if measure_name == reg["measure_name"]:
                 if (
                     instrument_name
-                    and reg.instrument_name
-                    and instrument_name != reg.instrument_name
+                    and reg["instrument_name"]
+                    and instrument_name != reg["instrument_name"]
                 ):
                     continue
                 return True
@@ -339,9 +339,9 @@ class PreparePhenoBrowserBase:
                 self.browser.save_regression(
                     {
                         "regression_id": reg_id,
-                        "instrument_name": reg_data.instrument_name,
-                        "measure_name": reg_data.measure_name,
-                        "display_name": reg_data.display_name,
+                        "instrument_name": reg_data.get("instrument_name"),
+                        "measure_name": reg_data.get("measure_name"),
+                        "display_name": reg_data.get("display_name"),
                     },
                 )
         with self.browser.connection.cursor() as cursor:
@@ -412,12 +412,12 @@ class PreparePhenoBrowserBase:
         if self.pheno_regressions is None:
             return regression_measures
         for reg_id, reg in self.pheno_regressions.items():
-            measure_names = reg.measure_names
+            measure_names = reg["measure_names"]
             reg_measure = None
             for measure_name in measure_names:
                 reg_measure = self._get_measure_by_name(
                     measure_name,
-                    reg.instrument_name
+                    reg["instrument_name"]
                     or measure.instrument_name,  # type: ignore
                 )
                 if not reg_measure:
@@ -513,7 +513,8 @@ class PreparePhenoBrowserBase:
                 "regression_id": reg_id,
             }
             regression = cls.build_regression(
-                pheno_data, images_dir, measure, reg_measure, reg_conf.jitter,
+                pheno_data, images_dir, measure,
+                reg_measure, reg_conf["jitter"],
             )
             res.update(regression)  # type: ignore
             if (

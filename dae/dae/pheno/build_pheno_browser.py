@@ -141,12 +141,13 @@ def main(argv: list[str] | None = None) -> int:
     })
     storage_registry.register_default_storage(storage)
     registry = PhenoRegistry(
-        storage_registry, configurations=configs, browser_cache_path=cache_dir,
+        storage_registry, configurations=configs,
+        browser_cache_path=Path(cache_dir),
     )
     pheno_data = registry.get_phenotype_data(args.phenotype_data_id)
     kwargs = vars(args)
 
-    regressions = pheno_data.config.regression
+    regressions = pheno_data.config.get("regression")
 
     build_pheno_browser(pheno_data, regressions, **kwargs)
 
