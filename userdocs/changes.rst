@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+* 2025.01.4
+    * Fix deserialization of variant attributes.
+
+* 2025.01.3
+    * Clean up phenotype browser cache build tool.
+    * Fix support for categorical genomic scores queries.
+    * Deprecation of `import_tools` and introduction of `genotypes_import`.
+    * Deprecation of `import_tools_pheno` and introduction of `phenotypes_import`.
+    * Fix support for categorical histograms for genomic scores.
+
 * 2025.01.2
     * Fix wgpf tool.
 
