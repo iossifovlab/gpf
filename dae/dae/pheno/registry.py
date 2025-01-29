@@ -4,6 +4,8 @@ import logging
 from pathlib import Path
 from threading import Lock
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 from dae.pheno.pheno_data import PhenotypeData, PhenotypeGroup
 from dae.pheno.storage import PhenotypeStorageRegistry
 
@@ -47,6 +49,17 @@ class PhenoRegistry:
                         "Failure while registering "
                         "phenotype study configuration",
                     )
+
+    @staticmethod
+    def load_configurations(pheno_data_dir: str) -> list[dict]:
+        config_files = GPFConfigParser.collect_directory_configs(
+            pheno_data_dir,
+        )
+
+        return [
+            GPFConfigParser.load_config_dict(file, pheno_conf_schema)
+            for file in config_files
+        ]
 
     def register_study_config(
         self, study_config: dict, *, lock: bool = True,
