@@ -177,12 +177,14 @@ class PhenotypeData(ABC):
 
     def __init__(
         self, pheno_id: str, config: Box,
+        cache_path: Path | None = None,
     ) -> None:
         self._pheno_id: str = pheno_id
         self.config = config
         self._measures: dict[str, Measure] = {}
         self._instruments: dict[str, Instrument] = {}
         self._browser: PhenoBrowser | None = None
+        self.cache_path = cache_path / self.pheno_id if cache_path else None
 
     @property
     def pheno_id(self) -> str:
@@ -192,12 +194,10 @@ class PhenotypeData(ABC):
     def create_browser(
         pheno_data: PhenotypeData,
         *,
-        output_dir: Path | None = None,
         read_only: bool = True,
     ) -> PhenoBrowser:
         """Load pheno browser from pheno configuration."""
-        db_dir = output_dir if output_dir is not None else \
-                 Path(pheno_data.config["conf_dir"])
+        db_dir = pheno_data.cache_path or Path(pheno_data.config["conf_dir"])
         browser_dbfile = db_dir / "browser.db"
         if not read_only and not browser_dbfile.exists():
             conn = duckdb.connect(browser_dbfile, read_only=False)
@@ -413,9 +413,11 @@ class PhenotypeStudy(PhenotypeData):
     """
 
     def __init__(
-            self, pheno_id: str, dbfile: str,
-            config: dict | None = None, *, read_only: bool = True) -> None:
-        super().__init__(pheno_id, cast(Box, config))
+        self, pheno_id: str, dbfile: str,
+        config: dict | None = None, *, read_only: bool = True,
+        cache_path: Path | None = None,
+    ) -> None:
+        super().__init__(pheno_id, cast(Box, config), cache_path=cache_path)
 
         self.db = PhenoDb(dbfile, read_only=read_only)
         self.config = config
@@ -577,8 +579,9 @@ class PhenotypeGroup(PhenotypeData):
     def __init__(
         self, pheno_id: str, config: dict | None,
         children: list[PhenotypeData],
+        cache_path: Path | None = None,
     ) -> None:
-        super().__init__(pheno_id, cast(Box, config))
+        super().__init__(pheno_id, cast(Box, config), cache_path=cache_path)
         self.children = children
         instruments, measures = self._merge_instruments(
             [ph.instruments for ph in self.children])

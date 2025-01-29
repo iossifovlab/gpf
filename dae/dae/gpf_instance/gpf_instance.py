@@ -19,6 +19,7 @@ from dae.common_reports.common_report import CommonReport
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.configuration.schemas.gene_profile import gene_profiles_config
+from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 from dae.enrichment_tool.enrichment_builder import (
     BaseEnrichmentBuilder,
     EnrichmentBuilder,
@@ -42,6 +43,10 @@ from dae.pheno.pheno_data import (
     get_pheno_db_dir,
 )
 from dae.pheno.registry import PhenoRegistry
+from dae.pheno.storage import (
+    PhenotypeStorage,
+    PhenotypeStorageRegistry,
+)
 from dae.pheno_tool.pheno_tool_adapter import (
     PhenoToolAdapter,
     PhenoToolAdapterBase,
@@ -127,6 +132,17 @@ class GPFInstance:
 
         self.enrichment_helper = EnrichmentHelper(self.grr)
 
+        cache_dir = self.dae_config.get("cache_path")
+        if cache_dir:
+            self.cache_dir = Path(self.dae_dir, cache_dir)
+        else:
+            self.cache_dir = None
+
+    def get_cache_path(self, prefix: str) -> Path | None:
+        if self.cache_dir is not None:
+            return self.cache_dir / prefix
+        return None
+
     def load(self) -> GPFInstance:
         """Load all GPF instance attributes."""
         # pylint: disable=pointless-statement
@@ -204,10 +220,55 @@ class GPFInstance:
 
         return None, None
 
+    def _get_default_phenotype_storage_config(self) -> dict:
+        base_dir = get_pheno_db_dir(self.dae_config)
+        return {
+            "default": "default_pheno_storage",
+            "storages": [
+                {
+                    "id": "default_pheno_storage",
+                    "base_dir": base_dir,
+                },
+            ],
+        }
+
+    @cached_property
+    def _pheno_storage_registry(self) -> PhenotypeStorageRegistry:
+        registry = PhenotypeStorageRegistry()
+
+        if "phenotype_storage" in self.dae_config:
+            storages_config = self.dae_config["phenotype_storage"]
+        else:
+            storages_config = self._get_default_phenotype_storage_config()
+
+        default_id = storages_config["default"]
+        for storage_config in storages_config["storages"]:
+            storage = PhenotypeStorage.from_config(storage_config)
+            if storage.storage_id == default_id:
+                registry.register_default_storage(storage)
+            else:
+                registry.register_phenotype_storage(storage)
+
+        return registry
+
     @cached_property
     def _pheno_registry(self) -> PhenoRegistry:
         pheno_data_dir = get_pheno_db_dir(self.dae_config)
-        return PhenoRegistry.from_directory(Path(pheno_data_dir))
+        config_files = GPFConfigParser.collect_directory_configs(
+            pheno_data_dir,
+        )
+
+        configurations = [
+            GPFConfigParser.load_config_dict(file, pheno_conf_schema)
+            for file in config_files
+        ]
+
+        pheno_cache_dir = self.get_cache_path("pheno")
+        return PhenoRegistry(
+            self._pheno_storage_registry,
+            configurations=configurations,
+            browser_cache_path=pheno_cache_dir,
+        )
 
     @cached_property
     def gene_scores_db(self) -> Any:
@@ -389,7 +450,7 @@ class GPFInstance:
 
     def get_phenotype_data_config(
         self, phenotype_data_id: str,
-    ) -> Box | None:
+    ) -> dict | None:
         return self._pheno_registry.get_phenotype_data_config(
             phenotype_data_id)
 

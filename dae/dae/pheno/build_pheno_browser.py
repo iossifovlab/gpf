@@ -11,6 +11,7 @@ from dae.pheno.pheno_data import PhenotypeData
 from dae.pheno.pheno_import import IMPORT_METADATA_TABLE, ImportManifest
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.pheno.registry import PhenoRegistry
+from dae.pheno.storage import PhenotypeStorage, PhenotypeStorageRegistry
 from dae.task_graph.cli_tools import TaskGraphCli
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,26 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "pheno_dir",
         help=("Path to pheno directory. This is the directory which"
-              " contains ALL phenotype data for an instance."),
+              " contains ALL phenotype data configurations for an instance."),
+    )
+    parser.add_argument(
+        "--pheno_storage_dir",
+        help=(
+            "Path to pheno storage. This is the directory containing"
+            "phenotype databases. By default will be the same as pheno_dir."),
+    )
+    parser.add_argument(
+        "--cache_dir",
+        help=(
+            "Path to pheno cache dir, where browser data will be saved."
+            "By default will be the same as pheno_dir."),
+    )
+    parser.add_argument(
+        "--images_dir",
+        help=(
+            "Path to pheno images dir, "
+            "where browser images data will be saved."
+            "By default will be the same as pheno_dir."),
     )
     parser.add_argument(
         "--phenotype-data-id",
@@ -110,11 +130,24 @@ def main(argv: list[str] | None = None) -> int:
     if args.phenotype_data_id is None:
         raise ValueError("Missing phenotype data ID argument.")
 
-    registry = PhenoRegistry.from_directory(Path(args.pheno_dir))
+    storage_dir = args.pheno_storage_dir or args.pheno_dir
+    cache_dir = args.cache_dir or args.pheno_dir
+
+    configs = PhenoRegistry.load_configurations(args.pheno_dir)
+    storage_registry = PhenotypeStorageRegistry()
+    storage = PhenotypeStorage.from_config({
+        "id": "build_pheno_browser_storage",
+        "base_dir": storage_dir,
+    })
+    storage_registry.register_default_storage(storage)
+    registry = PhenoRegistry(
+        storage_registry, configurations=configs,
+        browser_cache_path=Path(cache_dir),
+    )
     pheno_data = registry.get_phenotype_data(args.phenotype_data_id)
     kwargs = vars(args)
 
-    regressions = pheno_data.config.regression
+    regressions = pheno_data.config.get("regression")
 
     build_pheno_browser(pheno_data, regressions, **kwargs)
 
