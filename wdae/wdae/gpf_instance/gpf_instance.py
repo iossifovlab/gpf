@@ -132,7 +132,7 @@ class WGPFInstance(GPFInstance):
             )
         return None
 
-    def get_wdae_wrapper(self, dataset_id: str) -> WDAEStudy:
+    def get_wdae_wrapper(self, dataset_id: str) -> WDAEStudy | None:
         """Return wdae study wrapper."""
         wrapper: WDAEStudy | None = None
         if dataset_id not in self._study_wrappers:
@@ -141,9 +141,6 @@ class WGPFInstance(GPFInstance):
                 self._study_wrappers[dataset_id] = wrapper
         else:
             wrapper = self._study_wrappers.get(dataset_id)
-
-        if wrapper is None:
-            raise KeyError(f"No data found for {dataset_id}!")
 
         return wrapper
 
@@ -346,6 +343,7 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
         Dataset.set_broken(data_id, broken=True)
 
         wdae_study = gpf_instance.get_wdae_wrapper(data_id)
+        assert wdae_study is not None
         Dataset.set_broken(data_id, broken=False)
         Dataset.update_name(data_id, wdae_study.name)
 
@@ -361,6 +359,7 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
         DatasetHierarchy.add_relation(
             gpf_instance.instance_id, data_id, data_id,
         )
+        assert wdae_study is not None
         direct_descendants = wdae_study.get_children_ids(leaves=False)
         for study_id in wdae_study.get_children_ids():
             if study_id == data_id:

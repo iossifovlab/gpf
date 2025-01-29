@@ -91,12 +91,9 @@ class DatasetView(QueryBaseView):
     def _collect_datasets_summary(
         self, user: User,
     ) -> list[dict[str, Any]]:
-        genotype_data = self.gpf_instance.get_genotype_data_ids() + \
-                        self.gpf_instance.get_phenotype_data_ids()
-
         datasets: list[WDAEStudy] = list(filter(None, [
             self.gpf_instance.get_wdae_wrapper(data_id)
-            for data_id in genotype_data
+            for data_id in self.gpf_instance.get_available_data_ids()
         ]))
 
         res = []
@@ -214,7 +211,6 @@ class DatasetDetailsView(QueryBaseView):
             "genome": wdae_study.genotype_data.config.genome,
             "chrPrefix": wdae_study.genotype_data.config.chr_prefix,
         })
-
 
 
 class DatasetPedigreeView(QueryBaseView):
@@ -446,6 +442,7 @@ class DatasetHierarchyView(QueryBaseView):
         dataset: PhenotypeData,
         permitted_datasets: set[str],
     ):
+        """Make dummy tree for a pheno-only study."""
         has_rights = dataset.pheno_id in permitted_datasets
         dataset_obj = Dataset.objects.get(dataset_id=dataset.pheno_id)
         groups = dataset_obj.groups.all()
@@ -495,20 +492,19 @@ class DatasetHierarchyView(QueryBaseView):
         """Return the hierarchy of one dataset in the instance."""
         user = request.user
 
-        genotype_data_ids = self.gpf_instance.get_genotype_data_ids()
+        data_ids = self.gpf_instance.get_available_data_ids()
 
         permitted_datasets = set(
             IsDatasetAllowed.permitted_datasets(user, self.instance_id),
         )
 
         wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id) \
-                if dataset_id else None
-
+                  if dataset_id else None
         if wrapper is not None:
             if wrapper.is_genotype:
                 tree = self.produce_tree(
                     wrapper.genotype_data,
-                    genotype_data_ids,
+                    data_ids,
                     permitted_datasets,
                 )
             else:
@@ -518,38 +514,21 @@ class DatasetHierarchyView(QueryBaseView):
                 )
             return Response({"data": tree}, status=status.HTTP_200_OK)
 
-        study_wrappers = [
-            self.gpf_instance.get_wdae_wrapper(genotype_data_id)
-            for genotype_data_id in genotype_data_ids
-        ]
-        study_wrappers = [
-            sw for sw in study_wrappers
-            if sw is not None and not sw.genotype_data.parents
-        ]
-
         trees = []
-
-        for wrapper in study_wrappers:
-            tree = self.produce_tree(
-                wrapper.genotype_data,
-                genotype_data_ids,
-                permitted_datasets,
-            )
-            if tree is not None:
-                trees.append(tree)
-
-        study_wrappers = filter(None, [
-            self.gpf_instance.get_wdae_wrapper(pheno_id)
-            for pheno_id in self.gpf_instance.get_phenotype_data_ids()
-        ])
-        for wrapper in study_wrappers:
-            tree = self.produce_tree_pheno(
-                wrapper.phenotype_data,
-                permitted_datasets,
-            )
-            if tree is not None:
-                trees.append(tree)
-
+        for data_id in data_ids:
+            study = self.gpf_instance.get_wdae_wrapper(data_id)
+            assert study is not None
+            if study.is_genotype and not study.genotype_data.parents:
+                trees.append(self.produce_tree(
+                    study.genotype_data,
+                    data_ids,
+                    permitted_datasets,
+                ))
+            elif study.is_phenotype:
+                trees.append(self.produce_tree_pheno(
+                    study.phenotype_data,
+                    permitted_datasets,
+                ))
         return Response({"data": trees}, status=status.HTTP_200_OK)
 
 
@@ -562,6 +541,5 @@ class VisibleDatasetsView(QueryBaseView):
         # pylint: disable=unused-argument
         res = self.gpf_instance.get_visible_datasets()
         if not res:
-            res = sorted(self.gpf_instance.get_genotype_data_ids()
-                         + self.gpf_instance.get_phenotype_data_ids())
+            res = sorted(self.gpf_instance.get_available_data_ids())
         return Response(res)
