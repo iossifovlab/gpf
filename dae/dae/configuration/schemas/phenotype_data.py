@@ -37,8 +37,11 @@ pheno_conf_schema = {
         },
     },
     "phenotype_storage": {
-        "id": {"type": "string"},
-        "db": {"type": "string"},
+        "type": "dict",
+        "schema": {
+            "id": {"type": "string"},
+            "db": {"type": "string"},
+        },
     },
     "children": {
         "type": "list",
