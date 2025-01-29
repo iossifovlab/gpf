@@ -26,19 +26,24 @@ class PhenotypeStorage:
     ) -> PhenotypeStudy:
         """Create a phenotype study object from a configuration."""
         study_id = study_config["name"]
-        study_storage_config = study_config["phenotype_storage"]
-        study_storage_id = study_storage_config["id"]
+        study_storage_config = study_config.get("phenotype_storage")
+        if study_storage_config is not None:
+            study_storage_id = study_storage_config["id"]
+            if study_storage_id != self.storage_id:
+                raise ValueError(
+                    f"Attempted to create phenotype study {study_id}"
+                    f"in storage {self.storage_id}; "
+                    f"study config requests "
+                    f"different storage {study_storage_id}",
+                )
+
         dbfile: Path
 
-        if study_storage_id != self.storage_id:
-            raise ValueError(
-                f"Attempted to create phenotype study {study_id}"
-                f"in storage {self.storage_id}; "
-                f"study config requests different storage {study_storage_id}",
-            )
-        if "dbfile" not in study_storage_config:
+        if study_storage_config is None or "db" not in study_storage_config:
             dbfile = self.base_dir / f"{study_id}/{study_id}.db"
-        dbfile = self.base_dir / study_config["phenotype_storage"]["dbfile"]
+        else:
+            filename = study_config["phenotype_storage"]["dbfile"]
+            dbfile = self.base_dir / filename
 
         if not dbfile.exists():
             raise ValueError(

@@ -226,7 +226,7 @@ class GPFInstance:
             "default": "default_pheno_storage",
             "storages": [
                 {
-                    "id": "default_pheno_st",
+                    "id": "default_pheno_storage",
                     "base_dir": base_dir,
                 },
             ],
