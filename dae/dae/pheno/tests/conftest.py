@@ -10,6 +10,7 @@ import pytest
 from dae.pheno.browser import PhenoBrowser
 from dae.pheno.pheno_data import PhenotypeData
 from dae.pheno.registry import PhenoRegistry
+from dae.pheno.storage import PhenotypeStorage, PhenotypeStorageRegistry
 
 
 def relative_to_this_folder(path: str) -> str:
@@ -22,8 +23,26 @@ def fake_pheno_db_dir() -> Path:
 
 
 @pytest.fixture(scope="session")
+def fake_pheno_storage_registry(fake_pheno_db_dir) -> PhenotypeStorageRegistry:
+    storage_config = {"id": "fake_storage", "base_dir": fake_pheno_db_dir}
+    storage = PhenotypeStorage.from_config(storage_config)
+    registry = PhenotypeStorageRegistry()
+    registry.register_default_storage(storage)
+    return registry
+
+
+@pytest.fixture(scope="session")
+def fake_pheno_db(
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
+    fake_pheno_db_dir: Path,
+) -> PhenoRegistry:
+    configs = PhenoRegistry.load_configurations(str(fake_pheno_db_dir))
+    return PhenoRegistry(fake_pheno_storage_registry, configs)
+
+
+@pytest.fixture(scope="session")
 def fake_phenotype_data_config() -> str:
-    return relative_to_this_folder("fixtures/fake_phenoDB/main_fake/fake.yaml")
+    return relative_to_this_folder("fixtures/fake_phenoDB/fake/fake.yaml")
 
 
 @pytest.fixture(scope="session")
@@ -34,7 +53,7 @@ def fake_phenotype_data(fake_pheno_db: PhenoRegistry) -> PhenotypeData:
 @pytest.fixture(scope="session")
 def fake_phenotype_data_browser_dbfile() -> str:
     return relative_to_this_folder(
-        "fixtures/fake_phenoDB/main_fake/browser.db",
+        "fixtures/fake_phenoDB/fake/browser.db",
     )
 
 

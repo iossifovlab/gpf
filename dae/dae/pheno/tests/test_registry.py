@@ -41,7 +41,7 @@ def pheno_study_configs() -> dict[str, dict]:
             "type": "study",
             "phenotype_storage": {
                 "id": "fake_storage",
-                "dbfile": "main_fake/fake.db",
+                "dbfile": "fake/fake.db",
             },
         },
         "fake_i1": {
