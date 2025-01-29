@@ -11,10 +11,9 @@ from threading import Lock
 from typing import Any, cast
 
 from box import Box
-from studies.study_wrapper import StudyWrapper, StudyWrapperBase, WDAEStudy
+from studies.study_wrapper import StudyWrapper, WDAEStudy
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.studies.study import GenotypeData
 from dae.utils.fs_utils import find_directory_with_a_file
 from dae.utils.helpers import to_response_json
 
@@ -253,11 +252,9 @@ class WGPFInstance(GPFInstance):
                                     to_response_json(dataset)["statistics"],
                             })
 
-                    display_name = dataset.get("display_name")
-                    if display_name is None:
-                        display_name = study_wrapper.config.get("name")
-                    if display_name is None:
-                        display_name = dataset_id
+                    display_name = dataset.get("display_name") \
+                        or study_wrapper.genotype_data.config.get("name") \
+                        or dataset_id
 
                     json_config["datasets"].append({
                         "id": dataset_id,
