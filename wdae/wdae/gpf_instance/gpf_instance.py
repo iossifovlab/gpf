@@ -132,9 +132,7 @@ class WGPFInstance(GPFInstance):
             )
         return None
 
-    def get_wdae_wrapper(
-        self, dataset_id: str,
-    ) -> WDAEStudy | None:
+    def get_wdae_wrapper(self, dataset_id: str) -> WDAEStudy:
         """Return wdae study wrapper."""
         wrapper: WDAEStudy | None = None
         if dataset_id not in self._study_wrappers:
@@ -144,41 +142,39 @@ class WGPFInstance(GPFInstance):
         else:
             wrapper = self._study_wrappers.get(dataset_id)
 
+        if wrapper is None:
+            raise KeyError(f"No data found for {dataset_id}!")
+
         return wrapper
 
-    def get_genotype_data_ids(self) -> list[str]:
-        result = list(super().get_genotype_data_ids())
+    def get_available_data_ids(self) -> list[str]:
+        """Get the IDs of all available data - genotypic and phenotypic."""
+        result = self.get_genotype_data_ids() \
+                + self.get_phenotype_data_ids()
 
         if self.visible_datasets is None:
             return result
-        genotype_data_order = self.visible_datasets
-        if genotype_data_order is None:
-            genotype_data_order = []
+        data_order = self.visible_datasets
 
         def _ordering(st: str) -> int:
-            if st not in genotype_data_order:
+            if st not in data_order:
                 return 10_000
-            return cast(int, genotype_data_order.index(st))
+            return cast(int, data_order.index(st))
 
         return sorted(result, key=_ordering)
+
+    def get_visible_datasets(self) -> list[str] | None:
+        if self.visible_datasets is None:
+            return None
+        return [dataset_id for dataset_id
+                in self.visible_datasets
+                if dataset_id in self.get_available_data_ids()]
 
     @property
     def remote_studies(self) -> list[str]:
         if self._remote_study_db is None:
             return []
         return list(self._remote_study_db.get_genotype_data_ids())
-
-    def get_visible_datasets(self) -> list[str] | None:
-        if self.visible_datasets is None:
-            return None
-        all_datasets = self.get_genotype_data_ids()
-        return [
-            dataset_id for dataset_id
-            in self.visible_datasets
-            if dataset_id in all_datasets
-        ] + self.get_phenotype_data_ids()  # FIXME - This is a temporary fix to
-        #                                            allow all phenotype studies
-        #                                            to be seen
 
     def _gp_find_category_section(
         self, configuration: dict[str, Any], category: str,
@@ -345,46 +341,33 @@ def reload_datasets(gpf_instance: WGPFInstance) -> None:
     # pylint: disable=import-outside-toplevel
     from datasets_api.models import Dataset, DatasetHierarchy
 
-    for phenotype_data_id in gpf_instance.get_phenotype_data_ids():
-        Dataset.recreate_dataset_perm(phenotype_data_id)
-        Dataset.set_broken(phenotype_data_id, broken=False)
-        Dataset.update_name(phenotype_data_id, phenotype_data_id)
+    for data_id in gpf_instance.get_available_data_ids():
+        Dataset.recreate_dataset_perm(data_id)
+        Dataset.set_broken(data_id, broken=True)
 
-    for genotype_data_id in gpf_instance.get_genotype_data_ids():
-        Dataset.recreate_dataset_perm(genotype_data_id)
-        Dataset.set_broken(genotype_data_id, broken=True)
+        wdae_study = gpf_instance.get_wdae_wrapper(data_id)
+        Dataset.set_broken(data_id, broken=False)
+        Dataset.update_name(data_id, wdae_study.name)
 
-        genotype_data = gpf_instance.get_genotype_data(genotype_data_id)
-        if genotype_data is None:
-            continue
-        Dataset.set_broken(genotype_data_id, broken=False)
-        Dataset.update_name(genotype_data_id, genotype_data.name)
-        if not genotype_data.studies:
-            continue
-
-        for study_id in genotype_data.get_studies_ids(leaves=False):
-            if study_id is None or study_id == genotype_data_id:
+        for study_id in wdae_study.get_children_ids(leaves=False):
+            if study_id is None or study_id == data_id:
                 continue
             Dataset.recreate_dataset_perm(study_id)
 
     DatasetHierarchy.clear(gpf_instance.instance_id)
-    datasets = gpf_instance.get_genotype_data_ids()
-    for genotype_data_id in datasets:
-        genotype_data = gpf_instance.get_genotype_data(genotype_data_id)
-        if genotype_data is None:
-            logger.error(
-                "unable to find study %s; skipping...", genotype_data_id)
-            continue
+
+    for data_id in gpf_instance.get_available_data_ids():
+        wdae_study = gpf_instance.get_wdae_wrapper(data_id)
         DatasetHierarchy.add_relation(
-            gpf_instance.instance_id, genotype_data_id, genotype_data_id,
+            gpf_instance.instance_id, data_id, data_id,
         )
-        direct_descendants = genotype_data.get_studies_ids(leaves=False)
-        for study_id in genotype_data.get_studies_ids():
-            if study_id == genotype_data_id:
+        direct_descendants = wdae_study.get_children_ids(leaves=False)
+        for study_id in wdae_study.get_children_ids():
+            if study_id == data_id:
                 continue
             is_direct = study_id in direct_descendants
             DatasetHierarchy.add_relation(
-                gpf_instance.instance_id, genotype_data_id, study_id,
+                gpf_instance.instance_id, data_id, study_id,
                 direct=is_direct,
             )
 

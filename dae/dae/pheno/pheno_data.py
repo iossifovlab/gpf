@@ -393,6 +393,11 @@ class PhenotypeData(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def get_children_ids(self, *, leaves: bool = True) -> list[str]:
+        """Return all phenotype studies' ids in the group."""
+        raise NotImplementedError
+
 
 class PhenotypeStudy(PhenotypeData):
     """
@@ -572,6 +577,11 @@ class PhenotypeStudy(PhenotypeData):
             page,
         )
 
+    def get_children_ids(
+        self, *, leaves: bool = True,  # noqa: ARG002
+    ) -> list[str]:
+        return [self.pheno_id]
+
 
 class PhenotypeGroup(PhenotypeData):
     """Represents a group of phenotype data studies or groups."""
@@ -598,6 +608,10 @@ class PhenotypeGroup(PhenotypeData):
             else:
                 leaves.extend(cast(PhenotypeGroup, child).get_leaves())
         return leaves
+
+    def get_children_ids(self, *, leaves: bool = True) -> list[str]:
+        studies = self.get_leaves() if leaves else self.children
+        return [data.pheno_id for data in studies]
 
     @staticmethod
     def _merge_instruments(

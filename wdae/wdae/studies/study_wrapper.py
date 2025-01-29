@@ -66,10 +66,21 @@ class WDAEStudy:
         return self.genotype_data.study_id
 
     @property
+    def name(self) -> str:
+        if self.is_phenotype:
+            return self.phenotype_data.pheno_id
+        return self.genotype_data.name
+
+    @property
     def description(self) -> str | None:
         if self.is_phenotype:
             return None
         return self.genotype_data.description
+
+    def get_children_ids(self, *, leaves=True) -> list[str]:
+        if self.is_phenotype:
+            return self.phenotype_data.get_children_ids(leaves=leaves)
+        return self.genotype_data.get_studies_ids(leaves=leaves)
 
 
 class StudyWrapperBase(WDAEStudy):
