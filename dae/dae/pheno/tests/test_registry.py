@@ -1,5 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+from unittest.mock import MagicMock
+
 import pytest
+import pytest_mock
 
 from dae.pheno.pheno_data import PhenotypeGroup, PhenotypeStudy
 from dae.pheno.registry import PhenoRegistry
@@ -19,6 +22,15 @@ def fake_pheno_storage_registry(
     registry = PhenotypeStorageRegistry()
     registry.register_default_storage(fake_pheno_storage)
     return registry
+
+
+@pytest.fixture
+def mock_classes(
+    mocker: pytest_mock.MockerFixture,
+) -> tuple[MagicMock, MagicMock]:
+    a, b = mocker.spy(PhenotypeStudy, "__init__"), \
+           mocker.spy(PhenotypeGroup, "__init__")
+    return a, b
 
 
 @pytest.fixture
@@ -135,3 +147,33 @@ def test_get_all_phenotype_data(full_registry) -> None:
     assert set(full_registry.get_phenotype_data_ids()) == {
         "fake", "fake2", "fake_i1", "group",
     }
+
+
+def test_load_study_called(
+    empty_registry: PhenoRegistry,
+    pheno_study_configs: dict[str, dict],
+    mock_classes: tuple[MagicMock, MagicMock],
+) -> None:
+    study_mock, group_mock = mock_classes
+
+    empty_registry.register_study_config(pheno_study_configs["fake"])
+    empty_registry.get_phenotype_data("fake")
+
+    assert study_mock.call_count == 1
+    assert group_mock.call_count == 0
+
+
+def test_load_group_called(
+    empty_registry: PhenoRegistry,
+    pheno_study_configs: dict[str, dict],
+    mock_classes: tuple[MagicMock, MagicMock],
+) -> None:
+    study_mock, group_mock = mock_classes
+
+    empty_registry.register_study_config(pheno_study_configs["fake"])
+    empty_registry.register_study_config(pheno_study_configs["fake2"])
+    empty_registry.register_study_config(pheno_study_configs["group"])
+    empty_registry.get_phenotype_data("group")
+
+    assert study_mock.call_count == 2
+    assert group_mock.call_count == 1
