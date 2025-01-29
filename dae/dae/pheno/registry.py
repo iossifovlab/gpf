@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from threading import Lock
 
 from dae.pheno.pheno_data import PhenotypeData, PhenotypeGroup
@@ -31,8 +32,10 @@ class PhenoRegistry:
     def __init__(
         self, storage_registry: PhenotypeStorageRegistry,
         configurations: list[dict] | None = None,
+        browser_cache_path: Path | None = None,
     ) -> None:
         self._study_configs: dict[str, dict] = {}
+        self.browser_cache_path = browser_cache_path
         self._cache: dict[str, PhenotypeData] = {}
         self._storage_registry = storage_registry
         if configurations is not None:
@@ -141,7 +144,7 @@ class PhenoRegistry:
                 self._storage_registry.get_default_phenotype_storage()
 
         self._cache[pheno_id] = study_storage.build_phenotype_study(
-            study_config)
+            study_config, browser_cache_path=self.browser_cache_path)
 
         return self._cache[pheno_id]
 
@@ -161,5 +164,6 @@ class PhenoRegistry:
         ]
         self._cache[pheno_id] = PhenotypeGroup(
             pheno_id, study_config, children,
+            cache_path=self.browser_cache_path,
         )
         return self._cache[pheno_id]

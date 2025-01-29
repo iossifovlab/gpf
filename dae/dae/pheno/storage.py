@@ -20,7 +20,10 @@ class PhenotypeStorage:
     def from_config(storage_config: dict[str, Any]) -> PhenotypeStorage:
         return PhenotypeStorage(storage_config)
 
-    def build_phenotype_study(self, study_config: dict) -> PhenotypeStudy:
+    def build_phenotype_study(
+        self, study_config: dict,
+        browser_cache_path: Path | None,
+    ) -> PhenotypeStudy:
         """Create a phenotype study object from a configuration."""
         study_id = study_config["name"]
         study_storage_config = study_config["phenotype_storage"]
@@ -43,7 +46,10 @@ class PhenotypeStorage:
                 f"in phenotype storage {self.storage_id}",
             )
 
-        return PhenotypeStudy(study_id, str(dbfile), study_config)
+        return PhenotypeStudy(
+            study_id, str(dbfile), study_config,
+            cache_path=browser_cache_path,
+        )
 
     def shutdown(self) -> None:
         return
