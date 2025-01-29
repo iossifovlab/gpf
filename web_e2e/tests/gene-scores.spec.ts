@@ -413,4 +413,99 @@ test.describe('Gene scores categorical histogram tests', () => {
     await page.getByRole('button', {name: 'Table Preview'}).click();
     await expect(page.locator('#variants-count-span')).toHaveText('4 variants selected');
   });
+
+  test('should select values from dropdown and check validation', async({ page }) => {
+    await page.getByRole('button', {name: 'Mode'}).click();
+    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+
+    await expect(page.getByText('Please select at least one value.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+
+    await page.locator('#search-box').click();
+    await page.locator('mat-option').getByText('2 (706)').click();
+
+    await expect(page.getByText('Please select at least one value.')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+
+    await expect(page.locator('.value-wrapper')).toBeVisible();
+    await expect(page.locator('.remove-value')).toBeVisible();
+    await expect(page.locator('.value-wrapper')).toContainText('2 (706)');
+
+    await page.locator('#search-box').click();
+    await expect(page.locator('mat-option:has-text("2 (706)")')).toBeDisabled();
+  });
+
+  test('should remove selected value from list of values and check validation', async({ page }) => {
+    await page.getByRole('button', {name: 'Mode'}).click();
+    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+
+    await page.locator('#search-box').focus();
+    await page.keyboard.type('3');
+    await expect(page.locator('mat-option').getByText('2 (706)')).not.toBeVisible();
+    await page.locator('mat-option').getByText('3 (143)').click();
+
+    await page.locator('#search-box').click();
+    await page.locator('mat-option').getByText('1 (233)').click();
+
+    await expect(page.locator('#values-list')).toContainText('3 (143)');
+    await expect(page.locator('#values-list')).toContainText('1 (233)');
+    await expect(page.locator('.remove-value')).toHaveCount(2);
+
+    await page.locator('.remove-value').nth(0).click();
+    await page.locator('.remove-value').nth(0).click();
+
+    await page.locator('#search-box').click();
+    await expect(page.locator('mat-option:has-text("1 (233)")')).toBeEnabled();
+    await expect(page.locator('mat-option:has-text("3 (143)")')).toBeEnabled();
+
+    await expect(page.getByText('Please select at least one value.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+  });
+
+  test('should check save/share query when using dropdown selector', async({ page }) => {
+    await page.getByRole('button', {name: 'Mode'}).click();
+    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+
+    await page.locator('#search-box').click();
+    await page.locator('mat-option').getByText('3 (143)').click();
+
+    await page.getByRole('button', { name: 'Share/save query'}).click();
+    await expect(page.locator('#save-query-dropdown')).toBeVisible();
+    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+    await expect(page.locator('#search-box')).toBeEmpty();
+    await expect(page.locator('.value-wrapper')).toHaveCount(1);
+    await expect(page.locator('#values-list')).toContainText('3 (143)');
+  });
+
+  test('should check downloading when using dropdown selector', async({ page }) => {
+    await page.getByRole('button', {name: 'Mode'}).click();
+    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+
+    await page.locator('#search-box').click();
+    await page.locator('mat-option').getByText('3 (143)').click();
+
+    const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
+    await page.getByRole('button', {name: 'Download'}).click();
+
+    const download = await downloadPromise;
+    const fixtureData = scanCSV('playwright/fixtures/gene-scores/variants3.tsv', {sep: '\t'});
+    const downloadData = scanCSV(await download.path(), {sep: '\t'});
+    const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('family id');
+    const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('family id');
+    expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
+  });
+
+  test('should check table preview when using dropdown selector', async({ page }) => {
+    await page.getByRole('button', {name: 'Mode'}).click();
+    await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
+
+    await page.locator('#search-box').click();
+    await page.locator('mat-option').getByText('3 (143)').click();
+
+    await page.getByRole('button', { name: 'Table Preview'}).click();
+
+    await expect(page.locator('#variants-count-span')).toHaveText('4 variants selected');
+  });
 });
