@@ -89,35 +89,34 @@ class PhenoRegistry:
 
         If the phenotype data hasn't been loaded it, load and cache.
         """
-        if lock:
-            with self.CACHE_LOCK:
-                return self._get_or_load(data_id)
-        else:
-            return self._get_or_load(data_id)
+        return self._get_or_load(data_id, lock=lock)
 
     def get_all_phenotype_data(
         self, *, lock: bool = True,
     ) -> list[PhenotypeData]:
         """Return all registered phenotype data."""
-        if lock:
-            with self.CACHE_LOCK:
-                return [
-                    self._get_or_load(pheno_id)
-                    for pheno_id in self._study_configs
-                ]
-        else:
-            return [
-                self._get_or_load(pheno_id) for pheno_id in self._study_configs
-            ]
+        return [
+            self._get_or_load(pheno_id, lock=lock)
+            for pheno_id in self._study_configs
+        ]
 
     def _get_or_load(
         self,
         pheno_id: str,
+        *,
+        lock: bool = True,
     ) -> PhenotypeData:
         """Return a phenotype data from the cache and load it if necessary."""
+        if lock:
+            with self.CACHE_LOCK:
+                if pheno_id in self._cache:
+                    return self._cache[pheno_id]
+                return self._load(pheno_id)
         if pheno_id in self._cache:
             return self._cache[pheno_id]
+        return self._load(pheno_id)
 
+    def _load(self, pheno_id: str):
         config = self._study_configs[pheno_id]
 
         if config["type"] == "study":
@@ -157,7 +156,7 @@ class PhenoRegistry:
                 f"{missing_children} are not registered",
             )
         children = [
-            self._get_or_load(child_id)
+            self._get_or_load(child_id, lock=False)
             for child_id in study_config["children"]
         ]
         self._cache[pheno_id] = PhenotypeGroup(
