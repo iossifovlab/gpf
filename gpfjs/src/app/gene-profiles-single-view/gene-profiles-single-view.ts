@@ -175,7 +175,7 @@ export class GeneProfilesDatasetStatistic {
       json['category'],
       json['description'],
       json['variantTypes'],
-      json['scores']?.map(s => ({
+      json['genomicScores']?.map(s => ({
         score: s['name'],
         histogramType: 'continuous',
         rangeStart: s['min'],
