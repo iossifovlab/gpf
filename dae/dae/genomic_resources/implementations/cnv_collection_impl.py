@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from dae.genomic_resources.histogram import Histogram
 from dae.genomic_resources.implementations.genomic_scores_impl import (
     GenomicScoreImplementation,
 )
@@ -32,3 +33,13 @@ class CnvCollectionImplementation(GenomicScoreImplementation):
 
     def get_statistics_info(self, **kwargs: Any) -> str:
         return super().get_statistics_info(**kwargs)
+
+    def histogram_add_value(
+        self, histogram: Histogram,
+        value: Any,
+        count: int,  # noqa: ARG002
+    ) -> None:
+        histogram.add_value(
+            value,
+            1,
+        )

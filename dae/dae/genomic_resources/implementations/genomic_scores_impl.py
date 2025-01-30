@@ -33,6 +33,9 @@ from dae.genomic_resources.histogram import (
     build_empty_histogram,
     plot_histogram,
 )
+from dae.genomic_resources.implementations.cnv_collection_impl import (
+    CnvCollectionImplementation,
+)
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource,
@@ -411,6 +414,16 @@ class GenomicScoreImplementation(
         )
         return histogram_tasks, merge_task, save_task
 
+    def histogram_add_value(
+        self, histogram: Histogram,
+        value: Any,
+        count: int,
+    ) -> None:
+        histogram.add_value(
+            value,
+            count,
+        )
+
     @staticmethod
     def _do_histogram(
         resource: GenomicResource,
@@ -436,8 +449,11 @@ class GenomicScoreImplementation(
                 for scr_index, scr_id in enumerate(score_ids):
 
                     try:
-                        result[scr_id].add_value(
-                            rec[scr_index], right - left + 1)  # type: ignore
+                        impl.histogram_add_value(
+                            result[scr_id],
+                            rec[scr_index],  # type: ignore
+                            right - left + 1,
+                        )
                     except TypeError as err:
                         logger.exception(
                             "Failed adding value %s to histogram of %s; "
@@ -559,8 +575,13 @@ class GenomicScoreImplementation(
 
 def build_score_implementation_from_resource(
     resource: GenomicResource,
-) -> GenomicScoreImplementation:
-    return GenomicScoreImplementation(resource)
+) -> GenomicScoreImplementation | CnvCollectionImplementation:
+    """Builds score implementation based on resource type"""
+    if resource.get_type() == "cnv_collection":
+        impl = CnvCollectionImplementation(resource)
+    else:
+        impl = GenomicScoreImplementation(resource)
+    return impl
 
 
 GENOMIC_SCORES_TEMPLATE = """
