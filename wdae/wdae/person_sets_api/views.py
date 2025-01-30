@@ -19,10 +19,12 @@ class CollectionConfigsView(QueryBaseView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if dataset is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        if dataset.is_phenotype:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         result = {
             psc.id: psc.config_json()
-            for psc in dataset.person_set_collections.values()
+            for psc in dataset.genotype_data.person_set_collections.values()
         }
         return Response(
             result,
@@ -42,10 +44,12 @@ class CollectionDomainView(QueryBaseView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if dataset is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        if dataset.is_phenotype:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         result = {
             psc.id: psc.domain_json()
-            for psc in dataset.person_set_collections.values()
+            for psc in dataset.genotype_data.person_set_collections.values()
         }
         return Response(
             result,

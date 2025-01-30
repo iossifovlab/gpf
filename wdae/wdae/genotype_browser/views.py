@@ -1,6 +1,7 @@
 """Genotype browser routes for browsing and listing variants in studies."""
 import itertools
 import logging
+from typing import cast
 
 from datasets_api.permissions import (
     handle_partial_permissions,
@@ -11,7 +12,7 @@ from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import StudyWrapperBase
+from studies.study_wrapper import StudyWrapper, StudyWrapperBase
 from utils.expand_gene_set import expand_gene_set, expand_gene_syms
 from utils.logger import request_logging
 from utils.query_params import parse_query_params
@@ -142,7 +143,11 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
 
         if dataset is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        if not dataset.is_remote:
+        if dataset.is_phenotype:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset = cast(StudyWrapper, dataset)
+
+        if not dataset.genotype_data.is_remote:
             data = expand_gene_set(data)
         elif "geneSet" in data:
             gene_set = expand_gene_syms(data)
@@ -154,11 +159,13 @@ class GenotypeBrowserQueryView(QueryBaseView, DatasetAccessRightsView):
         else:
             # TODO Handle summary variant preview and download sources
             if is_download:
-                cols = dataset.config.genotype_browser.download_columns
+                cols = \
+                    dataset.genotype_data.config.genotype_browser.download_columns
             else:
-                cols = dataset.config.genotype_browser.preview_columns
+                cols = \
+                    dataset.genotype_data.config.genotype_browser.preview_columns
             sources = StudyWrapperBase.get_columns_as_sources(
-                dataset.config, cols,
+                dataset.genotype_data.config, cols,
             )
 
         handle_partial_permissions(self.instance_id, user, dataset_id, data)

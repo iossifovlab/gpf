@@ -14,7 +14,7 @@ from query_base.query_base import DatasetAccessRightsView, QueryBaseView
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from studies.study_wrapper import StudyWrapper
+from studies.study_wrapper import WDAEStudy
 from utils.streaming_response_util import iterator_to_json
 
 logger = logging.getLogger(__name__)
@@ -165,7 +165,7 @@ class PhenoMeasuresDownload(QueryBaseView, DatasetAccessRightsView):
 
     def csv_value_iterator(
         self,
-        dataset: StudyWrapper,
+        dataset: WDAEStudy,
         measure_ids: list[str],
     ) -> Generator[str, None, None]:
         """Create CSV content for people measures data."""

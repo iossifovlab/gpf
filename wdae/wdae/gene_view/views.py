@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Generator
+from typing import cast
 
 from datasets_api.permissions import get_permissions_etag
 from django.contrib.auth.models import User
@@ -33,9 +34,13 @@ class ConfigView(QueryBaseView, DatasetAccessRightsView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
         if dataset is None:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        return Response(dataset.config.gene_browser, status=status.HTTP_200_OK)
+        if dataset.is_phenotype:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(dataset.genotype_data.config.gene_browser,
+                        status=status.HTTP_200_OK)
 
 
 class QueryVariantsView(QueryBaseView):
@@ -52,12 +57,17 @@ class QueryVariantsView(QueryBaseView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
         if dataset is None:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if dataset.is_remote:
+        if dataset.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        freq_col = dataset.config.gene_browser.frequency_column
+        if dataset.genotype_data.is_remote:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        freq_col = dataset.genotype_data.config.gene_browser.frequency_column
+
+        dataset = cast(StudyWrapper, dataset)
 
         return Response(
             list(dataset.get_gene_view_summary_variants(freq_col, **data)),
@@ -70,10 +80,10 @@ class DownloadSummaryVariantsView(QueryBaseView):
     DOWNLOAD_LIMIT = 10000
 
     def generate_variants(
-            self,
-            data: dict,
-            user: User,
-            dataset: StudyWrapper,
+        self,
+        data: dict,
+        user: User,
+        dataset: StudyWrapper,
     ) -> Generator[str, None, None]:
         """Summary variants generator."""
         # Return a response instantly and make download more responsive
@@ -102,10 +112,15 @@ class DownloadSummaryVariantsView(QueryBaseView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
 
         if dataset is None:
-            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if dataset.is_remote:
+        if dataset.is_phenotype:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if dataset.genotype_data.is_remote:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        dataset = cast(StudyWrapper, dataset)
 
         response = FileResponse(
             self.generate_variants(data, request.user, dataset),
