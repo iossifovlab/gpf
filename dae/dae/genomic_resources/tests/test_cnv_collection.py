@@ -7,7 +7,7 @@ import pytest_mock
 from dae.genomic_resources.genomic_scores import (
     CnvCollection,
 )
-from dae.genomic_resources.implementations.cnv_collection_impl import (
+from dae.genomic_resources.implementations.genomic_scores_impl import (
     CnvCollectionImplementation,
 )
 from dae.genomic_resources.repository import GR_CONF_FILE_NAME, GenomicResource

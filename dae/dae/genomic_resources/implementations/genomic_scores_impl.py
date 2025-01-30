@@ -33,9 +33,6 @@ from dae.genomic_resources.histogram import (
     build_empty_histogram,
     plot_histogram,
 )
-from dae.genomic_resources.implementations.cnv_collection_impl import (
-    CnvCollectionImplementation,
-)
 from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource,
@@ -571,6 +568,39 @@ class GenomicScoreImplementation(
                 }
                 for score_def in self.score.score_definitions.values()],
         }, indent=2).encode()
+
+
+class CnvCollectionImplementation(GenomicScoreImplementation):
+    """Assists in the management of resource of type cnv_collection."""
+    # pylint: disable=useless-parent-delegation
+
+    def add_statistics_build_tasks(
+        self, task_graph: TaskGraph,
+        **kwargs: str,
+    ) -> list[Task]:
+        return super().add_statistics_build_tasks(task_graph, **kwargs)
+
+    def calc_info_hash(self) -> bytes:
+        return super().calc_info_hash()
+
+    def calc_statistics_hash(self) -> bytes:
+        return super().calc_statistics_hash()
+
+    def get_info(self, **kwargs: Any) -> str:
+        return super().get_info(**kwargs)
+
+    def get_statistics_info(self, **kwargs: Any) -> str:
+        return super().get_statistics_info(**kwargs)
+
+    def histogram_add_value(
+        self, histogram: Histogram,
+        value: Any,
+        count: int,  # noqa: ARG002
+    ) -> None:
+        histogram.add_value(
+            value,
+            1,
+        )
 
 
 def build_score_implementation_from_resource(
