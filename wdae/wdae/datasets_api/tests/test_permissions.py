@@ -20,13 +20,13 @@ from datasets_api.permissions import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def omni_dataset(custom_wgpf: WGPFInstance) -> GenotypeData:
     """Easy-access fixture for the dataset containing all genotype data."""
     return custom_wgpf.get_genotype_data("omni_dataset")
 
 
-@pytest.fixture()
+@pytest.fixture
 def na_user(
     db: None,  # noqa: ARG001
 ) -> User:
@@ -133,26 +133,25 @@ def test_unregistered_dataset_does_not_propagate_permissions(
 ) -> None:
     """
     Test for faulty permissions propagations.
-
     Permissions were changed to return True for missing datasets, which
     resulted in a bug where checking parent/child permissions would return
     True when it shouldn't when a parent dataset suddenly disappears.
     """
     dataset1_wrapper = custom_wgpf.get_wdae_wrapper("dataset_1")
     assert dataset1_wrapper is not None
-    assert dataset1_wrapper.is_group
+    assert dataset1_wrapper.genotype_data.is_group
 
     dataset2_wrapper = custom_wgpf.get_wdae_wrapper("dataset_2")
     assert dataset2_wrapper is not None
-    assert dataset2_wrapper.is_group
+    assert dataset2_wrapper.genotype_data.is_group
 
-    ds_config = Box(dataset1_wrapper.config.to_dict())
+    ds_config = Box(dataset1_wrapper.genotype_data.config.to_dict())
     ds_config.studies = ("dataset_1", "dataset_2")
     ds_config.id = "big_dataset"
 
     dataset = GenotypeDataGroup(
-        ds_config, [dataset1_wrapper.genotype_data_study,
-                    dataset2_wrapper.genotype_data_study],
+        ds_config, [dataset1_wrapper.genotype_data,
+                    dataset2_wrapper.genotype_data],
     )
     assert dataset is not None
     assert dataset.study_id == "big_dataset"
@@ -163,12 +162,12 @@ def test_unregistered_dataset_does_not_propagate_permissions(
 
     Dataset.recreate_dataset_perm("big_dataset")
 
-    custom_wgpf.register_genotype_data(dataset)
+    custom_wgpf._variants_db.register_genotype_data(dataset)
 
     assert "big_dataset" in custom_wgpf.get_genotype_data_ids()
     assert custom_wgpf.get_genotype_data("big_dataset") is not None
 
-    custom_wgpf.unregister_genotype_data(dataset)
+    custom_wgpf._variants_db.unregister_genotype_data(dataset)
     custom_wgpf.get_genotype_data("dataset_1")._parents = set()
     custom_wgpf.get_genotype_data("dataset_2")._parents = set()
 

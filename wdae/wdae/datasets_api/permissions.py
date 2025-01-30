@@ -216,7 +216,7 @@ class IsDatasetAllowed(permissions.BasePermission):
     def permitted_datasets(user: User, instance_id: str) -> Iterable[str]:
         """Return list of allowed datasets for a specific user."""
         wgpf_instance = get_wgpf_instance()
-        dataset_ids = set(wgpf_instance.get_genotype_data_ids())
+        dataset_ids = set(wgpf_instance.get_available_data_ids())
         if settings.DISABLE_PERMISSIONS:
             return dataset_ids
 

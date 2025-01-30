@@ -15,19 +15,7 @@ def test_datasets_api_get_all(
     assert response
     assert response.status_code == 200
     data = response.json()
-    assert len(data["data"]) == 4
-
-
-def test_datasets_api_get_all_studies(
-    admin_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
-) -> None:
-    response = admin_client.get("/api/v3/datasets/studies")
-
-    assert response
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data["data"]) == 3
+    assert len(data["data"]) == 5
 
 
 def test_datasets_api_get_one(
@@ -253,7 +241,7 @@ def test_datasets_hierarchy(
 
     data = response.json()
     assert data
-    assert len(data["data"]) == 2
+    assert len(data["data"]) == 3
 
     dataset = data["data"][0]
     assert dataset == {

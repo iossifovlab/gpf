@@ -14,7 +14,7 @@ def test_study_with_phenotype_data(
     wrapper = t4c8_wgpf_instance.get_wdae_wrapper("t4c8_study_1")
 
     assert wrapper is not None
-    assert wrapper.phenotype_data is not None
+    assert wrapper.has_pheno_data
 
 
 def test_pheno_measure_genotype_browser_columns(

@@ -13,10 +13,10 @@ from dae.pedigrees.family_tag_builder import FamilyTag, check_tag
 
 
 class ListFamiliesView(QueryBaseView, DatasetAccessRightsView):
-    """List dataåset families."""
+    """List dataset families."""
 
     @method_decorator(etag(get_permissions_etag))
-    def get(self, request: Request, dataset_id: str) -> Response:
+    def get(self, request: Request, dataset_id: str | None) -> Response:
         """Response to get request for a dataset families."""
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -25,7 +25,11 @@ class ListFamiliesView(QueryBaseView, DatasetAccessRightsView):
         if dataset is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        families = dataset.families
+        if dataset.is_phenotype:
+            # TODO Currently this route does not support pheno-only studies
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        families = dataset.genotype_data.families
 
         tags_query = request.GET.get("tags")
         if tags_query is None:
@@ -73,7 +77,11 @@ class FamilyDetailsView(QueryBaseView, DatasetAccessRightsView):
         if dataset is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        families = dataset.families
+        if dataset.is_phenotype:
+            # TODO Currently this route does not support pheno-only studies
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        families = dataset.genotype_data.families
 
         family = families.get(family_id)
 
@@ -117,7 +125,11 @@ class ListMembersView(QueryBaseView, DatasetAccessRightsView):
         if dataset is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        families = dataset.families
+        if dataset.is_phenotype:
+            # TODO Currently this route does not support pheno-only studies
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        families = dataset.genotype_data.families
 
         family = families.get(family_id)
 
@@ -154,7 +166,11 @@ class MemberDetailsView(QueryBaseView, DatasetAccessRightsView):
         if dataset is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        families = dataset.families
+        if dataset.is_phenotype:
+            # TODO Currently this route does not support pheno-only studies
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        families = dataset.genotype_data.families
 
         family = families.get(family_id)
 
@@ -192,7 +208,11 @@ class AllMemberDetailsView(QueryBaseView, DatasetAccessRightsView):
         if dataset is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        families = dataset.families
+        if dataset.is_phenotype:
+            # TODO Currently this route does not support pheno-only studies
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        families = dataset.genotype_data.families
 
         family = families.get(family_id)
 
@@ -225,11 +245,15 @@ class ListAllDetailsView(QueryBaseView, DatasetAccessRightsView):
         if dataset is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        families = dataset.families
+        if dataset.is_phenotype:
+            # TODO Currently this route does not support pheno-only studies
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        families = dataset.genotype_data.families
 
         out = []
 
-        for _, family in families.items():
+        for family in families.values():
             json = family.to_json()
             members = family.members_in_order
             json["members"] = [m.to_json() for m in members]
