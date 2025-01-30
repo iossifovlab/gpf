@@ -44,7 +44,7 @@ export class CategoricalValuesDropdownComponent implements OnInit {
   }
 
   public addToSelected(value: { name: string; value: number; }): void {
-    if (!this.selectedValues.includes(value)) {
+    if (!this.selectedValues.find(v => v.name === value.name)) {
       this.selectedValues.push(value);
       this.updateSelectedValues.emit(this.selectedValues.map(v => v.name));
     }
@@ -61,6 +61,6 @@ export class CategoricalValuesDropdownComponent implements OnInit {
   }
 
   public isSelected(suggestion: { name: string; value: number; }): boolean {
-    return this.selectedValues.includes(suggestion);
+    return Boolean(this.selectedValues.find(v => v.name === suggestion.name));
   }
 }
