@@ -42,7 +42,7 @@ class PhenotypeStorage:
         if study_storage_config is None or "db" not in study_storage_config:
             dbfile = self.base_dir / f"{study_id}/{study_id}.db"
         else:
-            filename = study_config["phenotype_storage"]["dbfile"]
+            filename = study_config["phenotype_storage"]["db"]
             dbfile = self.base_dir / filename
 
         if not dbfile.exists():
