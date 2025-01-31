@@ -27,10 +27,10 @@ logger = logging.getLogger(__name__)
 def get_pheno_db_dir(dae_config: dict | None) -> str:
     """Return the directory where phenotype data configurations are located."""
     if dae_config is not None:
-        if dae_config.phenotype_data is None or \
-                dae_config.phenotype_data.dir is None:
+        if dae_config["phenotype_data"] is None or \
+                dae_config["phenotype_data"]["dir"] is None:
             pheno_data_dir = os.path.join(
-                dae_config.conf_dir, "pheno")
+                dae_config["conf_dir"], "pheno")
         else:
             pheno_data_dir = dae_config.phenotype_data.dir
     else:
