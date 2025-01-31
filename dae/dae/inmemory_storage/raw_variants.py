@@ -150,7 +150,6 @@ class RawFamilyVariants(abc.ABC):
                     or reg.start <= end_pos <= reg.stop
                     or (reg.start >= pos and reg.stop <= end_pos)
                 ):
-                    logger.debug("variant %s in region %s", v, reg)
                     return True
         return False
 
