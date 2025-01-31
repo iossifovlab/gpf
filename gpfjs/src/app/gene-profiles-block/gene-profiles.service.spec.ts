@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ConfigService } from 'app/config/config.service';
-import { lastValueFrom, of } from 'rxjs';
+import { lastValueFrom, of, throwError } from 'rxjs';
 import { GeneProfilesService } from './gene-profiles.service';
 import {
   GeneProfilesSingleViewConfig,
@@ -164,5 +164,16 @@ describe('GeneProfilesService', () => {
     const res = await lastValueFrom(resultGene.pipe(take(1)));
     expect(res['mockGeneProperty']).toBe('mockGeneValue');
     expect(res).toBeInstanceOf(GeneProfilesGene);
+  });
+
+  it('should catch error when getting gene', async() => {
+    const getGeneSpy = jest.spyOn(service['http'], 'get');
+    getGeneSpy.mockReturnValueOnce(throwError(() => new Error('FAIL')));
+
+    const resultGene = service.getGene('gene');
+
+    expect(getGeneSpy).toHaveBeenCalledWith(service['config'].baseUrl + service['genesUrl'] + 'gene');
+    const res = await lastValueFrom(resultGene.pipe(take(1)));
+    expect(res).toBeNull();
   });
 });

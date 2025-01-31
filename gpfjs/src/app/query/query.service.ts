@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
-// eslint-disable-next-line no-restricted-imports
 import { Observable, Subject } from 'rxjs';
 import { environment } from 'environments/environment';
 import { ConfigService } from '../config/config.service';
@@ -148,7 +147,6 @@ export class QueryService {
           ].data.set('genome', dataset.genome);
         }
       });
-
     return genotypePreviewVariantsArray;
   }
 

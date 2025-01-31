@@ -317,9 +317,7 @@ describe('GeneProfileSingleViewComponent', () => {
     component.errorModal = false;
     Object.defineProperty(component, 'geneSymbol', {value: 'tab2' });
 
-    getGeneSpy.mockReturnValueOnce(throwError(() => {
-      new Error('FAIL');
-    }));
+    getGeneSpy.mockReturnValueOnce(throwError(() => new Error('FAIL')));
 
     component.ngOnInit();
 
