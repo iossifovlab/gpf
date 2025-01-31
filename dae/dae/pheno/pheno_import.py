@@ -4,6 +4,7 @@ import glob
 import gzip
 import logging
 import os
+import shutil
 import sys
 import textwrap
 import time
@@ -31,6 +32,7 @@ from dae.genomic_resources.histogram import (
     CategoricalHistogram,
     NumberHistogram,
 )
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.family import ALL_FAMILY_TAG_LABELS
 from dae.pedigrees.loader import (
     FamiliesLoader,
@@ -45,7 +47,12 @@ from dae.pheno.common import (
     RegressionMeasure,
 )
 from dae.pheno.db import safe_db_name
-from dae.pheno.pheno_data import PhenotypeData, PhenotypeGroup, PhenotypeStudy
+from dae.pheno.pheno_data import (
+    PhenotypeData,
+    PhenotypeGroup,
+    PhenotypeStudy,
+    get_pheno_db_dir,
+)
 from dae.pheno.prepare.measure_classifier import (
     InferenceReport,
     determine_histogram_type,
@@ -157,18 +164,21 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
 
 def generate_phenotype_data_config(
     pheno_name: str,
-    pheno_db_filename: str,
+    storage_id: str | None,
     regressions: dict[str, RegressionMeasure] | None,
 ) -> str:
     """Construct phenotype data configuration from command line arguments."""
-    dbfile = os.path.join("%(wd)s", os.path.basename(pheno_db_filename))
     config = {
         "vars": {"wd": "."},
         "type": "study",
         "name": pheno_name,
-        "dbfile": dbfile,
         "browser_images_url": "static/images/",
     }
+    if storage_id is not None:
+        config["phenotype_storage"] = {
+            "id": storage_id,
+            "db": f"{pheno_name}/{pheno_name}.db",
+        }
     if regressions is None:
         return yaml.dump(config)
 
@@ -194,7 +204,7 @@ def transform_cli_args(args: argparse.Namespace) -> PhenoImportConfig:
 
     result["input_dir"] = os.getcwd()
 
-    result["output_dir"] = args.output
+    result["work_dir"] = args.output
     delattr(args, "output")
 
     result["instrument_files"] = [args.instruments]
@@ -268,9 +278,15 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def get_output_parquet_files_dir(import_config: PhenoImportConfig) -> Path:
-    parquet_dir = Path(import_config.output_dir) / "parquet"
+    parquet_dir = Path(import_config.work_dir) / "parquet"
     parquet_dir.mkdir(exist_ok=True)
     return parquet_dir
+
+
+def get_gpf_instance(config: PhenoImportConfig):
+    if config.gpf_instance is not None:
+        return GPFInstance.build(config.gpf_instance.path)
+    return GPFInstance.build()
 
 
 def import_pheno_data(
@@ -280,9 +296,34 @@ def import_pheno_data(
     force: bool = False,
 ) -> None:
     """Import pheno data into DuckDB."""
-    os.makedirs(config.output_dir, exist_ok=True)
+    os.makedirs(config.work_dir, exist_ok=True)
 
-    pheno_db_filename = os.path.join(config.output_dir, f"{config.id}.db")
+    data_copy_destination = None
+    config_copy_destination = None
+    destination_storage_id = None
+
+    if config.destination is not None:
+        destination_storage_id = config.destination.storage_id
+        gpf_instance = get_gpf_instance(config)
+
+        if destination_storage_id not in gpf_instance.phenotype_storages:
+            raise ValueError(
+                f"Phenotype storage {destination_storage_id} not found in"
+                "instance!",
+            )
+        storage = gpf_instance.phenotype_storages.get_phenotype_storage(
+            destination_storage_id,
+        )
+        config_copy_destination = Path(
+            get_pheno_db_dir(gpf_instance.dae_config),
+            config.id,
+            f"{config.id}.yaml",
+        )
+        data_copy_destination = (
+            storage.base_dir / config.id / f"{config.id}.db"
+        )
+
+    pheno_db_filename = os.path.join(config.work_dir, f"{config.id}.db")
 
     if os.path.exists(pheno_db_filename):
         if not force:
@@ -338,6 +379,7 @@ def import_pheno_data(
     task_cache = TaskCache.create(
         force=task_graph_args.force,
         cache_dir=task_graph_args.task_status_dir,
+        no_cache=task_graph_args.no_cache,
     )
 
     descriptions = load_descriptions(config.input_dir, config.data_dictionary)
@@ -388,10 +430,18 @@ def import_pheno_data(
             regressions = regression_config
 
     output_config = generate_phenotype_data_config(
-        config.id, pheno_db_filename, regressions)
+        config.id, destination_storage_id, regressions)
 
-    pheno_conf_path = Path(config.output_dir, f"{config.id}.yaml")
+    pheno_conf_path = Path(config.work_dir, f"{config.id}.yaml")
     pheno_conf_path.write_text(output_config)
+
+    if config_copy_destination:
+        config_copy_destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(pheno_conf_path, config_copy_destination)
+
+    if data_copy_destination:
+        data_copy_destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(pheno_db_filename, data_copy_destination)
 
 
 def handle_measure_inference_tasks(

@@ -63,6 +63,18 @@ class StudyConfig(BaseModel):
     regressions: str | dict[str, RegressionMeasure] | None = None
 
 
+class GPFInstanceConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    path: str
+
+
+class DestinationConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    storage_id: str
+
+
 class InstrumentConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -78,11 +90,13 @@ class PhenoImportConfig(BaseModel):
 
     id: str
     input_dir: str
-    output_dir: str
+    work_dir: str
     instrument_files: list[str | InstrumentConfig]
     pedigree: str
     person_column: str
     delimiter: str = ","
+    destination: DestinationConfig | None = None
+    gpf_instance: GPFInstanceConfig | None = None
     skip_pedigree_measures: bool = False
     inference_config: str | dict[str, InferenceConfig] | None = None
     data_dictionary: MeasureDescriptionsConfig | None = None
