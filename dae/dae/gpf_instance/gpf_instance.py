@@ -233,7 +233,7 @@ class GPFInstance:
         }
 
     @cached_property
-    def _pheno_storage_registry(self) -> PhenotypeStorageRegistry:
+    def phenotype_storages(self) -> PhenotypeStorageRegistry:
         registry = PhenotypeStorageRegistry()
 
         if "phenotype_storage" in self.dae_config:
@@ -268,7 +268,7 @@ class GPFInstance:
 
         pheno_cache_dir = self.get_cache_path("pheno")
         return PhenoRegistry(
-            self._pheno_storage_registry,
+            self.phenotype_storages,
             configurations=configurations,
             browser_cache_path=pheno_cache_dir,
         )
