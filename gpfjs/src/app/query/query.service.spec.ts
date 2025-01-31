@@ -311,6 +311,7 @@ describe('QueryService', () => {
     ];
 
     const genotypePreview = new GenotypePreview();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dataMap = new Map<string, any>();
     dataMap.set('source1', resMock[0]);
     dataMap.set('source2', resMock[1]);
@@ -350,6 +351,7 @@ describe('QueryService', () => {
     const resMock = [['14016']];
 
     const genotypePreview = new GenotypePreview();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dataMap = new Map<string, any>();
     dataMap.set('source1', resMock[0]);
 
