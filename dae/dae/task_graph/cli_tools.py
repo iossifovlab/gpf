@@ -58,11 +58,6 @@ class TaskGraphCli:
             default="./.task-log",
             help="Path to directory where to store tasks' logs",
         )
-        executor_group.add_argument(
-            "--no-cache",
-            action="store_true",
-            help="Do not create cache files for tasks",
-        )
         # task_cache
         execution_mode_group = parser.add_argument_group(
             title="Execution Mode")
@@ -83,6 +78,11 @@ class TaskGraphCli:
         execution_mode_group.add_argument(
             "--keep-going", default=False, action="store_true",
             help="Whether or not to keep executing in case of an error",
+        )
+        executor_group.add_argument(
+            "--no-cache",
+            action="store_true",
+            help="Do not create cache files for tasks",
         )
         if force_mode == "optional":
             execution_mode_group.add_argument(
