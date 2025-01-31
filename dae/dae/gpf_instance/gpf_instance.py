@@ -254,6 +254,13 @@ class GPFInstance:
 
         return registry
 
+    def get_pheno_cache_path(self) -> Path:
+        pheno_cache_dir = self.get_cache_path("pheno")
+        if pheno_cache_dir is None:
+            pheno_data_dir = get_pheno_db_dir(self.dae_config)
+            return Path(pheno_data_dir)
+        return pheno_cache_dir
+
     @cached_property
     def _pheno_registry(self) -> PhenoRegistry:
         pheno_data_dir = get_pheno_db_dir(self.dae_config)
@@ -265,12 +272,10 @@ class GPFInstance:
             GPFConfigParser.load_config_dict(file, pheno_conf_schema)
             for file in config_files
         ]
-
-        pheno_cache_dir = self.get_cache_path("pheno")
         return PhenoRegistry(
             self.phenotype_storages,
             configurations=configurations,
-            browser_cache_path=pheno_cache_dir,
+            browser_cache_path=self.get_pheno_cache_path(),
         )
 
     @cached_property
