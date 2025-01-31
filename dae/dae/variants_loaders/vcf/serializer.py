@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import pathlib
-from collections.abc import Sequence
+from collections.abc import Iterable
 from types import TracebackType
 
 import pysam
@@ -32,7 +32,7 @@ class VcfSerializer:
 
     def serialize(
         self,
-        full_variants: Sequence[tuple[SummaryVariant, list[FamilyVariant]]],
+        full_variants: Iterable[tuple[SummaryVariant, list[FamilyVariant]]],
     ) -> None:
         """Serialize a sequence of alleles to a VCF file."""
         assert self.vcf_file is not None
@@ -72,7 +72,8 @@ class VcfSerializer:
         for fv in fvs:
             fam = self.families[fv.family_id]
             for mem_index, mem in enumerate(fam.members_in_order):
-                record.samples[mem.sample_id]["GT"] = fv.genotype[mem_index]
+                gt = [g for g in fv.genotype[mem_index] if g > -2]
+                record.samples[mem.sample_id]["GT"] = gt
         return record
 
     def __enter__(self) -> VcfSerializer:
