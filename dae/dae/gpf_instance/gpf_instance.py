@@ -243,6 +243,9 @@ class GPFInstance:
 
         default_id = storages_config["default"]
         for storage_config in storages_config["storages"]:
+            storage_config["base_dir"] = str(Path(
+                self.dae_dir, storage_config["base_dir"],
+            ))
             storage = PhenotypeStorage.from_config(storage_config)
             if storage.storage_id == default_id:
                 registry.register_default_storage(storage)
