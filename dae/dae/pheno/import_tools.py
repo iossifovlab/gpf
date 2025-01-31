@@ -53,9 +53,9 @@ def main(argv: list[str] | None = None) -> int:
     if not input_dir.is_absolute():
         raw_config["input_dir"] = str(project_path.parent / input_dir)
 
-    output_dir = pathlib.Path(raw_config["output_dir"])
-    if not output_dir.is_absolute():
-        raw_config["output_dir"] = str(project_path.parent / output_dir)
+    work_dir = pathlib.Path(raw_config["work_dir"])
+    if not work_dir.is_absolute():
+        raw_config["work_dir"] = str(project_path.parent / work_dir)
 
     import_config = PhenoImportConfig.model_validate(raw_config)
     delattr(args, "project")
