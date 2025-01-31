@@ -6,30 +6,11 @@ import pytest
 
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.testing import (
-    setup_genome,
     setup_pedigree,
     setup_vcf,
 )
 from dae.pedigrees.loader import FamiliesLoader
 from dae.variants_loaders.vcf.loader import VcfLoader
-
-
-@pytest.fixture(scope="module")
-def genome(
-    tmp_path_factory: pytest.TempPathFactory,
-) -> ReferenceGenome:
-    root_path = tmp_path_factory.mktemp("genome")
-    return setup_genome(
-        root_path / "acgt_gpf" / "genome" / "allChr.fa",
-        f"""
-        >chr1
-        {25 * "ACGT"}
-        >chr2
-        {25 * "ACGT"}
-        >chr3
-        {25 * "ACGT"}
-        """,
-    )
 
 
 @pytest.fixture
@@ -103,7 +84,7 @@ def multivcf_ped(tmp_path_factory: pytest.TempPathFactory) -> str:
 
 
 def test_simple_vcf_loader_multi(
-    genome: ReferenceGenome,
+    acgt_genome: ReferenceGenome,
     multivcf_split1_vcf: str,
     multivcf_split2_vcf: str,
     multivcf_ped: str,
@@ -117,7 +98,7 @@ def test_simple_vcf_loader_multi(
     vcf_loader = VcfLoader(
         families,
         vcf_filenames,
-        genome,
+        acgt_genome,
         fill_missing_ref=False,
     )
     assert vcf_loader is not None
@@ -150,7 +131,7 @@ def test_vcf_loader_multi(
     multivcf_split2_vcf: str,
     multivcf_original_vcf: str,
     multivcf_ped: str,
-    genome: ReferenceGenome,
+    acgt_genome: ReferenceGenome,
 ) -> None:
     # pylint: disable=too-many-locals,invalid-name
 
@@ -159,13 +140,13 @@ def test_vcf_loader_multi(
 
     multi_vcf_loader = VcfLoader(
         families_multi, [multivcf_split1_vcf, multivcf_split2_vcf],
-        genome,
+        acgt_genome,
         fill_missing_ref=False,
     )
     assert multi_vcf_loader is not None
 
     single_loader = VcfLoader(
-        families, [multivcf_original_vcf], genome,
+        families, [multivcf_original_vcf], acgt_genome,
     )
     assert single_loader is not None
 
@@ -246,7 +227,7 @@ def test_multivcf_loader_fill_missing(
     multivcf_ped: str,
     multivcf_missing1: str,
     multivcf_missing2: str,
-    genome: ReferenceGenome,
+    acgt_genome: ReferenceGenome,
 ) -> None:
     # pylint: disable=too-many-locals
 
@@ -259,7 +240,7 @@ def test_multivcf_loader_fill_missing(
         "vcf_multi_loader_fill_in_mode": fill_mode,
     }
     multi_vcf_loader = VcfLoader(
-        families, multivcf_files, genome,
+        families, multivcf_files, acgt_genome,
         params=params,
     )
 
