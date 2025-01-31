@@ -62,12 +62,15 @@ class TaskCache:
         *,
         force: bool | None = None,
         cache_dir: str | None = None,
+        no_cache: bool = False,
     ) -> TaskCache:
         """Create the appropriate task cache."""
-        if force is None:
+        if no_cache:
             # the force_mode is set to 'always'
             return NoTaskCache()
 
+        if force is None:
+            force = False
         if cache_dir is None:
             cache_dir = os.getcwd()
         return FileTaskCache(force=force, cache_dir=cache_dir)
