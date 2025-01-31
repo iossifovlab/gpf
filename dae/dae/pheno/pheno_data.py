@@ -24,7 +24,7 @@ from dae.variants.attributes import Role
 logger = logging.getLogger(__name__)
 
 
-def get_pheno_db_dir(dae_config: Box | None) -> str:
+def get_pheno_db_dir(dae_config: dict | None) -> str:
     """Return the directory where phenotype data configurations are located."""
     if dae_config is not None:
         if dae_config.phenotype_data is None or \
@@ -40,18 +40,22 @@ def get_pheno_db_dir(dae_config: Box | None) -> str:
     return pheno_data_dir
 
 
-def get_pheno_browser_images_dir(dae_config: Box | None = None) -> str:
+def get_pheno_browser_images_dir(dae_config: dict | None = None) -> Path:
     """Get images directory for pheno DB."""
-    pheno_db_dir = os.environ.get(
-        "DAE_PHENODB_DIR",
-        get_pheno_db_dir(dae_config),
-    )
-    browser_images_path = os.path.join(pheno_db_dir, "images")
-    if not os.path.exists(browser_images_path):
-        logger.error(
-            "Pheno images path %s does not exist!", browser_images_path,
-        )
-    return browser_images_path
+    if dae_config is None:
+        pheno_data_dir = get_pheno_db_dir(dae_config)
+        return Path(pheno_data_dir, "images")
+    images_dir = dae_config.get("phenotype_images")
+    if images_dir is not None:
+        return images_dir
+
+    cache_dir = dae_config.get("cache_path")
+    if cache_dir is None:
+        images_path = Path(get_pheno_db_dir(dae_config), "images")
+    else:
+        images_path = Path(cache_dir, "images")
+
+    return images_path
 
 
 class Instrument:
