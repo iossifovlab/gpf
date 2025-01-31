@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from box import Box
 
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pheno.browser import PhenoBrowser
 from dae.pheno.common import MeasureType
 from dae.pheno.graphs import (
@@ -23,10 +24,11 @@ from dae.pheno.pheno_data import (
     PhenotypeGroup,
     PhenotypeStudy,
     get_pheno_browser_images_dir,
+    get_pheno_db_dir,
 )
 from dae.pheno.pheno_import import IMPORT_METADATA_TABLE, ImportManifest
 from dae.pheno.registry import PhenoRegistry
-from dae.pheno.storage import PhenotypeStorage, PhenotypeStorageRegistry
+from dae.pheno.storage import PhenotypeStorageRegistry
 from dae.task_graph.cli_tools import TaskCache, TaskGraphCli
 from dae.task_graph.executor import task_graph_run_with_results
 from dae.task_graph.graph import TaskGraph
@@ -46,12 +48,14 @@ class PreparePhenoBrowserBase:
 
     def __init__(
         self,
+        gpf_instance: GPFInstance,
         phenotype_data: PhenotypeData,
         browser: PhenoBrowser,
         output_dir: Path,
         pheno_regressions: Box | None = None,
         images_dir: Path | None = None,
     ) -> None:
+        self.gpf_instance = gpf_instance
         assert output_dir.exists()
         self.output_dir = output_dir
         if images_dir is None:
@@ -349,19 +353,21 @@ class PreparePhenoBrowserBase:
 
         graph = TaskGraph()
 
-        storage_dir = kwargs.get("pheno_storage_dir") or kwargs["pheno_dir"]
-        cache_dir = kwargs.get("cache_dir") or kwargs["pheno_dir"]
+        cache_dir = self.gpf_instance.get_pheno_cache_path()
+        pheno_dir = get_pheno_db_dir(self.gpf_instance.dae_config)
+        self.images_dir = cache_dir / "images"
 
         for instrument in list(self.phenotype_data.instruments.values()):
             for measure in list(instrument.measures.values()):
                 self.add_measure_task(
-                    graph, measure,
-                    storage_dir, cache_dir, kwargs["pheno_dir"],
+                    graph, measure, pheno_dir,
+                    self.gpf_instance.phenotype_storages, str(cache_dir),
                 )
 
         task_cache = TaskCache.create(
             force=kwargs.get("force"),
             cache_dir=kwargs.get("task_status_dir"),
+            no_cache=kwargs.get("no_cache", False),
         )
 
         with TaskGraphCli.create_executor(task_cache, **kwargs) as xtor:
@@ -435,7 +441,7 @@ class PreparePhenoBrowserBase:
     def add_measure_task(
         self, graph: TaskGraph, measure: Measure,
         pheno_dir: str,
-        storage_dir: str,
+        storage_registry: PhenotypeStorageRegistry,
         cache_dir: str,
     ) -> None:
         """Add task for building browser data to the task graph."""
@@ -446,10 +452,10 @@ class PreparePhenoBrowserBase:
             [
                 self.pheno_id,
                 measure,
+                storage_registry,
                 self.images_dir,
                 regression_measures,
                 pheno_dir,
-                storage_dir,
                 cache_dir,
             ],
             [],
@@ -460,20 +466,14 @@ class PreparePhenoBrowserBase:
         cls,
         pheno_id: str,
         measure: Measure,
+        storage_registry: PhenotypeStorageRegistry,
         images_dir: str,
         regression_measures: dict[str, tuple[Box, Measure]],
         pheno_dir: str,
-        storage_dir: str,
         cache_dir: str,
     ) -> tuple[dict[str, Any], list[dict[str, Any]] | None]:
         """Create images and regressions for a given measure."""
         configs = PhenoRegistry.load_configurations(pheno_dir)
-        storage_registry = PhenotypeStorageRegistry()
-        storage = PhenotypeStorage.from_config({
-            "id": "build_pheno_browser_storage",
-            "base_dir": storage_dir,
-        })
-        storage_registry.register_default_storage(storage)
         registry = PhenoRegistry(
             storage_registry, configurations=configs,
             browser_cache_path=Path(cache_dir),

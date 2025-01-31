@@ -6,12 +6,11 @@ from typing import Any
 
 from box import Box
 
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pheno.browser import PhenoBrowser
 from dae.pheno.pheno_data import PhenotypeData
 from dae.pheno.pheno_import import IMPORT_METADATA_TABLE, ImportManifest
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
-from dae.pheno.registry import PhenoRegistry
-from dae.pheno.storage import PhenotypeStorage, PhenotypeStorageRegistry
 from dae.task_graph.cli_tools import TaskGraphCli
 
 logger = logging.getLogger(__name__)
@@ -24,28 +23,10 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
-        "pheno_dir",
-        help=("Path to pheno directory. This is the directory which"
-              " contains ALL phenotype data configurations for an instance."),
-    )
-    parser.add_argument(
-        "--pheno_storage_dir",
+        "gpf_instance",
         help=(
-            "Path to pheno storage. This is the directory containing"
-            "phenotype databases. By default will be the same as pheno_dir."),
-    )
-    parser.add_argument(
-        "--cache_dir",
-        help=(
-            "Path to pheno cache dir, where browser data will be saved."
-            "By default will be the same as pheno_dir."),
-    )
-    parser.add_argument(
-        "--images_dir",
-        help=(
-            "Path to pheno images dir, "
-            "where browser images data will be saved."
-            "By default will be the same as pheno_dir."),
+            "Path to GPF instance configuration to use for cache and images."
+        ),
     )
     parser.add_argument(
         "--phenotype-data-id",
@@ -94,6 +75,7 @@ def must_rebuild(pheno_data: PhenotypeData, browser: PhenoBrowser) -> bool:
 
 
 def build_pheno_browser(
+    gpfi: GPFInstance,
     pheno_data: PhenotypeData,
     pheno_regressions: Box | None = None,
     **kwargs: dict[str, Any],
@@ -109,7 +91,9 @@ def build_pheno_browser(
     rebuild = must_rebuild(pheno_data, browser)
     if (rebuild or kwargs["force"]) and not kwargs["dry_run"]:
         prep = PreparePhenoBrowserBase(
-            pheno_data, browser, pheno_data_dir, pheno_regressions, images_dir)
+            gpfi, pheno_data, browser, pheno_data_dir,
+            pheno_regressions, images_dir,
+        )
         prep.run(**kwargs)
     else:
         if not rebuild:
@@ -124,32 +108,19 @@ def main(argv: list[str] | None = None) -> int:
 
     parser = pheno_cli_parser()
     args = parser.parse_args(argv)
-    if args.pheno_dir is None:
-        raise ValueError("Missing phenotype directory argument.")
-
+    if args.gpf_instance is None:
+        raise ValueError("Missing GPF instance configuration!")
     if args.phenotype_data_id is None:
         raise ValueError("Missing phenotype data ID argument.")
 
-    storage_dir = args.pheno_storage_dir or args.pheno_dir
-    cache_dir = args.cache_dir or args.pheno_dir
+    gpfi = GPFInstance.build(args.gpf_instance)
 
-    configs = PhenoRegistry.load_configurations(args.pheno_dir)
-    storage_registry = PhenotypeStorageRegistry()
-    storage = PhenotypeStorage.from_config({
-        "id": "build_pheno_browser_storage",
-        "base_dir": storage_dir,
-    })
-    storage_registry.register_default_storage(storage)
-    registry = PhenoRegistry(
-        storage_registry, configurations=configs,
-        browser_cache_path=Path(cache_dir),
-    )
-    pheno_data = registry.get_phenotype_data(args.phenotype_data_id)
+    pheno_data = gpfi.get_phenotype_data(args.phenotype_data_id)
     kwargs = vars(args)
 
     regressions = pheno_data.config.get("regression")
 
-    build_pheno_browser(pheno_data, regressions, **kwargs)
+    build_pheno_browser(gpfi, pheno_data, regressions, **kwargs)
 
     return 0
 
