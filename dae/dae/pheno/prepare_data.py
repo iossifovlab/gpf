@@ -355,7 +355,6 @@ class PreparePhenoBrowserBase:
 
         cache_dir = self.gpf_instance.get_pheno_cache_path()
         pheno_dir = get_pheno_db_dir(self.gpf_instance.dae_config)
-        self.images_dir = cache_dir / "images"
 
         for instrument in list(self.phenotype_data.instruments.values()):
             for measure in list(instrument.measures.values()):

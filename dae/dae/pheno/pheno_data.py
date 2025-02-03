@@ -47,7 +47,7 @@ def get_pheno_browser_images_dir(dae_config: dict | None = None) -> Path:
         return Path(pheno_data_dir, "images")
     images_dir = dae_config.get("phenotype_images")
     if images_dir is not None:
-        return images_dir
+        return Path(images_dir)
 
     cache_dir = dae_config.get("cache_path")
     if cache_dir is None:

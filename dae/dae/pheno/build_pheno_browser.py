@@ -8,7 +8,7 @@ from box import Box
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pheno.browser import PhenoBrowser
-from dae.pheno.pheno_data import PhenotypeData
+from dae.pheno.pheno_data import PhenotypeData, get_pheno_browser_images_dir
 from dae.pheno.pheno_import import IMPORT_METADATA_TABLE, ImportManifest
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.task_graph.cli_tools import TaskGraphCli
@@ -83,12 +83,11 @@ def build_pheno_browser(
     """Calculate and save pheno browser values to db."""
 
     pheno_data_dir = Path(pheno_data.config["conf_dir"])
-    images_dir = pheno_data_dir / "images"
-    images_dir.mkdir(exist_ok=True)
     browser = PhenotypeData.create_browser(
         pheno_data, read_only=False,
     )
     rebuild = must_rebuild(pheno_data, browser)
+    images_dir = get_pheno_browser_images_dir(gpfi.dae_config)
     if (rebuild or kwargs["force"]) and not kwargs["dry_run"]:
         prep = PreparePhenoBrowserBase(
             gpfi, pheno_data, browser, pheno_data_dir,
