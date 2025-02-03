@@ -4,6 +4,11 @@
 import logging
 import os
 
+from gpf_instance.gpf_instance import get_wgpf_instance_path
+
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.dae_conf import dae_conf_schema
+
 DEBUG = os.environ.get("WDAE_DEBUG", "False") == "True"
 
 
@@ -22,6 +27,12 @@ DISABLE_PERMISSIONS = False
 SITE_URL = "localhost"
 
 BASE_DIR = os.path.dirname(__file__)
+
+GPF_INSTANCE_CONFIG_PATH = get_wgpf_instance_path() / "gpf_instance.yaml"
+
+GPF_INSTANCE_CONFIG = GPFConfigParser.load_config_dict(
+    str(GPF_INSTANCE_CONFIG_PATH), dae_conf_schema,
+)
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
