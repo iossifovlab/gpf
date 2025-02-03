@@ -1,21 +1,67 @@
 Getting Started with Phenotype Data
 ###################################
 
-Simple Pheno Import Tool
-++++++++++++++++++++++++
+Setting up the GPF instance phenotype database
+++++++++++++++++++++++++++++++++++++++++++++++
 
-The GPF simple pheno import tool prepares phenotype data to be used by the GPF
-system.
+The GPF instance has 4 different configuration settings that determine how phenotype data is read
+and stored. The most important is the **phenotype data directory**, which is where the phenotype data
+configurations are. If not specified, will attempt to look for the environment variable `DAE_PHENODB_DIR`,
+and if not found will default to the directory `pheno` inside the GPF instance directory.
 
-As an example, we are going to show how to import simulated phenotype 
-data into our GPF instance.
+**Phenotype storages** can be configured to tell the GPF instance where to look for phenotype
+data DB files. If no phenotype storages are defined, a default phenotype storage is used,
+which uses the **phenotype data directory**
 
-Download the archive and extract it outside of the GPF instance data directory:
+The **cache** option can be configured to tell the GPF instance and GPF tools where to
+store generated phenotype browser data. Data will be stored inside the `<cache_dir>/pheno` directory.
+
+The **phenotype images** option can be configured to tell the GPF instance and GPF tools
+where to store generated phenotype browser images.
+
+Example of an empty GPF instance with these properties configured.
+
+.. code-block:: yaml
+
+    instance_id: minimal_instance
+
+    reference_genome:
+        resource_id: "hg38/genomes/GRCh38-hg38"
+
+    gene_models:
+        resource_id: "hg38/gene_models/refSeq_v20200330"
+
+    phenotype_data: /data/pheno_configs
+
+    phenotype_images: /data/pheno_images
+
+    cache_path: /data/cache
+
+    phenotype_storage:
+        default: data_storage
+        storages:
+        - id: data_storage
+          base_dir: /data/pheno_db
+
+
+Working with import_phenotypes
+++++++++++++++++++++++++++++++
+
+To import phenotype data, the `import_phenotypes` tool is used.
+
+The tool requires an **import project**, a YAML file describing the
+contents of the phenotype data to be imported, along with configuration options
+on how to import them.
+
+As an example, we are going to show how to import simulated phenotype
+data into our GPF instance using the mini-pheno repository.
+
+Clone the mini-pheno repository.
 
 .. code::
 
-    wget -c https://iossifovlab.com/distribution/public/pheno/phenotype-comp-data-latest.tar.gz
-    tar zxvf phenotype-comp-data-latest.tar.gz
+   git clone git@github.com:iossifovlab/mini-pheno.git
+
 
 Navigate to the newly created ``comp-data`` directory::
 
