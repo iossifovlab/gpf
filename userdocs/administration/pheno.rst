@@ -27,9 +27,9 @@ Import project configuration format
     # If omitted, the directory in which the config is located will be considered as the input dir.
     input_dir: /home/user/pheno_data
 
-    # Required. The directory in which to produce the output.
+    # Required. The directory in which to produce the output files.
     # Accepts both relative and absolute paths. Relative paths will be resolved from the location of the import configuration.
-    output_dir: /home/user/pheno_result
+    work_dir: /home/user/pheno_result
 
     # Required. A list of string paths or nested configurations; these will be the sources from which instruments are read.
     # * String paths can be files, directories or glob-style patterns with wildcards. Valid instrument files are files which
@@ -100,6 +100,18 @@ Import project configuration format
         skip: false
         measure_type: null
 
+    # Optional. Specifies a path to a GPF instance configuration to use.
+    # The GPF instance will be used if a destination storage has been set (see below).
+    # If this field is omitted, the tool will attempt to use the $DAE_DB_DIR environment variable
+    # to find an instance.
+    gpf_instance:
+      path: "/home/user/instance/gpf_instance.yaml"
+
+    # Optional. If specified, will copy the output data into the provided storage.
+    # Requires a GPF instance to be configured (see above).
+    destination:
+      storage_id: "pheno_storage_1"
+
     # Optional. The contents of this section will be written to the output data's config file.
     study_config:
       # A dictionary of measures against which to calculate regressions with other measures in the study.
@@ -125,7 +137,7 @@ as well as parameters relating to the usage of Dask:
 
 .. runblock:: console
 
-    $ import_tools_pheno --help
+    $ import_phenotypes --help
 
 Importing via ``pheno_import`` tool
 ***********************************
