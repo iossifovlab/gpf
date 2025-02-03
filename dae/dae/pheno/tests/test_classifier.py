@@ -109,6 +109,13 @@ def test_classify_default_categorical() -> None:
     ]
 
 
+def test_classify_default_limit_many_values_in_values_domain() -> None:
+    values: list[str | None] = [f"id-{i}" for i in range(1, 100)]
+    config = InferenceConfig()
+    _, report = inference_reference_impl(values, config)
+    assert len(report.values_domain.split(",")) == 20
+
+
 def test_classify_all_none() -> None:
     values: list[str | None] = [
         None, None, None, None,
