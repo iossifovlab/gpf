@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 from box import Box
 
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pheno.browser import PhenoBrowser
 from dae.pheno.common import MeasureType
 from dae.pheno.graphs import (
@@ -23,8 +22,6 @@ from dae.pheno.pheno_data import (
     PhenotypeData,
     PhenotypeGroup,
     PhenotypeStudy,
-    get_pheno_browser_images_dir,
-    get_pheno_db_dir,
 )
 from dae.pheno.pheno_import import IMPORT_METADATA_TABLE, ImportManifest
 from dae.pheno.registry import PhenoRegistry
@@ -48,22 +45,23 @@ class PreparePhenoBrowserBase:
 
     def __init__(
         self,
-        gpf_instance: GPFInstance,
+        pheno_db_dir: Path,
+        storage_registry: PhenotypeStorageRegistry,
         phenotype_data: PhenotypeData,
         browser: PhenoBrowser,
-        output_dir: Path,
-        pheno_regressions: Box | None = None,
+        cache_dir: Path | None = None,
         images_dir: Path | None = None,
+        pheno_regressions: Box | None = None,
     ) -> None:
-        self.gpf_instance = gpf_instance
-        assert output_dir.exists()
-        self.output_dir = output_dir
+        self.pheno_db_dir = pheno_db_dir
+        self.storage_registry = storage_registry
+        if cache_dir is None:
+            cache_dir = self.pheno_db_dir
+        self.cache_dir = cache_dir
         if images_dir is None:
-            images_dir = Path(get_pheno_browser_images_dir())
+            images_dir = self.pheno_db_dir / "images"
         if not images_dir.exists():
             images_dir.mkdir(exist_ok=True)
-
-        assert os.path.exists(images_dir)
 
         self.images_dir = images_dir
 
@@ -353,14 +351,11 @@ class PreparePhenoBrowserBase:
 
         graph = TaskGraph()
 
-        cache_dir = self.gpf_instance.get_pheno_cache_path()
-        pheno_dir = get_pheno_db_dir(self.gpf_instance.dae_config)
-
         for instrument in list(self.phenotype_data.instruments.values()):
             for measure in list(instrument.measures.values()):
                 self.add_measure_task(
-                    graph, measure, pheno_dir,
-                    self.gpf_instance.phenotype_storages, str(cache_dir),
+                    graph, measure, str(self.pheno_db_dir),
+                    self.storage_registry, str(self.cache_dir),
                 )
 
         task_cache = TaskCache.create(
