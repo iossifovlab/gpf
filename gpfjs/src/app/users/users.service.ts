@@ -165,9 +165,12 @@ export class UsersService {
         return response.map(user => {
           const usr = User.fromJson(user);
           // Finding and fixing duplicate dataset names
-          usr.allowedDatasets.forEach((d, index) => {
-            if (usr.allowedDatasets.indexOf(d) !== index) {
-              d.datasetName += `(${d.datasetId})`;
+          usr.allowedDatasets.forEach(dataset => {
+            const allOccurences = usr.allowedDatasets.filter(d => d.datasetName === dataset.datasetName);
+            if (allOccurences.length > 1) {
+              allOccurences.forEach(d => {
+                d.datasetName += `(${d.datasetId})`;
+              });
             }
           });
           return usr;
