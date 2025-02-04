@@ -30,7 +30,6 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "phenotype_data_id",
-        required=True,
         help="ID of the phenotype data to build a browser database for.",
     )
     parser.add_argument(
