@@ -23,11 +23,12 @@ class VcfSerializer:
             families: FamiliesData,
             genome: ReferenceGenome,
             output_path: pathlib.Path,
+            header: list[str] | None = None,
     ):
         self.families = families
         self.genome = genome
         self.output_path = output_path
-        self._vcf_header = self._build_vcf_header()
+        self._vcf_header = self._build_vcf_header(header)
         self.vcf_file: pysam.VariantFile | None = None
 
     def serialize(
@@ -40,21 +41,25 @@ class VcfSerializer:
             record = self._build_vcf_record(sv, fvs)
             self.vcf_file.write(record)
 
-    def _build_vcf_header(self) -> pysam.VariantHeader:
-        header = pysam.VariantHeader()
+    def _build_vcf_header(
+        self, header: list[str] | None,
+    ) -> pysam.VariantHeader:
+        vcf_header = pysam.VariantHeader()
+        if header is not None:
+            for line in header:
+                vcf_header.add_line(line)
         for contig in self.genome.chromosomes:
-            header.contigs.add(contig)
+            vcf_header.contigs.add(contig)
         for fam in self.families.values():
             for p in fam.members_in_order:
-                header.add_sample(p.sample_id)
-        header.formats.add("GT", 1, "String", "Genotype")
+                vcf_header.add_sample(p.sample_id)
+        vcf_header.formats.add("GT", 1, "String", "Genotype")
 
-        return header
+        return vcf_header
 
     def _build_vcf_file(self) -> pysam.VariantFile:
-        header = self._build_vcf_header()
         return pysam.VariantFile(
-            str(self.output_path), "w", header=header,
+            str(self.output_path), "w", header=self._vcf_header,
         )
 
     def _build_vcf_record(

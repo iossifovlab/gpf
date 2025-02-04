@@ -79,6 +79,9 @@ def main(
         families,
         genome,
         pathlib.Path(args.output),
+        header=[
+            f"##source=denovo2vcf {' '.join(argv)}",
+        ],
     )
 
     with vcf_serializer as serializer:
