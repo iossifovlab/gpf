@@ -225,7 +225,7 @@ EOT
                 pip install -e "'"${d}"'"'
         done
 
-        build_run_detached ctx:ctx_dae bash -c '
+        build_run ctx:ctx_dae bash -c '
             cd /wd/dae;
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
@@ -258,7 +258,7 @@ EOT
 
         build_run_attach 
 
-        build_run_detached ctx:ctx_dae_integ bash -c '
+        build_run ctx:ctx_dae_integ bash -c '
             cd /wd/dae/tests;
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
@@ -290,7 +290,7 @@ EOT
                 pip install -e "'"${d}"'"'
         done
 
-        build_run_detached ctx:ctx_wdae bash -c '
+        build_run ctx:ctx_wdae bash -c '
             cd /wd/wdae;
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
@@ -322,7 +322,7 @@ EOT
                 pip install -e "'"${d}"'"'
         done
 
-        build_run_detached ctx:ctx_demo bash -c '
+        build_run ctx:ctx_demo bash -c '
             cd /wd/external_demo_annotator;
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
@@ -353,7 +353,7 @@ EOT
                 pip install -e "'"${d}"'"'
         done
 
-        build_run_detached ctx:ctx_vep bash -c '
+        build_run ctx:ctx_vep bash -c '
             cd /wd/external_vep_annotator;
             export PYTHONHASHSEED=0;
             /opt/conda/bin/conda run --no-capture-output -n gpf py.test -v \
