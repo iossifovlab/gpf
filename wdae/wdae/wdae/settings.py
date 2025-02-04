@@ -4,7 +4,6 @@
 # pylint: disable=wildcard-import,unused-wildcard-import
 import os
 
-from gpf_instance.gpf_instance import get_wgpf_instance_path
 from .default_settings import *
 
 from dae.pheno.pheno_data import get_pheno_browser_images_dir

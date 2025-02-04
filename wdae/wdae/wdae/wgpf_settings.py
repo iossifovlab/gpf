@@ -8,6 +8,8 @@ from gpf_instance.gpf_instance import get_wgpf_instance_path
 
 from .default_settings import *
 
+from dae.pheno.pheno_data import get_pheno_browser_images_dir
+
 DEBUG = True
 LOGGING_CONFIG = None
 
@@ -31,6 +33,13 @@ CORS_ALLOW_CREDENTIALS = True
 
 OPEN_REGISTRATION = False
 DISABLE_PERMISSIONS = True
+
+PHENO_BROWSER_CACHE = get_pheno_browser_images_dir(GPF_INSTANCE_CONFIG)
+
+# Additional locations of static files
+STATICFILES_DIRS = (
+    ("images", PHENO_BROWSER_CACHE),
+)
 
 ########################################################
 
