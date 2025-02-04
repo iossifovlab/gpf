@@ -186,6 +186,9 @@ def main(argv: list[str] | None = None) -> int:
         )
 
     regressions = pheno_data.config.get("regression")
+    del kwargs["pheno_db_dir"]
+    del kwargs["cache_dir"]
+    del kwargs["images_dir"]
 
     build_pheno_browser(
         pheno_db_dir, storage_registry, pheno_data,
