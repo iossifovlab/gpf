@@ -213,7 +213,7 @@ def setup_t4c8_grr(
     )
 
     cli_manage([
-        "repo-repair", "-R", str(repo_path), "-j", "1"])
+        "repo-repair", "-R", str(repo_path), "-j", "1", "--no-cache"])
 
     return build_genomic_resource_repository({
         "id": "t4c8_local",
