@@ -12,6 +12,7 @@ import yaml
 from box import Box
 
 from dae.annotation.annotation_factory import (
+    RawPipelineConfig,
     build_annotation_pipeline,
 )
 from dae.annotation.annotation_pipeline import AnnotationPipeline
@@ -559,11 +560,18 @@ class GPFInstance:
                     "worst_effect",
                     "gene_effects",
                     "effect_details",
+                    {
+                        "source": "gene_list",
+                        "name": "gene_list",
+                        "internal": True,
+                    },
                 ],
             },
         }
 
-    def get_annotation_pipeline_config(self) -> list[dict[str, Any]]:
+    def get_annotation_pipeline_config(
+        self,
+    ) -> RawPipelineConfig:
         """Return the annotation pipeline config."""
         pipeline_config = []
         if self.dae_config.annotation is not None:
@@ -574,10 +582,18 @@ class GPFInstance:
 
             with open(config_filename, "rt", encoding="utf8") as infile:
                 pipeline_config = yaml.safe_load(infile.read())
-
-        pipeline_config.insert(
-            0, self._construct_import_effect_annotator_config())
-        return pipeline_config
+        if isinstance(pipeline_config, dict):
+            annotators = pipeline_config.get("annotators", [])
+            annotators.insert(
+                0, self._construct_import_effect_annotator_config())
+        elif isinstance(pipeline_config, list):
+            pipeline_config.insert(
+                0, self._construct_import_effect_annotator_config())
+        else:
+            raise TypeError(
+                f"unexpected annotation pipeline config: "
+                f"{pipeline_config}")
+        return cast(RawPipelineConfig, pipeline_config)
 
     def get_annotation_pipeline(self) -> AnnotationPipeline:
         """Return the annotation pipeline configured in the GPF instance."""

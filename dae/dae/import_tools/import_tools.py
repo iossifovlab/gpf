@@ -17,6 +17,7 @@ from box import Box
 
 from dae.annotation.annotation_factory import (
     AnnotationPipeline,
+    RawPipelineConfig,
     build_annotation_pipeline,
 )
 from dae.configuration.gpf_config_parser import GPFConfigParser
@@ -621,7 +622,7 @@ class ImportProject:
 
     def get_annotation_pipeline_config(
         self,
-    ) -> list[dict]:
+    ) -> RawPipelineConfig:
         """Return the annotation pipeline configuration."""
         gpf_instance = self.get_gpf_instance()
         if "annotation" not in self.import_config:
@@ -874,7 +875,7 @@ def save_study_config(
 def construct_import_annotation_pipeline_config(
     gpf_instance: GPFInstance,
     annotation_configfile: str | None = None,
-) -> list[dict]:
+) -> RawPipelineConfig:
     """Construct annotation pipeline config for importing data."""
     if annotation_configfile is not None:
         assert os.path.exists(annotation_configfile), annotation_configfile
