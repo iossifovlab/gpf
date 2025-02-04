@@ -34,33 +34,23 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--gpf-instance",
-        help=(
-            "Path to GPF instance configuration to use for cache and images."
-        ),
+        help=("Path to GPF instance configuration to use for cache and images."),
     )
     parser.add_argument(
         "--pheno-db-dir",
-        help=(
-            "Path to pheno DB dir to use."
-        ),
+        help=("Path to pheno DB dir to use."),
     )
     parser.add_argument(
         "--storage-dir",
-        help=(
-            "Path to phenotype storage to use."
-        ),
+        help=("Path to phenotype storage to use."),
     )
     parser.add_argument(
         "--cache-dir",
-        help=(
-            "Path to output generated cache DB."
-        ),
+        help=("Path to output generated cache DB."),
     )
     parser.add_argument(
         "--images-dir",
-        help=(
-            "Path to output images."
-        ),
+        help=("Path to output images."),
     )
     parser.add_argument(
         "-n",
@@ -77,8 +67,9 @@ def must_rebuild(pheno_data: PhenotypeData, browser: PhenoBrowser) -> bool:
     """Check if a rebuild is required according to manifests."""
     manifests = {
         manifest.import_config.id: manifest
-        for manifest in
-        ImportManifest.from_table(browser.connection, IMPORT_METADATA_TABLE)
+        for manifest in ImportManifest.from_table(
+            browser.connection, IMPORT_METADATA_TABLE
+        )
     }
 
     if len(manifests) == 0:
@@ -87,8 +78,7 @@ def must_rebuild(pheno_data: PhenotypeData, browser: PhenoBrowser) -> bool:
 
     pheno_data_manifests = {
         manifest.import_config.id: manifest
-        for manifest in
-        ImportManifest.from_phenotype_data(pheno_data)
+        for manifest in ImportManifest.from_phenotype_data(pheno_data)
     }
     if len(set(manifests).symmetric_difference(pheno_data_manifests)) > 0:
         logger.warning("Manifest count mismatch between input and browser")
@@ -115,13 +105,18 @@ def build_pheno_browser(
     """Calculate and save pheno browser values to db."""
 
     browser = PhenotypeData.create_browser(
-        pheno_data, read_only=False,
+        pheno_data,
+        read_only=False,
     )
     rebuild = must_rebuild(pheno_data, browser)
     if (rebuild or kwargs["force"]) and not kwargs["dry_run"]:
         prep = PreparePhenoBrowserBase(
-            pheno_db_dir, storage_registry, pheno_data, browser,
-            cache_dir, images_dir,
+            pheno_db_dir,
+            storage_registry,
+            pheno_data,
+            browser,
+            cache_dir,
+            images_dir,
             pheno_regressions=pheno_regressions,
         )
         prep.run(**kwargs)
@@ -143,15 +138,7 @@ def main(argv: list[str] | None = None) -> int:
 
     kwargs = vars(args)
 
-    if args.gpf_instance is not None:
-        gpfi = GPFInstance.build(args.gpf_instance)
-
-        pheno_data = gpfi.get_phenotype_data(args.phenotype_data_id)
-        pheno_db_dir = Path(get_pheno_db_dir(gpfi.dae_config))
-        storage_registry = gpfi.phenotype_storages
-        cache_dir = gpfi.get_pheno_cache_path()
-        images_dir = get_pheno_browser_images_dir(gpfi.dae_config)
-    elif args.pheno_db_dir is not None:
+    if args.pheno_db_dir is not None:
         pheno_db_dir = Path(args.pheno_db_dir)
         storage_registry = PhenotypeStorageRegistry()
         storage_config = {"id": "default_storage"}
@@ -179,11 +166,14 @@ def main(argv: list[str] | None = None) -> int:
             ),
         )
         pheno_data = registry.get_phenotype_data(args.phenotype_data_id)
-
     else:
-        raise ValueError(
-            "Provide either a phenotype DB directory or a GPF instance!",
-        )
+        gpfi = GPFInstance.build(args.gpf_instance)
+
+        pheno_data = gpfi.get_phenotype_data(args.phenotype_data_id)
+        pheno_db_dir = Path(get_pheno_db_dir(gpfi.dae_config))
+        storage_registry = gpfi.phenotype_storages
+        cache_dir = gpfi.get_pheno_cache_path()
+        images_dir = get_pheno_browser_images_dir(gpfi.dae_config)
 
     regressions = pheno_data.config.get("regression")
     del kwargs["pheno_db_dir"]
@@ -191,8 +181,11 @@ def main(argv: list[str] | None = None) -> int:
     del kwargs["images_dir"]
 
     build_pheno_browser(
-        pheno_db_dir, storage_registry, pheno_data,
-        cache_dir, images_dir,
+        pheno_db_dir,
+        storage_registry,
+        pheno_data,
+        cache_dir,
+        images_dir,
         pheno_regressions=regressions,
         **kwargs,
     )
