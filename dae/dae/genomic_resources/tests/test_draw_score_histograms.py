@@ -17,7 +17,7 @@ from dae.genomic_resources.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def proto_fixture(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[pathlib.Path, FsspecReadWriteProtocol]:
@@ -60,7 +60,9 @@ def test_draw_score_histograms(
 
     assert not (path / "one/statistics/histogram_phastCons100way.png").exists()
     cli_manage([
-        "resource-repair", "-R", str(path), "-r", "one", "-j", "1"])
+        "resource-repair", "-R", str(path), "-r", "one", "-j", "1",
+        "--no-cache",
+    ])
     assert (path / "one/statistics/histogram_phastCons100way.png").exists()
 
     proto.filesystem.delete(

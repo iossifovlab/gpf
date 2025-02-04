@@ -14,7 +14,7 @@ from dae.genomic_resources.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def proto_fixture(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[pathlib.Path, FsspecReadWriteProtocol]:
@@ -85,13 +85,17 @@ def test_resource_info(
     path, _proto = proto_fixture
     assert not (path / "one/index.html").exists()
 
-    cli_manage(["resource-info", "-R", str(path), "-r", "one", "-j", "1"])
+    cli_manage([
+        "resource-info", "-R", str(path), "-r", "one", "-j", "1", "--no-cache",
+    ])
 
     assert (path / "one/index.html").exists()
     assert not (path / "two/index.html").exists()
     assert not (path / "index.html").exists()
 
-    cli_manage(["resource-info", "-R", str(path), "-r", "two", "-j", "1"])
+    cli_manage([
+        "resource-info", "-R", str(path), "-r", "two", "-j", "1", "--no-cache",
+    ])
 
     assert (path / "one/index.html").exists()
     assert (path / "two/index.html").exists()
@@ -114,7 +118,7 @@ def test_repo_info(
 
     assert not (path / "one/index.html").exists()
 
-    cli_manage(["repo-info", "-R", str(path), "-j", "1"])
+    cli_manage(["repo-info", "-R", str(path), "-j", "1", "--no-cache"])
 
     assert (path / "one/index.html").exists()
     assert (path / "two/index.html").exists()

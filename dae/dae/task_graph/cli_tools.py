@@ -147,7 +147,10 @@ class TaskGraphCli:
 
         force = None if force_mode == "always" else args.get("force")
         task_cache = TaskCache.create(
-            force=force, cache_dir=args.get("task_status_dir"))
+            force=force,
+            cache_dir=args.get("task_status_dir"),
+            no_cache=args.get("no_cache"),
+        )
 
         if args.command is None or args.command == "run":
             if task_graph_all_done(task_graph, task_cache):
