@@ -139,7 +139,7 @@ def test_write_and_read_manifest(
     import_config = PhenoImportConfig(
         id="asdf",
         input_dir="test",
-        output_dir="test1",
+        work_dir="test1",
         instrument_files=["test"],
         pedigree="test",
         person_column="test",
@@ -201,7 +201,7 @@ def test_collect_instruments(tmp_path: pathlib.Path) -> None:
         PhenoImportConfig(
             id="test",
             input_dir=str(tmp_path),
-            output_dir="N/A",
+            work_dir="N/A",
             instrument_files=instrument_files,
             pedigree="N/A",
             delimiter=",",

@@ -12,11 +12,15 @@ from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 from dae.pheno.graphs import gender_palette, stripplot, violinplot
 from dae.pheno.pheno_data import PhenotypeData, PhenotypeStudy
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
+from dae.pheno.storage import PhenotypeStorageRegistry
 from dae.variants.attributes import Role, Sex
 
 
 def test_augment_measure(
-    fake_phenotype_data: PhenotypeStudy, tmp_path: Path,
+    fake_pheno_db_dir: Path,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
+    fake_phenotype_data: PhenotypeStudy,
+    tmp_path: Path,
 ) -> None:
     images_dir = tmp_path / "images"
     fake_phenotype_data.cache_path = tmp_path
@@ -24,7 +28,9 @@ def test_augment_measure(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path,
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
         images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
@@ -51,7 +57,10 @@ def test_augment_measure(
 
 
 def test_augment_measure_regressor_no_instrument_name(
-    fake_phenotype_data: PhenotypeStudy, tmp_path: Path,
+    fake_pheno_db_dir: Path,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
+    fake_phenotype_data: PhenotypeStudy,
+    tmp_path: Path,
 ) -> None:
     images_dir = tmp_path / "images"
     fake_phenotype_data.cache_path = tmp_path
@@ -59,7 +68,9 @@ def test_augment_measure_regressor_no_instrument_name(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path,
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
         images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
@@ -89,7 +100,10 @@ def test_augment_measure_regressor_no_instrument_name(
 
 
 def test_augment_measure_with_identical_measures(
-    fake_phenotype_data: PhenotypeStudy, tmp_path: Path,
+    fake_pheno_db_dir: Path,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
+    fake_phenotype_data: PhenotypeStudy,
+    tmp_path: Path,
 ) -> None:
     images_dir = tmp_path / "images"
     fake_phenotype_data.cache_path = tmp_path
@@ -97,7 +111,9 @@ def test_augment_measure_with_identical_measures(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path,
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
         images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.age")
@@ -109,7 +125,10 @@ def test_augment_measure_with_identical_measures(
 
 
 def test_augment_measure_with_nonexistent_regressor(
-    fake_phenotype_data: PhenotypeStudy, tmp_path: Path,
+    fake_pheno_db_dir: Path,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
+    fake_phenotype_data: PhenotypeStudy,
+    tmp_path: Path,
 ) -> None:
     images_dir = tmp_path / "images"
     fake_phenotype_data.cache_path = tmp_path
@@ -117,7 +136,9 @@ def test_augment_measure_with_nonexistent_regressor(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path,
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
         images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i2.m1")
@@ -131,6 +152,8 @@ def test_augment_measure_with_nonexistent_regressor(
 
 def test_build_regression(
     mocker: pytest_mock.MockerFixture,
+    fake_pheno_db_dir: Path,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
     fake_phenotype_data: PhenotypeStudy,
     tmp_path: Path,
 ) -> None:
@@ -196,7 +219,9 @@ def test_build_regression(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path,
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
         images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
@@ -204,7 +229,7 @@ def test_build_regression(
     jitter = 0.32403423849
 
     res = prep.build_regression(
-        fake_phenotype_data, tmp_path, regressand, regressor, jitter,
+        fake_phenotype_data, str(tmp_path), regressand, regressor, jitter,
     )
     assert res is not None
     assert isinstance(res, dict)
@@ -218,6 +243,8 @@ def test_build_regression(
 
 def test_build_regression_min_vals(
     mocker: pytest_mock.MockerFixture,
+    fake_pheno_db_dir: Path,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
     fake_phenotype_data: PhenotypeStudy,
     tmp_path: Path,
 ) -> None:
@@ -245,7 +272,9 @@ def test_build_regression_min_vals(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path,
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
         images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
@@ -253,13 +282,15 @@ def test_build_regression_min_vals(
     jitter = 0.32403423849
 
     assert not prep.build_regression(
-        fake_phenotype_data, tmp_path,
+        fake_phenotype_data, str(tmp_path),
         regressand, regressor, jitter,
     )
 
 
 def test_build_regression_min_unique_vals(
     mocker: pytest_mock.MockerFixture,
+    fake_pheno_db_dir: Path,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
     fake_phenotype_data: PhenotypeStudy,
     tmp_path: Path,
 ) -> None:
@@ -301,7 +332,9 @@ def test_build_regression_min_unique_vals(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path,
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
         images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
@@ -309,11 +342,13 @@ def test_build_regression_min_unique_vals(
     jitter = 0.32403423849
 
     assert not prep.build_regression(
-        fake_phenotype_data, tmp_path, regressand, regressor, jitter,
+        fake_phenotype_data, str(tmp_path), regressand, regressor, jitter,
     )
 
 
 def test_build_regression_identical_measures(
+    fake_pheno_db_dir: Path,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
     fake_phenotype_data: PhenotypeStudy,
     tmp_path: Path,
 ) -> None:
@@ -323,7 +358,9 @@ def test_build_regression_identical_measures(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path,
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
         images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.age")
@@ -331,12 +368,14 @@ def test_build_regression_identical_measures(
     jitter = 0.32403423849
 
     assert not prep.build_regression(
-        fake_phenotype_data, tmp_path, regressand, regressor, jitter,
+        fake_phenotype_data, str(tmp_path), regressand, regressor, jitter,
     )
 
 
 def test_build_regression_aug_df_is_none(
     mocker: pytest_mock.MockerFixture,
+    fake_pheno_db_dir: Path,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
     fake_phenotype_data: PhenotypeStudy,
     tmp_path: Path,
 ) -> None:
@@ -355,7 +394,9 @@ def test_build_regression_aug_df_is_none(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path,
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
         images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
@@ -363,7 +404,7 @@ def test_build_regression_aug_df_is_none(
     jitter = 0.32403423849
 
     assert not prep.build_regression(
-        fake_phenotype_data, tmp_path,
+        fake_phenotype_data, str(tmp_path),
         regressand, regressor, jitter,
     )
 
@@ -371,6 +412,7 @@ def test_build_regression_aug_df_is_none(
 def test_handle_regressions(
     mocker: pytest_mock.MockerFixture,
     fake_phenotype_data: PhenotypeStudy,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
     fake_pheno_db_dir: Path,
     tmp_path: Path,
     fake_phenotype_data_config: str,
@@ -411,8 +453,11 @@ def test_handle_regressions(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path,
-        reg, images_dir=images_dir,
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
+        images_dir=images_dir,
+        pheno_regressions=reg,
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
 
@@ -422,8 +467,9 @@ def test_handle_regressions(
 
     res = prep.do_measure_build(
         fake_phenotype_data.pheno_id,
-        regressand, "test_dir", regression_measures,
-        str(fake_pheno_db_dir), str(fake_pheno_db_dir), str(tmp_path),
+        regressand, fake_pheno_storage_registry, "test_dir",
+        regression_measures,
+        str(fake_pheno_db_dir), str(fake_pheno_db_dir),
     )
     assert len(res) == 2
     print(res)
@@ -451,6 +497,7 @@ def test_handle_regressions(
 def test_handle_regressions_non_continuous_or_ordinal_measure(
     mocker: pytest_mock.MockerFixture,
     fake_phenotype_data: PhenotypeStudy,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
     tmp_path: Path,
     fake_pheno_db_dir: Path,
     fake_phenotype_data_config: str,
@@ -471,8 +518,11 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path,
-        reg, images_dir=images_dir,
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
+        images_dir=images_dir,
+        pheno_regressions=reg,
     )
     regressand_categorical = fake_phenotype_data.get_measure("i1.m5")
     regression_measures_categorical = prep.get_regression_measures(
@@ -487,14 +537,16 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
 
     res = prep.do_measure_build(
         fake_phenotype_data.pheno_id,
-        regressand_categorical, "test_dir", regression_measures_categorical,
-        str(fake_pheno_db_dir), str(fake_pheno_db_dir), str(tmp_path),
+        regressand_categorical, fake_pheno_storage_registry,
+        "test_dir", regression_measures_categorical,
+        str(fake_pheno_db_dir), str(fake_pheno_db_dir),
     )
     assert res[1] is None
     res = prep.do_measure_build(
         fake_phenotype_data.pheno_id,
-        regressand_raw, "test_dir", regression_measures_raw,
-        str(fake_pheno_db_dir), str(fake_pheno_db_dir), str(tmp_path),
+        regressand_raw, fake_pheno_storage_registry,
+        "test_dir", regression_measures_raw,
+        str(fake_pheno_db_dir), str(fake_pheno_db_dir),
     )
     assert res[1] is None
 
@@ -502,6 +554,7 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
 def test_handle_regressions_regressand_is_regressor(
     mocker: pytest_mock.MockerFixture,
     fake_phenotype_data: PhenotypeStudy,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
     fake_pheno_db_dir: Path,
     tmp_path: Path,
 ) -> None:
@@ -518,7 +571,9 @@ def test_handle_regressions_regressand_is_regressor(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path,
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
         images_dir=images_dir,
     )
     regressand = fake_phenotype_data.get_measure("i1.age")
@@ -527,8 +582,9 @@ def test_handle_regressions_regressand_is_regressor(
     assert fake_phenotype_data.config is not None
     res = prep.do_measure_build(
         fake_phenotype_data.pheno_id,
-        regressand, "test_dir", regression_measures,
-        str(fake_pheno_db_dir), str(fake_pheno_db_dir), str(tmp_path),
+        regressand, fake_pheno_storage_registry, "test_dir",
+        regression_measures,
+        str(fake_pheno_db_dir), str(fake_pheno_db_dir),
     )
     assert res[1] is None
 
@@ -536,6 +592,7 @@ def test_handle_regressions_regressand_is_regressor(
 def test_handle_regressions_default_jitter(
     mocker: pytest_mock.MockerFixture,
     fake_phenotype_data: PhenotypeStudy,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
     tmp_path: Path,
     fake_pheno_db_dir: Path,
     fake_phenotype_data_config: str,
@@ -566,8 +623,11 @@ def test_handle_regressions_default_jitter(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path,
-        reg, images_dir=images_dir,
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
+        images_dir=images_dir,
+        pheno_regressions=reg,
     )
     regressand = fake_phenotype_data.get_measure("i1.m1")
 
@@ -576,8 +636,9 @@ def test_handle_regressions_default_jitter(
     assert fake_phenotype_data.config is not None
     prep.do_measure_build(
         fake_phenotype_data.pheno_id,
-        regressand, "test_dir", regression_measures,
-        str(fake_pheno_db_dir), str(fake_pheno_db_dir), str(tmp_path),
+        regressand, fake_pheno_storage_registry,
+        "test_dir", regression_measures,
+        str(fake_pheno_db_dir), str(fake_pheno_db_dir),
     )
 
     mocked.assert_called()

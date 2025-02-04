@@ -5,6 +5,7 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import regression_conf_schema
 from dae.pheno.pheno_data import PhenotypeData, PhenotypeStudy
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
+from dae.pheno.storage import PhenotypeStorageRegistry
 
 
 def test_pheno_regressions_from_conf_path(regressions_conf: str) -> None:
@@ -45,6 +46,8 @@ def test_pheno_regressions_from_conf_path(regressions_conf: str) -> None:
 
 
 def test_has_regression_measure(
+    fake_pheno_db_dir: Path,
+    fake_pheno_storage_registry: PhenotypeStorageRegistry,
     fake_phenotype_data: PhenotypeStudy,
     tmp_path: Path,
     regressions_conf: str,
@@ -55,8 +58,11 @@ def test_has_regression_measure(
         fake_phenotype_data, read_only=False,
     )
     prep = PreparePhenoBrowserBase(
-        fake_phenotype_data, browser, tmp_path, reg["regression"],
-        tmp_path / "images",
+        fake_pheno_db_dir, fake_pheno_storage_registry, fake_phenotype_data,
+        browser,
+        cache_dir=tmp_path,
+        images_dir=tmp_path / "images",
+        pheno_regressions=reg["regression"],
     )
 
     expected_reg_measures = [
