@@ -38,8 +38,9 @@ def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
 
 
 def main(
-        argv: list[str] | None = None,
-        grr: GenomicResourceRepo | None = None) -> None:
+    argv: list[str] | None = None,
+    grr: GenomicResourceRepo | None = None,
+) -> None:
     """Liftover de Novo variants tool main function."""
     # pylint: disable=too-many-locals
     if argv is None:

@@ -74,6 +74,10 @@ class VcfSerializer:
         record.pos = sv.position
         record.ref = sv.reference
         record.alts = sv.alternative
+        svid = [
+            f"{aa.chrom}_{aa.position}_{aa.reference}_{aa.alternative}"
+            for aa in sv.alt_alleles]
+        record.id = ";".join(svid)
 
         for fv in fvs:
             fam = self.families[fv.family_id]
