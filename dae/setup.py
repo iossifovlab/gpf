@@ -141,6 +141,7 @@ setuptools.setup(
     simple_study_import=dae.tools.simple_study_import:main
 
     denovo2vcf=dae.tools.denovo2vcf:main
+    dae2vcf=dae.tools.dae2vcf:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
