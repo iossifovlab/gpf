@@ -1,61 +1,104 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
+import textwrap
 from typing import Any, cast
 
 import pytest
 import pytest_mock
 
+from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.genomic_scores import (
     CnvCollection,
 )
-from dae.genomic_resources.implementations.cnv_collection_impl import (
+from dae.genomic_resources.histogram import (
+    HistogramConfig,
+    NumberHistogram,
+    build_histogram_config,
+)
+from dae.genomic_resources.implementations.genomic_scores_impl import (
     CnvCollectionImplementation,
 )
-from dae.genomic_resources.repository import GR_CONF_FILE_NAME, GenomicResource
-from dae.genomic_resources.testing import build_inmemory_test_resource
+from dae.genomic_resources.repository import (
+    GenomicResource,
+    GenomicResourceRepo,
+)
+from dae.genomic_resources.repository_factory import (
+    build_genomic_resource_repository,
+)
+from dae.genomic_resources.testing import (
+    convert_to_tab_separated,
+    setup_directories,
+)
 from dae.task_graph.executor import SequentialExecutor, task_graph_run
 from dae.task_graph.graph import TaskGraph
 
 
 @pytest.fixture
-def cnvs_resource() -> GenomicResource:
-    res = build_inmemory_test_resource({
-        GR_CONF_FILE_NAME: """
-            type: cnv_collection
-            table:
-                filename: data.mem
-            scores:
-                - id: freq
-                  name: frequency
-                  type: float
-                  desc: some populaton frequency
-                - id: collection
-                  name: collection
-                  type: str
-                  desc: SSC or AGRE
-                - id: status
-                  name: affected_status
-                  type: str
-                  desc: |
-                    shows if the child that has the de novo
-                    is affected or unaffected
-        """,
-        "data.mem": """
-            chrom  pos_begin  pos_end  frequency  collection affected_status
-            1      10         20       0.02       SSC        affected
-            1      50         100      0.1        SSC        affected
-            2      1          8        0.00001    AGRE       unaffected
-            2      16         20       0.3        SSC        affected
-            2      200        203      0.0002     AGRE       unaffected
-            15     16         20       0.2        AGRE       affected
-        """,
-    })
-    assert res.get_type() == "cnv_collection"
-    return res
+def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
+    root_path = tmp_path
+    setup_directories(
+        root_path, {
+            "grr.yaml": textwrap.dedent(f"""
+                id: reannotation_repo
+                type: dir
+                directory: "{root_path}/grr"
+            """),
+            "grr": {
+                "score_one": {
+                    "genomic_resource.yaml": textwrap.dedent("""
+                        type: cnv_collection
+                        table:
+                            filename: data.txt
+                        scores:
+                            - id: freq
+                              name: frequency
+                              type: float
+                              histogram:
+                                type: number
+                                number_of_bins: 3
+                                view_range:
+                                  min: 0
+                                  max: 1
+                                x_log_scale: false
+                                y_log_scale: true
+                              desc: some populaton frequency
+                            - id: collection
+                              name: collection
+                              type: str
+                              desc: SSC or AGRE
+                            - id: status
+                              name: affected_status
+                              type: str
+                              desc: |
+                                shows if the child that has the de novo
+                                is affected or unaffected
+                    """),
+                    "data.txt": convert_to_tab_separated(textwrap.dedent("""
+                chrom  pos_begin  pos_end  frequency  collection affected_status
+                1      10         20       0.02       SSC        affected
+                1      50         100      0.1        SSC        affected
+                2      1          8        0.00001    AGRE       unaffected
+                2      16         20       0.3        SSC        affected
+                2      200        203      0.0002     AGRE       unaffected
+                15     16         20       0.2        AGRE       affected
+                    """)),
+                },
+            },
+        },
+    )
+    return build_genomic_resource_repository(file_name=str(
+        root_path / "grr.yaml",
+    ))
 
 
 @pytest.fixture
-def cnvs(cnvs_resource: GenomicResource) -> CnvCollection:
-    return CnvCollection(cnvs_resource)
+def cnvs(test_grr: GenomicResourceRepo) -> CnvCollection:
+    return CnvCollection(test_grr.get_resource("score_one"))
+
+
+@pytest.fixture
+def cnvs_resource(test_grr: GenomicResourceRepo) -> GenomicResource:
+    return test_grr.get_resource("score_one")
 
 
 @pytest.mark.parametrize("chrom,beg,end,count,attributes", [
@@ -112,7 +155,10 @@ def test_cnv_collection_wrong_resource_types(
 
 
 def test_cnv_collection_no_open(cnvs: CnvCollection) -> None:
-    with pytest.raises(ValueError, match="The resource <> is not open"):
+    with pytest.raises(
+        ValueError,
+        match="The resource <score_one> is not open",
+    ):
         cnvs.fetch_cnvs("1", 5, 15)
 
 
@@ -150,3 +196,51 @@ def test_cnv_collection_implementation(
 
     info = cnvs_impl.get_statistics_info()
     assert "Filename" in info
+
+
+def test_cnv_collection_implementation_histogram(
+    cnvs_resource: GenomicResource,
+) -> None:
+    hist_conf = build_histogram_config({
+        "histogram": {
+            "type": "number",
+            "view_range": {"min": 0, "max": 0.3},
+            "number_of_bins": 2,
+        },
+    })
+    assert isinstance(hist_conf, HistogramConfig)
+
+    hist_confs = {"freq": hist_conf}
+
+    histograms = CnvCollectionImplementation._do_histogram(
+        cnvs_resource, hist_confs, "2", 0, 300,
+    )
+
+    assert isinstance(histograms["freq"], NumberHistogram)
+    assert histograms["freq"].min_value == 1e-05
+    assert histograms["freq"].max_value == 0.3
+    assert histograms["freq"].bars.tolist() == [2, 1]
+    assert histograms["freq"].bins.tolist() == [0, 0.15, 0.3]
+
+
+def test_cli_manage_cnv_collection_histograms(
+    tmp_path: pathlib.Path,
+    test_grr: GenomicResourceRepo,  # noqa: ARG001
+) -> None:
+    grr_path = tmp_path / "grr"
+    assert not (grr_path / "/score_one/statistics").exists()
+
+    cli_manage([
+        "resource-repair",
+        "-R", str(grr_path),
+        "-r", "score_one",
+        "-j", "1",
+    ])
+
+    assert (grr_path / "score_one/statistics").exists()
+
+    assert (grr_path / "score_one/statistics/histogram_freq.json").exists()
+    hist_file = (
+        grr_path / "score_one/statistics/histogram_freq.json"
+    ).read_text().replace(" ", "").replace("\n", "")
+    assert hist_file.find('"bars":[6,0,0]') != -1

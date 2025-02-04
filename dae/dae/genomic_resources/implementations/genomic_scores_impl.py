@@ -411,6 +411,16 @@ class GenomicScoreImplementation(
         )
         return histogram_tasks, merge_task, save_task
 
+    def histogram_add_value(
+        self, histogram: Histogram,
+        value: Any,
+        count: int,
+    ) -> None:
+        histogram.add_value(
+            value,
+            count,
+        )
+
     @staticmethod
     def _do_histogram(
         resource: GenomicResource,
@@ -436,8 +446,11 @@ class GenomicScoreImplementation(
                 for scr_index, scr_id in enumerate(score_ids):
 
                     try:
-                        result[scr_id].add_value(
-                            rec[scr_index], right - left + 1)  # type: ignore
+                        impl.histogram_add_value(
+                            result[scr_id],
+                            rec[scr_index],  # type: ignore
+                            right - left + 1,
+                        )
                     except TypeError as err:
                         logger.exception(
                             "Failed adding value %s to histogram of %s; "
@@ -557,10 +570,48 @@ class GenomicScoreImplementation(
         }, indent=2).encode()
 
 
+class CnvCollectionImplementation(GenomicScoreImplementation):
+    """Assists in the management of resource of type cnv_collection."""
+    # pylint: disable=useless-parent-delegation
+
+    def add_statistics_build_tasks(
+        self, task_graph: TaskGraph,
+        **kwargs: str,
+    ) -> list[Task]:
+        return super().add_statistics_build_tasks(task_graph, **kwargs)
+
+    def calc_info_hash(self) -> bytes:
+        return super().calc_info_hash()
+
+    def calc_statistics_hash(self) -> bytes:
+        return super().calc_statistics_hash()
+
+    def get_info(self, **kwargs: Any) -> str:
+        return super().get_info(**kwargs)
+
+    def get_statistics_info(self, **kwargs: Any) -> str:
+        return super().get_statistics_info(**kwargs)
+
+    def histogram_add_value(
+        self, histogram: Histogram,
+        value: Any,
+        count: int,  # noqa: ARG002
+    ) -> None:
+        histogram.add_value(
+            value,
+            1,
+        )
+
+
 def build_score_implementation_from_resource(
     resource: GenomicResource,
-) -> GenomicScoreImplementation:
-    return GenomicScoreImplementation(resource)
+) -> GenomicScoreImplementation | CnvCollectionImplementation:
+    """Builds score implementation based on resource type"""
+    if resource.get_type() == "cnv_collection":
+        impl = CnvCollectionImplementation(resource)
+    else:
+        impl = GenomicScoreImplementation(resource)
+    return impl
 
 
 GENOMIC_SCORES_TEMPLATE = """
