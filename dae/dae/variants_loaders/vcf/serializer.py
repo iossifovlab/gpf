@@ -22,7 +22,7 @@ class VcfSerializer:
             self,
             families: FamiliesData,
             genome: ReferenceGenome,
-            output_path: pathlib.Path,
+            output_path: pathlib.Path | str | None,
             header: list[str] | None = None,
     ):
         self.families = families
@@ -58,8 +58,9 @@ class VcfSerializer:
         return vcf_header
 
     def _build_vcf_file(self) -> pysam.VariantFile:
+        output = "-" if self.output_path is None else str(self.output_path)
         return pysam.VariantFile(
-            str(self.output_path), "w", header=self._vcf_header,
+            output, "w", header=self._vcf_header,
         )
 
     def _build_vcf_record(

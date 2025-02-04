@@ -1,6 +1,5 @@
 import argparse
 import logging
-import pathlib
 import sys
 
 from dae.genomic_resources.reference_genome import (
@@ -33,7 +32,7 @@ def parse_cli_arguments(argv: list[str]) -> argparse.Namespace:
 
     parser.add_argument(
         "-o", "--output", help="output filename",
-        default="denovo_liftover.txt")
+        default=None)
 
     return parser.parse_args(argv)
 
@@ -78,7 +77,7 @@ def main(
     vcf_serializer = VcfSerializer(
         families,
         genome,
-        pathlib.Path(args.output),
+        args.output,
         header=[
             f"##source=denovo2vcf {' '.join(argv)}",
         ],

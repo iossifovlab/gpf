@@ -94,3 +94,24 @@ def test_denovo2vcf_simple(
     )
     variants = list(vcf_loader.family_variants_iterator())
     assert len(variants) == 3
+
+
+def test_denovo2vcf_stdout(
+    trio_pedigree: pathlib.Path,
+    trio_denovo: pathlib.Path,
+    t4c8_grr: GenomicResourceRepo,
+    capfd: pytest.CaptureFixture,
+) -> None:
+    # When:
+    denovo2vcf_main(
+        [
+            str(trio_pedigree),
+            str(trio_denovo),
+            "--genome", "t4c8_genome",
+        ],
+        grr=t4c8_grr,
+    )
+
+    # Then:
+    captured = capfd.readouterr()
+    assert "##source=denovo2vcf" in captured.out
