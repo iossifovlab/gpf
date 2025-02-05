@@ -115,7 +115,8 @@ class Measure:
 
     def __repr__(self) -> str:
         return (
-            f"Measure({self.measure_id}, " f"{self.measure_type}, {self.values_domain})"
+            f"Measure({self.measure_id}, "
+            f"{self.measure_type}, {self.values_domain})"
         )
 
     @property
@@ -124,7 +125,9 @@ class Measure:
         domain_list: Sequence[str | float] = []
         if self.values_domain is not None:
             domain = (
-                self.values_domain.replace("[", "").replace("]", "").replace(" ", "")
+                self.values_domain.replace("[", "")
+                .replace("]", "")
+                .replace(" ", "")
             )
             domain_list = domain.split(",")
             if self.measure_type in (
@@ -163,16 +166,12 @@ class Measure:
         result["description"] = self.description
         result["defaultFilter"] = self.default_filter
         result["valuesDomain"] = self.values_domain
-        result["minValue"] = (
-            None
-            if self.min_value is None or math.isnan(self.min_value)
+        result["minValue"] = \
+            None if self.min_value is None or math.isnan(self.min_value) \
             else self.min_value
-        )
-        result["maxValue"] = (
-            None
-            if self.max_value is None or math.isnan(self.max_value)
+        result["maxValue"] = \
+            None if self.max_value is None or math.isnan(self.max_value) \
             else self.max_value
-        )
 
         return result
 
@@ -181,9 +180,7 @@ class PhenotypeData(ABC):
     """Base class for all phenotype data studies and datasets."""
 
     def __init__(
-        self,
-        pheno_id: str,
-        config: Box,
+        self, pheno_id: str, config: Box,
         cache_path: Path | None = None,
     ) -> None:
         self._pheno_id: str = pheno_id
@@ -318,7 +315,8 @@ class PhenotypeData(ABC):
 
         for instrument in instruments.values():
             for measure in instrument.measures.values():
-                if measure_type is not None and measure.measure_type != measure_type:
+                if measure_type is not None and \
+                        measure.measure_type != measure_type:
                     continue
                 result[measure.measure_id] = measure
 
@@ -344,7 +342,9 @@ class PhenotypeData(ABC):
         """Return measures for given instrument."""
         assert instrument_name in self.instruments
         instrument = self.instruments[instrument_name]
-        return [m.measure_id for m in list(instrument.measures.values())]
+        return [
+            m.measure_id for m in list(instrument.measures.values())
+        ]
 
     @abstractmethod
     def get_people_measure_values(
@@ -422,12 +422,8 @@ class PhenotypeStudy(PhenotypeData):
     """
 
     def __init__(
-        self,
-        pheno_id: str,
-        dbfile: str,
-        config: dict | None = None,
-        *,
-        read_only: bool = True,
+        self, pheno_id: str, dbfile: str,
+        config: dict | None = None, *, read_only: bool = True,
         cache_path: Path | None = None,
     ) -> None:
         super().__init__(pheno_id, cast(Box, config), cache_path=cache_path)
@@ -493,10 +489,7 @@ class PhenotypeStudy(PhenotypeData):
         roles: list[Role] | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         yield from self.db.get_people_measure_values(
-            measure_ids,
-            person_ids,
-            family_ids,
-            roles,
+            measure_ids, person_ids, family_ids, roles,
         )
 
     def get_people_measure_values_df(
@@ -507,10 +500,7 @@ class PhenotypeStudy(PhenotypeData):
         roles: list[Role] | None = None,
     ) -> pd.DataFrame:
         return self.db.get_people_measure_values_df(
-            measure_ids,
-            person_ids,
-            family_ids,
-            roles,
+            measure_ids, person_ids, family_ids, roles,
         )
 
     def get_regressions(self) -> dict[str, Any]:
@@ -546,7 +536,8 @@ class PhenotypeStudy(PhenotypeData):
         for measure in measures:
             if measure["values_domain"] is None:
                 measure["values_domain"] = ""
-            measure["measure_type"] = cast(MeasureType, measure["measure_type"]).name
+            measure["measure_type"] = \
+                cast(MeasureType, measure["measure_type"]).name
 
             measure["regressions"] = []
             for reg_id in self.browser.regression_ids:
@@ -591,9 +582,7 @@ class PhenotypeStudy(PhenotypeData):
         )
 
     def get_children_ids(
-        self,
-        *,
-        leaves: bool = True,  # noqa: ARG002
+        self, *, leaves: bool = True,  # noqa: ARG002
     ) -> list[str]:
         return [self.pheno_id]
 
@@ -675,9 +664,8 @@ class PhenotypeGroup(PhenotypeData):
             measures_info = pheno.get_measures_info()
             if result["base_image_url"] is None:
                 result["base_image_url"] = measures_info["base_image_url"]
-            result["has_descriptions"] = (
+            result["has_descriptions"] = \
                 result["has_descriptions"] or measures_info["has_descriptions"]
-            )
             cast(dict, result["regression_names"]).update(
                 measures_info["regression_names"],
             )
@@ -730,16 +718,15 @@ class PhenotypeGroup(PhenotypeData):
     ) -> Generator[dict[str, Any], None, None]:
         generators = []
         for child in self.children:
-            measures_in_child = list(filter(child.has_measure, measure_ids))
+            measures_in_child = list(
+                filter(child.has_measure, measure_ids))
             if len(measures_in_child) > 0:
-                generators.append(
-                    child.get_people_measure_values(
-                        measures_in_child,
-                        person_ids,
-                        family_ids,
-                        roles,
-                    )
-                )
+                generators.append(child.get_people_measure_values(
+                    measures_in_child,
+                    person_ids,
+                    family_ids,
+                    roles,
+                ))
         return cast(
             Generator[dict[str, Any], None, None],
             chain.from_iterable(generators),
@@ -754,7 +741,8 @@ class PhenotypeGroup(PhenotypeData):
     ) -> pd.DataFrame:
         measures_dfs: list[tuple[list[str], pd.DataFrame]] = []
         for child in self.children:
-            measures_in_child = list(filter(child.has_measure, measure_ids))
+            measures_in_child = list(
+                filter(child.has_measure, measure_ids))
             if len(measures_in_child) > 0:
                 df = child.get_people_measure_values_df(
                     measures_in_child,

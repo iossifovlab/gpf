@@ -34,23 +34,33 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--gpf-instance",
-        help=("Path to GPF instance configuration to use for cache and images."),
+        help=(
+            "Path to GPF instance configuration to use for cache and images."
+        ),
     )
     parser.add_argument(
         "--pheno-db-dir",
-        help=("Path to pheno DB dir to use."),
+        help=(
+            "Path to pheno DB dir to use."
+        ),
     )
     parser.add_argument(
         "--storage-dir",
-        help=("Path to phenotype storage to use."),
+        help=(
+            "Path to phenotype storage to use."
+        ),
     )
     parser.add_argument(
         "--cache-dir",
-        help=("Path to output generated cache DB."),
+        help=(
+            "Path to output generated cache DB."
+        ),
     )
     parser.add_argument(
         "--images-dir",
-        help=("Path to output images."),
+        help=(
+            "Path to output images."
+        ),
     )
     parser.add_argument(
         "-n",
@@ -181,11 +191,8 @@ def main(argv: list[str] | None = None) -> int:
     del kwargs["images_dir"]
 
     build_pheno_browser(
-        pheno_db_dir,
-        storage_registry,
-        pheno_data,
-        cache_dir,
-        images_dir,
+        pheno_db_dir, storage_registry, pheno_data,
+        cache_dir, images_dir,
         pheno_regressions=regressions,
         **kwargs,
     )

@@ -191,7 +191,8 @@ def generate_phenotype_data_config(
         return yaml.dump(config)
 
     config["regression"] = {
-        reg_id: reg_measure.model_dump() for reg_id, reg_measure in regressions.items()
+        reg_id: reg_measure.model_dump()
+        for reg_id, reg_measure in regressions.items()
     }
     if regressions:
         for reg in config["regression"].values():
@@ -315,7 +316,8 @@ def import_pheno_data(
 
         if destination_storage_id not in gpf_instance.phenotype_storages:
             raise ValueError(
-                f"Phenotype storage {destination_storage_id} not found in" "instance!",
+                f"Phenotype storage {destination_storage_id} not found in"
+                "instance!",
             )
         storage = gpf_instance.phenotype_storages.get_phenotype_storage(
             destination_storage_id,
@@ -350,8 +352,7 @@ def import_pheno_data(
     if config.inference_config is not None:
         if isinstance(config.inference_config, str):
             inference_configs = load_inference_configs(
-                config.input_dir, config.inference_config
-            )
+                config.input_dir, config.inference_config)
         else:
             inference_configs = config.inference_config
     add_pheno_common_inference(inference_configs)
@@ -372,14 +373,12 @@ def import_pheno_data(
     instruments = collect_instruments(config)
 
     if not config.skip_pedigree_measures:
-        instruments.append(
-            ImportInstrument(
-                [Path(config.input_dir, config.pedigree).absolute()],
-                "pheno_common",
-                "\t",
-                config.person_column,
-            )
-        )
+        instruments.append(ImportInstrument(
+            [Path(config.input_dir, config.pedigree).absolute()],
+            "pheno_common",
+            "\t",
+            config.person_column,
+        ))
 
     instrument_measure_names = read_instrument_measure_names(instruments)
 
@@ -399,18 +398,14 @@ def import_pheno_data(
     descriptions = load_descriptions(config.input_dir, config.data_dictionary)
 
     create_import_tasks(
-        task_graph,
-        instruments,
+        task_graph, instruments,
         instrument_measure_names,
         inference_configs,
-        config,
-        descriptions,
+        config, descriptions,
     )
 
     instrument_pq_files = handle_measure_inference_tasks(
-        task_graph,
-        task_cache,
-        task_graph_args,
+        task_graph, task_cache, task_graph_args,
     )
 
     print(f"DONE {time.time() - start}")
@@ -448,8 +443,7 @@ def import_pheno_data(
             regressions = regression_config
 
     output_config = generate_phenotype_data_config(
-        config.id, destination_storage_id, regressions
-    )
+        config.id, destination_storage_id, regressions)
 
     pheno_conf_path = Path(config.work_dir, f"{config.id}.yaml")
     pheno_conf_path.write_text(output_config)
@@ -472,19 +466,15 @@ def handle_measure_inference_tasks(
 
     instrument_pq_files: dict[str, tuple[Path, Path]] = {}
     with TaskGraphCli.create_executor(
-        task_cache,
-        **vars(task_graph_args),
+        task_cache, **vars(task_graph_args),
     ) as xtor:
         try:
             task_results = task_graph_run_with_results(task_graph, xtor)
             for (
-                instrument_name,
-                values_filepath,
-                reports_filepath,
+                instrument_name, values_filepath, reports_filepath,
             ) in task_results:
                 instrument_pq_files[instrument_name] = (
-                    values_filepath,
-                    reports_filepath,
+                    values_filepath, reports_filepath,
                 )
 
         except Exception:
@@ -505,19 +495,17 @@ def collect_instruments(
         matched_paths: list[Path] = []
         if "*" in raw_path:
             matched_paths.extend(
-                Path(res).absolute() for res in glob.glob(str(path), recursive=True)
-            )
+                Path(res).absolute()
+                for res in glob.glob(str(path), recursive=True))
         elif path.is_file():
             matched_paths.append(path.absolute())
         elif path.is_dir():
             for root, _, filenames in os.walk(path):
-                matched_paths.extend(
-                    Path(root, filename).absolute() for filename in filenames
-                )
+                matched_paths.extend(Path(root, filename).absolute()
+                                    for filename in filenames)
 
-        matched_paths = list(
-            filter(lambda m: m.suffixes[0] in (".csv", ".txt"), matched_paths)
-        )
+        matched_paths = list(filter(lambda m: m.suffixes[0] in (".csv", ".txt"),
+                                    matched_paths))
 
         for match in matched_paths:
             logger.debug("instrument matched: %s", match.name)
@@ -533,23 +521,18 @@ def collect_instruments(
 
     def handle_conf(conf: InstrumentConfig):
         path = Path(import_config.input_dir, conf.path).absolute()
-        instrument = (
-            conf.instrument if conf.instrument is not None else path.name.split(".")[0]
-        )
-        delimiter = (
-            conf.delimiter if conf.delimiter is not None else import_config.delimiter
-        )
-        person_column = (
-            conf.person_column
-            if conf.person_column is not None
+        instrument = conf.instrument \
+            if conf.instrument is not None \
+            else path.name.split(".")[0]
+        delimiter = conf.delimiter \
+            if conf.delimiter is not None \
+            else import_config.delimiter
+        person_column = conf.person_column \
+            if conf.person_column is not None \
             else import_config.person_column
-        )
         if conf.instrument not in all_instruments:
             all_instruments[instrument] = ImportInstrument(
-                [],
-                instrument,
-                delimiter,
-                person_column,
+                [], instrument, delimiter, person_column,
             )
         all_instruments[instrument].files.append(path)
 
@@ -559,10 +542,8 @@ def collect_instruments(
         elif isinstance(config, InstrumentConfig):
             handle_conf(config)
         else:
-            raise TypeError(
-                f"Encountered invalid type while processing"
-                f"instrument configurations - {type(config)}"
-            )
+            raise TypeError(f"Encountered invalid type while processing"
+                            f"instrument configurations - {type(config)}")
 
     return list(all_instruments.values())
 
@@ -622,9 +603,8 @@ def read_and_classify_measure(
                     person_ids.append(person_id)
                 seen_person_ids.add(person_id)
                 for measure_name in measure_names:
-                    transformed_measures[measure_name][person_id] = _transform_value(
-                        row[measure_name]
-                    )
+                    transformed_measures[measure_name][person_id] = \
+                        _transform_value(row[measure_name])
 
     output_table, reports = infer_measures(
         instrument,
@@ -644,10 +624,7 @@ def read_and_classify_measure(
     out_file = values_parquet_dir / f"{instrument.name}.parquet"
 
     out_file = write_to_parquet(
-        instrument.name,
-        out_file,
-        reports,
-        output_table,
+        instrument.name, out_file, reports, output_table,
     )
 
     reports_out_file = reports_parquet_dir / f"{instrument.name}.parquet"
@@ -673,18 +650,19 @@ def infer_measures(
     output_table: dict[str, list[Any]] = {"person_id": person_ids}
     reports = {}
 
-    m_zip = zip(measure_names, db_names, inf_configs, strict=True)
+    m_zip = zip(measure_names,
+                db_names,
+                inf_configs,
+                strict=True)
 
-    for m_name, m_dbname, m_infconf in m_zip:
+    for (m_name, m_dbname, m_infconf) in m_zip:
         m_values = list(measure_person_values[m_name].values())
         values, inference_report = inference_reference_impl(
-            m_values,
-            m_infconf,
+            m_values, m_infconf,
         )
 
-        inference_report.histogram_type = determine_histogram_type(
-            inference_report, m_infconf
-        )
+        inference_report.histogram_type = \
+            determine_histogram_type(inference_report, m_infconf)
         m_type: MeasureType = MeasureType.raw
         if inference_report.histogram_type == NumberHistogram:
             m_type = MeasureType.continuous
@@ -694,15 +672,13 @@ def infer_measures(
             else:
                 m_type = MeasureType.ordinal
 
-        report = MeasureReport.model_validate(
-            {
-                "measure_name": instrument.name.strip(),
-                "instrument_name": m_name.strip(),
-                "db_name": m_dbname,
-                "measure_type": m_type,
-                "inference_report": inference_report,
-            }
-        )
+        report = MeasureReport.model_validate({
+            "measure_name": instrument.name.strip(),
+            "instrument_name": m_name.strip(),
+            "db_name": m_dbname,
+            "measure_type": m_type,
+            "inference_report": inference_report,
+        })
         report.instrument_name = instrument.name
         report.measure_name = m_name
         report.db_name = m_dbname
@@ -760,8 +736,7 @@ def write_to_parquet(
     )
 
     writer = pq.ParquetWriter(
-        filepath,
-        schema,
+        filepath, schema,
     )
 
     batch = pa.RecordBatch.from_pydict(values_table, schema)  # type: ignore
@@ -806,12 +781,9 @@ def load_inference_configs(
 ) -> dict[str, Any]:
     """Load import inference configuration file."""
     if inference_config_filepath:
-        return cast(
-            dict[str, Any],
-            yaml.safe_load(
-                Path(input_dir, inference_config_filepath).read_text(),
-            ),
-        )
+        return cast(dict[str, Any], yaml.safe_load(
+            Path(input_dir, inference_config_filepath).read_text(),
+        ))
     return {}
 
 
@@ -837,17 +809,14 @@ class ImportManifest(BaseModel):
 
     @staticmethod
     def from_table(
-        connection: duckdb.DuckDBPyConnection,
-        table: Table,
+        connection: duckdb.DuckDBPyConnection, table: Table,
     ) -> list["ImportManifest"]:
         """Read manifests from given table."""
         with connection.cursor() as cursor:
-            table_row = cursor.execute(
-                sqlglot.parse_one(
-                    "SELECT * FROM information_schema.tables"
-                    f" WHERE table_name = '{table.alias_or_name}'",
-                ).sql()
-            ).fetchone()
+            table_row = cursor.execute(sqlglot.parse_one(
+                "SELECT * FROM information_schema.tables"
+                f" WHERE table_name = '{table.alias_or_name}'",
+            ).sql()).fetchone()
             if table_row is None:
                 return []
             rows = cursor.execute(select("*").from_(table).sql()).fetchall()
@@ -866,8 +835,7 @@ class ImportManifest(BaseModel):
 
         return [
             ImportManifest.from_table(
-                leaf.db.connection,
-                IMPORT_METADATA_TABLE,
+                leaf.db.connection, IMPORT_METADATA_TABLE,
             )[0]
             for leaf in leaves
         ]
@@ -892,8 +860,7 @@ class ImportManifest(BaseModel):
         config_json = import_config.model_dump_json()
         timestamp = time.time()
         query = insert(
-            f"VALUES ({timestamp}, '{config_json}')",
-            table,
+            f"VALUES ({timestamp}, '{config_json}')", table,
         )
         with connection.cursor() as cursor:
             cursor.execute(to_duckdb_transpile(query)).fetchall()
@@ -901,9 +868,8 @@ class ImportManifest(BaseModel):
 
 def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
     """Create phenotype data tables in DuckDB."""
-    create_instrument = sqlglot.parse(
-        textwrap.dedent(
-            """
+    create_instrument = sqlglot.parse(textwrap.dedent(
+        """
         CREATE TABLE instrument(
             instrument_name VARCHAR NOT NULL PRIMARY KEY,
             table_name VARCHAR NOT NULL,
@@ -911,12 +877,10 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
         CREATE UNIQUE INDEX instrument_instrument_name_idx
             ON instrument (instrument_name);
         """,
-        )
-    )
+    ))
 
-    create_measure = sqlglot.parse(
-        textwrap.dedent(
-            """
+    create_measure = sqlglot.parse(textwrap.dedent(
+        """
         CREATE TABLE measure(
             measure_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
             db_column_name VARCHAR NOT NULL,
@@ -940,24 +904,20 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
         CREATE INDEX measure_measure_type_idx
             ON measure (measure_type);
         """,
-        )
-    )
+    ))
 
-    create_family = sqlglot.parse(
-        textwrap.dedent(
-            """
+    create_family = sqlglot.parse(textwrap.dedent(
+        """
         CREATE TABLE family(
             family_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
         );
         CREATE UNIQUE INDEX family_family_id_idx
             ON family (family_id);
         """,
-        )
-    )
+    ))
 
-    create_person = sqlglot.parse(
-        textwrap.dedent(
-            f"""
+    create_person = sqlglot.parse(textwrap.dedent(
+        f"""
         CREATE TABLE person(
             family_id VARCHAR NOT NULL,
             person_id VARCHAR NOT NULL,
@@ -970,8 +930,7 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
         CREATE UNIQUE INDEX person_person_id_idx
             ON person (person_id);
         """,
-        )
-    )
+    ))
 
     queries = [
         *create_instrument,
@@ -1005,7 +964,8 @@ def read_instrument_measure_names(
             )
             header = next(reader)
             instrument_measure_names[instrument.name] = [
-                col for col in header[1:] if col != instrument.person_column
+                col for col in header[1:]
+                if col != instrument.person_column
             ]
     return instrument_measure_names
 
@@ -1022,13 +982,13 @@ def read_pedigree(
     """
 
     ped_df = FamiliesLoader.flexible_pedigree_read(
-        Path(input_dir, pedigree_filepath),
-        enums_as_values=True,
+        Path(input_dir, pedigree_filepath), enums_as_values=True,
     )
 
     with connection.cursor() as cursor:
         cursor.execute(
-            "INSERT INTO family " "SELECT DISTINCT family_id FROM ped_df",
+            "INSERT INTO family "
+            "SELECT DISTINCT family_id FROM ped_df",
         )
         cursor.execute(
             "INSERT INTO person "
@@ -1050,16 +1010,15 @@ def write_results(
             values_file, reports_file = pq_files
             table_name = safe_db_name(f"{instrument_name}_measure_values")
             cursor.execute(
-                textwrap.dedent(
-                    f"""
+                textwrap.dedent(f"""
                     INSERT INTO instrument VALUES
                     ('{instrument_name}', '{table_name}')
-                """
-                ),
+                """),
             )
 
             query = (
-                "INSERT INTO measure " f"SELECT * from read_parquet('{reports_file!s}')"
+                "INSERT INTO measure "
+                f"SELECT * from read_parquet('{reports_file!s}')"
             )
             cursor.execute(query)
 
@@ -1142,7 +1101,9 @@ def merge_inference_configs(
         current_config.update(update_config)
 
     if f"{instrument_name}.{measure_name}" in inference_configs:
-        update_config = inference_configs[f"{instrument_name}.{measure_name}"]
+        update_config = inference_configs[
+            f"{instrument_name}.{measure_name}"
+        ]
         current_config.update(update_config)
 
     return InferenceConfig.model_validate(current_config)
@@ -1160,11 +1121,7 @@ def create_import_tasks(
     for instrument in instruments:
         seen_col_names: dict[str, int] = defaultdict(int)
         table_column_names = [
-            "person_id",
-            "family_id",
-            "role",
-            "status",
-            "sex",
+            "person_id", "family_id", "role", "status", "sex",
         ]
         measure_names = instrument_measure_names[instrument.name]
 
@@ -1174,9 +1131,7 @@ def create_import_tasks(
 
         for measure_name in measure_names:
             inference_config = merge_inference_configs(
-                inference_configs,
-                instrument.name,
-                measure_name,
+                inference_configs, instrument.name, measure_name,
             )
             if inference_config.skip:
                 continue
@@ -1294,8 +1249,7 @@ def write_reports_to_parquet(
         value_type = report.inference_report.value_type.__name__
         histogram_type = report.inference_report.histogram_type.__name__
         values_domain = report.inference_report.values_domain.replace(
-            "'",
-            "''",
+            "'", "''",
         )
         desc = descriptions.get(m_id, "")
         batch_values["measure_id"].append(m_id)
@@ -1306,20 +1260,21 @@ def write_reports_to_parquet(
         batch_values["measure_type"].append(report.measure_type.value)
         batch_values["value_type"].append(value_type)
         batch_values["histogram_type"].append(histogram_type)
-        batch_values["individuals"].append(report.inference_report.count_with_values)
+        batch_values["individuals"].append(
+            report.inference_report.count_with_values)
         batch_values["default_filter"].append("")
         batch_values["min_value"].append(report.inference_report.min_value)
         batch_values["max_value"].append(report.inference_report.max_value)
         batch_values["values_domain"].append(values_domain)
-        batch_values["rank"].append(report.inference_report.count_unique_values)
+        batch_values["rank"].append(
+            report.inference_report.count_unique_values)
 
     schema = pa.schema(
         fields,
     )
 
     writer = pq.ParquetWriter(
-        output_file,
-        schema,
+        output_file, schema,
     )
 
     batch = pa.RecordBatch.from_pydict(batch_values, schema)  # type: ignore
