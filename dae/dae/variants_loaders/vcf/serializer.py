@@ -73,7 +73,10 @@ class VcfSerializer:
         record.contig = sv.chrom
         record.pos = sv.position
         record.ref = sv.reference
-        record.alts = sv.alternative
+
+        alts = [aa.alternative for aa in sv.alt_alleles]
+        record.alts = alts
+
         svid = [
             f"{aa.chrom}_{aa.position}_{aa.reference}_{aa.alternative}"
             for aa in sv.alt_alleles]

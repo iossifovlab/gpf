@@ -35,10 +35,10 @@ def trio_vcf(
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=INH,Number=1,Type=String,Description="Inheritance">
     ##contig=<ID=chr1>
-    #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT mom1 dad1 ch1
-    chr1   1   .  T   G   .    .      .    GT     0/0  1/0  1/1
-    chr1   5   .  T   G   .    .      .    GT     1/1  1/1  1/0
-    chr1   12  .  T   G   .    .      .    GT     1/1  1/1  0/1
+    #CHROM POS ID REF ALT   QUAL FILTER INFO FORMAT mom1 dad1 ch1
+    chr1   1   .  T   G     .    .      .    GT     0/1  1/0  1/1
+    chr1   5   .  T   TG    .    .      .    GT     1/1  1/0  1/0
+    chr1   12  .  T   G,TG  .    .      .    GT     1/1  1/2  1/2
     """)
 
 
@@ -110,5 +110,8 @@ def test_vcf_serializer_summary_variant_id(
     assert len(variants) == 3
     for variant in variants:
         assert variant.alts is not None
-        assert variant.id == \
-            f"{variant.chrom}_{variant.pos}_{variant.ref}_{variant.alts[0]}"
+        svid = ";".join([
+            f"{variant.chrom}_{variant.pos}_{variant.ref}_{alt}"
+            for alt in variant.alts
+        ])
+        assert variant.id == svid
