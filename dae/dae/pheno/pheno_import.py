@@ -291,17 +291,19 @@ def get_output_parquet_files_dir(import_config: PhenoImportConfig) -> Path:
     return parquet_dir
 
 
-def get_gpf_instance(config: PhenoImportConfig):
+def get_gpf_instance(config: PhenoImportConfig) -> GPFInstance | None:
     if config.gpf_instance is not None:
         return GPFInstance.build(config.gpf_instance.path)
-    return GPFInstance.build()
+    try:
+        return GPFInstance.build()
+    except ValueError:
+        logger.exception("Cannot build GPF instance")
+    return None
 
 
 def import_pheno_data(
     config: PhenoImportConfig,
     task_graph_args: argparse.Namespace,
-    *,
-    force: bool = False,
 ) -> None:
     """Import pheno data into DuckDB."""
     os.makedirs(config.work_dir, exist_ok=True)
@@ -311,35 +313,33 @@ def import_pheno_data(
     destination_storage_id = None
 
     gpf_instance = get_gpf_instance(config)
-    if config.destination is not None:
-        destination_storage_id = config.destination.storage_id
+    if gpf_instance is not None:
+        if config.destination is not None:
+            destination_storage_id = config.destination.storage_id
 
-        if destination_storage_id not in gpf_instance.phenotype_storages:
-            raise ValueError(
-                f"Phenotype storage {destination_storage_id} not found in"
-                "instance!",
+            if destination_storage_id not in gpf_instance.phenotype_storages:
+                raise ValueError(
+                    f"Phenotype storage {destination_storage_id} not found in"
+                    "instance!",
+                )
+            storage = gpf_instance.phenotype_storages.get_phenotype_storage(
+                destination_storage_id,
             )
-        storage = gpf_instance.phenotype_storages.get_phenotype_storage(
-            destination_storage_id,
-        )
-    else:
-        if gpf_instance is not None:
-            storage = gpf_instance.phenotype_storages.get_default_phenotype_storage()
         else:
-            raise ValueError("NOT YET")
+            storage = \
+                gpf_instance.phenotype_storages.get_default_phenotype_storage()
+        pheno_dir = get_pheno_db_dir(gpf_instance.dae_config)
+        config_copy_destination = Path(
+            pheno_dir,
+            config.id,
+            f"{config.id}.yaml",
+        )
+        data_copy_destination = storage.base_dir / config.id / f"{config.id}.db"
 
-    config_copy_destination = Path(
-        get_pheno_db_dir(gpf_instance.dae_config),
-        config.id,
-        f"{config.id}.yaml",
-    )
-    data_copy_destination = storage.base_dir / config.id / f"{config.id}.db"
-
-    print("IIIIIIIIII: ", storage.base_dir)
     pheno_db_filename = os.path.join(config.work_dir, f"{config.id}.db")
 
     if os.path.exists(pheno_db_filename):
-        if not force:
+        if not task_graph_args.force:
             print(
                 f"Pheno DB already exists at {pheno_db_filename}!\n"
                 "Use --force or specify another directory.",
@@ -352,7 +352,8 @@ def import_pheno_data(
     if config.inference_config is not None:
         if isinstance(config.inference_config, str):
             inference_configs = load_inference_configs(
-                config.input_dir, config.inference_config)
+                config.input_dir, config.inference_config,
+            )
         else:
             inference_configs = config.inference_config
     add_pheno_common_inference(inference_configs)

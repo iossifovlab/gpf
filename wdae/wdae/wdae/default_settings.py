@@ -27,7 +27,10 @@ BASE_DIR = os.path.dirname(__file__)
 
 SKIP_CONFIG_LOAD = False
 
-GPF_INSTANCE_CONFIG_PATH = get_wgpf_instance_path() / "gpf_instance.yaml"
+try:
+    GPF_INSTANCE_CONFIG_PATH = get_wgpf_instance_path() / "gpf_instance.yaml"
+except ValueError:
+    print("Couldn't find GPF Instance")
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
