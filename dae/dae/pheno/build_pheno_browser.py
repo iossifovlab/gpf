@@ -78,7 +78,7 @@ def must_rebuild(pheno_data: PhenotypeData, browser: PhenoBrowser) -> bool:
     manifests = {
         manifest.import_config.id: manifest
         for manifest in ImportManifest.from_table(
-            browser.connection, IMPORT_METADATA_TABLE
+            browser.connection, IMPORT_METADATA_TABLE,
         )
     }
 

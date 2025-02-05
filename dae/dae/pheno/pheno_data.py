@@ -33,7 +33,7 @@ def get_pheno_db_dir(dae_config: dict | None) -> str:
         ):
             pheno_data_dir = os.path.join(dae_config["conf_dir"], "pheno")
         else:
-            pheno_data_dir = dae_config.phenotype_data.dir
+            pheno_data_dir = dae_config["phenotype_data"]["dir"]
     else:
         pheno_data_dir = os.path.join(os.environ.get("DAE_DB_DIR", ""), "pheno")
 
@@ -600,7 +600,7 @@ class PhenotypeGroup(PhenotypeData):
         super().__init__(pheno_id, cast(Box, config), cache_path=cache_path)
         self.children = children
         instruments, measures = self._merge_instruments(
-            [ph.instruments for ph in self.children]
+            [ph.instruments for ph in self.children],
         )
         self._instruments.update(instruments)
 

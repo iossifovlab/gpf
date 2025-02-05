@@ -234,6 +234,11 @@ class GPFInstance:
 
     @cached_property
     def phenotype_storages(self) -> PhenotypeStorageRegistry:
+        """
+        Get phenotype storage registry.
+
+        Will load if not cached.
+        """
         registry = PhenotypeStorageRegistry()
 
         if "phenotype_storage" in self.dae_config:
