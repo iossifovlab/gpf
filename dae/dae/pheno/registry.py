@@ -67,7 +67,7 @@ class PhenoRegistry:
         self, study_config: dict, *, lock: bool = True,
     ) -> None:
         """Register a configuration as a loadable phenotype data."""
-        study_id = study_config["name"]
+        study_id = study_config["id"]
         storage_config = study_config.get("phenotype_storage")
         if storage_config is not None:
             storage_id = study_config["phenotype_storage"]["id"]
@@ -78,9 +78,9 @@ class PhenoRegistry:
                 )
         if lock:
             with self.CACHE_LOCK:
-                self._study_configs[study_config["name"]] = study_config
+                self._study_configs[study_config["id"]] = study_config
 
-        self._study_configs[study_config["name"]] = study_config
+        self._study_configs[study_config["id"]] = study_config
 
     def has_phenotype_data(self, data_id: str, *, lock: bool = True) -> bool:
         if lock:
@@ -158,7 +158,7 @@ class PhenoRegistry:
         return path
 
     def _load_study(self, study_config: dict) -> PhenotypeData:
-        pheno_id = study_config["name"]
+        pheno_id = study_config["id"]
         study_storage_config = study_config.get("phenotype_storage")
         if study_storage_config is not None:
             study_storage_id = study_storage_config["id"]
@@ -175,7 +175,7 @@ class PhenoRegistry:
         return self._cache[pheno_id]
 
     def _load_group(self, study_config: dict) -> PhenotypeData:
-        pheno_id = study_config["name"]
+        pheno_id = study_config["id"]
         missing_children = set(study_config["children"]).difference(
             set(self._study_configs),
         )

@@ -68,7 +68,7 @@ class WDAEStudy:
     @property
     def name(self) -> str:
         if self.is_phenotype:
-            return self.phenotype_data.pheno_id
+            return self.phenotype_data.name
         return self.genotype_data.name
 
     @property

@@ -37,7 +37,8 @@ def mock_classes(
 def pheno_study_configs() -> dict[str, dict]:
     return {
         "fake": {
-            "name": "fake",
+            "id": "fake",
+            "name": "Fake Study",
             "type": "study",
             "phenotype_storage": {
                 "id": "fake_storage",
@@ -45,7 +46,8 @@ def pheno_study_configs() -> dict[str, dict]:
             },
         },
         "fake_i1": {
-            "name": "fake_i1",
+            "id": "fake_i1",
+            "name": "Fake Study 1",
             "type": "study",
             "phenotype_storage": {
                 "id": "fake_storage",
@@ -53,7 +55,8 @@ def pheno_study_configs() -> dict[str, dict]:
             },
         },
         "fake2": {
-            "name": "fake2",
+            "id": "fake2",
+            "name": "Fake Study 2",
             "type": "study",
             "phenotype_storage": {
                 "id": "fake_storage",
@@ -61,7 +64,8 @@ def pheno_study_configs() -> dict[str, dict]:
             },
         },
         "group": {
-            "name": "group",
+            "id": "group",
+            "name": "Fake Group",
             "type": "group",
             "children": ["fake", "fake2"],
         },

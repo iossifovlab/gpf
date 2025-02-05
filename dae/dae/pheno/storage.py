@@ -25,7 +25,7 @@ class PhenotypeStorage:
         browser_cache_path: Path | None,
     ) -> PhenotypeStudy:
         """Create a phenotype study object from a configuration."""
-        study_id = study_config["name"]
+        study_id = study_config["id"]
         study_storage_config = study_config.get("phenotype_storage")
         if study_storage_config is not None:
             study_storage_id = study_storage_config["id"]
