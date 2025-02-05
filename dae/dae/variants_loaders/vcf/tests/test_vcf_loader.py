@@ -3,19 +3,11 @@ from typing import Literal
 
 import pytest
 
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.genomic_resources.testing import setup_pedigree, setup_vcf
-from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
-from dae.testing.acgt_import import acgt_gpf
 from dae.variants.attributes import Inheritance
 from dae.variants_loaders.vcf.loader import VcfLoader
-
-
-@pytest.fixture
-def gpf_instance(
-        tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
-    root_path = tmp_path_factory.mktemp("instance")
-    return acgt_gpf(root_path)
 
 
 @pytest.fixture
@@ -58,7 +50,7 @@ def test_vcf_denovo_mode(
     total: Literal[1, 3],
     unexpected_inheritance: set[Inheritance],
     inheritance_trio_denovo_omission: tuple[str, str],
-    gpf_instance: GPFInstance,
+    acgt_genome: ReferenceGenome,
 ) -> None:
     ped_path, vcf_path = inheritance_trio_denovo_omission
     families = FamiliesLoader(ped_path).load()
@@ -71,7 +63,7 @@ def test_vcf_denovo_mode(
     vcf_loader = VcfLoader(
         families,
         [vcf_path],
-        gpf_instance.reference_genome,
+        acgt_genome,
         params=params,
     )
 
@@ -102,7 +94,7 @@ def test_vcf_omission_mode(
     total: Literal[3, 2],
     unexpected_inheritance: set[Inheritance],
     inheritance_trio_denovo_omission: tuple[str, str],
-    gpf_instance: GPFInstance,
+    acgt_genome: ReferenceGenome,
 ) -> None:
     ped_path, vcf_path = inheritance_trio_denovo_omission
     families = FamiliesLoader(ped_path).load()
@@ -115,7 +107,7 @@ def test_vcf_omission_mode(
     vcf_loader = VcfLoader(
         families,
         [vcf_path],
-        gpf_instance.reference_genome,
+        acgt_genome,
         params=params,
     )
 
@@ -183,7 +175,7 @@ def test_vcf_loader_params(
     vcf_include_unknown_family_genotypes: bool,  # noqa: FBT001
     vcf_include_unknown_person_genotypes: bool,  # noqa: FBT001
     count: int,
-    gpf_instance: GPFInstance,
+    acgt_genome: ReferenceGenome,
 ) -> None:
     params = {
         "vcf_include_reference_genotypes":
@@ -197,7 +189,7 @@ def test_vcf_loader_params(
     families = FamiliesLoader(ped_path).load()
     vcf_loader = VcfLoader(families,
                            [vcf_path],
-                           gpf_instance.reference_genome,
+                           acgt_genome,
                            params=params)
 
     variants = list(vcf_loader.family_variants_iterator())
@@ -240,7 +232,7 @@ def simple_family(tmp_path_factory: pytest.TempPathFactory) -> tuple[str, str]:
 
 def test_family_variants(
     simple_family: tuple[str, str],
-    gpf_instance: GPFInstance,
+    acgt_genome: ReferenceGenome,
 ) -> None:
     ped_filename, vcf_filename = simple_family
     families = FamiliesLoader(ped_filename).load()
@@ -248,7 +240,7 @@ def test_family_variants(
     vcf_loader = VcfLoader(
         families,
         [vcf_filename],
-        gpf_instance.reference_genome,
+        acgt_genome,
     )
     variants = list(vcf_loader.full_variants_iterator())
     assert len(variants) == 10

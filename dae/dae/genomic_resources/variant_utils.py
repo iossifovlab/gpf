@@ -23,7 +23,6 @@ def normalize_variant(
 
     while True:
         changed = False
-        logger.debug("normalizing variant: %s:%d %s>%s", chrom, pos, ref, alts)
 
         if len(ref) > 0 and all(len(alt) > 0
                 and ref[-1] == alt[-1] for alt in alts):
