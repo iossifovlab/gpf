@@ -42,7 +42,7 @@ def test_resource_manifest_simple(
 
     # When
     cli_manage([
-        "resource-manifest", "-R", str(path), "-r", "one", "--no-cache"])
+        "resource-manifest", "-R", str(path), "-r", "one"])
 
     # Then
     assert (path / "one" / GR_MANIFEST_FILE_NAME).is_file()
@@ -64,7 +64,7 @@ def test_resource_manifest_dry_run_simple(
     with pytest.raises(SystemExit):
         cli_manage([
             "resource-manifest", "-R", str(path), "-r", "one", "--dry-run",
-            "--no-cache"])
+        ])
 
     # Then
     assert not (path / "one" / GR_MANIFEST_FILE_NAME).exists()
@@ -179,7 +179,8 @@ def test_resource_dry_run_manifest_update(
     # When
     with pytest.raises(SystemExit):
         cli_manage([
-            "resource-manifest", "--dry-run", "-R", str(path), "-r", "one"])
+            "resource-manifest", "--dry-run", "-R", str(path), "-r", "one",
+            "--no-cache"])
 
     # Then
     assert bool(proto.check_update_manifest(res))
@@ -198,7 +199,7 @@ def test_repo_dry_run_manifest_update(
     # When
     with pytest.raises(SystemExit):
         cli_manage([
-            "repo-manifest", "--dry-run", "-R", str(path)])
+            "repo-manifest", "--dry-run", "-R", str(path), "--no-cache"])
 
     # Then
     assert bool(proto.check_update_manifest(res))
