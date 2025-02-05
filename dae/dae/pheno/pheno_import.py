@@ -292,6 +292,7 @@ def get_output_parquet_files_dir(import_config: PhenoImportConfig) -> Path:
 
 
 def get_gpf_instance(config: PhenoImportConfig) -> GPFInstance | None:
+    """Return a GPF instance for an import config if it can be found."""
     if config.gpf_instance is not None:
         return GPFInstance.build(config.gpf_instance.path)
     try:
@@ -301,18 +302,13 @@ def get_gpf_instance(config: PhenoImportConfig) -> GPFInstance | None:
     return None
 
 
-def import_pheno_data(
-    config: PhenoImportConfig,
-    task_graph_args: argparse.Namespace,
-) -> None:
-    """Import pheno data into DuckDB."""
-    os.makedirs(config.work_dir, exist_ok=True)
-
+def determine_destination(
+    gpf_instance: GPFInstance | None, config: PhenoImportConfig,
+) -> tuple[str | None, Path | None, Path | None]:
+    """Determine where output should be placed based on configuration."""
+    destination_storage_id = None
     data_copy_destination = None
     config_copy_destination = None
-    destination_storage_id = None
-
-    gpf_instance = get_gpf_instance(config)
     if gpf_instance is not None:
         if config.destination is not None:
             destination_storage_id = config.destination.storage_id
@@ -334,7 +330,26 @@ def import_pheno_data(
             config.id,
             f"{config.id}.yaml",
         )
-        data_copy_destination = storage.base_dir / config.id / f"{config.id}.db"
+        data_copy_destination = \
+            storage.base_dir / config.id / f"{config.id}.db"
+    return (
+        destination_storage_id,
+        data_copy_destination,
+        config_copy_destination,
+    )
+
+
+def import_pheno_data(
+    config: PhenoImportConfig,
+    task_graph_args: argparse.Namespace,
+) -> None:
+    """Import pheno data into DuckDB."""
+    os.makedirs(config.work_dir, exist_ok=True)
+
+    gpf_instance = get_gpf_instance(config)
+
+    destination_storage_id, data_copy_destination, config_copy_destination = \
+            determine_destination(gpf_instance, config)
 
     pheno_db_filename = os.path.join(config.work_dir, f"{config.id}.db")
 
