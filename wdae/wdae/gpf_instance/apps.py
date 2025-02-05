@@ -1,6 +1,5 @@
 """Provides class for configuing WDAE Django application."""
 import logging
-import pathlib
 
 from django.apps import AppConfig
 from django.conf import settings
@@ -29,15 +28,12 @@ class WDAEConfig(AppConfig):
     def ready(self) -> None:
         logger.info("WGPConfig application starting...")
         AppConfig.ready(self)
-        config_filename = None
 
-        if getattr(settings, "GPF_INSTANCE_CONFIG", None):
-            config_filename = pathlib.Path(__file__).parent.joinpath(
-                settings.GPF_INSTANCE_CONFIG)
+        config_filepath = getattr(settings, "GPF_INSTANCE_CONFIG_PATH", None)
 
-            logger.info("GPF instance config: %s", config_filename)
+        logger.info("GPF instance config: %s", config_filepath)
 
-        gpf_instance = get_wgpf_instance(config_filename)
+        gpf_instance = get_wgpf_instance(config_filepath)
         if gpf_instance is None:
             logger.warning("GPF instance is not loaded")
             return

@@ -233,7 +233,12 @@ class GPFInstance:
         }
 
     @cached_property
-    def _pheno_storage_registry(self) -> PhenotypeStorageRegistry:
+    def phenotype_storages(self) -> PhenotypeStorageRegistry:
+        """
+        Get phenotype storage registry.
+
+        Will load if not cached.
+        """
         registry = PhenotypeStorageRegistry()
 
         if "phenotype_storage" in self.dae_config:
@@ -243,6 +248,9 @@ class GPFInstance:
 
         default_id = storages_config["default"]
         for storage_config in storages_config["storages"]:
+            storage_config["base_dir"] = str(Path(
+                self.dae_dir, storage_config["base_dir"],
+            ))
             storage = PhenotypeStorage.from_config(storage_config)
             if storage.storage_id == default_id:
                 registry.register_default_storage(storage)
@@ -250,6 +258,13 @@ class GPFInstance:
                 registry.register_phenotype_storage(storage)
 
         return registry
+
+    def get_pheno_cache_path(self) -> Path:
+        pheno_cache_dir = self.get_cache_path("pheno")
+        if pheno_cache_dir is None:
+            pheno_data_dir = get_pheno_db_dir(self.dae_config)
+            return Path(pheno_data_dir)
+        return pheno_cache_dir
 
     @cached_property
     def _pheno_registry(self) -> PhenoRegistry:
@@ -262,12 +277,10 @@ class GPFInstance:
             GPFConfigParser.load_config_dict(file, pheno_conf_schema)
             for file in config_files
         ]
-
-        pheno_cache_dir = self.get_cache_path("pheno")
         return PhenoRegistry(
-            self._pheno_storage_registry,
+            self.phenotype_storages,
             configurations=configurations,
-            browser_cache_path=pheno_cache_dir,
+            browser_cache_path=self.get_pheno_cache_path(),
         )
 
     @cached_property

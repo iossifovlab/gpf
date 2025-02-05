@@ -95,7 +95,10 @@ genotype_storage_schema = {
 
 phenotype_storage_schema = {
     "id": {"type": "string"},
-    "base_dir": {"type": "string"},
+    "base_dir": {
+        "type": "string",
+        "coerce": "abspath",
+    },
 }
 
 gene_scores_db_schema = {
@@ -169,6 +172,11 @@ dae_conf_schema = {
     },
     "cache_path": {
         "type": "string",
+        "coerce": "abspath",
+    },
+    "phenotype_images": {
+        "type": "string",
+        "coerce": "abspath",
     },
     "studies": {
         "type": "dict",

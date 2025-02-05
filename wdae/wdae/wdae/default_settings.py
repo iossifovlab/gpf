@@ -4,6 +4,8 @@
 import logging
 import os
 
+from gpf_instance.gpf_instance import get_wgpf_instance_path
+
 DEBUG = os.environ.get("WDAE_DEBUG", "False") == "True"
 
 
@@ -22,6 +24,13 @@ DISABLE_PERMISSIONS = False
 SITE_URL = "localhost"
 
 BASE_DIR = os.path.dirname(__file__)
+
+SKIP_CONFIG_LOAD = False
+
+try:
+    GPF_INSTANCE_CONFIG_PATH = get_wgpf_instance_path() / "gpf_instance.yaml"
+except ValueError:
+    print("Couldn't find GPF Instance")
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),

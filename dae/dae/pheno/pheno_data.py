@@ -24,34 +24,38 @@ from dae.variants.attributes import Role
 logger = logging.getLogger(__name__)
 
 
-def get_pheno_db_dir(dae_config: Box | None) -> str:
+def get_pheno_db_dir(dae_config: dict | None) -> str:
     """Return the directory where phenotype data configurations are located."""
     if dae_config is not None:
-        if dae_config.phenotype_data is None or \
-                dae_config.phenotype_data.dir is None:
-            pheno_data_dir = os.path.join(
-                dae_config.conf_dir, "pheno")
+        if (
+            dae_config.get("phenotype_data") is None
+            or dae_config["phenotype_data"]["dir"] is None
+        ):
+            pheno_data_dir = os.path.join(dae_config["conf_dir"], "pheno")
         else:
-            pheno_data_dir = dae_config.phenotype_data.dir
+            pheno_data_dir = dae_config["phenotype_data"]["dir"]
     else:
-        pheno_data_dir = os.path.join(
-            os.environ.get("DAE_DB_DIR", ""), "pheno")
+        pheno_data_dir = os.path.join(os.environ.get("DAE_DB_DIR", ""), "pheno")
 
     return pheno_data_dir
 
 
-def get_pheno_browser_images_dir(dae_config: Box | None = None) -> str:
+def get_pheno_browser_images_dir(dae_config: dict | None = None) -> Path:
     """Get images directory for pheno DB."""
-    pheno_db_dir = os.environ.get(
-        "DAE_PHENODB_DIR",
-        get_pheno_db_dir(dae_config),
-    )
-    browser_images_path = os.path.join(pheno_db_dir, "images")
-    if not os.path.exists(browser_images_path):
-        logger.error(
-            "Pheno images path %s does not exist!", browser_images_path,
-        )
-    return browser_images_path
+    if dae_config is None:
+        pheno_data_dir = get_pheno_db_dir(dae_config)
+        return Path(pheno_data_dir, "images")
+    images_dir = dae_config.get("phenotype_images")
+    if images_dir is not None:
+        return Path(images_dir)
+
+    cache_dir = dae_config.get("cache_path")
+    if cache_dir is None:
+        images_path = Path(get_pheno_db_dir(dae_config), "images")
+    else:
+        images_path = Path(cache_dir, "images")
+
+    return images_path
 
 
 class Instrument:
@@ -241,7 +245,7 @@ class PhenotypeData(ABC):
         search_term: str | None,
         page: int | None = None,
         sort_by: str | None = None,
-        order_by:  str | None = None,
+        order_by: str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         """Yield measures in the DB according to filters."""
 
@@ -520,7 +524,7 @@ class PhenotypeStudy(PhenotypeData):
         search_term: str | None,
         page: int | None = None,
         sort_by: str | None = None,
-        order_by:  str | None = None,
+        order_by: str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         measures = self.browser.search_measures(
             instrument,
@@ -587,14 +591,17 @@ class PhenotypeGroup(PhenotypeData):
     """Represents a group of phenotype data studies or groups."""
 
     def __init__(
-        self, pheno_id: str, config: dict | None,
+        self,
+        pheno_id: str,
+        config: dict | None,
         children: list[PhenotypeData],
         cache_path: Path | None = None,
     ) -> None:
         super().__init__(pheno_id, cast(Box, config), cache_path=cache_path)
         self.children = children
         instruments, measures = self._merge_instruments(
-            [ph.instruments for ph in self.children])
+            [ph.instruments for ph in self.children],
+        )
         self._instruments.update(instruments)
 
         self._measures.update(measures)
@@ -670,7 +677,7 @@ class PhenotypeGroup(PhenotypeData):
         search_term: str | None,
         page: int | None = None,
         sort_by: str | None = None,
-        order_by:  str | None = None,
+        order_by: str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         generators = [
             pheno.search_measures(

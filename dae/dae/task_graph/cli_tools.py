@@ -79,6 +79,11 @@ class TaskGraphCli:
             "--keep-going", default=False, action="store_true",
             help="Whether or not to keep executing in case of an error",
         )
+        executor_group.add_argument(
+            "--no-cache",
+            action="store_true",
+            help="Do not create cache files for tasks",
+        )
         if force_mode == "optional":
             execution_mode_group.add_argument(
                 "--force", "-f", default=False, action="store_true",
@@ -142,7 +147,10 @@ class TaskGraphCli:
 
         force = None if force_mode == "always" else args.get("force")
         task_cache = TaskCache.create(
-            force=force, cache_dir=args.get("task_status_dir"))
+            force=force,
+            cache_dir=args.get("task_status_dir"),
+            no_cache=args.get("no_cache"),
+        )
 
         if args.command is None or args.command == "run":
             if task_graph_all_done(task_graph, task_cache):

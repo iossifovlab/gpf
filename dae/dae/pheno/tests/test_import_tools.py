@@ -19,7 +19,7 @@ def test_dir(
     setup_directories(root_path, {
         "conf_1.yaml": textwrap.dedent("""
             id: first
-            output_dir: test_out
+            work_dir: test_out
             instrument_files:
                 - instruments/i1.csv
             pedigree: family.ped
@@ -28,7 +28,7 @@ def test_dir(
         "conf_2.yaml": textwrap.dedent("""
             id: first
             input_dir: test_inp
-            output_dir: test_out
+            work_dir: test_out
             instrument_files:
                 - instruments/i1.csv
             pedigree: family.ped
@@ -37,7 +37,7 @@ def test_dir(
         "conf_3.yaml": textwrap.dedent("""
             id: first
             input_dir: /home/user/test_inp
-            output_dir: test_out
+            work_dir: test_out
             instrument_files:
                 - instruments/i1.csv
             pedigree: family.ped
@@ -45,7 +45,7 @@ def test_dir(
         """),
         "conf_4.yaml": textwrap.dedent("""
             id: first
-            output_dir: /home/user/test_out
+            work_dir: /home/user/test_out
             instrument_files:
                 - instruments/i1.csv
             pedigree: family.ped
@@ -67,7 +67,7 @@ def test_pheno_import_tool(
         PhenoImportConfig(
             id="first",
             input_dir=str(test_dir),
-            output_dir=str(test_dir / "test_out"),
+            work_dir=str(test_dir / "test_out"),
             instrument_files=["instruments/i1.csv"],
             pedigree="family.ped",
             person_column="person_id",
@@ -87,6 +87,7 @@ def test_pheno_import_tool(
         keep_going=False,
         force=False,
         task_status_dir=".",
+        no_cache=False,
     )
 
 
@@ -125,7 +126,7 @@ def test_pheno_import_tool_input_dir_absolute(
         "/home/user/test_inp"
 
 
-def test_pheno_import_tool_output_dir_relative(
+def test_pheno_import_tool_work_dir_relative(
     mocker: pytest_mock.MockerFixture,
     test_dir: Path,
 ) -> None:
@@ -135,16 +136,16 @@ def test_pheno_import_tool_output_dir_relative(
     mocked_import_func = \
         mocker.patch("dae.pheno.import_tools.import_pheno_data")
     main([str(test_dir / "conf_1.yaml")])
-    assert mocked_import_func.call_args[0][0].output_dir == \
+    assert mocked_import_func.call_args[0][0].work_dir == \
         str(test_dir / "test_out")
 
 
-def test_pheno_import_tool_output_dir_absolute(
+def test_pheno_import_tool_work_dir_absolute(
     mocker: pytest_mock.MockerFixture,
     test_dir: Path,
 ) -> None:
     mocked_import_func = \
         mocker.patch("dae.pheno.import_tools.import_pheno_data")
     main([str(test_dir / "conf_4.yaml")])
-    assert mocked_import_func.call_args[0][0].output_dir == \
+    assert mocked_import_func.call_args[0][0].work_dir == \
         "/home/user/test_out"

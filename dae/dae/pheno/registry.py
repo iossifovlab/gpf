@@ -40,6 +40,8 @@ class PhenoRegistry:
         self.browser_cache_path = browser_cache_path
         self._cache: dict[str, PhenotypeData] = {}
         self._storage_registry = storage_registry
+        if self.browser_cache_path is not None:
+            self.browser_cache_path.mkdir(parents=True, exist_ok=True)
         if configurations is not None:
             for configuration in configurations:
                 try:
@@ -136,13 +138,24 @@ class PhenoRegistry:
         config = self._study_configs[pheno_id]
 
         if config["type"] == "study":
-            return self._load_study(config)
+            pheno_data = self._load_study(config)
+        elif config["type"] == "group":
+            pheno_data = self._load_group(config)
+        else:
+            raise ValueError(f"Invalid type '{config['type']}'"
+                                f" in config for {pheno_id}")
 
-        if config["type"] == "group":
-            return self._load_group(config)
+        cache_path = self._make_cache_path_for(config)
+        pheno_data.cache_path = cache_path
+        return pheno_data
 
-        raise ValueError(f"Invalid type '{config['type']}'"
-                            f" in config for {pheno_id}")
+    def _make_cache_path_for(self, study_config: dict) -> Path | None:
+        if self.browser_cache_path is None:
+            return None
+
+        path = self.browser_cache_path / study_config["name"]
+        path.mkdir(parents=True, exist_ok=True)
+        return path
 
     def _load_study(self, study_config: dict) -> PhenotypeData:
         pheno_id = study_config["name"]
