@@ -6,7 +6,9 @@ import math
 import mimetypes
 import os
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from collections.abc import Generator, Iterable, Sequence
+from functools import cached_property
 from itertools import chain, islice
 from pathlib import Path
 from typing import Any, cast
@@ -15,11 +17,13 @@ import duckdb
 import pandas as pd
 from box import Box
 
+from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import Person
 from dae.pheno.browser import PhenoBrowser
 from dae.pheno.common import IMPORT_METADATA_TABLE, ImportManifest, MeasureType
 from dae.pheno.db import PhenoDb
 from dae.utils.helpers import isnan
-from dae.variants.attributes import Role
+from dae.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)
 
@@ -193,6 +197,10 @@ class PhenotypeData(ABC):
         self._browser: PhenoBrowser | None = None
         self.cache_path = cache_path / self.pheno_id if cache_path else None
 
+    @cached_property
+    def families(self) -> FamiliesData:
+        raise NotImplementedError
+
     @property
     def pheno_id(self) -> str:
         return self._pheno_id
@@ -281,6 +289,29 @@ class PhenotypeData(ABC):
     @abstractmethod
     def get_measures_info(self) -> dict[str, Any]:
         pass
+
+    @abstractmethod
+    def get_persons_df(self) -> pd.DataFrame:
+        pass
+
+    def get_persons(self) -> dict[str, Person]:
+        "Return individuals data from phenotype database."
+        persons = {}
+        df = self.get_persons_df()
+        for row in df.to_dict("records"):
+            person_id = row["person_id"]
+            row["role"] = Role.from_value(row["role"])
+            row["sex"] = Sex.from_value(row["sex"])
+            row["status"] = Status.from_value(row["status"])
+
+            person = Person(**row)  # type: ignore
+            assert row["role"] in Role, f"{row['role']} not a valid role"
+            assert row["sex"] in Sex, f"{row['sex']} not a valid sex"
+            assert row["status"] in Status, \
+                f"{row['status']} not a valid status"
+
+            persons[person_id] = person
+        return persons
 
     @abstractmethod
     def search_measures(
@@ -485,6 +516,14 @@ class PhenotypeStudy(PhenotypeData):
             )[0],
         ]
 
+    @cached_property
+    def families(self) -> FamiliesData:
+        families = defaultdict(list)
+        persons = self.get_persons()
+        for person in list(persons.values()):
+            families[person.family_id].append(person)
+        return FamiliesData.from_family_persons(families)
+
     def _get_measures_df(
         self,
         instrument: str | None = None,
@@ -636,6 +675,9 @@ class PhenotypeStudy(PhenotypeData):
         self, *, leaves: bool = True,  # noqa: ARG002
     ) -> list[str]:
         return [self.pheno_id]
+
+    def get_persons_df(self) -> pd.DataFrame:
+        return self.db.get_persons_df()
 
 
 class PhenotypeGroup(PhenotypeData):
@@ -822,3 +864,6 @@ class PhenotypeGroup(PhenotypeData):
                 how="inner",
             )
         return out_df
+
+    def get_persons_df(self) -> pd.DataFrame:
+        raise NotImplementedError
