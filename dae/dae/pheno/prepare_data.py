@@ -320,9 +320,9 @@ class PreparePhenoBrowserBase:
         configs = {}
         for child in study.children:
             if child.config["type"] == "study":
-                configs[child.config["name"]] = child.config
+                configs[child.config["id"]] = child.config
             elif child.config["type"] == "group":
-                configs[child.config["name"]] = child.config
+                configs[child.config["id"]] = child.config
                 configs.update(
                     self.collect_child_configs(cast(PhenotypeGroup, child)),
                 )

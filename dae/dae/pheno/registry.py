@@ -153,7 +153,7 @@ class PhenoRegistry:
         if self.browser_cache_path is None:
             return None
 
-        path = self.browser_cache_path / study_config["name"]
+        path = self.browser_cache_path / study_config["id"]
         path.mkdir(parents=True, exist_ok=True)
         return path
 
