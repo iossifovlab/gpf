@@ -179,6 +179,7 @@ def generate_phenotype_data_config(
     config = {
         "vars": {"wd": "."},
         "type": "study",
+        "id": pheno_name,
         "name": pheno_name,
         "browser_images_url": "static/images/",
     }

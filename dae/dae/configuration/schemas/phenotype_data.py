@@ -16,7 +16,8 @@ regression_conf_schema = {
 }
 
 pheno_conf_schema = {
-    "name": {"type": "string", "required": True},
+    "id": {"type": "string", "required": True},
+    "name": {"type": "string", "required": False},
     "enabled": {"type": "boolean", "default": True},
     "type": {
         "type": "string",

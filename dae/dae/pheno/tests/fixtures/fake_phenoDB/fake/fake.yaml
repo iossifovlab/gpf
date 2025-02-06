@@ -1,4 +1,5 @@
-name: fake
+id: fake
+name: Fake Study
 type: study
 dbfile: fake.db
 

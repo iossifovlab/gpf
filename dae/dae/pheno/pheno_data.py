@@ -185,6 +185,9 @@ class PhenotypeData(ABC):
     ) -> None:
         self._pheno_id: str = pheno_id
         self.config = config
+        self.name = self.config.get("name", pheno_id) \
+            if self.config is not None \
+            else pheno_id
         self._measures: dict[str, Measure] = {}
         self._instruments: dict[str, Instrument] = {}
         self._browser: PhenoBrowser | None = None
@@ -411,8 +414,6 @@ class PhenotypeStudy(PhenotypeData):
     and call the method *load()*.
 
     Common fields of this class are:
-
-    * `families` -- list of all families in the database
 
     * `persons` -- list of all individuals in the database
 

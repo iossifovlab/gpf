@@ -142,7 +142,7 @@ class DatasetView(QueryBaseView):
         else:
             res = {
                 "id": dataset.phenotype_data.pheno_id,
-                "name": dataset.phenotype_data.pheno_id,
+                "name": dataset.phenotype_data.name,
                 "genotype_browser": False,
                 "phenotype_browser": {"enabled": True},
                 "phenotype_tool": False,
@@ -451,7 +451,7 @@ class DatasetHierarchyView(QueryBaseView):
 
         return {
             "dataset": dataset.pheno_id,
-            "name": dataset.pheno_id,
+            "name": dataset.name,
             "children": None,
             "access_rights": has_rights,
         }

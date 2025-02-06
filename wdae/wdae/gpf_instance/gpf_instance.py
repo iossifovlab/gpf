@@ -146,8 +146,14 @@ class WGPFInstance(GPFInstance):
 
     def get_available_data_ids(self) -> list[str]:
         """Get the IDs of all available data - genotypic and phenotypic."""
-        result = self.get_genotype_data_ids() \
-                + self.get_phenotype_data_ids()
+        available: set[str] = set()
+        for data_id in self.get_genotype_data_ids() \
+                     + self.get_phenotype_data_ids():
+            if data_id in available:
+                raise ValueError(f"Duplicate study {data_id}!")
+            available.add(data_id)
+
+        result = list(available)
 
         if self.visible_datasets is None:
             return result

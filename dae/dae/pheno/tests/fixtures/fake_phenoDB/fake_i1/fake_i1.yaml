@@ -1,3 +1,4 @@
 dbfile: '%(wd)s/fake_i1.db'
-name: fake_i1
+id: fake_i1
+name: Fake Study 1
 type: study
