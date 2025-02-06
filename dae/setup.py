@@ -142,6 +142,7 @@ setuptools.setup(
 
     denovo2vcf=dae.tools.denovo2vcf:main
     dae2vcf=dae.tools.dae2vcf:main
+    vcf2tsv=dae.tools.vcf2tsv:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
