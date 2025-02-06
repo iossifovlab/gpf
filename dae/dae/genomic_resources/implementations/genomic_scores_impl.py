@@ -306,6 +306,12 @@ class GenomicScoreImplementation(
         )
         return min_max_tasks, merge_task
 
+    def statistic_add_value(
+        self, statistic: MinMaxValue,
+        value: float,
+    ) -> None:
+        statistic.add_value(value)
+
     @staticmethod
     def _do_min_max(
         resource: GenomicResource,
@@ -323,7 +329,10 @@ class GenomicScoreImplementation(
             for _left, _right, rec in score._fetch_region_values(  # noqa
                     chrom, start, end, score_ids):
                 for score_index, score_id in enumerate(score_ids):
-                    result[score_id].add_value(rec[score_index])  # type: ignore
+                    impl.statistic_add_value(
+                        result[score_id],
+                        rec[score_index],  # type: ignore
+                    )
         return result
 
     @staticmethod
@@ -601,6 +610,13 @@ class CnvCollectionImplementation(GenomicScoreImplementation):
             value,
             1,
         )
+
+    def statistic_add_value(
+        self, statistic: MinMaxValue,
+        value: Any,
+    ) -> None:
+        statistic.add_value(value)
+        statistic.count()
 
 
 def build_score_implementation_from_resource(

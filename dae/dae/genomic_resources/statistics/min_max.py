@@ -12,12 +12,17 @@ class MinMaxValue(Statistic):
     """Statistic that calculates Min and Max values in a genomic score."""
 
     def __init__(
-            self, score_id: str,
-            min_value: float = np.nan, max_value: float = np.nan):
+        self,
+        score_id: str,
+        min_value: float = np.nan,
+        max_value: float = np.nan,
+        count: int = 0,
+    ):
         super().__init__("min_max", "Calculates Min and Max values")
         self.score_id = score_id
         self.min = min_value
         self.max = max_value
+        self._count = count
 
     def add_value(self, value: float | None) -> None:
         if value is None:
@@ -40,16 +45,33 @@ class MinMaxValue(Statistic):
             self.max = max(other.max, self.max)
         else:
             self.max = max(self.max, other.max)
+        self._count += other.get_count()
+
+    def count(self) -> None:
+        self._count += 1
+
+    def get_count(self) -> int:
+        return self._count
 
     def serialize(self) -> str:
-        return cast(str, yaml.dump(
-            {"score_id": self.score_id, "min": self.min, "max": self.max}),
-        )
+        serialized = {
+            "score_id": self.score_id,
+            "min": self.min,
+            "max": self.max,
+        }
+        if self._count != 0:
+            serialized["count"] = 0
+        return cast(str, yaml.dump(serialized))
 
     @staticmethod
     def deserialize(content: str) -> MinMaxValue:
         data = yaml.load(content, yaml.Loader)
-        return MinMaxValue(data["score_id"], data["min"], data["max"])
+        return MinMaxValue(
+            data["score_id"],
+            data["min"],
+            data["max"],
+            data["count"],
+        )
 
 
 class MinMaxValueStatisticMixin:
