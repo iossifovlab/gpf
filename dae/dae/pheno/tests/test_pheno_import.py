@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import argparse
 import pathlib
 import textwrap
 import time
@@ -12,6 +13,7 @@ from dae.genomic_resources.testing import (
     setup_directories,
 )
 from dae.pheno.common import (
+    DestinationConfig,
     InstrumentConfig,
     MeasureDescriptionsConfig,
     PhenoImportConfig,
@@ -21,6 +23,7 @@ from dae.pheno.pheno_import import (
     ImportInstrument,
     ImportManifest,
     collect_instruments,
+    import_pheno_data,
     load_descriptions,
     main,
 )
@@ -345,3 +348,31 @@ def test_load_descriptions_file_with_overrides(tmp_path: pathlib.Path) -> None:
         "theSpecialInstrument.measure1": "description three",
         "theSpecialInstrument.measure2": "description two",
     }
+
+
+def test_destination_storage_dir_option(
+    import_data_fixture: tuple[Path, Path, Path, Path],
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    storage_dir = tmp_path_factory.mktemp("test_storage_dir")
+    ped_path, instruments_dir, out_dir, _ = import_data_fixture
+    import_config = PhenoImportConfig(
+        id="test",
+        input_dir=str(instruments_dir.parent),
+        work_dir=str(out_dir),
+        instrument_files=[str(instruments_dir)],
+        pedigree=str(ped_path),
+        person_column="person_id",
+        destination=DestinationConfig(storage_dir=str(storage_dir)),
+    )
+    args = argparse.Namespace(
+        no_cache=True, force=True, jobs=1,
+        task_status_dir=None, dask_cluster_name=None,
+        dask_cluster_config_file=None,
+    )
+
+    import_pheno_data(import_config, args)
+
+    assert storage_dir.exists()
+    assert (storage_dir / "test.yaml").exists()
+    assert (storage_dir / "test.db").exists()

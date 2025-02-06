@@ -72,7 +72,8 @@ class GPFInstanceConfig(BaseModel):
 class DestinationConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    storage_id: str
+    storage_id: str | None = None
+    storage_dir: str | None = None
 
 
 class InstrumentConfig(BaseModel):
