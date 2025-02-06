@@ -466,11 +466,23 @@ def import_pheno_data(
 
     if config_copy_destination:
         config_copy_destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(pheno_conf_path, config_copy_destination)
+        try:
+            shutil.copy(pheno_conf_path, config_copy_destination)
+        except shutil.SameFileError:
+            logger.warning(
+                "Tried to copy pheno config to where it already is %s",
+                str(config_copy_destination),
+            )
 
     if data_copy_destination:
         data_copy_destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(pheno_db_filename, data_copy_destination)
+        try:
+            shutil.copy(pheno_db_filename, data_copy_destination)
+        except shutil.SameFileError:
+            logger.warning(
+                "Tried to copy pheno data to where it already is %s",
+                str(data_copy_destination),
+            )
 
 
 def handle_measure_inference_tasks(
