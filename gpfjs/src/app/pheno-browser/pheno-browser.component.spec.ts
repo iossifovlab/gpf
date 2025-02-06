@@ -260,6 +260,7 @@ describe('PhenoBrowserComponent', () => {
 
     const validateSpy = jest.spyOn(phenoBrowserServiceMock, 'validateMeasureDownload');
     const downloadSpy = jest.spyOn(phenoBrowserServiceMock, 'getDownloadMeasuresLink');
+    jest.spyOn(window, 'open').mockImplementation();
 
     validateSpy.mockReturnValue(of({ status: 404 }));
     component.downloadMeasures();
@@ -275,10 +276,57 @@ describe('PhenoBrowserComponent', () => {
 
     component.errorModalMsg = '';
 
+    validateSpy.mockReturnValue(of({ status: 204 }));
+    component.downloadMeasures();
+    expect(validateSpy).toHaveBeenCalledWith(data);
+    expect(downloadSpy).not.toHaveBeenCalled();
+    expect(component.errorModalMsg).toBe('No instruments, select more than 0!');
+
+    component.errorModalMsg = '';
+
     validateSpy.mockReturnValue(of({ status: 200 }));
     component.downloadMeasures();
     expect(validateSpy).toHaveBeenCalledWith(data);
     expect(downloadSpy).toHaveBeenCalledWith(data);
+    expect(component.errorModalMsg).toBe('');
+  });
+
+  it('should get invalid dataset', () => {
+    jest.clearAllMocks();
+    jest.spyOn(store, 'select').mockReturnValueOnce(of(null));
+    jest.spyOn(MockDatasetsService.prototype, 'getDataset').mockReturnValueOnce(of(null));
+    component.selectedDataset = undefined;
+    component.ngOnInit();
+    expect(component.selectedDataset).toBeUndefined();
+  });
+
+  it('should set search value and instrument in url', () => {
+    const replaceStateSpy = jest.spyOn(component['location'], 'replaceState');
+    component['updateUrl']('searchValue', 'i1');
+    expect(replaceStateSpy).toHaveBeenCalledWith('i1/searchValue');
+  });
+
+  it('should not update measures when response is undefined', () => {
+    jest.clearAllMocks();
+    jest.spyOn(MockPhenoBrowserService.prototype, 'getMeasures').mockReturnValueOnce(of([] as PhenoMeasure[]));
+    component.measuresLoading = true;
+    const measures = new PhenoMeasures(
+      'imgUrl', [
+        new PhenoMeasure(1, 'i1', '12', '', '', 'mId', 'mName', 'mType', 'mDesc', null, 'baseUrl')
+      ],
+      true,
+      {}
+    );
+    component.measuresToShow = measures;
+
+    component['updateTable']();
+    expect(component.measuresLoading).toBe(false);
+    expect(component.measuresToShow).toStrictEqual(measures);
+  });
+
+  it('should clear error message when click back button in modal', () => {
+    component.errorModalMsg = 'some error message';
+    component.errorModalMsgBack();
     expect(component.errorModalMsg).toBe('');
   });
 });

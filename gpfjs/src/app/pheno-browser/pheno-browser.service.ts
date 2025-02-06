@@ -40,7 +40,7 @@ export class PhenoBrowserService {
     return this.http.get(this.config.baseUrl + this.measureDescription, options).pipe(map(res => res));
   }
 
-  private getHeaders() {
+  private getHeaders(): { 'X-CSRFToken': string; 'Content-Type': string; } {
     const csrfToken = this.cookieService.get('csrftoken');
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const headers = { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' };
