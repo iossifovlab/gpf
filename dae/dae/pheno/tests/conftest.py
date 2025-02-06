@@ -53,7 +53,7 @@ def fake_phenotype_data(fake_pheno_db: PhenoRegistry) -> PhenotypeData:
 @pytest.fixture(scope="session")
 def fake_phenotype_data_browser_dbfile() -> str:
     return relative_to_this_folder(
-        "fixtures/fake_phenoDB/fake/browser.db",
+        "fixtures/fake_phenoDB/fake/fake_browser.db",
     )
 
 
@@ -88,7 +88,7 @@ def fake_browserdb_file_copy(
     tmp_path: Path,
     fake_phenotype_data_browser_dbfile,
 ) -> str:
-    temp_dbfile = str(tmp_path / "browser.db")
+    temp_dbfile = str(tmp_path / "fake_browser.db")
     shutil.copy(
         fake_phenotype_data_browser_dbfile,
         temp_dbfile,

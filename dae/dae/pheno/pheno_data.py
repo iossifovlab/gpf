@@ -205,7 +205,7 @@ class PhenotypeData(ABC):
     ) -> PhenoBrowser:
         """Load pheno browser from pheno configuration."""
         db_dir = pheno_data.cache_path or Path(pheno_data.config["conf_dir"])
-        browser_dbfile = db_dir / "browser.db"
+        browser_dbfile = db_dir / f"{pheno_data.pheno_id}_browser.db"
         if not read_only and not browser_dbfile.exists():
             conn = duckdb.connect(browser_dbfile, read_only=False)
             conn.checkpoint()
