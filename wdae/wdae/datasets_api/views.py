@@ -342,7 +342,7 @@ class BaseDatasetPermissionsView(QueryBaseView):
                     users_found.add(user.email)
         users_list = sorted(users_list, key=itemgetter("email"))
 
-        dataset_gd = self.gpf_instance.get_genotype_data(
+        dataset_gd = self.gpf_instance.get_wdae_wrapper(
             dataset.dataset_id,
         )
 
@@ -363,7 +363,6 @@ class BaseDatasetPermissionsView(QueryBaseView):
             "broken": dataset.broken,
             "users": users_list,
             "groups": group_names,
-
         }
 
 
