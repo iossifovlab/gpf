@@ -652,7 +652,7 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
             families_report_collections = \
                 list(self.person_set_collections.values())
 
-        families_report = FamiliesReport.from_genotype_study(
+        families_report = FamiliesReport.from_study(
             self,
             families_report_collections,
         )

@@ -517,21 +517,23 @@ class PhenotypeData(ABC):
 
     def build_report(self) -> CommonReport:
         """Generate common report JSON from genotpye data study."""
-        config = self.config.common_report
+        config = self.config["common_report"]
 
-        assert config.enabled, self.pheno_id
+        assert config["enabled"], self.pheno_id
 
-        if config.selected_person_set_collections.family_report:
+        selected = config.get("selected_person_set_collections")
+
+        if selected and selected.get("family_report"):
             families_report_collections = [
                 self.person_set_collections[collection_id]
                 for collection_id in
-                config.selected_person_set_collections.family_report
+                config["selected_person_set_collections"]["family_report"]
             ]
         else:
             families_report_collections = \
                 list(self.person_set_collections.values())
 
-        families_report = FamiliesReport.from_genotype_study(
+        families_report = FamiliesReport.from_study(
             self,
             families_report_collections,
         )
@@ -540,14 +542,10 @@ class PhenotypeData(ABC):
             families_report_collections,
         )
 
-        person_sets_config = \
-            self.config.person_set_collections
-
-        assert person_sets_config.selected_person_set_collections \
-            is not None, config
+        person_sets_config = self.config.get("person_set_collections")
 
         collection = self.get_person_set_collection(
-            person_sets_config.selected_person_set_collections[0],
+            person_sets_config["selected_person_set_collections"][0],
         )
 
         phenotype: list[str] = []
@@ -599,9 +597,9 @@ class PhenotypeData(ABC):
         the report. You can force building the report by
         passing `force=True` to the function.
         """
-        if not self.config.common_report.enabled:
+        if not self.config["common_report"]["enabled"]:
             return None
-        report_filename = self.config.common_report.file_path
+        report_filename = self.config["common_report"]["file_path"]
         try:
             if os.path.exists(report_filename) and not force:
                 return CommonReport.load(report_filename)
@@ -615,10 +613,10 @@ class PhenotypeData(ABC):
 
     def get_common_report(self) -> CommonReport | None:
         """Return a study's common report."""
-        if not self.config.common_report.enabled:
+        if not self.config["common_report"]["enabled"]:
             return None
 
-        report = CommonReport.load(self.config.common_report.file_path)
+        report = CommonReport.load(self.config["common_report"]["file_path"])
         if report is None:
             report = self.build_and_save()
         return report

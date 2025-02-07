@@ -21,15 +21,15 @@ class FamiliesReport:
         }
 
     @staticmethod
-    def from_genotype_study(
-        genotype_data_study: Any,
+    def from_study(
+        study: Any,
         person_set_collections: Iterable[PersonSetCollection],
     ) -> FamiliesReport:
         """Create a family report from a genotype study."""
-        config = genotype_data_study.config.common_report
+        config = study.config["common_report"]
         return FamiliesReport.from_families_data(
-            genotype_data_study.families, person_set_collections,
-            draw_all_families=config.draw_all_families)
+            study.families, person_set_collections,
+            draw_all_families=config["draw_all_families"])
 
     @staticmethod
     def from_families_data(
