@@ -269,7 +269,7 @@ def test_datasets_permissions(
 
     data = response.json()
 
-    assert len(data) == 4
+    assert len(data) == 5
     assert set(data[0].keys()) == {
         "dataset_id",
         "dataset_name",
