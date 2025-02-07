@@ -241,7 +241,7 @@ def test_cnv_collection_implementation_do_min_max(
     )
 
     assert isinstance(statistics["freq"], MinMaxValue)
-    assert statistics["freq"].get_count() == 3
+    assert statistics["freq"].count == 3
 
 
 def test_cli_manage_cnv_collection_histograms(

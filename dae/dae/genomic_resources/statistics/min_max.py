@@ -22,7 +22,7 @@ class MinMaxValue(Statistic):
         self.score_id = score_id
         self.min = min_value
         self.max = max_value
-        self._count = count
+        self.count = count
 
     def add_value(self, value: float | None) -> None:
         if value is None:
@@ -32,7 +32,7 @@ class MinMaxValue(Statistic):
 
     def merge(self, other: Statistic) -> None:
         if not isinstance(other, MinMaxValue):
-            raise ValueError("unexpected type of statistics to merge with")
+            raise TypeError("unexpected type of statistics to merge with")
         if self.score_id != other.score_id:
             raise ValueError(
                 "Attempting to merge min max values of different scores!",
@@ -45,13 +45,10 @@ class MinMaxValue(Statistic):
             self.max = max(other.max, self.max)
         else:
             self.max = max(self.max, other.max)
-        self._count += other.get_count()
+        self.count += other.count
 
-    def count(self) -> None:
-        self._count += 1
-
-    def get_count(self) -> int:
-        return self._count
+    def add_count(self, count: int = 1) -> None:
+        self.count += count
 
     def serialize(self) -> str:
         serialized = {
@@ -59,13 +56,13 @@ class MinMaxValue(Statistic):
             "min": self.min,
             "max": self.max,
         }
-        if self._count != 0:
-            serialized["count"] = 0
+        if self.count != 0:
+            serialized["count"] = self.count
         return cast(str, yaml.dump(serialized))
 
     @staticmethod
     def deserialize(content: str) -> MinMaxValue:
-        data = yaml.load(content, yaml.Loader)
+        data = yaml.safe_load(content)
         return MinMaxValue(
             data["score_id"],
             data["min"],

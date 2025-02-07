@@ -306,7 +306,7 @@ class GenomicScoreImplementation(
         )
         return min_max_tasks, merge_task
 
-    def statistic_add_value(
+    def _min_max_add_value(
         self, statistic: MinMaxValue,
         value: float,
     ) -> None:
@@ -329,7 +329,7 @@ class GenomicScoreImplementation(
             for _left, _right, rec in score._fetch_region_values(  # noqa
                     chrom, start, end, score_ids):
                 for score_index, score_id in enumerate(score_ids):
-                    impl.statistic_add_value(
+                    impl._min_max_add_value(  # noqa: SLF001
                         result[score_id],
                         rec[score_index],  # type: ignore
                     )
@@ -420,7 +420,7 @@ class GenomicScoreImplementation(
         )
         return histogram_tasks, merge_task, save_task
 
-    def histogram_add_value(
+    def _histogram_add_value(
         self, histogram: Histogram,
         value: Any,
         count: int,
@@ -455,7 +455,7 @@ class GenomicScoreImplementation(
                 for scr_index, scr_id in enumerate(score_ids):
 
                     try:
-                        impl.histogram_add_value(
+                        impl._histogram_add_value(  # noqa: SLF001
                             result[scr_id],
                             rec[scr_index],  # type: ignore
                             right - left + 1,
@@ -601,7 +601,7 @@ class CnvCollectionImplementation(GenomicScoreImplementation):
     def get_statistics_info(self, **kwargs: Any) -> str:
         return super().get_statistics_info(**kwargs)
 
-    def histogram_add_value(
+    def _histogram_add_value(
         self, histogram: Histogram,
         value: Any,
         count: int,  # noqa: ARG002
@@ -611,12 +611,12 @@ class CnvCollectionImplementation(GenomicScoreImplementation):
             1,
         )
 
-    def statistic_add_value(
+    def _min_max_add_value(
         self, statistic: MinMaxValue,
         value: Any,
     ) -> None:
         statistic.add_value(value)
-        statistic.count()
+        statistic.add_count()
 
 
 def build_score_implementation_from_resource(
