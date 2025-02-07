@@ -67,8 +67,9 @@ function main() {
 
   build_stage "Clean and fetch fresh dependencies"
   {
-    build_run rm -rf dist dist.orig
+    build_run rm -rf dist dist.orig packages
     build_run rm -rf node_modules package-lock.json
+    build_run mkdir -p packages
     build_run npm install
   }
 
@@ -119,6 +120,7 @@ function main() {
             gpfjs/
       )
 
+    build run tar cvzf packages/gpfjs-production-package.tar.gz -C dist gpfjs
   }
 
   build_stage "Compile conda package"
@@ -158,6 +160,7 @@ function main() {
             gpfjs/
       )
 
+    build run tar cvzf packages/gpfjs-conda-package.tar.gz -C dist gpfjs
   }
 
 }
