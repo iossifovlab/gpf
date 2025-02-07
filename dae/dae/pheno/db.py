@@ -46,6 +46,21 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         return {i_name: table_(t_name) for i_name, t_name in results}
 
+    def get_persons_df(self) -> pd.DataFrame:
+        """Return individuals data from phenotype database as a dataframe."""
+        person_table = self.person
+        columns = [
+            column("family_id", person_table.alias_or_name),
+            column("person_id", person_table.alias_or_name),
+            column("role", person_table.alias_or_name),
+            column("status", person_table.alias_or_name),
+            column("sex", person_table.alias_or_name),
+        ]
+        query: Any = select(*columns).from_(person_table)
+        with self.connection.cursor() as cursor:
+            df = cursor.execute(to_duckdb_transpile(query)).df()
+        return df[["person_id", "family_id", "role", "sex", "status"]]
+
     def get_measures_df(
         self,
         instrument: str | None = None,

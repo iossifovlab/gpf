@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -19,7 +20,6 @@ from pydantic import (
 
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Person
-from dae.pheno.pheno_data import MeasureType, PhenotypeData
 from dae.variants.attributes import Sex
 
 logger = logging.getLogger(__name__)
@@ -453,7 +453,9 @@ class PersonSetCollection:
         return person_set_collection
 
     def collect_person_collection_attributes(
-        self, person: Person, pheno_db: PhenotypeData | None,
+        self,
+        person: Person,
+        pheno_fetcher: Callable | None,
     ) -> tuple[str, ...]:
         """Collect all configured attributes for a Person."""
         values = []
@@ -464,13 +466,8 @@ class PersonSetCollection:
                 # attributes can be of an enum type
                 if value is not None:
                     value = str(value)
-            elif source.from_ == "phenodb" and pheno_db is not None:
-                assert pheno_db.get_measure(source.source).measure_type \
-                    in {MeasureType.categorical, MeasureType.ordinal}, (
-                    f"Continuous measures not allowed in person sets! "
-                    f"({source.source})")
-
-                pheno_values = list(pheno_db.get_people_measure_values(
+            elif source.from_ == "phenodb" and pheno_fetcher is not None:
+                pheno_values = list(pheno_fetcher(
                     [source.source],
                     person_ids=[person.person_id],
                 ))
@@ -478,6 +475,9 @@ class PersonSetCollection:
                     value = None
                 else:
                     value = pheno_values[0][source.source]
+                    assert type(value) in {int, str}, (
+                        f"Continuous measures not allowed in person sets! "
+                        f"({source.source})")
             else:
                 raise ValueError(f"Invalid source type {source.from_}!")
             values.append(value)
@@ -488,7 +488,7 @@ class PersonSetCollection:
     def from_families(
         psc_config: PersonSetCollectionConfig,
         families_data: FamiliesData,
-        pheno_db: PhenotypeData | None = None,
+        pheno_fetcher: Callable | None = None,
     ) -> PersonSetCollection:
         """Produce a PersonSetCollection from a config and pedigree."""
         collection = PersonSetCollection(
@@ -505,7 +505,7 @@ class PersonSetCollection:
         for person_id, person in families_data.real_persons.items():
             assert not person.missing
             value = collection.collect_person_collection_attributes(
-                person, pheno_db)
+                person, pheno_fetcher)
             if value not in value_to_id:
                 collection.default.persons[person_id] = person
             else:

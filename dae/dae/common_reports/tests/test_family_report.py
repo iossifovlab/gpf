@@ -8,7 +8,7 @@ def test_families_report(
     study1: GenotypeDataStudy,
     phenotype_role_collection: PersonSetCollection,
 ) -> None:
-    families_report = FamiliesReport.from_genotype_study(
+    families_report = FamiliesReport.from_study(
         study1, [phenotype_role_collection],
     )
     assert len(families_report.families_counters) == 1

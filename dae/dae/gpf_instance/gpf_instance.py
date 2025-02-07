@@ -487,7 +487,10 @@ class GPFInstance:
         """Load and return common report (dataset statistics) for a study."""
         study = self.get_genotype_data(study_id)
         if study is None:
-            return None
+            if self.has_phenotype_data(study_id):
+                study = self.get_phenotype_data(study_id)
+            else:
+                return None
         return study.get_common_report()
 
     def get_all_common_report_configs(self) -> list[Box]:

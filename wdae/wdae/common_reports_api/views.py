@@ -113,7 +113,12 @@ class FamilyCounterDownloadView(QueryBaseView, DatasetAccessRightsView):
 
         counter_families = group.counters[counter_id].families
 
-        study_families = self.gpf_instance.get_genotype_data(study_id).families
+        wrapper = self.gpf_instance.get_wdae_wrapper(study_id)
+        assert wrapper is not None
+        if wrapper.is_genotype:
+            study_families = wrapper.genotype_data.families
+        else:
+            study_families = wrapper.phenotype_data.families
 
         counter_families_data = FamiliesData.from_families({
             family_id: study_families[family_id]

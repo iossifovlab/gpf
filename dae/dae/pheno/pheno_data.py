@@ -6,7 +6,9 @@ import math
 import mimetypes
 import os
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from collections.abc import Generator, Iterable, Sequence
+from functools import cached_property
 from itertools import chain, islice
 from pathlib import Path
 from typing import Any, cast
@@ -15,11 +17,21 @@ import duckdb
 import pandas as pd
 from box import Box
 
+from dae.common_reports.common_report import CommonReport
+from dae.common_reports.family_report import FamiliesReport
+from dae.common_reports.people_counter import PeopleReport
+from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import Person
+from dae.person_sets.person_sets import (
+    PersonSetCollection,
+    PersonSetCollectionConfig,
+    parse_person_set_collections_study_config,
+)
 from dae.pheno.browser import PhenoBrowser
 from dae.pheno.common import IMPORT_METADATA_TABLE, ImportManifest, MeasureType
 from dae.pheno.db import PhenoDb
 from dae.utils.helpers import isnan
-from dae.variants.attributes import Role
+from dae.variants.attributes import Role, Sex, Status
 
 logger = logging.getLogger(__name__)
 
@@ -192,6 +204,11 @@ class PhenotypeData(ABC):
         self._instruments: dict[str, Instrument] = {}
         self._browser: PhenoBrowser | None = None
         self.cache_path = cache_path / self.pheno_id if cache_path else None
+        self.person_set_collections: dict[str, PersonSetCollection] = {}
+
+    @cached_property
+    def families(self) -> FamiliesData:
+        raise NotImplementedError
 
     @property
     def pheno_id(self) -> str:
@@ -281,6 +298,29 @@ class PhenotypeData(ABC):
     @abstractmethod
     def get_measures_info(self) -> dict[str, Any]:
         pass
+
+    @abstractmethod
+    def get_persons_df(self) -> pd.DataFrame:
+        pass
+
+    def get_persons(self) -> dict[str, Person]:
+        "Return individuals data from phenotype database."
+        persons = {}
+        df = self.get_persons_df()
+        for row in df.to_dict("records"):
+            person_id = row["person_id"]
+            row["role"] = Role.from_value(row["role"])
+            row["sex"] = Sex.from_value(row["sex"])
+            row["status"] = Status.from_value(row["status"])
+
+            person = Person(**row)  # type: ignore
+            assert row["role"] in Role, f"{row['role']} not a valid role"
+            assert row["sex"] in Sex, f"{row['sex']} not a valid sex"
+            assert row["status"] in Status, \
+                f"{row['status']} not a valid status"
+
+            persons[person_id] = person
+        return persons
 
     @abstractmethod
     def search_measures(
@@ -446,6 +486,141 @@ class PhenotypeData(ABC):
         """Return all phenotype studies' ids in the group."""
         raise NotImplementedError
 
+    @abstractmethod
+    def _build_person_set_collection(
+        self, psc_config: PersonSetCollectionConfig,
+        families: FamiliesData,
+    ) -> PersonSetCollection:
+        pass
+
+    def _build_person_set_collections(
+        self,
+        pheno_config: dict[str, Any] | None,
+        families: FamiliesData,
+    ) -> dict[str, PersonSetCollection]:
+        if pheno_config is None:
+            return {}
+        if "person_set_collections" not in pheno_config:
+            return {}
+        pscs_config = parse_person_set_collections_study_config(pheno_config)
+        return {
+            psc_id: self._build_person_set_collection(psc_config, families)
+            for psc_id, psc_config in pscs_config.items()
+        }
+
+    def get_person_set_collection(
+        self, person_set_collection_id: str | None,
+    ) -> PersonSetCollection | None:
+        if person_set_collection_id is None:
+            return None
+        return self.person_set_collections.get(person_set_collection_id)
+
+    def build_report(self) -> CommonReport:
+        """Generate common report JSON from genotpye data study."""
+        config = self.config["common_report"]
+
+        assert config["enabled"], self.pheno_id
+
+        selected = config.get("selected_person_set_collections")
+
+        if selected and selected.get("family_report"):
+            families_report_collections = [
+                self.person_set_collections[collection_id]
+                for collection_id in
+                config["selected_person_set_collections"]["family_report"]
+            ]
+        else:
+            families_report_collections = \
+                list(self.person_set_collections.values())
+
+        families_report = FamiliesReport.from_study(
+            self,
+            families_report_collections,
+        )
+
+        people_report = PeopleReport.from_person_set_collections(
+            families_report_collections,
+        )
+
+        person_sets_config = self.config.get("person_set_collections")
+
+        collection = self.get_person_set_collection(
+            person_sets_config["selected_person_set_collections"][0],
+        )
+
+        phenotype: list[str] = []
+        assert collection is not None
+        for person_set in collection.person_sets.values():
+            if len(person_set.persons) > 0:
+                phenotype += person_set.values
+
+        number_of_probands = 0
+        number_of_siblings = 0
+        for family in self.families.values():
+            for person in family.members_in_order:
+                if not family.member_is_child(person.person_id):
+                    continue
+                if person.role == Role.prb:
+                    number_of_probands += 1
+                if person.role == Role.sib:
+                    number_of_siblings += 1
+
+        return CommonReport({
+            "id": self.pheno_id,
+            "people_report": people_report.to_dict(),
+            "families_report": families_report.to_dict(full=True),
+            "denovo_report": None,
+            "study_name": self.name,
+            "phenotype": phenotype,
+            "study_type": None,
+            "study_year": None,
+            "pub_med": None,
+            "families": len(self.families.values()),
+            "number_of_probands": number_of_probands,
+            "number_of_siblings": number_of_siblings,
+            "denovo": False,
+            "transmitted": False,
+            "study_description": "placeholder description",
+        })
+
+    def build_and_save(
+        self,
+        *,
+        force: bool = False,
+    ) -> CommonReport | None:
+        """Build a common report for a study, saves it and returns the report.
+
+        If the common reports are disabled for the study, the function skips
+        building the report and returns None.
+
+        If the report already exists the default behavior is to skip building
+        the report. You can force building the report by
+        passing `force=True` to the function.
+        """
+        if not self.config["common_report"]["enabled"]:
+            return None
+        report_filename = self.config["common_report"]["file_path"]
+        try:
+            if os.path.exists(report_filename) and not force:
+                return CommonReport.load(report_filename)
+        except Exception:  # noqa: BLE001
+            logger.warning(
+                "unable to load common report for %s", self.pheno_id,
+                exc_info=True)
+        report = self.build_report()
+        report.save(report_filename)
+        return report
+
+    def get_common_report(self) -> CommonReport | None:
+        """Return a study's common report."""
+        if not self.config["common_report"]["enabled"]:
+            return None
+
+        report = CommonReport.load(self.config["common_report"]["file_path"])
+        if report is None:
+            report = self.build_and_save()
+        return report
+
 
 class PhenotypeStudy(PhenotypeData):
     """
@@ -474,6 +649,10 @@ class PhenotypeStudy(PhenotypeData):
         self.config = config
         df = self._get_measures_df()
         self._instruments = self._load_instruments(df)
+        self.person_set_collections = self._build_person_set_collections(
+            self.config,
+            self.families,
+        )
         logger.info("phenotype study %s fully loaded", pheno_id)
 
     def generate_import_manifests(
@@ -484,6 +663,14 @@ class PhenotypeStudy(PhenotypeData):
                 self.db.connection, IMPORT_METADATA_TABLE,
             )[0],
         ]
+
+    @cached_property
+    def families(self) -> FamiliesData:
+        families = defaultdict(list)
+        persons = self.get_persons()
+        for person in list(persons.values()):
+            families[person.family_id].append(person)
+        return FamiliesData.from_family_persons(families)
 
     def _get_measures_df(
         self,
@@ -636,6 +823,21 @@ class PhenotypeStudy(PhenotypeData):
         self, *, leaves: bool = True,  # noqa: ARG002
     ) -> list[str]:
         return [self.pheno_id]
+
+    def get_persons_df(self) -> pd.DataFrame:
+        return self.db.get_persons_df()
+
+    def _build_person_set_collection(
+        self,
+        psc_config: PersonSetCollectionConfig,
+        families: FamiliesData,
+    ) -> PersonSetCollection:
+        psc = PersonSetCollection.from_families(psc_config, self.families)
+        for fpid, person in families.real_persons.items():
+            person_set_value = psc.get_person_set_of_person(fpid)
+            assert person_set_value is not None
+            person.set_attr(psc.id, person_set_value.id)
+        return psc
 
 
 class PhenotypeGroup(PhenotypeData):
@@ -822,3 +1024,13 @@ class PhenotypeGroup(PhenotypeData):
                 how="inner",
             )
         return out_df
+
+    def get_persons_df(self) -> pd.DataFrame:
+        raise NotImplementedError
+
+    def _build_person_set_collection(
+        self,
+        psc_config: PersonSetCollectionConfig,
+        families: FamiliesData,
+    ) -> PersonSetCollection:
+        raise NotImplementedError

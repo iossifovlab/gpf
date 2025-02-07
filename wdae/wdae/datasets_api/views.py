@@ -147,7 +147,6 @@ class DatasetView(QueryBaseView):
                 "phenotype_browser": {"enabled": True},
                 "phenotype_tool": False,
                 "enrichment_tool": False,
-                "common_report": {"enabled": False},
                 "phenotype_data": dataset.phenotype_data.pheno_id,
                 "study_type": "Phenotype study",
                 "studies": [],
@@ -159,6 +158,8 @@ class DatasetView(QueryBaseView):
                 "gene_browser": {"enabled": False},
                 "description_editable": False,
             }
+            res["common_report"] = \
+                dataset.phenotype_data.config["common_report"]
 
         allowed_datasets = self.get_permitted_datasets(user)
         res = augment_accessibility(res, allowed_datasets)
