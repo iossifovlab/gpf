@@ -22,7 +22,7 @@ const queryMock = {
       description: null,
     },
   },
-  errorsState: 'erors',
+  errorsState: 'errors',
   page: 'genotype'
 };
 
