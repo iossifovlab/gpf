@@ -120,7 +120,7 @@ function main() {
             gpfjs/
       )
 
-    build run tar cvzf packages/gpfjs-production-package.tar.gz -C dist gpfjs
+    build_run tar cvzf packages/gpfjs-production-package.tar.gz -C dist gpfjs
   }
 
   build_stage "Compile conda package"
@@ -160,7 +160,7 @@ function main() {
             gpfjs/
       )
 
-    build run tar cvzf packages/gpfjs-conda-package.tar.gz -C dist gpfjs
+    build_run tar cvzf packages/gpfjs-conda-package.tar.gz -C dist gpfjs
   }
 
 }
