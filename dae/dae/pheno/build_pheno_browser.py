@@ -7,13 +7,11 @@ from typing import Any
 from box import Box
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-from dae.pheno.browser import PhenoBrowser
 from dae.pheno.pheno_data import (
     PhenotypeData,
     get_pheno_browser_images_dir,
     get_pheno_db_dir,
 )
-from dae.pheno.pheno_import import IMPORT_METADATA_TABLE, ImportManifest
 from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.pheno.registry import PhenoRegistry
 from dae.pheno.storage import PhenotypeStorage, PhenotypeStorageRegistry
@@ -73,36 +71,6 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def must_rebuild(pheno_data: PhenotypeData, browser: PhenoBrowser) -> bool:
-    """Check if a rebuild is required according to manifests."""
-    manifests = {
-        manifest.import_config.id: manifest
-        for manifest in ImportManifest.from_table(
-            browser.connection, IMPORT_METADATA_TABLE,
-        )
-    }
-
-    if len(manifests) == 0:
-        logger.warning("No manifests found in browser; either fresh or legacy")
-        return True
-
-    pheno_data_manifests = {
-        manifest.import_config.id: manifest
-        for manifest in ImportManifest.from_phenotype_data(pheno_data)
-    }
-    if len(set(manifests).symmetric_difference(pheno_data_manifests)) > 0:
-        logger.warning("Manifest count mismatch between input and browser")
-        return True
-
-    is_outdated = False
-    for pheno_id, pheno_manifest in pheno_data_manifests.items():
-        browser_manifest = manifests[pheno_id]
-        if browser_manifest.is_older_than(pheno_manifest):
-            logger.warning("Browser manifest outdated for %s", pheno_id)
-            is_outdated = True
-    return is_outdated
-
-
 def build_pheno_browser(
     pheno_db_dir: Path,
     storage_registry: PhenotypeStorageRegistry,
@@ -118,7 +86,7 @@ def build_pheno_browser(
         pheno_data,
         read_only=False,
     )
-    rebuild = must_rebuild(pheno_data, browser)
+    rebuild = pheno_data.is_browser_outdated(browser)
     if (rebuild or kwargs["force"]) and not kwargs["dry_run"]:
         prep = PreparePhenoBrowserBase(
             pheno_db_dir,

@@ -1,10 +1,12 @@
 from django.conf import settings
+from django.contrib.staticfiles import views
 from django.urls import include, path, re_path
 from gpfjs.views import favicon, index
 from users_api.views import WdaeLoginView
 
 urlpatterns = [
     re_path(r"^$", index),
+    re_path(r"^gpfjs/static/(?P<path>.*)$", views.serve),
     re_path(r"^gpfjs/.*$", index),
     re_path(r"^favicon.ico$", favicon),
     re_path(r"^api/v3/datasets", include("datasets_api.urls")),

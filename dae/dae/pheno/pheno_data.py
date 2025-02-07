@@ -16,7 +16,7 @@ import pandas as pd
 from box import Box
 
 from dae.pheno.browser import PhenoBrowser
-from dae.pheno.common import MeasureType
+from dae.pheno.common import IMPORT_METADATA_TABLE, ImportManifest, MeasureType
 from dae.pheno.db import PhenoDb
 from dae.utils.helpers import isnan
 from dae.variants.attributes import Role
@@ -197,6 +197,12 @@ class PhenotypeData(ABC):
     def pheno_id(self) -> str:
         return self._pheno_id
 
+    def generate_import_manifests(
+        self,
+    ) -> list[ImportManifest]:
+        """Collect all manifests in a phenotype data instance."""
+        raise NotImplementedError
+
     @staticmethod
     def create_browser(
         pheno_data: PhenotypeData,
@@ -205,16 +211,51 @@ class PhenotypeData(ABC):
     ) -> PhenoBrowser:
         """Load pheno browser from pheno configuration."""
         db_dir = pheno_data.cache_path or Path(pheno_data.config["conf_dir"])
-        browser_dbfile = db_dir / "browser.db"
+        browser_dbfile = db_dir / f"{pheno_data.pheno_id}_browser.db"
         if not read_only and not browser_dbfile.exists():
             conn = duckdb.connect(browser_dbfile, read_only=False)
             conn.checkpoint()
             PhenoBrowser.create_browser_tables(conn)
             conn.close()
-        return PhenoBrowser(
+        browser = PhenoBrowser(
             str(browser_dbfile),
             read_only=read_only,
         )
+
+        pheno_data.is_browser_outdated(browser)
+
+        return browser
+
+    def is_browser_outdated(self, browser: PhenoBrowser) -> bool:
+        """Check if a rebuild is required according to manifests."""
+        manifests = {
+            manifest.import_config.id: manifest
+            for manifest in ImportManifest.from_table(
+                browser.connection, IMPORT_METADATA_TABLE,
+            )
+        }
+
+        if len(manifests) == 0:
+            logger.warning(
+                "No manifests found in browser; either fresh or legacy",
+            )
+            return True
+
+        pheno_data_manifests = {
+            manifest.import_config.id: manifest
+            for manifest in self.generate_import_manifests()
+        }
+        if len(set(manifests).symmetric_difference(pheno_data_manifests)) > 0:
+            logger.warning("Manifest count mismatch between input and browser")
+            return True
+
+        is_outdated = False
+        for pheno_id, pheno_manifest in pheno_data_manifests.items():
+            browser_manifest = manifests[pheno_id]
+            if browser_manifest.is_older_than(pheno_manifest):
+                logger.warning("Browser manifest outdated for %s", pheno_id)
+                is_outdated = True
+        return is_outdated
 
     @property
     def browser(self) -> PhenoBrowser:
@@ -435,6 +476,15 @@ class PhenotypeStudy(PhenotypeData):
         self._instruments = self._load_instruments(df)
         logger.info("phenotype study %s fully loaded", pheno_id)
 
+    def generate_import_manifests(
+        self,
+    ) -> list[ImportManifest]:
+        return [
+            ImportManifest.from_table(
+                self.db.connection, IMPORT_METADATA_TABLE,
+            )[0],
+        ]
+
     def _get_measures_df(
         self,
         instrument: str | None = None,
@@ -616,6 +666,17 @@ class PhenotypeGroup(PhenotypeData):
             else:
                 leaves.extend(cast(PhenotypeGroup, child).get_leaves())
         return leaves
+
+    def generate_import_manifests(
+        self,
+    ) -> list[ImportManifest]:
+        leaves = self.get_leaves()
+        return [
+            ImportManifest.from_table(
+                leaf.db.connection, IMPORT_METADATA_TABLE,
+            )[0]
+            for leaf in leaves
+        ]
 
     def get_children_ids(self, *, leaves: bool = True) -> list[str]:
         studies = self.get_leaves() if leaves else self.children

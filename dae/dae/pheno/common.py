@@ -1,8 +1,18 @@
 from __future__ import annotations
 
 import enum
+import time
+from typing import Any
 
+import duckdb
+import sqlglot
 from pydantic import BaseModel, ConfigDict
+from sqlglot import insert, select
+from sqlglot.expressions import Table, table_
+
+from dae.utils.sql_utils import to_duckdb_transpile
+
+IMPORT_METADATA_TABLE = table_("import_metadata")
 
 
 class RankRange(BaseModel):
@@ -72,7 +82,8 @@ class GPFInstanceConfig(BaseModel):
 class DestinationConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    storage_id: str
+    storage_id: str | None = None
+    storage_dir: str | None = None
 
 
 class InstrumentConfig(BaseModel):
@@ -129,3 +140,64 @@ class MeasureType(enum.Enum):
     @staticmethod
     def is_text(measure_type: MeasureType) -> bool:
         return not MeasureType.is_numeric(measure_type)
+
+
+class ImportManifest(BaseModel):
+    """Import manifest for checking cache validity."""
+
+    unix_timestamp: float
+    import_config: PhenoImportConfig
+
+    def is_older_than(self, other: ImportManifest) -> bool:
+        if self.unix_timestamp < other.unix_timestamp:
+            return True
+        return self.import_config != other.import_config
+
+    @staticmethod
+    def from_row(row: tuple[str, Any, str]) -> ImportManifest:
+        timestamp = float(row[0])
+        import_config = PhenoImportConfig.model_validate_json(row[1])
+        return ImportManifest(
+            unix_timestamp=timestamp,
+            import_config=import_config,
+        )
+
+    @staticmethod
+    def from_table(
+        connection: duckdb.DuckDBPyConnection, table: Table,
+    ) -> list[ImportManifest]:
+        """Read manifests from given table."""
+        with connection.cursor() as cursor:
+            table_row = cursor.execute(sqlglot.parse_one(
+                "SELECT * FROM information_schema.tables"  # noqa: S608
+                f" WHERE table_name = '{table.alias_or_name}'",
+            ).sql()).fetchone()
+            if table_row is None:
+                return []
+            rows = cursor.execute(select("*").from_(table).sql()).fetchall()
+        return [ImportManifest.from_row(row) for row in rows]
+
+    @staticmethod
+    def create_table(connection: duckdb.DuckDBPyConnection, table: Table):
+        """Create table for recording import manifests."""
+        query = sqlglot.parse_one(
+            f"CREATE TABLE {table.alias_or_name} "
+            "(unix_timestamp DOUBLE, import_config VARCHAR)",
+        ).sql()
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+
+    @staticmethod
+    def write_to_db(
+        connection: duckdb.DuckDBPyConnection,
+        table: Table,
+        import_config: PhenoImportConfig,
+    ):
+        """Write manifest into DB on given table."""
+        config_json = import_config.model_dump_json()
+        timestamp = time.time()
+        query = insert(
+            f"VALUES ({timestamp}, '{config_json}')", table,
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(to_duckdb_transpile(query)).fetchall()
