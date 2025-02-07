@@ -322,7 +322,8 @@ def test_phenotype_person_set_categorical(
     t4c8_study_1 = t4c8_instance.get_phenotype_data("study_1_pheno")
 
     pheno_categorical_collection = PersonSetCollection.from_families(
-        config["pheno_cat"], families_fixture, t4c8_study_1,
+        config["pheno_cat"], families_fixture,
+        t4c8_study_1.get_people_measure_values,
     )
 
     val3 = set(
@@ -364,7 +365,8 @@ def test_phenotype_person_set_continuous(
 
     with pytest.raises(AssertionError) as excinfo:
         PersonSetCollection.from_families(
-            config["pheno_cont"], families_fixture, study_1_pheno,
+            config["pheno_cont"], families_fixture,
+            study_1_pheno.get_people_measure_values,
         )
 
     assert (
