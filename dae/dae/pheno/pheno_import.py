@@ -874,6 +874,8 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
             status INT NOT NULL DEFAULT {Status.unaffected.value},
             sex INT NOT NULL,
             sample_id VARCHAR,
+            dad_id VARCHAR,
+            mom_id VARCHAR,
             PRIMARY KEY (family_id, person_id)
         );
         CREATE UNIQUE INDEX person_person_id_idx
@@ -942,7 +944,7 @@ def read_pedigree(
         cursor.execute(
             "INSERT INTO person "
             "SELECT family_id, person_id, "
-            "role, status, sex, sample_id FROM ped_df ",
+            "role, status, sex, sample_id, dad_id, mom_id FROM ped_df ",
         )
     return ped_df
 
