@@ -12,12 +12,17 @@ class MinMaxValue(Statistic):
     """Statistic that calculates Min and Max values in a genomic score."""
 
     def __init__(
-            self, score_id: str,
-            min_value: float = np.nan, max_value: float = np.nan):
+        self,
+        score_id: str,
+        min_value: float = np.nan,
+        max_value: float = np.nan,
+        count: int = 0,
+    ):
         super().__init__("min_max", "Calculates Min and Max values")
         self.score_id = score_id
         self.min = min_value
         self.max = max_value
+        self.count = count
 
     def add_value(self, value: float | None) -> None:
         if value is None:
@@ -27,7 +32,7 @@ class MinMaxValue(Statistic):
 
     def merge(self, other: Statistic) -> None:
         if not isinstance(other, MinMaxValue):
-            raise ValueError("unexpected type of statistics to merge with")
+            raise TypeError("unexpected type of statistics to merge with")
         if self.score_id != other.score_id:
             raise ValueError(
                 "Attempting to merge min max values of different scores!",
@@ -40,16 +45,37 @@ class MinMaxValue(Statistic):
             self.max = max(other.max, self.max)
         else:
             self.max = max(self.max, other.max)
+        self.count += other.count
+
+    def add_count(self, count: int = 1) -> None:
+        self.count += count
 
     def serialize(self) -> str:
-        return cast(str, yaml.dump(
-            {"score_id": self.score_id, "min": self.min, "max": self.max}),
-        )
+        serialized = {
+            "score_id": self.score_id,
+            "min": self.min,
+            "max": self.max,
+        }
+        if self.count != 0:
+            serialized["count"] = self.count
+        return cast(str, yaml.dump(serialized))
 
     @staticmethod
     def deserialize(content: str) -> MinMaxValue:
-        data = yaml.load(content, yaml.Loader)
-        return MinMaxValue(data["score_id"], data["min"], data["max"])
+        data = yaml.safe_load(content)
+
+        if "count" in data:
+            return MinMaxValue(
+                data["score_id"],
+                data["min"],
+                data["max"],
+                data["count"],
+            )
+        return MinMaxValue(
+            data["score_id"],
+            data["min"],
+            data["max"],
+        )
 
 
 class MinMaxValueStatisticMixin:

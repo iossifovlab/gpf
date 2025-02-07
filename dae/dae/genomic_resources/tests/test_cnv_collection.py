@@ -25,6 +25,7 @@ from dae.genomic_resources.repository import (
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
+from dae.genomic_resources.statistics.min_max import MinMaxValue
 from dae.genomic_resources.testing import (
     convert_to_tab_separated,
     setup_directories,
@@ -221,6 +222,26 @@ def test_cnv_collection_implementation_histogram(
     assert histograms["freq"].max_value == 0.3
     assert histograms["freq"].bars.tolist() == [2, 1]
     assert histograms["freq"].bins.tolist() == [0, 0.15, 0.3]
+
+
+def test_cnv_collection_implementation_do_min_max(
+    cnvs_resource: GenomicResource,
+) -> None:
+    hist_conf = build_histogram_config({
+        "histogram": {
+            "type": "number",
+            "view_range": {"min": 0, "max": 0.3},
+            "number_of_bins": 2,
+        },
+    })
+    assert isinstance(hist_conf, HistogramConfig)
+
+    statistics = CnvCollectionImplementation._do_min_max(
+        cnvs_resource, ["freq"], "2", 0, 300,
+    )
+
+    assert isinstance(statistics["freq"], MinMaxValue)
+    assert statistics["freq"].count == 3
 
 
 def test_cli_manage_cnv_collection_histograms(
