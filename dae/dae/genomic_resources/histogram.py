@@ -493,7 +493,7 @@ class NullHistogram(Statistic):
         # pylint: disable=unused-argument
         return
 
-    def merge(self, _other: Any) -> None:
+    def merge(self, other: Any) -> None:  # noqa: ARG002
         return
 
     def to_dict(self) -> dict[str, Any]:
