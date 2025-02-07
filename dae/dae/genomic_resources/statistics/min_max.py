@@ -63,11 +63,18 @@ class MinMaxValue(Statistic):
     @staticmethod
     def deserialize(content: str) -> MinMaxValue:
         data = yaml.safe_load(content)
+
+        if "count" in data:
+            return MinMaxValue(
+                data["score_id"],
+                data["min"],
+                data["max"],
+                data["count"],
+            )
         return MinMaxValue(
             data["score_id"],
             data["min"],
             data["max"],
-            data["count"],
         )
 
 
