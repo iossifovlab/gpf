@@ -14,12 +14,12 @@ from dae.variants_loaders.vcf.loader import VcfLoader
 def inheritance_trio_denovo_omission(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> tuple[str, str]:
-    root_path = tmp_path_factory.mktemp("inheritance_trio_denovo_omission")
+    root_path = tmp_path_factory.mktemp("test_vcf_loader")
     ped_path = setup_pedigree(root_path / "ped_data" / "in.ped", """
-    familyId	personId	dadId	momId	sex	status	role
-    f1		    mom1		0	    0	    2	1	    mom
-    f1		    dad1		0	    0	    1	1	    dad
-    f1		    ch1		    dad1	mom1	2	2	    prb
+    familyId personId dadId momId sex status role
+    f1       mom1     0     0     2   1      mom
+    f1       dad1     0     0     1   1      dad
+    f1       ch1      dad1  mom1  2   2      prb
     """)
 
     vcf_path = setup_vcf(root_path / "vcf_data" / "in.vcf", """
@@ -27,11 +27,11 @@ def inheritance_trio_denovo_omission(
     ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
     ##INFO=<ID=INH,Number=1,Type=String,Description="Inheritance">
     ##contig=<ID=chr1>
-    #CHROM	POS	    ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	mom1	dad1	ch1
-    chr1	1   	.	T	G	.	    .   	INH=OMI	GT	    0/0 	1/0 	1/1
-    chr1	5   	.	T	G	.	    .   	INH=DEN	GT	    1/1 	1/1 	1/0
-    chr1	12  	.	T	G	.	    .   	INH=DEN	GT	    1/1 	1/1 	0/1
-    """)  # noqa: E501
+    #CHROM POS ID REF ALT QUAL FILTER INFO FORMAT mom1 dad1 ch1
+    chr1   1   .  T   G   .    .      .    GT     0/0  1/0  1/1
+    chr1   5   .  T   G   .    .      .    GT     1/1  1/1  1/0
+    chr1   12  .  T   G   .    .      .    GT     1/1  1/1  0/1
+    """)
 
     return (str(ped_path), str(vcf_path))
 

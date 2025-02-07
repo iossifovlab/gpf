@@ -2,7 +2,7 @@ import functools
 import logging
 import os
 import time
-from collections.abc import Iterator
+from collections.abc import Iterable
 from typing import Any, cast
 
 import pyarrow as pa
@@ -272,7 +272,7 @@ class VariantsParquetWriter:
 
     def write_dataset(
         self,
-        full_variants_iterator: Iterator[
+        full_variants_iterator: Iterable[
             tuple[SummaryVariant, list[FamilyVariant]]],
     ) -> list[str]:
         """Write variant to partitioned parquet dataset."""
@@ -368,13 +368,17 @@ class VariantsParquetWriter:
 
             family_variant_data_json = self.serializer.serialize_family(fv)
 
+            denovo_reference = any(
+                i == Inheritance.denovo
+                for i in fv.ref_allele.inheritance_in_members)
+
             family_alleles = []
             if is_unknown_genotype(fv.gt) or \
                         is_all_reference_genotype(fv.gt):
                 assert fv.ref_allele.allele_index == 0
                 family_alleles.append(fv.ref_allele)
                 num_fam_alleles_written += 1
-            elif self.include_reference:
+            elif self.include_reference or denovo_reference:
                 family_alleles.append(fv.ref_allele)
 
             family_alleles.extend(fv.alt_alleles)
@@ -397,18 +401,17 @@ class VariantsParquetWriter:
                         for i in inheritance)
 
                 seen_as_denovo[fa.allele_index] = \
-                        sad or seen_as_denovo[fa.allele_index]
+                    sad or seen_as_denovo[fa.allele_index]
 
                 family_bin_writer = self._get_bin_writer_family(
-                        fa, seen_as_denovo=sad)
+                    fa, seen_as_denovo=sad)
                 family_bin_writer.append_family_allele(
-                        fa, family_variant_data_json,
-                    )
+                    fa, family_variant_data_json)
 
                 family_variants_count[fa.allele_index] += 1
                 num_fam_alleles_written += 1
 
-            # don't store summary alleles withouth family ones
+        # don't store summary alleles withouth family ones
         if num_fam_alleles_written > 0:
             summary_variant.summary_index = summary_index
             summary_variant.ref_allele.update_attributes(
