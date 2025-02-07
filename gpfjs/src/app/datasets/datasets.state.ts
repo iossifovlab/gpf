@@ -1,5 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
-export const initialState = '';
+export const datasetIdInitialState = '';
 
 export const selectDatasetId = createFeatureSelector<string>('datasetId');
 
@@ -13,7 +13,7 @@ export const resetDatasetId = createAction(
 );
 
 export const datasetIdReducer = createReducer(
-  initialState,
+  datasetIdInitialState,
   on(setDatasetId, (state, {datasetId}) => datasetId),
-  on(resetDatasetId, (state,) => initialState),
+  on(resetDatasetId, (state,) => datasetIdInitialState),
 );
