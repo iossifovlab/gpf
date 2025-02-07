@@ -1,4 +1,5 @@
-from dae.configuration.utils import validate_existing_path
+from dae.configuration.schemas.person_sets import person_set_collections_schema
+from dae.configuration.utils import validate_existing_path, validate_path
 
 regression_schema = {
     "instrument_name": {"type": "string"},
@@ -53,6 +54,33 @@ pheno_conf_schema = {
     },
     "browser_images_url": {"type": "string"},
     **regression_conf_schema,
+    "person_set_collections": person_set_collections_schema,
+    "common_report": {
+        "type": "dict",
+        "schema": {
+            "enabled": {"type": "boolean", "required": True},
+            "selected_person_set_collections": {
+                "type": "dict",
+                "schema": {
+                    "denovo_report": {
+                        "type": "list", "schema": {"type": "string"},
+                    },
+                    "family_report": {
+                        "type": "list", "schema": {"type": "string"},
+                    },
+                },
+                "default": {},
+            },
+            "draw_all_families": {"type": "boolean", "default": False},
+            "file_path": {
+                "type": "string",
+                "check_with": validate_path,
+                "coerce": "abspath",
+                "default": "common_report.json",
+            },
+        },
+        "default": {"enabled": False},
+    },
 }
 
 groups_file_schema = {
