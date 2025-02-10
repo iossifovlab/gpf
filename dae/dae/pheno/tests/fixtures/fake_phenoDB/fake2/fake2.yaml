@@ -1,6 +1,6 @@
-dbfile: '%(wd)s/fake2.db'
+browser_images_url: static/images/
 id: fake2
-name: Fake Study 2
+name: fake2
 type: study
 vars:
   wd: .

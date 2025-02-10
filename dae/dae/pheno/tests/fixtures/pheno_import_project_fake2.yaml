@@ -1,0 +1,27 @@
+id: fake2
+
+instrument_files:
+  - instruments2
+
+data_dictionary:
+  files:
+    - path: descriptions.tsv
+
+pedigree: pedigree_data/fake_pheno.ped
+
+person_column: personId
+
+work_dir: work
+
+inference_config:
+  "*.family_id":
+    skip: True
+  "*.role":
+    skip: True
+  "*.status":
+    skip: True
+  "*.sex":
+    skip: True
+
+destination:
+  storage_dir: fake_phenoDB

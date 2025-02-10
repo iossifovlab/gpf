@@ -1,0 +1,42 @@
+id: fake
+
+instrument_files:
+  - instruments
+
+data_dictionary:
+  files:
+    - path: descriptions.tsv
+
+pedigree: pedigree_data/fake_pheno.ped
+
+person_column: personId
+
+study_config:
+  regressions:
+    age:
+      measure_names:
+        - age
+      instrument_name: i1
+      jitter: 0.1
+      display_name: "age"
+    nviq:
+      measure_names:
+        - iq
+      instrument_name: i1
+      jitter: 0.1
+      display_name: "nonverbal iq"
+
+inference_config:
+  "*.family_id":
+    skip: True
+  "*.role":
+    skip: True
+  "*.status":
+    skip: True
+  "*.sex":
+    skip: True
+
+work_dir: work
+
+destination:
+  storage_dir: fake_phenoDB
