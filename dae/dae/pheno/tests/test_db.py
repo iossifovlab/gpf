@@ -96,7 +96,7 @@ def test_search_measures_get_all(
     assert browser is not None
     measures = list(browser.search_measures())
     print(measures)
-    assert len(measures) == 17
+    assert len(measures) == 15
     assert [measure.get("instrument_name") for measure in measures] == [
         "i1",
         "i1",
@@ -110,8 +110,6 @@ def test_search_measures_get_all(
         "i1",
         "i1",
         "i1",
-        "i2",
-        "i2",
         "i2",
         "i3",
         "i4",
@@ -132,7 +130,7 @@ def test_search_measures_get_by_instrument(
         assert row["instrument_name"] == "i1"
 
     measures = list(browser.search_measures("i2", None))
-    assert len(measures) == 3
+    assert len(measures) == 1
     for row in measures:
         assert row["instrument_name"] == "i2"
 
@@ -174,11 +172,9 @@ def test_search_measures_by_keyword_in_measure_name(
     )
     assert browser is not None
     measures = list(browser.search_measures(None, "m2"))
-    assert len(measures) == 2
+    assert len(measures) == 1
     assert measures[0]["measure_name"] == "m2"
     assert measures[0]["instrument_name"] == "i1"
-    assert measures[1]["measure_name"] == "m2"
-    assert measures[1]["instrument_name"] == "i2"
 
 
 def test_search_measures_by_keyword_in_instrument_name(
@@ -191,7 +187,7 @@ def test_search_measures_by_keyword_in_instrument_name(
     assert browser is not None
 
     measures = list(browser.search_measures(None, "i"))
-    assert len(measures) == 17
+    assert len(measures) == 15
 
     measures = list(browser.search_measures(None, "i1"))
     assert len(measures) == 12

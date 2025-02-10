@@ -374,5 +374,5 @@ def test_destination_storage_dir_option(
     import_pheno_data(import_config, args)
 
     assert storage_dir.exists()
-    assert (storage_dir / "test.yaml").exists()
-    assert (storage_dir / "test.db").exists()
+    assert (storage_dir / "test" / "test.yaml").exists()
+    assert (storage_dir / "test" / "test.db").exists()
