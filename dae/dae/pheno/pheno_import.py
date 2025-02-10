@@ -302,8 +302,16 @@ def determine_destination(
     config_copy_destination = None
     if config.destination is not None and \
             config.destination.storage_dir is not None:
-        data_copy_destination = Path(config.destination.storage_dir)
-        config_copy_destination = Path(config.destination.storage_dir)
+        data_copy_destination = Path(
+            config.destination.storage_dir,
+            config.id,
+            f"{config.id}.db",
+        )
+        config_copy_destination = Path(
+            config.destination.storage_dir,
+            config.id,
+            f"{config.id}.yaml",
+        )
     elif gpf_instance is not None:
         if config.destination is not None:
             destination_storage_id = config.destination.storage_id
