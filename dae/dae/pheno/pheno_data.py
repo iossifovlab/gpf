@@ -552,7 +552,7 @@ class PhenotypeData(ABC):
         assert collection is not None
         for person_set in collection.person_sets.values():
             if len(person_set.persons) > 0:
-                phenotype += person_set.values
+                phenotype += person_set.values  # noqa: PD011
 
         number_of_probands = 0
         number_of_siblings = 0
