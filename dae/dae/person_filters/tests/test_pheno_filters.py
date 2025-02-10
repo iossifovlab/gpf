@@ -10,11 +10,10 @@ from dae.person_filters import (
 from dae.pheno.pheno_data import PhenotypeStudy
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_phenotype_data(fixture_dirname):
-    pheno_data = PhenotypeStudy(
-        "fake_db", fixture_dirname("fake_pheno_db/fake.db"))
-    return pheno_data
+    return PhenotypeStudy(
+        "fake_db", fixture_dirname("fake_pheno_db/fake_i1.db"))
 
 
 def test_pheno_filter_set_apply(fake_phenotype_data):
@@ -36,8 +35,8 @@ def test_pheno_filter_set_apply(fake_phenotype_data):
 
 
 def test_pheno_filter_set_noncategorical_measure(fake_phenotype_data):
+    measure = fake_phenotype_data.get_measure("i1.m1")
     with pytest.raises(AssertionError):
-        measure = fake_phenotype_data.get_measure("i1.m1")
         PhenoFilterSet(measure, ["a", "b", "c"], fake_phenotype_data)
 
 
@@ -72,13 +71,15 @@ def test_pheno_filter_range_apply(fake_phenotype_data):
     filtered_df = pheno_filter.apply_to_df(df)
     assert len(filtered_df) == 44
     for value in list(filtered_df["i1.m1"]):
-        assert value > 50.0 and value < 70.0
+        assert value > 50.0
+        assert value < 70.0
 
     pheno_filter = PhenoFilterRange(measure, [70, 80], fake_phenotype_data)
     filtered_df = pheno_filter.apply_to_df(df)
     assert len(filtered_df) == 30
     for value in list(filtered_df["i1.m1"]):
-        assert value > 70.0 and value < 80.0
+        assert value > 70.0
+        assert value < 80.0
 
     pheno_filter = PhenoFilterRange(measure, (None, 70), fake_phenotype_data)
     filtered_df = pheno_filter.apply_to_df(df)
@@ -103,12 +104,12 @@ def test_pheno_filter_range_apply(fake_phenotype_data):
 
 
 def test_pheno_filter_range_measure_type(fake_phenotype_data):
+    measure = fake_phenotype_data.get_measure("i1.m5")
     with pytest.raises(AssertionError):
-        measure = fake_phenotype_data.get_measure("i1.m5")
         PhenoFilterRange(measure, (0, 0), fake_phenotype_data)
 
+    measure = fake_phenotype_data.get_measure("i1.m6")
     with pytest.raises(AssertionError):
-        measure = fake_phenotype_data.get_measure("i1.m6")
         PhenoFilterRange(measure, (0, 0), fake_phenotype_data)
 
 

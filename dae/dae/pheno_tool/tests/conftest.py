@@ -7,9 +7,9 @@ import pytest
 from dae.pheno.pheno_data import PhenotypeData, PhenotypeStudy
 
 
-@pytest.fixture()
+@pytest.fixture
 def fake_phenotype_data(
     fixture_dirname: Callable[[str], str],
 ) -> PhenotypeData:
     return PhenotypeStudy(
-        "fake_db", fixture_dirname("fake_pheno_db/fake.db"))
+        "fake_db", fixture_dirname("fake_pheno_db/fake_i1.db"))

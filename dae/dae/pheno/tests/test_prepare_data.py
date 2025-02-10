@@ -484,14 +484,14 @@ def test_handle_regressions(
     assert images_dir == "test_dir"
     assert measure.measure_id == "i1.m1"
     assert reg_measure.measure_id == "i1.age"
-    assert jitter == 0.12
+    assert jitter == 0.1
     phenotype_data, images_dir, measure, reg_measure, jitter = \
         mocked.call_args_list[1][0]
     assert phenotype_data.pheno_id == fake_phenotype_data.pheno_id
     assert images_dir == "test_dir"
     assert measure.measure_id == "i1.m1"
     assert reg_measure.measure_id == "i1.iq"
-    assert jitter == 0.13
+    assert jitter == 0.1
 
 
 def test_handle_regressions_non_continuous_or_ordinal_measure(
@@ -644,10 +644,10 @@ def test_handle_regressions_default_jitter(
     mocked.assert_called()
     _phenotype_data, _images_dir, _measure, _reg_measure, jitter = \
         mocked.call_args_list[0][0]
-    assert jitter == 0.12
+    assert jitter == 0.1
     _phenotype_data, _images_dir, _measure, _reg_measure, jitter = \
         mocked.call_args_list[1][0]
-    assert jitter == 0.13
+    assert jitter == 0.1
 
 
 def test_draw_violinplot(

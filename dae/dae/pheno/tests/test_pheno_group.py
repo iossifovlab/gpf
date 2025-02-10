@@ -114,14 +114,14 @@ def test_pheno_group_get_people_measure_values(
 def test_pheno_group_get_measures(fake_group: PhenotypeGroup) -> None:
     # Total measures are 30
     measures = fake_group.get_measures(measure_type=MeasureType.continuous)
-    assert len(measures) == 16, measures
+    assert len(measures) == 14, measures
 
     measures = fake_group.get_measures(
         instrument_name="i1", measure_type=MeasureType.continuous)
     assert len(measures) == 7, measures
 
     measures = fake_group.get_measures(measure_type=MeasureType.ordinal)
-    assert len(measures) == 4, measures
+    assert len(measures) == 6, measures
 
     measures = fake_group.get_measures(
         instrument_name="i1", measure_type=MeasureType.ordinal)
