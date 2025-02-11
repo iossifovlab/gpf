@@ -302,8 +302,16 @@ def determine_destination(
     config_copy_destination = None
     if config.destination is not None and \
             config.destination.storage_dir is not None:
-        data_copy_destination = Path(config.destination.storage_dir)
-        config_copy_destination = Path(config.destination.storage_dir)
+        data_copy_destination = Path(
+            config.destination.storage_dir,
+            config.id,
+            f"{config.id}.db",
+        )
+        config_copy_destination = Path(
+            config.destination.storage_dir,
+            config.id,
+            f"{config.id}.yaml",
+        )
     elif gpf_instance is not None:
         if config.destination is not None:
             destination_storage_id = config.destination.storage_id
@@ -874,6 +882,8 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
             status INT NOT NULL DEFAULT {Status.unaffected.value},
             sex INT NOT NULL,
             sample_id VARCHAR,
+            dad_id VARCHAR,
+            mom_id VARCHAR,
             PRIMARY KEY (family_id, person_id)
         );
         CREATE UNIQUE INDEX person_person_id_idx
@@ -942,7 +952,7 @@ def read_pedigree(
         cursor.execute(
             "INSERT INTO person "
             "SELECT family_id, person_id, "
-            "role, status, sex, sample_id FROM ped_df ",
+            "role, status, sex, sample_id, dad_id, mom_id FROM ped_df ",
         )
     return ped_df
 

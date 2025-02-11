@@ -6,7 +6,6 @@ import math
 import mimetypes
 import os
 from abc import ABC, abstractmethod
-from collections import defaultdict
 from collections.abc import Generator, Iterable, Sequence
 from functools import cached_property
 from itertools import chain, islice
@@ -22,6 +21,7 @@ from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.people_counter import PeopleReport
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Person
+from dae.pedigrees.loader import FamiliesLoader
 from dae.person_sets.person_sets import (
     PersonSetCollection,
     PersonSetCollectionConfig,
@@ -552,7 +552,7 @@ class PhenotypeData(ABC):
         assert collection is not None
         for person_set in collection.person_sets.values():
             if len(person_set.persons) > 0:
-                phenotype += person_set.values
+                phenotype += person_set.values  # noqa: PD011
 
         number_of_probands = 0
         number_of_siblings = 0
@@ -666,11 +666,10 @@ class PhenotypeStudy(PhenotypeData):
 
     @cached_property
     def families(self) -> FamiliesData:
-        families = defaultdict(list)
-        persons = self.get_persons()
-        for person in list(persons.values()):
-            families[person.family_id].append(person)
-        return FamiliesData.from_family_persons(families)
+        return FamiliesLoader.build_families_data_from_pedigree(
+            self.get_persons_df(),
+            {"ped_layout_mode": "generate"},
+        )
 
     def _get_measures_df(
         self,

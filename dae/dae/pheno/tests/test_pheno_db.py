@@ -79,7 +79,7 @@ def test_get_measure_type(fake_phenotype_data: PhenotypeStudy) -> None:
     "query_cols", [
         (["i1.m1"]),
         (["i1.m1", "i1.m2"]),
-        (["i1.m1", "i2.m2"]),
+        (["i1.m1", "i2.m1"]),
     ],
 )
 def test_get_people_measure_values(
@@ -211,13 +211,13 @@ def test_get_measures(
     ]
 
     measures = get(fake_phenotype_data, measure_type=MeasureType.continuous)
-    check(measures, 9, expected_cols)
+    check(measures, 7, expected_cols)
 
 
 def test_default_get_measure_df(fake_phenotype_data: PhenotypeStudy) -> None:
     df = fake_phenotype_data._get_measures_df()
     assert df is not None
-    assert len(df) == 17
+    assert len(df) == 15
 
 
 def test_get_query_with_dot_measure(
