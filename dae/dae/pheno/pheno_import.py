@@ -168,7 +168,6 @@ def generate_phenotype_data_config(
 ) -> str:
     """Construct phenotype data configuration from command line arguments."""
     config = {
-        "vars": {"wd": "."},
         "type": "study",
         "id": pheno_name,
         "name": pheno_name,
