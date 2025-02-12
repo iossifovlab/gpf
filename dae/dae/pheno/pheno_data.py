@@ -667,7 +667,6 @@ class PhenotypeStudy(PhenotypeData):
     def families(self) -> FamiliesData:
         return FamiliesLoader.build_families_data_from_pedigree(
             self.get_persons_df(),
-            {"ped_layout_mode": "generate"},
         )
 
     @cached_property

@@ -884,6 +884,28 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
             sample_id VARCHAR,
             dad_id VARCHAR,
             mom_id VARCHAR,
+            layout VARCHAR,
+            generated BOOLEAN DEFAULT false,
+            not_sequenced BOOLEAN DEFAULT false,
+            tag_nuclear_family BOOLEAN DEFAULT false,
+            tag_quad_family BOOLEAN DEFAULT false,
+            tag_trio_family BOOLEAN DEFAULT false,
+            tag_simplex_family BOOLEAN DEFAULT false,
+            tag_multiplex_family BOOLEAN DEFAULT false,
+            tag_control_family BOOLEAN DEFAULT false,
+            tag_affected_dad_family BOOLEAN DEFAULT false,
+            tag_affected_mom_family BOOLEAN DEFAULT false,
+            tag_affected_prb_family BOOLEAN DEFAULT false,
+            tag_affected_sib_family BOOLEAN DEFAULT false,
+            tag_unaffected_dad_family BOOLEAN DEFAULT false,
+            tag_unaffected_mom_family BOOLEAN DEFAULT false,
+            tag_unaffected_prb_family BOOLEAN DEFAULT false,
+            tag_unaffected_sib_family BOOLEAN DEFAULT false,
+            tag_male_prb_family BOOLEAN DEFAULT false,
+            tag_female_prb_family BOOLEAN DEFAULT false,
+            tag_missing_mom_family BOOLEAN DEFAULT false,
+            tag_missing_dad_family BOOLEAN DEFAULT false,
+            member_index INT NOT NULL,
             PRIMARY KEY (family_id, person_id)
         );
         CREATE UNIQUE INDEX person_person_id_idx
@@ -940,9 +962,50 @@ def read_pedigree(
     Also imports the pedigree data into the database.
     """
 
-    ped_df = FamiliesLoader.flexible_pedigree_read(
+    initial_ped_df = FamiliesLoader.flexible_pedigree_read(
         Path(input_dir, pedigree_filepath), enums_as_values=True,
     )
+    families = FamiliesLoader.build_families_data_from_pedigree(
+        initial_ped_df, {"ped_layout_mode": "generate"},
+    )
+
+    columns: list[str] = [
+        "family_id",
+        "person_id",
+        "role",
+        "status",
+        "sex",
+        "sample_id",
+        "dad_id",
+        "mom_id",
+        "layout",
+        "generated",
+        "not_sequenced",
+        "tag_nuclear_family",
+        "tag_quad_family",
+        "tag_trio_family",
+        "tag_simplex_family",
+        "tag_multiplex_family",
+        "tag_control_family",
+        "tag_affected_dad_family",
+        "tag_affected_mom_family",
+        "tag_affected_prb_family",
+        "tag_affected_sib_family",
+        "tag_unaffected_dad_family",
+        "tag_unaffected_mom_family",
+        "tag_unaffected_prb_family",
+        "tag_unaffected_sib_family",
+        "tag_male_prb_family",
+        "tag_female_prb_family",
+        "tag_missing_mom_family",
+        "tag_missing_dad_family",
+        "member_index",
+    ]
+
+    ped_df = families.ped_df
+    ped_df["role"] = ped_df["role"].apply(lambda x: x.value)
+    ped_df["status"] = ped_df["status"].apply(lambda x: x.value)
+    ped_df["sex"] = ped_df["sex"].apply(lambda x: x.value)
 
     with connection.cursor() as cursor:
         cursor.execute(
@@ -950,9 +1013,8 @@ def read_pedigree(
             "SELECT DISTINCT family_id FROM ped_df",
         )
         cursor.execute(
-            "INSERT INTO person "
-            "SELECT family_id, person_id, "
-            "role, status, sex, sample_id, dad_id, mom_id FROM ped_df ",
+            f"INSERT INTO person "
+            f"SELECT {', '.join(columns)} FROM ped_df ",
         )
     return ped_df
 
