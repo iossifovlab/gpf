@@ -40,9 +40,12 @@ export class UsersGroupsService {
         return response.map(user => {
           const usr = UserGroup.fromJson(user);
           // Finding and fixing duplicate dataset names
-          usr.datasets.forEach((d, index) => {
-            if (usr.datasets.indexOf(d) !== index) {
-              d.datasetName += `(${d.datasetId})`;
+          usr.datasets.forEach(dataset => {
+            const allOccurences = usr.datasets.filter(d => d.datasetName === dataset.datasetName);
+            if (allOccurences.length > 1) {
+              allOccurences.forEach(d => {
+                d.datasetName += `(${d.datasetId})`;
+              });
             }
           });
           return usr;

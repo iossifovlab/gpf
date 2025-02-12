@@ -26,6 +26,7 @@ import { PersonFilterState } from 'app/person-filters/person-filters';
 import { FamilyTags } from 'app/family-tags/family-tags';
 import { cloneDeep } from 'lodash';
 import { reset } from '../users/state-actions';
+import { datasetIdInitialState } from 'app/datasets/datasets.state';
 
 export interface State {
   errors: string[];
@@ -51,6 +52,7 @@ export interface State {
   genomicScores: GenomicScoreState[];
   uniqueFamilyVariantsFilter: boolean;
   studyTypes: string[];
+  datasetId: string;
 }
 
 export const initialState: State = {
@@ -77,6 +79,7 @@ export const initialState: State = {
   genomicScores: genomicScoresInitialState,
   uniqueFamilyVariantsFilter: uniqueFamilyVariantsInitialState,
   studyTypes: studyTypesInitialState,
+  datasetId: datasetIdInitialState
 };
 
 export const reducer = createReducer(
