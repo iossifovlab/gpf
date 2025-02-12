@@ -204,10 +204,13 @@ class PhenotypeData(ABC):
         self._instruments: dict[str, Instrument] = {}
         self._browser: PhenoBrowser | None = None
         self.cache_path = cache_path / self.pheno_id if cache_path else None
-        self.person_set_collections: dict[str, PersonSetCollection] = {}
 
     @cached_property
     def families(self) -> FamiliesData:
+        raise NotImplementedError
+
+    @cached_property
+    def person_set_collection(self) -> dict[str, PersonSetCollection]:
         raise NotImplementedError
 
     @property
@@ -649,10 +652,6 @@ class PhenotypeStudy(PhenotypeData):
         self.config = config
         df = self._get_measures_df()
         self._instruments = self._load_instruments(df)
-        self.person_set_collections = self._build_person_set_collections(
-            self.config,
-            self.families,
-        )
         logger.info("phenotype study %s fully loaded", pheno_id)
 
     def generate_import_manifests(
@@ -669,6 +668,13 @@ class PhenotypeStudy(PhenotypeData):
         return FamiliesLoader.build_families_data_from_pedigree(
             self.get_persons_df(),
             {"ped_layout_mode": "generate"},
+        )
+
+    @cached_property
+    def person_set_collections(self) -> dict[str, PersonSetCollection]:
+        return self._build_person_set_collections(
+            self.config,
+            self.families,
         )
 
     def _get_measures_df(
