@@ -210,7 +210,7 @@ class PhenotypeData(ABC):
         raise NotImplementedError
 
     @cached_property
-    def person_set_collection(self) -> dict[str, PersonSetCollection]:
+    def person_set_collections(self) -> dict[str, PersonSetCollection]:
         raise NotImplementedError
 
     @property
