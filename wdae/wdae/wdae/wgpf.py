@@ -151,12 +151,9 @@ def _run_run_command(
     )
     for study_id in study_ids:
         logger.info("Generating browser cache for %s", study_id)
-        gpf_instance_path = pathlib.Path(
-            wgpf_instance.dae_dir, "gpf_instance.yaml",
-        )
         build_pheno_browser([
             study_id, "--gpf-instance",
-            str(gpf_instance_path),
+            str(wgpf_instance.dae_config_path),
             "--no-cache",
         ])
 

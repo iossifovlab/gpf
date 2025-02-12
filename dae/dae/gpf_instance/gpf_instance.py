@@ -67,7 +67,7 @@ class GPFInstance:
     @staticmethod
     def _build_gpf_config(
         config_filename: str | Path | None = None,
-    ) -> tuple[Box, Path]:
+    ) -> tuple[Box, Path, Path]:
         dae_dir: Path | None
         if config_filename is not None:
             config_filename = Path(config_filename)
@@ -87,7 +87,7 @@ class GPFInstance:
                 f"GPF instance config <{config_filename}> does not exists")
         dae_config = GPFConfigParser.load_config(
             str(config_filename), dae_conf_schema)
-        return dae_config, dae_dir
+        return dae_config, dae_dir, config_filename
 
     @staticmethod
     def build(
@@ -102,18 +102,23 @@ class GPFInstance:
         Otherwise look for a gpf_instance.yaml file in the current directory
         and its parents. If found use it as a configuration file.
         """
-        dae_config, dae_dir = GPFInstance._build_gpf_config(config_filename)
-        return GPFInstance(dae_config, dae_dir, **kwargs)
+        dae_config, dae_dir, dae_config_path = \
+            GPFInstance._build_gpf_config(config_filename)
+        return GPFInstance(
+            dae_config, dae_dir, dae_config_path, **kwargs,
+        )
 
     def __init__(
             self,
             dae_config: Box,
             dae_dir: str | Path,
+            dae_config_path: Path,
             **kwargs: dict[str, Any]):
         assert dae_dir is not None
 
         self.dae_config = dae_config
         self.dae_dir = str(dae_dir)
+        self.dae_config_path = dae_config_path
 
         self.instance_id = self.dae_config.get("instance_id")
 

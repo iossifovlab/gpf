@@ -82,12 +82,14 @@ class WGPFInstance(GPFInstance):
     def __init__(
         self, dae_config: dict[str, Any],
         dae_dir: str | pathlib.Path,
+        dae_config_path: pathlib.Path,
         **kwargs: dict[str, Any],
     ) -> None:
         self._remote_study_db: None = None
         self._study_wrappers: dict[str, WDAEStudy] = {}
         self._gp_configuration: dict[str, Any] | None = None
-        super().__init__(cast(Box, dae_config), dae_dir, **kwargs)
+        super().__init__(
+            cast(Box, dae_config), dae_dir, dae_config_path, **kwargs)
 
         self.visible_datasets = None
         if self.dae_config.gpfjs and self.dae_config.gpfjs.visible_datasets:
@@ -108,9 +110,9 @@ class WGPFInstance(GPFInstance):
         config_filename: str | pathlib.Path | None = None,
         **kwargs: Any,
     ) -> WGPFInstance:
-        dae_config, dae_dir = GPFInstance._build_gpf_config(  # noqa: SLF001
+        dae_config, dae_dir, dae_config_path = GPFInstance._build_gpf_config(  # noqa: SLF001
             config_filename)
-        return WGPFInstance(dae_config, dae_dir, **kwargs)
+        return WGPFInstance(dae_config, dae_dir, dae_config_path, **kwargs)
 
     def get_main_description_path(self) -> str:
         return cast(str, self.dae_config.gpfjs.main_description_file)

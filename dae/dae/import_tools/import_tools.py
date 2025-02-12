@@ -659,6 +659,7 @@ class ImportProject:
         state = self.__dict__.copy()
         del state["_gpf_instance"]
         state["_gpf_dae_config"] = gpf_instance.dae_config
+        state["_gpf_dae_config_path"] = gpf_instance.dae_config_path
         state["_gpf_dae_dir"] = gpf_instance.dae_dir
         return state
 
@@ -666,7 +667,10 @@ class ImportProject:
         """Set state of object after unpickling."""
         self.__dict__.update(state)
         self._gpf_instance = GPFInstance(
-            state["_gpf_dae_config"], state["_gpf_dae_dir"])
+            state["_gpf_dae_config"],
+            state["_gpf_dae_dir"],
+            state["_gpf_dae_config_path"],
+        )
 
 
 class ImportConfigNormalizer:
