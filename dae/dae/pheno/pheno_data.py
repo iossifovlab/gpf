@@ -232,7 +232,11 @@ class PhenotypeData(ABC):
         """Load pheno browser from pheno configuration."""
         db_dir = pheno_data.cache_path or Path(pheno_data.config["conf_dir"])
         browser_dbfile = db_dir / f"{pheno_data.pheno_id}_browser.db"
-        if not read_only and not browser_dbfile.exists():
+        if not browser_dbfile.exists():
+            if read_only:
+                raise FileNotFoundError(
+                    f"Browser DB file {browser_dbfile!s} not found.",
+                )
             conn = duckdb.connect(browser_dbfile, read_only=False)
             conn.checkpoint()
             PhenoBrowser.create_browser_tables(conn)
@@ -278,9 +282,13 @@ class PhenotypeData(ABC):
         return is_outdated
 
     @property
-    def browser(self) -> PhenoBrowser:
+    def browser(self) -> PhenoBrowser | None:
         if self._browser is None:
-            self._browser = PhenotypeData.create_browser(self)
+            try:
+                self._browser = PhenotypeData.create_browser(self)
+            except FileNotFoundError:
+                logger.exception(
+                    "Could not create browser for %s", self.pheno_id)
         return self._browser
 
     @property
