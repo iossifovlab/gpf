@@ -167,7 +167,7 @@ def generate_phenotype_data_config(
     overrides: StudyConfig | None,
 ) -> str:
     """Construct phenotype data configuration from command line arguments."""
-    config = {
+    config: dict[str, Any] = {
         "type": "study",
         "id": pheno_name,
         "name": pheno_name,

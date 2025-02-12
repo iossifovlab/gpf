@@ -182,6 +182,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
                 measure_col = column(
                     safe_db_name(measure),
                     instrument_table.alias_or_name,
+                    quoted=True,
                 ).as_(measure_id)
                 query = query.select(
                     measure_col,
