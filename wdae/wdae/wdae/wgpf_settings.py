@@ -42,6 +42,8 @@ GPF_INSTANCE_CONFIG = GPFConfigParser.load_config_dict(
 
 PHENO_BROWSER_CACHE = get_pheno_browser_images_dir(GPF_INSTANCE_CONFIG)
 
+STUDIES_EAGER_LOADING = True
+
 # Additional locations of static files
 STATICFILES_DIRS = (
     ("images", PHENO_BROWSER_CACHE),

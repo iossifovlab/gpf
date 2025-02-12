@@ -12,6 +12,7 @@ from django.core.management import execute_from_command_line
 from gpf_instance.gpf_instance import WGPFInstance
 
 from dae import __version__  # type: ignore
+from dae.pheno.build_pheno_browser import main as build_pheno_browser
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("wgpf")
@@ -113,6 +114,22 @@ def _run_init_command(
         _init_flag(wgpf_instance).touch()
 
 
+def collect_outdated_phenotype_studies(
+    wgpf_instance: WGPFInstance,
+) -> list[str]:
+    collected_ids = []
+    for phenotype_data_id in wgpf_instance.get_phenotype_data_ids():
+        phenotype_data = wgpf_instance.get_phenotype_data(phenotype_data_id)
+        browser = phenotype_data.browser
+        if browser is None:
+            collected_ids.append(phenotype_data_id)
+            continue
+
+        if phenotype_data.is_browser_outdated(browser):
+            collected_ids.append(phenotype_data_id)
+    return collected_ids
+
+
 def _run_run_command(
         wgpf_instance: WGPFInstance, **kwargs: bool | str) -> None:
     if not _check_is_initialized(wgpf_instance):
@@ -124,6 +141,24 @@ def _run_run_command(
 
     host = kwargs.get("host")
     port = kwargs.get("port")
+
+    logger.info("Checking phenotype studies for browser caches")
+    study_ids = collect_outdated_phenotype_studies(wgpf_instance)
+    logger.info(
+        "The following studies have"
+        "missing or outdated browser caches: %s",
+        study_ids,
+    )
+    for study_id in study_ids:
+        logger.info("Generating browser cache for %s", study_id)
+        gpf_instance_path = pathlib.Path(
+            wgpf_instance.dae_dir, "gpf_instance.yaml",
+        )
+        build_pheno_browser([
+            study_id, "--gpf-instance",
+            str(gpf_instance_path),
+            "--no-cache",
+        ])
 
     try:
         execute_from_command_line([
