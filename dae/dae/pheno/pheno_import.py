@@ -41,6 +41,7 @@ from dae.pheno.common import (
     MeasureType,
     PhenoImportConfig,
     RegressionMeasure,
+    StudyConfig,
 )
 from dae.pheno.db import safe_db_name
 from dae.pheno.pheno_data import (
@@ -163,7 +164,7 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
 def generate_phenotype_data_config(
     pheno_name: str,
     storage_id: str | None,
-    regressions: dict[str, RegressionMeasure] | None,
+    overrides: StudyConfig | None,
 ) -> str:
     """Construct phenotype data configuration from command line arguments."""
     config = {
@@ -178,19 +179,15 @@ def generate_phenotype_data_config(
             "id": storage_id,
             "db": f"{pheno_name}/{pheno_name}.db",
         }
-    if regressions is None:
+    if overrides is None:
         return yaml.dump(config)
 
-    config["regression"] = {
-        reg_id: reg_measure.model_dump()
-        for reg_id, reg_measure in regressions.items()
-    }
-    if regressions:
-        for reg in config["regression"].values():
-            if "measure_name" in reg and reg["measure_name"] is None:
-                del reg["measure_name"]
-            if "measure_names" in reg and reg["measure_names"] is None:
-                del reg["measure_names"]
+    overrides_dict = overrides.model_dump()
+    if overrides.common_report is None:
+        del overrides_dict["common_report"]
+    if overrides.person_set_collections is None:
+        del overrides_dict["person_set_collections"]
+    config.update(overrides_dict)
     return yaml.dump(config)
 
 
@@ -447,27 +444,28 @@ def import_pheno_data(
 
     regressions = None
     regression_config = None
-    if config.study_config is not None:
-        regression_config = config.study_config.regressions
-
-    if regression_config is not None:
-        if isinstance(regression_config, str):
-            reg_file = Path(config.input_dir, regression_config)
-            with reg_file.open("r") as file:
-                regs = yaml.safe_load(file)
-            if not isinstance(regs, dict):
-                raise TypeError(
-                    "Invalid regressions file, should be a dictionary",
-                )
-            regressions = {
-                reg_id: RegressionMeasure.model_validate(reg)
-                for reg_id, reg in regs["regression"].items()
-            }
-        else:
-            regressions = regression_config
+    overrides = config.study_config
+    if overrides is not None:
+        regression_config = overrides.regressions
+        if regression_config is not None:
+            if isinstance(regression_config, str):
+                reg_file = Path(config.input_dir, regression_config)
+                with reg_file.open("r") as file:
+                    regs = yaml.safe_load(file)
+                if not isinstance(regs, dict):
+                    raise TypeError(
+                        "Invalid regressions file, should be a dictionary",
+                    )
+                regressions = {
+                    reg_id: RegressionMeasure.model_validate(reg)
+                    for reg_id, reg in regs["regression"].items()
+                }
+            else:
+                regressions = regression_config
+        overrides.regressions = regressions
 
     output_config = generate_phenotype_data_config(
-        config.id, destination_storage_id, regressions)
+        config.id, destination_storage_id, overrides)
 
     pheno_conf_path = Path(config.work_dir, f"{config.id}.yaml")
     pheno_conf_path.write_text(output_config)

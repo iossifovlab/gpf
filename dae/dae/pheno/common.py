@@ -68,9 +68,9 @@ class RegressionMeasure(BaseModel):
 
 
 class StudyConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
     regressions: str | dict[str, RegressionMeasure] | None = None
+    common_report: dict[str, Any] | None = None
+    person_set_collections: dict[str, Any] | None = None
 
 
 class GPFInstanceConfig(BaseModel):

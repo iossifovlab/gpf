@@ -14,6 +14,10 @@ regression_conf_schema = {
         "type": "dict",
         "valuesrules": {"type": "dict", "schema": regression_schema},
     },
+    "regressions": {
+        "type": "dict",
+        "valuesrules": {"type": "dict", "schema": regression_schema},
+    },
 }
 
 pheno_conf_schema = {
