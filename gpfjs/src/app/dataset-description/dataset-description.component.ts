@@ -78,4 +78,8 @@ export class DatasetDescriptionComponent implements OnInit {
   public writeDataset(datasetId: string, text: string): void {
     this.datasetsService.writeDatasetDescription(datasetId, text).pipe(take(1)).subscribe();
   }
+
+  public areChildrenVisible(children: DatasetHierarchy[]): boolean {
+    return children.filter(c => c.visibility).length > 0;
+  }
 }
