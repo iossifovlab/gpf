@@ -24,8 +24,8 @@ export class EnrichmentToolComponent implements OnInit, OnDestroy {
   public disableQueryButtons = false;
 
   public enrichmentState: Observable<object[]>;
+  public enrichmentQuerySubscription: Subscription = null;
   private enrichmentToolState = {};
-  private enrichmentQuerySubscription: Subscription = null;
 
   public constructor(
     private enrichmentQueryService: EnrichmentQueryService,
