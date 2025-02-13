@@ -1233,11 +1233,11 @@ def write_reports_to_parquet(
         ),
         pa.field(
             "min_value",
-            pa.float32(),
+            pa.float64(),
         ),
         pa.field(
             "max_value",
-            pa.float32(),
+            pa.float64(),
         ),
         pa.field(
             "values_domain",
