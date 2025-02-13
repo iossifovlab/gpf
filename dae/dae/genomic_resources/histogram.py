@@ -281,8 +281,11 @@ class NumberHistogram(Statistic):
                     self.config.view_range[1],
                     self.config.number_of_bins + 1,
                 )
-                self._rstep = self.config.number_of_bins / \
-                    (self.view_max() - self.view_min())
+                if (self.view_max() - self.view_min()) <= 0:
+                    self._rstep = 0
+                else:
+                    self._rstep = self.config.number_of_bins / \
+                        (self.view_max() - self.view_min())
             self.bars = np.zeros(self.config.number_of_bins, dtype=np.int64)
             assert not np.any(np.isnan(self.bins)), ("nan bins", self.config)
         elif self.bins is None or self.bars is None:
