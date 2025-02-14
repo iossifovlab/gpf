@@ -31,6 +31,7 @@ class TaskGraphCli:
         default_task_status_dir: str | None = ".",
         *,
         use_commands: bool = True,
+        never_cache: bool = False,
     ) -> None:
         """Add arguments needed to execute a task graph."""
         executor_group = parser.add_argument_group(title="Task Graph Executor")
@@ -79,11 +80,12 @@ class TaskGraphCli:
             "--keep-going", default=False, action="store_true",
             help="Whether or not to keep executing in case of an error",
         )
-        executor_group.add_argument(
-            "--no-cache",
-            action="store_true",
-            help="Do not create cache files for tasks",
-        )
+        if not never_cache:
+            executor_group.add_argument(
+                "--no-cache",
+                action="store_true",
+                help="Do not create cache files for tasks",
+            )
         if force_mode == "optional":
             execution_mode_group.add_argument(
                 "--force", "-f", default=False, action="store_true",

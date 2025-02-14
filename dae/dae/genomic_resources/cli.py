@@ -224,7 +224,9 @@ def _configure_repo_stats_subparser(
     _add_hist_parameters_group(parser)
     VerbosityConfiguration.set_arguments(parser)
 
-    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
+    TaskGraphCli.add_arguments(
+        parser, use_commands=False, force_mode="always", never_cache=True,
+    )
 
 
 def _configure_resource_stats_subparser(
@@ -239,7 +241,9 @@ def _configure_resource_stats_subparser(
     _add_hist_parameters_group(parser)
     VerbosityConfiguration.set_arguments(parser)
 
-    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
+    TaskGraphCli.add_arguments(
+        parser, use_commands=False, force_mode="always", never_cache=True,
+    )
 
 
 def _configure_repo_repair_subparser(
@@ -253,7 +257,9 @@ def _configure_repo_repair_subparser(
     _add_hist_parameters_group(parser)
     VerbosityConfiguration.set_arguments(parser)
 
-    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
+    TaskGraphCli.add_arguments(
+        parser, use_commands=False, force_mode="always", never_cache=True,
+    )
 
 
 def _configure_resource_repair_subparser(
@@ -267,7 +273,9 @@ def _configure_resource_repair_subparser(
     _add_hist_parameters_group(parser)
     VerbosityConfiguration.set_arguments(parser)
 
-    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
+    TaskGraphCli.add_arguments(
+        parser, use_commands=False, force_mode="always", never_cache=True,
+    )
 
 
 def _configure_repo_info_subparser(
@@ -280,7 +288,9 @@ def _configure_repo_info_subparser(
     _add_dvc_parameters_group(parser)
     VerbosityConfiguration.set_arguments(parser)
 
-    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
+    TaskGraphCli.add_arguments(
+        parser, use_commands=False, force_mode="always", never_cache=True,
+    )
 
 
 def _configure_resource_info_subparser(
@@ -293,7 +303,9 @@ def _configure_resource_info_subparser(
     _add_dvc_parameters_group(parser)
     VerbosityConfiguration.set_arguments(parser)
 
-    TaskGraphCli.add_arguments(parser, use_commands=False, force_mode="always")
+    TaskGraphCli.add_arguments(
+        parser, use_commands=False, force_mode="always", never_cache=True,
+    )
 
 
 def collect_dvc_entries(
