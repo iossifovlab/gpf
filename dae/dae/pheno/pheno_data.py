@@ -283,6 +283,7 @@ class PhenotypeData(ABC):
 
     @property
     def browser(self) -> PhenoBrowser | None:
+        """Get or create pheno browser for phenotype data."""
         if self._browser is None:
             try:
                 self._browser = PhenotypeData.create_browser(self)

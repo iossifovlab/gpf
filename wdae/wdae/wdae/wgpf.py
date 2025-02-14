@@ -117,6 +117,7 @@ def _run_init_command(
 def collect_outdated_phenotype_studies(
     wgpf_instance: WGPFInstance,
 ) -> list[str]:
+    """Collect a list of phenotype IDs with outdated or missing browsers."""
     collected_ids = []
     for phenotype_data_id in wgpf_instance.get_phenotype_data_ids():
         phenotype_data = wgpf_instance.get_phenotype_data(phenotype_data_id)
