@@ -123,6 +123,7 @@ class CategoricalHistogramConfig:
     displayed_values_percent: float | None = None
     value_order: list[str | int] | None = None
     y_log_scale: bool = False
+    label_rotation: int = 0
     plot_function: str | None = None
     enforce_type: bool = True
 
@@ -132,6 +133,7 @@ class CategoricalHistogramConfig:
             "type": "categorical",
             "value_order": self.value_order,
             "y_log_scale": self.y_log_scale,
+            "label_rotation": self.label_rotation,
         }
         if self.displayed_values_count != DEFAULT_DISPLAYED_VALUES_COUNT:
             result["displayed_values_count"] = self.displayed_values_count
@@ -174,6 +176,7 @@ class CategoricalHistogramConfig:
         value_order = parsed.get("value_order", [])
         y_log_scale = parsed.get("y_log_scale", False)
         plot_function = parsed.get("plot_function")
+        label_rotation = parsed.get("label_rotation", 0)
 
         return CategoricalHistogramConfig(
             displayed_values_count=displayed_values_count,
@@ -181,6 +184,7 @@ class CategoricalHistogramConfig:
             value_order=value_order,
             y_log_scale=y_log_scale,
             plot_function=plot_function,
+            label_rotation=label_rotation,
             enforce_type=True,
         )
 
@@ -714,7 +718,7 @@ class CategoricalHistogram(Statistic):
         plt.xlabel(f"\n{score_id}")
         plt.ylabel("count")
 
-        plt.tick_params(axis="x", labelrotation=90)
+        plt.tick_params(axis="x", labelrotation=self.config.label_rotation)
 
         plt.tight_layout()
 
