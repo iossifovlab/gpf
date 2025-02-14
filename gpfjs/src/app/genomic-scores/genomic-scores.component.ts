@@ -26,6 +26,7 @@ export class GenomicScoresComponent implements OnInit {
   @Output() public updateState = new EventEmitter<GenomicScoreState>();
   public errors: string[] = [];
   private categoricalValueMax = 1000;
+  private readonly maxBarCount = 25;
 
   // Refactor needed, not removal.
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
@@ -39,6 +40,19 @@ export class GenomicScoresComponent implements OnInit {
   public ngOnInit(): void {
     this.localState = cloneDeep(this.initialState);
     this.validateState(this.localState);
+
+    const histogram = this.selectedGenomicScore.histogram;
+    if (this.isCategoricalHistogram(histogram)) {
+      let barCount = 0;
+      if (histogram.displayedValuesCount) {
+        barCount = histogram.displayedValuesCount;
+      } else if (histogram.displayedValuesPercent) {
+        barCount = Math.floor(histogram.values.length / 100 * histogram.displayedValuesPercent);
+      }
+      if (barCount > this.maxBarCount) {
+        this.switchCategoricalHistogramView('dropdown selector');
+      }
+    }
   }
 
   public updateRangeStart(range): void {

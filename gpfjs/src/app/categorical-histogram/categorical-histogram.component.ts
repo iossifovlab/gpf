@@ -24,7 +24,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   @Input() public width: number;
   @Input() public height: number;
   @Input() public marginLeft = 100;
-  @Input() public marginTop = 10;
+  @Input() public marginTop = -60;
   @Input() public interactType: CategoricalHistogramView = 'range selector';
   @ViewChild('histogramContainer', {static: true}) public histogramContainer: ElementRef;
 
@@ -41,7 +41,8 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   // Currently selected names of values
   public selectedValueNames: string[] = [];
 
-  private maxShown: number;
+  private barCount: number;
+  private readonly defaultBarCount = 20;
 
   private svg: d3.Selection<SVGElement, unknown, null, undefined>;
 
@@ -60,7 +61,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
                      | d3.ScaleLogarithmic<number, number, never>;
 
   public ngOnInit(): void {
-    this.calculateMaxShown();
+    this.calculateBarCount();
 
     this.values = cloneDeep(this.histogram.values);
     this.formatValues();
@@ -93,14 +94,14 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     }
   }
 
-  private calculateMaxShown(): void {
-    this.maxShown = this.histogram.values.length;
+  private calculateBarCount(): void {
+    this.barCount = this.histogram.values.length;
     if (this.histogram.displayedValuesCount) {
-      this.maxShown = this.histogram.displayedValuesCount;
+      this.barCount = this.histogram.displayedValuesCount;
     } else if (this.histogram.displayedValuesPercent) {
-      this.maxShown = Math.floor(this.histogram.values.length / 100 * this.histogram.displayedValuesPercent);
+      this.barCount = Math.floor(this.histogram.values.length / 100 * this.histogram.displayedValuesPercent);
     } else {
-      this.maxShown = 100;
+      this.barCount = this.defaultBarCount;
     }
   }
 
@@ -110,9 +111,9 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       return this.histogram.valueOrder.indexOf(a.name) - this.histogram.valueOrder.indexOf(b.name);
     });
 
-    if (this.maxShown < this.values.length) {
+    if (this.barCount < this.values.length) {
       const otherValues = this.values
-        .splice(this.maxShown, this.values.length);
+        .splice(this.barCount, this.values.length);
       this.otherValueNames = otherValues.map(v => v.name);
       const otherSum = otherValues.reduce((acc, v) => acc + v.value, 0);
       this.values.push({name: 'Other values', value: otherSum});
@@ -182,12 +183,12 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
         this.toggleValue(event);
       });
 
-      svg.selectAll('rect').on('mouseover', (element) => {
-        element.srcElement.style.filter = 'brightness(75%)';
-        element.srcElement.style.cursor = 'pointer';
-      }).on('mouseout', (element) => {
-        element.srcElement.style.filter = 'none';
-        element.srcElement.style.cursor = 'default';
+      svg.selectAll('rect').on('mouseover', (element: MouseEvent) => {
+        (element.target as SVGRectElement).style.filter = 'brightness(75%)';
+        (element.target as SVGRectElement).style.cursor = 'pointer';
+      }).on('mouseout', (element: MouseEvent) => {
+        (element.target as SVGRectElement).style.filter = 'none';
+        (element.target as SVGRectElement).style.cursor = 'default';
       });
     }
 
@@ -223,6 +224,10 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
         d3.axisBottom(this.scaleXAxis)
       ).style('font-size', '12px');
     svg.selectAll('text').style('text-anchor', 'start').attr('transform', 'rotate(45)');
+    // add hover text on each label
+    this.values.forEach(value => {
+      svg.selectAll('text').filter(t => t === value.name).append('title').text(value.name);
+    });
   }
 
   private toggleValue(event: { srcElement: { id: string, style: { fill: string } } }): void {
