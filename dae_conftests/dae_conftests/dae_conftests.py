@@ -11,7 +11,6 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from dae.annotation.annotation_factory import load_pipeline_from_file
 from dae.configuration.gpf_config_parser import (
     DefaultBox,
     FrozenBox,
@@ -69,15 +68,9 @@ def resources_dir(request) -> Path:
 
 
 @pytest.fixture(scope="session")
-def default_dae_config(request, fixture_dirname):
+def default_dae_config(fixture_dirname):
     studies_dirname = tempfile.mkdtemp(prefix="studies_", suffix="_test")
     datasets_dirname = tempfile.mkdtemp(prefix="datasets_", suffix="_test")
-
-    def fin():
-        shutil.rmtree(studies_dirname)
-        shutil.rmtree(datasets_dirname)
-
-    request.addfinalizer(fin)
 
     conf_dir = fixture_dirname("")
     assert conf_dir is not None
@@ -94,7 +87,10 @@ def default_dae_config(request, fixture_dirname):
         dae_conf_schema,
         conf_dir=conf_dir,
     )
-    return dae_config
+    yield dae_config, dae_conf_path
+
+    shutil.rmtree(studies_dirname)
+    shutil.rmtree(datasets_dirname)
 
 
 @pytest.fixture(scope="session")
@@ -109,7 +105,7 @@ def grr_test_repo(fixture_dirname):
 
 
 @pytest.fixture(scope="session")
-def gpf_instance(default_dae_config, fixture_dirname, grr_test_repo):
+def gpf_instance(default_dae_config, fixture_dirname, grr_test_repo):  # noqa: ARG001
     from dae.gpf_instance.gpf_instance import GPFInstance
 
     def build(config_filename):
@@ -125,9 +121,7 @@ def gpf_instance(default_dae_config, fixture_dirname, grr_test_repo):
         ]
         grr = GenomicResourceGroupRepo(repositories)
 
-        instance = GPFInstance.build(config_filename, grr=grr)
-
-        return instance
+        return GPFInstance.build(config_filename, grr=grr)
 
     return build
 
@@ -137,6 +131,8 @@ def gpf_instance_2013(
         default_dae_config, fixture_dirname,
         global_dae_fixtures_dir, grr_test_repo):
     from dae.gpf_instance.gpf_instance import GPFInstance
+
+    dae_config, dae_config_path = default_dae_config
 
     repositories = [
         grr_test_repo,
@@ -159,12 +155,11 @@ def gpf_instance_2013(
     genome = build_reference_genome_from_resource(resource)
     genome.open()
 
-    gpf_instance = GPFInstance(
-        dae_config=default_dae_config,
+    return GPFInstance(
+        dae_config=dae_config,
         dae_dir=global_dae_fixtures_dir,
-        grr=grr, gene_models=gene_models, reference_genome=genome)
-
-    return gpf_instance
+        dae_config_path=dae_config_path,
+        grr=grr, gene_models=gene_models, reference_genome=genome)  # type: ignore
 
 
 @pytest.fixture(scope="session")
@@ -178,6 +173,8 @@ def gpf_instance_2019(
         default_dae_config, fixture_dirname,
         global_dae_fixtures_dir, grr_test_repo):
     from dae.gpf_instance.gpf_instance import GPFInstance
+
+    dae_config, dae_config_path = default_dae_config
 
     repositories = [
         grr_test_repo,
@@ -199,18 +196,19 @@ def gpf_instance_2019(
     genome = build_reference_genome_from_resource(resource)
     genome.open()
 
-    gpf_instance = GPFInstance(
-        dae_config=default_dae_config,
+    return GPFInstance(
+        dae_config=dae_config,
         dae_dir=global_dae_fixtures_dir,
-        grr=grr, gene_models=gene_models, reference_genome=genome)
-
-    return gpf_instance
+        dae_config_path=dae_config_path,
+        grr=grr, gene_models=gene_models, reference_genome=genome)  # type: ignore
 
 
 def _create_gpf_instance(
         gene_model_dir, ref_genome_dir,
         default_dae_config, global_dae_fixtures_dir, fixture_dirname):
     from dae.gpf_instance.gpf_instance import GPFInstance
+
+    dae_config, dae_config_path = default_dae_config
 
     repositories = [
         build_genomic_resource_repository({
@@ -238,12 +236,11 @@ def _create_gpf_instance(
         genome = build_reference_genome_from_resource(resource)
         genome.open()
 
-    instance = GPFInstance(
-        dae_config=default_dae_config, dae_dir=global_dae_fixtures_dir,
-        grr=grr, gene_models=gene_models, reference_genome=genome,
+    return GPFInstance(
+        dae_config=dae_config, dae_dir=global_dae_fixtures_dir,
+        dae_config_path=dae_config_path,
+        grr=grr, gene_models=gene_models, reference_genome=genome,  # type: ignore
     )
-
-    return instance
 
 
 @pytest.fixture(scope="session")
@@ -267,49 +264,39 @@ def gpf_instance_grch38(
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def result_df():
     def build(data):
         infile = StringIO(str(data))
-        df = pd.read_csv(infile, sep="\t")
-        return df
+        return pd.read_csv(infile, sep="\t")
 
     return build
 
 
-@pytest.fixture()
-def temp_dirname(request):
+@pytest.fixture
+def temp_dirname():
     dirname = tempfile.mkdtemp(suffix="_data", prefix="variants_")
-
-    def fin():
-        shutil.rmtree(dirname)
-
-    request.addfinalizer(fin)
-    return dirname
+    yield dirname
+    shutil.rmtree(dirname)
 
 
-@pytest.fixture()
-def temp_dirname_grdb(request):
+@pytest.fixture
+def temp_dirname_grdb():
     dirname = tempfile.mkdtemp(suffix="_data", prefix="grdb_")
 
-    def fin():
-        shutil.rmtree(dirname)
+    yield dirname
 
-    request.addfinalizer(fin)
-    return dirname
+    shutil.rmtree(dirname)
 
 
-@pytest.fixture()
-def temp_filename(request):
+@pytest.fixture
+def temp_filename():
     dirname = tempfile.mkdtemp(suffix="_eff", prefix="variants_")
 
-    def fin():
-        shutil.rmtree(dirname)
-
-    request.addfinalizer(fin)
-
     output = os.path.join(dirname, "temp_filename.tmp")
-    return output
+    yield output
+
+    shutil.rmtree(dirname)
 
 
 IMPORT_ANNOTATION_CONFIG = \
@@ -369,11 +356,10 @@ def from_prefix_vcf(prefix):
     return DefaultBox(conf)
 
 
-@pytest.fixture()
+@pytest.fixture
 def dae_denovo_config():
     fullpath = relative_to_this_test_folder("fixtures/dae_denovo/denovo")
-    config = from_prefix_denovo(fullpath)
-    return config
+    return from_prefix_denovo(fullpath)
 
 
 def from_prefix_dae(prefix):
@@ -391,7 +377,7 @@ def from_prefix_dae(prefix):
     return FrozenBox(conf)
 
 
-@pytest.fixture()
+@pytest.fixture
 def dae_transmitted_config():
     fullpath = relative_to_this_test_folder(
         "fixtures/dae_transmitted/transmission",
@@ -409,8 +395,7 @@ def vcf_loader_data():
             prefix = os.path.join(
                 relative_to_this_test_folder("fixtures"), path,
             )
-        conf = from_prefix_vcf(prefix)
-        return conf
+        return from_prefix_vcf(prefix)
 
     return builder
 
@@ -418,8 +403,7 @@ def vcf_loader_data():
 @pytest.fixture(scope="session")
 def variants_mem():
     def builder(loader):
-        fvars = RawMemoryVariants([loader], loader.families)
-        return fvars
+        return RawMemoryVariants([loader], loader.families)
 
     return builder
 
@@ -428,8 +412,7 @@ def variants_mem():
 def config_dae():
     def builder(path):
         fullpath = relative_to_this_test_folder(os.path.join("fixtures", path))
-        config = from_prefix_dae(fullpath)
-        return config
+        return from_prefix_dae(fullpath)
 
     return builder
 
@@ -511,7 +494,7 @@ def _import_project_from_prefix_config(
 
 
 @pytest.fixture(scope="session")
-def dae_calc_gene_sets(request, fixtures_gpf_instance):
+def dae_calc_gene_sets(fixtures_gpf_instance):
     genotype_data_names = ["f1_group", "f2_group", "f3_group"]
     for dgs in genotype_data_names:
         genotype_data = fixtures_gpf_instance.get_genotype_data(dgs)
@@ -519,19 +502,18 @@ def dae_calc_gene_sets(request, fixtures_gpf_instance):
 
         DenovoGeneSetHelpers.build_collection(genotype_data)
 
-    def remove_gene_sets():
-        for dgs in genotype_data_names:
-            genotype_data = fixtures_gpf_instance.get_genotype_data(dgs)
-            # fmt:off
-            cache_file = \
-                DenovoGeneSetHelpers.denovo_gene_set_cache_file(
-                    genotype_data.config, "phenotype",
-                )
-            # fmt:on
-            if os.path.exists(cache_file):
-                os.remove(cache_file)
+    yield None
 
-    request.addfinalizer(remove_gene_sets)
+    for dgs in genotype_data_names:
+        genotype_data = fixtures_gpf_instance.get_genotype_data(dgs)
+        # fmt:off
+        cache_file = \
+            DenovoGeneSetHelpers.denovo_gene_set_cache_file(
+                genotype_data.config, "phenotype",
+            )
+        # fmt:on
+        if os.path.exists(cache_file):
+            os.remove(cache_file)
 
 
 PED1 = """
@@ -552,7 +534,7 @@ def fam1():
     return family
 
 
-@pytest.fixture()
+@pytest.fixture
 def grr_fixture(fixture_dirname):
     test_grr_location = fixture_dirname("genomic_resources")
     repositories = {

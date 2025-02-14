@@ -232,7 +232,11 @@ class PhenotypeData(ABC):
         """Load pheno browser from pheno configuration."""
         db_dir = pheno_data.cache_path or Path(pheno_data.config["conf_dir"])
         browser_dbfile = db_dir / f"{pheno_data.pheno_id}_browser.db"
-        if not read_only and not browser_dbfile.exists():
+        if not browser_dbfile.exists():
+            if read_only:
+                raise FileNotFoundError(
+                    f"Browser DB file {browser_dbfile!s} not found.",
+                )
             conn = duckdb.connect(browser_dbfile, read_only=False)
             conn.checkpoint()
             PhenoBrowser.create_browser_tables(conn)
@@ -278,9 +282,14 @@ class PhenotypeData(ABC):
         return is_outdated
 
     @property
-    def browser(self) -> PhenoBrowser:
+    def browser(self) -> PhenoBrowser | None:
+        """Get or create pheno browser for phenotype data."""
         if self._browser is None:
-            self._browser = PhenotypeData.create_browser(self)
+            try:
+                self._browser = PhenotypeData.create_browser(self)
+            except FileNotFoundError:
+                logger.exception(
+                    "Could not create browser for %s", self.pheno_id)
         return self._browser
 
     @property
@@ -746,6 +755,8 @@ class PhenotypeStudy(PhenotypeData):
         )
 
     def get_regressions(self) -> dict[str, Any]:
+        if self.browser is None:
+            return {}
         return self.browser.regression_display_names_with_ids
 
     def _get_pheno_images_base_url(self) -> str | None:
@@ -754,6 +765,12 @@ class PhenotypeStudy(PhenotypeData):
         return cast(str | None, self.config.get("browser_images_url"))
 
     def get_measures_info(self) -> dict[str, Any]:
+        if self.browser is None:
+            return {
+                "base_image_url": self._get_pheno_images_base_url(),
+                "has_descriptions": {},
+                "regression_names": {},
+            }
         return {
             "base_image_url": self._get_pheno_images_base_url(),
             "has_descriptions": self.browser.has_descriptions,
@@ -768,6 +785,8 @@ class PhenotypeStudy(PhenotypeData):
         sort_by: str | None = None,
         order_by: str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
+        if self.browser is None:
+            return
         measures = self.browser.search_measures(
             instrument,
             search_term,
@@ -817,6 +836,8 @@ class PhenotypeStudy(PhenotypeData):
         search_term: str | None,
         page: int | None = None,
     ) -> int:
+        if self.browser is None:
+            return 0
         return self.browser.count_measures(
             instrument,
             search_term,

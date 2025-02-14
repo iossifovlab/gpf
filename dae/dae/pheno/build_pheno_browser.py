@@ -153,7 +153,7 @@ def main(argv: list[str] | None = None) -> int:
         cache_dir = gpfi.get_pheno_cache_path()
         images_dir = get_pheno_browser_images_dir(gpfi.dae_config)
 
-    regressions = pheno_data.config.get("regression")
+    regressions = pheno_data.config.get("regressions")
     del kwargs["pheno_db_dir"]
     del kwargs["cache_dir"]
     del kwargs["images_dir"]

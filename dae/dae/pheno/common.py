@@ -68,9 +68,9 @@ class RegressionMeasure(BaseModel):
 
 
 class StudyConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
     regressions: str | dict[str, RegressionMeasure] | None = None
+    common_report: dict[str, Any] | None = None
+    person_set_collections: dict[str, Any] | None = None
 
 
 class GPFInstanceConfig(BaseModel):
@@ -180,12 +180,15 @@ class ImportManifest(BaseModel):
     @staticmethod
     def create_table(connection: duckdb.DuckDBPyConnection, table: Table):
         """Create table for recording import manifests."""
-        query = sqlglot.parse_one(
+        drop = sqlglot.parse_one(
+            f"DROP TABLE IF EXISTS {table.alias_or_name}").sql()
+        create = sqlglot.parse_one(
             f"CREATE TABLE {table.alias_or_name} "
             "(unix_timestamp DOUBLE, import_config VARCHAR)",
         ).sql()
         with connection.cursor() as cursor:
-            cursor.execute(query)
+            cursor.execute(drop)
+            cursor.execute(create)
 
     @staticmethod
     def write_to_db(
