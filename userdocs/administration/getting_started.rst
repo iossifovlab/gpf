@@ -1,17 +1,15 @@
 GPF Getting Started Guide
 =========================
 
-
 Prerequisites
 #############
 
 This guide assumes that you are working on a recent Linux box.
 
+Working version of anaconda or miniconda
+++++++++++++++++++++++++++++++++++++++++
 
-Working version of `anaconda` or `miniconda`
-++++++++++++++++++++++++++++++++++++++++++++
-
-The GPF system is distributed as an Anaconda package using the `conda`
+The GPF system is distributed as an Anaconda package using the ``conda``
 package manager.
 
 If you do not have a working version of Anaconda or Miniconda, you must
@@ -45,7 +43,6 @@ instead of ``conda``. Mamba will speed up the installation of packages:
 .. code-block::
 
     conda install -c conda-forge mamba
-
 
 GPF Installation
 ################
@@ -82,44 +79,22 @@ environment:
 
 This command is going to install GPF and all of its dependencies.
 
-
-Create an empty GPF instance
-++++++++++++++++++++++++++++
-
-Create an empty directory named ``minimal_instance``:
+Clone the example "getting-started" repository
+++++++++++++++++++++++++++++++++++++++++++++++
 
 .. code-block:: bash
 
-    mkdir minimal_instance
+    git clone https://github.com/iossifovlab/getting-started.git
 
-and inside it, create a file named ``gpf_instance.yaml`` with the following
-content:
+This repository provides a minimal instance and sample data to be imported.
 
-.. code-block:: yaml
-
-    instance_id: minimal_instance
-
-    reference_genome:
-        resource_id: "hg38/genomes/GRCh38-hg38"
-
-    gene_models:
-        resource_id: "hg38/gene_models/refSeq_v20200330"
-
-This will create a GPF instance that:
-
-* The reference genome used by this GPF instance is ``hg38/genomes/GRCh38-hg38``
-  from default GRR;
-
-* The gene models used by this GPF instance are 
-  ``hg38/gene_models/refSeq_v20200330`` from default GRR;
-
-* If not specified otherwise, the GPF uses the default genomic resources
-  repository located at 
-  `https://www.iossifovlab.com/distribution/public/genomic-resources-repository/ 
-  <https://www.iossifovlab.com/distribution/public/genomic-resources-repository/>`_.
-  Resources are used without caching.
-
-
+The reference genome used by this GPF instance is ``hg38/genomes/GRCh38-hg38`` from the default GRR.
+The gene models used by this GPF instance are ``hg38/gene_models/refSeq_v20200330`` from the default GRR.
+If not specified otherwise, GPF uses the default genomic resources
+repository located at
+`https://www.iossifovlab.com/distribution/public/genomic-resources-repository/
+<https://www.iossifovlab.com/distribution/public/genomic-resources-repository/>`_.
+Resources are used without caching.
 
 Run the GPF development web server
 ##################################
@@ -129,6 +104,13 @@ current directory (and its parent directories). If GPF finds such a file, it
 uses it as a configuration for the GPF instance. Otherwise, it throws an
 exception.
 
+Additionally, GPF will also consider the ``DAE_DB_DIR`` environment variable.
+Sourcing the provided ``setenv.sh`` file will set this variable for you.
+
+.. code-block:: bash
+
+    source setenv.sh
+
 Now we can run the GPF development web server and browse our empty GPF instance:
 
 .. code-block:: bash
@@ -137,10 +119,8 @@ Now we can run the GPF development web server and browse our empty GPF instance:
 
 and browse the GPF development server at ``http://localhost:8000``.
 
-
 To stop the development GPF web server, you should press ``Ctrl-C`` - the usual
 keybinding for stopping long-running Linux commands in a terminal.
-
 
 .. warning::
 
@@ -148,14 +128,11 @@ keybinding for stopping long-running Linux commands in a terminal.
     is meant for development purposes only
     and is not suitable for serving the GPF system in production.
 
-
 Import genotype variants
 ########################
 
-
 Data Storage
 ++++++++++++
-
 
 The GPF system uses genotype storages for storing genomic variants.
 
@@ -177,166 +154,21 @@ This tool supports importing variants from three formats:
 * List of de novo CNV variants
 * Variant Call Format (VCF)
 
-
-
 Example import of de novo variants: ``helloworld``
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. note:: 
-
-    Input files for this example can be downloaded from 
-    :download:`denovo-helloworld.tar.gz <getting_started_files/denovo-helloworld.tar.gz>`.
-    
 Let us import a small list of de novo variants. We will need the list of
-de novo variants ``helloworld.tsv``:
+de novo variants ``raw_genotype_data/helloworld.tsv``, and a pedigree file
+that describes the families - ``raw_genotype_data/helloworld.ped``:
 
-.. code-block::
-
-    CHROM   POS	      REF    ALT  person_ids
-    chr14   21403214  T      C    p1
-    chr14   21431459  G      C    p1
-    chr14   21391016  A      AT   p2
-    chr14   21403019  G      A    p2
-    chr14   21402010  G      A    p1
-    chr14   21393484  TCTTC  T    p2
-
-and a pedigree file that describes the families ``helloworld.ped``:
-
-.. code-block::
-
-    familyId  personId  dadId   momId   sex   status  role  phenotype
-    f1        m1        0       0       2     1       mom   unaffected
-    f1        d1        0       0       1     1       dad   unaffected
-    f1        p1        d1      m1      1     2       prb   autism
-    f1        s1        d1      m1      2     2       sib   unaffected
-    f2        m2        0       0       2     1       mom   unaffected
-    f2        d2        0       0       1     1       dad   unaffected
-    f2        p2        d2      m2      1     2       prb   autism
-
-
-.. warning::
-
-    Please note that the default separator for the list of de novo and pedigree
-    files is ``TAB``. If you copy these snippets and paste them into
-    corresponding files the separators between values most probably will
-    become spaces. 
-    
-    You need to ensure that separators between column values 
-    are ``TAB`` symbols.
-
-The project configuration file for importing this study
-``denovo_helloworld.yaml`` should look like:
-
-.. code-block:: yaml
-
-    id: denovo_helloworld
-
-    input:
-      pedigree:
-        file: helloworld.ped
-
-      denovo:
-        files:
-        - helloworld.tsv
-        person_id: person_ids
-        chrom: CHROM
-        pos: POS
-        ref: REF
-        alt: ALT    
-
+A project configuration file for importing this study
+(``raw_genotype_data/import_denovo_project.yaml``) is also provided.
 
 To import this project run the following command:
 
 .. code-block:: bash
 
-    import_tools denovo_helloworld.yaml
-
-
-When the import finishes you can run the GPF development server using:
-
-.. code-block:: bash
-
-    wgpf run
-
-and browse the content of the GPF development server at `http://localhost:8000`
-
-
-Example import of VCF variants: ``vcf_helloworld``
-++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-.. note:: 
-
-    Input files for this example can be downloaded from 
-    :download:`vcf-helloworld.tar.gz <getting_started_files/vcf-helloworld.tar.gz>`.
-
-
-Let us have a small VCF file ``helloworld.vcf``:
-
-.. code-block::
-
-  ##fileformat=VCFv4.2
-  ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-  ##contig=<ID=chr14>
-  #CHROM POS      ID REF  ALT QUAL FILTER INFO FORMAT m1  d1  p1  s1  m2  d2  p2
-  chr14  21385738 .  C    T   .    .      .    GT     0/0 0/1 0/1 0/0 0/0 0/1 0/0   
-  chr14  21385954 .  A    C   .    .      .    GT     0/0 0/0 0/0 0/0 0/1 0/0 0/1   
-  chr14  21393173 .  T    C   .    .      .    GT     0/1 0/0 0/0 0/1 0/0 0/0 0/0   
-  chr14  21393702 .  C    T   .    .      .    GT     0/0 0/0 0/0 0/0 0/0 0/1 0/1   
-  chr14  21393860 .  G    A   .    .      .    GT     0/0 0/1 0/1 0/1 0/0 0/0 0/0   
-  chr14  21403023 .  G    A   .    .      .    GT     0/0 0/1 0/0 0/1 0/1 0/0 0/0   
-  chr14  21405222 .  T    C   .    .      .    GT     0/0 0/0 0/0 0/0 0/0 0/1 0/0   
-  chr14  21409888 .  T    C   .    .      .    GT     0/1 0/0 0/1 0/0 0/1 0/0 1/0   
-  chr14  21429019 .  C    T   .    .      .    GT     0/0 0/1 0/1 0/0 0/0 0/1 0/1   
-  chr14  21431306 .  G    A   .    .      .    GT     0/0 0/1 0/1 0/1 0/0 0/0 0/0   
-  chr14  21431623 .  A    C   .    .      .    GT     0/0 0/0 0/0 0/0 0/1 1/1 1/1   
-  chr14  21393540 .  GGAA G   .    .      .    GT     0/1 0/1 1/1 0/0 0/0 0/0 0/0   
-
-and a pedigree file ``helloworld.ped`` (the same pedigree file used in the example import of de novo variants):
-
-.. code-block::
-
-    familyId  personId  dadId   momId   sex   status  role  phenotype
-    f1        m1        0       0       2     1       mom   unaffected
-    f1        d1        0       0       1     1       dad   unaffected
-    f1        p1        d1      m1      1     2       prb   autism
-    f1        s1        d1      m1      2     2       sib   unaffected
-    f2        m2        0       0       2     1       mom   unaffected
-    f2        d2        0       0       1     1       dad   unaffected
-    f2        p2        d2      m2      1     2       prb   autism
-
-
-.. warning::
-
-    Please note that the default separator for the VCF and pedigree
-    files is ``TAB``. If you copy these snippets and paste them into
-    corresponding files the separators between values most probably will
-    become spaces. 
-    
-    You need to ensure that separators between column values 
-    are ``TAB`` symbols for import to work.
-
-The project configuration file for importing this VCF study
-``vcf_helloworld.yaml`` should look like:
-
-.. code-block:: yaml
-
-    id: vcf_helloworld
-
-    input:
-      pedigree:
-        file: helloworld.ped
-
-      vcf:
-        files:
-        - helloworld.vcf
-
-To import this project run the following command:
-
-.. code-block:: bash
-
-    import_tools vcf_helloworld.yaml
-
+    import_genotypes raw_genotype_data/import_denovo_project.yaml
 
 When the import finishes you can run the GPF development server using:
 
@@ -346,6 +178,25 @@ When the import finishes you can run the GPF development server using:
 
 and browse the content of the GPF development server at ``http://localhost:8000``
 
+Example import of VCF variants: ``vcf_helloworld``
+++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Similar to the sample denovo variants, there are also sample variants in VCF format.
+They can be found in ``raw_genotype_data/helloworld.vcf`` and the same pedigree file from before is used.
+
+To import them, run the following command:
+
+.. code-block:: bash
+
+    import_genotypes raw_genotype_data/vcf_helloworld.yaml
+
+When the import finishes you can run the GPF development server using:
+
+.. code-block:: bash
+
+    wgpf run
+
+and browse the content of the GPF development server at ``http://localhost:8000``
 
 Example of a dataset (group of genotype studies)
 ++++++++++++++++++++++++++++++++++++++++++++++++
@@ -362,8 +213,7 @@ directory ``minimal_instance``:
     cd minimal_instance
     mkdir -p datasets/helloworld
 
-and place the following configuration file ``hellowrold.yaml`` inside that
-directory:
+and place the following configuration file ``helloworld.yaml`` inside that directory:
 
 .. code-block:: yaml
 
@@ -373,8 +223,6 @@ directory:
     studies:
       - denovo_helloworld
       - vcf_helloworld    
-
-
 
 Example import of de novo variants from `Rates of contributory de novo mutation in high and low-risk autism families`
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -405,7 +253,6 @@ named ``SupplementaryData1_Children.tsv``.
 
 Preprocess the families data
 ____________________________
-
 
 To import the data into GPF we need a pedigree file describing the structure
 of the families. The ``SupplementaryData1_Children.tsv`` contains only the list
@@ -474,7 +321,6 @@ example we are going to use a subset of 10000 variants:
 
     head -n 10001 SupplementaryData2_SSC.tsv > ssc_denovo.tsv
 
-
 Data import of ``ssc_denovo``
 _____________________________
 
@@ -512,13 +358,10 @@ and when the import finishes we can run the development GPF server:
 
 In the list of studies, we should have a new study ``ssc_denovo``.
 
-
-
 Getting started with Dataset Statistics
 ##########################################
 
 .. _reports_tool:
-
 
 To generate family and de novo variant reports, you can use
 the ``generate_common_report.py`` tool. It supports the option ``--show-studies``
@@ -575,7 +418,6 @@ If we now start the GPF development server:
 and browse the ``helloworld`` dataset we will see the `Dataset Statistics`
 section available.
 
-
 Getting started with de novo gene sets
 ######################################
 
@@ -617,7 +459,6 @@ running:
 
     generate_denovo_gene_sets.py --studies helloworld
 
-
 .. include:: getting_started/getting_started_with_annotation.rst
 
 .. include:: getting_started/getting_started_with_preview_columns.rst
@@ -637,7 +478,7 @@ class and instantiate it:
 .. code-block:: python3
 
     from dae.gpf_instance.gpf_instance import GPFInstance
-    gpf_instance = GPFInstance()
+    gpf_instance = GPFInstance.build()
 
 This ``gpf_instance`` object groups together a number of objects, each dedicated
 to managing different parts of the underlying data. It can be used to interact
@@ -653,20 +494,19 @@ This will return a list with the ids of all configured studies:
 
 .. code-block:: python3
 
-    ['comp_vcf',
-     'comp_denovo',
-     'comp_all',
-     'iossifov_2014']
+    ['denovo_helloworld',
+     'vcf_helloworld',
+     'helloworld']
 
 To get a specific study and query it, you can use:
 
 .. code-block:: python3
 
-    st = gpf_instance.get_genotype_data('comp_denovo')
+    st = gpf_instance.get_genotype_data('helloworld')
     vs = list(st.query_variants())
 
 .. note::
-    The `query_variants` method returns a Python iterator.
+    The ``query_variants`` method returns a Python iterator.
 
 To get the basic information about variants found by the ``query_variants`` method,
 you can use:
@@ -677,11 +517,27 @@ you can use:
         for aa in v.alt_alleles:
             print(aa)
 
-    1:865664 G->A f1
-    1:865691 C->T f3
-    1:865664 G->A f3
-    1:865691 C->T f2
-    1:865691 C->T f1
+    chr1:1287138 C->A f1
+    chr1:3602485 AC->A f1
+    chr1:12115730 G->A f1
+    chr1:20639952 C->T f2
+    chr1:21257524 C->T f2
+    chr14:21385738 C->T f1
+    chr14:21385738 C->T f2
+    chr14:21385954 A->C f2
+    chr14:21393173 T->C f1
+    chr14:21393702 C->T f2
+    chr14:21393860 G->A f1
+    chr14:21403023 G->A f1
+    chr14:21403023 G->A f2
+    chr14:21405222 T->C f2
+    chr14:21409888 T->C f1
+    chr14:21409888 T->C f2
+    chr14:21429019 C->T f1
+    chr14:21429019 C->T f2
+    chr14:21431306 G->A f1
+    chr14:21431623 A->C f2
+    chr14:21393540 GGAA->G f1
 
 The ``query_variants`` interface allows you to specify what kind of variants
 you are interested in. For example, if you only need "splice-site" variants, you
@@ -689,12 +545,12 @@ can use:
 
 .. code-block:: python3
 
-    st = gpf_instance.get_genotype_data('iossifov_2014')
+    st = gpf_instance.get_genotype_data('helloworld')
     vs = st.query_variants(effect_types=['splice-site'])
     vs = list(vs)
     print(len(vs))
 
-    >> 87
+    >> 2
 
 Or, if you are interested in "splice-site" variants only in people with
 "prb" role, you can use:
@@ -705,4 +561,4 @@ Or, if you are interested in "splice-site" variants only in people with
     vs = list(vs)
     len(vs)
 
-    >> 62
+    >> 1
