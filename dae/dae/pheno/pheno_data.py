@@ -755,6 +755,8 @@ class PhenotypeStudy(PhenotypeData):
         )
 
     def get_regressions(self) -> dict[str, Any]:
+        if self.browser is None:
+            return {}
         return self.browser.regression_display_names_with_ids
 
     def _get_pheno_images_base_url(self) -> str | None:
@@ -763,6 +765,12 @@ class PhenotypeStudy(PhenotypeData):
         return cast(str | None, self.config.get("browser_images_url"))
 
     def get_measures_info(self) -> dict[str, Any]:
+        if self.browser is None:
+            return {
+                "base_image_url": self._get_pheno_images_base_url(),
+                "has_descriptions": {},
+                "regression_names": {},
+            }
         return {
             "base_image_url": self._get_pheno_images_base_url(),
             "has_descriptions": self.browser.has_descriptions,
@@ -777,6 +785,8 @@ class PhenotypeStudy(PhenotypeData):
         sort_by: str | None = None,
         order_by: str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
+        if self.browser is None:
+            return
         measures = self.browser.search_measures(
             instrument,
             search_term,
@@ -826,6 +836,8 @@ class PhenotypeStudy(PhenotypeData):
         search_term: str | None,
         page: int | None = None,
     ) -> int:
+        if self.browser is None:
+            return 0
         return self.browser.count_measures(
             instrument,
             search_term,
