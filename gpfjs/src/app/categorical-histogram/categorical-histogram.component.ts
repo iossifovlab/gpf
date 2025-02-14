@@ -24,7 +24,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   @Input() public width: number;
   @Input() public height: number;
   @Input() public marginLeft = 100;
-  @Input() public marginTop = 10;
+  @Input() public marginTop = -60;
   @Input() public interactType: CategoricalHistogramView = 'range selector';
   @ViewChild('histogramContainer', {static: true}) public histogramContainer: ElementRef;
 
@@ -183,12 +183,12 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
         this.toggleValue(event);
       });
 
-      svg.selectAll('rect').on('mouseover', (element) => {
-        element.srcElement.style.filter = 'brightness(75%)';
-        element.srcElement.style.cursor = 'pointer';
-      }).on('mouseout', (element) => {
-        element.srcElement.style.filter = 'none';
-        element.srcElement.style.cursor = 'default';
+      svg.selectAll('rect').on('mouseover', (element: MouseEvent) => {
+        (element.target as SVGRectElement).style.filter = 'brightness(75%)';
+        (element.target as SVGRectElement).style.cursor = 'pointer';
+      }).on('mouseout', (element: MouseEvent) => {
+        (element.target as SVGRectElement).style.filter = 'none';
+        (element.target as SVGRectElement).style.cursor = 'default';
       });
     }
 
@@ -224,6 +224,10 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
         d3.axisBottom(this.scaleXAxis)
       ).style('font-size', '12px');
     svg.selectAll('text').style('text-anchor', 'start').attr('transform', 'rotate(45)');
+    // add hover text on each label
+    this.values.forEach(value => {
+      svg.selectAll('text').filter(t => t === value.name).append('title').text(value.name);
+    });
   }
 
   private toggleValue(event: { srcElement: { id: string, style: { fill: string } } }): void {
