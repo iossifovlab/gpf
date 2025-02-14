@@ -61,7 +61,6 @@ def test_draw_score_histograms(
     assert not (path / "one/statistics/histogram_phastCons100way.png").exists()
     cli_manage([
         "resource-repair", "-R", str(path), "-r", "one", "-j", "1",
-        "--no-cache",
     ])
     assert (path / "one/statistics/histogram_phastCons100way.png").exists()
 

@@ -86,7 +86,7 @@ def test_resource_info(
     assert not (path / "one/index.html").exists()
 
     cli_manage([
-        "resource-info", "-R", str(path), "-r", "one", "-j", "1", "--no-cache",
+        "resource-info", "-R", str(path), "-r", "one", "-j", "1",
     ])
 
     assert (path / "one/index.html").exists()
@@ -94,7 +94,7 @@ def test_resource_info(
     assert not (path / "index.html").exists()
 
     cli_manage([
-        "resource-info", "-R", str(path), "-r", "two", "-j", "1", "--no-cache",
+        "resource-info", "-R", str(path), "-r", "two", "-j", "1",
     ])
 
     assert (path / "one/index.html").exists()
@@ -118,7 +118,7 @@ def test_repo_info(
 
     assert not (path / "one/index.html").exists()
 
-    cli_manage(["repo-info", "-R", str(path), "-j", "1", "--no-cache"])
+    cli_manage(["repo-info", "-R", str(path), "-j", "1"])
 
     assert (path / "one/index.html").exists()
     assert (path / "two/index.html").exists()

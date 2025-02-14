@@ -817,6 +817,7 @@ def cli_manage(cli_args: list[str] | None = None) -> None:
 
     args = parser.parse_args(cli_args)
     VerbosityConfiguration.set(args)
+    args.no_cache = True
 
     if args.version:
         print(f"GPF version: {__version__}")

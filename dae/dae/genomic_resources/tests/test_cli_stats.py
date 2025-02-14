@@ -120,7 +120,7 @@ def test_cli_stats(
 
     assert repo is not None
 
-    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1", "--no-cache"])
+    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
 
     statistic_path = os.path.join(tmp_path, "one", "statistics", "somestat")
     assert os.path.exists(statistic_path)
@@ -175,7 +175,7 @@ def test_stats_allele_score(tmp_path: pathlib.Path) -> None:
 
     assert repo is not None
 
-    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1", "--no-cache"])
+    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
     minmax_statistic_path = os.path.join(
         tmp_path, "one", "statistics", "min_max_freq.yaml",
     )
@@ -252,7 +252,7 @@ def test_stats_position_score(tmp_path: pathlib.Path) -> None:
 
     assert repo is not None
 
-    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1", "--no-cache"])
+    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
     minmax_100way_path = os.path.join(
         tmp_path, "one", "statistics", "min_max_phastCons100way.yaml",
     )
@@ -356,7 +356,7 @@ def test_stats_np_score(tmp_path: pathlib.Path) -> None:
 
     assert repo is not None
 
-    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1", "--no-cache"])
+    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
     minmax_cadd_raw_path = os.path.join(
         tmp_path, "one", "statistics", "min_max_cadd_raw.yaml",
     )
@@ -484,7 +484,6 @@ def test_reference_genome_usage(
     assert ref_genome_length_mock.call_count == 0
     cli_manage([
         "resource-stats", "-r", "one", "-R", str(tmp_path), "-j", "1",
-        "--no-cache",
     ])
     assert ref_genome_length_mock.call_count == 6
 
@@ -508,7 +507,6 @@ def test_reference_genome_usage(
 
     cli_manage([
         "resource-stats", "-r", "one", "-R", str(tmp_path), "-j", "1",
-        "--no-cache",
     ])
 
     assert genomic_table_length_mock.call_count == 6
@@ -549,7 +547,7 @@ def test_stats_categorical(tmp_path: pathlib.Path) -> None:
 
     assert repo is not None
 
-    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1", "--no-cache"])
+    cli_manage(["repo-stats", "-R", str(tmp_path), "-j", "1"])
 
     histogram_statistic_path = os.path.join(
         tmp_path, "one", "statistics", "histogram_some_stat.json",

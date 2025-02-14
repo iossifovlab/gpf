@@ -180,7 +180,7 @@ def test_resource_dry_run_manifest_update(
     with pytest.raises(SystemExit):
         cli_manage([
             "resource-manifest", "--dry-run", "-R", str(path), "-r", "one",
-            "--no-cache"])
+        ])
 
     # Then
     assert bool(proto.check_update_manifest(res))
@@ -199,7 +199,7 @@ def test_repo_dry_run_manifest_update(
     # When
     with pytest.raises(SystemExit):
         cli_manage([
-            "repo-manifest", "--dry-run", "-R", str(path), "--no-cache"])
+            "repo-manifest", "--dry-run", "-R", str(path)])
 
     # Then
     assert bool(proto.check_update_manifest(res))

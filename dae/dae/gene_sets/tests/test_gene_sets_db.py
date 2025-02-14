@@ -398,7 +398,7 @@ def test_calc_statistics_hash(
     add_statistics_build_tasks_mock.return_value = b""
 
     cli_manage([
-        "repo-repair", "-R", str(gene_sets_repo_path), "-j", "1", "--no-cache",
+        "repo-repair", "-R", str(gene_sets_repo_path), "-j", "1",
     ])
 
     assert calc_statistics_hash_mock.called is True

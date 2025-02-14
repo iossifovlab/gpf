@@ -94,7 +94,6 @@ def test_resource_repair_simple(
     # When
     cli_manage([
         "resource-repair", "-R", str(path), "-r", "one", "-j", "1",
-        "--no-cache",
     ])
 
     # Then
@@ -116,7 +115,7 @@ def test_repo_repair_simple(
 
     # When
     cli_manage([
-        "repo-repair", "-R", str(path), "-j", "1", "--no-cache"])
+        "repo-repair", "-R", str(path), "-j", "1"])
 
     # Then
     assert (path / "one/statistics").exists()
@@ -145,7 +144,6 @@ def test_resource_repair_dry_run(
             "resource-repair", "--dry-run",
             "-R", str(path), "-r", "one",
             "-j", "1",
-            "--no-cache",
         ])
 
     # Then
@@ -167,7 +165,6 @@ def test_repo_repair_dry_run(
     with pytest.raises(SystemExit):
         cli_manage([
             "repo-repair", "--dry-run", "-R", str(path), "-j", "1",
-            "--no-cache",
         ])
 
     # Then
