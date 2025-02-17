@@ -301,6 +301,10 @@ class GenomicScore(ResourceConfigValidationMixin):
                             "type": "number",
                             "dependencies": {"type": ["number", "categorical"]},
                         },
+                        "label_rotation": {
+                            "type": "integer",
+                            "dependencies": {"type": "categorical"},
+                        },
                         "value_order": {
                             "type": "list",
                             "schema": {"type": ["string", "integer"]},
