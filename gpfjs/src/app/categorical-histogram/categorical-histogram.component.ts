@@ -24,7 +24,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   @Input() public width: number;
   @Input() public height: number;
   @Input() public marginLeft = 100;
-  @Input() public marginTop = -60;
+  @Input() public marginTop = -40;
   @Input() public interactType: CategoricalHistogramView = 'range selector';
   @ViewChild('histogramContainer', {static: true}) public histogramContainer: ElementRef;
 
@@ -255,7 +255,10 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   }
 
   public get viewBox(): string {
-    const pos = '-8 -8';
+    let pos = '-30 -8';
+    if (this.labelRotation === 0) {
+      pos = '-30 -60';
+    }
     return `${pos} ${this.width} ${this.height}`;
   }
 
