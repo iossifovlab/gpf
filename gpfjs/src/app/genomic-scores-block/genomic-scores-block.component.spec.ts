@@ -44,6 +44,7 @@ class MockGenomicScoresBlockService {
           'large value descriptions',
           'small value descriptions',
           true,
+          0
         ),
       ),
       new GenomicScore(
@@ -68,6 +69,7 @@ class MockGenomicScoresBlockService {
           'large value descriptions',
           'small value descriptions',
           true,
+          0
         ),
       )
     ]);
@@ -161,6 +163,7 @@ describe('GenomicScoresBlockComponent', () => {
           'large value descriptions',
           'small value descriptions',
           true,
+          0
         ),
       ),
       new GenomicScore(
@@ -179,6 +182,7 @@ describe('GenomicScoresBlockComponent', () => {
           'large value descriptions',
           'small value descriptions',
           true,
+          0
         ),
       )
     ]);
@@ -204,6 +208,7 @@ describe('GenomicScoresBlockComponent', () => {
         'large value descriptions',
         'small value descriptions',
         true,
+        0
       ),
     );
 
@@ -242,6 +247,7 @@ describe('GenomicScoresBlockComponent', () => {
           'large value descriptions',
           'small value descriptions',
           true,
+          0
         ),
       ),
       new GenomicScore(
@@ -292,6 +298,7 @@ describe('GenomicScoresBlockComponent', () => {
           'large value descriptions',
           'small value descriptions',
           true,
+          0
         ),
       ),
       new GenomicScore(
@@ -316,6 +323,7 @@ describe('GenomicScoresBlockComponent', () => {
           'large value descriptions',
           'small value descriptions',
           true,
+          0
         ),
       )
     ];
@@ -371,6 +379,7 @@ describe('GenomicScoresBlockComponent', () => {
           'large value descriptions',
           'small value descriptions',
           true,
+          0
         ),
       ),
       new GenomicScore(
@@ -395,6 +404,7 @@ describe('GenomicScoresBlockComponent', () => {
           'large value descriptions',
           'small value descriptions',
           true,
+          0
         ),
       )
     ]);

@@ -64,6 +64,7 @@ describe('GenomicScoresComponent', () => {
         'large value descriptions',
         'small value descriptions',
         true,
+        0
       ),
     );
     component.initialState = {

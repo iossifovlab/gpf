@@ -28,6 +28,7 @@ describe('CategoricalHistogramComponent', () => {
       'large value descriptions',
       'small value descriptions',
       true,
+      0
     );
 
     fixture.detectChanges();
@@ -48,6 +49,7 @@ describe('CategoricalHistogramComponent', () => {
       'large value descriptions',
       'small value descriptions',
       true,
+      0
     );
     component.initialSelectedValueNames = ['name1', 'name2', 'name3'];
 
@@ -70,6 +72,7 @@ describe('CategoricalHistogramComponent', () => {
       'large value descriptions',
       'small value descriptions',
       true,
+      0,
       2,
     );
 
@@ -93,6 +96,7 @@ describe('CategoricalHistogramComponent', () => {
       'large value descriptions',
       'small value descriptions',
       true,
+      0,
       null,
       60,
     );
@@ -119,6 +123,7 @@ describe('CategoricalHistogramComponent', () => {
       'large value descriptions',
       'small value descriptions',
       true,
+      0,
       3,
     );
     component.interactType = 'range selector';
@@ -140,6 +145,7 @@ describe('CategoricalHistogramComponent', () => {
       'large value descriptions',
       'small value descriptions',
       true,
+      0,
       2,
     );
     component.initialSelectedValueNames = ['name3', 'name2', 'name1'];

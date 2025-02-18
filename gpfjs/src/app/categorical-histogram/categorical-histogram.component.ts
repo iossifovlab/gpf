@@ -43,6 +43,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
 
   private barCount: number;
   private readonly defaultBarCount = 20;
+  public labelRotation = 0;
 
   private svg: d3.Selection<SVGElement, unknown, null, undefined>;
 
@@ -65,6 +66,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
 
     this.values = cloneDeep(this.histogram.values);
     this.formatValues();
+    this.labelRotation = this.histogram.labelRotation;
 
     // Select all values if no initial are provided and range selector mode is used
     if (this.initialSelectedValueNames.length) {
@@ -223,7 +225,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       .call(
         d3.axisBottom(this.scaleXAxis)
       ).style('font-size', '12px');
-    svg.selectAll('text').style('text-anchor', 'start').attr('transform', 'rotate(45)');
+    svg.selectAll('text').style('text-anchor', 'start').attr('transform', `rotate(${this.labelRotation})`);
     // add hover text on each label
     this.values.forEach(value => {
       svg.selectAll('text').filter(t => t === value.name).append('title').text(value.name);
