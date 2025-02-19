@@ -31,6 +31,7 @@ export class GenomicScore {
         json['large_values_desc'] as string,
         json['small_values_desc'] as string,
         json['histogram']['config']['y_log_scale'] as boolean,
+        json['histogram']['config']['label_rotation'] as number,
         json['histogram']['config']['displayed_values_count'] as number,
         json['histogram']['config']['displayed_values_percent'] as number,
       );
@@ -86,6 +87,7 @@ export class CategoricalHistogram {
     public readonly largeValuesDesc: string,
     public readonly smallValuesDesc: string,
     public readonly logScaleY: boolean,
+    public readonly labelRotation: number,
     public readonly displayedValuesCount: number = null,
     public readonly displayedValuesPercent: number = null,
   ) { }

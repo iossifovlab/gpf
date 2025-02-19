@@ -32,6 +32,7 @@ describe('CategoricalValuesDropdownComponent', () => {
       'large value descriptions',
       'small value descriptions',
       true,
+      0
     );
 
     fixture.detectChanges();

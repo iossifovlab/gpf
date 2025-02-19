@@ -182,6 +182,7 @@ describe('GeneScoresComponent', () => {
       'large value descriptions',
       'small value descriptions',
       true,
+      0
     ));
     component.selectedCategoricalHistogramView = 'range selector';
     component.selectedGeneScore = scoreWithValuesOrder;
@@ -197,6 +198,7 @@ describe('GeneScoresComponent', () => {
       'large value descriptions',
       'small value descriptions',
       true,
+      0
     ));
     component.selectedGeneScore = scoreWithoutValuesOrder;
     expect(component.selectedCategoricalHistogramView).toBe('click selector');

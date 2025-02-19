@@ -108,6 +108,7 @@ describe('GeneScoresService', () => {
             '2',
             '3'
           ],
+          label_rotation: 45,
           y_log_scale: false
         },
         values: {
@@ -135,7 +136,8 @@ describe('GeneScoresService', () => {
         ['1', '2', '3'],
         'weak evidence for association with ASD',
         'strong evidence for association with ASD',
-        false
+        false,
+        45
       )
     );
 
