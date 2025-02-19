@@ -77,7 +77,7 @@ def test_pheno_import_tool(
             data_dictionary=None,
             study_config=None,
         )
-    assert mocked_import_func.call_args[0][1] == Namespace(
+    assert mocked_import_func.call_args[0][2] == Namespace(
         verbose=None,
         jobs=None,
         dask_cluster_name=None,

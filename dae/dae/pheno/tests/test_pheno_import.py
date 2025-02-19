@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import argparse
 import pathlib
 import textwrap
 import time
@@ -365,13 +364,8 @@ def test_destination_storage_dir_option(
         person_column="person_id",
         destination=DestinationConfig(storage_dir=str(storage_dir)),
     )
-    args = argparse.Namespace(
-        no_cache=True, force=True, jobs=1,
-        task_status_dir=None, dask_cluster_name=None,
-        dask_cluster_config_file=None,
-    )
 
-    import_pheno_data(import_config, args)
+    import_pheno_data(import_config)
 
     assert storage_dir.exists()
     assert (storage_dir / "test" / "test.yaml").exists()

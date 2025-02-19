@@ -6,7 +6,7 @@ import sys
 import yaml
 
 from dae.pheno.common import PhenoImportConfig
-from dae.pheno.pheno_import import import_pheno_data
+from dae.pheno.pheno_import import get_gpf_instance, import_pheno_data
 from dae.task_graph.cli_tools import TaskGraphCli
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,8 @@ def main(argv: list[str] | None = None) -> int:
         raw_config["work_dir"] = str(project_path.parent / work_dir)
 
     import_config = PhenoImportConfig.model_validate(raw_config)
+    gpf_instance = get_gpf_instance(import_config)
     delattr(args, "project")
-    import_pheno_data(import_config, args)
+    import_pheno_data(import_config, gpf_instance, args)
 
     return 0

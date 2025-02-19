@@ -257,7 +257,8 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         import_config = transform_cli_args(args)
-        import_pheno_data(import_config, args)
+        gpf_instance = get_gpf_instance(import_config)
+        import_pheno_data(import_config, gpf_instance, args)
     except KeyboardInterrupt:
         return 0
     except ValueError as e:
@@ -345,12 +346,21 @@ def determine_destination(
 
 def import_pheno_data(
     config: PhenoImportConfig,
-    task_graph_args: argparse.Namespace,
+    gpf_instance: GPFInstance | None = None,
+    task_graph_args: argparse.Namespace | None = None,
 ) -> None:
     """Import pheno data into DuckDB."""
     os.makedirs(config.work_dir, exist_ok=True)
 
-    gpf_instance = get_gpf_instance(config)
+    if task_graph_args is None:
+        task_graph_args = argparse.Namespace(
+            jobs=1,
+            force=True,
+            no_cache=True,
+            task_status_dir=None,
+            dask_cluster_name=None,
+            dask_cluster_config_file=None,
+        )
 
     destination_storage_id, data_copy_destination, config_copy_destination = \
             determine_destination(gpf_instance, config)
