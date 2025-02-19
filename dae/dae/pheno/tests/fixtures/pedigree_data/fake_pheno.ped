@@ -28,7 +28,7 @@ f6	f6.mom	0	0	2	1	mom
 f6	f6.p1	f6.dad	f6.mom	1	2	prb
 f6	f6.s1	f6.dad	f6.mom	2	2	sib
 f6	f6.s2	f6.dad	f6.mom	2	1	sib
-f6	f6.s3	f3.dad	f6.mom	1	1	sib
+f6	f6.s3	f6.dad	f6.mom	1	1	sib
 f7	f7.dad	0	0	1	1	dad
 f7	f7.mom	0	0	2	1	mom
 f7	f7.s1	f7.dad	f7.mom	2	1	sib
@@ -78,7 +78,7 @@ f16	f16.mom	0	0	2	1	mom
 f16	f16.p1	f16.dad	f16.mom	1	2	prb
 f16	f16.s1	f16.dad	f16.mom	1	2	sib
 f16	f16.s2	f16.dad	f16.mom	2	1	sib
-f16	f16.s3	f13.dad	f16.mom	1	1	sib
+f16	f16.s3	f16.dad	f16.mom	1	1	sib
 f17	f17.dad	0	0	1	1	dad
 f17	f17.mom	0	0	2	1	mom
 f17	f17.s1	f17.dad	f17.mom	2	1	sib
@@ -128,7 +128,7 @@ f26	f26.mom	0	0	2	1	mom
 f26	f26.p1	f26.dad	f26.mom	1	2	prb
 f26	f26.s1	f26.dad	f26.mom	2	2	sib
 f26	f26.s2	f26.dad	f26.mom	2	1	sib
-f26	f26.s3	f23.dad	f26.mom	1	1	sib
+f26	f26.s3	f26.dad	f26.mom	1	1	sib
 f27	f27.dad	0	0	1	1	dad
 f27	f27.mom	0	0	2	1	mom
 f27	f27.s1	f27.dad	f27.mom	2	1	sib
@@ -178,7 +178,7 @@ f36	f36.mom	0	0	2	1	mom
 f36	f36.p1	f36.dad	f36.mom	1	2	prb
 f36	f36.s1	f36.dad	f36.mom	1	2	sib
 f36	f36.s2	f36.dad	f36.mom	2	1	sib
-f36	f36.s3	f33.dad	f36.mom	1	1	sib
+f36	f36.s3	f36.dad	f36.mom	1	1	sib
 f37	f37.dad	0	0	1	1	dad
 f37	f37.mom	0	0	2	1	mom
 f37	f37.s1	f37.dad	f37.mom	2	1	sib
