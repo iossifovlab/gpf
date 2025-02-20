@@ -344,7 +344,7 @@ def determine_destination(
     )
 
 
-def import_pheno_data(
+def import_pheno_data(  # pylint: disable=R0912
     config: PhenoImportConfig,
     gpf_instance: GPFInstance | None = None,
     task_graph_args: argparse.Namespace | None = None,
