@@ -370,3 +370,35 @@ def test_destination_storage_dir_option(
     assert storage_dir.exists()
     assert (storage_dir / "test" / "test.yaml").exists()
     assert (storage_dir / "test" / "test.db").exists()
+
+
+def test_import_generates_necessary_pedigree_columns(
+    import_data_fixture: tuple[Path, Path, Path, Path],
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    storage_dir = tmp_path_factory.mktemp("test_storage_dir")
+    ped_path, instruments_dir, out_dir, _ = import_data_fixture
+    import_config = PhenoImportConfig(
+        id="test",
+        input_dir=str(instruments_dir.parent),
+        work_dir=str(out_dir),
+        instrument_files=[str(instruments_dir)],
+        pedigree=str(ped_path),
+        person_column="person_id",
+        destination=DestinationConfig(storage_dir=str(storage_dir)),
+    )
+    import_pheno_data(import_config)
+
+    study = PhenotypeStudy("test", str(storage_dir / "test" / "test.db"))
+    persons_df = study.get_persons_df()
+
+    assert set(persons_df.columns).issuperset({
+        "family_id",
+        "person_id",
+        "role",
+        "status",
+        "sex",
+        "dad_id",
+        "mom_id",
+        "layout",
+    })
