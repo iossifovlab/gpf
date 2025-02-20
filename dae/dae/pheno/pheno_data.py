@@ -14,7 +14,6 @@ from typing import Any, cast
 
 import duckdb
 import pandas as pd
-from box import Box
 
 from dae.common_reports.common_report import CommonReport
 from dae.common_reports.family_report import FamiliesReport
@@ -192,11 +191,13 @@ class PhenotypeData(ABC):
     """Base class for all phenotype data studies and datasets."""
 
     def __init__(
-        self, pheno_id: str, config: Box,
+        self,
+        pheno_id: str,
+        config: dict | None = None,
         cache_path: Path | None = None,
     ) -> None:
         self._pheno_id: str = pheno_id
-        self.config = config
+        self.config = config if config is not None else {}
         self.name = self.config.get("name", pheno_id) \
             if self.config is not None \
             else pheno_id
@@ -554,7 +555,7 @@ class PhenotypeData(ABC):
             families_report_collections,
         )
 
-        person_sets_config = self.config.get("person_set_collections")
+        person_sets_config = self.config["person_set_collections"]
 
         collection = self.get_person_set_collection(
             person_sets_config["selected_person_set_collections"][0],
@@ -651,14 +652,17 @@ class PhenotypeStudy(PhenotypeData):
     """
 
     def __init__(
-        self, pheno_id: str, dbfile: str,
-        config: dict | None = None, *, read_only: bool = True,
+        self,
+        pheno_id: str,
+        dbfile: str,
+        config: dict | None = None,
+        *,
+        read_only: bool = True,
         cache_path: Path | None = None,
     ) -> None:
-        super().__init__(pheno_id, cast(Box, config), cache_path=cache_path)
+        super().__init__(pheno_id, config, cache_path=cache_path)
 
         self.db = PhenoDb(dbfile, read_only=read_only)
-        self.config = config
         df = self._get_measures_df()
         self._instruments = self._load_instruments(df)
         logger.info("phenotype study %s fully loaded", pheno_id)
@@ -875,7 +879,7 @@ class PhenotypeGroup(PhenotypeData):
         children: list[PhenotypeData],
         cache_path: Path | None = None,
     ) -> None:
-        super().__init__(pheno_id, cast(Box, config), cache_path=cache_path)
+        super().__init__(pheno_id, config, cache_path=cache_path)
         self.children = children
         instruments, measures = self._merge_instruments(
             [ph.instruments for ph in self.children],
