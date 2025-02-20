@@ -60,10 +60,10 @@ def pheno_study(
         destination=DestinationConfig(storage_dir=str(storage_dir)),
     )
 
-    pheno_config = yaml.safe_load(textwrap.dedent("""
+    pheno_config = yaml.safe_load(textwrap.dedent(f"""
         common_report:
           enabled: True
-          file_path: "common_report.json"
+          file_path: "{out_dir}/common_report.json"
           draw_all_families: False
           selected_person_set_collections:
             family_report:
@@ -104,10 +104,6 @@ def pheno_study(
     )
 
 
-def test_study_init(pheno_study: PhenotypeStudy):
-    assert pheno_study is not None
-
-
 def test_study_families(pheno_study: PhenotypeStudy):
     families = pheno_study.families
     assert families is not None
@@ -127,3 +123,11 @@ def test_study_person_sets(pheno_study: PhenotypeStudy):
 
     assert len(person_set_collections["phenotype"].person_sets["autism"]) == 4
     assert len(person_set_collections["phenotype"].person_sets["unaffected"]) == 8  # noqa: E501
+
+
+def test_study_common_report(pheno_study: PhenotypeStudy):
+    common_report = pheno_study.get_common_report()
+    assert common_report is not None
+    assert common_report.people_report is not None
+    assert common_report.families_report is not None
+    assert common_report.families_report.families_counters is not None
