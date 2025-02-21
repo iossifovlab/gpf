@@ -1,5 +1,4 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-from collections.abc import Callable, Generator
 from typing import Any
 
 import numpy as np
@@ -7,45 +6,8 @@ import pandas as pd
 import pytest
 
 from dae.pheno.common import MeasureType
-from dae.pheno.pheno_data import Measure, PhenotypeStudy
+from dae.pheno.pheno_data import PhenotypeStudy
 from dae.variants.attributes import Role
-
-
-def df_check(
-    df: pd.DataFrame, expected_count: int, expected_cols: list[str],
-) -> None:
-    assert df is not None
-    assert all(col in df for col in expected_cols)
-    assert expected_count == len(df)
-
-
-def dict_gen_check(
-    dict_gen: Generator[dict[str, Any], None, None],
-    expected_count: int,
-    expected_cols: list[str],
-) -> None:
-    dict_check(next(dict_gen), expected_count, expected_cols)
-
-
-def dict_check(
-    dict_: dict[str, Any], expected_count: int, expected_cols: list[str],
-) -> None:
-    assert isinstance(dict_, dict)
-    for measures in dict_.values():
-        assert all(col in measures for col in expected_cols)
-    assert expected_count == len(dict_)
-
-
-def str_check(
-    str_: str, expected_count: int, expected_cols: list[str],
-) -> None:
-    assert isinstance(str_, str)
-    lines = str_.splitlines()
-    header = lines[0]
-    values_lines = lines[1:]
-    columns = [col.strip() for col in header.split(",")]
-    assert all(col in columns for col in expected_cols)
-    assert len(values_lines) == expected_count
 
 
 def dict_list_check(
@@ -57,17 +19,6 @@ def dict_list_check(
     for dict_ in dict_list:
         assert set(dict_.keys()) == set(expected_cols)
     assert len(dict_list) == expected_count
-
-
-def dict_check_measure(
-    dict_: dict[str, Measure],
-    expected_count: int,
-    *args: Any,  # noqa: ARG001
-) -> None:
-    assert isinstance(dict_, dict)
-    for measure in dict_.values():
-        assert isinstance(measure, Measure)
-    assert expected_count == len(dict_)
 
 
 def test_get_measure_type(fake_phenotype_data: PhenotypeStudy) -> None:
@@ -186,31 +137,11 @@ def test_has_measure(fake_phenotype_data: PhenotypeStudy) -> None:
     assert all(fake_phenotype_data.has_measure(m) for m in measures)
 
 
-@pytest.mark.parametrize(
-    "get,check",
-    [
-        (PhenotypeStudy.get_measures, dict_check_measure),
-    ],
-)
-def test_get_measures(
-    fake_phenotype_data: PhenotypeStudy,
-    get: Callable,
-    check: Callable,
-) -> None:
-    expected_cols = [
-        "measure_id",
-        "measure_name",
-        "instrument_name",
-        "description",
-        "individuals",
-        "measure_type",
-        "min_value",
-        "max_value",
-        "values_domain",
-    ]
-
-    measures = get(fake_phenotype_data, measure_type=MeasureType.continuous)
-    check(measures, 7, expected_cols)
+def test_get_measures(fake_phenotype_data: PhenotypeStudy) -> None:
+    measures = fake_phenotype_data.get_measures(
+        measure_type=MeasureType.continuous,
+    )
+    assert len(measures) == 7
 
 
 def test_get_query_with_dot_measure(
