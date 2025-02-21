@@ -5,6 +5,7 @@ import pytest
 import yaml
 
 from dae.genomic_resources.testing import setup_directories, setup_pedigree
+from dae.pedigrees.family import Person
 from dae.pheno.common import DestinationConfig, PhenoImportConfig
 from dae.pheno.pheno_data import PhenotypeStudy
 from dae.pheno.pheno_import import import_pheno_data
@@ -132,3 +133,11 @@ def test_study_common_report(pheno_study: PhenotypeStudy):
     assert common_report.people_report is not None
     assert common_report.families_report is not None
     assert common_report.families_report.families_counters is not None
+
+
+def test_get_persons(pheno_study: PhenotypeStudy):
+    persons = pheno_study.get_persons()
+    assert persons is not None
+    assert len(persons) == 13
+    assert "fam1.prb" in persons
+    assert isinstance(persons["fam1.prb"], Person)
