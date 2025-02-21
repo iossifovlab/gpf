@@ -190,7 +190,6 @@ def test_has_measure(fake_phenotype_data: PhenotypeStudy) -> None:
     "get,check",
     [
         (PhenotypeStudy.get_measures, dict_check_measure),
-        (PhenotypeStudy._get_measures_df, df_check),
     ],
 )
 def test_get_measures(
@@ -212,12 +211,6 @@ def test_get_measures(
 
     measures = get(fake_phenotype_data, measure_type=MeasureType.continuous)
     check(measures, 7, expected_cols)
-
-
-def test_default_get_measure_df(fake_phenotype_data: PhenotypeStudy) -> None:
-    df = fake_phenotype_data._get_measures_df()
-    assert df is not None
-    assert len(df) == 15
 
 
 def test_get_query_with_dot_measure(

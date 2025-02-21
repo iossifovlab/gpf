@@ -657,8 +657,7 @@ class PhenotypeStudy(PhenotypeData):
         super().__init__(pheno_id, config, cache_path=cache_path)
 
         self.db = PhenoDb(dbfile, read_only=read_only)
-        df = self._get_measures_df()
-        self._instruments = self._load_instruments(df)
+        self._instruments = self._load_instruments()
         logger.info("phenotype study %s fully loaded", pheno_id)
 
     def generate_import_manifests(
@@ -683,36 +682,10 @@ class PhenotypeStudy(PhenotypeData):
             self.families,
         )
 
-    def _get_measures_df(
-        self,
-        instrument: str | None = None,
-        measure_type: MeasureType | None = None,
-    ) -> pd.DataFrame:
-        """
-        Return data frame containing measures information.
+    def _load_instruments(self) -> dict[str, Instrument]:
+        df = self.db.get_measures_df()
 
-        `instrument` -- an instrument name which measures should be
-        returned. If not specified all type of measures are returned.
-
-        `measure_type` -- a type ('continuous', 'ordinal' or 'categorical')
-        of measures that should be returned. If not specified all
-        type of measures are returned.
-
-        Each row in the returned data frame represents given measure.
-
-        Columns in the returned data frame are: `measure_id`, `measure_name`,
-        `instrument_name`, `description`, `stats`, `min_value`, `max_value`,
-        `value_domain`, `has_probands`, `has_siblings`, `has_parents`,
-        `default_filter`.
-        """
-        assert instrument is None or instrument in self.instruments
-        assert measure_type is None or isinstance(measure_type, MeasureType)
-
-        return self.db.get_measures_df(instrument, measure_type)
-
-    def _load_instruments(self, df: pd.DataFrame) -> dict[str, Instrument]:
         instruments = {}
-
         instrument_names = list(df.instrument_name.unique())
         instrument_names = sorted(instrument_names)
 
