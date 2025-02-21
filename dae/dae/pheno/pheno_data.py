@@ -324,14 +324,7 @@ class PhenotypeData(ABC):
             row["role"] = Role.from_value(row["role"])
             row["sex"] = Sex.from_value(row["sex"])
             row["status"] = Status.from_value(row["status"])
-
-            person = Person(**row)  # type: ignore
-            assert row["role"] in Role, f"{row['role']} not a valid role"
-            assert row["sex"] in Sex, f"{row['sex']} not a valid sex"
-            assert row["status"] in Status, \
-                f"{row['status']} not a valid status"
-
-            persons[person_id] = person
+            persons[person_id] = Person(**row)  # type: ignore
         return persons
 
     @abstractmethod
