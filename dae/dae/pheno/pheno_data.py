@@ -218,9 +218,8 @@ class PhenotypeData(ABC):
     def pheno_id(self) -> str:
         return self._pheno_id
 
-    def generate_import_manifests(
-        self,
-    ) -> list[ImportManifest]:
+    @abstractmethod
+    def generate_import_manifests(self) -> list[ImportManifest]:
         """Collect all manifests in a phenotype data instance."""
         raise NotImplementedError
 
@@ -306,15 +305,15 @@ class PhenotypeData(ABC):
 
     @abstractmethod
     def get_regressions(self) -> dict[str, Any]:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def get_measures_info(self) -> dict[str, Any]:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def get_persons_df(self) -> pd.DataFrame:
-        pass
+        raise NotImplementedError
 
     def get_persons(self) -> dict[str, Person]:
         "Return individuals data from phenotype database."
@@ -345,6 +344,7 @@ class PhenotypeData(ABC):
         order_by: str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         """Yield measures in the DB according to filters."""
+        raise NotImplementedError
 
     @abstractmethod
     def count_measures(
@@ -354,6 +354,7 @@ class PhenotypeData(ABC):
         page: int | None = None,
     ) -> int:
         """Count measures in the DB according to filters."""
+        raise NotImplementedError
 
     def has_measure(self, measure_id: str) -> bool:
         """Check if phenotype DB contains a measure by ID."""
@@ -504,7 +505,7 @@ class PhenotypeData(ABC):
         self, psc_config: PersonSetCollectionConfig,
         families: FamiliesData,
     ) -> PersonSetCollection:
-        pass
+        raise NotImplementedError
 
     def _build_person_set_collections(
         self,
