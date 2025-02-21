@@ -657,8 +657,8 @@ def test_draw_violinplot(
 
     df = fake_phenotype_data.get_people_measure_values_df(["i1.m5", "i1.m6"])
     for i in range(len(df)):
-        df["i1.m5"][i] = i
-        df["i1.m6"][i] = i * 2
+        df.loc[i, "i1.m5"] = i
+        df.loc[i, "i1.m6"] = i * 2
 
     violinplot(
         data=df,
@@ -668,8 +668,8 @@ def test_draw_violinplot(
         hue_order=[Sex.male, Sex.female],
         linewidth=1,
         split=True,
-        scale="count",
-        scale_hue=False,
+        density_norm="count",
+        common_norm=False,
         palette=gender_palette(),
         saturation=1,
     )
@@ -684,8 +684,8 @@ def test_draw_stripplot(
 
     df = fake_phenotype_data.get_people_measure_values_df(["i1.m5", "i1.m6"])
     for i in range(len(df)):
-        df["i1.m5"][i] = i
-        df["i1.m6"][i] = i * 2
+        df.loc[i, "i1.m5"] = i
+        df.loc[i, "i1.m6"] = i * 2
 
     stripplot(
         data=df,
