@@ -1,3 +1,7 @@
+[report]
+exclude_also=
+    raise NotImplementedError
+
 [run]
 omit=
     */tests/*
@@ -10,7 +14,3 @@ omit=
     */docs/*
 
 branch=true
-
-[report]
-exclude_also =
-    raise NotImplementedError
