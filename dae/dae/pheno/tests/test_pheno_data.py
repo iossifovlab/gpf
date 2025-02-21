@@ -18,20 +18,21 @@ def pheno_study(
     ped_path = setup_pedigree(
         root_path / "pedigree.ped",
         """
-        familyId	personId	dadId	momId	sex	status	role	layout	test_col
-        fam1	fam1.mom	0	0	2	1	mom	1:53.5,50.0	test1
-        fam1	fam1.dad	0	0	1	1	dad	1:10.0,50.0	test2
-        fam1	fam1.prb	fam1.dad	fam1.mom	2	2	prb	2:31.75,80.0	test3
-        fam2	fam2.mom	0	0	2	1	mom	1:53.5,50.0	test4
-        fam2	fam2.dad	0	0	1	1	dad	1:10.0,50.0	test5
-        fam2	fam2.prb	fam2.dad	fam2.mom	2	2	prb	2:31.75,80.0	test6
-        fam3	fam3.mom	0	0	2	1	mom	1:53.5,50.0	test7
-        fam3	fam3.dad	0	0	1	1	dad	1:10.0,50.0	test8
-        fam3	fam3.prb	fam3.dad	fam3.mom	2	2	prb	2:31.75,80.0	test9
-        fam4	fam4.mom	0	0	2	1	mom	1:53.5,50.0	test10
-        fam4	fam4.dad	0	0	1	1	dad	1:10.0,50.0	test11
-        fam4	fam4.prb	fam4.dad	fam4.mom	2	2	prb	2:31.75,80.0	test12
-        """)  # noqa: E501
+        familyId	personId	dadId	    momId	    sex	status	role
+        fam1	    fam1.mom	0	        0	        2	1	    mom
+        fam1	    fam1.dad	0	        0	        1	1	    dad
+        fam1	    fam1.prb	fam1.dad	fam1.mom	2	2	    prb
+        fam2	    fam2.mom	0	        0	        2	1	    mom
+        fam2	    fam2.dad	0	        0	        1	1	    dad
+        fam2	    fam2.prb	fam2.dad	fam2.mom	2	2	    prb
+        fam3	    fam3.mom	0	        0	        2	1	    mom
+        fam3	    fam3.dad	0	        0	        1	1	    dad
+        fam3	    fam3.prb	fam3.dad	fam3.mom	2	2	    prb
+        fam3	    fam3.sib	fam3.dad	fam3.mom	2	1	    sib
+        fam4	    fam4.mom	0	        0	        2	1	    mom
+        fam4	    fam4.dad	0	        0	        1	1	    dad
+        fam4	    fam4.sib	fam4.dad	fam4.mom	2	1	    sib
+        """)
     setup_directories(root_path, {
         "instruments": {
             "instr1.csv": textwrap.dedent("""
@@ -108,7 +109,7 @@ def test_study_families(pheno_study: PhenotypeStudy):
     families = pheno_study.families
     assert families is not None
     assert len(families) == 4
-    assert len(families.persons) == 12
+    assert len(families.persons) == 13
 
 
 def test_study_person_sets(pheno_study: PhenotypeStudy):
@@ -121,8 +122,8 @@ def test_study_person_sets(pheno_study: PhenotypeStudy):
     assert "autism" in person_set_collections["phenotype"].person_sets
     assert "unaffected" in person_set_collections["phenotype"].person_sets
 
-    assert len(person_set_collections["phenotype"].person_sets["autism"]) == 4
-    assert len(person_set_collections["phenotype"].person_sets["unaffected"]) == 8  # noqa: E501
+    assert len(person_set_collections["phenotype"].person_sets["autism"]) == 3
+    assert len(person_set_collections["phenotype"].person_sets["unaffected"]) == 10  # noqa: E501
 
 
 def test_study_common_report(pheno_study: PhenotypeStudy):
