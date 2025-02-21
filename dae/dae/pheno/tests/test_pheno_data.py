@@ -64,8 +64,8 @@ def test_study_common_report(pheno_study: PhenotypeStudy):
     assert common_report.families_report.families_counters is not None
 
 
-def test_get_measure_type(fake_phenotype_data: PhenotypeStudy) -> None:
-    mes = fake_phenotype_data.get_measure("i1.m1")
+def test_get_measure_type(pheno_study: PhenotypeStudy) -> None:
+    mes = pheno_study.get_measure("i1.m1")
     assert mes.measure_type == MeasureType.continuous
 
 
@@ -77,35 +77,35 @@ def test_get_measure_type(fake_phenotype_data: PhenotypeStudy) -> None:
     ],
 )
 def test_get_people_measure_values(
-    fake_phenotype_data: PhenotypeStudy,
+    pheno_study: PhenotypeStudy,
     query_cols: list[str],
 ) -> None:
-    result_it = fake_phenotype_data.get_people_measure_values(query_cols)
+    result_it = pheno_study.get_people_measure_values(query_cols)
     result = list(result_it)
     base_cols = ["person_id", "family_id", "role", "sex", "status"]
     db_query_cols = list(query_cols)
     dict_list_check(result, 195, base_cols + db_query_cols)
 
-    result_it = fake_phenotype_data.get_people_measure_values(
+    result_it = pheno_study.get_people_measure_values(
         query_cols, ["f20.p1"])
     result = list(result_it)
     dict_list_check(result, 1, base_cols + db_query_cols)
 
-    result_it = fake_phenotype_data.get_people_measure_values(
+    result_it = pheno_study.get_people_measure_values(
         query_cols, ["f20.p1", "f21.p1"])
     result = list(result_it)
     dict_list_check(result, 2, base_cols + db_query_cols)
 
-    result_it = fake_phenotype_data.get_people_measure_values(
+    result_it = pheno_study.get_people_measure_values(
         query_cols, roles=[Role.prb])
     result = list(result_it)
     dict_list_check(result, 39, base_cols + db_query_cols)
 
 
 def test_get_people_measure_values_non_overlapping(
-    fake_phenotype_data: PhenotypeStudy,
+    pheno_study: PhenotypeStudy,
 ) -> None:
-    result_it = fake_phenotype_data.get_people_measure_values(
+    result_it = pheno_study.get_people_measure_values(
         ["i3.m1", "i4.m1"],
     )
     result = list(result_it)
@@ -149,9 +149,9 @@ def test_get_people_measure_values_non_overlapping(
 
 
 def test_get_people_measure_values_correct_values(
-    fake_phenotype_data: PhenotypeStudy,
+    pheno_study: PhenotypeStudy,
 ) -> None:
-    result_list = list(fake_phenotype_data.get_people_measure_values(
+    result_list = list(pheno_study.get_people_measure_values(
         ["i1.m1", "i1.m2"], roles=[Role.prb]))
     assert result_list[0] == {
         "person_id": "f1.p1",
@@ -164,7 +164,7 @@ def test_get_people_measure_values_correct_values(
     }
 
 
-def test_has_measure(fake_phenotype_data: PhenotypeStudy) -> None:
+def test_has_measure(pheno_study: PhenotypeStudy) -> None:
     measures = [
         "i1.m1",
         "i1.m2",
@@ -177,20 +177,20 @@ def test_has_measure(fake_phenotype_data: PhenotypeStudy) -> None:
         "i1.m9",
         "i1.m10",
     ]
-    assert all(fake_phenotype_data.has_measure(m) for m in measures)
+    assert all(pheno_study.has_measure(m) for m in measures)
 
 
-def test_get_measures(fake_phenotype_data: PhenotypeStudy) -> None:
-    measures = fake_phenotype_data.get_measures(
+def test_get_measures(pheno_study: PhenotypeStudy) -> None:
+    measures = pheno_study.get_measures(
         measure_type=MeasureType.continuous,
     )
     assert len(measures) == 7
 
 
 def test_get_query_with_dot_measure(
-    fake_phenotype_data: PhenotypeStudy,
+    pheno_study: PhenotypeStudy,
 ) -> None:
-    result = fake_phenotype_data.db._get_measure_values_query(
+    result = pheno_study.db._get_measure_values_query(
         ["instr.some.measure.1"],
     )
     assert result is not None
@@ -201,13 +201,13 @@ def test_get_query_with_dot_measure(
 )
 @pytest.mark.parametrize("query_cols", [(["i1.m1"]), (["i1.m1", "i1.m2"])])
 def test_get_values_families_filter(
-    fake_phenotype_data: PhenotypeStudy,
+    pheno_study: PhenotypeStudy,
     families: list[str],
     expected_count: int,
     query_cols: list[str],
 ) -> None:
     personlist = ["{}.dad", "{}.mom", "{}.p1"]
-    vals = list(fake_phenotype_data.get_people_measure_values(
+    vals = list(pheno_study.get_people_measure_values(
         query_cols, family_ids=families,
     ))
     all_people = [v["person_id"] for v in vals]
@@ -217,15 +217,15 @@ def test_get_values_families_filter(
     dict_list_check(vals, expected_count, base_cols + query_cols)
 
 
-def test_min_max_measure_values(fake_phenotype_data: PhenotypeStudy) -> None:
-    measures = fake_phenotype_data.get_measures()
+def test_min_max_measure_values(pheno_study: PhenotypeStudy) -> None:
+    measures = pheno_study.get_measures()
 
     for measure in measures.values():
         if measure.measure_type in {MeasureType.categorical, MeasureType.raw}:
             continue
         mmin = measure.min_value
         mmax = measure.max_value
-        df = fake_phenotype_data.get_people_measure_values_df(
+        df = pheno_study.get_people_measure_values_df(
             [measure.measure_id],
         )
         df = df[
