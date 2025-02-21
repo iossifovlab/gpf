@@ -7,13 +7,23 @@ import pytest
 
 from dae.pedigrees.family import Person
 from dae.pheno.common import MeasureType
-from dae.pheno.pheno_data import PhenotypeStudy
+from dae.pheno.pheno_data import Measure, PhenotypeStudy
 from dae.variants.attributes import Role
 
 
 @pytest.fixture(scope="session")
 def pheno_study(fake_phenotype_data: PhenotypeStudy) -> PhenotypeStudy:
     return fake_phenotype_data
+
+
+@pytest.fixture(scope="session")
+def pheno_measure_continuous(fake_phenotype_data: PhenotypeStudy) -> Measure:
+    return fake_phenotype_data._measures["i1.m1"]
+
+
+@pytest.fixture(scope="session")
+def pheno_measure_categorical(fake_phenotype_data: PhenotypeStudy) -> Measure:
+    return fake_phenotype_data._measures["i1.m5"]
 
 
 def dict_list_check(
@@ -236,3 +246,47 @@ def test_min_max_measure_values(pheno_study: PhenotypeStudy) -> None:
 
         error = np.abs(mmax - df[measure.measure_id].max())
         assert error < 1e-5, measure.measure_id
+
+
+def test_measure_domain(
+    pheno_measure_continuous: Measure,
+    pheno_measure_categorical: Measure,
+) -> None:
+    domain = pheno_measure_continuous.domain
+    assert len(domain) == 2
+    assert domain[0] == pytest.approx(21.046, rel=1e-3)
+    assert domain[1] == pytest.approx(131.303, rel=1e-3)
+
+    domain = pheno_measure_categorical.domain
+    assert domain == ["catA", "catB", "catC", "catD", "catF"]
+
+
+def test_measure_to_json(
+    pheno_measure_continuous: Measure,
+    pheno_measure_categorical: Measure,
+) -> None:
+    json = pheno_measure_continuous.to_json()
+    assert json == {
+        "measureName": "m1",
+        "measureId": "i1.m1",
+        "instrumentName": "i1",
+        "measureType": "continuous",
+        "description": "Measure number one",
+        "defaultFilter": "",
+        "valuesDomain": "[21.04639185188603, 131.3034132504469]",
+        "minValue": pytest.approx(21.046, rel=1e-3),
+        "maxValue": pytest.approx(131.303, rel=1e-3),
+    }
+
+    json = pheno_measure_categorical.to_json()
+    assert json == {
+        "measureName": "m5",
+        "measureId": "i1.m5",
+        "instrumentName": "i1",
+        "measureType": "categorical",
+        "description": "",
+        "defaultFilter": "",
+        "valuesDomain": "catA, catB, catC, catD, catF",
+        "minValue": None,
+        "maxValue": None,
+    }
