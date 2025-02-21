@@ -11,3 +11,6 @@ omit=
 
 branch=true
 
+[report]
+exclude_also =
+    raise NotImplementedError
