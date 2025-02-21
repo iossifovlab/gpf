@@ -1,116 +1,28 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
-import textwrap
-
 import pytest
-import yaml
 
-from dae.genomic_resources.testing import setup_directories, setup_pedigree
 from dae.pedigrees.family import Person
-from dae.pheno.common import DestinationConfig, PhenoImportConfig
 from dae.pheno.pheno_data import PhenotypeStudy
-from dae.pheno.pheno_import import import_pheno_data
 
 
-@pytest.fixture(scope="module")
-def pheno_study(
-    tmp_path_factory: pytest.TempPathFactory,
-) -> PhenotypeStudy:
-    root_path = tmp_path_factory.mktemp("pheno_import")
-    ped_path = setup_pedigree(
-        root_path / "pedigree.ped",
-        """
-        familyId	personId	dadId	    momId	    sex	status	role
-        fam1	    fam1.mom	0	        0	        2	1	    mom
-        fam1	    fam1.dad	0	        0	        1	1	    dad
-        fam1	    fam1.prb	fam1.dad	fam1.mom	2	2	    prb
-        fam2	    fam2.mom	0	        0	        2	1	    mom
-        fam2	    fam2.dad	0	        0	        1	1	    dad
-        fam2	    fam2.prb	fam2.dad	fam2.mom	2	2	    prb
-        fam3	    fam3.mom	0	        0	        2	1	    mom
-        fam3	    fam3.dad	0	        0	        1	1	    dad
-        fam3	    fam3.prb	fam3.dad	fam3.mom	2	2	    prb
-        fam3	    fam3.sib	fam3.dad	fam3.mom	2	1	    sib
-        fam4	    fam4.mom	0	        0	        2	1	    mom
-        fam4	    fam4.dad	0	        0	        1	1	    dad
-        fam4	    fam4.sib	fam4.dad	fam4.mom	2	1	    sib
-        """)
-    setup_directories(root_path, {
-        "instruments": {
-            "instr1.csv": textwrap.dedent("""
-                person_id,m1,m2,m3
-                fam1.mom,1,8,3
-                fam1.dad,3,1,3
-                fam1.prb,4,0,3
-                fam2.mom,9,4,3
-                fam2.dad,10,,3
-                fam2.prb,23,asdf,3
-            """),
-        },
-    })
+@pytest.fixture(scope="session")
+def pheno_study(fake_phenotype_data: PhenotypeStudy) -> PhenotypeStudy:
+    return fake_phenotype_data
 
-    instruments_dir = root_path / "instruments"
-    out_dir = root_path / "out"
-    storage_dir = tmp_path_factory.mktemp("test_storage_dir")
 
-    import_config = PhenoImportConfig(
-        id="test",
-        input_dir=str(root_path),
-        work_dir=str(out_dir),
-        instrument_files=[str(instruments_dir)],
-        pedigree=str(ped_path),
-        person_column="person_id",
-        destination=DestinationConfig(storage_dir=str(storage_dir)),
-    )
-
-    pheno_config = yaml.safe_load(textwrap.dedent(f"""
-        common_report:
-          enabled: True
-          file_path: "{out_dir}/common_report.json"
-          draw_all_families: False
-          selected_person_set_collections:
-            family_report:
-              - "phenotype"
-
-        person_set_collections:
-          selected_person_set_collections:
-            - "phenotype"
-          phenotype:
-            id: "phenotype"
-            name: "Phenotype"
-            sources:
-              - from: "pedigree"
-                source: "status"
-            domain:
-              - id: "autism"
-                name: "autism"
-                values:
-                  - "affected"
-                color: "#ff2121"
-              - id: "unaffected"
-                name: "unaffected"
-                values:
-                  - "unaffected"
-                color: "#ffffff"
-            default:
-              id: "unspecified"
-              name: "unspecified"
-              color: "#aaaaaa"
-        """))
-
-    import_pheno_data(import_config)
-
-    return PhenotypeStudy(
-        "test",
-        str(storage_dir / "test" / "test.db"),
-        pheno_config,
-    )
+def test_data_get_persons(pheno_study: PhenotypeStudy):
+    persons = pheno_study.get_persons()
+    assert persons is not None
+    assert len(persons) == 195
+    assert "f1.p1" in persons
+    assert isinstance(persons["f1.p1"], Person)
 
 
 def test_study_families(pheno_study: PhenotypeStudy):
     families = pheno_study.families
     assert families is not None
-    assert len(families) == 4
-    assert len(families.persons) == 13
+    assert len(families) == 39
+    assert len(families.persons) == 195
 
 
 def test_study_person_sets(pheno_study: PhenotypeStudy):
@@ -123,8 +35,8 @@ def test_study_person_sets(pheno_study: PhenotypeStudy):
     assert "autism" in person_set_collections["phenotype"].person_sets
     assert "unaffected" in person_set_collections["phenotype"].person_sets
 
-    assert len(person_set_collections["phenotype"].person_sets["autism"]) == 3
-    assert len(person_set_collections["phenotype"].person_sets["unaffected"]) == 10  # noqa: E501
+    assert len(person_set_collections["phenotype"].person_sets["autism"]) == 66
+    assert len(person_set_collections["phenotype"].person_sets["unaffected"]) == 129  # noqa: E501
 
 
 def test_study_common_report(pheno_study: PhenotypeStudy):
@@ -133,11 +45,3 @@ def test_study_common_report(pheno_study: PhenotypeStudy):
     assert common_report.people_report is not None
     assert common_report.families_report is not None
     assert common_report.families_report.families_counters is not None
-
-
-def test_get_persons(pheno_study: PhenotypeStudy):
-    persons = pheno_study.get_persons()
-    assert persons is not None
-    assert len(persons) == 13
-    assert "fam1.prb" in persons
-    assert isinstance(persons["fam1.prb"], Person)
