@@ -301,7 +301,7 @@ class PhenotypeData(ABC):
         return self._instruments
 
     def get_instruments(self) -> list[str]:
-        return cast(list[str], self.instruments.keys())
+        return list(self.instruments.keys())
 
     @abstractmethod
     def get_regressions(self) -> dict[str, Any]:
