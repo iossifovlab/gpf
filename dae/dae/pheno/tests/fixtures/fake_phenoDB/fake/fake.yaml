@@ -1,6 +1,8 @@
 browser_images_url: static/images/
 id: fake
 name: fake
+type: study
+
 regression:
   age:
     display_name: age
@@ -14,4 +16,36 @@ regression:
     jitter: 0.1
     measure_names:
     - iq
-type: study
+
+common_report:
+  enabled: True
+  file_path: "{out_dir}/common_report.json"
+  draw_all_families: False
+  selected_person_set_collections:
+    family_report:
+      - "phenotype"
+
+person_set_collections:
+  selected_person_set_collections:
+    - "phenotype"
+  phenotype:
+    id: "phenotype"
+    name: "Phenotype"
+    sources:
+      - from: "pedigree"
+        source: "status"
+    domain:
+      - id: "autism"
+        name: "autism"
+        values:
+          - "affected"
+        color: "#ff2121"
+      - id: "unaffected"
+        name: "unaffected"
+        values:
+          - "unaffected"
+        color: "#ffffff"
+    default:
+      id: "unspecified"
+      name: "unspecified"
+      color: "#aaaaaa"
