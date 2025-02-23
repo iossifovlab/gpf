@@ -674,11 +674,41 @@ GENOMIC_SCORES_TEMPLATE = """
         function openModal(scoreId) {
             var modal = document.getElementById("modal-" + scoreId);
             modal.style.display = "flex";
+
+            document.addEventListener("keydown", closeOnEscape);
+            modal.addEventListener("click", closeOnOutsideClick);
         }
 
         function closeModal(scoreId) {
             var modal = document.getElementById("modal-" + scoreId);
             modal.style.display = "none";
+
+            modal.removeEventListener("click", closeOnOutsideClick);
+
+            if (document.querySelector(".modal[style*='display: flex']") === null) {
+                document.removeEventListener("keydown", closeOnEscape);
+            }
+        }
+
+        function closeOnEscape(event) {
+            if (event.key === "Escape") {
+                document.querySelectorAll(".modal[style*='display: flex']").forEach(modal => {
+                    modal.style.display = "none";
+                    modal.removeEventListener("click", closeOnOutsideClick);
+                });
+                document.removeEventListener("keydown", closeOnEscape);
+            }
+        }
+
+        function closeOnOutsideClick(event) {
+            if (event.target.classList.contains("modal")) {
+                event.target.style.display = "none";
+                event.target.removeEventListener("click", closeOnOutsideClick);
+
+                if (document.querySelector(".modal[style*='display: flex']") === null) {
+                    document.removeEventListener("keydown", closeOnEscape);
+                }
+            }
         }
     </script>
 {% endblock %}

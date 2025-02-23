@@ -208,10 +208,41 @@ GENE_SCORES_TEMPLATE = """
         function openModal(scoreId) {
             var modal = document.getElementById("modal-" + scoreId);
             modal.style.display = "flex";
+
+            document.addEventListener("keydown", closeOnEscape);
+            modal.addEventListener("click", closeOnOutsideClick);
         }
+
         function closeModal(scoreId) {
             var modal = document.getElementById("modal-" + scoreId);
             modal.style.display = "none";
+
+            modal.removeEventListener("click", closeOnOutsideClick);
+
+            if (document.querySelector(".modal[style*='display: flex']") === null) {
+                document.removeEventListener("keydown", closeOnEscape);
+            }
+        }
+
+        function closeOnEscape(event) {
+            if (event.key === "Escape") {
+                document.querySelectorAll(".modal[style*='display: flex']").forEach(modal => {
+                    modal.style.display = "none";
+                    modal.removeEventListener("click", closeOnOutsideClick);
+                });
+                document.removeEventListener("keydown", closeOnEscape);
+            }
+        }
+
+        function closeOnOutsideClick(event) {
+            if (event.target.classList.contains("modal")) {
+                event.target.style.display = "none";
+                event.target.removeEventListener("click", closeOnOutsideClick);
+
+                if (document.querySelector(".modal[style*='display: flex']") === null) {
+                    document.removeEventListener("keydown", closeOnEscape);
+                }
+            }
         }
     </script>
 {% endblock %}
@@ -252,10 +283,10 @@ GENE_SCORES_TEMPLATE = """
                 <td>
                 {% if hist %}
                     <div class="histogram">
-                        <img src="{{score.get_histogram_image_filename(score_id)}}"
+                        <img src="{{ score.get_histogram_image_filename(score_id) }}"
                             width="200px"
                             alt={{ score_id }}
-                            title={{ score_id | replace(" ", "_")}}
+                            title={{ score_id | replace(" ", "_") }}
                             style="cursor: pointer"
                             onclick="openModal(title)">>
                     </div>
@@ -272,13 +303,13 @@ GENE_SCORES_TEMPLATE = """
             </tr>
         {% endfor %}
         {%- for score_id in score.score_definitions.keys() -%}
-            <div id="modal-{{score_id | replace(" ", "_")}}" class="modal">
+            <div id="modal-{{ score_id | replace(" ", "_") }}" class="modal">
                 <div style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
-                    <span title={{score_id | replace(" ", "_")}} class="close" onclick="closeModal(title)">&times;</span>
-                    <img class="modal-content" id="histogram-{{score_id}}"
+                    <span title={{ score_id | replace(" ", "_") }} class="close" onclick="closeModal(title)">&times;</span>
+                    <img class="modal-content" id="histogram-{{ score_id }}"
                         src="{{ score.get_histogram_image_filename(score_id) }}"
                         alt="{{ "HISTOGRAM FOR " + score_id }}"
-                        title={{ score_id | replace(" ", "_")}}
+                        title={{ score_id | replace(" ", "_") }}
                         width="200">
                 </div>
             </div>
