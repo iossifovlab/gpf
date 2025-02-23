@@ -3,10 +3,11 @@ import os
 from typing import Any
 
 import pytest
+import pytest_mock
 
 from dae.pedigrees.family import Person
-from dae.pheno.common import MeasureType
-from dae.pheno.pheno_data import Measure, PhenotypeStudy
+from dae.pheno.common import ImportManifest, MeasureType
+from dae.pheno.pheno_data import Measure, PhenotypeData, PhenotypeStudy
 from dae.variants.attributes import Role
 
 
@@ -98,6 +99,27 @@ def test_data_get_persons(fake_phenotype_data: PhenotypeStudy):
     assert isinstance(persons["f1.p1"], Person)
 
 
+def test_data_get_measure(fake_phenotype_data: PhenotypeStudy) -> None:
+    mes = fake_phenotype_data.get_measure("i1.m1")
+    assert mes is not None
+    assert mes.measure_type == MeasureType.continuous
+
+
+def test_data_get_measures(fake_phenotype_data: PhenotypeStudy) -> None:
+    measures = fake_phenotype_data.get_measures(
+        measure_type=MeasureType.continuous,
+    )
+    assert len(measures) == 7
+
+
+def test_data_has_measure(fake_phenotype_data: PhenotypeStudy) -> None:
+    measures = [
+        "i1.m1", "i1.m2", "i1.m3", "i1.m4", "i1.m5",
+        "i1.m6", "i1.m7", "i1.m8", "i1.m9", "i1.m10",
+    ]
+    assert all(fake_phenotype_data.has_measure(m) for m in measures)
+
+
 def test_data_get_measure_description(fake_phenotype_data: PhenotypeStudy):
     assert fake_phenotype_data.get_measure_description("i1.m1") == {
         "instrument_name": "i1",
@@ -116,10 +138,8 @@ def test_data_get_measure_description(fake_phenotype_data: PhenotypeStudy):
     }
 
 
-def test_data_get_measure(fake_phenotype_data: PhenotypeStudy) -> None:
-    mes = fake_phenotype_data.get_measure("i1.m1")
-    assert mes is not None
-    assert mes.measure_type == MeasureType.continuous
+def test_data_get_instruments(fake_phenotype_data: PhenotypeStudy) -> None:
+    assert fake_phenotype_data.get_instruments() == ["i1", "i2", "i3", "i4"]
 
 
 def test_data_get_instrument_measures(fake_phenotype_data: PhenotypeStudy):
@@ -138,19 +158,92 @@ def test_data_get_person_set_collection(fake_phenotype_data: PhenotypeStudy):
         .get_person_set_collection(None) is None
 
 
-def test_data_has_measure(fake_phenotype_data: PhenotypeStudy) -> None:
-    measures = [
-        "i1.m1", "i1.m2", "i1.m3", "i1.m4", "i1.m5",
-        "i1.m6", "i1.m7", "i1.m8", "i1.m9", "i1.m10",
-    ]
-    assert all(fake_phenotype_data.has_measure(m) for m in measures)
+def test_data_create_browser(fake_phenotype_data: PhenotypeStudy) -> None:
+    browser = PhenotypeData.create_browser(fake_phenotype_data)
+    assert browser is not None
 
 
-def test_data_get_measures(fake_phenotype_data: PhenotypeStudy) -> None:
-    measures = fake_phenotype_data.get_measures(
-        measure_type=MeasureType.continuous,
+def test_data_browser_property(fake_phenotype_data: PhenotypeStudy) -> None:
+    assert fake_phenotype_data._browser is None
+    browser = fake_phenotype_data.browser
+    assert browser is not None
+    assert fake_phenotype_data._browser is not None
+
+
+def test_data_is_browser_outdated(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
+    is_outdated = fake_phenotype_data.is_browser_outdated(
+            fake_phenotype_data.browser)
+    assert is_outdated is False
+
+
+def test_data_is_browser_outdated_older(
+    fake_phenotype_data: PhenotypeStudy,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    import_manifest = fake_phenotype_data.generate_import_manifests()[0]
+    # this is the browser manifest's timestamp + 1, hardcoded
+    # cause writing it dynamically will bloat the test further.
+    # update this value if the browser db file is re-built.
+    import_manifest.unix_timestamp = 1739974139 + 1
+
+    mocker.patch(
+        "dae.pheno.pheno_data.PhenotypeStudy.generate_import_manifests",
+        return_value=[import_manifest],
     )
-    assert len(measures) == 7
+    is_outdated = fake_phenotype_data.is_browser_outdated(
+            fake_phenotype_data.browser)
+    assert is_outdated is True
+
+
+def test_data_is_browser_outdated_no_browser_manifests(
+    fake_phenotype_data: PhenotypeStudy,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    mocker.patch(
+        "dae.pheno.common.ImportManifest.from_table",
+        return_value=[],
+    )
+    is_outdated = fake_phenotype_data.is_browser_outdated(
+            fake_phenotype_data.browser)
+    assert is_outdated is True
+
+
+def test_data_is_browser_outdated_count_mismatch(
+    fake_phenotype_data: PhenotypeStudy,
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+
+    mock_import_config_a = {
+        "id": "a",
+        "input_dir": "a",
+        "work_dir": "a",
+        "instrument_files": ["a"],
+        "pedigree": "a",
+        "person_column": "a",
+    }
+    mock_import_config_b = {
+        "id": "b",
+        "input_dir": "b",
+        "work_dir": "b",
+        "instrument_files": ["b"],
+        "pedigree": "b",
+        "person_column": "b",
+    }
+
+    mocker.patch(
+        "dae.pheno.pheno_data.PhenotypeStudy.generate_import_manifests",
+        return_value=[
+            ImportManifest(unix_timestamp=1,
+                           import_config=mock_import_config_a),
+            ImportManifest(unix_timestamp=1,
+                           import_config=mock_import_config_b),
+        ],
+    )
+    is_outdated = fake_phenotype_data.is_browser_outdated(
+            fake_phenotype_data.browser)
+    assert is_outdated is True
 
 
 def test_study_families(fake_phenotype_data: PhenotypeStudy):
@@ -300,6 +393,15 @@ def test_study_get_values_families_filter(
         assert all(p.format(fam) in all_people for p in personlist)
     base_cols = ["person_id", "family_id", "role", "sex", "status"]
     dict_list_check(vals, expected_count, base_cols + query_cols)
+
+
+def test_study_generate_import_manifests(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
+    manifests = fake_phenotype_data.generate_import_manifests()
+    assert manifests is not None
+    assert len(manifests) == 1
+    assert isinstance(manifests[0], ImportManifest)
 
 
 def test_get_query_with_dot_measure(
