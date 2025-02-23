@@ -6,7 +6,7 @@ import pytest
 import pytest_mock
 
 from dae.pedigrees.family import Person
-from dae.pheno.common import ImportManifest, MeasureType
+from dae.pheno.common import ImportManifest, MeasureType, PhenoImportConfig
 from dae.pheno.pheno_data import Measure, PhenotypeData, PhenotypeStudy
 from dae.variants.attributes import Role
 
@@ -173,8 +173,9 @@ def test_data_browser_property(fake_phenotype_data: PhenotypeStudy) -> None:
 def test_data_is_browser_outdated(
     fake_phenotype_data: PhenotypeStudy,
 ) -> None:
-    is_outdated = fake_phenotype_data.is_browser_outdated(
-            fake_phenotype_data.browser)
+    browser = fake_phenotype_data.browser
+    assert browser is not None
+    is_outdated = fake_phenotype_data.is_browser_outdated(browser)
     assert is_outdated is False
 
 
@@ -192,8 +193,9 @@ def test_data_is_browser_outdated_older(
         "dae.pheno.pheno_data.PhenotypeStudy.generate_import_manifests",
         return_value=[import_manifest],
     )
-    is_outdated = fake_phenotype_data.is_browser_outdated(
-            fake_phenotype_data.browser)
+    browser = fake_phenotype_data.browser
+    assert browser is not None
+    is_outdated = fake_phenotype_data.is_browser_outdated(browser)
     assert is_outdated is True
 
 
@@ -205,8 +207,9 @@ def test_data_is_browser_outdated_no_browser_manifests(
         "dae.pheno.common.ImportManifest.from_table",
         return_value=[],
     )
-    is_outdated = fake_phenotype_data.is_browser_outdated(
-            fake_phenotype_data.browser)
+    browser = fake_phenotype_data.browser
+    assert browser is not None
+    is_outdated = fake_phenotype_data.is_browser_outdated(browser)
     assert is_outdated is True
 
 
@@ -215,22 +218,22 @@ def test_data_is_browser_outdated_count_mismatch(
     mocker: pytest_mock.MockerFixture,
 ) -> None:
 
-    mock_import_config_a = {
+    mock_import_config_a = PhenoImportConfig.model_validate({
         "id": "a",
         "input_dir": "a",
         "work_dir": "a",
         "instrument_files": ["a"],
         "pedigree": "a",
         "person_column": "a",
-    }
-    mock_import_config_b = {
+    })
+    mock_import_config_b = PhenoImportConfig.model_validate({
         "id": "b",
         "input_dir": "b",
         "work_dir": "b",
         "instrument_files": ["b"],
         "pedigree": "b",
         "person_column": "b",
-    }
+    })
 
     mocker.patch(
         "dae.pheno.pheno_data.PhenotypeStudy.generate_import_manifests",
@@ -241,8 +244,9 @@ def test_data_is_browser_outdated_count_mismatch(
                            import_config=mock_import_config_b),
         ],
     )
-    is_outdated = fake_phenotype_data.is_browser_outdated(
-            fake_phenotype_data.browser)
+    browser = fake_phenotype_data.browser
+    assert browser is not None
+    is_outdated = fake_phenotype_data.is_browser_outdated(browser)
     assert is_outdated is True
 
 
