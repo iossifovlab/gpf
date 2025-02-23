@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
 import os
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -7,7 +8,13 @@ import pytest_mock
 
 from dae.pedigrees.family import Person
 from dae.pheno.common import ImportManifest, MeasureType, PhenoImportConfig
-from dae.pheno.pheno_data import Measure, PhenotypeData, PhenotypeStudy
+from dae.pheno.pheno_data import (
+    Measure,
+    PhenotypeData,
+    PhenotypeStudy,
+    get_pheno_browser_images_dir,
+    get_pheno_db_dir,
+)
 from dae.variants.attributes import Role
 
 
@@ -469,3 +476,51 @@ def test_get_query_with_dot_measure(
         ["instr.some.measure.1"],
     )
     assert result is not None
+
+
+def test_get_pheno_db_dir(mocker: pytest_mock.MockerFixture) -> None:
+    res = get_pheno_db_dir(None)
+    assert res == "pheno"
+
+    mocker.patch.dict(os.environ, {"DAE_DB_DIR": "bla_db_dir"})
+    res = get_pheno_db_dir(None)
+    assert res == "bla_db_dir/pheno"
+
+    res = get_pheno_db_dir({
+        "conf_dir": "mock",
+    })
+    assert res == "mock/pheno"
+
+    res = get_pheno_db_dir({
+        "conf_dir": "mock",
+        "phenotype_data": {"dir": None},
+    })
+    assert res == "mock/pheno"
+
+    res = get_pheno_db_dir({
+        "conf_dir": "mock",
+        "phenotype_data": {"dir": "blabla_pheno_dir"},
+    })
+    assert res == "blabla_pheno_dir"
+
+
+def test_get_pheno_browser_images_dir() -> None:
+    res = get_pheno_browser_images_dir()
+    assert res == Path("pheno", "images")
+
+    res = get_pheno_browser_images_dir({
+        "conf_dir": "mock",
+    })
+    assert res == Path("mock", "pheno", "images")
+
+    res = get_pheno_browser_images_dir({
+        "conf_dir": "mock",
+        "phenotype_images": "mock/bla",
+    })
+    assert res == Path("mock", "bla")
+
+    res = get_pheno_browser_images_dir({
+        "conf_dir": "mock",
+        "cache_path": "mock/cache",
+    })
+    assert res == Path("mock", "cache", "images")
