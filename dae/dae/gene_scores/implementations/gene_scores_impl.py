@@ -252,10 +252,10 @@ GENE_SCORES_TEMPLATE = """
                 <td>
                 {% if hist %}
                     <div class="histogram">
-                        <img src="{{score.get_histogram_image_filename(score_id)}}"
+                        <img src="{{ score.get_histogram_image_filename(score_id) }}"
                             width="200px"
                             alt={{ score_id }}
-                            title={{ score_id | replace(" ", "_")}}
+                            title={{ score_id | replace(" ", "_") }}
                             style="cursor: pointer"
                             onclick="openModal(title)">>
                     </div>
@@ -272,13 +272,13 @@ GENE_SCORES_TEMPLATE = """
             </tr>
         {% endfor %}
         {%- for score_id in score.score_definitions.keys() -%}
-            <div id="modal-{{score_id | replace(" ", "_")}}" class="modal">
+            <div id="modal-{{ score_id | replace(" ", "_") }}" class="modal">
                 <div style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
-                    <span title={{score_id | replace(" ", "_")}} class="close" onclick="closeModal(title)">&times;</span>
-                    <img class="modal-content" id="histogram-{{score_id}}"
+                    <span title={{ score_id | replace(" ", "_") }} class="close" onclick="closeModal(title)">&times;</span>
+                    <img class="modal-content" id="histogram-{{ score_id }}"
                         src="{{ score.get_histogram_image_filename(score_id) }}"
                         alt="{{ "HISTOGRAM FOR " + score_id }}"
-                        title={{ score_id | replace(" ", "_")}}
+                        title={{ score_id | replace(" ", "_") }}
                         width="200">
                 </div>
             </div>
