@@ -404,6 +404,60 @@ def test_study_generate_import_manifests(
     assert isinstance(manifests[0], ImportManifest)
 
 
+def test_study_get_regressions(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
+    assert fake_phenotype_data.get_regressions() == {
+        "age": {
+            "display_name": "age",
+            "instrument_name": "i1",
+            "measure_name": "age",
+        },
+        "nviq": {
+            "display_name": "nonverbal iq",
+            "instrument_name": "i1",
+            "measure_name": "iq",
+        },
+    }
+
+
+def test_study_get_measures_info(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
+    assert fake_phenotype_data.get_measures_info() == {
+        "base_image_url": "static/images/",
+        "has_descriptions": True,
+        "regression_names": {
+            "age": "age",
+            "nviq": "nonverbal iq",
+        },
+    }
+
+
+def test_study_search_measures(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
+    res = list(fake_phenotype_data.search_measures("i1", "m1"))
+    assert len(res) == 2
+    assert res[0]["measure"]["measure_id"] == "i1.m1"
+    assert res[1]["measure"]["measure_id"] == "i1.m10"
+
+    measure = res[0]["measure"]
+    assert measure["measure_type"] == "continuous"
+    assert len(measure["regressions"]) > 0
+    reg = measure["regressions"][0]
+    assert "figure_regression" in reg
+    assert "figure_regression_small" in reg
+    assert "pvalue_regression_male" in reg
+    assert "pvalue_regression_female" in reg
+
+
+def test_study_count_measures(
+    fake_phenotype_data: PhenotypeStudy,
+) -> None:
+    assert fake_phenotype_data.count_measures(None, None) == 15
+
+
 def test_get_query_with_dot_measure(
     fake_phenotype_data: PhenotypeStudy,
 ) -> None:
