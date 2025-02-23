@@ -607,13 +607,8 @@ class PhenotypeData(ABC):
         if not self.config["common_report"]["enabled"]:
             return None
         report_filename = self.config["common_report"]["file_path"]
-        try:
-            if os.path.exists(report_filename) and not force:
-                return CommonReport.load(report_filename)
-        except Exception:  # noqa: BLE001
-            logger.warning(
-                "unable to load common report for %s", self.pheno_id,
-                exc_info=True)
+        if os.path.exists(report_filename) and not force:
+            return CommonReport.load(report_filename)
         report = self.build_report()
         report.save(report_filename)
         return report
