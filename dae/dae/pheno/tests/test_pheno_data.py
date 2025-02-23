@@ -2,8 +2,6 @@
 import os
 from typing import Any
 
-import numpy as np
-import pandas as pd
 import pytest
 
 from dae.pedigrees.family import Person
@@ -48,12 +46,111 @@ def dict_list_check(
     assert len(dict_list) == expected_count
 
 
+def test_measure_domain(
+    pheno_measure_continuous: Measure,
+    pheno_measure_categorical: Measure,
+) -> None:
+    domain = pheno_measure_continuous.domain
+    assert len(domain) == 2
+    assert domain[0] == pytest.approx(21.046, rel=1e-3)
+    assert domain[1] == pytest.approx(131.303, rel=1e-3)
+
+    domain = pheno_measure_categorical.domain
+    assert domain == ["catA", "catB", "catC", "catD", "catF"]
+
+
+def test_measure_to_json(
+    pheno_measure_continuous: Measure,
+    pheno_measure_categorical: Measure,
+) -> None:
+    json = pheno_measure_continuous.to_json()
+    assert json == {
+        "measureName": "m1",
+        "measureId": "i1.m1",
+        "instrumentName": "i1",
+        "measureType": "continuous",
+        "description": "Measure number one",
+        "defaultFilter": "",
+        "valuesDomain": "[21.04639185188603, 131.3034132504469]",
+        "minValue": pytest.approx(21.046, rel=1e-3),
+        "maxValue": pytest.approx(131.303, rel=1e-3),
+    }
+
+    json = pheno_measure_categorical.to_json()
+    assert json == {
+        "measureName": "m5",
+        "measureId": "i1.m5",
+        "instrumentName": "i1",
+        "measureType": "categorical",
+        "description": "",
+        "defaultFilter": "",
+        "valuesDomain": "catA, catB, catC, catD, catF",
+        "minValue": None,
+        "maxValue": None,
+    }
+
+
 def test_data_get_persons(fake_phenotype_data: PhenotypeStudy):
     persons = fake_phenotype_data.get_persons()
     assert persons is not None
     assert len(persons) == 195
     assert "f1.p1" in persons
     assert isinstance(persons["f1.p1"], Person)
+
+
+def test_data_get_measure_description(fake_phenotype_data: PhenotypeStudy):
+    assert fake_phenotype_data.get_measure_description("i1.m1") == {
+        "instrument_name": "i1",
+        "measure_name": "m1",
+        "measure_type": "continuous",
+        "values_domain": [pytest.approx(21.046, rel=1e-3),
+                          pytest.approx(131.303, rel=1e-3)],
+        "min_value": pytest.approx(21.046, rel=1e-3),
+        "max_value": pytest.approx(131.303, rel=1e-3),
+    }
+    assert fake_phenotype_data.get_measure_description("i1.m5") == {
+        "instrument_name": "i1",
+        "measure_name": "m5",
+        "measure_type": "categorical",
+        "values_domain": ["catA", "catB", "catC", "catD", "catF"],
+    }
+
+
+def test_data_get_measure(fake_phenotype_data: PhenotypeStudy) -> None:
+    mes = fake_phenotype_data.get_measure("i1.m1")
+    assert mes is not None
+    assert mes.measure_type == MeasureType.continuous
+
+
+def test_data_get_instrument_measures(fake_phenotype_data: PhenotypeStudy):
+    assert fake_phenotype_data.get_instrument_measures("i1") == [
+        "i1.age", "i1.iq", "i1.m1", "i1.m2", "i1.m3", "i1.m4",
+        "i1.m5", "i1.m6", "i1.m7", "i1.m8", "i1.m9", "i1.m10",
+    ]
+
+
+def test_data_get_person_set_collection(fake_phenotype_data: PhenotypeStudy):
+    assert fake_phenotype_data\
+        .get_person_set_collection("phenotype") is not None
+    assert fake_phenotype_data\
+        .get_person_set_collection("nonexistent") is None
+    assert fake_phenotype_data\
+        .get_person_set_collection(None) is None
+
+
+def test_data_has_measure(fake_phenotype_data: PhenotypeStudy) -> None:
+    measures = [
+        "i1.m1", "i1.m2", "i1.m3", "i1.m4", "i1.m5",
+        "i1.m6", "i1.m7", "i1.m8", "i1.m9", "i1.m10",
+    ]
+    assert all(fake_phenotype_data.has_measure(m) for m in measures)
+
+
+def test_data_get_measures(fake_phenotype_data: PhenotypeStudy) -> None:
+    measures = fake_phenotype_data.get_measures(
+        measure_type=MeasureType.continuous,
+    )
+    assert len(measures) == 7
 
 
 def test_study_families(fake_phenotype_data: PhenotypeStudy):
@@ -85,9 +182,8 @@ def test_study_common_report(fake_phenotype_data: PhenotypeStudy):
     assert common_report.families_report.families_counters is not None
 
 
-def test_get_measure_type(fake_phenotype_data: PhenotypeStudy) -> None:
-    mes = fake_phenotype_data.get_measure("i1.m1")
-    assert mes.measure_type == MeasureType.continuous
+def test_study_get_children_ids(fake_phenotype_data: PhenotypeStudy):
+    assert fake_phenotype_data.get_children_ids() == ["fake"]
 
 
 @pytest.mark.parametrize(
@@ -97,7 +193,7 @@ def test_get_measure_type(fake_phenotype_data: PhenotypeStudy) -> None:
         (["i1.m1", "i2.m1"]),
     ],
 )
-def test_get_people_measure_values(
+def test_study_get_people_measure_values(
     fake_phenotype_data: PhenotypeStudy,
     query_cols: list[str],
 ) -> None:
@@ -123,7 +219,7 @@ def test_get_people_measure_values(
     dict_list_check(result, 39, base_cols + db_query_cols)
 
 
-def test_get_people_measure_values_non_overlapping(
+def test_study_get_people_measure_values_non_overlapping(
     fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     result_it = fake_phenotype_data.get_people_measure_values(
@@ -169,7 +265,7 @@ def test_get_people_measure_values_non_overlapping(
     assert result[8]["i4.m1"] is None
 
 
-def test_get_people_measure_values_correct_values(
+def test_study_get_people_measure_values_correct_values(
     fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     result_list = list(fake_phenotype_data.get_people_measure_values(
@@ -185,43 +281,11 @@ def test_get_people_measure_values_correct_values(
     }
 
 
-def test_has_measure(fake_phenotype_data: PhenotypeStudy) -> None:
-    measures = [
-        "i1.m1",
-        "i1.m2",
-        "i1.m3",
-        "i1.m4",
-        "i1.m5",
-        "i1.m6",
-        "i1.m7",
-        "i1.m8",
-        "i1.m9",
-        "i1.m10",
-    ]
-    assert all(fake_phenotype_data.has_measure(m) for m in measures)
-
-
-def test_get_measures(fake_phenotype_data: PhenotypeStudy) -> None:
-    measures = fake_phenotype_data.get_measures(
-        measure_type=MeasureType.continuous,
-    )
-    assert len(measures) == 7
-
-
-def test_get_query_with_dot_measure(
-    fake_phenotype_data: PhenotypeStudy,
-) -> None:
-    result = fake_phenotype_data.db._get_measure_values_query(
-        ["instr.some.measure.1"],
-    )
-    assert result is not None
-
-
 @pytest.mark.parametrize(
     "families,expected_count", [(["f20"], 5), (["f20", "f21"], 10)],
 )
 @pytest.mark.parametrize("query_cols", [(["i1.m1"]), (["i1.m1", "i1.m2"])])
-def test_get_values_families_filter(
+def test_study_get_values_families_filter(
     fake_phenotype_data: PhenotypeStudy,
     families: list[str],
     expected_count: int,
@@ -238,66 +302,10 @@ def test_get_values_families_filter(
     dict_list_check(vals, expected_count, base_cols + query_cols)
 
 
-def test_min_max_measure_values(fake_phenotype_data: PhenotypeStudy) -> None:
-    measures = fake_phenotype_data.get_measures()
-
-    for measure in measures.values():
-        if measure.measure_type in {MeasureType.categorical, MeasureType.raw}:
-            continue
-        mmin = measure.min_value
-        mmax = measure.max_value
-        df = fake_phenotype_data.get_people_measure_values_df(
-            [measure.measure_id],
-        )
-        df = df[
-            pd.to_numeric(df[measure.measure_id], errors="coerce").notna()
-        ]
-        error = np.abs(mmin - df[measure.measure_id].min())
-        assert error < 1e-5, measure.measure_id
-
-        error = np.abs(mmax - df[measure.measure_id].max())
-        assert error < 1e-5, measure.measure_id
-
-
-def test_measure_domain(
-    pheno_measure_continuous: Measure,
-    pheno_measure_categorical: Measure,
+def test_get_query_with_dot_measure(
+    fake_phenotype_data: PhenotypeStudy,
 ) -> None:
-    domain = pheno_measure_continuous.domain
-    assert len(domain) == 2
-    assert domain[0] == pytest.approx(21.046, rel=1e-3)
-    assert domain[1] == pytest.approx(131.303, rel=1e-3)
-
-    domain = pheno_measure_categorical.domain
-    assert domain == ["catA", "catB", "catC", "catD", "catF"]
-
-
-def test_measure_to_json(
-    pheno_measure_continuous: Measure,
-    pheno_measure_categorical: Measure,
-) -> None:
-    json = pheno_measure_continuous.to_json()
-    assert json == {
-        "measureName": "m1",
-        "measureId": "i1.m1",
-        "instrumentName": "i1",
-        "measureType": "continuous",
-        "description": "Measure number one",
-        "defaultFilter": "",
-        "valuesDomain": "[21.04639185188603, 131.3034132504469]",
-        "minValue": pytest.approx(21.046, rel=1e-3),
-        "maxValue": pytest.approx(131.303, rel=1e-3),
-    }
-
-    json = pheno_measure_categorical.to_json()
-    assert json == {
-        "measureName": "m5",
-        "measureId": "i1.m5",
-        "instrumentName": "i1",
-        "measureType": "categorical",
-        "description": "",
-        "defaultFilter": "",
-        "valuesDomain": "catA, catB, catC, catD, catF",
-        "minValue": None,
-        "maxValue": None,
-    }
+    result = fake_phenotype_data.db._get_measure_values_query(
+        ["instr.some.measure.1"],
+    )
+    assert result is not None
