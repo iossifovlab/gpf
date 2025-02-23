@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+import os
 from typing import Any
 
 import numpy as np
@@ -9,6 +10,21 @@ from dae.pedigrees.family import Person
 from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import Measure, PhenotypeStudy
 from dae.variants.attributes import Role
+
+
+def _remove_common_report_cache(study: PhenotypeStudy):
+    report_filename = study.config["common_report"]["file_path"]
+    if os.path.exists(report_filename):
+        os.remove(report_filename)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def auto_setup_fixture(fake_phenotype_data: PhenotypeStudy):
+    # Remove common_report.json if it was built. Done both before and
+    # after a test has ran to ensure the file does not exist between tests.
+    _remove_common_report_cache(fake_phenotype_data)
+    yield
+    _remove_common_report_cache(fake_phenotype_data)
 
 
 @pytest.fixture(scope="session")

@@ -19,7 +19,6 @@ regression:
 
 common_report:
   enabled: True
-  file_path: "{out_dir}/common_report.json"
   draw_all_families: False
   selected_person_set_collections:
     family_report:
