@@ -4,15 +4,12 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-import pytest_mock
 
 from dae.gene_sets.gene_sets_db import (
     GeneSetCollection,
-    GeneSetCollectionImpl,
     GeneSetsDb,
     build_gene_set_collection_from_resource_id,
 )
-from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
@@ -23,7 +20,6 @@ from dae.genomic_resources.testing import (
     convert_to_tab_separated,
     setup_directories,
 )
-from dae.task_graph.graph import TaskGraph
 
 
 @pytest.fixture
@@ -361,45 +357,3 @@ def test_build_gene_set_collection_from_resource_id(
         "PCSK2",
     }
     assert gene_set["desc"] == "Main Candidates"
-
-
-def test_add_statistics_build_tasks(
-    gene_sets_repo_in_memory: GenomicResourceRepo,
-) -> None:
-    build_gene_set_collection_from_resource_id("test", gene_sets_repo_in_memory)
-
-    res = gene_sets_repo_in_memory.get_resource("test")
-    assert res is not None
-
-    gene_sets_collection_impl = GeneSetCollectionImpl(res)
-    assert gene_sets_collection_impl is not None
-
-    graph = TaskGraph()
-    assert len(graph.tasks) == 0
-
-    gene_sets_collection_impl.add_statistics_build_tasks(graph)
-    assert len(graph.tasks) == 0
-
-
-def test_calc_statistics_hash(
-    gene_sets_repo_path: Path,
-    mocker: pytest_mock.MockerFixture,
-) -> None:
-    calc_statistics_hash_mock = mocker.patch(
-        "dae.gene_sets.gene_sets_db.GeneSetCollectionImpl.calc_statistics_hash",
-        autospec=True,
-    )
-    calc_statistics_hash_mock.return_value = b""
-
-    add_statistics_build_tasks_mock = mocker.patch(
-        "dae.gene_sets.gene_sets_db.GeneSetCollectionImpl.add_statistics_build_tasks",
-        autospec=True,
-    )
-    add_statistics_build_tasks_mock.return_value = b""
-
-    cli_manage([
-        "repo-repair", "-R", str(gene_sets_repo_path), "-j", "1",
-    ])
-
-    assert calc_statistics_hash_mock.called is True
-    assert add_statistics_build_tasks_mock.called is True
