@@ -122,7 +122,7 @@ def test_try_to_load_group_with_unregistered_children(
 ) -> None:
     error_msg = (
         "Cannot load group group; the following child studies "
-        "{'fake', 'fake2'} "
+        r"({'fake', 'fake2'}|{'fake2', 'fake'}) "  # regex that matches either
         "are not registered"
     )
     empty_registry.register_study_config(pheno_study_configs["group"])
