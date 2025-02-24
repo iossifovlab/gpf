@@ -12,7 +12,7 @@ Importing via import project configuration
 ******************************************
 
 The import project configuration is a YAML-formatted text file which describes how the phenotype data should be imported.
-This configuration is then passed to the ``import_tools_pheno`` CLI tool, which will take care of carrying out the import.
+This configuration is then passed to the ``import_phenotypes`` CLI tool, which will take care of carrying out the import.
 
 Import project configuration format
 ###################################
@@ -108,9 +108,11 @@ Import project configuration format
       path: "/home/user/instance/gpf_instance.yaml"
 
     # Optional. If specified, will copy the output data into the provided storage.
-    # Requires a GPF instance to be configured (see above).
     destination:
+      # Requires a GPF instance to be configured (see above).
       storage_id: "pheno_storage_1"
+      # Can be used without a configured GPF instance.
+      storage_dir: "path/to/some/directory"
 
     # Optional. The contents of this section will be written to the output data's config file.
     study_config:
@@ -128,11 +130,44 @@ Import project configuration format
           instrument_name: instrument_1
           display_name: measure number one
           jitter: 0.1
+      # Configuration for the person set collections to build for this study.
+      person_set_collections:
+        selected_person_set_collections:
+          - "phenotype"
+        phenotype:
+          id: "phenotype"
+          name: "Phenotype"
+          sources:
+            - from: "pedigree"
+              source: "status"
+          domain:
+            - id: "affected"
+              name: "affected"
+              values:
+                - "affected"
+              color: "#ff2121"
+            - id: "unaffected"
+              name: "unaffected"
+              values:
+                - "unaffected"
+              color: "#ffffff"
+          default:
+            id: "unspecified"
+            name: "unspecified"
+            color: "#aaaaaa"
+      # Configuration for common report to produce for this study.
+      common_report:
+        enabled: True
+        file_path: "common_report.json"
+        draw_all_families: False
+        selected_person_set_collections:
+          family_report:
+            - "phenotype"
 
-Running the ``import_tools_pheno`` CLI tool
+Running the ``import_phenotypes`` CLI tool
 ###########################################
 
-The ``import_tools_pheno`` tool accepts the YAML-formatted import project configuration,
+The ``import_phenotypes`` tool accepts the YAML-formatted import project configuration,
 as well as parameters relating to the usage of Dask:
 
 .. runblock:: console
