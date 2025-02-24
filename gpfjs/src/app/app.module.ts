@@ -48,6 +48,7 @@ import { FullscreenLoadingComponent } from './fullscreen-loading/fullscreen-load
 import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loading.service';
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 import { Router, RouterModule, Routes, UrlSerializer } from '@angular/router';
+import { PersonFiltersSelectorComponent } from './person-filters-selector/person-filters-selector.component';
 import { PersonFiltersComponent } from './person-filters/person-filters.component';
 import { personFiltersReducer } from './person-filters/person-filters.state';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
@@ -185,6 +186,7 @@ import { CategoricalHistogramModule } from './categorical-histogram/categorical-
 import {MatMenuModule} from '@angular/material/menu';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { CategoricalValuesDropdownComponent } from './categorical-values-dropdown/categorical-values-dropdown.component';
+import { PersonFilterComponent } from './person-filter/person-filter.component';
 
 const appRoutes: Routes = [
   {
@@ -312,6 +314,7 @@ const appRoutes: Routes = [
   FullscreenLoadingComponent,
   EncodeUriComponentPipe,
   EnrichmentModelsBlockComponent,
+  PersonFiltersSelectorComponent,
   PersonFiltersComponent,
   FamilyFiltersBlockComponent,
   ContinuousFilterComponent,
@@ -397,7 +400,8 @@ const appRoutes: Routes = [
   AboutComponent,
   MarkdownEditorComponent,
   FamilyTagsComponent,
-  CategoricalValuesDropdownComponent
+  CategoricalValuesDropdownComponent,
+  PersonFilterComponent
 ],
 bootstrap: [AppComponent], imports: [BrowserModule,
   FormsModule,
