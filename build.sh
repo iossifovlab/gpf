@@ -277,7 +277,6 @@ EOT
         local -A ctx_wdae
         build_run_ctx_init ctx:ctx_wdae "container" "${gpf_dev_image_ref}" \
           --network "${ctx_network["network_id"]}" \
-          --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env LOCALSTACK_HOST="localstack" \
           --env WDAE_EMAIL_HOST="mailhog"
@@ -307,7 +306,6 @@ EOT
         local -A ctx_demo
         build_run_ctx_init ctx:ctx_demo "container" "${gpf_dev_image_ref}" \
           --network "${ctx_network["network_id"]}" \
-          --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env LOCALSTACK_HOST="localstack" \
           --env AWS_ACCESS_KEY_ID="foo" \
@@ -338,7 +336,6 @@ EOT
         local -A ctx_vep
         build_run_ctx_init ctx:ctx_vep "container" "${gpf_dev_image_ref}" \
           --network "${ctx_network["network_id"]}" \
-          --env DAE_DB_DIR="/wd/data/data-hg19-local/" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
           --env LOCALSTACK_HOST="localstack" \
           --env AWS_ACCESS_KEY_ID="foo" \
