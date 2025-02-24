@@ -18,6 +18,12 @@ import pandas as pd
 from dae.common_reports.common_report import CommonReport
 from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.people_counter import PeopleReport
+from dae.genomic_resources.histogram import (
+    CategoricalHistogram,
+    Histogram,
+    NullHistogram,
+    NumberHistogram,
+)
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Person
 from dae.pedigrees.loader import FamiliesLoader
@@ -102,6 +108,10 @@ class Measure:
 
     * `measure_type` - one of 'continuous', 'ordinal', 'categorical'
 
+    * `value_type` - one of 'float', 'str', 'int'
+
+    * `histogram_type` - one of 'number', 'categorical'
+
     * `description`
 
     * `min_value` - for 'continuous' and 'ordinal' measures
@@ -117,6 +127,8 @@ class Measure:
         self.name: str = name
         self.measure_name: str = name
         self.measure_type: MeasureType = MeasureType.other
+        self.value_type: type = str
+        self.histogram_type: type[Histogram] = NullHistogram
         self.values_domain: str | None = None
         self.instrument_name: str | None = None
         self.description: str | None = None
@@ -157,6 +169,18 @@ class Measure:
         mes.instrument_name = row["instrument_name"]
         mes.measure_name = row["measure_name"]
         mes.measure_type = MeasureType(row["measure_type"])
+        if row["value_type"] == "str":
+            mes.value_type = str
+        if row["value_type"] == "float":
+            mes.value_type = float
+        if row["value_type"] == "int":
+            mes.value_type = int
+        if row["histogram_type"] == "NumberHistogram":
+            mes.histogram_type = NumberHistogram
+        elif row["histogram_type"] == "CategoricalHistogram":
+            mes.histogram_type = CategoricalHistogram
+        else:
+            mes.histogram_type = NullHistogram
 
         mes.description = row["description"]
         mes.default_filter = row["default_filter"]
@@ -174,6 +198,8 @@ class Measure:
         result["measureId"] = self.measure_id
         result["instrumentName"] = self.instrument_name
         result["measureType"] = self.measure_type.name
+        result["valueType"] = self.value_type.__name__
+        result["histogramType"] = self.histogram_type.__name__
         result["description"] = self.description
         result["defaultFilter"] = self.default_filter
         result["valuesDomain"] = self.values_domain

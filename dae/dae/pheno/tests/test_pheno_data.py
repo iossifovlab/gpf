@@ -77,13 +77,15 @@ def test_measure_to_json(
     assert json == {
         "measureName": "m1",
         "measureId": "i1.m1",
+        "histogramType": "NumberHistogram",
+        "valueType": "float",
         "instrumentName": "i1",
         "measureType": "continuous",
         "description": "Measure number one",
         "defaultFilter": "",
         "valuesDomain": "[21.04639185188603, 131.3034132504469]",
-        "minValue": pytest.approx(21.046, rel=1e-3),
-        "maxValue": pytest.approx(131.303, rel=1e-3),
+        "minValue": pytest.approx(21.046, rel=1e-4),
+        "maxValue": pytest.approx(131.303, rel=1e-4),
     }
 
     json = pheno_measure_categorical.to_json()
@@ -92,6 +94,8 @@ def test_measure_to_json(
         "measureId": "i1.m5",
         "instrumentName": "i1",
         "measureType": "categorical",
+        "histogramType": "CategoricalHistogram",
+        "valueType": "str",
         "description": "",
         "defaultFilter": "",
         "valuesDomain": "catA, catB, catC, catD, catF",
