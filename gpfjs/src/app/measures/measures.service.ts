@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
-import { ContinuousMeasure, HistogramData } from './measures';
+import { ContinuousMeasure, HistogramData, MeasureHistogram } from './measures';
 import { Partitions } from '../gene-scores/gene-scores';
 import { map } from 'rxjs/operators';
 
@@ -10,6 +10,7 @@ import { map } from 'rxjs/operators';
 export class MeasuresService {
   private readonly continuousMeasuresUrl = 'measures/type/continuous';
   private readonly measureHistogramUrl = 'measures/histogram';
+  private readonly measureHistogramUrlBeta = 'measures/histogram-beta';
   private readonly measurePartitionsUrl = 'measures/partitions';
   private readonly regressionsUrl = 'measures/regressions';
 
@@ -39,6 +40,21 @@ export class MeasuresService {
       )
       .pipe(
         map((res) => HistogramData.fromJson(res))
+      );
+  }
+
+  public getMeasureHistogramBeta(datasetId: string, measureName: string): Observable<MeasureHistogram> {
+    const headers = { 'Content-Type': 'application/json' };
+    const options = { headers: headers, withCredentials: true };
+
+    return this.http
+      .post(
+        this.config.baseUrl + this.measureHistogramUrlBeta,
+        { datasetId: datasetId, measure: measureName },
+        options
+      )
+      .pipe(
+        map((res) => MeasureHistogram.fromJson(res))
       );
   }
 
