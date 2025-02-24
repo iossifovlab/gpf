@@ -78,6 +78,7 @@ genotype_browser_schema = {
     "schema": {
         "enabled": {"type": "boolean", "required": True},
         "has_family_filters": {"type": "boolean"},
+        "has_family_filters_beta": {"type": "boolean"},
         "has_family_structure_filter": {
             "type": "boolean",
             "dependencies": {
@@ -85,6 +86,7 @@ genotype_browser_schema = {
             },
         },
         "has_person_filters": {"type": "boolean"},
+        "has_person_filters_beta": {"type": "boolean"},
         "has_study_filters": {
             "type": "boolean",
             "depends_global": "studies",

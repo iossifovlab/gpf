@@ -399,6 +399,10 @@ enabled = {{ genotype_browser.enabled }}
 has_family_filters = {{ genotype_browser.has_family_filters }}
 {%- endif %}
 
+{%- if genotype_browser.has_family_filters_beta %}
+has_family_filters_beta = {{ genotype_browser.has_family_filters_beta }}
+{%- endif %}
+
 {%- if genotype_browser.has_study_filters %}
 has_study_filters = {{ genotype_browser.has_study_filters }}
 {%- endif %}
