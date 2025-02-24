@@ -897,7 +897,7 @@ class PhenotypeGroup(PhenotypeData):
                         raise ValueError(
                             f"{full_name} measure duplication!",
                         )
-                    group_instrument.measures[full_name] = measure
+                    group_instrument.measures[name] = measure
                     group_measures[full_name] = measure
                 group_instruments[instrument_name] = group_instrument
 

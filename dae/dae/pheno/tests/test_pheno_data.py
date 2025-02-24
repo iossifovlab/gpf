@@ -9,8 +9,10 @@ import pytest_mock
 from dae.pedigrees.family import Person
 from dae.pheno.common import ImportManifest, MeasureType, PhenoImportConfig
 from dae.pheno.pheno_data import (
+    Instrument,
     Measure,
     PhenotypeData,
+    PhenotypeGroup,
     PhenotypeStudy,
     get_pheno_browser_images_dir,
     get_pheno_db_dir,
@@ -467,6 +469,109 @@ def test_study_count_measures(
     fake_phenotype_data: PhenotypeStudy,
 ) -> None:
     assert fake_phenotype_data.count_measures(None, None) == 15
+
+
+def test_group_init(
+    fake_phenotype_group: PhenotypeGroup,
+) -> None:
+    assert fake_phenotype_group is not None
+
+
+def test_group_merge_instruments() -> None:
+    i1 = Instrument("i1")
+    i2 = Instrument("i2")
+    i1.measures["m1"] = Measure("m1", "measure 1")
+    i2.measures["m1"] = Measure("m1", "measure 1")
+    res_instruments, res_measures = PhenotypeGroup._merge_instruments(
+        ({"i1": i1}, {"i2": i2}),
+    )
+    assert len(res_instruments) == 2
+    assert "i1" in res_instruments
+    assert "m1" in res_instruments["i1"].measures
+    assert "i2" in res_instruments
+    assert "m1" in res_instruments["i2"].measures
+    assert len(res_measures) == 2
+    assert "i1.m1" in res_measures
+    assert "i2.m1" in res_measures
+
+
+def test_group_merge_instruments_duplicate() -> None:
+    i1 = Instrument("i1")
+    i1.measures["m1"] = Measure("m1", "measure 1")
+    with pytest.raises(ValueError, match="measure duplication"):
+        PhenotypeGroup._merge_instruments(
+            ({"i1": i1}, {"i1": i1}),
+        )
+
+
+def test_group_leaves(
+    fake_phenotype_group: PhenotypeGroup,
+) -> None:
+    assert len(fake_phenotype_group.get_leaves()) == 2
+
+
+def test_group_generate_import_manifests(
+    fake_phenotype_group: PhenotypeGroup,
+) -> None:
+    assert len(fake_phenotype_group.generate_import_manifests()) == 2
+
+
+def test_group_get_children_ids(
+    fake_phenotype_group: PhenotypeGroup,
+) -> None:
+    assert fake_phenotype_group.get_children_ids() == [
+        "fake", "fake2",
+    ]
+    assert fake_phenotype_group.get_children_ids(leaves=False) == [
+        "fake", "fake_subgroup",
+    ]
+
+
+def test_group_get_regressions(
+    fake_phenotype_group: PhenotypeGroup,
+) -> None:
+    assert len(fake_phenotype_group.get_regressions()) == 2
+
+
+def test_group_get_measures_info(
+    fake_phenotype_group: PhenotypeGroup,
+) -> None:
+    assert fake_phenotype_group.get_measures_info() == {
+        "base_image_url": "static/images/",
+        "has_descriptions": True,
+        "regression_names": {
+            "age": "age",
+            "nviq": "nonverbal iq",
+        },
+    }
+
+
+def test_group_search_measures(
+    fake_phenotype_group: PhenotypeGroup,
+) -> None:
+    assert len(list(fake_phenotype_group.search_measures(None, "m1"))) == 7
+
+
+def test_group_count_measures(
+    fake_phenotype_group: PhenotypeGroup,
+) -> None:
+    assert fake_phenotype_group.count_measures(None, None) == 27
+
+
+def test_group_get_people_measure_values(
+    fake_phenotype_group: PhenotypeGroup,
+) -> None:
+    res = list(fake_phenotype_group.get_people_measure_values(["i1.m1"]))
+    assert len(res) == 195
+
+
+def test_group_get_people_measure_values_df(
+    fake_phenotype_group: PhenotypeGroup,
+) -> None:
+    res = fake_phenotype_group.get_people_measure_values_df(["i1.m1"])
+    assert list(res) == ["person_id", "family_id", "role",
+                         "status", "sex", "i1.m1"]
+    assert len(res) == 195
 
 
 def test_get_query_with_dot_measure(
