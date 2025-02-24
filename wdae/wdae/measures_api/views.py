@@ -10,6 +10,12 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from dae.genomic_resources.histogram import (
+    CategoricalHistogram,
+    CategoricalHistogramConfig,
+    NumberHistogram,
+    NumberHistogramConfig,
+)
 from dae.pheno.common import MeasureType
 
 logger = logging.getLogger(__name__)
@@ -102,6 +108,68 @@ class PhenoMeasureHistogramView(QueryBaseView):
         return Response(result, status=status.HTTP_200_OK)
 
 
+class PhenoMeasureHistogramViewBeta(QueryBaseView):
+    """View for phenotype measure histograms."""
+
+    def post(self, request: Request) -> Response:
+        """Get phenotype measure histograms."""
+        data = request.data
+        if data is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        assert isinstance(data, dict)
+
+        dataset_id = data["datasetId"]
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        assert dataset is not None
+        if "measure" in data \
+                and not dataset.phenotype_data.has_measure(data["measure"]):
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        assert "measure" in data
+
+        pheno_measure = data["measure"]
+        assert pheno_measure is not None
+        assert dataset.phenotype_data.has_measure(pheno_measure)
+
+        measure = dataset.phenotype_data.get_measure(pheno_measure)
+        df = dataset.phenotype_data.get_people_measure_values_df(
+            [pheno_measure],
+        )
+        m = df[pheno_measure]
+        df = df[np.logical_not(np.isnan(m.values))]
+
+        result = {
+            "measure": measure.measure_id,
+            "histogram": None,
+        }
+        if measure.histogram_type is NumberHistogram:
+            bars, bins = np.histogram(
+                df[pheno_measure].values,
+                25,
+            )
+            number_hist_conf = NumberHistogramConfig(
+                (np.min(bins).item(), np.max(bins).item()),
+                25,
+            )
+            result["histogram"] = NumberHistogram.from_dict({
+                "config": number_hist_conf.to_dict(),
+                "bins": bins,
+                "bars": bars,
+                "min_value": np.min(bins).item(),
+                "max_value": np.max(bins).item(),
+            }).to_dict()
+        elif measure.histogram_type is CategoricalHistogram:
+            counts = {}
+            for value in measure.domain:
+                counts[value] = len(df[df[pheno_measure] == value])
+            categorical_hist_conf = CategoricalHistogramConfig()
+            result["histogram"] = CategoricalHistogram(
+                categorical_hist_conf,
+                counts,
+            ).to_dict()
+        return Response(result, status=status.HTTP_200_OK)
+
+
 class PhenoMeasurePartitionsView(QueryBaseView, DatasetAccessRightsView):
     """View for phenotype measure partitions.
     Histograms can calculate gene count when min and max are not inside bins.
@@ -160,7 +228,6 @@ class PhenoMeasureRegressionsView(QueryBaseView):
 
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
-
         if dataset is None or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
