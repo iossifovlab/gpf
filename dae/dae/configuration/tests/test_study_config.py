@@ -140,8 +140,10 @@ def full_study_config() -> dict[str, Any]:
         "genotype_browser": {
             "enabled": True,
             "has_family_filters": True,
+            "has_family_filters_beta": True,
             "has_family_structure_filter": True,
             "has_person_filters": True,
+            "has_person_filters_beta": True,
             "has_study_filters": True,
             "has_present_in_child": True,
             "has_present_in_parent": True,
