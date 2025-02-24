@@ -1,0 +1,6 @@
+id: fake_group
+name: "Fake pheno group"
+type: group
+children:
+  - fake
+  - fake_subgroup

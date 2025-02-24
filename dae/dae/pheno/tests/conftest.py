@@ -51,6 +51,11 @@ def fake_phenotype_data(fake_pheno_db: PhenoRegistry) -> PhenotypeData:
 
 
 @pytest.fixture(scope="session")
+def fake_phenotype_group(fake_pheno_db: PhenoRegistry) -> PhenotypeData:
+    return fake_pheno_db.get_phenotype_data("fake_group")
+
+
+@pytest.fixture(scope="session")
 def fake_phenotype_data_browser_dbfile() -> str:
     return relative_to_this_folder(
         "fixtures/fake_phenoDB/fake/fake_browser.db",
