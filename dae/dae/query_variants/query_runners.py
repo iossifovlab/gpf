@@ -233,5 +233,5 @@ class QueryResult:
             for error in self._exceptions:
                 logger.error(
                     "unexpected exception in query result: %s", error,
-                    exc_info=True, stack_info=True)
+                    stack_info=True)
             raise OSError(self._exceptions[0])

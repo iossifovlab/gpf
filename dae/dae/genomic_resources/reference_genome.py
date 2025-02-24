@@ -145,7 +145,7 @@ class ReferenceGenome(
         if exc_type is not None:
             logger.error(
                 "exception while using reference genome: %s, %s, %s",
-                exc_type, exc_value, exc_tb, exc_info=True)
+                exc_type, exc_value, exc_tb)
         try:
             self.close()
         except Exception:  # pylint: disable=broad-except

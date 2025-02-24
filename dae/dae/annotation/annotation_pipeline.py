@@ -199,7 +199,7 @@ class AnnotationPipeline:
         if exc_type is not None:
             logger.error(
                 "exception during annotation: %s, %s, %s",
-                exc_type, exc_value, exc_tb, exc_info=True)
+                exc_type, exc_value, exc_tb)
         self.close()
 
 
