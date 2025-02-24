@@ -3,6 +3,7 @@ import logging
 import sys
 import tempfile
 from contextlib import closing
+from pathlib import Path
 
 import pysam
 
@@ -139,9 +140,9 @@ def main(
             target_genome)
 
     if args.mode == "bcf_liftover":
-        _liftover_variant_func = bcf_liftover_variant
+        liftover_variant_func = bcf_liftover_variant
     elif args.mode == "basic_liftover":
-        _liftover_variant_func = basic_liftover_variant
+        liftover_variant_func = basic_liftover_variant
     else:
         raise ValueError(f"Invalid mode: {args.mode}")
 
@@ -155,7 +156,7 @@ def main(
             if vcf_variant.ref is None:
                 logger.warning("skipping variant without ref: %s", vcf_variant)
                 continue
-            lo_variant = _liftover_variant_func(
+            lo_variant = liftover_variant_func(
                     vcf_variant.chrom, vcf_variant.pos,
                     vcf_variant.ref, list(vcf_variant.alts),
                     chain, source_genome, target_genome,
@@ -242,18 +243,15 @@ def liftover_header(
         if contig_index is None:
             raise ValueError("No contig lines found in header")
 
-        with open(temp_vcf.name, "wt") as tmp:
-            for index, line in enumerate(outheader):
-                if index == contig_index:
-                    for contig in outcontigs:
-                        tmp.write(contig)
-                tmp.write(line)
-            tmp.write(
-                f"##source_genome={source_genome.resource_id}\n")
-            tmp.write(
-                f"##target_genome={target_genome.resource_id}\n")
-            tmp.write(
-                f"##command=vcf_liftover {' '.join(sys.argv[1:])}\n")
+        out_buf = "".join([
+            *outheader[:contig_index],
+            *outcontigs,
+            *outheader[contig_index:],
+            f"##source_genome={source_genome.resource_id}\n",
+            f"##target_genome={target_genome.resource_id}\n",
+            f"##command=vcf_liftover {' '.join(sys.argv[1:])}\n",
+        ])
+        Path(temp_vcf.name).write_text(out_buf)
 
         with closing(pysam.VariantFile(temp_vcf.name)) as tmp:
             return tmp.header

@@ -18,7 +18,7 @@ dependencies:
   - pytest-mock=3.14
   - pytest-django=4.8
   - pytest-doctestplus=1.2
-  - ruff==0.9.2
+  - ruff==0.9.7
   - pylint=3.2
   - pyright=1.1.390
   - pyarrow-stubs

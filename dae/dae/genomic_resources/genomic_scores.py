@@ -621,7 +621,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         if exc_type is not None:
             logger.error(
                 "exception while working with genomic score: %s, %s, %s",
-                exc_type, exc_value, exc_tb, exc_info=True)
+                exc_type, exc_value, exc_tb)
         self.close()
 
     @staticmethod

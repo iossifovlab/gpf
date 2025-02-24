@@ -478,10 +478,12 @@ def test_get_query_with_dot_measure(
     assert result is not None
 
 
-def test_get_pheno_db_dir() -> None:
-    dae_db_dir = os.environ.get("DAE_DB_DIR", "")
+def test_get_pheno_db_dir(
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    mocker.patch.dict(os.environ, {"DAE_DB_DIR": "mock_dae_dir"})
     res = get_pheno_db_dir(None)
-    assert res == f"{dae_db_dir}/pheno"
+    assert res == "mock_dae_dir/pheno"
 
     res = get_pheno_db_dir({
         "conf_dir": "mock",
@@ -501,10 +503,12 @@ def test_get_pheno_db_dir() -> None:
     assert res == "blabla_pheno_dir"
 
 
-def test_get_pheno_browser_images_dir() -> None:
-    dae_db_dir = os.environ.get("DAE_DB_DIR", "")
+def test_get_pheno_browser_images_dir(
+    mocker: pytest_mock.MockerFixture,
+) -> None:
+    mocker.patch.dict(os.environ, {"DAE_DB_DIR": "mock_dae_dir"})
     res = get_pheno_browser_images_dir()
-    assert res == Path(dae_db_dir, "pheno", "images")
+    assert res == Path("mock_dae_dir", "pheno", "images")
 
     res = get_pheno_browser_images_dir({
         "conf_dir": "mock",
