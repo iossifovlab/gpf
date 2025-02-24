@@ -1,8 +1,7 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { reset } from 'app/users/state-actions';
+import { HistogramType, CategoricalHistogramView } from 'app/utils/histogram-types';
 import { cloneDeep } from 'lodash';
-import { CategoricalHistogramView } from './genomic-scores-block';
-import { HistogramType } from 'app/gene-scores/gene-scores.state';
 
 export interface GenomicScoreState {
   histogramType: HistogramType;

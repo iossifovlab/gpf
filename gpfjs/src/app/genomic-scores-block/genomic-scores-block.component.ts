@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { GenomicScoresBlockService } from './genomic-scores-block.service';
-import { CategoricalHistogram, GenomicScore } from './genomic-scores-block';
 import { Store} from '@ngrx/store';
 import {
   GenomicScoreState,
@@ -13,6 +12,8 @@ import { combineLatest, of } from 'rxjs';
 import { switchMap, take } from 'rxjs/operators';
 import { cloneDeep } from 'lodash';
 import { resetErrors } from 'app/common/errors.state';
+import { CategoricalHistogram } from 'app/utils/histogram-types';
+import { GenomicScore } from './genomic-scores-block';
 
 @Component({
   selector: 'gpf-genomic-scores-block',

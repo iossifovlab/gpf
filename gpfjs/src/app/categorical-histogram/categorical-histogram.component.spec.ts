@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { CategoricalHistogramComponent } from './categorical-histogram.component';
-import { CategoricalHistogram } from 'app/genomic-scores-block/genomic-scores-block';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { CategoricalHistogram } from 'app/utils/histogram-types';
 
 describe('CategoricalHistogramComponent', () => {
   let component: CategoricalHistogramComponent;

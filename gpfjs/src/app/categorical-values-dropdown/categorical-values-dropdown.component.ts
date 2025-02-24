@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { CategoricalHistogram } from 'app/genomic-scores-block/genomic-scores-block';
+import { CategoricalHistogram } from 'app/utils/histogram-types';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 
 @Component({

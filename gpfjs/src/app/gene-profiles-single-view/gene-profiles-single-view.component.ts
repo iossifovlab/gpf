@@ -5,7 +5,6 @@ import {
 } from 'app/gene-profiles-single-view/gene-profiles-single-view';
 import { Observable, of, zip } from 'rxjs';
 import { GeneScoresService } from '../gene-scores/gene-scores.service';
-import { CategoricalHistogram, GenomicScore, NumberHistogram } from 'app/genomic-scores-block/genomic-scores-block';
 import { GeneProfilesService } from 'app/gene-profiles-block/gene-profiles.service';
 import { switchMap, take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
@@ -23,6 +22,8 @@ import { cloneDeep } from 'lodash';
 import { GeneProfilesTableService } from 'app/gene-profiles-table/gene-profiles-table.service';
 import { Router } from '@angular/router';
 import { GenomicScoreState, setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
+import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
+import { NumberHistogram, CategoricalHistogram } from 'app/utils/histogram-types';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',

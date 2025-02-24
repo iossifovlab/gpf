@@ -17,12 +17,8 @@ import {
   setGeneScoreContinuous
 } from './gene-scores.state';
 import { cloneDeep } from 'lodash';
-import {
-  CategoricalHistogramView,
-  CategoricalHistogram,
-  NumberHistogram,
-  GenomicScore
-} from 'app/genomic-scores-block/genomic-scores-block';
+import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
+import { CategoricalHistogramView, CategoricalHistogram, NumberHistogram } from 'app/utils/histogram-types';
 
 @Component({
   encapsulation: ViewEncapsulation.None, // TODO: What is this?

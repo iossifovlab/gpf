@@ -1,18 +1,15 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { environment } from 'environments/environment';
 import { ReplaySubject} from 'rxjs';
-import {
-  CategoricalHistogram,
-  CategoricalHistogramView,
-  GenomicScore,
-  NumberHistogram
-} from '../genomic-scores-block/genomic-scores-block';
+
 import { cloneDeep } from 'lodash';
 import { Store } from '@ngrx/store';
 import {
   GenomicScoreState,
 } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { resetErrors, setErrors } from 'app/common/errors.state';
+import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
+import { NumberHistogram, CategoricalHistogramView, CategoricalHistogram } from 'app/utils/histogram-types';
 
 @Component({
   selector: 'gpf-genomic-scores',

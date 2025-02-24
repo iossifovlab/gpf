@@ -8,7 +8,8 @@ import { GeneScoresService } from './gene-scores.service';
 import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { lastValueFrom, of, take } from 'rxjs';
 import { Partitions } from './gene-scores';
-import { GenomicScore, NumberHistogram, CategoricalHistogram } from 'app/genomic-scores-block/genomic-scores-block';
+import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
+import { NumberHistogram, CategoricalHistogram } from 'app/utils/histogram-types';
 
 describe('GeneScoresService', () => {
   let service: GeneScoresService;

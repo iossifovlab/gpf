@@ -10,12 +10,9 @@ import { GeneScoresComponent } from './gene-scores.component';
 import { GeneScoresService } from './gene-scores.service';
 import { geneScoresReducer, setGeneScoreCategorical, setGeneScoreContinuous } from './gene-scores.state';
 import { Store, StoreModule } from '@ngrx/store';
-import {
-  CategoricalHistogram,
-  CategoricalHistogramView,
-  GenomicScore,
-  NumberHistogram
-} from 'app/genomic-scores-block/genomic-scores-block';
+import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
+import { NumberHistogram, CategoricalHistogramView, CategoricalHistogram } from 'app/utils/histogram-types';
+
 
 class MockGeneScoresService {
   public provide = true;
