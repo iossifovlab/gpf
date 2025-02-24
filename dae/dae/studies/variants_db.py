@@ -61,7 +61,9 @@ enabled = false
 [genotype_browser]
 enabled = true
 has_family_filters = true
+has_family_filters_beta = true
 has_person_filters = true
+has_person_filters_beta = true
 has_study_filters = false
 has_present_in_child = true
 has_present_in_parent = true
