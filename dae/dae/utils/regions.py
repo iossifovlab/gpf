@@ -4,6 +4,7 @@ import copy
 import logging
 from collections import defaultdict
 from collections.abc import Iterator, Sequence
+from pathlib import Path
 from typing import Any
 
 import networkx as nx
@@ -38,10 +39,11 @@ def bedfile2regions(bed_filename: str) -> list[BedRegion]:
 
 def regions2bedfile(regions: list[BedRegion], bed_filename: str) -> None:
     """Save list of regions into a BED file."""
-    with open(bed_filename, "w") as outfile:
-        for reg in regions:
-            outfile.write(
-                f"{reg.chrom}\t{reg.start - 1}\t{reg.stop}\n")
+    result = "\n".join(
+        f"{reg.chrom}\t{reg.start - 1}\t{reg.stop}\n"
+        for reg in regions
+    )
+    Path(bed_filename).write_text(result)
 
 
 def calc_bin_begin(bin_len: int, bin_idx: int) -> int:

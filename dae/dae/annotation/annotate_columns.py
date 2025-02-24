@@ -272,8 +272,10 @@ class AnnotateColumnsTool(AnnotationTool):
                     header_columns,
                     record_to_annotatable,
                 )
-            for val in values:
-                out_file.write(args.output_separator.join(val) + "\n")
+
+            result = "\n".join(
+                args.output_separator.join(val) for val in values) + "\n"
+            out_file.write(result)
 
     @staticmethod
     def batch_annotate(
