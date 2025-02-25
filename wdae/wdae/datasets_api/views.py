@@ -156,10 +156,10 @@ class DatasetView(QueryBaseView):
                 "genome": None,
                 "chr_prefix": None,
                 "gene_browser": {"enabled": False},
-                "description_editable": False,
+                "description_editable":
+                    dataset.phenotype_data.config["description_editable"],
+                "common_report": dataset.phenotype_data.config["common_report"],
             }
-            res["common_report"] = \
-                dataset.phenotype_data.config["common_report"]
 
         allowed_datasets = self.get_permitted_datasets(user)
         res = augment_accessibility(res, allowed_datasets)
@@ -288,14 +288,10 @@ class DatasetDescriptionView(QueryBaseView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        if wdae_study.is_genotype:
-            genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
-            if get_cacheable_hash(dataset_id) is None:
-                calc_and_set_cacheable_hash(f"{dataset_id}_description",
-                                genotype_data.description)
-            description = genotype_data.description
-        else:
-            description = f"placeholder description for {dataset_id}"
+        if get_cacheable_hash(dataset_id) is None:
+            calc_and_set_cacheable_hash(f"{dataset_id}_description",
+                                        wdae_study.description)
+        description = wdae_study.description
 
         return Response(
             {"description": description},
@@ -312,10 +308,11 @@ class DatasetDescriptionView(QueryBaseView):
         description = ""
         if isinstance(request.data, dict):
             description = request.data.get("description", "")
-        genotype_data = self.gpf_instance.get_genotype_data(dataset_id)
-        genotype_data.description = description
+        wdae_study = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        assert wdae_study is not None
+        wdae_study.description = description
         calc_and_set_cacheable_hash(f"{dataset_id}_description",
-                           genotype_data.description)
+                                    wdae_study.description)
 
         return Response(status=status.HTTP_200_OK)
 

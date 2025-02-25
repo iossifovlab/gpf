@@ -74,8 +74,15 @@ class WDAEStudy:
     @property
     def description(self) -> str | None:
         if self.is_phenotype:
-            return None
+            return self.phenotype_data.description
         return self.genotype_data.description
+
+    @description.setter
+    def description(self, input_text: str) -> None:
+        if self.is_phenotype:
+            self.phenotype_data.description = input_text
+        else:
+            self.genotype_data.description = input_text
 
     def get_children_ids(self, *, leaves=True) -> list[str]:
         if self.is_phenotype:
@@ -90,14 +97,6 @@ class StudyWrapperBase(WDAEStudy):
         super().__init__(genotype_data, None)
         self.config = self.genotype_data.config
         assert self.config is not None, self.genotype_data.study_id
-
-    @property
-    def study_id(self) -> str:
-        return self.genotype_data.study_id
-
-    @property
-    def description(self) -> str | None:
-        return self.genotype_data.description
 
     @staticmethod
     def get_columns_as_sources(

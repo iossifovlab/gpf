@@ -35,6 +35,7 @@ from dae.person_sets.person_sets import (
 from dae.pheno.browser import PhenoBrowser
 from dae.pheno.common import IMPORT_METADATA_TABLE, ImportManifest, MeasureType
 from dae.pheno.db import PhenoDb
+from dae.studies.study import CommonStudyMixin
 from dae.utils.helpers import isnan
 from dae.variants.attributes import Role, Sex, Status
 
@@ -213,7 +214,7 @@ class Measure:
         return result
 
 
-class PhenotypeData(ABC):
+class PhenotypeData(ABC, CommonStudyMixin):
     """Base class for all phenotype data studies and datasets."""
 
     def __init__(
@@ -231,6 +232,7 @@ class PhenotypeData(ABC):
         self._instruments: dict[str, Instrument] = {}
         self._browser: PhenoBrowser | None = None
         self.cache_path = cache_path / self.pheno_id if cache_path else None
+        self._description: str | None = None
 
     @cached_property
     def families(self) -> FamiliesData:
