@@ -6,7 +6,7 @@ import os
 from functools import cached_property
 from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from dae.gene_sets.gene_term import (
     read_ewa_set_file,
@@ -58,10 +58,10 @@ class HistogramSchema(BaseModel):
 
 # pylint: disable=missing-class-docstring
 class GeneSetResourceSchema(BaseResourceSchema):
-    id: str
+    resource_id: str = Field(alias="id")
     filename: str | None = None
     directory: str | None = None
-    format: str | None = None
+    resource_format: str | None = Field(alias="format")
     web_label: str | None = None
     web_format_str: str | None = None
     histograms: dict[
@@ -130,7 +130,7 @@ class GeneSetCollection(
 
         self.config = GeneSetResourceSchema.model_validate(config)
 
-        self.collection_id = self.config.id
+        self.collection_id = self.config.resource_id
         assert self.collection_id != "denovo"
         if resource.get_type() not in {"gene_set_collection", "gene_set"}:
             raise ValueError("Invalid resource type for gene set collection")
@@ -150,7 +150,7 @@ class GeneSetCollection(
     def files(self) -> set[str]:
         """Return a list of resource files the implementation utilises."""
         res = set()
-        collection_format = self.config.format
+        collection_format = self.config.resource_format
 
         if collection_format == "map":
             filename = self.config.filename
@@ -181,7 +181,7 @@ class GeneSetCollection(
         """Build a gene set collection from a given GenomicResource."""
         assert self.resource is not None
         gene_sets = {}
-        collection_format = self.config.format
+        collection_format = self.config.resource_format
         logger.debug("loading %s", self.collection_id)
 
         if collection_format == "map":
