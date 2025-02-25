@@ -9,9 +9,10 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Store, StoreModule } from '@ngrx/store';
 import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { GenomicScoreState } from 'app/genomic-scores-block/genomic-scores-block.state';
-import { CategoricalHistogram, GenomicScore, NumberHistogram } from 'app/genomic-scores-block/genomic-scores-block';
 import { MatMenuModule } from '@angular/material/menu';
 import { setErrors } from 'app/common/errors.state';
+import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
+import { CategoricalHistogram, NumberHistogram } from 'app/utils/histogram-types';
 
 describe('GenomicScoresComponent', () => {
   let component: GenomicScoresComponent;

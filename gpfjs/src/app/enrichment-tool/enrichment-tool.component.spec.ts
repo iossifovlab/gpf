@@ -68,7 +68,9 @@ const datasetMock = new Dataset(
     ['selectedInheritance', 'string2'],
     ['variant', 'string3'],
     ['selectedVariant', 'string1'],
-    5
+    5,
+    false,
+    false
   ),
   new PersonSetCollections(
     [

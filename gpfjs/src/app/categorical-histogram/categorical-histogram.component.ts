@@ -9,7 +9,7 @@ import {
   EventEmitter,
   OnInit
 } from '@angular/core';
-import { CategoricalHistogram, CategoricalHistogramView } from 'app/genomic-scores-block/genomic-scores-block';
+import { CategoricalHistogramView, CategoricalHistogram } from 'app/utils/histogram-types';
 
 import * as d3 from 'd3';
 import { cloneDeep } from 'lodash';

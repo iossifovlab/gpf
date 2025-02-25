@@ -36,6 +36,14 @@
           </div>
         </ng-template>
       </li>
+      <li [ngbNavItem]="'advancedBeta'" *ngIf="showAdvancedBetaButton" id="advanced">
+        <a ngbNavLink (click)="hasContent = true">AdvancedBeta</a>
+        <ng-template ngbNavContent>
+          <div id="filters">
+            <gpf-person-filters-selector [dataset]="dataset" [isFamilyFilters]="true"> </gpf-person-filters-selector>
+          </div>
+        </ng-template>
+      </li>
     </ul>
     <div [ngbNavOutlet]="nav" class="card-block"></div>
   </div>

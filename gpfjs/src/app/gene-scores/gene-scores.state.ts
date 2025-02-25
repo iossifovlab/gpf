@@ -1,10 +1,7 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
 import { reset } from 'app/users/state-actions';
-import { CategoricalHistogramView } from 'app/genomic-scores-block/genomic-scores-block';
-
-
-export type HistogramType = 'continuous' | 'categorical';
+import { CategoricalHistogramView, HistogramType } from 'app/utils/histogram-types';
 
 export interface GeneScoresState {
   histogramType: HistogramType;
@@ -60,5 +57,6 @@ export const geneScoresReducer = createReducer(
     values: values,
     categoricalView: categoricalView,
   })),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   on(reset, resetGeneScoresValues, state => cloneDeep(initialState))
 );

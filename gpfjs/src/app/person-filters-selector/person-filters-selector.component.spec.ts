@@ -1,9 +1,21 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { PersonFiltersSelectorComponent } from './person-filters-selector.component';
+import { StoreModule } from '@ngrx/store';
+import { MeasuresService } from 'app/measures/measures.service';
+import { provideHttpClient } from '@angular/common/http';
+import { ConfigService } from 'app/config/config.service';
 import {
-  Column, Dataset, GeneBrowser, GenotypeBrowser,
-  PersonFilter, PersonSet, PersonSetCollection, PersonSetCollections
+  Column,
+  Dataset,
+  GeneBrowser,
+  GenotypeBrowser,
+  PersonFilter,
+  PersonSet,
+  PersonSetCollection,
+  PersonSetCollections
 } from 'app/datasets/datasets';
 import { UserGroup } from 'app/users-groups/users-groups';
-import { DatasetNode } from './dataset-node';
 
 const datasetMock = new Dataset(
   'id1',
@@ -81,10 +93,25 @@ const datasetMock = new Dataset(
   true,
 );
 
-describe('DatasetNode', () => {
-  const instance = new DatasetNode(datasetMock, []);
+describe('PersonFiltersSelectorComponent', () => {
+  let component: PersonFiltersSelectorComponent;
+  let fixture: ComponentFixture<PersonFiltersSelectorComponent>;
+
+  beforeEach(async() => {
+    await TestBed.configureTestingModule({
+      declarations: [PersonFiltersSelectorComponent],
+      imports: [StoreModule.forRoot()],
+      providers: [ConfigService, MeasuresService, provideHttpClient()]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(PersonFiltersSelectorComponent);
+    component = fixture.componentInstance;
+
+    component.dataset = datasetMock;
+    fixture.detectChanges();
+  });
+
   it('should create', () => {
-    expect(instance).toBeTruthy();
-    expect(instance.dataset).toBe(datasetMock);
+    expect(component).toBeTruthy();
   });
 });

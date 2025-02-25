@@ -20,6 +20,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() public dataset: Dataset;
   @ViewChild('nav') public ngbNav: NgbNav;
   public showAdvancedButton: boolean;
+  public showAdvancedBetaButton: boolean;
   public hasContent = false;
 
   public tags: Array<string> = new Array<string>();
@@ -41,6 +42,8 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
     this.showAdvancedButton =
       this.dataset.genotypeBrowserConfig.familyFilters.length !== 0 ||
       this.dataset.genotypeBrowserConfig.hasFamilyStructureFilter;
+
+    this.showAdvancedBetaButton = this.dataset.genotypeBrowserConfig.hasFamilyFiltersBeta;
 
     if (this.variantReportsService.getTags() !== undefined) {
       this.variantReportsService.getTags().subscribe(data => {
@@ -68,6 +71,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
         if (err.status === 404) {
           this.showSelectedFamilies = false;
         } else {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error
           throw err;
         }
       }

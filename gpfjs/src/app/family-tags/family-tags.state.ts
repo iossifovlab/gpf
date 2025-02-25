@@ -30,5 +30,6 @@ export const familyTagsReducer = createReducer(
       tagIntersection: tagIntersection,
     })
   ),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   on(reset, resetFamilyTags, state => cloneDeep(initialState)),
 );

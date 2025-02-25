@@ -15,11 +15,13 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() public dataset: Dataset;
   @ViewChild('nav') public ngbNav: NgbNav;
   public showAdvancedButton: boolean;
+  public showAdvancedBetaButton: boolean;
 
   public constructor(private store: Store) { }
 
   public ngOnInit(): void {
     this.showAdvancedButton = this.dataset.genotypeBrowserConfig.personFilters.length !== 0;
+    this.showAdvancedBetaButton = this.dataset.genotypeBrowserConfig.hasPersonFiltersBeta;
   }
 
   public ngAfterViewInit(): void {

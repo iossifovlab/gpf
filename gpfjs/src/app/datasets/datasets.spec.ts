@@ -315,6 +315,8 @@ describe('GenotypeBrowser', () => {
       ['variant', 'string3'],
       ['selectedVariant', 'string1'],
       5,
+      false,
+      false
     );
 
     /* eslint-disable */
@@ -324,8 +326,10 @@ describe('GenotypeBrowser', () => {
       has_present_in_parent: false,
       has_present_in_role: false,
       has_family_filters: true,
+      has_family_filters_beta: false,
       has_family_structure_filter: false,
       has_person_filters: true,
+      has_person_filters_beta: false,
       has_study_filters: false,
       has_study_types: false,
       table_columns: [
@@ -459,6 +463,8 @@ describe('GenotypeBrowser', () => {
       ['variant', 'string3'],
       ['selectedVariant', 'string1'],
       5,
+      false,
+      false
     );
 
     expect(genotypeMock1.columnIds).toStrictEqual(['source1', 'source2']);
@@ -528,7 +534,9 @@ describe('Dataset', () => {
       ['selectedInheritance', 'string2'],
       ['variant', 'string3'],
       ['selectedVariant', 'string1'],
-      5
+      5,
+      false,
+      false
     ),
     new PersonSetCollections(
       [
@@ -608,7 +616,9 @@ describe('Dataset', () => {
       ['selectedInheritance3', 'string5'],
       ['variant2', 'string5'],
       ['selectedVariant1', 'string3'],
-      6
+      6,
+      false,
+      false
     ),
     new PersonSetCollections([
       new PersonSetCollection(
@@ -669,7 +679,9 @@ describe('Dataset', () => {
       has_present_in_parent: false,
       has_present_in_role: false,
       has_family_filters: true,
+      has_family_filters_beta: false,
       has_family_structure_filter: false,
+      has_person_filters_beta: false,
       has_person_filters: true,
       has_study_filters: false,
       has_study_types: false,
@@ -826,8 +838,10 @@ describe('Dataset', () => {
       has_present_in_parent: true,
       has_present_in_role: false,
       has_family_filters: false,
+      has_family_filters_beta: false,
       has_family_structure_filter: false,
       has_person_filters: true,
+      has_person_filters_beta: false,
       has_study_filters: false,
       has_study_types: false,
       table_columns: [
@@ -1001,8 +1015,10 @@ describe('Dataset', () => {
         has_present_in_parent: false,
         has_present_in_role: false,
         has_family_filters: true,
+        has_family_filters_beta: false,
         has_family_structure_filter: false,
         has_person_filters: true,
+        has_person_filters_beta: false,
         has_study_filters: false,
         has_study_types: false,
         table_columns: [{

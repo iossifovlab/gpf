@@ -16,8 +16,9 @@ import { GenomicScoresBlockService } from './genomic-scores-block.service';
 import { provideHttpClient } from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
 import { Observable, of } from 'rxjs';
-import { CategoricalHistogram, GenomicScore, NumberHistogram } from './genomic-scores-block';
 import { resetErrors } from 'app/common/errors.state';
+import { NumberHistogram, CategoricalHistogram } from 'app/utils/histogram-types';
+import { GenomicScore } from './genomic-scores-block';
 
 class MockGenomicScoresBlockService {
   public getGenomicScores(): Observable<GenomicScore[]> {
