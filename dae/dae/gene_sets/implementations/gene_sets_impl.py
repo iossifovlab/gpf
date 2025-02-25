@@ -1,9 +1,9 @@
 import copy
+import json
 from collections import Counter
 from functools import lru_cache
 from typing import Any
 
-import yaml
 from jinja2 import Template
 from markdown2 import markdown
 
@@ -60,8 +60,11 @@ class GeneSetCollectionImpl(
         }
 
         with resource.proto.open_raw_file(
-                resource, "statistics/stats.yaml", "wt") as stats_file:
-            stats_file.write(yaml.dump(result))
+            resource,
+            "statistics/gene_collection_count_statistics.json",
+            "wt",
+        ) as statistics_file:
+            json.dump(result, statistics_file)
 
         return result
 
@@ -72,7 +75,7 @@ class GeneSetCollectionImpl(
 
         info["gene_set_collection"] = self.gene_set_collection
 
-        statistics = self.get_statistics()
+        statistics = self.get_gene_collection_count_statistics()
         if statistics is not None:
             info["number_of_gene_sets"] = (
                 statistics["number_of_gene_sets"]
@@ -219,12 +222,15 @@ class GeneSetCollectionImpl(
         return histogram
 
     @lru_cache(maxsize=64)
-    def get_statistics(self) -> dict | None:  # type: ignore
+    def get_gene_collection_count_statistics(self) -> dict | None:  # pylint: disable=missing-function-docstring
         try:
             with self.resource.proto.open_raw_file(
-                    self.resource, "statistics/stats.yaml", "rt") as stats_file:
-                return yaml.safe_load(stats_file.read())
-        except FileExistsError:
+                self.resource,
+                "statistics/gene_collection_count_statistics.json",
+                "rt",
+            ) as statistics_file:
+                return json.load(statistics_file)
+        except FileNotFoundError:
             return None
 
     @staticmethod
