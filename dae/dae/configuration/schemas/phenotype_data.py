@@ -24,6 +24,12 @@ pheno_conf_schema = {
     "id": {"type": "string", "required": True},
     "name": {"type": "string", "required": False},
     "enabled": {"type": "boolean", "default": True},
+    "description_file": {
+        "type": "string",
+        "coerce": "abspath",
+        "default": "description.md",
+    },
+    "description_editable": {"type": "boolean", "default": True},
     "type": {
         "type": "string",
         "allowed": ["study", "group"],
