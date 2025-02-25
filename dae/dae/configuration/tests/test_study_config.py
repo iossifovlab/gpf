@@ -52,7 +52,7 @@ def test_study_with_study_filters_false_passes() -> None:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def full_study_config() -> dict[str, Any]:
     return {
         "id": "test",
@@ -140,8 +140,10 @@ def full_study_config() -> dict[str, Any]:
         "genotype_browser": {
             "enabled": True,
             "has_family_filters": True,
+            "has_family_filters_beta": True,
             "has_family_structure_filter": True,
             "has_person_filters": True,
+            "has_person_filters_beta": True,
             "has_study_filters": True,
             "has_present_in_child": True,
             "has_present_in_parent": True,
@@ -235,14 +237,6 @@ def full_study_config() -> dict[str, Any]:
             "enabled": True,
             "selected_person_set_collections": ["test"],
             "selected_background_models": ["test"],
-            # "background": {
-            #     "test": {
-            #         "file": "test",
-            #         "name": "test",
-            #         "kind": "test",
-            #         "desc": "test"
-            #     }
-            # },
             "default_background_model": "test",
             "selected_counting_models": ["test"],
             "counting": {
@@ -354,7 +348,7 @@ def build_structural_schema(schema: dict[str, Any]) -> dict[str, Any]:
     return _build_structural_schema_keys({}, schema)
 
 
-@pytest.fixture()
+@pytest.fixture
 def study_config_structural() -> dict[str, dict[str, Any]]:
     return build_structural_schema(study_config_schema)
 
