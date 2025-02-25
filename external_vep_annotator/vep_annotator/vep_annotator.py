@@ -7,8 +7,6 @@ import subprocess
 from pathlib import Path
 from typing import Any, TextIO, cast
 
-import fsspec
-
 from dae.annotation.annotatable import Annotatable, VCFAllele
 from dae.annotation.annotation_factory import AnnotationConfigParser
 from dae.annotation.annotation_pipeline import (
@@ -16,7 +14,7 @@ from dae.annotation.annotation_pipeline import (
     Annotator,
     AnnotatorInfo,
 )
-from dae.annotation.annotator_base import AnnotatorBase
+from dae.annotation.docker_annotator import DockerAnnotator
 from dae.genomic_resources.cached_repository import GenomicResourceCachedRepo
 from dae.genomic_resources.gene_models import (
     build_gene_models_from_resource,
@@ -78,7 +76,7 @@ IMPACTS = {
 }
 
 
-class VEPAnnotatorBase(AnnotatorBase):
+class VEPAnnotatorBase(DockerAnnotator):
     """
     Base class for VEP annotators
 
@@ -87,7 +85,6 @@ class VEPAnnotatorBase(AnnotatorBase):
     def __init__(
         self, pipeline: AnnotationPipeline | None,
         info: AnnotatorInfo,
-        source_type_desc: dict[str, tuple[str, str]],
         extra_attributes: list[str] | None = None,
     ):
         if not info.attributes:
@@ -108,20 +105,20 @@ class VEPAnnotatorBase(AnnotatorBase):
                 attributes)
 
         super().__init__(
-            pipeline, info, source_type_desc=source_type_desc,
+            pipeline, info,
         )
 
     def _do_annotate(
-        self, _annotatable: Annotatable | None,
-        _context: dict[str, Any],
+        self, annotatable: Annotatable | None,
+        context: dict[str, Any],
     ) -> dict[str, Any]:
         raise NotImplementedError(
             "External annotator supports only batch mode",
         )
 
     def annotate(
-        self, _annotatable: Annotatable | None,
-        _context: dict[str, Any],
+        self, annotatable: Annotatable | None,
+        context: dict[str, Any],
     ) -> dict[str, Any]:
         raise NotImplementedError(
             "External annotator supports only batch mode",
@@ -225,10 +222,10 @@ class VEPAnnotatorBase(AnnotatorBase):
         command.extend(args)
         subprocess.run(command, check=True)
 
-    def open_files(self, work_dir: Path) -> tuple[TextIO, TextIO]:
+    def open_files(self, work_dir: Path) -> tuple[TextIO, Path]:
         return (
             (work_dir / "input.tsv").open("w+t"),
-            (work_dir / "output.tsv").open("w+t"),
+            (work_dir / "output.tsv"),
         )
 
 
@@ -245,8 +242,11 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
 
         assert self.vep_cache_dir is not None
         super().__init__(
-            pipeline, info, full_attributes,
+            pipeline, info,
         )
+
+    def _attribute_type_descs(self) -> dict[str, tuple[str, str]]:
+        return full_attributes
 
     def _do_batch_annotate(
         self, annotatables: list[Annotatable | None],
@@ -258,29 +258,49 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
         else:
             work_dir = self.work_dir / batch_work_dir
         os.makedirs(work_dir, exist_ok=True)
-        input_file, out_file = self.open_files(work_dir)
-        with input_file, out_file:
+        work_dir.chmod(0o0777)
+        input_file, out_path = self.open_files(work_dir)
+        with input_file:
             self.prepare_input(
                 input_file, cast(list[VCFAllele | None], annotatables),
             )
-            args = [
-                "-i", cast(str, input_file.name),
-                "-o", cast(str, out_file.name),
-                "--tab", "--cache",
-                "--offline",
-                "--dir", str(self.vep_cache_dir),
-                "--everything",
-                "--symbol",
-                "--no_stats",
-                "--force_overwrite",
-            ]
-            self.run_vep(args)
-            out_file.flush()
-            self.read_output(out_file, contexts, full_attributes)
+
+            self.run(
+                input_file_name=Path(input_file.name).name,
+                output_file_name=out_path.name,
+                work_dir=str(work_dir.absolute()),
+            )
+
+        with out_path.open("r") as out_file:
+            self.read_output(
+                out_file, contexts, self._attribute_type_descs(),
+            )
 
         self.aggregate_attributes(contexts)
 
         return contexts
+
+    def run(self, **kwargs):
+        args = [
+            "vep",
+            "-i", str(Path("/work", kwargs["input_file_name"])),
+            "-o", str(Path("/work", kwargs["output_file_name"])),
+            "--tab", "--cache",
+            "--offline",
+            "--dir", "/vep_cache",
+            "--everything",
+            "--symbol",
+            "--no_stats",
+            "--force_overwrite",
+        ]
+        self.client.containers.run(
+            "ensemblorg/ensembl-vep",
+            args,
+            volumes={
+                kwargs["work_dir"]: {"bind": "/work", "mode": "rw"},
+                str(self.vep_cache_dir): {"bind": "/vep_cache", "mode": "ro"},
+            },
+        )
 
 
 class VEPEffectAnnotator(VEPAnnotatorBase):
@@ -311,7 +331,10 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
 
         gtf_file_name = self.gene_models_resource.resource_id.replace("/", "_")
 
-        self.gtf_path = self.work_dir / f"{gtf_file_name}.gtf"
+        self.resources_dir = (self.work_dir / "annotator_resources").absolute()
+        self.resources_dir.mkdir(exist_ok=True)
+
+        self.gtf_path = self.resources_dir / f"{gtf_file_name}.gtf"
         self.gtf_path_gz = self.gtf_path.with_suffix(
                 f"{self.gtf_path.suffix}.gz",
             )
@@ -322,7 +345,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
             f"Value from {self.gene_models_resource.resource_id}",
         )
         super().__init__(
-            pipeline, info, self.annotator_attributes,
+            pipeline, info,
             [self.gtf_path_gz.name],
         )
 
@@ -342,43 +365,78 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
                 check=True,
             )
 
+    def _attribute_type_descs(self) -> dict[str, tuple[str, str]]:
+        annotator_attributes = copy.deepcopy(effect_attributes)
+        annotator_attributes[self.gtf_path_gz.name] = (
+            "object",
+            f"Value from {self.gene_models_resource.resource_id}",
+        )
+        return annotator_attributes
+
     def _do_batch_annotate(
         self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,
     ) -> list[dict[str, Any]]:
-        genome_filepath = fsspec.url_to_fs(
-            self.genome_resource.get_file_url(self.genome_filename),
-        )[1]
+        self.genome_resource.get_file_url(self.genome_filename)
         self.genome_resource.get_file_url(f"{self.genome_filename}.fai")
+
+        genome_filepath = Path(
+            "/grr",
+            self.genome_resource.get_genomic_resource_id_version(),
+            self.genome_filename,
+        )
 
         if batch_work_dir is None:
             work_dir = self.work_dir
         else:
             work_dir = self.work_dir / batch_work_dir
         os.makedirs(work_dir, exist_ok=True)
-        input_file, out_file = self.open_files(work_dir)
-        with input_file, out_file:
+        work_dir.chmod(0o0777)
+        input_file, out_path = self.open_files(work_dir)
+        with input_file:
             self.prepare_input(
                 input_file, cast(list[VCFAllele | None], annotatables),
             )
-            args = [
-                "-i", input_file.name,
-                "-o", out_file.name,
-                "--tab",
-                "--fasta", genome_filepath,
-                "--gtf", self.gtf_path_gz,
-                "--no_stats",
-                "--symbol",
-                "--force_overwrite",
-            ]
-            self.run_vep(args)
-            out_file.flush()
-            self.read_output(out_file, contexts, self.annotator_attributes)
+            self.run(
+                input_file_name=Path(input_file.name).name,
+                output_file_name=out_path.name,
+                work_dir=str(work_dir.absolute()),
+                genome_filepath=str(genome_filepath),
+                gtf_filename=self.gtf_path_gz.name,
+            )
+
+        with out_path.open("r") as out_file:
+            self.read_output(
+                out_file, contexts, self._attribute_type_descs(),
+            )
 
         self.aggregate_attributes(contexts)
 
         return contexts
+
+    def run(self, **kwargs):
+        args = [
+            "vep",
+            "-i", str(Path("/work", kwargs["input_file_name"])),
+            "-o", str(Path("/work", kwargs["output_file_name"])),
+            "--tab",
+            "--fasta", str(Path("/grr", kwargs["genome_filepath"])),
+            "--gtf", str(Path("/resources", kwargs["gtf_filename"])),
+            "--symbol",
+            "--no_stats",
+            "--force_overwrite",
+        ]
+        cache_path = Path(self.genome_resource.proto.url[7:]).absolute()
+        self.client.containers.run(
+            "ensemblorg/ensembl-vep",
+            args,
+            volumes={
+                kwargs["work_dir"]: {"bind": "/work", "mode": "rw"},
+                str(cache_path): {"bind": "/grr", "mode": "ro"},
+                str(self.resources_dir): {"bind": "/resources", "mode": "ro"},
+            },
+        )
 
 
 def build_vep_cache_annotator(
