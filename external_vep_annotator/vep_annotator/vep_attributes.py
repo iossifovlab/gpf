@@ -90,6 +90,11 @@ full_attributes = {
         "object",
         "Indicates if transcript is canonical for this gene",
     ),
+    "MANE": (
+        "object",
+        "MANE (Matched Annotation from NCBI and EMBL-EBI) "
+        "set(s) the transcript belongs to",
+    ),
     "MANE_SELECT": (
         "object",
         "MANE Select (Matched Annotation "
@@ -237,6 +242,11 @@ full_attributes = {
         "Frequency of existing variant in "
         "gnomAD exomes Finnish population",
     ),
+    "gnomADe_MID_AF": (
+        "object",
+        "Frequency of existing variant in "
+        "gnomAD exomes Mid-eastern population",
+    ),
     "gnomADe_NFE_AF": (
         "object",
         "Frequency of existing variant in "
@@ -251,6 +261,11 @@ full_attributes = {
         "object",
         "Frequency of existing variant in "
         "gnomAD exomes South Asian population",
+    ),
+    "gnomADe_REMAINING_AF": (
+        "object",
+        "Frequency of existing variant in "
+        "gnomAD exomes remaining combined populations",
     ),
     "gnomADg_AF": (
         "object",
@@ -306,6 +321,11 @@ full_attributes = {
         "object",
         "Frequency of existing variant in "
         "gnomAD genomes South Asian population",
+    ),
+    "gnomADg_REMAINING_AF": (
+        "object",
+        "Frequency of existing variant in "
+        "gnomAD genomes remaining combined populations",
     ),
     "MAX_AF": (
         "object",
