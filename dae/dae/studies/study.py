@@ -10,6 +10,7 @@ from collections.abc import Generator, Iterable
 from contextlib import closing
 from dataclasses import dataclass
 from os.path import basename, exists
+from pathlib import Path
 from typing import Any, cast
 
 from box import Box
@@ -46,7 +47,31 @@ class PSCQueryAdjustments:
     person_ids: list[str] | None
 
 
-class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
+class CommonStudyMixin:
+    "Mixin class for common study functionality to be reused."
+
+    @property
+    def description(self) -> str | None:
+        """Load and return description of a genotype data."""
+        if self._description is None:
+            description_file = self.config["description_file"]  # type: ignore
+            if basename(description_file) != "description.md" \
+               and not exists(description_file):
+                # If a non-default description file was given, assert it exists
+                raise ValueError(f"missing description file {description_file}")
+
+            if exists(description_file):
+                # the default description file may not yet exist
+                self._description = Path(description_file).read_text()
+        return self._description
+
+    @description.setter
+    def description(self, input_text: str) -> None:
+        self._description = None
+        Path(self.config["description_file"]).write_text(input_text)  # type: ignore
+
+
+class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-methods
     """Abstract base class for genotype data."""
 
     def __init__(self, config: Box, studies: list[GenotypeData]):
@@ -74,32 +99,6 @@ class GenotypeData(ABC):  # pylint: disable=too-many-public-methods
         if name:
             return cast(str, name)
         return self.study_id
-
-    @property
-    def description(self) -> str | None:
-        """Load and return description of a genotype data."""
-        if self._description is None:
-            if basename(self.config.description_file) != "description.md" and \
-                    not exists(self.config.description_file):
-                # If a non-default description file was given, assert it exists
-                raise ValueError(
-                    f"missing description file {self.config.description_file}")
-
-            if exists(self.config.description_file):
-                # the default description file may not yet exist
-                with open(
-                        self.config.description_file,
-                        mode="rt", encoding="utf8") as infile:
-                    self._description = infile.read()
-        return self._description
-
-    @description.setter
-    def description(self, input_text: str) -> None:
-        self._description = None
-        with open(
-                self.config.description_file,
-                mode="wt", encoding="utf8") as outfile:
-            outfile.write(input_text)
 
     @property
     def year(self) -> str | None:
