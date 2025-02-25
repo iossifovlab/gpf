@@ -45,7 +45,9 @@ const datasetMock = new Dataset(
     ['selectedInheritance', 'string2'],
     ['variant', 'string3'],
     ['selectedVariant', 'string1'],
-    5
+    5,
+    false,
+    false
   ),
   new PersonSetCollections(
     [
@@ -76,7 +78,7 @@ const datasetMock = new Dataset(
   new GeneBrowser(true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6, true),
   false,
   'genome1',
-  true
+  true,
 );
 
 describe('DatasetNode', () => {

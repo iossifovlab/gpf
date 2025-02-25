@@ -1,8 +1,8 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { CategoricalValuesDropdownComponent } from './categorical-values-dropdown.component';
 import { MatAutocompleteOrigin, MatAutocomplete, MatAutocompleteTrigger } from '@angular/material/autocomplete';
-import { CategoricalHistogram } from 'app/genomic-scores-block/genomic-scores-block';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { CategoricalHistogram } from 'app/utils/histogram-types';
 
 describe('CategoricalValuesDropdownComponent', () => {
   let component: CategoricalValuesDropdownComponent;

@@ -44,7 +44,7 @@ class PhenoToolServiceMock {
 class MockDatasetsService {
   public getDataset(datasetId: string): Observable<Dataset> {
     // eslint-disable-next-line @stylistic/max-len
-    const genotypeBrowserConfigMock = new GenotypeBrowser(true, true, true, true, true, true, true, true, true, new Array<object>(), new Array<PersonFilter>(), new Array<PersonFilter>(), [], [], [], [], 0);
+    const genotypeBrowserConfigMock = new GenotypeBrowser(true, true, true, true, true, true, true, true, true, new Array<object>(), new Array<PersonFilter>(), new Array<PersonFilter>(), [], [], [], [], 0, false, false);
     // eslint-disable-next-line @stylistic/max-len
     return of(new Dataset(datasetId, 'testDataset', [], true, [], [], [], '', true, true, true, true, null, genotypeBrowserConfigMock, null, [], null, null, '', null));
   }
