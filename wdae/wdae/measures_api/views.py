@@ -41,7 +41,7 @@ class PhenoMeasuresView(QueryBaseView):
         measures = dataset.phenotype_data.get_measures(
             measure_type=MeasureType.from_str(measure_type),
         )
-        res: list[dict[str, Any]]
+        res: list[dict[str, Any]] = []
         if measure_type == "continuous":
             res = [
                 {
@@ -68,6 +68,7 @@ class PhenoMeasureHistogramView(QueryBaseView):
     def post(self, request: Request) -> Response:
         """Get phenotype measure histograms."""
         data = request.data
+        assert isinstance(data, dict)
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
@@ -180,6 +181,8 @@ class PhenoMeasurePartitionsView(QueryBaseView, DatasetAccessRightsView):
     def post(self, request: Request) -> Response:
         """Get phenotype measure partitions."""
         data = request.data
+        assert isinstance(data, dict)
+
         dataset_id = data["datasetId"]
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
