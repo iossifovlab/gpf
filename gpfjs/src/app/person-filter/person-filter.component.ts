@@ -1,7 +1,7 @@
-import { Component, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { GenomicScoreState } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { MeasureHistogram } from 'app/measures/measures';
+import { MeasureHistogramState } from 'app/person-filters-selector/measure-histogram.state';
 import { NumberHistogram, CategoricalHistogramView, CategoricalHistogram } from 'app/utils/histogram-types';
 import { environment } from 'environments/environment';
 import { cloneDeep } from 'lodash';
@@ -14,9 +14,9 @@ import { ReplaySubject } from 'rxjs';
 })
 export class PersonFilterComponent implements OnInit {
   @Input() public selectedMeasure: MeasureHistogram;
-  // @Input() public initialState: GenomicScoreState;
-  // public localState: GenomicScoreState;
-  // @Output() public updateState = new EventEmitter<GenomicScoreState>();
+  @Input() public initialState: MeasureHistogramState;
+  public localState: MeasureHistogramState;
+  @Output() public updateState = new EventEmitter<MeasureHistogramState>();
   public errors: string[] = [];
   private categoricalValueMax = 1000;
   private readonly maxBarCount = 25;
@@ -30,32 +30,32 @@ export class PersonFilterComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    // this.localState = cloneDeep(this.initialState);
-    // this.validateState(this.localState);
+    this.localState = cloneDeep(this.initialState);
+    this.validateState(this.localState);
 
-    // const histogram = this.selectedGenomicScore.histogram;
-    // if (this.isCategoricalHistogram(histogram)) {
-    //   let barCount = 0;
-    //   if (histogram.displayedValuesCount) {
-    //     barCount = histogram.displayedValuesCount;
-    //   } else if (histogram.displayedValuesPercent) {
-    //     barCount = Math.floor(histogram.values.length / 100 * histogram.displayedValuesPercent);
-    //   }
-    //   if (barCount > this.maxBarCount) {
-    //     this.switchCategoricalHistogramView('dropdown selector');
-    //   }
-    // }
+    const histogram = this.selectedMeasure.histogram;
+    if (this.isCategoricalHistogram(histogram)) {
+      let barCount = 0;
+      if (histogram.displayedValuesCount) {
+        barCount = histogram.displayedValuesCount;
+      } else if (histogram.displayedValuesPercent) {
+        barCount = Math.floor(histogram.values.length / 100 * histogram.displayedValuesPercent);
+      }
+      if (barCount > this.maxBarCount) {
+        this.switchCategoricalHistogramView('dropdown selector');
+      }
+    }
   }
 
 
   public updateRangeStart(range): void {
-    // this.localState.rangeStart = range as number;
-    // this.updateHistogramState();
+    this.localState.rangeStart = range as number;
+    this.updateHistogramState();
   }
 
   public updateRangeEnd(range): void {
-    // this.localState.rangeEnd = range as number;
-    // this.updateHistogramState();
+    this.localState.rangeEnd = range as number;
+    this.updateHistogramState();
   }
 
   public get domainMin(): number {
@@ -68,15 +68,16 @@ export class PersonFilterComponent implements OnInit {
   }
 
   public replaceCategoricalValues(values: string[]): void {
-    // this.localState.values = values;
+    this.localState.values = values;
     this.updateHistogramState();
   }
 
   private updateHistogramState(): void {
-    // this.validateState(this.localState);
-    // this.updateState.emit(this.localState);
+    this.validateState(this.localState);
+    this.updateState.emit(this.localState);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public switchCategoricalHistogramView(view: CategoricalHistogramView): void {
     // if (view === this.localState.categoricalView) {
     //   return;
@@ -90,6 +91,7 @@ export class PersonFilterComponent implements OnInit {
     // this.updateHistogramState();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public toggleCategoricalValues(values: string[]): void {
     // const oldValues: Set<string> = new Set(this.localState.values);
     // const newValues: Set<string> = new Set(values);
@@ -106,7 +108,8 @@ export class PersonFilterComponent implements OnInit {
     return arg instanceof CategoricalHistogram;
   }
 
-  private validateState(state: GenomicScoreState): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private validateState(state: MeasureHistogramState): void {
     // this.errors = [];
     // if (!state.score) {
     //   this.errors.push('Empty score names are invalid.');
