@@ -187,6 +187,7 @@ import {MatMenuModule} from '@angular/material/menu';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { CategoricalValuesDropdownComponent } from './categorical-values-dropdown/categorical-values-dropdown.component';
 import { PersonFilterComponent } from './person-filter/person-filter.component';
+import { familyMeasureHistogramsReducer, personMeasureHistogramsReducer } from './person-filters-selector/measure-histogram.state';
 
 const appRoutes: Routes = [
   {
@@ -450,7 +451,9 @@ bootstrap: [AppComponent], imports: [BrowserModule,
     regionsFilter: regionsFiltersReducer,
     genomicScores: genomicScoresReducer,
     uniqueFamilyVariantsFilter: uniqueFamilyVariantsFilterReducer,
-    studyTypes: studyTypesReducer
+    studyTypes: studyTypesReducer,
+    familyMeasureHistograms: familyMeasureHistogramsReducer,
+    personMeasureHistograms: personMeasureHistogramsReducer
   }),], providers: [
   CookieService,
   ConfigService,
