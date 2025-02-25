@@ -5,7 +5,16 @@ import { StoreModule } from '@ngrx/store';
 import { MeasuresService } from 'app/measures/measures.service';
 import { provideHttpClient } from '@angular/common/http';
 import { ConfigService } from 'app/config/config.service';
-import { Column, Dataset, GeneBrowser, GenotypeBrowser, PersonFilter, PersonSet, PersonSetCollection, PersonSetCollections } from 'app/datasets/datasets';
+import {
+  Column,
+  Dataset,
+  GeneBrowser,
+  GenotypeBrowser,
+  PersonFilter,
+  PersonSet,
+  PersonSetCollection,
+  PersonSetCollections
+} from 'app/datasets/datasets';
 import { UserGroup } from 'app/users-groups/users-groups';
 
 const datasetMock = new Dataset(

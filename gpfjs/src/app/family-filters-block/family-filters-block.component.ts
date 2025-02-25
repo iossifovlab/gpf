@@ -71,6 +71,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
         if (err.status === 404) {
           this.showSelectedFamilies = false;
         } else {
+          // eslint-disable-next-line @typescript-eslint/only-throw-error
           throw err;
         }
       }

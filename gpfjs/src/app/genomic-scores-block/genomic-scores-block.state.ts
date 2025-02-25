@@ -89,5 +89,6 @@ export const genomicScoresReducer = createReducer(
   on(removeGenomicScore, (state, {genomicScoreName}) => {
     return [...state].filter(score => score.score !== genomicScoreName);
   }),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   on(reset, resetGenomicScores, state => cloneDeep(initialState)),
 );

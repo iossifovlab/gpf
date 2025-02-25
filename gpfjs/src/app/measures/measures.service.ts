@@ -76,7 +76,7 @@ export class MeasuresService {
     );
   }
 
-  public getRegressions(datasetId: string): Observable<Object> {
+  public getRegressions(datasetId: string): Observable<object> {
     const params = new HttpParams().set('datasetId', datasetId);
     const requestOptions = { withCredentials: true, params: params };
 

@@ -88,6 +88,7 @@ export const familyMeasureHistogramsReducer = createReducer(
   on(removeFamilyMeasureHistogram, (state, {familyMeasureHistogramName}) => {
     return [...state].filter(histogram => histogram.measure !== familyMeasureHistogramName);
   }),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   on(reset, resetFamilyMeasureHistograms, state => cloneDeep(initialState)),
 );
 
@@ -166,5 +167,6 @@ export const personMeasureHistogramsReducer = createReducer(
   on(removePersonMeasureHistogram, (state, {personMeasureHistogramName}) => {
     return [...state].filter(histogram => histogram.measure !== personMeasureHistogramName);
   }),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   on(reset, resetPersonMeasureHistograms, state => cloneDeep(initialState)),
 );

@@ -57,5 +57,6 @@ export const geneScoresReducer = createReducer(
     values: values,
     categoricalView: categoricalView,
   })),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   on(reset, resetGeneScoresValues, state => cloneDeep(initialState))
 );

@@ -27,12 +27,12 @@ export class ContinuousMeasure {
 export class HistogramData {
   public static fromJson(json: object): HistogramData {
     return new HistogramData(
-      json['bars'].map(bar => Number(bar)),
+      (json['bars'] as number[]).map(bar => Number(bar)),
       String(json['measure']),
       Number(json['min']),
       Number(json['max']),
       Number(json['step']),
-      json['bins'].map(bin => Number(bin)),
+      (json['bins'] as number[]).map(bin => Number(bin)),
       String(json['desc'])
     );
   }
