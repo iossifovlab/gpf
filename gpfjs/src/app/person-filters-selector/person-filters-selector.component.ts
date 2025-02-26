@@ -4,7 +4,7 @@ import { Store } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
 import { take } from 'rxjs';
 import { MeasuresService } from 'app/measures/measures.service';
-import { ContinuousMeasure, MeasureHistogram } from 'app/measures/measures';
+import { Measure, MeasureHistogram } from 'app/measures/measures';
 import {
   MeasureHistogramState,
   removeFamilyMeasureHistogram,
@@ -63,9 +63,9 @@ export class PersonFiltersSelectorComponent implements OnInit {
     }
   }
 
-  public addMeasure(measure: ContinuousMeasure): void {
+  public addMeasure(measure: Measure): void {
     if (measure) {
-      this.measuresService.getMeasureHistogramBeta(this.dataset.id, measure.name)
+      this.measuresService.getMeasureHistogramBeta(this.dataset.id, measure.id)
         .subscribe(histogramData => {
           const defaultState = this.createMeasureDefaultState(histogramData);
           this.selectedMeasureHistograms.push({
