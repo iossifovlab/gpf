@@ -20,7 +20,8 @@ describe('PersonFilterComponent', () => {
 
     component.selectedMeasure = new MeasureHistogram(
       'm1',
-      new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', 7, 8, true, true)
+      new NumberHistogram([1, 2], [4, 5], 'larger1', 'smaller1', 7, 8, true, true),
+      ''
     );
     fixture.detectChanges();
   });
