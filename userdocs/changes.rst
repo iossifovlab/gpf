@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+* 2025.2.0
+    * Update gene profiles configuration.
+    * Introduction of phenotype storage and phenotype storage registry
+    * Support phenotype data into datasets hierarchy
+    * Update and fix CNV collection statistics
+    * Improvements in phenotype data import and phenotype browser cache
+    * Initial support for VCF serialization of full variants iterator from variant loaders
+    * Support for phenotype data common reports
+    * Support for full pedigree information in phenotype data import
+    * Adjust wgpf tool to support phenotype data stides and groups
+    * Support for categorical histograms label rotation
+    * Fix for phenotype data group merge instruments function
+    * Support for categorical genomic scores in the UI
+    * Support for multiple views for categorical histograms UI
+    * Support for label rotation in categorical histograms UI
+
+
 * 2025.01.4
     * Fix deserialization of variant attributes.
 
