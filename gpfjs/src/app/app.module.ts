@@ -188,6 +188,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { CategoricalValuesDropdownComponent } from './categorical-values-dropdown/categorical-values-dropdown.component';
 import { PersonFilterComponent } from './person-filter/person-filter.component';
 import { familyMeasureHistogramsReducer, personMeasureHistogramsReducer } from './person-filters-selector/measure-histogram.state';
+import { PhenoMeasureSelectorBetaComponent } from './pheno-measure-selector-beta/pheno-measure-selector-beta.component';
 
 const appRoutes: Routes = [
   {
@@ -402,7 +403,8 @@ const appRoutes: Routes = [
   MarkdownEditorComponent,
   FamilyTagsComponent,
   CategoricalValuesDropdownComponent,
-  PersonFilterComponent
+  PersonFilterComponent,
+  PhenoMeasureSelectorBetaComponent
 ],
 bootstrap: [AppComponent], imports: [BrowserModule,
   FormsModule,

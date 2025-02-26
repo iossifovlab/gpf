@@ -1,0 +1,45 @@
+<div>
+  <div class="input-group" style="display: inline-flex; flex-wrap: nowrap">
+    <input
+      #measuresSearchBox
+      id="search-box"
+      placeholder="Select or start typing to search"
+      autocomplete="off"
+      spellcheck="false"
+      [(ngModel)]="searchString"
+      (keyup)="loadDropdownData($event)"
+      (mousedown)="clear()"
+      (focus)="showDropdown = true"
+      (blur)="closeDropdown()"
+      (keydown.escape)="closeDropdown(); clear()"
+      (keydown.arrowup)="$event.preventDefault(); prevItem()"
+      (keydown.arrowdown)="$event.preventDefault(); nextItem()"
+      (keydown.enter)="selectMeasure(filteredMeasures[selectedIdx]); closeDropdown()"
+      [title]="selectedMeasure ? selectedMeasure.id : ''" />
+
+    <div class="input-group-append">
+      <button (click)="onClearButtonClick()" class="btn btn-secondary clear-button" id="clear-measure-button"
+        ><span id="clear-pheno-measure-icon" class="material-symbols-outlined sm">close</span></button
+      >
+    </div>
+
+    <div class="measures-dropdown" *ngIf="showDropdown">
+      <div class="status-info" *ngIf="filteredMeasures.length === 0">{{
+        loadingMeasures || loadingDropdown ? 'Loading...' : 'Nothing found'
+      }}</div>
+      <cdk-virtual-scroll-viewport itemSize="30" style="height: 240px; overflow-x: hidden">
+        <div
+          *cdkVirtualFor="let measure of filteredMeasures; let index = index"
+          class="dropdown-item"
+          [ngClass]="{ 'dropdown-selected': selectedIdx === index }"
+          type="button"
+          (mousedown)="selectMeasure(measure)"
+          (onSelectionChange)="selectMeasure(measure)"
+          (mousemove)="selectedIdx = index"
+          [title]="measure.name">
+          <span [innerHTML]="measure.name | boldMatching : searchString"></span>
+        </div>
+      </cdk-virtual-scroll-viewport>
+    </div>
+  </div>
+</div>
