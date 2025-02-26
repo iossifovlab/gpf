@@ -11,6 +11,7 @@
   width: auto;
   font-weight: bold;
   font-size: 16px;
+  max-width: 900px;
 }
 
 .genomic-score-container {
