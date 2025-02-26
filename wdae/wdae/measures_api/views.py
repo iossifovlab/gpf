@@ -1,4 +1,5 @@
 import logging
+import operator
 from typing import Any, cast
 
 import numpy as np
@@ -59,6 +60,50 @@ class PhenoMeasuresView(QueryBaseView):
                 }
                 for m in list(measures.values())
             ]
+        return Response(res, status=status.HTTP_200_OK)
+
+
+class PhenoMeasureListView(QueryBaseView):
+    """View for phenotype measures ids."""
+
+    @method_decorator(etag(get_instance_timestamp_etag))
+    def get(self, request: Request) -> Response:
+        """Get phenotype measures ids."""
+        data = request.query_params
+
+        dataset_id = data["datasetId"]
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        assert dataset is not None
+
+        if not dataset.has_pheno_data:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        res: list[dict[str, Any]] = []
+
+        continuous_measures = dataset.phenotype_data.get_measures(
+            measure_type=MeasureType.from_str("continuous"),
+        )
+        res = [
+            {
+                "measure": m.measure_id,
+                "description": m.description,
+            }
+            for m in list(continuous_measures.values())
+        ]
+
+        categorical_measures = dataset.phenotype_data.get_measures(
+            measure_type=MeasureType.from_str("categorical"),
+        )
+        res += [
+            {
+                "measure": m.measure_id,
+                "description": m.description,
+            }
+            for m in list(categorical_measures.values())
+        ]
+
+        res = sorted(res, key=operator.itemgetter("measure"))
+
         return Response(res, status=status.HTTP_200_OK)
 
 
