@@ -19,7 +19,7 @@ Navigate to the ``helloworld`` dataset folder:
 
 .. code-block:: bash
 
-    cd datasets/helloworld
+    cd minimal_instance/datasets/helloworld
 
 and edit the ``helloworld.yaml`` file. Add the following section to the end:
 

@@ -26,6 +26,7 @@ we need to add a new section
     ...
 
     gene_browser:
+      enabled: true
       frequency_column: genome_gnomad_v3_af_percent
 
 

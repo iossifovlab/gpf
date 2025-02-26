@@ -29,17 +29,14 @@ following:
 
     - allele_score: hg38/variant_frequencies/gnomAD_v3/genomes
 
-Store this annotation configuration in a file named ``annotation.yaml`` and
-configure the GPF instance to use this annotation configuration:
+Store this annotation configuration in a file named ``minimal_instance/annotation.yaml``.
+
+Afterwards, edit the GPF instance configuration (``minimal_instance/gpf_instance.yaml``) to use this
+annotation configuration by uncommenting the following lines:
 
 .. code-block:: yaml
 
-    reference_genome:
-      resource_id: "hg38/genomes/GRCh38-hg38"
-    
-    gene_models:
-      resource_id: "hg38/gene_models/refSeq_v20200330"
-    
+    # The annotation pipeline configuration to use. Uncomment to enable.
     annotation:
       conf_file: annotation.yaml
 
@@ -47,11 +44,11 @@ Now we can re-run the import for our ``helloworld`` examples:
 
 .. code-block:: bash
   
-    import_genotypes raw_genotype_data/import_denovo_project.yaml
+    import_genotypes -f raw_genotype_data/denovo_helloworld.yaml
 
 .. code-block:: bash
 
-    import_genotypes raw_genotype_data/vcf_helloworld.yaml
+    import_genotypes -f raw_genotype_data/vcf_helloworld.yaml
 
 Once the re-import finishes, the variants in our ``Hello World Dataset`` have
 additional attributes that come from the annotation with ``GnomAD v3.0``. By

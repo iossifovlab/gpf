@@ -119,6 +119,9 @@ Now we can run the GPF development web server and browse our empty GPF instance:
 
 and browse the GPF development server at ``http://localhost:8000``.
 
+The web interface will be mostly empty, as at this point there is no data imported
+into the instance.
+
 To stop the development GPF web server, you should press ``Ctrl-C`` - the usual
 keybinding for stopping long-running Linux commands in a terminal.
 
@@ -162,13 +165,13 @@ de novo variants ``raw_genotype_data/helloworld.tsv``, and a pedigree file
 that describes the families - ``raw_genotype_data/helloworld.ped``:
 
 A project configuration file for importing this study
-(``raw_genotype_data/import_denovo_project.yaml``) is also provided.
+(``raw_genotype_data/denovo_helloworld.yaml``) is also provided.
 
 To import this project run the following command:
 
 .. code-block:: bash
 
-    import_genotypes raw_genotype_data/import_denovo_project.yaml
+    import_genotypes raw_genotype_data/denovo_helloworld.yaml
 
 When the import finishes you can run the GPF development server using:
 
@@ -230,32 +233,26 @@ Getting started with Dataset Statistics
 .. _reports_tool:
 
 To generate family and de novo variant reports, you can use
-the ``generate_common_report.py`` tool. It supports the option ``--show-studies``
+the ``generate_common_report`` tool. It supports the option ``--show-studies``
 to list all studies and datasets configured in the GPF instance:
 
 .. code-block:: bash
 
-    generate_common_report.py --show-studies
+    generate_common_report --show-studies
 
 To generate the reports for a given study or dataset, you can use the 
 ``--studies`` option. 
 
-By default the dataset statistics are disabled. If we try to run
+By default the dataset statistics are disabled. If we try to run the following command:
 
 .. code-block:: bash
 
-    generate_common_report.py --studies helloworld
+    generate_common_report --studies helloworld
 
-it will not generate the dataset statistics. Instead, it will print 
-a message that the reports are disabled to study ``helloworld``:
-
-.. code-block:: bash
-
-    WARNING:generate_common_reports:skipping study helloworld 
+Nothing will occur and no dataset statistics will be generated.
 
 To enable the dataset statistics for the ``helloworld`` dataset we need to
-modify the configuration and add
-a new section that enables dataset statistics:
+modify the configuration and add a new section that enables dataset statistics:
 
 .. code-block:: yaml
 
@@ -269,11 +266,11 @@ a new section that enables dataset statistics:
   common_report:
     enabled: True
 
-Let us now re-run the ``generate_common_report.py`` command:
+Let us now re-run the ``generate_common_report`` command:
 
 .. code-block:: bash
 
-    generate_common_report.py --studies helloworld
+    generate_common_report --studies helloworld
 
 If we now start the GPF development server:
 
