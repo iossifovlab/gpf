@@ -100,7 +100,7 @@ Add the following line at the beginning of the file, outside of any section:
 
     phenotype_data: mini_pheno
 
-To enable the :ref:`phenotype_browser_ui`, add this line:
+To enable the :ref:`Phenotype Browser`, add this line:
 
 .. code:: yaml
 
@@ -125,7 +125,7 @@ When you restart the server, you should be able to see the 'Phenotype Browser' t
 Configure Family Filters in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
 
-A study or a dataset can have phenotype filters configured for its :ref:`genotype_browser_ui`
+A study or a dataset can have phenotype filters configured for its :ref:`Genotype Browser`
 when it has a phenotype database attached to it. The configuration looks like this:
 
 .. code:: yaml
@@ -148,7 +148,7 @@ Configure Phenotype Columns in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
 
 Phenotype columns contain values from a phenotype database.
-These values are selected from the individual who has the variant displayed in the :ref:`genotype_browser_ui`'s table preview.
+These values are selected from the individual who has the variant displayed in the :ref:`Genotype Browser`'s table preview.
 They can be added when a phenotype database is attached to a study.
 
 Let's add a phenotype column. To do this, you need to define it in the study's config,
@@ -182,9 +182,9 @@ configuration. Add this in the genotype_browser section:
 Enabling the Phenotype Tool
 +++++++++++++++++++++++++++
 
-To enable the :ref:`phenotype_tool_ui` for a study, you must edit
+To enable the :ref:`Phenotype Tool` for a study, you must edit
 the study's configuration file and set the appropriate property, as with
-the :ref:`phenotype_browser_ui`. Open the helloworld dataset conifguration file
+the :ref:`Phenotype Browser`. Open the helloworld dataset conifguration file
 and add the following line:
 
 .. code:: yaml
@@ -208,7 +208,7 @@ After editing, it should look like this:
 
 
 Restart the GPF web server and select the ``helloworld`` dataset.
-You should see the :ref:`phenotype_tool_ui` tab. Once you have selected it, you
+You should see the :ref:`Phenotype Tool` tab. Once you have selected it, you
 can select a phenotype measure of your choice. To get the tool to acknowledge
 the variants in the ``helloworld`` dataset, select the "All" option of the
 "Present in Parent" field.

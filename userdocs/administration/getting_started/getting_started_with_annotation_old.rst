@@ -1,9 +1,7 @@
 Getting Started with Annotation
 ###############################
 
-
-
-Get Genomic Scores Database
+Get genomic scores database
 +++++++++++++++++++++++++++
 
 To annotate variants with genomic scores, you will need a genomic scores

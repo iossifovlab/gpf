@@ -45,17 +45,13 @@ configure the GPF instance to use this annotation configuration:
 
 Now we can re-run the import for our ``helloworld`` examples:
 
-* Go to the ``denovo-helloworld`` project directory and re-run the import:
+.. code-block:: bash
+  
+    import_genotypes raw_genotype_data/import_denovo_project.yaml
 
-  .. code-block:: bash
-  
-      import_tools -f denovo_helloworld.yaml
-  
-* Go to the ``vcf-helloworld`` project directory and re-run the import:
+.. code-block:: bash
 
-  .. code-block:: bash
-  
-      import_tools -f vcf_helloworld.yaml
+    import_genotypes raw_genotype_data/vcf_helloworld.yaml
 
 Once the re-import finishes, the variants in our ``Hello World Dataset`` have
 additional attributes that come from the annotation with ``GnomAD v3.0``. By
@@ -66,8 +62,8 @@ default annotation adds the following three attributes:
 - ``genome_gnomad_v3_an`` - number of sequenced alleles.
 
 If we run the GPF development server and browse our ``Hello World Dataset``
-there are almost no difference. The only difference is that now in the
-genotype browse the genomic scores section is not empty and we can query
+there is almost no difference. The only difference is that now in the
+genotype browser, the genomic scores section is not empty and we can query
 our variants using the ``genome_gnomad_v3_af_percent`` genomic score.
 
 .. image:: getting_started_files/helloworld-gnomad-annotation-with-genomic-scores-filter.png

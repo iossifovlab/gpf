@@ -9,8 +9,8 @@ the configuration of the corresponding study or dataset.
 For each study dataset, you can specify which columns are shown in the variants' 
 table preview, as well as those which will be downloaded.
 
-Example: Redefine the `Frequency` column in the preview table of `Hello World Dataset``
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Example: Redefine the `Frequency` column in the preview table of `Hello World Dataset`
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 As an example, we are going to redefine the `Frequency` column for ``helloworld``
 dataset to include attributes from annotation with GnomAD v3 genomic score.

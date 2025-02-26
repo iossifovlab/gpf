@@ -3,22 +3,20 @@ Getting Started with Enrichment Tool
 ####################################
 
 For studies that include de Novo variants, you can enable the enrichment tool UI.
-As an example, let us enable it for the already imported
-`iossifov_2014` study.
+As an example, let us enable it for the ``helloworld`` dataset.
 
-Go to the directory where the configuration file of the `iossifov_2014`
-study is located::
+Navigate to the ``helloworld`` dataset folder:
 
-    cd gpf_test/studies/iossifov_2014
+.. code-block:: bash
 
-Edit the study configuration file ``iossifov_2014.conf`` and add the following section in the end of the file::
+    cd datasets/helloworld
 
-    [enrichment]
-    enabled = true
+and edit the ``helloworld.yaml`` file. Add the following section to the end:
 
-Restart the GPF web server::
+.. code-block:: yaml
 
-    wdaemanage.py runserver 0.0.0.0:8000
+    enrichment:
+      enabled: true
 
-Now when you navigate to the iossifov_2014 study in the browser,
-the Enrichment Tool tab will be available.
+Restart the GPF web server and select the ``helloworld`` dataset.
+You should see the :ref:`Enrichment Tool` tab.
