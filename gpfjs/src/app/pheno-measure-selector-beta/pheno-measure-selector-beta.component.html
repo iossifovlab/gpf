@@ -36,8 +36,8 @@
           (mousedown)="selectMeasure(measure)"
           (onSelectionChange)="selectMeasure(measure)"
           (mousemove)="selectedIdx = index"
-          [title]="measure.name">
-          <span [innerHTML]="measure.name | boldMatching : searchString"></span>
+          [title]="measure.id">
+          <span [innerHTML]="measure.id | boldMatching : searchString"></span>
         </div>
       </cdk-virtual-scroll-viewport>
     </div>

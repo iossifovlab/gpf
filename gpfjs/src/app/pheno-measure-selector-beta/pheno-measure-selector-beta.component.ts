@@ -7,6 +7,7 @@ import { MeasuresService } from '../measures/measures.service';
 import { Measure } from '../measures/measures';
 import { first } from 'rxjs/operators';
 import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'gpf-pheno-measure-selector-beta',
@@ -31,7 +32,7 @@ export class PhenoMeasureSelectorBetaComponent implements OnChanges {
 
   public topVisibleIdx = 0;
   public selectedIdx = -1;
-  public idxSubscription = null;
+  public idxSubscription: Subscription = null;
 
   public constructor(
     private measuresService: MeasuresService,
@@ -50,7 +51,7 @@ export class PhenoMeasureSelectorBetaComponent implements OnChanges {
   }
 
   @HostListener('window:keydown', ['$event'])
-  public handleTabKey(event): void {
+  public handleTabKey(event: KeyboardEvent): void {
     if (!this.showDropdown || event.code !== 'Tab') {
       return;
     }
@@ -136,7 +137,7 @@ export class PhenoMeasureSelectorBetaComponent implements OnChanges {
     this.loadDropdownData();
   }
 
-  public loadDropdownData($event = null): void {
+  public loadDropdownData($event: KeyboardEvent = null): void {
     if ($event && ($event.key === 'ArrowUp'
                    || $event.key === 'ArrowDown'
                    || $event.key === 'ArrowLeft'
