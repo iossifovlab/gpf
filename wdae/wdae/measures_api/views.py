@@ -3,6 +3,7 @@ import operator
 from typing import Any, cast
 
 import numpy as np
+import pandas as pd
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
@@ -182,7 +183,7 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
             [pheno_measure],
         )
         m = df[pheno_measure]
-        df = df[np.logical_not(np.isnan(m.values))]
+        df = df[np.logical_not(pd.isna(m.values))]
 
         result = {
             "measure": measure.measure_id,
