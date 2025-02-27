@@ -12,12 +12,14 @@ from dae.annotation.annotatable import (
 )
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.utils.cnv_utils import cnv_variant_type, cshl2cnv_variant
-from dae.utils.dae_utils import cshl2vcf_variant
+from dae.utils.dae_utils import cshl2vcf_variant, dae2vcf_variant
 
 
 class RecordToAnnotable(abc.ABC):
+    """Base class for record to annotable transformation."""
     def __init__(self, columns: tuple, ref_genome: ReferenceGenome | None):
-        pass
+        self.columns = columns
+        self.ref_genome = ref_genome
 
     @abc.abstractmethod
     def build(self, record: dict[str, str]) -> Annotatable:
@@ -99,7 +101,6 @@ class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
                 "without a referrence genome")
         super().__init__(columns, ref_genome)
         self.location_col, self.variant_col = columns
-        self.reference_genome = ref_genome
 
     def build(self, record: dict[str, str]) -> Annotatable:
         variant = record[self.variant_col]
@@ -112,10 +113,33 @@ class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
                 chrom, pos_begin, pos_end,
                 CNVAllele.Type.from_string(cnv_type))
 
+        assert self.ref_genome is not None
         return VCFAllele(*cshl2vcf_variant(
             record[self.location_col],
             record[self.variant_col],
-            self.reference_genome))
+            self.ref_genome))
+
+
+class DaeAlleleRecordToAnnotatable(RecordToAnnotable):
+    """Transform a CSHL variant record into a VCF allele annotatable."""
+
+    def __init__(self, columns: tuple, ref_genome: ReferenceGenome | None):
+        if ref_genome is None:
+            raise ValueError(
+                "unable to instantiate DaeAlleleRecordToVcfAllele "
+                "without a referrence genome")
+        super().__init__(columns, ref_genome)
+        self.chrom_column, self.pos_column, self.variant_column = columns
+
+    def build(self, record: dict[str, str]) -> Annotatable:
+        variant = record[self.variant_column]
+        chrom = record[self.chrom_column]
+        assert self.ref_genome is not None
+        return VCFAllele(chrom, *dae2vcf_variant(
+            chrom,
+            int(record[self.pos_column]),
+            variant,
+            self.ref_genome))
 
 
 RECORD_TO_ANNOTATABLE_CONFIGURATION: dict[tuple, type[RecordToAnnotable]] = {
@@ -123,8 +147,9 @@ RECORD_TO_ANNOTATABLE_CONFIGURATION: dict[tuple, type[RecordToAnnotable]] = {
     ("chrom", "pos_beg", "pos_end"): RecordToRegion,
     ("chrom", "pos", "ref", "alt"): RecordToVcfAllele,
     ("vcf_like",): VcfLikeRecordToVcfAllele,
-    ("chrom", "pos"): RecordToPosition,
+    ("chrom", "pos", "variant"): DaeAlleleRecordToAnnotatable,
     ("location", "variant"): CSHLAlleleRecordToAnnotatable,
+    ("chrom", "pos"): RecordToPosition,
 }
 
 

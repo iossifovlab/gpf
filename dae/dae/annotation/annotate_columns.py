@@ -30,6 +30,7 @@ from dae.annotation.annotation_pipeline import (
 )
 from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.record_to_annotatable import (
+    DaeAlleleRecordToAnnotatable,
     RecordToAnnotable,
     RecordToCNVAllele,
     RecordToPosition,
@@ -68,6 +69,7 @@ def read_input(
             header = in_file_raw.readline() \
                 .strip("\r\n") \
                 .split(args.input_separator)
+        header = [c.strip("#") for c in header]
         return closing(tabix_file), tabix_file.fetch(*region_tuple), header
     # pylint: disable=consider-using-with
     text_file = open(args.input, "rt")  # noqa: SIM115
@@ -80,9 +82,10 @@ def produce_tabix_index(
     ref_genome: ReferenceGenome | None,
 ) -> None:
     """Produce a tabix index file for the given variants file."""
+    line_skip = 0 if header[0].startswith("#") else 1
+    header = [c.strip("#") for c in header]
     record_to_annotatable = build_record_to_annotatable(
         vars(args), set(header), ref_genome)
-    line_skip = 0 if header[0].startswith("#") else 1
     if isinstance(record_to_annotatable, (RecordToRegion,
                                           RecordToCNVAllele)):
         seq_col = header.index(record_to_annotatable.chrom_col)
@@ -92,7 +95,9 @@ def produce_tabix_index(
         seq_col = header.index(record_to_annotatable.chrom_col)
         start_col = header.index(record_to_annotatable.pos_col)
         end_col = start_col
-    elif isinstance(record_to_annotatable, RecordToPosition):
+    elif isinstance(
+            record_to_annotatable,
+            (RecordToPosition, DaeAlleleRecordToAnnotatable)):
         seq_col = header.index(record_to_annotatable.chrom_column)
         start_col = header.index(record_to_annotatable.pos_column)
         end_col = start_col
@@ -202,7 +207,7 @@ class AnnotateColumnsTool(AnnotationTool):
     ) -> None:
         """Annotate a variants file with a given pipeline configuration."""
         # pylint: disable=too-many-locals,too-many-branches
-        # TODO Insisting on having the pipeline config passed in args
+        # Insisting on having the pipeline config passed in args
         # prevents the finding of a default annotation config. Consider fixing
 
         pipeline_config_old = None
@@ -230,7 +235,7 @@ class AnnotateColumnsTool(AnnotationTool):
             if not attr.internal]
 
         if compress_output:
-            out_file = gzip.open(out_file_path, "wt")
+            out_file = gzip.open(out_file_path, "wt")  # noqa: SIM115
         else:
             out_file = open(out_file_path, "wt")  # noqa: SIM115
 
@@ -402,11 +407,10 @@ class AnnotateColumnsTool(AnnotationTool):
                 self.args.input, regions, self.args.work_dir)
 
             region_tasks = []
-            for index, (region, path) in enumerate(
-                zip(regions, file_paths, strict=True),
-            ):
+            for region, path in zip(regions, file_paths, strict=True):
+                task_id = f"part-{str(region).replace(':', '-')}"
                 region_tasks.append(self.task_graph.create_task(
-                    f"part-{index}",
+                    task_id,
                     AnnotateColumnsTool.annotate,
                     [self.args, self.pipeline.raw,
                      self.grr.definition,
