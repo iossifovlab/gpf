@@ -65,7 +65,7 @@ export class PhenoMeasureSelectorBetaComponent implements OnChanges {
 
   public selectMeasure(measure: Measure, sendEvent: boolean = true): void {
     this.selectedMeasure = measure;
-    this.searchString = measure ? measure.id : '';
+    this.searchString = '';
     if (sendEvent) {
       this.selectedMeasureChange.emit(measure);
     }
