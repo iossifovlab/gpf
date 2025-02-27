@@ -16,7 +16,7 @@ import {
   setPersonMeasureHistogramsCategorical,
   setPersonMeasureHistogramsContinuous
 } from './measure-histogram.state';
-import { CategoricalHistogram } from 'app/utils/histogram-types';
+import { CategoricalHistogram, CategoricalHistogramView } from 'app/utils/histogram-types';
 import { resetErrors } from 'app/common/errors.state';
 
 @Component({
@@ -73,21 +73,40 @@ export class PersonFiltersSelectorComponent implements OnInit {
             state: defaultState
           });
 
-          // check for categorical histogram
-          if (this.isFamilyFilters) {
-            this.store.dispatch(setFamilyMeasureHistogramsContinuous({
+          if (defaultState.histogramType === 'continuous') {
+            const continuousHistogram = {
               measure: defaultState.measure,
               rangeStart: defaultState.rangeStart,
               rangeEnd: defaultState.rangeEnd
-            }));
+            };
+            this.dispatchContinuousHistogram(continuousHistogram);
           } else {
-            this.store.dispatch(setPersonMeasureHistogramsContinuous({
+            const categoricalHistogram = {
               measure: defaultState.measure,
-              rangeStart: defaultState.rangeStart,
-              rangeEnd: defaultState.rangeEnd
-            }));
+              values: defaultState.values,
+              categoricalView: defaultState.categoricalView
+            };
+            this.dispatchCategoricalHistogram(categoricalHistogram);
           }
         });
+    }
+  }
+
+  private dispatchContinuousHistogram(histogram: { measure: string; rangeStart: number; rangeEnd: number; }): void {
+    if (this.isFamilyFilters) {
+      this.store.dispatch(setFamilyMeasureHistogramsContinuous(histogram));
+    } else {
+      this.store.dispatch(setPersonMeasureHistogramsContinuous(histogram));
+    }
+  }
+
+  private dispatchCategoricalHistogram(
+    histogram: { measure: string; values: string[]; categoricalView: CategoricalHistogramView }
+  ): void {
+    if (this.isFamilyFilters) {
+      this.store.dispatch(setFamilyMeasureHistogramsCategorical(histogram));
+    } else {
+      this.store.dispatch(setPersonMeasureHistogramsCategorical(histogram));
     }
   }
 
