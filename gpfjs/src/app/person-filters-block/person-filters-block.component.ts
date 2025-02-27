@@ -5,6 +5,7 @@ import { Store } from '@ngrx/store';
 import { resetPersonFilterStates, selectPersonFilters } from 'app/person-filters/person-filters.state';
 import { combineLatest, take } from 'rxjs';
 import { resetPersonIds, selectPersonIds } from 'app/person-ids/person-ids.state';
+import { selectPersonMeasureHistograms } from 'app/person-filters-selector/measure-histogram.state';
 
 @Component({
   selector: 'gpf-person-filters-block',
@@ -28,11 +29,14 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
     combineLatest([
       this.store.select(selectPersonFilters),
       this.store.select(selectPersonIds),
-    ]).pipe(take(1)).subscribe(([personFiltersState, personIdsState]) => {
+      this.store.select(selectPersonMeasureHistograms),
+    ]).pipe(take(1)).subscribe(([personFiltersState, personIdsState, personMeasureHistograms]) => {
       if (personIdsState.length) {
         setTimeout(() => this.ngbNav.select('personIds'));
       } else if (personFiltersState?.personFilters?.length) {
         setTimeout(() => this.ngbNav.select('advanced'));
+      } else if (personMeasureHistograms?.length) {
+        setTimeout(() => this.ngbNav.select('advancedBeta'));
       }
     });
   }

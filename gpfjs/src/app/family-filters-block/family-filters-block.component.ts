@@ -10,6 +10,7 @@ import { selectDatasetId } from 'app/datasets/datasets.state';
 import { resetFamilyIds, selectFamilyIds } from 'app/family-ids/family-ids.state';
 import { resetFamilyTags, selectFamilyTags } from 'app/family-tags/family-tags.state';
 import { resetFamilyFilterStates, selectPersonFilters } from 'app/person-filters/person-filters.state';
+import { selectFamilyMeasureHistograms } from 'app/person-filters-selector/measure-histogram.state';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -98,7 +99,8 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
       this.store.select(selectFamilyIds),
       this.store.select(selectFamilyTags),
       this.store.select(selectPersonFilters),
-    ]).pipe(take(1)).subscribe(([familyIdsState, familyTagsState, personFiltersState]) => {
+      this.store.select(selectFamilyMeasureHistograms),
+    ]).pipe(take(1)).subscribe(([familyIdsState, familyTagsState, personFiltersState, familyMeasureHistograms]) => {
       if (familyIdsState.length) {
         setTimeout(() => {
           this.ngbNav.select('familyIds');
@@ -118,6 +120,9 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
           this.ngbNav.select('advanced');
           this.hasContent = true;
         });
+      } else if (familyMeasureHistograms?.length) {
+        setTimeout(() => this.ngbNav.select('advancedBeta'));
+        this.hasContent = true;
       }
     });
   }

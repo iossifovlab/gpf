@@ -23,6 +23,10 @@ import { setFamilyFilters, setPersonFilters } from 'app/person-filters/person-fi
 import { setPhenoToolMeasure } from 'app/pheno-tool-measure/pheno-tool-measure.state';
 import { setFamilyIds } from 'app/family-ids/family-ids.state';
 import { setPersonIds } from 'app/person-ids/person-ids.state';
+import {
+  setFamilyMeasureHistograms,
+  setPersonMeasureHistograms
+} from 'app/person-filters-selector/measure-histogram.state';
 
 const PAGE_TYPE_TO_NAVIGATE = {
   genotype: (datasetId: string): string[] => ['datasets', datasetId, 'genotype-browser'],
@@ -98,6 +102,8 @@ export class LoadQueryComponent implements OnInit {
       this.store.dispatch(setPhenoToolMeasure({phenoToolMeasure: state.phenoToolMeasure}));
       this.store.dispatch(setFamilyIds({familyIds: state.familyIds}));
       this.store.dispatch(setPersonIds({personIds: state.personIds}));
+      this.store.dispatch(setFamilyMeasureHistograms({familyMeasureHistograms: state.familyMeasureHistograms}));
+      this.store.dispatch(setPersonMeasureHistograms({personMeasureHistograms: state.personMeasureHistograms}));
       this.router.navigate(navigationParams);
       if (state.geneScores.histogramType === 'categorical') {
         this.store.dispatch(setGeneScoreCategorical({
