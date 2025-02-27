@@ -126,13 +126,17 @@ class GeneSetCollectionImpl(
     ) -> NumberHistogram:
         gene_set_collection = build_gene_set_collection_from_resource(resource)
         all_gene_sets = gene_set_collection.get_all_gene_sets()
-
-        config = gene_set_collection.config.model_dump()
-        histograms = config.get("histograms", {})
-        hist_conf_data = histograms.get("genes_per_gene_set")
-        hist_conf = NumberHistogramConfig.from_dict(
-            hist_conf_data,
-        ) if hist_conf_data else None
+        config = (
+            gene_set_collection.config.model_dump()
+            if gene_set_collection.config
+            else {}
+        )
+        histograms = config.get("histograms") or {}
+        hist_conf_data = histograms.get("genes_per_gene_set") or {}
+        hist_conf = (
+            NumberHistogramConfig.from_dict(hist_conf_data)
+            if hist_conf_data else None
+        )
 
         if hist_conf is None:
             min_count = min(all_gene_sets, key=lambda gs: gs.count).count
@@ -153,12 +157,17 @@ class GeneSetCollectionImpl(
         gene_set_collection = build_gene_set_collection_from_resource(resource)
         all_gene_sets = gene_set_collection.get_all_gene_sets()
 
-        config = gene_set_collection.config.model_dump()
-        histograms = config.get("histograms", {})
-        hist_conf_data = histograms.get("gene_sets_per_gene")
-        hist_conf = NumberHistogramConfig.from_dict(
-            hist_conf_data,
-        ) if hist_conf_data else None
+        config = (
+            gene_set_collection.config.model_dump()
+            if gene_set_collection.config
+            else {}
+        )
+        histograms = config.get("histograms") or {}
+        hist_conf_data = histograms.get("gene_sets_per_gene", {})
+        hist_conf = (
+            NumberHistogramConfig.from_dict(hist_conf_data)
+            if hist_conf_data else None
+        )
 
         gene_counter = Counter(
             gene for gs in all_gene_sets for gene in set(gs.syms)
