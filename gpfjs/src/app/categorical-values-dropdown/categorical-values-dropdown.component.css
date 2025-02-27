@@ -1,7 +1,6 @@
 #search-box {
   border-radius: 5px;
-  width: 40vw;
-  max-width: 780px;
+  width: 100%;
 }
 
 #categorical-values-container {

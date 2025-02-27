@@ -1,3 +1,30 @@
 .title-wrapper {
+  width: auto;
   font-weight: bold;
+  font-size: 16px;
+  max-width: 900px;
+}
+
+.measure-histograms-container {
+  display: flex;
+  padding: 0 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+#view-menu-button {
+  background: #2a6395;
+  color: white;
+  border: 1px solid #2a6395;
+  border-radius: 0.3rem;
+  padding: 5px 10px;
+  margin-left: 10px;
+}
+
+.measure-histograms-panel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  border-top: 0;
+  margin-left: 40px;
 }

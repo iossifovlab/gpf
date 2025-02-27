@@ -1,8 +1,5 @@
-<div
-  class="panel"
-  style="display: flex; flex-wrap: wrap; justify-content: center; border-top: 0; margin-left: 40px"
-  *ngIf="selectedMeasure && localState">
-  <div class="genomic-score-container">
+<div class="panel measure-histograms-panel" *ngIf="selectedMeasure && localState">
+  <div class="measure-histograms-container">
     <div class="title-wrapper">{{ selectedMeasure.measure }}</div>
 
     <div *ngIf="isCategoricalHistogram(selectedMeasure.histogram)">
