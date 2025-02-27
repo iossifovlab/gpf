@@ -77,27 +77,25 @@ export class PersonFilterComponent implements OnInit {
     this.updateState.emit(this.localState);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public switchCategoricalHistogramView(view: CategoricalHistogramView): void {
-    // if (view === this.localState.categoricalView) {
-    //   return;
-    // }
-    // if (view === 'click selector' || view === 'dropdown selector') {
-    //   this.localState.values = [];
-    // } else if (view === 'range selector' && this.isCategoricalHistogram(this.selectedMeasure.histogram)) {
-    //   this.localState.values = this.selectedMeasure.histogram.values.map(v => v.name);
-    // }
-    // this.localState.categoricalView = view;
-    // this.updateHistogramState();
+    if (view === this.localState.categoricalView) {
+      return;
+    }
+    if (view === 'click selector' || view === 'dropdown selector') {
+      this.localState.values = [];
+    } else if (view === 'range selector' && this.isCategoricalHistogram(this.selectedMeasure.histogram)) {
+      this.localState.values = this.selectedMeasure.histogram.values.map(v => v.name);
+    }
+    this.localState.categoricalView = view;
+    this.updateHistogramState();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public toggleCategoricalValues(values: string[]): void {
-    // const oldValues: Set<string> = new Set(this.localState.values);
-    // const newValues: Set<string> = new Set(values);
+    const oldValues: Set<string> = new Set(this.localState.values);
+    const newValues: Set<string> = new Set(values);
 
-    // this.localState.values = Array.from(oldValues.symmetricDifference(newValues));
-    // this.updateHistogramState();
+    this.localState.values = Array.from(oldValues.symmetricDifference(newValues));
+    this.updateHistogramState();
   }
 
   public isNumberHistogram(arg: object): arg is NumberHistogram {
