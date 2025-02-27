@@ -233,6 +233,11 @@ class PhenotypeData(ABC, CommonStudyMixin):
         self._browser: PhenoBrowser | None = None
         self.cache_path = cache_path / self.pheno_id if cache_path else None
         self._description: str | None = None
+        self.parents: set[str] = set()
+
+    @property
+    def is_group(self) -> bool:
+        return False
 
     @cached_property
     def families(self) -> FamiliesData:
@@ -877,6 +882,12 @@ class PhenotypeGroup(PhenotypeData):
         self._instruments.update(instruments)
 
         self._measures.update(measures)
+        for child in self.children:
+            child.parents.add(self.pheno_id)
+
+    @property
+    def is_group(self) -> bool:
+        return True
 
     def get_leaves(self) -> list[PhenotypeStudy]:
         """Return all phenotype studies in the group."""

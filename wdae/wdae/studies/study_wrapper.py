@@ -84,6 +84,18 @@ class WDAEStudy:
         else:
             self.genotype_data.description = input_text
 
+    @property
+    def is_group(self) -> bool:
+        if self.is_phenotype:
+            return self.phenotype_data.is_group
+        return self.genotype_data.is_group
+
+    @property
+    def parents(self) -> set[str]:
+        if self.is_phenotype:
+            return self.phenotype_data.parents
+        return self.genotype_data.parents
+
     def get_children_ids(self, *, leaves=True) -> list[str]:
         if self.is_phenotype:
             return self.phenotype_data.get_children_ids(leaves=leaves)

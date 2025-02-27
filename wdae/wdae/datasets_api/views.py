@@ -20,8 +20,6 @@ from rest_framework.response import Response
 from studies.study_wrapper import StudyWrapperBase, WDAEStudy
 from users_api.models import WdaeUser
 
-from dae.pheno.pheno_data import PhenotypeData
-from dae.studies.study import GenotypeData
 from datasets_api.permissions import (
     IsDatasetAllowed,
     get_instance_timestamp_etag,
@@ -434,28 +432,9 @@ class DatasetPermissionsSingleView(BaseDatasetPermissionsView):
 class DatasetHierarchyView(QueryBaseView):
     """Provide the hierarchy of one dataset configured in the instance."""
 
-    def produce_tree_pheno(
-        self,
-        dataset: PhenotypeData,
-        permitted_datasets: set[str],
-    ):
-        """Make dummy tree for a pheno-only study."""
-        has_rights = dataset.pheno_id in permitted_datasets
-        dataset_obj = Dataset.objects.get(dataset_id=dataset.pheno_id)
-        groups = dataset_obj.groups.all()
-        if "hidden" in [group.name for group in groups] and not has_rights:
-            return None
-
-        return {
-            "dataset": dataset.pheno_id,
-            "name": dataset.name,
-            "children": None,
-            "access_rights": has_rights,
-        }
-
     def produce_tree(
         self,
-        dataset: GenotypeData,
+        dataset: WDAEStudy,
         selected: list[str],
         permitted_datasets: set[str],
     ) -> dict[str, Any] | None:
@@ -469,11 +448,14 @@ class DatasetHierarchyView(QueryBaseView):
         children = None
         if dataset.is_group:
             children = []
-            for child in dataset.studies:
-                if child.study_id in selected:
+            for child_id in dataset.get_children_ids(leaves=False):
+                if child_id == dataset.study_id:
+                    continue
+                if child_id in selected:
+                    child = self.gpf_instance.get_wdae_wrapper(child_id)
+                    assert child is not None
                     tree = self.produce_tree(
-                        child, selected, permitted_datasets,
-                    )
+                        child, selected, permitted_datasets)
                     if tree is not None:
                         children.append(tree)
 
@@ -498,32 +480,17 @@ class DatasetHierarchyView(QueryBaseView):
         wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id) \
                   if dataset_id else None
         if wrapper is not None:
-            if wrapper.is_genotype:
-                tree = self.produce_tree(
-                    wrapper.genotype_data,
-                    data_ids,
-                    permitted_datasets,
-                )
-            else:
-                tree = self.produce_tree_pheno(
-                    wrapper.phenotype_data,
-                    permitted_datasets,
-                )
+            tree = self.produce_tree(wrapper, data_ids, permitted_datasets)
             return Response({"data": tree}, status=status.HTTP_200_OK)
 
         trees = []
         for data_id in data_ids:
             study = self.gpf_instance.get_wdae_wrapper(data_id)
             assert study is not None
-            if study.is_genotype and not study.genotype_data.parents:
+            if not study.parents:
                 trees.append(self.produce_tree(
-                    study.genotype_data,
+                    study,
                     data_ids,
-                    permitted_datasets,
-                ))
-            elif study.is_phenotype:
-                trees.append(self.produce_tree_pheno(
-                    study.phenotype_data,
                     permitted_datasets,
                 ))
         return Response({"data": trees}, status=status.HTTP_200_OK)
