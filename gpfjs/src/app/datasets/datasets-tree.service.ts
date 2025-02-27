@@ -14,7 +14,8 @@ export class DatasetsTreeService {
     private http: HttpClient,
     private config: ConfigService
   ) {
-    this.http.get(`${this.config.baseUrl}${this.datasetHierarchyUrl}`).subscribe(
+    const options = { withCredentials: true };
+    this.http.get(`${this.config.baseUrl}${this.datasetHierarchyUrl}`, options).subscribe(
       data => {
         this.datasetTreeNodes$.next(data);
       }
@@ -88,7 +89,8 @@ export class DatasetsTreeService {
   }
 
   public getDatasetHierarchy(): Observable<DatasetHierarchy[]> {
-    return this.http.get(`${this.config.baseUrl}${this.datasetHierarchyUrl}`).pipe(
+    const options = { withCredentials: true };
+    return this.http.get(`${this.config.baseUrl}${this.datasetHierarchyUrl}`, options).pipe(
       map((json: {data: object[]}) => json.data.map(d => DatasetHierarchy.fromJson(d)))
     );
   }
