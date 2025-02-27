@@ -67,6 +67,9 @@ class PhenoRegistry:
         self, study_config: dict, *, lock: bool = True,
     ) -> None:
         """Register a configuration as a loadable phenotype data."""
+        if not study_config["enabled"]:
+            return
+
         study_id = study_config["id"]
         storage_config = study_config.get("phenotype_storage")
         if storage_config is not None:
