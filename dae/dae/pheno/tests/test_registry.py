@@ -38,6 +38,7 @@ def pheno_study_configs() -> dict[str, dict]:
     return {
         "fake": {
             "id": "fake",
+            "enabled": True,
             "name": "Fake Study",
             "type": "study",
             "phenotype_storage": {
@@ -47,6 +48,7 @@ def pheno_study_configs() -> dict[str, dict]:
         },
         "fake_i1": {
             "id": "fake_i1",
+            "enabled": True,
             "name": "Fake Study 1",
             "type": "study",
             "phenotype_storage": {
@@ -56,6 +58,7 @@ def pheno_study_configs() -> dict[str, dict]:
         },
         "fake2": {
             "id": "fake2",
+            "enabled": True,
             "name": "Fake Study 2",
             "type": "study",
             "phenotype_storage": {
@@ -63,8 +66,19 @@ def pheno_study_configs() -> dict[str, dict]:
                 "dbfile": "fake2/fake2.db",
             },
         },
+        "fake3": {
+            "id": "fake3",
+            "enabled": False,
+            "name": "Fake Study 3",
+            "type": "study",
+            "phenotype_storage": {
+                "id": "fake_storage",
+                "dbfile": "fake3/fake3.db",
+            },
+        },
         "group": {
             "id": "group",
+            "enabled": True,
             "name": "Fake Group",
             "type": "group",
             "children": ["fake", "fake2"],
@@ -87,6 +101,7 @@ def full_registry(
     empty_registry.register_study_config(pheno_study_configs["fake"])
     empty_registry.register_study_config(pheno_study_configs["fake2"])
     empty_registry.register_study_config(pheno_study_configs["fake_i1"])
+    empty_registry.register_study_config(pheno_study_configs["fake3"])
     empty_registry.register_study_config(pheno_study_configs["group"])
     return empty_registry
 
@@ -181,3 +196,19 @@ def test_load_group_called(
 
     assert study_mock.call_count == 2
     assert group_mock.call_count == 1
+
+
+def test_disabled_study_not_registered(
+    empty_registry: PhenoRegistry,
+    pheno_study_configs: dict[str, dict],
+) -> None:
+    assert len(empty_registry._study_configs) == 0
+
+    empty_registry.register_study_config(pheno_study_configs["fake"])
+    assert len(empty_registry._study_configs) == 1
+
+    empty_registry.register_study_config(pheno_study_configs["fake2"])
+    assert len(empty_registry._study_configs) == 2
+
+    empty_registry.register_study_config(pheno_study_configs["fake3"])
+    assert len(empty_registry._study_configs) == 2
