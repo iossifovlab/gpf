@@ -12,7 +12,7 @@ export interface MeasureHistogramState {
   categoricalView: CategoricalHistogramView;
 }
 
-export const initialState: MeasureHistogramState[] = [];
+export const measureHistogramInitialState: MeasureHistogramState[] = [];
 
 export const selectFamilyMeasureHistograms = createFeatureSelector<MeasureHistogramState[]>('familyMeasureHistograms');
 
@@ -41,7 +41,7 @@ export const resetFamilyMeasureHistograms = createAction(
 );
 
 export const familyMeasureHistogramsReducer = createReducer(
-  initialState,
+  measureHistogramInitialState,
   on(setFamilyMeasureHistograms, (state, {familyMeasureHistograms}) => cloneDeep(familyMeasureHistograms)),
   on(setFamilyMeasureHistogramsContinuous, (state, { measure, rangeStart, rangeEnd }) => {
     const newMeasureHistogram = {
@@ -89,7 +89,7 @@ export const familyMeasureHistogramsReducer = createReducer(
     return [...state].filter(histogram => histogram.measure !== familyMeasureHistogramName);
   }),
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  on(reset, resetFamilyMeasureHistograms, state => cloneDeep(initialState)),
+  on(reset, resetFamilyMeasureHistograms, state => cloneDeep(measureHistogramInitialState)),
 );
 
 
@@ -120,7 +120,7 @@ export const resetPersonMeasureHistograms = createAction(
 );
 
 export const personMeasureHistogramsReducer = createReducer(
-  initialState,
+  measureHistogramInitialState,
   on(setPersonMeasureHistograms, (state, {personMeasureHistograms}) => cloneDeep(personMeasureHistograms)),
   on(setPersonMeasureHistogramsContinuous, (state, { measure, rangeStart, rangeEnd }) => {
     const newMeasureHistogram = {
@@ -168,5 +168,5 @@ export const personMeasureHistogramsReducer = createReducer(
     return [...state].filter(histogram => histogram.measure !== personMeasureHistogramName);
   }),
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  on(reset, resetPersonMeasureHistograms, state => cloneDeep(initialState)),
+  on(reset, resetPersonMeasureHistograms, state => cloneDeep(measureHistogramInitialState)),
 );
