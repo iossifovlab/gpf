@@ -1,21 +1,29 @@
 import {
   Component, OnChanges, Input, Output,
   EventEmitter, ElementRef, ViewChild,
-  HostListener
+  HostListener,
+  OnInit
 } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service';
 import { Measure } from '../measures/measures';
 import { first } from 'rxjs/operators';
 import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { Subscription } from 'rxjs';
+import { Store } from '@ngrx/store';
+import {
+  MeasureHistogramState,
+  selectFamilyMeasureHistograms,
+  selectPersonMeasureHistograms
+} from 'app/person-filters-selector/measure-histogram.state';
 
 @Component({
   selector: 'gpf-pheno-measure-selector-beta',
   templateUrl: './pheno-measure-selector-beta.component.html',
   styleUrls: ['./pheno-measure-selector-beta.component.css']
 })
-export class PhenoMeasureSelectorBetaComponent implements OnChanges {
+export class PhenoMeasureSelectorBetaComponent implements OnChanges, OnInit {
   @Input() public datasetId: string;
+  @Input() public isFamilyFilters: boolean;
   @Output() public selectedMeasureChange = new EventEmitter(true);
   @Output() public measuresChange = new EventEmitter(true);
 
@@ -24,6 +32,7 @@ export class PhenoMeasureSelectorBetaComponent implements OnChanges {
 
   public measures: Array<Measure> = [];
   public filteredMeasures: Array<Measure> = [];
+  public selectedMeasureIds: string[] = [];
   public searchString = '';
   public selectedMeasure: Measure = null;
   public loadingMeasures = false;
@@ -36,7 +45,26 @@ export class PhenoMeasureSelectorBetaComponent implements OnChanges {
 
   public constructor(
     private measuresService: MeasuresService,
+    private store: Store
   ) { }
+
+  public ngOnInit(): void {
+    if (this.isFamilyFilters) {
+      this.store.select(selectFamilyMeasureHistograms).subscribe((state: MeasureHistogramState[]) => {
+        this.selectedMeasureIds = [];
+        if (state) {
+          this.selectedMeasureIds = state.map(s => s.measure);
+        }
+      });
+    } else {
+      this.store.select(selectPersonMeasureHistograms).subscribe((state: MeasureHistogramState[]) => {
+        this.selectedMeasureIds = [];
+        if (state) {
+          this.selectedMeasureIds = state.map(s => s.measure);
+        }
+      });
+    }
+  }
 
   public ngOnChanges(): void {
     if (this.datasetId && this.measures.length === 0) {
@@ -64,10 +92,13 @@ export class PhenoMeasureSelectorBetaComponent implements OnChanges {
   }
 
   public selectMeasure(measure: Measure, sendEvent: boolean = true): void {
-    this.selectedMeasure = measure;
-    this.searchString = '';
-    if (sendEvent) {
-      this.selectedMeasureChange.emit(measure);
+    if (measure) {
+      this.selectedMeasure = measure;
+      this.selectedMeasureIds.push(measure.id);
+      this.searchString = '';
+      if (sendEvent) {
+        this.selectedMeasureChange.emit(measure);
+      }
     }
   }
 
@@ -171,5 +202,9 @@ export class PhenoMeasureSelectorBetaComponent implements OnChanges {
         measure.id.toLowerCase().indexOf(this.searchString.toLowerCase()) !== -1
       );
     }
+  }
+
+  public isMeasureSelected(measureId: string): boolean {
+    return this.selectedMeasureIds.includes(measureId);
   }
 }

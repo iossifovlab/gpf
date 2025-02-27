@@ -28,17 +28,18 @@
         loadingMeasures || loadingDropdown ? 'Loading...' : 'Nothing found'
       }}</div>
       <cdk-virtual-scroll-viewport itemSize="30" style="height: 240px; overflow-x: hidden">
-        <div
+        <fieldset
           *cdkVirtualFor="let measure of filteredMeasures; let index = index"
           class="dropdown-item"
           [ngClass]="{ 'dropdown-selected': selectedIdx === index }"
+          [ngStyle]="{ display: isMeasureSelected(measure.id) ? 'none' : 'initial' }"
           type="button"
           (mousedown)="selectMeasure(measure)"
           (onSelectionChange)="selectMeasure(measure)"
           (mousemove)="selectedIdx = index"
           [title]="measure.id">
           <span [innerHTML]="measure.id | boldMatching : searchString"></span>
-        </div>
+        </fieldset>
       </cdk-virtual-scroll-viewport>
     </div>
   </div>
