@@ -380,11 +380,12 @@ you can use:
         for aa in v.alt_alleles:
             print(aa)
 
-    chr1:1287138 C->A f1
-    chr1:3602485 AC->A f1
-    chr1:12115730 G->A f1
-    chr1:20639952 C->T f2
-    chr1:21257524 C->T f2
+    chr14:21391016 A->AT f2
+    chr14:21393484 TCTTC->T f2
+    chr14:21402010 G->A f1
+    chr14:21403019 G->A f2
+    chr14:21403214 T->C f1
+    chr14:21431459 G->C f1
     chr14:21385738 C->T f1
     chr14:21385738 C->T f2
     chr14:21385954 A->C f2
@@ -403,24 +404,24 @@ you can use:
     chr14:21393540 GGAA->G f1
 
 The ``query_variants`` interface allows you to specify what kind of variants
-you are interested in. For example, if you only need "splice-site" variants, you
+you are interested in. For example, if you only need "synonymous" variants, you
 can use:
 
 .. code-block:: python3
 
     st = gpf_instance.get_genotype_data('helloworld')
-    vs = st.query_variants(effect_types=['splice-site'])
+    vs = st.query_variants(effect_types=['synonymous'])
     vs = list(vs)
-    print(len(vs))
+    len(vs)
 
-    >> 2
+    >> 4
 
-Or, if you are interested in "splice-site" variants only in people with
+Or, if you are interested in "synonymous" variants only in people with
 "prb" role, you can use:
 
 .. code-block:: python3
 
-    vs = st.query_variants(effect_types=['splice-site'], roles='prb')
+    vs = st.query_variants(effect_types=['synonymous'], roles='prb')
     vs = list(vs)
     len(vs)
 

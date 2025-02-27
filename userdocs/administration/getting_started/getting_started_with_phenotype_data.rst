@@ -94,7 +94,7 @@ If you want to attach the ``mini_pheno`` phenotype study to the ``helloworld`` d
 you need to specify it in the dataset's configuration file, which can be found at
 ``minimal_instance/datasets/helloworld/helloworld.yaml``.
 
-Add the following line at the beginning of the file, outside of any section:
+Add the following line to the file:
 
 .. code:: yaml
 
@@ -106,21 +106,7 @@ To enable the :ref:`Phenotype Browser`, add this line:
 
     phenotype_browser: true
 
-After this, the beginning of the configuration file should look like this:
-
-.. code:: yaml
-
-    id: helloworld
-    name: Hello World Dataset
-
-    phenotype_data: mini_pheno
-    phenotype_browser: true
-
-    studies:
-    - denovo_helloworld
-    - vcf_helloworld
-
-When you restart the server, you should be able to see the 'Phenotype Browser' tab in the `helloworld` dataset.
+When you restart the server, you should be able to see the 'Phenotype Browser' tab in the ``helloworld`` dataset.
 
 Configure Family Filters in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
@@ -134,11 +120,11 @@ when it has a phenotype database attached to it. The configuration looks like th
       enabled: true
       family_filters:
         sample_continuous_filter:
-        name: Sample Filter Name
-        source_type: continuous
-        from: phenodb
-        filter_type: multi
-        role: prb
+          name: Sample Filter Name
+          source_type: continuous
+          from: phenodb
+          filter_type: multi
+          role: prb
 
 After adding the family filters configuration, restart the web server and
 navigate to the Genotype Browser. You should be able to see the Advanced option
@@ -157,7 +143,7 @@ in the genotype browser section:
 .. code:: yaml
 
     genotype_browser:
-      # ...
+      ...
       columns:
         phenotype:
           sample_pheno_measure:
@@ -167,17 +153,19 @@ in the genotype browser section:
 
 For the phenotype columns to be in the Genotype Browser table preview or download file, 
 they have to be present in the ``preview_columns`` or the ``download_columns`` in the Genotype Browser
-configuration. Add this in the genotype_browser section:
+configuration. Add this to the genotype browser section:
 
 .. code:: yaml
 
-    preview_columns:
-    - family
-    - variant
-    - genotype
-    - effect
-    - gene_scores
-    - sample_pheno_measure
+    genotype_browser:
+      ...
+      preview_columns:
+        - family
+        - variant
+        - genotype
+        - effect
+        - gene_scores
+        - sample_pheno_measure
 
 Enabling the Phenotype Tool
 +++++++++++++++++++++++++++
@@ -190,21 +178,6 @@ and add the following line:
 .. code:: yaml
 
     phenotype_tool: true
-
-After editing, it should look like this:
-
-.. code:: yaml
-
-    id: helloworld
-    name: Hello World Dataset
-
-    phenotype_data: mini_pheno
-    phenotype_browser: true
-    phenotype_tool: true
-
-    studies:
-    - denovo_helloworld
-    - vcf_helloworld
 
 
 Restart the GPF web server and select the ``helloworld`` dataset.
