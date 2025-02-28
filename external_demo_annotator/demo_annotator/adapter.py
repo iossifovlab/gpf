@@ -5,21 +5,23 @@ import os
 import select
 import subprocess
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, TextIO, cast
 
 from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotation_config import AnnotationConfigParser
+from dae.annotation.annotation_config import (
+    AnnotationConfigParser,
+    AnnotatorInfo,
+)
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
-    AnnotatorInfo,
 )
-from dae.annotation.annotator_base import AnnotatorBase
+from dae.annotation.docker_annotator import DockerAnnotator
 
 # ruff: noqa: S607
 
 
-class DemoAnnotatorAdapter(AnnotatorBase):
+class DemoAnnotatorAdapter(DockerAnnotator):
     """Annotation pipeline adapter for dummy_annotate using tempfiles."""
 
     def __init__(
@@ -31,12 +33,17 @@ class DemoAnnotatorAdapter(AnnotatorBase):
                 "annotatable_length",
             ])
         super().__init__(
-            pipeline, info, {
-                "annotatable_length": ("int", "Positional length "
-                                              "of the annotatable"),
-            },
+            pipeline, info,
         )
-        self.work_dir: Path = info.parameters.get("work_dir")
+        self.work_dir: Path = cast(Path, info.parameters.get("work_dir"))
+
+    def _attribute_type_descs(self) -> dict[str, tuple[str, str]]:
+        return {
+            "annotatable_length": (
+                "int",
+                "Positional length of the annotatable",
+            ),
+        }
 
     def _do_annotate(
         self, _annotatable: Annotatable | None,
@@ -83,16 +90,33 @@ class DemoAnnotatorAdapter(AnnotatorBase):
             work_dir = self.work_dir / batch_work_dir
         os.makedirs(work_dir, exist_ok=True)
 
-        with (work_dir / "input.tsv").open("w+t") as input_file, \
-                (work_dir / "output.tsv").open("w+t") as out_file:
+        with (work_dir / "input.tsv").open("w+t") as input_file:
             self.prepare_input(input_file, annotatables)
+            self.run(
+                input_filename="input.tsv",
+                output_filename="output.tsv",
+                work_dir=str(work_dir.absolute()),
+            )
             subprocess.run(
-                ["annotate_length", input_file.name, out_file.name],
+                ["annotate_length", input_file.name, "output.tsv"],
                 check=True,
             )
-            out_file.flush()
+        with (work_dir / "output.tsv").open("r") as out_file:
             self.read_output(out_file, contexts)
         return contexts
+
+    def run(self, **kwargs):
+        args = [
+            "annotate_length",
+            str(Path("/work", kwargs["input_filename"])),
+            str(Path("/work", kwargs["output_filename"])),
+        ]
+        self.client.containers.run(
+            "gpf_docker_test", args,
+            volumes={
+                kwargs["work_dir"]: {"bind": "/work", "mode": "rw"},
+            },
+        )
 
 
 class DemoAnnotatorStreamAdapter(DemoAnnotatorAdapter):
