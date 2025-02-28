@@ -184,3 +184,25 @@ def make_pheno_filter(
     if pheno_filter.get("role"):
         return FamilyFilter(result_filter)
     return result_filter
+
+
+def make_pheno_filter_beta(
+    pheno_filter: dict, phenotype_data: PhenotypeData,
+) -> PersonFilter:
+    """Create a PhenoFilter based on a dict config."""
+    measure = phenotype_data.get_measure(pheno_filter["source"])
+    pheno_filter_type = MeasureType.from_str(pheno_filter["histogramType"])
+
+    result_filter: PhenoFilter
+    if pheno_filter_type == MeasureType.categorical:
+        result_filter = PhenoFilterSet(
+            measure, set(pheno_filter["values"]), phenotype_data,
+        )
+    else:
+        result_filter = PhenoFilterRange(
+            measure, (pheno_filter["min"], pheno_filter["max"]), phenotype_data,
+        )
+
+    if pheno_filter["isFamily"] is True:
+        return FamilyFilter(result_filter)
+    return result_filter
