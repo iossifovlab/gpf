@@ -9,6 +9,11 @@ urlpatterns = [
         name="measures_list",
     ),
     re_path(
+        r"^/list/?$",
+        views.PhenoMeasureListView.as_view(),
+        name="measure_ids_list",
+    ),
+    re_path(
         r"^/partitions/?$",
         views.PhenoMeasurePartitionsView.as_view(),
         name="measure_partitions",

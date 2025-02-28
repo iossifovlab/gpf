@@ -2,6 +2,7 @@ import logging
 from typing import Any, cast
 
 import numpy as np
+import pandas as pd
 from datasets_api.permissions import get_instance_timestamp_etag
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
@@ -59,6 +60,32 @@ class PhenoMeasuresView(QueryBaseView):
                 }
                 for m in list(measures.values())
             ]
+        return Response(res, status=status.HTTP_200_OK)
+
+
+class PhenoMeasureListView(QueryBaseView):
+    """View for phenotype measures ids."""
+
+    @method_decorator(etag(get_instance_timestamp_etag))
+    def get(self, request: Request) -> Response:
+        """Get phenotype measures ids."""
+        data = request.query_params
+
+        dataset_id = data["datasetId"]
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        assert dataset is not None
+
+        if not dataset.has_pheno_data:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        res: list[dict[str, Any]] = []
+
+        used_types = ["continuous", "categorical"]
+        measures = list(dataset.phenotype_data.get_measures().values())
+        measures = [m for m in measures if m.measure_type.name in used_types]
+
+        res = [m.to_json() for m in measures]
+
         return Response(res, status=status.HTTP_200_OK)
 
 
@@ -137,7 +164,7 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
             [pheno_measure],
         )
         m = df[pheno_measure]
-        df = df[np.logical_not(np.isnan(m.values))]
+        df = df[np.logical_not(pd.isna(m.values))]
 
         result = {
             "measure": measure.measure_id,
