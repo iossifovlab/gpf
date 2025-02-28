@@ -477,50 +477,19 @@ class ReferenceGenomeImplementation(
     def add_statistics_build_tasks(
         self, task_graph: TaskGraph, **kwargs: Any,
     ) -> list[Task]:
-        region_size = kwargs.get("region_size", 1_000_000)
-
-        if region_size > 0:
-            return self._multitask_statistics(task_graph, **kwargs)
-
-        return [
-            task_graph.create_task(
-                f"{self.resource.resource_id}_calc_statistics",
-                ReferenceGenomeImplementation._singletask_statistics,
-                [self.resource],
-                [],
-            ),
-        ]
-
-    @staticmethod
-    def _singletask_statistics(resource: GenomicResource) -> GenomeStatistic:
-        impl = build_reference_genome_from_resource(resource)
-        statistics = []
-        for chrom in impl.chromosomes:
-            stat = ReferenceGenomeImplementation._do_chrom_statistic(
-                resource, chrom, 1, None)
-            ReferenceGenomeImplementation._save_chrom_statistic(
-                resource, chrom, stat)
-            statistics.append(stat)
-        return ReferenceGenomeImplementation._do_global_statistic(
-            resource, *statistics)
-
-    def _multitask_statistics(
-            self, task_graph: TaskGraph, **kwargs: Any) -> list[Task]:
         tasks = []
-
+        chrom_save_tasks = []
         region_size = kwargs.get("region_size", 1_000_000)
 
-        chrom_save_tasks = []
         with self.reference_genome.open():
             for chrom in self.reference_genome.chromosomes:
                 _, _, chrom_save_task = self._add_chrom_stats_tasks(
                     task_graph, chrom, region_size,
                 )
                 chrom_save_tasks.append(chrom_save_task)
-
         tasks.extend(chrom_save_tasks)
-
         tasks.append(self._add_global_stat_task(task_graph, chrom_save_tasks))
+
         return tasks
 
     def _add_chrom_stats_tasks(
