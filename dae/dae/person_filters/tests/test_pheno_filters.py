@@ -7,6 +7,7 @@ from dae.person_filters import (
     PhenoFilterSet,
     make_pheno_filter,
 )
+from dae.person_filters.person_filters import make_pheno_filter_beta
 from dae.pheno.pheno_data import PhenotypeStudy
 
 
@@ -134,6 +135,16 @@ def test_make_pheno_filter_categorical(fake_phenotype_data):
     assert isinstance(pheno_filter, PhenoFilterSet)
 
 
+def test_make_pheno_filter_categorical_beta(fake_phenotype_data):
+    pheno_filter = make_pheno_filter_beta({
+        "source": "i1.m5",
+        "histogramType": "categorical",
+        "values": {"catB", "catF"},
+        "isFamily": False,
+    }, fake_phenotype_data)
+    assert isinstance(pheno_filter, PhenoFilterSet)
+
+
 def test_make_pheno_filter_raw(fake_phenotype_data):
     with pytest.raises(AssertionError):
         make_pheno_filter({
@@ -143,11 +154,32 @@ def test_make_pheno_filter_raw(fake_phenotype_data):
         }, fake_phenotype_data)
 
 
+def test_make_pheno_filter_raw_beta(fake_phenotype_data):
+    with pytest.raises(AssertionError):
+        make_pheno_filter_beta({
+            "source": "i1.m9",
+            "histogramType": "categorical",
+            "values": [0, 0],
+            "isFamily": False,
+        }, fake_phenotype_data)
+
+
 def test_make_pheno_filter_continuous(fake_phenotype_data):
     pheno_filter = make_pheno_filter({
         "source": "i1.m1",
         "sourceType": "continuous",
         "selection": {"min": 50, "max": 70},
+    }, fake_phenotype_data)
+    assert isinstance(pheno_filter, PhenoFilterRange)
+
+
+def test_make_pheno_filter_continuous_beta(fake_phenotype_data):
+    pheno_filter = make_pheno_filter_beta({
+        "source": "i1.m1",
+        "histogramType": "continuous",
+        "isFamily": False,
+        "min": 50,
+        "max": 70,
     }, fake_phenotype_data)
     assert isinstance(pheno_filter, PhenoFilterRange)
 
@@ -161,6 +193,17 @@ def test_make_pheno_filter_ordinal(fake_phenotype_data):
     assert isinstance(pheno_filter, PhenoFilterRange)
 
 
+def test_make_pheno_filter_ordinal_beta(fake_phenotype_data):
+    pheno_filter = make_pheno_filter_beta({
+        "source": "i1.m4",
+        "histogramType": "continuous",
+        "isFamily": False,
+        "min": 3,
+        "max": 5,
+    }, fake_phenotype_data)
+    assert isinstance(pheno_filter, PhenoFilterRange)
+
+
 def test_make_pheno_filter_nonexistent_measure(fake_phenotype_data):
     with pytest.raises(AssertionError):
         make_pheno_filter({
@@ -170,12 +213,35 @@ def test_make_pheno_filter_nonexistent_measure(fake_phenotype_data):
         }, fake_phenotype_data)
 
 
+def test_make_pheno_filter_nonexistent_measure_beta(fake_phenotype_data):
+    with pytest.raises(AssertionError):
+        make_pheno_filter_beta({
+            "source": "??.??",
+            "histogramType": "continuous",
+            "isFamily": False,
+            "min": 0,
+            "max": 0,
+        }, fake_phenotype_data)
+
+
 def test_make_pheno_filter_family(fake_phenotype_data):
     pheno_filter = make_pheno_filter({
         "source": "i1.m4",
         "sourceType": "continuous",
         "selection": {"min": 3, "max": 5},
         "role": "prb",
+    }, fake_phenotype_data)
+    assert isinstance(pheno_filter, FamilyFilter)
+    assert isinstance(pheno_filter.person_filter, PhenoFilterRange)
+
+
+def test_make_pheno_filter_family_beta(fake_phenotype_data):
+    pheno_filter = make_pheno_filter_beta({
+        "source": "i1.m4",
+        "histogramType": "continuous",
+        "isFamily": True,
+        "min": 3,
+        "max": 5,
     }, fake_phenotype_data)
     assert isinstance(pheno_filter, FamilyFilter)
     assert isinstance(pheno_filter.person_filter, PhenoFilterRange)

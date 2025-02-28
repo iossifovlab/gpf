@@ -80,6 +80,13 @@ class PhenoToolView(QueryBaseView):
                     data["familyFilters"],
                 ),
             )
+        if data.get("familyFiltersBeta") is not None:
+            data["phenoFilterFamilyIds"] = list(
+                study_wrapper.query_transformer  # noqa: SLF001
+                ._transform_filters_to_ids_beta(
+                    data["familyFiltersBeta"],
+                ),
+            )
 
         if not adapter:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -184,6 +191,13 @@ class PhenoToolDownload(PhenoToolView, DatasetAccessRightsView):
                 study_wrapper.query_transformer  # noqa: SLF001
                 ._transform_filters_to_ids(
                     data["familyFilters"],
+                ),
+            )
+        if data.get("familyFiltersBeta") is not None:
+            data["phenoFilterFamilyIds"] = list(
+                study_wrapper.query_transformer  # noqa: SLF001
+                ._transform_filters_to_ids_beta(
+                    data["familyFiltersBeta"],
                 ),
             )
 

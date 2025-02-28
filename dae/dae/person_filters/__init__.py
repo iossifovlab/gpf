@@ -8,6 +8,7 @@ from .person_filters import (
     PhenoFilterSet,
     make_pedigree_filter,
     make_pheno_filter,
+    make_pheno_filter_beta,
 )
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "PhenoFilterSet",
     "make_pedigree_filter",
     "make_pheno_filter",
+    "make_pheno_filter_beta",
 ]
