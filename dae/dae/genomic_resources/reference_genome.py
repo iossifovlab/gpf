@@ -180,6 +180,11 @@ class ReferenceGenome(
             chromosome_lengths = [
                 (chromosome, self.get_chrom_length(chromosome)),
             ]
+
+        if region_size == 0:
+            yield from [Region(chrom, 1) for chrom, _ in chromosome_lengths]
+            return
+
         for chrom, chrom_len in chromosome_lengths:
             logger.debug(
                 "Chromosome '%s' has length %s",

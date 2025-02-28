@@ -26,9 +26,10 @@ from dae.genomic_resources.testing import (
     setup_directories,
     setup_genome,
 )
+from dae.utils.regions import Region
 
 
-@pytest.fixture()
+@pytest.fixture
 def genome_repo() -> GenomicResourceRepo:
     return build_inmemory_test_repository({
         "gosho_genome": {
@@ -49,7 +50,7 @@ def genome_repo() -> GenomicResourceRepo:
     })
 
 
-@pytest.fixture()
+@pytest.fixture
 def genome_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     root_path = tmp_path / "genome"
     setup_directories(root_path, {
@@ -295,3 +296,37 @@ def test_build_reference_genome_from_resource_id(
         assert len(ref.get_all_chrom_lengths()) == 2
         assert ref.get_chrom_length("pesho") == 24
         assert ref.get_chrom_length("gosho") == 20
+
+
+def test_reference_genome_split_into_regions(
+    genome_fixture: pathlib.Path,
+) -> None:
+    res = build_filesystem_test_resource(genome_fixture)
+    reference_genome = build_reference_genome_from_resource(res)
+
+    with reference_genome.open():
+        regions = list(reference_genome.split_into_regions(0))
+        assert regions == [
+            Region("pesho", 1),
+            Region("gosho", 1),
+        ]
+
+        regions = list(reference_genome.split_into_regions(10))
+        assert regions == [
+            Region("pesho", 1, 10),
+            Region("pesho", 11, 20),
+            Region("pesho", 21),
+            Region("gosho", 1, 10),
+            Region("gosho", 11),
+        ]
+
+        regions = list(reference_genome.split_into_regions(0, "gosho"))
+        assert regions == [
+            Region("gosho", 1),
+        ]
+
+        regions = list(reference_genome.split_into_regions(10, "gosho"))
+        assert regions == [
+            Region("gosho", 1, 10),
+            Region("gosho", 11),
+        ]
