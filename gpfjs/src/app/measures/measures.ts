@@ -26,7 +26,7 @@ export class ContinuousMeasure {
 export class Measure {
   public static fromJson(json: object): Measure {
     return new Measure(
-      String(json['measure']),
+      String(json['measureId']),
       String(json['description']),
     );
   }
