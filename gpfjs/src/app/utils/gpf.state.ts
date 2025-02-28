@@ -27,6 +27,7 @@ import { FamilyTags } from 'app/family-tags/family-tags';
 import { cloneDeep } from 'lodash';
 import { reset } from '../users/state-actions';
 import { datasetIdInitialState } from 'app/datasets/datasets.state';
+import { measureHistogramInitialState, MeasureHistogramState } from 'app/person-filters-selector/measure-histogram.state';
 
 export interface State {
   errors: string[];
@@ -53,6 +54,8 @@ export interface State {
   uniqueFamilyVariantsFilter: boolean;
   studyTypes: string[];
   datasetId: string;
+  familyMeasureHistograms: MeasureHistogramState[],
+  personMeasureHistograms: MeasureHistogramState[],
 }
 
 export const initialState: State = {
@@ -79,7 +82,9 @@ export const initialState: State = {
   genomicScores: genomicScoresInitialState,
   uniqueFamilyVariantsFilter: uniqueFamilyVariantsInitialState,
   studyTypes: studyTypesInitialState,
-  datasetId: datasetIdInitialState
+  datasetId: datasetIdInitialState,
+  familyMeasureHistograms: measureHistogramInitialState,
+  personMeasureHistograms: measureHistogramInitialState,
 };
 
 export const reducer = createReducer(

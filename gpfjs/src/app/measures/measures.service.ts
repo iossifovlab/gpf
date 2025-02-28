@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
-import { ContinuousMeasure, HistogramData, MeasureHistogram } from './measures';
+import { ContinuousMeasure, HistogramData, Measure, MeasureHistogram } from './measures';
 import { Partitions } from '../gene-scores/gene-scores';
 import { map } from 'rxjs/operators';
 
 @Injectable()
 export class MeasuresService {
+  private readonly measuresListUrl = 'measures/list';
   private readonly continuousMeasuresUrl = 'measures/type/continuous';
   private readonly measureHistogramUrl = 'measures/histogram';
   private readonly measureHistogramUrlBeta = 'measures/histogram-beta';
@@ -18,6 +19,15 @@ export class MeasuresService {
     private http: HttpClient,
     private config: ConfigService
   ) {}
+
+  public getMeasureList(datasetId: string): Observable<Array<Measure>> {
+    const params = new HttpParams().set('datasetId', datasetId);
+    const requestOptions = { withCredentials: true, params: params };
+
+    return this.http
+      .get(this.config.baseUrl + this.measuresListUrl, requestOptions)
+      .pipe(map((res: object[]) => Measure.fromJsonArray(res)));
+  }
 
   public getContinuousMeasures(datasetId: string): Observable<Array<ContinuousMeasure>> {
     const params = new HttpParams().set('datasetId', datasetId);

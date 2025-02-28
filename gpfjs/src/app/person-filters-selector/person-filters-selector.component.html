@@ -1,7 +1,10 @@
 <div id="pheno-filters-panel">
   <div id="measures-dropdown">
-    <gpf-pheno-measure-selector [datasetId]="selectedDatasetId" (selectedMeasureChange)="addMeasure($event)">
-    </gpf-pheno-measure-selector>
+    <gpf-pheno-measure-selector-beta
+      [datasetId]="selectedDatasetId"
+      (selectedMeasureChange)="addMeasure($event)"
+      [isFamilyFilters]="isFamilyFilters">
+    </gpf-pheno-measure-selector-beta>
   </div>
 
   <div *ngFor="let histogram of selectedMeasureHistograms" class="filters-container">

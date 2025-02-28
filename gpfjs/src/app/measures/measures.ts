@@ -23,6 +23,27 @@ export class ContinuousMeasure {
   ) {}
 }
 
+export class Measure {
+  public static fromJson(json: object): Measure {
+    return new Measure(
+      String(json['measureId']),
+      String(json['description']),
+    );
+  }
+
+  public static fromJsonArray(jsonArray: object[]): Array<Measure> {
+    if (!jsonArray) {
+      return undefined;
+    }
+    return jsonArray.map((json) => Measure.fromJson(json));
+  }
+
+  public constructor(
+    public readonly id: string,
+    public readonly description: string,
+  ) {}
+}
+
 
 export class HistogramData {
   public static fromJson(json: object): HistogramData {
@@ -94,7 +115,8 @@ export class MeasureHistogram {
 
     return new MeasureHistogram(
       String(json['measure']),
-      histogram
+      histogram,
+      String(json['description'])
     );
   }
 
@@ -104,6 +126,7 @@ export class MeasureHistogram {
 
   public constructor(
     public readonly measure: string,
-    public readonly histogram: NumberHistogram | CategoricalHistogram
+    public readonly histogram: NumberHistogram | CategoricalHistogram,
+    public readonly description: string
   ) { }
 }

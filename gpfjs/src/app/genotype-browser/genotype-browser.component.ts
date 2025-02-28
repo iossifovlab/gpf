@@ -33,6 +33,11 @@ import { selectStudyTypes } from 'app/study-types/study-types.state';
 import {
   selectUniqueFamilyVariantsFilter
 } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
+import {
+  selectFamilyMeasureHistograms,
+  selectPersonMeasureHistograms
+} from 'app/person-filters-selector/measure-histogram.state';
+
 
 @Component({
   selector: 'gpf-genotype-browser',
@@ -126,7 +131,9 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
       this.store.select(selectGenomicScores),
       this.store.select(selectPersonIds),
       this.store.select(selectUniqueFamilyVariantsFilter),
-      this.store.select(selectStudyFilters)
+      this.store.select(selectStudyFilters),
+      this.store.select(selectFamilyMeasureHistograms),
+      this.store.select(selectPersonMeasureHistograms),
     ).pipe(
       map(([
         variantTypesState,
@@ -147,7 +154,9 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
         genomicScoresState,
         personIdsState,
         uniqueFamilyVariantsFilterState,
-        studyFiltersState
+        studyFiltersState,
+        familyMeasureHistogramsState,
+        personMeasureHistogramsState,
       ]) => {
         const presentInParent = {
           presentInParent: presentInParentState.presentInParent,
@@ -196,6 +205,8 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
           }},
           ...geneScoresState.score && {geneScores: geneScoresState},
           ...presentInParent.presentInParent?.length && {presentInParent: presentInParent},
+          ...familyMeasureHistogramsState?.length && { familyMeasureHistograms: familyMeasureHistogramsState },
+          ...personMeasureHistogramsState?.length && { personMeasureHistograms: personMeasureHistogramsState },
         };
         return state;
       })
