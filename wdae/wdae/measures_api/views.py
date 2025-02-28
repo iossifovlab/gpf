@@ -1,5 +1,4 @@
 import logging
-import operator
 from typing import Any, cast
 
 import numpy as np
@@ -81,29 +80,11 @@ class PhenoMeasureListView(QueryBaseView):
 
         res: list[dict[str, Any]] = []
 
-        continuous_measures = dataset.phenotype_data.get_measures(
-            measure_type=MeasureType.from_str("continuous"),
-        )
-        res = [
-            {
-                "measure": m.measure_id,
-                "description": m.description,
-            }
-            for m in list(continuous_measures.values())
-        ]
+        used_types = ["continuous", "categorical"]
+        measures = list(dataset.phenotype_data.get_measures().values())
+        measures = [m for m in measures if m.measure_type.name in used_types]
 
-        categorical_measures = dataset.phenotype_data.get_measures(
-            measure_type=MeasureType.from_str("categorical"),
-        )
-        res += [
-            {
-                "measure": m.measure_id,
-                "description": m.description,
-            }
-            for m in list(categorical_measures.values())
-        ]
-
-        res = sorted(res, key=operator.itemgetter("measure"))
+        res = [m.to_json() for m in measures]
 
         return Response(res, status=status.HTTP_200_OK)
 
