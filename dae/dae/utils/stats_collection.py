@@ -1,5 +1,5 @@
 from collections.abc import Iterator, MutableMapping
-from typing import Any, Dict, Tuple
+from typing import Any
 
 
 class StatsCollection(MutableMapping):
@@ -30,12 +30,12 @@ class StatsCollection(MutableMapping):
     """
 
     def __init__(self) -> None:
-        self._stats: Dict[Tuple[str, ...], int] = {}
+        self._stats: dict[tuple[str, ...], int] = {}
 
-    def __delitem__(self, key: Tuple[str, ...]) -> None:
+    def __delitem__(self, key: tuple[str, ...]) -> None:
         pass
 
-    def __setitem__(self, key: Tuple[str, ...], value: Any) -> None:
+    def __setitem__(self, key: tuple[str, ...], value: Any) -> None:
         """Store stats value for the specified key."""
         self._stats[key] = value
 
@@ -47,14 +47,14 @@ class StatsCollection(MutableMapping):
         result: dict[tuple[str, ...], int] = {}
         for k, v in self._stats.items():
             if k[:len(key)] == key:
-                result[k] = v
+                result[k] = v  # noqa: PERF403
         if result:
             if len(result) == 1 and key in result:
                 return result[key]
             return result  # type: ignore
         return default
 
-    def __iter__(self) -> Iterator[Tuple[str, ...]]:
+    def __iter__(self) -> Iterator[tuple[str, ...]]:
         return iter(self._stats)
 
     def __len__(self) -> int:
@@ -63,7 +63,7 @@ class StatsCollection(MutableMapping):
     def __repr__(self) -> str:
         return str(self._stats)
 
-    def inc(self, key: Tuple[str, ...]) -> None:
+    def inc(self, key: tuple[str, ...]) -> None:
         """Increment stats value for the specified key."""
         self._stats[key] = self._stats.get(key, 0) + 1
 

@@ -1,17 +1,17 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,W0104
 import pytest
 
-from dae.utils.statistics import StatsCollection
+from dae.utils.stats_collection import StatsCollection
 
 
-@pytest.fixture()
+@pytest.fixture
 def stats_fixture() -> StatsCollection:
     stats = StatsCollection()
     assert stats is not None
 
-    stats[("a", )] = 1
-    stats[("b", "1")] = 1
-    stats[("b", "2")] = 2
+    stats["a", ] = 1
+    stats["b", "1"] = 1
+    stats["b", "2"] = 2
     return stats
 
 
@@ -26,7 +26,7 @@ def test_stats_simple(stats_fixture: StatsCollection) -> None:
 def test_stats_get(stats_fixture: StatsCollection) -> None:
     stats = stats_fixture
 
-    assert stats[("b", "1")] == 1
+    assert stats["b", "1"] == 1
     assert stats.get(("b", "3")) == 0
 
     assert stats.get(("c",)) == 0
@@ -68,7 +68,7 @@ def test_stats_keys(stats_fixture: StatsCollection) -> None:
 def test_stats_get_multi(stats_fixture: StatsCollection) -> None:
     stats = stats_fixture
 
-    assert stats[("b",)] == {
+    assert stats["b",] == {
         ("b", "1"): 1,
         ("b", "2"): 2,
     }
@@ -76,10 +76,10 @@ def test_stats_get_multi(stats_fixture: StatsCollection) -> None:
 
 def test_stats_get_multi2(stats_fixture: StatsCollection) -> None:
     stats = stats_fixture
-    stats[("a", "3")] = 3
-    stats[("a", "4")] = 4
+    stats["a", "3"] = 3
+    stats["a", "4"] = 4
 
-    assert stats[("a",)] == {
+    assert stats["a",] == {
         ("a",): 1,
         ("a", "3"): 3,
         ("a", "4"): 4,
@@ -90,10 +90,10 @@ def test_stats_default_0(stats_fixture: StatsCollection) -> None:
     stats = stats_fixture
 
     stats.inc(("tttt",))
-    assert stats[("tttt",)] == 1
+    assert stats["tttt",] == 1
 
     stats.inc(("tttt",))
-    assert stats[("tttt",)] == 2
+    assert stats["tttt",] == 2
 
     stats.inc(("tttt", "tttt"))
-    assert stats[("tttt", "tttt")] == 1
+    assert stats["tttt", "tttt"] == 1

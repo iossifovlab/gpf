@@ -39,7 +39,7 @@ from dae.pedigrees.loader import FamiliesLoader
 from dae.task_graph.graph import TaskGraph
 from dae.utils import fs_utils
 from dae.utils.regions import Region
-from dae.utils.statistics import StatsCollection
+from dae.utils.stats_collection import StatsCollection
 from dae.variants_loaders.cnv.loader import CNVLoader
 from dae.variants_loaders.dae.loader import DaeTransmittedLoader, DenovoLoader
 from dae.variants_loaders.raw.loader import VariantsLoader

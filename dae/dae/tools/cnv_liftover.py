@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import argparse
 import logging
 import sys
@@ -16,7 +14,7 @@ from dae.genomic_resources.repository_factory import (
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.loader import FamiliesLoader
-from dae.utils.statistics import StatsCollection
+from dae.utils.stats_collection import StatsCollection
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 from dae.variants.family_variant import FamilyAllele
 from dae.variants_loaders.cnv.loader import CNVLoader
@@ -157,10 +155,11 @@ def main(
                 for aa in fv.alt_alleles:
                     fa = cast(FamilyAllele, aa)
                     line: list[str] = []
-                    person_ids = []
-                    for person_id in fa.variant_in_members:
-                        if person_id is not None:
-                            person_ids.append(person_id)
+                    person_ids = [
+                        person_id
+                        for person_id in fa.variant_in_members
+                        if person_id is not None
+                    ]
                     assert len(person_ids) >= 1
                     line = [
                         f"{liftover_annotatable.chrom}:"
