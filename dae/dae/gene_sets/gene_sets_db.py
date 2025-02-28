@@ -1,15 +1,12 @@
 """Classes for handling of gene sets."""
 
 import abc
-import copy
 import logging
 import os
-import textwrap
 from functools import cached_property
-from typing import Any
+from typing import Any, Literal
 
-from jinja2 import Template
-from markdown2 import markdown
+from pydantic import BaseModel, Field
 
 from dae.gene_sets.gene_term import (
     read_ewa_set_file,
@@ -24,15 +21,53 @@ from dae.genomic_resources.repository import (
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
-from dae.genomic_resources.resource_implementation import (
-    GenomicResourceImplementation,
-    InfoImplementationMixin,
-    ResourceConfigValidationMixin,
-    get_base_resource_schema,
-)
 from dae.task_graph.graph import Task, TaskGraph
 
 logger = logging.getLogger(__name__)
+
+
+class MetaSchema(BaseModel):
+    description: str | None = None
+    labels: dict[str, Any] | None = None
+
+
+class BaseResourceSchema(BaseModel):
+    type: str | None = None
+    meta: MetaSchema | None = None
+
+
+class ViewRangeSchema(BaseModel):
+    min: float | None = None
+    max: float | None = None
+
+
+# pylint: disable=missing-class-docstring
+class HistogramSchema(BaseModel):
+    type: str | None = None
+    plot_function: str | None = None
+    number_of_bins: int | None = None
+    view_range: ViewRangeSchema | None = None
+    x_log_scale: bool | None = None
+    y_log_scale: bool | None = None
+    x_min_log: float | None = None
+    value_order: list[str | int] | None = None
+    displayed_values_count: int | None = None
+    displayed_values_percent: float | None = None
+    reason: str | None = None
+
+
+# pylint: disable=missing-class-docstring
+class GeneSetResourceSchema(BaseResourceSchema):
+    resource_id: str = Field(alias="id")
+    filename: str | None = None
+    directory: str | None = None
+    resource_format: str | None = Field(alias="format")
+    web_label: str | None = None
+    web_format_str: str | None = None
+    histograms: dict[
+        Literal["genes_per_gene_set", "gene_sets_per_gene"],
+        HistogramSchema,
+    ] | None = None
 
 
 class GeneSet:
@@ -79,65 +114,7 @@ class BaseGeneSetCollection(abc.ABC):
         raise NotImplementedError
 
 
-class GeneSetCollectionImpl(
-    GenomicResourceImplementation,
-    InfoImplementationMixin,
-):
-    """Class used to represent gene sets collection resource implementations."""
-
-    def get_template(self) -> Template:
-        return Template(textwrap.dedent("""
-            {% extends base %}
-            {% block content %}
-            <hr>
-            <h2>Gene set ID: {{ data["id"] }}</h2>
-            {% if data["format"] == "directory" %}
-            <h3>Gene sets directory:</h3>
-            <a href="{{ data["directory"] }}">
-            {{ data["directory"] }}
-            </a>
-            {% else %}
-            <h3>Gene sets file:</h3>
-            <a href="{{ data["filename"] }}">
-            {{ data["filename"] }}
-            </a>
-            {% endif %}
-            <p>Format: {{ data["format"] }}</p>
-            {% if data["web_label"] %}
-            <p>Web label: {{ data["web_label"] }}</p>
-            {% endif %}
-            {% if data["web_format_str"] %}
-            <p>Web label: {{ data["web_format_str"] }}</p>
-            {% endif %}
-            {% endblock %}
-        """))
-
-    def _get_template_data(self) -> dict:
-        info = copy.deepcopy(self.config)
-        if "meta" in info:
-            info["meta"] = markdown(str(info["meta"]))
-        return info
-
-    def calc_info_hash(self) -> bytes:
-        return b"placeholder"
-
-    def calc_statistics_hash(self) -> bytes:
-        return b"placeholder"
-
-    def add_statistics_build_tasks(
-        self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
-    ) -> list[Task]:
-        return []
-
-    def get_info(self, **kwargs: Any) -> str:  # noqa: ARG002
-        return InfoImplementationMixin.get_info(self)
-
-    def get_statistics_info(self, **kwargs: Any) -> str:  # noqa: ARG002
-        return InfoImplementationMixin.get_statistics_info(self)
-
-
 class GeneSetCollection(
-    ResourceConfigValidationMixin,
     BaseGeneSetCollection,
 ):
     """Class representing a collection of gene sets in a resource."""
@@ -150,10 +127,10 @@ class GeneSetCollection(
             raise ValueError(
                 f"genomic resource {resource.resource_id} not configured")
         self.resource = resource
-        self.config = self.validate_and_normalize_schema(
-            config, resource,
-        )
-        self.collection_id = self.config["id"]
+
+        self.config = GeneSetResourceSchema.model_validate(config)
+
+        self.collection_id = self.config.resource_id
         assert self.collection_id != "denovo"
         if resource.get_type() not in {"gene_set_collection", "gene_set"}:
             raise ValueError("Invalid resource type for gene set collection")
@@ -162,8 +139,8 @@ class GeneSetCollection(
                 "'gene_set' resource type is deprecated; "
                 "use 'gene_set_collection' instead")
 
-        self.web_label = config.get("web_label", None)
-        self.web_format_str = config.get("web_format_str", None)
+        self.web_label = self.config.web_label
+        self.web_format_str = self.config.web_format_str
         logger.debug("loading %s: %s", self.collection_id, config)
         self.gene_sets: dict[str, GeneSet] = self.load_gene_sets()
 
@@ -173,19 +150,22 @@ class GeneSetCollection(
     def files(self) -> set[str]:
         """Return a list of resource files the implementation utilises."""
         res = set()
-        config = self.resource.get_config()
-        collection_format = config["format"]
+        collection_format = self.config.resource_format
 
         if collection_format == "map":
-            filename = self.config["filename"]
+            filename = self.config.filename
+            assert filename is not None
             res.add(filename)
             names_filename = filename[:-4] + "names.txt"
             if self.resource.file_exists(names_filename):
                 res.add(names_filename)
         elif collection_format == "gmt":
-            res.add(config["filename"])
+            filename = self.config.filename
+            assert filename is not None
+            res.add(filename)
         elif collection_format == "directory":
-            directory = config["directory"]
+            directory = self.config.directory
+            assert directory is not None
             if directory == ".":
                 directory = ""
             for filepath, _ in self.resource.get_manifest().get_files():
@@ -201,12 +181,12 @@ class GeneSetCollection(
         """Build a gene set collection from a given GenomicResource."""
         assert self.resource is not None
         gene_sets = {}
-        config = self.resource.get_config()
-        collection_format = config["format"]
-        logger.debug("loading %s: %s", self.collection_id, config)
+        collection_format = self.config.resource_format
+        logger.debug("loading %s", self.collection_id)
 
         if collection_format == "map":
-            filename = self.config["filename"]
+            filename = self.config.filename
+            assert filename is not None
             names_filename = filename[:-4] + "names.txt"
             names_file = None
             if self.resource.file_exists(names_filename):
@@ -216,10 +196,12 @@ class GeneSetCollection(
                 names_file,
             )
         elif collection_format == "gmt":
-            filename = config["filename"]
+            filename = self.config.filename
+            assert filename is not None
             gene_terms = read_gmt_file(self.resource.open_raw_file(filename))
         elif collection_format == "directory":
-            directory = config["directory"]
+            directory = self.config.directory
+            assert directory is not None
             filepaths = []
             if directory == ".":
                 directory = ""  # Easier check with startswith
@@ -252,19 +234,6 @@ class GeneSetCollection(
     def get_all_gene_sets(self) -> list[GeneSet]:
         return list(self.gene_sets.values())
 
-    @staticmethod
-    def get_schema() -> dict[str, Any]:
-        return {
-            **get_base_resource_schema(),
-            "filename": {"type": "string"},
-            "id": {"type": "string"},
-            "directory": {"type": "string"},
-            "format": {"type": "string"},
-            "web_label": {"type": "string"},
-            "web_format_str": {"type": "string"},
-
-        }
-
     def calc_info_hash(self) -> bytes:
         return b"placeholder"
 
@@ -275,6 +244,12 @@ class GeneSetCollection(
         self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
     ) -> list[Task]:
         return []
+
+    def get_genes_per_gene_set_hist_filename(self) -> str:
+        return "statistics/genes_per_gene_set_histogram.png"
+
+    def get_gene_sets_per_gene_hist_filename(self) -> str:
+        return "statistics/gene_sets_per_gene_histogram.png"
 
 
 class GeneSetsDb:
@@ -406,11 +381,3 @@ def build_gene_set_collection_from_resource_id(
         grr = build_genomic_resource_repository()
     return build_gene_set_collection_from_resource(
         grr.get_resource(resource_id))
-
-
-def build_gene_set_collection_implementation_from_resource(
-    resource: GenomicResource,
-) -> GenomicResourceImplementation:
-    if resource is None:
-        raise ValueError(f"missing resource {resource}")
-    return GeneSetCollectionImpl(resource)
