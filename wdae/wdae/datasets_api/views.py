@@ -488,11 +488,9 @@ class DatasetHierarchyView(QueryBaseView):
             study = self.gpf_instance.get_wdae_wrapper(data_id)
             assert study is not None
             if not study.parents:
-                trees.append(self.produce_tree(
-                    study,
-                    data_ids,
-                    permitted_datasets,
-                ))
+                tree = self.produce_tree(study, data_ids, permitted_datasets)
+                if tree is not None:
+                    trees.append(tree)
         return Response({"data": trees}, status=status.HTTP_200_OK)
 
 

@@ -20,7 +20,7 @@ def custom_wgpf_module(
     return gpf_instance
 
 
-@pytest.fixture()
+@pytest.fixture
 def custom_wgpf(
     custom_wgpf_module: WGPFInstance,
     db: None,  # noqa: ARG001

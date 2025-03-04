@@ -5,6 +5,8 @@ from django.test.client import Client
 from gpf_instance.gpf_instance import WGPFInstance
 from rest_framework import status
 
+from datasets_api.permissions import add_group_perm_to_dataset
+
 
 def test_datasets_api_get_all(
     admin_client: Client,
@@ -259,6 +261,20 @@ def test_datasets_hierarchy(
         "name": "t4c8_dataset",
         "access_rights": True,
     }
+
+
+def test_datasets_hierarchy_hidden(
+    user_client: Client,
+    custom_wgpf: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    response = user_client.get("/api/v3/datasets/hierarchy/")
+    assert response.status_code == 200
+    assert len(response.json()["data"]) == 4
+
+    add_group_perm_to_dataset("hidden", "omni_dataset")
+    response = user_client.get("/api/v3/datasets/hierarchy/")
+    assert response.status_code == 200
+    assert len(response.json()["data"]) == 3
 
 
 def test_datasets_permissions(
