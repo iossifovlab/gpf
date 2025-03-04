@@ -240,12 +240,76 @@ th {
 td {
     font-size: 18px;
 }
-{% block extra_styles %}{% endblock %}
 
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    padding-top: 100px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+}
+.modal-content {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 700px;
+}
+.close {
+    float: right;
+    font-size: 40px;
+    font-weight: bold;
+}
+.close:hover,
+.close:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+{% block extra_styles %}{% endblock %}
 </style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll("[data-modal-trigger]").forEach(function (trigger) {
+            trigger.addEventListener("click", function () {
+                var modalId = this.getAttribute("data-modal-trigger");
+                var modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "block";
+                    document.currentOpenModal = modal;
+                }
+            });
+        });
+
+        document.querySelectorAll(".close").forEach(function (closeButton) {
+            closeButton.addEventListener("click", function () {
+                this.closest(".modal").style.display = "none";
+                document.currentOpenModal = null;
+            });
+        });
+
+        window.addEventListener("click", function (event) {
+            if (event.target.classList.contains("modal")) {
+                event.target.style.display = "none";
+                document.currentOpenModal = null;
+            }
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && document.currentOpenModal) {
+                document.currentOpenModal.style.display = "none";
+                document.currentOpenModal = null;
+            }
+        });
+    });
+</script>
 </head>
     <body>
-
     <h1>Resource</h1>
     <div>
         <table border="1">
@@ -277,7 +341,7 @@ td {
                                 markdown(summary, extras=["tables"]) if summary else "N/A"
                             }}
                         </template>
-                     </div>
+                    </div>
                 </td>
             </tr>
             <tr>
@@ -292,10 +356,9 @@ td {
                                 markdown(description, extras=["tables"]) if description else "N/A"
                             }}
                         </template>
-                     </div>
+                    </div>
                 </td>
             </tr>
-
             <tr>
                 <td>
                     <b>Labels:</b>
@@ -341,11 +404,9 @@ td {
                 <td class="nowrap">{{entry.size}}</td>
                 <td class="nowrap">{{entry.md5}}</td>
             </tr>
-
         {%- endfor %}
     </tbody>
     </table>
-
     </body>
 </html>
 """)  # noqa: E501
@@ -372,11 +433,10 @@ td {
     font-size: 18px;
 }
 {% block extra_styles %}{% endblock %}
-
 </style>
 </head>
-    <body>
-        <table>
+<body>
+    <table>
         <thead>
             <tr>
                 <th>Filename</th>
@@ -395,7 +455,7 @@ td {
             </tr>
             {%- endfor %}
         </tbody>
-        </table>
-    </body>
+    </table>
+</body>
 </html>
 """)

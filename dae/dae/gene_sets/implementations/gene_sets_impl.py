@@ -258,96 +258,18 @@ def build_gene_set_collection_implementation_from_resource(
 GENE_SETS_TEMPLATE = """
 {% extends base %}
 {% block content %}
-
-<style>
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        padding-top: 100px;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.5);
-        justify-content: center;
-    }
-    .modal-content {
-        margin: auto;
-        display: block;
-        width: 80%;
-        max-width: 700px;
-    }
-    .close {
-        float: right;
-        font-size: 40px;
-        font-weight: bold;
-    }
-    .close:hover,
-    .close:focus {
-        color: #bbb;
-        text-decoration: none;
-        cursor: pointer;
-    }
-</style>
-
-{% block javascript %}
-    <script type="text/javascript">
-        function openModal(elementId) {
-            var modal = document.getElementById(elementId);
-            modal.style.display = "flex";
-            document.currentOpenModal = modal;
-
-            document.addEventListener("keydown", closeOnEscape);
-            modal.addEventListener("click", closeOnOutsideClick);
-        }
-
-        function closeModal(elementId) {
-            var modal = document.getElementById(elementId);
-            modal.style.display = "none";
-            document.currentOpenModal = null;
-
-            document.removeEventListener("keydown", closeOnEscape);
-            modal.removeEventListener("click", closeOnOutsideClick);
-        }
-
-        function closeOnEscape(event) {
-            if (event.key === "Escape" && document.currentOpenModal) {
-                document.currentOpenModal.style.display = "none";
-                document.currentOpenModal = null;
-                document.removeEventListener("keydown", closeOnEscape);
-            }
-        }
-
-        function closeOnOutsideClick(event) {
-            if (event.target === document.currentOpenModal) {
-                document.currentOpenModal.style.display = "none";
-                document.currentOpenModal = null;
-                document.removeEventListener("click", closeOnOutsideClick);
-            }
-        }
-    </script>
-{% endblock %}
-
 {% set gene_set_collection = data.gene_set_collection %}
-
 <hr>
 <h2>Gene set ID: {{ data["id"] }}</h2>
 {% if data["format"] == "directory" %}
 <h3>Gene sets directory:</h3>
-<a href="{{ data["directory"] }}">
-{{ data["directory"] }}
-</a>
+<a href="{{ data["directory"] }}">{{ data["directory"] }}</a>
 {% else %}
 <h3>Gene sets file:</h3>
-<a href="{{ data["filename"] }}">
-{{ data["filename"] }}
-</a>
+<a href="{{ data["filename"] }}">{{ data["filename"] }}</a>
 {% endif %}
 <p>Format: {{ data["format"] }}</p>
-{% if data["web_label"] %}
-<p>Web label: {{ data["web_label"] }}</p>
-{% endif %}
+{% if data["web_label"] %}<p>Web label: {{ data["web_label"] }}</p>{% endif %}
 {% if data["web_format_str"] %}
 <p>Web label: {{ data["web_format_str"] }}</p>
 <p>Number of gene sets: {{ data["number_of_gene_sets"] }}</p>
@@ -355,39 +277,34 @@ GENE_SETS_TEMPLATE = """
 {% endif %}
 <div class="histogram">
     <img src="{{ gene_set_collection.get_genes_per_gene_set_hist_filename() }}"
-        width="200px"
+        style="width: 200px; cursor: pointer;"
         alt={{ data["id"] }}
         title="genes-per-gene-set"
-        style="cursor: pointer"
-        onclick="openModal(title)">
+        data-modal-trigger="genes-per-gene-set">
 </div>
 <div id="genes-per-gene-set" class="modal">
-    <div style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
-        <span title="genes-per-gene-set" class="close" onclick="closeModal(title)">&times;</span>
-        <img class="modal-content" id="histogram-{{data["id"]}}"
-            src="{{ gene_set_collection.get_genes_per_gene_set_hist_filename() }}"
-            alt="{{ "HISTOGRAM FOR " + data["id"] }}"
-            title="genes-per-gene-set"
-            width="200">
+    <div class="modal-content"
+        style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+        <span class="close">&times;</span>
+        <img src="{{ gene_set_collection.get_genes_per_gene_set_hist_filename() }}"
+            alt="genes per gene set histogram"
+            title="genes-per-gene-set">
     </div>
 </div>
-
 <div class="histogram">
     <img src="{{ gene_set_collection.get_gene_sets_per_gene_hist_filename() }}"
-        width="200px"
+        style="width: 200px; cursor: pointer;"
         alt={{ data["id"] }}
         title="gene-sets-per-gene"
-        style="cursor: pointer"
-        onclick="openModal(title)">
+        data-modal-trigger="gene-sets-per-gene">
 </div>
 <div id="gene-sets-per-gene" class="modal">
-    <div style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
-        <span title="gene-sets-per-gene" class="close" onclick="closeModal(title)">&times;</span>
-        <img class="modal-content" id="histogram-{{data["id"]}}"
-            src="{{ gene_set_collection.get_gene_sets_per_gene_hist_filename() }}"
-            alt="{{ "HISTOGRAM FOR " + data["id"] }}"
-            title="gene-sets-per-gene"
-            width="200">
+    <div class="modal-content"
+        style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+        <span class="close">&times;</span>
+        <img src="{{ gene_set_collection.get_gene_sets_per_gene_hist_filename() }}"
+            alt="genes per gene set histogram"
+            title="gene-sets-per-gene">
     </div>
 </div>
 {% endblock %}
