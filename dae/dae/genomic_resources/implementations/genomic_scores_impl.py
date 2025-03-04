@@ -91,61 +91,9 @@ class GenomicScoreImplementation(
         self, task_graph: TaskGraph, **kwargs: Any,
     ) -> list[Task]:
         region_size = kwargs.get("region_size", 1_000_000)
+        grr = kwargs.get("grr")
 
-        if region_size > 0:
-            return self._multitask_statistics(task_graph, **kwargs)
-
-        return [
-            task_graph.create_task(
-                f"{self.resource.resource_id}_calc_statistics",
-                GenomicScoreImplementation._singletask_statistics,
-                [self.resource],
-                [],
-            ),
-        ]
-
-    @staticmethod
-    def _singletask_statistics(
-        resource: GenomicResource,
-    ) -> dict[str, Histogram]:
-        impl = build_score_implementation_from_resource(resource)
-        all_min_max_scores, all_hist_confs = \
-            GenomicScoreImplementation._unpack_score_defs(resource)
-        with impl.score.open():
-            chroms = impl.score.get_all_chromosomes()
-
-        min_max = {}
-        if all_min_max_scores:
-            min_max_parts = [
-                GenomicScoreImplementation._do_min_max(
-                    resource, all_min_max_scores, chrom, None, None)
-                for chrom in chroms
-            ]
-            min_max = GenomicScoreImplementation._merge_min_max(
-                all_min_max_scores, *min_max_parts)
-
-        all_hist_confs = GenomicScoreImplementation._update_hist_confs(
-            all_hist_confs, min_max)
-
-        histograms = GenomicScoreImplementation._merge_histograms(
-            resource,
-            all_hist_confs,
-            *[
-                GenomicScoreImplementation._do_histogram(
-                    resource, all_hist_confs, chrom, None, None,
-                )
-                for chrom in chroms
-            ],
-        )
-        return GenomicScoreImplementation._save_histograms(resource, histograms)
-
-    def _multitask_statistics(
-        self, task_graph: TaskGraph, **kwargs: Any,
-    ) -> list[Task]:
         with self.score.open():
-            region_size = kwargs.get("region_size", 1_000_000)
-            grr = kwargs.get("grr")
-
             all_min_max_scores, all_hist_confs = \
                 self._unpack_score_defs(self.resource)
 

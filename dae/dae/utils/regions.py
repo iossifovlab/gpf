@@ -90,6 +90,10 @@ def split_into_regions(
         chrom: str, chrom_length: int,
         region_size: int, start: int = 1) -> list[Region]:
     """Return a list of regions for a chrom with a given length."""
+
+    if region_size == 0:
+        return [Region(chrom)]
+
     region_size = min(region_size, chrom_length)
     return [
         Region(chrom,

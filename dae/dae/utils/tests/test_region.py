@@ -122,7 +122,11 @@ def test_split_into_regions_with_start_pos() -> None:
         assert res == expected[i], f"{res} != {expected[i]}"
 
 
-@pytest.fixture()
+def test_split_into_regions_zero_region_length() -> None:
+    assert split_into_regions("1", 50, 0) == [Region("1")]
+
+
+@pytest.fixture
 def sample_tabix(tmp_path: pathlib.Path) -> pysam.TabixFile:
     filepath = tmp_path / "data.txt.gz"
     setup_tabix(
