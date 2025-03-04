@@ -205,7 +205,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
           }},
           ...geneScoresState.score && {geneScores: geneScoresState},
           ...presentInParent.presentInParent?.length && {presentInParent: presentInParent},
-          ...familyMeasureHistogramsState?.length && { familyMeasureHistograms: familyMeasureHistogramsState.map(s => ({
+          ...familyMeasureHistogramsState?.length && { familyFiltersBeta: familyMeasureHistogramsState.map(s => ({
             source: s.measure,
             isFamily: true,
             histogramType: s.histogramType,
@@ -213,7 +213,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
             max: s.rangeEnd,
             values: s.values,
           }))},
-          ...personMeasureHistogramsState?.length && { personMeasureHistograms: personMeasureHistogramsState.map(s => ({
+          ...personMeasureHistogramsState?.length && { personFiltersBeta: personMeasureHistogramsState.map(s => ({
             source: s.measure,
             isFamily: false,
             histogramType: s.histogramType,
