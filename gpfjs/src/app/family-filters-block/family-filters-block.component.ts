@@ -121,8 +121,10 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
           this.hasContent = true;
         });
       } else if (familyMeasureHistograms?.length) {
-        setTimeout(() => this.ngbNav.select('advancedBeta'));
-        this.hasContent = true;
+        setTimeout(() => {
+          this.ngbNav.select('advancedBeta');
+          this.hasContent = true;
+        });
       }
     });
   }

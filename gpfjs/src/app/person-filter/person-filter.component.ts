@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Store } from '@ngrx/store';
+import { resetErrors, setErrors } from 'app/common/errors.state';
 import { MeasureHistogram } from 'app/measures/measures';
 import { MeasureHistogramState } from 'app/person-filters-selector/measure-histogram.state';
 import { NumberHistogram, CategoricalHistogramView, CategoricalHistogram } from 'app/utils/histogram-types';
@@ -15,6 +16,7 @@ import { ReplaySubject } from 'rxjs';
 export class PersonFilterComponent implements OnInit {
   @Input() public selectedMeasure: MeasureHistogram;
   @Input() public initialState: MeasureHistogramState;
+  @Input() public isFamilyFilters: boolean;
   public localState: MeasureHistogramState;
   @Output() public updateState = new EventEmitter<MeasureHistogramState>();
   public errors: string[] = [];
@@ -106,53 +108,61 @@ export class PersonFilterComponent implements OnInit {
     return arg instanceof CategoricalHistogram;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private validateState(state: MeasureHistogramState): void {
-    // this.errors = [];
-    // if (!state.score) {
-    //   this.errors.push('Empty score names are invalid.');
-    // }
-    // if (this.isNumberHistogram(this.selectedGenomicScore.histogram)) {
-    //   if (state.rangeStart !== null) {
-    //     if (typeof state.rangeStart !== 'number') {
-    //       this.errors.push('Range start should be a number.');
-    //     }
-    //     if (state.rangeStart > state.rangeEnd) {
-    //       this.errors.push('Range start should be less than or equal to range end.');
-    //     }
-    //     if (state.rangeStart < this.selectedGenomicScore.histogram.rangeMin) {
-    //       this.errors.push('Range start should be more than or equal to domain min.');
-    //     }
-    //   }
-    //   if (state.rangeEnd !== null) {
-    //     if (typeof state.rangeEnd !== 'number') {
-    //       this.errors.push('Range end should be a number.');
-    //     }
-    //     if (state.rangeEnd < state.rangeStart) {
-    //       this.errors.push('Range end should be more than or equal to range start.');
-    //     }
-    //     if (state.rangeEnd > this.selectedGenomicScore.histogram.rangeMax) {
-    //       this.errors.push('Range end should be less than or equal to domain max.');
-    //     }
-    //   }
-    // }
-    // if (this.isCategoricalHistogram(this.selectedGenomicScore.histogram)) {
-    //   if (!state.values.length) {
-    //     this.errors.push('Please select at least one value.');
-    //   }
-    //   if (state.values.length > this.categoricalValueMax) {
-    //     this.errors.push(`Please select less than ${this.categoricalValueMax} values.`);
-    //   }
-    // }
 
-    // if (this.errors.length) {
-    //   this.store.dispatch(setErrors({
-    //     errors: {
-    //       componentId: `genomicScores: ${this.selectedGenomicScore.score}`, errors: cloneDeep(this.errors)
-    //     }
-    //   }));
-    // } else {
-    //   this.store.dispatch(resetErrors({componentId: `genomicScores: ${this.selectedGenomicScore.score}`}));
-    // }
+  private validateState(state: MeasureHistogramState): void {
+    this.errors = [];
+    if (!state) {
+      return;
+    }
+    if (!state.measure) {
+      this.errors.push('Empty pheno measures are invalid.');
+    }
+    if (this.isNumberHistogram(this.selectedMeasure.histogram)) {
+      if (state.rangeStart !== null) {
+        if (typeof state.rangeStart !== 'number') {
+          this.errors.push('Range start should be a number.');
+        }
+        if (state.rangeStart > state.rangeEnd) {
+          this.errors.push('Range start should be less than or equal to range end.');
+        }
+        if (state.rangeStart < this.selectedMeasure.histogram.rangeMin) {
+          this.errors.push('Range start should be more than or equal to domain min.');
+        }
+      }
+      if (state.rangeEnd !== null) {
+        if (typeof state.rangeEnd !== 'number') {
+          this.errors.push('Range end should be a number.');
+        }
+        if (state.rangeEnd < state.rangeStart) {
+          this.errors.push('Range end should be more than or equal to range start.');
+        }
+        if (state.rangeEnd > this.selectedMeasure.histogram.rangeMax) {
+          this.errors.push('Range end should be less than or equal to domain max.');
+        }
+      }
+    }
+    if (this.isCategoricalHistogram(this.selectedMeasure.histogram)) {
+      if (!state.values.length) {
+        this.errors.push('Please select at least one value.');
+      }
+      if (state.values.length > this.categoricalValueMax) {
+        this.errors.push(`Please select less than ${this.categoricalValueMax} values.`);
+      }
+    }
+
+    let component = 'personFilters';
+    if (this.isFamilyFilters) {
+      component = 'familyFilters';
+    }
+
+    if (this.errors.length) {
+      this.store.dispatch(setErrors({
+        errors: {
+          componentId: component + `: ${this.selectedMeasure.measure}`, errors: cloneDeep(this.errors)
+        }
+      }));
+    } else {
+      this.store.dispatch(resetErrors({componentId: component + `: ${this.selectedMeasure.measure}`}));
+    }
   }
 }

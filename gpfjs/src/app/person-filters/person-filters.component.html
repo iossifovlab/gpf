@@ -2,7 +2,9 @@
   <div class="row">
     <div *ngIf="categoricalFilters?.length !== 0" class="col-sm-3">
       <div *ngFor="let categoricalFilter of categoricalFilters" class="categorical-filter">
-        <gpf-categorical-filter [isFamilyFilters]="isFamilyFilters" [categoricalFilter]="categoricalFilter"> </gpf-categorical-filter>
+        <gpf-categorical-filter
+          [isFamilyFilters]="isFamilyFilters"
+          [categoricalFilter]="categoricalFilter"></gpf-categorical-filter>
       </div>
     </div>
     <div style="margin: auto" class="col-sm-9">
