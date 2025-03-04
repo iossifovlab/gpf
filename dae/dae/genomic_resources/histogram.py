@@ -718,8 +718,11 @@ class CategoricalHistogram(Statistic):
         plt.xlabel(f"\n{score_id}")
         plt.ylabel("count")
 
-        if self.config.label_rotation > 0:
-            label_angle = self.config.label_rotation % 360
+        label_angle = self.config.label_rotation % 360
+        if self.config.label_rotation < 0:
+            label_angle = 360 + label_angle
+
+        if label_angle != 0:
             label_anchor = "right" if 0 < label_angle < 180 else "left"
             ax.set_xticklabels(
                 [str(v) for v in values],
