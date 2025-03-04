@@ -812,13 +812,16 @@ class GenotypeDataGroup(GenotypeData):
         self, *,
         leaves: bool = True,
     ) -> list[str]:
-        result = {self.study_id}
-        if not leaves:
-            result = result.union([st.study_id for st in self.studies])
-            return list(result)
+        result = [self.study_id]
         for study in self.studies:
-            result = result.union(study.get_studies_ids())
-        return list(result)
+            result.append(study.study_id)
+            if leaves:
+                result.extend([
+                    child_id
+                    for child_id in study.get_studies_ids(leaves=True)
+                    if child_id not in result
+                ])
+        return result
 
     def rebuild_families(self) -> None:
         """Construct genotype group families data from child studies."""
