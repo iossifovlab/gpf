@@ -198,3 +198,12 @@ def test_disable_permissions_flag_allows_all(
                 *omni_dataset.get_studies_ids(leaves=False)}
     for data_id in data_ids:
         assert user_has_permission("t4c8_instance", na_user, data_id)
+
+
+def test_any_user_with_anonymous(omni_dataset: GenotypeData) -> None:
+    anonymous_user = cast(User, AnonymousUser())
+    assert not user_has_permission("t4c8_instance", anonymous_user,
+                                   omni_dataset.study_id)
+    add_group_perm_to_dataset("any_user", "omni_dataset")
+    assert user_has_permission("t4c8_instance", anonymous_user,
+                               omni_dataset.study_id)

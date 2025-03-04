@@ -40,6 +40,25 @@ def test_simple_query(
     assert len(res) == 12
 
 
+def test_simple_query_any_user_with_anonymous(
+    anonymous_client: Client,
+    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
+) -> None:
+    response = anonymous_client.post(
+        QUERY_VARIANTS_URL, json.dumps({"datasetId": "t4c8_study_1"}),
+        content_type=JSON_CONTENT_TYPE,
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    add_group_perm_to_dataset("any_user", "t4c8_study_1")
+
+    response = anonymous_client.post(
+        QUERY_VARIANTS_URL, json.dumps({"datasetId": "t4c8_study_1"}),
+        content_type=JSON_CONTENT_TYPE,
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+
 def test_simple_query_download_anonymous(
     anonymous_client: Client,
     download_sources: list[dict],

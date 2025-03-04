@@ -318,7 +318,7 @@ def user_has_permission(instance_id: str, user: User, dataset_id: str) -> bool:
     """Check if a user has permission to browse the given dataset."""
     if settings.DISABLE_PERMISSIONS:
         return True
-    if not user.is_active:
+    if not user.is_active and not user.is_anonymous:
         return False
     if user.is_superuser or user.is_staff:
         return True
