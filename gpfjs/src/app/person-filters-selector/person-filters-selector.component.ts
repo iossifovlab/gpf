@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { Store } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
@@ -17,30 +17,31 @@ import {
   setPersonMeasureHistogramsContinuous
 } from './measure-histogram.state';
 import { CategoricalHistogram, CategoricalHistogramView } from 'app/utils/histogram-types';
-import { resetErrors } from 'app/common/errors.state';
+import { resetErrors, setErrors } from 'app/common/errors.state';
 
 @Component({
   selector: 'gpf-person-filters-selector',
   templateUrl: './person-filters-selector.component.html',
   styleUrls: ['./person-filters-selector.component.css'],
 })
-export class PersonFiltersSelectorComponent implements OnInit {
+export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
   @Input() public dataset: Dataset;
   public selectedMeasureHistograms: {measureHistogram: MeasureHistogram, state: MeasureHistogramState}[] = [];
   @Input() public isFamilyFilters: boolean;
 
   public selectedDatasetId: string;
 
-  // @Equals(true, {message: 'Select at least one continuous filter.'})
+  public errors: string[] = [];
   public areFiltersSelected = false;
 
-  public constructor(protected store: Store, private measuresService: MeasuresService) {}
+  public constructor(protected store: Store, private measuresService: MeasuresService) { }
 
   public ngOnInit(): void {
     this.selectedDatasetId = this.dataset.id;
     if (this.isFamilyFilters) {
       this.store.select(selectFamilyMeasureHistograms).subscribe((state: MeasureHistogramState[]) => {
         this.areFiltersSelected = Boolean(state?.length);
+        this.validateState();
       });
 
       this.store.select(selectFamilyMeasureHistograms).pipe(take(1)).subscribe((state: MeasureHistogramState[]) => {
@@ -52,6 +53,7 @@ export class PersonFiltersSelectorComponent implements OnInit {
     } else {
       this.store.select(selectPersonMeasureHistograms).subscribe((state: MeasureHistogramState[]) => {
         this.areFiltersSelected = Boolean(state?.length);
+        this.validateState();
       });
 
       this.store.select(selectPersonMeasureHistograms).pipe(take(1)).subscribe((state: MeasureHistogramState[]) => {
@@ -61,6 +63,14 @@ export class PersonFiltersSelectorComponent implements OnInit {
         }
       });
     }
+  }
+
+  public ngOnDestroy(): void {
+    let componentId = 'personFilters';
+    if (this.isFamilyFilters) {
+      componentId = 'familyFilters';
+    }
+    this.store.dispatch(resetErrors({componentId: `${componentId}`}));
   }
 
   public addMeasure(measure: Measure): void {
@@ -90,6 +100,7 @@ export class PersonFiltersSelectorComponent implements OnInit {
           }
         });
     }
+    this.validateState();
   }
 
   private dispatchContinuousHistogram(histogram: { measure: string; rangeStart: number; rangeEnd: number; }): void {
@@ -155,6 +166,7 @@ export class PersonFiltersSelectorComponent implements OnInit {
     } else {
       this.savePersonFilterToState(state);
     }
+    this.validateState();
   }
 
   private saveFamilyFilterToState(state: MeasureHistogramState): void {
@@ -199,6 +211,29 @@ export class PersonFiltersSelectorComponent implements OnInit {
     } else {
       this.store.dispatch(removePersonMeasureHistogram({personMeasureHistogramName: measure}));
       this.store.dispatch(resetErrors({componentId: `personFilters: ${measure}`}));
+    }
+    this.validateState();
+  }
+
+  private validateState(): void {
+    this.errors = [];
+    if (!this.areFiltersSelected) {
+      this.errors.push('Select a measure.');
+    }
+
+    let componentId = 'personFilters';
+    if (this.isFamilyFilters) {
+      componentId = 'familyFilters';
+    }
+
+    if (this.errors.length) {
+      this.store.dispatch(setErrors({
+        errors: {
+          componentId: `${componentId}`, errors: cloneDeep(this.errors)
+        }
+      }));
+    } else {
+      this.store.dispatch(resetErrors({componentId: `${componentId}`}));
     }
   }
 }

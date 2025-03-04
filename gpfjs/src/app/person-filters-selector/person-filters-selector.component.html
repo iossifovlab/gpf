@@ -11,7 +11,8 @@
     <gpf-person-filter
       [selectedMeasure]="histogram.measureHistogram"
       [initialState]="histogram.state"
-      (updateState)="addToState($event)"></gpf-person-filter>
+      (updateState)="addToState($event)"
+      [isFamilyFilters]="isFamilyFilters"></gpf-person-filter>
 
     <div>
       <gpf-remove-button
@@ -20,5 +21,7 @@
         (removeFilter)="removeFromState($event)"></gpf-remove-button>
     </div>
   </div>
-  <!-- <gpf-errors-alert [errors]="errors"></gpf-errors-alert> -->
+  <div style="margin: 10px 55px">
+    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+  </div>
 </div>
