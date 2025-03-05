@@ -30,7 +30,8 @@ class EnrichmentModelsView(QueryBaseView):
         enrichment_config = self.enrichment_helper.get_enrichment_config(study)
         if enrichment_config is None:
             return []
-        selected_models = enrichment_config["selected_counting_models"]
+        selected_models = self.enrichment_helper.get_selected_counting_models(
+            study)
         return [
             {"id": counting_model.id,
              "name": counting_model.name,
