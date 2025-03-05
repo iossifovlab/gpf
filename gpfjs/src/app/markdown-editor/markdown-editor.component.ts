@@ -1,7 +1,6 @@
 import { Component, EventEmitter, HostListener, Input, OnChanges, OnInit, Output } from '@angular/core';
 import { EditorOption } from 'angular-markdown-editor';
 import { UsersService } from 'app/users/users.service';
-import DOMPurify from 'dompurify';
 import { MarkdownService } from 'ngx-markdown';
 
 @Component({
@@ -27,8 +26,7 @@ export class MarkdownEditorComponent implements OnInit, OnChanges {
     resize: 'both',
     fullscreen: {enable: false, icons: undefined},
     parser: (val: string) => {
-      const sanitizedText = DOMPurify.sanitize(val.trim()) as string;
-      return this.markdownService.parse(sanitizedText);
+      return this.markdownService.parse(val.trim()) as string;
     }
   };
 
