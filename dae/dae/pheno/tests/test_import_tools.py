@@ -86,7 +86,7 @@ def test_pheno_import_tool(
         task_ids=None,
         keep_going=False,
         force=False,
-        task_status_dir=".",
+        task_status_dir="./.task-progress",
         no_cache=False,
     )
 

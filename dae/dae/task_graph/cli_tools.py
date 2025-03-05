@@ -28,7 +28,7 @@ class TaskGraphCli:
     def add_arguments(
         parser: argparse.ArgumentParser,
         force_mode: str = "optional",
-        default_task_status_dir: str | None = ".",
+        default_task_status_dir: str | None = "./.task-progress",
         *,
         use_commands: bool = True,
         never_cache: bool = False,
