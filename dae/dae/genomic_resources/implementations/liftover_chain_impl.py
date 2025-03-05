@@ -104,6 +104,6 @@ class LiftoverChainImplementation(
         return b"placeholder"
 
     def add_statistics_build_tasks(
-            self, task_graph: TaskGraph,
-            **kwargs: str | None) -> list[Task]:
+        self, task_graph: TaskGraph, **kwargs: Any,  # noqa: ARG002
+    ) -> list[Task]:
         return []

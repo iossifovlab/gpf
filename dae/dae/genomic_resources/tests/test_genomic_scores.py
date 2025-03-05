@@ -36,6 +36,7 @@ from dae.genomic_resources.testing import (
     setup_tabix,
     setup_vcf,
 )
+from dae.task_graph.graph import TaskGraph
 
 
 @pytest.fixture
@@ -653,3 +654,52 @@ def test_build_genomic_score_from_resource_id() -> None:
     assert score is not None
     assert list(score._fetch_region_values("1", 10, None, ["s1"])) == [
         (10, 10, [0.02])]
+
+
+def test_statistics_build_tasks(tmp_path: pathlib.Path) -> None:
+    setup_directories(
+        tmp_path, {
+            "genomic_resource.yaml": """
+                type: position_score
+                table:
+                  filename: data.txt.gz
+                  format: tabix
+                scores:
+                - id: dummy
+                  name: dummy
+                  type: float
+            """,
+        })
+    setup_tabix(
+        tmp_path / "data.txt.gz",
+        """
+        #chrom  pos_begin  pos_end  dummy
+        chr1     1         20       3.14
+        chr1    21         40       3.15
+        chr1    41         60       3.16
+        chr2    10         20       4.14
+        chr3    10         20       5.14
+        """, seq_col=0, start_col=1, end_col=2)
+    res = build_filesystem_test_resource(tmp_path)
+    impl = build_score_implementation_from_resource(res)
+
+    task_graph = TaskGraph()
+    tasks = impl.add_statistics_build_tasks(task_graph)
+    save_task = tasks[0]
+    merge_task = save_task.deps[0]
+    calc_tasks = merge_task.deps
+    assert len(calc_tasks) == 3 + 1  # 3 hist region tasks, 1 for hist conf
+
+    task_graph = TaskGraph()
+    tasks = impl.add_statistics_build_tasks(task_graph, region_size=20)
+    save_task = tasks[0]
+    merge_task = save_task.deps[0]
+    calc_tasks = merge_task.deps
+    assert len(calc_tasks) == 9 + 1  # 9 hist region tasks, 1 for hist conf
+
+    task_graph = TaskGraph()
+    tasks = impl.add_statistics_build_tasks(task_graph, region_size=0)
+    save_task = tasks[0]
+    merge_task = save_task.deps[0]
+    calc_tasks = merge_task.deps
+    assert len(calc_tasks) == 1 + 1  # 1 hist region tasks, 1 for hist conf

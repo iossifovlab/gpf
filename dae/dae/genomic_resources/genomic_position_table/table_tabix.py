@@ -240,11 +240,16 @@ class TabixGenomicPositionTable(GenomicPositionTable):
         yield from self._gen_from_tabix(chrom, end, buffering=True)
 
     def get_records_in_region(
-        self, chrom: str,
+        self,
+        chrom: str | None = None,
         pos_begin: int | None = None,
         pos_end: int | None = None,
     ) -> Generator[LineBase, None, None]:
         self.stats["calls"] += 1
+
+        if chrom is None:
+            yield from self.get_all_records()
+            return
 
         if chrom not in self.get_chromosomes():
             logger.error(

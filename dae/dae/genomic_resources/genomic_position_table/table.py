@@ -180,7 +180,8 @@ class GenomicPositionTable(abc.ABC):
 
     @abc.abstractmethod
     def get_records_in_region(
-        self, chrom: str,
+        self,
+        chrom: str | None = None,
         pos_begin: int | None = None,
         pos_end: int | None = None,
     ) -> Generator[LineBase, None, None]:

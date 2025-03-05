@@ -55,7 +55,7 @@ class BigWigTable(GenomicPositionTable):
         ``start`` until either results are found or ``stop`` is reached.
         """
         assert self._bw_file is not None
-        self._buffer = ()
+        self._buffer = []
         self._buffer_region = Region("?", -1, -1)
 
         chromlen = self.chroms[chrom]
@@ -172,10 +172,15 @@ class BigWigTable(GenomicPositionTable):
 
     def get_records_in_region(
         self,
-        chrom: str,
+        chrom: str | None = None,
         pos_begin: int | None = None,
         pos_end: int | None = None,
     ) -> Generator[BigWigLine, None, None]:
+
+        if chrom is None:
+            yield from self.get_all_records()
+            return
+
         fchrom = self._map_file_chrom(chrom)
         if fchrom not in self.chroms:
             raise KeyError
@@ -201,7 +206,8 @@ class BigWigTable(GenomicPositionTable):
             yield from self.get_records_in_region(chrom)
 
     def get_chromosome_length(
-        self, chrom: str, _step: int = 100_000_000,
+        self, chrom: str,
+        step: int = 100_000_000,  # noqa: ARG002
     ) -> int:
         assert self._bw_file is not None
         if chrom not in self.get_chromosomes():

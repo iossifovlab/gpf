@@ -91,61 +91,9 @@ class GenomicScoreImplementation(
         self, task_graph: TaskGraph, **kwargs: Any,
     ) -> list[Task]:
         region_size = kwargs.get("region_size", 1_000_000)
+        grr = kwargs.get("grr")
 
-        if region_size > 0:
-            return self._multitask_statistics(task_graph, **kwargs)
-
-        return [
-            task_graph.create_task(
-                f"{self.resource.resource_id}_calc_statistics",
-                GenomicScoreImplementation._singletask_statistics,
-                [self.resource],
-                [],
-            ),
-        ]
-
-    @staticmethod
-    def _singletask_statistics(
-        resource: GenomicResource,
-    ) -> dict[str, Histogram]:
-        impl = build_score_implementation_from_resource(resource)
-        all_min_max_scores, all_hist_confs = \
-            GenomicScoreImplementation._unpack_score_defs(resource)
-        with impl.score.open():
-            chroms = impl.score.get_all_chromosomes()
-
-        min_max = {}
-        if all_min_max_scores:
-            min_max_parts = [
-                GenomicScoreImplementation._do_min_max(
-                    resource, all_min_max_scores, chrom, None, None)
-                for chrom in chroms
-            ]
-            min_max = GenomicScoreImplementation._merge_min_max(
-                all_min_max_scores, *min_max_parts)
-
-        all_hist_confs = GenomicScoreImplementation._update_hist_confs(
-            all_hist_confs, min_max)
-
-        histograms = GenomicScoreImplementation._merge_histograms(
-            resource,
-            all_hist_confs,
-            *[
-                GenomicScoreImplementation._do_histogram(
-                    resource, all_hist_confs, chrom, None, None,
-                )
-                for chrom in chroms
-            ],
-        )
-        return GenomicScoreImplementation._save_histograms(resource, histograms)
-
-    def _multitask_statistics(
-        self, task_graph: TaskGraph, **kwargs: Any,
-    ) -> list[Task]:
         with self.score.open():
-            region_size = kwargs.get("region_size", 1_000_000)
-            grr = kwargs.get("grr")
-
             all_min_max_scores, all_hist_confs = \
                 self._unpack_score_defs(self.resource)
 
@@ -229,6 +177,12 @@ class GenomicScoreImplementation(
     def _get_chrom_regions(
         self, region_size: int, grr: GenomicResourceRepo | None = None,
     ) -> list[Region]:
+
+        if region_size == 0:
+            # Forcefully setting the chromosome to None is a bit hacky,
+            # but is more elegant than properly supporting it in Region.
+            return [Region(None, None, None)]  # type: ignore
+
         regions = []
         ref_genome_id = cast(
             str,
@@ -302,7 +256,7 @@ class GenomicScoreImplementation(
             f"{self.resource.get_full_id()}_merge_min_max",
             GenomicScoreImplementation._merge_min_max,
             [score_ids, *min_max_tasks],
-            min_max_tasks,
+            [],
         )
         return min_max_tasks, merge_task
 
@@ -316,7 +270,7 @@ class GenomicScoreImplementation(
     def _do_min_max(
         resource: GenomicResource,
         score_ids: list[str],
-        chrom: str,
+        chrom: str | None,
         start: int | None,
         end: int | None,
     ) -> dict[str, MinMaxValue]:
@@ -386,12 +340,11 @@ class GenomicScoreImplementation(
         The histogram tasks are dependant on the provided minmax task.
         """
         regions = self._get_chrom_regions(region_size, grr)
-        update_hist_confs_deps = [] if minmax_task is None else [minmax_task]
         update_hist_confs = graph.create_task(
             f"{self.resource.get_full_id()}_update_hist_confs",
             GenomicScoreImplementation._update_hist_confs,
             [all_hist_confs, minmax_task],
-            update_hist_confs_deps,
+            [],
         )
 
         histogram_tasks = []
@@ -404,19 +357,19 @@ class GenomicScoreImplementation(
                 f"{chrom}_{start}_{end}",
                 GenomicScoreImplementation._do_histogram,
                 [self.resource, update_hist_confs, chrom, start, end],
-                [update_hist_confs],
+                [],
             ))
         merge_task = graph.create_task(
             f"{self.resource.get_full_id()}_merge_histograms",
             GenomicScoreImplementation._merge_histograms,
             [self.resource, update_hist_confs, *histogram_tasks],
-            histogram_tasks,
+            [],
         )
         save_task = graph.create_task(
             f"{self.resource.get_full_id()}_save_histograms",
             GenomicScoreImplementation._save_histograms,
             [self.resource, merge_task],
-            [merge_task],
+            [],
         )
         return histogram_tasks, merge_task, save_task
 
@@ -434,7 +387,7 @@ class GenomicScoreImplementation(
     def _do_histogram(
         resource: GenomicResource,
         all_hist_confs: dict[str, HistogramConfig],
-        chrom: str,
+        chrom: str | None,
         start: int | None,
         end: int | None,
     ) -> dict[str, Histogram]:
@@ -584,8 +537,7 @@ class CnvCollectionImplementation(GenomicScoreImplementation):
     # pylint: disable=useless-parent-delegation
 
     def add_statistics_build_tasks(
-        self, task_graph: TaskGraph,
-        **kwargs: str,
+        self, task_graph: TaskGraph, **kwargs: Any,
     ) -> list[Task]:
         return super().add_statistics_build_tasks(task_graph, **kwargs)
 

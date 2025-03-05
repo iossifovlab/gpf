@@ -152,6 +152,12 @@ def test_get_records_in_region_missing_chrom(bigwig_table: BigWigTable) -> None:
         list(bigwig_table.get_records_in_region("chrX"))
 
 
+def test_get_records_in_region_without_chrom(bigwig_table: BigWigTable) -> None:
+    with bigwig_table:
+        vs = list(bigwig_table.get_records_in_region())
+        assert len(vs) == 9
+
+
 def test_build_genomic_position_table_bigwig(
     test_grr: GenomicResourceRepo,
 ) -> None:
@@ -567,19 +573,19 @@ def test_bigwig_buffering_switching(
     mocker.spy(BigWigTable, "_fetch_buffered")
 
     with BigWigTable(res, table_definition) as bigwig_table:
-        assert BigWigTable._fetch_direct.call_count   == 0  # type: ignore
+        assert BigWigTable._fetch_direct.call_count == 0  # type: ignore
         assert BigWigTable._fetch_buffered.call_count == 0  # type: ignore
 
         list(bigwig_table.get_records_in_region("chr1", 0, 200))
-        assert BigWigTable._fetch_direct.call_count   == 1  # type: ignore
+        assert BigWigTable._fetch_direct.call_count == 1  # type: ignore
         assert BigWigTable._fetch_buffered.call_count == 0  # type: ignore
 
         list(bigwig_table.get_records_in_region("chr1", 200, 500))
-        assert BigWigTable._fetch_direct.call_count   == 1  # type: ignore
+        assert BigWigTable._fetch_direct.call_count == 1  # type: ignore
         assert BigWigTable._fetch_buffered.call_count == 1  # type: ignore
 
         list(bigwig_table.get_records_in_region("chr1", 1000, 1000))
-        assert BigWigTable._fetch_direct.call_count   == 2  # type: ignore
+        assert BigWigTable._fetch_direct.call_count == 2  # type: ignore
         assert BigWigTable._fetch_buffered.call_count == 1  # type: ignore
 
 

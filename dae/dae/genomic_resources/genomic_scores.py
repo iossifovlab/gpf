@@ -638,8 +638,10 @@ class GenomicScore(ResourceConfigValidationMixin):
         return self.table.header
 
     def _fetch_lines(
-        self, chrom: str,
-        pos_begin: int | None, pos_end: int | None,
+        self,
+        chrom: str | None,
+        pos_begin: int | None,
+        pos_end: int | None,
     ) -> Iterator[ScoreLine]:
         for line in self.table.get_records_in_region(
             chrom, pos_begin, pos_end,
@@ -656,8 +658,10 @@ class GenomicScore(ResourceConfigValidationMixin):
         return list(self.score_definitions)
 
     def _fetch_region_lines(
-        self, chrom: str,
-        pos_begin: int | None, pos_end: int | None,
+        self,
+        chrom: str | None,
+        pos_begin: int | None,
+        pos_end: int | None,
         scores: list[str] | None = None,
     ) -> Generator[
             tuple[int, int, list[ScoreValue] | None, ScoreLine], None, None]:
@@ -665,7 +669,7 @@ class GenomicScore(ResourceConfigValidationMixin):
         if not self.is_open():
             raise ValueError(f"genomic score <{self.resource_id}> is not open")
 
-        if chrom not in self.get_all_chromosomes():
+        if chrom is not None and chrom not in self.get_all_chromosomes():
             raise ValueError(
                 f"{chrom} is not among the available chromosomes.")
 
@@ -689,12 +693,14 @@ class GenomicScore(ResourceConfigValidationMixin):
 
     @abc.abstractmethod
     def _fetch_region_values(
-        self, chrom: str,
-        pos_begin: int | None, pos_end: int | None,
+        self,
+        chrom: str | None,
+        pos_begin: int | None,
+        pos_end: int | None,
         scores: list[str] | None = None,
     ) -> Generator[
             tuple[int, int, list[ScoreValue] | None], None, None]:
-        """Return score values in a region.
+        """Return score values - either all available or in a specific region.
 
         This method is used for calculation of score statistics.
         """
@@ -755,8 +761,10 @@ class PositionScore(GenomicScore):
         return cast(PositionScore, super().open())
 
     def _fetch_region_values(
-        self, chrom: str,
-        pos_begin: int | None, pos_end: int | None,
+        self,
+        chrom: str | None,
+        pos_begin: int | None,
+        pos_end: int | None,
         scores: list[str] | None = None,
     ) -> Generator[
             tuple[int, int, list[ScoreValue] | None], None, None]:
@@ -994,8 +1002,10 @@ class AlleleScore(GenomicScore):
         return cast(AlleleScore, super().open())
 
     def _fetch_region_values(
-        self, chrom: str,
-        pos_begin: int | None, pos_end: int | None,
+        self,
+        chrom: str | None,
+        pos_begin: int | None,
+        pos_end: int | None,
         scores: list[str] | None = None,
     ) -> Generator[
             tuple[int, int, list[ScoreValue] | None], None, None]:
@@ -1005,8 +1015,10 @@ class AlleleScore(GenomicScore):
             yield pos, pos, values
 
     def fetch_region(
-        self, chrom: str,
-        pos_begin: int | None, pos_end: int | None,
+        self,
+        chrom: str | None,
+        pos_begin: int | None,
+        pos_end: int | None,
         scores: list[str] | None = None,
     ) -> Generator[
             tuple[int, str | None, str | None, list[ScoreValue] | None],
@@ -1187,8 +1199,10 @@ class CnvCollection(GenomicScore):
         return cast(CnvCollection, super().open())
 
     def _fetch_region_values(
-        self, chrom: str,
-        pos_begin: int | None, pos_end: int | None,
+        self,
+        chrom: str | None,
+        pos_begin: int | None,
+        pos_end: int | None,
         scores: list[str] | None = None,
     ) -> Generator[
             tuple[int, int, list[ScoreValue] | None], None, None]:
