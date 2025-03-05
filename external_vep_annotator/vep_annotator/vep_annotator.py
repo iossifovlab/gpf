@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import csv
+import logging
 import os
 import subprocess
 from pathlib import Path
@@ -21,6 +22,8 @@ from dae.genomic_resources.gene_models import (
     gene_models_to_gtf,
 )
 from vep_annotator.vep_attributes import effect_attributes, full_attributes
+
+logger = logging.getLogger(__name__)
 
 # ruff: noqa: S607
 
@@ -202,6 +205,12 @@ class VEPAnnotatorBase(DockerAnnotator):
         )
 
         header = next(reader)[1:]
+        unsupported_cols = {col for col in header if col not in contexts[0]}
+        if len(unsupported_cols) > 0:
+            logger.warning(
+                "VEP annotator detected new unsupported columns: %s",
+                unsupported_cols,
+            )
         columns_map = dict(enumerate(header))
 
         for row in reader:
@@ -210,6 +219,8 @@ class VEPAnnotatorBase(DockerAnnotator):
 
             for idx, col in enumerate(row[1:]):
                 col_name = columns_map[idx]
+                if col_name not in context[col_name]:
+                    continue
                 context[col_name].append(col)
 
         for context in contexts:
