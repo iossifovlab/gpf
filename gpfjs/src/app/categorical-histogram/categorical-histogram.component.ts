@@ -238,7 +238,17 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       .attr('transform', `rotate(${this.labelRotation})`);
 
     this.values.forEach(value => {
-      svg.selectAll('text').filter(t => t === value.name).append('title').text(value.name);
+      svg.selectAll('text').filter(t => t === value.name).each(function(d: string) {
+        const maxLabelLen = 20;
+        if (d.length > maxLabelLen) {
+          d = d.slice(0, maxLabelLen).concat('...');
+        }
+        // eslint-disable-next-line no-invalid-this
+        d3.select(this).text(d);
+
+        // eslint-disable-next-line no-invalid-this
+        d3.select(this).append('title').text(value.name); // add hover text on each label
+      });
     });
   }
 
