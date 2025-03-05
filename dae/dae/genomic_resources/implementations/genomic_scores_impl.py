@@ -177,6 +177,12 @@ class GenomicScoreImplementation(
     def _get_chrom_regions(
         self, region_size: int, grr: GenomicResourceRepo | None = None,
     ) -> list[Region]:
+
+        if region_size == 0:
+            # Forcefully setting the chromosome to None is a bit hacky,
+            # but is more elegant than properly supporting it in Region.
+            return [Region(None, None, None)]  # type: ignore
+
         regions = []
         ref_genome_id = cast(
             str,
@@ -264,7 +270,7 @@ class GenomicScoreImplementation(
     def _do_min_max(
         resource: GenomicResource,
         score_ids: list[str],
-        chrom: str,
+        chrom: str | None,
         start: int | None,
         end: int | None,
     ) -> dict[str, MinMaxValue]:
@@ -381,7 +387,7 @@ class GenomicScoreImplementation(
     def _do_histogram(
         resource: GenomicResource,
         all_hist_confs: dict[str, HistogramConfig],
-        chrom: str,
+        chrom: str | None,
         start: int | None,
         end: int | None,
     ) -> dict[str, Histogram]:
