@@ -4,7 +4,7 @@
       <span>Empty description. Write a description using the pencil button to the right.</span>
     </div>
     <div id="edit-description">
-      <div markdown [data]="initialMarkdown || ''"></div>
+      <markdown id="main-description" [data]="initialMarkdown || ''"></markdown>
       <div *ngIf="!editMode && editable" id="edit-wrapper">
         <div style="position: relative">
           <span
