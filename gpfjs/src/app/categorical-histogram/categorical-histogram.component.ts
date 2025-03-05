@@ -110,7 +110,13 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
   // Sort and combine other values
   private formatValues(): void {
     this.values.sort((a, b) => {
-      return this.histogram.valueOrder.indexOf(a.name) - this.histogram.valueOrder.indexOf(b.name);
+      if (this.histogram.valueOrder?.length) {
+        return this.histogram.valueOrder.indexOf(a.name) - this.histogram.valueOrder.indexOf(b.name);
+      }
+      if (a.value < b.value) {
+        return 1;
+      }
+      return -1;
     });
 
     if (this.barCount < this.values.length) {
@@ -124,17 +130,19 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
 
   // Sort and combine other values
   private formatSelectedValueNames(): void {
-    this.selectedValueNames.sort((a, b) => {
-      return this.histogram.valueOrder.indexOf(a) - this.histogram.valueOrder.indexOf(b);
-    });
     if (this.otherValueNames.length) {
       const visibleValues = [...new Set(this.selectedValueNames).difference(new Set(this.otherValueNames))];
 
+      // If all other values have been selected
       if (this.selectedValueNames.length - visibleValues.length === this.otherValueNames.length) {
         visibleValues.push('Other values');
       }
       this.selectedValueNames = visibleValues;
     }
+
+    this.selectedValueNames.sort((a, b) => {
+      return this.values.findIndex(v1 => v1.name === a) - this.values.findIndex(v2 => v2.name === b);
+    });
   }
 
   public singleScoreValueIsValid(): boolean {
