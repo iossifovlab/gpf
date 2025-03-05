@@ -104,9 +104,25 @@ class VEPAnnotatorBase(DockerAnnotator):
             info.attributes = AnnotationConfigParser.parse_raw_attributes(
                 attributes)
 
+        vep_version: str | None = info.parameters.get("vep_version", None)
+        if vep_version is not None and not vep_version.find("."):
+            vep_version = f"{vep_version}.0"
+
+        self._vep_version = vep_version
+
         super().__init__(
             pipeline, info,
         )
+
+    def _init_images(self) -> None:
+        if self._vep_version is not None:
+            self.client.images.pull(
+                f"ensemblorg/ensembl-vep:release_{self._vep_version}",
+            )
+        else:
+            self.client.images.pull(
+                "ensemblorg/ensembl-vep:release_latest",
+            )
 
     def _do_annotate(
         self, annotatable: Annotatable | None,
