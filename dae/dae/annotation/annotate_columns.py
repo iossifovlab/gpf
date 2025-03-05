@@ -146,7 +146,11 @@ def combine(
         for partfile_path in partfile_paths:
             with gzip.open(partfile_path, "rt") as partfile:
                 partfile.readline()  # skip header
-                out_file.write(partfile.read())
+                content = partfile.read().strip()
+                if content == "":
+                    continue
+                out_file.write(content)
+                out_file.write("\n")
     for partfile_path in partfile_paths:
         os.remove(partfile_path)
     produce_tabix_index(out_file_path, args, hcs, genome)
