@@ -512,13 +512,13 @@ class ReferenceGenomeImplementation(
             f"{self.resource.resource_id}_merge_chrom_statistics_{chrom}",
             ReferenceGenomeImplementation._merge_chrom_statistics,
             [*chrom_tasks],
-            chrom_tasks,
+            [],
         )
         save_task = task_graph.create_task(
             f"{self.resource.resource_id}_save_chrom_statistics_{chrom}",
             ReferenceGenomeImplementation._save_chrom_statistic,
             [self.resource, chrom, merge_task],
-            [merge_task],
+            [],
         )
 
         return chrom_tasks, merge_task, save_task
@@ -530,7 +530,7 @@ class ReferenceGenomeImplementation(
             f"{self.resource.resource_id}_save_chrom_statistics",
             ReferenceGenomeImplementation._do_global_statistic,
             [self.resource, *chrom_stats_save_tasks],
-            chrom_stats_save_tasks,
+            [],
         )
 
     @staticmethod

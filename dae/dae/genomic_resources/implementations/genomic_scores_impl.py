@@ -250,7 +250,7 @@ class GenomicScoreImplementation(
             f"{self.resource.get_full_id()}_merge_min_max",
             GenomicScoreImplementation._merge_min_max,
             [score_ids, *min_max_tasks],
-            min_max_tasks,
+            [],
         )
         return min_max_tasks, merge_task
 
@@ -334,12 +334,11 @@ class GenomicScoreImplementation(
         The histogram tasks are dependant on the provided minmax task.
         """
         regions = self._get_chrom_regions(region_size, grr)
-        update_hist_confs_deps = [] if minmax_task is None else [minmax_task]
         update_hist_confs = graph.create_task(
             f"{self.resource.get_full_id()}_update_hist_confs",
             GenomicScoreImplementation._update_hist_confs,
             [all_hist_confs, minmax_task],
-            update_hist_confs_deps,
+            [],
         )
 
         histogram_tasks = []
@@ -352,19 +351,19 @@ class GenomicScoreImplementation(
                 f"{chrom}_{start}_{end}",
                 GenomicScoreImplementation._do_histogram,
                 [self.resource, update_hist_confs, chrom, start, end],
-                [update_hist_confs],
+                [],
             ))
         merge_task = graph.create_task(
             f"{self.resource.get_full_id()}_merge_histograms",
             GenomicScoreImplementation._merge_histograms,
             [self.resource, update_hist_confs, *histogram_tasks],
-            histogram_tasks,
+            [],
         )
         save_task = graph.create_task(
             f"{self.resource.get_full_id()}_save_histograms",
             GenomicScoreImplementation._save_histograms,
             [self.resource, merge_task],
-            [merge_task],
+            [],
         )
         return histogram_tasks, merge_task, save_task
 
