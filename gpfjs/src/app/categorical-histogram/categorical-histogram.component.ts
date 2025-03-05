@@ -227,9 +227,14 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       ).style('font-size', '12px');
 
     this.labelRotation %= 360;
-    this.labelRotation = 360 - this.labelRotation; // Backend framework rotates labels in reverse
+    if (this.labelRotation !== 0) {
+      this.labelRotation = 360 - this.labelRotation; // Backend framework rotates labels in reverse
+    }
     let anchorRotation = 'end';
-    if (this.labelRotation > 0 && this.labelRotation < 180) {
+
+    if (this.labelRotation === 0 || this.labelRotation === 180) {
+      anchorRotation = 'center';
+    } else if (this.labelRotation > 0 && this.labelRotation < 180) {
       anchorRotation = 'start';
     }
     svg.selectAll('text')
