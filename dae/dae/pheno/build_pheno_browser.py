@@ -16,6 +16,7 @@ from dae.pheno.prepare_data import PreparePhenoBrowserBase
 from dae.pheno.registry import PhenoRegistry
 from dae.pheno.storage import PhenotypeStorage, PhenotypeStorageRegistry
 from dae.task_graph.cli_tools import TaskGraphCli
+from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         description="phenotype browser generation tool",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+    VerbosityConfiguration.set_arguments(parser)
     parser.add_argument(
         "phenotype_data_id",
         help="ID of the phenotype data to build a browser database for.",
@@ -111,6 +113,8 @@ def main(argv: list[str] | None = None) -> int:
 
     parser = pheno_cli_parser()
     args = parser.parse_args(argv)
+    VerbosityConfiguration.set(args)
+
     if args.phenotype_data_id is None:
         raise ValueError("Missing phenotype data ID argument.")
 
