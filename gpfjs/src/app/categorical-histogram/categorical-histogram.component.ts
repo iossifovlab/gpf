@@ -234,8 +234,9 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     }
     svg.selectAll('text')
       .style('text-anchor', anchorRotation)
-      .attr('transform', `rotate(${this.labelRotation}) translate(-8, -15)`);
-    // add hover text on each label
+      .attr('transform-origin', '0 9%')
+      .attr('transform', `rotate(${this.labelRotation})`);
+
     this.values.forEach(value => {
       svg.selectAll('text').filter(t => t === value.name).append('title').text(value.name);
     });
