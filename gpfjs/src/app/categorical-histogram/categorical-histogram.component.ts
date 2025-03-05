@@ -226,21 +226,22 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
         d3.axisBottom(this.scaleXAxis)
       ).style('font-size', '12px');
 
-    this.labelRotation %= 360;
-    if (this.labelRotation !== 0) {
-      this.labelRotation = 360 - this.labelRotation; // Backend framework rotates labels in reverse
+    let calculatedRotation = this.labelRotation;
+    calculatedRotation %= 360;
+    if (calculatedRotation !== 0) {
+      calculatedRotation = 360 - this.labelRotation; // Backend framework rotates labels in reverse
     }
     let anchorRotation = 'end';
 
-    if (this.labelRotation === 0 || this.labelRotation === 180) {
+    if (calculatedRotation === 0 || calculatedRotation === 180) {
       anchorRotation = 'center';
-    } else if (this.labelRotation > 0 && this.labelRotation < 180) {
+    } else if (calculatedRotation > 0 && calculatedRotation < 180) {
       anchorRotation = 'start';
     }
     svg.selectAll('text')
       .style('text-anchor', anchorRotation)
       .attr('transform-origin', '0 9%')
-      .attr('transform', `rotate(${this.labelRotation})`);
+      .attr('transform', `rotate(${calculatedRotation})`);
 
     this.values.forEach(value => {
       svg.selectAll('text').filter(t => t === value.name).each(function(d: string) {
