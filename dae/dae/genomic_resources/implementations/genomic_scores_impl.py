@@ -633,61 +633,10 @@ def build_score_implementation_from_resource(
 GENOMIC_SCORES_TEMPLATE = """
 {% extends base %}
 {% block content %}
-
-<style>
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1;
-        padding-top: 100px;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.5);
-        justify-content: center;
-    }
-
-    .modal-content {
-        margin: auto;
-        display: block;
-        width: 80%;
-        max-width: 700px;
-    }
-
-    .close {
-        float: right;
-        font-size: 40px;
-        font-weight: bold;
-    }
-
-    .close:hover,
-    .close:focus {
-         color: #bbb;
-         text-decoration: none;
-         cursor: pointer;
-    }
-</style>
-
-{% block javascript %}
-    <script type="text/javascript">
-        function openModal(scoreId) {
-            var modal = document.getElementById("modal-" + scoreId);
-            modal.style.display = "flex";
-        }
-
-        function closeModal(scoreId) {
-            var modal = document.getElementById("modal-" + scoreId);
-            modal.style.display = "none";
-        }
-    </script>
-{% endblock %}
-
 {% set impl = data.genomic_scores %}
 {% set scores = impl.score %}
 
 <h1>Scores</h1>
-
 <table border="1">
     <tr>
         <th>ID</th>
@@ -700,16 +649,12 @@ GENOMIC_SCORES_TEMPLATE = """
 
     {%- for score_id, score in scores.score_definitions.items() -%}
         <tr class="score-definition">
-
             <td>{{ score_id }}</td>
-
             <td>{{ score.value_type }}</td>
-
             {% set d_atts = scores.get_default_annotation_attribute(score_id) %}
             <td>
                 <p>{{ d_atts }}</p>
             </td>
-
             <td>
                 <div>{{ score.desc }}</div>
                 {% if score.small_values_desc %}
@@ -723,23 +668,19 @@ GENOMIC_SCORES_TEMPLATE = """
                     </div>
                 {% endif %}
             </td>
-
             <td>
                 {% set hist = impl.score.get_score_histogram(score_id) %}
                 {%- if hist.type != 'null_histogram' %}
-                {% set hist_image_file =
-                    impl.score.get_histogram_image_filename(score_id) %}
+                {% set hist_image_file = impl.score.get_histogram_image_filename(score_id) %}
                 <img src="{{ hist_image_file }}"
                     alt="{{ "HISTOGRAM FOR " + score_id }}"
                     title={{ score_id | replace(" ", "_") }}
-                    width="200"
-                    style="cursor: pointer"
-                    onclick="openModal(title)">
+                    style="width: 200px; cursor: pointer;"
+                    data-modal-trigger="modal-{{ score_id | replace(" ", "_") }}">
                 {%- else -%}
                 <p>No histogram: {{ hist.reason }}</p>
                 {%- endif -%}
             </td>
-
             <td>
             {%- if hist.type != 'null_histogram' %}
                 {{ hist.values_domain() }}
@@ -747,22 +688,18 @@ GENOMIC_SCORES_TEMPLATE = """
                 NO DOMAIN
             {%- endif -%}
             </td>
-
         </tr>
     {%- endfor %}
     {%- for score_id in scores.score_definitions.keys() -%}
         <div id="modal-{{score_id | replace(" ", "_")}}" class="modal">
-            <div style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
-                <span title={{score_id | replace(" ", "_")}} class="close" onclick="closeModal(title)">&times;</span>
-                <img class="modal-content" id="histogram-{{score_id}}"
-                    src="{{ impl.score.get_histogram_image_filename(score_id) }}"
+            <div class="modal-content" style="padding: 10px 20px; background-color: #fff; height: fit-content; width: fit-content;">
+                <span title={{score_id | replace(" ", "_")}} class="close">&times;</span>
+                <img src="{{ impl.score.get_histogram_image_filename(score_id) }}"
                     alt="{{ "HISTOGRAM FOR " + score_id }}"
-                    title={{ score_id | replace(" ", "_")}}
-                    width="200">
+                    title={{ score_id | replace(" ", "_")}}>
             </div>
         </div>
     {%- endfor %}
 </table>
-
 {% endblock %}
 """  # noqa: E501
