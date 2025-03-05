@@ -226,18 +226,35 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
         d3.axisBottom(this.scaleXAxis)
       ).style('font-size', '12px');
 
-    this.labelRotation %= 360;
-    this.labelRotation = 360 - this.labelRotation; // Backend framework rotates labels in reverse
+    let calculatedRotation = this.labelRotation;
+    calculatedRotation %= 360;
+    if (calculatedRotation !== 0) {
+      calculatedRotation = 360 - this.labelRotation; // Backend framework rotates labels in reverse
+    }
     let anchorRotation = 'end';
-    if (this.labelRotation > 0 && this.labelRotation < 180) {
+
+    if (calculatedRotation === 0 || calculatedRotation === 180) {
+      anchorRotation = 'center';
+    } else if (calculatedRotation > 0 && calculatedRotation < 180) {
       anchorRotation = 'start';
     }
     svg.selectAll('text')
       .style('text-anchor', anchorRotation)
-      .attr('transform', `rotate(${this.labelRotation}) translate(-8, -15)`);
-    // add hover text on each label
+      .attr('transform-origin', '0 9%')
+      .attr('transform', `rotate(${calculatedRotation})`);
+
     this.values.forEach(value => {
-      svg.selectAll('text').filter(t => t === value.name).append('title').text(value.name);
+      svg.selectAll('text').filter(t => t === value.name).each(function(d: string) {
+        const maxLabelLen = 20;
+        if (d.length > maxLabelLen) {
+          d = d.slice(0, maxLabelLen).concat('...');
+        }
+        // eslint-disable-next-line no-invalid-this
+        d3.select(this).text(d);
+
+        // eslint-disable-next-line no-invalid-this
+        d3.select(this).append('title').text(value.name); // add hover text on each label
+      });
     });
   }
 
