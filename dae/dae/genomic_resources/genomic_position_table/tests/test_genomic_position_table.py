@@ -27,7 +27,7 @@ from dae.genomic_resources.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def vcf_res(tmp_path: pathlib.Path) -> GenomicResource:
     setup_directories(
         tmp_path, {
@@ -57,7 +57,7 @@ chr1   30  .  A   T   .    .      A=3;B=31;C=c21;D=d31,d32
     return build_filesystem_test_resource(tmp_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def vcf_res_autodetect_format(tmp_path: pathlib.Path) -> GenomicResource:
     setup_directories(
         tmp_path, {
@@ -78,7 +78,7 @@ chr1   5   .  A   T   .    .       A=1
     return build_filesystem_test_resource(tmp_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def vcf_res_multiallelic(tmp_path: pathlib.Path) -> GenomicResource:
     setup_directories(
         tmp_path, {
@@ -654,7 +654,7 @@ def test_tabix_table(tmp_path: pathlib.Path, jump_threshold: int) -> None:
             list(table.get_records_in_region("3"))
 
 
-@pytest.fixture()
+@pytest.fixture
 def tabix_table(tmp_path: pathlib.Path) -> GenomicPositionTable:
     setup_directories(
         tmp_path, {
@@ -692,7 +692,7 @@ def tabix_table(tmp_path: pathlib.Path) -> GenomicPositionTable:
     return table
 
 
-@pytest.fixture()
+@pytest.fixture
 def regions_tabix_table(tmp_path: pathlib.Path) -> GenomicPositionTable:
     setup_directories(
         tmp_path, {
@@ -778,7 +778,7 @@ def test_tabix_table_jumper_current_position(
         break
 
 
-@pytest.fixture()
+@pytest.fixture
 def tabix_table_multiline(tmp_path: pathlib.Path) -> GenomicPositionTable:
     setup_directories(
         tmp_path, {
@@ -1792,3 +1792,11 @@ def test_new_score_configuration_fields() -> None:
     with build_genomic_position_table(res, res.config["table"]) as table:
         assert table.get_column_key("pos_begin") == 1
         assert table.get_column_key("pos_end") == 2
+
+
+def test_tabix_get_records_in_region_without_chrom(
+    tabix_table: GenomicPositionTable,
+) -> None:
+    table = cast(TabixGenomicPositionTable, tabix_table)
+    res = list(table.get_records_in_region())
+    assert len(res) == 12

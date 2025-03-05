@@ -117,10 +117,15 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
 
     def get_records_in_region(
         self,
-        chrom: str,
+        chrom: str | None = None,
         pos_begin: int | None = None,
         pos_end: int | None = None,
     ) -> Generator[LineBase, None, None]:
+
+        if chrom is None:
+            yield from self.get_all_records()
+            return
+
         fch = self.chrom_map[chrom] if self.chrom_map else chrom
         if fch not in self.records_by_chr:
             raise ValueError(
@@ -136,7 +141,10 @@ class InmemoryGenomicPositionTable(GenomicPositionTable):
             else:
                 yield line
 
-    def get_chromosome_length(self, chrom: str, _step: int = 0) -> int:
+    def get_chromosome_length(
+        self, chrom: str,
+        step: int = 0,  # noqa: ARG002
+    ) -> int:
         if chrom not in self.get_chromosomes():
             raise ValueError(
                 f"contig {chrom} not present in the table's contigs: "
