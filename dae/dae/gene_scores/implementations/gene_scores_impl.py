@@ -58,7 +58,7 @@ class GeneScoreImplementation(
 
     def add_statistics_build_tasks(
         self, task_graph: TaskGraph,
-        **kwargs: str,  # noqa: ARG002
+        **kwargs: Any,  # noqa: ARG002
     ) -> list[Task]:
         save_tasks = []
         for score_id, score_def in self.gene_score.score_definitions.items():

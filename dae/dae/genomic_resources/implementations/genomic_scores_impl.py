@@ -532,8 +532,7 @@ class CnvCollectionImplementation(GenomicScoreImplementation):
     # pylint: disable=useless-parent-delegation
 
     def add_statistics_build_tasks(
-        self, task_graph: TaskGraph,
-        **kwargs: str,
+        self, task_graph: TaskGraph, **kwargs: Any,
     ) -> list[Task]:
         return super().add_statistics_build_tasks(task_graph, **kwargs)
 
