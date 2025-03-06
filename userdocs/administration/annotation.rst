@@ -423,7 +423,7 @@ that the variant belongs to from the collection.
 VEP annotators
 ##############
 
-There are two annotators which depend on and use the Ensembl Variant Effect Predictor (VEP).
+There are two annotators which depend on and use the Ensembl Variant Effect Predictor (VEP) via docker.
 
 Setting up
 ++++++++++
@@ -438,6 +438,7 @@ Using the Ensembl VEP annotators requires the `gpf_vep_annotator` conda package 
         -c defaults \
         gpf_vep_annotator
 
+Using the VEP annotators also requires `Docker` to be setup.
 
 **The VEP annotators can be run only in batch mode.**
 
@@ -460,6 +461,13 @@ The annotator configuration looks like this:
 
     - vep_full_annotator:
         cache_dir: <VEP cache directory>
+        vep_version: <VEP version to use>
+
+If `vep_version` is not specified, then the annotator will use the latest docker image available on the
+`ensemblorg/ensembl-vep` docker repository. Versions can be specified with and without minor versions.
+When specified with only the major version, the minor will be set to .0  
+
+Valid version examples: `113`, `113.0`, `113.3`, `112`, etc.
 
 Full Annotator Output Attributes
 ++++++++++++++++++++++++++++++++
@@ -727,6 +735,14 @@ and gene models prepared.
     - external_vep_gtf_annotator:
         genome: hg38/genomes/GRCh38-hg38
         gene_models: hg38/gene_models/MANE/1.3
+        vep_version: <VEP version to use>
+
+If `vep_version` is not specified, then the annotator will use the latest docker image available on the
+`ensemblorg/ensembl-vep` docker repository. Versions can be specified with and without minor versions.
+When specified with only the major version, the minor will be set to .0  
+
+Valid version examples: `113`, `113.0`, `113.3`, `112`, etc.
+
 
 Effect Annotator Output Attributes
 ++++++++++++++++++++++++++++++++++
