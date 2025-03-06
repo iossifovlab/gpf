@@ -170,8 +170,10 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   }
 
   public set rangeStart(range: number) {
-    this.geneScoresLocalState.rangeStart = range;
-    this.updateContinuousHistogramState();
+    if (this.isNumberHistogram(this.geneScoresLocalState.score.histogram)) {
+      this.geneScoresLocalState.rangeStart = range;
+      this.updateContinuousHistogramState();
+    }
   }
 
   public get rangeStart(): number {
@@ -179,8 +181,10 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
   }
 
   public set rangeEnd(range: number) {
-    this.geneScoresLocalState.rangeEnd = range;
-    this.updateContinuousHistogramState();
+    if (this.isNumberHistogram(this.geneScoresLocalState.score.histogram)) {
+      this.geneScoresLocalState.rangeEnd = range;
+      this.updateContinuousHistogramState();
+    }
   }
 
   public get rangeEnd(): number {
@@ -217,11 +221,7 @@ export class GeneScoresComponent extends ComponentValidator implements OnInit {
         this.categoricalValues.splice(valueIndex, 1);
       }
     });
-    this.store.dispatch(setGeneScoreCategorical({
-      score: this.geneScoresLocalState.score.score,
-      values: cloneDeep(this.categoricalValues),
-      categoricalView: this.selectedCategoricalHistogramView,
-    }));
+    this.updateCategoricalHistogramState();
   }
 
   public isNumberHistogram(arg: object): arg is NumberHistogram {
