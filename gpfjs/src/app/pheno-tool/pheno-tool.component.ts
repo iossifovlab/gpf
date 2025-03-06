@@ -21,6 +21,10 @@ import { selectErrors } from 'app/common/errors.state';
 import { selectFamilyTags } from 'app/family-tags/family-tags.state';
 import { selectFamilyIds } from 'app/family-ids/family-ids.state';
 import { selectPersonFilters } from 'app/person-filters/person-filters.state';
+import {
+  selectFamilyMeasureHistograms,
+  selectPersonMeasureHistograms
+} from 'app/person-filters-selector/measure-histogram.state';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -76,6 +80,8 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       this.store.select(selectFamilyTags),
       this.store.select(selectFamilyIds),
       this.store.select(selectPersonFilters),
+      this.store.select(selectFamilyMeasureHistograms),
+      this.store.select(selectPersonMeasureHistograms),
     ]).subscribe(([
       geneSymbolsState,
       geneSetsState,
@@ -85,7 +91,9 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       presentInParentState,
       familyTagsState,
       familyIdsState,
-      personFiltersState
+      personFiltersState,
+      familyMeasureHistogramsState,
+      personMeasureHistogramsState,
     ]) => {
       const presentInParent = {
         presentInParent: presentInParentState.presentInParent,
@@ -123,6 +131,22 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
             && {deselectedFamilyTags: familyTagsState.deselectedFamilyTags},
         ...familyIdsState?.length && {familyIds: familyIdsState},
         ...personFiltersState?.familyFilters?.length && {familyFilters: personFiltersState.familyFilters},
+        ...familyMeasureHistogramsState?.length && { familyFiltersBeta: familyMeasureHistogramsState.map(s => ({
+          source: s.measure,
+          isFamily: true,
+          histogramType: s.histogramType,
+          min: s.rangeStart,
+          max: s.rangeEnd,
+          values: s.values,
+        }))},
+        ...personMeasureHistogramsState?.length && { personFiltersBeta: personMeasureHistogramsState.map(s => ({
+          source: s.measure,
+          isFamily: false,
+          histogramType: s.histogramType,
+          min: s.rangeStart,
+          max: s.rangeEnd,
+          values: s.values,
+        }))},
       };
 
       this.phenoToolResults = null;
