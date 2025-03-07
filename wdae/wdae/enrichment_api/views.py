@@ -30,14 +30,31 @@ class EnrichmentModelsView(QueryBaseView):
         enrichment_config = self.enrichment_helper.get_enrichment_config(study)
         if enrichment_config is None:
             return []
-        selected_models = self.enrichment_helper.get_selected_counting_models(
-            study)
+
+        if enrichment_config["counting"] is None:
+            return [
+                {
+                    "id": "enrichment_events_counting",
+                    "name": "Counting events",
+                    "desc": "Counting events",
+                },
+                {
+                    "id": "enrichment_gene_counting",
+                    "name": "Counting affected genes",
+                    "desc": "Counting affected genes",
+                },
+            ]
+
+        selected_counting_models = (
+            self.enrichment_helper.get_selected_counting_models(study)
+        )
+
         return [
             {"id": counting_model.id,
              "name": counting_model.name,
              "desc": counting_model.desc}
             for counting_model in enrichment_config["counting"].values()
-            if counting_model.id in selected_models
+            if counting_model.id in selected_counting_models
         ]
 
     @method_decorator(etag(get_instance_timestamp_etag))

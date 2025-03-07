@@ -81,7 +81,9 @@ class EnrichmentHelper:
 
         if enrichment_config["selected_counting_models"]:
             return enrichment_config["selected_counting_models"]
-        return enrichment_config["counting"]
+        if enrichment_config["counting"]:
+            return list(enrichment_config["counting"].keys())
+        return ["enrichment_events_counting", "enrichment_gene_counting"]
 
     @staticmethod
     def get_selected_person_set_collections(genotype_data: GenotypeData):

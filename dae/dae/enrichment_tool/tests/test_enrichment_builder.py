@@ -1,5 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from typing import Callable
 from dae.enrichment_tool.enrichment_builder import EnrichmentBuilder
+from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.studies.study import GenotypeData
 
 
@@ -71,3 +73,29 @@ def test_build_people_group_selector(
     assert build["missense"]["rec"].expected == 1
     assert build["missense"]["male"].expected == 1
     assert build["missense"]["female"].expected == 1
+
+
+#  test that even with only enabled + selected_background_models, the tool works
+def test_study_with_custom_config(create_test_study: Callable[[dict], GenotypeData],
+    enrichment_helper: EnrichmentHelper) -> None:
+    study_config = {
+        "enrichment": {
+            "enabled": True,
+            "selected_background_models": ["enrichment/samocha_testing"],
+        },
+    }
+
+    study = create_test_study(study_config)
+
+
+    enrichment_builder = EnrichmentBuilder(enrichment_helper, study)
+
+    build = enrichment_builder.build_results(
+        gene_syms=["SAMD11", "PLEKHN1", "POGZ"],
+        background_id="enrichment/coding_len_testing",
+        counting_id="enrichment_events_counting",
+    )
+    print(build)
+
+
+
