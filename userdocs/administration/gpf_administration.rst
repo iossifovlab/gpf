@@ -14,5 +14,5 @@ GPF Administration
    pheno
    pheno_measure_configuration
    gpf_tools
-   example_denovo_import
+   examples/examples
    data_appendix
