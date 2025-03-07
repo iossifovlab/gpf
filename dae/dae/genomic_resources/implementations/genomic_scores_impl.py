@@ -604,9 +604,16 @@ GENOMIC_SCORES_TEMPLATE = """
             <td>{{ score_id }}</td>
             <td>{{ score.value_type }}</td>
             {% set d_atts = scores.get_default_annotation_attribute(score_id) %}
-            <td>
-                <p>{{ d_atts }}</p>
-            </td>
+            {% if d_atts != None %}
+                <td>
+                    <p>{{ d_atts }}</p>
+                </td>
+            {% else %}
+                <td>
+                    <p>—</p>
+                </td>
+            {% endif %}
+
             <td>
                 <div>{{ score.desc }}</div>
                 {% if score.small_values_desc %}
