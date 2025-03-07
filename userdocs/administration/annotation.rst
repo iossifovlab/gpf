@@ -539,6 +539,9 @@ BIOTYPE
 CANONICAL
   Indicates if transcript is canonical for this gene
 
+MANE
+  MANE (Matched Annotation from NCBI and EMBL-EBI) set(s) the transcript belongs to
+
 MANE_SELECT
   MANE Select (Matched Annotation from NCBI and EMBL-EBI) Transcript
 
@@ -635,6 +638,9 @@ gnomADe_EAS_AF
 gnomADe_FIN_AF
   Frequency of existing variant in gnomAD exomes Finnish population
 
+gnomADe_MID_AF
+  Frequency of existing variant in gnomAD exomes Mid-eastern population
+
 gnomADe_NFE_AF
   Frequency of existing variant in gnomAD exomes Non-Finnish European population
 
@@ -643,6 +649,9 @@ gnomADe_OTH_AF
 
 gnomADe_SAS_AF
   Frequency of existing variant in gnomAD exomes South Asian population
+
+gnomADe_REMAINING_AF
+  Frequency of existing variant in gnomAD exomes remaining combined populations
 
 gnomADg_AF
   Frequency of existing variant in gnomAD genomes combined population
@@ -676,6 +685,9 @@ gnomADg_OTH_AF
 
 gnomADg_SAS_AF
   Frequency of existing variant in gnomAD genomes South Asian population
+
+gnomADg_REMAINING_AF
+  Frequency of existing variant in gnomAD genomes remaining combined populations
 
 MAX_AF
   Maximum observed allele frequency in 1000 Genomes, ESP and ExAC/gnomAD
