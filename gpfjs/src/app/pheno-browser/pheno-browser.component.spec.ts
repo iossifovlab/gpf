@@ -327,7 +327,6 @@ describe('PhenoBrowserComponent', () => {
 
   it('should clear error message when click back button in modal', () => {
     component.errorModalMsg = 'some error message';
-    component.ngOnInit();
     component.errorModalMsgBack();
     expect(component.errorModalMsg).toBe('');
   });
