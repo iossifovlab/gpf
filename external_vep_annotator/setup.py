@@ -22,6 +22,9 @@ setuptools.setup(
     [dae.annotation.annotators]
     vep_full_annotator=vep_annotator.vep_annotator:build_vep_cache_annotator
     vep_effect_annotator=vep_annotator.vep_annotator:build_vep_effect_annotator
+
+    [console_scripts]
+    install_vep_cache=vep_annotator.install_vep_cache:main
     """,
     classifiers=[
         "Development Status :: 4 - Beta",
