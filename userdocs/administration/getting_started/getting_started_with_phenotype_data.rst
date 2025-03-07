@@ -1,25 +1,6 @@
 Getting Started with Phenotype Data
 ###################################
 
-Setting up the GPF instance phenotype database
-++++++++++++++++++++++++++++++++++++++++++++++
-
-The GPF instance has four configuration settings that determine how phenotype data is read
-and stored:
-
-* The most important is the **phenotype data directory**, which is where the phenotype data
-  configurations are. If not specified, will attempt to look for the environment variable ``DAE_PHENODB_DIR``,
-  and if not found will default to the directory ``pheno`` inside the GPF instance directory.
-* **Phenotype storages** can be configured to tell the GPF instance where to look for phenotype
-  data DB files. If no phenotype storages are defined, a default phenotype storage is used,
-  which uses the **phenotype data directory**
-* The **cache** option can be configured to tell the GPF instance and GPF tools where to
-  store generated phenotype browser data. Data will be stored inside the ``<cache_dir>/pheno`` directory.
-* The **phenotype images** option can be configured to tell the GPF instance and GPF tools
-  where to store generated phenotype browser images.
-
-You can examine the provided ``gpf_instance.yaml`` to see how these settings are configured in it.
-
 Importing phenotype data
 ++++++++++++++++++++++++
 
@@ -71,11 +52,8 @@ configuration file generated from the import tool:
     browser_images_url: static/images/
     id: mini_pheno
     name: mini_pheno
-    phenotype_storage:
-    db: mini_pheno/mini_pheno.db
-    id: storage1
     regressions:
-    reg_1:
+      reg_1:
         display_name: Regression one
         instrument_name: instrument_1
         jitter: 0.1
