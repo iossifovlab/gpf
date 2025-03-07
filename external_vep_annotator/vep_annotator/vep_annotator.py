@@ -219,7 +219,7 @@ class VEPAnnotatorBase(DockerAnnotator):
 
             for idx, col in enumerate(row[1:]):
                 col_name = columns_map[idx]
-                if col_name not in context[col_name]:
+                if col_name not in context:
                     continue
                 context[col_name].append(col)
 
