@@ -475,6 +475,7 @@ study_config_schema = {
             },
             "selected_background_models": {
                 "type": "list",
+                "required": True,
                 "schema": {"type": "string"},
                 "default": [],
             },
@@ -488,8 +489,15 @@ study_config_schema = {
                 "type": "dict",
                 "valuesrules": {"type": "dict", "schema": counting_schema},
             },
-            "default_counting_model": {"type": "string"},
-            "effect_types": {"type": "list", "schema": {"type": "string"}},
+            "default_counting_model": {
+                "type": "string",
+                "default": "enrichment_events_counting",
+            },
+            "effect_types": {
+                "type": "list",
+                "schema": {"type": "string"},
+                "default": ["LGDs", "missense", "synonymous"],
+            },
         },
         "default": {"enabled": False},
     },
