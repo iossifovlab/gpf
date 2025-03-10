@@ -3,9 +3,9 @@ from __future__ import annotations
 import argparse
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from functools import lru_cache
-from typing import Any, Callable
+from typing import Any
 
 from dae.genomic_resources.gene_models import (
     GeneModels,
@@ -205,8 +205,7 @@ class PriorityGenomicContext(GenomicContext):
     @lru_cache(maxsize=32)
     def get_source(self) -> tuple[str, ...]:
         result = ["PriorityGenomicContext"]
-        for context in self.contexts:
-            result.append(str(context.get_source()))
+        result.extend([str(context.get_source()) for context in self.contexts])
         return tuple(result)
 
 
@@ -217,6 +216,10 @@ def get_genomic_context() -> GenomicContext:
                                           g.get_context_provider_type())):
         contexts.extend(provider.get_contexts())
     return PriorityGenomicContext(contexts)
+
+
+def get_registered_genomic_context() -> GenomicContext:
+    return get_genomic_context()
 
 
 class CLIGenomicContext(SimpleGenomicContext):
