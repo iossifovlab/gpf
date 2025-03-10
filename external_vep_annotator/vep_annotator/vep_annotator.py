@@ -339,22 +339,43 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
     ):
         self.work_dir: Path = cast(Path, info.parameters.get("work_dir"))
 
-        genome_id: str | None = info.parameters.get("genome")
-        assert genome_id is not None
-        gene_models_id: str | None = info.parameters.get("gene_models")
-        assert gene_models_id is not None
         assert pipeline is not None
+
+        pipeline_context = pipeline.build_pipeline_context()
+
         self.cache_repo = GenomicResourceCachedRepo(
             pipeline.repository, str(self.work_dir / "grr_cache"),
         )
 
-        self.genome_resource = self.cache_repo.get_resource(genome_id)
+        genome_id: str | None = info.parameters.get("genome")
+        if genome_id is not None:
+            self.genome_resource = self.cache_repo.get_resource(genome_id)
+        else:
+            genome = pipeline_context.get_reference_genome()
+            if genome is None:
+                raise ValueError(
+                    f"No reference genome found for {info.annotator_id}",
+                )
+            self.genome_resource = genome.resource
+
+        gene_models_id: str | None = info.parameters.get("gene_models")
+        if gene_models_id is not None:
+            self.gene_models_resource = self.cache_repo.get_resource(
+                gene_models_id,
+            )
+        else:
+            gene_models = pipeline_context.get_gene_models()
+            if gene_models is None:
+                raise ValueError(
+                    f"No gene models found for {info.annotator_id}",
+                )
+            self.gene_models_resource = gene_models.resource
+
+        assert gene_models_id is not None
+        assert pipeline is not None
+
         self.genome_filename = \
             self.genome_resource.get_config()["filename"]
-
-        self.gene_models_resource = self.cache_repo.get_resource(
-            gene_models_id,
-        )
 
         gtf_file_name = self.gene_models_resource.resource_id.replace("/", "_")
 
