@@ -57,6 +57,19 @@ counting_schema = {
     "desc": {"type": "string"},
 }
 
+counting_defaults = {
+    "enrichment_events_counting": {
+        "id": "enrichment_events_counting",
+        "name": "Counting events",
+        "desc": "Counting events",
+    },
+    "enrichment_gene_counting": {
+        "id": "enrichment_gene_counting",
+        "name": "Counting affected genes",
+        "desc": "Counting affected genes",
+    },
+}
+
 person_filters_schema = {
     "name": {"type": "string"},
     "from": {"type": "string", "allowed": ["pedigree", "phenodb"]},
@@ -475,6 +488,7 @@ study_config_schema = {
             },
             "selected_background_models": {
                 "type": "list",
+                "required": True,
                 "schema": {"type": "string"},
                 "default": [],
             },
@@ -487,9 +501,17 @@ study_config_schema = {
             "counting": {
                 "type": "dict",
                 "valuesrules": {"type": "dict", "schema": counting_schema},
+                "default": counting_defaults,
             },
-            "default_counting_model": {"type": "string"},
-            "effect_types": {"type": "list", "schema": {"type": "string"}},
+            "default_counting_model": {
+                "type": "string",
+                "default": "enrichment_events_counting",
+            },
+            "effect_types": {
+                "type": "list",
+                "schema": {"type": "string"},
+                "default": ["LGDs", "missense", "synonymous"],
+            },
         },
         "default": {"enabled": False},
     },
