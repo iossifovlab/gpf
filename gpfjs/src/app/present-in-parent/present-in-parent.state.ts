@@ -15,8 +15,8 @@ export interface PresentInParent {
 
 const initialRarityState: PresentInParentRarity = {
   rarityType: '',
-  rarityIntervalStart: 0,
-  rarityIntervalEnd: 1,
+  rarityIntervalStart: null,
+  rarityIntervalEnd: null,
 };
 
 export const initialState: PresentInParent = {
@@ -37,6 +37,13 @@ export const resetPresentInParent = createAction(
 
 export const presentInParentReducer = createReducer(
   initialState,
-  on(setPresentInParent, (state: PresentInParent, {presentInParent}) => cloneDeep(presentInParent)),
+  on(setPresentInParent, (state: PresentInParent, {presentInParent}) => {
+    state = cloneDeep(presentInParent);
+    // Rare can't have start value
+    if (state.rarity.rarityType === 'rare') {
+      state.rarity.rarityIntervalStart = null;
+    }
+    return state;
+  }),
   on(reset, resetPresentInParent, state => cloneDeep(initialState)),
 );
