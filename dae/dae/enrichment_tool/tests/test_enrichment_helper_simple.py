@@ -1,4 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+from collections.abc import Callable
+
 from dae.enrichment_tool.enrichment_helper import EnrichmentHelper
 from dae.enrichment_tool.gene_weights_background import (
     GeneScoreEnrichmentBackground,
@@ -52,3 +54,144 @@ def test_has_enrichment_config(
 
     helper = EnrichmentHelper(gpf_fixture.grr)
     assert helper.has_enrichment_config(f1_trio) is True
+
+
+def test_get_selected_counting_models(
+    create_test_study: Callable[[dict], GenotypeData],
+) -> None:
+    study_config = {
+        "enrichment": {
+            "enabled": True,
+            "selected_background_models": ["enrichment/samocha_testing"],
+            "selected_counting_models": ["enrichment_gene_counting"],
+            "counting": {
+                "enrichment_events_counting": {
+                    "id": "enrichment_events_counting",
+                    "name": "Counting events",
+                    "desc": "Counting events",
+                },
+                "enrichment_gene_counting": {
+                    "id": "enrichment_gene_counting",
+                    "name": "Counting affected genes",
+                    "desc": "Counting affected genes",
+                },
+            },
+        },
+    }
+
+    study = create_test_study(study_config)
+    assert EnrichmentHelper.get_selected_counting_models(study) == [
+        "enrichment_gene_counting"]
+
+
+def test_get_selected_counting_models_default(
+    create_test_study: Callable[[dict], GenotypeData],
+) -> None:
+    study_config = {
+        "enrichment": {
+            "enabled": True,
+            "selected_background_models": ["enrichment/samocha_testing"],
+        },
+    }
+    study = create_test_study(study_config)
+    assert EnrichmentHelper.get_selected_counting_models(study) == [
+        "enrichment_events_counting", "enrichment_gene_counting"]
+
+
+def test_get_selected_counting_models_default_with_counting(
+    create_test_study: Callable[[dict], GenotypeData],
+) -> None:
+    study_config = {
+        "enrichment": {
+            "enabled": True,
+            "selected_background_models": ["enrichment/samocha_testing"],
+            "counting": {
+                "enrichment_events_counting": {
+                    "id": "enrichment_events_counting",
+                    "name": "Counting events",
+                    "desc": "Counting events",
+                },
+            },
+        },
+    }
+    study = create_test_study(study_config)
+    assert EnrichmentHelper.get_selected_counting_models(study) == [
+        "enrichment_events_counting"]
+
+
+def test_get_default_background_model(
+    create_test_study: Callable[[dict], GenotypeData],
+) -> None:
+    study_config = {
+        "enrichment": {
+            "enabled": True,
+            "selected_background_models": [
+                "enrichment/samocha_testing",
+                "enrichment/samocha_background",
+            ],
+            "default_background_model": "enrichment/samocha_background",
+        },
+    }
+
+    study = create_test_study(study_config)
+    assert EnrichmentHelper.get_default_background_model(study) == \
+        "enrichment/samocha_background"
+
+
+def test_get_default_background_model_default(
+    create_test_study: Callable[[dict], GenotypeData],
+) -> None:
+    study_config = {
+        "enrichment": {
+            "enabled": True,
+            "selected_background_models": [
+                "hg38/enrichment/coding_length_ref_gene_v20170601",
+                "enrichment/samocha_background",
+                "hg38/enrichment/ur_synonymous_SFARI_SSC_WGS_2",
+            ],
+        },
+    }
+
+    study = create_test_study(study_config)
+    assert EnrichmentHelper.get_default_background_model(study) == \
+        "hg38/enrichment/coding_length_ref_gene_v20170601"
+
+
+def test_get_selected_person_set_collections(
+    create_test_study: Callable[[dict], GenotypeData],
+) -> None:
+    study_config = {
+        "enrichment": {
+            "enabled": True,
+            "selected_background_models": ["enrichment/samocha_testing"],
+            "selected_person_set_collections": ["role"],
+        },
+        "person_set_collections": {
+            "phenotype": {"id": "phenotype", "name": "Phenotype"},
+            "status": {"id": "status", "name": "Affected Status"},
+            "role": {"id": "role", "name": "Role"},
+        },
+    }
+
+    study = create_test_study(study_config)
+    assert EnrichmentHelper.get_selected_person_set_collections(study) == "role"
+
+
+def test_get_selected_person_set_collections_default(
+    create_test_study: Callable[[dict], GenotypeData],
+) -> None:
+    study_config = {
+        "enrichment": {
+            "enabled": True,
+            "selected_background_models": ["enrichment/samocha_testing"],
+        },
+        "person_set_collections": {
+            "phenotype": {"id": "phenotype", "name": "Phenotype"},
+            "status": {"id": "status", "name": "Affected Status"},
+            "role": {"id": "role", "name": "Role"},
+        },
+    }
+
+    study = create_test_study(study_config)
+    assert EnrichmentHelper.get_selected_person_set_collections(study) == \
+        "phenotype"
