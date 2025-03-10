@@ -19,7 +19,9 @@ from dae.annotation.annotation_pipeline import (
 )
 from dae.annotation.context import CLIAnnotationContext
 from dae.genomic_resources.cached_repository import cache_resources
-from dae.genomic_resources.genomic_context import get_genomic_context
+from dae.genomic_resources.genomic_context import (
+    get_registered_genomic_context,
+)
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
@@ -96,10 +98,16 @@ class AnnotationTool:
         CLIAnnotationContext.register(self.args)
 
         self.gpf_instance = gpf_instance
-        self.context = get_genomic_context()
-        self.pipeline = CLIAnnotationContext.get_pipeline(self.context)
-        grr = \
-            CLIAnnotationContext.get_genomic_resources_repository(self.context)
+        registered_context = get_registered_genomic_context()
+
+        # Maybe add a method to build a pipeline from a genomic context
+        # the pipeline arguments are registered as a context above, where
+        # the pipeline is also written into the context, only to be accessed
+        # 3 lines down
+        self.pipeline = CLIAnnotationContext.get_pipeline(registered_context)
+
+        self.context = self.pipeline.build_pipeline_context()
+        grr = self.context.get_genomic_resources_repository()
         if grr is None:
             raise ValueError("No valid GRR configured. Aborting.")
         self.grr = grr
