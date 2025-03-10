@@ -473,6 +473,22 @@ class RESTClient:
             raise OSError(f"Query failed: {response.text}")
         return response.iter_content(chunk_size=chunk_size)
 
+    def query_pheno_tool(
+        self, query: dict,
+        chunk_size: int = 512,
+    ) -> Iterator[Any]:
+        """Perform a pheno tool query to the GPF API."""
+        url = f"{self.base_url}/api/v3/pheno_tool"
+        response = self.session.post(
+            url,
+            json=query,
+            headers={"Content-Type": "application/json"},
+            stream=True,
+        )
+        if response.status_code != 200:
+            raise OSError(f"Query failed: {response.text}")
+        return response.iter_content(chunk_size=chunk_size)
+
     def query_summary_variants(
         self, query: dict,
     ) -> list:
