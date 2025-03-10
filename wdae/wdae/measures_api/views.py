@@ -190,7 +190,9 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
             counts = {}
             for value in measure.domain:
                 counts[value] = len(df[df[pheno_measure] == value])
-            categorical_hist_conf = CategoricalHistogramConfig()
+            categorical_hist_conf = CategoricalHistogramConfig(
+                label_rotation=90,
+            )
             result["histogram"] = CategoricalHistogram(
                 categorical_hist_conf,
                 counts,
