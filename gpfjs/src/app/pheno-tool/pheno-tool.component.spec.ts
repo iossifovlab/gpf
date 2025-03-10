@@ -30,6 +30,12 @@ import { effectTypesReducer } from 'app/effect-types/effect-types.state';
 import { personFiltersReducer } from 'app/person-filters/person-filters.state';
 import { familyIdsReducer } from 'app/family-ids/family-ids.state';
 import { familyTagsReducer } from 'app/family-tags/family-tags.state';
+import { genomicScoresReducer, GenomicScoreState } from 'app/genomic-scores-block/genomic-scores-block.state';
+import {
+  familyMeasureHistogramsReducer,
+  MeasureHistogramState,
+  personMeasureHistogramsReducer
+} from 'app/person-filters-selector/measure-histogram.state';
 
 class PhenoToolServiceMock {
   public getPhenoToolResults(): Observable<PhenoToolResults> {
@@ -91,6 +97,9 @@ describe('PhenoToolComponent', () => {
           personFilters: personFiltersReducer,
           familyIds: familyIdsReducer,
           familyTags: familyTagsReducer,
+          genomicScores: genomicScoresReducer,
+          familyMeasureHistograms: familyMeasureHistogramsReducer,
+          personMeasureHistograms: personMeasureHistogramsReducer
         }),
         NgbNavModule
       ],
@@ -108,7 +117,7 @@ describe('PhenoToolComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should test state selector', () => {
+  it('should get and combine states of all filters', () => {
     jest.clearAllMocks();
     const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
 
@@ -141,6 +150,32 @@ describe('PhenoToolComponent', () => {
       }
     };
 
+    const genomicScoresMock: GenomicScoreState = {
+      histogramType: 'categorical',
+      score: 's1',
+      rangeStart: null,
+      rangeEnd: null,
+      values: ['val1', 'val2'],
+      categoricalView: 'click selector'
+    };
+
+    const familyMeasureHistogramsMock: MeasureHistogramState = {
+      histogramType: 'categorical',
+      measure: 'm1',
+      rangeStart: null,
+      rangeEnd: null,
+      values: ['val1', 'val2'],
+      categoricalView: 'click selector'
+    };
+
+    const personMeasureHistogramsMock: MeasureHistogramState = {
+      histogramType: 'continuous',
+      measure: 'm2',
+      rangeStart: 5,
+      rangeEnd: 100,
+      values: null,
+      categoricalView: null
+    };
 
     jest.spyOn(rxjs, 'combineLatest')
       .mockReturnValue(of([
@@ -159,22 +194,42 @@ describe('PhenoToolComponent', () => {
         {
           familyFilters: null,
           personFilters: null,
-        }
+        },
+        [familyMeasureHistogramsMock],
+        [personMeasureHistogramsMock],
+        genomicScoresMock
       ]));
 
     component.ngOnInit();
 
-    expect(component.phenoToolState).toStrictEqual(
-      {
-        effectTypes: ['missense', 'splice-site'],
-        measureId: 'abc',
-        normalizeBy: [],
-        presentInParent: {
-          presentInParent: ['neither'],
-          rarity: { ultraRare: false },
-        }
-      }
-    );
+    const phenoToolStateResult = {
+      effectTypes: ['missense', 'splice-site'],
+      familyFiltersBeta: [{
+        source: 'm1',
+        isFamily: true,
+        histogramType: 'categorical',
+        min: null,
+        max: null,
+        values: ['val1', 'val2'],
+      }],
+      genomicScores: genomicScoresMock,
+      measureId: 'abc',
+      normalizeBy: [],
+      personFiltersBeta: [{
+        source: 'm2',
+        isFamily: false,
+        histogramType: 'continuous',
+        min: 5,
+        max: 100,
+        values: null,
+      }],
+      presentInParent: {
+        presentInParent: ['neither'],
+        rarity: { ultraRare: false },
+      },
+    };
+
+    expect(component.phenoToolState).toStrictEqual(phenoToolStateResult);
   });
 
   it('should test submit query', () => {

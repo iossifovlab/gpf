@@ -3,6 +3,8 @@
   <gpf-pheno-tool-measure></gpf-pheno-tool-measure>
   <gpf-pheno-tool-genotype-block [variantTypes]="variantTypesSet"></gpf-pheno-tool-genotype-block>
 
+  <gpf-genomic-scores-block></gpf-genomic-scores-block>
+
   <gpf-family-filters-block
     *ngIf="selectedDataset?.genotypeBrowserConfig?.hasFamilyFilters"
     [dataset]="selectedDataset">

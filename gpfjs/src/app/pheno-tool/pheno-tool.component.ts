@@ -25,6 +25,7 @@ import {
   selectFamilyMeasureHistograms,
   selectPersonMeasureHistograms
 } from 'app/person-filters-selector/measure-histogram.state';
+import { selectGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
 
 @Component({
   selector: 'gpf-pheno-tool',
@@ -82,6 +83,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       this.store.select(selectPersonFilters),
       this.store.select(selectFamilyMeasureHistograms),
       this.store.select(selectPersonMeasureHistograms),
+      this.store.select(selectGenomicScores),
     ]).subscribe(([
       geneSymbolsState,
       geneSetsState,
@@ -94,6 +96,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
       personFiltersState,
       familyMeasureHistogramsState,
       personMeasureHistogramsState,
+      genomicScoresState,
     ]) => {
       const presentInParent = {
         presentInParent: presentInParentState.presentInParent,
@@ -147,6 +150,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
           max: s.rangeEnd,
           values: s.values,
         }))},
+        ...{genomicScores: genomicScoresState},
       };
 
       this.phenoToolResults = null;
