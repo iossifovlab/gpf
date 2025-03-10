@@ -69,7 +69,7 @@ export class PhenoToolResultsChartComponent implements OnInit, OnChanges, AfterV
 
   private createImgFromSvg(): void {
     const container = document.getElementById('image-download-container');
-    const svg = document.querySelector('svg');
+    const svg: SVGSVGElement = document.querySelector('#pheno-tool-result');
 
     if (container && svg) {
       svg.style.backgroundColor = 'white';
