@@ -236,7 +236,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
 
     let calculatedRotation = this.labelRotation;
     calculatedRotation %= 360;
-    if (calculatedRotation !== 0) {
+    if (calculatedRotation !== 0 && calculatedRotation !== 90) {
       calculatedRotation = 360 - this.labelRotation; // Backend framework rotates labels in reverse
     }
     let anchorRotation = 'end';
