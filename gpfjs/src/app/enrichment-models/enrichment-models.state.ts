@@ -2,22 +2,22 @@ import { createReducer, createAction, on, props, createFeatureSelector } from '@
 import { reset } from 'app/users/state-actions';
 import { cloneDeep } from 'lodash';
 
-export interface EnrichmentModels {
+export interface EnrichmentModelsState {
   enrichmentBackgroundModel: string;
   enrichmentCountingModel: string;
 }
 
-export const initialState: EnrichmentModels = {
+export const initialState: EnrichmentModelsState = {
   enrichmentBackgroundModel: '',
   enrichmentCountingModel: ''
 };
 
 export const selectEnrichmentModels =
-  createFeatureSelector<EnrichmentModels>('enrichmentModels');
+  createFeatureSelector<EnrichmentModelsState>('enrichmentModels');
 
 export const setEnrichmentModels = createAction(
   '[Genotype] Set enrichmentModel values',
-  props<EnrichmentModels>()
+  props<EnrichmentModelsState>()
 );
 
 export const resetEnrichmentModels = createAction(

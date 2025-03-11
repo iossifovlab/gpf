@@ -14,7 +14,7 @@ import { initialState as effectTypesInitialState } from 'app/effect-types/effect
 import { initialState as genderInitialState } from 'app/gender/gender.state';
 import { initialState as variantTypesInitialState } from 'app/variant-types/variant-types.state';
 import { initialState as inheritanceTypesInitialState } from 'app/inheritancetypes/inheritancetypes.state';
-import { EnrichmentModels, initialState as enrichmentModelsInitialState } from 'app/enrichment-models/enrichment-models.state';
+import { EnrichmentModelsState, initialState as enrichmentModelsInitialState } from 'app/enrichment-models/enrichment-models.state';
 import { GeneSetsState, initialState as geneSetsInitialState } from 'app/gene-sets/gene-sets.state';
 import { initialState as geneSymbolsInitialState } from 'app/gene-symbols/gene-symbols.state';
 import { initialState as presentInChildInitialState } from 'app/present-in-child/present-in-child.state';
@@ -40,7 +40,7 @@ export interface State {
   genders: string[];
   variantTypes: string[];
   inheritanceTypes: string[];
-  enrichmentModels: EnrichmentModels;
+  enrichmentModels: EnrichmentModelsState;
   geneSets: GeneSetsState;
   geneScores: GeneScoresState;
   geneSymbols: string[];
