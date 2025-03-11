@@ -16,6 +16,17 @@ from dae.annotation.annotation_config import (
     AttributeInfo,
     RawPipelineConfig,
 )
+from dae.genomic_resources.genomic_context import (
+    GC_GRR_KEY,
+    GC_REFERENCE_GENOME_KEY,
+    GenomicContext,
+    PriorityGenomicContext,
+    SimpleGenomicContext,
+    get_registered_genomic_context,
+)
+from dae.genomic_resources.reference_genome import (
+    build_reference_genome_from_resource,
+)
 from dae.genomic_resources.repository import (
     GenomicResource,
     GenomicResourceRepo,
@@ -94,6 +105,20 @@ class AnnotationPipeline:
         self.preamble: AnnotationPreamble | None = None
         self.raw: RawPipelineConfig = []
         self._is_open = False
+
+    def build_pipeline_genomic_context(self) -> GenomicContext:
+        """Create a genomic context from the pipeline parameters."""
+        registered_context = get_registered_genomic_context()
+        genome = None
+        if self.preamble is not None:
+            genome_res = self.preamble.input_reference_genome_res
+            genome = build_reference_genome_from_resource(genome_res)
+        pipeline_context = SimpleGenomicContext({
+            GC_GRR_KEY: self.repository,
+            GC_REFERENCE_GENOME_KEY: genome,
+        }, ("pipeline_context",))
+
+        return PriorityGenomicContext([pipeline_context, registered_context])
 
     def get_info(self) -> list[AnnotatorInfo]:
         return [annotator.get_info() for annotator in self.annotators]
