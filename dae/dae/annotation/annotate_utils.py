@@ -106,7 +106,7 @@ class AnnotationTool:
         # 3 lines down
         self.pipeline = CLIAnnotationContext.get_pipeline(registered_context)
 
-        self.context = self.pipeline.build_pipeline_context()
+        self.context = self.pipeline.build_pipeline_genomic_context()
         grr = self.context.get_genomic_resources_repository()
         if grr is None:
             raise ValueError("No valid GRR configured. Aborting.")

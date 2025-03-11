@@ -106,7 +106,7 @@ class AnnotationPipeline:
         self.raw: RawPipelineConfig = []
         self._is_open = False
 
-    def build_pipeline_context(self) -> GenomicContext:
+    def build_pipeline_genomic_context(self) -> GenomicContext:
         """Create a genomic context from the pipeline parameters."""
         registered_context = get_registered_genomic_context()
         genome = None

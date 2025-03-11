@@ -225,7 +225,7 @@ def test_annotation_pipeline_context(
     """)
 
     pipeline = load_pipeline_from_yaml(pipeline_config, test_grr)
-    context = pipeline.build_pipeline_context()
+    context = pipeline.build_pipeline_genomic_context()
 
     assert context_fixture.get_genomic_resources_repository() is None
     pipeline_grr = context.get_genomic_resources_repository()

@@ -343,7 +343,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
 
         assert pipeline is not None
 
-        pipeline_context = pipeline.build_pipeline_context()
+        pipeline_context = pipeline.build_pipeline_genomic_context()
 
         self.cache_repo = GenomicResourceCachedRepo(
             pipeline.repository, str(self.work_dir / "grr_cache"),
