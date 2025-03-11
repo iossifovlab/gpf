@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import os
 import pathlib
 import textwrap
 
@@ -15,8 +16,14 @@ from dae.annotation.annotation_factory import (
 )
 from dae.annotation.annotation_pipeline import ReannotationPipeline
 from dae.genomic_resources import build_genomic_resource_repository
+from dae.genomic_resources.genomic_context import (
+    GenomicContext,
+    SimpleGenomicContext,
+    get_registered_genomic_context,
+)
 from dae.genomic_resources.repository import GenomicResourceRepo
 from dae.testing import convert_to_tab_separated, setup_directories
+from dae.testing.t4c8_import import t4c8_genome
 
 
 @pytest.fixture
@@ -78,9 +85,37 @@ def test_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
             },
         },
     )
+    t4c8_genome(root_path / "grr")
     return build_genomic_resource_repository(file_name=str(
         root_path / "grr.yaml",
     ))
+
+
+@pytest.fixture
+def context_fixture(
+    tmp_path: pathlib.Path,
+    mocker: pytest_mock.MockerFixture,
+) -> GenomicContext:
+    conf_dir = str(tmp_path / "conf")
+    home_dir = os.environ["HOME"]
+    mocker.patch("os.environ", {
+        "DAE_DB_DIR": conf_dir,
+        "HOME": home_dir,
+    })
+    test_context = SimpleGenomicContext(
+        {},
+        ("test_context",),
+    )
+    mocker.patch(
+        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXT_PROVIDERS",
+        [])
+    mocker.patch(
+        "dae.genomic_resources.genomic_context._REGISTERED_CONTEXTS",
+        [test_context])
+    context = get_registered_genomic_context()
+    assert context is not None
+
+    return context
 
 
 def test_pipeline_with_wildcards(test_grr: GenomicResourceRepo) -> None:
@@ -170,3 +205,33 @@ def test_copy_reannotation_pipeline(
     copy_method.assert_any_call(pipeline_b)  # type: ignore
 
     assert len(copied_pipeline.annotators) == len(reannotation.annotators)
+
+
+def test_annotation_pipeline_context(
+    context_fixture: GenomicContext,
+    test_grr: GenomicResourceRepo,
+) -> None:
+    pipeline_config = textwrap.dedent("""
+        preamble:
+          summary: asdf
+          description: lorem ipsum
+          input_reference_genome: t4c8_genome
+          metadata:
+              foo: bar
+              subdata:
+                  a: b
+        annotators:
+          - position_score: score_one
+    """)
+
+    pipeline = load_pipeline_from_yaml(pipeline_config, test_grr)
+    context = pipeline.build_pipeline_context()
+
+    assert context_fixture.get_genomic_resources_repository() is None
+    pipeline_grr = context.get_genomic_resources_repository()
+    assert pipeline_grr is not None
+    assert pipeline_grr.get_resource("t4c8_genome") is not None
+
+    pipeline_genome = context.get_reference_genome()
+    assert pipeline_genome is not None
+    assert pipeline_genome.resource_id == "t4c8_genome"
