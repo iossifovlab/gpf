@@ -186,6 +186,7 @@ class Schema2ImportStorage(ImportStorage):
         )
         variants_writer.write_dataset(
             variants_loader.full_variants_iterator(),
+            annotation_batch_size=project.get_processing_annotation_batch_size(),
         )
 
     @classmethod

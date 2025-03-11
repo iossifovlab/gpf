@@ -3,6 +3,7 @@ import logging
 import os
 import time
 from collections.abc import Iterable
+from itertools import islice
 from typing import Any, cast
 
 import pyarrow as pa
@@ -200,6 +201,11 @@ class VariantsParquetWriter:
         assert isinstance(partition_descriptor, PartitionDescriptor)
         self.partition_descriptor = partition_descriptor
         self.annotation_pipeline = annotation_pipeline
+        self._annotation_internal_attributes = {
+            attribute.name
+            for attribute in self.annotation_pipeline.get_attributes()
+            if attribute.internal
+        }
 
     def _build_family_filename(
         self, allele: FamilyAllele, *,
@@ -270,35 +276,97 @@ class VariantsParquetWriter:
             self.bucket_index * 1_000_000_000
             + summary_index) * 10_000
 
-    def write_dataset(
-        self,
-        full_variants_iterator: Iterable[
-            tuple[SummaryVariant, list[FamilyVariant]]],
-    ) -> list[str]:
-        """Write variant to partitioned parquet dataset."""
-        # pylint: disable=too-many-locals,too-many-branches
-        family_index = 0
-        summary_index = 0
-        internal_attributes = {
-            attribute.name
-            for attribute in self.annotation_pipeline.get_attributes()
-            if attribute.internal
+    def _apply_attributes_to_allele(
+        self, summary_allele: SummaryAllele, attributes,
+    ) -> None:
+        if "allele_effects" in attributes:
+            allele_effects = attributes["allele_effects"]
+            assert isinstance(allele_effects, AlleleEffects), attributes
+            # pylint: disable=protected-access
+            summary_allele._effects = allele_effects  # noqa: SLF001
+            del attributes["allele_effects"]
+        public_attributes = {
+            key: value for key, value in attributes.items()
+            if key not in self._annotation_internal_attributes
         }
+        summary_allele.update_attributes(public_attributes)
 
-        with self.annotation_pipeline.open() as pipeline:
-            for summary_index, (
-                summary_variant,
-                family_variants,
-            ) in enumerate(full_variants_iterator):
+    def _annotate_summary_variant(
+        self, summary_variant: SummaryVariant,
+    ) -> None:
+        for sallele in summary_variant.alt_alleles:
+            attributes = self.annotation_pipeline.annotate(
+                sallele.get_annotatable())
+            self._apply_attributes_to_allele(sallele, attributes)
+
+    def _annotate_batch(
+        self, batch: Iterable[tuple[SummaryVariant, list[FamilyVariant]]],
+    ) -> None:
+        summary_alleles: list[SummaryAllele] = [
+            sallele
+            for summary_variant, _ in batch
+            for sallele in summary_variant.alt_alleles
+        ]
+        annotations = iter(self.annotation_pipeline.batch_annotate(
+            [sa.get_annotatable() for sa in summary_alleles],
+        ))
+        for sa, attributes in zip(summary_alleles, annotations, strict=True):
+            self._apply_attributes_to_allele(sa, attributes)
+
+    def _write_iterative(
+        self,
+        full_variants_iterator: Iterable[tuple[SummaryVariant, list[FamilyVariant]]],  # noqa: E501
+    ) -> tuple[int, int]:
+        summary_index = 0
+        family_index = 0
+        for summary_index, (
+            summary_variant,
+            family_variants,
+        ) in enumerate(full_variants_iterator):
+            assert summary_index < 1_000_000_000, \
+                "too many summary variants"
+            self._annotate_summary_variant(summary_variant)
+            sj_base_index = self._calc_sj_base_index(summary_index)
+
+            family_index, num_fam_alleles_written = \
+                self._write_family_variants(
+                    family_index, summary_index, sj_base_index,
+                    summary_variant, family_variants,
+                )
+            if num_fam_alleles_written > 0:
+                self.write_summary_variant(
+                        summary_variant,
+                        sj_base_index=sj_base_index,
+                    )
+
+            if summary_index % 1000 == 0 and summary_index > 0:
+                elapsed = time.time() - self.start
+                logger.info(
+                    "progress bucket %s; "
+                    "summary variants: %s; family variants: %s; "
+                    "elapsed time: %0.2f sec",
+                    self.bucket_index,
+                    summary_index, family_index,
+                    elapsed)
+
+        return summary_index, family_index
+
+    def _write_batched(
+        self,
+        full_variants_iterator: Iterable[tuple[SummaryVariant, list[FamilyVariant]]],  # noqa: E501
+        annotation_batch_size: int,
+    ) -> tuple[int, int]:
+        summary_index = 0
+        family_index = 0
+
+        iterator = iter(full_variants_iterator)
+        while batch := tuple(islice(iterator, annotation_batch_size)):
+            self._annotate_batch(batch)
+            for summary_variant, family_variants in batch:
                 assert summary_index < 1_000_000_000, \
                     "too many summary variants"
-                self._annotate_summary_variant(
-                    pipeline,
-                    summary_variant,
-                    internal_attributes)
 
                 sj_base_index = self._calc_sj_base_index(summary_index)
-
                 family_index, num_fam_alleles_written = \
                     self._write_family_variants(
                         family_index, summary_index, sj_base_index,
@@ -306,9 +374,11 @@ class VariantsParquetWriter:
                     )
                 if num_fam_alleles_written > 0:
                     self.write_summary_variant(
-                            summary_variant,
-                            sj_base_index=sj_base_index,
-                        )
+                        summary_variant,
+                        sj_base_index=sj_base_index,
+                    )
+
+                summary_index += 1
 
                 if summary_index % 1000 == 0 and summary_index > 0:
                     elapsed = time.time() - self.start
@@ -319,6 +389,23 @@ class VariantsParquetWriter:
                         self.bucket_index,
                         summary_index, family_index,
                         elapsed)
+        return summary_index, family_index
+
+    def write_dataset(
+        self,
+        full_variants_iterator: Iterable[tuple[SummaryVariant, list[FamilyVariant]]],  # noqa: E501
+        *,
+        annotation_batch_size: int = 0,
+    ) -> list[str]:
+        """Write variant to partitioned parquet dataset."""
+        with self.annotation_pipeline.open():
+            if annotation_batch_size > 0:
+                summary_index, family_index = \
+                    self._write_batched(full_variants_iterator,
+                                        annotation_batch_size)
+            else:
+                summary_index, family_index = \
+                    self._write_iterative(full_variants_iterator)
 
         filenames = list(self.data_writers.keys())
 
@@ -428,27 +515,6 @@ class VariantsParquetWriter:
     def close(self) -> None:
         for bin_writer in self.data_writers.values():
             bin_writer.close()
-
-    @staticmethod
-    def _annotate_summary_variant(
-        annotation_pipeline: AnnotationPipeline,
-        summary_variant: SummaryVariant,
-        internal_attributes: set[str],
-    ) -> None:
-        for sallele in summary_variant.alt_alleles:
-            attributes = annotation_pipeline.annotate(
-                sallele.get_annotatable())
-            if "allele_effects" in attributes:
-                allele_effects = attributes["allele_effects"]
-                assert isinstance(allele_effects, AlleleEffects), attributes
-                # pylint: disable=protected-access
-                sallele._effects = allele_effects  # noqa: SLF001
-                del attributes["allele_effects"]
-            public_attributes = {
-                key: value for key, value in attributes.items()
-                if key not in internal_attributes
-            }
-            sallele.update_attributes(public_attributes)
 
     def write_summary_variant(
         self, summary_variant: SummaryVariant,

@@ -82,6 +82,7 @@ import_config_schema: dict[str, Any] = {
             "work_dir": {"type": "string"},
             "parquet_dataset_dir": {"type": "string"},
             "include_reference": {"type": "boolean", "default": False},
+            "annotation_batch_size": {"type": "integer", "default": 0},
             "parquet_row_group_size": {
                 "anyof_type": ["integer", "string"],
                 "default": 50_000,
