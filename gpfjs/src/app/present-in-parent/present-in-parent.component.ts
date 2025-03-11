@@ -15,12 +15,12 @@ import { take } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PresentInParentComponent extends ComponentValidator implements OnInit {
-  @ValidateIf(o => o.selectedRarityType !== 'ultraRare' && o.rarityIntervalStart !== null)
+  @ValidateIf((o: PresentInParentComponent) => o.selectedRarityType !== 'ultraRare' && o.rarityIntervalStart !== null)
   @Min(0) @Max(100)
   @IsLessThanOrEqual('rarityIntervalEnd')
   public rarityIntervalStart = 0;
 
-  @ValidateIf(o => o.selectedRarityType !== 'ultraRare')
+  @ValidateIf((o: PresentInParentComponent) => o.selectedRarityType !== 'ultraRare' && o.rarityIntervalEnd !== null)
   @Min(0) @Max(100)
   @IsMoreThanOrEqual('rarityIntervalStart')
   public rarityIntervalEnd = 1;
