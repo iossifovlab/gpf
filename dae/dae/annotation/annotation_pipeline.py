@@ -24,6 +24,9 @@ from dae.genomic_resources.genomic_context import (
     SimpleGenomicContext,
     get_registered_genomic_context,
 )
+from dae.genomic_resources.reference_genome import (
+    build_reference_genome_from_resource,
+)
 from dae.genomic_resources.repository import (
     GenomicResource,
     GenomicResourceRepo,
@@ -108,7 +111,8 @@ class AnnotationPipeline:
         registered_context = get_registered_genomic_context()
         genome = None
         if self.preamble is not None:
-            genome = self.preamble.input_reference_genome_res
+            genome_res = self.preamble.input_reference_genome_res
+            genome = build_reference_genome_from_resource(genome_res)
         pipeline_context = SimpleGenomicContext({
             GC_GRR_KEY: self.repository,
             GC_REFERENCE_GENOME_KEY: genome,
