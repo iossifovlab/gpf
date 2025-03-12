@@ -140,6 +140,59 @@ histogram
   Histogram configuration. See :ref:`Histograms and statistics <Histograms and statistics>` for more info.
 
 
+Auto generated score definition
+==================================
+
+Writing manual configuration for many vcf scores at a time is too cumbersome.
+For that reason vcf score definitions are generated automatically. Manually written
+partial or full configurations will replace some or all of the auto generated information.
+
+Example vcf file:
+
+.. code:: bash
+
+    ##fileformat=VCFv4.1
+    ##INFO=<ID=A,Number=1,Type=Integer,Description="Score A">
+    #CHROM POS ID REF ALT QUAL FILTER  INFO
+    chr1   5   .  A   T   .    .       A=1
+
+Score ``A`` will get auto generated score definition as if created by configuration like this:
+    
+.. code:: yaml
+
+    scores:
+    - id: A
+      type: int
+      column_name: A
+      desc: Score A
+
+Auto generated score definitions lack key information. Use overriding to add more fields or change existing auto generated fields.
+Define manually which score definitions should be overriden by first specifying score id,
+then add new fields (like ``histogram``) or override existing auto generated (like ``type``):
+
+.. code:: yaml
+
+    scores:
+    - id: A
+      type: float
+      histogram:
+        type: categorical
+        value_order: ["alpha", "beta"]
+
+The resulting score definition with updated ``type`` and added ``histogram`` will look like this if typed as configuration:
+
+.. code:: yaml
+
+    scores:
+    - id: A
+      type: float
+      column_name: A
+      desc: Score A
+      histogram:
+        type: categorical
+        value_order: ["alpha", "beta"]
+
+
 Zero-based / BED format scores
 ==============================
 
