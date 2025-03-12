@@ -10,6 +10,7 @@ from rest_client.mailhog_client import (
 )
 from rest_client.rest_client import (
     RESTClient,
+    RESTError,
 )
 
 
@@ -32,7 +33,7 @@ def test_double_create_user_fail(
     new_user = admin_client.create_user(username, name)
     assert new_user["email"] == username
 
-    with pytest.raises(OSError, match=f"Create user <{username}> failed:"):
+    with pytest.raises(RESTError, match=f"Create user <{username}> failed:"):
         admin_client.create_user(username, name)
 
 
@@ -180,7 +181,7 @@ def test_get_all_users_by_non_admin_user(
 ) -> None:
     """Test getting all users by non-admin user."""
     with pytest.raises(
-            OSError,
+            RESTError,
             match="Get all users failed: You do not have permission"):
         user_client.get_all_users()
 
@@ -202,7 +203,7 @@ def test_get_a_user_by_non_admin_user(
     user = all_users[0]
 
     with pytest.raises(
-            OSError, match="Get user failed: You do not have permission"):
+            RESTError, match="Get user failed: You do not have permission"):
         user_client.get_user(user["id"])
 
 
@@ -212,7 +213,7 @@ def test_create_a_user_by_non_admin_user(
     """Test getting a user by non-admin user."""
     username = f"test_{uuid.uuid4()}@iossifovlab.com"
     with pytest.raises(
-            OSError,
+            RESTError,
             match=r"Create user .* failed: You do not have permission"):
         user_client.create_user(username, "Test User")
 
@@ -231,7 +232,7 @@ def test_update_a_user_by_non_admin_user(
     user["name"] = "Updated Test User"
 
     with pytest.raises(
-            OSError,
+            RESTError,
             match="Update user failed: You do not have permission"):
         user_client.update_user(user_id, user)
 
@@ -241,7 +242,7 @@ def test_get_all_groups_by_non_admin_user(
 ) -> None:
     """Test getting all groups by non admin user."""
     with pytest.raises(
-            OSError,
+            RESTError,
             match="Get all groups failed: You do not have permission"):
         user_client.get_all_groups()
 
@@ -256,7 +257,7 @@ def test_get_a_group_by_non_admin_user(
 
     group_name = groups[0]["name"]
     with pytest.raises(
-            OSError,
+            RESTError,
             match=r"Get group .* failed: You do not have permission"):
         user_client.get_group(group_name)
 
@@ -275,7 +276,7 @@ def test_add_group_to_a_dataset_by_non_admin_user(
     assert test_group_name not in {g["name"] for g in dataset["groups"]}
 
     with pytest.raises(
-            OSError,
+            RESTError,
             match="Grant permission failed"):
         user_client.grant_permission(dataset_id, test_group_name)
 
@@ -304,7 +305,7 @@ def test_remove_group_from_a_dataset_by_non_admin_user(
     group = admin_client.get_group(test_group_name)
 
     with pytest.raises(
-            OSError,
+            RESTError,
             match="Revoke permission failed"):
         user_client.revoke_permission(dataset_id, group["id"])
 
@@ -358,7 +359,7 @@ def test_initiate_reset_password_old_for_non_existing_user(
     mail_client.delete_all_messages()
     time.sleep(0.5)
 
-    with pytest.raises(OSError, match="Initiate old password reset failed"):
+    with pytest.raises(RESTError, match="Initiate old password reset failed"):
         admin_client.initiate_password_reset_old(-1)
 
     time.sleep(0.5)
@@ -389,7 +390,7 @@ def test_initiate_reset_password_old_by_anonymous_user(
     mail_client.delete_all_messages()
     time.sleep(0.5)
 
-    with pytest.raises(OSError, match="Initiate old password reset failed"):
+    with pytest.raises(RESTError, match="Initiate old password reset failed"):
         annon_client.initiate_password_reset_old(user["id"])
 
     time.sleep(0.5)
@@ -407,7 +408,7 @@ def test_admin_user_logout(
     admin_client.logout()
 
     with pytest.raises(
-            OSError,
+            RESTError,
             match="Get all users failed: "):
         admin_client.get_all_users()
 
