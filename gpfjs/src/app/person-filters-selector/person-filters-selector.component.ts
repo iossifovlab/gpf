@@ -78,7 +78,7 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
       this.measuresService.getMeasureHistogramBeta(this.dataset.id, measure.id)
         .subscribe(histogramData => {
           const defaultState = this.createMeasureDefaultState(histogramData);
-          this.selectedMeasureHistograms.push({
+          this.selectedMeasureHistograms.unshift({
             measureHistogram: histogramData,
             state: defaultState
           });
@@ -151,7 +151,7 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
     states.forEach(state => {
       this.measuresService.getMeasureHistogramBeta(this.dataset.id, state.measure)
         .subscribe(histogramData => {
-          this.selectedMeasureHistograms.push({
+          this.selectedMeasureHistograms.unshift({
             measureHistogram: histogramData,
             state: state
           });
