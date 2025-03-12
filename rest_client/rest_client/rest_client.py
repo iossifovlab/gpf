@@ -9,6 +9,10 @@ from requests.auth import HTTPBasicAuth
 logger = logging.getLogger(__name__)
 
 
+class RESTError(BaseException):
+    """REST error."""
+
+
 def encode_params_utf8(
     params: list[tuple[str, str]],
 ) -> list[tuple[bytes, bytes]]:
@@ -233,7 +237,7 @@ class GPFBasicAuth:
             login_url, json=body,
             timeout=self.DEFAULT_TIMEOUT)
         if response.status_code != 204:
-            raise OSError(f"Login failed: {response.text}")
+            raise RESTError(f"Login failed: {response.text}")
         logger.debug("Login successful: %s", response.text)
 
     def deauthenticate(self) -> None:
@@ -241,7 +245,7 @@ class GPFBasicAuth:
         response = self.session.post(
             logout_url, timeout=self.DEFAULT_TIMEOUT)
         if response.status_code != 204:
-            raise OSError(f"Logout failed: {response.text}")
+            raise RESTError(f"Logout failed: {response.text}")
         logger.debug("Logout successful: %s", response.text)
 
     def get(
@@ -317,7 +321,7 @@ class RESTClient:
         response = self.session.get(all_users_url)
         if response.status_code != 200:
             data = response.json()
-            raise OSError(f"Get all users failed: {data['detail']}")
+            raise RESTError(f"Get all users failed: {data['detail']}")
         return cast(list[dict], response.json())
 
     def get_user(self, user_id: int) -> dict:
@@ -326,7 +330,7 @@ class RESTClient:
             f"{self.base_url}/api/v3/users/{user_id}")
         if response.status_code != 200:
             data = response.json()
-            raise OSError(f"Get user failed: {data['detail']}")
+            raise RESTError(f"Get user failed: {data['detail']}")
         return cast(dict, response.json())
 
     def create_user(
@@ -354,7 +358,7 @@ class RESTClient:
                 msg = ";".join(data["email"])
             else:
                 msg = response.text
-            raise OSError(f"Create user <{username}> failed: {msg}")
+            raise RESTError(f"Create user <{username}> failed: {msg}")
         return cast(dict, response.json())
 
     def update_user(self, user_id: int, data: dict) -> dict:
@@ -364,7 +368,7 @@ class RESTClient:
             json=data)
         if response.status_code != 200:
             data = response.json()
-            raise OSError(f"Update user failed: {data['detail']}")
+            raise RESTError(f"Update user failed: {data['detail']}")
         return cast(dict, response.json())
 
     def get_all_datasets(self) -> list[dict]:
@@ -386,7 +390,7 @@ class RESTClient:
         if response.status_code != 200:
             data = response.json()
             msg = data.get("detail", response.text)
-            raise OSError(f"Get all groups failed: {msg}")
+            raise RESTError(f"Get all groups failed: {msg}")
         return cast(list[dict], response.json())
 
     def get_group(self, group_name: str) -> dict:
@@ -396,7 +400,7 @@ class RESTClient:
         if response.status_code != 200:
             data = response.json()
             msg = data.get("detail", response.text)
-            raise OSError(f"Get group {group_name} failed: {msg}")
+            raise RESTError(f"Get group {group_name} failed: {msg}")
 
         return cast(dict, response.json())
 
@@ -411,7 +415,7 @@ class RESTClient:
             f"{self.base_url}/api/v3/groups/grant-permission", json=body)
 
         if response.status_code != 200:
-            raise OSError(f"Grant permission failed: {response.text}")
+            raise RESTError(f"Grant permission failed: {response.text}")
 
     def revoke_permission(self, dataset_id: int, group_id: int) -> None:
         """Revoke permission to a dataset."""
@@ -424,14 +428,14 @@ class RESTClient:
             f"{self.base_url}/api/v3/groups/revoke-permission", json=body)
 
         if response.status_code != 200:
-            raise OSError(f"Revoke permission failed: {response.text}")
+            raise RESTError(f"Revoke permission failed: {response.text}")
 
     def search_users(self, search: str) -> list[dict]:
         """Search for users in the GPF users REST API."""
         response = self.session.get(
             f"{self.base_url}/api/v3/users?page=1&search={search}")
         if response.status_code != 200:
-            raise OSError(f"Search user failed: {response.text}")
+            raise RESTError(f"Search user failed: {response.text}")
         return cast(list[dict], response.json())
 
     def initiate_forgotten_password(self, username: str) -> None:
@@ -442,7 +446,7 @@ class RESTClient:
         response = self.session.post(
             f"{self.base_url}/api/v3/users/forgotten_password", json=body)
         if response.status_code != 200:
-            raise OSError(
+            raise RESTError(
                 f"Initiate forgotten password reset failed: {response.text}")
 
     def initiate_password_reset_old(self, user_id: int) -> None:
@@ -454,7 +458,7 @@ class RESTClient:
             reset_password_url,
             json={})
         if response.status_code != 204:
-            raise OSError(
+            raise RESTError(
                 f"Initiate old password reset failed: {response.text}")
 
     def query_genotype_browser(
@@ -470,7 +474,8 @@ class RESTClient:
             stream=True,
         )
         if response.status_code != 200:
-            raise OSError(f"Query failed: {response.text}")
+            raise RESTError(
+                f"Query failed: {response.status_code} {response.text}")
         return response.iter_content(chunk_size=chunk_size)
 
     def query_pheno_tool(
@@ -501,5 +506,6 @@ class RESTClient:
                 ) as response:
 
             if response.status_code != 200:
-                raise OSError(f"Query failed: {response.text}")
+                raise RESTError(
+                    f"Query failed: {response.status_code} {response.text}")
             return cast(list[dict], response.json())
