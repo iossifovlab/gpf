@@ -1,0 +1,42 @@
+<div id="roles-container">
+  <div style="width: 70%">
+    <input
+      matAutocompleteOrigin
+      #roleSearch="matAutocompleteOrigin"
+      #roleSearchTrigger="matAutocompleteTrigger"
+      matInput
+      [matAutocomplete]="rolesDropdown"
+      [matAutocompleteConnectedTo]="roleSearch"
+      #searchBox
+      id="search-box"
+      placeholder="Search role"
+      autocomplete="off"
+      [(ngModel)]="searchValue"
+      (keyup)="searchBoxInput$.next(searchValue)"
+      spellcheck="false"
+      (focus)="roleSearchTrigger.openPanel()"
+      (keydown.enter)="roleSearchTrigger.closePanel()" />
+
+    <mat-autocomplete #rolesDropdown="matAutocomplete" class="role-suggestions-dropdown">
+      <mat-option
+        *ngFor="let suggestion of roleSuggestions"
+        class="dropdown-item"
+        type="button"
+        (click)="addToSelected(suggestion)"
+        (onSelectionChange)="addToSelected(suggestion)"
+        [title]="suggestion"
+        [disabled]="isSelected(suggestion)">
+        <span>{{ suggestion }}</span>
+      </mat-option>
+    </mat-autocomplete>
+  </div>
+
+  <div id="values-list">
+    <div *ngFor="let selectedRole of selectedRoles" class="role-wrapper">
+      <button (click)="removeFromSelected(selectedRole)" class="remove-role">
+        <span [id]="'remove-' + selectedRole" class="material-symbols-outlined">close</span>
+      </button>
+      {{ selectedRole }}
+    </div>
+  </div>
+</div>
