@@ -160,8 +160,12 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
         assert dataset.phenotype_data.has_measure(pheno_measure)
 
         measure = dataset.phenotype_data.get_measure(pheno_measure)
+        roles = None
+        if list(data["roles"]) is not None:
+            roles = list(data["roles"])
         df = dataset.phenotype_data.get_people_measure_values_df(
             [pheno_measure],
+            roles,
         )
         m = df[pheno_measure]
         df = df[np.logical_not(pd.isna(m.values))]
