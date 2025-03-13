@@ -4,7 +4,6 @@ from typing import Any, cast
 
 from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
-from dae.annotation.context import CLIAnnotationContext
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from dae.duckdb_storage.duckdb_genotype_storage import (
     DuckDbParquetStorage,
@@ -12,6 +11,7 @@ from dae.duckdb_storage.duckdb_genotype_storage import (
 from dae.duckdb_storage.duckdb_storage_helpers import (
     PARQUET_SCAN,
 )
+from dae.genomic_resources.genomic_context import CLIGenomicContext
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.parquet_storage.storage import ParquetLoaderVariants
 from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage
@@ -50,7 +50,7 @@ class ReannotateInstanceTool(AnnotationTool):
             action="store_true",
         )
 
-        CLIAnnotationContext.add_context_arguments(parser)
+        CLIGenomicContext.add_context_arguments(parser)
         TaskGraphCli.add_arguments(parser)
         VerbosityConfiguration.set_arguments(parser)
         return parser
