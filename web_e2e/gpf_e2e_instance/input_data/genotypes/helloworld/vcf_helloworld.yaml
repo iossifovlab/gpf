@@ -1,0 +1,9 @@
+id: vcf_helloworld
+
+input:
+  pedigree:
+    file: helloworld.ped
+
+  vcf:
+    files:
+      - helloworld.vcf

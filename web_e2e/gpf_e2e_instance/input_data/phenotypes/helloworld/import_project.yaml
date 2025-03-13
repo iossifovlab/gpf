@@ -1,0 +1,25 @@
+id: pheno_helloworld
+
+instrument_files:
+  - instruments/instrument_1.csv
+  - path: instruments/instrument_2.csv
+    delimiter: "\t"
+
+data_dictionary:
+  files:
+    - path: measure_descriptions.tsv
+
+pedigree: pedigree.ped
+
+person_column: personId
+
+work_dir: work
+
+study_config:
+  regressions:
+    reg_1:
+      measure_names:
+        - measure_1
+      instrument_name: instrument_1
+      jitter: 0.1
+      display_name: "Regression one"

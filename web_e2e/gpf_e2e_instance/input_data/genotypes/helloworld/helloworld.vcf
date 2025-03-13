@@ -1,0 +1,16 @@
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=chr14>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	f1.mom	f1.dad	f1.p1	f1.s1	f2.mom	f2.dad	f2.p1
+chr14	21385738	.	C	T	.	.	.	GT	0/0	0/1	0/1	0/0	0/0	0/1	0/0
+chr14	21385954	.	A	C	.	.	.	GT	0/0	0/0	0/0	0/0	0/1	0/0	0/1
+chr14	21393173	.	T	C	.	.	.	GT	0/1	0/0	0/0	0/1	0/0	0/0	0/0
+chr14	21393702	.	C	T	.	.	.	GT	0/0	0/0	0/0	0/0	0/0	0/1	0/1
+chr14	21393860	.	G	A	.	.	.	GT	0/0	0/1	0/1	0/1	0/0	0/0	0/0
+chr14	21403023	.	G	A	.	.	.	GT	0/0	0/1	0/0	0/1	0/1	0/0	0/0
+chr14	21405222	.	T	C	.	.	.	GT	0/0	0/0	0/0	0/0	0/0	0/1	0/0
+chr14	21409888	.	T	C	.	.	.	GT	0/1	0/0	0/1	0/0	0/1	0/0	1/0
+chr14	21429019	.	C	T	.	.	.	GT	0/0	0/1	0/1	0/0	0/0	0/1	0/1
+chr14	21431306	.	G	A	.	.	.	GT	0/0	0/1	0/1	0/1	0/0	0/0	0/0
+chr14	21431623	.	A	C	.	.	.	GT	0/0	0/0	0/0	0/0	0/1	1/1	1/1
+chr14	21393540	.	GGAA	G	.	.	.	GT	0/1	0/1	1/1	0/0	0/0	0/0	0/0

@@ -1,0 +1,14 @@
+id: denovo_helloworld
+
+input:
+  pedigree:
+    file: helloworld.ped
+
+  denovo:
+    files:
+      - helloworld.tsv
+    person_id: person_ids
+    chrom: CHROM
+    pos: POS
+    ref: REF
+    alt: ALT
