@@ -143,11 +143,10 @@ histogram
 Auto generated score definition
 ==================================
 
-Writing manual configuration for many vcf scores at a time is too cumbersome.
-For that reason vcf score definitions are generated automatically. Manually written
-partial or full configurations will replace some or all of the auto generated information.
+VCF files provide enough information to allow automatic generation of score definitions.
+These definitions can be overriden manually if necessary, either partially or fully.
 
-Example vcf file:
+Example VCF file:
 
 .. code:: bash
 
@@ -166,8 +165,8 @@ Score ``A`` will get auto generated score definition as if created by configurat
       column_name: A
       desc: Score A
 
-Auto generated score definitions lack key information. Use overriding to add more fields or change existing auto generated fields.
-Define manually which score definitions should be overriden by first specifying score id,
+Some fields cannot be automatically generated. Use overriding to add more fields or change existing auto generated fields.
+Define manually which score definitions should be overriden by first specifying the score id,
 then add new fields (like ``histogram``) or override existing auto generated (like ``type``):
 
 .. code:: yaml
@@ -179,7 +178,7 @@ then add new fields (like ``histogram``) or override existing auto generated (li
         type: categorical
         value_order: ["alpha", "beta"]
 
-The resulting score definition with updated ``type`` and added ``histogram`` will look like this if typed as configuration:
+The resulting score definition with updated ``type`` and added ``histogram`` will be equivalent to the following configuration:
 
 .. code:: yaml
 
@@ -191,6 +190,17 @@ The resulting score definition with updated ``type`` and added ``histogram`` wil
       histogram:
         type: categorical
         value_order: ["alpha", "beta"]
+
+How VCF types correspond to our types
+
+  =========  ======
+  VCF        GPF
+  =========  ======
+  Integer    int
+  Float      float
+  String     str
+  Flag       bool
+  =========  ======
 
 
 Zero-based / BED format scores
