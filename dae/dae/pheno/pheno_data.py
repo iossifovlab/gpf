@@ -360,6 +360,15 @@ class PhenotypeData(ABC, CommonStudyMixin):
             persons[person_id] = Person(**row)  # type: ignore
         return persons
 
+    def get_person_roles(self) -> list[str]:
+        "Return individuals distinct role data from phenotype database."
+        distinct_roles = set()
+        df = self.get_persons_df()
+        distinct_roles.update(
+            Role.from_value(row["role"]).name for row in df.to_dict("records")
+        )
+        return sorted(distinct_roles)
+
     @abstractmethod
     def search_measures(
         self,

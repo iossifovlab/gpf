@@ -232,9 +232,10 @@ class QueryTransformer:
     def _transform_filters_to_ids_beta(self, filters: list[dict]) -> set[str]:
         result = []
         for filter_conf in filters:
+            roles = filter_conf.get("roles") if "roles" in filter_conf else None
             ids = make_pheno_filter_beta(
                 filter_conf, self.study_wrapper.phenotype_data,
-            ).apply(self.study_wrapper.families)
+            ).apply(self.study_wrapper.families, roles)
 
             result.append(ids)
         return reduce(set.intersection, result)

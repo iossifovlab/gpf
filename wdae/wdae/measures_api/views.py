@@ -30,7 +30,7 @@ class PhenoMeasuresView(QueryBaseView):
         """Get phenotype measures."""
         data = request.query_params
 
-        dataset_id = data["datasetId"]
+        dataset_id = str(data["datasetId"])
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
 
@@ -71,7 +71,7 @@ class PhenoMeasureListView(QueryBaseView):
         """Get phenotype measures ids."""
         data = request.query_params
 
-        dataset_id = data["datasetId"]
+        dataset_id = str(data["datasetId"])
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
 
@@ -96,7 +96,7 @@ class PhenoMeasureHistogramView(QueryBaseView):
         """Get phenotype measure histograms."""
         data = request.data
         assert isinstance(data, dict)
-        dataset_id = data["datasetId"]
+        dataset_id = str(data["datasetId"])
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
         if "measure" in data \
@@ -147,7 +147,7 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
 
         assert isinstance(data, dict)
 
-        dataset_id = data["datasetId"]
+        dataset_id = str(data["datasetId"])
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
         if "measure" in data \
@@ -207,6 +207,26 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
         return Response(result, status=status.HTTP_200_OK)
 
 
+class PhenoDataRoleListView(QueryBaseView):
+    """View for phenotype data roles list."""
+
+    def post(self, request: Request) -> Response:
+        """Get phenotype data roles list."""
+        data = request.data
+        if data is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        assert isinstance(data, dict)
+
+        dataset_id = str(data["datasetId"])
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        assert dataset is not None
+
+        result = dataset.phenotype_data.get_person_roles()
+
+        return Response(result, status=status.HTTP_200_OK)
+
+
 class PhenoMeasurePartitionsView(QueryBaseView, DatasetAccessRightsView):
     """View for phenotype measure partitions.
     Histograms can calculate gene count when min and max are not inside bins.
@@ -219,7 +239,7 @@ class PhenoMeasurePartitionsView(QueryBaseView, DatasetAccessRightsView):
         data = request.data
         assert isinstance(data, dict)
 
-        dataset_id = data["datasetId"]
+        dataset_id = str(data["datasetId"])
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
         assert "measure" in data
@@ -265,7 +285,7 @@ class PhenoMeasureRegressionsView(QueryBaseView):
         """Get phenotype measure regressions."""
         data = request.query_params
 
-        dataset_id = data["datasetId"]
+        dataset_id = str(data["datasetId"])
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         if dataset is None or not dataset.has_pheno_data:
             return Response(status=status.HTTP_404_NOT_FOUND)

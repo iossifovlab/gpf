@@ -26,6 +26,11 @@ urlpatterns = [
     re_path(
         r"^/histogram-beta/?$",
         views.PhenoMeasureHistogramViewBeta.as_view(),
+        name="measure_histogram_beta",
+    ),
+    re_path(
+        r"^/role-list/?$",
+        views.PhenoDataRoleListView.as_view(),
         name="measure_histogram",
     ),
     re_path(
