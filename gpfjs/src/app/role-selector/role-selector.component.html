@@ -1,5 +1,5 @@
 <div id="roles-container">
-  <div style="width: 70%">
+  <div>
     <input
       matAutocompleteOrigin
       #roleSearch="matAutocompleteOrigin"
@@ -31,7 +31,7 @@
     </mat-autocomplete>
   </div>
 
-  <div id="values-list">
+  <div id="roles-list">
     <div *ngFor="let selectedRole of selectedRoles" class="role-wrapper">
       <button (click)="removeFromSelected(selectedRole)" class="remove-role">
         <span [id]="'remove-' + selectedRole" class="material-symbols-outlined">close</span>

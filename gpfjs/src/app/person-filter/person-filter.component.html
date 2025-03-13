@@ -1,96 +1,99 @@
 <div class="panel measure-histograms-panel" *ngIf="selectedMeasure && localState">
-  <div class="measure-histograms-container">
-    <div class="title-wrapper">{{ selectedMeasure.measure }}</div>
+  <gpf-role-selector></gpf-role-selector>
+  <div>
+    <div class="measure-histograms-container">
+      <div class="title-wrapper">{{ selectedMeasure.measure }}</div>
 
-    <div *ngIf="isCategoricalHistogram(selectedMeasure.histogram)">
-      <button mat-icon-button [matMenuTriggerFor]="menu" id="view-menu-button">
-        <span>Mode</span>
-      </button>
-      <mat-menu #menu="matMenu">
-        <button
-          mat-menu-item
-          (click)="switchCategoricalHistogramView('range selector')"
-          [ngClass]="{ 'selected-view': localState.categoricalView === 'range selector' }"
-          >range selector
+      <div *ngIf="isCategoricalHistogram(selectedMeasure.histogram)">
+        <button mat-icon-button [matMenuTriggerFor]="menu" id="view-menu-button">
+          <span>Mode</span>
         </button>
-        <button
-          mat-menu-item
-          (click)="switchCategoricalHistogramView('click selector')"
-          [ngClass]="{ 'selected-view': localState.categoricalView === 'click selector' }"
-          >click selector
-        </button>
-        <button
-          mat-menu-item
-          (click)="switchCategoricalHistogramView('dropdown selector')"
-          [ngClass]="{ 'selected-view': localState.categoricalView === 'dropdown selector' }"
-          >dropdown selector
-        </button>
-      </mat-menu>
+        <mat-menu #menu="matMenu">
+          <button
+            mat-menu-item
+            (click)="switchCategoricalHistogramView('range selector')"
+            [ngClass]="{ 'selected-view': localState.categoricalView === 'range selector' }"
+            >range selector
+          </button>
+          <button
+            mat-menu-item
+            (click)="switchCategoricalHistogramView('click selector')"
+            [ngClass]="{ 'selected-view': localState.categoricalView === 'click selector' }"
+            >click selector
+          </button>
+          <button
+            mat-menu-item
+            (click)="switchCategoricalHistogramView('dropdown selector')"
+            [ngClass]="{ 'selected-view': localState.categoricalView === 'dropdown selector' }"
+            >dropdown selector
+          </button>
+        </mat-menu>
+      </div>
     </div>
-  </div>
 
-  <div
-    *ngIf="
-      selectedMeasure &&
-      isCategoricalHistogram(selectedMeasure.histogram) &&
-      localState.categoricalView === 'dropdown selector'
-    "
-    style="width: 100%">
-    <gpf-categorical-values-dropdown
-      [initialState]="localState.values"
-      [histogram]="selectedMeasure.histogram"
-      (updateSelectedValues)="replaceCategoricalValues($event)"></gpf-categorical-values-dropdown>
-  </div>
-
-  <div *ngIf="localState.categoricalView !== 'dropdown selector'" class="col-sm-11">
-    <gpf-histogram
-      *ngIf="selectedMeasure && isNumberHistogram(selectedMeasure.histogram)"
-      [width]="800"
-      [height]="145"
-      [marginLeft]="180"
-      [bins]="selectedMeasure.histogram.bins"
-      [bars]="selectedMeasure.histogram.bars"
-      [domainMin]="domainMin"
-      [domainMax]="domainMax"
-      [logScaleX]="selectedMeasure.histogram.logScaleX"
-      [logScaleY]="selectedMeasure.histogram.logScaleY"
-      [smallValuesDesc]="selectedMeasure.histogram.smallValuesDesc"
-      [largeValuesDesc]="selectedMeasure.histogram.largeValuesDesc"
-      [rangeStart]="localState.rangeStart"
-      (rangeStartChange)="updateRangeStart($event)"
-      [rangeEnd]="localState.rangeEnd"
-      (rangeEndChange)="updateRangeEnd($event)"
-      style="display: block; margin-top: 17px">
-    </gpf-histogram>
-    <gpf-categorical-histogram
+    <div
       *ngIf="
         selectedMeasure &&
         isCategoricalHistogram(selectedMeasure.histogram) &&
-        localState.categoricalView === 'click selector'
+        localState.categoricalView === 'dropdown selector'
       "
-      [width]="700"
-      [height]="145"
-      [histogram]="selectedMeasure.histogram"
-      [initialSelectedValueNames]="localState.values"
-      [interactType]="localState.categoricalView"
-      (selectCategoricalValues)="toggleCategoricalValues($event)">
-    </gpf-categorical-histogram>
-    <gpf-categorical-histogram
-      *ngIf="
-        selectedMeasure &&
-        isCategoricalHistogram(selectedMeasure.histogram) &&
-        localState.categoricalView === 'range selector'
-      "
-      [width]="700"
-      [height]="145"
-      [histogram]="selectedMeasure.histogram"
-      [initialSelectedValueNames]="localState.values"
-      [interactType]="localState.categoricalView"
-      (selectCategoricalValues)="toggleCategoricalValues($event)">
-    </gpf-categorical-histogram>
-  </div>
+      style="width: 100%">
+      <gpf-categorical-values-dropdown
+        [initialState]="localState.values"
+        [histogram]="selectedMeasure.histogram"
+        (updateSelectedValues)="replaceCategoricalValues($event)"></gpf-categorical-values-dropdown>
+    </div>
 
-  <div class="col-sm-11">
-    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+    <div *ngIf="localState.categoricalView !== 'dropdown selector'" class="col-sm-11">
+      <gpf-histogram
+        *ngIf="selectedMeasure && isNumberHistogram(selectedMeasure.histogram)"
+        [width]="800"
+        [height]="145"
+        [marginLeft]="180"
+        [bins]="selectedMeasure.histogram.bins"
+        [bars]="selectedMeasure.histogram.bars"
+        [domainMin]="domainMin"
+        [domainMax]="domainMax"
+        [logScaleX]="selectedMeasure.histogram.logScaleX"
+        [logScaleY]="selectedMeasure.histogram.logScaleY"
+        [smallValuesDesc]="selectedMeasure.histogram.smallValuesDesc"
+        [largeValuesDesc]="selectedMeasure.histogram.largeValuesDesc"
+        [rangeStart]="localState.rangeStart"
+        (rangeStartChange)="updateRangeStart($event)"
+        [rangeEnd]="localState.rangeEnd"
+        (rangeEndChange)="updateRangeEnd($event)"
+        style="display: block; margin-top: 17px">
+      </gpf-histogram>
+      <gpf-categorical-histogram
+        *ngIf="
+          selectedMeasure &&
+          isCategoricalHistogram(selectedMeasure.histogram) &&
+          localState.categoricalView === 'click selector'
+        "
+        [width]="600"
+        [height]="145"
+        [histogram]="selectedMeasure.histogram"
+        [initialSelectedValueNames]="localState.values"
+        [interactType]="localState.categoricalView"
+        (selectCategoricalValues)="toggleCategoricalValues($event)">
+      </gpf-categorical-histogram>
+      <gpf-categorical-histogram
+        *ngIf="
+          selectedMeasure &&
+          isCategoricalHistogram(selectedMeasure.histogram) &&
+          localState.categoricalView === 'range selector'
+        "
+        [width]="600"
+        [height]="145"
+        [histogram]="selectedMeasure.histogram"
+        [initialSelectedValueNames]="localState.values"
+        [interactType]="localState.categoricalView"
+        (selectCategoricalValues)="toggleCategoricalValues($event)">
+      </gpf-categorical-histogram>
+    </div>
+
+    <div class="col-sm-11">
+      <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+    </div>
   </div>
 </div>

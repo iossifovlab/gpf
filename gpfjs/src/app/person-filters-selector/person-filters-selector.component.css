@@ -5,8 +5,7 @@
 
 .filters-container {
   display: flex;
-  justify-content: flex-end;
-  gap: 4rem;
+  justify-content: space-between;
   border-top: 1px solid rgba(0, 0, 0, 17%);
 }
 
