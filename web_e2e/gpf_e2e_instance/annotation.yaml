@@ -1,0 +1,6 @@
+
+- np_score: hg19/scores/MPC
+# - np_score: hg19/scores/CADD
+
+- allele_score: hg19/variant_frequencies/gnomAD_v2.1.1/exomes
+# - allele_score: hg19/variant_frequencies/gnomAD_v2.1.1/genomes

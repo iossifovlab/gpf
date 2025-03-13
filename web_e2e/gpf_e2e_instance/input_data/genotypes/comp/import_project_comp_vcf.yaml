@@ -1,0 +1,16 @@
+id: comp_vcf
+
+input:
+  input_dir: "%(wd)s"
+  pedigree:
+    file: comp.ped
+
+  vcf:
+    files:
+      - comp.vcf
+
+processing_config:
+  work_dir: "%(wd)s/OUTPUT"
+
+destination:
+  storage_id: genotype_duckdb

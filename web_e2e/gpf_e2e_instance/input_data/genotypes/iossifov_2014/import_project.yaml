@@ -1,0 +1,15 @@
+id: iossifov_2014
+
+input:
+  input_dir: "%(wd)s"
+  pedigree:
+    file: IossifovWE2014.ped
+  denovo:
+    files:
+      - IossifovWE2014.tsv
+
+processing_config:
+  work_dir: "%(wd)s/OUTPUT"
+
+destination:
+  storage_id: genotype_duckdb
