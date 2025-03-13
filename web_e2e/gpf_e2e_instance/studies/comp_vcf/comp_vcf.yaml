@@ -1,0 +1,14 @@
+id: comp_vcf
+conf_dir: .
+has_denovo: false
+has_cnv: false
+has_transmitted: true
+genotype_storage:
+  id: genotype_duckdb
+  tables:
+    pedigree: parquet_scan('comp_vcf/pedigree/pedigree.parquet')
+    meta: parquet_scan('comp_vcf/meta/meta.parquet')
+    summary: parquet_scan('comp_vcf/summary/*.parquet')
+    family: parquet_scan('comp_vcf/family/*.parquet')
+genotype_browser:
+  enabled: true

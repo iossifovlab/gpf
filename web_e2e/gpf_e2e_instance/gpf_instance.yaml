@@ -1,18 +1,24 @@
-vars:
-  instance_id: data_hg19_startup
-
-instance_id: '%(instance_id)s'
+instance_id: gpf_e2e_instance
 
 genotype_storage:
   default: genotype_duckdb
 
   storages:
-    - id: genotype_inmemory
-      dir: "%($DAE_DB_DIR)s/studies"
-      storage_type: inmemory
     - id: genotype_duckdb
       storage_type: duckdb_parquet
-      base_dir: "%(wd)s/duckdb_storage"
+      base_dir: "%(wd)s/genotype_storage"
+
+phenotype_storage:
+  default: pheno_storage
+
+  storages:
+    - id: pheno_storage
+      base_dir: '%(wd)s/phenotype_storage'
+
+cache_path: '%(wd)s/phenotype_storage'
+
+phenotype_images: '%(wd)s/phenotype_storage/images'
+
 
 annotation:
   conf_file: "%($DAE_DB_DIR)s/annotation.yaml"
@@ -30,25 +36,6 @@ datasets:
 
 default_study_config:
   conf_file: "%($DAE_DB_DIR)s/defaultConfiguration.conf"
-
-#remotes:
-  #- id: "staging"
-    #host: "dory.seqpipe.org"
-    #gpf_prefix: "hg38"
-    #base_url: "api/v3"
-    #port: 8000
-    #credentials: "dlBIQU9vWkFoQ1o1b0IwUzNIUVoxOFJmSzhWWkNYamFzUzZMVjhHRTpyb1U1UXp4czQ0OEVTTWZiRXQ0dFREajZpUnZJaXpZaW5Zd3FITjNaaU9nNEpRYmZQaG9OWnlKV25wdGZRbFZWVW9pOUZzWkRvbkJIZWlDRGZIaERlSlRXcUNXMm5JSFdFODBCaHBTYWpIMnpIcVFEcVZIVHhNcXlWdnowRkwwVw=="
-  #- id: "TEST_REMOTE"
-    #host: "localhost"
-    #base_url: "api/v3"
-    #port: 21010
-    #credentials: "ZmVkZXJhdGlvbjpzZWNyZXQ="
-
-# grr:
-#   id: "seqpipe"
-#   type: "url"
-#   url: "https://grr.seqpipe.org"
-#   cache_dir: "%($HOME)s/grrCache"
 
 gene_sets_db:
   gene_set_collections:
@@ -71,24 +58,11 @@ gene_scores_db:
     - gene_properties/gene_scores/pRec
     - gene_properties/gene_scores/SFARI_gene_score_2024_Q1
 
-# genomic_scores_db:
-# - resource: hg19/scores/MPC
-#   score: mpc
-# - resource: hg19/scores/CADD
-#   score: cadd_raw
-# - resource: hg19/scores/CADD
-#   score: cadd_phred
-# - resource: hg19/variant_frequencies/gnomAD_v2.1.1/exomes
-#   score: exome_gnomad_af_percent
-# - resource: hg19/variant_frequencies/gnomAD_v2.1.1/genomes
-#   score: genome_gnomad_af_percent
-
 reference_genome:
   resource_id: "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174"
 
 gene_models:
   resource_id: "hg19/gene_models/refGene_v20190211"
-
 
 gene_profiles_config:
   conf_file: "geneProfiles.yaml"
