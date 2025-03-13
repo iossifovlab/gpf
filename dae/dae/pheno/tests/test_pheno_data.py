@@ -112,6 +112,12 @@ def test_data_get_persons(fake_phenotype_data: PhenotypeStudy):
     assert isinstance(persons["f1.p1"], Person)
 
 
+def test_data_get_person_roles(fake_phenotype_data: PhenotypeStudy):
+    roles = fake_phenotype_data.get_person_roles()
+    assert roles is not None
+    assert roles == ["dad", "mom", "prb", "sib"]
+
+
 def test_data_get_measure(fake_phenotype_data: PhenotypeStudy) -> None:
     mes = fake_phenotype_data.get_measure("i1.m1")
     assert mes is not None
