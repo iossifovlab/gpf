@@ -1,6 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
-from typing import Literal
 
 import pytest
 
@@ -39,14 +38,7 @@ def vcf_variants(
     return (str(ped_path), str(vcf_path))
 
 
-@pytest.mark.parametrize(
-    "denovo_mode",
-    [
-        "denovo",
-    ],
-)
 def test_vcf_denovo_reference(
-    denovo_mode: Literal["denovo", "possible_denovo", "ignore", "ala_bala"],
     vcf_variants: tuple[str, str],
     acgt_genome_38: ReferenceGenome,
     tmp_path: pathlib.Path,
@@ -58,7 +50,7 @@ def test_vcf_denovo_reference(
         "vcf_include_reference_genotypes": True,
         "vcf_include_unknown_family_genotypes": True,
         "vcf_include_unknown_person_genotypes": True,
-        "vcf_denovo_mode": denovo_mode,
+        "vcf_denovo_mode": "denovo",
     }
     vcf_loader = VcfLoader(
         families,
