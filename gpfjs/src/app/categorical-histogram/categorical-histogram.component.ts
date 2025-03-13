@@ -222,7 +222,11 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     this.values.forEach(value => {
       const leftX = this.xScale(value.name) + this.xScale.bandwidth() / 2;
       axisX.push(leftX);
-      axisVals.push(value.name);
+      if (value.name === 'Other values') {
+        axisVals.push(value.name + ` (${this.otherValueNames.length})`);
+      } else {
+        axisVals.push(value.name);
+      }
     });
 
     axisX.push(width);
@@ -252,16 +256,24 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       .attr('transform', `rotate(${calculatedRotation})`);
 
     this.values.forEach(value => {
-      svg.selectAll('text').filter(t => t === value.name).each(function(d: string) {
+      svg.selectAll('text').filter(
+        (t: string) => t === value.name || t.includes('Other values')
+      ).each((d: string, i, labels) => {
         const maxLabelLen = 20;
         if (d.length > maxLabelLen) {
           d = d.slice(0, maxLabelLen).concat('...');
         }
         // eslint-disable-next-line no-invalid-this
-        d3.select(this).text(d);
+        d3.select(labels[i]).text(d);
 
-        // eslint-disable-next-line no-invalid-this
-        d3.select(this).append('title').text(value.name); // add hover text on each label
+        // add hover text on each label
+        if (value.name === 'Other values') {
+          // eslint-disable-next-line no-invalid-this
+          d3.select(labels[i]).append('title').text(value.name + ` (${this.otherValueNames.length})`);
+        } else {
+          // eslint-disable-next-line no-invalid-this
+          d3.select(labels[i]).append('title').text(value.name);
+        }
       });
     });
   }

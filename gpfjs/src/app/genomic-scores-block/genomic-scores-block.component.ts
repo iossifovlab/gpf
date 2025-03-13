@@ -42,7 +42,7 @@ export class GenomicScoresBlockComponent implements OnInit {
       if (genomicScoresState.length > 0) {
         // restore state
         for (const state of genomicScoresState) {
-          this.selectedGenomicScores.push({
+          this.selectedGenomicScores.unshift({
             score: genomicScores.find(score => score.score === state.score),
             state: state,
           });
@@ -85,7 +85,7 @@ export class GenomicScoresBlockComponent implements OnInit {
 
   public addFilter(score: GenomicScore, index: number): void {
     const defaultState = this.createScoreDefaultState(score);
-    this.selectedGenomicScores.push({
+    this.selectedGenomicScores.unshift({
       score: score,
       state: defaultState,
     });
