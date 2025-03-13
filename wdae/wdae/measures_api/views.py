@@ -207,6 +207,26 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
         return Response(result, status=status.HTTP_200_OK)
 
 
+class PhenoDataRoleListView(QueryBaseView):
+    """View for phenotype data roles list."""
+
+    def post(self, request: Request) -> Response:
+        """Get phenotype data roles list."""
+        data = request.data
+        if data is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        assert isinstance(data, dict)
+
+        dataset_id = data["datasetId"]
+        dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        assert dataset is not None
+
+        result = dataset.phenotype_data.get_person_roles()
+
+        return Response(result, status=status.HTTP_200_OK)
+
+
 class PhenoMeasurePartitionsView(QueryBaseView, DatasetAccessRightsView):
     """View for phenotype measure partitions.
     Histograms can calculate gene count when min and max are not inside bins.
