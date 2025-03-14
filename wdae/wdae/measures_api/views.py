@@ -18,6 +18,7 @@ from dae.genomic_resources.histogram import (
     NumberHistogramConfig,
 )
 from dae.pheno.common import MeasureType
+from dae.variants.attributes import Role
 
 logger = logging.getLogger(__name__)
 
@@ -151,17 +152,24 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
         if "measure" in data \
-                and not dataset.phenotype_data.has_measure(data["measure"]):
+                and not dataset.phenotype_data.has_measure(
+                    str(data["measure"]),
+                ):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         assert "measure" in data
 
-        pheno_measure = data["measure"]
+        pheno_measure = str(data["measure"])
         assert pheno_measure is not None
         assert dataset.phenotype_data.has_measure(pheno_measure)
 
         measure = dataset.phenotype_data.get_measure(pheno_measure)
+        roles = None
+        if data.get("roles") is not None:
+            roles = [Role.from_name(str(r)) for r in data["roles"]]
+
         df = dataset.phenotype_data.get_people_measure_values_df(
             [pheno_measure],
+            roles=roles,
         )
         m = df[pheno_measure]
         df = df[np.logical_not(pd.isna(m.values))]
@@ -172,7 +180,7 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
         }
         if measure.histogram_type is NumberHistogram:
             bars, bins = np.histogram(
-                df[pheno_measure].values,
+                list(df[pheno_measure].values),
                 25,
             )
             number_hist_conf = NumberHistogramConfig(
