@@ -131,7 +131,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: 0,
       rangeEnd: 0,
       values: [],
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     component.localState = localStateMock;
     component.updateRangeStart(5);
@@ -148,7 +149,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: 0,
       rangeEnd: 0,
       values: [],
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     component.localState = localStateMock;
 
@@ -171,7 +173,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['val1', 'val2'],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
     component.localState = localStateMock;
 
@@ -189,7 +192,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['val1', 'val2'],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
     component.localState = localStateMock;
 
@@ -207,7 +211,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['val1', 'val2'],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
     component.localState = localStateMock;
 
@@ -245,7 +250,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['val1', 'val2'],
-      categoricalView: 'click selector'
+      categoricalView: 'click selector',
+      roles: null
     };
     component.localState = localStateMock;
 
@@ -263,7 +269,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['val1', 'val2'],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
     component.localState = localStateMock;
 
@@ -281,7 +288,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['val1', 'val2'],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
     component.localState = localStateMock;
 
@@ -301,7 +309,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['val1, val2'],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
     component.initialState = localStateMock;
     component.ngOnInit();
@@ -324,7 +333,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: undefined,
       rangeEnd: undefined,
       values: [],
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     component.initialState = localStateMock;
     component.ngOnInit();
@@ -347,7 +357,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: 3,
       rangeEnd: 13,
       values: [],
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     component.initialState = localStateMock;
     component.ngOnInit();
@@ -373,7 +384,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: 8,
       rangeEnd: 7,
       values: [],
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     component.initialState = localStateMock;
     component.ngOnInit();
@@ -419,7 +431,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: [],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
     component.initialState = localStateMock;
     component.ngOnInit();
@@ -464,7 +477,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: selectedValuesMock,
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
     component.initialState = localStateMock;
     component.ngOnInit();
@@ -488,7 +502,8 @@ describe('PersonFilterComponent', () => {
       rangeStart: 7,
       rangeEnd: 10,
       values: [],
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     component.initialState = localStateMock;
     component.ngOnInit();

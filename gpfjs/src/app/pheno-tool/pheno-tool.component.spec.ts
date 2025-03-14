@@ -165,7 +165,8 @@ describe('PhenoToolComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['val1', 'val2'],
-      categoricalView: 'click selector'
+      categoricalView: 'click selector',
+      roles: null
     };
 
     const personMeasureHistogramsMock: MeasureHistogramState = {
@@ -174,7 +175,8 @@ describe('PhenoToolComponent', () => {
       rangeStart: 5,
       rangeEnd: 100,
       values: null,
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
 
     jest.spyOn(rxjs, 'combineLatest')
@@ -211,6 +213,7 @@ describe('PhenoToolComponent', () => {
         min: null,
         max: null,
         values: ['val1', 'val2'],
+        roles: null
       }],
       genomicScores: genomicScoresMock,
       measureId: 'abc',
@@ -222,6 +225,7 @@ describe('PhenoToolComponent', () => {
         min: 5,
         max: 100,
         values: null,
+        roles: null
       }],
       presentInParent: {
         presentInParent: ['neither'],

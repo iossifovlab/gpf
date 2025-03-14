@@ -87,7 +87,8 @@ describe('PhenoMeasureSelectorBetaComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['val1', 'val2'],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
     jest.spyOn(store, 'select').mockReturnValue(of([mockState]));
     component.ngOnInit();
@@ -102,7 +103,8 @@ describe('PhenoMeasureSelectorBetaComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['val1', 'val2'],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
 
     const mockState2: MeasureHistogramState = {
@@ -111,7 +113,8 @@ describe('PhenoMeasureSelectorBetaComponent', () => {
       rangeStart: 5,
       rangeEnd: 10,
       values: null,
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     jest.spyOn(store, 'select').mockReturnValue(of([mockState1, mockState2]));
     component.ngOnInit();
