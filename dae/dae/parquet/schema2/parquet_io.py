@@ -317,6 +317,7 @@ class VariantsParquetWriter:
         self,
         full_variants_iterator: Iterable[tuple[SummaryVariant, list[FamilyVariant]]],  # noqa: E501
     ) -> tuple[int, int]:
+        logger.info("Working in iterative annotation mode")
         summary_index = 0
         family_index = 0
         for summary_index, (
@@ -356,9 +357,9 @@ class VariantsParquetWriter:
         full_variants_iterator: Iterable[tuple[SummaryVariant, list[FamilyVariant]]],  # noqa: E501
         annotation_batch_size: int,
     ) -> tuple[int, int]:
+        logger.info("Working in batch annotation mode")
         summary_index = 0
         family_index = 0
-
         iterator = iter(full_variants_iterator)
         while batch := tuple(islice(iterator, annotation_batch_size)):
             self._annotate_batch(batch)
