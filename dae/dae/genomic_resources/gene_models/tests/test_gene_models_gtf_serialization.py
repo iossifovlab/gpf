@@ -27,7 +27,7 @@ from dae.genomic_resources.testing import (
 from dae.utils.regions import BedRegion
 
 
-@pytest.fixture()
+@pytest.fixture
 def ensembl_gtf_example() -> GeneModels:
     # Example from: https://ftp.ensembl.org/pub/current/gtf/homo_sapiens/README
     res = build_inmemory_test_resource(
@@ -49,7 +49,7 @@ def ensembl_gtf_example() -> GeneModels:
     return build_gene_models_from_resource(res)
 
 
-@pytest.fixture()
+@pytest.fixture
 def ensembl_gtf_example_shh() -> GeneModels:
     # SHH = Sonic hedgehog gene
     res = build_inmemory_test_resource(
@@ -73,7 +73,7 @@ chr7  HAVANA  UTR          155799980  155802902  .  -  .  gene_id||"ENSG00000164
     return build_gene_models_from_resource(res)
 
 
-@pytest.fixture()
+@pytest.fixture
 def gencode_46_calml6_example() -> GeneModels:
     # CALML6
     res = build_inmemory_test_resource(
@@ -103,7 +103,7 @@ chr1        HAVANA      UTR         1917191     1917296     .           +       
     return build_gene_models_from_resource(res)
 
 
-@pytest.fixture()
+@pytest.fixture
 def ensembl_gtf_example_noncoding() -> GeneModels:
     res = build_inmemory_test_resource(
         content={
@@ -120,7 +120,7 @@ chr1    HAVANA    exon    89295    91629    .    -    .    gene_id||"ENSG0000023
     return build_gene_models_from_resource(res)
 
 
-@pytest.fixture()
+@pytest.fixture
 def gtf_example_no_exons() -> GeneModels:
     res = build_inmemory_test_resource(
         content={
@@ -133,7 +133,7 @@ chr1    HAVANA    transcript    89295    120932    .    -    .    gene_id||"ENSG
     return build_gene_models_from_resource(res)
 
 
-@pytest.fixture()
+@pytest.fixture
 def gtf_example_split_start_stop_codons() -> GeneModels:
     res = build_inmemory_test_resource(
         content={
@@ -583,7 +583,7 @@ def test_find_exon_for_gtf_cds_feature(
     assert cds
 
 
-@pytest.fixture()
+@pytest.fixture
 def transcript_builder() -> Callable[
     [list[tuple[int, int]], tuple[int, int], str],
     TranscriptModel,
@@ -997,3 +997,45 @@ def test_with_various_formats(filename: str, fmt: str) -> None:
 
     assert len(gtf_models.gene_models) \
         == len(reference_models.gene_models)
+
+
+@pytest.fixture
+def refseq_trim17_example() -> GeneModels:
+    res = build_inmemory_test_resource(
+        content={
+            "genomic_resource.yaml":
+                "{type: gene_models, filename: test.txt, format: refseq}",
+            "test.txt": convert_to_tab_separated(textwrap.dedent("""
+2327	XM_047422078.1	chr1	-	228407934	228416861	228408200	228415072	6	228407934,228409171,228409388,228410945,228413796,228414643,	228408751,228409275,228409411,228411176,228413892,228416861,	0	TRIM17	cmpl	cmpl	1,2,0,0,0,0,
+2327	XM_047422091.1	chr1	-	228407934	228416861	228409261	228415072	5	228407934,228409388,228410945,228413796,228414643,	228409271,228409411,228411176,228413892,228416861,	0	TRIM17	cmpl	cmpl	2,0,0,0,0,
+2327	XM_011544209.4	chr1	-	228407934	228416861	228408200	228415072	7	228407934,228409171,228409388,228410945,228413796,228414643,228416386,	228408751,228409275,228409411,228411176,228413892,228415205,228416861,	0	TRIM17	cmpl	cmpl	1,2,0,0,0,0,-1,
+2327	XM_047422098.1	chr1	-	228407934	228416861	228409261	228415072	6	228407934,228409388,228410945,228413796,228414643,228416386,	228409271,228409411,228411176,228413892,228415205,228416861,	0	TRIM17	cmpl	cmpl	2,0,0,0,0,-1,
+2327	XM_006711779.4	chr1	-	228407934	228416861	228408200	228415072	7	228407934,228409171,228409388,228410945,228413796,228414643,228416386,	228408751,228409275,228409411,228411176,228413892,228415113,228416861,	0	TRIM17	cmpl	cmpl	1,2,0,0,0,0,-1,
+2327	XM_047422103.1	chr1	-	228407934	228416861	228409261	228415072	6	228407934,228409388,228410945,228413796,228414643,228416386,	228409271,228409411,228411176,228413892,228415113,228416861,	0	TRIM17	cmpl	cmpl	2,0,0,0,0,-1,
+2327	XM_011544210.4	chr1	-	228407934	228416861	228408200	228415072	7	228407934,228409171,228409388,228410945,228413796,228414643,228416386,	228408751,228409275,228409411,228411176,228413892,228415077,228416861,	0	TRIM17	cmpl	cmpl	1,2,0,0,0,0,-1,
+2327	XM_017001419.2	chr1	-	228407934	228416861	228409261	228415072	6	228407934,228409388,228410945,228413796,228414643,228416386,	228409271,228409411,228411176,228413892,228415077,228416861,	0	TRIM17	cmpl	cmpl	2,0,0,0,0,-1,
+2327	XM_011544211.4	chr1	-	228407934	228416861	228408200	228414991	7	228407934,228409171,228409388,228410945,228413796,228414643,228416386,	228408751,228409275,228409411,228411176,228413892,228414999,228416861,	0	TRIM17	cmpl	cmpl	1,2,0,0,0,0,-1,
+2327	NM_016102.4	chr1	-	228407934	228416861	228408200	228415072	7	228407934,228409171,228409388,228410945,228413796,228414643,228416538,	228408751,228409275,228409411,228411176,228413892,228415113,228416861,	0	TRIM17	cmpl	cmpl	1,2,0,0,0,0,-1,
+2327	NM_001024940.3	chr1	-	228407934	228416861	228408200	228415072	7	228407934,228409171,228409388,228410945,228413796,228414643,228416538,	228408751,228409275,228409411,228411176,228413892,228415077,228416861,	0	TRIM17	cmpl	cmpl	1,2,0,0,0,0,-1,
+2327	XM_047422088.1	chr1	-	228407934	228416861	228408200	228414991	7	228407934,228409171,228409388,228410945,228413796,228414643,228416538,	228408751,228409275,228409411,228411176,228413892,228414999,228416861,	0	TRIM17	cmpl	cmpl	1,2,0,0,0,0,-1,
+2327	NM_001134855.2	chr1	-	228408773	228416861	228409022	228415072	6	228408773,228409388,228410945,228413796,228414643,228416386,	228409275,228409411,228411176,228413892,228415077,228416861,	0	TRIM17	cmpl	cmpl	2,0,0,0,0,-1,
+585	NM_001134855.2	chr1_KZ208906v1_fix	-	0	8060	221	6271	6	0,587,2144,4995,5842,7585,	474,610,2375,5091,6276,8060,	0	TRIM17	cmpl	cmpl	2,0,0,0,0,-1,
+585	NM_016102.4	chr1_KZ208906v1_fix	-	370	8060	370	6271	6	370,587,2144,4995,5842,7737,	474,610,2375,5091,6312,8060,	0	TRIM17	cmpl	cmpl	2,0,0,0,0,-1,
+585	NM_001024940.3	chr1_KZ208906v1_fix	-	370	8060	370	6271	6	370,587,2144,4995,5842,7737,	474,610,2375,5091,6276,8060,	0	TRIM17	cmpl	cmpl	2,0,0,0,0,-1,
+""")),  # noqa: E501
+        })
+    return build_gene_models_from_resource(res)
+
+
+def test_serialization_with_gene_on_multiple_chromosomes(
+    refseq_trim17_example: GeneModels,
+):
+    refseq_trim17_example.load()
+    buffer = gene_models_to_gtf(refseq_trim17_example)
+
+    output = buffer.read().splitlines()
+    gene_line = output[4].split("\t")
+    assert gene_line[0] == "chr1"
+    assert gene_line[2] == "gene"
+    assert gene_line[3] == "228407935"
+    assert gene_line[4] == "228416861"
