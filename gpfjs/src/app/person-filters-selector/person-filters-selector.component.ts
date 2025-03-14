@@ -105,6 +105,21 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
     this.validateState();
   }
 
+  public loadHistogram(data: {measureId: string, roles: string[]}): void {
+    this.measuresService.getMeasureHistogramBeta(this.dataset.id, data.measureId, data.roles)
+      .subscribe(histogramData => {
+        this.removeFromState(data.measureId);
+        const defaultState = this.createMeasureDefaultState(histogramData);
+        defaultState.roles = data.roles;
+
+        this.selectedMeasureHistograms.push({
+          measureHistogram: histogramData,
+          state: defaultState
+        });
+        this.addToState(defaultState);
+      });
+  }
+
   private dispatchContinuousHistogram(
     histogram: { measure: string; rangeStart: number; rangeEnd: number; roles: string[] }
   ): void {

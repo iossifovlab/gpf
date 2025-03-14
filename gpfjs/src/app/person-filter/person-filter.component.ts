@@ -19,6 +19,7 @@ export class PersonFilterComponent implements OnInit {
   @Input() public isFamilyFilters: boolean;
   public localState: MeasureHistogramState;
   @Output() public updateState = new EventEmitter<MeasureHistogramState>();
+  @Output() public updateHistogram = new EventEmitter<{ measureId: string, roles: string[] }>();
   public errors: string[] = [];
   private categoricalValueMax = 1000;
   private readonly maxBarCount = 25;
@@ -76,7 +77,8 @@ export class PersonFilterComponent implements OnInit {
 
   public replaceSelectedRoles(roles: string[]): void {
     this.localState.roles = roles;
-    this.updateHistogramState();
+    this.updateHistogram.emit({ measureId: this.localState.measure, roles: roles });
+    // this.updateHistogramState();
   }
 
   private updateHistogramState(): void {

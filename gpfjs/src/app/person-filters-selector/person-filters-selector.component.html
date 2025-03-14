@@ -12,6 +12,7 @@
       [selectedMeasure]="histogram.measureHistogram"
       [initialState]="histogram.state"
       (updateState)="addToState($event)"
+      (updateHistogram)="loadHistogram($event)"
       [isFamilyFilters]="isFamilyFilters"></gpf-person-filter>
 
     <div>

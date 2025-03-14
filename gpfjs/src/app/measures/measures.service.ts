@@ -62,14 +62,18 @@ export class MeasuresService {
       );
   }
 
-  public getMeasureHistogramBeta(datasetId: string, measureName: string): Observable<MeasureHistogram> {
+  public getMeasureHistogramBeta(
+    datasetId: string,
+    measureName: string,
+    roles?: string[]
+  ): Observable<MeasureHistogram> {
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 
     return this.http
       .post(
         this.config.baseUrl + this.measureHistogramUrlBeta,
-        { datasetId: datasetId, measure: measureName },
+        { datasetId: datasetId, measure: measureName, roles: roles },
         options
       )
       .pipe(
