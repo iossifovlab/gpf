@@ -9,6 +9,7 @@ import { map } from 'rxjs/operators';
 @Injectable()
 export class MeasuresService {
   private readonly measuresListUrl = 'measures/list';
+  private readonly measureRolesUrl = 'measures/role-list';
   private readonly continuousMeasuresUrl = 'measures/type/continuous';
   private readonly measureHistogramUrl = 'measures/histogram';
   private readonly measureHistogramUrlBeta = 'measures/histogram-beta';
@@ -19,6 +20,14 @@ export class MeasuresService {
     private http: HttpClient,
     private config: ConfigService
   ) {}
+
+  public getMeasureRoles(datasetId: string): Observable<string[]> {
+    return this.http
+      .post(this.config.baseUrl + this.measureRolesUrl,
+        { datasetId: datasetId }
+      )
+      .pipe(map(res => res as string[]));
+  }
 
   public getMeasureList(datasetId: string): Observable<Array<Measure>> {
     const params = new HttpParams().set('datasetId', datasetId);
@@ -53,14 +62,18 @@ export class MeasuresService {
       );
   }
 
-  public getMeasureHistogramBeta(datasetId: string, measureName: string): Observable<MeasureHistogram> {
+  public getMeasureHistogramBeta(
+    datasetId: string,
+    measureName: string,
+    roles?: string[]
+  ): Observable<MeasureHistogram> {
     const headers = { 'Content-Type': 'application/json' };
     const options = { headers: headers, withCredentials: true };
 
     return this.http
       .post(
         this.config.baseUrl + this.measureHistogramUrlBeta,
-        { datasetId: datasetId, measure: measureName },
+        { datasetId: datasetId, measure: measureName, roles: roles },
         options
       )
       .pipe(

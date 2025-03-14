@@ -212,6 +212,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
             min: s.rangeStart,
             max: s.rangeEnd,
             values: s.values,
+            roles: s.roles
           }))},
           ...personMeasureHistogramsState?.length && { personFiltersBeta: personMeasureHistogramsState.map(s => ({
             source: s.measure,
@@ -220,6 +221,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
             min: s.rangeStart,
             max: s.rangeEnd,
             values: s.values,
+            roles: s.roles
           }))},
         };
         return state;
@@ -268,15 +270,13 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     );
   }
 
-  public onSubmit(event): void {
+  public onSubmit(event: SubmitEvent): void {
     this.patchState();
     this.genotypeBrowserState['datasetId'] = this.selectedDataset.id;
     const args = clone(this.genotypeBrowserState);
     args['download'] = true;
-    /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-    event.target.queryData.value = JSON.stringify(args);
-    event.target.submit();
-    /* eslint-enable */
+    ((event.target as HTMLFormElement).queryData as HTMLInputElement).value = JSON.stringify(args);
+    (event.target as HTMLFormElement).submit();
   }
 
   private patchState(): void {

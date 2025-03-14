@@ -191,7 +191,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['val1', 'val2'],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
     jest.spyOn(store, 'select').mockReturnValue(of([mockState]));
 
@@ -210,7 +211,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['name1', 'name2'],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
     jest.spyOn(store, 'select').mockReturnValue(of([mockState]));
 
@@ -242,7 +244,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: 5,
       rangeEnd: 10,
       values: null,
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     const measure = new Measure('m2', 'desc2');
 
@@ -255,7 +258,8 @@ describe('PersonFiltersSelectorComponent', () => {
       {
         measure: 'm2',
         rangeStart: 5,
-        rangeEnd: 10
+        rangeEnd: 10,
+        roles: null
       }
     ));
   });
@@ -270,7 +274,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: 5,
       rangeEnd: 10,
       values: null,
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     const measure = new Measure('m2', 'desc2');
 
@@ -283,7 +288,8 @@ describe('PersonFiltersSelectorComponent', () => {
       {
         measure: 'm2',
         rangeStart: 5,
-        rangeEnd: 10
+        rangeEnd: 10,
+        roles: null
       }
     ));
   });
@@ -299,7 +305,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['name1', 'name2', 'name3', 'name4', 'name5'],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
     const measure = new Measure('m3', 'desc3');
 
@@ -312,7 +319,8 @@ describe('PersonFiltersSelectorComponent', () => {
       {
         measure: 'm3',
         values: ['name1', 'name2', 'name3', 'name4', 'name5'],
-        categoricalView: 'range selector'
+        categoricalView: 'range selector',
+        roles: null
       }
     ));
   });
@@ -328,7 +336,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['name1', 'name2', 'name3', 'name4', 'name5'],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
+      roles: null
     };
     const measure = new Measure('m3', 'desc3');
 
@@ -341,7 +350,8 @@ describe('PersonFiltersSelectorComponent', () => {
       {
         measure: 'm3',
         values: ['name1', 'name2', 'name3', 'name4', 'name5'],
-        categoricalView: 'range selector'
+        categoricalView: 'range selector',
+        roles: null
       }
     ));
   });
@@ -354,7 +364,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: 5,
       rangeEnd: 10,
       values: null,
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
 
     component.isFamilyFilters = true;
@@ -362,7 +373,8 @@ describe('PersonFiltersSelectorComponent', () => {
     expect(dispatchSpy).toHaveBeenCalledWith(setFamilyMeasureHistogramsContinuous({
       measure: 'm1',
       rangeStart: 5,
-      rangeEnd: 10
+      rangeEnd: 10,
+      roles: null
     }));
   });
 
@@ -374,7 +386,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: 5,
       rangeEnd: 10,
       values: null,
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
 
     component.isFamilyFilters = false;
@@ -382,7 +395,8 @@ describe('PersonFiltersSelectorComponent', () => {
     expect(dispatchSpy).toHaveBeenCalledWith(setPersonMeasureHistogramsContinuous({
       measure: 'm1',
       rangeStart: 5,
-      rangeEnd: 10
+      rangeEnd: 10,
+      roles: null
     }));
   });
 
@@ -394,7 +408,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['name1', 'name2'],
-      categoricalView: 'click selector'
+      categoricalView: 'click selector',
+      roles: ['mom']
     };
 
     component.isFamilyFilters = true;
@@ -402,7 +417,8 @@ describe('PersonFiltersSelectorComponent', () => {
     expect(dispatchSpy).toHaveBeenCalledWith(setFamilyMeasureHistogramsCategorical({
       measure: 'm3',
       values: ['name1', 'name2'],
-      categoricalView: 'click selector'
+      categoricalView: 'click selector',
+      roles: ['mom']
     }));
   });
 
@@ -414,7 +430,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['name1', 'name2'],
-      categoricalView: 'click selector'
+      categoricalView: 'click selector',
+      roles: null
     };
 
     component.isFamilyFilters = false;
@@ -422,7 +439,8 @@ describe('PersonFiltersSelectorComponent', () => {
     expect(dispatchSpy).toHaveBeenCalledWith(setPersonMeasureHistogramsCategorical({
       measure: 'm3',
       values: ['name1', 'name2'],
-      categoricalView: 'click selector'
+      categoricalView: 'click selector',
+      roles: null
     }));
   });
 
@@ -436,7 +454,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['name1', 'name2'],
-      categoricalView: 'click selector'
+      categoricalView: 'click selector',
+      roles: null
     };
     const hist1: {measureHistogram: MeasureHistogram, state: MeasureHistogramState} = {
       measureHistogram: measureHistogramMock3,
@@ -449,7 +468,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: 5,
       rangeEnd: 10,
       values: null,
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     const hist2: {measureHistogram: MeasureHistogram, state: MeasureHistogramState} = {
       measureHistogram: measureHistogramMock3,
@@ -470,7 +490,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['name1', 'name2'],
-      categoricalView: 'click selector'
+      categoricalView: 'click selector',
+      roles: null
     };
     const hist1: {measureHistogram: MeasureHistogram, state: MeasureHistogramState} = {
       measureHistogram: measureHistogramMock3,
@@ -483,7 +504,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: 5,
       rangeEnd: 10,
       values: null,
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     const hist2: {measureHistogram: MeasureHistogram, state: MeasureHistogramState} = {
       measureHistogram: measureHistogramMock3,
@@ -506,7 +528,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: 5,
       rangeEnd: 10,
       values: null,
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     component.addToState(mockState);
     expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
@@ -527,7 +550,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: 5,
       rangeEnd: 10,
       values: null,
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     component.addToState(mockState);
     expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
@@ -548,7 +572,8 @@ describe('PersonFiltersSelectorComponent', () => {
       rangeStart: 5,
       rangeEnd: 10,
       values: null,
-      categoricalView: null
+      categoricalView: null,
+      roles: null
     };
     component.addToState(mockState);
     expect(dispatchSpy).toHaveBeenCalledWith(resetErrors({ componentId: 'personFilters'}));

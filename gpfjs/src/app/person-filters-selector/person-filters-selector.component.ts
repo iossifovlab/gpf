@@ -87,14 +87,16 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
             const continuousHistogram = {
               measure: defaultState.measure,
               rangeStart: defaultState.rangeStart,
-              rangeEnd: defaultState.rangeEnd
+              rangeEnd: defaultState.rangeEnd,
+              roles: defaultState.roles
             };
             this.dispatchContinuousHistogram(continuousHistogram);
           } else {
             const categoricalHistogram = {
               measure: defaultState.measure,
               values: defaultState.values,
-              categoricalView: defaultState.categoricalView
+              categoricalView: defaultState.categoricalView,
+              roles: defaultState.roles
             };
             this.dispatchCategoricalHistogram(categoricalHistogram);
           }
@@ -103,7 +105,24 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
     this.validateState();
   }
 
-  private dispatchContinuousHistogram(histogram: { measure: string; rangeStart: number; rangeEnd: number; }): void {
+  public loadHistogram(data: {measureId: string, roles: string[]}): void {
+    this.measuresService.getMeasureHistogramBeta(this.dataset.id, data.measureId, data.roles)
+      .subscribe(histogramData => {
+        this.removeFromState(data.measureId);
+        const defaultState = this.createMeasureDefaultState(histogramData);
+        defaultState.roles = data.roles;
+
+        this.selectedMeasureHistograms.push({
+          measureHistogram: histogramData,
+          state: defaultState
+        });
+        this.addToState(defaultState);
+      });
+  }
+
+  private dispatchContinuousHistogram(
+    histogram: { measure: string; rangeStart: number; rangeEnd: number; roles: string[] }
+  ): void {
     if (this.isFamilyFilters) {
       this.store.dispatch(setFamilyMeasureHistogramsContinuous(histogram));
     } else {
@@ -112,7 +131,7 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
   }
 
   private dispatchCategoricalHistogram(
-    histogram: { measure: string; values: string[]; categoricalView: CategoricalHistogramView }
+    histogram: { measure: string; values: string[]; categoricalView: CategoricalHistogramView, roles: string[] }
   ): void {
     if (this.isFamilyFilters) {
       this.store.dispatch(setFamilyMeasureHistogramsCategorical(histogram));
@@ -129,6 +148,7 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
       rangeEnd: null,
       values: null,
       categoricalView: null,
+      roles: null
     };
     state.measure = measureHistogram.measure;
     if (measureHistogram.histogram instanceof CategoricalHistogram) {
@@ -137,12 +157,14 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
       state.rangeEnd = null;
       state.values = measureHistogram.histogram.values.map(value => value.name);
       state.categoricalView = 'range selector';
+      state.roles = null;
     } else {
       state.histogramType = 'continuous';
       state.rangeStart = measureHistogram.histogram.rangeMin;
       state.rangeEnd = measureHistogram.histogram.rangeMax;
       state.values = null;
       state.categoricalView = null;
+      state.roles = null;
     }
     return state;
   }
@@ -175,12 +197,14 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
         measure: state.measure,
         rangeStart: state.rangeStart,
         rangeEnd: state.rangeEnd,
+        roles: state.roles
       }));
     } else if (state.histogramType === 'categorical') {
       this.store.dispatch(setFamilyMeasureHistogramsCategorical({
         measure: state.measure,
         values: state.values,
         categoricalView: state.categoricalView,
+        roles: state.roles
       }));
     }
   }
@@ -191,12 +215,14 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
         measure: state.measure,
         rangeStart: state.rangeStart,
         rangeEnd: state.rangeEnd,
+        roles: state.roles
       }));
     } else if (state.histogramType === 'categorical') {
       this.store.dispatch(setPersonMeasureHistogramsCategorical({
         measure: state.measure,
         values: state.values,
         categoricalView: state.categoricalView,
+        roles: state.roles
       }));
     }
   }

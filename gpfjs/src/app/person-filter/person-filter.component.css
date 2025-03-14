@@ -23,8 +23,8 @@
 
 .measure-histograms-panel {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
   justify-content: center;
   border-top: 0;
-  margin-left: 40px;
+  margin-left: 10px;
 }

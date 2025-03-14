@@ -315,7 +315,7 @@ class MockQueryService {
   public streamingSubject = new Subject();
   public streamingFinishedSubject = new Subject();
   public downloadVariants(): Observable<HttpResponse<Blob>> {
-    return of([] as any) as Observable<HttpResponse<Blob>>;
+    return of(null) as Observable<HttpResponse<Blob>>;
   }
 
   public cancelStreamPost(): void {
@@ -325,7 +325,9 @@ class MockQueryService {
   public getGenotypePreviewVariantsByFilter(
     dataset: Dataset,
     filter,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     maxVariantsCount: number = 1001,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     callback?: () => void
   ): GenotypePreviewVariantsArray {
     return new GenotypePreviewVariantsArray();
@@ -629,7 +631,7 @@ describe('GenotypeBrowserComponent', () => {
     component.genotypeBrowserState = {};
     component.selectedDataset = mockDataset;
 
-    component.onSubmit(mockEvent);
+    component.onSubmit(mockEvent as unknown as SubmitEvent);
     expect(mockEvent.target.queryData.value).toStrictEqual(JSON.stringify({
       datasetId: component.selectedDataset.id,
       download: true,

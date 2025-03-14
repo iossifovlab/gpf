@@ -189,6 +189,7 @@ import { CategoricalValuesDropdownComponent } from './categorical-values-dropdow
 import { PersonFilterComponent } from './person-filter/person-filter.component';
 import { familyMeasureHistogramsReducer, personMeasureHistogramsReducer } from './person-filters-selector/measure-histogram.state';
 import { PhenoMeasureSelectorBetaComponent } from './pheno-measure-selector-beta/pheno-measure-selector-beta.component';
+import { RoleSelectorComponent } from './role-selector/role-selector.component';
 
 const appRoutes: Routes = [
   {
@@ -404,7 +405,8 @@ const appRoutes: Routes = [
   FamilyTagsComponent,
   CategoricalValuesDropdownComponent,
   PersonFilterComponent,
-  PhenoMeasureSelectorBetaComponent
+  PhenoMeasureSelectorBetaComponent,
+  RoleSelectorComponent
 ],
 bootstrap: [AppComponent], imports: [BrowserModule,
   FormsModule,

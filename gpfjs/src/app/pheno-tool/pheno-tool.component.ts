@@ -141,6 +141,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
           min: s.rangeStart,
           max: s.rangeEnd,
           values: s.values,
+          roles: s.roles
         }))},
         ...personMeasureHistogramsState?.length && { personFiltersBeta: personMeasureHistogramsState.map(s => ({
           source: s.measure,
@@ -149,6 +150,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
           min: s.rangeStart,
           max: s.rangeEnd,
           values: s.values,
+          roles: s.roles
         }))},
         ...{genomicScores: genomicScoresState},
       };
@@ -201,7 +203,8 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
 
   public onDownload(event: Event): void {
     if (event.target instanceof HTMLFormElement) {
-      event.target.queryData.value = JSON.stringify({...this.phenoToolState, datasetId: this.selectedDataset.id});
+      const queryData = event.target.queryData as HTMLInputElement;
+      queryData.value = JSON.stringify({...this.phenoToolState, datasetId: this.selectedDataset.id});
       event.target.submit();
     }
   }
