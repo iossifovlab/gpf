@@ -98,7 +98,8 @@ Import project configuration format
           min_rank: 1
           max_rank: 15
         skip: false
-        measure_type: null
+        value_type: null
+        histogram_type: null
 
     # Optional. Specifies a path to a GPF instance configuration to use.
     # The GPF instance will be used if a destination storage has been set (see below).
@@ -292,7 +293,8 @@ Example configuration (default configuration):
           min_rank: 1
           max_rank: 15
         skip: false
-        measure_type: null
+        value_type: null
+        histogram_type: null
 
 
 A more advanced example:
@@ -312,7 +314,8 @@ A more advanced example:
           min_rank: 1
           max_rank: 15
         skip: false
-        measure_type: null
+        value_type: null
+        histogram_type: null
     "ala.*":
         min_individuals: 2
     "*.bala":
@@ -346,8 +349,12 @@ Inference parameters
   unlike measures classified as ``raw``)
 
 * ``value_type``: Force a value type onto the measure. This skips the classification step, but not the statistics.
-  The value of measure type should be a string or left as null or preferably omitted from the configuration if unused,
+  The value should be a string or left as null or preferably omitted from the configuration if unused,
   as the default value is null. The valid string values are: ``raw``, ``categorical``, ``ordinal`` and ``continuous``.
+
+* ``histogram_type``: Force a histogram type onto the measure.  The value should be a string or left as null
+  or preferably omitted from the configuration if unused, as the default value is null.
+  The valid string values are: ``number`` and ``categorical``.
 
 
 How classification works
