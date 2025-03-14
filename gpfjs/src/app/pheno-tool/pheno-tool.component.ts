@@ -203,7 +203,8 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
 
   public onDownload(event: Event): void {
     if (event.target instanceof HTMLFormElement) {
-      event.target.queryData.value = JSON.stringify({...this.phenoToolState, datasetId: this.selectedDataset.id});
+      const queryData = event.target.queryData as HTMLInputElement;
+      queryData.value = JSON.stringify({...this.phenoToolState, datasetId: this.selectedDataset.id});
       event.target.submit();
     }
   }

@@ -168,7 +168,7 @@ export const personMeasureHistogramsReducer = createReducer(
       const histogramCopy = cloneDeep(measureHistograms.at(histogramIndex));
       histogramCopy.values = values;
       histogramCopy.categoricalView = categoricalView;
-      histogramCopy.roles = roles
+      histogramCopy.roles = roles;
       measureHistograms[histogramIndex] = histogramCopy;
     }
     return measureHistograms;
