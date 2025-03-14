@@ -439,6 +439,8 @@ class GeneModels(
             else None
 
         self.gene_models: dict[str, list[TranscriptModel]] = defaultdict(list)
+        self.chrom_gene_models: \
+            dict[tuple[str, str], list[TranscriptModel]] = defaultdict(list)
         self.utr_models: dict[
                 str, dict[tuple[int, int], list[TranscriptModel]]] = \
             defaultdict(lambda: defaultdict(list))
@@ -464,6 +466,9 @@ class GeneModels(
 
         self.transcript_models[transcript_model.tr_id] = transcript_model
         self.gene_models[transcript_model.gene].append(transcript_model)
+        self.chrom_gene_models[
+            transcript_model.chrom, transcript_model.gene,
+        ].append(transcript_model)
 
         self.utr_models[transcript_model.chrom][transcript_model.tx]\
             .append(transcript_model)

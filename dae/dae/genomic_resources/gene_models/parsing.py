@@ -104,7 +104,7 @@ def parse_default_gene_models_format(
             exons=exons,
             attributes=attributes,
         )
-        gene_models.transcript_models[transcript_model.tr_id] = transcript_model
+        gene_models.add_transcript_model(transcript_model)
 
     gene_models.update_indexes()
     if nrows is not None:
