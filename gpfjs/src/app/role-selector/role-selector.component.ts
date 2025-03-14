@@ -1,5 +1,8 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { selectDatasetId } from 'app/datasets/datasets.state';
+import { MeasuresService } from 'app/measures/measures.service';
+import { debounceTime, distinctUntilChanged, Subject, switchMap, take } from 'rxjs';
 
 @Component({
   selector: 'gpf-role-selector',
@@ -8,7 +11,6 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 })
 export class RoleSelectorComponent implements OnInit {
   @Input() public initialState: string[] = [];
-  // @Input() public roles: string[];
   @Output() public updateSelectedRoles = new EventEmitter<string[]>();
   public roleSuggestions = [];
   public searchValue = '';
@@ -16,12 +18,19 @@ export class RoleSelectorComponent implements OnInit {
   public roles: string[] = [];
   public selectedRoles: string[] = [];
 
-  public ngOnInit(): void {
-    this.roles = ['all', 'mom', 'dad', 'proband'];
+  public constructor(private measuresService: MeasuresService, private store: Store) {}
 
-    if (this.initialState.length) {
-      this.selectedRoles = this.roles.filter(r => this.initialState.includes(r));
-    }
+  public ngOnInit(): void {
+    this.store.select(selectDatasetId).pipe(
+      take(1),
+      switchMap(datasetIdState => this.measuresService.getMeasureRoles(datasetIdState)),
+    ).subscribe(roles => {
+      this.roles = roles;
+      this.roleSuggestions = this.roles;
+      if (this.initialState) {
+        this.selectedRoles = this.roles.filter(r => this.initialState.includes(r));
+      }
+    });
 
     this.searchBoxInput$.pipe(debounceTime(100), distinctUntilChanged()).subscribe(() => {
       if (!this.searchValue) {
@@ -42,9 +51,6 @@ export class RoleSelectorComponent implements OnInit {
 
   public addToSelected(role: string): void {
     if (!this.selectedRoles.find(r => r === role)) {
-      if (role === 'all') {
-        this.selectedRoles = [];
-      }
       this.selectedRoles.push(role);
       this.updateSelectedRoles.emit(this.selectedRoles);
     }
@@ -61,6 +67,6 @@ export class RoleSelectorComponent implements OnInit {
   }
 
   public isSelected(role: string): boolean {
-    return this.selectedRoles.includes('all') ? true : Boolean(this.selectedRoles.find(r => r === role));
+    return Boolean(this.selectedRoles.find(r => r === role));
   }
 }
