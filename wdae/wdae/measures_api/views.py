@@ -18,6 +18,7 @@ from dae.genomic_resources.histogram import (
     NumberHistogramConfig,
 )
 from dae.pheno.common import MeasureType
+from dae.variants.attributes import Role
 
 logger = logging.getLogger(__name__)
 
@@ -163,11 +164,12 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
 
         measure = dataset.phenotype_data.get_measure(pheno_measure)
         roles = None
-        if list(data["roles"]) is not None:
-            roles = [str(r) for r in data["roles"]]
+        if data.get("roles") is not None:
+            roles = [Role.from_name(str(r)) for r in data["roles"]]
+
         df = dataset.phenotype_data.get_people_measure_values_df(
-            list(pheno_measure),
-            roles,
+            [pheno_measure],
+            roles=roles,
         )
         m = df[pheno_measure]
         df = df[np.logical_not(pd.isna(m.values))]
