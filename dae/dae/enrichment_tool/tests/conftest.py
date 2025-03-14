@@ -242,19 +242,19 @@ def study_data(
 def create_test_study(
     tmp_path_factory: pytest.TempPathFactory,
     study_data: tuple[pathlib.Path, pathlib.Path],
-    t4c8_instance: GPFInstance,
+    t4c8_fixture: GPFInstance,
 ):
     study_path = tmp_path_factory.mktemp("test_study")
     ped_path, vcf_path = study_data
 
     def _create_study(study_config: dict) -> GenotypeData:
         return vcf_study(
-            study_path, "test_study", ped_path, [vcf_path], t4c8_instance,
+            study_path, "test_study", ped_path, [vcf_path], t4c8_fixture,
             study_config_update=study_config)
 
     yield _create_study
     shutil.rmtree(
-        str(pathlib.Path(t4c8_instance.dae_dir, "studies", "test_study")),
+        str(pathlib.Path(t4c8_fixture.dae_dir, "studies", "test_study")),
     )
 
 

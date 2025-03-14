@@ -186,12 +186,50 @@ def test_get_selected_person_set_collections_default(
             "selected_background_models": ["enrichment/samocha_testing"],
         },
         "person_set_collections": {
-            "phenotype": {"id": "phenotype", "name": "Phenotype"},
-            "status": {"id": "status", "name": "Affected Status"},
-            "role": {"id": "role", "name": "Role"},
-        },
-    }
+            "phenotype": {"id": "phenotype",
+            "name": "Phenotype",
+            "sources": [{"from": "pedigree", "source": "status"}],
+            "domain": [
+                {"id": "autism",
+                "name": "autism",
+                "values": ["affected"],
+                "color": "#ff2121"},
+                {"id": "unaffected",
+                "name": "unaffected",
+                "values": ["unaffected"],
+                "color": "#ffffff"},
+            ],
+            "default": {"id": "unspecified", "name": "unspecified", "color": "#aaaaaa"}},  # noqa: E501
+            "status": {"id": "status",
+            "name": "Affected Status",
+            "sources": [{"from": "pedigree", "source": "status"}],
+            "domain": [
+                {"id": "affected",
+                "name": "affected",
+                "values": ["affected"],
+                "color": "#ff2121"},
+                {"id": "unaffected",
+                "name": "unaffected",
+                "values": ["unaffected"],
+                "color": "#ffffff"},
+            ],
+            "default": {"id": "unspecified", "name": "unspecified", "color": "#aaaaaa"}},  # noqa: E501
+            "role": {"id": "role",
+            "name": "Role",
+            "sources": [{"from": "pedigree", "source": "role"}],
+            "domain": [
+                {"id": "prb",
+                "name": "Proband",
+                "values": ["prb"],
+                "color": "#ff2121"},
+                {"id": "sib",
+                 "name": "Sibling",
+                 "values": ["sib"], "color": "#ffffff"},
+            ],
+            "default": {"id": "unspecified", "name": "unspecified", "color": "#aaaaaa"}},  # noqa: E501
+            "selected_person_set_collections": ["role", "status", "phenotype"],
+    }}
 
     study = create_test_study(study_config)
     assert EnrichmentHelper.get_selected_person_set_collections(study) == \
-        "phenotype"
+        "role"
