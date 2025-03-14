@@ -213,6 +213,13 @@ class AnnotationPipeline:
                     annotator.get_info())
         self._is_open = False
 
+    def print(self) -> None:
+        """Print the annotation pipeline."""
+        print("NEW ATTRIBUTES -")
+        for anno in self.annotators:
+            for attr in anno.attributes:
+                print("    +", attr.name)
+
     def __enter__(self) -> AnnotationPipeline:
         return self
 
@@ -362,6 +369,26 @@ class ReannotationPipeline(AnnotationPipeline):
 
     def get_attributes(self) -> list[AttributeInfo]:
         return self.pipeline_new.get_attributes()
+
+    def print(self):
+        print("NEW ATTRIBUTES -")
+        for anno in self.annotators_new:
+            for attr in anno.attributes:
+                print("    +", attr.name)
+        print("DELETED ATTRIBUTES -")
+        for attr in self.attributes_deleted:
+            print("    +", attr)
+        print("REUSED ATTRIBUTES -")
+        for attr in self.attributes_reused:
+            print("    +", attr)
+        print("NEW ANNOTATORS -")
+        for anno in self.annotators_new:
+            print("    +", anno.annotator_id, anno.type,
+                           [res.resource_id for res in anno.resources])
+        print("RE-RUNNING ANNOTATORS -")
+        for anno in self.annotators_rerun:
+            print("    +", anno.annotator_id, anno.type,
+                           [res.resource_id for res in anno.resources])
 
 
 class AnnotatorDecorator(Annotator):

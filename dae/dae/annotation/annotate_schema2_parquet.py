@@ -62,6 +62,10 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             "-m", "--meta",
             help="Print the input Parquet's meta properties.",
             action="store_true")
+        output_behaviour.add_argument(
+            "-n", "--dry-run",
+            help="Print the annotation that will be done without writing.",
+            action="store_true")
 
         CLIAnnotationContext.add_context_arguments(parser)
         TaskGraphCli.add_arguments(parser)
@@ -79,6 +83,25 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                 print("=" * 50)
                 print(v)
                 print()
+
+    def dry_run(self) -> None:
+        """Print a summary of the annotation without running it."""
+        input_dir = os.path.abspath(self.args.input)
+        loader = ParquetLoader.load_from_dir(input_dir)
+
+        raw_pipeline = self.pipeline.raw \
+            if isinstance(self.pipeline.raw, list) \
+            else self.pipeline.raw["annotators"]
+
+        pipeline = AnnotationTool.produce_annotation_pipeline(
+            raw_pipeline,
+            loader.meta["annotation_pipeline"]
+                if loader.has_annotation else None,
+            self.grr.definition,
+            allow_repeated_attributes=self.args.allow_repeated_attributes,
+            full_reannotation=self.args.full_reannotation,
+        )
+        pipeline.print()
 
     def _remove_data(self, path: str) -> None:
         data_layout = create_schema2_dataset_layout(path)
@@ -173,5 +196,8 @@ def cli(
     tool = AnnotateSchema2ParquetTool(raw_args, gpf_instance)
     if tool.args.meta:
         tool.print_meta()
+        return
+    if tool.args.dry_run:
+        tool.dry_run()
         return
     tool.run()
