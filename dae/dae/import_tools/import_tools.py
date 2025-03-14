@@ -384,6 +384,11 @@ class ImportProject:
     def study_id(self) -> str:
         return cast(str, self.import_config["id"])
 
+    def get_processing_annotation_batch_size(self) -> int:
+        """Return processing parquet dataset dir if configured and exists."""
+        processing_config = self.import_config.get("processing_config", {})
+        return processing_config.get("annotation_batch_size", 0)
+
     def get_processing_parquet_dataset_dir(self) -> str | None:
         """Return processing parquet dataset dir if configured and exists."""
         processing_config = self.import_config.get("processing_config", {})
