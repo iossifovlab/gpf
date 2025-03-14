@@ -350,7 +350,7 @@ Inference parameters
 
 * ``value_type``: Force a value type onto the measure. This skips the classification step, but not the statistics.
   The value should be a string or left as null or preferably omitted from the configuration if unused,
-  as the default value is null. The valid string values are: ``raw``, ``categorical``, ``ordinal`` and ``continuous``.
+  as the default value is null. The valid string values are: ``str``, ``int`` and ``float``.
 
 * ``histogram_type``: Force a histogram type onto the measure.  The value should be a string or left as null
   or preferably omitted from the configuration if unused, as the default value is null.
