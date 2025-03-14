@@ -10,6 +10,7 @@ export interface MeasureHistogramState {
   rangeEnd: number;
   values: string[];
   categoricalView: CategoricalHistogramView;
+  roles: string[]
 }
 
 export const measureHistogramInitialState: MeasureHistogramState[] = [];
@@ -23,12 +24,12 @@ export const setFamilyMeasureHistograms = createAction(
 
 export const setFamilyMeasureHistogramsContinuous = createAction(
   '[Genotype] Set family measure histogram with continuous histogram data',
-  props<{measure: string, rangeStart: number, rangeEnd: number}>()
+  props<{measure: string, rangeStart: number, rangeEnd: number, roles: string[]}>()
 );
 
 export const setFamilyMeasureHistogramsCategorical = createAction(
   '[Genotype] Set family measure histogram with categorical histogram data',
-  props<{measure: string, values: string[], categoricalView: CategoricalHistogramView}>()
+  props<{measure: string, values: string[], categoricalView: CategoricalHistogramView, roles: string[]}>()
 );
 
 export const removeFamilyMeasureHistogram = createAction(
@@ -43,7 +44,7 @@ export const resetFamilyMeasureHistograms = createAction(
 export const familyMeasureHistogramsReducer = createReducer(
   measureHistogramInitialState,
   on(setFamilyMeasureHistograms, (state, {familyMeasureHistograms}) => cloneDeep(familyMeasureHistograms)),
-  on(setFamilyMeasureHistogramsContinuous, (state, { measure, rangeStart, rangeEnd }) => {
+  on(setFamilyMeasureHistogramsContinuous, (state, { measure, rangeStart, rangeEnd, roles }) => {
     const newMeasureHistogram = {
       histogramType: 'continuous' as const,
       measure: measure,
@@ -51,6 +52,7 @@ export const familyMeasureHistogramsReducer = createReducer(
       rangeEnd: rangeEnd,
       values: null,
       categoricalView: null,
+      roles: null
     };
     const measureHistograms = [...state];
     const histogramIndex = measureHistograms.findIndex(h => h.measure === measure);
@@ -60,11 +62,12 @@ export const familyMeasureHistogramsReducer = createReducer(
       const histogramCopy = cloneDeep(measureHistograms.at(histogramIndex));
       histogramCopy.rangeStart = rangeStart;
       histogramCopy.rangeEnd = rangeEnd;
+      histogramCopy.roles = roles;
       measureHistograms[histogramIndex] = histogramCopy;
     }
     return measureHistograms;
   }),
-  on(setFamilyMeasureHistogramsCategorical, (state, { measure, values, categoricalView }) => {
+  on(setFamilyMeasureHistogramsCategorical, (state, { measure, values, categoricalView, roles }) => {
     const newMeasureHistogram = {
       histogramType: 'categorical' as const,
       measure: measure,
@@ -72,6 +75,7 @@ export const familyMeasureHistogramsReducer = createReducer(
       rangeEnd: null,
       values: values,
       categoricalView: categoricalView,
+      roles: null
     };
     const measureHistograms = [...state];
     const histogramIndex = measureHistograms.findIndex(h => h.measure === measure);
@@ -81,6 +85,7 @@ export const familyMeasureHistogramsReducer = createReducer(
       const histogramCopy = cloneDeep(measureHistograms.at(histogramIndex));
       histogramCopy.values = values;
       histogramCopy.categoricalView = categoricalView;
+      histogramCopy.roles = roles;
       measureHistograms[histogramIndex] = histogramCopy;
     }
     return measureHistograms;
@@ -102,12 +107,12 @@ export const setPersonMeasureHistograms = createAction(
 
 export const setPersonMeasureHistogramsContinuous = createAction(
   '[Genotype] Set person measure histogram with continuous histogram data',
-  props<{measure: string, rangeStart: number, rangeEnd: number}>()
+  props<{measure: string, rangeStart: number, rangeEnd: number, roles: string[]}>()
 );
 
 export const setPersonMeasureHistogramsCategorical = createAction(
   '[Genotype] Set person measure histogram with categorical histogram data',
-  props<{measure: string, values: string[], categoricalView: CategoricalHistogramView}>()
+  props<{measure: string, values: string[], categoricalView: CategoricalHistogramView, roles: string[]}>()
 );
 
 export const removePersonMeasureHistogram = createAction(
@@ -122,7 +127,7 @@ export const resetPersonMeasureHistograms = createAction(
 export const personMeasureHistogramsReducer = createReducer(
   measureHistogramInitialState,
   on(setPersonMeasureHistograms, (state, {personMeasureHistograms}) => cloneDeep(personMeasureHistograms)),
-  on(setPersonMeasureHistogramsContinuous, (state, { measure, rangeStart, rangeEnd }) => {
+  on(setPersonMeasureHistogramsContinuous, (state, { measure, rangeStart, rangeEnd, roles }) => {
     const newMeasureHistogram = {
       histogramType: 'continuous' as const,
       measure: measure,
@@ -130,6 +135,7 @@ export const personMeasureHistogramsReducer = createReducer(
       rangeEnd: rangeEnd,
       values: null,
       categoricalView: null,
+      roles: null
     };
     const measureHistograms = [...state];
     const histogramIndex = measureHistograms.findIndex(h => h.measure === measure);
@@ -139,11 +145,12 @@ export const personMeasureHistogramsReducer = createReducer(
       const histogramCopy = cloneDeep(measureHistograms.at(histogramIndex));
       histogramCopy.rangeStart = rangeStart;
       histogramCopy.rangeEnd = rangeEnd;
+      histogramCopy.roles = roles;
       measureHistograms[histogramIndex] = histogramCopy;
     }
     return measureHistograms;
   }),
-  on(setPersonMeasureHistogramsCategorical, (state, { measure, values, categoricalView }) => {
+  on(setPersonMeasureHistogramsCategorical, (state, { measure, values, categoricalView, roles }) => {
     const newMeasureHistogram = {
       histogramType: 'categorical' as const,
       measure: measure,
@@ -151,6 +158,7 @@ export const personMeasureHistogramsReducer = createReducer(
       rangeEnd: null,
       values: values,
       categoricalView: categoricalView,
+      roles: null
     };
     const measureHistograms = [...state];
     const histogramIndex = measureHistograms.findIndex(h => h.measure === measure);
@@ -160,6 +168,7 @@ export const personMeasureHistogramsReducer = createReducer(
       const histogramCopy = cloneDeep(measureHistograms.at(histogramIndex));
       histogramCopy.values = values;
       histogramCopy.categoricalView = categoricalView;
+      histogramCopy.roles = roles
       measureHistograms[histogramIndex] = histogramCopy;
     }
     return measureHistograms;

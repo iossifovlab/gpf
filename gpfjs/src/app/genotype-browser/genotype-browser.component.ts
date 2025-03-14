@@ -212,6 +212,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
             min: s.rangeStart,
             max: s.rangeEnd,
             values: s.values,
+            roles: s.roles
           }))},
           ...personMeasureHistogramsState?.length && { personFiltersBeta: personMeasureHistogramsState.map(s => ({
             source: s.measure,
@@ -220,6 +221,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
             min: s.rangeStart,
             max: s.rangeEnd,
             values: s.values,
+            roles: s.roles
           }))},
         };
         return state;

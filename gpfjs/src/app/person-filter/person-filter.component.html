@@ -1,5 +1,7 @@
 <div class="panel measure-histograms-panel" *ngIf="selectedMeasure && localState">
-  <gpf-role-selector></gpf-role-selector>
+  <gpf-role-selector
+    (updateSelectedRoles)="replaceSelectedRoles($event)"
+    [initialState]="localState.roles"></gpf-role-selector>
   <div>
     <div class="measure-histograms-container">
       <div class="title-wrapper">{{ selectedMeasure.measure }}</div>

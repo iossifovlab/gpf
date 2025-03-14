@@ -141,6 +141,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
           min: s.rangeStart,
           max: s.rangeEnd,
           values: s.values,
+          roles: s.roles
         }))},
         ...personMeasureHistogramsState?.length && { personFiltersBeta: personMeasureHistogramsState.map(s => ({
           source: s.measure,
@@ -149,6 +150,7 @@ export class PhenoToolComponent implements OnInit, OnDestroy {
           min: s.rangeStart,
           max: s.rangeEnd,
           values: s.values,
+          roles: s.roles
         }))},
         ...{genomicScores: genomicScoresState},
       };

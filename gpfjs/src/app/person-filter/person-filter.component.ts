@@ -74,6 +74,11 @@ export class PersonFilterComponent implements OnInit {
     this.updateHistogramState();
   }
 
+  public replaceSelectedRoles(roles: string[]): void {
+    this.localState.roles = roles;
+    this.updateHistogramState();
+  }
+
   private updateHistogramState(): void {
     this.validateState(this.localState);
     this.updateState.emit(this.localState);
