@@ -52,7 +52,8 @@ class EnrichmentBuilder(BaseEnrichmentBuilder):
         person_set_collection = cast(
             PersonSetCollection,
             self.dataset.get_person_set_collection(
-                self.enrichment_config["selected_person_set_collections"][0],
+                self.enrichment_helper.get_selected_person_set_collections(
+                    self.dataset),
             ),
         )
 

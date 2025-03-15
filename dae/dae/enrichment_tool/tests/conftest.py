@@ -1,5 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
+import shutil
 import textwrap
 from collections.abc import Generator
 from typing import cast
@@ -27,10 +28,13 @@ from dae.genomic_resources.testing import (
     build_inmemory_test_repository,
     convert_to_tab_separated,
     setup_directories,
+    setup_pedigree,
+    setup_vcf,
 )
 from dae.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData
 from dae.testing import setup_gpf_instance
+from dae.testing.import_helpers import vcf_study
 from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
 
 
@@ -196,6 +200,62 @@ def t4c8_fixture(tmp_path: pathlib.Path) -> GPFInstance:
         reference_genome_id="t4c8_genome",
         gene_models_id="t4c8_genes",
         grr=grr)
+
+
+@pytest.fixture(scope="session")
+def study_data(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> tuple[pathlib.Path, pathlib.Path]:
+    root_path = tmp_path_factory.mktemp("test_study_data")
+    ped_path = setup_pedigree(
+        root_path / "test_study" / "in.ped",
+        """
+        familyId	personId	dadId	momId	sex	status	role	phenotype
+        f1	mom1	0	0	2	1	mom	unaffected
+        f1	dad1	0	0	1	1	dad	unaffected
+        f1	ch1	dad1	mom1	2	2	prb	phenotype1
+        f2	mom2	0	0	2	1	mom	unaffected
+        f2	dad2	0	0	1	1	dad	unaffected
+        f2	ch2	dad2	mom2	1	2	prb	phenotype1
+        f2	ch2.1	dad2	mom2	2	1	sib	unaffected
+        """,
+    )
+    vcf_path = setup_vcf(
+        root_path / "test_study" / "in.vcf",
+        """
+        ##fileformat=VCFv4.2
+        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+        ##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
+        ##contig=<ID=1>
+        #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	mom1	dad1	ch1	mom2	dad2	ch2	ch2.1
+        1	865583	.	G	A	.	.	EFF=SYN:SAMD11	GT	0/0	0/1	0/0	0/0	0/1	0/0	0/0
+        1	865624	.	G	A	.	.	EFF=MIS:SAMD11	GT	0/0	0/0	0/1	0/0	0/0	0/1	0/0
+        1	865664	.	G	A	.	.	EFF=SYN:SAMD11	GT	0/0	0/0	0/1	0/0	0/0	0/1	0/0
+        1	901923	.	C	A	.	.	EFF=MIS:PLEKHN1	GT	0/1	0/0	0/0	0/1	0/0	0/0	0/0
+        1	905957	.	C	T	.	.	EFF=SYN:PLEKHN1	GT	0/0	0/0	0/0	0/0	0/0	0/0	0/1
+        """,  # noqa: E501
+    )
+    return ped_path, vcf_path
+
+
+@pytest.fixture
+def create_test_study(
+    tmp_path_factory: pytest.TempPathFactory,
+    study_data: tuple[pathlib.Path, pathlib.Path],
+    t4c8_fixture: GPFInstance,
+):
+    study_path = tmp_path_factory.mktemp("test_study")
+    ped_path, vcf_path = study_data
+
+    def _create_study(study_config: dict) -> GenotypeData:
+        return vcf_study(
+            study_path, "test_study", ped_path, [vcf_path], t4c8_fixture,
+            study_config_update=study_config)
+
+    yield _create_study
+    shutil.rmtree(
+        str(pathlib.Path(t4c8_fixture.dae_dir, "studies", "test_study")),
+    )
 
 
 @pytest.fixture(scope="session")

@@ -58,17 +58,55 @@ class EnrichmentHelper:
 
     @staticmethod
     def get_default_background_model(genotype_data: GenotypeData) -> str:
+        """
+        Return default background model field from the enrichment config.
+        If it is missing, default to the first selected background model.
+        """
         enrichment_config = EnrichmentHelper.get_enrichment_config(
             genotype_data)
         assert enrichment_config is not None
-        return cast(str, enrichment_config["default_background_model"])
+
+        if enrichment_config["default_background_model"]:
+            return enrichment_config["default_background_model"]
+        return enrichment_config["selected_background_models"][0]
 
     @staticmethod
     def get_default_counting_model(genotype_data: GenotypeData) -> str:
         enrichment_config = EnrichmentHelper.get_enrichment_config(
             genotype_data)
         assert enrichment_config is not None
-        return cast(str, enrichment_config["default_counting_model"])
+        return enrichment_config["default_counting_model"]
+
+    @staticmethod
+    def get_selected_counting_models(
+        genotype_data: GenotypeData,
+    ) -> list[str]:
+        """
+        Return selected counting models field from the enrichment config.
+        If it is missing, default to the counting field.
+        """
+        enrichment_config = EnrichmentHelper.get_enrichment_config(
+            genotype_data)
+        assert enrichment_config is not None
+
+        if enrichment_config["selected_counting_models"]:
+            return enrichment_config["selected_counting_models"]
+        return list(enrichment_config["counting"].keys())
+
+    @staticmethod
+    def get_selected_person_set_collections(genotype_data: GenotypeData):
+        """
+        Return selected person set collections field from the enrichment config.
+        If it is missing, default to the first available person set collection
+        in the provided study.
+        """
+        enrichment_config = EnrichmentHelper.get_enrichment_config(
+            genotype_data)
+        assert enrichment_config is not None
+
+        if enrichment_config["selected_person_set_collections"]:
+            return enrichment_config["selected_person_set_collections"][0]
+        return next(iter(genotype_data.person_set_collections.keys()))
 
     def collect_genotype_data_backgrounds(
         self, genotype_data: GenotypeData,
