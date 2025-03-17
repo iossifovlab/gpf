@@ -2,7 +2,7 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { Store } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
-import { take } from 'rxjs';
+import { Subscription, take } from 'rxjs';
 import { MeasuresService } from 'app/measures/measures.service';
 import { Measure, MeasureHistogram } from 'app/measures/measures';
 import {
@@ -34,15 +34,18 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
   public errors: string[] = [];
   public areFiltersSelected = false;
 
+  public selectMeasureHistogramsSubscription = new Subscription();
+
   public constructor(protected store: Store, private measuresService: MeasuresService) { }
 
   public ngOnInit(): void {
     this.selectedDatasetId = this.dataset.id;
     if (this.isFamilyFilters) {
-      this.store.select(selectFamilyMeasureHistograms).subscribe((state: MeasureHistogramState[]) => {
-        this.areFiltersSelected = Boolean(state?.length);
-        this.validateState();
-      });
+      this.selectMeasureHistogramsSubscription = this.store.select(selectFamilyMeasureHistograms)
+        .subscribe((state: MeasureHistogramState[]) => {
+          this.areFiltersSelected = Boolean(state?.length);
+          this.validateState();
+        });
 
       this.store.select(selectFamilyMeasureHistograms).pipe(take(1)).subscribe((state: MeasureHistogramState[]) => {
         if (state) {
@@ -51,10 +54,11 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
         }
       });
     } else {
-      this.store.select(selectPersonMeasureHistograms).subscribe((state: MeasureHistogramState[]) => {
-        this.areFiltersSelected = Boolean(state?.length);
-        this.validateState();
-      });
+      this.selectMeasureHistogramsSubscription = this.store.select(selectPersonMeasureHistograms)
+        .subscribe((state: MeasureHistogramState[]) => {
+          this.areFiltersSelected = Boolean(state?.length);
+          this.validateState();
+        });
 
       this.store.select(selectPersonMeasureHistograms).pipe(take(1)).subscribe((state: MeasureHistogramState[]) => {
         if (state) {
@@ -71,6 +75,7 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
       componentId = 'familyFilters';
     }
     this.store.dispatch(resetErrors({componentId: `${componentId}`}));
+    this.selectMeasureHistogramsSubscription.unsubscribe();
   }
 
   public addMeasure(measure: Measure): void {
