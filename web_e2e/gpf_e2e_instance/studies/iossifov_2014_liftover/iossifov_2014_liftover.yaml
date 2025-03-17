@@ -3,6 +3,8 @@ conf_dir: .
 has_denovo: true
 has_cnv: false
 has_transmitted: false
+enrichment:
+  enabled: true
 genotype_storage:
   id: genotype_duckdb
   tables:
