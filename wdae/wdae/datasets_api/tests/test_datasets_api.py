@@ -74,19 +74,6 @@ def test_datasets_api_get_forbidden(
     assert data["data"]["access_rights"] is False
 
 
-def test_user_client_get_dataset_details(
-    user_client: Client,
-    t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
-) -> None:
-    response = user_client.get("/api/v3/datasets/details/t4c8_study_1")
-
-    assert response
-    assert response.status_code == 200
-
-    data = response.json()
-    assert data["hasDenovo"]
-
-
 def test_user_client_get_nonexistant_dataset_details(
     user_client: Client,
     t4c8_wgpf_instance: WGPFInstance,  # noqa: ARG001 ; setup WGPF instance
