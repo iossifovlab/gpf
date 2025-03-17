@@ -1,82 +1,82 @@
-              default_dataset: ALL_genotypes
+default_dataset: ALL_genotypes
 
-              gene_links:
-              - name: Gene Browser
-                url: "datasets/ALL_genotypes/gene-browser/{gene}"
-              - name: UCSC genome browser
-                url: "https://genome.ucsc.edu/cgi-bin/hgTracks?db={genome}&position={chromosome_prefix}{chromosome}%%3A{gene_start_position}-{gene_stop_position}"
-              - name: GeneCards
-                url: "https://www.genecards.org/cgi-bin/carddisp.pl?gene={gene}"
-              - name: Pubmed
-                url: "https://pubmed.ncbi.nlm.nih.gov/?term={gene}%%20AND%%20(autism%%20OR%%20asd)"
-              - name: SFARI gene
-                url: "https://gene.sfari.org/database/human-gene/{gene}"
+gene_links:
+- name: Gene Browser
+  url: "datasets/ALL_genotypes/gene-browser/{gene}"
+- name: UCSC genome browser
+  url: "https://genome.ucsc.edu/cgi-bin/hgTracks?db={genome}&position={chromosome_prefix}{chromosome}%%3A{gene_start_position}-{gene_stop_position}"
+- name: GeneCards
+  url: "https://www.genecards.org/cgi-bin/carddisp.pl?gene={gene}"
+- name: Pubmed
+  url: "https://pubmed.ncbi.nlm.nih.gov/?term={gene}%%20AND%%20(autism%%20OR%%20asd)"
+- name: SFARI gene
+  url: "https://gene.sfari.org/database/human-gene/{gene}"
 
-              order:
-              - autism_gene_sets_rank
-              - relevant_gene_sets_rank 
-              - autism_scores
-              - protection_scores
-              - iossifov_2014_liftover
+order:
+- autism_gene_sets_rank
+- relevant_gene_sets_rank 
+- autism_scores
+- protection_scores
+- iossifov_2014_liftover
 
-              gene_sets:
-              - category: autism_gene_sets
-                display_name: Autism Gene Sets
-                sets:
-                - set_id: autism candidates from Iossifov PNAS 2015
-                  collection_id: main
-                - set_id: autism candidates from Sanders Neuron 2015
-                  collection_id: main
-              - category: relevant_gene_sets
-                display_name: Relevant Gene Sets
-                sets:
-                - set_id: CHD8 target genes
-                  collection_id: main
-                - set_id: chromatin modifiers
-                  collection_id: main
-                - set_id: essential genes
-                  collection_id: main
-                - set_id: FMRP Darnell
-                  collection_id: main
+gene_sets:
+- category: autism_gene_sets
+  display_name: Autism Gene Sets
+  sets:
+  - set_id: autism candidates from Iossifov PNAS 2015
+    collection_id: main
+  - set_id: autism candidates from Sanders Neuron 2015
+    collection_id: main
+- category: relevant_gene_sets
+  display_name: Relevant Gene Sets
+  sets:
+  - set_id: CHD8 target genes
+    collection_id: main
+  - set_id: chromatin modifiers
+    collection_id: main
+  - set_id: essential genes
+    collection_id: main
+  - set_id: FMRP Darnell
+    collection_id: main
 
-              gene_scores:
-              - category: autism_scores
-                display_name: Autism Scores
-                scores:
-                - score_name: SFARI gene score
-                  format: "%%s"
-              - category: protection_scores
-                display_name: Protection Scores
-                scores:
-                - score_name: RVIS_rank
-                  format: "%%s"
-                - score_name: LGD_rank
-                  format: "%%s"
-                - score_name: pLI_rank
-                  format: "%%s"
-                - score_name: pRec_rank
-                  format: "%%s"
+gene_scores:
+- category: autism_scores
+  display_name: Autism Scores
+  scores:
+  - score_name: SFARI gene score
+    format: "%%s"
+- category: protection_scores
+  display_name: Protection Scores
+  scores:
+  - score_name: RVIS_rank
+    format: "%%s"
+  - score_name: LGD_rank
+    format: "%%s"
+  - score_name: pLI_rank
+    format: "%%s"
+  - score_name: pRec_rank
+    format: "%%s"
 
-              datasets:
-                iossifov_2014_liftover:
-                  person_sets:
-                  - set_name: affected
-                    collection_name: status
-                  - set_name: unaffected
-                    collection_name: status
-                  statistics:
-                  - id: denovo_lgds
-                    display_name: LGDs
-                    effects:
-                    - LGDs
-                    category: denovo
-                  - id: denovo_missense
-                    display_name: missense
-                    effects:
-                    - missense
-                    category: denovo
-                  - id: denovo_intron
-                    display_name: intron
-                    effects:
-                    - intron
-                    category: denovo
+datasets:
+  iossifov_2014_liftover:
+    person_sets:
+    - set_name: affected
+      collection_name: status
+    - set_name: unaffected
+      collection_name: status
+    statistics:
+    - id: denovo_lgds
+      display_name: LGDs
+      effects:
+      - LGDs
+      category: denovo
+    - id: denovo_missense
+      display_name: missense
+      effects:
+      - missense
+      category: denovo
+    - id: denovo_intron
+      display_name: intron
+      effects:
+      - intron
+      category: denovo
