@@ -127,6 +127,31 @@ class MeanAggregator(Aggregator):
         return None
 
 
+class CountAggregator(Aggregator):
+    """Aggregator that counts values."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.count = 0
+
+    def _add_internal(
+        self, value: Any,
+        **kwargs: Any,  # noqa: ARG002
+    ) -> None:
+        if value is None:
+            return
+
+        self.count += 1
+
+    def _clear_internal(self) -> None:
+        self.count = 0
+
+    def get_final(self) -> Any:
+        if self.count > 0:
+            return self.count
+        return None
+
+
 class ConcatAggregator(Aggregator):
     """Aggregator that concatenates all passed values."""
 
@@ -291,6 +316,7 @@ AGGREGATOR_CLASS_DICT: dict[str, type[Aggregator]] = {
     "max": MaxAggregator,
     "min": MinAggregator,
     "mean": MeanAggregator,
+    "count": CountAggregator,
     "concatenate": ConcatAggregator,
     "median": MedianAggregator,
     "mode": ModeAggregator,
