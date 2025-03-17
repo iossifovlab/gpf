@@ -35,7 +35,7 @@ datasets:
   dir: "%($DAE_DB_DIR)s/datasets"
 
 default_study_config:
-  conf_file: "%($DAE_DB_DIR)s/defaultConfiguration.conf"
+  conf_file: "%($DAE_DB_DIR)s/default_configuration.yaml"
 
 gene_sets_db:
   gene_set_collections:

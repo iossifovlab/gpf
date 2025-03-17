@@ -20,3 +20,4 @@ wdae-api.log
 /playwright/test-results/
 /playwright/.cache/
 logs
+wdae.sql
