@@ -1,4 +1,4 @@
-browser_images_url: /gpf/static/images/
+browser_images_url: static/images/
 id: comp_pheno
 name: comp_pheno
 regressions:
