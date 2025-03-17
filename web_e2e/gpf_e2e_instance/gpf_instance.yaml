@@ -57,12 +57,13 @@ gene_scores_db:
     - gene_properties/gene_scores/pLI
     - gene_properties/gene_scores/pRec
     - gene_properties/gene_scores/SFARI_gene_score_2024_Q1
+    - gene_properties/gene_scores/LOEUF
 
 reference_genome:
-  resource_id: "hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174"
+  resource_id: "hg38/genomes/GRCh38-hg38"
 
 gene_models:
-  resource_id: "hg19/gene_models/refGene_v20190211"
+  resource_id: "hg38/gene_models/refSeq_v20240129"
 
 gene_profiles_config:
   conf_file: "geneProfiles.yaml"

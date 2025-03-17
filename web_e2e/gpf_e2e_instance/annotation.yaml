@@ -1,6 +1,41 @@
 
-- np_score: hg19/scores/MPC
-# - np_score: hg19/scores/CADD
+- normalize_allele_annotator:
+    genome: hg38/genomes/GRCh38-hg38
 
-- allele_score: hg19/variant_frequencies/gnomAD_v2.1.1/exomes
-# - allele_score: hg19/variant_frequencies/gnomAD_v2.1.1/genomes
+- allele_score:
+    resource_id: hg38/scores/dbSNP
+    input_annotatable: normalized_allele    
+    
+- allele_score:
+    resource_id: hg38/variant_frequencies/gnomAD_4.1.0/exomes/ALL
+    input_annotatable: normalized_allele
+    attributes:
+    - name: gnomad_4_1_exomes_af_percent
+      source: AF_percent
+
+- allele_score:
+    resource_id: hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL
+    input_annotatable: normalized_allele
+    attributes:
+    - name: gnomad_4_1_genomes_af_percent
+      source: AF_percent
+
+- allele_score:
+    resource_id: hg38/scores/ClinVar_20240730
+    input_annotatable: normalized_allele
+    attributes:
+    - source: CLNSIG
+    - source: CLNDN
+
+- liftover_annotator:
+    chain: liftover/hg38ToHg19
+    source_genome: hg38/genomes/GRCh38-hg38
+    target_genome: hg19/genomes/GATK_ResourceBundle_5777_b37_phiX174
+    attributes:
+    - source: liftover_annotatable
+      name: hg19_annotatable
+      internal: true
+
+- np_score:
+    resource_id: hg19/scores/MPC
+    input_annotatable: hg19_annotatable

@@ -2,8 +2,8 @@ id: COMP_genotypes
 name: COMP Genotypes
 
 studies:
-- comp_denovo
-- comp_vcf
+- comp_denovo_liftover
+- comp_vcf_liftover
 study_type: 
 - WG
 has_complex: true

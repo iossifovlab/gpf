@@ -17,7 +17,7 @@
               - relevant_gene_sets_rank 
               - autism_scores
               - protection_scores
-              - iossifov_2014
+              - iossifov_2014_liftover
 
               gene_sets:
               - category: autism_gene_sets
@@ -58,7 +58,7 @@
                   format: "%%s"
 
               datasets:
-                iossifov_2014:
+                iossifov_2014_liftover:
                   person_sets:
                   - set_name: affected
                     collection_name: status

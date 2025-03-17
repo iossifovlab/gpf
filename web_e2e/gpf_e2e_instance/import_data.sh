@@ -6,6 +6,7 @@ set -e
 rm -rf ${WD}/gpf_e2e_instance/wdae/*
 rm -rf ${WD}/gpf_e2e_instance/phenotype_storage/*
 rm -rf ${WD}/gpf_e2e_instance/genotype_storage/*
+rm -rf ${WD}/gpdb.duckdb
 
 # setup context
 # build_run export DAE_DB_DIR=${WD}/gpf_e2e_instance
@@ -22,23 +23,23 @@ import_tools import_project_comp_vcf.yaml -f -vv -j 1
 import_tools import_project_comp_denovo.yaml -f -vv -j 1
 import_tools import_project_comp_all.yaml -f -vv -j 1
 
-cp comp_vcf.yaml ${WD}/gpf_e2e_instance/studies/comp_vcf
-cp comp_denovo.yaml ${WD}/gpf_e2e_instance/studies/comp_denovo
-cp comp_all.yaml ${WD}/gpf_e2e_instance/studies/comp_all
+cp comp_vcf.yaml ${WD}/gpf_e2e_instance/studies/comp_vcf_liftover
+cp comp_denovo.yaml ${WD}/gpf_e2e_instance/studies/comp_denovo_liftover
+cp comp_all.yaml ${WD}/gpf_e2e_instance/studies/comp_all_liftover
 cd -
 
 # import iossifov 2014
 cd ${WD}/gpf_e2e_instance/input_data/genotypes/iossifov_2014
 rm -rf OUTPUT
 import_tools import_project.yaml -f -vv -j 1
-cp iossifov_2014.yaml ${WD}/gpf_e2e_instance/studies/iossifov_2014/
+cp iossifov_2014.yaml ${WD}/gpf_e2e_instance/studies/iossifov_2014_liftover/
 cd -
 
 # import multi
 cd ${WD}/gpf_e2e_instance/input_data/genotypes/multi
 rm -rf OUTPUT
 import_tools import_project.yaml -f -vv -j 1
-cp multi.yaml ${WD}/gpf_e2e_instance/studies/multi/
+cp multi.yaml ${WD}/gpf_e2e_instance/studies/multi_liftover/
 cd -
 
 # import phenotype comp data

@@ -1,4 +1,4 @@
-id: multi
+id: multi_liftover
 
 input:
   input_dir: "%(wd)s"

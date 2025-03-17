@@ -1,4 +1,4 @@
-id: comp_all
+id: comp_all_liftover
 phenotype_data: comp_pheno
 phenotype_browser: true
 phenotype_tool: true
@@ -9,10 +9,10 @@ has_transmitted: true
 genotype_storage:
   id: genotype_duckdb
   tables:
-    pedigree: parquet_scan('comp_all/pedigree/pedigree.parquet')
-    meta: parquet_scan('comp_all/meta/meta.parquet')
-    summary: parquet_scan('comp_all/summary/*.parquet')
-    family: parquet_scan('comp_all/family/*.parquet')
+    pedigree: parquet_scan('comp_all_liftover/pedigree/pedigree.parquet')
+    meta: parquet_scan('comp_all_liftover/meta/meta.parquet')
+    summary: parquet_scan('comp_all_liftover/summary/*.parquet')
+    family: parquet_scan('comp_all_liftover/family/*.parquet')
 genotype_browser:
   enabled: true
   family_filters: 

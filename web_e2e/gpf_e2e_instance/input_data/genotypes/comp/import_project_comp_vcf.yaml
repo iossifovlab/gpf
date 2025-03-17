@@ -1,4 +1,4 @@
-id: comp_vcf
+id: comp_vcf_liftover
 
 input:
   input_dir: "%(wd)s"
@@ -7,7 +7,7 @@ input:
 
   vcf:
     files:
-      - comp.vcf
+      - comp_liftover.vcf
 
 processing_config:
   work_dir: "%(wd)s/OUTPUT"

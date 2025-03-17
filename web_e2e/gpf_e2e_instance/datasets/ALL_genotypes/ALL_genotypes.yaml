@@ -2,10 +2,10 @@
 id: "ALL_genotypes"
 name: "ALL Genotypes"
 studies: 
-- comp_all
+- comp_all_liftover
 - COMP_genotypes
-- multi
-- iossifov_2014
+- multi_liftover
+- iossifov_2014_liftover
 study_type:
 - WG
 has_complex: true
