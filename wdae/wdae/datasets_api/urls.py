@@ -9,11 +9,6 @@ urlpatterns = [
         name="visible",
     ),
     re_path(
-        r"^/details/(?P<dataset_id>[^/]+)/?$",
-        views.DatasetDetailsView.as_view(),
-        name="dataset_details",
-    ),
-    re_path(
         r"^/pedigree/(?P<dataset_id>.+)/(?P<column>[^/]+)/?$",
         views.DatasetPedigreeView.as_view(),
         name="pedigree",

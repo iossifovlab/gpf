@@ -151,8 +151,6 @@ class DatasetView(QueryBaseView):
                 "has_present_in_child": False,
                 "has_present_in_parent": False,
                 "has_denovo": False,
-                "genome": None,
-                "chr_prefix": None,
                 "gene_browser": {"enabled": False},
                 "description_editable":
                     dataset.phenotype_data.config["description_editable"],
@@ -179,37 +177,6 @@ class DatasetView(QueryBaseView):
                             status=status.HTTP_404_NOT_FOUND)
 
         return Response({"data": self._collect_single_dataset(user, dataset)})
-
-
-class DatasetDetailsView(QueryBaseView):
-    """Provide miscellaneous details for a given dataset."""
-
-    @method_decorator(etag(get_instance_timestamp_etag))
-    def get(self, _request: Request, dataset_id: str) -> Response:
-        # pylint: disable=unused-argument
-        """Return response for a specific dataset configuration details."""
-
-        wdae_study = self.gpf_instance.get_wdae_wrapper(dataset_id)
-
-        if wdae_study is None:
-            return Response(
-                {"error": f"Dataset {dataset_id} not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        if wdae_study.is_phenotype:
-            return Response({
-                "hasDenovo": False,
-                "genome": None,
-                "chrPrefix": None,
-            })
-
-        has_denovo = wdae_study.genotype_data.config.get("has_denovo", False)
-        return Response({
-            "hasDenovo": has_denovo,
-            "genome": wdae_study.genotype_data.config.genome,
-            "chrPrefix": wdae_study.genotype_data.config.chr_prefix,
-        })
 
 
 class DatasetPedigreeView(QueryBaseView):

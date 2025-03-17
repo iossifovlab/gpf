@@ -18,4 +18,9 @@ urlpatterns = [
         instance_views.AboutDescriptionView.as_view(),
         name="about",
     ),
+    re_path(
+        r"^/genome/?$",
+        instance_views.GenomeView.as_view(),
+        name="genome",
+    ),
 ]
