@@ -15,22 +15,22 @@ import { setExpandedDatasets } from './dataset-node.state';
 const datasetNodeMock = new DatasetNode(
   new Dataset('id1',
     null, ['id11', 'id12'], null, null, null, null, null,
-    null, null, null, null, null, null, null, null, null, null, null, null
+    null, null, null, null, null, null, null, null, null, null, null
   ), [
     new Dataset(
       'id2',
       null, ['id1', 'parent2'], null, null, null, null, null,
-      null, null, null, null, null, null, null, null, null, null, null, null
+      null, null, null, null, null, null, null, null, null, null, null
     ),
     new Dataset(
       'id3',
       null, ['id1', 'parent3'], null, null, null, null, null,
-      null, null, null, null, null, null, null, null, null, null, null, null
+      null, null, null, null, null, null, null, null, null, null, null
     ),
     new Dataset(
       'id4',
       null, ['id4', 'parent4'], null, null, null, null, null,
-      null, null, null, null, null, null, null, null, null, null, null, null
+      null, null, null, null, null, null, null, null, null, null, null
     )
   ]);
 describe('DatasetNodeComponent', () => {

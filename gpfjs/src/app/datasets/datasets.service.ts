@@ -10,7 +10,6 @@ import { DatasetPermissions } from 'app/datasets-table/datasets-table';
 @Injectable()
 export class DatasetsService {
   private readonly datasetUrl = 'datasets';
-  private readonly datasetsDetailsUrl = 'datasets/details';
   private readonly datasetPedigreeUrl = 'datasets/pedigree';
   private readonly visibleDatasetsUrl = 'datasets/visible';
   private readonly descriptionUrl = 'datasets/description';
@@ -48,11 +47,9 @@ export class DatasetsService {
     const url = `${this.datasetUrl}/${datasetId}`;
     const options = { headers: this.headers, withCredentials: true };
 
-    const dataset$ = this.http.get(this.config.baseUrl + url, options);
-    const details$ = this.http.get(`${this.config.baseUrl}${this.datasetsDetailsUrl}/${datasetId}`, options);
-
-    return zip(dataset$, details$).pipe(map(
-      (datasetPack: [object, object]) => Dataset.fromDatasetAndDetailsJson(datasetPack[0]['data'], datasetPack[1]))
+    return this.http.get(this.config.baseUrl + url, options).pipe(
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      map((response: object) => Dataset.fromDataset(response['data']))
     );
   }
 

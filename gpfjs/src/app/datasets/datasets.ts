@@ -269,15 +269,11 @@ export class Dataset extends IdName {
       UserGroup.fromJsonArray(json['groups'] as object[]),
       json['gene_browser'] ? GeneBrowser.fromJson(json['gene_browser'] as object) : null,
       json['has_denovo'] as boolean,
-      json['genome'] as string,
       json['description_editable'] as boolean
     );
   }
 
-  public static fromDatasetAndDetailsJson(datasetJson: object, detailsJson: object): Dataset {
-    if (!datasetJson || !detailsJson) {
-      return undefined;
-    }
+  public static fromDataset(datasetJson: object): Dataset {
     return new Dataset(
       datasetJson['id'] as string,
       datasetJson['name'] as string,
@@ -298,8 +294,7 @@ export class Dataset extends IdName {
         PersonSetCollections.fromJson(datasetJson['person_set_collections'] as object) : null,
       UserGroup.fromJsonArray(datasetJson['groups'] as object[]),
       datasetJson['gene_browser'] ? GeneBrowser.fromJson(datasetJson['gene_browser'] as object) : null,
-      detailsJson['has_denovo'] as boolean,
-      detailsJson['genome'] as string,
+      datasetJson['has_denovo'] as boolean,
       datasetJson['description_editable'] as boolean
     );
   }
@@ -338,7 +333,6 @@ export class Dataset extends IdName {
     public readonly groups: UserGroup[],
     public readonly geneBrowser: GeneBrowser,
     public readonly hasDenovo: boolean,
-    public readonly genome: string,
     public readonly descriptionEditable: boolean
   ) {
     super(id, name);

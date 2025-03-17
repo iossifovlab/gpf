@@ -21,6 +21,12 @@ export class InstanceService {
     );
   }
 
+  public getGenome(): Observable<string> {
+    return this.http.get<{build: string}>(`${this.config.baseUrl}${this.instanceUrl}/genome`).pipe(
+      map(json => json.build)
+    );
+  }
+
   public writeHomeDescription(description: string): Observable<object> {
     const options = { headers: this.headers, withCredentials: true };
     return this.http.post(
