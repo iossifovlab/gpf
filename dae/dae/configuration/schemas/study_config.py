@@ -328,11 +328,15 @@ study_config_schema = {
     "pub_med": {"type": "list", "schema": {"type": "string"}},
     "genome": {
         "type": "string",
-        "allowed": ["hg19", "hg38"],
-        "default": "hg19",
+        "nullable": True,
+        "meta": {"deprecated": True},
     },
     "study_phenotype": {"type": "string"},
-    "chr_prefix": {"type": "boolean", "default": False},
+    "chr_prefix": {
+        "type": "boolean",
+        "nullable": True,
+        "meta": {"deprecated": True},
+    },
     "has_denovo": {"type": "boolean", "default": True},
     "has_transmitted": {"type": "boolean"},
     "has_complex": {"type": "boolean"},

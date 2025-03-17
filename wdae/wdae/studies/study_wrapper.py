@@ -176,8 +176,6 @@ class StudyWrapperBase(WDAEStudy):
             "has_present_in_child",
             "has_present_in_parent",
             "has_denovo",
-            "genome",
-            "chr_prefix",
             "gene_browser",
             "description_editable",
         ]

@@ -151,8 +151,6 @@ class DatasetView(QueryBaseView):
                 "has_present_in_child": False,
                 "has_present_in_parent": False,
                 "has_denovo": False,
-                "genome": None,
-                "chr_prefix": None,
                 "gene_browser": {"enabled": False},
                 "description_editable":
                     dataset.phenotype_data.config["description_editable"],
