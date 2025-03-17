@@ -64,7 +64,6 @@ const datasetMock = new Dataset(
   null,
   new GeneBrowser(true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6, true),
   false,
-  'genome1',
   true
 );
 
@@ -87,7 +86,6 @@ const datasetMock2 = new Dataset(
   null,
   new GeneBrowser(true, 'frequencyCol2', 'frequencyName2', 'effectCol2', 'locationCol2', 5, 6, true),
   false,
-  'genome1',
   true
 );
 

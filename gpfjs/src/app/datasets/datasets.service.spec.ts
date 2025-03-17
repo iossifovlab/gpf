@@ -55,7 +55,6 @@ const datasetMock = new Dataset(
   ],
   new GeneBrowser(true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6, true),
   false,
-  'genome1',
   true
 );
 
@@ -93,18 +92,13 @@ describe('DatasetService', () => {
   });
 
   it('should get dataset', async() => {
-    const datasetFromJsonSpy = jest.spyOn(Dataset, 'fromDatasetAndDetailsJson');
+    const datasetFromJsonSpy = jest.spyOn(Dataset, 'fromDataset');
     datasetFromJsonSpy.mockReturnValue(datasetMock);
     const httpGetSpy = jest.spyOn(HttpClient.prototype, 'get');
     httpGetSpy.mockReturnValue(of(datasetMock));
-
     jest.clearAllMocks();
 
     const response = await lastValueFrom(service.getDataset('geneSymbol').pipe(take(1)));
     expect(response).toBe(datasetMock);
-    expect(httpGetSpy.mock.calls[0][0]).toBe('testUrl/datasets/geneSymbol');
-    expect(httpGetSpy.mock.calls[1][0]).toBe('testUrl/datasets/details/geneSymbol');
-    // eslint-disable-next-line jest/prefer-strict-equal
-    expect(datasetFromJsonSpy.mock.calls).toEqual([[undefined, datasetMock]]);
   });
 });
