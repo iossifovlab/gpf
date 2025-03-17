@@ -48,7 +48,8 @@ export class DatasetsService {
     const options = { headers: this.headers, withCredentials: true };
 
     return this.http.get(this.config.baseUrl + url, options).pipe(
-      map((response: object) => Dataset.fromDataset(response["data"]))
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      map((response: object) => Dataset.fromDataset(response['data']))
     );
   }
 

@@ -96,7 +96,7 @@ class DatasetsServiceMock {
 }
 
 class MockDatasetsTreeService {
-  public findNodeById(node: DatasetNode, id: string): DatasetNode | undefined {
+  public findNodeById(node: DatasetNode): DatasetNode | undefined {
     return node;
   }
 }
