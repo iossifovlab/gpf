@@ -269,7 +269,7 @@ class AnnotationConfigParser:
         if not set(raw.keys()) <= {
             "summary", "description", "input_reference_genome", "metadata",
         }:
-            raise AnnotationConfigurationError
+            raise AnnotationConfigurationError("Invalid preamble keys")
 
         if not isinstance(raw.get("summary", ""), str):
             raise TypeError("preamble summary must be a string!")
