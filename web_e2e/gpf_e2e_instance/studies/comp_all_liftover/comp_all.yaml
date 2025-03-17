@@ -1,0 +1,50 @@
+id: comp_all_liftover
+phenotype_data: comp_pheno
+phenotype_browser: true
+phenotype_tool: true
+conf_dir: .
+has_denovo: true
+has_cnv: false
+has_transmitted: true
+genotype_storage:
+  id: genotype_duckdb
+  tables:
+    pedigree: parquet_scan('comp_all_liftover/pedigree/pedigree.parquet')
+    meta: parquet_scan('comp_all_liftover/meta/meta.parquet')
+    summary: parquet_scan('comp_all_liftover/summary/*.parquet')
+    family: parquet_scan('comp_all_liftover/family/*.parquet')
+genotype_browser:
+  enabled: true
+  family_filters: 
+    sample_continuous_filter:
+      name: Sample Filter Name
+      source_type: continuous
+      from: phenodb
+      filter_type: multi
+      role: prb
+
+  preview_columns:
+  - family
+  - variant
+  - genotype
+  - effect
+  - gene_scores
+  - mpc_cadd
+  - freq
+  - pheno
+  column_groups:
+    pheno:
+      name: Measures
+      columns:
+      - pheno_age
+      - pheno_iq
+  columns:
+    phenotype:
+      pheno_age:
+        role: prb
+        source: i1.age
+        name: Age
+      pheno_iq:
+        role: prb
+        source: i1.iq
+        name: Iq

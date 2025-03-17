@@ -1,0 +1,14 @@
+id: denovo_helloworld
+conf_dir: .
+has_denovo: true
+has_cnv: false
+has_transmitted: false
+genotype_storage:
+  id: genotype_duckdb
+  tables:
+    pedigree: parquet_scan('denovo_helloworld/pedigree/pedigree.parquet')
+    meta: parquet_scan('denovo_helloworld/meta/meta.parquet')
+    summary: parquet_scan('denovo_helloworld/summary/*.parquet')
+    family: parquet_scan('denovo_helloworld/family/*.parquet')
+genotype_browser:
+  enabled: true

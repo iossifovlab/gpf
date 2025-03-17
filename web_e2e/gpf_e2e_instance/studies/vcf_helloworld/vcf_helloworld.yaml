@@ -1,0 +1,14 @@
+id: vcf_helloworld
+conf_dir: .
+has_denovo: false
+has_cnv: false
+has_transmitted: true
+genotype_storage:
+  id: genotype_duckdb
+  tables:
+    pedigree: parquet_scan('vcf_helloworld/pedigree/pedigree.parquet')
+    meta: parquet_scan('vcf_helloworld/meta/meta.parquet')
+    summary: parquet_scan('vcf_helloworld/summary/*.parquet')
+    family: parquet_scan('vcf_helloworld/family/*.parquet')
+genotype_browser:
+  enabled: true
