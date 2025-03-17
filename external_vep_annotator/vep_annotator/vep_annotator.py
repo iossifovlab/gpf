@@ -161,7 +161,7 @@ class VEPAnnotatorBase(DockerAnnotator):
         self, file: TextIO, annotatables: list[VCFAllele | None],
     ) -> None:
         """Prepare input files for VEP in standard VEP variant format."""
-        writer = csv.writer(file, delimiter="\t")
+        writer = csv.writer(file, delimiter="\t", lineterminator="\n")
         for idx, annotatable in enumerate(annotatables, 1):
             if annotatable is None:
                 continue
