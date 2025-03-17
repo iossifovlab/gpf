@@ -21,7 +21,7 @@ from dae.testing import (
 from dae.testing.foobar_import import foobar_genes, foobar_genome
 
 
-@pytest.fixture()
+@pytest.fixture
 def reannotation_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     root_path = tmp_path
     foobar_genome(root_path / "grr")
@@ -134,44 +134,53 @@ def reannotation_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
                 },
             },
             "reannotation_old.yaml": textwrap.dedent("""
-                - position_score: one
-                - effect_annotator:
-                    genome: foobar_genome
-                    gene_models: foobar_genes
-                - gene_score_annotator:
-                    resource_id: gene_score1
-                    input_gene_list: gene_list
-                - gene_score_annotator:
-                    resource_id: gene_score2
-                    input_gene_list: gene_list
+                preamble:
+                  input_reference_genome: foobar_genome
+                annotators:
+                  - position_score: one
+                  - effect_annotator:
+                      genome: foobar_genome
+                      gene_models: foobar_genes
+                  - gene_score_annotator:
+                      resource_id: gene_score1
+                      input_gene_list: gene_list
+                  - gene_score_annotator:
+                      resource_id: gene_score2
+                      input_gene_list: gene_list
             """),
             "reannotation_old_internal.yaml": textwrap.dedent("""
-                - position_score: one
-                - effect_annotator:
-                    genome: foobar_genome
-                    gene_models: foobar_genes
-                - gene_score_annotator:
-                    resource_id: gene_score1
-                    input_gene_list: gene_list
-                - gene_score_annotator:
-                    resource_id: gene_score2
-                    input_gene_list: gene_list
-                    attributes:
-                    - source: gene_score2
-                      name: gene_score2
-                      internal: true
+                preamble:
+                  input_reference_genome: foobar_genome
+                annotators:
+                  - position_score: one
+                  - effect_annotator:
+                      genome: foobar_genome
+                      gene_models: foobar_genes
+                  - gene_score_annotator:
+                      resource_id: gene_score1
+                      input_gene_list: gene_list
+                  - gene_score_annotator:
+                      resource_id: gene_score2
+                      input_gene_list: gene_list
+                      attributes:
+                      - source: gene_score2
+                        name: gene_score2
+                        internal: true
             """),
             "reannotation_new.yaml": textwrap.dedent("""
-                - position_score: one
-                - effect_annotator:
-                    genome: foobar_genome
-                    gene_models: foobar_genes
-                    attributes:
-                    - worst_effect
-                    - gene_list
-                - gene_score_annotator:
-                    resource_id: gene_score1
-                    input_gene_list: gene_list
+                preamble:
+                  input_reference_genome: foobar_genome
+                annotators:
+                  - position_score: one
+                  - effect_annotator:
+                      genome: foobar_genome
+                      gene_models: foobar_genes
+                      attributes:
+                      - worst_effect
+                      - gene_list
+                  - gene_score_annotator:
+                      resource_id: gene_score1
+                      input_gene_list: gene_list
             """),
         },
     )
@@ -180,7 +189,7 @@ def reannotation_grr(tmp_path: pathlib.Path) -> GenomicResourceRepo:
     ))
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_pipeline_config() -> str:
     return """
     - liftover_annotator:

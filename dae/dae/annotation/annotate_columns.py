@@ -8,7 +8,7 @@ import sys
 from collections.abc import Generator, Iterable
 from contextlib import closing
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from pysam import TabixFile, tabix_index
 
@@ -78,10 +78,10 @@ def read_input(
 
 
 def produce_tabix_index(
-    filepath: str, args: Any, header: list[str],
-    ref_genome: ReferenceGenome | None,
+    filepath: str, args: Any, ref_genome: ReferenceGenome | None,
 ) -> None:
     """Produce a tabix index file for the given variants file."""
+    header = read_header(filepath)
     line_skip = 0 if header[0].startswith("#") else 1
     header = [c.strip("#") for c in header]
     record_to_annotatable = build_record_to_annotatable(
@@ -113,6 +113,19 @@ def produce_tabix_index(
                 force=True)
 
 
+def read_header(filepath: str, separator: str = "\t") -> list[str]:
+    """Extract header from file."""
+    if filepath.endswith(".gz"):
+        file = gzip.open(filepath, "rt")  # noqa: SIM115
+    else:
+        file = open(filepath, "r")  # noqa: SIM115
+
+    with file:
+        header = file.readline()
+
+    return [c.strip() for c in header.split(separator)]
+
+
 def combine(
     args: Any,
     pipeline_config: RawPipelineConfig,
@@ -138,10 +151,18 @@ def combine(
     ]
 
     with gzip.open(args.input, "rt") as in_file_raw:
-        hcs = in_file_raw.readline().strip("\r\n").split(args.input_separator)
+        header_line = cast(str, in_file_raw.readline())
+        hcs = header_line.strip("\r\n").split(args.input_separator)
         header = args.output_separator.join(hcs + annotation_attributes)
 
-    with open(out_file_path, "wt") as out_file:
+    compress_output = out_file_path.endswith(".gz")
+
+    if compress_output:
+        out_file = gzip.open(out_file_path, "wt")  # noqa: SIM115
+    else:
+        out_file = open(out_file_path, "wt")  # noqa: SIM115
+
+    with out_file:
         out_file.write(header + "\n")
         for partfile_path in partfile_paths:
             with gzip.open(partfile_path, "rt") as partfile:
@@ -153,7 +174,10 @@ def combine(
                 out_file.write("\n")
     for partfile_path in partfile_paths:
         os.remove(partfile_path)
-    produce_tabix_index(out_file_path, args, hcs, genome)
+    try:
+        produce_tabix_index(out_file_path, args, genome)
+    except (TypeError, OSError):
+        logger.exception("Could not produce tabix file for output")
 
 
 class AnnotateColumnsTool(AnnotationTool):
@@ -207,12 +231,13 @@ class AnnotateColumnsTool(AnnotationTool):
         ref_genome_id: str | None,
         out_file_path: str,
         region: Region | None = None,
-        compress_output: bool = False,  # noqa: FBT001 FBT002
     ) -> None:
         """Annotate a variants file with a given pipeline configuration."""
         # pylint: disable=too-many-locals,too-many-branches
         # Insisting on having the pipeline config passed in args
         # prevents the finding of a default annotation config. Consider fixing
+
+        compress_output = out_file_path.endswith(".gz")
 
         pipeline_config_old = None
         if args.reannotate:
@@ -418,7 +443,7 @@ class AnnotateColumnsTool(AnnotationTool):
                     AnnotateColumnsTool.annotate,
                     [self.args, self.pipeline.raw,
                      self.grr.definition,
-                     ref_genome_id, path, region, True],
+                     ref_genome_id, path, region],
                     []))
 
             self.task_graph.create_task(
@@ -432,8 +457,18 @@ class AnnotateColumnsTool(AnnotationTool):
                 "annotate_all",
                 AnnotateColumnsTool.annotate,
                 [self.args, self.pipeline.raw, self.grr.definition,
-                 ref_genome_id, output, None, output.endswith(".gz")],
+                 ref_genome_id, output, None],
                 [])
+
+            if ref_genome_id is not None:
+                genome = build_reference_genome_from_resource(
+                    self.grr.get_resource(ref_genome_id))
+            else:
+                genome = None
+            try:
+                produce_tabix_index(output, self.args, genome)
+            except (TypeError, OSError):
+                logger.exception("Could not produce tabix file for output")
 
 
 def cli(raw_args: list[str] | None = None) -> None:
