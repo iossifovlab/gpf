@@ -1,0 +1,11 @@
+browser_images_url: static/images/
+id: pheno_helloworld
+name: pheno_helloworld
+regressions:
+  reg_1:
+    display_name: Regression one
+    instrument_name: instrument_1
+    jitter: 0.1
+    measure_names:
+    - measure_1
+type: study

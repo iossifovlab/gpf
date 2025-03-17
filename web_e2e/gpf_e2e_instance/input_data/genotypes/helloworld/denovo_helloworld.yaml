@@ -12,3 +12,6 @@ input:
     pos: POS
     ref: REF
     alt: ALT
+
+processing_config:
+  work_dir: "%(wd)s/OUTPUT"

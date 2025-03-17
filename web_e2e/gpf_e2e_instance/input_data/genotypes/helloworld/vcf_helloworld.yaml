@@ -7,3 +7,6 @@ input:
   vcf:
     files:
       - helloworld.vcf
+
+processing_config:
+  work_dir: "%(wd)s/OUTPUT"

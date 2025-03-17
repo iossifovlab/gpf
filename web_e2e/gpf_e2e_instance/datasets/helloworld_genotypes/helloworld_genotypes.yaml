@@ -1,14 +1,11 @@
+id: helloworld_genotypes
+name: Hello World Genotypes
 
-id: "ALL_genotypes"
-name: "ALL Genotypes"
-studies: 
-- helloworld_genotypes
-- iossifov_2014_liftover
-- multi_liftover
-
-- comp_all_liftover
-- COMP_genotypes
-
+studies:
+- denovo_helloworld
+- vcf_helloworld
+study_type: 
+- WG
 has_complex: true
 enabled: true
 genotype_browser:
