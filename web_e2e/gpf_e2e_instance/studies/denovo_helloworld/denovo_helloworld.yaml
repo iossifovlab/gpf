@@ -3,6 +3,13 @@ conf_dir: .
 has_denovo: true
 has_cnv: false
 has_transmitted: false
+genotype_browser:
+  enabled: true
+phenotype_data: pheno_helloworld
+phenotype_tool: true
+phenotype_browser: true
+enrichment:
+  enabled: true
 genotype_storage:
   id: genotype_duckdb
   tables:
@@ -10,5 +17,3 @@ genotype_storage:
     meta: parquet_scan('denovo_helloworld/meta/meta.parquet')
     summary: parquet_scan('denovo_helloworld/summary/*.parquet')
     family: parquet_scan('denovo_helloworld/family/*.parquet')
-genotype_browser:
-  enabled: true

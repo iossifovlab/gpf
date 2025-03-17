@@ -1,13 +1,17 @@
 id: helloworld_genotypes
 name: Hello World Genotypes
-
 studies:
 - denovo_helloworld
 - vcf_helloworld
-study_type: 
+study_type:
 - WG
 has_complex: true
 enabled: true
+phenotype_data: pheno_helloworld
+phenotype_tool: true
+phenotype_browser: true
+enrichment:
+  enabled: true
 genotype_browser:
   has_present_in_child: true
   has_present_in_parent: true

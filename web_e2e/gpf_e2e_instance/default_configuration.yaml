@@ -491,12 +491,11 @@ denovo_gene_sets:
 enrichment:
   enabled: false
   selected_background_models:
-  - hg19/enrichment/coding_length_in_target_ref_gene_v20190211
-  - hg19/enrichment/coding_length_ref_gene_v20190211
+  - hg38/enrichment/coding_length_ref_gene_v20170601
   - enrichment/samocha_background
   selected_person_set_collections:
   - status
-  default_background_model: hg19/enrichment/coding_length_in_target_ref_gene_v20190211
+  default_background_model: hg38/enrichment/coding_length_ref_gene_v20170601
   selected_counting_models:
   - enrichment_gene_counting
   - enrichment_events_counting
