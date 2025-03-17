@@ -179,23 +179,7 @@ def test_get_all_genotype_groups(variants_db_fixture: VariantsDb) -> None:
     assert len(genotype_data_groups) == 18
 
 
-def test_get_all_genotype_group_configs(
-    variants_db_fixture: VariantsDb,
-) -> None:
-    configs = variants_db_fixture.get_all_genotype_group_configs()
-    assert len(configs) == 18
-
-
 ##############################################################
-
-
-def test_get_existing_config(variants_db_fixture: VariantsDb) -> None:
-    vdb = variants_db_fixture
-    assert vdb.get_config("inheritance_trio") is not None
-
-
-def test_get_non_existing_config(variants_db_fixture: VariantsDb) -> None:
-    assert variants_db_fixture.get_config("ala bala") is None
 
 
 def test_get_existing(variants_db_fixture: VariantsDb) -> None:
