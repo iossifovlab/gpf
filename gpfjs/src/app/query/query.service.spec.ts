@@ -304,27 +304,29 @@ describe('QueryService', () => {
         'nonsense',
       ]
     };
-
     const resMock = [
       ['14016'],
       ['SSC CSHL WGS'],
       ['chr14:21402010'],
     ];
-
+    const genomeMock = 'hg38';
     const genotypePreview = new GenotypePreview();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dataMap = new Map<string, any>();
+
     dataMap.set('source1', resMock[0]);
     dataMap.set('source2', resMock[1]);
     dataMap.set('source3', resMock[2]);
+    dataMap.set('genome', genomeMock);
 
-    dataMap.set('genome', datasetMock.genome);
     genotypePreview.data = dataMap;
     const genotypePreviewArray = new GenotypePreviewVariantsArray();
     genotypePreviewArray.genotypePreviews = [genotypePreview];
 
     const spy = jest.spyOn(service, 'streamPost').mockImplementation(() => of(resMock) as Subject<unknown>);
     const arrSpy = jest.spyOn(GenotypePreviewVariantsArray.prototype, 'addPreviewVariant');
+    jest.spyOn(service['instanceService'], 'getGenome').mockReturnValue(of(genomeMock));
+
     const genotypePreviewResponse = service.getGenotypePreviewVariantsByFilter(datasetMock, filter, 12, () => {});
 
     expect(spy).toHaveBeenCalledWith(service['genotypePreviewVariantsUrl'], filter);
@@ -348,21 +350,22 @@ describe('QueryService', () => {
         'nonsense',
       ]
     };
-
     const resMock = [['14016']];
-
+    const genomeMock = 'hg38';
     const genotypePreview = new GenotypePreview();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dataMap = new Map<string, any>();
     dataMap.set('source1', resMock[0]);
+    dataMap.set('genome', genomeMock);
 
-    dataMap.set('genome', datasetMock.genome);
     genotypePreview.data = dataMap;
     const genotypePreviewArray = new GenotypePreviewVariantsArray();
     genotypePreviewArray.genotypePreviews = [genotypePreview];
 
     const spy = jest.spyOn(service, 'streamPost').mockImplementation(() => of(resMock) as Subject<unknown>);
     const arrSpy = jest.spyOn(GenotypePreviewVariantsArray.prototype, 'addPreviewVariant');
+    jest.spyOn(service['instanceService'], 'getGenome').mockReturnValue(of(genomeMock));
+
     const genotypePreviewResponse = service.getGenotypePreviewVariantsByFilter(datasetMock, filter);
 
     expect(spy).toHaveBeenCalledWith(service['genotypePreviewVariantsUrl'], filter);

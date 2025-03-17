@@ -6,10 +6,11 @@ import { Observable, Subject } from 'rxjs';
 import { environment } from 'environments/environment';
 import { ConfigService } from '../config/config.service';
 import { GenotypePreviewVariantsArray } from '../genotype-preview-model/genotype-preview';
-import { map } from 'rxjs/operators';
+import { map, mergeMap, take, tap } from 'rxjs/operators';
 import { Dataset } from 'app/datasets/datasets';
 import { AuthService } from 'app/auth.service';
 import oboe from 'oboe';
+import { InstanceService } from 'app/instance.service';
 
 @Injectable()
 export class QueryService {
@@ -40,7 +41,8 @@ export class QueryService {
     private router: Router,
     private http: HttpClient,
     private config: ConfigService,
-    private authService: AuthService
+    private authService: AuthService,
+    private instanceService: InstanceService,
   ) { }
 
   public cancelStreamPost(): void {
@@ -128,25 +130,28 @@ export class QueryService {
     const queryFilter = { ...filter };
     queryFilter['maxVariantsCount'] = maxVariantsCount;
 
-    this.familyVariantsSubscription = this.streamPost(this.genotypePreviewVariantsUrl, queryFilter)
-      .subscribe(variant => {
-        genotypePreviewVariantsArray.addPreviewVariant(
-          <Array<string>> variant,
-          dataset.genotypeBrowserConfig.columnIds
-        );
-
-        if (callback !== undefined) {
-          callback();
-        }
-
-        if (variant) {
-          // Attach the genome version to each variant
-          // This is done so that the table can construct the correct UCSC link for the variant
-          genotypePreviewVariantsArray.genotypePreviews[
-            genotypePreviewVariantsArray.genotypePreviews.length - 1
-          ].data.set('genome', dataset.genome);
-        }
-      });
+    this.familyVariantsSubscription = this.instanceService.getGenome().pipe(
+      take(1),
+      mergeMap(genome =>
+        this.streamPost(this.genotypePreviewVariantsUrl, queryFilter).pipe(
+          tap(variant => {
+            genotypePreviewVariantsArray.addPreviewVariant(
+              <Array<string>>variant,
+              dataset.genotypeBrowserConfig.columnIds
+            );
+            if (callback !== undefined) {
+              callback();
+            }
+            if (variant) {
+              // Attach the genome version to each variant to generate USCS link
+              genotypePreviewVariantsArray.genotypePreviews[
+                genotypePreviewVariantsArray.genotypePreviews.length - 1
+              ].data.set('genome', genome);
+            }
+          })
+        )
+      )
+    ).subscribe();
     return genotypePreviewVariantsArray;
   }
 

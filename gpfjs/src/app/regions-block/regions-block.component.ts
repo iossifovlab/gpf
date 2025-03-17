@@ -1,6 +1,7 @@
-import { Component, ViewChild, AfterViewInit, Input } from '@angular/core';
+import { Component, ViewChild, AfterViewInit, OnInit } from '@angular/core';
 import { NgbNav } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
+import { InstanceService } from 'app/instance.service';
 import { resetRegionsFilters, selectRegionsFilters } from 'app/regions-filter/regions-filter.state';
 import { take } from 'rxjs';
 
@@ -9,11 +10,20 @@ import { take } from 'rxjs';
   templateUrl: './regions-block.component.html',
   styleUrls: ['./regions-block.component.css'],
 })
-export class RegionsBlockComponent implements AfterViewInit {
+export class RegionsBlockComponent implements OnInit, AfterViewInit {
   @ViewChild('nav') public ngbNav: NgbNav;
-  @Input() public genome: string;
+  public genome: string;
 
-  public constructor(private store: Store) { }
+  public constructor(
+    private store: Store,
+    private instanceService: InstanceService,
+  ) { }
+
+  public ngOnInit(): void {
+    this.instanceService.getGenome().pipe(take(1)).subscribe(res => {
+      this.genome = res;
+    });
+  }
 
   public ngAfterViewInit(): void {
     this.store.select(selectRegionsFilters).pipe(take(1)).subscribe(regionsFiltersState => {

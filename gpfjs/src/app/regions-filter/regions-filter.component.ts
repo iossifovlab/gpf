@@ -6,6 +6,7 @@ import { ValidateNested } from 'class-validator';
 import { ComponentValidator } from 'app/common/component-validator';
 import { take } from 'rxjs';
 import { cloneDeep } from 'lodash';
+import { InstanceService } from 'app/instance.service';
 
 @Component({
   selector: 'gpf-regions-filter',
@@ -16,14 +17,20 @@ export class RegionsFilterComponent extends ComponentValidator implements OnInit
   @ValidateNested() public regionsFilter = new RegionsFilter();
   @ViewChild('textArea') private textArea: ElementRef;
 
-  public constructor(protected store: Store) {
+  public constructor(
+    protected store: Store,
+    private instanceService: InstanceService
+  ) {
     super(store, 'regionsFilter', selectRegionsFilters);
   }
 
   public ngOnInit(): void {
+    this.instanceService.getGenome().pipe(take(1)).subscribe(genome => {
+      this.regionsFilter.genome = genome;
+    });
+
     super.ngOnInit();
     this.focusTextInputArea();
-    this.regionsFilter.genome = this.genome;
     this.store.select(selectRegionsFilters).pipe(take(1)).subscribe((regionsFilters: string[]) => {
       this.setRegionsFilter(regionsFilters.join('\n'));
     });
