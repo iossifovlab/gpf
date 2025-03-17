@@ -6,7 +6,7 @@ set -e
 rm -rf ${WD}/gpf_e2e_instance/wdae/*
 rm -rf ${WD}/gpf_e2e_instance/phenotype_storage/*
 rm -rf ${WD}/gpf_e2e_instance/genotype_storage/*
-rm -rf ${WD}/gpdb.duckdb
+rm -rf ${WD}/gpf_e2e_instance/gpdb.duckdb
 
 # import comp data
 cd ${WD}/gpf_e2e_instance/input_data/genotypes/comp
