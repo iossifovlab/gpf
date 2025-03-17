@@ -20,6 +20,7 @@ import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import {
   MeasureHistogramState,
+  personMeasureHistogramsReducer,
   setFamilyMeasureHistogramsCategorical,
   setFamilyMeasureHistogramsContinuous,
   setPersonMeasureHistogramsCategorical,
@@ -139,7 +140,7 @@ const measureHistogramMock3 = new MeasureHistogram(
 
 class MeasuresServiceMock {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public getMeasureHistogramBeta(datasetId: string, measure: string): Observable<MeasureHistogram> {
+  public getMeasureHistogramBeta(datasetId: string, measure: string, roles: string[]): Observable<MeasureHistogram> {
     if (measure === 'm1') {
       return of(measureHistogramMock);
     } else if (measure === 'm2') {
@@ -159,7 +160,7 @@ describe('PersonFiltersSelectorComponent', () => {
   beforeEach(async() => {
     await TestBed.configureTestingModule({
       declarations: [PersonFiltersSelectorComponent],
-      imports: [StoreModule.forRoot()],
+      imports: [StoreModule.forRoot({personMeasureHistograms: personMeasureHistogramsReducer})],
       providers: [
         ConfigService,
         provideHttpClient(),
@@ -577,5 +578,28 @@ describe('PersonFiltersSelectorComponent', () => {
     };
     component.addToState(mockState);
     expect(dispatchSpy).toHaveBeenCalledWith(resetErrors({ componentId: 'personFilters'}));
+  });
+
+  it('should reload histogram when there are changes in roles list', () => {
+    const removeFromStateSpy = jest.spyOn(component, 'removeFromState').mockImplementation();
+    const addToStateSpy = jest.spyOn(component, 'addToState').mockImplementation();
+
+    const defaultState: MeasureHistogramState = {
+      histogramType: 'continuous',
+      measure: 'm1',
+      rangeStart: 5,
+      rangeEnd: 10,
+      values: null,
+      categoricalView: null,
+      roles: ['dad']
+    };
+    component.loadHistogram({measureId: 'm1', roles: ['dad']});
+
+    expect(removeFromStateSpy).toHaveBeenCalledWith('m1');
+    expect(component.selectedMeasureHistograms).toStrictEqual([{
+      measureHistogram: measureHistogramMock,
+      state: defaultState
+    }]);
+    expect(addToStateSpy).toHaveBeenCalledWith(defaultState);
   });
 });

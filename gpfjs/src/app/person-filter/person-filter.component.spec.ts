@@ -495,7 +495,6 @@ describe('PersonFilterComponent', () => {
 
     component.isFamilyFilters = false;
 
-
     const localStateMock: MeasureHistogramState = {
       histogramType: 'continuous',
       measure: 'm1',
@@ -509,5 +508,45 @@ describe('PersonFilterComponent', () => {
     component.ngOnInit();
 
     expect(dispatchSpy).toHaveBeenCalledWith(resetErrors({componentId: 'personFilters: m1'}));
+  });
+
+  it('should update list of selected roles and trigger histogram update', () => {
+    const updateHistogramSpy = jest.spyOn(component.updateHistogram, 'emit');
+
+    const localStateMock: MeasureHistogramState = {
+      histogramType: 'continuous',
+      measure: 'm1',
+      rangeStart: 7,
+      rangeEnd: 10,
+      values: [],
+      categoricalView: null,
+      roles: null
+    };
+    component.localState = localStateMock;
+
+    const roles = ['mom', 'dad'];
+    component.replaceSelectedRoles(roles);
+    expect(component.localState.roles).toStrictEqual(roles);
+    expect(updateHistogramSpy).toHaveBeenCalledWith({ measureId: 'm1', roles: roles });
+  });
+
+  it('should save null to state when selected roles are empty list', () => {
+    const updateHistogramSpy = jest.spyOn(component.updateHistogram, 'emit');
+
+    const localStateMock: MeasureHistogramState = {
+      histogramType: 'continuous',
+      measure: 'm1',
+      rangeStart: 7,
+      rangeEnd: 10,
+      values: [],
+      categoricalView: null,
+      roles: ['mom', 'dad']
+    };
+    component.localState = localStateMock;
+
+    const roles: string[] = [];
+    component.replaceSelectedRoles(roles);
+    expect(component.localState.roles).toStrictEqual([]);
+    expect(updateHistogramSpy).toHaveBeenCalledWith({ measureId: 'm1', roles: null });
   });
 });
