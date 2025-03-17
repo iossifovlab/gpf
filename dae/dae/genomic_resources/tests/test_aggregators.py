@@ -4,6 +4,7 @@ import numpy
 
 from dae.genomic_resources.aggregators import (
     ConcatAggregator,
+    CountAggregator,
     DictAggregator,
     JoinAggregator,
     ListAggregator,
@@ -67,6 +68,22 @@ def test_mean_aggregator() -> None:
         agg.add(val)
 
     assert numpy.isclose(agg.get_final(), 2.5)
+
+
+def test_count_aggregator() -> None:
+    generic_values = [1, 2, 3, 4]
+    agg = CountAggregator()
+    for val in generic_values:
+        agg.add(val)
+
+    assert agg.get_final() == 4
+
+    advanced_values = [{"a": 1}, {"b": 2}, {"c": 3}]
+    agg = CountAggregator()
+    for val in advanced_values:
+        agg.add(val)
+
+    assert agg.get_final() == 3
 
 
 def test_median_aggregator_even() -> None:
