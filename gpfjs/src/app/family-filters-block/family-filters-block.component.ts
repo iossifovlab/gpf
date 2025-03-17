@@ -10,7 +10,10 @@ import { selectDatasetId } from 'app/datasets/datasets.state';
 import { resetFamilyIds, selectFamilyIds } from 'app/family-ids/family-ids.state';
 import { resetFamilyTags, selectFamilyTags } from 'app/family-tags/family-tags.state';
 import { resetFamilyFilterStates, selectPersonFilters } from 'app/person-filters/person-filters.state';
-import { selectFamilyMeasureHistograms } from 'app/person-filters-selector/measure-histogram.state';
+import {
+  resetFamilyMeasureHistograms,
+  selectFamilyMeasureHistograms
+} from 'app/person-filters-selector/measure-histogram.state';
 
 @Component({
   selector: 'gpf-family-filters-block',
@@ -133,6 +136,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
     this.store.dispatch(resetFamilyTags());
     this.store.dispatch(resetFamilyIds());
     this.store.dispatch(resetFamilyFilterStates());
+    this.store.dispatch(resetFamilyMeasureHistograms());
   }
 
   public updateTags(tags: {selected: string[]; deselected: string[]}): void {

@@ -5,7 +5,10 @@ import { Store } from '@ngrx/store';
 import { resetPersonFilterStates, selectPersonFilters } from 'app/person-filters/person-filters.state';
 import { combineLatest, take } from 'rxjs';
 import { resetPersonIds, selectPersonIds } from 'app/person-ids/person-ids.state';
-import { selectPersonMeasureHistograms } from 'app/person-filters-selector/measure-histogram.state';
+import {
+  resetPersonMeasureHistograms,
+  selectPersonMeasureHistograms
+} from 'app/person-filters-selector/measure-histogram.state';
 
 @Component({
   selector: 'gpf-person-filters-block',
@@ -44,5 +47,6 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
   public onNavChange(): void {
     this.store.dispatch(resetPersonIds());
     this.store.dispatch(resetPersonFilterStates());
+    this.store.dispatch(resetPersonMeasureHistograms());
   }
 }
