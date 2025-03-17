@@ -126,3 +126,17 @@ class AboutDescriptionView(MarkdownFileView):
     @method_decorator(etag(get_about_etag))
     def get(self, _request: Request) -> Response:
         return super().get(_request)
+
+
+class GenomeView(QueryBaseView):
+    """Provide genome build"""
+    @method_decorator(etag(get_description_etag))
+    def get(self, _: Request) -> Response:  # pylint: disable=missing-function-docstring
+        genome_id = self.gpf_instance.reference_genome.resource_id
+        if genome_id.startswith("hg38"):
+            build = "hg38"
+        elif genome_id.startswith("hg19"):
+            build = "hg19"
+        else:
+            build = "other"
+        return Response({"build": build}, status=status.HTTP_200_OK)
