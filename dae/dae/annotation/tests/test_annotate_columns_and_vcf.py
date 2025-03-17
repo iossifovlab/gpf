@@ -69,7 +69,7 @@ def get_file_content_as_string(file: str) -> str:
         return "".join(infile.readlines())
 
 
-@pytest.fixture()
+@pytest.fixture
 def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     root_path = tmp_path / "annotate_columns_and_vcf"
     setup_directories(
@@ -438,7 +438,7 @@ def test_annotate_columns_multiple_chrom(
     root_path = annotate_directory_fixture
     in_file = root_path / "in.txt"
     in_file_gz = in_file.with_suffix(".txt.gz")
-    out_file = root_path / "out.txt"
+    out_file = root_path / "out.txt.gz"
     out_file_tbi = root_path / "out.txt.gz.tbi"
     workdir = root_path / "output"
     annotation_file = root_path / "annotation.yaml"
@@ -456,7 +456,7 @@ def test_annotate_columns_multiple_chrom(
         ]
     ])
 
-    with gzip.open(out_file.with_suffix(".txt.gz"), "rt") as out:
+    with gzip.open(out_file, "rt") as out:
         out_file_content = out.read()
     assert out_file_content == out_expected_content
     assert os.path.exists(out_file_tbi)
@@ -491,7 +491,7 @@ def test_annotate_columns_multiple_chrom_repeated_attr(
     root_path = annotate_directory_fixture
     in_file = root_path / "in.txt"
     in_file_gz = in_file.with_suffix(".txt.gz")
-    out_file = root_path / "out.txt"
+    out_file = root_path / "out.txt.gz"
     out_file_tbi = root_path / "out.txt.gz.tbi"
     workdir = root_path / "output"
     annotation_file = root_path / "annotation_duplicate.yaml"
@@ -510,7 +510,7 @@ def test_annotate_columns_multiple_chrom_repeated_attr(
         ]
     ])
 
-    with gzip.open(out_file.with_suffix(".txt.gz"), "rt") as out:
+    with gzip.open(out_file, "rt") as out:
         out_file_content = out.read()
     assert out_file_content == out_expected_content
     assert os.path.exists(out_file_tbi)
