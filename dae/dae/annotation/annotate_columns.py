@@ -10,7 +10,7 @@ from contextlib import closing
 from pathlib import Path
 from typing import Any, cast
 
-from pysam import TabixFile, tabix_index
+from pysam import TabixFile, tabix_compress, tabix_index
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotate_utils import (
@@ -156,16 +156,12 @@ def combine(
         header = args.output_separator.join(hcs + annotation_attributes)
 
     compress_output = out_file_path.endswith(".gz")
+    out_file_path = out_file_path.rstrip(".gz")
 
-    if compress_output:
-        out_file = gzip.open(out_file_path, "wt")  # noqa: SIM115
-    else:
-        out_file = open(out_file_path, "wt")  # noqa: SIM115
-
-    with out_file:
+    with open(out_file_path, "wt") as out_file:
         out_file.write(header + "\n")
         for partfile_path in partfile_paths:
-            with gzip.open(partfile_path, "rt") as partfile:
+            with open(partfile_path, "rt") as partfile:
                 partfile.readline()  # skip header
                 content = partfile.read().strip()
                 if content == "":
@@ -174,10 +170,16 @@ def combine(
                 out_file.write("\n")
     for partfile_path in partfile_paths:
         os.remove(partfile_path)
-    try:
-        produce_tabix_index(out_file_path, args, genome)
-    except (TypeError, OSError):
-        logger.exception("Could not produce tabix file for output")
+
+    if compress_output:
+        try:
+            compressed_output = f"{out_file_path}.gz"
+            tabix_compress(out_file_path, compressed_output, force=True)
+            produce_tabix_index(compressed_output, args, genome)
+        except (TypeError, OSError):
+            logger.exception("Could not produce tabix file for output")
+        else:
+            os.remove(out_file_path)
 
 
 class AnnotateColumnsTool(AnnotationTool):
@@ -237,8 +239,6 @@ class AnnotateColumnsTool(AnnotationTool):
         # Insisting on having the pipeline config passed in args
         # prevents the finding of a default annotation config. Consider fixing
 
-        compress_output = out_file_path.endswith(".gz")
-
         pipeline_config_old = None
         if args.reannotate:
             pipeline_config_old = Path(args.reannotate).read_text()
@@ -263,10 +263,7 @@ class AnnotateColumnsTool(AnnotationTool):
             attr.name for attr in pipeline.get_attributes()
             if not attr.internal]
 
-        if compress_output:
-            out_file = gzip.open(out_file_path, "wt")  # noqa: SIM115
-        else:
-            out_file = open(out_file_path, "wt")  # noqa: SIM115
+        out_file = open(out_file_path, "wt")  # noqa: SIM115
 
         if region is None:
             batch_work_dir = None
@@ -453,6 +450,9 @@ class AnnotateColumnsTool(AnnotationTool):
                  ref_genome_id, file_paths, output],
                 region_tasks)
         else:
+            compress_output = output.endswith(".gz")
+            output = output.rstrip(".gz")
+
             self.task_graph.create_task(
                 "annotate_all",
                 AnnotateColumnsTool.annotate,
@@ -460,15 +460,26 @@ class AnnotateColumnsTool(AnnotationTool):
                  ref_genome_id, output, None],
                 [])
 
-            if ref_genome_id is not None:
-                genome = build_reference_genome_from_resource(
-                    self.grr.get_resource(ref_genome_id))
-            else:
-                genome = None
-            try:
-                produce_tabix_index(output, self.args, genome)
-            except (TypeError, OSError):
-                logger.exception("Could not produce tabix file for output")
+            if compress_output:
+                compressed_output = f"{output}.gz"
+
+                try:
+                    tabix_compress(output, compressed_output, force=True)
+                except (TypeError, OSError):
+                    logger.exception("Could not compress output")
+                else:
+                    os.remove(output)
+
+                if ref_genome_id is not None:
+                    genome = build_reference_genome_from_resource(
+                        self.grr.get_resource(ref_genome_id))
+                else:
+                    genome = None
+
+                try:
+                    produce_tabix_index(compressed_output, self.args, genome)
+                except (TypeError, OSError):
+                    logger.exception("Could not produce tabix file for output")
 
 
 def cli(raw_args: list[str] | None = None) -> None:

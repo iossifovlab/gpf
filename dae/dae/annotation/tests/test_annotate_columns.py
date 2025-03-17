@@ -54,13 +54,13 @@ def test_default_columns(
     ],
 )
 def test_cshl_variants_without_context(
-        record: dict[str, str], expected: Annotatable) -> None:
-    with pytest.raises(ValueError):
+        record: dict[str, str], expected: Annotatable) -> None:  # noqa: ARG001
+    with pytest.raises(ValueError):  # noqa: PT011
         build_record_to_annotatable(
             {}, set(record.keys())).build(record)
 
 
-@pytest.fixture()
+@pytest.fixture
 def gc_fixture(tmp_path: pathlib.Path) -> GenomicContext:
     genome = setup_genome(
         tmp_path / "acgt_gpf" / "genome" / "allChr.fa",
@@ -156,7 +156,7 @@ def get_file_content_as_string(file: str) -> str:
         return "".join(infile.readlines())
 
 
-@pytest.fixture()
+@pytest.fixture
 def annotate_directory_fixture(tmp_path: pathlib.Path) -> pathlib.Path:
     root_path = tmp_path / "annotate_columns"
     setup_directories(
@@ -314,7 +314,7 @@ def test_produce_tabix_correctly_position(
 
     root_path = annotate_directory_fixture
     in_file = root_path / "in.txt.gz"
-    out_file = root_path / "out.txt"
+    out_file = root_path / "out.txt.gz"
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
     work_dir = root_path / "work"
@@ -331,8 +331,7 @@ def test_produce_tabix_correctly_position(
         ]
     ])
 
-    out_tbi = out_file.with_suffix(".txt.gz")
-    assert len(list(TabixFile(str(out_tbi)).fetch())) == 2
+    assert len(list(TabixFile(str(out_file)).fetch())) == 2
 
 
 def test_produce_tabix_correctly_vcf_allele(
@@ -353,7 +352,7 @@ def test_produce_tabix_correctly_vcf_allele(
 
     root_path = annotate_directory_fixture
     in_file = root_path / "in.txt.gz"
-    out_file = root_path / "out.txt"
+    out_file = root_path / "out.txt.gz"
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
     work_dir = root_path / "work"
@@ -370,8 +369,7 @@ def test_produce_tabix_correctly_vcf_allele(
         ]
     ])
 
-    out_tbi = out_file.with_suffix(".txt.gz")
-    assert len(list(TabixFile(str(out_tbi)).fetch())) == 2
+    assert len(list(TabixFile(str(out_file)).fetch())) == 2
 
 
 def test_produce_tabix_correctly_region_or_cnv_annotatable(
@@ -392,7 +390,7 @@ def test_produce_tabix_correctly_region_or_cnv_annotatable(
 
     root_path = annotate_directory_fixture
     in_file = root_path / "in.txt.gz"
-    out_file = root_path / "out.txt"
+    out_file = root_path / "out.txt.gz"
     annotation_file = root_path / "annotation.yaml"
     grr_file = root_path / "grr.yaml"
     work_dir = root_path / "work"
@@ -409,5 +407,4 @@ def test_produce_tabix_correctly_region_or_cnv_annotatable(
         ]
     ])
 
-    out_tbi = out_file.with_suffix(".txt.gz")
-    assert len(list(TabixFile(str(out_tbi)).fetch())) == 2
+    assert len(list(TabixFile(str(out_file)).fetch())) == 2
