@@ -212,6 +212,30 @@ def setup_t4c8_grr(
         },
     )
 
+    setup_directories(
+        repo_path / "genomic_scores" / "score_one",
+        {
+            GR_CONF_FILE_NAME: textwrap.dedent("""
+                type: position_score
+                table:
+                  filename: data.txt
+                scores:
+                - id: score_one
+                  type: float
+                  name: score
+            """),
+            "data.txt": textwrap.dedent("""
+                chrom\tpos_begin\tscore
+                chr1\t4\t0.01
+                chr1\t54\t0.02
+                chr1\t90\t0.03
+                chr1\t100\t0.04
+                chr1\t119\t0.05
+                chr1\t122\t0.06
+            """),
+        },
+    )
+
     cli_manage([
         "repo-repair", "-R", str(repo_path), "-j", "1"])
 
@@ -233,8 +257,12 @@ def setup_t4c8_instance(
 
     setup_directories(
         instance_path, {
-            "gpf_instance.yaml": textwrap.dedent("""
+            "gpf_instance.yaml": textwrap.dedent(f"""
                 instance_id: t4c8_instance
+                grr:
+                    id: t4c8_grr
+                    type: directory
+                    directory: {root_path / "t4c8_grr"}
                 reference_genome:
                     resource_id: t4c8_genome
                 gene_models:
