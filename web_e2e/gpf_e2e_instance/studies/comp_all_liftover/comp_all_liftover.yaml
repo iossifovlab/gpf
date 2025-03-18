@@ -15,3 +15,14 @@ genotype_storage:
     family: parquet_scan('comp_all_liftover/family/*.parquet')
 genotype_browser:
   enabled: true
+  has_family_filters: true
+  has_person_filters: true
+  has_family_filters_beta: true
+  has_person_filters_beta: true
+  family_filters:
+    measures:
+      name: Proband Pheno Measure
+      source_type: continuous
+      from: phenodb
+      filter_type: multi
+      role: prb
