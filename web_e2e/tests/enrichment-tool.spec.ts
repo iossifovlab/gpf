@@ -44,7 +44,7 @@ test.describe('Enrichment tool tests', () => {
     await expect(page.locator('.enrichment-table')).toBeVisible();
   });
 
-  test('should display "55" and "169" in the affected person\'s observed column ' +
+  test('should display "54" and "168" in the affected person\'s observed column ' +
   'of LGDs and missense\'s rows respectively with gene set Main: FMRP Darnell', async({ page }) => {
     await page.locator('#gene-sets').click();
     await page.waitForSelector('gpf-gene-sets');
@@ -60,10 +60,10 @@ test.describe('Enrichment tool tests', () => {
     await page.getByRole('button', {name: 'Enrichment test'}).click();
     await page.waitForSelector('.enrichment-table');
 
-    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(2)).toHaveText('55');
-    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(2)).toHaveText('169');
-    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(3)).toHaveText('35.01');
-    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('145.62');
+    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(2)).toHaveText('54');
+    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(2)).toHaveText('168');
+    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(3)).toHaveText('32.69');
+    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('135.96');
   });
 
   test('should display "0" and "2" in the affected person"s observed column of LGDs and missense"s rows respectively ' +
@@ -86,8 +86,8 @@ test.describe('Enrichment tool tests', () => {
 
     await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(2)).toHaveText('0');
     await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(2)).toHaveText('2');
-    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(3)).toHaveText('0.36');
-    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('1.52');
+    await expect(page.locator('.enrichment-table tr').nth(3).locator('td').nth(3)).toHaveText('0.35');
+    await expect(page.locator('.enrichment-table tr').nth(4).locator('td').nth(3)).toHaveText('1.47');
   });
 
   // add screenshot test for the table

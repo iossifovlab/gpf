@@ -118,7 +118,7 @@ test.describe('App user access rights tests', () => {
   });
 
   test('should properly disable tools based on access rights', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset Description');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Dataset Description');
     await expect(page.locator('li').filter({hasText: 'Gene Browser'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Phenotype Browser'})).not.toHaveClass('nav-item disabled-tool');
@@ -138,7 +138,7 @@ test.describe('App user access rights tests', () => {
     await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
 
     await utils.logout(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset Description');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Dataset Description');
     await expect(page.locator('li').filter({hasText: 'Gene Browser'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Phenotype Browser'})).not.toHaveClass('nav-item disabled-tool');
@@ -202,25 +202,25 @@ test.describe('App user access rights tests', () => {
 
     await utils.login(page, email, userData.normal.password + '!!__3456');
 
-    await utils.navigateToDataset(page, utils.datasetIds.compVcf);
+    await utils.navigateToDataset(page, utils.datasetIds.compVcfLiftover);
     await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
 
     await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
     await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).not.toHaveClass('nav-item disabled-tool');
 
-    await utils.navigateToDataset(page, utils.datasetIds.compDenovo);
+    await utils.navigateToDataset(page, utils.datasetIds.compDenovoLiftover);
     await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
 
-    await utils.navigateToDataset(page, utils.datasetIds.iossifov2014);
+    await utils.navigateToDataset(page, utils.datasetIds.iossifov2014Liftover);
     await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
 
     await utils.navigateToDataset(page, utils.datasetIds.compGenotypes);
     await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).not.toHaveClass('nav-item disabled-tool');
 
-    await utils.navigateToDataset(page, utils.datasetIds.compAll);
+    await utils.navigateToDataset(page, utils.datasetIds.compAllLiftover);
     await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
 
-    await utils.navigateToDataset(page, utils.datasetIds.multi);
+    await utils.navigateToDataset(page, utils.datasetIds.multiLiftover);
     await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
   });
 
@@ -260,19 +260,19 @@ test.describe('App user access rights tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype Browser');
     await expect(page.locator('#register-alert')).not.toBeVisible();
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compDenovo, 'Dataset Statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compDenovoLiftover, 'Dataset Statistics');
     await expect(page.locator('#register-alert')).not.toBeVisible();
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Dataset Statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Dataset Statistics');
     await expect(page.locator('#register-alert')).not.toBeVisible();
 
     await utils.navigateToDatasetPage(page, utils.datasetIds.compGenotypes, 'Genotype Browser');
     await expect(page.locator('#register-alert')).not.toBeVisible();
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset Statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Dataset Statistics');
     await expect(page.locator('#register-alert')).not.toBeVisible();
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.multi, 'Dataset Statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.multiLiftover, 'Dataset Statistics');
     await expect(page.locator('#register-alert')).not.toBeVisible();
   });
 

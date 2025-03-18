@@ -8,7 +8,7 @@ const geneScoresData = [
   {
     desc: 'SFARI gene score - Evidence strength supporting a gene\'s association with autism',
     inputField: false,
-    allVariants: '30'
+    allVariants: '10'
   },
   {
     desc: 'RVIS rank - Gene rank after sorting by RVIS intolerance score',
@@ -18,7 +18,7 @@ const geneScoresData = [
   {
     desc: 'pLI - Probability of Loss-of-Function Intolerance',
     inputField: true,
-    allVariants: '30'
+    allVariants: '10'
   }
 ];
 

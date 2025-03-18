@@ -134,9 +134,9 @@ test.describe('Dataset description access rights tests', () => {
     await page.locator('[id="user_iossifov_2014@iossifovlab.com-groups-cell"]').getByText('Add').click();
     await page.waitForSelector('.add-item-button');
     await page.getByRole('textbox', { name: 'Search' }).focus();
-    await page.keyboard.type('iossifov_2014');
-    await page.waitForSelector('button:text("iossifov_2014")');
-    await page.getByRole('button', { name: 'iossifov_2014' }).click();
+    await page.keyboard.type('iossifov_2014_liftover');
+    await page.waitForSelector('button:text("iossifov_2014_liftover")');
+    await page.getByRole('button', { name: 'iossifov_2014_liftover' }).click();
     await page.mouse.click(0, 0); // close the menu
 
     await page.locator('#header a:text("Datasets")').click();
@@ -160,12 +160,12 @@ test.describe('Dataset description access rights tests', () => {
 
     await page.locator('a:text("Management")').click();
     await page.locator(
-      '[id="user_iossifov_2014@iossifovlab.com-groups-cell"] #iossifov_2014-list-item gpf-confirm-button'
+      '[id="user_iossifov_2014@iossifovlab.com-groups-cell"] #iossifov_2014_liftover-list-item gpf-confirm-button'
     ).click();
     await page.getByRole('button', { name: 'Remove', exact: true }).click();
     await expect(page.locator(
       '[id="user_iossifov_2014@iossifovlab.com-groups-cell"]')
-    ).not.toContainText('iossifov_2014');
+    ).not.toContainText('iossifov_2014_liftover');
   });
 
   test('should login regular user, try to navigate to a dataset description page without description via the url ' +
