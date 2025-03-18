@@ -18,7 +18,7 @@ and edit the ``helloworld.yaml`` file. Add the following section to the end:
     enrichment:
       enabled: true
       selected_background_models:
-          - enrichment/samocha_background
+        - enrichment/samocha_background
 
 
 Restart the GPF web server and select the ``helloworld`` dataset.
