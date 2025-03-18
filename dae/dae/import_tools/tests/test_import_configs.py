@@ -2,7 +2,6 @@
 
 import os
 import pathlib
-from collections.abc import Callable
 from glob import glob
 from typing import Any
 
@@ -17,7 +16,7 @@ from dae.import_tools import cli, import_tools
 from dae.testing.alla_import import alla_gpf
 
 
-@pytest.fixture()
+@pytest.fixture
 def gpf_instance(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp(__name__)
     return alla_gpf(root_path)
@@ -249,13 +248,13 @@ def test_project_input_dir(input_dir: str) -> None:
 
 
 def test_get_genotype_storage_no_explicit_config(
-    fixture_dirname: Callable,
+    gpf_instance: GPFInstance,
 ) -> None:
     config = {
         "id": "test_import",
         "input": {},
         "gpf_instance": {
-            "path": fixture_dirname(""),
+            "path": gpf_instance.dae_config.conf_dir,
         },
     }
     project = import_tools.ImportProject.build_from_config(config)
@@ -327,16 +326,18 @@ def test_input_in_external_file(
         f"{resources_dir}/external_input/files/multivcf.ped"
 
 
-def test_embedded_annotation_pipeline(fixture_dirname: Callable) -> None:
+def test_embedded_annotation_pipeline(
+    t4c8_instance: GPFInstance,
+) -> None:
     import_config = {
         "input": {},
         "annotation": [{
-            "np_score": {
-                "resource_id": "hg19/CADD",
+            "position_score": {
+                "resource_id": "genomic_scores/score_one",
             },
         }],
         "gpf_instance": {
-            "path": fixture_dirname(""),
+            "path": t4c8_instance.dae_config.conf_dir,
         },
     }
     project = import_tools.ImportProject.build_from_config(import_config)
@@ -345,17 +346,18 @@ def test_embedded_annotation_pipeline(fixture_dirname: Callable) -> None:
     assert len(pipeline.get_info()) == 1
 
     annotator_info = pipeline.get_info()[0]
-    assert annotator_info.type == "np_score"
-    assert annotator_info.parameters["resource_id"] == "hg19/CADD"
+    assert annotator_info.type == "position_score"
+    assert annotator_info.parameters["resource_id"] == \
+        "genomic_scores/score_one"
 
 
 def test_annotation_file(
     tmp_path: pathlib.Path,
-    fixture_dirname: Callable,
+    t4c8_instance: GPFInstance,
 ) -> None:
     annotation = [{
-        "np_score": {
-            "resource_id": "hg19/CADD",
+        "position_score": {
+            "resource_id": "genomic_scores/score_one",
         },
     }]
     annotation_fn = str(tmp_path / "annotation.yaml")
@@ -368,7 +370,7 @@ def test_annotation_file(
             "file": "annotation.yaml",
         },
         "gpf_instance": {
-            "path": fixture_dirname(""),
+            "path": t4c8_instance.dae_config.conf_dir,
         },
     }
     config_fn = str(tmp_path / "import_config.yaml")
@@ -381,16 +383,17 @@ def test_annotation_file(
     assert len(pipeline.get_info()) == 1
 
     annotator_info = pipeline.get_info()[0]
-    assert annotator_info.type == "np_score"
-    assert annotator_info.parameters["resource_id"] == "hg19/CADD"
+    assert annotator_info.type == "position_score"
+    assert annotator_info.parameters["resource_id"] == \
+        "genomic_scores/score_one"
 
 
 def test_annotation_file_and_external_input_config(
-    tmp_path: pathlib.Path, fixture_dirname: Callable,
+    tmp_path: pathlib.Path, t4c8_instance: GPFInstance,
 ) -> None:
     annotation = [{
-        "np_score": {
-            "resource_id": "hg19/CADD",
+        "position_score": {
+            "resource_id": "genomic_scores/score_one",
         },
     }]
     with open(str(tmp_path / "annotation.yaml"), "wt") as out_file:
@@ -408,7 +411,7 @@ def test_annotation_file_and_external_input_config(
             "file": "annotation.yaml",
         },
         "gpf_instance": {
-            "path": fixture_dirname(""),
+            "path": t4c8_instance.dae_config.conf_dir,
         },
     }
     config_fn = str(tmp_path / "import_config.yaml")
@@ -421,4 +424,4 @@ def test_annotation_file_and_external_input_config(
     assert len(pipeline.get_info()) == 1
 
     annotator_info = pipeline.get_info()[0]
-    assert annotator_info.type == "np_score"
+    assert annotator_info.type == "position_score"
