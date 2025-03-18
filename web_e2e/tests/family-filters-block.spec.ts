@@ -7,7 +7,7 @@ test.describe('Family filters block tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, datasetIds.compAll, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.compAllLiftover, 'Genotype browser');
   });
 
   test('should display family ids panel', async({ page }) => {
@@ -25,7 +25,7 @@ test.describe('Family filters block tests', () => {
   });
 
   test('should preview table and download filtered by Family Tags', async({ page }) => {
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
     await expect(page.locator('gpf-family-filters-block').getByText('Family Tags')).toBeVisible();
     await page.locator('gpf-family-filters-block').getByText('Family Tags').click();
 
@@ -35,7 +35,7 @@ test.describe('Family filters block tests', () => {
     await page.locator('#tag_quad_family-tag-remove').click();
 
     await page.locator('#table-preview-button').click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('77 variants selected', { timeout: 120000 });
+    await expect(page.locator('#variants-count-span > span')).toHaveText('76 variants selected', { timeout: 120000 });
 
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
@@ -54,7 +54,7 @@ test.describe('Family filters block tests', () => {
   });
 
   test('should preview table and download filtered by Family Tags and mode "Or"', async({ page }) => {
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
     await expect(page.locator('gpf-family-filters-block').getByText('Family Tags')).toBeVisible();
     await page.locator('gpf-family-filters-block').getByText('Family Tags').click();
 
@@ -86,7 +86,7 @@ test.describe('Family filters block tests', () => {
   });
 
   test('should test save/share query after selecting Family tags', async({ page }) => {
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
     await expect(page.locator('gpf-family-filters-block').getByText('Family Tags')).toBeVisible();
     await page.locator('gpf-family-filters-block').getByText('Family Tags').click();
 
@@ -119,7 +119,7 @@ test.describe('Family filters block tests', () => {
   });
 
   test('should clear all tags that are selected in Family Tags', async({ page }) => {
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
     await expect(page.locator('gpf-family-filters-block').getByText('Family Tags')).toBeVisible();
     await page.locator('gpf-family-filters-block').getByText('Family Tags').click();
 
@@ -129,7 +129,7 @@ test.describe('Family filters block tests', () => {
     await page.locator('#tag_quad_family-tag-remove').click();
 
     await page.locator('#table-preview-button').click();
-    await expect(page.locator('#variants-count-span > span')).toHaveText('77 variants selected', { timeout: 120000 });
+    await expect(page.locator('#variants-count-span > span')).toHaveText('76 variants selected', { timeout: 120000 });
 
     await page.locator('#clear-filters-button').click();
     await expect(page.locator('#tag_nuclear_family-tag-add')).not.toHaveCSS('color', 'rgb(0, 128, 0)');
@@ -140,8 +140,9 @@ test.describe('Family filters block tests', () => {
   });
 
   test('should display pheno filters panel after "Advanced" button click', async({ page }) => {
-    await expect(page.locator('gpf-family-filters-block').getByText('Advanced')).toBeVisible();
-    await page.locator('gpf-family-filters-block').getByText('Advanced').click();
+    await expect(page.locator('gpf-family-filters-block')
+      .getByRole('tab', { name: 'Advanced', exact: true })).toBeVisible();
+    await page.locator('gpf-family-filters-block').getByRole('tab', { name: 'Advanced', exact: true }).click();
 
     await expect(page.locator('gpf-family-filters-block').locator('gpf-multi-continuous-filter')).toBeVisible();
     await expect(page.getByText('Select at least one continuous filter.')).toBeVisible();
@@ -150,7 +151,8 @@ test.describe('Family filters block tests', () => {
     await page.locator('.dropdown-item span', {hasText: 'i1.age'}).click();
     await expect(page.locator('gpf-histogram')).toBeVisible();
 
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
-    await expect(page.locator('gpf-family-filters-block').getByText('Advanced')).not.toBeVisible();
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
+    await expect(page.locator('gpf-family-filters-block')
+      .getByRole('tab', { name: 'Advanced', exact: true })).not.toBeVisible();
   });
 });

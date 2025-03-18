@@ -105,27 +105,40 @@ test.describe('Home page tests', () => {
   });
 
   test('should expand and close datasets', async({ page }) => {
+    await expect(page.locator('a:text("pheno_helloworld")')).toBeVisible();
+    await expect(page.locator('a:text("comp_pheno")')).toBeVisible();
     await expect(page.locator('a:text("ALL Genotypes")')).toBeVisible();
-    await expect(page.locator('a:text("comp_all")')).toBeVisible();
+    await expect(page.locator('a:text("comp_all_liftover")')).toBeVisible();
     await expect(page.locator('a:text("COMP Genotypes")')).toBeVisible();
-    await expect(page.locator('a:text("multi")')).toBeVisible();
-    await expect(page.locator('a:text("iossifov_2014")')).toBeVisible();
+    await expect(page.locator('a:text("multi_liftover")')).toBeVisible();
+    await expect(page.locator('a:text("iossifov_2014_liftover")')).toBeVisible();
+    await expect(page.locator('a:text("Hello World Genotypes")')).toBeVisible();
 
-    await expect(page.locator('a:text("comp_denovo")')).not.toBeVisible();
-    await expect(page.locator('a:text("comp_vcf")')).not.toBeVisible();
+    await expect(page.locator('a:text("comp_denovo_liftover")')).not.toBeVisible();
+    await expect(page.locator('a:text("comp_vcf_liftover")')).not.toBeVisible();
+    await expect(page.locator('a:text("denovo_helloworld")')).not.toBeVisible();
+    await expect(page.locator('a:text("vcf_helloworld")')).not.toBeVisible();
 
     await page.locator('.collapse-dataset-icon').nth(1).click();
-    await expect(page.locator('a:text("comp_denovo")')).toBeVisible();
-    await expect(page.locator('a:text("comp_vcf")')).toBeVisible();
+    await expect(page.locator('a:text("denovo_helloworld")')).toBeVisible();
+    await expect(page.locator('a:text("vcf_helloworld")')).toBeVisible();
+
+    await page.locator('.collapse-dataset-icon').nth(2).click();
+    await expect(page.locator('a:text("comp_denovo_liftover")')).toBeVisible();
+    await expect(page.locator('a:text("comp_vcf_liftover")')).toBeVisible();
 
     await page.locator('.collapse-dataset-icon').nth(0).click();
+    await expect(page.locator('a:text("pheno_helloworld")')).toBeVisible();
+    await expect(page.locator('a:text("comp_pheno")')).toBeVisible();
     await expect(page.locator('a:text("ALL Genotypes")')).toBeVisible();
-    await expect(page.locator('a:text("comp_all")')).not.toBeVisible();
+    await expect(page.locator('a:text("comp_all_liftover")')).not.toBeVisible();
     await expect(page.locator('a:text("COMP Genotypes")')).not.toBeVisible();
-    await expect(page.locator('a:text("multi")')).not.toBeVisible();
-    await expect(page.locator('a:text("iossifov_2014")')).not.toBeVisible();
-    await expect(page.locator('a:text("comp_denovo")')).not.toBeVisible();
-    await expect(page.locator('a:text("comp_vcf")')).not.toBeVisible();
+    await expect(page.locator('a:text("multi_liftover")')).not.toBeVisible();
+    await expect(page.locator('a:text("iossifov_2014_liftover")')).not.toBeVisible();
+    await expect(page.locator('a:text("comp_denovo_liftover")')).not.toBeVisible();
+    await expect(page.locator('a:text("comp_vcf_liftover")')).not.toBeVisible();
+    await expect(page.locator('a:text("denovo_helloworld")')).not.toBeVisible();
+    await expect(page.locator('a:text("vcf_helloworld")')).not.toBeVisible();
   });
 
 
@@ -134,6 +147,6 @@ test.describe('Home page tests', () => {
     await expect(page.locator('a:text("Datasets")')).toHaveClass('highlighted-route');
     await expect(page.locator('gpf-home')).not.toBeVisible();
     await expect(page.locator('gpf-gene-browser')).toBeVisible();
-    await expect(page.locator('#datasets-dropdown-menu-button')).toHaveText('comp_all');
+    await expect(page.locator('#datasets-dropdown-menu-button')).toHaveText('comp_all_liftover');
   });
 });

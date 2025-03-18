@@ -6,7 +6,7 @@ test.describe('Genomic scores tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
   });
 
   test('should display genomic scores panel after selecting score ' +

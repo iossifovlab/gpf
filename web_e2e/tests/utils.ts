@@ -1,8 +1,5 @@
 import { Page, expect } from '@playwright/test';
 
-export const frontendUrl = 'http://gpf:8080/gpf';
-export const backendUrl = frontendUrl;
-export const mailhogUrl = 'http://mailhog:8025';
 
 // for local dev with containers:
 // export const frontendUrl = 'http://localhost:8080/gpf';
@@ -10,9 +7,9 @@ export const mailhogUrl = 'http://mailhog:8025';
 // export const mailhogUrl = 'http://localhost:8025';
 
 // for data-hg19-startup dev:
-// export const backendUrl = 'http://localhost:8000';
-// export const frontendUrl = 'http://localhost:4200';
-// export const mailhogUrl = 'http://localhost:8025';
+export const backendUrl = 'http://localhost:8000';
+export const frontendUrl = 'http://localhost:4200';
+export const mailhogUrl = 'http://localhost:8025';
 
 export const username = process.env.GPF_STAGING_USERNAME ? process.env.GPF_STAGING_USERNAME : 'admin@iossifovlab.com';
 export const password = process.env.GPF_STAGING_PASSWORD ? process.env.GPF_STAGING_PASSWORD : 'secret';
@@ -20,11 +17,16 @@ export const password = process.env.GPF_STAGING_PASSWORD ? process.env.GPF_STAGI
 export const datasetIds = {
   allGenotypes: 'ALL Genotypes',
   compGenotypes: 'COMP Genotypes',
-  compDenovo: 'comp_denovo',
-  compVcf: 'comp_vcf',
-  compAll: 'comp_all',
-  iossifov2014: 'iossifov_2014',
-  multi: 'multi'
+  compDenovoLiftover: 'comp_denovo_liftover',
+  compVcfLiftover: 'comp_vcf_liftover',
+  compAllLiftover: 'comp_all_liftover',
+  iossifov2014Liftover: 'iossifov_2014_liftover',
+  multiLiftover: 'multi_liftover',
+  helloWorldGenotypes: 'Hello World Genotypes',
+  denovoHelloWorld: 'denovo_helloworld',
+  vcfHelloWorld: 'vcf_helloworld',
+  compPheno: 'comp_pheno',
+  phenoHelloWorld: 'pheno_helloworld',
 };
 
 export const toolPageLinks = {
@@ -80,7 +82,7 @@ export async function navigateToDataset(page: Page, dataset: string): Promise<vo
   }
   await page.locator('#datasets-dropdown-menu-button').click();
 
-
+  // expand all datasets
   if (!await page.locator('gpf-dataset-node a').filter({ hasText: dataset }).isVisible()) {
     for (const ele of (await page.locator('.collapse-dataset-icon.rotate').all()).reverse()) {
       // eslint-disable-next-line no-await-in-loop

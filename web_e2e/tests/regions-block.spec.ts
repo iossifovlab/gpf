@@ -6,7 +6,7 @@ test.describe('Regions block tests', () => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
   });
 
   test('should display regions filter panel', async({ page }) => {

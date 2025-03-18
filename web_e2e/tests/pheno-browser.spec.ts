@@ -10,7 +10,7 @@ test.describe('Pheno browser tests', () => {
     await utils.navigateToHome(page);
     await utils.loginAdmin(page);
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Phenotype browser');
   });
 
 

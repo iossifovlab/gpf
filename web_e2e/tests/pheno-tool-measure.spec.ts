@@ -5,7 +5,7 @@ test.describe('Pheno tool measure tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype tool');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Phenotype tool');
   });
 
   test('should check if the dropdown menu closes when clicking outside', async({ page }) => {

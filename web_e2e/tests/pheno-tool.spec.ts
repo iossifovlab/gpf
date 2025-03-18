@@ -6,7 +6,7 @@ test.describe('Pheno tool tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype tool');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Phenotype tool');
   });
 
   test('should display pheno tool elements', async({ page }) => {
@@ -113,7 +113,7 @@ test.describe('Pheno tool download tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Phenotype tool');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Phenotype tool');
   });
   test('should download i1.m1 and check if it equals the reference data', async({ page }) => {
     await page.locator('input#search-box').click();

@@ -143,8 +143,8 @@ test.describe('Gene profiles table column filtering tests', () => {
   test('should uncheck iossifov_2014 and check table header', async({ page }) => {
     const headerCell = page.locator('.header-cell');
     await page.locator('#category-filtering-button').click();
-    await page.locator('gpf-multiple-select-menu').getByLabel('iossifov_2014').click();
-    await expect(headerCell.getByText('iossifov_2014', { exact: true})).not.toBeVisible();
+    await page.locator('gpf-multiple-select-menu').getByLabel('iossifov_2014_liftover').click();
+    await expect(headerCell.getByText('iossifov_2014_liftover', { exact: true})).not.toBeVisible();
     await expect(headerCell.getByText('affected (2507)', { exact: true})).not.toBeVisible();
     await expect(headerCell.getByText('unaffected (1910)', { exact: true})).not.toBeVisible();
     await expect(headerCell.getByText('LGDs', { exact: true}).nth(0)).not.toBeVisible();
@@ -155,8 +155,8 @@ test.describe('Gene profiles table column filtering tests', () => {
     await expect(headerCell.getByText('intron', { exact: true}).nth(1)).not.toBeVisible();
     await expect(headerCell).toHaveCount(16);
 
-    await page.locator('gpf-multiple-select-menu').getByLabel('iossifov_2014').click();
-    await expect(headerCell.getByText('iossifov_2014', { exact: true})).toBeVisible();
+    await page.locator('gpf-multiple-select-menu').getByLabel('iossifov_2014_liftover').click();
+    await expect(headerCell.getByText('iossifov_2014_liftover', { exact: true})).toBeVisible();
     await expect(headerCell.getByText('affected (2507)', { exact: true})).toBeVisible();
     await expect(headerCell.getByText('unaffected (1910)', { exact: true})).toBeVisible();
     await expect(headerCell.getByText('LGDs', { exact: true}).nth(0)).toBeVisible();
@@ -450,7 +450,7 @@ test.describe('Gene profiles table functionality tests', () => {
   test('should navigate to genotype browser', async({ page }) => {
     await page.getByTitle('2.0 (1.05)\nTBCD').click();
     await page.waitForSelector('gpf-genotype-browser');
-    expect(page.url()).toEqual(`${utils.frontendUrl}/datasets/iossifov_2014/genotype-browser`);
+    expect(page.url()).toEqual(`${utils.frontendUrl}/datasets/iossifov_2014_liftover/genotype-browser`);
 
     await expect(page.locator('#gene-symbols-panel textarea')).toHaveValue('TBCD');
     await expect(page.locator('gpf-pedigree-selector').getByLabel('unaffected')).toBeChecked();
@@ -486,7 +486,7 @@ test.describe('Gene profiles table state tests', () => {
     await page.waitForTimeout(1500); // wait for user's gene profile state query
 
     // go to Genotype browser and return to Gene Profiles
-    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
     await page.locator('#header a:text("Gene Profiles")').click();
 
     await page.waitForResponse(

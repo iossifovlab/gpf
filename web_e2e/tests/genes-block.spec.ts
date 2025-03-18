@@ -7,7 +7,7 @@ test.describe('Genes block tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, 'comp_all', 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
   });
 
   test('should display gene symbols panel', async({ page }) => {
@@ -55,7 +55,7 @@ test.describe('Genes block gene sets names and count tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, 'comp_all', 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
   });
     [
         {
@@ -73,7 +73,7 @@ test.describe('Genes block gene sets names and count tests', () => {
       ].forEach(data => {
         test('should properly display "' + data.expectedSearchCondition + '" in "' +
         data.collection + '" collection, and the counts should match', async({ page }) => {
-            await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
+            await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
             await page.getByRole('tab', { name: 'Gene Sets' }).click();
             await page.locator('select#selected-collection').selectOption(data.collection);
             await page.waitForRequest(utils.backendUrl + '/api/v3/gene_sets/gene_sets');
@@ -134,7 +134,7 @@ test.beforeEach(async({ page }) => {
      'the downloaded"s file length and the gene set"s name matches the first value of the file', async({ page }) => {
     const results = [];
 
-    await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype Browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype Browser');
 
     await page.locator('#gene-sets').click();
     await page.locator('gpf-gene-sets select.form-control').selectOption(data.collection);
@@ -177,11 +177,11 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, { waitUntil: 'load' });
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
   });
 
   test('basic functionality', async({ page }) => {
-      await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
+      await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
       await page.locator('#gene-sets').click();
       await expect(page.locator('#gene-sets-panel')).toBeVisible();
       await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
@@ -191,55 +191,70 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
       await expect(page.locator('#hierarchy')).toBeVisible();
       await expect(page.locator('#filters')).toBeVisible();
       await expect(page.locator('#modal-filter-list')).toBeVisible();
-      await expect(page.locator('#dataset-comp_vcf')).not.toBeVisible();
-      await expect(page.locator('#dataset-comp_denovo')).not.toBeVisible();
+      await expect(page.locator('#dataset-comp_vcf_liftover')).not.toBeVisible();
+      await expect(page.locator('#dataset-comp_denovo_liftover')).not.toBeVisible();
 
       await page.locator('#expand-COMP_genotypes').click();
-      await expect(page.locator('#dataset-comp_vcf')).toBeVisible();
-      await expect(page.locator('#dataset-comp_denovo')).toBeVisible();
+      await expect(page.locator('#dataset-comp_vcf_liftover')).toBeVisible();
+      await expect(page.locator('#dataset-comp_denovo_liftover')).toBeVisible();
 
       await expect(page.locator('#dataset-COMP_genotypes')).toHaveCSS('opacity', '0.3');
       await expect(page.locator('#dataset-COMP_genotypes')).toHaveCSS('pointer-events', 'none');
 
-      await page.locator('#dataset-comp_denovo').click();
-      await expect(page.locator('#dataset-iossifov_2014')).toHaveClass('btn-sm text-wrap modified');
+      await page.locator('#dataset-comp_denovo_liftover').click();
+      await expect(page.locator('#dataset-iossifov_2014_liftover')).toHaveClass('btn-sm text-wrap modified');
       await expect(page.getByText('Affected Status:')).toBeVisible();
 
-      await page.locator('#comp_denovo-checkbox-affected').click();
-      await page.locator('#comp_denovo-checkbox-unaffected').click();
+      await page.locator('#comp_denovo_liftover-checkbox-affected').click();
+      await page.locator('#comp_denovo_liftover-checkbox-unaffected').click();
 
-      await expect(page.locator('#modal-filter-list').getByText('iossifov_2014: status: affected')).toBeVisible();
-      await expect(page.locator('#modal-filter-list').getByText('comp_denovo: status: affected')).toBeVisible();
-      await expect(page.locator('#modal-filter-list').getByText('comp_denovo: status: unaffected')).toBeVisible();
+      await expect(
+        page.locator('#modal-filter-list').getByText('iossifov_2014_liftover: status: affected')
+      ).toBeVisible();
+
+      await expect(
+        page.locator('#modal-filter-list').getByText('comp_denovo_liftover: status: affected')
+      ).toBeVisible();
+
+      await expect(
+        page.locator('#modal-filter-list').getByText('comp_denovo_liftover: status: unaffected')
+      ).toBeVisible();
       await page.mouse.click(0, 0); // close modal
 
       await expect(page.locator('#selected-filter-list')).toBeVisible();
-      await expect(page.locator('#selected-filter-list')).toContainText('iossifov_2014: status: affected');
-      await expect(page.locator('#selected-filter-list')).toContainText('comp_denovo: status: affected');
-      await expect(page.locator('#selected-filter-list')).toContainText('comp_denovo: status: unaffected');
+      await expect(page.locator('#selected-filter-list')).toContainText('iossifov_2014_liftover: status: affected');
+      await expect(page.locator('#selected-filter-list')).toContainText('comp_denovo_liftover: status: affected');
+      await expect(page.locator('#selected-filter-list')).toContainText('comp_denovo_liftover: status: unaffected');
 
 
-      await page.locator('[id="remove-iossifov_2014: status: affected"]').click();
-      await page.locator('[id="remove-comp_denovo: status: affected"]').click();
+      await page.locator('[id="remove-iossifov_2014_liftover: status: affected"]').click();
+      await page.locator('[id="remove-comp_denovo_liftover: status: affected"]').click();
 
-      await expect(page.locator('#selected-filter-list')).not.toContainText('iossifov_2014: status: affected');
-      await expect(page.locator('#selected-filter-list')).not.toContainText('comp_denovo: status: affected');
-      await expect(page.locator('#selected-filter-list')).toContainText('comp_denovo: status: unaffected');
+      await expect(page.locator('#selected-filter-list')).not.toContainText('iossifov_2014_liftover: status: affected');
+      await expect(page.locator('#selected-filter-list')).not.toContainText('comp_denovo_liftover: status: affected');
+      await expect(page.locator('#selected-filter-list')).toContainText('comp_denovo_liftover: status: unaffected');
 
       await page.getByRole('button', { name: 'Select studies' }).click();
 
-      await expect(page.locator('#comp_denovo-checkbox-affected')).not.toBeChecked();
-      await expect(page.locator('#comp_denovo-checkbox-unaffected')).toBeChecked();
-      await expect(page.locator('#dataset-iossifov_2014')).toHaveClass('btn-sm text-wrap');
-      await expect(page.locator('#modal-filter-list').getByText('iossifov_2014: status: affected')).not.toBeVisible();
-      await expect(page.locator('#modal-filter-list').getByText('comp_denovo: status: affected')).not.toBeVisible();
-      await expect(page.locator('#modal-filter-list').getByText('comp_denovo: status: unaffected')).toBeVisible();
-    }
-  );
+      await expect(page.locator('#comp_denovo_liftover-checkbox-affected')).not.toBeChecked();
+      await expect(page.locator('#comp_denovo_liftover-checkbox-unaffected')).toBeChecked();
+      await expect(page.locator('#dataset-iossifov_2014_liftover')).toHaveClass('btn-sm text-wrap');
+      await expect(
+        page.locator('#modal-filter-list').getByText('iossifov_2014_liftover: status: affected')
+      ).not.toBeVisible();
+
+      await expect(
+        page.locator('#modal-filter-list').getByText('comp_denovo_liftover: status: affected')
+      ).not.toBeVisible();
+
+      await expect(
+        page.locator('#modal-filter-list').getByText('comp_denovo_liftover: status: unaffected')
+      ).toBeVisible();
+  });
   test(
     'should download iossifov affected ' +
       'denovo gene sets and check whether they are equal to the reference data', async({ page }) => {
-        await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
+        await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
         await page.locator('#gene-sets').click();
         await expect(page.locator('#gene-sets-panel')).toBeVisible();
         await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
@@ -268,7 +283,7 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
 
         const expectedDataLines = (
           await utils.readFile(path.join(__dirname +
-            '/../fixtures/gene-sets/Missense_iossifov_2014_status_affected.csv'))
+            '/../fixtures/gene-sets/Missense_iossifov_2014_liftover_status_affected.csv'))
         ).toString();
 
         const downloadedData = Buffer.concat(downloadData);
@@ -281,7 +296,7 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
     test(
       'should download iossifov unaffected denovo gene sets and '
       + 'check whether they are equal to the reference data', async({ page }) => {
-          await utils.navigateToDatasetPage(page, 'iossifov_2014', 'Genotype browser');
+          await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Genotype browser');
           await page.locator('#gene-sets').click();
           await expect(page.locator('#gene-sets-panel')).toBeVisible();
           await page.locator('gpf-gene-sets select.form-control').selectOption({ label: 'Denovo' });
@@ -289,8 +304,8 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
           await page.getByRole('button', { name: 'Select studies' }).click();
           await expect(page.locator('.modal-content')).toBeVisible();
 
-          await page.locator('#iossifov_2014-checkbox-affected').click();
-          await page.locator('#iossifov_2014-checkbox-unaffected').click();
+          await page.locator('#iossifov_2014_liftover-checkbox-affected').click();
+          await page.locator('#iossifov_2014_liftover-checkbox-unaffected').click();
           await page.mouse.click(0, 0); // close modal
 
           await page.getByPlaceholder('Select or start typing to search').click();
@@ -316,7 +331,9 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
           // Assert that the downloaded file contents are the same as the expected file contents
 
           const expectedDataLines = (
-            await utils.readFile(path.join(__dirname + '/../fixtures/gene-sets/LGDs_iossifov_2014_unaffected.csv'))
+            await utils.readFile(
+              path.join(__dirname + '/../fixtures/gene-sets/LGDs_iossifov_2014_liftover_unaffected.csv')
+            )
           ).toString();
 
           const downloadedData = Buffer.concat(downloadData);

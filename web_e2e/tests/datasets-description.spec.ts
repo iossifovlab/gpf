@@ -5,7 +5,7 @@ test.describe('Dataset description tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset description');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Dataset description');
   });
 
   test('should display dataset description window', async({ page }) => {
@@ -90,15 +90,15 @@ test.describe('Dataset description access rights tests', () => {
     await expect(page.getByText('Dataset Description')).toBeVisible();
     await utils.navigateToDatasetPage(page, utils.datasetIds.compGenotypes, 'Gene browser');
     await expect(page.getByText('Dataset Description')).toBeVisible();
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compDenovo, 'Dataset statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compDenovoLiftover, 'Dataset statistics');
     await expect(page.getByText('Dataset Description')).toBeVisible();
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compVcf, 'Dataset statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compVcfLiftover, 'Dataset statistics');
     await expect(page.getByText('Dataset Description')).toBeVisible();
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Dataset statistics');
     await expect(page.getByText('Dataset Description')).toBeVisible();
-    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Dataset statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Dataset statistics');
     await expect(page.getByText('Dataset Description')).toBeVisible();
-    await utils.navigateToDatasetPage(page, utils.datasetIds.multi, 'Dataset statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.multiLiftover, 'Dataset statistics');
     await expect(page.getByText('Dataset Description')).toBeVisible();
   });
   test('should NOT show the dataset description button for a regular user when no description is available', async({
@@ -110,19 +110,19 @@ test.describe('Dataset description access rights tests', () => {
     await utils.navigateToDatasetPage(page, utils.datasetIds.compGenotypes, 'Gene browser');
     expect(await page.getByText('Dataset Description').getAttribute('pointer-events')).toBe(null);
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compDenovo, 'Dataset statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compDenovoLiftover, 'Dataset statistics');
     expect(await page.getByText('Dataset Description').getAttribute('pointer-events')).toBe(null);
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compVcf, 'Dataset statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compVcfLiftover, 'Dataset statistics');
     expect(await page.getByText('Dataset Description').getAttribute('pointer-events')).toBe(null);
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Dataset statistics');
     expect(await page.getByText('Dataset Description').getAttribute('pointer-events')).toBe(null);
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Dataset statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Dataset statistics');
     expect(await page.getByText('Dataset Description').getAttribute('pointer-events')).toBe(null);
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.multi, 'Dataset statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.multiLiftover, 'Dataset statistics');
     expect(await page.getByText('Dataset Description').getAttribute('pointer-events')).toBe(null);
   });
 
@@ -140,20 +140,20 @@ test.describe('Dataset description access rights tests', () => {
     await page.mouse.click(0, 0); // close the menu
 
     await page.locator('#header a:text("Datasets")').click();
-    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Dataset description');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Dataset description');
     await page.locator('#edit-icon').click();
     await page.locator('.editor textarea').fill('IOSSIFOV TEST DESCRIPTION');
     await page.getByText('Save').click();
     await utils.logout(page);
 
     await utils.login(page, 'user_iossifov_2014@iossifovlab.com');
-    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Dataset description');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Dataset description');
     await expect(page.locator('markdown p')).toHaveText('IOSSIFOV TEST DESCRIPTION');
     await expect(page.locator('#edit-icon')).not.toBeVisible();
     await utils.logout(page);
 
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014, 'Dataset description');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Dataset description');
     await page.locator('#edit-icon').click();
     await page.locator('.editor textarea').fill('');
     await page.getByText('Save').click();

@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
 import * as utils from './utils';
 
-test.describe('Dataset description tests', () => {
+test.describe('Dataset navigation tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Dataset Statistics');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Dataset Statistics');
   });
 
   test('should toggle studies dropdown menu', async({ page }) => {
@@ -47,16 +47,12 @@ test.describe('Dataset description tests', () => {
     const datasets = [
       {id: utils.datasetIds.allGenotypes, url: 'ALL_genotypes'},
       {id: utils.datasetIds.compGenotypes, url: 'COMP_genotypes'},
-      {id: utils.datasetIds.compDenovo, url: 'comp_denovo'},
-      {id: utils.datasetIds.compVcf, url: 'comp_vcf'},
-      {id: utils.datasetIds.compAll, url: 'comp_all'},
-      {id: utils.datasetIds.iossifov2014, url: 'iossifov_2014'},
-      {id: utils.datasetIds.multi, url: 'multi'}
+      {id: utils.datasetIds.compDenovoLiftover, url: 'comp_denovo_liftover'},
+      {id: utils.datasetIds.helloWorldGenotypes, url: 'helloworld_genotypes'},
+      {id: utils.datasetIds.compPheno, url: 'comp_pheno'},
+      {id: utils.datasetIds.iossifov2014Liftover, url: 'iossifov_2014_liftover'},
+      {id: utils.datasetIds.phenoHelloWorld, url: 'pheno_helloworld'}
     ];
-
-    await page.locator('#datasets-dropdown-menu-button').click();
-    await page.locator('.collapse-dataset-icon').nth(1).click();
-    await page.keyboard.press('Escape');
 
     for (const dataset of datasets) {
       // eslint-disable-next-line no-await-in-loop
@@ -68,7 +64,7 @@ test.describe('Dataset description tests', () => {
   });
 
   test('navigation to invalid dataset', async({ page }) => {
-    await page.goto(`${utils.frontendUrl}/datasets/iossifov_2014/gene-browser`);
+    await page.goto(`${utils.frontendUrl}/datasets/iossifov_2014_liftover/gene-browser`);
     await expect(page.locator('gpf-gene-browser')).toBeVisible();
     await expect(page.locator('.alert-danger')).not.toBeVisible();
 

@@ -27,7 +27,7 @@ test.describe('Gene scores tests', () => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
   });
 
   test('should display gene scores panel and dropdown', async({ page }) => {
@@ -79,7 +79,7 @@ test.describe('Gene scores tests', () => {
   });
 
   test('should have working from/to step up/down buttons in ExAC pLI', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
     await page.locator('#gene-scores').click();
     await page.locator('gpf-gene-scores select').selectOption('pLI - Probability of Loss-of-Function Intolerance');
 
@@ -109,7 +109,7 @@ test.describe('Gene scores tests', () => {
 
     geneScoresData.forEach(geneScore => {
       test(`should filter variants when "${geneScore.desc}" gene score is selected`, async({ page }) => {
-        await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
+        await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
         await page.click('#gene-scores');
         await page.locator('gpf-gene-scores select').selectOption(geneScore.desc);
 

@@ -201,7 +201,18 @@ test.describe('Users management', () => {
     await searchInTable(page, 'admin@iossifovlab.com');
     await expect(page.locator('#admin-list-item gpf-confirm-button')).not.toBeVisible();
     await expect(page.locator('[id="admin@iossifovlab.com-datasets-cell"]'))
-      .toHaveText('ALL GenotypesCOMP Genotypescomp_allcomp_denovocomp_vcfiossifov_2014multi');
+      .toHaveText(
+        'ALL Genotypes' +
+        'COMP Genotypes' +
+        'Hello World Genotypes' +
+        'comp_all_liftover' +
+        'comp_denovo_liftover' +
+        'comp_vcf_liftover' +
+        'denovo_helloworld' +
+        'iossifov_2014_liftover' +
+        'multi_liftover' +
+        'vcf_helloworld'
+      );
     await expect(page.locator('[id="admin@iossifovlab.com-reset-password-button"]')).toBeVisible();
     await expect(page.locator('[id="admin@iossifovlab.com-reset-delete-user-button"]')).not.toBeVisible();
   });
@@ -214,20 +225,20 @@ test.describe('Users management', () => {
 
     await page.locator(`[id="${email}-groups-cell"]`).getByText('Add').click();
     await page.waitForSelector('.add-item-button');
-    await searchInMenu(page, 'comp_all');
-    await page.waitForSelector('button:text("comp_all")');
-    await page.getByRole('button', { name: 'comp_all' }).click();
+    await searchInMenu(page, 'comp_all_liftover');
+    await page.waitForSelector('button:text("comp_all_liftover")');
+    await page.getByRole('button', { name: 'comp_all_liftover' }).click();
 
     await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText(email);
     await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText('any_user');
-    await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText('comp_all');
-    await expect(page.locator(`[id="${email}-datasets-cell"]`)).toContainText('comp_all');
+    await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText('comp_all_liftover');
+    await expect(page.locator(`[id="${email}-datasets-cell"]`)).toContainText('comp_all_liftover');
 
-    await page.locator(`[id="${email}-groups-cell"] #comp_all-list-item gpf-confirm-button`).click();
+    await page.locator(`[id="${email}-groups-cell"] #comp_all_liftover-list-item gpf-confirm-button`).click();
     await page.getByRole('button', { name: 'Remove', exact: true }).click();
 
-    await expect(page.locator(`[id="${email}-groups-cell"]`)).not.toContainText('comp_all');
-    await expect(page.locator(`[id="${email}-datasets-cell"]`)).not.toContainText('comp_all');
+    await expect(page.locator(`[id="${email}-groups-cell"]`)).not.toContainText('comp_all_liftover');
+    await expect(page.locator(`[id="${email}-datasets-cell"]`)).not.toContainText('comp_all_liftover');
   });
 });
 
@@ -252,7 +263,7 @@ test.describe('Groups management', () => {
     await expect(page.getByText('Empty groups with no users or datasets will be deleted!')).not.toBeVisible();
 
     // add dataset
-    await addDatasetToGroup(page, groupName, 'iossifov_2014');
+    await addDatasetToGroup(page, groupName, 'iossifov_2014_liftover');
 
     // check if the group is added
     await page.reload();
@@ -293,8 +304,8 @@ test.describe('Groups management', () => {
     const groupName = utils.getRandomString();
     await createGroup(page, groupName);
 
-    await addDatasetToGroup(page, groupName, 'iossifov_2014');
-    await expect(page.locator(`[id="${groupName}-datasets-cell"]`)).toContainText('iossifov_2014');
+    await addDatasetToGroup(page, groupName, 'iossifov_2014_liftover');
+    await expect(page.locator(`[id="${groupName}-datasets-cell"]`)).toContainText('iossifov_2014_liftover');
 
     // check if the group is added
     await page.reload();
@@ -345,8 +356,8 @@ test.describe('Groups management', () => {
     await createGroup(page, groupName);
 
     // add dataset to make the group valid
-    await addDatasetToGroup(page, groupName, 'iossifov_2014');
-    await expect(page.locator(`[id="${groupName}-datasets-cell"]`)).toContainText('iossifov_2014');
+    await addDatasetToGroup(page, groupName, 'iossifov_2014_liftover');
+    await expect(page.locator(`[id="${groupName}-datasets-cell"]`)).toContainText('iossifov_2014_liftover');
 
     await page.locator('#create-group-form-button').click();
     await page.locator('#group-name-box').fill(groupName);
@@ -362,7 +373,7 @@ test.describe('Groups management', () => {
     const groupName = utils.getRandomString();
     await createGroup(page, groupName);
 
-    const datasetName = 'iossifov_2014';
+    const datasetName = 'iossifov_2014_liftover';
 
     await addUserToGroup(page, groupName, email);
     await addDatasetToGroup(page, groupName, datasetName);
@@ -391,7 +402,7 @@ test.describe('Groups management', () => {
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
 
-    const datasetName = 'iossifov_2014';
+    const datasetName = 'iossifov_2014_liftover';
 
     const groupName1 = utils.getRandomString();
     await createGroup(page, groupName1);
@@ -525,7 +536,7 @@ test.describe('Datasets management', () => {
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
 
-    const groupName = 'comp_all';
+    const groupName = 'comp_all_liftover';
 
     // add group to user
     await page.locator(`[id="${email}-groups-cell"]`).getByText('Add').click();
@@ -553,8 +564,8 @@ test.describe('Datasets management', () => {
     const groupName = utils.getRandomString();
     await createGroup(page, groupName);
 
-    const datasetName1 = 'iossifov_2014';
-    const datasetName2 = 'comp_all';
+    const datasetName1 = 'iossifov_2014_liftover';
+    const datasetName2 = 'comp_all_liftover';
     await addDatasetToGroup(page, groupName, datasetName1);
     await addDatasetToGroup(page, groupName, datasetName2);
 
@@ -578,7 +589,7 @@ test.describe('Datasets management', () => {
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
 
-    const datasetName = 'iossifov_2014';
+    const datasetName = 'iossifov_2014_liftover';
 
     const groupName = utils.getRandomString();
     await createGroup(page, groupName);
@@ -620,7 +631,7 @@ test.describe('Datasets management', () => {
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
 
-    const datasetName = 'comp_denovo';
+    const datasetName = 'comp_denovo_liftover';
 
     const groupName = utils.getRandomString();
     await createGroup(page, groupName);
@@ -657,7 +668,7 @@ test.describe('Datasets management', () => {
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
 
-    const datasetName = 'comp_denovo';
+    const datasetName = 'comp_denovo_liftover';
 
     const groupName = utils.getRandomString();
     await createGroup(page, groupName);

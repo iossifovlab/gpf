@@ -7,7 +7,7 @@ test.describe('Genotype browser tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
   });
 
   test('should display filters blocks and buttons', async({ page }) => {
@@ -43,11 +43,11 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {study: datasetIds.compAll, count: '30'},
-    {study: datasetIds.compDenovo, count: '5'},
-    {study: datasetIds.compVcf, count: '25'},
-    {study: datasetIds.iossifov2014, count: '0'},
-    {study: datasetIds.multi, count: '0'}
+    {study: datasetIds.compAllLiftover, count: '30'},
+    {study: datasetIds.compDenovoLiftover, count: '5'},
+    {study: datasetIds.compVcfLiftover, count: '25'},
+    {study: datasetIds.iossifov2014Liftover, count: '0'},
+    {study: datasetIds.multiLiftover, count: '0'}
   ].forEach(data => {
     test('should display the correct overview paragraph ' +
     'when gene symbol is "SAMD11" at /' + data.study + '/browser', async({ page }) => {
@@ -69,7 +69,7 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct overview paragraph' +
     ' when regions filter is "' + data.region + '" at /comp_vcf/browser', async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.compVcf, 'Genotype browser');
+      await utils.navigateToDatasetPage(page, datasetIds.compVcfLiftover, 'Genotype browser');
       await page.locator('#regions-filter').click();
       await page.locator('gpf-regions-filter textarea').fill(data.region);
 
@@ -82,22 +82,22 @@ test.describe('Genotype browser table preview result tests', () => {
 
   [
     {
-      study: datasetIds.compAll,
+      study: datasetIds.compAllLiftover,
       affectedStatus: 'affected',
       count: '30'
     },
     {
-      study: datasetIds.compDenovo,
+      study: datasetIds.compDenovoLiftover,
       affectedStatus: 'affected',
       count: '5'
     },
     {
-      study: datasetIds.compVcf,
+      study: datasetIds.compVcfLiftover,
       affectedStatus: 'affected',
       count: '25'
     },
     {
-      study: datasetIds.compDenovo,
+      study: datasetIds.compDenovoLiftover,
       affectedStatus: 'unaffected',
       count: '0'
     }
@@ -125,7 +125,7 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct data in overview paragraph when ' +
         'child gender is ' + data.childGender, async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.compVcf, 'Genotype browser');
+      await utils.navigateToDatasetPage(page, datasetIds.compVcfLiftover, 'Genotype browser');
 
       await page.locator('gpf-gender').getByRole('button', {name: 'None'}).click();
       await page.locator(`[class="gender-icon ${data.childGender}"]`).click();
@@ -144,7 +144,7 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct data in overview paragraph when only ' +
     data.variantType + ' variant type checkbox is checked', async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.compVcf, 'Genotype browser');
+      await utils.navigateToDatasetPage(page, datasetIds.compVcfLiftover, 'Genotype browser');
 
       await page.locator('gpf-variant-types').getByRole('button', {name: 'None'}).click();
       await page.locator('gpf-variant-types').getByLabel(data.variantType, {exact: true}).click();
@@ -165,7 +165,7 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct data in overview paragraph' +
         ' where effect types are ' + data.effectType, async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.compVcf, 'Genotype browser');
+      await utils.navigateToDatasetPage(page, datasetIds.compVcfLiftover, 'Genotype browser');
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
       await page.locator('gpf-effect-types').getByRole('button', {name: data.effectType}).click();
@@ -177,12 +177,12 @@ test.describe('Genotype browser table preview result tests', () => {
 
   [
     {
-      study: datasetIds.multi,
+      study: datasetIds.multiLiftover,
       inheritanceType: 'mendelian',
       count: '2'
     },
     {
-      study: datasetIds.compAll,
+      study: datasetIds.compAllLiftover,
       inheritanceType: 'denovo',
       count: '5'
     }
@@ -202,8 +202,8 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {study: datasetIds.compDenovo, count: '5'},
-    {study: datasetIds.compVcf, count: '0'}
+    {study: datasetIds.compDenovoLiftover, count: '5'},
+    {study: datasetIds.compVcfLiftover, count: '0'}
   ].forEach(data => {
     test('should display the correct overview paragraph when ' +
     'inheritance types are denovo at /' + data.study + '/browser', async({ page }) => {
@@ -226,7 +226,7 @@ test.describe('Genotype browser table preview result tests', () => {
     {familyId: 'f4', count: '6'},
   ].forEach(data => {
     test('should display the correct overview paragraph when family id is "' + data.familyId + '"', async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.compVcf, 'Genotype browser');
+      await utils.navigateToDatasetPage(page, datasetIds.compVcfLiftover, 'Genotype browser');
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
 
@@ -240,19 +240,19 @@ test.describe('Genotype browser table preview result tests', () => {
 
   [
     {
-      study: datasetIds.iossifov2014,
+      study: datasetIds.iossifov2014Liftover,
       geneSymbol: 'SCN2A',
       effectType: 'LGDs',
       overviewParagraph: '2 variants selected'
     },
     {
-      study: datasetIds.iossifov2014,
+      study: datasetIds.iossifov2014Liftover,
       geneSymbol: 'NRXN1',
       effectType: 'LGDs',
       overviewParagraph: '1 variant selected'
     },
     {
-      study: datasetIds.iossifov2014,
+      study: datasetIds.iossifov2014Liftover,
       geneSymbol: 'NRXN1',
       effectType: 'All',
       overviewParagraph: '1 variant selected'
@@ -277,7 +277,7 @@ test.describe('Genotype browser table preview result tests', () => {
 
   test('should display "2 variants selected" in overview paragraph ' +
   'when family id is 11002 at /iossifov_2014/browser', async({ page }) => {
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
     await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
     await page.locator('#family-ids').click();
@@ -289,7 +289,7 @@ test.describe('Genotype browser table preview result tests', () => {
 
   test('should display "0 variants selected" in overview paragraph when the gene sets is ' +
   'GO Terms - GO:0016917 GABA_receptor_activity and effect type LGDs at /iossifov_2014/browser', async({ page }) => {
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
     await page.locator('gpf-effect-types').getByRole('button', {name: 'LGDs'}).click();
 
@@ -317,8 +317,8 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct overview paragraph when gene sets is GO Terms'+
     ' - GO:0016917 and effect types are ' + data.effectTypes.toString() +
-    ' at /iossifov2014/browser', async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    ' at /iossifov2014Liftover/browser', async({ page }) => {
+      await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
       await page.locator('#gene-sets').click();
       await page.locator('#selected-collection').click();
@@ -349,7 +349,7 @@ test.describe('Genotype browser table preview result tests', () => {
   ].forEach(data => {
     test('should display the correct age and iq values in the measures column for "'
     + data.familyId + '" family', async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.compAll, 'Genotype browser');
+      await utils.navigateToDatasetPage(page, datasetIds.compAllLiftover, 'Genotype browser');
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
 
@@ -369,7 +369,7 @@ test.describe('Genotype browser table preview result tests', () => {
 
   test('should display the correct overview paragraph with ' +
   'denovo inheritance types, affected only, 5\'UTR', async({ page }) => {
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
     await page.locator('#pedigree-dropdown-menu-button').click();
     await page.locator('gpf-pedigree-selector').getByRole('link', { name: 'Affected Status' }).click();
@@ -391,7 +391,7 @@ test.describe('Genotype browser download tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
   });
 
   test('should download all effect types CHD8 iossifov variants ' +
@@ -417,7 +417,7 @@ test.describe('Genotype browser table tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
   });
 
   test('should redirect to UCSC', async({ page }) => {
