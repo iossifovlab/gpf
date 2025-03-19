@@ -43,9 +43,9 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {study: datasetIds.compAllLiftover, count: '30'},
-    {study: datasetIds.compDenovoLiftover, count: '5'},
-    {study: datasetIds.compVcfLiftover, count: '25'},
+    {study: datasetIds.compAllLiftover, count: '10'},
+    {study: datasetIds.compDenovoLiftover, count: '3'},
+    {study: datasetIds.compVcfLiftover, count: '7'},
     {study: datasetIds.iossifov2014Liftover, count: '0'},
     {study: datasetIds.multiLiftover, count: '0'}
   ].forEach(data => {
@@ -63,18 +63,16 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {region: '1:865627', count: '5'},
-    {region: '1:865664', count: '3'},
-    {region: '1:865691', count: '2'}
+    {region: 'chr1:101806080-125000000', count: '7'},
+    {region: 'chr1:1592000-15929267', count: '5'},
+    {region: 'chrX:70000000-74000000', count: '2'}
   ].forEach(data => {
     test('should display the correct overview paragraph' +
-    ' when regions filter is "' + data.region + '" at /comp_vcf/browser', async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.compVcfLiftover, 'Genotype browser');
+    ' when regions filter is "' + data.region + '" at /iossifov_2014_liftover/browser', async({ page }) => {
+      await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
       await page.locator('#regions-filter').click();
-      await page.locator('gpf-regions-filter textarea').fill(data.region);
-
-      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
-
+      await page.locator('gpf-regions-filter textarea').focus();
+      await page.keyboard.type(data.region);
       await page.getByRole('button', { name: 'Table Preview' }).click();
       await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
     });
@@ -84,17 +82,17 @@ test.describe('Genotype browser table preview result tests', () => {
     {
       study: datasetIds.compAllLiftover,
       affectedStatus: 'affected',
-      count: '30'
+      count: '10'
     },
     {
       study: datasetIds.compDenovoLiftover,
       affectedStatus: 'affected',
-      count: '5'
+      count: '3'
     },
     {
       study: datasetIds.compVcfLiftover,
       affectedStatus: 'affected',
-      count: '25'
+      count: '7'
     },
     {
       study: datasetIds.compDenovoLiftover,
@@ -119,53 +117,49 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {childGender: 'male', count: '23'},
-    {childGender: 'female', count: '22'},
+    {childGender: 'male', count: '406'},
+    {childGender: 'female', count: '169'},
     {childGender: 'unspecified', count: '0'}
   ].forEach(data => {
     test('should display the correct data in overview paragraph when ' +
         'child gender is ' + data.childGender, async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.compVcfLiftover, 'Genotype browser');
+      await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
       await page.locator('gpf-gender').getByRole('button', {name: 'None'}).click();
       await page.locator(`[class="gender-icon ${data.childGender}"]`).click();
 
-      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
-
       await page.getByRole('button', { name: 'Table Preview' }).click();
       await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
     });
   });
 
   [
-    {variantType: 'sub', count: '25'},
-    {variantType: 'ins', count: '0'},
-    {variantType: 'del', count: '0'}
+    {variantType: 'sub', count: '273'},
+    {variantType: 'ins', count: '87'},
+    {variantType: 'del', count: '212'}
   ].forEach(data => {
     test('should display the correct data in overview paragraph when only ' +
     data.variantType + ' variant type checkbox is checked', async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.compVcfLiftover, 'Genotype browser');
+      await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
 
       await page.locator('gpf-variant-types').getByRole('button', {name: 'None'}).click();
       await page.locator('gpf-variant-types').getByLabel(data.variantType, {exact: true}).click();
 
-      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
-
       await page.getByRole('button', { name: 'Table Preview' }).click();
       await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
     });
   });
 
   [
-    {effectType: 'All', count: '25'},
+    {effectType: 'All', count: '10'},
     {effectType: 'LGDs', count: '0'},
-    {effectType: 'Nonsynonymous', count: '12'},
-    {effectType: 'Coding', count: '25'},
+    {effectType: 'Nonsynonymous', count: '5'},
+    {effectType: 'Coding', count: '10'},
     {effectType: 'UTRs', count: '0'}
   ].forEach(data => {
     test('should display the correct data in overview paragraph' +
         ' where effect types are ' + data.effectType, async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.compVcfLiftover, 'Genotype browser');
+      await utils.navigateToDatasetPage(page, datasetIds.compAllLiftover, 'Genotype browser');
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
       await page.locator('gpf-effect-types').getByRole('button', {name: data.effectType}).click();
@@ -184,7 +178,7 @@ test.describe('Genotype browser table preview result tests', () => {
     {
       study: datasetIds.compAllLiftover,
       inheritanceType: 'denovo',
-      count: '5'
+      count: '3'
     }
   ].forEach(data => {
     test('should display the correct overview paragraph when ' +
@@ -202,7 +196,7 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {study: datasetIds.compDenovoLiftover, count: '5'},
+    {study: datasetIds.compDenovoLiftover, count: '3'},
     {study: datasetIds.compVcfLiftover, count: '0'}
   ].forEach(data => {
     test('should display the correct overview paragraph when ' +
@@ -220,13 +214,12 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {familyId: 'f1', count: '4'},
-    {familyId: 'f2', count: '5'},
-    {familyId: 'f3', count: '4'},
-    {familyId: 'f4', count: '6'},
+    {familyId: 'f1', count: '3'},
+    {familyId: 'f2', count: '3'},
+    {familyId: 'f3', count: '0'},
   ].forEach(data => {
     test('should display the correct overview paragraph when family id is "' + data.familyId + '"', async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.compVcfLiftover, 'Genotype browser');
+      await utils.navigateToDatasetPage(page, datasetIds.denovoHelloWorld, 'Genotype browser');
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
 
@@ -343,9 +336,6 @@ test.describe('Genotype browser table preview result tests', () => {
   [
     {familyId: 'f1', values: {age: '166.339', iq: '104.911'}},
     {familyId: 'f2', values: {age: '111.538', iq: '66.694'}},
-    {familyId: 'f3', values: {age: '68.001', iq: '69.333'}},
-    {familyId: 'f4', values: {age: '157.618', iq: '103.074'}},
-    {familyId: 'f5', values: {age: '171.890', iq: '38.885'}}
   ].forEach(data => {
     test('should display the correct age and iq values in the measures column for "'
     + data.familyId + '" family', async({ page }) => {
@@ -383,7 +373,7 @@ test.describe('Genotype browser table preview result tests', () => {
     await page.locator('gpf-effect-types').getByLabel('5\'UTR').click();
 
     await page.getByRole('button', { name: 'Table Preview' }).click();
-    await expect(page.locator('#variants-count-span')).toHaveText('98 variants selected');
+    await expect(page.locator('#variants-count-span')).toHaveText('164 variants selected');
   });
 });
 
@@ -391,7 +381,7 @@ test.describe('Genotype browser download tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.denovoHelloWorld, 'Genotype browser');
   });
 
   test('should download all effect types CHD8 iossifov variants ' +
@@ -423,31 +413,31 @@ test.describe('Genotype browser table tests', () => {
   test('should redirect to UCSC', async({ page }) => {
     await page.getByRole('button', { name: 'Table Preview' }).click();
 
-    const baseUrl = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr';
+    const baseUrl = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=';
 
-    await page.waitForSelector('span:text("569 variants selected")');
+    await page.waitForSelector('span:text("572 variants selected")');
     await page.locator('#sort-child').getByText('family id').click();
 
     await expect(
-      page.locator('a').filter({ hasText: /^4:41748295$/ }).first()
-    ).toHaveAttribute('href', baseUrl + '4:41748295');
+      page.locator('a').filter({ hasText: /^chr4:41746278$/ }).first()
+    ).toHaveAttribute('href', baseUrl + 'chr4:41746278');
 
 
     await expect(
-      page.locator('a').filter({ hasText: /^7:87339897$/ }).first()
-    ).toHaveAttribute('href', baseUrl + '7:87339897');
+      page.locator('a').filter({ hasText: /^chr13:51374698$/ }).first()
+    ).toHaveAttribute('href', baseUrl + 'chr13:51374698');
   });
 
   test('should show details', async({ page }) => {
     await page.getByRole('button', { name: 'Table Preview' }).click();
-    await page.waitForSelector('span:text("569 variants selected")');
+    await page.waitForSelector('span:text("572 variants selected")');
     await page.locator('#sort-child').getByText('family id').click();
 
     await page.getByText('Show details').first().click();
     await expect(page.locator('.modal-content')).toBeVisible();
     await expect(page.locator('.modal-content > .details-header')).toHaveCount(2);
     await expect(page.locator('.modal-content > .details-header').nth(0)).toHaveText('Family id: 14699');
-    await expect(page.locator('.modal-content > .details-header').nth(1)).toHaveText('Location: 4:41748295');
+    await expect(page.locator('.modal-content > .details-header').nth(1)).toHaveText('Location: chr4:41746278');
     await expect(page.locator('.modal-content > .grid-container')).toBeVisible();
   });
 });

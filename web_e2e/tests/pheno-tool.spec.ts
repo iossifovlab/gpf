@@ -96,7 +96,7 @@ test.describe('Pheno tool tests', () => {
     await expect(page.getByText('Report')).toBeEnabled();
     await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
 
-    await page.getByText('Advanced').click();
+    await page.getByRole('tab', { name: 'Advanced', exact: true }).click();
     await expect(page.locator('#save-query-dropdown-button')).toBeDisabled();
     await expect(page.getByText('Report')).toBeDisabled();
     await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
@@ -210,7 +210,7 @@ test.describe('Pheno tool download tests', () => {
       await page.locator('input#search-box').click();
       await page.getByText('i1.age').first().click();
 
-      await page.getByRole('tab', { name: 'Advanced' }).click();
+      await page.getByRole('tab', { name: 'Advanced', exact: true }).click();
       await page.getByLabel('Advanced').getByPlaceholder('Select or start typing to search').click();
       await page.locator('.dropdown-item span', {hasText: data.familyFilter}).click();
 
@@ -294,16 +294,17 @@ test.describe('Pheno tool download tests', () => {
   [
     {
       id: '14',
-      genotype: 'comp_vcf',
+      genotype: 'comp_vcf_liftover',
       affectedStatus: 'affected',
-      set: 'Missense.Male (1): Missense.Male (comp_all:status:affected;comp_vcf:status:affected)',
+      set: 'Missense.Male (1): Missense.Male (comp_all_liftover:status:affected;comp_vcf_liftover:status:affected)',
       measure: 'i1.age'
     },
     {
       id: '15',
-      genotype: 'iossifov_2014',
+      genotype: 'iossifov_2014_liftover',
       affectedStatus: 'unaffected',
-      set: 'LGDs.Recurrent (3): LGDs.Recurrent (comp_all:status:affected;iossifov_2014:status:unaffected)',
+      set: 'LGDs.Recurrent (3): LGDs.Recurrent '+
+        '(comp_all_liftover:status:affected;iossifov_2014_liftover:status:unaffected)',
       measure: 'i1.iq'
     }
   ].forEach(data => {
