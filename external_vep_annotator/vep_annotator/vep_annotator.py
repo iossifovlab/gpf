@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 import csv
 import logging
 import os
@@ -343,58 +342,21 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
 
         assert pipeline is not None
 
-        pipeline_context = pipeline.build_pipeline_genomic_context()
-
         self.cache_repo = GenomicResourceCachedRepo(
             pipeline.repository, str(self.work_dir / "grr_cache"),
         )
-
-        self.gene_models_resource = self.find_gene_models(
-            pipeline_context, info)
-
-        self.genome_resource = self.find_genome(
-            self.gene_models_resource, pipeline_context, info)
-
-        assert pipeline is not None
-
-        self.genome_filename = \
-            self.genome_resource.get_config()["filename"]
-
-        gtf_file_name = self.gene_models_resource.resource_id.replace("/", "_")
+        self.genome_filename = None
+        self.gtf_path = None
+        self.gtf_path_gz = None
+        self.gene_models_resource = None
+        self.genome_resource = None
 
         self.resources_dir = (self.work_dir / "annotator_resources").absolute()
         self.resources_dir.mkdir(exist_ok=True)
 
-        self.gtf_path = self.resources_dir / f"{gtf_file_name}.gtf"
-        self.gtf_path_gz = self.gtf_path.with_suffix(
-                f"{self.gtf_path.suffix}.gz",
-            )
+        self.annotator_attributes = effect_attributes
 
-        self.annotator_attributes = copy.deepcopy(effect_attributes)
-        self.annotator_attributes[self.gtf_path_gz.name] = (
-            "object",
-            f"Value from {self.gene_models_resource.resource_id}",
-        )
-        super().__init__(
-            pipeline, info,
-            [self.gtf_path_gz.name],
-        )
-
-        if not self.gtf_path_gz.exists():
-            gene_models = build_gene_models_from_resource(
-                self.gene_models_resource,
-            )
-
-            gene_models.load()
-            gtf_content = gene_models_to_gtf(gene_models).getvalue()
-
-            self.gtf_path.write_text(gtf_content)
-
-            subprocess.run(["bgzip", str(self.gtf_path)], check=True)
-            subprocess.run(
-                ["tabix", "-p", "gff", str(self.gtf_path_gz)],
-                check=True,
-            )
+        super().__init__(pipeline, info)
 
     def find_gene_models(
         self, genomic_context: GenomicContext, info: AnnotatorInfo,
@@ -440,18 +402,18 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         return genome_resource
 
     def _attribute_type_descs(self) -> dict[str, tuple[str, str]]:
-        annotator_attributes = copy.deepcopy(effect_attributes)
-        annotator_attributes[self.gtf_path_gz.name] = (
-            "object",
-            f"Value from {self.gene_models_resource.resource_id}",
-        )
-        return annotator_attributes
+        return effect_attributes
 
     def _do_batch_annotate(
         self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,
     ) -> list[dict[str, Any]]:
+
+        assert self.genome_resource is not None
+        assert self.genome_filename is not None
+        assert self.gtf_path_gz is not None
+
         self.genome_resource.get_file_url(self.genome_filename)
         self.genome_resource.get_file_url(f"{self.genome_filename}.fai")
 
@@ -490,6 +452,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         return contexts
 
     def run(self, **kwargs):
+        assert self.genome_resource is not None
         args = [
             "vep",
             "-i", str(Path("/work", kwargs["input_file_name"])),
@@ -511,6 +474,43 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
                 str(self.resources_dir): {"bind": "/resources", "mode": "ro"},
             },
         )
+
+    def open(self) -> Annotator:
+        assert self.pipeline is not None
+        pipeline_context = self.pipeline.build_pipeline_genomic_context()
+        self.gene_models_resource = self.find_gene_models(
+            pipeline_context, self.get_info())
+
+        self.genome_resource = self.find_genome(
+            self.gene_models_resource, pipeline_context, self.get_info())
+
+        self.genome_filename = \
+            self.genome_resource.get_config()["filename"]
+
+        gtf_file_name = self.gene_models_resource.resource_id.replace("/", "_")
+
+        self.gtf_path = self.resources_dir / f"{gtf_file_name}.gtf"
+        self.gtf_path_gz = self.gtf_path.with_suffix(
+                f"{self.gtf_path.suffix}.gz",
+            )
+
+        if not self.gtf_path_gz.exists():
+            gene_models = build_gene_models_from_resource(
+                self.gene_models_resource,
+            )
+
+            gene_models.load()
+            gtf_content = gene_models_to_gtf(gene_models).getvalue()
+
+            self.gtf_path.write_text(gtf_content)
+
+            subprocess.run(["bgzip", str(self.gtf_path)], check=True)
+            subprocess.run(
+                ["tabix", "-p", "gff", str(self.gtf_path_gz)],
+                check=True,
+            )
+
+        return super().open()
 
 
 def build_vep_cache_annotator(
