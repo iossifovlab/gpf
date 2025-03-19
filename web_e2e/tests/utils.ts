@@ -1,15 +1,19 @@
 import { Page, expect } from '@playwright/test';
 
 
+export const frontendUrl = 'http://gpf:8080/gpf';
+export const backendUrl = frontendUrl;
+export const mailhogUrl = 'http://mailhog:8025';
+
 // for local dev with containers:
 // export const frontendUrl = 'http://localhost:8080/gpf';
 // export const backendUrl = frontendUrl;
 // export const mailhogUrl = 'http://localhost:8025';
 
 // for data-hg19-startup dev:
-export const backendUrl = 'http://localhost:8000';
-export const frontendUrl = 'http://localhost:4200';
-export const mailhogUrl = 'http://localhost:8025';
+// export const backendUrl = 'http://localhost:8000';
+// export const frontendUrl = 'http://localhost:4200';
+// export const mailhogUrl = 'http://localhost:8025';
 
 export const username = process.env.GPF_STAGING_USERNAME ? process.env.GPF_STAGING_USERNAME : 'admin@iossifovlab.com';
 export const password = process.env.GPF_STAGING_PASSWORD ? process.env.GPF_STAGING_PASSWORD : 'secret';
