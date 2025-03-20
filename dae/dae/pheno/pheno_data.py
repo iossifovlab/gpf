@@ -25,7 +25,6 @@ from dae.genomic_resources.histogram import (
     Histogram,
     HistogramConfig,
     NullHistogram,
-    NullHistogramConfig,
     NumberHistogram,
     NumberHistogramConfig,
 )
@@ -118,7 +117,7 @@ class Measure:
 
     * `histogram_type` - one of 'number', 'categorical'
 
-    * `histogram_config` - 'str'
+    * `histogram_config` - one of HistogramConfig or None
 
     * `description`
 
@@ -137,7 +136,7 @@ class Measure:
         self.measure_type: MeasureType = MeasureType.other
         self.value_type: type = str
         self.histogram_type: type[Histogram] = NullHistogram
-        self.histogram_config: HistogramConfig = NullHistogramConfig("default")
+        self.histogram_config: HistogramConfig | None = None
         self.values_domain: str | None = None
         self.instrument_name: str | None = None
         self.description: str | None = None
@@ -186,14 +185,20 @@ class Measure:
             mes.value_type = int
         if row["histogram_type"] == "NumberHistogram":
             mes.histogram_type = NumberHistogram
-            mes.histogram_config = NumberHistogramConfig.from_dict(
-                json.loads(row["histogram_config"]),
-            )
+            if row["histogram_config"] is None:
+                mes.histogram_config = None
+            else:
+                mes.histogram_config = NumberHistogramConfig.from_dict(
+                    json.loads(row["histogram_config"]),
+                )
         elif row["histogram_type"] == "CategoricalHistogram":
             mes.histogram_type = CategoricalHistogram
-            mes.histogram_config = CategoricalHistogramConfig.from_dict(
-                json.loads(row["histogram_config"]),
-            )
+            if row["histogram_config"] is None:
+                mes.histogram_config = None
+            else:
+                mes.histogram_config = CategoricalHistogramConfig.from_dict(
+                    json.loads(row["histogram_config"]),
+                )
         else:
             mes.histogram_type = NullHistogram
 

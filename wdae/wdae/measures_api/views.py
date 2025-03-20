@@ -100,12 +100,13 @@ class PhenoMeasureHistogramView(QueryBaseView):
         dataset_id = str(data["datasetId"])
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
-        if "measure" in data \
-                and not dataset.phenotype_data.has_measure(data["measure"]):
+        if "measure" not in data \
+                or not dataset.phenotype_data.has_measure(
+                    cast(str, data["measure"]),
+                ):
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        assert "measure" in data
 
-        pheno_measure = data["measure"]
+        pheno_measure = cast(str, data["measure"])
         assert dataset.phenotype_data.has_measure(pheno_measure)
 
         measure = dataset.phenotype_data.get_measure(pheno_measure)
@@ -184,10 +185,13 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
                 25,
             )
 
-            number_hist_conf = cast(
-                NumberHistogramConfig,
-                measure.histogram_config,
-            )
+            if measure.histogram_config is None:
+                number_hist_conf = NumberHistogramConfig.default_config(None)
+            else:
+                number_hist_conf = cast(
+                    NumberHistogramConfig,
+                    measure.histogram_config,
+                )
             min_value = number_hist_conf.view_range[0] or np.min(bins).item()
             max_value = number_hist_conf.view_range[1] or np.max(bins).item()
             number_hist_conf.view_range = (min_value, max_value)
@@ -209,10 +213,14 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
             if min(values) * 10 < max(values):
                 enable_log = True
 
-            categorical_hist_conf = cast(
-                CategoricalHistogramConfig,
-                measure.histogram_config,
-            )
+            if measure.histogram_config is None:
+                categorical_hist_conf = \
+                    CategoricalHistogramConfig.default_config()
+            else:
+                categorical_hist_conf = cast(
+                    CategoricalHistogramConfig,
+                    measure.histogram_config,
+                )
 
             if categorical_hist_conf.is_default:
                 categorical_hist_conf.label_rotation = 90
@@ -261,7 +269,7 @@ class PhenoMeasurePartitionsView(QueryBaseView, DatasetAccessRightsView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
         assert "measure" in data
-        pheno_measure = data["measure"]
+        pheno_measure = cast(str, data["measure"])
 
         assert dataset.phenotype_data.has_measure(pheno_measure)
 
@@ -270,12 +278,12 @@ class PhenoMeasurePartitionsView(QueryBaseView, DatasetAccessRightsView):
         )
 
         try:
-            mmin = float(data["min"])
+            mmin = float(cast(float, data["min"]))
         except TypeError:
             mmin = float("-inf")
 
         try:
-            mmax = float(data["max"])
+            mmax = float(cast(float, data["max"]))
         except TypeError:
             mmax = float("inf")
 

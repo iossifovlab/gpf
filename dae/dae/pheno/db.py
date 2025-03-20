@@ -7,7 +7,7 @@ from typing import Any, cast
 import duckdb
 import pandas as pd
 from sqlglot import column, expressions, select
-from sqlglot.expressions import table_
+from sqlglot.expressions import Null, alias_, table_
 
 from dae.pheno.common import MeasureType
 from dae.utils.sql_utils import glot_and, to_duckdb_transpile
@@ -88,7 +88,23 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         `default_filter`.
         """
 
+        is_legacy = True
+        with self.connection.cursor() as cursor:
+            columns = cursor.execute("DESCRIBE measure").fetchall()
+            for col in columns:
+                if col[0] == "histogram_config":
+                    is_legacy = False
+                    break
+
         measure_table = self.measure
+        if is_legacy:
+            hist_config_column = alias_(Null(), "histogram_config")
+        else:
+            hist_config_column = column(
+                "histogram_config",
+                measure_table.alias_or_name,
+            )
+
         columns = [
             column("measure_id", measure_table.alias_or_name),
             column("instrument_name", measure_table.alias_or_name),
@@ -97,7 +113,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             column("measure_type", measure_table.alias_or_name),
             column("value_type", measure_table.alias_or_name),
             column("histogram_type", measure_table.alias_or_name),
-            column("histogram_config", measure_table.alias_or_name),
+            hist_config_column,
             column("individuals", measure_table.alias_or_name),
             column("default_filter", measure_table.alias_or_name),
             column("values_domain", measure_table.alias_or_name),
@@ -114,6 +130,10 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         with self.connection.cursor() as cursor:
             df = cursor.execute(to_duckdb_transpile(query)).df()
+
+        df["histogram_config"] = df["histogram_config"].apply(
+            lambda x: None if pd.isna(x) else str(x),
+        )
 
         df_columns = [
             "measure_id",

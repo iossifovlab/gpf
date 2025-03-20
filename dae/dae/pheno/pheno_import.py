@@ -27,7 +27,6 @@ from dae.genomic_resources.histogram import (
     CategoricalHistogram,
     CategoricalHistogramConfig,
     HistogramConfig,
-    NullHistogramConfig,
     NumberHistogram,
     NumberHistogramConfig,
 )
@@ -1171,14 +1170,14 @@ def merge_inference_configs(
 def merge_histogram_configs(
     histogram_configs: MeasureHistogramConfigs | None,
     measure_report: MeasureReport,
-) -> HistogramConfig:
+) -> HistogramConfig | None:
     """Merge configs by order of specificity"""
     if measure_report.inference_report.histogram_type is \
             NumberHistogram:
         histogram_config = NumberHistogramConfig.default_config(None)
 
         if histogram_configs is None:
-            return histogram_config
+            return None
 
         configs_dict = histogram_configs.number_config
     elif measure_report.inference_report.histogram_type is \
@@ -1186,28 +1185,34 @@ def merge_histogram_configs(
         histogram_config = CategoricalHistogramConfig.default_config()
 
         if histogram_configs is None:
-            return histogram_config
+            return None
 
         configs_dict = histogram_configs.categorical_config
     else:
-        return NullHistogramConfig("no histogram")
+        return None
 
     instrument_name = measure_report.instrument_name
     measure_name = measure_report.measure_name
-    current_config = histogram_config.to_dict()
+    current_config = None
 
     if "*.*" in configs_dict:
         update_config = configs_dict["*.*"]
+        if current_config is None:
+            current_config = histogram_config.to_dict()
         current_config.update(update_config)
         current_config["is_default"] = False
 
     if f"{instrument_name}.*" in configs_dict:
         update_config = configs_dict[f"{instrument_name}.*"]
+        if current_config is None:
+            current_config = histogram_config.to_dict()
         current_config.update(update_config)
         current_config["is_default"] = False
 
     if f"*.{measure_name}" in configs_dict:
         update_config = configs_dict[f"*.{measure_name}"]
+        if current_config is None:
+            current_config = histogram_config.to_dict()
         current_config.update(update_config)
         current_config["is_default"] = False
 
@@ -1215,8 +1220,13 @@ def merge_histogram_configs(
         update_config = configs_dict[
             f"{instrument_name}.{measure_name}"
         ]
+        if current_config is None:
+            current_config = histogram_config.to_dict()
         current_config.update(update_config)
         current_config["is_default"] = False
+
+    if current_config is None:
+        return current_config
 
     if measure_report.inference_report.histogram_type is \
             NumberHistogram:
@@ -1369,10 +1379,14 @@ def write_reports_to_parquet(
 
     for report in reports.values():
 
-        histogram_config = json.dumps(merge_histogram_configs(
+        histogram_config = merge_histogram_configs(
             hist_configs,
             report,
-        ).to_dict())
+        )
+        if histogram_config is None:
+            histogram_config_json = None
+        else:
+            histogram_config_json = json.dumps(histogram_config.to_dict())
 
         m_id = f"{report.instrument_name}.{report.measure_name}"
         value_type = report.inference_report.value_type.__name__
@@ -1389,7 +1403,7 @@ def write_reports_to_parquet(
         batch_values["measure_type"].append(report.measure_type.value)
         batch_values["value_type"].append(value_type)
         batch_values["histogram_type"].append(histogram_type)
-        batch_values["histogram_config"].append(histogram_config)
+        batch_values["histogram_config"].append(histogram_config_json)
         batch_values["individuals"].append(
             report.inference_report.count_with_values)
         batch_values["default_filter"].append("")
