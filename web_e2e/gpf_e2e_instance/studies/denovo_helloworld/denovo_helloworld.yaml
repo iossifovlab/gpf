@@ -5,6 +5,24 @@ has_cnv: false
 has_transmitted: false
 genotype_browser:
   enabled: true
+  columns:
+    phenotype:
+      pheno_measure_1:
+        role: prb
+        source: instrument_1.measure_1
+        name: "Phenotype Measure 1"
+      pheno_measure_2:
+        role: prb
+        source: instrument_1.measure_2
+        name: "Phenotype Measure 2"
+  preview_columns:
+    - family
+    - variant
+    - genotype
+    - effect
+    - gene_scores
+    - pheno_measure_1
+    - pheno_measure_2
 phenotype_data: pheno_helloworld
 phenotype_tool: true
 phenotype_browser: true
