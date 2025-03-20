@@ -183,10 +183,15 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
                 list(df[pheno_measure].values),
                 25,
             )
-            number_hist_conf = NumberHistogramConfig(
-                (np.min(bins).item(), np.max(bins).item()),
-                25,
+
+            number_hist_conf = cast(
+                NumberHistogramConfig,
+                measure.histogram_config,
             )
+            min_value = number_hist_conf.view_range[0] or np.min(bins).item()
+            max_value = number_hist_conf.view_range[1] or np.max(bins).item()
+            number_hist_conf.view_range = (min_value, max_value)
+
             result["histogram"] = NumberHistogram.from_dict({
                 "config": number_hist_conf.to_dict(),
                 "bins": bins,
@@ -204,10 +209,15 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
             if min(values) * 10 < max(values):
                 enable_log = True
 
-            categorical_hist_conf = CategoricalHistogramConfig(
-                label_rotation=90,
-                y_log_scale=enable_log,
+            categorical_hist_conf = cast(
+                CategoricalHistogramConfig,
+                measure.histogram_config,
             )
+
+            if categorical_hist_conf.is_default:
+                categorical_hist_conf.label_rotation = 90
+                categorical_hist_conf.y_log_scale = enable_log
+
             result["histogram"] = CategoricalHistogram(
                 categorical_hist_conf,
                 counts,

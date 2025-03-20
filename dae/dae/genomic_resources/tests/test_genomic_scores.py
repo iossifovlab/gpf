@@ -629,7 +629,7 @@ def test_score_definition_histograms(
     score2_def = score.score_definitions["score2"]
     assert score2_def.hist_conf is not None
     assert isinstance(score2_def.hist_conf, CategoricalHistogramConfig)
-    assert score2_def.hist_conf.enforce_type
+    assert not score2_def.hist_conf.is_default
 
 
 def test_build_genomic_score_from_resource_id() -> None:

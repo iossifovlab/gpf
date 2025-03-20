@@ -2,6 +2,7 @@ import argparse
 import csv
 import glob
 import gzip
+import json
 import logging
 import os
 import shutil
@@ -24,7 +25,11 @@ from pydantic import BaseModel
 
 from dae.genomic_resources.histogram import (
     CategoricalHistogram,
+    CategoricalHistogramConfig,
+    HistogramConfig,
+    NullHistogramConfig,
     NumberHistogram,
+    NumberHistogramConfig,
 )
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pedigrees.family import ALL_FAMILY_TAG_LABELS
@@ -38,6 +43,7 @@ from dae.pheno.common import (
     InferenceConfig,
     InstrumentConfig,
     MeasureDescriptionsConfig,
+    MeasureHistogramConfigs,
     MeasureType,
     PhenoImportConfig,
     RegressionMeasure,
@@ -387,6 +393,15 @@ def import_pheno_data(  # pylint: disable=R0912
             inference_configs = config.inference_config
     add_pheno_common_inference(inference_configs)
 
+    histogram_configs: MeasureHistogramConfigs | None = None
+    if config.histogram_configs is not None:
+        if isinstance(config.histogram_configs, str):
+            histogram_configs = load_histogram_configs(
+                config.input_dir, config.histogram_configs,
+            )
+        else:
+            histogram_configs = config.histogram_configs
+
     connection = duckdb.connect(pheno_db_filename)
     create_tables(connection)
 
@@ -431,6 +446,7 @@ def import_pheno_data(  # pylint: disable=R0912
         task_graph, instruments,
         instrument_measure_names,
         inference_configs,
+        histogram_configs,
         config, descriptions,
     )
 
@@ -618,6 +634,7 @@ def read_and_classify_measure(
     import_config: PhenoImportConfig,
     db_names: list[str],
     inf_configs: list[InferenceConfig],
+    hist_configs: MeasureHistogramConfigs | None,
 ) -> tuple[str, Path, Path]:
     """Read a measure's values and classify from an instrument file."""
 
@@ -676,6 +693,7 @@ def read_and_classify_measure(
         reports_out_file,
         reports,
         descriptions,
+        hist_configs,
     )
 
     return (instrument.name, out_file, reports_out_file)
@@ -830,6 +848,18 @@ def load_inference_configs(
     return {}
 
 
+def load_histogram_configs(
+    input_dir: str,
+    histogram_config_filepath: str | None,
+) -> MeasureHistogramConfigs | None:
+    """Load import histogram configuration file."""
+    if histogram_config_filepath:
+        return MeasureHistogramConfigs.model_validate(yaml.safe_load(
+            Path(input_dir, histogram_config_filepath).read_text(),
+        ))
+    return None
+
+
 def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
     """Create phenotype data tables in DuckDB."""
     create_instrument = sqlglot.parse(textwrap.dedent(
@@ -854,6 +884,7 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
             measure_type INT,
             value_type VARCHAR,
             histogram_type VARCHAR,
+            histogram_config VARCHAR,
             individuals INT,
             default_filter VARCHAR,
             min_value FLOAT,
@@ -1137,11 +1168,68 @@ def merge_inference_configs(
     return InferenceConfig.model_validate(current_config)
 
 
+def merge_histogram_configs(
+    histogram_configs: MeasureHistogramConfigs | None,
+    measure_report: MeasureReport,
+) -> HistogramConfig:
+    """Merge configs by order of specificity"""
+    if measure_report.inference_report.histogram_type is \
+            NumberHistogram:
+        histogram_config = NumberHistogramConfig.default_config(None)
+
+        if histogram_configs is None:
+            return histogram_config
+
+        configs_dict = histogram_configs.number_config
+    elif measure_report.inference_report.histogram_type is \
+            CategoricalHistogram:
+        histogram_config = CategoricalHistogramConfig.default_config()
+
+        if histogram_configs is None:
+            return histogram_config
+
+        configs_dict = histogram_configs.categorical_config
+    else:
+        return NullHistogramConfig("no histogram")
+
+    instrument_name = measure_report.instrument_name
+    measure_name = measure_report.measure_name
+    current_config = histogram_config.to_dict()
+
+    if "*.*" in configs_dict:
+        update_config = configs_dict["*.*"]
+        current_config.update(update_config)
+        current_config["is_default"] = False
+
+    if f"{instrument_name}.*" in configs_dict:
+        update_config = configs_dict[f"{instrument_name}.*"]
+        current_config.update(update_config)
+        current_config["is_default"] = False
+
+    if f"*.{measure_name}" in configs_dict:
+        update_config = configs_dict[f"*.{measure_name}"]
+        current_config.update(update_config)
+        current_config["is_default"] = False
+
+    if f"{instrument_name}.{measure_name}" in configs_dict:
+        update_config = configs_dict[
+            f"{instrument_name}.{measure_name}"
+        ]
+        current_config.update(update_config)
+        current_config["is_default"] = False
+
+    if measure_report.inference_report.histogram_type is \
+            NumberHistogram:
+        return NumberHistogramConfig.from_dict(current_config)
+    return CategoricalHistogramConfig.from_dict(current_config)
+
+
 def create_import_tasks(
     task_graph: TaskGraph,
     instruments: list[ImportInstrument],
     instrument_measure_names: dict[str, list[str]],
     inference_configs: dict[str, Any],
+    histogram_configs: MeasureHistogramConfigs | None,
     import_config: PhenoImportConfig,
     descriptions: dict[str, str],
 ) -> None:
@@ -1186,6 +1274,7 @@ def create_import_tasks(
                 import_config,
                 group_db_names,
                 group_inf_configs,
+                histogram_configs,
             ],
             [],
         )
@@ -1195,6 +1284,7 @@ def write_reports_to_parquet(
     output_file: Path,
     reports: dict[str, MeasureReport],
     descriptions: dict[str, str],
+    hist_configs: MeasureHistogramConfigs | None,
 ) -> Path:
     """Write inferred instrument measure values to parquet file."""
     fields = [
@@ -1231,6 +1321,10 @@ def write_reports_to_parquet(
             pa.string(),
         ),
         pa.field(
+            "histogram_config",
+            pa.string(),
+        ),
+        pa.field(
             "individuals",
             pa.int32(),
         ),
@@ -1264,6 +1358,7 @@ def write_reports_to_parquet(
         "measure_type": [],
         "value_type": [],
         "histogram_type": [],
+        "histogram_config": [],
         "individuals": [],
         "default_filter": [],
         "min_value": [],
@@ -1273,6 +1368,12 @@ def write_reports_to_parquet(
     }
 
     for report in reports.values():
+
+        histogram_config = json.dumps(merge_histogram_configs(
+            hist_configs,
+            report,
+        ).to_dict())
+
         m_id = f"{report.instrument_name}.{report.measure_name}"
         value_type = report.inference_report.value_type.__name__
         histogram_type = report.inference_report.histogram_type.__name__
@@ -1288,6 +1389,7 @@ def write_reports_to_parquet(
         batch_values["measure_type"].append(report.measure_type.value)
         batch_values["value_type"].append(value_type)
         batch_values["histogram_type"].append(histogram_type)
+        batch_values["histogram_config"].append(histogram_config)
         batch_values["individuals"].append(
             report.inference_report.count_with_values)
         batch_values["default_filter"].append("")
