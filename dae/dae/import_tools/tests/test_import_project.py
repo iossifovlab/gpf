@@ -1,7 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
-import os
 import pathlib
-from typing import Any, Callable
+from typing import Any
 
 import cloudpickle
 import pytest
@@ -10,20 +9,13 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.import_tools.import_tools import ImportProject
 
 
-@pytest.fixture()
-def fixture_gpf_instance(fixture_dirname: Callable) -> GPFInstance:
-    gpf_instance = GPFInstance.build(
-        os.path.join(fixture_dirname(""), "gpf_instance.yaml"))
-    return gpf_instance
-
-
 def test_import_project_is_cpickle_serializable(
-    fixture_dirname: Callable,
+    t4c8_instance: GPFInstance,
 ) -> None:
     import_config = {
         "input": {},
         "gpf_instance": {
-            "path": fixture_dirname(""),
+            "path": t4c8_instance.dae_config.conf_dir,
         },
     }
     project = ImportProject.build_from_config(import_config)
@@ -35,10 +27,10 @@ def test_import_project_is_cpickle_serializable(
 
 def test_project_is_serializable_after_loader_reference_genome(
     resources_dir: pathlib.Path,
-    fixture_gpf_instance: GPFInstance,
+    t4c8_instance: GPFInstance,
 ) -> None:
     config_fn = str(resources_dir / "vcf_import" / "import_config.yaml")
-    project = ImportProject.build_from_file(config_fn, fixture_gpf_instance)
+    project = ImportProject.build_from_file(config_fn, t4c8_instance)
     assert project.get_gpf_instance().reference_genome is not None
     pickled = cloudpickle.dumps(project)
     unpickled_project = cloudpickle.loads(pickled)
@@ -47,10 +39,10 @@ def test_project_is_serializable_after_loader_reference_genome(
 
 def test_project_is_serializable_instance_dir(
     resources_dir: pathlib.Path,
-    fixture_gpf_instance: GPFInstance,
+    t4c8_instance: GPFInstance,
 ) -> None:
     config_fn = str(resources_dir / "vcf_import" / "import_config.yaml")
-    project = ImportProject.build_from_file(config_fn, fixture_gpf_instance)
+    project = ImportProject.build_from_file(config_fn, t4c8_instance)
     assert project.get_gpf_instance().dae_dir is not None
     pickled = cloudpickle.dumps(project)
     unpickled_project = cloudpickle.loads(pickled)

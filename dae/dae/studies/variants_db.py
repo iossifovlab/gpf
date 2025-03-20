@@ -388,12 +388,6 @@ class VariantsDb:
     def get_all_genotype_study_ids(self) -> list[str | Any]:
         return list(self._genotype_study_cache.keys())
 
-    def get_all_genotype_study_configs(self) -> list[Box]:
-        return [
-            genotype_study.config
-            for genotype_study in self._genotype_study_cache.values()
-        ]
-
     def get_all_genotype_studies(self) -> list[GenotypeDataStudy]:
         return list(self._genotype_study_cache.values())
 
@@ -411,27 +405,6 @@ class VariantsDb:
 
     def get_all_genotype_groups(self) -> list[GenotypeData]:
         return list(self._genotype_group_cache.values())
-
-    def get_all_genotype_group_configs(self) -> list[Box]:
-        return [
-            genotype_group.config
-            for genotype_group in self._genotype_group_cache.values()
-        ]
-
-    @deprecated(details="start using GPFInstance methods")
-    def get_all_ids(self) -> list[str]:
-        return (
-            self.get_all_genotype_study_ids()
-            + self.get_all_genotype_group_ids()
-        )
-
-    @deprecated(details="start using GPFInstance methods")
-    def get_config(self, config_id: str) -> Box | None:
-        study_config = self.get_genotype_study_config(config_id)
-        genotype_data_group_config = self.get_genotype_group_config(
-            config_id,
-        )
-        return study_config or genotype_data_group_config
 
     @deprecated(details="start using GPFInstance methods")
     def get(self, object_id: str) -> GenotypeData | None:

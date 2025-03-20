@@ -136,10 +136,10 @@ def test_study_1_enrichment(
     study_1: GenotypeData,
     t4c8_fixture: GPFInstance,
 ) -> None:
-    enriichment_helper = EnrichmentHelper(t4c8_fixture.grr)
-    assert enriichment_helper is not None
+    enrichment_helper = EnrichmentHelper(t4c8_fixture.grr)
+    assert enrichment_helper is not None
 
-    results = enriichment_helper.calc_enrichment_test(
+    results = enrichment_helper.calc_enrichment_test(
         study_1,
         "status",
         ["t4"],
@@ -172,14 +172,14 @@ def test_study_1_enrichment_with_caching(
     t4c8_fixture: GPFInstance,
 ) -> None:
 
-    enriichment_helper = EnrichmentHelper(t4c8_fixture.grr)
-    assert enriichment_helper is not None
+    enrichment_helper = EnrichmentHelper(t4c8_fixture.grr)
+    assert enrichment_helper is not None
 
-    enriichment_helper.build_enrichment_event_counts_cache(
+    enrichment_helper.build_enrichment_event_counts_cache(
         study_1, "status",
     )
 
-    results = enriichment_helper.calc_enrichment_test(
+    results = enrichment_helper.calc_enrichment_test(
         study_1,
         "status",
         ["t4"],
@@ -219,9 +219,9 @@ def test_build_study_1_enrichment_cache(
     assert (
         pathlib.Path(study_1.config_dir) / "enrichment_cache.json").exists()
 
-    enriichment_helper = EnrichmentHelper(t4c8_fixture.grr)
-    assert enriichment_helper is not None
-    cache = enriichment_helper._load_enrichment_event_counts_cache(study_1)
+    enrichment_helper = EnrichmentHelper(t4c8_fixture.grr)
+    assert enrichment_helper is not None
+    cache = enrichment_helper._load_enrichment_event_counts_cache(study_1)
 
     assert cache is not None
     assert len(cache) == 2
