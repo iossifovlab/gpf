@@ -113,6 +113,8 @@ class VEPAnnotatorBase(DockerAnnotator):
             vep_version = f"{vep_version}.0"
         if vep_version is None:
             vep_version = "latest"
+        else:
+            vep_version = f"release_{vep_version}"
 
         self._vep_version = vep_version
 
@@ -123,7 +125,7 @@ class VEPAnnotatorBase(DockerAnnotator):
     def _init_images(self) -> None:
         if self._vep_version is not None:
             self.client.images.pull(
-                f"ensemblorg/ensembl-vep:release_{self._vep_version}",
+                f"ensemblorg/ensembl-vep:{self._vep_version}",
             )
         else:
             self.client.images.pull(
