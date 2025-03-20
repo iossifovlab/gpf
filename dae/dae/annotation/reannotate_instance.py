@@ -134,7 +134,7 @@ class ReannotateInstanceTool(AnnotationTool):
         return str(
             pathlib.Path(match.groupdict()["parquet_path"]).parent.parent)
 
-    def work(self) -> None:
+    def prepare_for_annotation(self) -> None:
         if self.gpf_instance is None:
             raise ValueError("No configured GPF instance to work with!")
         reannotatable_data: list[GenotypeData] = [

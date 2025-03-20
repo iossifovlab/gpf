@@ -5,6 +5,7 @@ import logging
 import os
 import sys
 from contextlib import closing
+from pathlib import Path
 
 from pysam import (
     TabixFile,
@@ -29,6 +30,7 @@ from dae.annotation.context import CLIAnnotationContext
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.regions import Region
@@ -107,6 +109,13 @@ def combine(
 class AnnotateVCFTool(AnnotationTool):
     """Annotation tool for the VCF file format."""
 
+    def __init__(
+        self, raw_args: list[str] | None = None,
+        gpf_instance: GPFInstance | None = None,
+    ):
+        super().__init__(raw_args, gpf_instance)
+        self.output = None
+
     def get_argument_parser(self) -> argparse.ArgumentParser:
         """Construct and configure argument parser."""
         parser = argparse.ArgumentParser(
@@ -125,6 +134,12 @@ class AnnotateVCFTool(AnnotationTool):
                             default=None)
         parser.add_argument("--reannotate", default=None,
                             help="Old pipeline config to reannotate over")
+        parser.add_argument(
+            "-i", "--full-reannotation",
+            help="Ignore any previous annotation and run "
+            " a full reannotation.",
+            action="store_true",
+        )
 
         CLIAnnotationContext.add_context_arguments(parser)
         TaskGraphCli.add_arguments(parser)
@@ -133,21 +148,27 @@ class AnnotateVCFTool(AnnotationTool):
 
     @staticmethod
     def annotate(  # pylint: disable=too-many-locals,too-many-branches
-        input_file: str,
-        region: Region | None,
+        args: argparse.Namespace,
         pipeline_config: RawAnnotatorsConfig,
         grr_definition: dict | None,
         out_file_path: str,
-        allow_repeated_attributes: bool = False,
-        pipeline_config_old: str | None = None,
+        region: Region | None = None,
     ) -> None:
         # flake8: noqa: C901
         """Annotate a region from a given input VCF file using a pipeline."""
-        pipeline = AnnotateVCFTool.produce_annotation_pipeline(
-            pipeline_config, pipeline_config_old,
-            grr_definition, allow_repeated_attributes=allow_repeated_attributes,
+
+        pipeline_config_old = None
+        if args.reannotate:
+            pipeline_config_old = Path(args.reannotate).read_text()
+        grr = build_genomic_resource_repository(definition=grr_definition)
+        pipeline = build_annotation_pipeline(
+            pipeline_config, grr,
+            allow_repeated_attributes=args.allow_repeated_attributes,
+            work_dir=Path(args.work_dir),
+            config_old_raw=pipeline_config_old,
+            full_reannotation=args.full_reannotation,
         )
-        with closing(VariantFile(input_file)) as in_file:
+        with closing(VariantFile(args.input)) as in_file:
             update_header(in_file, pipeline)
             with pipeline.open(), closing(VariantFile(
                 out_file_path, "w", header=in_file.header,
@@ -188,17 +209,21 @@ class AnnotateVCFTool(AnnotationTool):
                         if isinstance(pipeline, ReannotationPipeline):
                             annotation = pipeline.annotate(
                                 VCFAllele(
-                                    vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt,
+                                    vcf_var.chrom, vcf_var.pos,
+                                    vcf_var.ref, alt,
                                 ), dict(vcf_var.info),
                             )
                         else:
                             annotation = pipeline.annotate(
                                 VCFAllele(
-                                    vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt,
+                                    vcf_var.chrom, vcf_var.pos,
+                                    vcf_var.ref, alt,
                                 ),
                             )
 
-                        for buff, attribute in zip(buffers, annotation_attributes):
+                        for buff, attribute in zip(
+                            buffers, annotation_attributes, strict=True,
+                        ):
                             attr = annotation.get(attribute.name)
                             if attr is not None:
                                 has_value[attribute.name] = True
@@ -219,36 +244,42 @@ class AnnotateVCFTool(AnnotationTool):
                                 .replace(" ", "_")
                             buff.append(attr)
 
-                    for attribute, buff in zip(annotation_attributes, buffers):
+                    for attribute, buff in zip(
+                        annotation_attributes, buffers, strict=True,
+                    ):
                         if attribute.internal:
                             continue
                         if has_value.get(attribute.name, False):
                             vcf_var.info[attribute.name] = buff
                     out_file.write(vcf_var)
 
-    def work(self) -> None:
+    def prepare_for_annotation(self) -> None:
         if self.args.output:
-            output = self.args.output
+            self.output = self.args.output
         else:
-            output = os.path.basename(self.args.input).split(".")[0] + "_annotated.vcf"
+            self.output = os.path.basename(
+                self.args.input).split(".")[0] + "_annotated.vcf"
+
+    def add_tasks_to_graph(self) -> None:
 
         raw_pipeline_config = self.pipeline.raw
 
-        pipeline_config_old = None
-        if self.args.reannotate:
-            with open(self.args.reannotate, "r") as infile:
-                pipeline_config_old = infile.read()
-
         if not tabix_index_filename(self.args.input):
             assert self.grr is not None
-            self.task_graph.create_task(
+            annotate_all_task = self.task_graph.create_task(
                 "all_variants_annotate",
                 AnnotateVCFTool.annotate,
-                [self.args.input, None, raw_pipeline_config,
-                self.grr.definition, output,
-                self.args.allow_repeated_attributes,
-                pipeline_config_old],
+                [self.args, raw_pipeline_config,
+                 self.grr.definition, self.output,
+                 None],
                 [],
+            )
+            self.task_graph.create_task(
+                "combine",
+                combine,
+                [self.args.input, self.pipeline.raw,
+                self.grr.definition, self.output, self.output],
+                [annotate_all_task],
             )
         else:
             with closing(TabixFile(self.args.input)) as pysam_file:
@@ -256,15 +287,16 @@ class AnnotateVCFTool(AnnotationTool):
             file_paths = produce_partfile_paths(
                 self.args.input, regions, self.args.work_dir)
             region_tasks = []
-            for index, (region, file_path) in enumerate(zip(regions, file_paths)):
+            for index, (region, file_path) in enumerate(
+                zip(regions, file_paths, strict=True),
+            ):
                 assert self.grr is not None
                 region_tasks.append(self.task_graph.create_task(
                     f"part-{index}",
                     AnnotateVCFTool.annotate,
-                    [self.args.input, region,
-                    raw_pipeline_config, self.grr.definition,
-                    file_path, self.args.allow_repeated_attributes,
-                    pipeline_config_old],
+                    [self.args, raw_pipeline_config,
+                     self.grr.definition, file_path,
+                     region],
                     [],
                 ))
 
@@ -273,7 +305,7 @@ class AnnotateVCFTool(AnnotationTool):
                 "combine",
                 combine,
                 [self.args.input, self.pipeline.raw,
-                self.grr.definition, file_paths, output],
+                self.grr.definition, file_paths, self.output],
                 region_tasks,
             )
 

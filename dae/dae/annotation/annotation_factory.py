@@ -16,6 +16,7 @@ from dae.annotation.annotation_config import (
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
+    FullReannotationPipeline,
     InputAnnotableAnnotatorDecorator,
     ReannotationPipeline,
     ValueTransformAnnotatorDecorator,
@@ -128,6 +129,8 @@ def build_annotation_pipeline(
     config: RawPipelineConfig, grr: GenomicResourceRepo, *,
     allow_repeated_attributes: bool = False,
     work_dir: Path | None = None,
+    config_old_raw: str | None = None,
+    full_reannotation: bool = False,
 ) -> AnnotationPipeline:
     """Build an annotation pipeline."""
     preamble, pipeline_config = AnnotationConfigParser.parse_raw(
@@ -136,8 +139,8 @@ def build_annotation_pipeline(
     pipeline = AnnotationPipeline(grr)
     pipeline.preamble = preamble
     pipeline.raw = config
-    try:
-        for idx, annotator_config in enumerate(pipeline_config):
+    for idx, annotator_config in enumerate(pipeline_config):
+        try:
             params = annotator_config.parameters
             if "work_dir" not in params:
                 if work_dir is not None:
@@ -154,15 +157,21 @@ def build_annotation_pipeline(
             check_for_unused_parameters(annotator_config)
             check_for_repeated_attributes_in_annotator(annotator_config)
             pipeline.add_annotator(annotator)
-    except ValueError as value_error:
-        raise AnnotationConfigurationError(
-            f"The {annotator_config.annotator_id} annotator"
-            f" configuration is incorrect: ",
-            value_error) from value_error
+        except ValueError as value_error:
+            raise AnnotationConfigurationError(
+                f"The {annotator_config.annotator_id} annotator"
+                f" configuration is incorrect: ",
+                value_error) from value_error
 
     check_for_repeated_attributes_in_pipeline(
         pipeline, allow_repeated_attributes=allow_repeated_attributes,
     )
+
+    if config_old_raw is not None:
+        pipeline_old = load_pipeline_from_yaml(config_old_raw, grr)
+        pipeline = ReannotationPipeline(pipeline, pipeline_old) \
+            if not full_reannotation \
+            else FullReannotationPipeline(pipeline, pipeline_old)
 
     return pipeline
 
