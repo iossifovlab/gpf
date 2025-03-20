@@ -248,7 +248,10 @@ class PhenoDataRoleListView(QueryBaseView):
         dataset = self.gpf_instance.get_wdae_wrapper(dataset_id)
         assert dataset is not None
 
-        result = dataset.phenotype_data.get_person_roles()
+        if dataset.phenotype_data.is_group:
+            result = []
+        else:
+            result = dataset.phenotype_data.get_person_roles()
 
         return Response(result, status=status.HTTP_200_OK)
 
