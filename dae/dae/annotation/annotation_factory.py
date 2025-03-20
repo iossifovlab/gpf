@@ -16,6 +16,7 @@ from dae.annotation.annotation_config import (
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
+    FullReannotationPipeline,
     InputAnnotableAnnotatorDecorator,
     ReannotationPipeline,
     ValueTransformAnnotatorDecorator,
@@ -128,6 +129,8 @@ def build_annotation_pipeline(
     config: RawPipelineConfig, grr: GenomicResourceRepo, *,
     allow_repeated_attributes: bool = False,
     work_dir: Path | None = None,
+    config_old_raw: str | None = None,
+    full_reannotation: bool = False,
 ) -> AnnotationPipeline:
     """Build an annotation pipeline."""
     preamble, pipeline_config = AnnotationConfigParser.parse_raw(
@@ -165,6 +168,12 @@ def build_annotation_pipeline(
     check_for_repeated_attributes_in_pipeline(
         pipeline, allow_repeated_attributes=allow_repeated_attributes,
     )
+
+    if config_old_raw is not None:
+        pipeline_old = load_pipeline_from_yaml(config_old_raw, grr)
+        pipeline = ReannotationPipeline(pipeline, pipeline_old) \
+            if not full_reannotation \
+            else FullReannotationPipeline(pipeline, pipeline_old)
 
     return pipeline
 

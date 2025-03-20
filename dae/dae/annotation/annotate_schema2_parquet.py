@@ -160,7 +160,12 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
         return input_layout, output_layout
 
-    def work(self) -> None:
+    def prepare_for_annotation(self) -> None:
+        self.input_layout, self.output_layout = self._setup_io_layouts()
+
+        self.loader = ParquetLoader(self.input_layout)
+
+    def add_tasks_to_graph(self) -> None:
         input_layout, output_layout = self._setup_io_layouts()
 
         loader = ParquetLoader(input_layout)

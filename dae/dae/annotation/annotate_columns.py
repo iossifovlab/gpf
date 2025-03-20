@@ -47,6 +47,7 @@ from dae.genomic_resources.reference_genome import (
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.regions import Region
@@ -172,18 +173,32 @@ def combine(
         os.remove(partfile_path)
 
     if compress_output:
+        compressed_output = f"{out_file_path}.gz"
         try:
-            compressed_output = f"{out_file_path}.gz"
             tabix_compress(out_file_path, compressed_output, force=True)
+        except (TypeError, OSError):
+            logger.exception("Could not compress output")
+        else:
+            os.remove(out_file_path)
+            return
+
+        try:
             produce_tabix_index(compressed_output, args, genome)
         except (TypeError, OSError):
             logger.exception("Could not produce tabix file for output")
-        else:
-            os.remove(out_file_path)
 
 
 class AnnotateColumnsTool(AnnotationTool):
     """Annotation tool for TSV-style text files."""
+
+    def __init__(
+        self,
+        raw_args: list[str] | None = None,
+        gpf_instance: GPFInstance | None = None,
+    ) -> None:
+        super().__init__(raw_args, gpf_instance)
+        self.output = None
+        self.ref_genome_id = None
 
     def get_argument_parser(self) -> argparse.ArgumentParser:
         """Configure argument parser."""
@@ -215,6 +230,12 @@ class AnnotateColumnsTool(AnnotationTool):
             "--reannotate", default=None,
             help="Old pipeline config to reannotate over")
         parser.add_argument(
+            "-i", "--full-reannotation",
+            help="Ignore any previous annotation and run "
+            " a full reannotation.",
+            action="store_true",
+        )
+        parser.add_argument(
             "--batch-mode", default=False,
             action="store_true",
         )
@@ -243,10 +264,13 @@ class AnnotateColumnsTool(AnnotationTool):
         if args.reannotate:
             pipeline_config_old = Path(args.reannotate).read_text()
 
-        pipeline = AnnotateColumnsTool.produce_annotation_pipeline(
-            pipeline_config, pipeline_config_old, grr_definition,
+        grr = build_genomic_resource_repository(definition=grr_definition)
+        pipeline = build_annotation_pipeline(
+            pipeline_config, grr,
             allow_repeated_attributes=args.allow_repeated_attributes,
             work_dir=Path(args.work_dir),
+            config_old_raw=pipeline_config_old,
+            full_reannotation=args.full_reannotation,
         )
         grr = pipeline.repository
         ref_genome = None
@@ -411,21 +435,22 @@ class AnnotateColumnsTool(AnnotationTool):
                 logger.error("line %s: %s", lnum, line)
                 logger.error("\t%s", error)
 
-    def work(self) -> None:
+    def prepare_for_annotation(self) -> None:
         if self.args.output:
-            output = self.args.output
+            self.output = self.args.output
         else:
             input_name = self.args.input.rstrip(".gz")
             if "." in input_name:
                 idx = input_name.find(".")
-                output = f"{input_name[:idx]}_annotated{input_name[idx:]}"
+                self.output = f"{input_name[:idx]}_annotated{input_name[idx:]}"
             else:
-                output = f"{input_name}_annotated"
+                self.output = f"{input_name}_annotated"
 
         ref_genome = self.context.get_reference_genome()
-        ref_genome_id = ref_genome.resource_id \
+        self.ref_genome_id = ref_genome.resource_id \
             if ref_genome is not None else None
 
+    def add_tasks_to_graph(self) -> None:
         if tabix_index_filename(self.args.input):
             with closing(TabixFile(self.args.input)) as pysam_file:
                 regions = produce_regions(pysam_file, self.args.region_size)
@@ -440,46 +465,29 @@ class AnnotateColumnsTool(AnnotationTool):
                     AnnotateColumnsTool.annotate,
                     [self.args, self.pipeline.raw,
                      self.grr.definition,
-                     ref_genome_id, path, region],
+                     self.ref_genome_id, path, region],
                     []))
 
             self.task_graph.create_task(
                 "combine",
                 combine,
                 [self.args, self.pipeline.raw, self.grr.definition,
-                 ref_genome_id, file_paths, output],
+                 self.ref_genome_id, file_paths, self.output],
                 region_tasks)
         else:
-            compress_output = output.endswith(".gz")
-            output = output.rstrip(".gz")
-
-            self.task_graph.create_task(
+            annotate_task = self.task_graph.create_task(
                 "annotate_all",
                 AnnotateColumnsTool.annotate,
                 [self.args, self.pipeline.raw, self.grr.definition,
-                 ref_genome_id, output, None],
+                 self.ref_genome_id, self.output, None],
                 [])
 
-            if compress_output:
-                compressed_output = f"{output}.gz"
-
-                try:
-                    tabix_compress(output, compressed_output, force=True)
-                except (TypeError, OSError):
-                    logger.exception("Could not compress output")
-                else:
-                    os.remove(output)
-
-                if ref_genome_id is not None:
-                    genome = build_reference_genome_from_resource(
-                        self.grr.get_resource(ref_genome_id))
-                else:
-                    genome = None
-
-                try:
-                    produce_tabix_index(compressed_output, self.args, genome)
-                except (TypeError, OSError):
-                    logger.exception("Could not produce tabix file for output")
+            self.task_graph.create_task(
+                "combine",
+                combine,
+                [self.args, self.pipeline.raw, self.grr.definition,
+                 self.ref_genome_id, [self.output], self.output],
+                [annotate_task])
 
 
 def cli(raw_args: list[str] | None = None) -> None:

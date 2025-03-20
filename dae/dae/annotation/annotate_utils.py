@@ -150,12 +150,16 @@ class AnnotationTool:
     def get_argument_parser(self) -> argparse.ArgumentParser:
         pass
 
-    @abstractmethod
-    def work(self) -> None:
-        pass
+    def prepare_for_annotation(self) -> None:
+        """Perform operations required for annotation."""
+        return
+
+    def add_tasks_to_graph(self) -> None:
+        """Add tasks to annotation tool task graph."""
+        return
 
     def run(self) -> None:
-        """Construct annotation tasks and process them."""
+        """Construct annotation tasks and execute task graph."""
         # Is this too eager? What if a reannotation pipeline is created
         # inside work() and the only caching that must be done is far smaller
         # than the entire new annotation config suggests?
@@ -168,14 +172,16 @@ class AnnotationTool:
 
         self.setup_work_dir()
 
-        if hasattr(self.args, "input"):
-            self.task_graph.input_files.append(self.args.input)
-        if hasattr(self.args, "pipeline"):
-            self.task_graph.input_files.append(self.args.pipeline)
-        if hasattr(self.args, "reannotate") and self.args.reannotate:
-            self.task_graph.input_files.append(self.args.reannotate)
+        self.prepare_for_annotation()
 
-        self.work()
+        self.add_tasks_to_graph()
 
         if len(self.task_graph.tasks) > 0:
+            if hasattr(self.args, "input"):
+                self.task_graph.input_files.append(self.args.input)
+            if hasattr(self.args, "pipeline"):
+                self.task_graph.input_files.append(self.args.pipeline)
+            if hasattr(self.args, "reannotate") and self.args.reannotate:
+                self.task_graph.input_files.append(self.args.reannotate)
+
             TaskGraphCli.process_graph(self.task_graph, **vars(self.args))
