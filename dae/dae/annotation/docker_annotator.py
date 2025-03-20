@@ -3,7 +3,7 @@ from abc import abstractmethod
 import docker
 
 from dae.annotation.annotation_config import AnnotatorInfo
-from dae.annotation.annotation_pipeline import AnnotationPipeline
+from dae.annotation.annotation_pipeline import AnnotationPipeline, Annotator
 from dae.annotation.annotator_base import AnnotatorBase
 
 
@@ -48,6 +48,10 @@ class DockerAnnotator(AnnotatorBase):
     @abstractmethod
     def run(self, **kwargs) -> None:
         raise NotImplementedError
+
+    def open(self) -> Annotator:
+        self._prepare_client()
+        return super().open()
 
     @abstractmethod
     def _attribute_type_descs(self) -> dict[str, tuple[str, str]]:

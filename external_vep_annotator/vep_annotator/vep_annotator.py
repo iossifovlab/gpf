@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import copy
 import csv
 import logging
 import os
 import subprocess
+import textwrap
 from pathlib import Path
 from typing import Any, TextIO, cast
 
@@ -21,7 +21,6 @@ from dae.genomic_resources.gene_models import (
     build_gene_models_from_resource,
     gene_models_to_gtf,
 )
-from dae.genomic_resources.genomic_context import GenomicContext
 from dae.genomic_resources.repository import GenomicResource
 from vep_annotator.vep_attributes import effect_attributes, full_attributes
 
@@ -112,6 +111,10 @@ class VEPAnnotatorBase(DockerAnnotator):
         vep_version: str | None = info.parameters.get("vep_version", None)
         if vep_version is not None and not vep_version.find("."):
             vep_version = f"{vep_version}.0"
+        if vep_version is None:
+            vep_version = "latest"
+        else:
+            vep_version = f"release_{vep_version}"
 
         self._vep_version = vep_version
 
@@ -122,7 +125,7 @@ class VEPAnnotatorBase(DockerAnnotator):
     def _init_images(self) -> None:
         if self._vep_version is not None:
             self.client.images.pull(
-                f"ensemblorg/ensembl-vep:release_{self._vep_version}",
+                f"ensemblorg/ensembl-vep:{self._vep_version}",
             )
         else:
             self.client.images.pull(
@@ -226,12 +229,13 @@ class VEPAnnotatorBase(DockerAnnotator):
                 context[col_name].append(col)
 
         for context in contexts:
-            gene_consequences = []
-            for gene, consequence in zip(
-                context["SYMBOL"], context["Consequence"], strict=True,
-            ):
-                gene_consequences.append(f"{gene}:{consequence}")
-            context["gene_consequence"] = gene_consequences
+            gene_consequences = set()
+            gene_consequences.update([
+                f"{gene}:{consequence}"
+                for gene, consequence in
+                zip(context["SYMBOL"], context["Consequence"], strict=True)
+            ])
+            context["gene_consequence"] = list(gene_consequences)
 
             consequences: list[str] = []
             for conseq in context["Consequence"]:
@@ -273,6 +277,17 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
         super().__init__(
             pipeline, info,
         )
+
+        info.documentation += textwrap.dedent(f"""
+
+            Ensembl VEP plugin annotator that annotates using VEP through
+            a docker container with a prepared VEP cache.
+
+            This annotator is configured to run with VEP version {self._vep_version}
+
+        <a href="https://iossifovlab.com/gpfuserdocs/administration/annotation.html#vep-annotators" target="_blank">More info</a>
+
+        """)  # noqa
 
     def _attribute_type_descs(self) -> dict[str, tuple[str, str]]:
         return full_attributes
@@ -343,115 +358,89 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
 
         assert pipeline is not None
 
-        pipeline_context = pipeline.build_pipeline_genomic_context()
-
         self.cache_repo = GenomicResourceCachedRepo(
             pipeline.repository, str(self.work_dir / "grr_cache"),
         )
-
-        self.gene_models_resource = self.find_gene_models(
-            pipeline_context, info)
-
-        self.genome_resource = self.find_genome(
-            self.gene_models_resource, pipeline_context, info)
-
-        assert pipeline is not None
-
-        self.genome_filename = \
-            self.genome_resource.get_config()["filename"]
-
-        gtf_file_name = self.gene_models_resource.resource_id.replace("/", "_")
+        self.genome_filename = None
+        self.gtf_path = None
+        self.gtf_path_gz = None
+        self.gene_models_resource = None
+        self.genome_resource = None
 
         self.resources_dir = (self.work_dir / "annotator_resources").absolute()
         self.resources_dir.mkdir(exist_ok=True)
 
-        self.gtf_path = self.resources_dir / f"{gtf_file_name}.gtf"
-        self.gtf_path_gz = self.gtf_path.with_suffix(
-                f"{self.gtf_path.suffix}.gz",
-            )
+        self.annotator_attributes = effect_attributes
 
-        self.annotator_attributes = copy.deepcopy(effect_attributes)
-        self.annotator_attributes[self.gtf_path_gz.name] = (
-            "object",
-            f"Value from {self.gene_models_resource.resource_id}",
-        )
-        super().__init__(
-            pipeline, info,
-            [self.gtf_path_gz.name],
-        )
+        pipeline_context = pipeline.build_pipeline_genomic_context()
 
-        if not self.gtf_path_gz.exists():
-            gene_models = build_gene_models_from_resource(
-                self.gene_models_resource,
-            )
-
-            gene_models.load()
-            gtf_content = gene_models_to_gtf(gene_models).getvalue()
-
-            self.gtf_path.write_text(gtf_content)
-
-            subprocess.run(["bgzip", str(self.gtf_path)], check=True)
-            subprocess.run(
-                ["tabix", "-p", "gff", str(self.gtf_path_gz)],
-                check=True,
-            )
-
-    def find_gene_models(
-        self, genomic_context: GenomicContext, info: AnnotatorInfo,
-    ) -> GenomicResource:
-        """Find gene models from info or genomic context."""
         gene_models_id: str | None = info.parameters.get("gene_models")
         if gene_models_id is not None:
-            gene_models_resource = self.cache_repo.get_resource(
+            self.gene_models_resource = self.cache_repo.get_resource(
                 gene_models_id,
             )
         else:
-            gene_models = genomic_context.get_gene_models()
+            gene_models = pipeline_context.get_gene_models()
             if gene_models is None:
                 raise ValueError(
                     f"No gene models found for {info.annotator_id}",
                 )
-            gene_models_resource = gene_models.resource
-
-        return gene_models_resource
-
-    def find_genome(
-        self, gene_models_resource: GenomicResource,
-        genomic_context: GenomicContext, info: AnnotatorInfo,
-    ) -> GenomicResource:
-        """Find genome from info, resource label or genomic context."""
+            self.gene_models_resource = gene_models.resource
         genome_id: str | None = info.parameters.get("genome")
-        gene_model_genome_id = gene_models_resource.get_labels().get(
+
+        gene_model_genome_id = self.gene_models_resource.get_labels().get(
             "reference_genome",
         )
         if genome_id is not None:
-            genome_resource = self.cache_repo.get_resource(genome_id)
+            self.genome_resource = self.cache_repo.get_resource(genome_id)
         elif gene_model_genome_id is not None:
-            genome_resource = self.cache_repo.get_resource(
+            self.genome_resource = self.cache_repo.get_resource(
                 gene_model_genome_id)
         else:
-            genome = genomic_context.get_reference_genome()
+            genome = pipeline_context.get_reference_genome()
             if genome is None:
                 raise ValueError(
                     f"No reference genome found for {info.annotator_id}",
                 )
-            genome_resource = genome.resource
+            self.genome_resource = genome.resource
 
-        return genome_resource
+        info.resources.append(self.gene_models_resource)
+        info.resources.append(self.genome_resource)
+
+        super().__init__(pipeline, info)
+
+        info.documentation += textwrap.dedent(f"""
+
+            Ensembl VEP plugin annotator that annotates using VEP through
+            a docker container with GTF and FASTA files.
+
+            This annotator is configured to run with VEP version {self._vep_version}
+
+        <a href="https://iossifovlab.com/gpfuserdocs/administration/annotation.html#vep-annotators" target="_blank">More info</a>
+
+        """)  # noqa
+
+    def find_gene_models(self) -> GenomicResource:
+        """Find gene models from info or genomic context."""
+        return cast(GenomicResource, self.gene_models_resource)
+
+    def find_genome(self) -> GenomicResource:
+        """Find genome from info, resource label or genomic context."""
+        return cast(GenomicResource, self.genome_resource)
 
     def _attribute_type_descs(self) -> dict[str, tuple[str, str]]:
-        annotator_attributes = copy.deepcopy(effect_attributes)
-        annotator_attributes[self.gtf_path_gz.name] = (
-            "object",
-            f"Value from {self.gene_models_resource.resource_id}",
-        )
-        return annotator_attributes
+        return effect_attributes
 
     def _do_batch_annotate(
         self, annotatables: list[Annotatable | None],
         contexts: list[dict[str, Any]],
         batch_work_dir: str | None = None,
     ) -> list[dict[str, Any]]:
+
+        assert self.genome_resource is not None
+        assert self.genome_filename is not None
+        assert self.gtf_path_gz is not None
+
         self.genome_resource.get_file_url(self.genome_filename)
         self.genome_resource.get_file_url(f"{self.genome_filename}.fai")
 
@@ -490,6 +479,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         return contexts
 
     def run(self, **kwargs):
+        assert self.genome_resource is not None
         args = [
             "vep",
             "-i", str(Path("/work", kwargs["input_file_name"])),
@@ -511,6 +501,38 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
                 str(self.resources_dir): {"bind": "/resources", "mode": "ro"},
             },
         )
+
+    def open(self) -> Annotator:
+        assert self.genome_resource is not None
+        assert self.gene_models_resource is not None
+
+        self.genome_filename = \
+            self.genome_resource.get_config()["filename"]
+
+        gtf_file_name = self.gene_models_resource.resource_id.replace("/", "_")
+
+        self.gtf_path = self.resources_dir / f"{gtf_file_name}.gtf"
+        self.gtf_path_gz = self.gtf_path.with_suffix(
+                f"{self.gtf_path.suffix}.gz",
+            )
+
+        if not self.gtf_path_gz.exists():
+            gene_models = build_gene_models_from_resource(
+                self.gene_models_resource,
+            )
+
+            gene_models.load()
+            gtf_content = gene_models_to_gtf(gene_models).getvalue()
+
+            self.gtf_path.write_text(gtf_content)
+
+            subprocess.run(["bgzip", str(self.gtf_path)], check=True)
+            subprocess.run(
+                ["tabix", "-p", "gff", str(self.gtf_path_gz)],
+                check=True,
+            )
+
+        return super().open()
 
 
 def build_vep_cache_annotator(
