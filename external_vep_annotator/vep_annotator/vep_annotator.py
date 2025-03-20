@@ -225,12 +225,13 @@ class VEPAnnotatorBase(DockerAnnotator):
                 context[col_name].append(col)
 
         for context in contexts:
-            gene_consequences = []
-            for gene, consequence in zip(
-                context["SYMBOL"], context["Consequence"], strict=True,
-            ):
-                gene_consequences.append(f"{gene}:{consequence}")
-            context["gene_consequence"] = gene_consequences
+            gene_consequences = set()
+            gene_consequences.update([
+                f"{gene}:{consequence}"
+                for gene, consequence in
+                zip(context["SYMBOL"], context["Consequence"], strict=True)
+            ])
+            context["gene_consequence"] = list(gene_consequences)
 
             consequences: list[str] = []
             for conseq in context["Consequence"]:
