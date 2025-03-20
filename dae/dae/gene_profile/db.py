@@ -67,21 +67,20 @@ class GeneProfileDB:
 
         Returns None if gene_symbol is not found within the DB.
         """
-        query = select("*").from_(self.table)
-        query = query.where(
-            column(
-                "symbol_name",
-                table=self.table.alias_or_name,
-            ).ilike(f"%{gene_symbol}%"),
-        )
-        query = query.limit(self.PAGE_SIZE)
+        query = select("*") \
+            .from_(self.table) \
+            .where(f"symbol_name = '{gene_symbol}'")
         with duckdb.connect(f"{self.dbfile}", read_only=True) as connection:
             rows = connection.execute(
                 to_duckdb_transpile(query),
             ).df().replace([np.nan], [None]).to_dict("records")
-            if len(rows) == 0:
-                return None
-            return self.gp_from_table_row_single_view(rows[0])
+        if len(rows) == 0:
+            return None
+        if len(rows) > 1:
+            raise ValueError(
+                f"More than one gene profile with symbol name {gene_symbol}",
+            )
+        return self.gp_from_table_row_single_view(rows[0])
 
     def gp_from_table_row(self, row: dict) -> dict:
         # pylint: disable=too-many-locals
