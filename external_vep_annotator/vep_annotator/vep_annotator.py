@@ -276,6 +276,17 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
             pipeline, info,
         )
 
+        info.documentation += textwrap.dedent(f"""
+
+            Ensembl VEP plugin annotator that annotates using VEP through
+            a docker container with a prepared VEP cache.
+
+            This annotator is configured to run with VEP version {self._vep_version}
+
+        <a href="https://iossifovlab.com/gpfuserdocs/administration/annotation.html#vep-annotators" target="_blank">More info</a>
+
+        """)  # noqa
+
     def _attribute_type_descs(self) -> dict[str, tuple[str, str]]:
         return full_attributes
 
