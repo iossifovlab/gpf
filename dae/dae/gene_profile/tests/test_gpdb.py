@@ -90,6 +90,21 @@ def test_gpdb_insert_and_get_gp(
     }
 
 
+def test_gpdb_get_gp_by_exact_symbol(
+        gp_gpf_instance: GPFInstance,
+        gpdb_write: GeneProfileDBWriter,
+        sample_gp: GPStatistic) -> None:
+
+    gpdb_write.insert_gp(sample_gp)
+    sample_gp.gene_symbol = "CHD"
+    gpdb_write.insert_gp(sample_gp)
+
+    gp = gp_gpf_instance._gene_profile_db.get_gp("CHD")
+
+    assert gp is not None
+    assert gp.gene_symbol == "CHD"
+
+
 def test_gpdb_sort(
         gp_gpf_instance: GPFInstance,
         gpdb_write: GeneProfileDBWriter,
