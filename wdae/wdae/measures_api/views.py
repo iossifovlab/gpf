@@ -216,15 +216,13 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
             if measure.histogram_config is None:
                 categorical_hist_conf = \
                     CategoricalHistogramConfig.default_config()
+                categorical_hist_conf.label_rotation = 90
+                categorical_hist_conf.y_log_scale = enable_log
             else:
                 categorical_hist_conf = cast(
                     CategoricalHistogramConfig,
                     measure.histogram_config,
                 )
-
-            if categorical_hist_conf.is_default:
-                categorical_hist_conf.label_rotation = 90
-                categorical_hist_conf.y_log_scale = enable_log
 
             result["histogram"] = CategoricalHistogram(
                 categorical_hist_conf,

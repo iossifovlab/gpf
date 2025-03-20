@@ -125,7 +125,7 @@ class CategoricalHistogramConfig:
     y_log_scale: bool = False
     label_rotation: int = 0
     plot_function: str | None = None
-    is_default: bool = False
+    enforce_type: bool = True
 
     def to_dict(self) -> dict[str, Any]:
         """Transform categorical histogram config to dict."""
@@ -134,7 +134,6 @@ class CategoricalHistogramConfig:
             "value_order": self.value_order,
             "y_log_scale": self.y_log_scale,
             "label_rotation": self.label_rotation,
-            "is_default": self.is_default,
         }
         if self.displayed_values_count != DEFAULT_DISPLAYED_VALUES_COUNT:
             result["displayed_values_count"] = self.displayed_values_count
@@ -147,7 +146,7 @@ class CategoricalHistogramConfig:
 
     @staticmethod
     def default_config() -> CategoricalHistogramConfig:
-        return CategoricalHistogramConfig(is_default=True)
+        return CategoricalHistogramConfig(enforce_type=False)
 
     @staticmethod
     def from_dict(parsed: dict[str, Any]) -> CategoricalHistogramConfig:
@@ -178,7 +177,6 @@ class CategoricalHistogramConfig:
         y_log_scale = parsed.get("y_log_scale", False)
         plot_function = parsed.get("plot_function")
         label_rotation = parsed.get("label_rotation", 0)
-        is_default = parsed.get("is_default", True)
 
         return CategoricalHistogramConfig(
             displayed_values_count=displayed_values_count,
@@ -187,7 +185,7 @@ class CategoricalHistogramConfig:
             y_log_scale=y_log_scale,
             plot_function=plot_function,
             label_rotation=label_rotation,
-            is_default=is_default,
+            enforce_type=True,
         )
 
 
@@ -560,7 +558,7 @@ class CategoricalHistogram(Statistic):
             "Collects values for categorical histogram.",
         )
         self.config = config
-        self.is_default = config.is_default
+        self.enforce_type = config.enforce_type
 
         if counter is not None:
             self._counter = Counter(counter)
@@ -586,7 +584,7 @@ class CategoricalHistogram(Statistic):
                 f"bad <{value}>",
             )
         self._counter[value] += count
-        if self.is_default and \
+        if not self.enforce_type and \
                 len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_LIMIT:
             raise HistogramError(
                 f"Too many unique values {len(self._counter)} "
@@ -599,7 +597,7 @@ class CategoricalHistogram(Statistic):
         assert self.config == other.config
         # pylint: disable=protected-access
         self._counter += other._counter  # noqa: SLF001
-        if self.is_default and \
+        if not self.enforce_type and \
                 len(self._counter) > CategoricalHistogram.UNIQUE_VALUES_LIMIT:
             raise HistogramError(
                 f"Can not merge categorical histograms; "

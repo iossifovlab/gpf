@@ -1200,21 +1200,18 @@ def merge_histogram_configs(
         if current_config is None:
             current_config = histogram_config.to_dict()
         current_config.update(update_config)
-        current_config["is_default"] = False
 
     if f"{instrument_name}.*" in configs_dict:
         update_config = configs_dict[f"{instrument_name}.*"]
         if current_config is None:
             current_config = histogram_config.to_dict()
         current_config.update(update_config)
-        current_config["is_default"] = False
 
     if f"*.{measure_name}" in configs_dict:
         update_config = configs_dict[f"*.{measure_name}"]
         if current_config is None:
             current_config = histogram_config.to_dict()
         current_config.update(update_config)
-        current_config["is_default"] = False
 
     if f"{instrument_name}.{measure_name}" in configs_dict:
         update_config = configs_dict[
@@ -1223,7 +1220,6 @@ def merge_histogram_configs(
         if current_config is None:
             current_config = histogram_config.to_dict()
         current_config.update(update_config)
-        current_config["is_default"] = False
 
     if current_config is None:
         return current_config
