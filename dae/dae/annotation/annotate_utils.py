@@ -1,11 +1,12 @@
 import argparse
+import gzip
 import os
 import sys
 from abc import abstractmethod
 from pathlib import Path
 from typing import Any
 
-from pysam import TabixFile
+from pysam import TabixFile, tabix_index
 
 from dae.annotation.annotation_config import RawAnnotatorsConfig
 from dae.annotation.annotation_factory import (
@@ -18,6 +19,14 @@ from dae.annotation.annotation_pipeline import (
     ReannotationPipeline,
 )
 from dae.annotation.context import CLIAnnotationContext
+from dae.annotation.record_to_annotatable import (
+    DaeAlleleRecordToAnnotatable,
+    RecordToCNVAllele,
+    RecordToPosition,
+    RecordToRegion,
+    RecordToVcfAllele,
+    build_record_to_annotatable,
+)
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.genomic_context import (
     get_registered_genomic_context,
@@ -79,6 +88,60 @@ def stringify(value: Any, *, vcf: bool = False) -> str:
     if isinstance(value, bool):
         return "yes" if value else ""
     return str(value)
+
+
+def _read_header(filepath: str, separator: str = "\t") -> list[str]:
+    """Extract header from columns file."""
+    if filepath.endswith(".gz"):
+        file = gzip.open(filepath, "rt")  # noqa: SIM115
+    else:
+        file = open(filepath, "r")  # noqa: SIM115
+    with file:
+        header = file.readline()
+    return [c.strip() for c in header.split(separator)]
+
+
+def produce_tabix_index(filepath: str, args: Any = None) -> None:
+    """Produce a tabix index file for the given variants file."""
+
+    filepath = filepath.rstrip(".gz")
+
+    if filepath.endswith(".vcf"):
+        tabix_index(filepath, preset="vcf")
+        return
+
+    header = _read_header(filepath)
+    line_skip = 0 if header[0].startswith("#") else 1
+    header = [c.strip("#") for c in header]
+    record_to_annotatable = build_record_to_annotatable(
+        vars(args) if args is not None else {},
+        set(header),
+    )
+    if isinstance(record_to_annotatable, (RecordToRegion,
+                                          RecordToCNVAllele)):
+        seq_col = header.index(record_to_annotatable.chrom_col)
+        start_col = header.index(record_to_annotatable.pos_beg_col)
+        end_col = header.index(record_to_annotatable.pos_end_col)
+    elif isinstance(record_to_annotatable, RecordToVcfAllele):
+        seq_col = header.index(record_to_annotatable.chrom_col)
+        start_col = header.index(record_to_annotatable.pos_col)
+        end_col = start_col
+    elif isinstance(
+            record_to_annotatable,
+            (RecordToPosition, DaeAlleleRecordToAnnotatable)):
+        seq_col = header.index(record_to_annotatable.chrom_column)
+        start_col = header.index(record_to_annotatable.pos_column)
+        end_col = start_col
+    else:
+        raise TypeError(
+            "Could not generate tabix index: record"
+            f" {type(record_to_annotatable)} is of unsupported type.")
+    tabix_index(filepath,
+                seq_col=seq_col,
+                start_col=start_col,
+                end_col=end_col,
+                line_skip=line_skip,
+                force=True)
 
 
 class AnnotationTool:

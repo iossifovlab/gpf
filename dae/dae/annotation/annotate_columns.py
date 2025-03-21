@@ -10,13 +10,14 @@ from contextlib import closing
 from pathlib import Path
 from typing import Any, cast
 
-from pysam import TabixFile, tabix_compress, tabix_index
+from pysam import TabixFile
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotate_utils import (
     AnnotationTool,
     produce_partfile_paths,
     produce_regions,
+    produce_tabix_index,
     stringify,
 )
 from dae.annotation.annotation_config import (
@@ -30,18 +31,12 @@ from dae.annotation.annotation_pipeline import (
 )
 from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.record_to_annotatable import (
-    DaeAlleleRecordToAnnotatable,
     RecordToAnnotable,
-    RecordToCNVAllele,
-    RecordToPosition,
-    RecordToRegion,
-    RecordToVcfAllele,
     add_record_to_annotable_arguments,
     build_record_to_annotatable,
 )
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.reference_genome import (
-    ReferenceGenome,
     build_reference_genome_from_resource,
 )
 from dae.genomic_resources.repository_factory import (
@@ -78,60 +73,10 @@ def read_input(
     return text_file, text_file, header
 
 
-def produce_tabix_index(
-    filepath: str, args: Any, ref_genome: ReferenceGenome | None,
-) -> None:
-    """Produce a tabix index file for the given variants file."""
-    header = read_header(filepath)
-    line_skip = 0 if header[0].startswith("#") else 1
-    header = [c.strip("#") for c in header]
-    record_to_annotatable = build_record_to_annotatable(
-        vars(args), set(header), ref_genome)
-    if isinstance(record_to_annotatable, (RecordToRegion,
-                                          RecordToCNVAllele)):
-        seq_col = header.index(record_to_annotatable.chrom_col)
-        start_col = header.index(record_to_annotatable.pos_beg_col)
-        end_col = header.index(record_to_annotatable.pos_end_col)
-    elif isinstance(record_to_annotatable, RecordToVcfAllele):
-        seq_col = header.index(record_to_annotatable.chrom_col)
-        start_col = header.index(record_to_annotatable.pos_col)
-        end_col = start_col
-    elif isinstance(
-            record_to_annotatable,
-            (RecordToPosition, DaeAlleleRecordToAnnotatable)):
-        seq_col = header.index(record_to_annotatable.chrom_column)
-        start_col = header.index(record_to_annotatable.pos_column)
-        end_col = start_col
-    else:
-        raise TypeError(
-            "Could not generate tabix index: record"
-            f" {type(record_to_annotatable)} is of unsupported type.")
-    tabix_index(filepath,
-                seq_col=seq_col,
-                start_col=start_col,
-                end_col=end_col,
-                line_skip=line_skip,
-                force=True)
-
-
-def read_header(filepath: str, separator: str = "\t") -> list[str]:
-    """Extract header from file."""
-    if filepath.endswith(".gz"):
-        file = gzip.open(filepath, "rt")  # noqa: SIM115
-    else:
-        file = open(filepath, "r")  # noqa: SIM115
-
-    with file:
-        header = file.readline()
-
-    return [c.strip() for c in header.split(separator)]
-
-
 def combine(
     args: Any,
     pipeline_config: RawPipelineConfig,
     grr_definition: dict | None,
-    ref_genome_id: str | None,
     partfile_paths: list[str], out_file_path: str,
 ) -> None:
     """Combine annotated region parts into a single VCF file."""
@@ -141,11 +86,6 @@ def combine(
         allow_repeated_attributes=args.allow_repeated_attributes,
         work_dir=Path(args.work_dir),
     )
-    if ref_genome_id is not None:
-        genome = build_reference_genome_from_resource(
-            grr.get_resource(ref_genome_id))
-    else:
-        genome = None
     annotation_attributes = [
         attr.name for attr in pipeline.get_attributes()
         if not attr.internal
@@ -156,7 +96,6 @@ def combine(
         hcs = header_line.strip("\r\n").split(args.input_separator)
         header = args.output_separator.join(hcs + annotation_attributes)
 
-    compress_output = out_file_path.endswith(".gz")
     out_file_path = out_file_path.rstrip(".gz")
 
     with open(out_file_path, "wt") as out_file:
@@ -169,23 +108,9 @@ def combine(
                     continue
                 out_file.write(content)
                 out_file.write("\n")
+
     for partfile_path in partfile_paths:
         os.remove(partfile_path)
-
-    if compress_output:
-        compressed_output = f"{out_file_path}.gz"
-        try:
-            tabix_compress(out_file_path, compressed_output, force=True)
-        except (TypeError, OSError):
-            logger.exception("Could not compress output")
-        else:
-            os.remove(out_file_path)
-            return
-
-        try:
-            produce_tabix_index(compressed_output, args, genome)
-        except (TypeError, OSError):
-            logger.exception("Could not produce tabix file for output")
 
 
 class AnnotateColumnsTool(AnnotationTool):
@@ -362,8 +287,6 @@ class AnnotateColumnsTool(AnnotationTool):
                     lnum, line)
                 errors.append((lnum, line, str(ex)))
 
-        if len(annotatables) == 0:
-            return
         try:
             if isinstance(pipeline, ReannotationPipeline):
                 annotations = pipeline.batch_annotate(
@@ -378,17 +301,17 @@ class AnnotateColumnsTool(AnnotationTool):
         except Exception as ex:  # pylint: disable=broad-except
             logger.exception("Error during batch annotation")
             errors.append((-1, -1, str(ex)))
-
-        for record, annotation in zip(records, annotations, strict=True):
-            for col in annotation_columns:
-                record[col] = annotation[col]
-            yield [stringify(val) for val in record.values()]
-
-        if len(errors) > 0:
-            logger.error("there were errors during the import")
-            for lnum, line, error in errors:
-                logger.error("line %s: %s", lnum, line)
-                logger.error("\t%s", error)
+        else:
+            for record, annotation in zip(records, annotations, strict=True):
+                for col in annotation_columns:
+                    record[col] = annotation[col]
+                yield [stringify(val) for val in record.values()]
+        finally:
+            if len(errors) > 0:
+                logger.error("there were errors during the import")
+                for lnum, line, error in errors:
+                    logger.error("line %s: %s", lnum, line)
+                    logger.error("\t%s", error)
 
     @staticmethod
     def single_annotate(
@@ -468,26 +391,25 @@ class AnnotateColumnsTool(AnnotationTool):
                      self.ref_genome_id, path, region],
                     []))
 
-            self.task_graph.create_task(
+            combine_task = self.task_graph.create_task(
                 "combine",
                 combine,
                 [self.args, self.pipeline.raw, self.grr.definition,
-                 self.ref_genome_id, file_paths, self.output],
+                 file_paths, self.output],
                 region_tasks)
+
+            self.task_graph.create_task(
+                "compress_and_tabix",
+                produce_tabix_index,
+                [self.output],
+                [combine_task])
         else:
-            annotate_task = self.task_graph.create_task(
+            self.task_graph.create_task(
                 "annotate_all",
                 AnnotateColumnsTool.annotate,
                 [self.args, self.pipeline.raw, self.grr.definition,
                  self.ref_genome_id, self.output, None],
                 [])
-
-            self.task_graph.create_task(
-                "combine",
-                combine,
-                [self.args, self.pipeline.raw, self.grr.definition,
-                 self.ref_genome_id, [self.output], self.output],
-                [annotate_task])
 
 
 def cli(raw_args: list[str] | None = None) -> None:

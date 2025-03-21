@@ -10,7 +10,6 @@ from pathlib import Path
 from pysam import (
     TabixFile,
     VariantFile,
-    tabix_index,  # pylint: disable=no-name-in-module
 )
 
 from dae.annotation.annotatable import VCFAllele
@@ -18,6 +17,7 @@ from dae.annotation.annotate_utils import (
     AnnotationTool,
     produce_partfile_paths,
     produce_regions,
+    produce_tabix_index,
     stringify,
 )
 from dae.annotation.annotation_config import RawAnnotatorsConfig
@@ -91,6 +91,8 @@ def combine(
     grr = build_genomic_resource_repository(definition=grr_definition)
     pipeline = build_annotation_pipeline(pipeline_config, grr)
 
+    output_file_path = output_file_path.rstrip(".gz")
+
     with closing(VariantFile(input_file_path)) as input_file:
         update_header(input_file, pipeline)
         with closing(
@@ -100,7 +102,6 @@ def combine(
                 partfile = VariantFile(partfile_path)
                 for rec in partfile.fetch():
                     output_file.write(rec)
-        tabix_index(output_file_path, preset="vcf")
 
     for partfile_path in partfile_paths:
         os.remove(partfile_path)
@@ -266,20 +267,13 @@ class AnnotateVCFTool(AnnotationTool):
 
         if not tabix_index_filename(self.args.input):
             assert self.grr is not None
-            annotate_all_task = self.task_graph.create_task(
+            self.task_graph.create_task(
                 "all_variants_annotate",
                 AnnotateVCFTool.annotate,
                 [self.args, raw_pipeline_config,
                  self.grr.definition, self.output,
                  None],
                 [],
-            )
-            self.task_graph.create_task(
-                "combine",
-                combine,
-                [self.args.input, self.pipeline.raw,
-                self.grr.definition, self.output, self.output],
-                [annotate_all_task],
             )
         else:
             with closing(TabixFile(self.args.input)) as pysam_file:
@@ -301,13 +295,18 @@ class AnnotateVCFTool(AnnotationTool):
                 ))
 
             assert self.grr is not None
-            self.task_graph.create_task(
+            combine_task = self.task_graph.create_task(
                 "combine",
                 combine,
                 [self.args.input, self.pipeline.raw,
                 self.grr.definition, file_paths, self.output],
                 region_tasks,
             )
+            self.task_graph.create_task(
+                "compress_and_tabix",
+                produce_tabix_index,
+                [self.output],
+                [combine_task])
 
 
 def cli(raw_args: list[str] | None = None) -> None:
