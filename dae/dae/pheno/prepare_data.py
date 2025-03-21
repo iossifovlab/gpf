@@ -317,6 +317,7 @@ class PreparePhenoBrowserBase:
         return False
 
     def collect_child_configs(self, study: PhenotypeGroup) -> dict[str, dict]:
+        """Collect child configurations"""
         configs = {}
         for child in study.children:
             if child.config["type"] == "study":
