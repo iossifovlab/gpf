@@ -23,7 +23,7 @@ dependencies:
   - numpy=2.2.1
   - scipy=1.15.0
   - pandas=2.2.3
-  - pyarrow=16.1
+  - pyarrow=19.0.1
   - scikit-learn=1.5
   - matplotlib-base=3.8
   - seaborn=0.13
