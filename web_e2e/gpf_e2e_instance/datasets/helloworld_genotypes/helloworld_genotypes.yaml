@@ -26,24 +26,29 @@ genotype_browser:
   - ins
   - del
   - complex
+  column_groups:
+    pheno:
+      name: Phenotype measures
+      columns:
+        - age
+        - nviq
   columns:
     phenotype:
-      pheno_measure_1:
+      age:
         role: prb
-        source: instrument_1.measure_1
-        name: "Phenotype Measure 1"
-      pheno_measure_2:
+        source: instrument_1.age
+        name: "Age at evaluation (months)"
+      nviq:
         role: prb
-        source: instrument_1.measure_2
-        name: "Phenotype Measure 2"
+        source: instrument_1.iq
+        name: "Nonverbal IQ"
   preview_columns:
     - family
     - variant
     - genotype
     - effect
     - gene_scores
-    - pheno_measure_1
-    - pheno_measure_2
+    - pheno
 denovo_gene_sets:
   enabled: false
 common_report:

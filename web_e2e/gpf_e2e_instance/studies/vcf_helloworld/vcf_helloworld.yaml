@@ -5,24 +5,29 @@ has_cnv: false
 has_transmitted: true
 genotype_browser:
   enabled: true
+  column_groups:
+    pheno:
+      name: Phenotype measures
+      columns:
+        - age
+        - nviq
   columns:
     phenotype:
-      pheno_measure_1:
+      age:
         role: prb
-        source: instrument_1.measure_1
-        name: "Phenotype Measure 1"
-      pheno_measure_2:
+        source: instrument_1.age
+        name: "Age at evaluation (months)"
+      nviq:
         role: prb
-        source: instrument_1.measure_2
-        name: "Phenotype Measure 2"
+        source: instrument_1.iq
+        name: "Nonverbal IQ"
   preview_columns:
     - family
     - variant
     - genotype
     - effect
     - gene_scores
-    - pheno_measure_1
-    - pheno_measure_2
+    - pheno
 phenotype_data: pheno_helloworld
 phenotype_tool: true
 phenotype_browser: true
