@@ -29,22 +29,6 @@ rm -rf OUTPUT
 import_tools import_project.yaml -f -vv -j 1
 cd -
 
-# import phenotype comp data
-cd ${WD}/gpf_e2e_instance/input_data/phenotypes/comp-data
-rm -rf .task-progress .task-log work
-
-pheno_import --force -j 1 -v -p comp_pheno.ped \
-    -i instruments/ --data-dictionary comp_pheno_data_dictionary.tsv \
-    -o ${WD}/gpf_e2e_instance/phenotype_storage/comp_pheno \
-    --person-column personId \
-    --pheno-id comp_pheno \
-    --regression comp_pheno_regressions.yaml
-
-build_pheno_browser -j 1 --force comp_pheno \
-    --gpf-instance ${WD}/gpf_e2e_instance/gpf_instance.yaml --no-cache
-
-cd -
-
 # import helloworld data
 cd ${WD}/gpf_e2e_instance/input_data/genotypes/helloworld
 rm -rf OUTPUT
