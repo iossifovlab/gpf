@@ -6,7 +6,7 @@ test.describe('Save query common tests', () => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Genotype browser');
     await expect(page.locator('#save-query-dropdown')).toHaveAttribute('class', 'dropdown-menu');
     await page.locator('#save-query-dropdown-button').click();
   });
@@ -28,7 +28,7 @@ test.describe('Save query tests', () => {
   });
 
   test('should open save query dropdown menu after pressing "Share/save query" button', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Genotype browser');
     await expect(page.locator('#save-query-dropdown')).toHaveAttribute('class', /dropdown-menu/);
 
     await page.locator('#save-query-dropdown-button').click();
@@ -37,7 +37,7 @@ test.describe('Save query tests', () => {
 
   test('should open save query dropdown menu, click on the copy link button ' +
      'and check whether the "Copied!" tooltip appears', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Genotype browser');
     await page.locator('#save-query-dropdown-button').click();
     await expect(page.locator('#copy-link-button')).toBeVisible();
 
@@ -47,7 +47,7 @@ test.describe('Save query tests', () => {
   });
 
   test('should save a query, load it, open all tools tabs and delete the query', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Genotype browser');
     await page.locator('#save-query-dropdown-button').click();
     await page.locator('gpf-save-query #name').fill('TestLoadAndDeleteQuery');
     await page.locator('gpf-save-query #save-button').click();
@@ -75,7 +75,7 @@ test.describe('Save query tests', () => {
 
   test('should navigate to genotype browser, check all effect types checkboxes, save a query, ' +
   'load it and validate that all effect types checkboxes are checked', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Genotype browser');
     await page.locator('gpf-effect-types').getByText('All').click();
     await page.locator('#save-query-dropdown-button').click();
     await page.locator('gpf-save-query #name').fill('CheckedSavedQuery');
@@ -110,7 +110,7 @@ test.describe('Save query tests', () => {
 
   test('should navigate to genotype browser, check all effect types checkboxes, click on "Save/share query" button, ' +
   'copy the share link, load it and validate that all effect types checkboxes are checked', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Genotype browser');
     await page.locator('gpf-effect-types').getByText('All').click();
     await page.locator('#save-query-dropdown-button').click();
 

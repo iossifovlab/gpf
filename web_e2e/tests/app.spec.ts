@@ -118,34 +118,34 @@ test.describe('App user access rights tests', () => {
   });
 
   test('should properly disable tools based on access rights', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Dataset Description');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Dataset Description');
     await expect(page.locator('li').filter({hasText: 'Gene Browser'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Phenotype Browser'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Enrichment Tool'})).toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Enrichment Tool'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Phenotype Tool'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Dataset Description'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).toHaveClass('nav-item disabled-tool');
 
 
     await utils.loginAdmin(page);
     await expect(page.locator('li').filter({hasText: 'Gene Browser'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Phenotype Browser'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Enrichment Tool'})).toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Enrichment Tool'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Phenotype Tool'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Dataset Description'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).toHaveClass('nav-item disabled-tool');
 
     await utils.logout(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Dataset Description');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Dataset Description');
     await expect(page.locator('li').filter({hasText: 'Gene Browser'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Phenotype Browser'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Enrichment Tool'})).toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Enrichment Tool'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Phenotype Tool'})).not.toHaveClass('nav-item disabled-tool');
     await expect(page.locator('li').filter({hasText: 'Dataset Description'})).not.toHaveClass('nav-item disabled-tool');
-    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).toHaveClass('nav-item disabled-tool');
   });
 
   test('should login admin and check whether the datasets have the correct opacity value', async({ page }) => {
@@ -171,8 +171,8 @@ test.describe('App user access rights tests', () => {
     }
   });
 
-  test('should login admin and give researcher access rights for comp_vcf, ' +
-       'then login researcher and verify his rights', async({ page }) => {
+  test('should login admin and give user access rights for Hello World Genotypes, ' +
+       'then login user and verify his rights', async({ page }) => {
     await utils.loginAdmin(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
@@ -183,8 +183,9 @@ test.describe('App user access rights tests', () => {
     await page.locator(`[id="${email}-groups-cell"]`).getByRole(
       'button', { name: 'Add' }
     ).click();
-    await page.getByRole('textbox', { name: 'Search' }).fill('COMP_genotypes');
-    await page.locator('button.add-item-button').filter({ hasText: 'COMP_genotypes' }).click();
+    await page.getByRole('textbox', { name: 'Search' }).focus();
+    await page.keyboard.type('helloworld_genotypes');
+    await page.locator('button.add-item-button').filter({ hasText: 'helloworld_genotypes' }).click();
     await expect(page.locator(`[id="${email}-password-cell"]`)).toBeEmpty();
 
     await page.locator(`[id="${email}-reset-password-button"] > button`).click();
@@ -202,30 +203,30 @@ test.describe('App user access rights tests', () => {
 
     await utils.login(page, email, userData.normal.password + '!!__3456');
 
-    await utils.navigateToDataset(page, utils.datasetIds.compVcfLiftover);
-    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
-
     await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
-    await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).not.toHaveClass('nav-item disabled-tool');
-
-    await utils.navigateToDataset(page, utils.datasetIds.compDenovoLiftover);
-    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('#register-alert')).not.toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.iossifov2014Liftover);
-    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('#register-alert')).toBeVisible();
 
-    await utils.navigateToDataset(page, utils.datasetIds.compGenotypes);
-    await expect(page.locator('li').filter({hasText: 'Genotype Browser'})).not.toHaveClass('nav-item disabled-tool');
+    await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
 
-    await utils.navigateToDataset(page, utils.datasetIds.compAllLiftover);
-    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
+    await utils.navigateToDataset(page, utils.datasetIds.denovoHelloWorld);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.vcfHelloWorld);
+    await expect(page.locator('#register-alert')).not.toBeVisible();
 
     await utils.navigateToDataset(page, utils.datasetIds.multiLiftover);
-    await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).not.toHaveClass('nav-item disabled-tool');
+    await expect(page.locator('#register-alert')).toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.phenoHelloWorld);
+    await expect(page.locator('#register-alert')).toBeVisible();
   });
 
-  test('should login admin and give researcher access rights for ALL Genotypes, ' +
-     'then login researcher and verify his rights', async({ page }) => {
+  test('should login admin and give user access rights for ALL Genotypes, ' +
+     'then login user and verify his rights', async({ page }) => {
     await utils.loginAdmin(page);
     const username = utils.getRandomString();
     const email = `${username}@mail.com`;
@@ -257,23 +258,26 @@ test.describe('App user access rights tests', () => {
     await utils.login(page, email, userData.normal.password + '!!__3456');
     await expect(page.locator('#register-alert')).not.toBeVisible();
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.allGenotypes, 'Genotype Browser');
+    await utils.navigateToDataset(page, utils.datasetIds.allGenotypes);
     await expect(page.locator('#register-alert')).not.toBeVisible();
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compDenovoLiftover, 'Dataset Statistics');
+    await utils.navigateToDataset(page, utils.datasetIds.iossifov2014Liftover);
     await expect(page.locator('#register-alert')).not.toBeVisible();
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Dataset Statistics');
+    await utils.navigateToDataset(page, utils.datasetIds.helloWorldGenotypes);
     await expect(page.locator('#register-alert')).not.toBeVisible();
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compGenotypes, 'Genotype Browser');
+    await utils.navigateToDataset(page, utils.datasetIds.denovoHelloWorld);
     await expect(page.locator('#register-alert')).not.toBeVisible();
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Dataset Statistics');
+    await utils.navigateToDataset(page, utils.datasetIds.vcfHelloWorld);
     await expect(page.locator('#register-alert')).not.toBeVisible();
 
-    await utils.navigateToDatasetPage(page, utils.datasetIds.multiLiftover, 'Dataset Statistics');
+    await utils.navigateToDataset(page, utils.datasetIds.multiLiftover);
     await expect(page.locator('#register-alert')).not.toBeVisible();
+
+    await utils.navigateToDataset(page, utils.datasetIds.phenoHelloWorld);
+    await expect(page.locator('#register-alert')).toBeVisible();
   });
 
   // tests robustness of the authentication process

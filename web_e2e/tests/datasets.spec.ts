@@ -46,10 +46,10 @@ test.describe('Dataset navigation tests', () => {
   test('should change url correctly after clicking on a dataset from the dataset dropdown menu', async({ page }) => {
     const datasets = [
       {id: utils.datasetIds.allGenotypes, url: 'ALL_genotypes'},
-      {id: utils.datasetIds.compGenotypes, url: 'COMP_genotypes'},
-      {id: utils.datasetIds.compDenovoLiftover, url: 'comp_denovo_liftover'},
       {id: utils.datasetIds.helloWorldGenotypes, url: 'helloworld_genotypes'},
-      {id: utils.datasetIds.compPheno, url: 'comp_pheno'},
+      {id: utils.datasetIds.denovoHelloWorld, url: 'denovo_helloworld'},
+      {id: utils.datasetIds.vcfHelloWorld, url: 'vcf_helloworld'},
+      {id: utils.datasetIds.multiLiftover, url: 'multi_liftover'},
       {id: utils.datasetIds.iossifov2014Liftover, url: 'iossifov_2014_liftover'},
       {id: utils.datasetIds.phenoHelloWorld, url: 'pheno_helloworld'}
     ];

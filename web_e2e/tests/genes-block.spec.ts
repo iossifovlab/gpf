@@ -7,7 +7,7 @@ test.describe('Genes block tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
   });
 
   test('should display gene symbols panel', async({ page }) => {
@@ -55,7 +55,7 @@ test.describe('Genes block gene sets names and count tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
   });
     [
         {
@@ -191,64 +191,64 @@ test.describe('Genes block denovo gene set gene symbols tests', () => {
       await expect(page.locator('#hierarchy')).toBeVisible();
       await expect(page.locator('#filters')).toBeVisible();
       await expect(page.locator('#modal-filter-list')).toBeVisible();
-      await expect(page.locator('#dataset-comp_vcf_liftover')).not.toBeVisible();
-      await expect(page.locator('#dataset-comp_denovo_liftover')).not.toBeVisible();
+      await expect(page.locator('#dataset-denovo_helloworld')).not.toBeVisible();
+      await expect(page.locator('#dataset-vcf_helloworld')).not.toBeVisible();
 
-      await page.locator('#expand-COMP_genotypes').click();
-      await expect(page.locator('#dataset-comp_vcf_liftover')).toBeVisible();
-      await expect(page.locator('#dataset-comp_denovo_liftover')).toBeVisible();
+      await page.locator('#expand-helloworld_genotypes').click();
+      await expect(page.locator('#dataset-denovo_helloworld')).toBeVisible();
+      await expect(page.locator('#dataset-vcf_helloworld')).toBeVisible();
 
-      await expect(page.locator('#dataset-COMP_genotypes')).toHaveCSS('opacity', '0.3');
-      await expect(page.locator('#dataset-COMP_genotypes')).toHaveCSS('pointer-events', 'none');
+      await expect(page.locator('#dataset-helloworld_genotypes')).toHaveCSS('opacity', '0.3');
+      await expect(page.locator('#dataset-helloworld_genotypes')).toHaveCSS('pointer-events', 'none');
 
-      await page.locator('#dataset-comp_denovo_liftover').click();
+      await page.locator('#dataset-denovo_helloworld').click();
       await expect(page.locator('#dataset-iossifov_2014_liftover')).toHaveClass('btn-sm text-wrap modified');
       await expect(page.getByText('Affected Status:')).toBeVisible();
 
-      await page.locator('#comp_denovo_liftover-checkbox-affected').click();
-      await page.locator('#comp_denovo_liftover-checkbox-unaffected').click();
+      await page.locator('#denovo_helloworld-checkbox-affected').click();
+      await page.locator('#denovo_helloworld-checkbox-unaffected').click();
 
       await expect(
         page.locator('#modal-filter-list').getByText('iossifov_2014_liftover: status: affected')
       ).toBeVisible();
 
       await expect(
-        page.locator('#modal-filter-list').getByText('comp_denovo_liftover: status: affected')
+        page.locator('#modal-filter-list').getByText('denovo_helloworld: status: affected')
       ).toBeVisible();
 
       await expect(
-        page.locator('#modal-filter-list').getByText('comp_denovo_liftover: status: unaffected')
+        page.locator('#modal-filter-list').getByText('denovo_helloworld: status: unaffected')
       ).toBeVisible();
       await page.mouse.click(0, 0); // close modal
 
       await expect(page.locator('#selected-filter-list')).toBeVisible();
       await expect(page.locator('#selected-filter-list')).toContainText('iossifov_2014_liftover: status: affected');
-      await expect(page.locator('#selected-filter-list')).toContainText('comp_denovo_liftover: status: affected');
-      await expect(page.locator('#selected-filter-list')).toContainText('comp_denovo_liftover: status: unaffected');
+      await expect(page.locator('#selected-filter-list')).toContainText('denovo_helloworld: status: affected');
+      await expect(page.locator('#selected-filter-list')).toContainText('denovo_helloworld: status: unaffected');
 
 
       await page.locator('[id="remove-iossifov_2014_liftover: status: affected"]').click();
-      await page.locator('[id="remove-comp_denovo_liftover: status: affected"]').click();
+      await page.locator('[id="remove-denovo_helloworld: status: affected"]').click();
 
       await expect(page.locator('#selected-filter-list')).not.toContainText('iossifov_2014_liftover: status: affected');
-      await expect(page.locator('#selected-filter-list')).not.toContainText('comp_denovo_liftover: status: affected');
-      await expect(page.locator('#selected-filter-list')).toContainText('comp_denovo_liftover: status: unaffected');
+      await expect(page.locator('#selected-filter-list')).not.toContainText('denovo_helloworld: status: affected');
+      await expect(page.locator('#selected-filter-list')).toContainText('denovo_helloworld: status: unaffected');
 
       await page.getByRole('button', { name: 'Select studies' }).click();
 
-      await expect(page.locator('#comp_denovo_liftover-checkbox-affected')).not.toBeChecked();
-      await expect(page.locator('#comp_denovo_liftover-checkbox-unaffected')).toBeChecked();
+      await expect(page.locator('#denovo_helloworld-checkbox-affected')).not.toBeChecked();
+      await expect(page.locator('#denovo_helloworld-checkbox-unaffected')).toBeChecked();
       await expect(page.locator('#dataset-iossifov_2014_liftover')).toHaveClass('btn-sm text-wrap');
       await expect(
         page.locator('#modal-filter-list').getByText('iossifov_2014_liftover: status: affected')
       ).not.toBeVisible();
 
       await expect(
-        page.locator('#modal-filter-list').getByText('comp_denovo_liftover: status: affected')
+        page.locator('#modal-filter-list').getByText('denovo_helloworld: status: affected')
       ).not.toBeVisible();
 
       await expect(
-        page.locator('#modal-filter-list').getByText('comp_denovo_liftover: status: unaffected')
+        page.locator('#modal-filter-list').getByText('denovo_helloworld: status: unaffected')
       ).toBeVisible();
   });
   test(

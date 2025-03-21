@@ -7,7 +7,7 @@ test.describe('Family filters block tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, datasetIds.compAllLiftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
   });
 
   test('should display family ids panel', async({ page }) => {

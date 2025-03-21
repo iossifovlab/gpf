@@ -6,7 +6,7 @@ test.describe('Inheritance selector tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, datasetIds.compAllLiftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
   });
 
   test('should display error alert when none of the checkboxes are selected', async({ page }) => {
@@ -20,7 +20,7 @@ test.describe('Inheritance selector tests', () => {
   });
 
   test('should check/uncheck affected status checkboxes using "All" and "None" buttons', async({ page }) => {
-    await expect(page.locator('gpf-pedigree-selector .checkbox')).toHaveCount(2);
+    await expect(page.locator('gpf-inheritancetypes .checkbox')).toHaveCount(2);
 
     await page.locator('gpf-inheritancetypes').getByText('None').click();
     await Promise.all(['mendelian', 'denovo'].map(async(type) => {

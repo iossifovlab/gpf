@@ -225,20 +225,20 @@ test.describe('Users management', () => {
 
     await page.locator(`[id="${email}-groups-cell"]`).getByText('Add').click();
     await page.waitForSelector('.add-item-button');
-    await searchInMenu(page, 'comp_all_liftover');
-    await page.waitForSelector('button:text("comp_all_liftover")');
-    await page.getByRole('button', { name: 'comp_all_liftover' }).click();
+    await searchInMenu(page, 'denovo_helloworld');
+    await page.waitForSelector('button:text("denovo_helloworld")');
+    await page.getByRole('button', { name: 'denovo_helloworld' }).click();
 
     await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText(email);
     await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText('any_user');
-    await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText('comp_all_liftover');
-    await expect(page.locator(`[id="${email}-datasets-cell"]`)).toContainText('comp_all_liftover');
+    await expect(page.locator(`[id="${email}-groups-cell"]`)).toContainText('denovo_helloworld');
+    await expect(page.locator(`[id="${email}-datasets-cell"]`)).toContainText('denovo_helloworld');
 
-    await page.locator(`[id="${email}-groups-cell"] #comp_all_liftover-list-item gpf-confirm-button`).click();
+    await page.locator(`[id="${email}-groups-cell"] #denovo_helloworld-list-item gpf-confirm-button`).click();
     await page.getByRole('button', { name: 'Remove', exact: true }).click();
 
-    await expect(page.locator(`[id="${email}-groups-cell"]`)).not.toContainText('comp_all_liftover');
-    await expect(page.locator(`[id="${email}-datasets-cell"]`)).not.toContainText('comp_all_liftover');
+    await expect(page.locator(`[id="${email}-groups-cell"]`)).not.toContainText('denovo_helloworld');
+    await expect(page.locator(`[id="${email}-datasets-cell"]`)).not.toContainText('denovo_helloworld');
   });
 });
 
@@ -536,7 +536,7 @@ test.describe('Datasets management', () => {
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
 
-    const groupName = 'comp_all_liftover';
+    const groupName = 'vcf_helloworld';
 
     // add group to user
     await page.locator(`[id="${email}-groups-cell"]`).getByText('Add').click();
@@ -565,7 +565,7 @@ test.describe('Datasets management', () => {
     await createGroup(page, groupName);
 
     const datasetName1 = 'iossifov_2014_liftover';
-    const datasetName2 = 'comp_all_liftover';
+    const datasetName2 = 'vcf_helloworld';
     await addDatasetToGroup(page, groupName, datasetName1);
     await addDatasetToGroup(page, groupName, datasetName2);
 
@@ -631,7 +631,7 @@ test.describe('Datasets management', () => {
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
 
-    const datasetName = 'comp_denovo_liftover';
+    const datasetName = 'vcf_helloworld';
 
     const groupName = utils.getRandomString();
     await createGroup(page, groupName);
@@ -668,7 +668,7 @@ test.describe('Datasets management', () => {
     const email = `${username}@mail.com`;
     await utils.createUser(page, email, username);
 
-    const datasetName = 'comp_denovo_liftover';
+    const datasetName = 'denovo_helloworld';
 
     const groupName = utils.getRandomString();
     await createGroup(page, groupName);

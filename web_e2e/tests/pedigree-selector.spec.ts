@@ -6,7 +6,7 @@ test.describe('Pedigree selector tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, datasetIds.compAllLiftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.denovoHelloWorld, 'Genotype browser');
   });
 
   test('should display error alert when none of the checkboxes are selected', async({ page }) => {

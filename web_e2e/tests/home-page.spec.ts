@@ -143,10 +143,10 @@ test.describe('Home page tests', () => {
 
 
   test('should navigate to dataset', async({ page }) => {
-    await page.locator('a:text("comp_all")').click();
+    await page.locator('a:text("Hello World Genotypes")').click();
     await expect(page.locator('a:text("Datasets")')).toHaveClass('highlighted-route');
     await expect(page.locator('gpf-home')).not.toBeVisible();
     await expect(page.locator('gpf-gene-browser')).toBeVisible();
-    await expect(page.locator('#datasets-dropdown-menu-button')).toHaveText('comp_all_liftover');
+    await expect(page.locator('#datasets-dropdown-menu-button')).toHaveText('Hello World Genotypes');
   });
 });
