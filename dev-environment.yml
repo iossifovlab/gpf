@@ -9,7 +9,7 @@ channels:
   - bioconda
   - iossifovlab
 dependencies:
-  - dask-kubernetes=2024.9.0
+  - dask-kubernetes=2025.1.1
   - duckdb=1.2.1
   - coverage=7.6
   - pytest=8.3
