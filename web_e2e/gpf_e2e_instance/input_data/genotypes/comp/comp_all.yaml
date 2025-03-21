@@ -1,5 +1,5 @@
 id: comp_all_liftover
-phenotype_data: comp_pheno
+phenotype_data: pheno_helloworld
 phenotype_browser: true
 phenotype_tool: true
 conf_dir: .
