@@ -417,9 +417,10 @@ class NumberHistogram(Statistic):
         if self.config.x_log_scale:
             plt.xscale("log")
 
-        if small_values_description is not None and \
-            large_values_description is not None:
-
+        if (
+            small_values_description is not None
+            and large_values_description is not None
+        ):
             sec = ax.secondary_xaxis(location=0)
             sec.set_ticks(
                 [

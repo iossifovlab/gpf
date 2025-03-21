@@ -1,6 +1,7 @@
 # pylint: disable=too-many-lines
 from __future__ import annotations
 
+import json
 import logging
 import math
 import mimetypes
@@ -20,9 +21,12 @@ from dae.common_reports.family_report import FamiliesReport
 from dae.common_reports.people_counter import PeopleReport
 from dae.genomic_resources.histogram import (
     CategoricalHistogram,
+    CategoricalHistogramConfig,
     Histogram,
+    HistogramConfig,
     NullHistogram,
     NumberHistogram,
+    NumberHistogramConfig,
 )
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import Person
@@ -113,6 +117,8 @@ class Measure:
 
     * `histogram_type` - one of 'number', 'categorical'
 
+    * `histogram_config` - one of HistogramConfig or None
+
     * `description`
 
     * `min_value` - for 'continuous' and 'ordinal' measures
@@ -130,6 +136,7 @@ class Measure:
         self.measure_type: MeasureType = MeasureType.other
         self.value_type: type = str
         self.histogram_type: type[Histogram] = NullHistogram
+        self.histogram_config: HistogramConfig | None = None
         self.values_domain: str | None = None
         self.instrument_name: str | None = None
         self.description: str | None = None
@@ -178,8 +185,20 @@ class Measure:
             mes.value_type = int
         if row["histogram_type"] == "NumberHistogram":
             mes.histogram_type = NumberHistogram
+            if row["histogram_config"] is None:
+                mes.histogram_config = None
+            else:
+                mes.histogram_config = NumberHistogramConfig.from_dict(
+                    json.loads(row["histogram_config"]),
+                )
         elif row["histogram_type"] == "CategoricalHistogram":
             mes.histogram_type = CategoricalHistogram
+            if row["histogram_config"] is None:
+                mes.histogram_config = None
+            else:
+                mes.histogram_config = CategoricalHistogramConfig.from_dict(
+                    json.loads(row["histogram_config"]),
+                )
         else:
             mes.histogram_type = NullHistogram
 
@@ -201,6 +220,7 @@ class Measure:
         result["measureType"] = self.measure_type.name
         result["valueType"] = self.value_type.__name__
         result["histogramType"] = self.histogram_type.__name__
+        result["histogramConfig"] = self.histogram_config
         result["description"] = self.description
         result["defaultFilter"] = self.default_filter
         result["valuesDomain"] = self.values_domain

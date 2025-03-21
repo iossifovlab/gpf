@@ -37,6 +37,14 @@ class InferenceConfig(BaseModel):
     histogram_type: str | None = None
 
 
+class MeasureHistogramConfigs(BaseModel):
+    """Classification histogram configuration class."""
+    model_config = ConfigDict(extra="forbid")
+
+    number_config: dict = {}
+    categorical_config: dict = {}
+
+
 class DataDictionaryConfig(BaseModel):
     """Pydantic model for data dictionary config entries."""
     model_config = ConfigDict(extra="forbid")
@@ -110,6 +118,7 @@ class PhenoImportConfig(BaseModel):
     gpf_instance: GPFInstanceConfig | None = None
     skip_pedigree_measures: bool = False
     inference_config: str | dict[str, InferenceConfig] | None = None
+    histogram_configs: MeasureHistogramConfigs | None = None
     data_dictionary: MeasureDescriptionsConfig | None = None
     study_config: StudyConfig | None = None
 
