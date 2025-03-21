@@ -236,6 +236,7 @@ class VEPAnnotatorBase(DockerAnnotator):
                 zip(context["SYMBOL"], context["Consequence"], strict=True)
             ])
             context["gene_consequence"] = list(gene_consequences)
+            context["gene_consequence"].sort()
 
             consequences: list[str] = []
             for conseq in context["Consequence"]:
@@ -367,9 +368,6 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         self.gene_models_resource = None
         self.genome_resource = None
 
-        self.resources_dir = (self.work_dir / "annotator_resources").absolute()
-        self.resources_dir.mkdir(exist_ok=True)
-
         self.annotator_attributes = effect_attributes
 
         pipeline_context = pipeline.build_pipeline_genomic_context()
@@ -419,6 +417,9 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         <a href="https://iossifovlab.com/gpfuserdocs/administration/annotation.html#vep-annotators" target="_blank">More info</a>
 
         """)  # noqa
+
+        self.resources_dir = (self.work_dir / "annotator_resources").absolute()
+        self.resources_dir.mkdir(exist_ok=True)
 
     def find_gene_models(self) -> GenomicResource:
         """Find gene models from info or genomic context."""
