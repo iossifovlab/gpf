@@ -236,6 +236,7 @@ class VEPAnnotatorBase(DockerAnnotator):
                 zip(context["SYMBOL"], context["Consequence"], strict=True)
             ])
             context["gene_consequence"] = list(gene_consequences)
+            context["gene_consequence"].sort()
 
             consequences: list[str] = []
             for conseq in context["Consequence"]:
