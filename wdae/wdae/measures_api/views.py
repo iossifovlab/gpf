@@ -179,6 +179,7 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
             "measure": measure.measure_id,
             "histogram": None,
         }
+
         if measure.histogram_type is NumberHistogram:
             bars, bins = np.histogram(
                 list(df[pheno_measure].values),
@@ -187,6 +188,8 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
 
             if measure.histogram_config is None:
                 number_hist_conf = NumberHistogramConfig.default_config(None)
+                if min(bars) * 10 < max(bars):
+                    number_hist_conf.y_log_scale = True
             else:
                 number_hist_conf = cast(
                     NumberHistogramConfig,
@@ -208,16 +211,13 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
             for value in measure.domain:
                 counts[value] = len(df[df[pheno_measure] == value])
 
-            enable_log = False
-            values = [value for key, value in counts.items()]
-            if min(values) * 10 < max(values):
-                enable_log = True
-
             if measure.histogram_config is None:
                 categorical_hist_conf = \
                     CategoricalHistogramConfig.default_config()
                 categorical_hist_conf.label_rotation = 90
-                categorical_hist_conf.y_log_scale = enable_log
+                values = [value for key, value in counts.items()]
+                if min(values) * 10 < max(values):
+                    categorical_hist_conf.y_log_scale = True
             else:
                 categorical_hist_conf = cast(
                     CategoricalHistogramConfig,
