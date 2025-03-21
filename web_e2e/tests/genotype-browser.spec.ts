@@ -23,7 +23,7 @@ test.describe('Genotype browser tests', () => {
     await expect(page.locator('gpf-person-filters-block')).toBeVisible();
     await expect(page.locator('gpf-unique-family-variants-filter')).not.toBeVisible();
 
-    await utils.navigateToDatasetPage(page, datasetIds.compGenotypes, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
     await expect(page.locator('gpf-unique-family-variants-filter')).toBeVisible();
   });
 
@@ -43,17 +43,17 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {study: datasetIds.compAllLiftover, count: '10'},
-    {study: datasetIds.compDenovoLiftover, count: '3'},
-    {study: datasetIds.compVcfLiftover, count: '7'},
-    {study: datasetIds.iossifov2014Liftover, count: '0'},
+    {study: datasetIds.helloWorldGenotypes, count: '6'},
+    {study: datasetIds.denovoHelloWorld, count: '6'},
+    {study: datasetIds.vcfHelloWorld, count: '16'},
+    {study: datasetIds.iossifov2014Liftover, count: '8'},
     {study: datasetIds.multiLiftover, count: '0'}
   ].forEach(data => {
     test('should display the correct overview paragraph ' +
-    'when gene symbol is "SAMD11" at /' + data.study + '/browser', async({ page }) => {
+    'when gene symbol is "CHD8" at /' + data.study + '/browser', async({ page }) => {
       await utils.navigateToDatasetPage(page, data.study, 'Genotype browser');
       await page.getByRole('tab', {name: 'Gene symbols'}).click();
-      await page.locator('#text-area').fill('SAMD11');
+      await page.locator('#text-area').fill('CHD8');
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
 
@@ -80,24 +80,19 @@ test.describe('Genotype browser table preview result tests', () => {
 
   [
     {
-      study: datasetIds.compAllLiftover,
+      study: datasetIds.denovoHelloWorld,
       affectedStatus: 'affected',
-      count: '10'
+      count: '16'
     },
     {
-      study: datasetIds.compDenovoLiftover,
+      study: datasetIds.vcfHelloWorld,
       affectedStatus: 'affected',
-      count: '3'
+      count: '20'
     },
     {
-      study: datasetIds.compVcfLiftover,
-      affectedStatus: 'affected',
-      count: '7'
-    },
-    {
-      study: datasetIds.compDenovoLiftover,
+      study: datasetIds.vcfHelloWorld,
       affectedStatus: 'unaffected',
-      count: '0'
+      count: '28'
     }
   ].forEach(data => {
     test('should display the correct overview paragraph when ' +
@@ -151,15 +146,15 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {effectType: 'All', count: '10'},
+    {effectType: 'All', count: '28'},
     {effectType: 'LGDs', count: '0'},
-    {effectType: 'Nonsynonymous', count: '5'},
-    {effectType: 'Coding', count: '10'},
+    {effectType: 'Nonsynonymous', count: '12'},
+    {effectType: 'Coding', count: '16'},
     {effectType: 'UTRs', count: '0'}
   ].forEach(data => {
     test('should display the correct data in overview paragraph' +
         ' where effect types are ' + data.effectType, async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.compAllLiftover, 'Genotype browser');
+      await utils.navigateToDatasetPage(page, datasetIds.vcfHelloWorld, 'Genotype browser');
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
       await page.locator('gpf-effect-types').getByRole('button', {name: data.effectType}).click();
@@ -176,9 +171,9 @@ test.describe('Genotype browser table preview result tests', () => {
       count: '2'
     },
     {
-      study: datasetIds.compAllLiftover,
+      study: datasetIds.denovoHelloWorld,
       inheritanceType: 'denovo',
-      count: '3'
+      count: '16'
     }
   ].forEach(data => {
     test('should display the correct overview paragraph when ' +
@@ -196,26 +191,8 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {study: datasetIds.compDenovoLiftover, count: '3'},
-    {study: datasetIds.compVcfLiftover, count: '0'}
-  ].forEach(data => {
-    test('should display the correct overview paragraph when ' +
-    'inheritance types are denovo at /' + data.study + '/browser', async({ page }) => {
-      await utils.navigateToDatasetPage(page, data.study, 'Genotype browser');
-
-      await page.locator('gpf-inheritancetypes').getByRole('button', {name: 'None'}).click();
-      await page.locator('gpf-inheritancetypes').getByLabel('denovo').click();
-
-      await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
-
-      await page.getByRole('button', { name: 'Table Preview' }).click();
-      await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
-    });
-  });
-
-  [
-    {familyId: 'f1', count: '3'},
-    {familyId: 'f2', count: '3'},
+    {familyId: 'f1', count: '8'},
+    {familyId: 'f2', count: '8'},
     {familyId: 'f3', count: '0'},
   ].forEach(data => {
     test('should display the correct overview paragraph when family id is "' + data.familyId + '"', async({ page }) => {
@@ -334,12 +311,12 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {familyId: 'f1', values: {age: '166.339', iq: '104.911'}},
-    {familyId: 'f2', values: {age: '111.538', iq: '66.694'}},
+    {familyId: 'f1', values: {age: '166.33975219726562', iq: '104.9118881225586'}},
+    {familyId: 'f2', values: {age: '111.53800201416016', iq: '66.6941146850586'}},
   ].forEach(data => {
     test('should display the correct age and iq values in the measures column for "'
     + data.familyId + '" family', async({ page }) => {
-      await utils.navigateToDatasetPage(page, datasetIds.compAllLiftover, 'Genotype browser');
+      await utils.navigateToDatasetPage(page, datasetIds.vcfHelloWorld, 'Genotype browser');
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
 
@@ -348,12 +325,12 @@ test.describe('Genotype browser table preview result tests', () => {
 
       await page.getByRole('button', { name: 'Table Preview' }).click();
       await expect(
-        page.locator('gpf-table-view-cell:nth-child(8) gpf-genotype-preview-field').first()
+        page.locator('gpf-table-view-cell:nth-child(6)').nth(0)
       ).toContainText(data.values.age);
 
       await expect(
-        page.locator('gpf-table-view-cell:nth-child(8) gpf-genotype-preview-field').nth(2)
-      ).toContainText(data.values.age);
+        page.locator('gpf-table-view-cell:nth-child(6)').nth(1)
+      ).toContainText(data.values.iq);
     });
   });
 

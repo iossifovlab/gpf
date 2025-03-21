@@ -8,17 +8,17 @@ const geneScoresData = [
   {
     desc: 'SFARI gene score - Evidence strength supporting a gene\'s association with autism',
     inputField: false,
-    allVariants: '10'
+    allVariants: '6'
   },
   {
     desc: 'RVIS rank - Gene rank after sorting by RVIS intolerance score',
     inputField: true,
-    allVariants: '0'
+    allVariants: '11'
   },
   {
     desc: 'pLI - Probability of Loss-of-Function Intolerance',
     inputField: true,
-    allVariants: '10'
+    allVariants: '13'
   }
 ];
 
@@ -27,7 +27,7 @@ test.describe('Gene scores tests', () => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
   });
 
   test('should display gene scores panel and dropdown', async({ page }) => {
@@ -79,7 +79,7 @@ test.describe('Gene scores tests', () => {
   });
 
   test('should have working from/to step up/down buttons in ExAC pLI', async({ page }) => {
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
     await page.locator('#gene-scores').click();
     await page.locator('gpf-gene-scores select').selectOption('pLI - Probability of Loss-of-Function Intolerance');
 
@@ -109,7 +109,7 @@ test.describe('Gene scores tests', () => {
 
     geneScoresData.forEach(geneScore => {
       test(`should filter variants when "${geneScore.desc}" gene score is selected`, async({ page }) => {
-        await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Genotype browser');
+        await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
         await page.click('#gene-scores');
         await page.locator('gpf-gene-scores select').selectOption(geneScore.desc);
 
