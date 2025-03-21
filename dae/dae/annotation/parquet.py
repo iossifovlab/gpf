@@ -111,9 +111,10 @@ def annotate_parquet(
     for variant in loader.fetch_summary_variants(region=region_obj):
         for allele in variant.alt_alleles:
             if isinstance(pipeline, ReannotationPipeline):
-                result = pipeline.annotate_summary_allele(allele)
                 for attr in pipeline.attributes_deleted:
                     del allele.attributes[attr]
+                result = pipeline.annotate(allele.get_annotatable(),
+                                           allele.attributes)
             else:
                 result = pipeline.annotate(allele.get_annotatable())
             for attr in internal_attributes:

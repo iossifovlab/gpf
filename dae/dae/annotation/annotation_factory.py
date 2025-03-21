@@ -170,7 +170,8 @@ def build_annotation_pipeline(
     )
 
     if config_old_raw is not None:
-        pipeline_old = load_pipeline_from_yaml(config_old_raw, grr)
+        pipeline_old = load_pipeline_from_yaml(config_old_raw, grr,
+                                               work_dir=work_dir)
         pipeline = ReannotationPipeline(pipeline, pipeline_old) \
             if not full_reannotation \
             else FullReannotationPipeline(pipeline, pipeline_old)

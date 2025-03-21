@@ -288,7 +288,7 @@ def test_cli_batch_mode(
             in_file, annotation_file, "-o", out_file,
             "-w", work_dir,
             "--grr", grr_file,
-            "--batch-mode",
+            "--batch-size", 100,
             "-j", 1,
         ]
     ])

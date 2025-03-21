@@ -162,22 +162,17 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
 
     def prepare_for_annotation(self) -> None:
         self.input_layout, self.output_layout = self._setup_io_layouts()
-
         self.loader = ParquetLoader(self.input_layout)
+        write_new_meta(self.loader, self.pipeline, self.output_layout)
+        if not self.args.in_place:
+            symlink_pedigree_and_family_variants(self.loader.layout,
+                                                 self.output_layout)
 
     def add_tasks_to_graph(self) -> None:
-        input_layout, output_layout = self._setup_io_layouts()
-
-        loader = ParquetLoader(input_layout)
-
-        write_new_meta(loader, self.pipeline, output_layout)
-        if not self.args.in_place:
-            symlink_pedigree_and_family_variants(loader.layout, output_layout)
-
         annotation_tasks = produce_schema2_annotation_tasks(
             self.task_graph,
-            loader,
-            output_layout.study,
+            self.loader,
+            self.output_layout.study,
             self.pipeline.raw,
             self.grr,
             self.args.region_size,
@@ -188,8 +183,8 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         produce_schema2_merging_tasks(
             self.task_graph,
             annotation_tasks,
-            loader,
-            output_layout,
+            self.loader,
+            self.output_layout,
         )
 
 
