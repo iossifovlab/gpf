@@ -3,7 +3,7 @@ conf_dir: .
 has_denovo: false
 has_cnv: false
 has_transmitted: true
-phenotype_data: comp_pheno
+phenotype_data: pheno_helloworld
 phenotype_tool: true
 phenotype_browser: true
 genotype_storage:

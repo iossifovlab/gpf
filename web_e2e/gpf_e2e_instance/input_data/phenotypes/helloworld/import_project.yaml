@@ -17,9 +17,15 @@ work_dir: work
 
 study_config:
   regressions:
-    reg_1:
-      measure_names:
-        - measure_1
-      instrument_name: instrument_1
+    age:
+      display_name: Age
+      instrument_name: i1
       jitter: 0.1
-      display_name: "Regression one"
+      measure_names:
+        - age
+    iq:
+      display_name: Non verbal IQ
+      instrument_name: i1
+      jitter: 0.1
+      measure_names:
+        - iq
