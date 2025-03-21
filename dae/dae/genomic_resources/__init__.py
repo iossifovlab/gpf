@@ -1,6 +1,5 @@
-from typing import Callable, Optional
-
-from importlib_metadata import EntryPoint, entry_points
+from collections.abc import Callable
+from importlib.metadata import EntryPoint, entry_points
 
 from .repository import GenomicResource
 from .repository_factory import build_genomic_resource_repository

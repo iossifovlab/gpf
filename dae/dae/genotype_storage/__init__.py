@@ -58,7 +58,7 @@ def _load_genotype_storage_factory_plugins() -> None:
     if _EXTENTIONS_LOADED:
         return
     # pylint: disable=import-outside-toplevel
-    from importlib_metadata import entry_points
+    from importlib.metadata import entry_points
     discovered_entries = entry_points(group="dae.genotype_storage.factories")
 
     for entry in discovered_entries:

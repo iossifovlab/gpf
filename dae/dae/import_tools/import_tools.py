@@ -818,7 +818,7 @@ def _load_import_storage_factory_plugins() -> None:
     if _EXTENTIONS_LOADED:
         return
     # pylint: disable=import-outside-toplevel
-    from importlib_metadata import entry_points
+    from importlib.metadata import entry_points
     discovered_entries = entry_points(group="dae.import_tools.storages")
     for entry in discovered_entries:
         storage_type = entry.name

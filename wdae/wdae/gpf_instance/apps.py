@@ -19,7 +19,7 @@ class WDAEConfig(AppConfig):
         """Load WDAE GPF instance extensions."""
         # pylint: disable=import-outside-toplevel
         logger.info("Loading extensions")
-        from importlib_metadata import entry_points
+        from importlib.metadata import entry_points
         discovered_entries = entry_points(group="wdae.gpf_instance.extensions")
         for entry in discovered_entries:
             extension_loader = entry.load()
