@@ -354,6 +354,8 @@ class ReannotationPipeline(AnnotationPipeline):
                 converted_value = bool(raw_value)
             elif attr.type == "annotatable":
                 converted_value = Annotatable.from_string(raw_value)
+            elif attr.type == "str":
+                converted_value = str(raw_value)
             elif attr.type == "object":
                 raise ValueError("Cannot deserialize object attribute - ",
                                  attr_name)
