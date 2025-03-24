@@ -1,482 +1,482 @@
 
 full_attributes = {
     "Location": (
-        "object",
+        "str",
         "Location of variant in standard "
         "coordinate format (chr:start or chr:start-end)",
     ),
     "Allele": (
-        "object",
+        "str",
         "The variant allele used to calculate the consequence",
     ),
     "Gene": (
-        "object",
+        "str",
         "Stable ID of affected gene",
     ),
     "Feature": (
-        "object",
+        "str",
         "Stable ID of feature",
     ),
     "Feature_type": (
-        "object",
+        "str",
         "Type of feature - Transcript, "
         "RegulatoryFeature or MotifFeature",
     ),
     "Consequence": (
-        "object",
+        "str",
         "Consequence type",
     ),
     "cDNA_position": (
-        "object",
+        "str",
         "Relative position of base pair in cDNA sequence",
     ),
     "CDS_position": (
-        "object",
+        "str",
         "Relative position of base pair in coding sequence",
     ),
     "Protein_position": (
-        "object",
+        "str",
         "Relative position of amino acid in protein",
     ),
     "Amino_acids": (
-        "object",
+        "str",
         "Reference and variant amino acids",
     ),
     "Codons": (
-        "object",
+        "str",
         "Reference and variant codon sequence",
     ),
     "Existing_variation": (
-        "object",
+        "str",
         "Identifier(s) of co-located known variants",
     ),
     "IMPACT": (
-        "object",
+        "str",
         "Subjective impact classification of consequence type",
     ),
     "DISTANCE": (
-        "object",
+        "str",
         "Shortest distance from variant to transcript",
     ),
     "STRAND": (
-        "object",
+        "str",
         "Strand of the feature (1/-1)",
     ),
     "FLAGS": (
-        "object",
+        "str",
         "Transcript quality flags",
     ),
     "VARIANT_CLASS": (
-        "object",
+        "str",
         "SO variant class",
     ),
     "SYMBOL": (
-        "object",
+        "str",
         "Gene symbol (e.g. HGNC)",
     ),
     "SYMBOL_SOURCE": (
-        "object",
+        "str",
         "Source of gene symbol",
     ),
     "HGNC_ID": (
-        "object",
+        "str",
         "Stable identifer of HGNC gene symbol",
     ),
     "BIOTYPE": (
-        "object",
+        "str",
         "Biotype of transcript or regulatory feature",
     ),
     "CANONICAL": (
-        "object",
+        "str",
         "Indicates if transcript is canonical for this gene",
     ),
     "MANE": (
-        "object",
+        "str",
         "MANE (Matched Annotation from NCBI and EMBL-EBI) "
         "set(s) the transcript belongs to",
     ),
     "MANE_SELECT": (
-        "object",
+        "str",
         "MANE Select (Matched Annotation "
         "from NCBI and EMBL-EBI) Transcript",
     ),
     "MANE_PLUS_CLINICAL": (
-        "object",
+        "str",
         "MANE Plus Clinical (Matched Annotation "
         "from NCBI and EMBL-EBI) Transcript",
     ),
     "TSL": (
-        "object",
+        "str",
         "Transcript support level",
     ),
     "APPRIS": (
-        "object",
+        "str",
         "Annotates alternatively spliced transcripts as primary "
         "or alternate based on a range of computational methods",
     ),
     "CCDS": (
-        "object",
+        "str",
         "Indicates if transcript is a CCDS transcript",
     ),
     "ENSP": (
-        "object",
+        "str",
         "Protein identifer",
     ),
     "SWISSPROT": (
-        "object",
+        "str",
         "UniProtKB/Swiss-Prot accession",
     ),
     "TREMBL": (
-        "object",
+        "str",
         "UniProtKB/TrEMBL accession",
     ),
     "UNIPARC": (
-        "object",
+        "str",
         "UniParc accession",
     ),
     "UNIPROT_ISOFORM": (
-        "object",
+        "str",
         "Direct mappings to UniProtKB isoforms",
     ),
     "GENE_PHENO": (
-        "object",
+        "str",
         "Indicates if gene is associated with "
         "a phenotype, disease or trait",
     ),
     "SIFT": (
-        "object",
+        "str",
         "SIFT prediction and/or score",
     ),
     "PolyPhen": (
-        "object",
+        "str",
         "PolyPhen prediction and/or score",
     ),
     "EXON": (
-        "object",
+        "str",
         "Exon number(s) / total",
     ),
     "INTRON": (
-        "object",
+        "str",
         "Intron number(s) / total",
     ),
     "DOMAINS": (
-        "object",
+        "str",
         "The source and identifer of "
         "any overlapping protein domains",
     ),
     "miRNA": (
-        "object",
+        "str",
         "SO terms of overlapped miRNA "
         "secondary structure feature(s)",
     ),
     "HGVSc": (
-        "object",
+        "str",
         "HGVS coding sequence name",
     ),
     "HGVSp": (
-        "object",
+        "str",
         "HGVS protein sequence name",
     ),
     "HGVS_OFFSET": (
-        "object",
+        "str",
         "Indicates by how many bases the "
         "HGVS notations for this variant have been shifted",
     ),
     "AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "1000 Genomes combined population",
     ),
     "AFR_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "1000 Genomes combined African population",
     ),
     "AMR_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "1000 Genomes combined American population",
     ),
     "EAS_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "1000 Genomes combined East Asian population",
     ),
     "EUR_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "1000 Genomes combined European population",
     ),
     "SAS_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "1000 Genomes combined South Asian population",
     ),
     "gnomADe_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD exomes combined population",
     ),
     "gnomADe_AFR_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD exomes African/American population",
     ),
     "gnomADe_AMR_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD exomes American population",
     ),
     "gnomADe_ASJ_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD exomes Ashkenazi Jewish population",
     ),
     "gnomADe_EAS_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD exomes East Asian population",
     ),
     "gnomADe_FIN_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD exomes Finnish population",
     ),
     "gnomADe_MID_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD exomes Mid-eastern population",
     ),
     "gnomADe_NFE_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD exomes Non-Finnish European population",
     ),
     "gnomADe_OTH_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD exomes other combined populations",
     ),
     "gnomADe_SAS_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD exomes South Asian population",
     ),
     "gnomADe_REMAINING_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD exomes remaining combined populations",
     ),
     "gnomADg_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD genomes combined population",
     ),
     "gnomADg_AFR_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD genomes African/American population",
     ),
     "gnomADg_AMI_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD genomes Amish population",
     ),
     "gnomADg_AMR_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD genomes American population",
     ),
     "gnomADg_ASJ_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD genomes Ashkenazi Jewish population",
     ),
     "gnomADg_EAS_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD genomes East Asian population",
     ),
     "gnomADg_FIN_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD genomes Finnish population",
     ),
     "gnomADg_MID_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD genomes Mid-eastern population",
     ),
     "gnomADg_NFE_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD genomes Non-Finnish European population",
     ),
     "gnomADg_OTH_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD genomes other combined populations",
     ),
     "gnomADg_SAS_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD genomes South Asian population",
     ),
     "gnomADg_REMAINING_AF": (
-        "object",
+        "str",
         "Frequency of existing variant in "
         "gnomAD genomes remaining combined populations",
     ),
     "MAX_AF": (
-        "object",
+        "str",
         "Maximum observed allele frequency in "
         "1000 Genomes, ESP and ExAC/gnomAD",
     ),
     "MAX_AF_POPS": (
-        "object",
+        "str",
         "Populations in which maximum "
         "allele frequency was observed",
     ),
     "CLIN_SIG": (
-        "object",
+        "str",
         "ClinVar clinical significance of the dbSNP variant",
     ),
     "SOMATIC": (
-        "object",
+        "str",
         "Somatic status of existing variant",
     ),
     "PHENO": (
-        "object",
+        "str",
         "Indicates if existing variant(s) is associated with "
         "a phenotype, disease or trait; "
         "multiple values correspond to multiple variants",
     ),
     "PUBMED": (
-        "object",
+        "str",
         "Pubmed ID(s) of publications that cite existing variant",
     ),
     "MOTIF_NAME": (
-        "object",
+        "str",
         "The stable identifier of a transcription factor "
         "binding profile (TFBP) aligned at this position",
     ),
     "MOTIF_POS": (
-        "object",
+        "str",
         "The relative position of the "
         "variation in the aligned TFBP",
     ),
     "HIGH_INF_POS": (
-        "object",
+        "str",
         "A flag indicating if the variant falls in a "
         "high information position of the TFBP",
     ),
     "MOTIF_SCORE_CHANGE": (
-        "object",
+        "str",
         "The difference in motif score of the reference "
         "and variant sequences for the TFBP",
     ),
     "TRANSCRIPTION_FACTORS": (
-        "object",
+        "str",
         "List of transcription factors which bind to "
         "the transcription factor binding profile",
     ),
     "worst_consequence": (
-        "object", "Worst consequence reported by VEP",
+        "str", "Worst consequence reported by VEP",
     ),
-    "highest_impact": ("object", "Highest impact reported by VEP"),
+    "highest_impact": ("str", "Highest impact reported by VEP"),
     "gene_consequence": (
-        "object", "List of gene consequence pairs reported by VEP",
+        "str", "List of gene consequence pairs reported by VEP",
     ),
 }
 
 effect_attributes = {
     "Location": (
-        "object",
+        "str",
         "Location of variant in standard "
         "coordinate format (chr:start or chr:start-end)",
     ),
     "Allele": (
-        "object",
+        "str",
         "The variant allele used to calculate the consequence",
     ),
     "Gene": (
-        "object",
+        "str",
         "Stable ID of affected gene",
     ),
     "Feature": (
-        "object",
+        "str",
         "Stable ID of feature",
     ),
     "Feature_type": (
-        "object",
+        "str",
         "Type of feature - Transcript, "
         "RegulatoryFeature or MotifFeature",
     ),
     "Consequence": (
-        "object",
+        "str",
         "Consequence type",
     ),
     "cDNA_position": (
-        "object",
+        "str",
         "Relative position of base pair in cDNA sequence",
     ),
     "CDS_position": (
-        "object",
+        "str",
         "Relative position of base pair in coding sequence",
     ),
     "Protein_position": (
-        "object",
+        "str",
         "Relative position of amino acid in protein",
     ),
     "Amino_acids": (
-        "object",
+        "str",
         "Reference and variant amino acids",
     ),
     "Codons": (
-        "object",
+        "str",
         "Reference and variant codon sequence",
     ),
     "Existing_variation": (
-        "object",
+        "str",
         "Identifier(s) of co-located known variants",
     ),
     "IMPACT": (
-        "object",
+        "str",
         "Subjective impact classification of consequence type",
     ),
     "DISTANCE": (
-        "object",
+        "str",
         "Shortest distance from variant to transcript",
     ),
     "STRAND": (
-        "object",
+        "str",
         "Strand of the feature (1/-1)",
     ),
     "FLAGS": (
-        "object",
+        "str",
         "Transcript quality flags",
     ),
     "SYMBOL": (
-        "object",
+        "str",
         "Gene symbol (e.g. HGNC)",
     ),
     "SYMBOL_SOURCE": (
-        "object",
+        "str",
         "Source of gene symbol",
     ),
     "HGNC_ID": (
-        "object",
+        "str",
         "Stable identifer of HGNC gene symbol",
     ),
     "SOURCE": (
-        "object",
+        "str",
         "Source of transcript",
     ),
     "worst_consequence": (
-        "object", "Worst consequence reported by VEP",
+        "str", "Worst consequence reported by VEP",
     ),
-    "highest_impact": ("object", "Highest impact reported by VEP"),
+    "highest_impact": ("str", "Highest impact reported by VEP"),
     "gene_consequence": (
-        "object", "List of gene consequence pairs reported by VEP",
+        "str", "List of gene consequence pairs reported by VEP",
     ),
 }
