@@ -9,7 +9,7 @@
     </div>
 
     <div *ngIf="dataset.genotypeBrowserConfig.hasPresentInParent" class="col-lg-3">
-      <gpf-present-in-parent></gpf-present-in-parent>
+      <gpf-present-in-parent [hasDenovo]="dataset.hasDenovo"></gpf-present-in-parent>
     </div>
 
     <div class="col-lg-6 panel-row">

@@ -147,4 +147,27 @@ describe('PresentInParentComponent', () => {
       }
     }));
   });
+
+  it('should set default present in parent values when study has denovo', () => {
+    jest.spyOn(store, 'select').mockReturnValueOnce(of({presentInParent: [], rarity: null}));
+    component.hasDenovo = true;
+    component.presentInParentValues = new Set([
+      'mother only', 'father only', 'mother and father', 'neither'
+    ]);
+
+    component.ngOnInit();
+    expect(component.selectedValues).toStrictEqual(new Set(['neither']));
+  });
+
+  it('should set default present in parent values when study doesn\'t have denovo', () => {
+    jest.spyOn(store, 'select').mockReturnValueOnce(of({presentInParent: [], rarity: null}));
+    component.hasDenovo = false;
+    const allValues = new Set([
+      'mother only', 'father only', 'mother and father', 'neither'
+    ]);
+    component.presentInParentValues = allValues;
+
+    component.ngOnInit();
+    expect(component.selectedValues).toStrictEqual(allValues);
+  });
 });

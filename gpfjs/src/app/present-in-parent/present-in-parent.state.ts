@@ -20,7 +20,7 @@ const initialRarityState: PresentInParentRarity = {
 };
 
 export const initialState: PresentInParent = {
-  presentInParent: ['neither'],
+  presentInParent: [],
   rarity: initialRarityState
 };
 

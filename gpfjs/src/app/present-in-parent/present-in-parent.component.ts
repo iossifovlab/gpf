@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { Validate, ValidateIf, Min, Max } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
@@ -7,6 +7,7 @@ import { SetNotEmpty } from '../utils/set.validators';
 import { ComponentValidator } from 'app/common/component-validator';
 import { selectPresentInParent, setPresentInParent } from './present-in-parent.state';
 import { take } from 'rxjs';
+import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-present-in-parent',
@@ -36,6 +37,7 @@ export class PresentInParentComponent extends ComponentValidator implements OnIn
     'all', 'rare', 'ultraRare', 'interval'
   ]);
   public selectedRarityType = '';
+  @Input() public hasDenovo = false;
 
   public constructor(protected store: Store) {
     super(store, 'presentInParent', selectPresentInParent);
@@ -45,12 +47,21 @@ export class PresentInParentComponent extends ComponentValidator implements OnIn
     super.ngOnInit();
 
     this.store.select(selectPresentInParent).pipe(take(1)).subscribe(state => {
-      // restore state
-      this.selectedValues = new Set([...state.presentInParent]);
-      this.selectedRarityType = state.rarity.rarityType;
-      this.rarityIntervalStart = state.rarity.rarityIntervalStart;
-      this.rarityIntervalEnd = state.rarity.rarityIntervalEnd;
-      this.updateState();
+      if (!state.presentInParent.length) {
+        if (this.hasDenovo) {
+          this.selectedValues = new Set(['neither']);
+        } else {
+          this.selectedValues = cloneDeep(this.presentInParentValues);
+        }
+        this.updatePresentInParent(this.selectedValues);
+      } else {
+        // restore state
+        this.selectedValues = new Set([...state.presentInParent]);
+        this.selectedRarityType = state.rarity.rarityType;
+        this.rarityIntervalStart = state.rarity.rarityIntervalStart;
+        this.rarityIntervalEnd = state.rarity.rarityIntervalEnd;
+        this.updateState();
+      }
     });
   }
 
