@@ -341,23 +341,26 @@ class ReannotationPipeline(AnnotationPipeline):
                         result.add(*further)
         return result
 
+    def _convert_attr(self, raw_value: str, attribute: AttributeInfo) -> Any:
+        converted_value: Any = None
+        if attribute.type == "int":
+            converted_value = int(raw_value)
+        elif attribute.type == "float":
+            converted_value = float(raw_value)
+        elif attribute.type == "bool":
+            converted_value = bool(raw_value)
+        elif attribute.type == "annotatable":
+            converted_value = Annotatable.from_string(raw_value)
+        elif attribute.type == "object":
+            raise ValueError("Cannot deserialize object attribute - ",
+                             attribute.name)
+        return converted_value
+
     def annotate(self, annotatable: Annotatable, record: dict) -> dict:  # type: ignore # pylint: disable=arguments-renamed
-        reused_context: dict[str, Any] = {}
-        for attr_name, attr in self.attributes_reused.items():
-            raw_value = record[attr_name]
-            converted_value: Any = None
-            if attr.type == "int":
-                converted_value = int(raw_value)
-            elif attr.type == "float":
-                converted_value = float(raw_value)
-            elif attr.type == "bool":
-                converted_value = bool(raw_value)
-            elif attr.type == "annotatable":
-                converted_value = Annotatable.from_string(raw_value)
-            elif attr.type == "object":
-                raise ValueError("Cannot deserialize object attribute - ",
-                                 attr_name)
-            reused_context[attr_name] = converted_value
+        reused_context = {
+            attr.name: self._convert_attr(record[attr.name], attr)
+            for attr in self.attributes_reused.values()
+        }
         return super().annotate(annotatable, reused_context)
 
     def annotate_summary_allele(self, allele: SummaryAllele) -> dict:
