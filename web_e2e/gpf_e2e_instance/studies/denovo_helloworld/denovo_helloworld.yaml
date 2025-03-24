@@ -5,6 +5,24 @@ has_cnv: false
 has_transmitted: false
 genotype_browser:
   enabled: true
+  has_family_filters: true
+  has_person_filters: true
+  has_family_filters_beta: true
+  has_person_filters_beta: true
+  family_filters:
+    categorical:
+      name: categorical values
+      source_type: categorical
+      source: instrument_1.measure_5
+      from: phenodb
+      filter_type: single
+      role: mom
+    measures:
+      name: Proband Pheno Measure
+      source_type: continuous
+      from: phenodb
+      filter_type: multi
+      role: prb
   column_groups:
     pheno:
       name: Phenotype measures
