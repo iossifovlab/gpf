@@ -355,11 +355,13 @@ class ReannotationPipeline(AnnotationPipeline):
                              attribute.name)
         return converted_value
 
-    def annotate(self, annotatable: Annotatable, record: dict) -> dict:  # type: ignore # pylint: disable=arguments-renamed
-        reused_context = {
-            attr.name: self._convert_attr(record[attr.name], attr)
-            for attr in self.attributes_reused.values()
-        }
+    def annotate(self, annotatable: Annotatable, record: dict | None) -> dict:  # type: ignore # pylint: disable=arguments-renamed
+        reused_context = None
+        if record is not None:
+            reused_context = {
+                attr.name: self._convert_attr(record[attr.name], attr)
+                for attr in self.attributes_reused.values()
+            }
         return super().annotate(annotatable, reused_context)
 
     def get_attributes(self) -> list[AttributeInfo]:

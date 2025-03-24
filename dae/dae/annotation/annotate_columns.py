@@ -37,6 +37,7 @@ from dae.annotation.record_to_annotatable import (
 )
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.reference_genome import (
+    ReferenceGenome,
     build_reference_genome_from_resource,
 )
 from dae.genomic_resources.repository_factory import (
@@ -172,6 +173,44 @@ class AnnotateColumnsTool(AnnotationTool):
         return parser
 
     @staticmethod
+    def _read(
+        args: argparse.Namespace,
+        region: Region | None,
+        grr_definition: dict | None,
+        ref_genome_id: str | None,
+    ) -> Generator[tuple[dict, Annotatable], None, None]:
+        _, line_iterator, header_columns = read_input(args, region)
+
+        grr = build_genomic_resource_repository(definition=grr_definition)
+        ref_genome = None
+        if ref_genome_id:
+            res = grr.find_resource(ref_genome_id)
+            if res is not None:
+                ref_genome = build_reference_genome_from_resource(res).open()
+
+        record_to_annotatable = build_record_to_annotatable(
+            vars(args), set(header_columns), ref_genome=ref_genome)
+        for line in line_iterator:
+            columns = line.strip("\n\r").split(args.input_separator)
+            record = dict(zip(header_columns, columns, strict=True))
+            yield record, record_to_annotatable.build(record)
+
+    @staticmethod
+    def _write(
+        record: Any,
+        annotation: dict,
+        annotation_columns: list[str],
+        separator: str,
+        out_file,
+    ) -> None:
+        for col in annotation_columns:
+            record[col] = annotation[col]
+        result = separator.join(
+            stringify(val) for val in record.values()
+        ) + "\n"
+        out_file.write(result)
+
+    @staticmethod
     def annotate(
         args: argparse.Namespace,
         pipeline_config: RawAnnotatorsConfig,
@@ -184,11 +223,10 @@ class AnnotateColumnsTool(AnnotationTool):
         # pylint: disable=too-many-locals,too-many-branches
         # Insisting on having the pipeline config passed in args
         # prevents the finding of a default annotation config. Consider fixing
-
         pipeline_config_old = None
         if args.reannotate:
             pipeline_config_old = Path(args.reannotate).read_text()
-
+        grr_definition_copy = dict(grr_definition) if grr_definition is not None else None
         grr = build_genomic_resource_repository(definition=grr_definition)
         pipeline = build_annotation_pipeline(
             pipeline_config, grr,
@@ -197,65 +235,41 @@ class AnnotateColumnsTool(AnnotationTool):
             config_old_raw=pipeline_config_old,
             full_reannotation=args.full_reannotation,
         )
-        grr = pipeline.repository
-        ref_genome = None
-        if ref_genome_id:
-            res = grr.find_resource(ref_genome_id)
-            if res is not None:
-                ref_genome = build_reference_genome_from_resource(res).open()
-
-        in_file, line_iterator, header_columns = read_input(args, region)
-        record_to_annotatable = build_record_to_annotatable(
-            vars(args), set(header_columns), ref_genome=ref_genome)
+        _, _, header_columns = read_input(args, region)
 
         annotation_columns = [
             attr.name for attr in pipeline.get_attributes()
-            if not attr.internal]
+            if not attr.internal
+        ]
 
-        out_file = open(out_file_path, "wt")  # noqa: SIM115
-
-        if region is None:
-            batch_work_dir = None
+        # WRITE HEADER
+        if isinstance(pipeline, ReannotationPipeline):
+            old_annotation_columns = {
+                attr.name
+                for attr in pipeline.pipeline_old.get_attributes()
+                if not attr.internal
+            }
+            new_header = [
+                col for col in header_columns
+                if col not in old_annotation_columns
+            ]
         else:
-            chrom = region.chrom
-            pos_beg = region.start if region.start is not None else "_"
-            pos_end = region.stop if region.stop is not None else "_"
-            batch_work_dir = f"{chrom}_{pos_beg}_{pos_end}"
+            new_header = list(header_columns)
+        new_header = new_header + annotation_columns
+        # END WRITE HEADER
+
+        data = AnnotateColumnsTool._read(
+            args, region, grr_definition_copy, ref_genome_id)
 
         pipeline.open()
-        with pipeline, in_file, out_file:
-            if isinstance(pipeline, ReannotationPipeline):
-                old_annotation_columns = {
-                    attr.name
-                    for attr in pipeline.pipeline_old.get_attributes()
-                    if not attr.internal
-                }
-                new_header = [
-                    col for col in header_columns
-                    if col not in old_annotation_columns
-                ]
-            else:
-                new_header = list(header_columns)
-
-            new_header = new_header + annotation_columns
+        with pipeline, open(out_file_path, "wt") as out_file:
             out_file.write(args.output_separator.join(new_header) + "\n")
-            if args.batch_mode:
-                values = AnnotateColumnsTool.batch_annotate(
-                    args, pipeline, line_iterator,
-                    header_columns,
-                    record_to_annotatable,
-                    batch_work_dir=batch_work_dir,
-                )
-            else:
-                values = AnnotateColumnsTool.single_annotate(
-                    args, pipeline, line_iterator,
-                    header_columns,
-                    record_to_annotatable,
-                )
+            for record, annotation in AnnotateColumnsTool.do_annotate(data, pipeline, region):
+                AnnotateColumnsTool._write(record,
+                                            annotation,
+                                            annotation_columns,
+                                            args.output_separator, out_file)
 
-            result = "\n".join(
-                args.output_separator.join(val) for val in values) + "\n"
-            out_file.write(result)
 
     @staticmethod
     def batch_annotate(
@@ -312,6 +326,34 @@ class AnnotateColumnsTool(AnnotationTool):
                 for lnum, line, error in errors:
                     logger.error("line %s: %s", lnum, line)
                     logger.error("\t%s", error)
+
+    @staticmethod
+    def do_annotate(
+        rec_iterator,
+        pipeline,
+        region: Region | None = None,
+    ) -> Generator[tuple[dict, dict], None, None]:
+        if region is not None:
+            chrom = region.chrom
+            pos_beg = region.start if region.start is not None else "_"
+            pos_end = region.stop if region.stop is not None else "_"
+            batch_work_dir = f"{chrom}_{pos_beg}_{pos_end}"
+            records, annotatables = zip(*tuple(rec_iterator), strict=True)
+            context = records \
+                if isinstance(pipeline, ReannotationPipeline) \
+                else None
+            yield from zip(records, pipeline.batch_annotate(
+                list(annotatables), list(records),
+                batch_work_dir=batch_work_dir,
+            ), strict=True)
+        else:
+            for record, annotatable in rec_iterator:
+                context = None
+                if isinstance(pipeline, ReannotationPipeline):
+                    for col in pipeline.attributes_deleted:
+                        del record[col]
+                    context = record
+                yield record, pipeline.annotate(annotatable, context)
 
     @staticmethod
     def single_annotate(

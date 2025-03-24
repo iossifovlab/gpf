@@ -3,11 +3,13 @@ import gzip
 import os
 import sys
 from abc import abstractmethod
+from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 
 from pysam import TabixFile, tabix_index
 
+from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import RawAnnotatorsConfig
 from dae.annotation.annotation_factory import (
     build_annotation_pipeline,
@@ -208,6 +210,24 @@ class AnnotationTool:
                 else FullReannotationPipeline(pipeline, pipeline_old)
 
         return pipeline
+
+    # @abstractmethod
+    # def _read(
+    #     self,
+    #     args,
+    #     region,
+    # ) -> Generator[tuple[dict, Annotatable], None, None]:
+    #     pass
+
+    # @abstractmethod
+    # def _write(
+    #     self,
+    #     record: Any,
+    #     annotation: dict,
+    #     separator: str,
+    #     out_file,
+    # ) -> None:
+    #     pass
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:
