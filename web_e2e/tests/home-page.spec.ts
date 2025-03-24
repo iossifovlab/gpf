@@ -106,7 +106,6 @@ test.describe('Home page tests', () => {
 
   test('should expand and close datasets', async({ page }) => {
     await expect(page.locator('a:text("pheno_helloworld")')).toBeVisible();
-    await expect(page.locator('a:text("comp_pheno")')).toBeVisible();
     await expect(page.locator('a:text("ALL Genotypes")')).toBeVisible();
     await expect(page.locator('a:text("comp_all_liftover")')).toBeVisible();
     await expect(page.locator('a:text("COMP Genotypes")')).toBeVisible();
@@ -129,7 +128,6 @@ test.describe('Home page tests', () => {
 
     await page.locator('.collapse-dataset-icon').nth(0).click();
     await expect(page.locator('a:text("pheno_helloworld")')).toBeVisible();
-    await expect(page.locator('a:text("comp_pheno")')).toBeVisible();
     await expect(page.locator('a:text("ALL Genotypes")')).toBeVisible();
     await expect(page.locator('a:text("comp_all_liftover")')).not.toBeVisible();
     await expect(page.locator('a:text("COMP Genotypes")')).not.toBeVisible();

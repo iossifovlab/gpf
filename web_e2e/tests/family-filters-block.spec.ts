@@ -7,7 +7,7 @@ test.describe('Family filters block tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.denovoHelloWorld, 'Genotype browser');
   });
 
   test('should display family ids panel', async({ page }) => {
@@ -148,7 +148,7 @@ test.describe('Family filters block tests', () => {
     await expect(page.getByText('Select at least one continuous filter.')).toBeVisible();
 
     await page.locator('gpf-family-filters-block').locator('#search-box').click();
-    await page.locator('.dropdown-item span', {hasText: 'i1.age'}).click();
+    await page.locator('.dropdown-item span', {hasText: 'instrument_1.age'}).click();
     await expect(page.locator('gpf-histogram')).toBeVisible();
 
     await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');

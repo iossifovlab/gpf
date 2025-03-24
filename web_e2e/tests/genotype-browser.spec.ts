@@ -82,7 +82,7 @@ test.describe('Genotype browser table preview result tests', () => {
     {
       study: datasetIds.denovoHelloWorld,
       affectedStatus: 'affected',
-      count: '16'
+      count: '32'
     },
     {
       study: datasetIds.vcfHelloWorld,
@@ -173,7 +173,7 @@ test.describe('Genotype browser table preview result tests', () => {
     {
       study: datasetIds.denovoHelloWorld,
       inheritanceType: 'denovo',
-      count: '16'
+      count: '32'
     }
   ].forEach(data => {
     test('should display the correct overview paragraph when ' +
@@ -191,8 +191,8 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {familyId: 'f1', count: '8'},
-    {familyId: 'f2', count: '8'},
+    {familyId: 'f1', count: '17'},
+    {familyId: 'f2', count: '15'},
     {familyId: 'f3', count: '0'},
   ].forEach(data => {
     test('should display the correct overview paragraph when family id is "' + data.familyId + '"', async({ page }) => {
