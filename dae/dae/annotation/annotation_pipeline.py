@@ -31,7 +31,6 @@ from dae.genomic_resources.repository import (
     GenomicResource,
     GenomicResourceRepo,
 )
-from dae.variants.variant import SummaryAllele
 
 logger = logging.getLogger(__name__)
 
@@ -361,13 +360,6 @@ class ReannotationPipeline(AnnotationPipeline):
             attr.name: self._convert_attr(record[attr.name], attr)
             for attr in self.attributes_reused.values()
         }
-        return super().annotate(annotatable, reused_context)
-
-    def annotate_summary_allele(self, allele: SummaryAllele) -> dict:
-        annotatable = allele.get_annotatable()
-        reused_context: dict[str, Any] = {}
-        for attr_name in self.attributes_reused:
-            reused_context[attr_name] = allele.get_attribute(attr_name)
         return super().annotate(annotatable, reused_context)
 
     def get_attributes(self) -> list[AttributeInfo]:
