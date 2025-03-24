@@ -1087,6 +1087,17 @@ class PhenotypeGroup(PhenotypeData):
     def get_persons_df(self) -> pd.DataFrame:
         raise NotImplementedError
 
+    def get_person_roles(self) -> list[str]:
+        leaves = self.get_leaves()
+        distinct_roles = set()
+        for leaf in leaves:
+            df = leaf.get_persons_df()
+            distinct_roles.update(
+                Role.from_value(row["role"]).name
+                    for row in df.to_dict("records")
+            )
+        return sorted(distinct_roles)
+
     def _build_person_set_collection(
         self,
         psc_config: PersonSetCollectionConfig,
