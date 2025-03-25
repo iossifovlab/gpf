@@ -29,7 +29,6 @@ export const datasetIds = {
   helloWorldGenotypes: 'Hello World Genotypes',
   denovoHelloWorld: 'denovo_helloworld',
   vcfHelloWorld: 'vcf_helloworld',
-  compPheno: 'comp_pheno',
   phenoHelloWorld: 'pheno_helloworld',
 };
 
@@ -86,7 +85,13 @@ export async function navigateToDataset(page: Page, dataset: string): Promise<vo
   }
   await page.locator('#datasets-dropdown-menu-button').click();
 
-  // expand all datasets
+  await expandDataset(page, dataset);
+
+  await page.locator('gpf-dataset-node a').filter({ hasText: dataset }).click();
+  await expect(page.locator('#datasets-dropdown-menu-button')).toHaveText(dataset);
+}
+
+export async function expandDataset(page: Page, dataset: string): Promise<void> {
   if (!await page.locator('gpf-dataset-node a').filter({ hasText: dataset }).isVisible()) {
     for (const ele of (await page.locator('.collapse-dataset-icon.rotate').all()).reverse()) {
       // eslint-disable-next-line no-await-in-loop
@@ -97,9 +102,6 @@ export async function navigateToDataset(page: Page, dataset: string): Promise<vo
       await ele.click();
     }
   }
-
-  await page.locator('gpf-dataset-node a').filter({ hasText: dataset }).click();
-  await expect(page.locator('#datasets-dropdown-menu-button')).toHaveText(dataset);
 }
 
 export function readFile(name): Promise<unknown> {
