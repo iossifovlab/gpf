@@ -1,4 +1,5 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
+import pathlib
 from collections.abc import Generator
 from typing import Any
 
@@ -27,7 +28,7 @@ def tabix_fsspec_proto(
     grr_scheme: str,
 ) -> Generator[RepositoryProtocol, None, None]:
 
-    root_path = tmp_path_factory.mktemp("tabix_fsspec_proto")
+    root_path = pathlib.Path("./test_grr")
     setup_directories(root_path, content_fixture)
     setup_tabix(
         root_path / "one" / "test.txt.gz",

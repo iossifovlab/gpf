@@ -2,6 +2,7 @@
 
 import gzip
 import logging
+import pathlib
 from collections.abc import Generator
 from typing import Any
 
@@ -74,11 +75,10 @@ def content_fixture(alabala_gz: bytes) -> dict[str, Any]:
 @pytest.fixture
 def fsspec_proto(
     content_fixture: dict[str, Any],
-    tmp_path_factory: pytest.TempPathFactory,
     grr_scheme: str,
 ) -> Generator[FsspecRepositoryProtocol, None, None]:
 
-    root_path = tmp_path_factory.mktemp("rw_fsspec_proto")
+    root_path = pathlib.Path("./test_grr")
     setup_directories(root_path, content_fixture)
 
     if grr_scheme == "file":
