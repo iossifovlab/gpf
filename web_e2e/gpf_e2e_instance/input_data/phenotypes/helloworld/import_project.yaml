@@ -19,13 +19,13 @@ study_config:
   regressions:
     age:
       display_name: Age
-      instrument_name: i1
+      instrument_name: instrument_1
       jitter: 0.1
       measure_names:
         - age
     iq:
       display_name: Non verbal IQ
-      instrument_name: i1
+      instrument_name: instrument_1
       jitter: 0.1
       measure_names:
         - iq
