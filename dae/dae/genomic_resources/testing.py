@@ -547,20 +547,21 @@ def proto_builder(
         FsspecReadOnlyProtocol | FsspecReadWriteProtocol,
         None, None]:
     """Build a test genomic resource protocol with specified content."""
-    root_path = pathlib.Path("./test_grr")
-    setup_directories(root_path, content)
+    with tempfile.TemporaryDirectory("s3_test_bucket") as tmp_path:
+        root_path = pathlib.Path(tmp_path)
+        setup_directories(root_path, content)
 
-    if scheme == "file":
-        yield build_filesystem_test_protocol(root_path)
-        return
-    if scheme == "s3":
-        with build_s3_test_protocol(root_path) as proto:
-            yield proto
-        return
-    if scheme == "http":
-        with build_http_test_protocol(root_path) as proto:
-            yield proto
-        return
+        if scheme == "file":
+            yield build_filesystem_test_protocol(root_path)
+            return
+        if scheme == "s3":
+            with build_s3_test_protocol(root_path) as proto:
+                yield proto
+            return
+        if scheme == "http":
+            with build_http_test_protocol(root_path) as proto:
+                yield proto
+            return
 
     raise ValueError(f"unexpected protocol scheme: <{scheme}>")
 
