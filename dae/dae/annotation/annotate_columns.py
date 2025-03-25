@@ -37,7 +37,6 @@ from dae.annotation.record_to_annotatable import (
 )
 from dae.genomic_resources.cli import VerbosityConfiguration
 from dae.genomic_resources.reference_genome import (
-    ReferenceGenome,
     build_reference_genome_from_resource,
 )
 from dae.genomic_resources.repository_factory import (
@@ -235,41 +234,21 @@ class AnnotateColumnsTool(AnnotationTool):
             config_old_raw=pipeline_config_old,
             full_reannotation=args.full_reannotation,
         )
-        _, _, header_columns = read_input(args, region)
-
         annotation_columns = [
             attr.name for attr in pipeline.get_attributes()
             if not attr.internal
         ]
 
-        # WRITE HEADER
-        if isinstance(pipeline, ReannotationPipeline):
-            old_annotation_columns = {
-                attr.name
-                for attr in pipeline.pipeline_old.get_attributes()
-                if not attr.internal
-            }
-            new_header = [
-                col for col in header_columns
-                if col not in old_annotation_columns
-            ]
-        else:
-            new_header = list(header_columns)
-        new_header = new_header + annotation_columns
-        # END WRITE HEADER
-
         data = AnnotateColumnsTool._read(
             args, region, grr_definition_copy, ref_genome_id)
 
         pipeline.open()
-        with pipeline, open(out_file_path, "wt") as out_file:
-            out_file.write(args.output_separator.join(new_header) + "\n")
+        with pipeline, open(out_file_path, "a") as out_file:
             for record, annotation in AnnotateColumnsTool.do_annotate(data, pipeline, region):
                 AnnotateColumnsTool._write(record,
                                             annotation,
                                             annotation_columns,
                                             args.output_separator, out_file)
-
 
     @staticmethod
     def batch_annotate(
@@ -337,14 +316,14 @@ class AnnotateColumnsTool(AnnotationTool):
             chrom = region.chrom
             pos_beg = region.start if region.start is not None else "_"
             pos_end = region.stop if region.stop is not None else "_"
-            batch_work_dir = f"{chrom}_{pos_beg}_{pos_end}"
+            task_work_dir = f"{chrom}_{pos_beg}_{pos_end}"
             records, annotatables = zip(*tuple(rec_iterator), strict=True)
             context = records \
                 if isinstance(pipeline, ReannotationPipeline) \
                 else None
             yield from zip(records, pipeline.batch_annotate(
                 list(annotatables), list(records),
-                batch_work_dir=batch_work_dir,
+                batch_work_dir=task_work_dir,
             ), strict=True)
         else:
             for record, annotatable in rec_iterator:
@@ -414,6 +393,28 @@ class AnnotateColumnsTool(AnnotationTool):
         ref_genome = self.context.get_reference_genome()
         self.ref_genome_id = ref_genome.resource_id \
             if ref_genome is not None else None
+
+        _, _, header_columns = read_input(self.args)
+        annotation_columns = [
+            attr.name for attr in self.pipeline.get_attributes()
+            if not attr.internal
+        ]
+        # WRITE HEADER
+        if isinstance(self.pipeline, ReannotationPipeline):
+            old_annotation_columns = {
+                attr.name
+                for attr in self.pipeline.pipeline_old.get_attributes()
+                if not attr.internal
+            }
+            new_header = [
+                col for col in header_columns
+                if col not in old_annotation_columns
+            ]
+        else:
+            new_header = list(header_columns)
+        new_header = new_header + annotation_columns
+        with open(self.output, "wt") as out_file:
+            out_file.write(self.args.output_separator.join(new_header) + "\n")
 
     def add_tasks_to_graph(self) -> None:
         if tabix_index_filename(self.args.input):
