@@ -6,7 +6,7 @@ f1	f1.s1	f1.dad	f1.mom	2	1	sib
 f2	f2.mom	0	0	2	1	mom
 f2	f2.dad	0	0	1	1	dad
 f2	f2.p1	f2.dad	f2.mom	2	2	prb
-f2	f2.s1	f2.dad	f2.mom	1	1	sib
+f2	f2.s1	f2.dad	f2.mom	2	2	sib
 f3	f3.dad	0	0	1	1	dad
 f3	f3.mom	0	0	2	1	mom
 f3	f3.p1	f3.dad	f3.mom	1	2	prb
@@ -17,7 +17,7 @@ f4	f4.p1	f4.dad	f4.mom	2	2	prb
 f4	f4.s1	f4.dad	f4.mom	1	2	sib
 f5	f5.dad	0	0	1	1	dad
 f5	f5.mom	0	0	2	1	mom
-f5	f5.p1	f5.dad	f5.mom	1	2	prb
+f5	f5.p1	f5.dad	f5.mom	1	1	prb
 f5	f5.s1	f5.dad	f5.mom	2	2	sib
 f6	f6.dad	0	0	1	1	dad
 f6	f6.mom	0	0	2	1	mom
@@ -32,7 +32,7 @@ f7	f7.p1	f7.dad	f7.mom	1	2	prb
 f7	f7.s2	f7.dad	f7.mom	2	2	sib
 f8	f8.mom	0	0	2	1	mom
 f8	f8.dad	0	0	1	1	dad
-f8	f8.p1	f8.dad	f8.mom	1	2	prb
+f8	f8.p1	f8.dad	f8.mom	2	2	prb
 f8	f8.s1	f8.dad	f8.mom	2	1	sib
 f9	f9.dad	0	0	1	1	dad
 f9	f9.mom	0	0	2	1	mom
