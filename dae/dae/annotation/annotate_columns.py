@@ -5,7 +5,7 @@ import gzip
 import logging
 import os
 import sys
-from collections.abc import Generator, Iterable
+from collections.abc import Generator
 from contextlib import closing
 from pathlib import Path
 from typing import Any, cast
@@ -21,17 +21,14 @@ from dae.annotation.annotate_utils import (
     stringify,
 )
 from dae.annotation.annotation_config import (
-    RawAnnotatorsConfig,
     RawPipelineConfig,
 )
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
-    AnnotationPipeline,
     ReannotationPipeline,
 )
 from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.record_to_annotatable import (
-    RecordToAnnotable,
     add_record_to_annotable_arguments,
     build_record_to_annotatable,
 )
@@ -51,25 +48,31 @@ logger = logging.getLogger("annotate_columns")
 
 
 def read_input(
-    args: Any, region: Region | None = None,
+    input_path: str,
+    input_separator: str,
+    region: Region | None = None,
 ) -> tuple[Any, Any, list[str]]:
     """Return a file object, line iterator and list of header columns.
 
     Handles differences between tabixed and non-tabixed input files.
     """
-    if args.input.endswith(".gz"):
-        tabix_file = TabixFile(args.input)
-        region_tuple: tuple = (region.chrom, region.start, region.stop) \
-            if region is not None else ()
-        with gzip.open(args.input, "rt") as in_file_raw:
+    if input_path.endswith(".gz"):
+        tabix_file = TabixFile(input_path)
+        with gzip.open(input_path, "rt") as in_file_raw:
             header = in_file_raw.readline() \
                 .strip("\r\n") \
-                .split(args.input_separator)
+                .split(input_separator)
         header = [c.strip("#") for c in header]
-        return closing(tabix_file), tabix_file.fetch(*region_tuple), header
+
+        if region is not None:
+            iterator = tabix_file.fetch(region.chrom, region.start, region.stop)
+        else:
+            iterator = tabix_file.fetch()
+
+        return closing(tabix_file), iterator, header
     # pylint: disable=consider-using-with
-    text_file = open(args.input, "rt")  # noqa: SIM115
-    header = text_file.readline().strip("\r\n").split(args.input_separator)
+    text_file = open(input_path, "rt")  # noqa: SIM115
+    header = text_file.readline().strip("\r\n").split(input_separator)
     return text_file, text_file, header
 
 
@@ -102,7 +105,6 @@ def combine(
         out_file.write(header + "\n")
         for partfile_path in partfile_paths:
             with open(partfile_path, "rt") as partfile:
-                partfile.readline()  # skip header
                 content = partfile.read().strip()
                 if content == "":
                     continue
@@ -173,12 +175,15 @@ class AnnotateColumnsTool(AnnotationTool):
 
     @staticmethod
     def _read(
-        args: argparse.Namespace,
+        input_path: str,
+        input_separator: str,
         region: Region | None,
         grr_definition: dict | None,
         ref_genome_id: str | None,
+        kwargs: dict,
     ) -> Generator[tuple[dict, Annotatable], None, None]:
-        _, line_iterator, header_columns = read_input(args, region)
+        _, line_iterator, header_columns = \
+            read_input(input_path, input_separator, region)
 
         grr = build_genomic_resource_repository(definition=grr_definition)
         ref_genome = None
@@ -188,196 +193,27 @@ class AnnotateColumnsTool(AnnotationTool):
                 ref_genome = build_reference_genome_from_resource(res).open()
 
         record_to_annotatable = build_record_to_annotatable(
-            vars(args), set(header_columns), ref_genome=ref_genome)
+            kwargs, set(header_columns), ref_genome=ref_genome)
         for line in line_iterator:
-            columns = line.strip("\n\r").split(args.input_separator)
+            columns = line.strip("\n\r").split(input_separator)
             record = dict(zip(header_columns, columns, strict=True))
             yield record, record_to_annotatable.build(record)
 
     @staticmethod
     def _write(
-        record: Any,
-        annotation: dict,
+        data: Generator[tuple[dict, dict], None, None],
         annotation_columns: list[str],
-        separator: str,
-        out_file,
-    ) -> None:
-        for col in annotation_columns:
-            record[col] = annotation[col]
-        result = separator.join(
-            stringify(val) for val in record.values()
-        ) + "\n"
-        out_file.write(result)
-
-    @staticmethod
-    def annotate(
-        args: argparse.Namespace,
-        pipeline_config: RawAnnotatorsConfig,
-        grr_definition: dict | None,
-        ref_genome_id: str | None,
         out_file_path: str,
-        region: Region | None = None,
+        separator: str,
     ) -> None:
-        """Annotate a variants file with a given pipeline configuration."""
-        # pylint: disable=too-many-locals,too-many-branches
-        # Insisting on having the pipeline config passed in args
-        # prevents the finding of a default annotation config. Consider fixing
-        pipeline_config_old = None
-        if args.reannotate:
-            pipeline_config_old = Path(args.reannotate).read_text()
-        grr_definition_copy = dict(grr_definition) if grr_definition is not None else None
-        grr = build_genomic_resource_repository(definition=grr_definition)
-        pipeline = build_annotation_pipeline(
-            pipeline_config, grr,
-            allow_repeated_attributes=args.allow_repeated_attributes,
-            work_dir=Path(args.work_dir),
-            config_old_raw=pipeline_config_old,
-            full_reannotation=args.full_reannotation,
-        )
-        annotation_columns = [
-            attr.name for attr in pipeline.get_attributes()
-            if not attr.internal
-        ]
-
-        data = AnnotateColumnsTool._read(
-            args, region, grr_definition_copy, ref_genome_id)
-
-        pipeline.open()
-        with pipeline, open(out_file_path, "a") as out_file:
-            for record, annotation in AnnotateColumnsTool.do_annotate(data, pipeline, region):
-                AnnotateColumnsTool._write(record,
-                                            annotation,
-                                            annotation_columns,
-                                            args.output_separator, out_file)
-
-    @staticmethod
-    def batch_annotate(
-        args: argparse.Namespace,
-        pipeline: AnnotationPipeline,
-        line_iterator: Iterable,
-        header_columns: list[str],
-        record_to_annotatable: RecordToAnnotable,
-        batch_work_dir: str | None = None,
-    ) -> Generator[list[str], None, None]:
-        """Annotate given lines as a batch."""
-        errors = []
-        annotation_columns = [
-            attr.name for attr in pipeline.get_attributes()
-            if not attr.internal]
-
-        records = []
-        annotatables: list[Annotatable | None] = []
-        for lnum, line in enumerate(line_iterator):
-            try:
-                columns = line.strip("\n\r").split(args.input_separator)
-                record = dict(zip(header_columns, columns, strict=True))
-                records.append(record)
-
-                annotatables.append(record_to_annotatable.build(record))
-            except Exception as ex:  # pylint: disable=broad-except
-                logger.exception(
-                    "unexpected input data format at line %s: %s",
-                    lnum, line)
-                errors.append((lnum, line, str(ex)))
-
-        try:
-            if isinstance(pipeline, ReannotationPipeline):
-                annotations = pipeline.batch_annotate(
-                    annotatables, records,
-                    batch_work_dir=batch_work_dir,
-                )
-            else:
-                annotations = pipeline.batch_annotate(
-                    annotatables,
-                    batch_work_dir=batch_work_dir,
-                )
-        except Exception as ex:  # pylint: disable=broad-except
-            logger.exception("Error during batch annotation")
-            errors.append((-1, -1, str(ex)))
-        else:
-            for record, annotation in zip(records, annotations, strict=True):
+        with open(out_file_path, "a") as out_file:
+            for record, annotation in data:
                 for col in annotation_columns:
                     record[col] = annotation[col]
-                yield [stringify(val) for val in record.values()]
-        finally:
-            if len(errors) > 0:
-                logger.error("there were errors during the import")
-                for lnum, line, error in errors:
-                    logger.error("line %s: %s", lnum, line)
-                    logger.error("\t%s", error)
-
-    @staticmethod
-    def do_annotate(
-        rec_iterator,
-        pipeline,
-        region: Region | None = None,
-    ) -> Generator[tuple[dict, dict], None, None]:
-        if region is not None:
-            chrom = region.chrom
-            pos_beg = region.start if region.start is not None else "_"
-            pos_end = region.stop if region.stop is not None else "_"
-            task_work_dir = f"{chrom}_{pos_beg}_{pos_end}"
-            records, annotatables = zip(*tuple(rec_iterator), strict=True)
-            context = records \
-                if isinstance(pipeline, ReannotationPipeline) \
-                else None
-            yield from zip(records, pipeline.batch_annotate(
-                list(annotatables), list(records),
-                batch_work_dir=task_work_dir,
-            ), strict=True)
-        else:
-            for record, annotatable in rec_iterator:
-                context = None
-                if isinstance(pipeline, ReannotationPipeline):
-                    for col in pipeline.attributes_deleted:
-                        del record[col]
-                    context = record
-                yield record, pipeline.annotate(annotatable, context)
-
-    @staticmethod
-    def single_annotate(
-        args: argparse.Namespace,
-        pipeline: AnnotationPipeline,
-        line_iterator: Iterable,
-        header_columns: list[str],
-        record_to_annotatable: RecordToAnnotable,
-    ) -> Generator[list[str], None, None]:
-        """Annotate given lines one by one."""
-        errors = []
-        annotation_columns = [
-            attr.name for attr in pipeline.get_attributes()
-            if not attr.internal]
-
-        for lnum, line in enumerate(line_iterator):
-            try:
-                columns = line.strip("\n\r").split(args.input_separator)
-                record = dict(zip(header_columns, columns, strict=True))
-                if isinstance(pipeline, ReannotationPipeline):
-                    for col in pipeline.attributes_deleted:
-                        del record[col]
-                    annotation = pipeline.annotate(
-                        record_to_annotatable.build(record), record,
-                    )
-                else:
-                    annotation = pipeline.annotate(
-                        record_to_annotatable.build(record),
-                    )
-
-                for col in annotation_columns:
-                    record[col] = annotation[col]
-
-                yield [stringify(val) for val in record.values()]
-            except Exception as ex:  # pylint: disable=broad-except
-                logger.exception(
-                    "unexpected input data format at line %s: %s",
-                    lnum, line)
-                errors.append((lnum, line, str(ex)))
-
-        if len(errors) > 0:
-            logger.error("there were errors during the import")
-            for lnum, line, error in errors:
-                logger.error("line %s: %s", lnum, line)
-                logger.error("\t%s", error)
+                result = separator.join(
+                    stringify(val) for val in record.values()
+                ) + "\n"
+                out_file.write(result)
 
     def prepare_for_annotation(self) -> None:
         if self.args.output:
@@ -394,7 +230,8 @@ class AnnotateColumnsTool(AnnotationTool):
         self.ref_genome_id = ref_genome.resource_id \
             if ref_genome is not None else None
 
-        _, _, header_columns = read_input(self.args)
+        _, _, header_columns = \
+            read_input(self.args.input, self.args.input_separator)
         annotation_columns = [
             attr.name for attr in self.pipeline.get_attributes()
             if not attr.internal

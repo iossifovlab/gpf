@@ -211,23 +211,109 @@ class AnnotationTool:
 
         return pipeline
 
-    # @abstractmethod
-    # def _read(
-    #     self,
-    #     args,
-    #     region,
-    # ) -> Generator[tuple[dict, Annotatable], None, None]:
-    #     pass
+    @staticmethod
+    def _read(
+        *args, **kwargs,
+    ) -> Generator[tuple[dict, Annotatable], None, None]:
+        raise NotImplementedError
 
-    # @abstractmethod
-    # def _write(
-    #     self,
-    #     record: Any,
-    #     annotation: dict,
-    #     separator: str,
-    #     out_file,
-    # ) -> None:
-    #     pass
+    @staticmethod
+    def _write(*args, **kwargs) -> None:
+        raise NotImplementedError
+
+    @staticmethod
+    def get_task_dir(region: Region | None) -> str:
+        assert region is not None
+        chrom = region.chrom
+        pos_beg = region.start if region.start is not None else "_"
+        pos_end = region.stop if region.stop is not None else "_"
+        return f"{chrom}_{pos_beg}_{pos_end}"
+
+    @staticmethod
+    def annotate_batched(
+        rec_iterator,
+        pipeline,
+        work_dir: str,
+    ) -> Generator[tuple[dict, dict], None, None]:
+        records, annotatables = zip(*tuple(rec_iterator), strict=True)
+        context = list(records) \
+            if isinstance(pipeline, ReannotationPipeline) \
+            else None
+        yield from zip(records, pipeline.batch_annotate(
+            list(annotatables), context,
+            batch_work_dir=work_dir,
+        ), strict=True)
+
+    @staticmethod
+    def annotate_iterative(
+        rec_iterator,
+        pipeline,
+    ) -> Generator[tuple[dict, dict], None, None]:
+        for record, annotatable in rec_iterator:
+            context = None
+            if isinstance(pipeline, ReannotationPipeline):
+                for col in pipeline.attributes_deleted:
+                    del record[col]
+                context = record
+            yield record, pipeline.annotate(annotatable, context)
+
+    @classmethod
+    def annotate(
+        cls,
+        args: argparse.Namespace,
+        pipeline_config: RawAnnotatorsConfig,
+        grr_definition: dict | None,
+        ref_genome_id: str | None,
+        out_file_path: str,
+        region: Region | None = None,
+    ) -> None:
+        """Annotate a variants file with a given pipeline configuration."""
+        # Insisting on having the pipeline config passed in args
+        # prevents the finding of a default annotation config. Consider fixing
+        pipeline_config_old = None
+        if args.reannotate:
+            pipeline_config_old = Path(args.reannotate).read_text()
+        grr_definition_copy = dict(grr_definition) \
+            if grr_definition is not None else None
+        grr = build_genomic_resource_repository(definition=grr_definition)
+        pipeline = build_annotation_pipeline(
+            pipeline_config, grr,
+            allow_repeated_attributes=args.allow_repeated_attributes,
+            work_dir=Path(args.work_dir),
+            config_old_raw=pipeline_config_old,
+            full_reannotation=args.full_reannotation,
+        )
+        annotation_columns = [
+            attr.name for attr in pipeline.get_attributes()
+            if not attr.internal
+        ]
+
+        data = cls._read(
+            args.input,
+            args.input_separator,
+            region,
+            grr_definition_copy,
+            ref_genome_id,
+            vars(args),
+        )
+
+        pipeline.open()
+        if args.batch_mode:
+            annotated_data = cls.annotate_batched(
+                data, pipeline, cls.get_task_dir(region),
+            )
+        else:
+            annotated_data = cls.annotate_iterative(
+                data, pipeline,
+            )
+        pipeline.close()
+
+        cls._write(
+            annotated_data,
+            annotation_columns,
+            out_file_path,
+            args.output_separator,
+        )
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:
