@@ -75,10 +75,11 @@ def content_fixture(alabala_gz: bytes) -> dict[str, Any]:
 @pytest.fixture
 def fsspec_proto(
     content_fixture: dict[str, Any],
+    tmp_path_factory: pytest.TempPathFactory,
     grr_scheme: str,
 ) -> Generator[FsspecRepositoryProtocol, None, None]:
 
-    root_path = pathlib.Path("./test_grr")
+    root_path = tmp_path_factory.mktemp("rw_fsspec_proto")
     setup_directories(root_path, content_fixture)
 
     if grr_scheme == "file":
@@ -98,6 +99,13 @@ def fsspec_proto(
         return
 
     if grr_scheme == "http":
+        http_path = pathlib.Path(__file__).parent
+        if root_path.is_absolute():
+            root_path = pathlib.Path(root_path.name[1:])
+        root_path = http_path / ".test_grr" / root_path
+        root_path.mkdir(parents=True, exist_ok=True)
+        setup_directories(root_path, content_fixture)
+
         with build_http_test_protocol(root_path) as http_proto:
             yield http_proto
         return

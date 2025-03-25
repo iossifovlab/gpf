@@ -8,6 +8,7 @@ import logging
 import multiprocessing as mp
 import os
 import pathlib
+import shutil
 import tempfile
 import textwrap
 import threading
@@ -411,8 +412,10 @@ def build_http_test_protocol(
     """
     build_filesystem_test_protocol(root_path, repair=repair)
 
-    server_address = "localhost:8080"
+    server_address = f"http://localhost:8080/{root_path.name}"
     yield build_fsspec_protocol(str(root_path), server_address)
+
+    shutil.rmtree(root_path)
 
 
 def _internal_process_runner(
