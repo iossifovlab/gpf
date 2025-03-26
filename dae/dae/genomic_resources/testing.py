@@ -373,34 +373,6 @@ def build_filesystem_test_resource(
 
 
 @contextlib.contextmanager
-def http_threaded_test_server(
-        path: pathlib.Path) -> Generator[str, None, None]:
-    """Run a range HTTP threaded server.
-
-    The HTTP range server is used to serve directory pointed by root_path.
-    """
-    # pylint: disable=import-outside-toplevel
-    from RangeHTTPServer import RangeRequestHandler  # type: ignore
-    handler_class = partial(
-        RangeRequestHandler, directory=str(path))
-    handler_class.protocol_version = "HTTP/1.0"  # type: ignore
-    httpd = HTTPServer(("", 0), handler_class)
-    server_address = httpd.server_address
-    logger.info(
-        "HTTP range server at %s serving %s",
-        server_address, path)
-    server_thread = threading.Thread(target=httpd.serve_forever)
-    server_thread.daemon = True
-    server_thread.start()
-
-    yield f"http://{server_address[0]}:{server_address[1]}"  # type: ignore
-
-    logger.info("shutting down HTTP range server %s", server_address)
-    httpd.socket.close()
-    httpd.shutdown()
-    server_thread.join()
-
-@contextlib.contextmanager
 def build_http_test_protocol(
     root_path: pathlib.Path, *,
     repair: bool = True,
