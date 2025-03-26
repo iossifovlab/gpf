@@ -159,11 +159,10 @@ EOT
 
         local -A ctx_apache
 
-        build_run_ctx_init ctx:ctx_apache "persistent" "container" "localstack/localstack" \
+        build_run_ctx_init ctx:ctx_apache "persistent" "container" "httpd:latest" \
            "cmd-from-image" "no-def-mounts" \
-           'ports:8080' \
            --hostname apache --network "${ctx_network["network_id"]}" \
-           -v /wd/dae/dae/genomic_resources/tests/.test_grr:/usr/local/apache2/htdocs/
+           -v ./dae/dae/genomic_resources/tests/.test_grr:/usr/local/apache2/htdocs/
 
         defer_ret build_run_ctx_reset ctx:ctx_apache
         build_run_ctx_persist ctx:ctx_apache
