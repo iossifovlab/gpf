@@ -11,11 +11,8 @@ import pathlib
 import shutil
 import tempfile
 import textwrap
-import threading
 from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager
-from functools import partial
-from http.server import HTTPServer  # ThreadingHTTPServer
 from typing import Any, cast
 
 import pyBigWig  # type: ignore
@@ -393,9 +390,12 @@ def build_http_test_protocol(
     host = os.environ.get("HTTP_HOST", "localhost:8080")
     server_address = f"http://{host}/{http_path.name}"
 
-    yield build_fsspec_protocol(str(root_path), server_address)
-
-    shutil.rmtree(http_path)
+    try:
+        yield build_fsspec_protocol(str(root_path), server_address)
+    except GeneratorExit:
+        print("Generator exit")
+    finally:
+        shutil.rmtree(http_path)
 
 
 def _internal_process_runner(
@@ -532,15 +532,24 @@ def proto_builder(
         setup_directories(root_path, content)
 
         if scheme == "file":
-            yield build_filesystem_test_protocol(root_path)
+            try:
+                yield build_filesystem_test_protocol(root_path)
+            except GeneratorExit:
+                print("Generator exit")
             return
         if scheme == "s3":
             with build_s3_test_protocol(root_path) as proto:
-                yield proto
+                try:
+                    yield proto
+                except GeneratorExit:
+                    print("Generator exit")
             return
         if scheme == "http":
             with build_http_test_protocol(root_path) as proto:
-                yield proto
+                try:
+                    yield proto
+                except GeneratorExit:
+                    print("Generator exit")
             return
 
     raise ValueError(f"unexpected protocol scheme: <{scheme}>")
