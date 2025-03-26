@@ -1,7 +1,9 @@
-<div class="container" style="margin-bottom: 20px">
+<div *ngIf="selectedDataset" class="container" style="margin-bottom: 20px">
   <gpf-genes-block [showAllTab]="true"></gpf-genes-block>
   <gpf-pheno-tool-measure></gpf-pheno-tool-measure>
-  <gpf-pheno-tool-genotype-block [variantTypes]="variantTypesSet"></gpf-pheno-tool-genotype-block>
+  <gpf-pheno-tool-genotype-block
+    [variantTypes]="variantTypesSet"
+    [hasDenovo]="selectedDataset.hasDenovo"></gpf-pheno-tool-genotype-block>
 
   <gpf-genomic-scores-block></gpf-genomic-scores-block>
 
