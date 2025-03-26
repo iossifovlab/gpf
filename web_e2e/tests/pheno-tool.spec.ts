@@ -6,7 +6,7 @@ test.describe('Pheno tool tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Phenotype tool');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Phenotype tool');
   });
 
   test('should display pheno tool elements', async({ page }) => {
@@ -24,7 +24,7 @@ test.describe('Pheno tool tests', () => {
     await expect(page.locator('gpf-pheno-tool-measure gpf-errors-alert .alert-danger')).toBeVisible();
 
     await page.locator('input#search-box').click();
-    await page.getByText('i1.age').first().click();
+    await page.getByText('instrument_1.age').first().click();
     await page.locator('gpf-pheno-tool').getByText('Report').click();
     await page.waitForSelector('gpf-pheno-tool-results-chart');
     await expect(page.locator('gpf-pheno-tool-results-chart')).toBeVisible();
@@ -34,7 +34,7 @@ test.describe('Pheno tool tests', () => {
     await expect(page.locator('gpf-pheno-tool-results-chart')).not.toBeVisible();
 
     await page.getByPlaceholder('Select or start typing to search').click();
-    await page.getByText('i1.age').first().click();
+    await page.getByText('instrument_1.age').first().click();
     await page.locator('gpf-pheno-tool').getByText('Report').click();
     await page.waitForSelector('gpf-pheno-tool-results-chart');
     await expect(page.locator('gpf-pheno-tool-results-chart')).toBeVisible();
@@ -52,7 +52,7 @@ test.describe('Pheno tool tests', () => {
     await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
 
     await page.locator('input#search-box').click();
-    await page.getByText('i1.age').first().click();
+    await page.getByText('instrument_1.age').first().click();
     await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
     await expect(page.getByText('Report')).toBeEnabled();
     await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
@@ -63,7 +63,7 @@ test.describe('Pheno tool tests', () => {
     await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
 
     await page.locator('input#search-box').click();
-    await page.getByText('i1.age').first().click();
+    await page.getByText('instrument_1.age').first().click();
     await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
     await expect(page.getByText('Report')).toBeEnabled();
     await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
@@ -102,7 +102,7 @@ test.describe('Pheno tool tests', () => {
     await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
 
     await page.getByLabel('Advanced').getByPlaceholder('Select or start typing to search').click();
-    await page.locator('.dropdown-item span', {hasText: 'i1.age'}).click();
+    await page.locator('.dropdown-item span', {hasText: 'instrument_1.age'}).click();
     await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
     await expect(page.getByText('Report')).toBeEnabled();
     await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
@@ -113,11 +113,11 @@ test.describe('Pheno tool download tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAllLiftover, 'Phenotype tool');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.vcfHelloWorld, 'Phenotype tool');
   });
-  test('should download i1.m1 and check if it equals the reference data', async({ page }) => {
+  test('should download instrument_1.measure_1 and check if it equals the reference data', async({ page }) => {
     await page.locator('input#search-box').click();
-    await page.getByText('i1.m1').first().click();
+    await page.getByText('instrument_1.measure_1').first().click();
 
     const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
     await page.getByText('Download').click();
@@ -126,12 +126,12 @@ test.describe('Pheno tool download tests', () => {
     const fixtureData = scanCSV('playwright/fixtures/pheno-tool/pheno_report1.csv', {nullValues: '-'});
     const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
     const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
-    expect(fixtureFrame.frameEqual(downloadFrame));
+    expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
   });
 
   [
-    {id: '2', measure: 'i1.m2', normalizedBy: 'Age'},
-    {id: '3', measure: 'i1.age', normalizedBy: 'Non verbal IQ'}
+    {id: '2', measure: 'instrument_1.measure_2', normalizedBy: 'Age'},
+    {id: '3', measure: 'instrument_1.age', normalizedBy: 'Non verbal IQ'}
   ].forEach(data => {
     test(`should normalize by "
       ${data.normalizedBy}
@@ -147,7 +147,7 @@ test.describe('Pheno tool download tests', () => {
       const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
-      expect(fixtureFrame.frameEqual(downloadFrame));
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
@@ -159,7 +159,7 @@ test.describe('Pheno tool download tests', () => {
       data.filters.toString()
     } filters, download report and compare it to the reference data`, async({ page }) => {
       await page.locator('input#search-box').click();
-      await page.getByText('i1.m1').first().click();
+      await page.getByText('instrument_1.measure_1').first().click();
 
 
       await page.locator('gpf-checkbox-list').getByRole('button', { name: 'None' }).click();
@@ -176,17 +176,17 @@ test.describe('Pheno tool download tests', () => {
       const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
-      expect(fixtureFrame.frameEqual(downloadFrame));
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
   [
     {id: '6', familyId: 'f1'},
-    {id: '7', familyId: 'f3'}
+    {id: '7', familyId: 'f2'}
   ].forEach(data => {
     test(`should check downloaded report with family id ${data.familyId}`, async({ page }) => {
       await page.locator('input#search-box').click();
-      await page.getByText('i1.age').first().click();
+      await page.getByText('instrument_1.age').first().click();
 
       await page.locator('#family-ids').click();
       await page.locator('gpf-family-ids textarea').fill(data.familyId);
@@ -198,19 +198,20 @@ test.describe('Pheno tool download tests', () => {
       const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
-      expect(fixtureFrame.frameEqual(downloadFrame));
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
   [
-    {id: '8', familyFilter: 'i1.iq', familyHistogramfromTo: ['33', '130']},
-    {id: '9', familyFilter: 'i1.m1', familyHistogramfromTo: ['84', '107']}
+    {id: '8', familyFilter: 'instrument_1.iq', familyHistogramfromTo: ['33', '130']},
+    {id: '9', familyFilter: 'instrument_1.measure_1', familyHistogramfromTo: ['50', '120']}
   ].forEach(data => {
     test(`should test advanced family filters with ${data.familyFilter}`, async({ page }) => {
       await page.locator('input#search-box').click();
-      await page.getByText('i1.age').first().click();
+      await page.getByText('instrument_1.age').first().click();
 
       await page.getByRole('tab', { name: 'Advanced', exact: true }).click();
+      await page.locator('gpf-categorical-filter').getByRole('button', { name: 'close' }).click();
       await page.getByLabel('Advanced').getByPlaceholder('Select or start typing to search').click();
       await page.locator('.dropdown-item span', {hasText: data.familyFilter}).click();
 
@@ -236,7 +237,7 @@ test.describe('Pheno tool download tests', () => {
       const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
-      expect(fixtureFrame.frameEqual(downloadFrame));
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
@@ -250,7 +251,7 @@ test.describe('Pheno tool download tests', () => {
       await page.keyboard.type(data.geneSymbol);
 
       await page.locator('input#search-box').click();
-      await page.getByText('i1.age').click();
+      await page.getByText('instrument_1.age').click();
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
       await page.getByText('Download').click();
@@ -259,13 +260,23 @@ test.describe('Pheno tool download tests', () => {
       const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
-      expect(fixtureFrame.frameEqual(downloadFrame));
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
   [
-    {id: '12', collection: 'SFARI Genes', set: 'SFARI ALL (910): SFARI Genes (2017-09): All genes', measure: 'i1.age'},
-    {id: '13', collection: 'Protein domains', set: 'AMOP (3)', measure: 'i1.iq'}
+    {
+      id: '12',
+      collection: 'SFARI Genes',
+      set: 'SFARI ALL (910): SFARI Genes (2017-09): All genes',
+      measure: 'instrument_1.age'
+    },
+    {
+      id: '13',
+      collection: 'Protein domains',
+      set: 'AMOP (3)',
+      measure: 'instrument_1.iq'
+    }
   ].forEach(data => {
     test(`should check downloaded report with gene sets collection ${data.collection}`, async({ page }) => {
       await page.getByRole('tab', { name: 'Gene Sets' }).click();
@@ -287,35 +298,34 @@ test.describe('Pheno tool download tests', () => {
       const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
-      expect(fixtureFrame.frameEqual(downloadFrame));
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
   [
     {
       id: '14',
-      genotype: 'comp_vcf_liftover',
+      genotype: 'denovo_helloworld',
       affectedStatus: 'affected',
-      set: 'Missense.Male (1): Missense.Male (comp_all_liftover:status:affected;comp_vcf_liftover:status:affected)',
-      measure: 'i1.age'
+      set: 'Missense (5): Missense (vcf_helloworld:status:affected;denovo_helloworld:status:affected)',
+      measure: 'instrument_1.age'
     },
     {
       id: '15',
       genotype: 'iossifov_2014_liftover',
       affectedStatus: 'unaffected',
       set: 'LGDs.Recurrent (3): LGDs.Recurrent '+
-        '(comp_all_liftover:status:affected;iossifov_2014_liftover:status:unaffected)',
-      measure: 'i1.iq'
+        '(vcf_helloworld:status:affected;iossifov_2014_liftover:status:unaffected)',
+      measure: 'instrument_1.iq'
     }
   ].forEach(data => {
-    test(`should check downloaded report with gene set Denovo and measure${data.measure}`, async({ page }) => {
+    test(`should check downloaded report with gene set Denovo and measure ${data.measure}`, async({ page }) => {
       await page.getByRole('tab', { name: 'Gene Sets' }).click();
       await page.locator('gpf-gene-sets select.form-control').selectOption('Denovo');
 
       await page.getByRole('button', { name: 'Select studies' }).click();
       await expect(page.locator('.modal-content')).toBeVisible();
 
-      await page.locator('#expand-COMP_genotypes').click();
       await page.locator('#dataset-' + data.genotype).click();
       await page.locator(`#${data.genotype}-checkbox-${data.affectedStatus}`).click();
       await page.mouse.click(0, 0); // close modal
@@ -333,19 +343,19 @@ test.describe('Pheno tool download tests', () => {
       const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
-      expect(fixtureFrame.frameEqual(downloadFrame));
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 
   [
     {
-      id: '16', measure: 'i1.age',
+      id: '16', measure: 'instrument_1.age',
       geneScore: 'LGD rank - Gene rank after sorting by LGD vulnerability score',
       geneScoresHistogramFromTo: ['2944', '14716']
     },
     {
       id: '17',
-      measure: 'i1.m1',
+      measure: 'instrument_1.measure_1',
       geneScore: 'pRec - Probability of biallelic loss-of-function intolerance',
       geneScoresHistogramFromTo: ['0.000012', '0.832']
     }
@@ -369,7 +379,7 @@ test.describe('Pheno tool download tests', () => {
       const fixtureData = scanCSV(`playwright/fixtures/pheno-tool/pheno_report${data.id}.csv`, {nullValues: '-'});
       const downloadFrame = (await downloadData.select(downloadData.columns.sort()).collect()).sort('person_id');
       const fixtureFrame = (await fixtureData.select(fixtureData.columns.sort()).collect()).sort('person_id');
-      expect(fixtureFrame.frameEqual(downloadFrame));
+      expect(fixtureFrame.toString()).toEqual(downloadFrame.toString());
     });
   });
 });

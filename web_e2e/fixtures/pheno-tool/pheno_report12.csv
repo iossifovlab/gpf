@@ -1,6 +1,9 @@
-person_id,family_id,sex,status,i1.age,LGDs,missense,synonymous
-f1.p1,f1,M,affected,166.33976,0,0,0
-f2.p1,f2,M,affected,111.538,0,0,0
-f3.p1,f3,M,affected,68.00149,0,0,0
-f4.p1,f4,M,affected,157.61835,0,0,0
-f5.p1,f5,M,affected,171.89037,0,0,0
+person_id,family_id,status,sex,instrument_1.age,LGDs,missense,synonymous
+f1.p1,f1,affected,M,166.33975,0,1.0,0.0
+f2.p1,f2,affected,F,111.538,0,1.0,1.0
+f3.p1,f3,affected,M,68.00149,0,0.0,0.0
+f4.p1,f4,affected,F,157.61835,0,0.0,0.0
+f5.p1,f5,unaffected,M,171.89038,0,0.0,0.0
+f6.p1,f6,affected,F,143.50627,0,0.0,0.0
+f7.p1,f7,affected,M,190.443,0,0.0,0.0
+f8.p1,f8,affected,F,129.93854,0,0.0,0.0

@@ -1,6 +1,9 @@
-person_id,family_id,sex,status,i1.m2,i1.age,i1.m2 ~ i1.age,LGDs,missense,synonymous
-f1.p1,f1,M,affected,28.5259,166.33975600961486,-7.24296,0,1.0,1.0
-f2.p1,f2,M,affected,43.48287,111.53800328766472,4.21296,0,1.0,0.0
-f3.p1,f3,M,affected,39.85473,68.00148724003327,-2.19655,0,1.0,1.0
-f4.p1,f4,M,affected,37.31663,157.61834502034586,0.99059,0,0.0,0.0
-f5.p1,f5,M,affected,39.65021,171.8903746807015,4.23596,0,0.0,0.0
+person_id,family_id,status,sex,instrument_1.measure_2,instrument_1.age,instrument_1.measure_2 ~ instrument_1.age,LGDs,missense,synonymous
+f1.p1,f1,affected,M,28.5259,166.33975,-10.31625,0,1.0,0.0
+f2.p1,f2,affected,F,43.48288,111.538,1.94939,0,1.0,1.0
+f3.p1,f3,affected,M,39.85472,68.00149,-3.81684,0,0.0,0.0
+f4.p1,f4,affected,F,37.31662,157.61835,-1.95384,0,0.0,0.0
+f5.p1,f5,unaffected,M,39.65021,171.89038,1.08065,0,0.0,0.0
+f6.p1,f6,affected,F,35.16426,143.50627,-4.79924,0,0.0,0.0
+f7.p1,f7,affected,M,41.77138,190.44301,4.11295,0,0.0,0.0
+f8.p1,f8,affected,F,54.37305,129.93854,13.74322,0,0.0,0.0
