@@ -95,7 +95,7 @@ when it has a phenotype database attached to it. The configuration looks like th
 .. code:: yaml
 
     genotype_browser:
-      enabled: true
+      ...
       family_filters:
         sample_continuous_filter:
           name: Sample Filter Name
@@ -121,8 +121,9 @@ in the genotype browser section:
 .. code:: yaml
 
     genotype_browser:
-      ...
       columns:
+        genotype:
+          ...
         phenotype:
           sample_pheno_measure:
             role: prb

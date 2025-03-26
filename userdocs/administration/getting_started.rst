@@ -285,7 +285,7 @@ Getting started with de novo gene sets
 ######################################
 
 To generate de novo gene sets, you can use the
-``generate_denovo_gene_sets.py`` tool. Similar to the `reports_tool`_ above,
+``generate_denovo_gene_sets`` tool. Similar to the `reports_tool`_ above,
 you can use the ``--show-studies`` and ``--studies`` option.
 
 By default the de novo gene sets are disabled. If you want to enable them for a 
@@ -320,7 +320,7 @@ running:
 
 .. code-block:: bash
 
-    generate_denovo_gene_sets.py --studies helloworld
+    generate_denovo_gene_sets --studies helloworld
 
 .. include:: getting_started/getting_started_with_annotation.rst
 
