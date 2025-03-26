@@ -153,6 +153,22 @@ EOT
 
   }
 
+  # run HTTP server
+  build_stage "Run apache"
+  {
+
+        local -A ctx_apache
+
+        build_run_ctx_init ctx:ctx_apache "persistent" "container" "httpd:latest" \
+           "cmd-from-image" "no-def-mounts" \
+           --hostname apache --network "${ctx_network["network_id"]}" \
+           -v ./dae/dae/genomic_resources/tests/.test_grr:/usr/local/apache2/htdocs/
+
+        defer_ret build_run_ctx_reset ctx:ctx_apache
+        build_run_ctx_persist ctx:ctx_apache
+
+  }
+
   build_stage "Diagnostics"
   {
     build_run_ctx_init "container" "${gpf_dev_image_ref}"
@@ -212,6 +228,7 @@ EOT
         build_run_ctx_init ctx:ctx_dae "container" "${gpf_dev_image_ref}" \
           --network "${ctx_network["network_id"]}" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env HTTP_HOST="apache" \
           --env LOCALSTACK_HOST="localstack" \
           --env AWS_ACCESS_KEY_ID="foo" \
           --env AWS_SECRET_ACCESS_KEY="foo" \
@@ -244,6 +261,7 @@ EOT
         build_run_ctx_init ctx:ctx_dae_integ "container" "${gpf_dev_image_ref}" \
           --network "${ctx_network["network_id"]}" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env HTTP_HOST="apache" \
           --env LOCALSTACK_HOST="localstack" \
           --env AWS_ACCESS_KEY_ID="foo" \
           --env AWS_SECRET_ACCESS_KEY="foo"
@@ -278,6 +296,7 @@ EOT
         build_run_ctx_init ctx:ctx_wdae "container" "${gpf_dev_image_ref}" \
           --network "${ctx_network["network_id"]}" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env HTTP_HOST="apache" \
           --env LOCALSTACK_HOST="localstack" \
           --env WDAE_EMAIL_HOST="mailhog"
 
@@ -307,6 +326,7 @@ EOT
         build_run_ctx_init ctx:ctx_demo "container" "${gpf_dev_image_ref}" \
           --network "${ctx_network["network_id"]}" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env HTTP_HOST="apache" \
           --env LOCALSTACK_HOST="localstack" \
           --env AWS_ACCESS_KEY_ID="foo" \
           --env AWS_SECRET_ACCESS_KEY="foo" \
@@ -337,6 +357,7 @@ EOT
         build_run_ctx_init ctx:ctx_vep "container" "${gpf_dev_image_ref}" \
           --network "${ctx_network["network_id"]}" \
           --env GRR_DEFINITION_FILE="/wd/cache/grr_definition.yaml" \
+          --env HTTP_HOST="apache" \
           --env LOCALSTACK_HOST="localstack" \
           --env AWS_ACCESS_KEY_ID="foo" \
           --env AWS_SECRET_ACCESS_KEY="foo" \

@@ -20,7 +20,7 @@ from dae.genomic_resources.testing import (
 pytestmark = [pytest.mark.grr_full, pytest.mark.grr_http]
 
 
-@pytest.fixture()
+@pytest.fixture
 def tabix_fsspec_proto(
     content_fixture: dict[str, Any],
     tmp_path_factory: pytest.TempPathFactory,
@@ -28,6 +28,7 @@ def tabix_fsspec_proto(
 ) -> Generator[RepositoryProtocol, None, None]:
 
     root_path = tmp_path_factory.mktemp("tabix_fsspec_proto")
+
     setup_directories(root_path, content_fixture)
     setup_tabix(
         root_path / "one" / "test.txt.gz",
@@ -106,14 +107,14 @@ def tabix_fsspec_proto_utf8(
     return build_filesystem_test_protocol(root_path)
 
 
-@pytest.mark.grr_tabix()
+@pytest.mark.grr_tabix
 def test_get_all_resources(tabix_fsspec_proto: RepositoryProtocol) -> None:
     proto = tabix_fsspec_proto
     resources = list(proto.get_all_resources())
     assert len(resources) == 5, resources
 
 
-@pytest.mark.grr_tabix()
+@pytest.mark.grr_tabix
 def test_open_raw_file_read_three_a(
         tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
@@ -128,7 +129,7 @@ def test_open_raw_file_read_three_a(
     assert content == "a"
 
 
-@pytest.mark.grr_tabix()
+@pytest.mark.grr_tabix
 def test_open_raw_file_read_one_compressed(
         tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
@@ -144,7 +145,7 @@ def test_open_raw_file_read_one_compressed(
     assert header == "#chrom\tpos_begin\tpos_end\tc1\n"
 
 
-@pytest.mark.grr_tabix()
+@pytest.mark.grr_tabix
 def test_open_raw_file_seek(tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
     proto = tabix_fsspec_proto
@@ -161,7 +162,7 @@ def test_open_raw_file_seek(tabix_fsspec_proto: RepositoryProtocol) -> None:
     assert sequence == "NNACCCAAAC"
 
 
-@pytest.mark.grr_tabix()
+@pytest.mark.grr_tabix
 def test_open_tabix_file_contigs(
         tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
@@ -176,7 +177,7 @@ def test_open_tabix_file_contigs(
     assert contigs == ["1", "2", "3"]
 
 
-@pytest.mark.grr_tabix()
+@pytest.mark.grr_tabix
 def test_open_tabix_file_fetch_all(
         tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
@@ -192,7 +193,7 @@ def test_open_tabix_file_fetch_all(
     assert len(lines) == 5
 
 
-@pytest.mark.grr_tabix()
+@pytest.mark.grr_tabix
 def test_open_tabix_file_fetch_region(
         tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
@@ -209,7 +210,7 @@ def test_open_tabix_file_fetch_region(
         ("3", "1", "10", "3.0"), ("3", "11", "20", "3.5")]
 
 
-@pytest.mark.grr_tabix()
+@pytest.mark.grr_tabix
 def test_open_vcf_file_contigs(
         tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
@@ -223,7 +224,7 @@ def test_open_vcf_file_contigs(
     assert contigs == ["foo", "bar"]
 
 
-@pytest.mark.grr_tabix()
+@pytest.mark.grr_tabix
 def test_open_vcf_file_fetch_all(
         tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
@@ -239,7 +240,7 @@ def test_open_vcf_file_fetch_all(
     assert len(lines) == 4
 
 
-@pytest.mark.grr_tabix()
+@pytest.mark.grr_tabix
 def test_open_vcf_file_fetch_region(
         tabix_fsspec_proto: RepositoryProtocol) -> None:
     # Given
@@ -255,7 +256,7 @@ def test_open_vcf_file_fetch_region(
     assert len(lines) == 2
 
 
-@pytest.mark.grr_tabix()
+@pytest.mark.grr_tabix
 def test_open_utf8_tabix_file(
         tabix_fsspec_proto_utf8: RepositoryProtocol) -> None:
     proto = tabix_fsspec_proto_utf8

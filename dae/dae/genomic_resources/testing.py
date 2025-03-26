@@ -8,13 +8,11 @@ import logging
 import multiprocessing as mp
 import os
 import pathlib
+import shutil
 import tempfile
 import textwrap
-import threading
 from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager
-from functools import partial
-from http.server import HTTPServer  # ThreadingHTTPServer
 from typing import Any, cast
 
 import pyBigWig  # type: ignore
@@ -372,41 +370,6 @@ def build_filesystem_test_resource(
 
 
 @contextlib.contextmanager
-def http_threaded_test_server(
-        path: pathlib.Path) -> Generator[str, None, None]:
-    """Run a range HTTP threaded server.
-
-    The HTTP range server is used to serve directory pointed by root_path.
-    """
-    # pylint: disable=import-outside-toplevel
-    from RangeHTTPServer import RangeRequestHandler  # type: ignore
-    handler_class = partial(
-        RangeRequestHandler, directory=str(path))
-    handler_class.protocol_version = "HTTP/1.0"  # type: ignore
-    httpd = HTTPServer(("", 0), handler_class)
-    server_address = httpd.server_address
-    logger.info(
-        "HTTP range server at %s serving %s",
-        server_address, path)
-    server_thread = threading.Thread(target=httpd.serve_forever)
-    server_thread.daemon = True
-    server_thread.start()
-
-    yield f"http://{server_address[0]}:{server_address[1]}"  # type: ignore
-
-    logger.info("shutting down HTTP range server %s", server_address)
-    httpd.socket.close()
-    httpd.shutdown()
-    server_thread.join()
-
-
-@contextlib.contextmanager
-def http_process_test_server(path: pathlib.Path) -> Generator[str, None, None]:
-    with _process_server_manager(http_threaded_test_server, path) as http_url:
-        yield http_url
-
-
-@contextlib.contextmanager
 def build_http_test_protocol(
     root_path: pathlib.Path, *,
     repair: bool = True,
@@ -416,10 +379,23 @@ def build_http_test_protocol(
     The HTTP range server is used to serve directory pointed by root_path.
     This directory should be a valid filesystem genomic resource repository.
     """
-    build_filesystem_test_protocol(root_path, repair=repair)
+    source_proto = build_filesystem_test_protocol(root_path, repair=repair)
+    http_path = pathlib.Path(__file__).parent
+    http_path = http_path / "tests" / ".test_grr" / root_path.name
+    http_path.mkdir(parents=True, exist_ok=True)
+    dest_proto = build_filesystem_test_protocol(http_path)
+    copy_proto_genomic_resources(
+        dest_proto, source_proto)
 
-    with http_process_test_server(root_path) as server_address:
+    host = os.environ.get("HTTP_HOST", "localhost:8080")
+    server_address = f"http://{host}/{http_path.name}"
+
+    try:
         yield build_fsspec_protocol(str(root_path), server_address)
+    except GeneratorExit:
+        print("Generator exit")
+    finally:
+        shutil.rmtree(http_path)
 
 
 def _internal_process_runner(
@@ -556,15 +532,24 @@ def proto_builder(
         setup_directories(root_path, content)
 
         if scheme == "file":
-            yield build_filesystem_test_protocol(root_path)
+            try:
+                yield build_filesystem_test_protocol(root_path)
+            except GeneratorExit:
+                print("Generator exit")
             return
         if scheme == "s3":
             with build_s3_test_protocol(root_path) as proto:
-                yield proto
+                try:
+                    yield proto
+                except GeneratorExit:
+                    print("Generator exit")
             return
         if scheme == "http":
             with build_http_test_protocol(root_path) as proto:
-                yield proto
+                try:
+                    yield proto
+                except GeneratorExit:
+                    print("Generator exit")
             return
 
     raise ValueError(f"unexpected protocol scheme: <{scheme}>")
