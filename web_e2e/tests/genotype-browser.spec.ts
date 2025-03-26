@@ -43,9 +43,9 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {study: datasetIds.helloWorldGenotypes, count: '6'},
-    {study: datasetIds.denovoHelloWorld, count: '6'},
-    {study: datasetIds.vcfHelloWorld, count: '16'},
+    {study: datasetIds.helloWorldGenotypes, count: '10'},
+    {study: datasetIds.denovoHelloWorld, count: '10'},
+    {study: datasetIds.vcfHelloWorld, count: '15'},
     {study: datasetIds.iossifov2014Liftover, count: '8'},
     {study: datasetIds.multiLiftover, count: '0'}
   ].forEach(data => {
@@ -82,17 +82,17 @@ test.describe('Genotype browser table preview result tests', () => {
     {
       study: datasetIds.denovoHelloWorld,
       affectedStatus: 'affected',
-      count: '32'
+      count: '61'
     },
     {
       study: datasetIds.vcfHelloWorld,
       affectedStatus: 'affected',
-      count: '20'
+      count: '19'
     },
     {
       study: datasetIds.vcfHelloWorld,
       affectedStatus: 'unaffected',
-      count: '28'
+      count: '27'
     }
   ].forEach(data => {
     test('should display the correct overview paragraph when ' +
@@ -146,10 +146,10 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {effectType: 'All', count: '28'},
+    {effectType: 'All', count: '27'},
     {effectType: 'LGDs', count: '0'},
-    {effectType: 'Nonsynonymous', count: '12'},
-    {effectType: 'Coding', count: '16'},
+    {effectType: 'Nonsynonymous', count: '11'},
+    {effectType: 'Coding', count: '15'},
     {effectType: 'UTRs', count: '0'}
   ].forEach(data => {
     test('should display the correct data in overview paragraph' +
@@ -173,7 +173,7 @@ test.describe('Genotype browser table preview result tests', () => {
     {
       study: datasetIds.denovoHelloWorld,
       inheritanceType: 'denovo',
-      count: '32'
+      count: '61'
     }
   ].forEach(data => {
     test('should display the correct overview paragraph when ' +
@@ -191,8 +191,8 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {familyId: 'f1', count: '17'},
-    {familyId: 'f2', count: '15'},
+    {familyId: 'f1', count: '28'},
+    {familyId: 'f2', count: '23'},
     {familyId: 'f3', count: '0'},
   ].forEach(data => {
     test('should display the correct overview paragraph when family id is "' + data.familyId + '"', async({ page }) => {
@@ -311,8 +311,8 @@ test.describe('Genotype browser table preview result tests', () => {
   });
 
   [
-    {familyId: 'f1', values: {age: '166.33975219726562', iq: '104.9118881225586'}},
-    {familyId: 'f2', values: {age: '111.53800201416016', iq: '66.6941146850586'}},
+    {familyId: 'f1', values: {age: '166.33975219726562', iq: '124.9118881225586'}},
+    {familyId: 'f2', values: {age: '111.53800201416016', iq: '118.6941146850586'}},
   ].forEach(data => {
     test('should display the correct age and iq values in the measures column for "'
     + data.familyId + '" family', async({ page }) => {
@@ -325,11 +325,11 @@ test.describe('Genotype browser table preview result tests', () => {
 
       await page.getByRole('button', { name: 'Table Preview' }).click();
       await expect(
-        page.locator('gpf-table-view-cell:nth-child(6)').nth(0)
+        page.locator('gpf-table-view-cell:nth-child(6) > div').nth(0)
       ).toContainText(data.values.age);
 
       await expect(
-        page.locator('gpf-table-view-cell:nth-child(6)').nth(1)
+        page.locator('gpf-table-view-cell:nth-child(6) > div').nth(1)
       ).toContainText(data.values.iq);
     });
   });
