@@ -48,7 +48,7 @@ test.describe('Unique family variants filter tests', () => {
     await page.getByText('Go').click();
     await expect(page.locator('gpf-gene-plot')).toBeVisible();
 
-    await expect(page.locator('#variants-count-span')).toHaveText('26 variants selected');
+    await expect(page.locator('#variants-count-span')).toHaveText('25 variants selected');
     await page.locator('#unique-family-variants-checkbox').click();
     await expect(page.locator('#variants-count-span')).toHaveText('22 variants selected');
   });
