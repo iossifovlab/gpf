@@ -38,7 +38,7 @@ def _load_annotator_factory_plugins() -> None:
     if _EXTENTIONS_LOADED:
         return
     # pylint: disable=import-outside-toplevel
-    from importlib_metadata import entry_points
+    from importlib.metadata import entry_points
     discovered_entries = entry_points(group="dae.annotation.annotators")
     for entry in discovered_entries:
         annotator_type = entry.name
@@ -136,6 +136,7 @@ def build_annotation_pipeline(
     pipeline = AnnotationPipeline(grr)
     pipeline.preamble = preamble
     pipeline.raw = config
+    annotator_config = None
     try:
         for idx, annotator_config in enumerate(pipeline_config):
             params = annotator_config.parameters
@@ -155,6 +156,7 @@ def build_annotation_pipeline(
             check_for_repeated_attributes_in_annotator(annotator_config)
             pipeline.add_annotator(annotator)
     except ValueError as value_error:
+        assert annotator_config is not None
         raise AnnotationConfigurationError(
             f"The {annotator_config.annotator_id} annotator"
             f" configuration is incorrect: ",
