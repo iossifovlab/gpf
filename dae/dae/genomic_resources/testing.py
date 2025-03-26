@@ -410,12 +410,20 @@ def build_http_test_protocol(
     The HTTP range server is used to serve directory pointed by root_path.
     This directory should be a valid filesystem genomic resource repository.
     """
-    build_filesystem_test_protocol(root_path, repair=repair)
+    source_proto = build_filesystem_test_protocol(root_path, repair=repair)
+    http_path = pathlib.Path(__file__).parent
+    http_path = http_path / "tests" / ".test_grr" / root_path.name
+    http_path.mkdir(parents=True, exist_ok=True)
+    dest_proto = build_filesystem_test_protocol(http_path)
+    copy_proto_genomic_resources(
+        dest_proto, source_proto)
 
-    server_address = f"http://localhost:8080/{root_path.name}"
+    host = os.environ.get("HTTP_HOST", "localhost:8080")
+    server_address = f"http://{host}/{http_path.name}"
+
     yield build_fsspec_protocol(str(root_path), server_address)
 
-    shutil.rmtree(root_path)
+    shutil.rmtree(http_path)
 
 
 def _internal_process_runner(
@@ -559,12 +567,6 @@ def proto_builder(
                 yield proto
             return
         if scheme == "http":
-            http_path = pathlib.Path(__file__).parent
-            if root_path.is_absolute():
-                root_path = pathlib.Path(root_path.name[1:])
-            root_path = http_path / ".test_grr" / root_path
-            root_path.mkdir(parents=True, exist_ok=True)
-            setup_directories(root_path, content)
             with build_http_test_protocol(root_path) as proto:
                 yield proto
             return

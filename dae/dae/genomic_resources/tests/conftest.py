@@ -99,13 +99,6 @@ def fsspec_proto(
         return
 
     if grr_scheme == "http":
-        http_path = pathlib.Path(__file__).parent
-        if root_path.is_absolute():
-            root_path = pathlib.Path(root_path.name[1:])
-        root_path = http_path / ".test_grr" / root_path
-        root_path.mkdir(parents=True, exist_ok=True)
-        setup_directories(root_path, content_fixture)
-
         with build_http_test_protocol(root_path) as http_proto:
             yield http_proto
         return
