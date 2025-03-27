@@ -5,6 +5,7 @@ import os
 import sys
 from abc import abstractmethod
 from collections.abc import Generator
+from itertools import islice
 from pathlib import Path
 from typing import Any
 
@@ -216,17 +217,29 @@ class AnnotationTool:
 
     @staticmethod
     def _read(
-        *args, **kwargs,
+        input_path: str,
+        input_separator: str,
+        region: Region | None,
+        grr_definition: dict | None,
+        ref_genome_id: str | None,
+        kwargs: dict,
     ) -> Generator[tuple[dict, Annotatable], None, None]:
         raise NotImplementedError
 
     @staticmethod
-    def _write(*args, **kwargs) -> None:
+    def _write(
+        data: Generator[tuple[dict, dict], None, None],
+        annotation_columns: list[str],
+        out_file_path: str,
+        separator: str,
+    ) -> None:
         raise NotImplementedError
 
     @staticmethod
     def get_task_dir(region: Region | None) -> str:
-        assert region is not None
+        """Get dir for batch annotation."""
+        if region is None:
+            return "batch_work_dir"
         chrom = region.chrom
         pos_beg = region.start if region.start is not None else "_"
         pos_end = region.stop if region.stop is not None else "_"
@@ -236,18 +249,21 @@ class AnnotationTool:
     def annotate_batched(
         rec_iterator,
         pipeline,
+        batch_size: int,
         work_dir: str,
     ) -> Generator[tuple[dict, dict], None, None]:
+        """Annotate using batch mode."""
         errors = []
         try:
-            records, annotatables = zip(*tuple(rec_iterator), strict=True)
-            context = list(records) \
-                if isinstance(pipeline, ReannotationPipeline) \
-                else None
-            yield from zip(records, pipeline.batch_annotate(
-                list(annotatables), context,
-                batch_work_dir=work_dir,
-            ), strict=True)
+            while batch := tuple(islice(rec_iterator, batch_size)):
+                records, annotatables = zip(*batch, strict=True)
+                context = list(records) \
+                    if isinstance(pipeline, ReannotationPipeline) \
+                    else None
+                yield from zip(records, pipeline.batch_annotate(
+                    list(annotatables), context,
+                    batch_work_dir=work_dir,
+                ), strict=True)
         except Exception as ex:  # pylint: disable=broad-except
             logger.exception("Error during batch annotation")
             errors.append(str(ex))
@@ -261,6 +277,7 @@ class AnnotationTool:
         rec_iterator,
         pipeline,
     ) -> Generator[tuple[dict, dict], None, None]:
+        """Annotate using iterative mode."""
         errors = []
         for record, annotatable in rec_iterator:
             try:
@@ -319,13 +336,17 @@ class AnnotationTool:
         )
 
         pipeline.open()
-        if args.batch_mode:
+        if args.batch_size > 0:
             annotated_data = cls.annotate_batched(
-                data, pipeline, cls.get_task_dir(region),
+                data,
+                pipeline,
+                args.batch_size,
+                cls.get_task_dir(region),
             )
         else:
             annotated_data = cls.annotate_iterative(
-                data, pipeline,
+                data,
+                pipeline,
             )
         pipeline.close()
 

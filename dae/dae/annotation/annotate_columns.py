@@ -163,8 +163,10 @@ class AnnotateColumnsTool(AnnotationTool):
             action="store_true",
         )
         parser.add_argument(
-            "--batch-mode", default=False,
-            action="store_true",
+            "--batch-size",
+            type=int,
+            default=0,  # 0 = annotate iteratively, no batches
+            help="Annotate in batches of",
         )
 
         CLIAnnotationContext.add_context_arguments(parser)

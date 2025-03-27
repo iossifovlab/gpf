@@ -141,6 +141,12 @@ class AnnotateVCFTool(AnnotationTool):
             " a full reannotation.",
             action="store_true",
         )
+        parser.add_argument(
+            "--batch-size",
+            type=int,
+            default=0,  # 0 = annotate iteratively, no batches
+            help="Annotate in batches of",
+        )
 
         CLIAnnotationContext.add_context_arguments(parser)
         TaskGraphCli.add_arguments(parser)
