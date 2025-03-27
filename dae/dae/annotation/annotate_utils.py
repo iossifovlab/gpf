@@ -1,5 +1,6 @@
 import argparse
 import gzip
+import logging
 import os
 import sys
 from abc import abstractmethod
@@ -47,6 +48,8 @@ from dae.utils.regions import (
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 PART_FILENAME = "{in_file}_annotation_{chrom}_{pos_beg}_{pos_end}.gz"
+
+logger = logging.getLogger("annotate_utils")
 
 
 def produce_regions(
@@ -235,27 +238,45 @@ class AnnotationTool:
         pipeline,
         work_dir: str,
     ) -> Generator[tuple[dict, dict], None, None]:
-        records, annotatables = zip(*tuple(rec_iterator), strict=True)
-        context = list(records) \
-            if isinstance(pipeline, ReannotationPipeline) \
-            else None
-        yield from zip(records, pipeline.batch_annotate(
-            list(annotatables), context,
-            batch_work_dir=work_dir,
-        ), strict=True)
+        errors = []
+        try:
+            records, annotatables = zip(*tuple(rec_iterator), strict=True)
+            context = list(records) \
+                if isinstance(pipeline, ReannotationPipeline) \
+                else None
+            yield from zip(records, pipeline.batch_annotate(
+                list(annotatables), context,
+                batch_work_dir=work_dir,
+            ), strict=True)
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.exception("Error during batch annotation")
+            errors.append(str(ex))
+        if len(errors) > 0:
+            logger.error("there were errors during annotation")
+            for error in errors:
+                logger.error("\t%s", error)
 
     @staticmethod
     def annotate_iterative(
         rec_iterator,
         pipeline,
     ) -> Generator[tuple[dict, dict], None, None]:
+        errors = []
         for record, annotatable in rec_iterator:
-            context = None
-            if isinstance(pipeline, ReannotationPipeline):
-                for col in pipeline.attributes_deleted:
-                    del record[col]
-                context = record
-            yield record, pipeline.annotate(annotatable, context)
+            try:
+                context = None
+                if isinstance(pipeline, ReannotationPipeline):
+                    for col in pipeline.attributes_deleted:
+                        del record[col]
+                    context = record
+                yield record, pipeline.annotate(annotatable, context)
+            except Exception as ex:  # pylint: disable=broad-except
+                logger.exception("Error during iterative annotation")
+                errors.append(str(ex))
+        if len(errors) > 0:
+            logger.error("there were errors during annotation")
+            for error in errors:
+                logger.error("\t%s", error)
 
     @classmethod
     def annotate(

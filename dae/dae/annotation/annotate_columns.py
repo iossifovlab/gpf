@@ -192,12 +192,25 @@ class AnnotateColumnsTool(AnnotationTool):
             if res is not None:
                 ref_genome = build_reference_genome_from_resource(res).open()
 
+        errors = []
         record_to_annotatable = build_record_to_annotatable(
             kwargs, set(header_columns), ref_genome=ref_genome)
-        for line in line_iterator:
-            columns = line.strip("\n\r").split(input_separator)
-            record = dict(zip(header_columns, columns, strict=True))
-            yield record, record_to_annotatable.build(record)
+        for lnum, line in enumerate(line_iterator):
+            try:
+                columns = line.strip("\n\r").split(input_separator)
+                record = dict(zip(header_columns, columns, strict=True))
+                yield record, record_to_annotatable.build(record)
+            except Exception as ex:  # pylint: disable=broad-except
+                logger.exception(
+                    "unexpected input data format at line %s: %s",
+                    lnum, line)
+                errors.append((lnum, line, str(ex)))
+
+        if len(errors) > 0:
+            logger.error("there were errors during the import")
+            for lnum, line, error in errors:
+                logger.error("line %s: %s", lnum, line)
+                logger.error("\t%s", error)
 
     @staticmethod
     def _write(
@@ -230,17 +243,28 @@ class AnnotateColumnsTool(AnnotationTool):
         self.ref_genome_id = ref_genome.resource_id \
             if ref_genome is not None else None
 
+        pipeline_config_old = None
+        if self.args.reannotate:
+            pipeline_config_old = Path(self.args.reannotate).read_text()
+        pipeline = build_annotation_pipeline(
+            self.pipeline.raw, self.grr,
+            allow_repeated_attributes=self.args.allow_repeated_attributes,
+            work_dir=Path(self.args.work_dir),
+            config_old_raw=pipeline_config_old,
+            full_reannotation=self.args.full_reannotation,
+        )
+
         _, _, header_columns = \
             read_input(self.args.input, self.args.input_separator)
         annotation_columns = [
-            attr.name for attr in self.pipeline.get_attributes()
+            attr.name for attr in pipeline.get_attributes()
             if not attr.internal
         ]
         # WRITE HEADER
-        if isinstance(self.pipeline, ReannotationPipeline):
+        if isinstance(pipeline, ReannotationPipeline):
             old_annotation_columns = {
                 attr.name
-                for attr in self.pipeline.pipeline_old.get_attributes()
+                for attr in pipeline.pipeline_old.get_attributes()
                 if not attr.internal
             }
             new_header = [
