@@ -459,6 +459,7 @@ EOT
     build_run cp BUILD wdae/wdae/wdae/__build__.py
     build_run cp BUILD impala_storage/impala_storage/__build__.py
     build_run cp BUILD impala2_storage/impala2_storage/__build__.py
+    build_run cp BUILD rest_client/rest_client/__build__.py
 
     local image_name="gpf-package"
     build_docker_data_image_create_from_tarball "${image_name}" <(
@@ -488,7 +489,11 @@ EOT
           --exclude pyrightconfig.json \
           --exclude pylintrc \
           --transform "s,^,gpf/," \
-          dae/ wdae/ impala_storage/ impala2_storage \
+          dae/ wdae/ \
+          impala_storage \
+          impala2_storage \
+          gcp_storage \
+          rest_client \
           external_vep_annotator \
           federation \
           environment.yml dev-environment.yml VERSION BUILD
