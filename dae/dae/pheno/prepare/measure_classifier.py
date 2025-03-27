@@ -230,7 +230,7 @@ def inference_reference_impl(
         min_value = None
         max_value = None
         domain_values = list(itertools.islice(
-            [v for v in unique_values if v.strip() != ""],
+            [v for v in sorted(unique_values) if v.strip() != ""],
             0,
             20,
         ))
