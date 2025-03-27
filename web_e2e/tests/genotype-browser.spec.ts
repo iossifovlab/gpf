@@ -73,7 +73,6 @@ test.describe('Genotype browser table preview result tests', () => {
       await page.locator('#regions-filter').click();
       await page.locator('gpf-regions-filter textarea').focus();
       await page.keyboard.type(data.region);
-      await page.waitForTimeout(1000);
       await page.getByRole('button', { name: 'Table Preview' }).click();
       await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
     });
