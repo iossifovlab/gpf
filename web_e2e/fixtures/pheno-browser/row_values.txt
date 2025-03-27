@@ -6,4 +6,4 @@ instrument_1measure_3Measure 3, a continuous measure with a normal distribution 
 instrument_1measure_4Measure 4, an ordinal measure with a Poisson distribution with an average number of events per interval of 4 for non-affected individuals, and 1 for affected individualscontinuous[0.000,10.000]0.2250.0530.7310.4976,
 instrument_1measure_5Measure 5, a categorical measure with random distribution of 5 distinct valuescategorical[val1][val2][val3][val4][val5]NaNNaNNaNNaN,
 instrument_2measure_6The first measure of the second instrumentcontinuous[10.100,15.400]0.96980.52650.27570.3167,
-instrument_2measure_7The second measure of the second instrumentraw[AA][AB][AC][AD][BA][BB][BD][CA][CB][CC][CD][DA][DC][DD][EB][EC][ED][FB][FC][FD]NaNNaNNaNNaN
+instrument_2measure_7The second measure of the second instrumentraw[AA][AB][AC][AD][BA][BB][BC][BD][CA][CB][CC][CD][DA][DB][DC][DD][EA][EB][EC][ED]NaNNaNNaNNaN
