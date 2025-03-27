@@ -4,39 +4,32 @@ import { Store } from '@ngrx/store';
 import { selectRegionsFilters, setRegionsFilters } from './regions-filter.state';
 import { ValidateNested } from 'class-validator';
 import { ComponentValidator } from 'app/common/component-validator';
-import { switchMap, take } from 'rxjs';
+import { take } from 'rxjs';
 import { cloneDeep } from 'lodash';
-import { InstanceService } from 'app/instance.service';
 
 @Component({
   selector: 'gpf-regions-filter',
   templateUrl: './regions-filter.component.html',
 })
 export class RegionsFilterComponent extends ComponentValidator implements OnInit {
-  @Input() public genome = '';
+  @Input() public genome: string;
   @ValidateNested() public regionsFilter = new RegionsFilter();
   @ViewChild('textArea') private textArea: ElementRef;
 
   public constructor(
     protected store: Store,
-    private instanceService: InstanceService
   ) {
     super(store, 'regionsFilter', selectRegionsFilters);
   }
 
   public ngOnInit(): void {
-    this.instanceService.getGenome().pipe(
-      take(1),
-      switchMap((genome) => {
-        this.regionsFilter.genome = genome;
+    this.store.select(selectRegionsFilters).pipe(take(1))
+      .subscribe((regionsFilters: string[]) => {
         this.focusTextInputArea();
-        return this.store.select(selectRegionsFilters);
-      }),
-      take(1)
-    ).subscribe((regionsFilters: string[]) => {
-      super.ngOnInit();
-      this.setRegionsFilter(regionsFilters.join('\n'));
-    });
+        this.regionsFilter.genome = this.genome;
+        super.ngOnInit();
+        this.setRegionsFilter(regionsFilters.join('\n'));
+      });
   }
 
   public setRegionsFilter(regionsFilter: string): void {

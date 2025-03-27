@@ -8,7 +8,7 @@
       <li [ngbNavItem]="'regionsFilter'" id="regions-filter">
         <a ngbNavLink>Regions Filter</a>
         <ng-template ngbNavContent>
-          <gpf-regions-filter [genome]="genome"></gpf-regions-filter>
+          <gpf-regions-filter *ngIf="genome" [genome]="genome"></gpf-regions-filter>
         </ng-template>
       </li>
     </ul>
