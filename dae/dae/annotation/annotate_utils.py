@@ -11,7 +11,11 @@ from typing import Any
 
 from pysam import TabixFile, tabix_index
 
-from dae.annotation.annotation_config import RawAnnotatorsConfig
+from dae.annotation.annotatable import Annotatable
+from dae.annotation.annotation_config import (
+    RawAnnotatorsConfig,
+    RawPipelineConfig,
+)
 from dae.annotation.annotation_factory import (
     build_annotation_pipeline,
     load_pipeline_from_yaml,
@@ -149,6 +153,99 @@ def produce_tabix_index(filepath: str, args: Any = None) -> None:
                 force=True)
 
 
+class AbstractFormat:
+    def __init__(
+        self,
+        pipeline_config: RawPipelineConfig,
+        pipeline_config_old: str,
+        cli_args: dict,
+        grr_definition: dict | None,
+        region: Region | None,
+    ):
+        self.pipeline = None
+        self.grr = None
+        self.grr_definition = grr_definition
+        self.pipeline_config = pipeline_config
+        self.pipeline_config_old = pipeline_config_old
+        self.cli_args = cli_args
+        self.region = region
+        if self.cli_args.get("reannotate"):
+            pipeline_config_old = Path(self.cli_args["reannotate"]).read_text()
+
+    def open(self) -> None:
+        self.grr = \
+            build_genomic_resource_repository(definition=self.grr_definition)
+        self.pipeline = build_annotation_pipeline(
+            self.pipeline_config, self.grr,
+            allow_repeated_attributes=self.cli_args["allow_repeated_attributes"],
+            work_dir=Path(self.cli_args["work_dir"]),
+            config_old_raw=self.pipeline_config_old,
+            full_reannotation=self.cli_args["full_reannotation"],
+        )
+        self.pipeline.open()
+
+    def close(self) -> None:
+        self.pipeline.close()  # type: ignore
+
+    @abstractmethod
+    def _read(self) -> Generator[Any, None, None]:
+        pass
+
+    @abstractmethod
+    def _convert(self, variant: Any) -> tuple[dict, Annotatable]:
+        pass
+
+    @abstractmethod
+    def _write(self, variant: Any, annotation: dict) -> None:
+        pass
+
+    @staticmethod
+    def get_task_dir(region: Region | None) -> str:
+        """Get dir for batch annotation."""
+        if region is None:
+            return "batch_work_dir"
+        chrom = region.chrom
+        pos_beg = region.start if region.start is not None else "_"
+        pos_end = region.stop if region.stop is not None else "_"
+        return f"{chrom}_{pos_beg}_{pos_end}"
+
+    def process(self):
+        assert self.pipeline is not None
+        for variant in self._read():
+            context, annotatable = self._convert(variant)
+            try:
+                annotation = self.pipeline.annotate(annotatable, context)
+                self._write(variant, annotation)
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("Error during iterative annotation")
+
+    def process_batched(self):
+        assert self.pipeline is not None
+
+        batch_size = self.cli_args["batch_size"]
+        work_dir = AbstractFormat.get_task_dir(self.region)
+        errors = []
+        try:
+            while batch := tuple(islice(self._read(), batch_size)):
+                prepared_data = (self._convert(v) for v in batch)
+                contexts, annotatables = zip(*prepared_data, strict=True)
+                annotations = self.pipeline.batch_annotate(
+                    annotatables, contexts,  # type: ignore
+                    batch_work_dir=work_dir,
+                )
+                del prepared_data, contexts
+                for variant, annotation in zip(batch, annotations, strict=True):
+                    self._write(variant, annotation)
+
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.exception("Error during batch annotation")
+            errors.append(str(ex))
+        if len(errors) > 0:
+            logger.error("there were errors during annotation")
+            for error in errors:
+                logger.error("\t%s", error)
+
+
 class AnnotationTool:
     """Base class for annotation tools. Format-agnostic."""
 
@@ -225,54 +322,13 @@ class AnnotationTool:
         return f"{chrom}_{pos_beg}_{pos_end}"
 
     @staticmethod
-    def annotate_batched(
-        rec_iterator,
-        pipeline,
-        batch_size: int,
-        work_dir: str,
-    ) -> Generator[tuple[Any, dict], None, None]:
-        """Annotate using batch mode."""
-        errors = []
-        try:
-            while batch := tuple(islice(rec_iterator, batch_size)):
-                records, annotatables = zip(*batch, strict=True)
-                context = list(records) \
-                    if isinstance(pipeline, ReannotationPipeline) \
-                    else None
-                yield from zip(records, pipeline.batch_annotate(
-                    list(annotatables), context,
-                    batch_work_dir=work_dir,
-                ), strict=True)
-        except Exception as ex:  # pylint: disable=broad-except
-            logger.exception("Error during batch annotation")
-            errors.append(str(ex))
-        if len(errors) > 0:
-            logger.error("there were errors during annotation")
-            for error in errors:
-                logger.error("\t%s", error)
-
-    @staticmethod
-    def annotate_iterative(
-        rec_iterator,
-        pipeline,
-    ) -> Generator[tuple[Any, dict], None, None]:
-        """Annotate using iterative mode."""
-        errors = []
-        for record, annotatable in rec_iterator:
-            try:
-                context = None
-                if isinstance(pipeline, ReannotationPipeline):
-                    for col in pipeline.attributes_deleted:
-                        del record[col]
-                    context = record
-                yield record, pipeline.annotate(annotatable, context)
-            except Exception as ex:  # pylint: disable=broad-except
-                logger.exception("Error during iterative annotation")
-                errors.append(str(ex))
-        if len(errors) > 0:
-            logger.error("there were errors during annotation")
-            for error in errors:
-                logger.error("\t%s", error)
+    def annotate(handler: AbstractFormat, batch_mode: bool) -> None:  # noqa: FBT001
+        handler.open()
+        if batch_mode:
+            handler.process_batched()
+        else:
+            handler.process()
+        handler.close()
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:

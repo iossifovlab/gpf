@@ -14,6 +14,7 @@ from pysam import TabixFile
 
 from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotate_utils import (
+    AbstractFormat,
     AnnotationTool,
     produce_partfile_paths,
     produce_regions,
@@ -21,7 +22,6 @@ from dae.annotation.annotate_utils import (
     stringify,
 )
 from dae.annotation.annotation_config import (
-    RawAnnotatorsConfig,
     RawPipelineConfig,
 )
 from dae.annotation.annotation_factory import build_annotation_pipeline
@@ -46,6 +46,100 @@ from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.regions import Region
 
 logger = logging.getLogger("annotate_columns")
+
+
+class ColumnsFormat(AbstractFormat):
+    def __init__(
+        self,
+        pipeline_config,
+        pipeline_config_old,
+        cli_args: dict,
+        grr_definition: dict | None,
+        region: Region | None,
+        input_path: str,
+        output_path: str,
+        ref_genome_id: str | None,
+    ):
+        super().__init__(pipeline_config, pipeline_config_old,
+                         cli_args, grr_definition, region)
+        self.input_path = input_path
+        self.output_path = output_path
+        self.region = region
+        self.grr_definition = grr_definition
+        self.ref_genome_id = ref_genome_id
+        self.cli_args = cli_args
+        self.input_separator = cli_args["input_separator"]
+        self.separator = cli_args["output_separator"]
+
+        self.grr = None
+        self.ref_genome = None
+        self.line_iterator = None
+        self.header_columns = None
+        self.record_to_annotatable = None
+        self.annotation_columns = None
+        self.output_file = None
+
+    def open(self) -> None:
+        super().open()
+        assert self.grr is not None
+        if self.ref_genome_id:
+            res = self.grr.find_resource(self.ref_genome_id)
+            if res is not None:
+                self.ref_genome = \
+                    build_reference_genome_from_resource(res).open()
+
+        _, self.line_iterator, self.header_columns = \
+            read_input(self.input_path, self.input_separator, self.region)
+        self.record_to_annotatable = build_record_to_annotatable(
+            self.cli_args, set(self.header_columns), ref_genome=self.ref_genome)
+        self.annotation_columns = [
+            attr.name for attr in self.pipeline.get_attributes()  # type: ignore
+            if not attr.internal
+        ]
+        self.output_file = open(self.output_path, "a")  # noqa: SIM115
+
+    def close(self):
+        super().close()
+        self.output_file.close()  # type: ignore
+
+    def _read(self) -> Generator[dict, None, None]:
+        assert self.cli_args is not None
+        assert self.header_columns is not None
+        assert self.line_iterator is not None
+
+        errors = []
+        for lnum, line in enumerate(self.line_iterator):
+            try:
+                columns = line.strip("\n\r").split(self.input_separator)
+                record = dict(zip(self.header_columns, columns, strict=True))
+                yield record
+            except Exception as ex:  # pylint: disable=broad-except
+                logger.exception(
+                    "unexpected input data format at line %s: %s",
+                    lnum, line)
+                errors.append((lnum, line, str(ex)))
+
+        if len(errors) > 0:
+            logger.error("there were errors during the import")
+            for lnum, line, error in errors:
+                logger.error("line %s: %s", lnum, line)
+                logger.error("\t%s", error)
+
+    def _convert(self, variant: dict) -> tuple[dict, Annotatable]:
+        return variant, self.record_to_annotatable.build(variant)  # type: ignore
+
+    def _write(
+        self, variant: dict, annotation: dict,
+    ) -> None:
+        if isinstance(self.pipeline, ReannotationPipeline):
+            for col in self.pipeline.attributes_deleted:  # type: ignore
+                del variant[col]
+        for col in self.annotation_columns:  # type: ignore
+            variant[col] = annotation[col]
+        result = self.separator.join(
+            stringify(val) for val in variant.values()
+        ) + "\n"
+        self.output_file.write(result)  # type: ignore
 
 
 def read_input(
@@ -176,123 +270,6 @@ class AnnotateColumnsTool(AnnotationTool):
         VerbosityConfiguration.set_arguments(parser)
         return parser
 
-    @staticmethod
-    def _read(
-        input_path: str,
-        input_separator: str,
-        region: Region | None,
-        grr_definition: dict | None,
-        ref_genome_id: str | None,
-        kwargs: dict,
-    ) -> Generator[tuple[dict, Annotatable], None, None]:
-        _, line_iterator, header_columns = \
-            read_input(input_path, input_separator, region)
-
-        grr = build_genomic_resource_repository(definition=grr_definition)
-        ref_genome = None
-        if ref_genome_id:
-            res = grr.find_resource(ref_genome_id)
-            if res is not None:
-                ref_genome = build_reference_genome_from_resource(res).open()
-
-        errors = []
-        record_to_annotatable = build_record_to_annotatable(
-            kwargs, set(header_columns), ref_genome=ref_genome)
-        for lnum, line in enumerate(line_iterator):
-            try:
-                columns = line.strip("\n\r").split(input_separator)
-                record = dict(zip(header_columns, columns, strict=True))
-                yield record, record_to_annotatable.build(record)
-            except Exception as ex:  # pylint: disable=broad-except
-                logger.exception(
-                    "unexpected input data format at line %s: %s",
-                    lnum, line)
-                errors.append((lnum, line, str(ex)))
-
-        if len(errors) > 0:
-            logger.error("there were errors during the import")
-            for lnum, line, error in errors:
-                logger.error("line %s: %s", lnum, line)
-                logger.error("\t%s", error)
-
-    @staticmethod
-    def _write(
-        data: Generator[tuple[dict, dict], None, None],
-        annotation_columns: list[str],
-        out_file_path: str,
-        separator: str,
-    ) -> None:
-        with open(out_file_path, "a") as out_file:
-            for record, annotation in data:
-                for col in annotation_columns:
-                    record[col] = annotation[col]
-                result = separator.join(
-                    stringify(val) for val in record.values()
-                ) + "\n"
-                out_file.write(result)
-
-    @classmethod
-    def annotate(
-        cls,
-        args: argparse.Namespace,
-        pipeline_config: RawAnnotatorsConfig,
-        grr_definition: dict | None,
-        ref_genome_id: str | None,
-        out_file_path: str,
-        region: Region | None = None,
-    ) -> None:
-        """Annotate a variants file with a given pipeline configuration."""
-        # Insisting on having the pipeline config passed in args
-        # prevents the finding of a default annotation config. Consider fixing
-        pipeline_config_old = None
-        if args.reannotate:
-            pipeline_config_old = Path(args.reannotate).read_text()
-        grr_definition_copy = dict(grr_definition) \
-            if grr_definition is not None else None
-        grr = build_genomic_resource_repository(definition=grr_definition)
-        pipeline = build_annotation_pipeline(
-            pipeline_config, grr,
-            allow_repeated_attributes=args.allow_repeated_attributes,
-            work_dir=Path(args.work_dir),
-            config_old_raw=pipeline_config_old,
-            full_reannotation=args.full_reannotation,
-        )
-        annotation_columns = [
-            attr.name for attr in pipeline.get_attributes()
-            if not attr.internal
-        ]
-
-        data = cls._read(
-            args.input,
-            args.input_separator,
-            region,
-            grr_definition_copy,
-            ref_genome_id,
-            vars(args),
-        )
-
-        pipeline.open()
-        if args.batch_size > 0:
-            annotated_data = cls.annotate_batched(
-                data,
-                pipeline,
-                args.batch_size,
-                cls.get_task_dir(region),
-            )
-        else:
-            annotated_data = cls.annotate_iterative(
-                data,
-                pipeline,
-            )
-        pipeline.close()
-
-        cls._write(
-            annotated_data,
-            annotation_columns,
-            out_file_path,
-            args.output_separator,
-        )
-
     def prepare_for_annotation(self) -> None:
         if self.args.output:
             self.output = self.args.output
@@ -343,6 +320,12 @@ class AnnotateColumnsTool(AnnotationTool):
             out_file.write(self.args.output_separator.join(new_header) + "\n")
 
     def add_tasks_to_graph(self) -> None:
+
+        assert self.output is not None
+        pipeline_config_old = None
+        if self.args.reannotate:
+            pipeline_config_old = Path(self.args.reannotate).read_text()
+
         if tabix_index_filename(self.args.input):
             with closing(TabixFile(self.args.input)) as pysam_file:
                 regions = produce_regions(pysam_file, self.args.region_size)
@@ -352,12 +335,22 @@ class AnnotateColumnsTool(AnnotationTool):
             region_tasks = []
             for region, path in zip(regions, file_paths, strict=True):
                 task_id = f"part-{str(region).replace(':', '-')}"
+
+                handler = ColumnsFormat(
+                    self.pipeline.raw,
+                    pipeline_config_old,
+                    vars(self.args),
+                    self.grr.definition,
+                    region,
+                    self.args.input,
+                    path,
+                    self.ref_genome_id,
+                )
+
                 region_tasks.append(self.task_graph.create_task(
                     task_id,
                     AnnotateColumnsTool.annotate,
-                    [self.args, self.pipeline.raw,
-                     self.grr.definition,
-                     self.ref_genome_id, path, region],
+                    [handler, self.args.batch_size > 0],
                     []))
 
             combine_task = self.task_graph.create_task(
@@ -373,11 +366,20 @@ class AnnotateColumnsTool(AnnotationTool):
                 [self.output],
                 [combine_task])
         else:
+            handler = ColumnsFormat(
+                self.pipeline.raw,
+                pipeline_config_old,
+                vars(self.args),
+                self.grr.definition,
+                None,
+                self.args.input,
+                self.output,
+                self.ref_genome_id,
+            )
             self.task_graph.create_task(
                 "annotate_all",
                 AnnotateColumnsTool.annotate,
-                [self.args, self.pipeline.raw, self.grr.definition,
-                 self.ref_genome_id, self.output, None],
+                [handler, self.args.batch_size > 0],
                 [])
 
 
