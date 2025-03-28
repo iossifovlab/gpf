@@ -64,10 +64,7 @@ class ColumnsFormat(AbstractFormat):
                          cli_args, grr_definition, region)
         self.input_path = input_path
         self.output_path = output_path
-        self.region = region
-        self.grr_definition = grr_definition
         self.ref_genome_id = ref_genome_id
-        self.cli_args = cli_args
         self.input_separator = cli_args["input_separator"]
         self.separator = cli_args["output_separator"]
 
