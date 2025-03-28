@@ -1,3 +1,45 @@
+## Development Setup of GPF e2e instance
+
+* Run Angular development server from `gpfjs`
+  directory: 
+  
+  ```bash
+  ng serve
+  ```
+
+* Activate the `gpf` conda environment and source the `setenv.sh` file 
+  from the `gpf-e2e` directory:
+
+  ```bash
+  conda activate gpf
+  source ./setenv.sh
+  ```
+
+* Run the data import script from `gpf-e2e/gpf_e2e_instance` directory:
+
+  ```bash
+  cd gpf_e2e_instance
+  ./import_data.sh
+  ```
+
+* Create admin user and OAuth application:
+
+  ```bash
+  wdaemanage.py migrate
+  wdaemanage.py user_create admin@iossifovlab.com -p secret -g any_dataset:admin
+  wdaemanage.py createapplication --user 1 \
+    --redirect-uris "http://localhost:4200/login" \
+    --name "GPF Genotypes and Phenotypes in Families" \
+    --client-id gpfjs  public authorization-code --skip-authorization
+  ```
+
+* Run Django development server:
+
+  ```bash
+  wdaemanage runserver
+  ```
+
+
 ## Setup GPF e2e tests
 
 Clear the previous e2e test instance:

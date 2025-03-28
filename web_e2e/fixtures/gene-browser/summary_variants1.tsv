@@ -1,7 +1,7 @@
 location	position	end_position	chrom	frequency	effect	variant	family_variants_count	is_denovo	seen_in_affected	seen_in_unaffected
-14:21861644	21861643	21861647	14		frame-shift	del(4)	1	True	True	False
-14:21861377	21861376	21861378	14		frame-shift	del(2)	1	True	True	False
-14:21895990	21895989	21896036	14		splice-site	del(47)	1	True	True	False
-14:21871373	21871373	21871373	14		splice-site	sub(T->C)	1	True	True	False
-14:21871178	21871178	21871178	14		nonsense	sub(G->A)	1	True	True	False
-14:21870169	21870169	21870169	14		nonsense	sub(G->A)	1	True	True	False
+chr14:21393218	21393217	21393219	chr14		frame-shift	del(2)	1	True	True	False
+chr14:21393485	21393484	21393488	chr14		frame-shift	del(4)	1	True	True	False
+chr14:21427831	21427830	21427877	chr14		splice-site	del(47)	1	True	True	False
+chr14:21402010	21402010	21402010	chr14		nonsense	sub(G->A)	1	True	True	False
+chr14:21403019	21403019	21403019	chr14		nonsense	sub(G->A)	1	True	True	False
+chr14:21403214	21403214	21403214	chr14		splice-site	sub(T->C)	1	True	True	False

@@ -1,0 +1,60 @@
+id: denovo_helloworld
+conf_dir: .
+has_denovo: true
+has_cnv: false
+has_transmitted: false
+genotype_browser:
+  enabled: true
+  has_family_filters: true
+  has_person_filters: true
+  has_family_filters_beta: true
+  has_person_filters_beta: true
+  family_filters:
+    categorical:
+      name: categorical values
+      source_type: categorical
+      source: instrument_1.measure_5
+      from: phenodb
+      filter_type: single
+      role: mom
+    measures:
+      name: Proband Pheno Measure
+      source_type: continuous
+      from: phenodb
+      filter_type: multi
+      role: prb
+  column_groups:
+    pheno:
+      name: Phenotype measures
+      columns:
+        - age
+        - nviq
+  columns:
+    phenotype:
+      age:
+        role: prb
+        source: instrument_1.age
+        name: "Age at evaluation (months)"
+      nviq:
+        role: prb
+        source: instrument_1.iq
+        name: "Nonverbal IQ"
+  preview_columns:
+    - family
+    - variant
+    - genotype
+    - effect
+    - gene_scores
+    - pheno
+phenotype_data: pheno_helloworld
+phenotype_tool: true
+phenotype_browser: true
+enrichment:
+  enabled: true
+genotype_storage:
+  id: genotype_duckdb
+  tables:
+    pedigree: parquet_scan('denovo_helloworld/pedigree/pedigree.parquet')
+    meta: parquet_scan('denovo_helloworld/meta/meta.parquet')
+    summary: parquet_scan('denovo_helloworld/summary/*.parquet')
+    family: parquet_scan('denovo_helloworld/family/*.parquet')

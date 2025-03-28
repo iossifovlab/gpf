@@ -50,7 +50,7 @@ test.describe('Gene profiles single view basic tests', () => {
 
   test('should display the datasets table', async({ page }) => {
     await expect(page.locator('.datasets-table')).toBeVisible();
-    await expect(page.locator('.datasets-table th').first()).toHaveText('iossifov_2014');
+    await expect(page.locator('.datasets-table th').first()).toHaveText('iossifov_2014_liftover');
     await expect(page.locator('.datasets-table tr')).toHaveCount(5);
   });
 
@@ -270,7 +270,7 @@ export const geneData =
       }
     ], datasets: [
       {
-        name: 'iossifov_2014', columns: [
+        name: 'iossifov_2014_liftover', columns: [
           'affected (2507)', 'unaffected (1910)'
         ], rows: [
           {
@@ -312,7 +312,7 @@ test.describe('Gene profiles single view dynamic data and links tests', () => {
     ).toHaveText('autism candidates from Sanders Neuron 2015check');
 
 
-    await expect(page.locator('.datasets-table').locator('th').nth(0)).toHaveText('iossifov_2014');
+    await expect(page.locator('.datasets-table').locator('th').nth(0)).toHaveText('iossifov_2014_liftover');
     await expect(
       page.locator('.datasets-table').locator('tr').nth(1)
     ).toHaveText('Variant Statisticsaffected (2507)unaffected (1910)');

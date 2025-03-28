@@ -1,0 +1,31 @@
+
+id: "ALL_genotypes"
+name: "ALL Genotypes"
+studies: 
+- helloworld_genotypes
+- iossifov_2014_liftover
+- multi_liftover
+
+- comp_all_liftover
+- COMP_genotypes
+
+has_complex: true
+enabled: true
+genotype_browser:
+  has_present_in_child: true
+  has_present_in_parent: true
+  has_pedigree_selector: false
+  variant_types: 
+  - sub
+  - ins
+  - del
+  - complex
+  selected_variant_types:
+  - sub
+  - ins
+  - del
+  - complex
+denovo_gene_sets:
+  enabled: false
+common_report:
+  enabled: false

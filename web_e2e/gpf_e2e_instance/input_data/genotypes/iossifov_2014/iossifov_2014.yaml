@@ -1,0 +1,16 @@
+id: iossifov_2014_liftover
+conf_dir: .
+has_denovo: true
+has_cnv: false
+has_transmitted: false
+genotype_storage:
+  id: genotype_duckdb
+  tables:
+    pedigree: parquet_scan('iossifov_2014_liftover/pedigree/pedigree.parquet')
+    meta: parquet_scan('iossifov_2014_liftover/meta/meta.parquet')
+    summary: parquet_scan('iossifov_2014_liftover/summary/*.parquet')
+    family: parquet_scan('iossifov_2014_liftover/family/*.parquet')
+genotype_browser:
+  enabled: true
+enrichment:
+  enabled: true

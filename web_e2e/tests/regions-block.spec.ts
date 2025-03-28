@@ -6,7 +6,7 @@ test.describe('Regions block tests', () => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.navigateToHome(page);
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
   });
 
   test('should display regions filter panel', async({ page }) => {
@@ -20,7 +20,11 @@ test.describe('Regions block tests', () => {
     await page.locator('#regions-filter').click();
     await expect(page.getByText('Invalid region!')).toBeVisible();
 
-    await page.locator('gpf-regions-filter textarea').fill('1:865582');
+    await page.locator('gpf-regions-filter textarea').fill('14:21393485');
+    await expect(page.getByText('Invalid region!')).toBeVisible();
+
+    await page.locator('gpf-regions-filter textarea').clear();
+    await page.locator('gpf-regions-filter textarea').fill('chr14:21393485');
     await expect(page.getByText('Invalid region!')).not.toBeVisible();
   });
 });

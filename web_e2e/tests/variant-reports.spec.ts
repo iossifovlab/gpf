@@ -29,7 +29,7 @@ test.describe('Variant reports tests', () => {
     await utils.login(page);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
-    await page.getByText(utils.datasetIds.iossifov2014, {exact: true}).click();
+    await page.getByText(utils.datasetIds.iossifov2014Liftover, {exact: true}).click();
     await page.getByText('Dataset Statistics').click();
   });
 
@@ -301,7 +301,7 @@ test.describe('Variant reports download tests', () => {
     await utils.login(page);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
-    await page.getByText(utils.datasetIds.iossifov2014, {exact: true}).click();
+    await page.getByText(utils.datasetIds.iossifov2014Liftover, {exact: true}).click();
     await page.getByText('Dataset Statistics').click();
   });
 
@@ -368,7 +368,7 @@ test.describe('Variant reports Iossifov count tests', () => {
     await utils.login(page);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
-    await page.getByText(utils.datasetIds.iossifov2014, {exact: true}).click();
+    await page.getByText(utils.datasetIds.iossifov2014Liftover, {exact: true}).click();
     await page.getByText('Dataset Statistics').click();
   });
 
@@ -390,10 +390,10 @@ test.describe('Variant reports Iossifov count tests', () => {
   });
 
   [
-    {rowIndex: 0, effectType: 'LGDs', expectedCounts: ['393, 0.157(366, 15%)', '180, 0.094(169, 9%)']},
-    {rowIndex: 2, effectType: 'UTRs', expectedCounts: ['244, 0.097(237, 9%)', '154, 0.081(144, 8%)']},
-    {rowIndex: 6, effectType: 'Missense', expectedCounts: ['1680, 0.67(1185, 47%)', '1149, 0.602(843, 44%)']},
-    {rowIndex: 12, effectType: 'Intron', expectedCounts: ['821, 0.327(671, 27%)', '558, 0.292(464, 24%)']}
+    {rowIndex: 0, effectType: 'LGDs', expectedCounts: ['393, 0.157(365, 15%)183, 0.096(172, 9%)']},
+    {rowIndex: 2, effectType: 'UTRs', expectedCounts: ['394, 0.157(360, 14%)', '251, 0.131(232, 12%)']},
+    {rowIndex: 6, effectType: 'Missense', expectedCounts: ['1690, 0.674(1190, 47%)', '1151, 0.603(843, 44%)']},
+    {rowIndex: 12, effectType: 'Intron', expectedCounts: ['1004, 0.4(794, 32%)', '688, 0.36(567, 30%)']}
   ].forEach(data => {
     test('should display the correct numbers for ' + data.effectType +
        ' effectType in the "Denovo variants of:" role table', async({ page }) => {
@@ -407,10 +407,10 @@ test.describe('Variant reports Iossifov count tests', () => {
   });
 
   [
-    {rowIndex: 0, effectType: 'LGDs', expectedCounts: ['393, 0.157(366, 15%)', '180, 0.094(169, 9%)']},
-    {rowIndex: 2, effectType: 'UTRs', expectedCounts: ['244, 0.097(237, 9%)', '154, 0.081(144, 8%)']},
-    {rowIndex: 6, effectType: 'Missense', expectedCounts: ['1680, 0.67(1185, 47%)', '1149, 0.602(843, 44%)']},
-    {rowIndex: 12, effectType: 'Intron', expectedCounts: ['821, 0.327(671, 27%)', '558, 0.292(464, 24%)']}
+    {rowIndex: 0, effectType: 'LGDs', expectedCounts: ['393, 0.157(365, 15%)183, 0.096(172, 9%)']},
+    {rowIndex: 2, effectType: 'UTRs', expectedCounts: ['394, 0.157(360, 14%)', '251, 0.131(232, 12%)']},
+    {rowIndex: 6, effectType: 'Missense', expectedCounts: ['1690, 0.674(1190, 47%)', '1151, 0.603(843, 44%)']},
+    {rowIndex: 12, effectType: 'Intron', expectedCounts: ['1004, 0.4(794, 32%)', '688, 0.36(567, 30%)']}
   ].forEach(data => {
     test('should display the correct numbers for ' + data.effectType +
        ' effectType in the "Denovo variants of:" status table', async({ page }) => {

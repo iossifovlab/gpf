@@ -1,0 +1,70 @@
+instance_id: gpf_e2e_instance
+
+genotype_storage:
+  default: genotype_duckdb
+
+  storages:
+    - id: genotype_duckdb
+      storage_type: duckdb_parquet
+      base_dir: "%(wd)s/genotype_storage"
+
+phenotype_storage:
+  default: pheno_storage
+
+  storages:
+    - id: pheno_storage
+      base_dir: '%(wd)s/phenotype_storage'
+
+cache_path: '%(wd)s/phenotype_storage'
+
+phenotype_images: '%(wd)s/phenotype_storage/images'
+
+
+annotation:
+  conf_file: "%($DAE_DB_DIR)s/annotation.yaml"
+
+
+phenotype_data:
+  dir: "%($DAE_DB_DIR)s/pheno"
+
+
+studies:
+  dir: "%($DAE_DB_DIR)s/studies"
+
+datasets:
+  dir: "%($DAE_DB_DIR)s/datasets"
+
+default_study_config:
+  conf_file: "%($DAE_DB_DIR)s/default_configuration.yaml"
+
+gene_sets_db:
+  gene_set_collections:
+    - gene_properties/gene_sets/main
+    - gene_properties/gene_sets/sfari
+    - gene_properties/gene_sets/spark
+    - gene_properties/gene_sets/MSigDB_curated
+    - gene_properties/gene_sets/miRNA
+    - gene_properties/gene_sets/GO
+    - gene_properties/gene_sets/domain
+    - gene_properties/gene_sets/disease
+    - gene_properties/gene_sets/miRNA_Darnell
+
+gene_scores_db:
+  gene_scores:
+    - gene_properties/gene_scores/SFARI_gene_score 
+    - gene_properties/gene_scores/RVIS
+    - gene_properties/gene_scores/LGD
+    - gene_properties/gene_scores/pLI
+    - gene_properties/gene_scores/pRec
+    - gene_properties/gene_scores/SFARI_gene_score_2024_Q1
+    - gene_properties/gene_scores/LOEUF
+
+reference_genome:
+  resource_id: "hg38/genomes/GRCh38-hg38"
+
+gene_models:
+  resource_id: "hg38/gene_models/refSeq_v20240129"
+
+gene_profiles_config:
+  conf_file: "geneProfiles.yaml"
+

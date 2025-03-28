@@ -6,7 +6,7 @@ test.describe('Genomic scores tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, utils.datasetIds.compAll, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
   });
 
   test('should display genomic scores panel after selecting score ' +
@@ -23,20 +23,19 @@ test.describe('Genomic scores tests', () => {
   });
 
   test('should enter filter data and check how it affects the histogram', async({ page }) => {
-    const exomeGnomadScore = 'exome_gnomad_af_percent - ' +
-      'Alternative allele frequency in the whole gnomAD exome samples v2.1.1 as percent';
+    const exomeGnomadScore = 'gnomad_4_1_exomes_af_percent - Alternate allele frequency as percent';
 
     await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
     await page.locator(`mat-option:has-text("${exomeGnomadScore}")`).click();
 
     await page.locator('input#from-input-field').nth(0).clear();
-    await page.locator('input#from-input-field').nth(0).fill('9.7944');
-    await expect(page.locator('text.partitions-text').nth(0)).toHaveText('~17113188 (99.46%)');
+    await page.locator('input#from-input-field').nth(0).fill('0.063');
+    await expect(page.locator('text.partitions-text').nth(0)).toHaveText('~74244341 (97.47%)');
 
     await page.locator('input#to-input-field').nth(0).clear();
-    await page.locator('input#to-input-field').nth(0).fill('13.6935');
-    await expect(page.locator('text.partitions-text').nth(1)).toHaveText('~82289 (0.48%)');
-    await expect(page.locator('text.partitions-text').nth(2)).toHaveText('~10162 (0.06%)');
+    await page.locator('input#to-input-field').nth(0).fill('1.096');
+    await expect(page.locator('text.partitions-text').nth(1)).toHaveText('~840182 (1.10%)');
+    await expect(page.locator('text.partitions-text').nth(2)).toHaveText('~1090009 (1.43%)');
 
     const mpcScore = 'mpc - Missense badness, PolyPhen-2, and Constraint. ' +
       'A deleteriousness prediction score for missense variants';
@@ -54,9 +53,9 @@ test.describe('Genomic scores tests', () => {
     await expect(page.locator('text.partitions-text').nth(2)).toHaveText('~35798106 (53.49%)');
 
     await page.locator('#remove-button').nth(0).click();
-    await expect(page.locator('text.partitions-text').nth(0)).toHaveText('~17113188 (99.46%)');
-    await expect(page.locator('text.partitions-text').nth(1)).toHaveText('~82289 (0.48%)');
-    await expect(page.locator('text.partitions-text').nth(2)).toHaveText('~10162 (0.06%)');
+    await expect(page.locator('text.partitions-text').nth(0)).toHaveText('~74244341 (97.47%)');
+    await expect(page.locator('text.partitions-text').nth(1)).toHaveText('~840182 (1.10%)');
+    await expect(page.locator('text.partitions-text').nth(2)).toHaveText('~1090009 (1.43%)');
   });
 
   test('should test download', async({ page }) => {

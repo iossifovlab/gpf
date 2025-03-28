@@ -1,0 +1,22 @@
+id: comp_denovo_liftover
+
+input:
+  input_dir: "%(wd)s"
+  pedigree:
+    file: comp.ped
+
+  denovo:
+    files:
+      - comp_liftover.tsv
+    chrom: chrom38
+    pos: pos38
+    ref: ref38
+    alt: alt38
+    family_id: familyId
+    best_state: bestSt
+
+processing_config:
+  work_dir: "%(wd)s/OUTPUT"
+
+destination:
+  storage_id: genotype_duckdb

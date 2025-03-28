@@ -7,7 +7,7 @@ test.describe('Gene plot tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014, 'Gene browser');
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Gene browser');
     await page.locator('gpf-gene-browser input#search-box').pressSequentially('chd8');
     await page.locator('input[value=\'Go\']').click();
   });
@@ -97,7 +97,7 @@ test.describe('Gene plot download tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, 'ALL Genotypes', 'Gene browser');
+    await utils.navigateToDatasetPage(page, utils.datasetIds.iossifov2014Liftover, 'Gene browser');
   });
 
   test('should go to chd8 gene page, filter out Affected only ' +

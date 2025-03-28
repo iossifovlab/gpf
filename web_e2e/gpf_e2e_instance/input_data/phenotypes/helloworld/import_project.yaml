@@ -1,0 +1,31 @@
+id: pheno_helloworld
+
+instrument_files:
+  - instruments/instrument_1.csv
+  - path: instruments/instrument_2.csv
+    delimiter: "\t"
+
+data_dictionary:
+  files:
+    - path: measure_descriptions.tsv
+
+pedigree: pedigree.ped
+
+person_column: personId
+
+work_dir: work
+
+study_config:
+  regressions:
+    age:
+      display_name: Age
+      instrument_name: instrument_1
+      jitter: 0.1
+      measure_names:
+        - age
+    iq:
+      display_name: Non verbal IQ
+      instrument_name: instrument_1
+      jitter: 0.1
+      measure_names:
+        - iq
