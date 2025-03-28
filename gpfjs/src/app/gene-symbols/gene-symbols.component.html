@@ -7,7 +7,9 @@
     (ngModelChange)="setGeneSymbols($event)"
     class="form-control"
     spellcheck="false"></textarea>
-  <div [hidden]="geneSymbols.geneSymbols" class="alert alert-warning" role="alert">
+  <span id="sensitivity-note" style="color: #acacac; font-style: italic">* Gene symbols are case-sensitive</span>
+
+  <div [hidden]="geneSymbols.geneSymbols" class="alert alert-warning" role="alert" style="margin-top: 10px">
     <span>Please insert at least one gene symbol.</span>
   </div>
 </div>
