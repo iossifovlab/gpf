@@ -11,7 +11,6 @@ from typing import Any
 
 from pysam import TabixFile, tabix_index
 
-from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import RawAnnotatorsConfig
 from dae.annotation.annotation_factory import (
     build_annotation_pipeline,
@@ -216,26 +215,6 @@ class AnnotationTool:
         return pipeline
 
     @staticmethod
-    def _read(
-        input_path: str,
-        input_separator: str,
-        region: Region | None,
-        grr_definition: dict | None,
-        ref_genome_id: str | None,
-        kwargs: dict,
-    ) -> Generator[tuple[dict, Annotatable], None, None]:
-        raise NotImplementedError
-
-    @staticmethod
-    def _write(
-        data: Generator[tuple[dict, dict], None, None],
-        annotation_columns: list[str],
-        out_file_path: str,
-        separator: str,
-    ) -> None:
-        raise NotImplementedError
-
-    @staticmethod
     def get_task_dir(region: Region | None) -> str:
         """Get dir for batch annotation."""
         if region is None:
@@ -251,7 +230,7 @@ class AnnotationTool:
         pipeline,
         batch_size: int,
         work_dir: str,
-    ) -> Generator[tuple[dict, dict], None, None]:
+    ) -> Generator[tuple[Any, dict], None, None]:
         """Annotate using batch mode."""
         errors = []
         try:
@@ -276,7 +255,7 @@ class AnnotationTool:
     def annotate_iterative(
         rec_iterator,
         pipeline,
-    ) -> Generator[tuple[dict, dict], None, None]:
+    ) -> Generator[tuple[Any, dict], None, None]:
         """Annotate using iterative mode."""
         errors = []
         for record, annotatable in rec_iterator:
@@ -294,68 +273,6 @@ class AnnotationTool:
             logger.error("there were errors during annotation")
             for error in errors:
                 logger.error("\t%s", error)
-
-    @classmethod
-    def annotate(
-        cls,
-        args: argparse.Namespace,
-        pipeline_config: RawAnnotatorsConfig,
-        grr_definition: dict | None,
-        ref_genome_id: str | None,
-        out_file_path: str,
-        region: Region | None = None,
-    ) -> None:
-        """Annotate a variants file with a given pipeline configuration."""
-        # Insisting on having the pipeline config passed in args
-        # prevents the finding of a default annotation config. Consider fixing
-        pipeline_config_old = None
-        if args.reannotate:
-            pipeline_config_old = Path(args.reannotate).read_text()
-        grr_definition_copy = dict(grr_definition) \
-            if grr_definition is not None else None
-        grr = build_genomic_resource_repository(definition=grr_definition)
-        pipeline = build_annotation_pipeline(
-            pipeline_config, grr,
-            allow_repeated_attributes=args.allow_repeated_attributes,
-            work_dir=Path(args.work_dir),
-            config_old_raw=pipeline_config_old,
-            full_reannotation=args.full_reannotation,
-        )
-        annotation_columns = [
-            attr.name for attr in pipeline.get_attributes()
-            if not attr.internal
-        ]
-
-        data = cls._read(
-            args.input,
-            args.input_separator,
-            region,
-            grr_definition_copy,
-            ref_genome_id,
-            vars(args),
-        )
-
-        pipeline.open()
-        if args.batch_size > 0:
-            annotated_data = cls.annotate_batched(
-                data,
-                pipeline,
-                args.batch_size,
-                cls.get_task_dir(region),
-            )
-        else:
-            annotated_data = cls.annotate_iterative(
-                data,
-                pipeline,
-            )
-        pipeline.close()
-
-        cls._write(
-            annotated_data,
-            annotation_columns,
-            out_file_path,
-            args.output_separator,
-        )
 
     @abstractmethod
     def get_argument_parser(self) -> argparse.ArgumentParser:

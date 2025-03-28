@@ -21,6 +21,7 @@ from dae.annotation.annotate_utils import (
     stringify,
 )
 from dae.annotation.annotation_config import (
+    RawAnnotatorsConfig,
     RawPipelineConfig,
 )
 from dae.annotation.annotation_factory import build_annotation_pipeline
@@ -229,6 +230,68 @@ class AnnotateColumnsTool(AnnotationTool):
                     stringify(val) for val in record.values()
                 ) + "\n"
                 out_file.write(result)
+
+    @classmethod
+    def annotate(
+        cls,
+        args: argparse.Namespace,
+        pipeline_config: RawAnnotatorsConfig,
+        grr_definition: dict | None,
+        ref_genome_id: str | None,
+        out_file_path: str,
+        region: Region | None = None,
+    ) -> None:
+        """Annotate a variants file with a given pipeline configuration."""
+        # Insisting on having the pipeline config passed in args
+        # prevents the finding of a default annotation config. Consider fixing
+        pipeline_config_old = None
+        if args.reannotate:
+            pipeline_config_old = Path(args.reannotate).read_text()
+        grr_definition_copy = dict(grr_definition) \
+            if grr_definition is not None else None
+        grr = build_genomic_resource_repository(definition=grr_definition)
+        pipeline = build_annotation_pipeline(
+            pipeline_config, grr,
+            allow_repeated_attributes=args.allow_repeated_attributes,
+            work_dir=Path(args.work_dir),
+            config_old_raw=pipeline_config_old,
+            full_reannotation=args.full_reannotation,
+        )
+        annotation_columns = [
+            attr.name for attr in pipeline.get_attributes()
+            if not attr.internal
+        ]
+
+        data = cls._read(
+            args.input,
+            args.input_separator,
+            region,
+            grr_definition_copy,
+            ref_genome_id,
+            vars(args),
+        )
+
+        pipeline.open()
+        if args.batch_size > 0:
+            annotated_data = cls.annotate_batched(
+                data,
+                pipeline,
+                args.batch_size,
+                cls.get_task_dir(region),
+            )
+        else:
+            annotated_data = cls.annotate_iterative(
+                data,
+                pipeline,
+            )
+        pipeline.close()
+
+        cls._write(
+            annotated_data,
+            annotation_columns,
+            out_file_path,
+            args.output_separator,
+        )
 
     def prepare_for_annotation(self) -> None:
         if self.args.output:
