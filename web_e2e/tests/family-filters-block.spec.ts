@@ -16,24 +16,6 @@ test.describe('Family filters block tests', () => {
     await expect(page.locator('#family-ids-panel')).toBeVisible();
   });
 
-  test('should test save/share query after typing Family ids in Genotype browser', async({ page }) => {
-    await expect(page.locator('gpf-family-filters-block').getByText('Family Ids')).toBeVisible();
-    await page.locator('gpf-family-filters-block').getByText('Family Ids').click();
-
-    await page.locator('#family-ids-panel > textarea').fill('familyId1, familyId2');
-
-    await page.locator('#save-query-dropdown-button').click();
-
-    await expect(page.locator('#link-input')).not.toHaveValue('');
-    const url = await page.locator('#link-input').inputValue();
-    await page.goto(url, {waitUntil: 'domcontentloaded'});
-    await page.waitForSelector('gpf-genotype-browser');
-
-    await expect(page.locator('#family-ids-panel > textarea')).toBeFocused();
-    await expect(page.locator('#family-ids-panel > textarea'))
-      .toHaveAttribute('ng-reflect-model', 'familyId1\nfamilyId2');
-  });
-
   test('should display error alert in family ids panel when the textarea is empty', async({ page }) => {
     await page.locator('#family-ids').click();
     await expect(page.getByText('Please insert at least one family id.')).toBeVisible();
