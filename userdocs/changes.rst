@@ -1,6 +1,26 @@
 Release Notes
 =============
 
+* 2025.2.3
+    * Fix permissions for any_user group with annonymous user.
+    * Fix datasets hierarchy with hidden datasets.
+    * Fix ordering of studies in genotype data groups.
+    * Support for label rotation in categorical histograms.
+    * Expand gene set collection GRR info page.
+    * Fix support for phenotype person and family filters in genotype browser.
+    * 
+
+* 2025.2.2
+    * Fix phenotype group hierarchy construction.
+    * Fix access rights for datasets hierarchy requests.
+    * Fix genomic scores header width.
+    * Update person filter styles.
+
+* 2025.2.1
+    * Support VEP annotator plugin using VEP Docker container.
+    * Support for phenotype mearures filtering using value and histogram types.
+    * Support for description in phenotype studies.
+
 * 2025.2.0
     * Update gene profiles configuration.
     * Introduction of phenotype storage and phenotype storage registry
@@ -18,23 +38,23 @@ Release Notes
     * Support for label rotation in categorical histograms UI
 
 
-* 2025.01.4
+* 2025.1.4
     * Fix deserialization of variant attributes.
 
-* 2025.01.3
+* 2025.1.3
     * Clean up phenotype browser cache build tool.
     * Fix support for categorical genomic scores queries.
     * Deprecation of `import_tools` and introduction of `genotypes_import`.
     * Deprecation of `import_tools_pheno` and introduction of `phenotypes_import`.
     * Fix support for categorical histograms for genomic scores.
 
-* 2025.01.2
+* 2025.1.2
     * Fix wgpf tool.
 
-* 2025.01.1
+* 2025.1.1
     * Fix queries by present in child and present in parent.
 
-* 2025.01.0
+* 2025.1.0
     * Update the model for saving queries.
     * Gene Browser performance optimization.
     * Added support for downloading Phenotype Tool report image.
