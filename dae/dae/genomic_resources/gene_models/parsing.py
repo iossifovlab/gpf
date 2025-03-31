@@ -307,7 +307,10 @@ def parse_raw(
     """Parse raw gene models data based on expected columns."""
     if probe_header(infile, expected_columns, comment=comment):
         infile.seek(0)
-        df = pd.read_csv(infile, sep="\t", nrows=nrows, comment=comment)
+        df = pd.read_csv(
+            infile, sep="\t", nrows=nrows, comment=comment,
+            dtype=str,
+        )
         assert list(df.columns) == expected_columns
         return df
 
