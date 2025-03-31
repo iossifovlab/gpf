@@ -1,0 +1,381 @@
+
+
+<html>
+<head>
+<style>
+h3,h4 {
+    margin-top:0.5em;
+    margin-bottom:0.5em;
+}
+table {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+}
+th {
+    font-size: 20px;
+}
+td {
+    font-size: 18px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    padding-top: 100px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    justify-content: center;
+}
+.modal-content {
+    margin: auto;
+    display: block;
+    width: 80%;
+    max-width: 700px;
+}
+.close {
+    float: right;
+    font-size: 40px;
+    font-weight: bold;
+}
+.close:hover,
+.close:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#chromosomes-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+#chromosomes-table th {
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#chromosomes-table td {
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#chromosomes-table th:first-child,
+#chromosomes-table td:first-child {
+    border-left: 1px solid;
+}
+#chromosomes-table thead tr:nth-of-type(2) th {
+    border-top: none;
+}
+#chromosomes-table thead {
+    position: sticky; top: 0; background-color: white;
+}
+
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll("[data-modal-trigger]").forEach(function (trigger) {
+            trigger.addEventListener("click", function () {
+                var modalId = this.getAttribute("data-modal-trigger");
+                var modal = document.getElementById(modalId);
+                if (modal) {
+                    modal.style.display = "block";
+                    document.currentOpenModal = modal;
+                }
+            });
+        });
+
+        document.querySelectorAll(".close").forEach(function (closeButton) {
+            closeButton.addEventListener("click", function () {
+                this.closest(".modal").style.display = "none";
+                document.currentOpenModal = null;
+            });
+        });
+
+        window.addEventListener("click", function (event) {
+            if (event.target.classList.contains("modal")) {
+                event.target.style.display = "none";
+                document.currentOpenModal = null;
+            }
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && document.currentOpenModal) {
+                document.currentOpenModal.style.display = "none";
+                document.currentOpenModal = null;
+            }
+        });
+    });
+</script>
+</head>
+    <body>
+    <h1>Resource</h1>
+    <div>
+        <table border="1">
+            <tr>
+                <td>
+                    <b>Id:</b>
+                </td>
+                <td>hg19/genome_10</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Type:</b>
+                </td>
+                <td>genome</td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Version:</b>
+                </td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td><b>Summary:</b></td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open">N/A
+                        </template>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Description:</b>
+                </td>
+                <td>
+                    <div>
+                        <template shadowrootmode="open">N/A
+                        </template>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <b>Labels:</b>
+                </td>
+                <td>
+                
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    
+
+
+
+
+
+<h3>Genome statistics:</h3>
+<h3>Chromosomes (1):</h3>
+<div style="max-height: 50%; overflow-y: auto; width: fit-content; margin-bottom: 14px;">
+    <table id="chromosomes-table">
+        <thead>
+            <tr>
+                <th>Chrom</th>
+                <th>Length</th>
+                
+                    <th>A</th>
+                
+                    <th>T</th>
+                
+                    <th>C</th>
+                
+                    <th>G</th>
+                
+                    <th>N</th>
+                
+            </tr>
+            <tr>
+                <th>Global</th>
+                <td>110,000</td>
+                
+                    <td>14.93%</td>
+                
+                    <td>12.17%</td>
+                
+                    <td>9.50%</td>
+                
+                    <td>8.86%</td>
+                
+                    <td>54.55%</td>
+                
+            </tr>
+        </thead><tr>
+                <td>10</td>
+                <td>110,000</td>
+                
+                    
+                        <td>14.93%</td>
+                    
+                
+                    
+                        <td>12.17%</td>
+                    
+                
+                    
+                        <td>9.50%</td>
+                    
+                
+                    
+                        <td>8.86%</td>
+                    
+                
+                    
+                        <td>54.55%</td>
+                    
+                
+            </tr></table>
+</div>
+
+    <h4>Bi-Nucleotide distribution:</h4>
+    <table border="1">
+        <tr>
+            <th></th>
+            
+                <th>A</th>
+            
+                <th>T</th>
+            
+                <th>C</th>
+            
+                <th>G</th>
+            
+                <th>N</th>
+            
+        </tr>
+        
+            <tr>
+                <th>A</th>
+                
+                    <td>5.43%</td>
+                
+                    <td>3.60%</td>
+                
+                    <td>2.75%</td>
+                
+                    <td>3.16%</td>
+                
+                    <td>0.00%</td>
+                
+            </tr>
+        
+            <tr>
+                <th>T</th>
+                
+                    <td>2.91%</td>
+                
+                    <td>3.79%</td>
+                
+                    <td>2.50%</td>
+                
+                    <td>2.96%</td>
+                
+                    <td>0.00%</td>
+                
+            </tr>
+        
+            <tr>
+                <th>C</th>
+                
+                    <td>3.81%</td>
+                
+                    <td>2.88%</td>
+                
+                    <td>2.39%</td>
+                
+                    <td>0.42%</td>
+                
+                    <td>0.00%</td>
+                
+            </tr>
+        
+            <tr>
+                <th>G</th>
+                
+                    <td>2.78%</td>
+                
+                    <td>1.90%</td>
+                
+                    <td>1.86%</td>
+                
+                    <td>2.32%</td>
+                
+                    <td>0.00%</td>
+                
+            </tr>
+        
+            <tr>
+                <th>N</th>
+                
+                    <td>0.00%</td>
+                
+                    <td>0.00%</td>
+                
+                    <td>0.00%</td>
+                
+                    <td>0.00%</td>
+                
+                    <td>54.55%</td>
+                
+            </tr>
+        
+    </table>
+
+
+
+    <h1>Files</h1>
+    <table>
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Size</th>
+            <th>md5</th>
+        </tr>
+    </thead>
+    <tbody>
+            <tr>
+                
+                    <td class="nowrap">
+                        <a href='chr10.fa'>chr10.fa</a>
+                    </td>
+                
+                <td class="nowrap">107.43 KB</td>
+                <td class="nowrap">94bbe9673c5acda1a829e87f4c6b93ac</td>
+            </tr>
+            <tr>
+                
+                    <td class="nowrap">
+                        <a href='chr10.fa.fai'>chr10.fa.fai</a>
+                    </td>
+                
+                <td class="nowrap">26.0 B</td>
+                <td class="nowrap">6d0fadd945cdf228c65fe0c823baa96c</td>
+            </tr>
+            <tr>
+                
+                    <td class="nowrap">
+                        <a href='genomic_resource.yaml'>genomic_resource.yaml</a>
+                    </td>
+                
+                <td class="nowrap">32.0 B</td>
+                <td class="nowrap">b5dd9cbf7c879297fc502e6aca0b7cd9</td>
+            </tr>
+            <tr>
+                
+                    <td class="nowrap">
+                        <a href='statistics/index.html'>statistics/</a>
+                    </td>
+                
+                <td class="nowrap"></td>
+                <td class="nowrap"></td>
+            </tr>
+    </tbody>
+    </table>
+    </body>
+</html>

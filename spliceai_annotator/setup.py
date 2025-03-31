@@ -16,7 +16,14 @@ setuptools.setup(
             "spliceai_annotator.docs", "tests.*", "*.tests.*", "*.tests"],
     ),
     package_data={
-        "spliceai_annotator": ["py.typed"],
+        "spliceai_annotator": [
+            "py.typed",
+            "models/spliceai1.h5",
+            "models/spliceai2.h5",
+            "models/spliceai3.h5",
+            "models/spliceai4.h5",
+            "models/spliceai5.h5",
+        ],
     },
     scripts=[
     ],

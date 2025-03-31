@@ -1,0 +1,13 @@
+resource_id: hg19/gene_models_small
+chromosome_count: 1
+global:
+  transcript_number: 1
+  protein_coding_transcript_number: 1
+  gene_number: 1
+  protein_coding_gene_number: 1
+chromosomes:
+  10:
+    transcript_number: 1
+    protein_coding_transcript_number: 1
+    gene_number: 1
+    protein_coding_gene_number: 1

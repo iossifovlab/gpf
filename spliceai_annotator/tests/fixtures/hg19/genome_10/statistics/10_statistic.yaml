@@ -1,0 +1,34 @@
+chrom: '10'
+length: 110000
+nucleotide_counts:
+  A: 16427
+  C: 10447
+  G: 9744
+  N: 60000
+  T: 13382
+nucleotide_pair_counts:
+  AA: 5974
+  AC: 3023
+  AG: 3471
+  AN: 0
+  AT: 3959
+  CA: 4190
+  CC: 2628
+  CG: 466
+  CN: 0
+  CT: 3163
+  GA: 3059
+  GC: 2041
+  GG: 2549
+  GN: 0
+  GT: 2094
+  NA: 0
+  NC: 0
+  NG: 1
+  NN: 59999
+  NT: 0
+  TA: 3204
+  TC: 2755
+  TG: 3257
+  TN: 0
+  TT: 4166
