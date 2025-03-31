@@ -18,13 +18,13 @@ test.describe('Regions block tests', () => {
 
   test('should display error alert in regions panel when the textarea is empty', async({ page }) => {
     await page.locator('#regions-filter').click();
-    await expect(page.getByText('Invalid region!')).toBeVisible();
+    await expect(page.getByText('Add at least one region filter.')).toBeVisible();
 
     await page.locator('gpf-regions-filter textarea').fill('14:21393485');
-    await expect(page.getByText('Invalid region!')).toBeVisible();
+    await expect(page.getByText('Invalid region: 14:21393485')).toBeVisible();
 
     await page.locator('gpf-regions-filter textarea').clear();
     await page.locator('gpf-regions-filter textarea').fill('chr14:21393485');
-    await expect(page.getByText('Invalid region!')).not.toBeVisible();
+    await expect(page.locator('gpf-regions-filter').locator('gpf-errors-alert')).not.toBeVisible();
   });
 });
