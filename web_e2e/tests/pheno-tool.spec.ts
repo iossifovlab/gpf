@@ -107,6 +107,21 @@ test.describe('Pheno tool tests', () => {
     await expect(page.getByText('Report')).toBeEnabled();
     await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
   });
+
+  test('should check present in parent default state when study doesn\'t have denovo', async({ page }) => {
+    await expect(page.locator('gpf-present-in-parent').getByLabel('mother only')).not.toBeChecked();
+    await expect(page.locator('gpf-present-in-parent').getByLabel('father only')).not.toBeChecked();
+    await expect(page.locator('gpf-present-in-parent').getByLabel('mother and father')).not.toBeChecked();
+    await expect(page.locator('gpf-present-in-parent').getByLabel('neither')).toBeChecked();
+    await expect(page.locator('gpf-present-in-parent').getByRole('radio', {name: 'ultraRare'})).not.toBeVisible();
+
+    await utils.navigateToDatasetPage(page, utils.datasetIds.vcfHelloWorld, 'Phenotype tool');
+    await expect(page.locator('gpf-present-in-parent').getByLabel('mother only')).toBeChecked();
+    await expect(page.locator('gpf-present-in-parent').getByLabel('father only')).toBeChecked();
+    await expect(page.locator('gpf-present-in-parent').getByLabel('mother and father')).toBeChecked();
+    await expect(page.locator('gpf-present-in-parent').getByLabel('neither')).toBeChecked();
+    await expect(page.locator('gpf-present-in-parent').getByRole('radio', {name: 'ultraRare'})).toBeChecked();
+  });
 });
 
 test.describe('Pheno tool download tests', () => {
