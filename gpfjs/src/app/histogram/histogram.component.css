@@ -51,13 +51,10 @@ label {
 }
 
 :host::ng-deep#values-description {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -4px;
   margin: auto;
   display: flex;
   justify-content: space-between;
+  gap: 15px;
   font-style: italic;
   color: #acacac;
   font-size: 14px;
