@@ -88,18 +88,18 @@ test.describe('Gene scores tests', () => {
 
     await page.locator('.histogram-from .step.up').click();
     await page.locator('.histogram-to .step.down').click();
-    await expect(page.locator('input#from-input-field')).toHaveValue('0.00001');
-    await expect(page.locator('input#to-input-field')).toHaveValue('0.912');
+    await expect(page.locator('input#from-input-field')).toHaveValue('0.008');
+    await expect(page.locator('input#to-input-field')).toHaveValue('0.992');
 
     await page.locator('.histogram-from .step.up').click();
     await page.locator('.histogram-to .step.down').click();
-    await expect(page.locator('input#from-input-field')).toHaveValue('0.000011');
-    await expect(page.locator('input#to-input-field')).toHaveValue('0.832');
+    await expect(page.locator('input#from-input-field')).toHaveValue('0.016');
+    await expect(page.locator('input#to-input-field')).toHaveValue('0.984');
 
     await page.locator('.histogram-to .step.up').click();
     await page.locator('.histogram-from .step.down').click();
-    await expect(page.locator('input#from-input-field')).toHaveValue('0.00001');
-    await expect(page.locator('input#to-input-field')).toHaveValue('0.912');
+    await expect(page.locator('input#from-input-field')).toHaveValue('0.008');
+    await expect(page.locator('input#to-input-field')).toHaveValue('0.992');
 
     await page.locator('.histogram-to .step.up').click();
     await page.locator('.histogram-from .step.down').click();
