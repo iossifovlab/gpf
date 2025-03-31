@@ -422,10 +422,17 @@ class NumberHistogram(Statistic):
             and large_values_description is not None
         ):
             sec = ax.secondary_xaxis(location=0)
+
+            if self.config.x_log_scale:
+                left_location = self.bins[1]
+            else:
+                left_location = self.bins[0]
+            right_location = self.bins[-1]
+
             sec.set_ticks(
                 [
-                    self.bins[0],
-                    self.bins[-1],
+                    left_location,
+                    right_location,
                 ],
                 labels=[
                     f"\n{small_values_description}",
