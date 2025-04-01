@@ -1,10 +1,47 @@
 Release Notes
 =============
 
-* 2025.3.1
-    * 
+* 2025.3.7
+    * Fix present in parent default values in phenotype tool.
+    * Bump dependencies versions.
+    * Clean up testing of GRR HTTP protocol support.
 
-* 2025.3.0
+* 2025.3.6
+    * Fix present in parent default values.
+    * Support for getting roles from phenotype data groups.
+    * Fix VEP annotator plugin attributes types.
+
+* 2025.3.5
+    * Fix gene profiles search for gene symbols.
+    * Clean up VEP annotator plugin documentation support.
+    * Fix VEP annotator plugin open method.
+    * Support for configutation of histograms in phenotype data import.
+    * Support heuristics for log scale Y axis in histograms.
+    * Fix sorting of gene consequences in VEP annotator plugin.
+    * Fix handling of genome prefix in regions filter block.
+
+* 2025.3.4
+    * Clean up handling of genome prefix.
+
+
+* 2025.3.3
+    * Fixes in VEP annotator plugin.
+    * Updates in CNV collection annotator.
+    * Fixes in handling of .gz files in annotate columns tool.
+
+* 2025.3.2
+    * Extend support for genomic context in all annotation tools.
+    * Fixes in GPF REST client library.
+    * Support for phenotype measures filtering by role.
+    * Support for batch annotation in import tools.
+    * Fix GTF parsing and serialization.
+    * Clean up enrichment tool configuration.
+    * Fix handling of categorical histograms labels.
+    * Fix transmitted rare variants filter.
+    * Improvements in categorical histograms user interface.
+    * Update phenotype family and person filters to include roles. 
+
+* 2025.3.1
     * Fix permissions for any_user group with annonymous user.
     * Fix in handling of empty lines in VEP annotator plugin.
     * Fix GRR histograms modals.
@@ -17,7 +54,7 @@ Release Notes
     * Fix categorical histograms handling of order in categorical histograms.
 
 
-* 2025.2.3
+* 2025.3.0
     * Fix datasets hierarchy with hidden datasets.
     * Fix ordering of studies in genotype data groups.
     * Support for label rotation in categorical histograms.
