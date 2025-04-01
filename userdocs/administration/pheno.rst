@@ -99,7 +99,26 @@ Import project configuration format
           max_rank: 15
         skip: false
         value_type: null
-        histogram_type: null
+        histogram_type: "CategoricalHistogram"
+
+    # Optional. The configurations to use for measure histograms. Can be either number or categorical histogram config, the inference config "histogram_type" field determines which is read.
+    # Nested configuration usage example below. (This is only for the purposes of an example, you CANNOT specify both a file and a nested configuration at the same time.)
+    histogram_configs:
+        number_config:
+          "*.*":
+            type: number
+            number_of_bins: 3
+            view_range:
+              min: 1
+              max: 4
+            x_log_scale: false
+            y_log_scale: true
+        categorical_config:
+          "*.*":
+            type: categorical
+            value_order: ["value1", "value2", "value3"]
+            y_log_scale: true
+            label_rotation: 90
 
     # Optional. Specifies a path to a GPF instance configuration to use.
     # The GPF instance will be used if a destination storage has been set (see below).
@@ -390,3 +409,46 @@ in the report, and non-numeric measures will get ``values_domain`` assigned.
 
 If the measure is numeric, the function returns the list of numeric values and the report, otherwise it returns
 the normal untransformed list of string values and the report.
+
+
+Measure histogram configurations
+********************************
+
+The histogram configurations are split in two sections: "number_config" and "categorical_config" sections.
+Each section includes YAML dictionaries of string based scopes to histogram configurations.
+The configuration format allows setting a scope for a specific rule to apply to different measures and instruments.
+The format scopes follow an order of specificity to determine the final configuration used for a given measure.
+The supported types of scopes (in order of specificity) are the following:
+
+* ``*.*`` - Wildcard for all measures in all instruments
+* ``ala.*`` - Affects all measures in the instrument ``ala``.
+* ``*.bala`` - Affects the measure ``bala`` in any instrument.
+* ``ala.bala`` - Affects the measure ``bala`` in the instrument ``ala``.
+
+Example setup of configurations:
+
+
+.. code:: yaml
+
+        number_config:
+          "*.*":
+            type: number
+            number_of_bins: 5
+            y_log_scale: true
+          "ala.*":
+            type: number
+            view_range:
+              min: 1
+              max: 4
+            x_log_scale: false
+        categorical_config:
+          "*.*":
+            type: categorical
+            label_rotation: 90
+          "*.bala":
+            type: categorical
+            value_order: ["value1", "value2", "value3"]
+            y_log_scale: true
+
+
+Visit :ref:`number-histograms-reference` and :ref:`categorical-histograms-reference` to learn more about how to configure histograms.

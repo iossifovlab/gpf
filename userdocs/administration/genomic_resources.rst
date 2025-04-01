@@ -158,6 +158,8 @@ genomic score resource. The GPF supports three types of histograms:
 * ``NullHistogram`` - this histogram type defines a missing histogram. It is used
   when calculating a histogram is not possible or does not make sense.
 
+.. _number-histograms-reference:
+
 Number Histograms Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -260,6 +262,8 @@ genomic score resource:
         x_min_log: 0.00001
   
     ...
+
+.. _categorical-histograms-reference:
 
 
 Categorical Histograms Configuration
