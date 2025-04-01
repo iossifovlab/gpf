@@ -508,3 +508,24 @@ def test_pedigree_schema(
     assert "family_bin" in pedigree_columns
     assert "tag_simplex_family" in pedigree_columns
     assert "tag_multiplex_family" in pedigree_columns
+
+
+@pytest.mark.parametrize("params, count", [
+    ({"selectedFamilyTags": ["tag_trio_family"]}, 12),
+    ({"selectedFamilyTags": ["tag_quad_family"]}, 0),
+    ({"deselectedFamilyTags": ["tag_trio_family"]}, 0),
+    ({"deselectedFamilyTags": ["tag_quad_family"]}, 12),
+    (
+        {
+            "selectedFamilyTags": ["tag_trio_family"],
+            "person_ids": ["ch1", "ch3"],
+        }, 9,
+    ),
+])
+def test_family_tag_queries_working(
+    params: dict[str, Any],
+    count: int,
+    duckdb2_variants: DuckDb2Variants,
+):
+    fvs = list(duckdb2_variants.query_variants(**params))
+    assert len(fvs) == count
