@@ -1,0 +1,76 @@
+
+
+<html>
+<head>
+<style>
+h3,h4 {
+    margin-top:0.5em;
+    margin-bottom:0.5em;
+}
+table {
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+}
+th {
+    font-size: 20px;
+}
+td {
+    font-size: 18px;
+}
+
+#chromosomes-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+#chromosomes-table th {
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#chromosomes-table td {
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#chromosomes-table th:first-child,
+#chromosomes-table td:first-child {
+    border-left: 1px solid;
+}
+#chromosomes-table thead tr:nth-of-type(2) th {
+    border-top: none;
+}
+#chromosomes-table thead {
+    position: sticky; top: 0; background-color: white;
+}
+
+</style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th>Filename</th>
+                <th>Size</th>
+                <th>md5</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="nowrap">
+                    <a href='stats.yaml'>stats.yaml</a>
+                </td>
+                <td class="nowrap">311.0 B</td>
+                <td class="nowrap">ff2b6897a933e2b6190c4f30f4da2d48</td>
+            </tr>
+            <tr>
+                <td class="nowrap">
+                    <a href='stats_hash'>stats_hash</a>
+                </td>
+                <td class="nowrap">120.0 B</td>
+                <td class="nowrap">17b77d5af30fd7c46ee9769522069f04</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,0 +1,2 @@
+#geneName	name	chrom	strand	txStart	txEnd	cdsStart	cdsEnd	exonCount	exonStarts	exonEnds
+TUBB8	tx_4	10	-	92892	95529	92892	95529	4	92892,94554,94743,95121	94054,94665,94852,95529
