@@ -406,6 +406,9 @@ class DuckDb2Variants(QueryVariantsBase):
         else:
             query_limit = 10 * limit
 
+        selected_family_tags = kwargs.get("selectedFamilyTags")
+        deselected_family_tags = kwargs.get("deselectedFamilyTags")
+
         query = self.query_builder.build_family_variants_query(
             regions=regions,
             genes=genes,
@@ -424,6 +427,8 @@ class DuckDb2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=query_limit,
+            selected_family_tags=selected_family_tags,
+            deselected_family_tags=deselected_family_tags,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
 

@@ -7,11 +7,12 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 import duckdb
-from sqlglot import condition, exp, or_, parse_one
+from sqlglot import column, condition, exp, or_, parse_one
 from sqlglot.expressions import (
     Condition,
     Select,
     replace_placeholders,
+    table_,
 )
 from sqlglot.schema import Schema, ensure_schema
 
@@ -976,6 +977,8 @@ class SqlQueryBuilder(QueryBuilderBase):
         roles: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
+        selected_family_tags: list[str] | None = None,
+        deselected_family_tags: list[str] | None = None,
     ) -> Select:
         """Build a family subclause query."""
         query = self.family_base()
@@ -1007,11 +1010,53 @@ class SqlQueryBuilder(QueryBuilderBase):
             assert family_ids is not None
             clause = self.family_ids(family_ids)
             query = query.where(clause)
-        if person_ids is not None:
 
+        pedigree_tags = None
+        pedigree_table = table_("pedigree_table", alias="ped")
+        if selected_family_tags is not None:
+            for tag in selected_family_tags:
+                comparison = column(
+                    tag, pedigree_table.alias_or_name).eq("True")
+                if pedigree_tags is None:
+                    pedigree_tags = comparison
+                else:
+                    pedigree_tags = pedigree_tags.and_(comparison)
+        if deselected_family_tags is not None:
+            for tag in deselected_family_tags:
+                comparison = column(
+                    tag, pedigree_table.alias_or_name).eq("False")
+                if pedigree_tags is None:
+                    pedigree_tags = comparison
+                else:
+                    pedigree_tags = pedigree_tags.and_(comparison)
+
+        base_table = "family_base"
+        ctes = [["family_base", query]]
+        if pedigree_tags is not None:
+            tagged_families_query = exp.select("family_id").from_(
+                pedigree_table,
+            ).where(
+                pedigree_tags,
+            )
+            filtered_by_tags_query = exp.select(
+                f"{base_table}.*",
+            ).from_("family_base").join(
+                "tagged",
+                on=(
+                    column("family_id", "family_base").eq(
+                        column("family_id", "tagged"),
+                    )
+                ),
+            )
+            ctes.extend([
+                ["tagged", tagged_families_query],
+                ["filtered_by_tags", filtered_by_tags_query],
+            ])
+            base_table = "filtered_by_tags"
+        if person_ids is not None:
             family_members = parse_one(
-                "select *, unnest(fa.allele_in_members) as aim "
-                "from family_base as fa",
+                "select *, unnest(fa.allele_in_members) as aim "  # noqa: S608
+                f"from {base_table} as fa",
             )
             family_query = exp.select(
                 "*",
@@ -1021,13 +1066,19 @@ class SqlQueryBuilder(QueryBuilderBase):
                 SqlQueryBuilder.person_ids(person_ids),
             )
 
-            query = Select().with_(
-                "family_base", as_=query,
-            ).with_(
-                "family_members", as_=family_members,
-            ).with_(
-                "family", as_=family_query,
-            ).select("*").from_("family")
+            ctes.extend([
+                ["family_members", family_members],
+                ["filtered_members", family_query],
+            ])
+
+            base_table = "filtered_members"
+
+        if len(ctes) > 1:
+            ctes[-1][0] = "family"
+            query = Select()
+            for cte in ctes:
+                query = self._append_cte(query, cte[1], cte[0])
+            query = query.select("*").from_("family")
 
         return query
 
@@ -1212,6 +1263,8 @@ class SqlQueryBuilder(QueryBuilderBase):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
+        selected_family_tags: list[str] | None = None,
+        deselected_family_tags: list[str] | None = None,
         **_kwargs: Any,
     ) -> list[str]:
         """Build a query for family variants."""
@@ -1234,6 +1287,8 @@ class SqlQueryBuilder(QueryBuilderBase):
             roles=roles,
             sexes=sexes,
             affected_statuses=affected_statuses,
+            selected_family_tags=selected_family_tags,
+            deselected_family_tags=deselected_family_tags,
         )
 
         batched_heuristics = self.calc_batched_heuristics(
