@@ -93,3 +93,24 @@ def test_query_family_variants_counting(
 ) -> None:
     fvs = list(duckdb2_variants.query_variants(**params))
     assert len(fvs) == count
+
+
+@pytest.mark.parametrize("params, count", [
+    ({"selectedFamilyTags": ["tag_trio_family"]}, 4),
+    ({"selectedFamilyTags": ["tag_quad_family"]}, 0),
+    ({"deselectedFamilyTags": ["tag_trio_family"]}, 0),
+    ({"deselectedFamilyTags": ["tag_quad_family"]}, 4),
+    (
+        {
+            "selectedFamilyTags": ["tag_trio_family"],
+            "person_ids": ["ch1", "ch3"],
+        }, 3,
+    ),
+])
+def test_family_tag_queries_working(
+    params: dict[str, Any],
+    count: int,
+    duckdb2_variants: DuckDb2Variants,
+):
+    fvs = list(duckdb2_variants.query_variants(**params))
+    assert len(fvs) == count
