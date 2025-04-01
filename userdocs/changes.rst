@@ -1,8 +1,23 @@
 Release Notes
 =============
 
-* 2025.2.3
+* 2025.3.1
+    * 
+
+* 2025.3.0
     * Fix permissions for any_user group with annonymous user.
+    * Fix in handling of empty lines in VEP annotator plugin.
+    * Fix GRR histograms modals.
+    * Fix VEP annotator plugin handling of unknown attributes.
+    * Clean up GRR manage tool support for single region tasks.
+    * Add VEP annotator plugion tool for cache download.
+    * Fix VEP annotator plugin writing to context.
+    * Fix handling of whitespaces in dataset description.
+    * Improvement in handling of labels in categorical histograms.
+    * Fix categorical histograms handling of order in categorical histograms.
+
+
+* 2025.2.3
     * Fix datasets hierarchy with hidden datasets.
     * Fix ordering of studies in genotype data groups.
     * Support for label rotation in categorical histograms.
