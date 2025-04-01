@@ -6,19 +6,22 @@ import shutil
 from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.context import CLIAnnotationContext
 from dae.annotation.parquet import (
+    ParquetFormat,
     backup_schema2_study,
-    produce_schema2_annotation_tasks,
+    produce_regions,
     produce_schema2_merging_tasks,
     symlink_pedigree_and_family_variants,
     write_new_meta,
 )
 from dae.genomic_resources.cli import VerbosityConfiguration
+from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.schema2_storage.schema2_import_storage import (
     create_schema2_dataset_layout,
 )
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.cli_tools import TaskGraphCli
+from dae.utils.regions import Region
 from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
@@ -66,6 +69,12 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
             "-n", "--dry-run",
             help="Print the annotation that will be done without writing.",
             action="store_true")
+        parser.add_argument(
+            "--batch-size",
+            type=int,
+            default=0,  # 0 = annotate iteratively, no batches
+            help="Annotate in batches of",
+        )
 
         CLIAnnotationContext.add_context_arguments(parser)
         TaskGraphCli.add_arguments(parser)
@@ -169,20 +178,43 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
                                                  self.output_layout)
 
     def add_tasks_to_graph(self) -> None:
-        annotation_tasks = produce_schema2_annotation_tasks(
-            self.task_graph,
-            self.loader,
-            self.output_layout.study,
-            self.pipeline.raw,
-            self.grr,
-            self.args.region_size,
-            self.args.allow_repeated_attributes,
-            target_region=self.args.region,
-            full_reannotation=self.args.full_reannotation,
-        )
+        if "reference_genome" not in self.loader.meta:
+            raise ValueError("No reference genome found in study metadata!")
+        genome = ReferenceGenome(
+            self.grr.get_resource(self.loader.meta["reference_genome"]))
+
+        contig_lens = {}
+        contigs = self.loader.contigs or genome.chromosomes
+        for contig in contigs:
+            contig_lens[contig] = genome.get_chrom_length(contig)
+
+        regions = produce_regions(self.args.region,
+                                  self.args.region_size,
+                                  contig_lens)
+
+        tasks = []
+        for idx, region in enumerate(regions):
+            handler = ParquetFormat(
+                self.pipeline.raw,
+                self.loader.meta["annotation_pipeline"]
+                    if self.loader.has_annotation else None,
+                vars(self.args),
+                self.grr.definition,
+                Region.from_str(region),
+                self.loader.layout,
+                self.output_layout.study,
+                idx,
+            )
+            tasks.append(self.task_graph.create_task(
+                f"part_{region}",
+                AnnotateSchema2ParquetTool.annotate,
+                [handler, self.args.batch_size > 0],
+                [],
+            ))
+
         produce_schema2_merging_tasks(
             self.task_graph,
-            annotation_tasks,
+            tasks,
             self.loader,
             self.output_layout,
         )

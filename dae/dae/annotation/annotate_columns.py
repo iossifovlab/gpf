@@ -51,8 +51,8 @@ logger = logging.getLogger("annotate_columns")
 class ColumnsFormat(AbstractFormat):
     def __init__(
         self,
-        pipeline_config,
-        pipeline_config_old,
+        pipeline_config: RawPipelineConfig,
+        pipeline_config_old: str | None,
         cli_args: dict,
         grr_definition: dict | None,
         region: Region | None,
@@ -68,7 +68,6 @@ class ColumnsFormat(AbstractFormat):
         self.input_separator = cli_args["input_separator"]
         self.separator = cli_args["output_separator"]
 
-        self.grr = None
         self.ref_genome = None
         self.line_iterator = None
         self.header_columns = None

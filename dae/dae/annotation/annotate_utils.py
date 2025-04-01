@@ -157,7 +157,7 @@ class AbstractFormat:
     def __init__(
         self,
         pipeline_config: RawPipelineConfig,
-        pipeline_config_old: str,
+        pipeline_config_old: str | None,
         cli_args: dict,
         grr_definition: dict | None,
         region: Region | None,

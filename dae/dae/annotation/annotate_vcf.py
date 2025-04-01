@@ -24,7 +24,11 @@ from dae.annotation.annotate_utils import (
     produce_tabix_index,
     stringify,
 )
-from dae.annotation.annotation_config import AttributeInfo, RawAnnotatorsConfig
+from dae.annotation.annotation_config import (
+    AttributeInfo,
+    RawAnnotatorsConfig,
+    RawPipelineConfig,
+)
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
@@ -46,8 +50,8 @@ logger = logging.getLogger("annotate_vcf")
 class VCFFormat(AbstractFormat):
     def __init__(
         self,
-        pipeline_config,
-        pipeline_config_old,
+        pipeline_config: RawPipelineConfig,
+        pipeline_config_old: str | None,
         cli_args: dict,
         grr_definition: dict | None,
         region: Region | None,
@@ -58,14 +62,12 @@ class VCFFormat(AbstractFormat):
                          cli_args, grr_definition, region)
         self.input_path = input_path
         self.output_path = output_path
-        self.grr_definition = grr_definition
 
-        self.grr = None
         self.input_file = None
         self.output_file = None
         self.annotation_attributes = None
         self._annot_buffer = []
-        self._prev_var = None
+        self._curr_var = None
 
     def open(self) -> None:
         super().open()
@@ -81,11 +83,11 @@ class VCFFormat(AbstractFormat):
         super().close()
         self.input_file.close()  # type: ignore
         VCFFormat._update_vcf_variant(
-            self._prev_var, self._annot_buffer,  # type: ignore
+            self._curr_var, self._annot_buffer,  # type: ignore
             self.annotation_attributes,  # type: ignore
             self.pipeline,  # type: ignore
         )
-        self.output_file.write(self._prev_var)  # type: ignore
+        self.output_file.write(self._curr_var)  # type: ignore
         self.output_file.close()  # type: ignore
 
     def _read(self) -> Generator[Any, None, None]:
@@ -115,26 +117,30 @@ class VCFFormat(AbstractFormat):
             for alt in vcf_var.alts:
                 yield vcf_var, alt
 
-    def _convert(self, variant: tuple[VariantRecord, Any]) -> tuple[dict, Annotatable]:
+    def _convert(
+        self,
+        variant: tuple[VariantRecord, Any],
+    ) -> tuple[dict, Annotatable]:
         vcf_var, alt = variant
-        return dict(vcf_var.info), VCFAllele(vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt)  # type: ignore
+        return dict(vcf_var.info), \
+            VCFAllele(vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt)  # type: ignore
 
     def _write(
         self, variant: tuple[VariantRecord, Any], annotation: dict,
     ) -> None:
         vcf_var, _ = variant
-        if self._prev_var is None or vcf_var == self._prev_var:
+        if self._curr_var is None or vcf_var == self._curr_var:
             self._annot_buffer.append(annotation)
-            self._prev_var = vcf_var
+            self._curr_var = vcf_var
         else:
             VCFFormat._update_vcf_variant(
-                self._prev_var, self._annot_buffer,
+                self._curr_var, self._annot_buffer,
                 self.annotation_attributes,  # type: ignore
                 self.pipeline,  # type: ignore
             )
-            self.output_file.write(self._prev_var)  # type: ignore
+            self.output_file.write(self._curr_var)  # type: ignore
             self._annot_buffer = [annotation]
-            self._prev_var = vcf_var
+            self._curr_var = vcf_var
 
     @staticmethod
     def _update_vcf_variant(
