@@ -10,6 +10,5 @@ channels:
   - bioconda
   - iossifovlab
 dependencies:
-  - cuda=12.8.1
   - pip:
-    - tensorflow==2.19.0
+    - tensorflow[and-cuda]==2.19.0

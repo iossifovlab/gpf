@@ -4,6 +4,10 @@ import logging
 import textwrap
 from typing import Any
 
+import numpy as np
+import tensorflow as tf
+from pkg_resources import resource_filename
+
 from dae.annotation.annotatable import Annotatable, VCFAllele
 from dae.annotation.annotation_config import (
     AnnotationConfigParser,
@@ -24,6 +28,7 @@ from dae.genomic_resources.reference_genome import (
     ReferenceGenome,
     build_reference_genome_from_resource_id,
 )
+from spliceai_annotator.utils import one_hot_encode
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +116,7 @@ models to predict splice site variant effects.
                 "Setting it to 0.", self._mask,
             )
             self._mask = 0
+        self._models = None
 
     def close(self) -> None:
         self.genome.close()
@@ -119,6 +125,13 @@ models to predict splice site variant effects.
     def open(self) -> Annotator:
         self.genome.open()
         self.gene_models.load()
+        model_paths = [
+            f"models/spliceai{i}.h5" for i in range(1, 6)
+        ]
+        self._models = [
+            tf.keras.models.load_model(resource_filename(__name__, path))
+            for path in model_paths
+        ]
         return super().open()
 
     def _not_found(self, attributes: dict[str, Any]) -> dict[str, Any]:
@@ -180,10 +193,69 @@ models to predict splice site variant effects.
                     f"{annotatable.alt}|{transcript.gene}|.|.|.|.|.|.|.|.",
                 )
                 continue
-            dist_ann = self._get_pos_data(transcript, annotatable.pos)
-            assert dist_ann is not None
+            padding_size = self._padding_size(transcript, annotatable.pos)
+            xref, xalt = self._seq_padding(
+                seq, padding_size, annotatable,
+            )
 
-        return self._not_found(result)
+            y = self._predict(
+                xref, xalt, transcript.strand,
+            )
+
+            idx_pa = (y[1, :, 1] - y[0, :, 1]).argmax()
+            idx_na = (y[0, :, 1] - y[1, :, 1]).argmax()
+            idx_pd = (y[1, :, 2] - y[0, :, 2]).argmax()
+            idx_nd = (y[0, :, 2] - y[1, :, 2]).argmax()
+
+            dist_ann = self._get_pos_data(transcript, annotatable.pos)
+            cov = 2 * self._distance + 1
+            mask_pa = np.logical_and(
+                (idx_pa - cov // 2 == dist_ann[2]), self._mask)
+            mask_na = np.logical_and(
+                (idx_na - cov // 2 != dist_ann[2]), self._mask)
+            mask_pd = np.logical_and(
+                (idx_pd - cov // 2 == dist_ann[2]), self._mask)
+            mask_nd = np.logical_and(
+                (idx_nd - cov // 2 != dist_ann[2]), self._mask)
+            pa = (y[1, idx_pa, 1] - y[0, idx_pa, 1]) * (1 - mask_pa)
+            na = (y[0, idx_na, 1] - y[1, idx_na, 1]) * (1 - mask_na)
+            pd = (y[1, idx_pd, 2] - y[0, idx_pd, 2]) * (1 - mask_pd)
+            nd = (y[0, idx_nd, 2] - y[1, idx_nd, 2]) * (1 - mask_nd)
+
+            delta_scores.append(
+                f"{annotatable.alt}|{transcript.gene}|"
+                f"{pa:.2f}|{na:.2f}|"
+                f"{pd:.2f}|{nd:.2f}|"
+                f"{idx_pa - cov // 2}|"
+                f"{idx_na - cov // 2}|"
+                f"{idx_pd - cov // 2}|"
+                f"{idx_nd - cov // 2}",
+            )
+        return {"delta_score": ";".join(delta_scores)}
+
+    def _predict(
+            self, xref: str, xalt: str, strand: str,
+    ) -> np.ndarray:
+        xref_one_hot = one_hot_encode(xref)[None, :]
+        xalt_one_hot = one_hot_encode(xalt)[None, :]
+
+        if strand == "-":
+            xref_one_hot = xref_one_hot[:, ::-1, ::-1]
+            xalt_one_hot = xalt_one_hot[:, ::-1, ::-1]
+
+        y_ref = np.mean([
+            self._models[m].predict(xref_one_hot, verbose=0)
+            for m in range(5)
+        ], axis=0)
+        y_alt = np.mean([
+            self._models[m].predict(xalt_one_hot, verbose=0)
+            for m in range(5)
+        ], axis=0)
+        if strand == "-":
+            y_ref = y_ref[:, ::-1]
+            y_alt = y_alt[:, ::-1]
+
+        return np.concatenate([y_ref, y_alt])
 
     def _get_pos_data(
         self, transcript: TranscriptModel,
@@ -197,3 +269,23 @@ models to predict splice site variant effects.
             *(ex.stop - pos for ex in transcript.exons),
             key=abs)
         return dist_tx_start, dist_tx_end, dist_exon_bdry
+
+    def _padding_size(
+            self, transcript: TranscriptModel,
+            pos: int,
+    ) -> tuple[int, int]:
+        dist_ann = self._get_pos_data(transcript, pos)
+        return [max(self._width() // 2 + dist_ann[0], 0),
+                max(self._width() // 2 - dist_ann[1], 0)]
+
+    def _seq_padding(
+            self, seq: str,
+            padding: tuple[int, int],
+            annotatable: Annotatable,
+    ) -> tuple[str, str]:
+        xref = "N" * padding[0] + \
+            seq[padding[0]:self._width() - padding[1]] + \
+            "N" * padding[1]
+        xalt = xref[:self._width() // 2] + \
+            annotatable.alt + xref[self._width() // 2 + len(annotatable.ref):]
+        return xref, xalt
