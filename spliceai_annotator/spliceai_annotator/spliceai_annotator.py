@@ -94,7 +94,18 @@ models to predict splice site variant effects.
 
         super().__init__(pipeline, info, {
             "delta_score":
-            ("str", "Delta score calculated using SpliceAI models."),
+            (
+                "str",
+                "Delta score calculated using SpliceAI models."
+                "These include delta scores (DS) and "
+                "delta positions (DP) for acceptor gain (AG), "
+                "acceptor loss (AL), "
+                "donor gain (DG), and donor loss (DL). "
+                "<br/>Format: <em>"
+                "ALLELE|SYMBOL|DS\\_AG|DS\\_AL|DS\\_DG|DS\\_DL|"
+                "DP\\_AG|DP\\_AL|DP\\_DG|DP\\_DL"
+                "</em>",
+             ),
         })
 
         self.used_attributes = [
