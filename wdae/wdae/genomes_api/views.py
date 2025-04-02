@@ -113,3 +113,29 @@ class GeneSymbolsSearch(QueryBaseView):
             {"gene_symbols": list(matching_gene_symbols)},
             status=status.HTTP_200_OK,
         )
+
+
+class GeneSymbolsValidate(QueryBaseView):
+    """Process validation for gene symbols."""
+
+    @method_decorator(etag(get_instance_timestamp_etag))
+    def post(self, request: Request) -> Response:
+        """Return list gene symbols that are not valid."""
+        data = request.data
+
+        assert isinstance(data, dict)
+
+        gene_symbols = data.get("geneSymbols", [])
+
+        if len(gene_symbols) == 0:
+            return Response([], status=status.HTTP_200_OK)
+
+        gene_models = self.gpf_instance.gene_models.gene_models
+        invalid_gene_symbols = [
+            gs for gs in gene_symbols if gs not in gene_models
+        ]
+
+        return Response(
+            invalid_gene_symbols,
+            status=status.HTTP_200_OK,
+        )
