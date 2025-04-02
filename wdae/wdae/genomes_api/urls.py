@@ -18,4 +18,9 @@ urlpatterns = [
         views.GeneSymbolsSearch.as_view(),
         name="gene_symbols_search",
     ),
+    re_path(
+        r"^/gene_models/validate/?$",
+        views.GeneSymbolsValidate.as_view(),
+        name="gene_symbols_validate",
+    ),
 ]
