@@ -315,7 +315,8 @@ Specifying the ``genome`` parameter in the configuration is optional - the effec
 Simple effect annotator
 #######################
 
-Classify an event according to the scheme described in https://pmc.ncbi.nlm.nih.gov/articles/PMC8410909/figure/Fig2/.
+Classify an event according to the scheme described in
+https://pmc.ncbi.nlm.nih.gov/articles/PMC8410909/figure/Fig2/.
 The attributes the annotator will output are the following:
 
 effect
@@ -418,6 +419,51 @@ Used to annotate whether a variant belongs to gene sets in a gene set collection
 The gene set annotator can output an attribute for every single gene set in a collection
 along with a special attribute `in_sets`, which is a list of the names of every gene set
 that the variant belongs to from the collection.
+
+SpliceAI annotator plugin
+#########################
+
+The SpliceAI annotator plugin is a wrapper around the 
+`SpliceAI tool <https://www.cell.com/cell/fulltext/S0092-8674(18)31629-5>`_,
+which predicts the effect of variants on splicing.
+
+This annotator produces the following attributes:
+
+delta_score
+    SpliceAIv1.3.1 variant annotation. These include delta scores (DS) and
+    delta positions (DP) for acceptor gain (AG), acceptor loss (AL),
+    donor gain (DG), and donor loss (DL). 
+    
+    Format: `ALLELE|SYMBOL|DS_AG|DS_AL|DS_DG|DS_DL|DP_AG|DP_AL|DP_DG|DP_DL`
+
+
+To configure the SpliceAI annotator plugin, use the following syntax:
+
+.. code:: yaml
+
+    - spliceai_annotator:
+        genome: hg38/genomes/GRCh38-hg38
+        gene_models: hg38/gene_models/refSeq_v20200330
+        distance: 500
+        mask: false
+
+where:
+
+genome
+    The reference genome resource ID to use for the annotation.
+
+gene_models
+    The gene models resource ID to use for the annotation.
+
+distance
+    maximum distance between the variant and gained/lost splice site,
+    defaults to 50
+
+mask:
+    mask scores representing annotated acceptor/donor gain and
+    unannotated acceptor/donor loss, defaults to `false`
+
+
 
 
 VEP annotators
@@ -836,6 +882,8 @@ gene_consequence
 By default, only the following are produced: `SYMBOL`, `Feature`, `Feature_type`,
 `Consequence`, `worst_consequence`, `highest_impact`, `gene_consequence` and the
 value from the provided gene models.
+
+
 
 Running the VEP annotation
 ++++++++++++++++++++++++++
