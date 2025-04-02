@@ -430,7 +430,7 @@ which predicts the effect of variants on splicing.
 This annotator produces the following attributes:
 
 delta_score
-    SpliceAIv1.3.1 variant annotation. These include delta scores (DS) and
+    SpliceAI variant annotation. These include delta scores (DS) and
     delta positions (DP) for acceptor gain (AG), acceptor loss (AL),
     donor gain (DG), and donor loss (DL). 
     
