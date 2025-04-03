@@ -3,7 +3,8 @@ import { IsNotEmpty, ValidateNested } from 'class-validator';
 import { Store } from '@ngrx/store';
 import { selectGeneSymbols, setGeneSymbols } from './gene-symbols.state';
 import { ComponentValidator } from 'app/common/component-validator';
-import { take } from 'rxjs';
+import { BehaviorSubject, debounceTime, distinctUntilChanged, take } from 'rxjs';
+import { GeneService } from 'app/gene-browser/gene.service';
 
 export class GeneSymbols {
   @IsNotEmpty()
@@ -17,10 +18,12 @@ export class GeneSymbols {
 export class GeneSymbolsComponent extends ComponentValidator implements OnInit {
   @ValidateNested()
   public geneSymbols: GeneSymbols = new GeneSymbols();
+  public invalidGenes: string;
+  public geneSymbolsInput$: BehaviorSubject<string> = new BehaviorSubject<string>('');
 
   @ViewChild('textArea') private textArea: ElementRef;
 
-  public constructor(protected store: Store) {
+  public constructor(protected store: Store, private geneService: GeneService) {
     super(store, 'geneSymbols', selectGeneSymbols);
   }
 
@@ -33,16 +36,37 @@ export class GeneSymbolsComponent extends ComponentValidator implements OnInit {
       if (geneSymbolsState.length >= 3) {
         separator = ', ';
       }
-      this.setGeneSymbols(geneSymbolsState.join(separator));
+      this.geneSymbolsInput$.next(geneSymbolsState.join(separator));
+    });
+
+    this.geneSymbolsInput$.pipe(
+      distinctUntilChanged(),
+      debounceTime(350),
+    ).subscribe(genes => {
+      this.setGeneSymbols(genes);
     });
   }
 
   public setGeneSymbols(geneSymbols: string): void {
+    if (!geneSymbols) {
+      this.geneSymbols.geneSymbols = '';
+      this.invalidGenes = '';
+      return;
+    }
+
     const result = geneSymbols
       .split(/[,\s]/)
       .filter(s => s !== '');
     this.geneSymbols.geneSymbols = geneSymbols;
-    this.store.dispatch(setGeneSymbols({geneSymbols: result}));
+
+    this.geneService.validateGenes(result).subscribe(invalidGenes => {
+      this.invalidGenes = '';
+      if (!invalidGenes.length) {
+        this.store.dispatch(setGeneSymbols({geneSymbols: result}));
+      } else {
+        this.invalidGenes = invalidGenes.join(', ');
+      }
+    });
   }
 
   /**

@@ -10,6 +10,8 @@ import { resetGeneSetsValues } from 'app/gene-sets/gene-sets.state';
 import { resetGeneScoresValues } from 'app/gene-scores/gene-scores.state';
 import { GeneSet, GeneSetsCollection } from 'app/gene-sets/gene-sets';
 import { State } from 'app/utils/gpf.state';
+import { provideHttpClient } from '@angular/common/http';
+import { ConfigService } from 'app/config/config.service';
 
 describe('GenesBlockComponent', () => {
   let component: GenesBlockComponent;
@@ -20,6 +22,7 @@ describe('GenesBlockComponent', () => {
     TestBed.configureTestingModule({
       declarations: [GeneSymbolsComponent, GenesBlockComponent],
       imports: [NgbModule, StoreModule.forRoot({geneSymbols: geneSymbolsReducer}), FormsModule],
+      providers: [ConfigService, provideHttpClient()]
     }).compileComponents();
 
     fixture = TestBed.createComponent(GenesBlockComponent);

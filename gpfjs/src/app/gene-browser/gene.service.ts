@@ -11,6 +11,7 @@ import { Observable } from 'rxjs';
 export class GeneService {
   private readonly geneVisualizationUrl = 'genome/gene_models/default/';
   private readonly geneSymbolSearchUrl = 'genome/gene_models/search/';
+  private readonly geneSymbolsValidateUrl = 'genome/gene_models/validate/';
 
   public constructor(
     private http: HttpClient,
@@ -25,5 +26,10 @@ export class GeneService {
 
   public searchGenes(searchTerm: string): Observable<object> {
     return this.http.get(this.config.baseUrl + this.geneSymbolSearchUrl + searchTerm);
+  }
+
+  public validateGenes(genes: string[]): Observable<string[]> {
+    const options = { headers: { 'Content-Type': 'application/json' }, withCredentials: true };
+    return this.http.post<string[]>(this.config.baseUrl + this.geneSymbolsValidateUrl, { geneSymbols: genes }, options);
   }
 }
