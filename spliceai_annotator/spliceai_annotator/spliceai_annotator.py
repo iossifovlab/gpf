@@ -203,7 +203,7 @@ models to predict splice site variant effects.
 
         delta_scores: list[str] = []
         for transcript in transcripts:
-            if len(annotatable.ref) > 1 or len(annotatable.alt) > 1:
+            if len(annotatable.ref) > 1 and len(annotatable.alt) > 1:
                 delta_scores.append(
                     f"{annotatable.alt}|{transcript.gene}|.|.|.|.|.|.|.|.",
                 )
@@ -215,6 +215,7 @@ models to predict splice site variant effects.
 
             y = self._predict(
                 xref, xalt, transcript.strand,
+                annotatable,
             )
 
             idx_pa = (y[1, :, 1] - y[0, :, 1]).argmax()
@@ -250,6 +251,7 @@ models to predict splice site variant effects.
 
     def _predict(
             self, xref: str, xalt: str, strand: str,
+            annotatable: Annotatable,
     ) -> np.ndarray:
         xref_one_hot = one_hot_encode(xref)[None, :]
         xalt_one_hot = one_hot_encode(xalt)[None, :]
@@ -270,6 +272,24 @@ models to predict splice site variant effects.
             y_ref = y_ref[:, ::-1]
             y_alt = y_alt[:, ::-1]
 
+        ref_len = len(annotatable.ref)
+        alt_len = len(annotatable.alt)
+
+        if ref_len > 1 and alt_len == 1:
+            y_alt = np.concatenate([
+                y_alt[:, :self._distance + alt_len],
+                np.zeros((1, ref_len - alt_len, 3)),
+                y_alt[:, self._distance + alt_len:]],
+                axis=1)
+        elif ref_len == 1 and alt_len > 1:
+            y_alt = np.concatenate([
+                y_alt[:, :self._distance],
+                np.max(
+                    y_alt[:, self._distance : self._distance + alt_len],
+                    axis=1)[:, None, :],
+                y_alt[:, self._distance + alt_len:]],
+                axis=1)
+
         return np.concatenate([y_ref, y_alt])
 
     def _get_pos_data(
@@ -289,9 +309,8 @@ models to predict splice site variant effects.
             self, transcript: TranscriptModel,
             pos: int,
     ) -> tuple[int, int]:
-        dist_ann = self._get_pos_data(transcript, pos)
-        return [max(self._width() // 2 + dist_ann[0], 0),
-                max(self._width() // 2 - dist_ann[1], 0)]
+        return (max(self._width() // 2 + transcript.tx[0] - pos, 0),
+                max(self._width() // 2 - transcript.tx[1] + pos, 0))
 
     def _seq_padding(
             self, seq: str,
