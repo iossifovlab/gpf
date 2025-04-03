@@ -95,14 +95,12 @@ class CSHLAlleleRecordToAnnotatable(RecordToAnnotable):
     """Transform a CSHL variant record into a VCF allele annotatable."""
 
     def __init__(self, columns: tuple, ref_genome: ReferenceGenome | None):
-        if ref_genome is None:
-            raise ValueError(
-                "unable to instantiate CSHLAlleleRecordToVcfAllele "
-                "without a referrence genome")
         super().__init__(columns, ref_genome)
         self.location_col, self.variant_col = columns
 
     def build(self, record: dict[str, str]) -> Annotatable:
+        if self.ref_genome is None:
+            raise ValueError("unable to build without a referrence genome")
         variant = record[self.variant_col]
         cnv_type = cnv_variant_type(variant)
         if cnv_type is not None:
@@ -124,14 +122,12 @@ class DaeAlleleRecordToAnnotatable(RecordToAnnotable):
     """Transform a CSHL variant record into a VCF allele annotatable."""
 
     def __init__(self, columns: tuple, ref_genome: ReferenceGenome | None):
-        if ref_genome is None:
-            raise ValueError(
-                "unable to instantiate DaeAlleleRecordToVcfAllele "
-                "without a referrence genome")
         super().__init__(columns, ref_genome)
         self.chrom_column, self.pos_column, self.variant_column = columns
 
     def build(self, record: dict[str, str]) -> Annotatable:
+        if self.ref_genome is None:
+            raise ValueError("unable to build without a referrence genome")
         variant = record[self.variant_column]
         chrom = record[self.chrom_column]
         assert self.ref_genome is not None

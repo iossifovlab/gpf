@@ -4,22 +4,31 @@ import argparse
 import logging
 import os
 import sys
+from collections.abc import Generator
 from contextlib import closing
+from pathlib import Path
+from typing import Any
 
 from pysam import (
     TabixFile,
     VariantFile,
-    tabix_index,  # pylint: disable=no-name-in-module
+    VariantRecord,
 )
 
-from dae.annotation.annotatable import VCFAllele
+from dae.annotation.annotatable import Annotatable, VCFAllele
 from dae.annotation.annotate_utils import (
+    AbstractFormat,
     AnnotationTool,
     produce_partfile_paths,
     produce_regions,
+    produce_tabix_index,
     stringify,
 )
-from dae.annotation.annotation_config import RawAnnotatorsConfig
+from dae.annotation.annotation_config import (
+    AttributeInfo,
+    RawAnnotatorsConfig,
+    RawPipelineConfig,
+)
 from dae.annotation.annotation_factory import build_annotation_pipeline
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
@@ -29,12 +38,137 @@ from dae.annotation.context import CLIAnnotationContext
 from dae.genomic_resources.repository_factory import (
     build_genomic_resource_repository,
 )
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.task_graph import TaskGraphCli
 from dae.utils.fs_utils import tabix_index_filename
 from dae.utils.regions import Region
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("annotate_vcf")
+
+
+class VCFFormat(AbstractFormat):
+    # pylint: disable=missing-class-docstring
+    def __init__(
+        self,
+        pipeline_config: RawPipelineConfig,
+        pipeline_config_old: str | None,
+        cli_args: dict,
+        grr_definition: dict | None,
+        region: Region | None,
+        input_path: str,
+        output_path: str,
+    ):
+        super().__init__(pipeline_config, pipeline_config_old,
+                         cli_args, grr_definition, region)
+        self.input_path = input_path
+        self.output_path = output_path
+
+        self.input_file = None
+        self.output_file = None
+        self.annotation_attributes = None
+
+    def open(self) -> None:
+        super().open()
+        assert self.pipeline is not None
+        self.annotation_attributes = self.pipeline.get_attributes()
+
+        self.input_file = VariantFile(self.input_path, "r")
+        update_header(self.input_file, self.pipeline)
+        self.output_file = VariantFile(self.output_path, "w",
+                                       header=self.input_file.header)
+
+    def close(self):
+        super().close()
+        self.input_file.close()  # type: ignore
+        self.output_file.close()  # type: ignore
+
+    def _read(self) -> Generator[Any, None, None]:
+        assert self.input_file is not None
+
+        if self.region is None:
+            in_file_iter = self.input_file.fetch()
+        else:
+            in_file_iter = self.input_file.fetch(
+                self.region.chrom, self.region.start, self.region.stop)
+
+        for vcf_var in in_file_iter:
+            if vcf_var.ref is None:
+                logger.warning(
+                    "vcf variant without reference: %s %s",
+                    vcf_var.chrom, vcf_var.pos,
+                )
+                continue
+
+            if vcf_var.alts is None:
+                logger.info(
+                    "vcf variant without alternatives: %s %s",
+                    vcf_var.chrom, vcf_var.pos,
+                )
+                continue
+
+            yield vcf_var
+
+    def _convert(
+        self, variant: VariantRecord,
+    ) -> list[tuple[Annotatable, dict]]:
+        return [
+            (VCFAllele(variant.chrom, variant.pos, variant.ref, alt),  # type: ignore
+             dict(variant.info))
+            for alt in variant.alts  # type: ignore
+        ]
+
+    def _apply(self, variant: VariantRecord, annotations: list[dict]):
+        VCFFormat._update_vcf_variant(
+            variant, annotations,
+            self.annotation_attributes,  # type: ignore
+            self.pipeline,  # type: ignore
+        )
+
+    def _write(self, variant: VariantRecord) -> None:
+        self.output_file.write(variant)  # type: ignore
+
+    @staticmethod
+    def _update_vcf_variant(
+        vcf_var: VariantRecord,
+        allele_annotations: list,
+        attributes: list[AttributeInfo],
+        pipeline: AnnotationPipeline,
+    ) -> None:
+        buffers: list[list] = [[] for _ in attributes]
+        for annotation in allele_annotations:
+            if isinstance(pipeline, ReannotationPipeline):
+                for col in pipeline.attributes_deleted:
+                    del vcf_var.info[col]
+
+            for buff, attribute in zip(buffers, attributes, strict=True):
+                attr = annotation.get(attribute.name)
+                if isinstance(attr, list):
+                    attr = ";".join(stringify(a, vcf=True) for a in attr)
+                elif isinstance(attr, dict):
+                    attr = ";".join(
+                        f"{k}:{v}"
+                        for k, v in attr.items()
+                    )
+                else:
+                    attr = stringify(attr, vcf=True)
+                attr = stringify(attr, vcf=True) \
+                    .replace(";", "|")\
+                    .replace(",", "|")\
+                    .replace(" ", "_")
+                buff.append(attr)
+        # If the all values for a given attribute are
+        # empty (i.e. - "."), then that attribute has no
+        # values to be written and will be skipped in the output
+        has_value = {
+            attr.name: any(filter(lambda x: x != ".", buffers[idx]))
+            for idx, attr in enumerate(attributes)
+        }
+        for buff, attribute in zip(buffers, attributes, strict=True):
+            if attribute.internal or not has_value[attribute.name]:
+
+                continue
+            vcf_var.info[attribute.name] = buff
 
 
 def update_header(
@@ -89,6 +223,8 @@ def combine(
     grr = build_genomic_resource_repository(definition=grr_definition)
     pipeline = build_annotation_pipeline(pipeline_config, grr)
 
+    output_file_path = output_file_path.rstrip(".gz")
+
     with closing(VariantFile(input_file_path)) as input_file:
         update_header(input_file, pipeline)
         with closing(
@@ -98,7 +234,6 @@ def combine(
                 partfile = VariantFile(partfile_path)
                 for rec in partfile.fetch():
                     output_file.write(rec)
-        tabix_index(output_file_path, preset="vcf")
 
     for partfile_path in partfile_paths:
         os.remove(partfile_path)
@@ -106,6 +241,13 @@ def combine(
 
 class AnnotateVCFTool(AnnotationTool):
     """Annotation tool for the VCF file format."""
+
+    def __init__(
+        self, raw_args: list[str] | None = None,
+        gpf_instance: GPFInstance | None = None,
+    ):
+        super().__init__(raw_args, gpf_instance)
+        self.output = None
 
     def get_argument_parser(self) -> argparse.ArgumentParser:
         """Construct and configure argument parser."""
@@ -125,129 +267,53 @@ class AnnotateVCFTool(AnnotationTool):
                             default=None)
         parser.add_argument("--reannotate", default=None,
                             help="Old pipeline config to reannotate over")
+        parser.add_argument(
+            "-i", "--full-reannotation",
+            help="Ignore any previous annotation and run "
+            " a full reannotation.",
+            action="store_true",
+        )
+        parser.add_argument(
+            "--batch-size",
+            type=int,
+            default=0,  # 0 = annotate iteratively, no batches
+            help="Annotate in batches of",
+        )
 
         CLIAnnotationContext.add_context_arguments(parser)
         TaskGraphCli.add_arguments(parser)
         VerbosityConfiguration.set_arguments(parser)
         return parser
 
-    @staticmethod
-    def annotate(  # pylint: disable=too-many-locals,too-many-branches
-        input_file: str,
-        region: Region | None,
-        pipeline_config: RawAnnotatorsConfig,
-        grr_definition: dict | None,
-        out_file_path: str,
-        allow_repeated_attributes: bool = False,
-        pipeline_config_old: str | None = None,
-    ) -> None:
-        # flake8: noqa: C901
-        """Annotate a region from a given input VCF file using a pipeline."""
-        pipeline = AnnotateVCFTool.produce_annotation_pipeline(
-            pipeline_config, pipeline_config_old,
-            grr_definition, allow_repeated_attributes=allow_repeated_attributes,
-        )
-        with closing(VariantFile(input_file)) as in_file:
-            update_header(in_file, pipeline)
-            with pipeline.open(), closing(VariantFile(
-                out_file_path, "w", header=in_file.header,
-            )) as out_file:
-                annotation_attributes = pipeline.get_attributes()
-
-                if region is None:
-                    in_file_iter = in_file.fetch()
-                else:
-                    in_file_iter = in_file.fetch(
-                        region.chrom, region.start, region.stop)
-
-                for vcf_var in in_file_iter:
-                    # pylint: disable=use-list-literal
-                    buffers: list[list] = [[] for _ in annotation_attributes]
-
-                    if vcf_var.ref is None:
-                        logger.warning(
-                            "vcf variant without reference: %s %s",
-                            vcf_var.chrom, vcf_var.pos,
-                        )
-                        continue
-
-                    if vcf_var.alts is None:
-                        logger.info(
-                            "vcf variant without alternatives: %s %s",
-                            vcf_var.chrom, vcf_var.pos,
-                        )
-                        continue
-
-                    has_value = {}
-
-                    if isinstance(pipeline, ReannotationPipeline):
-                        for col in pipeline.attributes_deleted:
-                            del vcf_var.info[col]
-
-                    for alt in vcf_var.alts:
-                        if isinstance(pipeline, ReannotationPipeline):
-                            annotation = pipeline.annotate(
-                                VCFAllele(
-                                    vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt,
-                                ), dict(vcf_var.info),
-                            )
-                        else:
-                            annotation = pipeline.annotate(
-                                VCFAllele(
-                                    vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt,
-                                ),
-                            )
-
-                        for buff, attribute in zip(buffers, annotation_attributes):
-                            attr = annotation.get(attribute.name)
-                            if attr is not None:
-                                has_value[attribute.name] = True
-
-                            if isinstance(attr, list):
-                                attr = ";".join(stringify(a, vcf=True)
-                                                for a in attr)
-                            elif isinstance(attr, dict):
-                                attr = ";".join(
-                                    f"{k}:{v}"
-                                    for k, v in attr.items()
-                                )
-                            else:
-                                attr = stringify(attr, vcf=True)
-                            attr = stringify(attr, vcf=True) \
-                                .replace(";", "|")\
-                                .replace(",", "|")\
-                                .replace(" ", "_")
-                            buff.append(attr)
-
-                    for attribute, buff in zip(annotation_attributes, buffers):
-                        if attribute.internal:
-                            continue
-                        if has_value.get(attribute.name, False):
-                            vcf_var.info[attribute.name] = buff
-                    out_file.write(vcf_var)
-
-    def work(self) -> None:
+    def prepare_for_annotation(self) -> None:
         if self.args.output:
-            output = self.args.output
+            self.output = self.args.output
         else:
-            output = os.path.basename(self.args.input).split(".")[0] + "_annotated.vcf"
+            self.output = os.path.basename(
+                self.args.input).split(".")[0] + "_annotated.vcf"
 
-        raw_pipeline_config = self.pipeline.raw
-
+    def add_tasks_to_graph(self) -> None:
+        assert self.grr is not None
+        assert self.output is not None
         pipeline_config_old = None
         if self.args.reannotate:
-            with open(self.args.reannotate, "r") as infile:
-                pipeline_config_old = infile.read()
+            pipeline_config_old = Path(self.args.reannotate).read_text()
+        raw_pipeline_config = self.pipeline.raw
 
         if not tabix_index_filename(self.args.input):
-            assert self.grr is not None
+            handler = VCFFormat(
+                raw_pipeline_config,
+                pipeline_config_old,
+                vars(self.args),
+                self.grr.definition,
+                None,
+                self.args.input,
+                self.output,
+            )
             self.task_graph.create_task(
                 "all_variants_annotate",
                 AnnotateVCFTool.annotate,
-                [self.args.input, None, raw_pipeline_config,
-                self.grr.definition, output,
-                self.args.allow_repeated_attributes,
-                pipeline_config_old],
+                [handler, self.args.batch_size > 0],
                 [],
             )
         else:
@@ -256,26 +322,39 @@ class AnnotateVCFTool(AnnotationTool):
             file_paths = produce_partfile_paths(
                 self.args.input, regions, self.args.work_dir)
             region_tasks = []
-            for index, (region, file_path) in enumerate(zip(regions, file_paths)):
+            for index, (region, file_path) in enumerate(
+                zip(regions, file_paths, strict=True),
+            ):
+                handler = VCFFormat(
+                    raw_pipeline_config,
+                    pipeline_config_old,
+                    vars(self.args),
+                    self.grr.definition,
+                    region,
+                    self.args.input,
+                    file_path,
+                )
                 assert self.grr is not None
                 region_tasks.append(self.task_graph.create_task(
                     f"part-{index}",
                     AnnotateVCFTool.annotate,
-                    [self.args.input, region,
-                    raw_pipeline_config, self.grr.definition,
-                    file_path, self.args.allow_repeated_attributes,
-                    pipeline_config_old],
+                    [handler, self.args.batch_size > 0],
                     [],
                 ))
 
             assert self.grr is not None
-            self.task_graph.create_task(
+            combine_task = self.task_graph.create_task(
                 "combine",
                 combine,
                 [self.args.input, self.pipeline.raw,
-                self.grr.definition, file_paths, output],
+                self.grr.definition, file_paths, self.output],
                 region_tasks,
             )
+            self.task_graph.create_task(
+                "compress_and_tabix",
+                produce_tabix_index,
+                [self.output],
+                [combine_task])
 
 
 def cli(raw_args: list[str] | None = None) -> None:
