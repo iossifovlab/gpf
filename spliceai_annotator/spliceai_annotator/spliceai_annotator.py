@@ -147,7 +147,7 @@ models to predict splice site variant effects.
 
     def _not_found(self, attributes: dict[str, Any]) -> dict[str, Any]:
         attributes.update({
-            "delta_score": "-",
+            "delta_score": None,
         })
         return attributes
 
@@ -166,6 +166,10 @@ models to predict splice site variant effects.
             return self._not_found(result)
         if any(c in {".", "-", "*", ">", "<"} for c in annotatable.alt):
             return self._not_found(result)
+
+        logger.debug(
+            "processing annotatable %s", annotatable)
+
         if len(annotatable.ref) > 2 * self._distance:
             logger.warning(
                 "Skipping record (ref too long): %s", annotatable,
