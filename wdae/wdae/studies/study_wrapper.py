@@ -147,6 +147,7 @@ class StudyWrapperBase(WDAEStudy):
             "phenotype_browser",
             "phenotype_tool",
             "has_denovo",
+            "phenotype_data",
         ]
         result = {
             key: config.get(key, None) for key in keys
