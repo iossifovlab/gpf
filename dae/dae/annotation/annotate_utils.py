@@ -5,7 +5,7 @@ import os
 import sys
 from abc import abstractmethod
 from collections.abc import Generator
-from itertools import islice
+from itertools import islice, starmap
 from pathlib import Path
 from typing import Any
 
@@ -192,11 +192,15 @@ class AbstractFormat:
         pass
 
     @abstractmethod
-    def _convert(self, variant: Any) -> tuple[dict, Annotatable]:
+    def _convert(self, variant: Any) -> list[tuple[Annotatable, dict]]:
         pass
 
     @abstractmethod
-    def _write(self, variant: Any, annotation: dict) -> None:
+    def _apply(self, variant: Any, annotations: list[dict]) -> None:
+        pass
+
+    @abstractmethod
+    def _write(self, variant: Any) -> None:
         pass
 
     @staticmethod
@@ -211,11 +215,13 @@ class AbstractFormat:
 
     def process(self):
         assert self.pipeline is not None
+        annotations = []
         for variant in self._read():
             try:
-                context, annotatable = self._convert(variant)
-                annotation = self.pipeline.annotate(annotatable, context)
-                self._write(variant, annotation)
+                annotations = list(starmap(self.pipeline.annotate,
+                                           self._convert(variant)))
+                self._apply(variant, annotations)
+                self._write(variant)
             except Exception:  # pylint: disable=broad-except
                 logger.exception("Error during iterative annotation")
 
@@ -227,15 +233,29 @@ class AbstractFormat:
         errors = []
         try:
             while batch := tuple(islice(self._read(), batch_size)):
-                prepared_data = (self._convert(v) for v in batch)
-                contexts, annotatables = zip(*prepared_data, strict=True)
-                annotations = self.pipeline.batch_annotate(
-                    annotatables, contexts,  # type: ignore
+                all_contexts = []
+                all_annotatables = []
+                allele_counts = []  # per variant
+
+                for variant in batch:
+                    annotatables, contexts = zip(*self._convert(variant),
+                                                 strict=True)
+                    all_contexts.extend(contexts)
+                    all_annotatables.extend(annotatables)
+                    allele_counts.append(len(annotatables))
+
+                all_annotations = iter(self.pipeline.batch_annotate(
+                    all_annotatables,
+                    all_contexts,
                     batch_work_dir=work_dir,
-                )
-                del prepared_data, contexts
-                for variant, annotation in zip(batch, annotations, strict=True):
-                    self._write(variant, annotation)
+                ))
+
+                for variant, allele_count in zip(batch, allele_counts,
+                                                 strict=True):
+                    annotations = [next(all_annotations)
+                                   for _ in range(allele_count)]
+                    self._apply(variant, annotations)
+                    self._write(variant)
 
         except Exception as ex:  # pylint: disable=broad-except
             logger.exception("Error during batch annotation")

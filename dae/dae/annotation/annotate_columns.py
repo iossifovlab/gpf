@@ -121,17 +121,21 @@ class ColumnsFormat(AbstractFormat):
                 logger.error("line %s: %s", lnum, line)
                 logger.error("\t%s", error)
 
-    def _convert(self, variant: dict) -> tuple[dict, Annotatable]:
-        return dict(variant), self.record_to_annotatable.build(variant)  # type: ignore
-
-    def _write(
-        self, variant: dict, annotation: dict,
-    ) -> None:
+    def _apply(self, variant: dict, annotations: list[dict]):
         if isinstance(self.pipeline, ReannotationPipeline):
             for col in self.pipeline.attributes_deleted:  # type: ignore
                 del variant[col]
+
+        # No support for multi-allelic variants in columns format
+        annotation = annotations[0]
+
         for col in self.annotation_columns:  # type: ignore
             variant[col] = annotation[col]
+
+    def _convert(self, variant: dict) -> list[tuple[Annotatable, dict]]:
+        return [(self.record_to_annotatable.build(variant), dict(variant))]  # type: ignore
+
+    def _write(self, variant: dict) -> None:
         result = self.separator.join(
             stringify(val) for val in variant.values()
         ) + "\n"

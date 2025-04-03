@@ -66,8 +66,6 @@ class VCFFormat(AbstractFormat):
         self.input_file = None
         self.output_file = None
         self.annotation_attributes = None
-        self._annot_buffer = []
-        self._curr_var = None
 
     def open(self) -> None:
         super().open()
@@ -82,12 +80,6 @@ class VCFFormat(AbstractFormat):
     def close(self):
         super().close()
         self.input_file.close()  # type: ignore
-        VCFFormat._update_vcf_variant(
-            self._curr_var, self._annot_buffer,  # type: ignore
-            self.annotation_attributes,  # type: ignore
-            self.pipeline,  # type: ignore
-        )
-        self.output_file.write(self._curr_var)  # type: ignore
         self.output_file.close()  # type: ignore
 
     def _read(self) -> Generator[Any, None, None]:
@@ -114,33 +106,26 @@ class VCFFormat(AbstractFormat):
                 )
                 continue
 
-            for alt in vcf_var.alts:
-                yield vcf_var, alt
+            yield vcf_var
 
     def _convert(
-        self,
-        variant: tuple[VariantRecord, Any],
-    ) -> tuple[dict, Annotatable]:
-        vcf_var, alt = variant
-        return dict(vcf_var.info), \
-            VCFAllele(vcf_var.chrom, vcf_var.pos, vcf_var.ref, alt)  # type: ignore
+        self, variant: VariantRecord,
+    ) -> list[tuple[Annotatable, dict]]:
+        return [
+            (VCFAllele(variant.chrom, variant.pos, variant.ref, alt),  # type: ignore
+             dict(variant.info))
+            for alt in variant.alts  # type: ignore
+        ]
 
-    def _write(
-        self, variant: tuple[VariantRecord, Any], annotation: dict,
-    ) -> None:
-        vcf_var, _ = variant
-        if self._curr_var is None or vcf_var == self._curr_var:
-            self._annot_buffer.append(annotation)
-            self._curr_var = vcf_var
-        else:
-            VCFFormat._update_vcf_variant(
-                self._curr_var, self._annot_buffer,
-                self.annotation_attributes,  # type: ignore
-                self.pipeline,  # type: ignore
-            )
-            self.output_file.write(self._curr_var)  # type: ignore
-            self._annot_buffer = [annotation]
-            self._curr_var = vcf_var
+    def _apply(self, variant: VariantRecord, annotations: list[dict]):
+        VCFFormat._update_vcf_variant(
+            variant, annotations,
+            self.annotation_attributes,  # type: ignore
+            self.pipeline,  # type: ignore
+        )
+
+    def _write(self, variant: VariantRecord) -> None:
+        self.output_file.write(variant)  # type: ignore
 
     @staticmethod
     def _update_vcf_variant(

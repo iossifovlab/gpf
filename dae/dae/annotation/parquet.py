@@ -27,7 +27,7 @@ from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils.regions import Region, split_into_regions
-from dae.variants.variant import SummaryAllele, SummaryVariant
+from dae.variants.variant import SummaryVariant
 from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
@@ -308,7 +308,6 @@ class ParquetFormat(AbstractFormat):
         self.input_loader = None
         self.writer = None
         self.internal_attributes = None
-        self._curr_var = None
 
     def open(self) -> None:
         super().open()
@@ -337,42 +336,29 @@ class ParquetFormat(AbstractFormat):
     def close(self):
         super().close()
         assert self.writer is not None
-        if self._curr_var is not None:
-            self.writer.write_summary_variant(self._curr_var)
         self.writer.close()
 
-    def _read(
-        self,
-    ) -> Generator[tuple[SummaryVariant, SummaryAllele], None, None]:
+    def _read(self) -> Generator[SummaryVariant, None, None]:
         assert self.input_loader is not None
-        fetch = self.input_loader.fetch_summary_variants(region=self.region)
-        for variant in fetch:
-            for alt in variant.alt_alleles:
-                yield variant, alt
+        yield from self.input_loader.fetch_summary_variants(region=self.region)
 
     def _convert(
-        self,
-        variant: tuple[SummaryVariant, SummaryAllele],
-    ) -> tuple[dict, Annotatable]:
-        _, allele = variant
-        return allele.attributes, allele.get_annotatable()
+        self, variant: SummaryVariant,
+    ) -> list[tuple[Annotatable, dict]]:
+        return [(allele.get_annotatable(), allele.attributes)
+                for allele in variant.alt_alleles]
 
-    def _write(
-        self, variant: tuple[SummaryVariant, SummaryAllele], annotation: dict,
-    ) -> None:
+    def _apply(self, variant: SummaryVariant, annotations: list[dict]):
+        for allele, annotation in zip(variant.alt_alleles, annotations,
+                                      strict=True):
+            if isinstance(self.pipeline, ReannotationPipeline):
+                for attr in self.pipeline.attributes_deleted:
+                    del allele.attributes[attr]
+            for attr in self.internal_attributes:  # type: ignore
+                del annotation[attr]
+            allele.update_attributes(annotation)
+
+    def _write(self, variant: SummaryVariant) -> None:
         assert self.internal_attributes is not None
         assert self.writer is not None
-
-        sv, allele = variant
-        if isinstance(self.pipeline, ReannotationPipeline):
-            for attr in self.pipeline.attributes_deleted:
-                del allele.attributes[attr]
-        for attr in self.internal_attributes:
-            del annotation[attr]
-        allele.update_attributes(annotation)
-
-        if self._curr_var is None:
-            self._curr_var = sv
-        elif sv != self._curr_var:
-            self.writer.write_summary_variant(self._curr_var)
-            self._curr_var = sv
+        self.writer.write_summary_variant(variant)
