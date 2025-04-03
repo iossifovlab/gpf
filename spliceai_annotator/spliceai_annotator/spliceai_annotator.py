@@ -223,29 +223,19 @@ models to predict splice site variant effects.
             idx_pd = (y[1, :, 2] - y[0, :, 2]).argmax()
             idx_nd = (y[0, :, 2] - y[1, :, 2]).argmax()
 
-            dist_ann = self._get_pos_data(transcript, annotatable.pos)
-            cov = 2 * self._distance + 1
-            mask_pa = np.logical_and(
-                (idx_pa - cov // 2 == dist_ann[2]), self._mask)
-            mask_na = np.logical_and(
-                (idx_na - cov // 2 != dist_ann[2]), self._mask)
-            mask_pd = np.logical_and(
-                (idx_pd - cov // 2 == dist_ann[2]), self._mask)
-            mask_nd = np.logical_and(
-                (idx_nd - cov // 2 != dist_ann[2]), self._mask)
-            pa = (y[1, idx_pa, 1] - y[0, idx_pa, 1]) * (1 - mask_pa)
-            na = (y[0, idx_na, 1] - y[1, idx_na, 1]) * (1 - mask_na)
-            pd = (y[1, idx_pd, 2] - y[0, idx_pd, 2]) * (1 - mask_pd)
-            nd = (y[0, idx_nd, 2] - y[1, idx_nd, 2]) * (1 - mask_nd)
+            pa = (y[1, idx_pa, 1] - y[0, idx_pa, 1])
+            na = (y[0, idx_na, 1] - y[1, idx_na, 1])
+            pd = (y[1, idx_pd, 2] - y[0, idx_pd, 2])
+            nd = (y[0, idx_nd, 2] - y[1, idx_nd, 2])
 
             delta_scores.append(
                 f"{annotatable.alt}|{transcript.gene}|"
                 f"{pa:.2f}|{na:.2f}|"
                 f"{pd:.2f}|{nd:.2f}|"
-                f"{idx_pa - cov // 2}|"
-                f"{idx_na - cov // 2}|"
-                f"{idx_pd - cov // 2}|"
-                f"{idx_nd - cov // 2}",
+                f"{idx_pa - self._distance}|"
+                f"{idx_na - self._distance}|"
+                f"{idx_pd - self._distance}|"
+                f"{idx_nd - self._distance}",
             )
         return {"delta_score": ";".join(delta_scores)}
 
@@ -291,19 +281,6 @@ models to predict splice site variant effects.
                 axis=1)
 
         return np.concatenate([y_ref, y_alt])
-
-    def _get_pos_data(
-        self, transcript: TranscriptModel,
-        pos: int,
-    ) -> tuple:
-        dist_tx_start = transcript.tx[0] - pos
-        dist_tx_end = transcript.tx[1] - pos
-
-        dist_exon_bdry = min(
-            *(ex.start - pos for ex in transcript.exons),
-            *(ex.stop - pos for ex in transcript.exons),
-            key=abs)
-        return dist_tx_start, dist_tx_end, dist_exon_bdry
 
     def _padding_size(
             self, transcript: TranscriptModel,

@@ -36,19 +36,6 @@ def test_spliceai_annotate_simple_donor(
         "T|TUBB8|0.01|0.18|0.15|0.62|-2|110|-190|0"
 
 
-def test_get_pos_data(
-    spliceai_annotator: SpliceAIAnnotator,
-) -> None:
-    spliceai_annotator.open()
-    gene_models = spliceai_annotator.gene_models
-    transcript = gene_models.gene_models_by_location("10", 94077)[0]
-
-    dist = spliceai_annotator._get_pos_data(transcript, 94077)
-    assert dist[0] == -1184
-    assert dist[1] == 1452
-    assert dist[2] == -23
-
-
 def test_padding_size(
     spliceai_annotator: SpliceAIAnnotator,
 ) -> None:
