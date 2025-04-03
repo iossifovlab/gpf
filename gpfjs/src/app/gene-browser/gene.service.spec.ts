@@ -45,4 +45,16 @@ describe('GeneService', () => {
       environment.apiPath + 'genome/gene_models/search/fakeSearchTerm'
     );
   });
+
+  it('should validate genes', async() => {
+    const httpPostSpy = jest.spyOn(HttpClient.prototype, 'post');
+    httpPostSpy.mockReturnValue(of(['invalidGene']));
+
+    const genes = ['CHD8', 'POGZ', 'invalidGene'];
+    const response = await lastValueFrom(service.validateGenes(genes).pipe(take(1)));
+    expect(response).toStrictEqual(['invalidGene']);
+    expect(httpPostSpy.mock.calls[0][0]).toBe(
+      environment.apiPath + 'genome/gene_models/validate/'
+    );
+  });
 });
