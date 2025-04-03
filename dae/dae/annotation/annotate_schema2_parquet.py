@@ -28,6 +28,12 @@ from dae.variants_loaders.parquet.loader import ParquetLoader
 class AnnotateSchema2ParquetTool(AnnotationTool):
     """Annotation tool for the Parquet file format."""
 
+    def __init__(self, raw_args=None, gpf_instance=None):
+        super().__init__(raw_args, gpf_instance)
+
+        self.loader = None
+        self.output_layout = None
+
     def get_argument_parser(self) -> argparse.ArgumentParser:
         """Construct and configure argument parser."""
         parser = argparse.ArgumentParser(
@@ -170,14 +176,17 @@ class AnnotateSchema2ParquetTool(AnnotationTool):
         return input_layout, output_layout
 
     def prepare_for_annotation(self) -> None:
-        self.input_layout, self.output_layout = self._setup_io_layouts()
-        self.loader = ParquetLoader(self.input_layout)
+        input_layout, self.output_layout = self._setup_io_layouts()
+        self.loader = ParquetLoader(input_layout)
         write_new_meta(self.loader, self.pipeline, self.output_layout)
         if not self.args.in_place:
             symlink_pedigree_and_family_variants(self.loader.layout,
                                                  self.output_layout)
 
     def add_tasks_to_graph(self) -> None:
+        assert self.loader is not None
+        assert self.output_layout is not None
+
         if "reference_genome" not in self.loader.meta:
             raise ValueError("No reference genome found in study metadata!")
         genome = ReferenceGenome(

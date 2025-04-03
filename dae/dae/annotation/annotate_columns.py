@@ -49,6 +49,7 @@ logger = logging.getLogger("annotate_columns")
 
 
 class ColumnsFormat(AbstractFormat):
+    # pylint: disable=missing-class-docstring
     def __init__(
         self,
         pipeline_config: RawPipelineConfig,
@@ -92,6 +93,7 @@ class ColumnsFormat(AbstractFormat):
             attr.name for attr in self.pipeline.get_attributes()  # type: ignore
             if not attr.internal
         ]
+        # pylint: disable=consider-using-with
         self.output_file = open(self.output_path, "a")  # noqa: SIM115
 
     def close(self):

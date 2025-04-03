@@ -288,6 +288,7 @@ def merge_non_partitioned(output_dir: str) -> None:
 
 
 class ParquetFormat(AbstractFormat):
+    # pylint: disable=missing-class-docstring
     def __init__(
         self,
         pipeline_config: RawPipelineConfig,

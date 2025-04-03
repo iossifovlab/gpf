@@ -48,6 +48,7 @@ logger = logging.getLogger("annotate_vcf")
 
 
 class VCFFormat(AbstractFormat):
+    # pylint: disable=missing-class-docstring
     def __init__(
         self,
         pipeline_config: RawPipelineConfig,

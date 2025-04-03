@@ -154,6 +154,8 @@ def produce_tabix_index(filepath: str, args: Any = None) -> None:
 
 
 class AbstractFormat:
+    # pylint: disable=missing-class-docstring
+    # pylint: disable=missing-function-docstring
     def __init__(
         self,
         pipeline_config: RawPipelineConfig,
@@ -343,6 +345,7 @@ class AnnotationTool:
 
     @staticmethod
     def annotate(handler: AbstractFormat, batch_mode: bool) -> None:  # noqa: FBT001
+        """Run annotation."""
         handler.open()
         if batch_mode:
             handler.process_batched()
