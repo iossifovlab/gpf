@@ -50,8 +50,20 @@ def stringify(value: Any, *, vcf: bool = False) -> str:
 
 
 class AbstractFormat:
-    # pylint: disable=missing-class-docstring
-    # pylint: disable=missing-function-docstring
+    """
+    Abstract class of input/output handlers for various formats.
+
+    This class and its children are responsible for correctly reading from
+    and writing to formats that can be annotated by our system.
+
+    They convert the raw input data to types that can be passed to the
+    annotation pipeline and then convert it back to its native format, as well
+    as handling the reading, updating and writing of metadata the format may
+    possess.
+
+    Each child class handles the specific differences of a single format.
+    """
+
     def __init__(
         self,
         pipeline_config: RawPipelineConfig,
@@ -71,6 +83,9 @@ class AbstractFormat:
             pipeline_config_old = Path(self.cli_args["reannotate"]).read_text()
 
     def open(self) -> None:
+        """
+        Initialize all necessary member variables and process relevant metadata.
+        """
         self.grr = \
             build_genomic_resource_repository(definition=self.grr_definition)
         self.pipeline = build_annotation_pipeline(
@@ -83,23 +98,47 @@ class AbstractFormat:
         self.pipeline.open()
 
     def close(self) -> None:
+        """
+        Close any open files, clean up anything unnecessary.
+        """
         self.pipeline.close()  # type: ignore
 
     @abstractmethod
     def _read(self) -> Generator[Any, None, None]:
-        pass
+        """
+        Read raw data from the input.
+        """
 
     @abstractmethod
     def _convert(self, variant: Any) -> list[tuple[Annotatable, dict]]:
-        pass
+        """
+        Convert a single piece of raw data from the input into a usable format.
+
+        This method returns a list of tuples - one tuple per allele for the raw
+        variant data that has been read.
+
+        Each tuple contains an Annotatable instance, which will be
+        annotated by the relevant annotation pipeline, and a dictionary
+        containing any attributes already present in the raw data, such as a
+        previous annotation - this is called a "context". This "context" is
+        primarily used when reannotating data.
+        """
 
     @abstractmethod
     def _apply(self, variant: Any, annotations: list[dict]) -> None:
-        pass
+        """
+        Apply produced annotations to the raw variant data.
+
+        This method updates the native variant data in-place with a list of
+        annotations - this list should contain a dictionary of annotation
+        results for each allele in the variant.
+        """
 
     @abstractmethod
     def _write(self, variant: Any) -> None:
-        pass
+        """
+        Write a single piece of raw data to the output.
+        """
 
     @staticmethod
     def get_task_dir(region: Region | None) -> str:
@@ -112,6 +151,12 @@ class AbstractFormat:
         return f"{chrom}_{pos_beg}_{pos_end}"
 
     def process(self):
+        """
+        Iteratively carry out the annotation of the input.
+
+        This method will read, annotate, apply and then write each variant
+        from the input data in an iterative fashion - one by one.
+        """
         assert self.pipeline is not None
         annotations = []
         for variant in self._read():
@@ -124,6 +169,12 @@ class AbstractFormat:
                 logger.exception("Error during iterative annotation")
 
     def process_batched(self):
+        """
+        Carry out the annotation of the input in batches.
+
+        This method performs each step of the read-annotate-apply-write
+        loop in batches.
+        """
         assert self.pipeline is not None
 
         batch_size = self.cli_args["batch_size"]
@@ -165,7 +216,10 @@ class AbstractFormat:
 
 
 class ColumnsFormat(AbstractFormat):
-    # pylint: disable=missing-class-docstring
+    """
+    Handler for delimiter-separated values text files.
+    """
+
     def __init__(
         self,
         pipeline_config: RawPipelineConfig,
@@ -301,7 +355,10 @@ class ColumnsFormat(AbstractFormat):
 
 
 class VCFFormat(AbstractFormat):
-    # pylint: disable=missing-class-docstring
+    """
+    Handler for VCF format files.
+    """
+
     def __init__(
         self,
         pipeline_config: RawPipelineConfig,
@@ -467,7 +524,10 @@ class VCFFormat(AbstractFormat):
 
 
 class ParquetFormat(AbstractFormat):
-    # pylint: disable=missing-class-docstring
+    """
+    Handler for Schema2 Parquet datasets.
+    """
+
     def __init__(
         self,
         pipeline_config: RawPipelineConfig,
