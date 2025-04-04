@@ -656,7 +656,10 @@ class FederationCredentials(views.APIView):
             f"{new_application.client_id}:{cleartext_secret}".encode(),
         )
         return Response(
-            {"credentials": credentials}, status=status.HTTP_200_OK,
+            {"credentials": credentials,
+             "client_secret": cleartext_secret,
+             "client_id": new_application.client_id},
+            status=status.HTTP_200_OK,
         )
 
     @request_logging(logger)
