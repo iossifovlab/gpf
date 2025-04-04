@@ -154,26 +154,42 @@ models to predict splice site variant effects.
     def _width(self) -> int:
         return 10000 + 2 * self._distance + 1
 
+    def _is_valid_annotatable(
+        self, annotatable: Annotatable,
+    ) -> bool:
+        if annotatable is None:
+            return False
+        if not isinstance(annotatable, VCFAllele):
+            return False
+        if any(c in {".", "-", "*", ">", "<"} for c in annotatable.alt):
+            logger.warning(
+                "Skipping record (strange alt): %s", annotatable,
+            )
+            return False
+
+        if len(annotatable.ref) > 2 * self._distance:
+            logger.warning(
+                "Skipping record (ref too long): %s", annotatable,
+            )
+            return False
+        if len(annotatable.ref) > 1 and len(annotatable.alt) > 1:
+            logger.warning(
+                "Skipping record (complex VCFAllele): %s", annotatable,
+            )
+            return False
+
+        return True
+
     def _do_annotate(
         self, annotatable: Annotatable,
         context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
         result: dict = {}
 
-        if annotatable is None:
-            return self._not_found(result)
-        if not isinstance(annotatable, VCFAllele):
-            return self._not_found(result)
-        if any(c in {".", "-", "*", ">", "<"} for c in annotatable.alt):
-            return self._not_found(result)
-
         logger.debug(
             "processing annotatable %s", annotatable)
 
-        if len(annotatable.ref) > 2 * self._distance:
-            logger.warning(
-                "Skipping record (ref too long): %s", annotatable,
-            )
+        if not self._is_valid_annotatable(annotatable):
             return self._not_found(result)
 
         transcripts = self.gene_models.gene_models_by_location(
@@ -197,7 +213,7 @@ models to predict splice site variant effects.
         ref_len = len(annotatable.ref)
         if seq[width // 2: width // 2 + ref_len] != annotatable.ref:
             logger.warning(
-                "Skipping record (ref not found): %s", annotatable,
+                "Skipping record (wrong reference): %s", annotatable,
             )
             return self._not_found(result)
 
