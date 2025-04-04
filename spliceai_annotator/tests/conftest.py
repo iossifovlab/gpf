@@ -30,6 +30,8 @@ def spliceai_annotation_pipeline(
         genome: hg19/genome_10
         gene_models: hg19/gene_models_small
         distance: 500
+        attributes:
+        - delta_score
     """)
     return load_pipeline_from_yaml(
         pipeline_config,

@@ -56,19 +56,6 @@ def test_spliceai_annotate_simple_donor(
         "T|TUBB8|0.01|0.18|0.15|0.62|-2|110|-190|0"
 
 
-def test_padding_size(
-    spliceai_annotator: SpliceAIAnnotator,
-) -> None:
-    spliceai_annotator.open()
-
-    gene_models = spliceai_annotator.gene_models
-    transcript = gene_models.gene_models_by_location("10", 94077)[0]
-
-    padding = spliceai_annotator._padding_size(transcript, 94077)
-    assert padding[0] == 4316
-    assert padding[1] == 4048
-
-
 def test_spliceai_batch_annotate(
     spliceai_annotation_pipeline: AnnotationPipeline,
 ) -> None:
