@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import textwrap
+from collections import defaultdict
 from typing import Any
 
 import numpy as np
@@ -20,7 +21,6 @@ from dae.annotation.annotation_pipeline import (
 from dae.annotation.annotator_base import AnnotatorBase
 from dae.genomic_resources.gene_models import (
     GeneModels,
-    TranscriptModel,
     build_gene_models_from_resource,
 )
 from dae.genomic_resources.genomic_context import get_genomic_context
@@ -89,10 +89,55 @@ models to predict splice site variant effects.
         info.resources += [genome.resource, gene_models.resource]
         if not info.attributes:
             info.attributes = AnnotationConfigParser.parse_raw_attributes([
-                "delta_score",
+                "gene",
+                "transcript_ids",
+                "DS_AG",
+                "DS_AL",
+                "DS_DG",
+                "DS_DL",
+                "DS_MAX",
+                # "DP_AG",
+                # "DP_AL",
+                # "DP_DG",
+                # "DP_DL",
+                # "ref_A_p",
+                # "ref_D_p",
+                # "alt_A_p",
+                # "alt_D_p",
+                # "delta_score",
             ])
 
         super().__init__(pipeline, info, {
+            "gene":
+            ("str", ""),
+            "transcript_ids":
+            ("str", ""),
+            "DS_AG":
+            ("float", ""),
+            "DS_AL":
+            ("float", ""),
+            "DS_DG":
+            ("float", ""),
+            "DS_DL":
+            ("float", ""),
+            "DS_MAX":
+            ("float", ""),
+            "DP_AG":
+            ("int", ""),
+            "DP_AL":
+            ("int", ""),
+            "DP_DG":
+            ("int", ""),
+            "DP_DL":
+            ("int", ""),
+            "ref_A_p":
+            ("str", ""),
+            "ref_D_p":
+            ("str", ""),
+            "alt_A_p":
+            ("str", ""),
+            "alt_D_p":
+            ("str", ""),
             "delta_score":
             (
                 "str",
@@ -145,39 +190,72 @@ models to predict splice site variant effects.
         ]
         return super().open()
 
-    def _not_found(self, attributes: dict[str, Any]) -> dict[str, Any]:
-        attributes.update({
-            "delta_score": "-",
-        })
-        return attributes
+    def _not_found(self) -> dict[str, Any]:
+        return {
+            "gene": None,
+            "transcript_ids": None,
+            "DS_AG": None,
+            "DS_AL": None,
+            "DS_DG": None,
+            "DS_DL": None,
+            "DS_MAX": None,
+            "DP_AG": None,
+            "DP_AL": None,
+            "DP_DG": None,
+            "DP_DL": None,
+            "ref_A_p": None,
+            "ref_D_p": None,
+            "alt_A_p": None,
+            "alt_D_p": None,
+            "delta_score": None,
+        }
 
     def _width(self) -> int:
         return 10000 + 2 * self._distance + 1
+
+    def _is_valid_annotatable(
+        self, annotatable: Annotatable,
+    ) -> bool:
+        if annotatable is None:
+            return False
+        if not isinstance(annotatable, VCFAllele):
+            return False
+        if any(c in {".", "-", "*", ">", "<"} for c in annotatable.alt):
+            logger.warning(
+                "Skipping record (strange alt): %s", annotatable,
+            )
+            return False
+
+        if len(annotatable.ref) > 2 * self._distance:
+            logger.warning(
+                "Skipping record (ref too long): %s", annotatable,
+            )
+            return False
+        if len(annotatable.ref) > 1 and len(annotatable.alt) > 1:
+            logger.warning(
+                "Skipping record (complex VCFAllele): %s", annotatable,
+            )
+            return False
+
+        return True
 
     def _do_annotate(
         self, annotatable: Annotatable,
         context: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
-        result: dict = {}
+        logger.debug(
+            "processing annotatable %s", annotatable)
 
-        if annotatable is None:
-            return self._not_found(result)
-        if not isinstance(annotatable, VCFAllele):
-            return self._not_found(result)
-        if any(c in {".", "-", "*", ">", "<"} for c in annotatable.alt):
-            return self._not_found(result)
-        if len(annotatable.ref) > 2 * self._distance:
-            logger.warning(
-                "Skipping record (ref too long): %s", annotatable,
-            )
-            return self._not_found(result)
+        if not self._is_valid_annotatable(annotatable):
+            return self._not_found()
+        assert not (len(annotatable.ref) > 1 and len(annotatable.alt) > 1)
 
         transcripts = self.gene_models.gene_models_by_location(
             annotatable.chromosome,
             annotatable.pos,
         )
         if not transcripts:
-            return self._not_found(result)
+            return self._not_found()
 
         width = self._width()
         seq = self.genome.get_sequence(
@@ -189,28 +267,39 @@ models to predict splice site variant effects.
             logger.warning(
                 "Skipping record (near chromosome end): %s", annotatable,
             )
-            return self._not_found(result)
+            return self._not_found()
         ref_len = len(annotatable.ref)
         if seq[width // 2: width // 2 + ref_len] != annotatable.ref:
             logger.warning(
-                "Skipping record (ref not found): %s", annotatable,
+                "Skipping record (wrong reference): %s", annotatable,
             )
-            return self._not_found(result)
+            return self._not_found()
 
-        delta_scores: list[str] = []
+        genes = defaultdict(list)
         for transcript in transcripts:
-            if len(annotatable.ref) > 1 or len(annotatable.alt) > 1:
-                delta_scores.append(
-                    f"{annotatable.alt}|{transcript.gene}|.|.|.|.|.|.|.|.",
+            genes[transcript.gene].append(transcript)
+
+        results = defaultdict(list)
+        for gene, transcripts in genes.items():
+            tx = (
+                min(t.tx[0] for t in transcripts),
+                max(t.tx[1] for t in transcripts),
+            )
+            strands = [t.strand for t in transcripts]
+            if not all(s == strands[0] for s in strands):
+                logger.warning(
+                    "Skipping record (mixed strands): %s", annotatable,
                 )
-                continue
-            padding_size = self._padding_size(transcript, annotatable.pos)
+                return self._not_found()
+            strand = strands[0]
+
             xref, xalt = self._seq_padding(
-                seq, padding_size, annotatable,
+                seq, tx, annotatable,
             )
 
             y = self._predict(
-                xref, xalt, transcript.strand,
+                xref, xalt, strand,
+                annotatable,
             )
 
             idx_pa = (y[1, :, 1] - y[0, :, 1]).argmax()
@@ -218,34 +307,74 @@ models to predict splice site variant effects.
             idx_pd = (y[1, :, 2] - y[0, :, 2]).argmax()
             idx_nd = (y[0, :, 2] - y[1, :, 2]).argmax()
 
-            dist_ann = self._get_pos_data(transcript, annotatable.pos)
-            cov = 2 * self._distance + 1
-            mask_pa = np.logical_and(
-                (idx_pa - cov // 2 == dist_ann[2]), self._mask)
-            mask_na = np.logical_and(
-                (idx_na - cov // 2 != dist_ann[2]), self._mask)
-            mask_pd = np.logical_and(
-                (idx_pd - cov // 2 == dist_ann[2]), self._mask)
-            mask_nd = np.logical_and(
-                (idx_nd - cov // 2 != dist_ann[2]), self._mask)
-            pa = (y[1, idx_pa, 1] - y[0, idx_pa, 1]) * (1 - mask_pa)
-            na = (y[0, idx_na, 1] - y[1, idx_na, 1]) * (1 - mask_na)
-            pd = (y[1, idx_pd, 2] - y[0, idx_pd, 2]) * (1 - mask_pd)
-            nd = (y[0, idx_nd, 2] - y[1, idx_nd, 2]) * (1 - mask_nd)
+            pa = (y[1, idx_pa, 1] - y[0, idx_pa, 1])
+            na = (y[0, idx_na, 1] - y[1, idx_na, 1])
+            pd = (y[1, idx_pd, 2] - y[0, idx_pd, 2])
+            nd = (y[0, idx_nd, 2] - y[1, idx_nd, 2])
 
-            delta_scores.append(
-                f"{annotatable.alt}|{transcript.gene}|"
+            results["gene"].append(gene)
+            results["transcript_ids"].append(
+                ",".join([t.tr_id for t in transcripts]),
+            )
+            results["DS_AG"].append(pa)
+            results["DS_AL"].append(na)
+            results["DS_DG"].append(pd)
+            results["DS_DL"].append(nd)
+            results["DS_MAX"].append(max(pa, na, pd, nd))
+            results["DP_AG"].append(idx_pa - self._distance)
+            results["DP_AL"].append(idx_na - self._distance)
+            results["DP_DG"].append(idx_pd - self._distance)
+            results["DP_DL"].append(idx_nd - self._distance)
+
+            results["ref_A_p"].append(
+                ",".join(
+                    [f"{p:.4f}" for p in y[0, :, 1]],
+                ))
+            results["ref_D_p"].append(
+                ",".join(
+                    [f"{p:.4f}" for p in y[0, :, 2]],
+                ))
+            results["alt_A_p"].append(
+                ",".join(
+                    [f"{p:.4f}" for p in y[1, :, 1]],
+                ))
+            results["alt_D_p"].append(
+                ",".join(
+                    [f"{p:.4f}" for p in y[1, :, 2]],
+                ))
+
+            results["delta_score"].append(
+                f"{annotatable.alt}|{gene}|"
                 f"{pa:.2f}|{na:.2f}|"
                 f"{pd:.2f}|{nd:.2f}|"
-                f"{idx_pa - cov // 2}|"
-                f"{idx_na - cov // 2}|"
-                f"{idx_pd - cov // 2}|"
-                f"{idx_nd - cov // 2}",
+                f"{idx_pa - self._distance}|"
+                f"{idx_na - self._distance}|"
+                f"{idx_pd - self._distance}|"
+                f"{idx_nd - self._distance}",
             )
-        return {"delta_score": ";".join(delta_scores)}
+
+        return {
+            "gene": ";".join(results["gene"]),
+            "transcript_ids": ";".join(results["transcript_ids"]),
+            "DS_AG": ";".join([f"{x:.2f}" for x in results["DS_AG"]]),
+            "DS_AL": ";".join([f"{x:.2f}" for x in results["DS_AL"]]),
+            "DS_DG": ";".join([f"{x:.2f}" for x in results["DS_DG"]]),
+            "DS_DL": ";".join([f"{x:.2f}" for x in results["DS_DL"]]),
+            "DS_MAX": ";".join([f"{x:.2f}" for x in results["DS_MAX"]]),
+            "DP_AG": ";".join([str(x) for x in results["DP_AG"]]),
+            "DP_AL": ";".join([str(x) for x in results["DP_AL"]]),
+            "DP_DG": ";".join([str(x) for x in results["DP_DG"]]),
+            "DP_DL": ";".join([str(x) for x in results["DP_DL"]]),
+            "ref_A_p": ";".join(results["ref_A_p"]),
+            "ref_D_p": ";".join(results["ref_D_p"]),
+            "alt_A_p": ";".join(results["alt_A_p"]),
+            "alt_D_p": ";".join(results["alt_D_p"]),
+            "delta_score": ";".join(results["delta_score"]),
+        }
 
     def _predict(
             self, xref: str, xalt: str, strand: str,
+            annotatable: Annotatable,
     ) -> np.ndarray:
         xref_one_hot = one_hot_encode(xref)[None, :]
         xalt_one_hot = one_hot_encode(xalt)[None, :]
@@ -266,34 +395,34 @@ models to predict splice site variant effects.
             y_ref = y_ref[:, ::-1]
             y_alt = y_alt[:, ::-1]
 
+        ref_len = len(annotatable.ref)
+        alt_len = len(annotatable.alt)
+
+        if ref_len > 1 and alt_len == 1:
+            y_alt = np.concatenate([
+                y_alt[:, :self._distance + alt_len],
+                np.zeros((1, ref_len - alt_len, 3)),
+                y_alt[:, self._distance + alt_len:]],
+                axis=1)
+        elif ref_len == 1 and alt_len > 1:
+            y_alt = np.concatenate([
+                y_alt[:, :self._distance],
+                np.max(
+                    y_alt[:, self._distance : self._distance + alt_len],
+                    axis=1)[:, None, :],
+                y_alt[:, self._distance + alt_len:]],
+                axis=1)
+
         return np.concatenate([y_ref, y_alt])
-
-    def _get_pos_data(
-        self, transcript: TranscriptModel,
-        pos: int,
-    ) -> tuple:
-        dist_tx_start = transcript.tx[0] - pos
-        dist_tx_end = transcript.tx[1] - pos
-
-        dist_exon_bdry = min(
-            *(ex.start - pos for ex in transcript.exons),
-            *(ex.stop - pos for ex in transcript.exons),
-            key=abs)
-        return dist_tx_start, dist_tx_end, dist_exon_bdry
-
-    def _padding_size(
-            self, transcript: TranscriptModel,
-            pos: int,
-    ) -> tuple[int, int]:
-        dist_ann = self._get_pos_data(transcript, pos)
-        return [max(self._width() // 2 + dist_ann[0], 0),
-                max(self._width() // 2 - dist_ann[1], 0)]
 
     def _seq_padding(
             self, seq: str,
-            padding: tuple[int, int],
+            tx_region: tuple[int, int],
             annotatable: Annotatable,
     ) -> tuple[str, str]:
+        padding = (
+            max(self._width() // 2 + tx_region[0] - annotatable.pos, 0),
+            max(self._width() // 2 - tx_region[1] + annotatable.pos, 0))
         xref = "N" * padding[0] + \
             seq[padding[0]:self._width() - padding[1]] + \
             "N" * padding[1]

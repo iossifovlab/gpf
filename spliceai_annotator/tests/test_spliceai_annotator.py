@@ -26,6 +26,26 @@ def test_spliceai_annotate_simple_acceptor(
         "C|TUBB8|0.15|0.27|0.00|0.05|89|-23|-267|193"
 
 
+def test_spliceai_annotate_del_acceptor(
+    spliceai_annotation_pipeline: AnnotationPipeline,
+) -> None:
+    annotatable = VCFAllele("10", 94076, "CAC", "C")
+    result = spliceai_annotation_pipeline.annotate(annotatable)
+    assert result is not None
+    assert result["delta_score"] == \
+        "C|TUBB8|0.19|0.15|0.00|0.05|90|-22|289|175"
+
+
+def test_spliceai_annotate_ins_acceptor(
+    spliceai_annotation_pipeline: AnnotationPipeline,
+) -> None:
+    annotatable = VCFAllele("10", 94076, "C", "CCCCC")
+    result = spliceai_annotation_pipeline.annotate(annotatable)
+    assert result is not None
+    assert result["delta_score"] == \
+        "CCCCC|TUBB8|0.15|0.27|0.00|0.05|90|-22|-266|194"
+
+
 def test_spliceai_annotate_simple_donor(
     spliceai_annotation_pipeline: AnnotationPipeline,
 ) -> None:
@@ -36,27 +56,18 @@ def test_spliceai_annotate_simple_donor(
         "T|TUBB8|0.01|0.18|0.15|0.62|-2|110|-190|0"
 
 
-def test_get_pos_data(
-    spliceai_annotator: SpliceAIAnnotator,
+def test_spliceai_batch_annotate(
+    spliceai_annotation_pipeline: AnnotationPipeline,
 ) -> None:
-    spliceai_annotator.open()
-    gene_models = spliceai_annotator.gene_models
-    transcript = gene_models.gene_models_by_location("10", 94077)[0]
+    annotatables = [
+        VCFAllele("10", 94077, "A", "C"),
+        VCFAllele("10", 94555, "C", "T"),
+    ]
+    result = spliceai_annotation_pipeline.batch_annotate(annotatables)
+    assert result is not None
+    assert len(result) == 2
 
-    dist = spliceai_annotator._get_pos_data(transcript, 94077)
-    assert dist[0] == -1184
-    assert dist[1] == 1452
-    assert dist[2] == -23
-
-
-def test_padding_size(
-    spliceai_annotator: SpliceAIAnnotator,
-) -> None:
-    spliceai_annotator.open()
-
-    gene_models = spliceai_annotator.gene_models
-    transcript = gene_models.gene_models_by_location("10", 94077)[0]
-
-    padding = spliceai_annotator._padding_size(transcript, 94077)
-    assert padding[0] == 4316
-    assert padding[1] == 4048
+    assert result[0]["delta_score"] == \
+        "C|TUBB8|0.15|0.27|0.00|0.05|89|-23|-267|193"
+    assert result[1]["delta_score"] == \
+        "T|TUBB8|0.01|0.18|0.15|0.62|-2|110|-190|0"
