@@ -3,7 +3,6 @@
     #collapseIcon
     *ngIf="datasetNode.children.length"
     class="collapse-dataset-icon material-icons material-symbols-outlined"
-    [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3"
     [ngClass]="{ rotate: isExpanded }"
     (click)="toggleDatasetCollapse(datasetNode.dataset.id)"
     >expand_more</span
@@ -11,12 +10,19 @@
     class="dataset-dropdown-item dropdown-item"
     *ngIf="selectedDatasetId"
     [class.active]="selectedDatasetId === datasetNode.dataset.id"
-    [style.opacity]="datasetNode.dataset.accessRights ? 1.0 : 0.3"
     [ngStyle]="{ 'padding-left': datasetNode.children.length ? 0 : 24 }"
     (click)="select()"
     (middleclick)="select(true)">
-    <!-- eslint-disable-next-line prettier/prettier -->
-    <span style="user-select: none">{{datasetNode.dataset.name}}</span>
+    <span
+      class="material-symbols-outlined sm"
+      [ngClass]="!datasetNode.dataset.accessRights ? 'lock-icon' : 'unlock-icon'"
+      >{{ !datasetNode.dataset.accessRights ? 'lock' : 'lock_open_right' }}</span
+    >
+    <span [title]="datasetNode.dataset.name" class="dataset-name">{{ datasetNode.dataset.name }}</span>
+    <span *ngIf="datasetNode.dataset.phenotypeData" class="phenotype-icon material-symbols-outlined md"
+      >how_to_reg</span
+    >
+    <span *ngIf="datasetNode.dataset.hasDenovo" class="denovo-icon material-symbols-outlined sm">genetics</span>
   </a>
 </div>
 

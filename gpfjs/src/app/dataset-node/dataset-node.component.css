@@ -10,6 +10,9 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  gap: 6px;
+  align-items: center;
 }
 
 .collapse-dataset-icon {
@@ -30,4 +33,33 @@
 
 .dataset-container {
   display: flex;
+}
+
+:host::ng-deep.lock-icon {
+  color: red;
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+:host::ng-deep.unlock-icon {
+  color: #3ea658;
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+:host::ng-deep.phenotype-icon {
+  opacity: 50%;
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+:host::ng-deep.denovo-icon {
+  font-variation-settings: "FILL" 1, "wght" 350, "GRAD" 0, "opsz" 24;
+  opacity: 50%;
+  font-size: 18px;
+}
+
+.dataset-name {
+  user-select: none;
+  display: inline-block;
+  max-width: 85%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
