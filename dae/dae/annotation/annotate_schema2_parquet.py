@@ -5,8 +5,8 @@ import shutil
 
 from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.context import CLIAnnotationContext
+from dae.annotation.format_handlers import ParquetFormat
 from dae.annotation.parquet import (
-    ParquetFormat,
     backup_schema2_study,
     produce_regions,
     produce_schema2_merging_tasks,

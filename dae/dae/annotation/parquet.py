@@ -1,12 +1,10 @@
 import os
 import pathlib
-from collections.abc import Generator
 from datetime import datetime
 
 import yaml
 
-from dae.annotation.annotatable import Annotatable
-from dae.annotation.annotate_utils import AbstractFormat, AnnotationTool
+from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.annotation_config import (
     RawAnnotatorsConfig,
     RawPipelineConfig,
@@ -27,7 +25,6 @@ from dae.parquet.schema2.parquet_io import VariantsParquetWriter
 from dae.schema2_storage.schema2_layout import Schema2DatasetLayout
 from dae.task_graph.graph import Task, TaskGraph
 from dae.utils.regions import Region, split_into_regions
-from dae.variants.variant import SummaryVariant
 from dae.variants_loaders.parquet.loader import ParquetLoader
 
 
@@ -285,81 +282,3 @@ def merge_partitioned(
 
 def merge_non_partitioned(output_dir: str) -> None:
     merge_variants_parquets(PartitionDescriptor(), output_dir, [])
-
-
-class ParquetFormat(AbstractFormat):
-    # pylint: disable=missing-class-docstring
-    def __init__(
-        self,
-        pipeline_config: RawPipelineConfig,
-        pipeline_config_old: str | None,
-        cli_args: dict,
-        grr_definition: dict | None,
-        region: Region | None,
-        input_layout: Schema2DatasetLayout,
-        output_dir: str,
-        bucket_idx: int,
-    ):
-        super().__init__(pipeline_config, pipeline_config_old,
-                         cli_args, grr_definition, region)
-        self.input_layout = input_layout
-        self.output_dir = output_dir
-        self.bucket_idx = bucket_idx
-
-        self.input_loader = None
-        self.writer = None
-        self.internal_attributes = None
-
-    def open(self) -> None:
-        super().open()
-        assert self.pipeline is not None
-        self.input_loader = ParquetLoader(self.input_layout)
-        self.writer = VariantsParquetWriter(
-            self.output_dir, self.pipeline,
-            self.input_loader.partition_descriptor,
-            bucket_index=self.bucket_idx,
-        )
-        if isinstance(self.pipeline, ReannotationPipeline):
-            self.internal_attributes = [
-                attribute.name
-                for annotator in (self.pipeline.annotators_new
-                                  | self.pipeline.annotators_rerun)
-                for attribute in annotator.attributes
-                if attribute.internal
-            ]
-        else:
-            self.internal_attributes = [
-                attribute.name
-                for attribute in self.pipeline.get_attributes()
-                if attribute.internal
-            ]
-
-    def close(self):
-        super().close()
-        assert self.writer is not None
-        self.writer.close()
-
-    def _read(self) -> Generator[SummaryVariant, None, None]:
-        assert self.input_loader is not None
-        yield from self.input_loader.fetch_summary_variants(region=self.region)
-
-    def _convert(
-        self, variant: SummaryVariant,
-    ) -> list[tuple[Annotatable, dict]]:
-        return [(allele.get_annotatable(), allele.attributes)
-                for allele in variant.alt_alleles]
-
-    def _apply(self, variant: SummaryVariant, annotations: list[dict]):
-        for allele, annotation in zip(variant.alt_alleles, annotations,
-                                      strict=True):
-            if isinstance(self.pipeline, ReannotationPipeline):
-                for attr in self.pipeline.attributes_deleted:
-                    del allele.attributes[attr]
-            for attr in self.internal_attributes:  # type: ignore
-                del annotation[attr]
-            allele.update_attributes(annotation)
-
-    def _write(self, variant: SummaryVariant) -> None:
-        assert self.internal_attributes is not None
-        assert self.writer is not None
-        self.writer.write_summary_variant(variant)

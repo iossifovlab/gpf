@@ -4,17 +4,13 @@ import logging
 import os
 import sys
 from abc import abstractmethod
-from collections.abc import Generator
-from itertools import islice, starmap
 from pathlib import Path
 from typing import Any
 
 from pysam import TabixFile, tabix_index
 
-from dae.annotation.annotatable import Annotatable
 from dae.annotation.annotation_config import (
     RawAnnotatorsConfig,
-    RawPipelineConfig,
 )
 from dae.annotation.annotation_factory import (
     build_annotation_pipeline,
@@ -26,6 +22,7 @@ from dae.annotation.annotation_pipeline import (
     ReannotationPipeline,
 )
 from dae.annotation.context import CLIAnnotationContext
+from dae.annotation.format_handlers import AbstractFormat
 from dae.annotation.record_to_annotatable import (
     DaeAlleleRecordToAnnotatable,
     RecordToCNVAllele,
@@ -88,17 +85,6 @@ def produce_partfile_paths(
     return filenames
 
 
-def stringify(value: Any, *, vcf: bool = False) -> str:
-    """Format the value to a string for human-readable output."""
-    if value is None:
-        return "." if vcf else ""
-    if isinstance(value, float):
-        return f"{value:.3g}"
-    if isinstance(value, bool):
-        return "yes" if value else ""
-    return str(value)
-
-
 def _read_header(filepath: str, separator: str = "\t") -> list[str]:
     """Extract header from columns file."""
     if filepath.endswith(".gz"):
@@ -151,121 +137,6 @@ def produce_tabix_index(filepath: str, args: Any = None) -> None:
                 end_col=end_col,
                 line_skip=line_skip,
                 force=True)
-
-
-class AbstractFormat:
-    # pylint: disable=missing-class-docstring
-    # pylint: disable=missing-function-docstring
-    def __init__(
-        self,
-        pipeline_config: RawPipelineConfig,
-        pipeline_config_old: str | None,
-        cli_args: dict,
-        grr_definition: dict | None,
-        region: Region | None,
-    ):
-        self.pipeline = None
-        self.grr = None
-        self.grr_definition = grr_definition
-        self.pipeline_config = pipeline_config
-        self.pipeline_config_old = pipeline_config_old
-        self.cli_args = cli_args
-        self.region = region
-        if self.cli_args.get("reannotate"):
-            pipeline_config_old = Path(self.cli_args["reannotate"]).read_text()
-
-    def open(self) -> None:
-        self.grr = \
-            build_genomic_resource_repository(definition=self.grr_definition)
-        self.pipeline = build_annotation_pipeline(
-            self.pipeline_config, self.grr,
-            allow_repeated_attributes=self.cli_args["allow_repeated_attributes"],
-            work_dir=Path(self.cli_args["work_dir"]),
-            config_old_raw=self.pipeline_config_old,
-            full_reannotation=self.cli_args["full_reannotation"],
-        )
-        self.pipeline.open()
-
-    def close(self) -> None:
-        self.pipeline.close()  # type: ignore
-
-    @abstractmethod
-    def _read(self) -> Generator[Any, None, None]:
-        pass
-
-    @abstractmethod
-    def _convert(self, variant: Any) -> list[tuple[Annotatable, dict]]:
-        pass
-
-    @abstractmethod
-    def _apply(self, variant: Any, annotations: list[dict]) -> None:
-        pass
-
-    @abstractmethod
-    def _write(self, variant: Any) -> None:
-        pass
-
-    @staticmethod
-    def get_task_dir(region: Region | None) -> str:
-        """Get dir for batch annotation."""
-        if region is None:
-            return "batch_work_dir"
-        chrom = region.chrom
-        pos_beg = region.start if region.start is not None else "_"
-        pos_end = region.stop if region.stop is not None else "_"
-        return f"{chrom}_{pos_beg}_{pos_end}"
-
-    def process(self):
-        assert self.pipeline is not None
-        annotations = []
-        for variant in self._read():
-            try:
-                annotations = list(starmap(self.pipeline.annotate,
-                                           self._convert(variant)))
-                self._apply(variant, annotations)
-                self._write(variant)
-            except Exception:  # pylint: disable=broad-except
-                logger.exception("Error during iterative annotation")
-
-    def process_batched(self):
-        assert self.pipeline is not None
-
-        batch_size = self.cli_args["batch_size"]
-        work_dir = AbstractFormat.get_task_dir(self.region)
-        errors = []
-        try:
-            while batch := tuple(islice(self._read(), batch_size)):
-                all_contexts = []
-                all_annotatables = []
-                allele_counts = []  # per variant
-
-                for variant in batch:
-                    annotatables, contexts = zip(*self._convert(variant),
-                                                 strict=True)
-                    all_contexts.extend(contexts)
-                    all_annotatables.extend(annotatables)
-                    allele_counts.append(len(annotatables))
-
-                all_annotations = iter(self.pipeline.batch_annotate(
-                    all_annotatables,
-                    all_contexts,
-                    batch_work_dir=work_dir,
-                ))
-
-                for variant, allele_count in zip(batch, allele_counts,
-                                                 strict=True):
-                    annotations = [next(all_annotations)
-                                   for _ in range(allele_count)]
-                    self._apply(variant, annotations)
-                    self._write(variant)
-
-        except Exception as ex:  # pylint: disable=broad-except
-            logger.exception("Error during batch annotation")
-            errors.append(str(ex))
-        if len(errors) > 0:
-            logger.error("there were errors during annotation")
-            for error in errors:
-                logger.error("\t%s", error)
 
 
 class AnnotationTool:

@@ -12,8 +12,8 @@ from dae.annotation.annotatable import (
     Region,
     VCFAllele,
 )
-from dae.annotation.annotate_columns import build_record_to_annotatable
 from dae.annotation.annotate_columns import cli as cli_columns
+from dae.annotation.record_to_annotatable import build_record_to_annotatable
 from dae.genomic_resources.genomic_context import (
     GenomicContext,
     SimpleGenomicContext,
