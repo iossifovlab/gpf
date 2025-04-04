@@ -326,9 +326,10 @@ class GPFInstance:
         registry = GenotypeStorageRegistry()
         internal_storage = registry.register_storage_config({
             "id": "internal",
-            "storage_type": "inmemory",
-            "dir": os.path.join(self.dae_dir, "internal_storage"),
+            "storage_type": "duckdb_parquet",
+            "base_dir": os.path.join(self.dae_dir, "internal_storage"),
         })
+
         registry.register_default_storage(internal_storage)
 
         if self.dae_config.genotype_storage:
