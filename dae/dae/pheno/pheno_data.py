@@ -8,7 +8,7 @@ import mimetypes
 import os
 from abc import ABC, abstractmethod
 from collections.abc import Generator, Iterable, Sequence
-from functools import cached_property
+from functools import cached_property, reduce
 from itertools import chain, islice
 from pathlib import Path
 from typing import Any, cast
@@ -1032,6 +1032,33 @@ class PhenotypeGroup(PhenotypeData):
 
         return sum(counts)
 
+    @cached_property
+    def families(self) -> FamiliesData:
+        return reduce(
+            FamiliesData.combine,
+            [child.families for child in self.children],
+        )
+
+    @cached_property
+    def person_set_collections(self) -> dict[str, PersonSetCollection]:
+        collection_ids = set()
+        for child in self.children:
+            collection_ids.update(child.person_set_collections.keys())
+        collections = {}
+        for collection_id in collection_ids:
+            collections[collection_id] = [
+                child.person_set_collections[collection_id]
+                for child in self.children
+                if collection_id in child.person_set_collections
+            ]
+        return {
+            collection_id: PersonSetCollection.combine(
+                child_collections,
+                self.families,
+            )
+            for collection_id, child_collections in collections.items()
+        }
+
     def get_people_measure_values(
         self,
         measure_ids: list[str],
@@ -1085,7 +1112,8 @@ class PhenotypeGroup(PhenotypeData):
         return out_df
 
     def get_persons_df(self) -> pd.DataFrame:
-        raise NotImplementedError
+        # Temporary basic implementation
+        return self.children[0].get_persons_df()
 
     def get_person_roles(self) -> list[str]:
         leaves = self.get_leaves()
