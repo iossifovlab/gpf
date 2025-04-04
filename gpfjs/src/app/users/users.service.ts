@@ -6,7 +6,11 @@ import { CookieService } from 'ngx-cookie-service';
 import { User, UserInfo } from './users';
 import { catchError, map, tap, take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../auth.service';
-import { FederationCredential, FederationJson } from 'app/federation-credentials/federation-credentials';
+import {
+  FederationCredential,
+  FederationGetJson,
+  FederationPostJson
+} from 'app/federation-credentials/federation-credentials';
 import { LocationStrategy } from '@angular/common';
 
 @Injectable()
@@ -181,24 +185,24 @@ export class UsersService {
 
   public getFederationCredentials(): Observable<FederationCredential[]> {
     const options = { withCredentials: true };
-
-    return this.http.get<FederationJson[]>(this.config.baseUrl + 'users/federation_credentials', options).pipe(
-      map(res => FederationCredential.fromJsonArray(res))
-    );
+    return this.http.get<FederationGetJson[]>(
+      this.config.baseUrl + 'users/federation_credentials', options
+    ).pipe(map(res => FederationCredential.fromJsonArray(res)));
   }
 
-  public createFederationCredentials(credentialName: string): Observable<string> {
+  public createFederationCredentials(credentialName: string): Observable<FederationPostJson> {
     const options = { withCredentials: true };
-
-    return this.http.post(this.config.baseUrl + 'users/federation_credentials', {name: credentialName}, options)
-      .pipe(
-        map(res => {
-          if (typeof (res as {credentials: string}).credentials === 'string') {
-            return (res as {credentials: string}).credentials;
-          }
-          return 'Error showing created credentials';
-        })
-      );
+    return this.http.post<FederationPostJson>(
+      this.config.baseUrl + 'users/federation_credentials',
+      { name: credentialName },
+      options
+    ).pipe(
+      map((res: FederationPostJson) => ({
+        credentials: res.credentials,
+        client_secret: res.client_secret,
+        client_id: res.client_id,
+      }))
+    );
   }
 
   public updateFederationCredentials(oldCredentialName: string, newCredentialName: string): Observable<string> {

@@ -326,23 +326,21 @@ describe('UsersService', () => {
 
   it('should create federation credentials', async() => {
     const httpPostSpy = jest.spyOn(HttpClient.prototype, 'post');
-    httpPostSpy.mockReturnValue(of({ credentials: 'credentialName'}));
+    httpPostSpy.mockReturnValue(of({
+      credentials: 'mockCredentialName',
+      client_secret: 'mockClientSecret',
+      client_id: 'mockClientId'
+    }));
 
-    const postResult = service.createFederationCredentials('credentialName');
-
+    const postResult = service.createFederationCredentials('mockCredentialName');
     expect(httpPostSpy).toHaveBeenCalledWith(
       service['config'].baseUrl + 'users/federation_credentials',
-      { name: 'credentialName' },
+      { name: 'mockCredentialName' },
       { withCredentials: true }
     );
 
     const res = await lastValueFrom(postResult.pipe(take(1)));
-    expect(res).toBe('credentialName');
-
-    httpPostSpy.mockReturnValue(of({}));
-    const postResultEmpty = service.createFederationCredentials('credentialName');
-    const resEmpty = await lastValueFrom(postResultEmpty.pipe(take(1)));
-    expect(resEmpty).toBe('Error showing created credentials');
+    expect(res.credentials).toBe('mockCredentialName');
   });
 
   it('should update federation credentials', async() => {

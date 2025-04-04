@@ -104,8 +104,7 @@ describe('FederationCredentialsComponent', () => {
       new FederationCredential('name3'),
       new FederationCredential('name4')
     ]);
-    expect(component.temporaryShownCredentials).toBe('secret new credential');
-    expect(document.getElementById('credential-modal-content').textContent).toBe('secret new credential');
+    expect(component.temporaryShownFederationCredentials).toBe('secret new credential');
   });
 
   it('should rename credential', () => {

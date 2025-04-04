@@ -520,6 +520,10 @@ summary.details {
   text-decoration: underline;
 }
 
+.credential-modal .modal-content {
+  padding: 6px;
+}
+
 /* stylelint-disable-next-line no-descending-specificity */
 markdown h1,
 markdown h2,

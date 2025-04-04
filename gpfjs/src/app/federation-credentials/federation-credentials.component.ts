@@ -1,30 +1,31 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { UsersService } from 'app/users/users.service';
-import { FederationCredential } from './federation-credentials';
-import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
+import { FederationCredential, FederationPostJson } from './federation-credentials';
+import { NgbModal, NgbModalRef, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { concatMap, debounceTime, fromEvent, of, tap, zip } from 'rxjs';
 
 @Component({
   selector: 'gpf-federation-credentials',
   templateUrl: './federation-credentials.component.html',
-  styleUrls: ['../saved-queries-table/saved-queries-table.component.css', './federation-credentials.component.css']
+  styleUrls: ['../saved-queries-table/saved-queries-table.component.css', './federation-credentials.component.css'],
 })
 export class FederationCredentialsComponent implements OnInit {
   public credentials: FederationCredential[];
   public creationError = '';
   public renameError = '';
   public modal: NgbModalRef;
-  public temporaryShownCredentials = '';
+  public temporaryShownFederationCredentials: FederationPostJson;
   @ViewChild('credentialModal') public credentialModal: ElementRef;
   @ViewChild('credentialNameBox') public newCredentialName: ElementRef;
   @ViewChild('credentialRename') public credentialRename: ElementRef;
   @ViewChild('createButton') public createButton: ElementRef;
+  private copiedTimeoutHandle: NodeJS.Timeout;
   public currentCredentialEdit = '';
 
   public constructor(
     private usersService: UsersService,
-    private modalService: NgbModal
-  ) {}
+    private modalService: NgbModal,
+  ) { }
 
   public ngOnInit(): void {
     this.usersService.getFederationCredentials().subscribe(res => {
@@ -53,17 +54,24 @@ export class FederationCredentialsComponent implements OnInit {
       this.creationError = 'Credential names must be at least 3 symbols long.';
       return;
     }
+
     if (this.credentials.find(credential => credential.name === name) !== undefined) {
       (this.newCredentialName.nativeElement as HTMLInputElement).focus();
       this.creationError = 'Credential with such name already exists!';
       return;
     }
+
     this.creationError = '';
+
     this.usersService.createFederationCredentials(name).pipe(
-      concatMap((credential: string) => zip(of(credential), this.usersService.getFederationCredentials()))
-    ).subscribe(([credential, allCredentials]) => {
-      this.credentials = allCredentials;
-      this.temporaryShownCredentials = credential;
+      concatMap(
+        (federationCredentials: FederationPostJson) => zip(
+          of(federationCredentials), this.usersService.getFederationCredentials()
+        )
+      )
+    ).subscribe(([federationCredentials, allFederationCredentials]) => {
+      this.credentials = allFederationCredentials;
+      this.temporaryShownFederationCredentials = federationCredentials;
       (this.newCredentialName.nativeElement as HTMLInputElement).value = '';
       this.openModal();
     });
@@ -93,5 +101,14 @@ export class FederationCredentialsComponent implements OnInit {
         credential.name = res;
       });
     this.currentCredentialEdit = '';
+  }
+
+  public openCopiedTooltip(tooltip: NgbTooltip): void {
+    tooltip.autoClose = true;
+    tooltip.open();
+    window.clearTimeout(this.copiedTimeoutHandle);
+    this.copiedTimeoutHandle = setTimeout(() => {
+      tooltip.close();
+    }, 2000);
   }
 }
