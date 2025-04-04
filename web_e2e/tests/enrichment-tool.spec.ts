@@ -19,9 +19,10 @@ test.describe('Enrichment tool tests', () => {
 
   test('should display enrichment table after "Enrichment Test" button click', async({ page }) => {
     await expect(page.locator('.enrichment-table')).not.toBeVisible();
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
 
-    await page.locator('gpf-gene-symbols textarea').fill('CAMSAP1');
-
+    await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
+    await page.keyboard.type('CAMSAP1');
     await page.getByRole('button', {name: 'Enrichment test'}).click();
     await expect(page.locator('.enrichment-table')).toBeVisible();
   });

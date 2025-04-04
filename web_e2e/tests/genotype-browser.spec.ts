@@ -53,7 +53,8 @@ test.describe('Genotype browser table preview result tests', () => {
     'when gene symbol is "CHD8" at /' + data.study + '/browser', async({ page }) => {
       await utils.navigateToDatasetPage(page, data.study, 'Genotype browser');
       await page.getByRole('tab', {name: 'Gene symbols'}).click();
-      await page.locator('#text-area').fill('CHD8');
+      await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
+      await page.keyboard.type('CHD8');
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
 
@@ -234,7 +235,8 @@ test.describe('Genotype browser table preview result tests', () => {
       await utils.navigateToDatasetPage(page, data.study, 'Genotype browser');
 
       await page.getByRole('tab', {name: 'Gene symbols'}).click();
-      await page.locator('#text-area').fill(data.geneSymbol);
+      await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
+      await page.keyboard.type(data.geneSymbol);
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
       await page.locator('gpf-effect-types').getByRole('button', {name: data.effectType}).click();
@@ -364,7 +366,8 @@ test.describe('Genotype browser download tests', () => {
   test('should download all effect types CHD8 iossifov variants ' +
   'and validate whether they are equal to the reference data', async({ page }) => {
     await page.getByRole('tab', {name: 'Gene symbols'}).click();
-    await page.locator('#text-area').fill('CHD8');
+    await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
+    await page.keyboard.type('CHD8');
 
     await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
 

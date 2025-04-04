@@ -19,10 +19,11 @@ test.describe('Genes block tests', () => {
 
   test('should display error alert in gene symbols panel when the textarea is empty', async({ page }) => {
     await page.getByRole('tab', { name: 'Gene Symbols' }).click();
-    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
 
-    await page.fill('textarea', 'SAMD11');
-    await expect(page.getByRole('alert')).toBeHidden();
+    await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
+    await page.keyboard.type('SAMD11');
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeHidden();
   });
 
   test('should display gene sets panel', async({ page }) => {
