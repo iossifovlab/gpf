@@ -148,6 +148,7 @@ class StudyWrapperBase(WDAEStudy):
             "phenotype_tool",
             "has_denovo",
             "phenotype_data",
+            "has_transmitted",
         ]
         result = {
             key: config.get(key, None) for key in keys
@@ -178,6 +179,7 @@ class StudyWrapperBase(WDAEStudy):
             "has_present_in_child",
             "has_present_in_parent",
             "has_denovo",
+            "has_transmitted",
             "gene_browser",
             "description_editable",
         ]
