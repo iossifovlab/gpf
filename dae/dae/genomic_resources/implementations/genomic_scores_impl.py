@@ -610,7 +610,7 @@ GENOMIC_SCORES_TEMPLATE = """
                 </td>
             {% else %}
                 <td>
-                    <p>—</p>
+                    <p>-</p>
                 </td>
             {% endif %}
 
