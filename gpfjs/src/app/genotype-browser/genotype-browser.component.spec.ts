@@ -301,7 +301,7 @@ const mockDataset = new Dataset(
   'testDatasetId',
   'testDataset',
   [], true, [], [], [], '', true, true, true, true, null,
-  genotypeMock, null, [], null, null, null
+  genotypeMock, null, [], null, null, null, null
 );
 class MockDatasetsService {
   public getDataset(datasetId: string): Observable<Dataset> {
@@ -603,7 +603,7 @@ describe('GenotypeBrowserComponent', () => {
             ]
           )
         ]
-      ), null, null, null, null
+      ), null, null, null, null, null
     );
 
     component.loadingFinished = true;

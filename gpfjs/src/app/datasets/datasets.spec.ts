@@ -572,6 +572,7 @@ describe('Dataset', () => {
     ],
     new GeneBrowser(true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6, true),
     false,
+    true,
     true
   );
 
@@ -650,6 +651,7 @@ describe('Dataset', () => {
       ])
     ],
     new GeneBrowser(false, 'frequencyCol6', 'frequencyName7', 'effectCol4', 'locationCol2', 7, 8, true),
+    true,
     true,
     true
   );
@@ -810,7 +812,8 @@ describe('Dataset', () => {
       has_affected_status: true
     },
     has_denovo: false,
-    description_editable: true
+    description_editable: true,
+    has_transmitted: true,
   };
 
   const datasetJson2 = {
@@ -967,7 +970,8 @@ describe('Dataset', () => {
       has_affected_status: true
     },
     has_denovo: true,
-    description_editable: true
+    description_editable: true,
+    has_transmitted: true,
   };
   /* eslint-enable */
 
@@ -1137,6 +1141,7 @@ describe('Dataset', () => {
         has_affected_status: true
       },
       has_denovo: false,
+      has_transmitted: true
     });
     /* eslint-enable */
     expect(datasetMock1).toStrictEqual(datasetMockFromJson);

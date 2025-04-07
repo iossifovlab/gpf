@@ -91,7 +91,8 @@ const datasetMock = new Dataset(
   ],
   new GeneBrowser(true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6, true),
   false,
-  true
+  true,
+  true,
 );
 
 const datasetMock2 = new Dataset(
@@ -169,7 +170,8 @@ const datasetMock2 = new Dataset(
   ],
   new GeneBrowser(true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6, true),
   false,
-  true
+  true,
+  true,
 );
 
 describe('PersonFiltersBlockComponent', () => {

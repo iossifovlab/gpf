@@ -64,7 +64,8 @@ const datasetMock = new Dataset(
   null,
   new GeneBrowser(true, 'frequencyCol1', 'frequencyName1', 'effectCol1', 'locationCol1', 5, 6, true),
   false,
-  true
+  true,
+  true,
 );
 
 const datasetMock2 = new Dataset(
@@ -86,7 +87,8 @@ const datasetMock2 = new Dataset(
   null,
   new GeneBrowser(true, 'frequencyCol2', 'frequencyName2', 'effectCol2', 'locationCol2', 5, 6, true),
   false,
-  true
+  true,
+  true,
 );
 
 class DatasetsServiceMock {

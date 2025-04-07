@@ -9,19 +9,19 @@ import { ConfigService } from 'app/config/config.service';
 
 const datasetNodeMock1 = new DatasetNode(new Dataset('id1',
   null, ['id11', 'id12'], null, null, null, null, null,
-  null, null, null, null, null, null, null, null, null, null, null
+  null, null, null, null, null, null, null, null, null, null, null, null
 ), [
   new Dataset(
     'id2', null, ['id1', 'parent2'], null, null, null, null, null,
-    null, null, null, null, null, null, null, null, null, null, null
+    null, null, null, null, null, null, null, null, null, null, null, null
   ),
   new Dataset(
     'id3', null, ['id1', 'parent3'], null, null, null, null, null,
-    null, null, null, null, null, null, null, null, null, null, null
+    null, null, null, null, null, null, null, null, null, null, null, null
   ),
   new Dataset(
     'id4', null, ['id4', 'parent4'], null, null, null, null, null,
-    null, null, null, null, null, null, null, null, null, null, null
+    null, null, null, null, null, null, null, null, null, null, null, null
   )
 ]);
 
@@ -50,11 +50,11 @@ describe('StudyFiltersTreeComponent', () => {
   it('should get all childrens of dataset', () => {
     const datasetNodeMock2 = new DatasetNode(new Dataset(
       'id2', null, ['id21', 'id22'], null, null, null, null, null,
-      null, null, null, null, null, null, null, null, null, null, null
+      null, null, null, null, null, null, null, null, null, null, null, null
     ), [
       new Dataset(
         'id4', null, ['id23', 'id24'], null, null, null, null, null,
-        null, null, null, null, null, null, null, null, null, null, null
+        null, null, null, null, null, null, null, null, null, null, null, null
       )
     ]);
 
