@@ -82,23 +82,19 @@
   color: #4d4007de;
 }
 
-:host::ng-deep.lock-icon {
-  color: red;
-  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
-}
-
-:host::ng-deep.unlock-icon {
-  color: #3ea658;
-  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
-}
-
 :host::ng-deep.phenotype-icon {
-  opacity: 50%;
+  opacity: 60%;
   font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
 :host::ng-deep.denovo-icon {
   font-variation-settings: "FILL" 1, "wght" 350, "GRAD" 0, "opsz" 24;
-  opacity: 50%;
+  opacity: 60%;
+  font-size: 18px;
+}
+
+:host::ng-deep.transmitted-icon {
+  font-variation-settings: "FILL" 1, "wght" 350, "GRAD" 0, "opsz" 24;
+  opacity: 60%;
   font-size: 18px;
 }
