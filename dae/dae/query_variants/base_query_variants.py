@@ -7,6 +7,8 @@ import numpy as np
 
 from dae.parquet.schema2.variant_serializers import VariantsDataSerializer
 from dae.pedigrees.families_data import FamiliesData
+from dae.pedigrees.family import FamilyTag
+from dae.pedigrees.family_tag_builder import check_family_tags_query
 from dae.query_variants.query_runners import QueryRunner
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance
@@ -159,3 +161,41 @@ class QueryVariantsBase(QueryVariants):
                     fv.family_alt_alleles, fattributes, strict=True):
                 fa.update_attributes(fattr)
         return fv
+
+    def tags_to_family_ids(
+        self, *,
+        selected_family_tags: list[str] | None = None,
+        deselected_family_tags: list[str] | None = None,
+        tags_or_mode: bool = False,
+    ) -> set[str] | None:
+        if selected_family_tags is None and deselected_family_tags is None:
+            return None
+
+        if isinstance(selected_family_tags, list):
+            include_tags = {
+                FamilyTag.from_label(label)
+                for label
+                in selected_family_tags
+            }
+        else:
+            include_tags = set[FamilyTag]()
+        if isinstance(deselected_family_tags, list):
+            exclude_tags = {
+                FamilyTag.from_label(label)
+                for label
+                in deselected_family_tags
+            }
+        else:
+            exclude_tags = set[FamilyTag]()
+
+        family_ids: set[str] = set()
+        for family_id, family in self.families.items():
+            if check_family_tags_query(
+                family,
+                or_mode=tags_or_mode,
+                include_tags=include_tags,
+                exclude_tags=exclude_tags,
+            ):
+                family_ids.add(family_id)
+
+        return family_ids

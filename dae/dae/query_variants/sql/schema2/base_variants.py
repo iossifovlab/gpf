@@ -221,6 +221,9 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
+        selected_family_tags: list[str] | None = None,
+        deselected_family_tags: list[str] | None = None,
+        tags_or_mode: bool = False,
         **kwargs: Any,  # noqa: ARG002
     ) -> QueryRunner | None:
         """Build a query selecting the appropriate family variants."""
@@ -229,6 +232,17 @@ class SqlSchema2Variants(QueryVariantsBase):
             logger.warning(
                 "No family or summary allele table defined in %s", self.db)
             return None
+
+        tag_family_ids = self.tags_to_family_ids(
+            selected_family_tags=selected_family_tags,
+            deselected_family_tags=deselected_family_tags,
+            tags_or_mode=tags_or_mode,
+        )
+        if tag_family_ids is not None:
+            if family_ids is not None:
+                family_ids = list(set(family_ids).intersection(tag_family_ids))
+            else:
+                family_ids = list(tag_family_ids)
 
         do_join_allele_in_members = person_ids is not None
 

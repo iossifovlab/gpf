@@ -4,8 +4,6 @@ from functools import reduce
 from typing import Any, ClassVar, cast
 
 from dae.effect_annotation.effect import EffectTypesMixin
-from dae.pedigrees.family import FamilyTag
-from dae.pedigrees.family_tag_builder import check_family_tags_query
 from dae.person_filters import make_pedigree_filter, make_pheno_filter
 from dae.person_filters.person_filters import make_pheno_filter_beta
 from dae.person_sets import PSCQuery
@@ -327,39 +325,10 @@ class QueryTransformer:
 
         kwargs = self._handle_person_set_collection(kwargs)
 
-        if "selectedFamilyTags" in kwargs or "deselectedFamilyTags" in kwargs:
-            or_mode = not (bool(kwargs.get("tagIntersection")) is True
-                or kwargs.get("tagIntersection") is None)
-            include_tags = kwargs.get("selectedFamilyTags")
-            if isinstance(include_tags, list):
-                include_tags = {
-                    FamilyTag.from_label(label)
-                    for label
-                    in include_tags
-                }
-            else:
-                include_tags = set[FamilyTag]()
-            exclude_tags = kwargs.get("deselectedFamilyTags")
-            if isinstance(exclude_tags, list):
-                exclude_tags = {
-                    FamilyTag.from_label(label)
-                    for label
-                    in exclude_tags
-                }
-            else:
-                exclude_tags = set[FamilyTag]()
-
-            family_ids: set[str] = set()
-            for family_id, family in self.study_wrapper.families.items():
-                if check_family_tags_query(
-                    family,
-                    or_mode=or_mode,
-                    include_tags=include_tags,
-                    exclude_tags=exclude_tags,
-                ):
-                    family_ids.add(family_id)
-
-            kwargs["familyIds"] = family_ids
+        kwargs["selected_family_tags"] = kwargs.get("selectedFamilyTags")
+        kwargs["deselected_family_tags"] = kwargs.get("deselectedFamilyTags")
+        kwargs["tags_or_mode"] = not \
+            bool(kwargs.get("tagIntersection", "True"))
 
         if "querySummary" in kwargs:
             kwargs["query_summary"] = kwargs["querySummary"]
