@@ -131,6 +131,7 @@ export class UsersService {
     return this.http.post(this.config.baseUrl + this.usersUrl, user, options).pipe(
       map(response => User.fromJson(response)),
       catchError((error: HttpErrorResponse) => {
+        // eslint-disable-next-line @typescript-eslint/only-throw-error
         throw error;
       })
     );
