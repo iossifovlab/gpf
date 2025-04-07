@@ -9,7 +9,7 @@ import os
 from abc import ABC, abstractmethod
 from collections.abc import Generator, Iterable, Sequence
 from functools import cached_property, reduce
-from itertools import chain, islice
+from itertools import chain
 from pathlib import Path
 from typing import Any, cast
 
@@ -389,7 +389,6 @@ class PhenotypeData(ABC, CommonStudyMixin):
         )
         return sorted(distinct_roles)
 
-    @abstractmethod
     def search_measures(
         self,
         instrument: str | None,
@@ -399,7 +398,51 @@ class PhenotypeData(ABC, CommonStudyMixin):
         order_by: str | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         """Yield measures in the DB according to filters."""
-        raise NotImplementedError
+
+        if self.browser is None:
+            return
+        measures = self.browser.search_measures(
+            instrument,
+            search_term,
+            page,
+            sort_by,
+            order_by,
+        )
+        for measure in measures:
+            if measure["values_domain"] is None:
+                measure["values_domain"] = ""
+            measure["measure_type"] = \
+                cast(MeasureType, measure["measure_type"]).name
+
+            measure["regressions"] = []
+            for reg_id in self.browser.regression_ids:
+                reg = {
+                    "regression_id": reg_id,
+                    "measure_id": measure["measure_id"],
+                }
+
+                if isnan(measure[f"{reg_id}_pvalue_regression_male"]):
+                    measure[f"{reg_id}_pvalue_regression_male"] = "NaN"
+                if isnan(measure[f"{reg_id}_pvalue_regression_female"]):
+                    measure[f"{reg_id}_pvalue_regression_female"] = "NaN"
+
+                reg["figure_regression"] = measure.pop(
+                    f"{reg_id}_figure_regression",
+                )
+                reg["figure_regression_small"] = measure.pop(
+                    f"{reg_id}_figure_regression_small",
+                )
+                reg["pvalue_regression_male"] = measure.pop(
+                    f"{reg_id}_pvalue_regression_male",
+                )
+                reg["pvalue_regression_female"] = measure.pop(
+                    f"{reg_id}_pvalue_regression_female",
+                )
+                measure["regressions"].append(reg)
+
+            yield {
+                "measure": measure,
+            }
 
     @abstractmethod
     def count_measures(
@@ -805,59 +848,6 @@ class PhenotypeStudy(PhenotypeData):
             "regression_names": self.browser.regression_display_names,
         }
 
-    def search_measures(
-        self,
-        instrument: str | None,
-        search_term: str | None,
-        page: int | None = None,
-        sort_by: str | None = None,
-        order_by: str | None = None,
-    ) -> Generator[dict[str, Any], None, None]:
-        if self.browser is None:
-            return
-        measures = self.browser.search_measures(
-            instrument,
-            search_term,
-            page,
-            sort_by,
-            order_by,
-        )
-        for measure in measures:
-            if measure["values_domain"] is None:
-                measure["values_domain"] = ""
-            measure["measure_type"] = \
-                cast(MeasureType, measure["measure_type"]).name
-
-            measure["regressions"] = []
-            for reg_id in self.browser.regression_ids:
-                reg = {
-                    "regression_id": reg_id,
-                    "measure_id": measure["measure_id"],
-                }
-
-                if isnan(measure[f"{reg_id}_pvalue_regression_male"]):
-                    measure[f"{reg_id}_pvalue_regression_male"] = "NaN"
-                if isnan(measure[f"{reg_id}_pvalue_regression_female"]):
-                    measure[f"{reg_id}_pvalue_regression_female"] = "NaN"
-
-                reg["figure_regression"] = measure.pop(
-                    f"{reg_id}_figure_regression",
-                )
-                reg["figure_regression_small"] = measure.pop(
-                    f"{reg_id}_figure_regression_small",
-                )
-                reg["pvalue_regression_male"] = measure.pop(
-                    f"{reg_id}_pvalue_regression_male",
-                )
-                reg["pvalue_regression_female"] = measure.pop(
-                    f"{reg_id}_pvalue_regression_female",
-                )
-                measure["regressions"].append(reg)
-
-            yield {
-                "measure": measure,
-            }
-
     def count_measures(
         self,
         instrument: str | None,
@@ -993,27 +983,6 @@ class PhenotypeGroup(PhenotypeData):
                 measures_info["regression_names"],
             )
         return result
-
-    def search_measures(
-        self,
-        instrument: str | None,
-        search_term: str | None,
-        page: int | None = None,
-        sort_by: str | None = None,
-        order_by: str | None = None,
-    ) -> Generator[dict[str, Any], None, None]:
-        generators = [
-            pheno.search_measures(
-                instrument,
-                search_term,
-                page,
-                sort_by,
-                order_by,
-            )
-            for pheno in self.children
-        ]
-        measures = islice(chain(*generators), 1001)
-        yield from measures
 
     def count_measures(
         self,
