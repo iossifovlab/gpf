@@ -23,6 +23,7 @@ dependencies:
   - scipy=1.15.0
   - pandas=2.2.3
   - pyarrow=19.0.1
+  - libxml2=2.13.7  # newer version breaks the pyarrow 19.0.1
   - scikit-learn=1.5
   - matplotlib-base=3.8
   - seaborn=0.13
