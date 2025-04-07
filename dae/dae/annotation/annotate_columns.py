@@ -190,7 +190,7 @@ class AnnotateColumnsTool(AnnotationTool):
             self.task_graph.create_task(
                 "compress_and_tabix",
                 produce_tabix_index,
-                [self.output],
+                [self.output, self.args],
                 [combine_task])
         else:
             handler = ColumnsFormat(
