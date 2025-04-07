@@ -28,10 +28,15 @@
                   >{{ !selectedDataset.accessRights ? 'lock' : 'lock_open_right' }}</span
                 >
                 <span [title]="selectedDataset.name" id="selected-dataset-name">{{ selectedDataset.name }}</span>
-                <span *ngIf="selectedDataset.phenotypeData" class="phenotype-icon material-symbols-outlined md"
+                <span
+                  *ngIf="selectedDataset.phenotypeData"
+                  class="phenotype-icon material-symbols-outlined md"
+                  title="phenotype"
                   >how_to_reg</span
                 >
-                <span *ngIf="selectedDataset.hasDenovo" class="denovo-icon material-symbols-outlined sm">genetics</span>
+                <span *ngIf="selectedDataset.hasDenovo" class="denovo-icon material-symbols-outlined sm" title="denovo"
+                  >genetics</span
+                >
               </div>
             </button>
             <div

@@ -19,10 +19,15 @@
       >{{ !datasetNode.dataset.accessRights ? 'lock' : 'lock_open_right' }}</span
     >
     <span [title]="datasetNode.dataset.name" class="dataset-name">{{ datasetNode.dataset.name }}</span>
-    <span *ngIf="datasetNode.dataset.phenotypeData" class="phenotype-icon material-symbols-outlined md"
+    <span
+      *ngIf="datasetNode.dataset.phenotypeData"
+      class="phenotype-icon material-symbols-outlined md"
+      title="phenotype"
       >how_to_reg</span
     >
-    <span *ngIf="datasetNode.dataset.hasDenovo" class="denovo-icon material-symbols-outlined sm">genetics</span>
+    <span *ngIf="datasetNode.dataset.hasDenovo" class="denovo-icon material-symbols-outlined sm" title="denovo"
+      >genetics</span
+    >
   </a>
 </div>
 
