@@ -390,6 +390,9 @@ class DuckDb2Variants(QueryVariantsBase):
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
+        selected_family_tags: list[str] | None = None,
+        deselected_family_tags: list[str] | None = None,
+        tags_or_mode: bool = False,
         **kwargs: Any,
     ) -> QueryRunner | None:
         # pylint: disable=too-many-arguments
@@ -429,6 +432,7 @@ class DuckDb2Variants(QueryVariantsBase):
             limit=query_limit,
             selected_family_tags=selected_family_tags,
             deselected_family_tags=deselected_family_tags,
+            tags_or_mode=tags_or_mode,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
 

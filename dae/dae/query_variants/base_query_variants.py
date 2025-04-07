@@ -79,6 +79,9 @@ class QueryVariants(abc.ABC):
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: list[str] | None = None,
+        selected_family_tags: list[str] | None = None,
+        deselected_family_tags: list[str] | None = None,
+        tags_or_mode: bool = False,
         **kwargs: Any,
     ) -> QueryRunner | None:
         # pylint: disable=too-many-arguments

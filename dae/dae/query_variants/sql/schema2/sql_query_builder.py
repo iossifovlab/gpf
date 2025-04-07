@@ -970,7 +970,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         return condition(f"fa.aim IN ({', '.join(pids)})")
 
     def family_query(
-        self,
+        self, *,
         family_ids: Sequence[str] | None = None,
         person_ids: Sequence[str] | None = None,
         inheritance: str | Sequence[str] | None = None,
@@ -979,6 +979,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         affected_statuses: str | None = None,
         selected_family_tags: list[str] | None = None,
         deselected_family_tags: list[str] | None = None,
+        tags_or_mode: bool = False,
     ) -> Select:
         """Build a family subclause query."""
         query = self.family_base()
@@ -1020,7 +1021,10 @@ class SqlQueryBuilder(QueryBuilderBase):
                 if pedigree_tags is None:
                     pedigree_tags = comparison
                 else:
-                    pedigree_tags = pedigree_tags.and_(comparison)
+                    if tags_or_mode:
+                        pedigree_tags = pedigree_tags.or_(comparison)
+                    else:
+                        pedigree_tags = pedigree_tags.and_(comparison)
         if deselected_family_tags is not None:
             for tag in deselected_family_tags:
                 comparison = column(
@@ -1028,7 +1032,10 @@ class SqlQueryBuilder(QueryBuilderBase):
                 if pedigree_tags is None:
                     pedigree_tags = comparison
                 else:
-                    pedigree_tags = pedigree_tags.and_(comparison)
+                    if tags_or_mode:
+                        pedigree_tags = pedigree_tags.or_(comparison)
+                    else:
+                        pedigree_tags = pedigree_tags.and_(comparison)
 
         base_table = "family_base"
         ctes = [["family_base", query]]
@@ -1265,6 +1272,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         limit: int | None = None,
         selected_family_tags: list[str] | None = None,
         deselected_family_tags: list[str] | None = None,
+        tags_or_mode: bool = False,
         **_kwargs: Any,
     ) -> list[str]:
         """Build a query for family variants."""
@@ -1289,6 +1297,7 @@ class SqlQueryBuilder(QueryBuilderBase):
             affected_statuses=affected_statuses,
             selected_family_tags=selected_family_tags,
             deselected_family_tags=deselected_family_tags,
+            tags_or_mode=tags_or_mode,
         )
 
         batched_heuristics = self.calc_batched_heuristics(
