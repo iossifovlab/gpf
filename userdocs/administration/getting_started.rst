@@ -227,60 +227,6 @@ and place the following configuration file ``helloworld.yaml`` inside that direc
       - denovo_helloworld
       - vcf_helloworld    
 
-Getting started with Dataset Statistics
-##########################################
-
-.. _reports_tool:
-
-To generate family and de novo variant reports, you can use
-the ``generate_common_report`` tool. It supports the option ``--show-studies``
-to list all studies and datasets configured in the GPF instance:
-
-.. code-block:: bash
-
-    generate_common_report --show-studies
-
-To generate the reports for a given study or dataset, you can use the 
-``--studies`` option. 
-
-By default the dataset statistics are disabled. If we try to run the following command:
-
-.. code-block:: bash
-
-    generate_common_report --studies helloworld
-
-Nothing will occur and no dataset statistics will be generated.
-
-To enable the dataset statistics for the ``helloworld`` dataset we need to
-modify the configuration and add a new section that enables dataset statistics:
-
-.. code-block:: yaml
-
-  id: helloworld
-  name: Hello World Dataset
-  
-  studies:
-    - denovo_helloworld
-    - vcf_helloworld
-  
-  common_report:
-    enabled: True
-
-Let us now re-run the ``generate_common_report`` command:
-
-.. code-block:: bash
-
-    generate_common_report --studies helloworld
-
-If we now start the GPF development server:
-
-.. code-block:: bash
-
-    wgpf run
-
-and browse the ``helloworld`` dataset we will see the `Dataset Statistics`
-section available.
-
 Getting started with de novo gene sets
 ######################################
 
@@ -327,8 +273,6 @@ running:
 .. include:: getting_started/getting_started_with_preview_columns.rst
 
 .. include:: getting_started/getting_started_with_gene_browser.rst
-
-.. include:: getting_started/getting_started_with_enrichment.rst
 
 .. include:: getting_started/getting_started_with_phenotype_data.rst
 
