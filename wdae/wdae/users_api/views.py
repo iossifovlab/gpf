@@ -589,11 +589,19 @@ def get_user_info(request: Request) -> Response:
             {
                 "loggedIn": True,
                 "email": user.email,
-                "isAdministrator": user.is_staff,
+                "isAdministrator":
+                    settings.DISABLE_PERMISSIONS or user.is_staff,
             },
             status.HTTP_200_OK,
         )
-    return Response({"loggedIn": False}, status.HTTP_200_OK)
+    return Response(
+        {
+            "loggedIn": False,
+            "email": None,
+            "isAdministrator": settings.DISABLE_PERMISSIONS,
+        },
+        status.HTTP_200_OK,
+    )
 
 
 @request_logging_function_view(logger)
