@@ -16,14 +16,20 @@ def test_transform_selected_family_tags_kwargs(
             "tag_male_prb_family",
         ],
     )
-    assert kwargs["family_ids"] == set()
+    family_ids = t4c8_study_1_wrapper.backend.tags_to_family_ids(
+        kwargs["tags_query"],
+    )
+    assert family_ids == set()
 
     kwargs = query_transformer.transform_kwargs(
         selectedFamilyTags=[
             "tag_female_prb_family",
         ],
     )
-    assert kwargs["family_ids"] == {"f1.1", "f1.3"}
+    family_ids = t4c8_study_1_wrapper.backend.tags_to_family_ids(
+        kwargs["tags_query"],
+    )
+    assert family_ids == {"f1.1", "f1.3"}
 
 
 def test_transform_deselected_family_tags_kwargs(
@@ -39,7 +45,10 @@ def test_transform_deselected_family_tags_kwargs(
             "tag_trio_family",
         ],
     )
-    assert kwargs["family_ids"] == {"f1.1", "f1.3"}
+    family_ids = t4c8_study_1_wrapper.backend.tags_to_family_ids(
+        kwargs["tags_query"],
+    )
+    assert family_ids == {"f1.1", "f1.3"}
 
     kwargs = query_transformer.transform_kwargs(
         tagIntersection=False,
@@ -47,7 +56,10 @@ def test_transform_deselected_family_tags_kwargs(
             "tag_male_prb_family",
         ],
     )
-    assert kwargs["family_ids"] == {"f1.1", "f1.3"}
+    family_ids = t4c8_study_1_wrapper.backend.tags_to_family_ids(
+        kwargs["tags_query"],
+    )
+    assert family_ids == {"f1.1", "f1.3"}
 
     kwargs = query_transformer.transform_kwargs(
         tagIntersection=False,
@@ -55,7 +67,10 @@ def test_transform_deselected_family_tags_kwargs(
             "tag_affected_sib_family",
         ],
     )
-    assert kwargs["family_ids"] == {"f1.1", "f1.3"}
+    family_ids = t4c8_study_1_wrapper.backend.tags_to_family_ids(
+        kwargs["tags_query"],
+    )
+    assert family_ids == {"f1.1", "f1.3"}
 
 
 def test_transform_or_mode_family_tags_kwargs(
@@ -72,10 +87,10 @@ def test_transform_or_mode_family_tags_kwargs(
             "tag_female_prb_family",
         ],
     )
-    assert kwargs["family_ids"] == {
-        "f1.1",
-        "f1.3",
-    }
+    family_ids = t4c8_study_1_wrapper.backend.tags_to_family_ids(
+        kwargs["tags_query"],
+    )
+    assert family_ids == {"f1.1", "f1.3"}
 
 
 def test_transform_and_mode_family_tags_kwargs(
@@ -91,7 +106,10 @@ def test_transform_and_mode_family_tags_kwargs(
             "tag_missing_mom_family",
         ],
     )
-    assert kwargs["family_ids"] == set()
+    family_ids = t4c8_study_1_wrapper.backend.tags_to_family_ids(
+        kwargs["tags_query"],
+    )
+    assert family_ids == set()
 
     kwargs = query_transformer.transform_kwargs(
         selectedFamilyTags=[
@@ -99,7 +117,10 @@ def test_transform_and_mode_family_tags_kwargs(
             "tag_unaffected_sib_family",
         ],
     )
-    assert kwargs["family_ids"] == {"f1.1", "f1.3"}
+    family_ids = t4c8_study_1_wrapper.backend.tags_to_family_ids(
+        kwargs["tags_query"],
+    )
+    assert family_ids == {"f1.1", "f1.3"}
 
 
 def test_transform_complex_family_tags_kwargs(
@@ -117,4 +138,7 @@ def test_transform_complex_family_tags_kwargs(
             "tag_missing_mom_family",
         ],
     )
-    assert kwargs["family_ids"] == {"f1.1", "f1.3"}
+    family_ids = t4c8_study_1_wrapper.backend.tags_to_family_ids(
+        kwargs["tags_query"],
+    )
+    assert family_ids == {"f1.1", "f1.3"}
