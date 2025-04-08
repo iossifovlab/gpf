@@ -21,6 +21,12 @@ class Aggregator(abc.ABC):
         self.total_count += count
         self._add_internal(value, **kwargs)
 
+    def aggregate(self, values: list[Any]) -> Any:
+        self.clear()
+        for value in values:
+            self.add(value)
+        return self.get_final()
+
     @abc.abstractmethod
     def _add_internal(self, value: Any, **kwargs: Any) -> None:
         raise NotImplementedError
