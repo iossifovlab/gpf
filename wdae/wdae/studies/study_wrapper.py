@@ -144,7 +144,6 @@ class StudyWrapperBase(WDAEStudy):
         keys = [
             "id",
             "name",
-            "phenotype_browser",
             "phenotype_tool",
             "has_denovo",
             "phenotype_data",
@@ -158,7 +157,10 @@ class StudyWrapperBase(WDAEStudy):
         result["common_report"] = {"enabled": config.common_report.enabled}
         result["enrichment_tool"] = config.enrichment.enabled
         result["gene_browser"] = config.gene_browser
-
+        result["phenotype_browser"] = config.get(
+            "phenotype_browser",
+            result["phenotype_data"] is not None,
+        )
         return result
 
     @staticmethod
@@ -171,7 +173,6 @@ class StudyWrapperBase(WDAEStudy):
         keys = [
             "id",
             "name",
-            "phenotype_browser",
             "phenotype_tool",
             "phenotype_data",
             "study_type",
@@ -188,6 +189,10 @@ class StudyWrapperBase(WDAEStudy):
         }
 
         result["genotype_browser"] = config.genotype_browser.enabled
+        result["phenotype_browser"] = config.get(
+            "phenotype_browser",
+            result["phenotype_data"] is not None,
+        )
         result["genotype_browser_config"] = {
             key: config.genotype_browser.get(key, None) for key in [
                 "has_family_filters",
