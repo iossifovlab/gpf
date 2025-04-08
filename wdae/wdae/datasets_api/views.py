@@ -266,7 +266,7 @@ class DatasetDescriptionView(QueryBaseView):
 
     def post(self, request: Request, dataset_id: str) -> Response:
         """Overwrite a dataset's description."""
-        if not request.user.is_staff:
+        if not request.user.is_staff and not settings.DISABLE_PERMISSIONS:
             return Response(
                 {"error": "You have no permission to edit the description."},
                 status=status.HTTP_403_FORBIDDEN,
