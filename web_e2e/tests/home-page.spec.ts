@@ -145,6 +145,6 @@ test.describe('Home page tests', () => {
     await expect(page.locator('a:text("Datasets")')).toHaveClass('highlighted-route');
     await expect(page.locator('gpf-home')).not.toBeVisible();
     await expect(page.locator('gpf-gene-browser')).toBeVisible();
-    await expect(page.locator('#datasets-dropdown-menu-button')).toHaveText('Hello World Genotypes');
+    await expect(page.locator('#selected-dataset-name')).toHaveText('Hello World Genotypes');
   });
 });

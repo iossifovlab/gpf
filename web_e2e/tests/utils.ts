@@ -88,7 +88,7 @@ export async function navigateToDataset(page: Page, dataset: string): Promise<vo
   await expandDataset(page, dataset);
 
   await page.locator('gpf-dataset-node a').filter({ hasText: dataset }).click();
-  await expect(page.locator('#datasets-dropdown-menu-button')).toHaveText(dataset);
+  await expect(page.locator('#selected-dataset-name')).toHaveText(dataset);
 }
 
 export async function expandDataset(page: Page, dataset: string): Promise<void> {

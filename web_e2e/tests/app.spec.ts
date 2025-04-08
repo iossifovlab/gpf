@@ -148,7 +148,8 @@ test.describe('App user access rights tests', () => {
     await expect(page.locator('li').filter({hasText: 'Dataset Statistics'})).toHaveClass('nav-item disabled-tool');
   });
 
-  test('should login admin and check whether the datasets have the correct opacity value', async({ page }) => {
+  test('should login admin and check whether the phenotype and transmitted icons ' +
+    'have the correct opacity value', async({ page }) => {
     await utils.login(page, userData.admin.username, userData.admin.password);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
@@ -156,12 +157,17 @@ test.describe('App user access rights tests', () => {
     await utils.expandDataset(page, utils.datasetIds.compDenovoLiftover);
     await utils.expandDataset(page, utils.datasetIds.denovoHelloWorld);
 
-    for (let i = 0; i < Object.keys(utils.datasetIds).length; i++) {
-      await expect(page.locator('.dataset-dropdown-item').nth(i)).toHaveCSS('opacity', '1');
-    }
+    await expect(
+      page.locator('gpf-dataset-node a').filter({ hasText: utils.datasetIds.vcfHelloWorld }).locator('.phenotype-icon')
+    ).toHaveCSS('opacity', '0.5');
+    await expect(
+      page.locator('gpf-dataset-node a')
+        .filter({ hasText: utils.datasetIds.vcfHelloWorld }).locator('.transmitted-icon')
+    ).toHaveCSS('opacity', '0.5');
   });
 
-  test('should login researcher and check whether the datasets have the correct opacity value', async({ page }) => {
+  test('should login researcher and check whether the phenotype and transmitted icons ' +
+    'have the correct opacity value', async({ page }) => {
     await utils.login(page, userData.normal.username, userData.normal.password);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
@@ -170,9 +176,13 @@ test.describe('App user access rights tests', () => {
     await utils.expandDataset(page, utils.datasetIds.denovoHelloWorld);
     await expect(page.locator('#register-alert')).toBeVisible();
 
-    for (let i = 0; i < Object.keys(utils.datasetIds).length; i++) {
-      await expect(page.locator('a.dataset-dropdown-item').nth(i)).toHaveCSS('opacity', '0.3');
-    }
+    await expect(
+      page.locator('gpf-dataset-node a').filter({ hasText: utils.datasetIds.vcfHelloWorld }).locator('.phenotype-icon')
+    ).toHaveCSS('opacity', '0.2');
+    await expect(
+      page.locator('gpf-dataset-node a')
+        .filter({ hasText: utils.datasetIds.vcfHelloWorld }).locator('.transmitted-icon')
+    ).toHaveCSS('opacity', '0.2');
   });
 
   test('should login admin and give user access rights for Hello World Genotypes, ' +
