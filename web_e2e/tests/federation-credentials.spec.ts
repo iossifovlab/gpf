@@ -18,23 +18,29 @@ test.describe('Federation token tests', () => {
   });
 
   test('should create new credential', async({ page }) => {
+    const credentialName = utils.getRandomString();
     await page.waitForSelector('.grid-container');
-    await page.locator('#new-credential-name-box').fill('TestCredentials');
+    await page.locator('#new-credential-name-box').fill(credentialName);
     await page.locator('#create-credential-button').click();
-    await expect(page.locator('.credential-modal')).toBeVisible();
-    await expect(page.locator('.credential-modal')).toContainText('Credentials: shown only once, copy before closing.');
-    await page.locator('#copy-credentials-button').click();
-    await expect(page.locator('#credential-modal-content')).not.toBeEmpty();
+    await expect(page.locator('.modal-content')).toBeVisible();
+    await expect(page.locator('.modal-content'))
+      .toContainText('Federation credentials are shown only once, copy before closing!');
+    await expect(page.getByTitle('Copy credentials')).toBeVisible();
+    await expect(page.getByTitle('Copy client secret')).toBeVisible();
+    await expect(page.getByTitle('Copy client id')).toBeVisible();
+    await expect(page.locator('.credential-modal-content').nth(0)).not.toBeEmpty();
+    await expect(page.locator('.credential-modal-content').nth(1)).not.toBeEmpty();
+    await expect(page.locator('.credential-modal-content').nth(2)).not.toBeEmpty();
 
     await page.mouse.click(0, 0); // close modal
-    await expect(page.locator('.credential-modal')).not.toBeVisible();
+    await expect(page.locator('.modal-content')).not.toBeVisible();
 
-    await expect(page.locator('div[id="TestCredentials-name-cell"]')).toBeVisible();
-    await expect(page.locator('div[id="TestCredentials-actions-cell"]')).toBeVisible();
+    await expect(page.locator(`div[id="${credentialName}-name-cell"]`)).toBeVisible();
+    await expect(page.locator(`div[id="${credentialName}-actions-cell"]`)).toBeVisible();
 
-    await page.locator('#TestCredentials-delete-credential-button').click();
+    await page.locator(`gpf-confirm-button[id="${credentialName}-delete-credential-button"]`).click();
     await page.getByRole('button', {name: 'Delete'}).click();
-    await page.waitForSelector('div[id="TestCredentials-name-cell"]', {state: 'detached'});
+    await page.waitForSelector(`div[id="${credentialName}-name-cell"]`, {state: 'detached'});
   });
 
   test('should not create credential with invalid name', async({ page }) => {
