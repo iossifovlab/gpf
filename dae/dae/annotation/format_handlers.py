@@ -285,7 +285,7 @@ class ColumnsFormat(AbstractFormat):
             attr.name for attr in self.pipeline.get_attributes()  # type: ignore
             if not attr.internal
         ]
-        self.output_file = open(self.output_path, "a")  # noqa: SIM115
+        self.output_file = open(self.output_path, "w")  # noqa: SIM115
 
         # Write header to output file
         if isinstance(self.pipeline, ReannotationPipeline):

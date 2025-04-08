@@ -271,6 +271,41 @@ def test_annotate_columns_basic_setup(
     assert out_file_content == out_expected_content
 
 
+def test_annotate_columns_idempotence(
+    annotate_directory_fixture: pathlib.Path,
+) -> None:
+    in_content = textwrap.dedent("""
+        chrom   pos
+        chr1    23
+        chr1    24
+    """)
+    out_expected_content = (
+        "chrom\tpos\tscore\n"
+        "chr1\t23\t0.1\n"
+        "chr1\t24\t0.2\n"
+    )
+    root_path = annotate_directory_fixture
+    in_file = root_path / "in.txt"
+    out_file = root_path / "out.txt"
+    annotation_file = root_path / "annotation.yaml"
+    grr_file = root_path / "grr.yaml"
+    work_dir = root_path / "work"
+
+    setup_denovo(in_file, in_content)
+
+    for _ in range(10):
+        cli_columns([
+            str(a) for a in [
+                in_file, annotation_file, "--grr", grr_file, "-o", out_file,
+                "-w", work_dir,
+                "-j", 1,
+                "--force",
+            ]
+        ])
+        out_file_content = get_file_content_as_string(str(out_file))
+        assert out_file_content == out_expected_content
+
+
 def test_basic_vcf(
     annotate_directory_fixture: pathlib.Path,
 ) -> None:
