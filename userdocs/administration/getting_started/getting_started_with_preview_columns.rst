@@ -9,19 +9,15 @@ the configuration of the corresponding study or dataset.
 For each study dataset, you can specify which columns are shown in the variants' 
 table preview, as well as those which will be downloaded.
 
-Example: Redefine the `Frequency` column in the preview table of `Hello World Dataset`
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Example: Redefine the `Frequency` column in the preview table of `Example Dataset`
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-As an example, we are going to redefine the `Frequency` column for ``helloworld``
+As an example, we are going to redefine the `Frequency` column for ``example_dataset``
 dataset to include attributes from annotation with GnomAD v3 genomic score.
 
-Navigate to the ``helloworld`` dataset folder:
+Edit the ``example_dataset.yaml`` dataset configuration in ``minimal_instance/datasets/example_dataset``:
 
-.. code-block:: bash
-
-    cd minimal_instance/datasets/helloworld
-
-and edit the ``helloworld.yaml`` file. Add the following section to the end:
+Add the following section to the end:
 
 .. code-block:: yaml
 
@@ -49,7 +45,7 @@ and edit the ``helloworld.yaml`` file. Add the following section to the end:
             - genome_gnomad_v3_an    
 
 This overwrites the definition of the default preview column `Frequency` to
-include the gnomAD v3 frequencies. If we now browse the `Hello World Dataset`
+include the gnomAD v3 frequencies. If we now browse the `Example Dataset`
 and run variants preview in the genotype browser we will start seeing the 
 GnomAD attributes:
 

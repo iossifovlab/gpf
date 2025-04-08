@@ -140,16 +140,6 @@ keybinding for stopping long-running Linux commands in a terminal.
 Import genotype variants
 ########################
 
-Data Storage
-++++++++++++
-
-The GPF system uses genotype storages for storing genomic variants.
-
-We are going to use in-memory genotype storage for this guide. It is easiest
-to set up and use, but it is unsuitable for large studies.
-
-By default, each GPF instance has internal in-memory genotype storage.
-
 Import Tools and Import Project
 +++++++++++++++++++++++++++++++
 
@@ -160,7 +150,7 @@ expects an import project file that describes the import.
 This tool supports importing variants from three formats:
 
 * List of de novo variants
-* List of de novo CNV variants
+* List of de novo CNV variants 
 * Variant Call Format (VCF)
 
 Example import of de novo variants
@@ -226,7 +216,7 @@ and place the following configuration file ``example_dataset.yaml`` inside that 
 .. code-block:: yaml
 
     id: example_dataset
-    name: Hello World Dataset
+    name: Example Dataset
     
     studies:
       - denovo_example
@@ -251,7 +241,7 @@ For example the configuration of ``example_dataset`` dataset should become simil
 .. code-block:: yaml
 
     id: example_dataset
-    name: Hello World Dataset
+    name: Example Dataset
     
     studies:
       - denovo_example

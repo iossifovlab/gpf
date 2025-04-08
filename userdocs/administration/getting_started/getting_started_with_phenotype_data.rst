@@ -13,7 +13,7 @@ on how to import them.
 As an example, we are going to show how to import simulated phenotype
 data into our GPF instance.
 
-Inside the ``raw_phenotype_data`` directory, the following data is provided:
+Inside the ``input_phenotype_data`` directory, the following data is provided:
 
 * ``instruments`` contains the phenotype instruments and measures to be imported.
 * ``pedigree.ped`` is the corresponding pedigree file.
@@ -25,7 +25,7 @@ the phenotype database directly to our GPF instance's phenotype storage:
 
 .. code:: bash
 
-    import_phenotypes raw_phenotype_data/import_project.yaml
+    import_phenotypes input_phenotype_data/import_project.yaml
 
 When the import finishes you can run the GPF development server using:
 
@@ -65,12 +65,12 @@ Configure Genotype Study With Phenotype Data
 ++++++++++++++++++++++++++++++++++++++++++++
 
 To demonstrate how a study is configured with a phenotype database, we will
-be working with the already imported ``helloworld`` dataset.
+be working with the already imported ``example_dataset`` dataset.
 
 The phenotype databases can be attached to one or more studies and/or datasets.
-If you want to attach the ``mini_pheno`` phenotype study to the ``helloworld`` dataset,
+If you want to attach the ``mini_pheno`` phenotype study to the ``example_dataset`` dataset,
 you need to specify it in the dataset's configuration file, which can be found at
-``minimal_instance/datasets/helloworld/helloworld.yaml``.
+``minimal_instance/datasets/example_dataset/example_dataset.yaml``.
 
 Add the following line to the file:
 
@@ -84,7 +84,7 @@ To enable the :ref:`Phenotype Browser`, add this line:
 
     phenotype_browser: true
 
-When you restart the server, you should be able to see the 'Phenotype Browser' tab in the ``helloworld`` dataset.
+When you restart the server, you should be able to see the 'Phenotype Browser' tab in the ``example_dataset`` dataset.
 
 Configure Family Filters in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
