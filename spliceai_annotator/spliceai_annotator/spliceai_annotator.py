@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import textwrap
 from collections import defaultdict
+from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
@@ -13,12 +14,17 @@ from dae.annotation.annotatable import Annotatable, VCFAllele
 from dae.annotation.annotation_config import (
     AnnotationConfigParser,
     AnnotatorInfo,
+    AttributeInfo,
 )
 from dae.annotation.annotation_pipeline import (
     AnnotationPipeline,
     Annotator,
 )
 from dae.annotation.annotator_base import AnnotatorBase
+from dae.genomic_resources.aggregators import (
+    Aggregator,
+    build_aggregator,
+)
 from dae.genomic_resources.gene_models import (
     GeneModels,
     build_gene_models_from_resource,
@@ -38,6 +44,25 @@ def build_spliceai_annotator(
     info: AnnotatorInfo,
 ) -> Annotator:
     return SpliceAIAnnotator(pipeline, info)
+
+
+@dataclass
+class _AttrConfig:
+    """SpliceAI attributes definition class."""
+
+    name: str
+    value_type: str
+    description: str
+    aggregator: str
+
+
+@dataclass
+class _AttrDef:
+    """SpliceAI attributes definition class."""
+
+    name: str
+    documentation: str
+    aggregator: Aggregator
 
 
 class SpliceAIAnnotator(AnnotatorBase):
@@ -81,7 +106,7 @@ class SpliceAIAnnotator(AnnotatorBase):
 
         info.documentation += textwrap.dedent("""
 
-Annotator to use 
+SpliceAI Annotator plugin uses 
 <a href="https://www.cell.com/cell/fulltext/S0092-8674(18)31629-5">SpliceAI</a>
 models to predict splice site variant effects.
 
@@ -96,66 +121,19 @@ models to predict splice site variant effects.
                 "DS_DG",
                 "DS_DL",
                 "DS_MAX",
-                # "DP_AG",
-                # "DP_AL",
-                # "DP_DG",
-                # "DP_DL",
-                # "ref_A_p",
-                # "ref_D_p",
-                # "alt_A_p",
-                # "alt_D_p",
-                # "delta_score",
             ])
 
         super().__init__(pipeline, info, {
-            "gene":
-            ("str", ""),
-            "transcript_ids":
-            ("str", ""),
-            "DS_AG":
-            ("float", ""),
-            "DS_AL":
-            ("float", ""),
-            "DS_DG":
-            ("float", ""),
-            "DS_DL":
-            ("float", ""),
-            "DS_MAX":
-            ("float", ""),
-            "DP_AG":
-            ("int", ""),
-            "DP_AL":
-            ("int", ""),
-            "DP_DG":
-            ("int", ""),
-            "DP_DL":
-            ("int", ""),
-            "ref_A_p":
-            ("str", ""),
-            "ref_D_p":
-            ("str", ""),
-            "alt_A_p":
-            ("str", ""),
-            "alt_D_p":
-            ("str", ""),
-            "delta_score":
-            (
-                "str",
-                "Delta score calculated using SpliceAI models."
-                "These include delta scores (DS) and "
-                "delta positions (DP) for acceptor gain (AG), "
-                "acceptor loss (AL), "
-                "donor gain (DG), and donor loss (DL). "
-                "<br/>Format: <em>"
-                "ALLELE|SYMBOL|DS\\_AG|DS\\_AL|DS\\_DG|DS\\_DL|"
-                "DP\\_AG|DP\\_AL|DP\\_DG|DP\\_DL"
-                "</em>",
-             ),
+            name: (attr.value_type, attr.description)
+            for name, attr in self._attributes_definition().items()
         })
-
         self.used_attributes = [
             attr.source for attr in self.get_info().attributes
         ]
+        self._attribute_defs = self._collect_attributes_definitions(
+            self.get_info().attributes,
+        )
+
         self.genome = genome
         self.gene_models = gene_models
         self._distance = int(info.parameters.get("distance", 50))
@@ -173,6 +151,149 @@ models to predict splice site variant effects.
             )
             self._mask = 0
         self._models = None
+
+    def _attributes_definition(self) -> dict[str, _AttrConfig]:
+        return {
+            "gene": _AttrConfig(
+                "gene",
+                "str",
+                "Gene symbol",
+                "join(,)",
+            ),
+            "transcript_ids": _AttrConfig(
+                "transcript_ids",
+                "str",
+                "Transcript IDs",
+                "join(,)",
+            ),
+            "DS_AG": _AttrConfig(
+                "DS_AG",
+                "float",
+                "Delta score for acceptor gain",
+                "max",
+            ),
+            "DS_AL": _AttrConfig(
+                "DS_AL",
+                "float",
+                "Delta score for acceptor loss",
+                "max",
+            ),
+            "DS_DG": _AttrConfig(
+                "DS_DG",
+                "float",
+                "Delta score for donor gain",
+                "max",
+            ),
+            "DS_DL": _AttrConfig(
+                "DS_DL",
+                "float",
+                "Delta score for donor loss",
+                "max",
+            ),
+            "DS_MAX": _AttrConfig(
+                "DS_MAX",
+                "float",
+                "Maximum delta score",
+                "max",
+            ),
+            "DP_AG": _AttrConfig(
+                "DP_AG",
+                "int",
+                "Delta position for acceptor gain",
+                "join(;)",
+            ),
+            "DP_AL": _AttrConfig(
+                "DP_AL",
+                "int",
+                "Delta position for acceptor loss",
+                "join(;)",
+            ),
+            "DP_DG": _AttrConfig(
+                "DP_DG",
+                "int",
+                "Delta position for donor gain",
+                "join(;)",
+            ),
+            "DP_DL": _AttrConfig(
+                "DP_DL",
+                "int",
+                "Delta position for donor loss",
+                "join(;)",
+            ),
+            "ref_A_p": _AttrConfig(
+                "ref_A_p",
+                "str",
+                "Reference acceptor probabilities",
+                "join(;)",
+            ),
+            "ref_D_p": _AttrConfig(
+                "ref_D_p",
+                "str",
+                "Reference donor probabilities",
+                "join(;)",
+            ),
+            "alt_A_p": _AttrConfig(
+                "alt_A_p",
+                "str",
+                "Alternative acceptor probabilities",
+                "join(;)",
+            ),
+            "alt_D_p": _AttrConfig(
+                "alt_D_p",
+                "str",
+                "Alternative donor probabilities",
+                "join(;)",
+            ),
+            "delta_score": _AttrConfig(
+                "delta_score",
+                "str",
+                "Delta score calculated using SpliceAI models."
+                "These include delta scores (DS) and "
+                "delta positions (DP) for acceptor gain (AG), "
+                "acceptor loss (AL), "
+                "donor gain (DG), and donor loss (DL). "
+                "<br/>Format: <em>"
+                "ALLELE|SYMBOL|DS\\_AG|DS\\_AL|DS\\_DG|DS\\_DL|"
+                "DP\\_AG|DP\\_AL|DP\\_DG|DP\\_DL"
+                "</em>",
+                "join(;)",
+            ),
+        }
+
+    def _collect_attributes_definitions(
+        self,
+        attributes: list[AttributeInfo],
+    ) -> list[_AttrDef]:
+        """Collect attributes configuration."""
+        result = []
+        for attr in attributes:
+            if attr.name not in self._attributes_definition():
+                logger.error(
+                    "Attribute %s is not supported by SpliceAI annotator",
+                    attr.name,
+                )
+                continue
+
+            attr_config = self._attributes_definition()[attr.name]
+            aggregator = attr.parameters.get("aggregator")
+            if aggregator is not None:
+                documenation = (
+                    f"{attr_config.description}\n"
+                    f"Aggregator: {aggregator}"
+                )
+            else:
+                aggregator = attr_config.aggregator
+                documenation = (
+                    f"{attr_config.description}\n\n"
+                    f"Aggregator (<em>default</em>): {aggregator}"
+                )
+            attr._documentation = documenation  # noqa: SLF001
+            result.append(_AttrDef(
+                attr.name,
+                documenation,
+                build_aggregator(aggregator),
+            ))
+        return result
 
     def close(self) -> None:
         self.genome.close()
@@ -354,22 +475,8 @@ models to predict splice site variant effects.
             )
 
         return {
-            "gene": ";".join(results["gene"]),
-            "transcript_ids": ";".join(results["transcript_ids"]),
-            "DS_AG": ";".join([f"{x:.2f}" for x in results["DS_AG"]]),
-            "DS_AL": ";".join([f"{x:.2f}" for x in results["DS_AL"]]),
-            "DS_DG": ";".join([f"{x:.2f}" for x in results["DS_DG"]]),
-            "DS_DL": ";".join([f"{x:.2f}" for x in results["DS_DL"]]),
-            "DS_MAX": ";".join([f"{x:.2f}" for x in results["DS_MAX"]]),
-            "DP_AG": ";".join([str(x) for x in results["DP_AG"]]),
-            "DP_AL": ";".join([str(x) for x in results["DP_AL"]]),
-            "DP_DG": ";".join([str(x) for x in results["DP_DG"]]),
-            "DP_DL": ";".join([str(x) for x in results["DP_DL"]]),
-            "ref_A_p": ";".join(results["ref_A_p"]),
-            "ref_D_p": ";".join(results["ref_D_p"]),
-            "alt_A_p": ";".join(results["alt_A_p"]),
-            "alt_D_p": ";".join(results["alt_D_p"]),
-            "delta_score": ";".join(results["delta_score"]),
+            attr.name: attr.aggregator.aggregate(results[attr.name])
+            for attr in self._attribute_defs
         }
 
     def _predict(
