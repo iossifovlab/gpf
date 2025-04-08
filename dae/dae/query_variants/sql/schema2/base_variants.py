@@ -15,6 +15,7 @@ from dae.query_variants.base_query_variants import QueryVariantsBase
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.query_variants.sql.schema2.base_query_builder import Dialect
 from dae.query_variants.sql.schema2.family_builder import FamilyQueryBuilder
+from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.query_variants.sql.schema2.summary_builder import SummaryQueryBuilder
 from dae.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
@@ -221,6 +222,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
+        tags_query: TagsQuery | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> QueryRunner | None:
         """Build a query selecting the appropriate family variants."""
@@ -229,6 +231,13 @@ class SqlSchema2Variants(QueryVariantsBase):
             logger.warning(
                 "No family or summary allele table defined in %s", self.db)
             return None
+
+        tag_family_ids = self.tags_to_family_ids(tags_query)
+        if tag_family_ids is not None:
+            if family_ids is not None:
+                family_ids = list(set(family_ids).intersection(tag_family_ids))
+            else:
+                family_ids = list(tag_family_ids)
 
         do_join_allele_in_members = person_ids is not None
 

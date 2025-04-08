@@ -7,11 +7,14 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 import duckdb
-from sqlglot import condition, exp, or_, parse_one
+from pydantic import BaseModel
+from sqlglot import Expression, column, condition, exp, or_, parse_one
 from sqlglot.expressions import (
     Condition,
     Select,
+    Table,
     replace_placeholders,
+    table_,
 )
 from sqlglot.schema import Schema, ensure_schema
 
@@ -74,6 +77,12 @@ class QueryHeuristics:
         """Check if all heuristics are empty."""
         return len(self.region_bins) == 0 and len(self.coding_bins) == 0 and \
             len(self.frequency_bins) == 0 and len(self.family_bins) == 0
+
+
+class TagsQuery(BaseModel):
+    selected_family_tags: list[str] | None = None
+    deselected_family_tags: list[str] | None = None
+    tags_or_mode: bool = False
 
 
 class QueryBuilderBase:
@@ -968,16 +977,49 @@ class SqlQueryBuilder(QueryBuilderBase):
         pids = [f"'{pid}'" for pid in person_ids]
         return condition(f"fa.aim IN ({', '.join(pids)})")
 
+    @staticmethod
+    def resolve_tags(
+        tags_query: TagsQuery, pedigree_table: Table,
+    ) -> Expression | None:
+        """Resolve tags query to an expression to use as a condition."""
+        pedigree_tags = None
+        if tags_query.selected_family_tags is not None:
+            for tag in tags_query.selected_family_tags:
+                comparison = column(
+                    tag, pedigree_table.alias_or_name).eq("True")
+                if pedigree_tags is None:
+                    pedigree_tags = comparison
+                else:
+                    if tags_query.tags_or_mode:
+                        pedigree_tags = pedigree_tags.or_(comparison)
+                    else:
+                        pedigree_tags = pedigree_tags.and_(comparison)
+        if tags_query.deselected_family_tags is not None:
+            for tag in tags_query.deselected_family_tags:
+                comparison = column(
+                    tag, pedigree_table.alias_or_name).eq("False")
+                if pedigree_tags is None:
+                    pedigree_tags = comparison
+                else:
+                    if tags_query.tags_or_mode:
+                        pedigree_tags = pedigree_tags.or_(comparison)
+                    else:
+                        pedigree_tags = pedigree_tags.and_(comparison)
+        return pedigree_tags
+
     def family_query(
-        self,
+        self, *,
         family_ids: Sequence[str] | None = None,
         person_ids: Sequence[str] | None = None,
         inheritance: str | Sequence[str] | None = None,
         roles: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
+        tags_query: TagsQuery | None = None,
     ) -> Select:
         """Build a family subclause query."""
+        if tags_query is None:
+            tags_query = TagsQuery()
         query = self.family_base()
         if roles is not None:
             clause = self.roles(roles)
@@ -1007,11 +1049,37 @@ class SqlQueryBuilder(QueryBuilderBase):
             assert family_ids is not None
             clause = self.family_ids(family_ids)
             query = query.where(clause)
-        if person_ids is not None:
 
+        pedigree_table = table_("pedigree_table", alias="ped")
+        pedigree_tags = self.resolve_tags(tags_query, pedigree_table)
+
+        base_table = "family_base"
+        ctes = [["family_base", query]]
+        if pedigree_tags is not None:
+            tagged_families_query = exp.select("family_id").from_(
+                pedigree_table,
+            ).where(
+                pedigree_tags,
+            )
+            filtered_by_tags_query = exp.select(
+                f"{base_table}.*",
+            ).from_("family_base").join(
+                "tagged",
+                on=(
+                    column("family_id", "family_base").eq(
+                        column("family_id", "tagged"),
+                    )
+                ),
+            )
+            ctes.extend([
+                ["tagged", tagged_families_query],
+                ["filtered_by_tags", filtered_by_tags_query],
+            ])
+            base_table = "filtered_by_tags"
+        if person_ids is not None:
             family_members = parse_one(
-                "select *, unnest(fa.allele_in_members) as aim "
-                "from family_base as fa",
+                "select *, unnest(fa.allele_in_members) as aim "  # noqa: S608
+                f"from {base_table} as fa",
             )
             family_query = exp.select(
                 "*",
@@ -1021,13 +1089,19 @@ class SqlQueryBuilder(QueryBuilderBase):
                 SqlQueryBuilder.person_ids(person_ids),
             )
 
-            query = Select().with_(
-                "family_base", as_=query,
-            ).with_(
-                "family_members", as_=family_members,
-            ).with_(
-                "family", as_=family_query,
-            ).select("*").from_("family")
+            ctes.extend([
+                ["family_members", family_members],
+                ["filtered_members", family_query],
+            ])
+
+            base_table = "filtered_members"
+
+        if len(ctes) > 1:
+            ctes[-1][0] = "family"
+            query = Select()
+            for cte in ctes:
+                query = self._append_cte(query, cte[1], cte[0])
+            query = query.select("*").from_("family")
 
         return query
 
@@ -1193,7 +1267,7 @@ class SqlQueryBuilder(QueryBuilderBase):
             },
         )
 
-    def build_family_variants_query(
+    def build_family_variants_query(  # pylint: disable=too-many-arguments
         self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
@@ -1212,6 +1286,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
+        tags_query: TagsQuery | None = None,
         **_kwargs: Any,
     ) -> list[str]:
         """Build a query for family variants."""
@@ -1234,6 +1309,7 @@ class SqlQueryBuilder(QueryBuilderBase):
             roles=roles,
             sexes=sexes,
             affected_statuses=affected_statuses,
+            tags_query=tags_query,
         )
 
         batched_heuristics = self.calc_batched_heuristics(

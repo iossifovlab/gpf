@@ -6,6 +6,7 @@ import pytest
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from dae.query_variants.sql.schema2.sql_query_builder import (
     SqlQueryBuilder,
+    TagsQuery,
 )
 from dae.studies.study import GenotypeData
 from dae.utils.regions import Region
@@ -508,3 +509,27 @@ def test_pedigree_schema(
     assert "family_bin" in pedigree_columns
     assert "tag_simplex_family" in pedigree_columns
     assert "tag_multiplex_family" in pedigree_columns
+
+
+@pytest.mark.parametrize("params, count", [
+    ({"tags_query": TagsQuery(selected_family_tags=["tag_trio_family"])}, 12),
+    ({"tags_query": TagsQuery(selected_family_tags=["tag_quad_family"])}, 0),
+    ({"tags_query": TagsQuery(deselected_family_tags=["tag_trio_family"])}, 0),
+    (
+        {"tags_query": TagsQuery(deselected_family_tags=["tag_quad_family"])},
+        12,
+    ),
+    (
+        {
+            "tags_query": TagsQuery(selected_family_tags=["tag_trio_family"]),
+            "person_ids": ["ch1", "ch3"],
+        }, 9,
+    ),
+])
+def test_family_tag_queries_working(
+    params: dict[str, Any],
+    count: int,
+    duckdb2_variants: DuckDb2Variants,
+):
+    fvs = list(duckdb2_variants.query_variants(**params))
+    assert len(fvs) == count
