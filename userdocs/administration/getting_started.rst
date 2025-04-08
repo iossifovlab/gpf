@@ -86,6 +86,12 @@ Clone the example "gpf-getting-started" repository
 
     git clone https://github.com/iossifovlab/gpf-getting-started.git
 
+Navigate to the newly-created directory:
+
+.. code-block:: bash
+
+    cd gpf-getting-started
+
 This repository provides a minimal instance and sample data to be imported.
 
 The reference genome used by this GPF instance is ``hg38/genomes/GRCh38-hg38`` from the default GRR.
@@ -105,11 +111,11 @@ uses it as a configuration for the GPF instance. Otherwise, it throws an
 exception.
 
 Additionally, GPF will also consider the ``DAE_DB_DIR`` environment variable.
-Sourcing the provided ``setenv.sh`` file will set this variable for you.
+You can set it using the following command:
 
 .. code-block:: bash
 
-    source setenv.sh
+    export DAE_DB_DIR=$(pwd)/minimal_instance
 
 Now we can run the GPF development web server and browse our empty GPF instance:
 
@@ -157,21 +163,21 @@ This tool supports importing variants from three formats:
 * List of de novo CNV variants
 * Variant Call Format (VCF)
 
-Example import of de novo variants: ``helloworld``
-++++++++++++++++++++++++++++++++++++++++++++++++++
+Example import of de novo variants
+++++++++++++++++++++++++++++++++++
 
 Let us import a small list of de novo variants. We will need the list of
-de novo variants ``raw_genotype_data/helloworld.tsv``, and a pedigree file
-that describes the families - ``raw_genotype_data/helloworld.ped``:
+de novo variants ``input_genotype_data/example.tsv``, and a pedigree file
+that describes the families - ``input_genotype_data/example.ped``:
 
 A project configuration file for importing this study
-(``raw_genotype_data/denovo_helloworld.yaml``) is also provided.
+(``input_genotype_data/denovo_example.yaml``) is also provided.
 
 To import this project run the following command:
 
 .. code-block:: bash
 
-    import_genotypes raw_genotype_data/denovo_helloworld.yaml
+    import_genotypes input_genotype_data/denovo_example.yaml
 
 When the import finishes you can run the GPF development server using:
 
@@ -181,17 +187,17 @@ When the import finishes you can run the GPF development server using:
 
 and browse the content of the GPF development server at ``http://localhost:8000``
 
-Example import of VCF variants: ``vcf_helloworld``
-++++++++++++++++++++++++++++++++++++++++++++++++++
+Example import of VCF variants
+++++++++++++++++++++++++++++++
 
 Similar to the sample denovo variants, there are also sample variants in VCF format.
-They can be found in ``raw_genotype_data/helloworld.vcf`` and the same pedigree file from before is used.
+They can be found in ``input_genotype_data/example.vcf`` and the same pedigree file from before is used.
 
 To import them, run the following command:
 
 .. code-block:: bash
 
-    import_genotypes raw_genotype_data/vcf_helloworld.yaml
+    import_genotypes input_genotype_data/vcf_example.yaml
 
 When the import finishes you can run the GPF development server using:
 
@@ -204,55 +210,52 @@ and browse the content of the GPF development server at ``http://localhost:8000`
 Example of a dataset (group of genotype studies)
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
-The already imported studies ``denovo_helloworld`` and ``vcf_helloworld``
-have genomic variants for the same group of individuals ``helloworld.ped``.
+The already imported studies ``denovo_example`` and ``vcf_example``
+have genomic variants for the same group of individuals ``example.ped``.
 We can create a dataset (group of genotype studies) that include both studies.
 
-To this end create a directory ``datasets/helloworld`` inside the GPF instance
+To this end create a directory ``datasets/example_dataset`` inside the GPF instance
 directory ``minimal_instance``:
 
 .. code-block:: bash
 
-    cd minimal_instance
-    mkdir -p datasets/helloworld
+    mkdir -p minimal_instance/datasets/example_dataset
 
-and place the following configuration file ``helloworld.yaml`` inside that directory:
+and place the following configuration file ``example_dataset.yaml`` inside that directory:
 
 .. code-block:: yaml
 
-    id: helloworld
+    id: example_dataset
     name: Hello World Dataset
     
     studies:
-      - denovo_helloworld
-      - vcf_helloworld    
+      - denovo_example
+      - vcf_example    
 
 Getting started with de novo gene sets
 ######################################
 
-To generate de novo gene sets, you can use the
-``generate_denovo_gene_sets`` tool. Similar to the `reports_tool`_ above,
-you can use the ``--show-studies`` and ``--studies`` option.
+To generate de novo gene sets, you can use the ``generate_denovo_gene_sets`` tool.
 
 By default the de novo gene sets are disabled. If you want to enable them for a 
-specific study or dataset you need to update the configuration and add a section
-that enable the de novo gene sets:
+specific study or dataset you need to update its configuration and add a section
+that enables the de novo gene sets:
 
 .. code-block:: yaml
 
     denovo_gene_sets:
       enabled: true
 
-For example the configuration of ``helloworld`` dataset should become similar to:
+For example the configuration of ``example_dataset`` dataset should become similar to:
 
 .. code-block:: yaml
 
-    id: helloworld
+    id: example_dataset
     name: Hello World Dataset
     
     studies:
-      - denovo_helloworld
-      - vcf_helloworld
+      - denovo_example
+      - vcf_example
     
     common_report:
       enabled: True
@@ -261,12 +264,12 @@ For example the configuration of ``helloworld`` dataset should become similar to
       enabled: true
     
 
-Then we can generate the de novo gene sets for ``helloworld`` dataset by
+Then we can generate the de novo gene sets for ``example_dataset`` dataset by
 running:
 
 .. code-block:: bash
 
-    generate_denovo_gene_sets --studies helloworld
+    generate_denovo_gene_sets --studies example_dataset
 
 .. include:: getting_started/getting_started_with_annotation.rst
 
@@ -301,15 +304,15 @@ This will return a list with the ids of all configured studies:
 
 .. code-block:: python3
 
-    ['denovo_helloworld',
-     'vcf_helloworld',
-     'helloworld']
+    ['denovo_example',
+     'vcf_example',
+     'example_dataset']
 
 To get a specific study and query it, you can use:
 
 .. code-block:: python3
 
-    st = gpf_instance.get_genotype_data('helloworld')
+    st = gpf_instance.get_genotype_data('example_dataset')
     vs = list(st.query_variants())
 
 .. note::
@@ -353,7 +356,7 @@ can use:
 
 .. code-block:: python3
 
-    st = gpf_instance.get_genotype_data('helloworld')
+    st = gpf_instance.get_genotype_data('example_dataset')
     vs = st.query_variants(effect_types=['synonymous'])
     vs = list(vs)
     len(vs)
