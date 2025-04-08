@@ -6,6 +6,7 @@ import pytest
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from dae.query_variants.sql.schema2.sql_query_builder import (
     SqlQueryBuilder,
+    TagsQuery,
 )
 from dae.studies.study import GenotypeData
 from dae.utils.regions import Region
@@ -511,13 +512,16 @@ def test_pedigree_schema(
 
 
 @pytest.mark.parametrize("params, count", [
-    ({"selectedFamilyTags": ["tag_trio_family"]}, 12),
-    ({"selectedFamilyTags": ["tag_quad_family"]}, 0),
-    ({"deselectedFamilyTags": ["tag_trio_family"]}, 0),
-    ({"deselectedFamilyTags": ["tag_quad_family"]}, 12),
+    ({"tags_query": TagsQuery(selected_family_tags=["tag_trio_family"])}, 12),
+    ({"tags_query": TagsQuery(selected_family_tags=["tag_quad_family"])}, 0),
+    ({"tags_query": TagsQuery(deselected_family_tags=["tag_trio_family"])}, 0),
+    (
+        {"tags_query": TagsQuery(deselected_family_tags=["tag_quad_family"])},
+        12,
+    ),
     (
         {
-            "selectedFamilyTags": ["tag_trio_family"],
+            "tags_query": TagsQuery(selected_family_tags=["tag_trio_family"]),
             "person_ids": ["ch1", "ch3"],
         }, 9,
     ),

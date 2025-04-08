@@ -29,6 +29,7 @@ from dae.person_sets import (
 )
 from dae.query_variants.base_query_variants import QueryVariantsBase
 from dae.query_variants.query_runners import QueryResult
+from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.utils.regions import Region
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyVariant
@@ -402,6 +403,7 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         limit: int | None = None,
         study_filters: list[str] | None = None,
         unique_family_variants: bool = True,
+        tags_query: TagsQuery | None = None,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         """Query and return generator containing variants."""
@@ -427,6 +429,7 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
             return_unknown=return_unknown,
             limit=limit,
             study_filters=study_filters,
+            tags_query=tags_query,
             **kwargs,
         )
         if result is None:

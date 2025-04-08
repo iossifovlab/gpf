@@ -23,6 +23,7 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
     Db2Layout,
     RealAttrFilterType,
     SqlQueryBuilder,
+    TagsQuery,
 )
 from dae.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status
@@ -390,9 +391,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
-        selected_family_tags: list[str] | None = None,
-        deselected_family_tags: list[str] | None = None,
-        tags_or_mode: bool = False,
+        tags_query: TagsQuery | None = None,
         **kwargs: Any,
     ) -> QueryRunner | None:
         # pylint: disable=too-many-arguments
@@ -408,9 +407,6 @@ class DuckDb2Variants(QueryVariantsBase):
             limit = -1
         else:
             query_limit = 10 * limit
-
-        selected_family_tags = kwargs.get("selectedFamilyTags")
-        deselected_family_tags = kwargs.get("deselectedFamilyTags")
 
         query = self.query_builder.build_family_variants_query(
             regions=regions,
@@ -430,9 +426,7 @@ class DuckDb2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=query_limit,
-            selected_family_tags=selected_family_tags,
-            deselected_family_tags=deselected_family_tags,
-            tags_or_mode=tags_or_mode,
+            tags_query=tags_query,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
 
@@ -485,6 +479,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
+        tags_query: TagsQuery | None = None,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
@@ -512,6 +507,7 @@ class DuckDb2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=query_limit,
+            tags_query=tags_query,
             **kwargs,
         )
         if runner is None:

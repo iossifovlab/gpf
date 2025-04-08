@@ -8,6 +8,7 @@ from dae.person_filters import make_pedigree_filter, make_pheno_filter
 from dae.person_filters.person_filters import make_pheno_filter_beta
 from dae.person_sets import PSCQuery
 from dae.query_variants.attributes_query import role_query
+from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance
 
@@ -325,10 +326,11 @@ class QueryTransformer:
 
         kwargs = self._handle_person_set_collection(kwargs)
 
-        kwargs["selected_family_tags"] = kwargs.get("selectedFamilyTags")
-        kwargs["deselected_family_tags"] = kwargs.get("deselectedFamilyTags")
-        kwargs["tags_or_mode"] = not \
-            bool(kwargs.get("tagIntersection", "True"))
+        kwargs["tags_query"] = TagsQuery(
+            selected_family_tags=kwargs.get("selectedFamilyTags"),
+            deselected_family_tags=kwargs.get("deselectedFamilyTags"),
+            tags_or_mode=not bool(kwargs.get("tagIntersection", "True")),
+    )
 
         if "querySummary" in kwargs:
             kwargs["query_summary"] = kwargs["querySummary"]

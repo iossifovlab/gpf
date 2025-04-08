@@ -7,10 +7,12 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 import duckdb
-from sqlglot import column, condition, exp, or_, parse_one
+from pydantic import BaseModel
+from sqlglot import Expression, column, condition, exp, or_, parse_one
 from sqlglot.expressions import (
     Condition,
     Select,
+    Table,
     replace_placeholders,
     table_,
 )
@@ -75,6 +77,12 @@ class QueryHeuristics:
         """Check if all heuristics are empty."""
         return len(self.region_bins) == 0 and len(self.coding_bins) == 0 and \
             len(self.frequency_bins) == 0 and len(self.family_bins) == 0
+
+
+class TagsQuery(BaseModel):
+    selected_family_tags: list[str] | None = None
+    deselected_family_tags: list[str] | None = None
+    tags_or_mode: bool = False
 
 
 class QueryBuilderBase:
@@ -969,6 +977,36 @@ class SqlQueryBuilder(QueryBuilderBase):
         pids = [f"'{pid}'" for pid in person_ids]
         return condition(f"fa.aim IN ({', '.join(pids)})")
 
+    @staticmethod
+    def resolve_tags(
+        tags_query: TagsQuery, pedigree_table: Table,
+    ) -> Expression | None:
+        """Resolve tags query to an expression to use as a condition."""
+        pedigree_tags = None
+        if tags_query.selected_family_tags is not None:
+            for tag in tags_query.selected_family_tags:
+                comparison = column(
+                    tag, pedigree_table.alias_or_name).eq("True")
+                if pedigree_tags is None:
+                    pedigree_tags = comparison
+                else:
+                    if tags_query.tags_or_mode:
+                        pedigree_tags = pedigree_tags.or_(comparison)
+                    else:
+                        pedigree_tags = pedigree_tags.and_(comparison)
+        if tags_query.deselected_family_tags is not None:
+            for tag in tags_query.deselected_family_tags:
+                comparison = column(
+                    tag, pedigree_table.alias_or_name).eq("False")
+                if pedigree_tags is None:
+                    pedigree_tags = comparison
+                else:
+                    if tags_query.tags_or_mode:
+                        pedigree_tags = pedigree_tags.or_(comparison)
+                    else:
+                        pedigree_tags = pedigree_tags.and_(comparison)
+        return pedigree_tags
+
     def family_query(
         self, *,
         family_ids: Sequence[str] | None = None,
@@ -977,11 +1015,11 @@ class SqlQueryBuilder(QueryBuilderBase):
         roles: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
-        selected_family_tags: list[str] | None = None,
-        deselected_family_tags: list[str] | None = None,
-        tags_or_mode: bool = False,
+        tags_query: TagsQuery | None = None,
     ) -> Select:
         """Build a family subclause query."""
+        if tags_query is None:
+            tags_query = TagsQuery()
         query = self.family_base()
         if roles is not None:
             clause = self.roles(roles)
@@ -1012,30 +1050,8 @@ class SqlQueryBuilder(QueryBuilderBase):
             clause = self.family_ids(family_ids)
             query = query.where(clause)
 
-        pedigree_tags = None
         pedigree_table = table_("pedigree_table", alias="ped")
-        if selected_family_tags is not None:
-            for tag in selected_family_tags:
-                comparison = column(
-                    tag, pedigree_table.alias_or_name).eq("True")
-                if pedigree_tags is None:
-                    pedigree_tags = comparison
-                else:
-                    if tags_or_mode:
-                        pedigree_tags = pedigree_tags.or_(comparison)
-                    else:
-                        pedigree_tags = pedigree_tags.and_(comparison)
-        if deselected_family_tags is not None:
-            for tag in deselected_family_tags:
-                comparison = column(
-                    tag, pedigree_table.alias_or_name).eq("False")
-                if pedigree_tags is None:
-                    pedigree_tags = comparison
-                else:
-                    if tags_or_mode:
-                        pedigree_tags = pedigree_tags.or_(comparison)
-                    else:
-                        pedigree_tags = pedigree_tags.and_(comparison)
+        pedigree_tags = self.resolve_tags(tags_query, pedigree_table)
 
         base_table = "family_base"
         ctes = [["family_base", query]]
@@ -1270,9 +1286,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
-        selected_family_tags: list[str] | None = None,
-        deselected_family_tags: list[str] | None = None,
-        tags_or_mode: bool = False,
+        tags_query: TagsQuery | None = None,
         **_kwargs: Any,
     ) -> list[str]:
         """Build a query for family variants."""
@@ -1295,9 +1309,7 @@ class SqlQueryBuilder(QueryBuilderBase):
             roles=roles,
             sexes=sexes,
             affected_statuses=affected_statuses,
-            selected_family_tags=selected_family_tags,
-            deselected_family_tags=deselected_family_tags,
-            tags_or_mode=tags_or_mode,
+            tags_query=tags_query,
         )
 
         batched_heuristics = self.calc_batched_heuristics(

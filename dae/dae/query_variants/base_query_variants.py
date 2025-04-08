@@ -10,6 +10,7 @@ from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import FamilyTag
 from dae.pedigrees.family_tag_builder import check_family_tags_query
 from dae.query_variants.query_runners import QueryRunner
+from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyVariant
@@ -108,6 +109,7 @@ class QueryVariants(abc.ABC):
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
+        tags_query: TagsQuery | None = None,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
@@ -163,27 +165,29 @@ class QueryVariantsBase(QueryVariants):
         return fv
 
     def tags_to_family_ids(
-        self, *,
-        selected_family_tags: list[str] | None = None,
-        deselected_family_tags: list[str] | None = None,
-        tags_or_mode: bool = False,
+        self, tags_query: TagsQuery | None = None,
     ) -> set[str] | None:
-        if selected_family_tags is None and deselected_family_tags is None:
+        """Transform a query for tags into a set of family IDs."""
+        if tags_query is None:
             return None
 
-        if isinstance(selected_family_tags, list):
+        if tags_query.selected_family_tags is None \
+                and tags_query.deselected_family_tags is None:
+            return None
+
+        if isinstance(tags_query.selected_family_tags, list):
             include_tags = {
                 FamilyTag.from_label(label)
                 for label
-                in selected_family_tags
+                in tags_query.selected_family_tags
             }
         else:
             include_tags = set[FamilyTag]()
-        if isinstance(deselected_family_tags, list):
+        if isinstance(tags_query.deselected_family_tags, list):
             exclude_tags = {
                 FamilyTag.from_label(label)
                 for label
-                in deselected_family_tags
+                in tags_query.deselected_family_tags
             }
         else:
             exclude_tags = set[FamilyTag]()
@@ -192,7 +196,7 @@ class QueryVariantsBase(QueryVariants):
         for family_id, family in self.families.items():
             if check_family_tags_query(
                 family,
-                or_mode=tags_or_mode,
+                or_mode=tags_query.tags_or_mode,
                 include_tags=include_tags,
                 exclude_tags=exclude_tags,
             ):
