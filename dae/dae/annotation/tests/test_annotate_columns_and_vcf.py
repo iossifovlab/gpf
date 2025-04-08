@@ -7,14 +7,15 @@ import textwrap
 import pysam
 import pytest
 
-from dae import utils
-from dae.annotation.annotatable import Annotatable, Position, Region, VCFAllele
+import dae.annotation.annotatable
+from dae.annotation.annotatable import Annotatable, Position, VCFAllele
 from dae.annotation.annotate_columns import cli as cli_columns
 from dae.annotation.annotate_vcf import cli as cli_vcf
 from dae.annotation.annotate_vcf import produce_partfile_paths
 from dae.annotation.record_to_annotatable import build_record_to_annotatable
 from dae.genomic_resources.testing import setup_genome
 from dae.testing import setup_denovo, setup_directories, setup_vcf
+from dae.utils.regions import Region
 
 
 @pytest.mark.parametrize(
@@ -29,7 +30,7 @@ from dae.testing import setup_denovo, setup_directories, setup_vcf
          VCFAllele("chr1", 4, "C", "CT")),
 
         ({"chrom": "chr1", "pos_beg": "4", "pos_end": "30"},
-         Region("chr1", 4, 30)),
+         dae.annotation.annotatable.Region("chr1", 4, 30)),
     ],
 )
 def test_default_columns(
@@ -431,9 +432,9 @@ def test_vcf_multiple_chroms(
 
 
 def test_produce_partfile_paths() -> None:
-    regions = [utils.regions.Region("chr1", 0, 1000),
-               utils.regions.Region("chr1", 1000, 2000),
-               utils.regions.Region("chr1", 2000, 3000)]
+    regions = [Region("chr1", 0, 1000),
+               Region("chr1", 1000, 2000),
+               Region("chr1", 2000, 3000)]
     expected_output = [
         "work_dir/output/input.vcf_annotation_chr1_0_1000.gz",
         "work_dir/output/input.vcf_annotation_chr1_1000_2000.gz",
