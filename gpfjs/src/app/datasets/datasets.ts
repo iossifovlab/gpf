@@ -350,6 +350,9 @@ export class DatasetHierarchy {
     public id: string,
     public name: string,
     public accessRights: boolean,
+    public hasTransmitted: boolean,
+    public hasDenovo: boolean,
+    public phenotypeData: string,
     public children: DatasetHierarchy[],
   ) { }
 
@@ -368,6 +371,9 @@ export class DatasetHierarchy {
       json['dataset'] as string,
       json['name'] as string,
       json['access_rights'] as boolean,
+      json['has_transmitted'] as boolean,
+      json['has_denovo'] as boolean,
+      json['phenotype_data'] as string,
       children
     );
   }

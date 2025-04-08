@@ -9,12 +9,10 @@
 
     <div id="gene-profiles-wrapper">
       <div id="all-genes-wrapper">
-        <span class="material-symbols-outlined sm unlock-icon">lock_open_right</span>
         <h4><a [routerLink]="'/gene-profiles'">All genes</a></h4>
       </div>
       <div id="single-gene-wrapper">
         <div id="single-gene-title-wrapper">
-          <span class="material-symbols-outlined sm unlock-icon">lock_open_right</span>
           <h4>Single gene</h4>
         </div>
 
@@ -63,8 +61,7 @@
   <div class="separator"></div>
 
   <div style="width: 100%">
-    <ng-container *ngTemplateOutlet="datasetsTemplate; context: { entries: content, nesting: 0 }">
-    </ng-container>
+    <ng-container *ngTemplateOutlet="datasetsTemplate; context: { entries: content, nesting: 0 }"> </ng-container>
   </div>
   <div class="separator"></div>
   <div id="footer">
@@ -82,35 +79,48 @@
   <ng-template #datasetsTemplate let-entries="entries" let-nesting="nesting">
     <ng-container *ngFor="let entry of entries">
       <ng-container *ngIf="datasets.includes(entry.id)">
-        <div>
-          <div
-            [ngStyle]="{ 'padding-left': (nesting * 80 || 36) + 'px' }"
-            style="position: relative; margin-bottom: 15px">
-            <div style="position: relative; display: inline-block; margin-right: 7px">
-              <span
-                #collapseIcon
-                *ngIf="entry.children && datasetHasVisibleChildren(entry.children)"
-                class="collapse-dataset-icon material-icons material-symbols-outlined"
-                [ngClass]="{ rotate: nesting === 0 }"
-                (click)="toggleDatasetCollapse(entry); collapseIcon.classList.toggle('rotate')"
-                >expand_more</span
-              >
+        <div
+          [ngStyle]="{ 'padding-left': (nesting * 80 || 36) + 'px' }"
+          style="position: relative; margin-bottom: 13px">
+          <div style="position: relative; display: inline-block; margin-right: 7px">
+            <span
+              #collapseIcon
+              *ngIf="entry.children && datasetHasVisibleChildren(entry.children)"
+              class="collapse-dataset-icon material-icons material-symbols-outlined"
+              [ngClass]="{ rotate: nesting === 0 }"
+              (click)="toggleDatasetCollapse(entry); collapseIcon.classList.toggle('rotate')"
+              >expand_more</span
+            >
 
-              <span
-                class="material-symbols-outlined sm"
-                [ngClass]="!entry.accessRights ? 'lock-icon' : 'unlock-icon'"
-                >{{ !entry.accessRights ? 'lock' : 'lock_open_right' }}</span
-              >
-            </div>
             <h4>
-              <a
-                [attr.href]="'datasets/' + entry.id"
-                [style.font-size]="nesting ? 24 - 2 * nesting + 'px' : '24px'"
-                >{{ entry.name }}</a
-              >
+              <a [attr.href]="'datasets/' + entry.id" [style.font-size]="nesting ? 24 - 2 * nesting + 'px' : '24px'">{{
+                entry.name
+              }}</a>
             </h4>
-            <markdown>{{ entry.description }}</markdown>
+            <div style="display: inline-flex; align-items: center">
+              <div style="position: relative; top: 3px" [id]="entry.id + '-icons-wrapper'">
+                <span
+                  *ngIf="entry.phenotypeData"
+                  class="phenotype-icon material-symbols-outlined"
+                  title="phenotype"
+                  [ngStyle]="{ opacity: entry.accessRights ? '50%' : '20%' }"
+                  >how_to_reg</span
+                >
+                <span *ngIf="entry.hasDenovo" class="denovo-icon material-symbols-outlined md" title="denovo"
+                  >genetics</span
+                >
+                <span
+                  *ngIf="entry.hasTransmitted"
+                  class="transmitted-icon material-symbols-outlined md"
+                  title="transmitted"
+                  [ngStyle]="{ opacity: entry.accessRights ? '50%' : '20%' }"
+                  >family_history</span
+                >
+              </div>
+            </div>
           </div>
+
+          <markdown>{{ entry.description }}</markdown>
         </div>
       </ng-container>
       <ng-container *ngIf="entry.children">

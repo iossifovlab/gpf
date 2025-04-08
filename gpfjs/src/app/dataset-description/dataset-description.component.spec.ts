@@ -44,8 +44,8 @@ const datasetMock = new Dataset(
   true
 );
 
-const datasetHierarchyMock = new DatasetHierarchy('id1', 'hierarchy1', true, []);
-const invisibleDatasetHierarchyMock = new DatasetHierarchy('id2', 'hierarchy2', true, []);
+const datasetHierarchyMock = new DatasetHierarchy('id1', 'hierarchy1', true, true, true, '', []);
+const invisibleDatasetHierarchyMock = new DatasetHierarchy('id2', 'hierarchy2', true, true, true, '', []);
 const visibleDatasetsMock = ['id1'];
 
 class DatasetsServiceMock {

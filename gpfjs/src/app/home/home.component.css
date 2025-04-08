@@ -1,6 +1,7 @@
 h4 {
   display: inline;
   margin-right: 5px;
+  margin-bottom: 0;
 }
 
 :host::ng-deep p {
@@ -23,7 +24,6 @@ h4 {
   position: absolute;
   right: 100%;
   top: 50%;
-  padding: 3px;
   user-select: none;
   transform: translateY(-50%) rotate(270deg);
   vertical-align: middle;
@@ -149,20 +149,26 @@ gpf-markdown-editor {
   border-radius: 0.375rem;
 }
 
-:host::ng-deep.lock-icon {
-  color: red;
-  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
-}
-
-:host::ng-deep.unlock-icon {
-  color: #3ea658;
-  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
-}
-
 ::ng-deep .genes-dropdown {
   border-radius: 0.375rem !important;
   box-shadow: none;
   border: 1px solid rgba(0, 0, 0, 17%);
   border-top: none;
   padding: 0 !important;
+}
+
+:host::ng-deep.phenotype-icon {
+  opacity: 60%;
+  font-size: 23px;
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+:host::ng-deep.denovo-icon {
+  font-variation-settings: "FILL" 1, "wght" 350, "GRAD" 0, "opsz" 24;
+  opacity: 60%;
+}
+
+:host::ng-deep.transmitted-icon {
+  font-variation-settings: "FILL" 1, "wght" 350, "GRAD" 0, "opsz" 24;
+  opacity: 60%;
 }

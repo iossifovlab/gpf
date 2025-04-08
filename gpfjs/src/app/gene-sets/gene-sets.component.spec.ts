@@ -146,19 +146,19 @@ const datasetHierarchyMock = [
   new DatasetHierarchy(
     'SSC_genotypes',
     'SSC Genotypes',
-    true,
+    true, true, true, '',
     [
-      new DatasetHierarchy('SFARI_SSC_WGS_2', 'SSC NYGC WGS', true, null),
-      new DatasetHierarchy('SFARI_SSC_WGS_CSHL', 'SSC CSHL WGS', true, [
-        new DatasetHierarchy('SFARI_SSC_WGS_CSHLChild1', 'SSC CSHL WGS', true, null),
-        new DatasetHierarchy('SFARI_SSC_WGS_CSHLChild2', 'SSC CSHL WGS', true, null)
+      new DatasetHierarchy('SFARI_SSC_WGS_2', 'SSC NYGC WGS', true, true, true, '', null),
+      new DatasetHierarchy('SFARI_SSC_WGS_CSHL', 'SSC CSHL WGS', true, true, true, '', [
+        new DatasetHierarchy('SFARI_SSC_WGS_CSHLChild1', 'SSC CSHL WGS', true, true, true, '', null),
+        new DatasetHierarchy('SFARI_SSC_WGS_CSHLChild2', 'SSC CSHL WGS', true, true, true, '', null)
       ]),
     ]
   ),
   new DatasetHierarchy(
     'ssc_rna_seq',
     'SSC LCL RNA Sequencing',
-    true,
+    true, true, true, '',
     []
   )
 ];

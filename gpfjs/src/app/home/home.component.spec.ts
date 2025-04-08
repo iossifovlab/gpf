@@ -113,15 +113,15 @@ class MockGeneService {
 }
 
 const datasetsHierarchy = [
-  new DatasetHierarchy('d1', 'dataset1Name', true, [
-    new DatasetHierarchy('d1Inner', 'dataset1InnerName', true, [])
+  new DatasetHierarchy('d1', 'dataset1Name', true, true, true, '', [
+    new DatasetHierarchy('d1Inner', 'dataset1InnerName', true, true, true, '', [])
   ]),
-  new DatasetHierarchy('d2', 'dataset2Name', true, null),
-  new DatasetHierarchy('d3', 'dataset3Name', true, [
-    new DatasetHierarchy('d3Inner1', 'dataset3InnerName1', true, []),
-    new DatasetHierarchy('d3Inner2', 'dataset3InnerName2', true, [
-      new DatasetHierarchy('d3InnerInner1', 'dataset3InnerInnerName1', true, []),
-      new DatasetHierarchy('d3InnerInner2', 'dataset3InnerInnerName2', true, []),
+  new DatasetHierarchy('d2', 'dataset2Name', true, true, true, '', null),
+  new DatasetHierarchy('d3', 'dataset3Name', true, true, true, '', [
+    new DatasetHierarchy('d3Inner1', 'dataset3InnerName1', true, true, true, '', []),
+    new DatasetHierarchy('d3Inner2', 'dataset3InnerName2', true, true, true, '', [
+      new DatasetHierarchy('d3InnerInner1', 'dataset3InnerInnerName1', true, true, true, '', []),
+      new DatasetHierarchy('d3InnerInner2', 'dataset3InnerInnerName2', true, true, true, '', []),
     ])
 
   ]),
