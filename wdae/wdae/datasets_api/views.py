@@ -427,12 +427,25 @@ class DatasetHierarchyView(QueryBaseView):
                     if tree is not None:
                         children.append(tree)
 
-        return {
+        result = {
             "dataset": dataset.study_id,
             "name": dataset.name,
             "children": children,
             "access_rights": has_rights,
         }
+
+        if dataset.is_genotype:
+            result["has_denovo"] = dataset.genotype_data.config["has_denovo"]
+            result["phenotype_data"] = \
+                dataset.genotype_data.config["phenotype_data"]
+            result["has_transmitted"] = \
+                dataset.genotype_data.config["has_transmitted"]
+        else:
+            result["has_denovo"] = False
+            result["phenotype_data"] = dataset.phenotype_data.pheno_id
+            result["has_transmitted"] = False
+
+        return result
 
     @method_decorator(etag(get_permissions_etag))
     def get(self, request: Request, dataset_id: str | None = None) -> Response:

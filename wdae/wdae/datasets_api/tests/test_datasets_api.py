@@ -236,17 +236,30 @@ def test_datasets_hierarchy(
     assert dataset == {
         "dataset": "t4c8_dataset",
         "children": [
-            {"dataset": "t4c8_study_1",
-             "children": None,
-             "name": "t4c8_study_1",
-             "access_rights": True},
-            {"dataset": "t4c8_study_2",
-             "children": None,
-             "name": "t4c8_study_2",
-             "access_rights": True},
+            {
+                "dataset": "t4c8_study_1",
+                "children": None,
+                "name": "t4c8_study_1",
+                "access_rights": True,
+                "has_denovo": True,
+                "has_transmitted": True,
+                "phenotype_data": "study_1_pheno",
+            },
+            {
+                "dataset": "t4c8_study_2",
+                "children": None,
+                "name": "t4c8_study_2",
+                "access_rights": True,
+                "has_denovo": True,
+                "has_transmitted": True,
+                "phenotype_data": None,
+            },
         ],
         "name": "t4c8_dataset",
+        "has_denovo": True,
+        "has_transmitted": True,
         "access_rights": True,
+        "phenotype_data": None,
     }
 
 
