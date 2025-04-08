@@ -1267,7 +1267,7 @@ class SqlQueryBuilder(QueryBuilderBase):
             },
         )
 
-    def build_family_variants_query(
+    def build_family_variants_query(  # pylint: disable=too-many-arguments
         self, *,
         regions: list[Region] | None = None,
         genes: list[str] | None = None,
