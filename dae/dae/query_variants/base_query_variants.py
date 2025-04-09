@@ -82,9 +82,8 @@ class QueryVariants(abc.ABC):
         return_unknown: bool | None = None,
         limit: int | None = None,
         study_filters: list[str] | None = None,
-        selected_family_tags: list[str] | None = None,
-        deselected_family_tags: list[str] | None = None,
-        tags_or_mode: bool = False,
+        tags_query: TagsQuery | None = None,
+        zygosity_in_status: str | None = None,
         **kwargs: Any,
     ) -> QueryRunner | None:
         # pylint: disable=too-many-arguments
@@ -110,6 +109,7 @@ class QueryVariants(abc.ABC):
         return_unknown: bool | None = None,
         limit: int | None = None,
         tags_query: TagsQuery | None = None,
+        zygosity_in_status: str | None = None,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
