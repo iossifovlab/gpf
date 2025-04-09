@@ -46,6 +46,13 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
 
         return {i_name: table_(t_name) for i_name, t_name in results}
 
+    def get_pedigree_df(self) -> pd.DataFrame:
+        """Return individuals data from phenotype database as a dataframe."""
+        person_table = self.person
+        query: Any = select("*").from_(person_table)
+        with self.connection.cursor() as cursor:
+            return cursor.execute(to_duckdb_transpile(query)).df()
+
     def get_persons_df(self) -> pd.DataFrame:
         """Return individuals data from phenotype database as a dataframe."""
         person_table = self.person

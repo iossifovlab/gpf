@@ -365,6 +365,10 @@ class PhenotypeData(ABC, CommonStudyMixin):
         raise NotImplementedError
 
     @abstractmethod
+    def get_pedigree_df(self) -> pd.DataFrame:
+        raise NotImplementedError
+
+    @abstractmethod
     def get_persons_df(self) -> pd.DataFrame:
         raise NotImplementedError
 
@@ -772,7 +776,7 @@ class PhenotypeStudy(PhenotypeData):
     @cached_property
     def families(self) -> FamiliesData:
         return FamiliesLoader.build_families_data_from_pedigree(
-            self.get_persons_df(),
+            self.get_pedigree_df(),
             pedigree_params={
                 "ped_tags": True,
             },
@@ -869,6 +873,9 @@ class PhenotypeStudy(PhenotypeData):
         self, *, leaves: bool = True,  # noqa: ARG002
     ) -> list[str]:
         return [self.pheno_id]
+
+    def get_pedigree_df(self) -> pd.DataFrame:
+        return self.db.get_pedigree_df()
 
     def get_persons_df(self) -> pd.DataFrame:
         return self.db.get_persons_df()
@@ -1082,6 +1089,9 @@ class PhenotypeGroup(PhenotypeData):
                 how="inner",
             )
         return out_df
+
+    def get_pedigree_df(self) -> pd.DataFrame:
+        return self.children[0].get_pedigree_df()
 
     def get_persons_df(self) -> pd.DataFrame:
         # Temporary basic implementation
