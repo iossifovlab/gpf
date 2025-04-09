@@ -235,7 +235,8 @@ def _liftover_snp_simple(
     tchrom, tpos, tstrand, _ = lo_coordinates
     tseq = target_genome.get_sequence(tchrom, tpos, tpos)
     if tstrand == "-":
-        tseq = reverse_complement(tseq)
+        nref = reverse_complement(nref)
+        nalt = reverse_complement(nalt)
     if tseq == nref:
         tref = tseq
         talt = nalt
