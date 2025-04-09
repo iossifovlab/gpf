@@ -502,6 +502,21 @@ class QueryTransformer:
                 else:
                     kwargs["familyIds"] = matching_family_ids
 
+        if "zygosityInStatus" in kwargs:
+            zygosity = kwargs.pop("zygosityInStatus")
+            if not isinstance(zygosity, str):
+                raise ValueError("Invalid zygosity argument - not a string.")
+
+            zygosity = zygosity.lower()
+
+            if zygosity not in ["homozygous", "heterozygous"]:
+                raise ValueError(
+                    f"Invalid zygosity value {zygosity}, expected either "
+                    "homozygous or heterozygous.",
+                )
+
+            kwargs["zygosity_in_status"] = kwargs.pop("zygosityInStatus")
+
         if "personIds" in kwargs:
             kwargs["personIds"] = list(kwargs["personIds"])
 

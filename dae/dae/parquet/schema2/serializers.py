@@ -63,6 +63,7 @@ class AlleleParquetSerializer:
         "allele_in_statuses": pa.int8(),
         "allele_in_roles": pa.int32(),
         "inheritance_in_members": pa.int16(),
+        "zygosity_in_status": pa.int8(),
         "allele_in_members": pa.list_(pa.string()),
     }
 

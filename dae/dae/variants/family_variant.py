@@ -20,6 +20,7 @@ from dae.variants.attributes import (
     Sex,
     Status,
     TransmissionType,
+    Zygosity,
 )
 from dae.variants.core import Allele
 from dae.variants.variant import SummaryAllele, SummaryVariant, VariantDetails
@@ -120,6 +121,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         self._variant_in_statuses: list[Status | None] | None = None
         self._family_index: int | None = None
         self._family_attributes: dict = {}
+        self._zygosity_in_status: int | None = None
 
         self.matched_gene_effects: list = []
 
@@ -240,6 +242,32 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
                 self.gt, self.attributes["allele_count"],
             )
         return self._best_state
+
+    def _calc_zygosity_status(self) -> int:
+        zygosity_affected = 0
+        zygosity_unaffected = 0
+        for idx, allele_pair in enumerate(self.genotype):
+            if self.allele_index not in allele_pair:
+                continue
+
+            pid = self.members_in_order[idx].person_id
+
+            zygosity = Zygosity.homozygous \
+                if allele_pair[0] == allele_pair[1] \
+                else Zygosity.heterozygous
+            if self.family.persons[pid].status == Status.unaffected:
+                zygosity_unaffected = zygosity_unaffected | zygosity.value
+            elif self.family.persons[pid].status == Status.affected:
+                zygosity_affected = zygosity_affected | zygosity.value
+
+        total_zygosity = zygosity_unaffected
+        return total_zygosity | (zygosity_affected << 2)
+
+    @property
+    def zygosity_in_status(self) -> int:
+        if self._zygosity_in_status is None:
+            self._zygosity_in_status = self._calc_zygosity_status()
+        return self._zygosity_in_status
 
     @property
     @deprecated(details="Replace `best_st` with `best_state`")
@@ -497,6 +525,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
 
         self._family_alleles: list[FamilyAllele] | None = None
         self._best_state = best_state
+        self._zygosity_in_status: int | None = None
 
         self._fvuid: str | None = None
         if inheritance_in_members is None:
@@ -724,6 +753,18 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             result[allele.allele_index] = [
                 inh.value for inh in allele.inheritance_in_members]
         return result
+
+    @property
+    def zygosity_in_status(self) -> int:
+        """Calculate and cache zygosity based on alternative alleles."""
+        if self._zygosity_in_status is None:
+            zygosity = 0
+            for fa_zygosity in [
+                fa.zygosity_in_status for fa in self.family_alt_alleles
+            ]:
+                zygosity = zygosity | fa_zygosity
+            self._zygosity_in_status = zygosity
+        return self._zygosity_in_status
 
     def to_record(self) -> dict[str, Any]:  # type: ignore
         assert self.gt is not None

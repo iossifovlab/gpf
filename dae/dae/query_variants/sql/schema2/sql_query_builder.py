@@ -39,7 +39,7 @@ from dae.query_variants.attributes_query_inheritance import (
     inheritance_parser,
 )
 from dae.utils.regions import Region
-from dae.variants.attributes import Inheritance, Role
+from dae.variants.attributes import Inheritance, Role, Status, Zygosity
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +83,11 @@ class TagsQuery(BaseModel):
     selected_family_tags: list[str] | None = None
     deselected_family_tags: list[str] | None = None
     tags_or_mode: bool = False
+
+
+class ZygosityQuery(BaseModel):
+    affected_zygosity: str | None = None
+    unaffected_zygosity: str | None = None
 
 
 class QueryBuilderBase:
@@ -544,7 +549,7 @@ class QueryBuilderBase:
         )
 
 
-class SqlQueryBuilder(QueryBuilderBase):
+class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-methods
     """Build SQL queries using sqlglot."""
 
     def __init__(
@@ -1016,6 +1021,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         sexes: str | None = None,
         affected_statuses: str | None = None,
         tags_query: TagsQuery | None = None,
+        zygosity_in_status: int | None = None,
     ) -> Select:
         """Build a family subclause query."""
         if tags_query is None:
@@ -1033,6 +1039,11 @@ class SqlQueryBuilder(QueryBuilderBase):
         if affected_statuses is not None:
             clause = self.statuses(affected_statuses)
             query = query.where(clause)
+
+        if zygosity_in_status is not None:
+            expr = parse_one(
+                f"(fa.zygosity_in_status & {zygosity_in_status}) != 0")
+            query = query.where(expr)
         if family_ids is not None or person_ids is not None:
             if person_ids is not None:
                 person_ids = [
@@ -1267,6 +1278,35 @@ class SqlQueryBuilder(QueryBuilderBase):
             },
         )
 
+    @staticmethod
+    def calc_zygosity_status_value(
+        affected_statuses: str | None, zygosity_in_status: str | None,
+    ) -> int | None:
+        """Extract from a query an int for filtering zygosity by status."""
+        if zygosity_in_status is None:
+            return None
+
+        affected = False
+        unaffected = False
+        if affected_statuses is None:
+            affected = True
+            unaffected = True
+        else:
+            if QueryBuilderBase.check_statuses_query_value(
+                    affected_statuses, Status.affected.value):
+                affected = True
+            if QueryBuilderBase.check_statuses_query_value(
+                    affected_statuses, Status.unaffected.value):
+                unaffected = True
+
+        zygosity = Zygosity.from_name(zygosity_in_status)
+        zygosity_value = 0
+        if unaffected:
+            zygosity_value |= zygosity.value
+        if affected:
+            zygosity_value |= zygosity.value << 2
+        return zygosity_value
+
     def build_family_variants_query(  # pylint: disable=too-many-arguments
         self, *,
         regions: list[Region] | None = None,
@@ -1287,6 +1327,7 @@ class SqlQueryBuilder(QueryBuilderBase):
         return_unknown: bool | None = None,
         limit: int | None = None,
         tags_query: TagsQuery | None = None,
+        zygosity_in_status: str | None = None,
         **_kwargs: Any,
     ) -> list[str]:
         """Build a query for family variants."""
@@ -1302,6 +1343,11 @@ class SqlQueryBuilder(QueryBuilderBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
         )
+        zygosity_in_status_value = self.calc_zygosity_status_value(
+            affected_statuses=affected_statuses,
+            zygosity_in_status=zygosity_in_status,
+        )
+
         fquery = self.family_query(
             family_ids=family_ids,
             person_ids=person_ids,
@@ -1310,6 +1356,7 @@ class SqlQueryBuilder(QueryBuilderBase):
             sexes=sexes,
             affected_statuses=affected_statuses,
             tags_query=tags_query,
+            zygosity_in_status=zygosity_in_status_value,
         )
 
         batched_heuristics = self.calc_batched_heuristics(

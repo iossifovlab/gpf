@@ -392,6 +392,7 @@ class DuckDb2Variants(QueryVariantsBase):
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
         tags_query: TagsQuery | None = None,
+        zygosity_in_status: str | None = None,
         **kwargs: Any,
     ) -> QueryRunner | None:
         # pylint: disable=too-many-arguments
@@ -427,6 +428,7 @@ class DuckDb2Variants(QueryVariantsBase):
             return_unknown=return_unknown,
             limit=query_limit,
             tags_query=tags_query,
+            zygosity_in_status=zygosity_in_status,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
 
@@ -480,6 +482,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_unknown: bool | None = None,
         limit: int | None = None,
         tags_query: TagsQuery | None = None,
+        zygosity_in_status: str | None = None,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
@@ -508,6 +511,7 @@ class DuckDb2Variants(QueryVariantsBase):
             return_unknown=return_unknown,
             limit=query_limit,
             tags_query=tags_query,
+            zygosity_in_status=zygosity_in_status,
             **kwargs,
         )
         if runner is None:
