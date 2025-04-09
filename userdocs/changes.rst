@@ -1,6 +1,25 @@
 Release Notes
 =============
 
+* 2025.4.1
+    * Consistent CLI interface and implementation for all annotation.
+    * Support for common reports in phenotype data groups.
+    * Reorganization of datasets hierarchy user interface.
+    * Switch to using DuckDb genotype storage for default internal storage.
+    * Reorganization of GPF rest client tokens.
+    * Genotype storage support for query by family tags.
+    * Fix support for INDELs in SpliceAI annotator plugin.
+    * Support for more attributes and aggregation of attributes in SpliceAI annotator plugin.
+
+
+* 2025.4.0
+    * Fix values domain ordering in phenotype data import.
+    * Fix GRR histogram labels on X-axis in case of X log scale.
+    * Initial implementation of SpliceAI annotator plugion.
+    * Support for validation in gene symbols edit box in genotype browser.
+    * Fix visual bug in Safari browser in gene profiles single view.
+
+
 * 2025.3.7
     * Fix present in parent default values in phenotype tool.
     * Bump dependencies versions.
