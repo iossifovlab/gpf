@@ -643,3 +643,28 @@ def test_get_pheno_browser_images_dir(
         "cache_path": "mock/cache",
     })
     assert res == Path("mock", "cache", "images")
+
+
+def test_pheno_common_report(fake_phenotype_data: PhenotypeStudy) -> None:
+    common_report = fake_phenotype_data.build_report()
+
+    assert common_report.study_id == "fake"
+    assert common_report.families_report
+    assert common_report.denovo_report
+    assert common_report.study_name == "fake"
+    assert common_report.phenotype == ["affected", "unaffected"]
+    assert common_report.study_type is None
+    assert common_report.families == 39
+    assert common_report.number_of_probands == 39
+    assert common_report.number_of_siblings == 78
+    assert common_report.denovo is False
+    assert common_report.transmitted is False
+    assert common_report.study_description == "placeholder description"
+
+    assert len(common_report.to_dict()) == 15
+
+    families_reports = common_report.families_report.to_dict()
+    assert len(families_reports[0]["counters"]) == 9
+    assert len(families_reports[0]["counters"][0]["tags"]) == 8
+
+    print(common_report.to_dict())
