@@ -71,4 +71,4 @@ def main(
             else:
                 study = gpf_instance.get_phenotype_data(study_id)
 
-            study.build_and_save()
+            study.build_and_save(force=True)

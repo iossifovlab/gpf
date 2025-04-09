@@ -773,6 +773,9 @@ class PhenotypeStudy(PhenotypeData):
     def families(self) -> FamiliesData:
         return FamiliesLoader.build_families_data_from_pedigree(
             self.get_persons_df(),
+            pedigree_params={
+                "ped_tags": True,
+            },
         )
 
     @cached_property
