@@ -72,6 +72,7 @@ def full_study_config() -> dict[str, Any]:
         "study_phenotype": "test",
         "chr_prefix": True,
         "has_denovo": True,
+        "has_zygosity": True,
         "has_transmitted": True,
         "has_complex": True,
         "has_cnv": True,
