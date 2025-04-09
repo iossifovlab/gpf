@@ -13,8 +13,9 @@ from dae.genomic_resources.gene_models import GeneModels
 from dae.inmemory_storage.raw_variants import RawFamilyVariants
 from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.loader import FamiliesLoader
-from dae.query_variants.base_query_variants import QueryVariants
+from dae.query_variants.base_query_variants import QueryVariantsBase
 from dae.query_variants.query_runners import QueryResult
+from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status
 from dae.variants.family_variant import FamilyVariant
@@ -36,7 +37,7 @@ logger = logging.getLogger(__name__)
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
 
 
-class ImpalaVariants(QueryVariants):
+class ImpalaVariants(QueryVariantsBase):
     # pylint: disable=too-many-instance-attributes
     """A backend implementing an impala backend."""
 
@@ -48,7 +49,6 @@ class ImpalaVariants(QueryVariants):
         pedigree_table: str,
         gene_models: GeneModels | None = None,
     ) -> None:
-        super().__init__()
         assert db, db
         assert pedigree_table, pedigree_table
 
@@ -60,7 +60,9 @@ class ImpalaVariants(QueryVariants):
         self.pedigree_schema = self._fetch_pedigree_schema()
 
         ped_df = self._fetch_pedigree()
-        self.families = FamiliesData.from_pedigree_df(ped_df)
+        families = FamiliesData.from_pedigree_df(ped_df)
+
+        super().__init__(families)
         # Temporary workaround for studies that are imported without tags
         # e.g. production data that is too large to reimport
         FamiliesLoader._build_families_tags(  # noqa: SLF001
@@ -190,6 +192,7 @@ class ImpalaVariants(QueryVariants):
         return_unknown: bool | None = None,
         limit: int | None = None,
         pedigree_fields: tuple[list[str], list[str]] | None = None,
+        tags_query: TagsQuery | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> ImpalaQueryRunner | None:
         """Build a query selecting the appropriate family variants."""
@@ -199,6 +202,13 @@ class ImpalaVariants(QueryVariants):
                 "missing varants table... skipping")
             return None
         assert self.schema is not None
+
+        tag_family_ids = self.tags_to_family_ids(tags_query)
+        if tag_family_ids is not None:
+            if family_ids is not None:
+                family_ids = list(set(family_ids).intersection(tag_family_ids))
+            else:
+                family_ids = list(tag_family_ids)
 
         do_join = False
         if pedigree_fields is not None:
