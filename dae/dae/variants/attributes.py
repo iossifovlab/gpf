@@ -337,6 +337,32 @@ class Inheritance(enum.Enum):
         return self.name
 
 
+class Zygosity(enum.Enum):
+    """Enumerance for allele zygosity."""
+
+    # pylint: disable=invalid-name
+    undefined = 0
+    homozygous = 1
+    heterozygous = 1 << 1
+
+    @staticmethod
+    def from_name(name: str) -> Zygosity:
+        assert (
+            name in Zygosity.__members__
+        ), f"Zygosity type {name} does not exist!"
+        return Zygosity[name]
+
+    @staticmethod
+    def from_value(value: int) -> Zygosity:
+        return Zygosity(value)
+
+    def __repr__(self) -> str:
+        return self.name
+
+    def __str__(self) -> str:
+        return self.name
+
+
 def bitmask2inheritance(bitmask: int) -> set[Inheritance]:
     """Convert a bitmask to set of inheritance."""
     all_inheritance = {
