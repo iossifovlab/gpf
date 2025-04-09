@@ -549,7 +549,7 @@ class QueryBuilderBase:
         )
 
 
-class SqlQueryBuilder(QueryBuilderBase):
+class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-methods
     """Build SQL queries using sqlglot."""
 
     def __init__(
