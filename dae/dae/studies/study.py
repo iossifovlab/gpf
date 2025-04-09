@@ -118,6 +118,10 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         return cast(bool, self.config.get("has_denovo"))
 
     @property
+    def has_zygosity(self) -> bool:
+        return cast(bool, self.config.get("has_zygosity"))
+
+    @property
     def has_transmitted(self) -> bool:
         return cast(bool, self.config.get("has_transmitted"))
 

@@ -338,6 +338,7 @@ study_config_schema = {
         "meta": {"deprecated": True},
     },
     "has_denovo": {"type": "boolean", "default": True},
+    "has_zygosity": {"type": "boolean", "default": False},
     "has_transmitted": {"type": "boolean"},
     "has_complex": {"type": "boolean"},
     "has_cnv": {"type": "boolean"},

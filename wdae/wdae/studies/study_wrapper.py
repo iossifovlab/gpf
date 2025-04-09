@@ -146,6 +146,7 @@ class StudyWrapperBase(WDAEStudy):
             "name",
             "phenotype_tool",
             "has_denovo",
+            "has_zygosity",
             "phenotype_data",
             "has_transmitted",
         ]
@@ -180,6 +181,7 @@ class StudyWrapperBase(WDAEStudy):
             "has_present_in_child",
             "has_present_in_parent",
             "has_denovo",
+            "has_zygosity",
             "has_transmitted",
             "gene_browser",
             "description_editable",
