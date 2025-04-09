@@ -125,7 +125,7 @@ class QueryVariantsBase(QueryVariants):
         self.families = families
         self.serializer = VariantsDataSerializer.build_serializer()
 
-    def has_affected_status_queries(self):
+    def has_affected_status_queries(self) -> bool:
         """Schema2 do support affected status queries."""
         return True
 

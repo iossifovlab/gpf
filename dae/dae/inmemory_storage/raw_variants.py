@@ -15,7 +15,9 @@ from dae.query_variants.attributes_query import (
     sex_query,
     variant_type_query,
 )
+from dae.query_variants.base_query_variants import QueryVariantsBase
 from dae.query_variants.query_runners import QueryResult, QueryRunner
+from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
@@ -587,10 +589,21 @@ class RawFamilyVariants(abc.ABC):
         frequency_filter: RealAttrFilterType | None = None,
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
+        tags_query: TagsQuery | None = None,
         **kwargs: Any,  # noqa: ARG002
     ) -> RawVariantsQueryRunner:
         # pylint: disable=too-many-arguments,unused-argument
         """Return a query runner for the family variants."""
+        # In memory variants does not inherit QueryVariantsBase,
+        # but is suitable for the tags to family IDs utility.
+        tag_family_ids = QueryVariantsBase.tags_to_family_ids(
+            self, tags_query,  # type: ignore
+        )
+        if tag_family_ids is not None:
+            if family_ids is not None:
+                family_ids = list(set(family_ids).intersection(tag_family_ids))
+            else:
+                family_ids = list(tag_family_ids)
         filter_func = RawFamilyVariants.family_variant_filter_function(
             regions=regions,
             genes=genes,
