@@ -23,13 +23,6 @@
                 *ngIf="!datasetsLoading"
                 style="display: flex; align-items: center; justify-content: center; gap: 6px">
                 <span [title]="selectedDataset.name" id="selected-dataset-name">{{ selectedDataset.name }}</span>
-                <span
-                  *ngIf="selectedDataset.phenotypeData"
-                  class="phenotype-icon material-symbols-outlined md"
-                  title="phenotype"
-                  [ngStyle]="{ opacity: selectedDataset.accessRights ? '50%' : '20%' }"
-                  >how_to_reg</span
-                >
                 <span *ngIf="selectedDataset.hasDenovo" class="denovo-icon material-symbols-outlined sm" title="denovo"
                   >genetics</span
                 >
@@ -39,6 +32,13 @@
                   title="transmitted"
                   [ngStyle]="{ opacity: selectedDataset.accessRights ? '50%' : '20%' }"
                   >family_history</span
+                >
+                <span
+                  *ngIf="selectedDataset.phenotypeData"
+                  class="phenotype-icon material-symbols-outlined md"
+                  title="phenotype"
+                  [ngStyle]="{ opacity: selectedDataset.accessRights ? '50%' : '20%' }"
+                  >how_to_reg</span
                 >
               </div>
             </button>

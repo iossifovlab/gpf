@@ -14,13 +14,6 @@
     (click)="select()"
     (middleclick)="select(true)">
     <span [title]="datasetNode.dataset.name" class="dataset-name">{{ datasetNode.dataset.name }}</span>
-    <span
-      *ngIf="datasetNode.dataset.phenotypeData"
-      class="phenotype-icon material-symbols-outlined md"
-      title="phenotype"
-      [ngStyle]="{ opacity: datasetNode.dataset.accessRights ? '50%' : '20%' }"
-      >how_to_reg</span
-    >
     <span *ngIf="datasetNode.dataset.hasDenovo" class="denovo-icon material-symbols-outlined sm" title="denovo"
       >genetics</span
     >
@@ -30,6 +23,13 @@
       title="transmitted"
       [ngStyle]="{ opacity: datasetNode.dataset.accessRights ? '50%' : '20%' }"
       >family_history</span
+    >
+    <span
+      *ngIf="datasetNode.dataset.phenotypeData"
+      class="phenotype-icon material-symbols-outlined md"
+      title="phenotype"
+      [ngStyle]="{ opacity: datasetNode.dataset.accessRights ? '50%' : '20%' }"
+      >how_to_reg</span
     >
   </a>
 </div>
