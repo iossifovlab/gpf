@@ -1,7 +1,9 @@
 <div class="genotype-block form-block">
   <div class="row row-eq-height">
     <div *ngIf="dataset.genotypeBrowserConfig.hasPedigreeSelector" class="col-lg-3">
-      <gpf-pedigree-selector [collections]="dataset.personSetCollections.collections"></gpf-pedigree-selector>
+      <gpf-pedigree-selector
+        [hasZygosity]="dataset.hasZygosity"
+        [collections]="dataset.personSetCollections.collections"></gpf-pedigree-selector>
     </div>
 
     <div *ngIf="dataset.genotypeBrowserConfig.hasPresentInChild" class="col-lg-3">

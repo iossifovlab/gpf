@@ -146,6 +146,8 @@ const datasetMock = new Dataset(
   false,
   true,
   true,
+  true,
+
 );
 describe('QueryService', () => {
   let service: QueryService;

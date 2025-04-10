@@ -28,6 +28,7 @@ import { cloneDeep } from 'lodash';
 import { reset } from '../users/state-actions';
 import { datasetIdInitialState } from 'app/datasets/datasets.state';
 import { measureHistogramInitialState, MeasureHistogramState } from 'app/person-filters-selector/measure-histogram.state';
+import { zygosityFilterInitialState } from 'app/zygosity-filters/zygosity-filter.state';
 
 export interface State {
   errors: string[];
@@ -56,6 +57,7 @@ export interface State {
   datasetId: string;
   familyMeasureHistograms: MeasureHistogramState[],
   personMeasureHistograms: MeasureHistogramState[],
+  zygosityFilter: string
 }
 
 export const initialState: State = {
@@ -85,6 +87,7 @@ export const initialState: State = {
   datasetId: datasetIdInitialState,
   familyMeasureHistograms: measureHistogramInitialState,
   personMeasureHistograms: measureHistogramInitialState,
+  zygosityFilter: zygosityFilterInitialState
 };
 
 export const reducer = createReducer(

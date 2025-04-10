@@ -1,0 +1,15 @@
+<div>
+  <em>Zygosity</em>
+  <div *ngFor="let type of zygosityTypes" class="checkbox">
+    <label>
+      <input
+        #checkbox
+        type="checkbox"
+        [checked]="selectedZygosityTypes.has(type)"
+        (change)="checkZygosityType(type, checkbox.checked)" />
+      <span class="zygosity-label">{{ type }}</span>
+    </label>
+  </div>
+
+  <div *ngIf="!selectedZygosityTypes.size" class="alert alert-danger">Select at least one zygosity.</div>
+</div>
