@@ -90,11 +90,17 @@ EOT
 '
     build_run mkdir -p projects
 
-
     # the quotes around 'EOF' are signifcant - it forces bash to treat the string as literal string until EOF
     build_run bash -e -x <<'EOF'
     if ! [ -d "projects/gpf.repo" ]; then
         git clone "ssh://git@github.com/iossifovlab/gpf" "projects/gpf.repo"
+    fi
+EOF
+
+    # the quotes around 'EOF' are signifcant - it forces bash to treat the string as literal string until EOF
+    build_run bash -e -x <<'EOF'
+    if ! [ -d "projects/data.repo" ]; then
+        git clone "ssh://git@github.com/iossifovlab/gpf-getting-started" "projects/data.repo"
     fi
 EOF
 
@@ -160,6 +166,9 @@ EOT
 
     build_run_container cd /wd/userdocs
     build_run_container ln -sf ../projects/gpf.repo gpf
+
+    build_run_container cd /wd/userdocs/administration
+    build_run_container ln -sf ../projects/data.repo gpf-getting-started
   
     local d
     for d in /wd/projects/gpf.repo/dae /wd/projects/gpf.repo/wdae; do

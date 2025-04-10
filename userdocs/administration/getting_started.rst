@@ -154,12 +154,19 @@ For this demonstration, we will be importing from the following formats:
 Example import of de novo variants
 ++++++++++++++++++++++++++++++++++
 
-Let us import a small list of de novo variants. We will need the list of
-de novo variants ``input_genotype_data/example.tsv``, and a pedigree file
-that describes the families - ``input_genotype_data/example.ped``:
+Let us import a small list of de novo variants.
 
-A project configuration file for importing this study
-(``input_genotype_data/denovo_example.yaml``) is also provided.
+We will need the list of de novo variants ``input_genotype_data/example.tsv``:
+
+.. literalinclude:: gpf-getting-started/input_genotype_data/example.tsv
+
+And a pedigree file that describes the families - ``input_genotype_data/example.ped``:
+
+.. literalinclude:: gpf-getting-started/input_genotype_data/example.ped
+
+A project configuration file for importing this study - ``input_genotype_data/denovo_example.yaml`` - is also provided:
+
+.. literalinclude:: gpf-getting-started/input_genotype_data/denovo_example.yaml
 
 To import this project run the following command:
 
@@ -180,6 +187,12 @@ Example import of VCF variants
 
 Similar to the sample denovo variants, there are also sample variants in VCF format.
 They can be found in ``input_genotype_data/example.vcf`` and the same pedigree file from before is used.
+
+.. literalinclude:: gpf-getting-started/input_genotype_data/example.vcf
+
+A project configuration file is again provided - ``input_genotype_data/vcf_example.yaml``.
+
+.. literalinclude:: gpf-getting-started/input_genotype_data/vcf_example.yaml
 
 To import them, run the following command:
 

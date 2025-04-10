@@ -20,6 +20,26 @@ Inside the ``input_phenotype_data`` directory, the following data is provided:
 * ``measure_descriptions.tsv`` contains descriptions for the provided measures.
 * ``import_project.yaml`` is the import project configuration that we will use to import this data.
 
+``input_phenotype_data/instruments/instrument_1.csv``:
+
+.. literalinclude:: gpf-getting-started/input_phenotype_data/instruments/instrument_1.csv
+
+``input_phenotype_data/instruments/instrument_2.csv``:
+
+.. literalinclude:: gpf-getting-started/input_phenotype_data/instruments/instrument_2.csv
+
+``input_phenotype_data/pedigree.ped``:
+
+.. literalinclude:: gpf-getting-started/input_phenotype_data/pedigree.ped
+
+``input_phenotype_data/measure_descriptions.tsv``:
+
+.. literalinclude:: gpf-getting-started/input_phenotype_data/measure_descriptions.tsv
+
+``input_phenotype_data/import_project.yaml``:
+
+.. literalinclude:: gpf-getting-started/input_phenotype_data/import_project.yaml
+
 To import the phenotype data, we will use the ``import_phenotypes.py`` tool. It will import
 the phenotype database directly to our GPF instance's phenotype storage:
 
