@@ -43,5 +43,7 @@
     </div>
   </div>
 
-  <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+  <gpf-errors-alert [errors]="errors" style="margin: initial"></gpf-errors-alert>
+
+  <gpf-zygosity-filter *ngIf="hasZygosity"></gpf-zygosity-filter>
 </div>

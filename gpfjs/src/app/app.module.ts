@@ -190,6 +190,8 @@ import { PersonFilterComponent } from './person-filter/person-filter.component';
 import { familyMeasureHistogramsReducer, personMeasureHistogramsReducer } from './person-filters-selector/measure-histogram.state';
 import { PhenoMeasureSelectorBetaComponent } from './pheno-measure-selector-beta/pheno-measure-selector-beta.component';
 import { RoleSelectorComponent } from './role-selector/role-selector.component';
+import { ZygosityFilterComponent } from './zygosity-filters/zygosity-filter.component';
+import { zygosityFilterReducer } from './zygosity-filters/zygosity-filter.state';
 
 const appRoutes: Routes = [
   {
@@ -406,7 +408,8 @@ const appRoutes: Routes = [
   CategoricalValuesDropdownComponent,
   PersonFilterComponent,
   PhenoMeasureSelectorBetaComponent,
-  RoleSelectorComponent
+  RoleSelectorComponent,
+  ZygosityFilterComponent
 ],
 bootstrap: [AppComponent], imports: [BrowserModule,
   FormsModule,
@@ -457,7 +460,8 @@ bootstrap: [AppComponent], imports: [BrowserModule,
     uniqueFamilyVariantsFilter: uniqueFamilyVariantsFilterReducer,
     studyTypes: studyTypesReducer,
     familyMeasureHistograms: familyMeasureHistogramsReducer,
-    personMeasureHistograms: personMeasureHistogramsReducer
+    personMeasureHistograms: personMeasureHistogramsReducer,
+    zygosityFilter: zygosityFilterReducer,
   }),], providers: [
   CookieService,
   ConfigService,

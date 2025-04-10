@@ -271,6 +271,7 @@ export class Dataset extends IdName {
       json['has_denovo'] as boolean,
       json['description_editable'] as boolean,
       json['has_transmitted'] as boolean,
+      json['has_zygosity'] as boolean,
     );
   }
 
@@ -297,7 +298,8 @@ export class Dataset extends IdName {
       datasetJson['gene_browser'] ? GeneBrowser.fromJson(datasetJson['gene_browser'] as object) : null,
       datasetJson['has_denovo'] as boolean,
       datasetJson['description_editable'] as boolean,
-      datasetJson['has_transmitted'] as boolean
+      datasetJson['has_transmitted'] as boolean,
+      datasetJson['has_zygosity'] as boolean,
     );
   }
 
@@ -337,6 +339,7 @@ export class Dataset extends IdName {
     public readonly hasDenovo: boolean,
     public readonly descriptionEditable: boolean,
     public readonly hasTransmitted: boolean,
+    public readonly hasZygosity: boolean,
   ) {
     super(id, name);
   }

@@ -37,6 +37,7 @@ import {
   selectFamilyMeasureHistograms,
   selectPersonMeasureHistograms
 } from 'app/person-filters-selector/measure-histogram.state';
+import { selectZygosityFilter } from 'app/zygosity-filters/zygosity-filter.state';
 
 
 @Component({
@@ -134,6 +135,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
       this.store.select(selectStudyFilters),
       this.store.select(selectFamilyMeasureHistograms),
       this.store.select(selectPersonMeasureHistograms),
+      this.store.select(selectZygosityFilter),
     ).pipe(
       map(([
         variantTypesState,
@@ -157,6 +159,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
         studyFiltersState,
         familyMeasureHistogramsState,
         personMeasureHistogramsState,
+        zygosityFilterState
       ]) => {
         const presentInParent = {
           presentInParent: presentInParentState.presentInParent,
@@ -223,6 +226,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
             values: s.values,
             roles: s.roles
           }))},
+          ...zygosityFilterState?.length && { zygosityInStatus: zygosityFilterState }
         };
         return state;
       })

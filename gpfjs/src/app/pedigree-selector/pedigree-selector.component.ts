@@ -15,6 +15,7 @@ import { take } from 'rxjs';
 })
 export class PedigreeSelectorComponent extends ComponentValidator implements OnInit {
   @Input() public collections: PersonSetCollection[];
+  @Input() public hasZygosity: boolean;
   public selectedCollection: PersonSetCollection = null;
 
   @Validate(SetNotEmpty, {
