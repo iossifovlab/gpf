@@ -27,7 +27,7 @@ import {
   setFamilyMeasureHistograms,
   setPersonMeasureHistograms
 } from 'app/person-filters-selector/measure-histogram.state';
-import { setZygosityFilter } from 'app/zygosity-filters/zygosity-filter.state';
+import { setAllZygosityFilters } from 'app/zygosity-filters/zygosity-filter.state';
 
 const PAGE_TYPE_TO_NAVIGATE = {
   genotype: (datasetId: string): string[] => ['datasets', datasetId, 'genotype-browser'],
@@ -105,7 +105,7 @@ export class LoadQueryComponent implements OnInit {
       this.store.dispatch(setPersonIds({personIds: state.personIds}));
       this.store.dispatch(setFamilyMeasureHistograms({familyMeasureHistograms: state.familyMeasureHistograms}));
       this.store.dispatch(setPersonMeasureHistograms({personMeasureHistograms: state.personMeasureHistograms}));
-      this.store.dispatch(setZygosityFilter({zygosityFilter: state.zygosityFilter}));
+      this.store.dispatch(setAllZygosityFilters({ zygosityFilters: state.zygosityFilter }));
 
       this.router.navigate(navigationParams);
       if (state.geneScores.histogramType === 'categorical') {
