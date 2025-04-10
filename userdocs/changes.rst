@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+* 2025.4.2
+    * Fix command line tool for generation of dataset statistics.
+    * Fix phenotype data families data to load family tags.
+    * Fix queryies by family tags in Apache Impala Schema1 genotype storage.
+    * Support for queries by zygosity in statuses in DuckdDb genotype storage.
+    * Fix in liftover annotator.
+
 * 2025.4.1
     * Consistent CLI interface and implementation for all annotation.
     * Support for common reports in phenotype data groups.
