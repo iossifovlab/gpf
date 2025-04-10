@@ -515,7 +515,7 @@ class QueryTransformer:
                     "homozygous or heterozygous.",
                 )
 
-            kwargs["zygosity_in_status"] = kwargs.pop("zygosityInStatus")
+            kwargs["zygosity_in_status"] = zygosity
 
         if "personIds" in kwargs:
             kwargs["personIds"] = list(kwargs["personIds"])
