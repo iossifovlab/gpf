@@ -12,6 +12,17 @@ config_reference_schema = {
     },
 }
 
+config_inlineable_reference_schema = {
+    **config_reference_schema,
+    "config": {
+        "type": "list",
+        "valuesrules": {
+            "type": "dict",
+            "allow_unknown": True,
+        },
+    },
+}
+
 resource_schema = {
     "resource_id": {
         "type": "string",
@@ -195,7 +206,10 @@ dae_conf_schema = {
     "gene_profiles_config": {
         "type": "dict", "schema": config_reference_schema,
     },
-    "annotation": {"type": "dict", "schema": config_reference_schema},
+    "annotation": {
+        "type": "dict",
+        "schema": config_inlineable_reference_schema,
+    },
     "phenotype_data": {
         "type": "dict",
         "schema": {

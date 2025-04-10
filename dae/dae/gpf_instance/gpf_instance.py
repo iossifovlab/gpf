@@ -584,13 +584,29 @@ class GPFInstance:
         """Return the annotation pipeline config."""
         pipeline_config = []
         if self.dae_config.annotation is not None:
-            config_filename = self.dae_config.annotation.conf_file
-            if not os.path.exists(config_filename):
-                raise ValueError(
-                    f"annotation config file not found: {config_filename}")
+            if "config" in self.dae_config.annotation and \
+                "conf_file" in self.dae_config.annotation:
+                logger.warning(
+                    "Two annotation config files provided, "
+                    "both inline and in file.",
+                )
 
-            with open(config_filename, "rt", encoding="utf8") as infile:
-                pipeline_config = yaml.safe_load(infile.read())
+            if "config" in self.dae_config.annotation:
+                pipeline_config = self.dae_config.annotation.config
+            elif "conf_file" in self.dae_config.annotation and \
+                isinstance(self.dae_config.annotation.conf_file, str):
+                config_filename = self.dae_config.annotation.conf_file
+                if not os.path.exists(config_filename):
+                    raise ValueError(
+                        f"annotation config file not found: {config_filename}")
+
+                with open(config_filename, "rt", encoding="utf8") as infile:
+                    pipeline_config = yaml.safe_load(infile.read())
+            else:
+                logger.warning(
+                    "Path to annotation configuration or "
+                    "inlined configuration not provided!",
+                )
         if isinstance(pipeline_config, dict):
             annotators = pipeline_config.get("annotators", [])
             annotators.insert(
