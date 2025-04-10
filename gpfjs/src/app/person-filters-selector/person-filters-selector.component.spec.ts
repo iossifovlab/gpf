@@ -104,6 +104,7 @@ const datasetMock = new Dataset(
   false,
   true,
   true,
+  true,
 );
 
 const measureHistogramMock = new MeasureHistogram(

@@ -289,7 +289,7 @@ describe('FamilyFiltersBlockComponent', () => {
     // eslint-disable-next-line @stylistic/max-len
     const genotypeBrowserMock = new GenotypeBrowser(true, true, true, true, true, true, true, true, true, [], [], [], null, null, null, null, 0, false, false);
     // eslint-disable-next-line @stylistic/max-len
-    const datasetMock = new Dataset('datasetId', 'dataset', [], true, [], [], [], '', true, true, true, true, {enabled: true}, genotypeBrowserMock, null, null, null, true, false, true);
+    const datasetMock = new Dataset('datasetId', 'dataset', [], true, [], [], [], '', true, true, true, true, {enabled: true}, genotypeBrowserMock, null, null, null, true, false, true, true);
     component.dataset = datasetMock;
 
     jest.useFakeTimers();
