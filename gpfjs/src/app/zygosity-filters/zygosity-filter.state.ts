@@ -17,5 +17,6 @@ export const resetZygosityFilter = createAction(
 export const zygosityFilterReducer = createReducer(
   zygosityFilterInitialState,
   on(setZygosityFilter, (state, { zygosityFilter }) => zygosityFilter),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   on(reset, resetZygosityFilter, state => zygosityFilterInitialState),
 );
