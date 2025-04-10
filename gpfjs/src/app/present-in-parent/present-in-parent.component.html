@@ -77,4 +77,6 @@
     </div>
   </div>
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+
+  <gpf-zygosity-filter *ngIf="hasZygosity" [parentComponent]="'presentInParent'"></gpf-zygosity-filter>
 </div>

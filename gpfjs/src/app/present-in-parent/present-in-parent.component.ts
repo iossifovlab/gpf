@@ -38,6 +38,7 @@ export class PresentInParentComponent extends ComponentValidator implements OnIn
   ]);
   public selectedRarityType = '';
   @Input() public hasDenovo = false;
+  @Input() public hasZygosity: boolean;
 
   public constructor(protected store: Store) {
     super(store, 'presentInParent', selectPresentInParent);
