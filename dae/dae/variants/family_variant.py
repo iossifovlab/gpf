@@ -8,6 +8,7 @@ from deprecation import deprecated
 from dae.effect_annotation.effect import AlleleEffects
 from dae.pedigrees.family import Family, Person
 from dae.utils.variant_utils import (
+    BitmaskEnumTranslator,
     GenotypeType,
     is_all_unknown_genotype,
     is_reference_genotype,
@@ -122,6 +123,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         self._family_index: int | None = None
         self._family_attributes: dict = {}
         self._zygosity_in_status: int | None = None
+        self._zygosity_in_roles: int | None = None
 
         self.matched_gene_effects: list = []
 
@@ -244,30 +246,64 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         return self._best_state
 
     def _calc_zygosity_status(self) -> int:
-        zygosity_affected = 0
-        zygosity_unaffected = 0
+        translator = BitmaskEnumTranslator(
+            main_enum_type=Zygosity, partition_by_enum_type=Status,
+        )
+        zygosity = 0
         for idx, allele_pair in enumerate(self.genotype):
             if self.allele_index not in allele_pair:
                 continue
 
             pid = self.members_in_order[idx].person_id
+            person_status = self.family.persons[pid].status
 
-            zygosity = Zygosity.homozygous \
+            current_zygosity = Zygosity.homozygous \
                 if allele_pair[0] == allele_pair[1] \
                 else Zygosity.heterozygous
-            if self.family.persons[pid].status == Status.unaffected:
-                zygosity_unaffected = zygosity_unaffected | zygosity.value
-            elif self.family.persons[pid].status == Status.affected:
-                zygosity_affected = zygosity_affected | zygosity.value
 
-        total_zygosity = zygosity_unaffected
-        return total_zygosity | (zygosity_affected << 2)
+            if person_status == Status.unspecified:
+                continue
+            zygosity = translator.apply_mask(
+                zygosity, current_zygosity.value, person_status,
+            )
+
+        return zygosity
+
+    def _calc_zygosity_roles(self) -> int:
+        translator = BitmaskEnumTranslator(
+            main_enum_type=Zygosity, partition_by_enum_type=Role,
+        )
+        zygosity = 0
+
+        for idx, allele_pair in enumerate(self.genotype):
+            if self.allele_index not in allele_pair:
+                continue
+
+            pid = self.members_in_order[idx].person_id
+            person_role = self.family.persons[pid].role
+            if person_role is None:
+                raise ValueError(f"Person {pid} has no role!")
+
+            current_zygosity = Zygosity.homozygous \
+                if allele_pair[0] == allele_pair[1] \
+                else Zygosity.heterozygous
+
+            zygosity = translator.apply_mask(
+                zygosity, current_zygosity.value, person_role,
+            )
+        return zygosity
 
     @property
     def zygosity_in_status(self) -> int:
         if self._zygosity_in_status is None:
             self._zygosity_in_status = self._calc_zygosity_status()
         return self._zygosity_in_status
+
+    @property
+    def zygosity_in_roles(self) -> int:
+        if self._zygosity_in_roles is None:
+            self._zygosity_in_roles = self._calc_zygosity_roles()
+        return self._zygosity_in_roles
 
     @property
     @deprecated(details="Replace `best_st` with `best_state`")
@@ -526,6 +562,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         self._family_alleles: list[FamilyAllele] | None = None
         self._best_state = best_state
         self._zygosity_in_status: int | None = None
+        self._zygosity_in_roles: int | None = None
 
         self._fvuid: str | None = None
         if inheritance_in_members is None:
@@ -765,6 +802,18 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
                 zygosity = zygosity | fa_zygosity
             self._zygosity_in_status = zygosity
         return self._zygosity_in_status
+
+    @property
+    def zygosity_in_roles(self) -> int:
+        """Calculate and cache zygosity based on alternative alleles."""
+        if self._zygosity_in_roles is None:
+            zygosity = 0
+            for fa_zygosity in [
+                fa.zygosity_in_roles for fa in self.family_alt_alleles
+            ]:
+                zygosity = zygosity | fa_zygosity
+            self._zygosity_in_roles = zygosity
+        return self._zygosity_in_roles
 
     def to_record(self) -> dict[str, Any]:  # type: ignore
         assert self.gt is not None
