@@ -13,7 +13,7 @@ Example: Redefine the `Frequency` column in the preview table of `Example Datase
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 As an example, we are going to redefine the `Frequency` column for ``example_dataset``
-dataset to include attributes from annotation with GnomAD v3 genomic score.
+dataset to include attributes from annotation with GnomAD v4 genomic score.
 
 Edit the ``example_dataset.yaml`` dataset configuration in ``minimal_instance/datasets/example_dataset``:
 
@@ -24,38 +24,28 @@ Add the following section to the end:
     genotype_browser:
       columns:
         genotype:
-          genome_gnomad_v3_af_percent:
-            name: gnomAD v3 AF
-            source: genome_gnomad_v3_af_percent
+          gnomad_v4_genome_ALL_af:
+            name: gnomAD v4 AF
+            source: gnomad_v4_genome_ALL_af
             format: "%%.3f"
-          genome_gnomad_v3_ac:
-            name: gnomAD v3 AC
-            source: genome_gnomad_v3_ac
-            format: "%%d"
-          genome_gnomad_v3_an:
-            name: gnomAD v3 AN
-            source: genome_gnomad_v3_an
-            format: "%%d"
       column_groups:
         freq:
           name: "Frequency"
           columns: 
-            - genome_gnomad_v3_af_percent
-            - genome_gnomad_v3_ac
-            - genome_gnomad_v3_an    
+            - gnomad_v4_genome_ALL_af
 
 This overwrites the definition of the default preview column `Frequency` to
-include the gnomAD v3 frequencies. If we now browse the `Example Dataset`
+include the gnomAD v4 frequencies. If we now browse the `Example Dataset`
 and run variants preview in the genotype browser we will start seeing the 
 GnomAD attributes:
 
 .. image:: getting_started_files/helloworld-gnomad-frequency-preview-columns.png
 
 
-Example: Add GnomAD v3 columns to the variants download
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Example: Add GnomAD v4 column to the variants download
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-As an example let us add GnomAD v3 columns to the variants downloads.
+As an example let us add the GnomAD v4 column to the variants downloads.
 
 By default, each genotype study or dataset has a list of predefined columns used
 when downloading variants. The users can replace the default list of download
@@ -63,35 +53,23 @@ columns by defining the ``download_columns`` list or they can extend the predefi
 list of download columns by defining the ``download_columns_ext`` list of columns.
 
 In the example below we are going to use ``download_columns_ext`` to add
-GnomAD v3 columns to the properties of downloaded variants:
+the GnomAD v4 column to the properties of downloaded variants:
 
 .. code-block:: yaml
 
     genotype_browser:
       columns:
         genotype:
-          genome_gnomad_v3_af_percent:
-            name: gnomAD v3 AF
-            source: genome_gnomad_v3_af_percent
+          gnomad_v4_genome_ALL_af:
+            name: gnomAD v4 AF
+            source: gnomad_v4_genome_ALL_af
             format: "%%.3f"
-          genome_gnomad_v3_ac:
-            name: gnomAD v3 AC
-            source: genome_gnomad_v3_ac
-            format: "%%d"
-          genome_gnomad_v3_an:
-            name: gnomAD v3 AN
-            source: genome_gnomad_v3_an
-            format: "%%d"
       column_groups:
         freq:
           name: "Frequency"
           columns: 
-            - genome_gnomad_v3_af_percent
-            - genome_gnomad_v3_ac
-            - genome_gnomad_v3_an    
+            - gnomad_v4_genome_ALL_af
 
       download_columns_ext:
-        - genome_gnomad_v3_af_percent
-        - genome_gnomad_v3_ac
-        - genome_gnomad_v3_an    
+        - gnomad_v4_genome_ALL_af
 

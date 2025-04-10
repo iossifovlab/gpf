@@ -13,12 +13,12 @@ There is a `public Genomic Resources Repository (GRR)
 with a collection of public genomic resources available for use with
 GPF system.
 
-Example: Annotation with GnomAD 3.0
-+++++++++++++++++++++++++++++++++++
+Example: Annotation with GnomAD 4.1.0
++++++++++++++++++++++++++++++++++++++
 
 To annotate the genotype variants with `GnomAD` allele frequencies we should
 find the GnomAD genomic resource in our public GRR. We will choose to use
-``hg38/variant_frequencies/gnomAD_v3/genomes`` resource. If we navigate
+``hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL`` resource. If we navigate
 to the resource page we will see that this is an ``allele_score`` resource.
 So to use it in the annotation we should use the ``allele_score`` annotator.
 
@@ -27,7 +27,7 @@ following:
 
 .. code-block:: yaml
 
-    - allele_score: hg38/variant_frequencies/gnomAD_v3/genomes
+    - allele_score: hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL
 
 Store this annotation configuration in a file named ``minimal_instance/annotation.yaml``.
 
@@ -51,17 +51,15 @@ Now we can re-run the import for our examples:
     import_genotypes -f input_genotype_data/vcf_example.yaml
 
 Once the re-import finishes, the variants in our ``Example Dataset`` have
-additional attributes that come from the annotation with ``GnomAD v3.0``. By
-default annotation adds the following three attributes:
+additional attributes that come from the annotation with ``gnomAD v4.1.0``. By
+default, the annotation adds the following attribute:
 
-- ``genome_gnomad_v3_af_percent`` - allele frequencies as a percent;
-- ``genome_gnomad_v3_ac`` - allele count;
-- ``genome_gnomad_v3_an`` - number of sequenced alleles.
+- ``gnomad_v4_genome_ALL_af`` - allele frequencies as a percent;
 
 If we run the GPF development server and browse our ``Example Dataset``
 there is almost no difference. The only difference is that now in the
 genotype browser, the genomic scores section is not empty and we can query
-our variants using the ``genome_gnomad_v3_af_percent`` genomic score.
+our variants using the ``gnomad_v4_genome_ALL_af`` genomic score.
 
 .. image:: getting_started_files/helloworld-gnomad-annotation-with-genomic-scores-filter.png
 
