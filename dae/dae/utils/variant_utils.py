@@ -1,4 +1,6 @@
 import logging
+import math
+from enum import Enum
 
 import numpy as np
 import numpy.typing as npt
@@ -306,3 +308,90 @@ def complement(nucleotides: str) -> str:
 
 def reverse_complement(nucleotides: str) -> str:
     return complement(nucleotides[::-1])
+
+
+class BitmaskEnumTranslator:
+    """
+    Encoder and decoder of two enums into a single value.
+
+    It has two enum types: the main and the partition by enum.
+    For every enum value in the partition_by enum,
+    a tuple of bits corresponding to the main enum will be added to the value.
+    The amount of bits in the tuple will depend on how many bitwise values
+    the main enum holds. The amount of tuples depends on the amount of bitwise
+    values the partition by holds.
+
+    Enums provided to this class must have bitwise values, behavior with
+    enums without bitwise values is undefined.
+    """
+    def __init__(
+        self, *,
+        main_enum_type: type[Enum],
+        partition_by_enum_type: type[Enum],
+    ):
+
+        self.main_enum_type = main_enum_type
+        self.partition_by_enum_type = partition_by_enum_type
+        self.main_indexes = {}
+        self.partition_indexes = {}
+
+        main_enumerations = {
+            e.name: e.value for e in list(main_enum_type)
+            if e.value != 0
+        }
+
+        for name, value in main_enumerations.items():
+            if value == 0:
+                continue
+            value_bit = math.log2(value)
+            if not value_bit.is_integer():
+                raise ValueError(
+                    f"Encountered an invalid bitmask value {value} "
+                    f"in enum {self.partition_by_enum_type}",
+                )
+            self.main_indexes[name] = int(value_bit)
+
+        self.tuple_length = max(self.main_indexes.values()) + 1
+
+        partition_enumerations = {
+            e.name: e.value for e in list(partition_by_enum_type)
+        }
+        self.partition_indexes = {}
+
+        for name, value in partition_enumerations.items():
+            if value == 0:
+                raise ValueError(
+                    "Cannot create translator partitioning for enum"
+                    "if a partitioning value is 0",
+                )
+            value_bit = math.log2(value)
+            if not value_bit.is_integer():
+                raise ValueError(
+                    f"Encountered an invalid bitmask value {value} "
+                    f"in enum {self.partition_by_enum_type}",
+                )
+            self.partition_indexes[name] = int(value_bit)
+
+        self.partitions_count = max(self.partition_indexes.values()) + 1
+        self.total_bits = self.tuple_length * self.partitions_count
+
+        if self.total_bits > 64:
+            logger.warning(
+                "Created bitwise translator with values larger than 64 bits!",
+            )
+
+    def apply_mask(
+        self, mask: int, main_enum_value: int, partition_by_enum: Enum,
+    ) -> int:
+        """
+        Apply a mask filter over an existing mask and return the new mask.
+        """
+        if not isinstance(partition_by_enum, self.partition_by_enum_type):
+            raise TypeError(
+                f"{partition_by_enum} is a different enum type!"
+                f"Expected {self.partition_by_enum_type}",
+            )
+
+        bitshift_amount = \
+            self.partition_indexes[partition_by_enum.name] * self.tuple_length
+        return mask | (main_enum_value << bitshift_amount)
