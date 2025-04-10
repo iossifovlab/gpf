@@ -384,7 +384,7 @@ def get_dataset_info(dataset_id: str) -> dict[str, Any] | None:
 def get_directly_allowed_genotype_data(user: User) -> list[dict[str, Any]]:
     """Return list of genotype data the user has direct permissions to."""
     gpf_instance = get_wgpf_instance()
-    dataset_ids = gpf_instance.get_genotype_data_ids()
+    dataset_ids = gpf_instance.get_available_data_ids()
     user_groups = get_user_groups(user)
     datasets = {
         dataset.dataset_id: dataset
