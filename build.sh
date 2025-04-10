@@ -168,7 +168,7 @@ EOT
     build_run_container ln -sf ../projects/gpf.repo gpf
 
     build_run_container cd /wd/userdocs/administration
-    build_run_container ln -sf ../projects/data.repo gpf-getting-started
+    build_run_container ln -sf ../../projects/data.repo gpf-getting-started
   
     local d
     for d in /wd/projects/gpf.repo/dae /wd/projects/gpf.repo/wdae; do
