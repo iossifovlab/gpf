@@ -1,13 +1,13 @@
 GPF Getting Started Guide
 =========================
 
+Setup
+#####
+
 Prerequisites
-#############
++++++++++++++
 
 This guide assumes that you are working on a recent Linux box.
-
-Working version of anaconda or miniconda
-++++++++++++++++++++++++++++++++++++++++
 
 The GPF system is distributed as an Anaconda package using the ``conda``
 package manager.
@@ -45,13 +45,10 @@ instead of ``conda``. Mamba will speed up the installation of packages:
     conda install -c conda-forge mamba
 
 GPF Installation
-################
+++++++++++++++++
 
 The GPF system is developed in Python and supports Python 3.9 and up.
 The recommended way to set up the GPF development environment is to use Anaconda.
-
-Install GPF
-+++++++++++
 
 Create an empty Anaconda environment named `gpf`:
 
@@ -79,8 +76,8 @@ environment:
 
 This command is going to install GPF and all of its dependencies.
 
-Clone the example "gpf-getting-started" repository
-++++++++++++++++++++++++++++++++++++++++++++++++++
+Getting the demonstration data
+++++++++++++++++++++++++++++++
 
 .. code-block:: bash
 
@@ -102,8 +99,8 @@ repository located at
 <https://www.iossifovlab.com/distribution/public/genomic-resources-repository/>`_.
 Resources are used without caching.
 
-Run the GPF development web server
-##################################
+Starting the GPF web interface
+++++++++++++++++++++++++++++++
 
 By default, the GPF system looks for a file ``gpf_instance.yaml`` in the
 current directory (and its parent directories). If GPF finds such a file, it
@@ -137,8 +134,8 @@ keybinding for stopping long-running Linux commands in a terminal.
     is meant for development purposes only
     and is not suitable for serving the GPF system in production.
 
-Import genotype variants
-########################
+Importing genotype data
+#######################
 
 Import Tools and Import Project
 +++++++++++++++++++++++++++++++
@@ -147,10 +144,11 @@ Importing genotype data into a GPF instance involves multiple steps.
 The tool used to import genotype data is named ``import_genotypes``. This tool
 expects an import project file that describes the import.
 
-This tool supports importing variants from three formats:
+We support importing variants from multiple formats.
+
+For this demonstration, we will be importing from the following formats:
 
 * List of de novo variants
-* List of de novo CNV variants 
 * Variant Call Format (VCF)
 
 Example import of de novo variants

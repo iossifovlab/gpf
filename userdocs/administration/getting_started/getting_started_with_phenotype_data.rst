@@ -44,25 +44,10 @@ Phenotype databases have a short configuration file which points
 the system to their files, as well as specifying additional properties.
 When importing a phenotype database through the
 ``import_phenotypes`` tool, a configuration file is automatically
-generated. You may inspect the ``minimal_instance/pheno/mini_pheno/mini_pheno.yaml``
-configuration file generated from the import tool:
+generated at ``minimal_instance/pheno/mini_pheno/mini_pheno.yaml``.
 
-.. code:: yaml
-
-    browser_images_url: static/images/
-    id: mini_pheno
-    name: mini_pheno
-    regressions:
-      reg_1:
-        display_name: Regression one
-        instrument_name: instrument_1
-        jitter: 0.1
-        measure_names:
-        - measure_1
-    type: study
-
-Configure Genotype Study With Phenotype Data
-++++++++++++++++++++++++++++++++++++++++++++
+Configure a genotype study to use phenotype data
+++++++++++++++++++++++++++++++++++++++++++++++++
 
 To demonstrate how a study is configured with a phenotype database, we will
 be working with the already imported ``example_dataset`` dataset.
@@ -86,8 +71,8 @@ To enable the :ref:`Phenotype Browser`, add this line:
 
 When you restart the server, you should be able to see the 'Phenotype Browser' tab in the ``example_dataset`` dataset.
 
-Configure Family Filters in Genotype Browser
-+++++++++++++++++++++++++++++++++++++++++++++++
+Configure family filters in Genotype Browser
+++++++++++++++++++++++++++++++++++++++++++++
 
 A study or a dataset can have phenotype filters configured for its :ref:`Genotype Browser`
 when it has a phenotype database attached to it. The configuration looks like this:
@@ -108,7 +93,7 @@ After adding the family filters configuration, restart the web server and
 navigate to the Genotype Browser. You should be able to see the Advanced option
 under the Family Filters - this is where the family filters can be applied.
 
-Configure Phenotype Columns in Genotype Browser
+Configure phenotype columns in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
 
 Phenotype columns contain values from a phenotype database.
