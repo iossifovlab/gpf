@@ -79,7 +79,7 @@ class AbstractTaskGraphExecutor(TaskGraphExecutor):
         VerbosityConfiguration.set_verbosity(verbose)
 
         task_id = params["task_id"]
-        log_dir = params.get("log_dir", ".")
+        log_dir = params.get("task_log_dir", ".")
 
         root_logger = logging.getLogger()
         handler = configure_task_logging(log_dir, task_id, verbose)
@@ -204,7 +204,7 @@ class SequentialExecutor(AbstractTaskGraphExecutor):
         self._task2result: dict[Task, Any] = {}
         log_dir = ensure_log_dir(**kwargs)
         self._params = copy(kwargs)
-        self._params["log_dir"] = log_dir
+        self._params["task_log_dir"] = log_dir
 
     def _queue_task(self, task_node: Task) -> None:
         self._task_queue.append(task_node)
@@ -271,7 +271,7 @@ class DaskExecutor(AbstractTaskGraphExecutor):
         self._task_queue: deque[Task] = deque()
         log_dir = ensure_log_dir(**kwargs)
         self._params = copy(kwargs)
-        self._params["log_dir"] = log_dir
+        self._params["task_log_dir"] = log_dir
 
     def _queue_task(self, task_node: Task) -> None:
         self._task_queue.append(task_node)

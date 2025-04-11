@@ -355,7 +355,7 @@ class GPFInstance:
         if os.path.isfile(os.path.join(self.dae_dir, "gpdb.duckdb")):
             db_name = "gpdb.duckdb"
         else:
-            logger.warning("Using legacy sqlite gpdb!")
+            logger.info("Using legacy sqlite gpdb!")
             db_name = "gpdb"
         return GeneProfileDB(
             config,
@@ -592,7 +592,8 @@ class GPFInstance:
                 )
 
             if "config" in self.dae_config.annotation:
-                pipeline_config = self.dae_config.annotation.config
+                pipeline_config = [dict(annotator) for annotator in
+                                   self.dae_config.annotation.config]
             elif "conf_file" in self.dae_config.annotation and \
                 isinstance(self.dae_config.annotation.conf_file, str):
                 config_filename = self.dae_config.annotation.conf_file

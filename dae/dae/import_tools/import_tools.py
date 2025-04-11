@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Generator
 from copy import deepcopy
 from dataclasses import dataclass
-from functools import cache
+from functools import cache, cached_property
 from typing import Any, cast
 
 import yaml
@@ -355,13 +355,17 @@ class ImportProject:
         factory = get_import_storage_factory(storage_type)
         return factory()
 
-    @property
+    @cached_property
     def work_dir(self) -> str:
         """Where to store generated import files (e.g. parquet files)."""
-        return cast(
+        work_dir = cast(
             str,
             self.import_config.get("processing_config", {}).get("work_dir", ""),
         )
+        if work_dir == "":
+            work_dir = self._base_config_dir or ""
+
+        return work_dir
 
     @property
     def include_reference(self) -> bool:
@@ -649,7 +653,10 @@ class ImportProject:
     def build_annotation_pipeline(self) -> AnnotationPipeline:
         config = self.get_annotation_pipeline_config()
         gpf_instance = self.get_gpf_instance()
-        return build_annotation_pipeline(config, gpf_instance.grr)
+        return build_annotation_pipeline(
+            config, gpf_instance.grr,
+            work_dir=pathlib.Path(self.work_dir, "import_annotation"),
+        )
 
     def __str__(self) -> str:
         return f"Project({self.study_id})"
@@ -894,10 +901,12 @@ def construct_import_annotation_pipeline_config(
 
 
 def construct_import_annotation_pipeline(
-        gpf_instance: GPFInstance,
-        annotation_configfile: str | None = None) -> AnnotationPipeline:
+    gpf_instance: GPFInstance,
+    annotation_configfile: str | None = None,
+    work_dir: pathlib.Path | None = None,
+) -> AnnotationPipeline:
     """Construct annotation pipeline for importing data."""
     pipeline_config = construct_import_annotation_pipeline_config(
         gpf_instance, annotation_configfile)
     grr = gpf_instance.grr
-    return build_annotation_pipeline(pipeline_config, grr)
+    return build_annotation_pipeline(pipeline_config, grr, work_dir=work_dir)

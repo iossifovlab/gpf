@@ -177,7 +177,7 @@ class AnnotationTool:
             os.mkdir(self.args.work_dir)
         self.args.task_status_dir = os.path.join(
             self.args.work_dir, ".task-status")
-        self.args.log_dir = os.path.join(self.args.work_dir, ".task-log")
+        self.args.task_log_dir = os.path.join(self.args.work_dir, ".task-log")
 
     @staticmethod
     def produce_annotation_pipeline(

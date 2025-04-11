@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 import uuid
 from typing import Any, cast
@@ -41,12 +42,14 @@ class FsspecHandler(logging.StreamHandler):
 
 def ensure_log_dir(**kwargs: Any) -> str:
     """Ensure logging directory exists."""
-    log_dir = kwargs.get("log_dir")
-    if log_dir is not None:
-        log_dir = fs_utils.abspath(log_dir)
-        if not fs_utils.exists(log_dir):
-            fs, path = fs_utils.url_to_fs(log_dir)
-            fs.mkdir(path, exists_ok=True)
+    log_dir = kwargs.get("task_log_dir")
+    if log_dir is None:
+        log_dir = os.path.join(os.getcwd(), ".task-log")
+
+    log_dir = fs_utils.abspath(log_dir)
+    if not fs_utils.exists(log_dir):
+        fs, path = fs_utils.url_to_fs(log_dir)
+        fs.mkdir(path, exists_ok=True)
     return cast(str, log_dir)
 
 
