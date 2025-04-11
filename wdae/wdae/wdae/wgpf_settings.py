@@ -72,6 +72,11 @@ DATABASES = {
 
 LOGGING["handlers"].update({  # type: ignore
         # Log to a text file that can be rotated by logrotate
+        "console": {
+            "level": "WARNING",
+            "class": "logging.StreamHandler",
+            "formatter": "verbose_console",
+        },
         "logdebug": {
             "level": "DEBUG",
             "class": "logging.handlers.WatchedFileHandler",

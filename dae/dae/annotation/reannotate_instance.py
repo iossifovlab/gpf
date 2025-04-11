@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import pathlib
 from typing import Any, cast
@@ -19,6 +20,8 @@ from dae.schema2_storage.schema2_import_storage import Schema2ImportStorage
 from dae.studies.study import GenotypeData, GenotypeDataStudy
 from dae.task_graph.cli_tools import TaskGraphCli
 from dae.utils.verbosity_configuration import VerbosityConfiguration
+
+logger = logging.getLogger(__name__)
 
 
 class ReannotateInstanceTool(AnnotationTool):
@@ -150,7 +153,7 @@ class ReannotateInstanceTool(AnnotationTool):
         ]
 
         if not reannotatable_data:
-            print("Nothing to be done.")
+            logger.info("Nothing to be done.")
             return
 
         print("Studies to be reannotated:")
