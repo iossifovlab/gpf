@@ -6,77 +6,87 @@
     (itemsUpdateEvent)="updatePresentInParent($event)">
   </gpf-checkbox-list>
 
-  <div
-    *ngIf="
-      selectedValues.has('mother only') || selectedValues.has('father only') || selectedValues.has('mother and father')
-    ">
-    <em id="rarity-label">Rarity:</em>
-    <div>
-      <ng-container *ngFor="let rarityType of rarityTypes">
-        <label id="rarity-options">
-          <input
-            type="radio"
-            (change)="updateRarityType(rarityType)"
-            value="rarityType"
-            [checked]="selectedRarityType === rarityType" />
-          <span style="margin-left: 5px">{{ rarityType }}</span>
-        </label>
-      </ng-container>
-    </div>
-    <div *ngIf="selectedRarityType === 'rare' || selectedRarityType === 'interval'" class="row">
-      <div *ngIf="selectedRarityType === 'interval'" id="interval-fields">
-        <div class="field-wrapper">
-          <div class="label-field-wrapper">
-            <sup>From:</sup>
-            <input
-              type="number"
-              step="0.01"
-              class="fields"
-              [min]="0"
-              [max]="rarityIntervalEnd"
-              [ngModel]="rarityIntervalStart"
-              (ngModelChange)="updateRarityIntervalStart($event)" />
-          </div>
-          <span class="percent">%</span>
-        </div>
-        <span id="range-dash" class="material-symbols-outlined sm" *ngIf="selectedRarityType === 'interval'"
-          >maximize</span
-        >
-        <div class="field-wrapper">
-          <div class="label-field-wrapper">
-            <sup>To:</sup>
-            <input
-              type="number"
-              step="0.01"
-              class="fields"
-              [min]="rarityIntervalStart"
-              [max]="100"
-              [ngModel]="rarityIntervalEnd"
-              (ngModelChange)="updateRarityIntervalEnd($event)" />
-          </div>
-          <span class="percent">%</span>
-        </div>
-      </div>
+  <gpf-errors-alert *ngIf="!selectedValues.size" [errors]="errors"></gpf-errors-alert>
 
-      <div *ngIf="selectedRarityType === 'rare'" id="max-field">
-        <div class="field-wrapper">
-          <div class="label-field-wrapper">
-            <sup style="margin-right: 5px">Max:</sup>
+  <div style="display: flex; gap: 45px; width: 30vw">
+    <gpf-zygosity-filter
+      *ngIf="hasZygosity"
+      [parentComponent]="'presentInParent'"
+      style="width: 30%"></gpf-zygosity-filter>
+
+    <div
+      *ngIf="
+        selectedValues.has('mother only') ||
+        selectedValues.has('father only') ||
+        selectedValues.has('mother and father')
+      "
+      style="width: 50%">
+      <em id="rarity-label">Rarity:</em>
+      <div>
+        <ng-container *ngFor="let rarityType of rarityTypes">
+          <label id="rarity-options">
             <input
-              type="number"
-              step="0.01"
-              class="fields"
-              [min]="rarityIntervalStart"
-              [max]="100"
-              [ngModel]="rarityIntervalEnd"
-              (ngModelChange)="updateRarityIntervalEnd($event)" />
+              type="radio"
+              (change)="updateRarityType(rarityType)"
+              value="rarityType"
+              [checked]="selectedRarityType === rarityType" />
+            <span style="margin-left: 5px">{{ rarityType }}</span>
+          </label>
+        </ng-container>
+      </div>
+      <div *ngIf="selectedRarityType === 'rare' || selectedRarityType === 'interval'" class="row">
+        <div *ngIf="selectedRarityType === 'interval'" id="interval-fields">
+          <div class="field-wrapper">
+            <div class="label-field-wrapper">
+              <sup>From:</sup>
+              <input
+                type="number"
+                step="0.01"
+                class="fields"
+                [min]="0"
+                [max]="rarityIntervalEnd"
+                [ngModel]="rarityIntervalStart"
+                (ngModelChange)="updateRarityIntervalStart($event)" />
+            </div>
+            <span class="percent">%</span>
           </div>
-          <span class="percent">%</span>
+          <span id="range-dash" class="material-symbols-outlined sm" *ngIf="selectedRarityType === 'interval'"
+            >maximize</span
+          >
+          <div class="field-wrapper">
+            <div class="label-field-wrapper">
+              <sup>To:</sup>
+              <input
+                type="number"
+                step="0.01"
+                class="fields"
+                [min]="rarityIntervalStart"
+                [max]="100"
+                [ngModel]="rarityIntervalEnd"
+                (ngModelChange)="updateRarityIntervalEnd($event)" />
+            </div>
+            <span class="percent">%</span>
+          </div>
+        </div>
+
+        <div *ngIf="selectedRarityType === 'rare'" id="max-field">
+          <div class="field-wrapper">
+            <div class="label-field-wrapper">
+              <sup style="margin-right: 5px">Max:</sup>
+              <input
+                type="number"
+                step="0.01"
+                class="fields"
+                [min]="rarityIntervalStart"
+                [max]="100"
+                [ngModel]="rarityIntervalEnd"
+                (ngModelChange)="updateRarityIntervalEnd($event)" />
+            </div>
+            <span class="percent">%</span>
+          </div>
         </div>
       </div>
+      <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
   </div>
-  <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
-
-  <gpf-zygosity-filter *ngIf="hasZygosity" [parentComponent]="'presentInParent'"></gpf-zygosity-filter>
 </div>
