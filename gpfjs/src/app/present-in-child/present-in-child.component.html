@@ -6,4 +6,6 @@
     (itemsUpdateEvent)="updatePresentInChild($event)">
   </gpf-checkbox-list>
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+
+  <gpf-zygosity-filter *ngIf="hasZygosity" [parentComponent]="'presentInChild'"></gpf-zygosity-filter>
 </div>

@@ -45,5 +45,5 @@
 
   <gpf-errors-alert [errors]="errors" style="margin: initial"></gpf-errors-alert>
 
-  <gpf-zygosity-filter *ngIf="hasZygosity"></gpf-zygosity-filter>
+  <gpf-zygosity-filter *ngIf="hasZygosity" [parentComponent]="'pedigreeSelector'"></gpf-zygosity-filter>
 </div>

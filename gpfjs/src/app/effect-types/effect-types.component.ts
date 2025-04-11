@@ -13,7 +13,8 @@ import { ComponentValidator } from 'app/common/component-validator';
 
 @Component({
   selector: 'gpf-effect-types',
-  templateUrl: './effect-types.component.html'
+  templateUrl: './effect-types.component.html',
+  styleUrls: ['./effect-types.css']
 })
 export class EffectTypesComponent extends ComponentValidator implements OnInit {
   @Input() public variantTypes: Set<string> = new Set();

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { Validate } from 'class-validator';
 import { SetNotEmpty } from '../utils/set.validators';
 import { Store } from '@ngrx/store';
@@ -9,8 +9,10 @@ import { take } from 'rxjs';
 @Component({
   selector: 'gpf-present-in-child',
   templateUrl: './present-in-child.component.html',
+  styleUrls: ['./present-in-child.css'],
 })
 export class PresentInChildComponent extends ComponentValidator implements OnInit {
+  @Input() public hasZygosity: boolean;
   public presentInChildValues: Set<string> = new Set([
     'proband only', 'sibling only', 'proband and sibling', 'neither'
   ]);

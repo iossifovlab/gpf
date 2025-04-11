@@ -23,3 +23,8 @@
   -webkit-transform: rotate(45deg);
   transform: rotate(45deg);
 }
+
+:host::ng-deep .alert {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
