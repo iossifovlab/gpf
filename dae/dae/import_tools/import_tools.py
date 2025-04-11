@@ -653,7 +653,10 @@ class ImportProject:
     def build_annotation_pipeline(self) -> AnnotationPipeline:
         config = self.get_annotation_pipeline_config()
         gpf_instance = self.get_gpf_instance()
-        return build_annotation_pipeline(config, gpf_instance.grr)
+        return build_annotation_pipeline(
+            config, gpf_instance.grr,
+            work_dir=pathlib.Path(self.work_dir),
+        )
 
     def __str__(self) -> str:
         return f"Project({self.study_id})"
