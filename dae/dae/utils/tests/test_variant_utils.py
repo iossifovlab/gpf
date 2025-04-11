@@ -1,6 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pathlib
 import textwrap
+from enum import Enum
 
 import numpy as np
 import pytest
@@ -15,6 +16,7 @@ from dae.genomic_resources.testing import (
     setup_directories,
 )
 from dae.utils.variant_utils import (
+    BitmaskEnumTranslator,
     get_locus_ploidy,
     gt2str,
     reverse_complement,
@@ -23,7 +25,7 @@ from dae.utils.variant_utils import (
     trim_str_left,
     trim_str_right,
 )
-from dae.variants.attributes import Sex
+from dae.variants.attributes import Role, Sex, Status, Zygosity
 
 
 @pytest.fixture
@@ -249,3 +251,82 @@ def test_trim_parsimonious(
     pos, ref, alt = trim_parsimonious(*allele)
 
     assert (pos, ref, alt) == parsimonious
+
+
+@pytest.mark.parametrize(
+    "main_enum,partition_by_enum,value,partition_value,expected",
+    [
+        (
+            Zygosity, Status,
+            Zygosity.homozygous, Status.unaffected, 1 << (0 * 2),
+        ),
+        (
+            Zygosity, Status,
+            Zygosity.heterozygous, Status.unaffected, 2 << (0 * 2),
+        ),
+        (
+            Zygosity, Status,
+            Zygosity.homozygous, Status.affected, 1 << (1 * 2),
+        ),
+        (
+            Zygosity, Status,
+            Zygosity.heterozygous, Status.affected, 2 << (1 * 2),
+        ),
+        (
+            Zygosity, Role,
+            Zygosity.homozygous, Role.maternal_grandmother, 1 << (0 * 2),
+        ),
+        (
+            Zygosity, Role,
+            Zygosity.homozygous, Role.maternal_grandfather, 1 << (1 * 2),
+        ),
+        (
+            Zygosity, Role,
+            Zygosity.homozygous, Role.paternal_grandmother, 1 << (2 * 2),
+        ),
+        (
+            Zygosity, Role,
+            Zygosity.homozygous, Role.paternal_grandfather, 1 << (3 * 2),
+        ),
+        (
+            Zygosity, Role,
+            Zygosity.homozygous, Role.mom, 1 << (4 * 2),
+        ),
+        (
+            Zygosity, Role,
+            Zygosity.homozygous, Role.dad, 1 << (5 * 2),
+        ),
+        (
+            Zygosity, Role,
+            Zygosity.heterozygous, Role.dad, 2 << (5 * 2),
+        ),
+        (
+            Zygosity, Role,
+            Zygosity.homozygous, Role.parent, 1 << (6 * 2),
+        ),
+        (
+            Zygosity, Role,
+            Zygosity.homozygous, Role.half_sibling, 1 << (12 * 2),
+        ),
+        (
+            Zygosity, Role,
+            Zygosity.homozygous, Role.maternal_aunt, 1 << (16 * 2),
+        ),
+        (
+            Zygosity, Role,
+            Zygosity.homozygous, Role.spouse, 1 << (24 * 2),
+        ),
+        (
+            Zygosity, Role,
+            Zygosity.homozygous, Role.unknown, 1 << (25 * 2),
+        ),
+    ],
+)
+def test_bitmask_translator(
+        main_enum: type[Enum], partition_by_enum: type[Enum],
+        value: Enum, partition_value: Enum, expected: int,
+):
+    translator = BitmaskEnumTranslator(
+        main_enum_type=main_enum, partition_by_enum_type=partition_by_enum)
+
+    assert translator.apply_mask(0, value.value, partition_value) == expected
