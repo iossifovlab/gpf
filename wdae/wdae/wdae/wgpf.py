@@ -3,9 +3,11 @@ import logging
 import logging.config
 import os
 import pathlib
+import shutil
 import sys
 from typing import cast
 
+from dae.annotation.reannotate_instance import ReannotateInstanceTool
 import django
 from django.conf import settings
 from django.core.management import execute_from_command_line
@@ -150,6 +152,15 @@ def _run_run_command(
         "missing or outdated browser caches: %s",
         study_ids,
     )
+
+    work_dir = os.path.join(
+        wgpf_instance.dae_dir, ".reannotate-instance")
+    shutil.rmtree(work_dir, ignore_errors=True)
+
+    reannotation_tool = ReannotateInstanceTool(
+        ["--work-dir", work_dir], wgpf_instance)
+    reannotation_tool.run()
+
     for study_id in study_ids:
         logger.info("Generating browser cache for %s", study_id)
         build_pheno_browser([
