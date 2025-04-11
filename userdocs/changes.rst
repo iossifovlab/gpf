@@ -1,6 +1,9 @@
 Release Notes
 =============
 
+* 2025.4.3
+    * Bug fix in handling of permissions on phenotype data.
+
 * 2025.4.2
     * Fix command line tool for generation of dataset statistics.
     * Fix phenotype data families data to load family tags.
