@@ -7,13 +7,13 @@ import shutil
 import sys
 from typing import cast
 
-from dae.annotation.reannotate_instance import ReannotateInstanceTool
 import django
 from django.conf import settings
 from django.core.management import execute_from_command_line
 from gpf_instance.gpf_instance import WGPFInstance
 
 from dae import __version__  # type: ignore
+from dae.annotation.reannotate_instance import ReannotateInstanceTool
 from dae.pheno.build_pheno_browser import main as build_pheno_browser
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 

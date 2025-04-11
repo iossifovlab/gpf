@@ -82,11 +82,11 @@ def test_pheno_import_tool(
         jobs=None,
         dask_cluster_name=None,
         dask_cluster_config_file=None,
-        task_log_dir=None,
+        task_log_dir=f"{test_dir}/test_out/.task-log/first",
         task_ids=None,
         keep_going=False,
         force=False,
-        task_status_dir="./.task-progress",
+        task_status_dir=f"{test_dir}/test_out/.task-progress/first",
         no_cache=False,
     )
 

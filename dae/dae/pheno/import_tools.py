@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 import pathlib
 import sys
 
@@ -29,7 +30,8 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         action="count",
         help="Set the verbosity level. [default: %(default)s]",
     )
-    TaskGraphCli.add_arguments(parser, use_commands=False)
+    TaskGraphCli.add_arguments(parser, use_commands=False,
+                               default_task_status_dir=None)
     return parser
 
 
@@ -60,6 +62,14 @@ def main(argv: list[str] | None = None) -> int:
     import_config = PhenoImportConfig.model_validate(raw_config)
     gpf_instance = get_gpf_instance(import_config)
     delattr(args, "project")
+
+    if args.task_status_dir is None:
+        args.task_status_dir = os.path.join(
+            raw_config["work_dir"], ".task-progress", import_config.id)
+    if args.task_log_dir is None:
+        args.task_log_dir = os.path.join(
+            raw_config["work_dir"], ".task-log", import_config.id)
+
     import_pheno_data(import_config, gpf_instance, args)
 
     return 0
