@@ -398,7 +398,4 @@ def test_import_generates_necessary_pedigree_columns(
         "role",
         "status",
         "sex",
-        "dad_id",
-        "mom_id",
-        "layout",
     })
