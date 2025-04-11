@@ -149,7 +149,8 @@ class ReannotateInstanceTool(AnnotationTool):
         reannotatable_data: list[GenotypeData] = [
             study
             for study in self.gpf_instance.get_all_genotype_data()
-            if self._is_reannotatable(study, self.gpf_instance)
+            if (not study.is_group
+                and self._is_reannotatable(study, self.gpf_instance))
         ]
 
         if not reannotatable_data:
