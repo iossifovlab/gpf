@@ -24,6 +24,7 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
     RealAttrFilterType,
     SqlQueryBuilder,
     TagsQuery,
+    ZygosityQuery,
 )
 from dae.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status
@@ -392,7 +393,7 @@ class DuckDb2Variants(QueryVariantsBase):
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
         tags_query: TagsQuery | None = None,
-        zygosity_in_status: str | None = None,
+        zygosity_query: ZygosityQuery | None = None,
         **kwargs: Any,
     ) -> QueryRunner | None:
         # pylint: disable=too-many-arguments
@@ -428,7 +429,7 @@ class DuckDb2Variants(QueryVariantsBase):
             return_unknown=return_unknown,
             limit=query_limit,
             tags_query=tags_query,
-            zygosity_in_status=zygosity_in_status,
+            zygosity_query=zygosity_query,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
 
@@ -482,7 +483,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_unknown: bool | None = None,
         limit: int | None = None,
         tags_query: TagsQuery | None = None,
-        zygosity_in_status: str | None = None,
+        zygosity_query: ZygosityQuery | None = None,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
@@ -511,7 +512,7 @@ class DuckDb2Variants(QueryVariantsBase):
             return_unknown=return_unknown,
             limit=query_limit,
             tags_query=tags_query,
-            zygosity_in_status=zygosity_in_status,
+            zygosity_query=zygosity_query,
             **kwargs,
         )
         if runner is None:

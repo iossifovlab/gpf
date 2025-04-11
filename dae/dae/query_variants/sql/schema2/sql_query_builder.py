@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import logging
+import re
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any, cast
@@ -39,6 +40,7 @@ from dae.query_variants.attributes_query_inheritance import (
     inheritance_parser,
 )
 from dae.utils.regions import Region
+from dae.utils.variant_utils import BitmaskEnumTranslator
 from dae.variants.attributes import Inheritance, Role, Status, Zygosity
 
 logger = logging.getLogger(__name__)
@@ -86,8 +88,9 @@ class TagsQuery(BaseModel):
 
 
 class ZygosityQuery(BaseModel):
-    affected_zygosity: str | None = None
-    unaffected_zygosity: str | None = None
+    status_zygosity: str | None = None
+    parents_zygosity: str | None = None
+    children_zygosity: str | None = None
 
 
 class QueryBuilderBase:
@@ -1021,7 +1024,7 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         sexes: str | None = None,
         affected_statuses: str | None = None,
         tags_query: TagsQuery | None = None,
-        zygosity_in_status: int | None = None,
+        zygosity: ZygosityQuery | None = None,
     ) -> Select:
         """Build a family subclause query."""
         if tags_query is None:
@@ -1040,10 +1043,30 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             clause = self.statuses(affected_statuses)
             query = query.where(clause)
 
-        if zygosity_in_status is not None:
+        if zygosity is None:
+            zygosity = ZygosityQuery()
+
+        if zygosity.status_zygosity is not None:
+            status_zygosity = self.calc_zygosity_status_value(
+                affected_statuses, zygosity,
+            )
             expr = parse_one(
-                f"(fa.zygosity_in_status & {zygosity_in_status}) != 0")
+                f"(fa.zygosity_in_status & {status_zygosity}) != 0")
             query = query.where(expr)
+
+        zygosity_roles_mask = 0
+
+        if (
+            zygosity.parents_zygosity is not None
+            or zygosity.children_zygosity is not None
+        ):
+            zygosity_roles_mask = self.calc_zygosity_role_mask(
+                roles, zygosity,
+            )
+            expr = parse_one(
+                f"(fa.zygosity_in_roles & {zygosity_roles_mask}) != 0")
+            query = query.where(expr)
+
         if family_ids is not None or person_ids is not None:
             if person_ids is not None:
                 person_ids = [
@@ -1280,10 +1303,10 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
 
     @staticmethod
     def calc_zygosity_status_value(
-        affected_statuses: str | None, zygosity_in_status: str | None,
+        affected_statuses: str | None, zygosity: ZygosityQuery,
     ) -> int | None:
         """Extract from a query an int for filtering zygosity by status."""
-        if zygosity_in_status is None:
+        if zygosity.status_zygosity is None:
             return None
 
         affected = False
@@ -1299,13 +1322,59 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
                     affected_statuses, Status.unaffected.value):
                 unaffected = True
 
-        zygosity = Zygosity.from_name(zygosity_in_status)
+        status_zygosity = Zygosity.from_name(zygosity.status_zygosity)
         zygosity_value = 0
         if unaffected:
-            zygosity_value |= zygosity.value
+            zygosity_value |= status_zygosity.value
         if affected:
-            zygosity_value |= zygosity.value << 2
+            zygosity_value |= status_zygosity.value << 2
         return zygosity_value
+
+    @staticmethod
+    def calc_zygosity_role_mask(
+        roles: str | None, zygosity: ZygosityQuery,
+    ):
+        if (
+            zygosity.children_zygosity is None
+            and
+            zygosity.parents_zygosity is None
+        ) or roles is None:
+            return None
+
+        translator = BitmaskEnumTranslator(
+            main_enum_type=Zygosity, partition_by_enum_type=Role,
+        )
+
+        role_string_regex = r"(\(.*\)) and (\(.*\))"
+        match = re.match(role_string_regex, roles)
+
+        mask = 0
+        if zygosity.children_zygosity is not None:
+            children_zygosity = Zygosity.from_name(zygosity.children_zygosity)
+            if match is not None:
+                roles = match.groups()[0]
+                if roles is None:
+                    raise ValueError(f"Invalid extracted roles string {roles}")
+            if QueryBuilderBase.check_roles_query_value(roles, Role.prb.value):
+                mask = translator.apply_mask(
+                    0, children_zygosity.value, Role.prb)
+            if QueryBuilderBase.check_roles_query_value(roles, Role.sib.value):
+                mask = translator.apply_mask(
+                    0, children_zygosity.value, Role.sib)
+        if zygosity.parents_zygosity is not None:
+            parents_zygosity = Zygosity.from_name(zygosity.parents_zygosity)
+            if match is not None:
+                roles = match.groups()[1]
+                if roles is None:
+                    raise ValueError(f"Invalid extracted roles string {roles}")
+            if QueryBuilderBase.check_roles_query_value(roles, Role.mom.value):
+                mask = translator.apply_mask(
+                    0, parents_zygosity.value, Role.mom)
+            if QueryBuilderBase.check_roles_query_value(roles, Role.dad.value):
+                mask = translator.apply_mask(
+                    0, parents_zygosity.value, Role.dad)
+
+        return mask
 
     def build_family_variants_query(  # pylint: disable=too-many-arguments
         self, *,
@@ -1327,7 +1396,7 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         return_unknown: bool | None = None,
         limit: int | None = None,
         tags_query: TagsQuery | None = None,
-        zygosity_in_status: str | None = None,
+        zygosity_query: ZygosityQuery | None = None,
         **_kwargs: Any,
     ) -> list[str]:
         """Build a query for family variants."""
@@ -1343,10 +1412,6 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             return_reference=return_reference,
             return_unknown=return_unknown,
         )
-        zygosity_in_status_value = self.calc_zygosity_status_value(
-            affected_statuses=affected_statuses,
-            zygosity_in_status=zygosity_in_status,
-        )
 
         fquery = self.family_query(
             family_ids=family_ids,
@@ -1356,7 +1421,7 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             sexes=sexes,
             affected_statuses=affected_statuses,
             tags_query=tags_query,
-            zygosity_in_status=zygosity_in_status_value,
+            zygosity=zygosity_query,
         )
 
         batched_heuristics = self.calc_batched_heuristics(
