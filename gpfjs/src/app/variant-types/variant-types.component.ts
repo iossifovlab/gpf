@@ -9,7 +9,8 @@ import { cloneDeep } from 'lodash';
 
 @Component({
   selector: 'gpf-variant-types',
-  templateUrl: './variant-types.component.html'
+  templateUrl: './variant-types.component.html',
+  styleUrls: ['./variant-types.css']
 })
 export class VariantTypesComponent extends ComponentValidator implements OnInit {
   @Input() public variantTypes: Set<string> = new Set<string>([]);

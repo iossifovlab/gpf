@@ -3,3 +3,8 @@
   padding: 0;
   border: 0;
 }
+
+:host::ng-deep .alert {
+  margin-top: 0;
+  margin-bottom: 10px;
+}

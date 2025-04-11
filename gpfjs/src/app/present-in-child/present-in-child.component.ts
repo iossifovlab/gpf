@@ -9,6 +9,7 @@ import { take } from 'rxjs';
 @Component({
   selector: 'gpf-present-in-child',
   templateUrl: './present-in-child.component.html',
+  styleUrls: ['./present-in-child.css'],
 })
 export class PresentInChildComponent extends ComponentValidator implements OnInit {
   @Input() public hasZygosity: boolean;
