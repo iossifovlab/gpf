@@ -8,7 +8,10 @@ from dae.person_filters import make_pedigree_filter, make_pheno_filter
 from dae.person_filters.person_filters import make_pheno_filter_beta
 from dae.person_sets import PSCQuery
 from dae.query_variants.attributes_query import role_query
-from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
+from dae.query_variants.sql.schema2.sql_query_builder import (
+    TagsQuery,
+    ZygosityQuery,
+)
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance
 
@@ -502,20 +505,57 @@ class QueryTransformer:
                 else:
                     kwargs["familyIds"] = matching_family_ids
 
+        kwargs["zygosity_query"] = ZygosityQuery()
         if "zygosityInStatus" in kwargs:
             zygosity = kwargs.pop("zygosityInStatus")
             if not isinstance(zygosity, str):
-                raise ValueError("Invalid zygosity argument - not a string.")
+                raise ValueError(
+                    "Invalid zygosity in status argument - not a string.",
+                )
 
             zygosity = zygosity.lower()
 
             if zygosity not in ["homozygous", "heterozygous"]:
                 raise ValueError(
-                    f"Invalid zygosity value {zygosity}, expected either "
-                    "homozygous or heterozygous.",
+                    f"Invalid zygosity in status value {zygosity},"
+                    "expected either homozygous or heterozygous.",
                 )
 
-            kwargs["zygosity_in_status"] = zygosity
+            kwargs["zygosity_query"].status_zygosity = zygosity
+
+        if "zygosityInParent" in kwargs:
+            zygosity = kwargs.pop("zygosityInParent")
+            if not isinstance(zygosity, str):
+                raise ValueError(
+                    "Invalid zygosity in parents argument - not a string.",
+                )
+
+            zygosity = zygosity.lower()
+
+            if zygosity not in ["homozygous", "heterozygous"]:
+                raise ValueError(
+                    f"Invalid zygosity in parents value {zygosity},"
+                    "expected either homozygous or heterozygous.",
+                )
+
+            kwargs["zygosity_query"].parents_zygosity = zygosity
+
+        if "zygosityInChild" in kwargs:
+            zygosity = kwargs.pop("zygosityInChild")
+            if not isinstance(zygosity, str):
+                raise ValueError(
+                    "Invalid zygosity in children argument - not a string.",
+                )
+
+            zygosity = zygosity.lower()
+
+            if zygosity not in ["homozygous", "heterozygous"]:
+                raise ValueError(
+                    f"Invalid zygosity in children value {zygosity},"
+                    "expected either homozygous or heterozygous.",
+                )
+
+            kwargs["zygosity_query"].children_zygosity = zygosity
 
         if "personIds" in kwargs:
             kwargs["personIds"] = list(kwargs["personIds"])

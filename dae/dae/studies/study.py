@@ -29,7 +29,10 @@ from dae.person_sets import (
 )
 from dae.query_variants.base_query_variants import QueryVariantsBase
 from dae.query_variants.query_runners import QueryResult
-from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
+from dae.query_variants.sql.schema2.sql_query_builder import (
+    TagsQuery,
+    ZygosityQuery,
+)
 from dae.utils.regions import Region
 from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyVariant
@@ -298,7 +301,7 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         limit: int | None = None,
         study_filters: list[str] | None = None,
         tags_query: TagsQuery | None = None,
-        zygosity_in_status: str | None = None,
+        zygosity_query: ZygosityQuery | None = None,
         **kwargs: Any,
     ) -> QueryResult | None:
         """Build a query result."""
@@ -363,7 +366,7 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
                     return_unknown=return_unknown,
                     limit=limit,
                     tags_query=tags_query,
-                    zygosity_in_status=zygosity_in_status,
+                    zygosity_query=zygosity_query,
                     **kwargs,
                 )
 
