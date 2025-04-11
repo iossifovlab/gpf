@@ -1,5 +1,6 @@
 import logging
 import os
+import pathlib
 from collections.abc import Generator
 
 import yaml
@@ -280,13 +281,15 @@ class Schema2ImportStorage(ImportStorage):
         study_dir: str,
         region_size: int,
         allow_repeated_attributes: bool,  # noqa: FBT001
+        work_dir: pathlib.Path | None = None,
         *,
         full_reannotation: bool = False,
     ) -> TaskGraph:
         """Generate TaskGraph for reannotation of a given study."""
         graph = TaskGraph()
 
-        pipeline = construct_import_annotation_pipeline(gpf_instance)
+        pipeline = construct_import_annotation_pipeline(gpf_instance,
+                                                        work_dir=work_dir)
         study_layout = create_schema2_dataset_layout(study_dir)
         backup_layout = backup_schema2_study(study_dir)
         loader = ParquetLoader(backup_layout)

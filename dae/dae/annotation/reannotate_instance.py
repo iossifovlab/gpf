@@ -1,4 +1,5 @@
 import argparse
+import os
 import pathlib
 from typing import Any, cast
 
@@ -36,7 +37,7 @@ class ReannotateInstanceTool(AnnotationTool):
         parser.add_argument(
             "-w", "--work-dir",
             help="Directory to store intermediate output files in",
-            default="annotate_schema2_output")
+            default=".reannotate-instance")
         parser.add_argument(
             "-n", "--dry-run",
             action="store_true",
@@ -49,6 +50,11 @@ class ReannotateInstanceTool(AnnotationTool):
                  " a full reannotation.",
             action="store_true",
         )
+        parser.add_argument(
+            "-ar", "--allow-repeated-attributes", default=False,
+            action="store_true",
+            help="Rename repeated attributes instead of raising"
+            " an error.")
 
         CLIGenomicContext.add_context_arguments(parser)
         TaskGraphCli.add_arguments(parser)
@@ -134,7 +140,7 @@ class ReannotateInstanceTool(AnnotationTool):
         return str(
             pathlib.Path(match.groupdict()["parquet_path"]).parent.parent)
 
-    def prepare_for_annotation(self) -> None:
+    def run(self) -> None:
         if self.gpf_instance is None:
             raise ValueError("No configured GPF instance to work with!")
         reannotatable_data: list[GenotypeData] = [
@@ -150,18 +156,28 @@ class ReannotateInstanceTool(AnnotationTool):
         print("Studies to be reannotated:")
         for study in reannotatable_data:
             print(f"-> {study.study_id}")
+
         if self.args.dry_run:
             return
 
         for study in reannotatable_data:
-            print(f"Processing {study.study_id}...")
+            task_status_dir = os.path.join(
+                self.args.work_dir, ".task-progress", study.study_id)
+            task_log_dir = os.path.join(
+                self.args.work_dir, ".task-log", study.study_id)
+            pipeline_work_dir = pathlib.Path(
+                self.args.work_dir, "work", study.study_id)
             study_dir = self._get_parquet_dir(study, self.gpf_instance)
             graph = Schema2ImportStorage.generate_reannotate_task_graph(
                 self.gpf_instance, study_dir,
                 self.args.region_size, self.args.allow_repeated_attributes,
                 full_reannotation=self.args.full_reannotation,
+                work_dir=pipeline_work_dir,
             )
-            TaskGraphCli.process_graph(graph, **vars(self.args))
+            kwargs = {**vars(self.args),
+                      "task_status_dir": task_status_dir,
+                      "task_log_dir": task_log_dir}
+            TaskGraphCli.process_graph(graph, **kwargs)
 
 
 def cli(

@@ -655,7 +655,7 @@ class ImportProject:
         gpf_instance = self.get_gpf_instance()
         return build_annotation_pipeline(
             config, gpf_instance.grr,
-            work_dir=pathlib.Path(self.work_dir),
+            work_dir=pathlib.Path(self.work_dir, "import_annotation"),
         )
 
     def __str__(self) -> str:
@@ -901,10 +901,12 @@ def construct_import_annotation_pipeline_config(
 
 
 def construct_import_annotation_pipeline(
-        gpf_instance: GPFInstance,
-        annotation_configfile: str | None = None) -> AnnotationPipeline:
+    gpf_instance: GPFInstance,
+    annotation_configfile: str | None = None,
+    work_dir: pathlib.Path | None = None,
+) -> AnnotationPipeline:
     """Construct annotation pipeline for importing data."""
     pipeline_config = construct_import_annotation_pipeline_config(
         gpf_instance, annotation_configfile)
     grr = gpf_instance.grr
-    return build_annotation_pipeline(pipeline_config, grr)
+    return build_annotation_pipeline(pipeline_config, grr, work_dir=work_dir)

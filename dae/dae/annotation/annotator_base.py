@@ -27,12 +27,14 @@ class AnnotatorBase(Annotator):
             att_type, att_desc = source_type_desc[attribute_config.source]
             attribute_config.type = att_type
             attribute_config.description = att_desc
-
         self.work_dir: Path = cast(Path, info.parameters.get("work_dir"))
+        super().__init__(pipeline, info)
+
+    def open(self) -> AnnotatorBase:
+        super().open()
         if self.work_dir is not None:
             os.makedirs(self.work_dir, exist_ok=True)
-
-        super().__init__(pipeline, info)
+        return self
 
     @abc.abstractmethod
     def _do_annotate(self, annotatable: Annotatable, context: dict[str, Any]) \
