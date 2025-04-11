@@ -592,7 +592,8 @@ class GPFInstance:
                 )
 
             if "config" in self.dae_config.annotation:
-                pipeline_config = self.dae_config.annotation.config
+                pipeline_config = [dict(annotator) for annotator in
+                                   self.dae_config.annotation.config]
             elif "conf_file" in self.dae_config.annotation and \
                 isinstance(self.dae_config.annotation.conf_file, str):
                 config_filename = self.dae_config.annotation.conf_file
