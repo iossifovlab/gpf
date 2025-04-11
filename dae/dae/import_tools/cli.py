@@ -41,6 +41,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.task_status_dir is None:
         args.task_status_dir = fs_utils.join(
             project.work_dir, ".task-progress", project.study_id)
+    if args.task_log_dir is None:
+        args.task_log_dir = fs_utils.join(
+            project.work_dir, ".task-log", project.study_id)
 
     storage = project.get_import_storage()
     task_graph = storage.generate_import_task_graph(project)

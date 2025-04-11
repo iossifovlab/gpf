@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Generator
 from copy import deepcopy
 from dataclasses import dataclass
-from functools import cache
+from functools import cache, cached_property
 from typing import Any, cast
 
 import yaml
@@ -355,13 +355,17 @@ class ImportProject:
         factory = get_import_storage_factory(storage_type)
         return factory()
 
-    @property
+    @cached_property
     def work_dir(self) -> str:
         """Where to store generated import files (e.g. parquet files)."""
-        return cast(
+        work_dir = cast(
             str,
             self.import_config.get("processing_config", {}).get("work_dir", ""),
         )
+        if work_dir == "":
+            work_dir = self._base_config_dir or ""
+
+        return work_dir
 
     @property
     def include_reference(self) -> bool:

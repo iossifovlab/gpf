@@ -82,7 +82,7 @@ def test_pheno_import_tool(
         jobs=None,
         dask_cluster_name=None,
         dask_cluster_config_file=None,
-        log_dir="./.task-log",
+        task_log_dir=None,
         task_ids=None,
         keep_going=False,
         force=False,

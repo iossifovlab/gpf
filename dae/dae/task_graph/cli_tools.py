@@ -55,8 +55,8 @@ class TaskGraphCli:
             help="dask cluster config file",
         )
         executor_group.add_argument(
-            "--tasks-log-dir", dest="log_dir", type=str,
-            default="./.task-log",
+            "--task-log-dir", dest="task_log_dir", type=str,
+            default=None,
             help="Path to directory where to store tasks' logs",
         )
         # task_cache
