@@ -13,7 +13,7 @@ Example: Redefine the `Frequency` column in the preview table of `Example Datase
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 As an example, we are going to redefine the `Frequency` column for ``example_dataset``
-dataset to include attributes from annotation with GnomAD v4 genomic score.
+dataset to include attributes from the annotation with the GnomAD and ClinVar genomic scores.
 
 Edit the ``example_dataset.yaml`` dataset configuration in ``minimal_instance/datasets/example_dataset``:
 
@@ -28,24 +28,28 @@ Add the following section to the end:
             name: gnomAD v4 AF
             source: gnomad_v4_genome_ALL_af
             format: "%%.3f"
+          CLNSIG:
+            name: ClinVar
+            source: CLNSIG
       column_groups:
         freq:
           name: "Frequency"
           columns: 
             - gnomad_v4_genome_ALL_af
+            - CLNSIG
 
 This overwrites the definition of the default preview column `Frequency` to
-include the gnomAD v4 frequencies. If we now browse the `Example Dataset`
+include the GnomAD and ClinVar scores. If we now browse the `Example Dataset`
 and run variants preview in the genotype browser we will start seeing the 
-GnomAD attributes:
+new attributes:
 
 .. image:: getting_started_files/helloworld-gnomad-frequency-preview-columns.png
 
 
-Example: Add GnomAD v4 column to the variants download
-++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Example: Add new columns to the variants download
++++++++++++++++++++++++++++++++++++++++++++++++++
 
-As an example let us add the GnomAD v4 column to the variants downloads.
+As an example let us add the GnomAD and ClinVar columns to the variants downloads.
 
 By default, each genotype study or dataset has a list of predefined columns used
 when downloading variants. The users can replace the default list of download
@@ -53,7 +57,7 @@ columns by defining the ``download_columns`` list or they can extend the predefi
 list of download columns by defining the ``download_columns_ext`` list of columns.
 
 In the example below we are going to use ``download_columns_ext`` to add
-the GnomAD v4 column to the properties of downloaded variants:
+the GnomAD and ClinVar columns to the properties of downloaded variants:
 
 .. code-block:: yaml
 
@@ -64,12 +68,17 @@ the GnomAD v4 column to the properties of downloaded variants:
             name: gnomAD v4 AF
             source: gnomad_v4_genome_ALL_af
             format: "%%.3f"
+          CLNSIG:
+            name: ClinVar
+            source: CLNSIG
       column_groups:
         freq:
           name: "Frequency"
           columns: 
             - gnomad_v4_genome_ALL_af
+            - CLNSIG
 
       download_columns_ext:
         - gnomad_v4_genome_ALL_af
+        - CLNSIG
 

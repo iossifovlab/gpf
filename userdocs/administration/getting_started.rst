@@ -156,13 +156,13 @@ Example import of de novo variants
 
 Let us import a small list of de novo variants.
 
-We will need the list of de novo variants ``input_genotype_data/example.tsv``:
-
-.. literalinclude:: gpf-getting-started/input_genotype_data/example.tsv
-
-And a pedigree file that describes the families - ``input_genotype_data/example.ped``:
+A pedigree file that describes the families is needed - ``input_genotype_data/example.ped``:
 
 .. literalinclude:: gpf-getting-started/input_genotype_data/example.ped
+
+We will also need the list of de novo variants ``input_genotype_data/example.tsv``:
+
+.. literalinclude:: gpf-getting-started/input_genotype_data/example.tsv
 
 A project configuration file for importing this study - ``input_genotype_data/denovo_example.yaml`` - is also provided:
 

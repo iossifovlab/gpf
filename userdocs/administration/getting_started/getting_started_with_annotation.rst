@@ -42,16 +42,16 @@ Re-running GPF will automatically re-annotate any data that is not up to date:
   
     wgpf run
 
-The variants in our ``Example Dataset`` will now have
-additional attributes that come from the annotation with ``gnomAD v4.1.0``. By
-default, the annotation adds the following attribute:
+The variants in our ``Example Dataset`` will now have additional attributes that
+come from the annotation with GnomAD and ClinVar. By default, the annotation adds the following attributes:
 
 - ``gnomad_v4_genome_ALL_af`` - allele frequencies as a percent;
+- ``CLNSIG`` - germline classification for variant;
 
 If we browse our ``Example Dataset`` there is almost no difference.
 The only difference is that now in the
 genotype browser, the genomic scores section is not empty and we can query
-our variants using the ``gnomad_v4_genome_ALL_af`` genomic score.
+our variants using the ``gnomad_v4_genome_ALL_af`` and ``CLNSIG`` genomic scores.
 
 .. image:: getting_started_files/helloworld-gnomad-annotation-with-genomic-scores-filter.png
 
