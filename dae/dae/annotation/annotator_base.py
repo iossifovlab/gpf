@@ -30,7 +30,7 @@ class AnnotatorBase(Annotator):
         self.work_dir: Path = cast(Path, info.parameters.get("work_dir"))
         super().__init__(pipeline, info)
 
-    def open(self) -> AnnotatorBase:
+    def open(self) -> Annotator:
         super().open()
         if self.work_dir is not None:
             os.makedirs(self.work_dir, exist_ok=True)
