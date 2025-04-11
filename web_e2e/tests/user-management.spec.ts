@@ -211,6 +211,7 @@ test.describe('Users management', () => {
         'denovo_helloworld' +
         'iossifov_2014_liftover' +
         'multi_liftover' +
+        'pheno_helloworld' +
         'vcf_helloworld'
       );
     await expect(page.locator('[id="admin@iossifovlab.com-reset-password-button"]')).toBeVisible();
