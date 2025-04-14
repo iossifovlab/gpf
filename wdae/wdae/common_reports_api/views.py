@@ -180,7 +180,12 @@ class FamiliesDataDownloadView(QueryBaseView, DatasetAccessRightsView):
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        study = self.gpf_instance.get_genotype_data(dataset_id)
+        wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        assert wrapper is not None
+        if wrapper.is_genotype:
+            study = wrapper.genotype_data
+        else:
+            study = wrapper.phenotype_data
 
         if study is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -208,7 +213,12 @@ class FamiliesDataDownloadView(QueryBaseView, DatasetAccessRightsView):
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        study = self.gpf_instance.get_genotype_data(dataset_id)
+        wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        assert wrapper is not None
+        if wrapper.is_genotype:
+            study = wrapper.genotype_data
+        else:
+            study = wrapper.phenotype_data
 
         if study is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
