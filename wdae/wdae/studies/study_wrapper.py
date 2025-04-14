@@ -204,9 +204,9 @@ class StudyWrapperBase(WDAEStudy):
         result["genotype_browser_config"] = {
             key: config.genotype_browser.get(key, None) for key in [
                 "has_family_filters",
-                "has_family_filters_beta",
+                "has_family_pheno_filters",
                 "has_person_filters",
-                "has_person_filters_beta",
+                "has_person_pheno_filters",
                 "has_study_filters",
                 "has_present_in_child",
                 "has_present_in_parent",
