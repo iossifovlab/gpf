@@ -180,12 +180,13 @@ class FamiliesDataDownloadView(QueryBaseView, DatasetAccessRightsView):
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        study = self.gpf_instance.get_genotype_data(dataset_id)
+        wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        assert wrapper is not None
 
-        if study is None:
+        if wrapper is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        tsv = FamiliesLoader.to_tsv(study.families)
+        tsv = FamiliesLoader.to_tsv(wrapper.families)
         lines = [f"{ln}\n" for ln in tsv.strip().split("\n")]
 
         response = StreamingHttpResponse(
@@ -208,12 +209,13 @@ class FamiliesDataDownloadView(QueryBaseView, DatasetAccessRightsView):
         if not dataset_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        study = self.gpf_instance.get_genotype_data(dataset_id)
+        wrapper = self.gpf_instance.get_wdae_wrapper(dataset_id)
+        assert wrapper is not None
 
-        if study is None:
+        if wrapper is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        study_families = study.families
+        study_families = wrapper.families
 
         try:
             result = self.collect_families(study_families, tags_query)

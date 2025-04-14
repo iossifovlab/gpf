@@ -96,6 +96,12 @@ class WDAEStudy:
             return self.phenotype_data.parents
         return self.genotype_data.parents
 
+    @property
+    def families(self) -> FamiliesData:
+        if self.is_phenotype:
+            return self.phenotype_data.families
+        return self.genotype_data.families
+
     def get_children_ids(self, *, leaves=True) -> list[str]:
         if self.is_phenotype:
             return self.phenotype_data.get_children_ids(leaves=leaves)
@@ -338,10 +344,6 @@ class StudyWrapper(StudyWrapperBase):
     @property
     def is_group(self) -> bool:
         return self.genotype_data_study.is_group
-
-    @property
-    def families(self) -> FamiliesData:
-        return self.genotype_data_study.families
 
     @property
     def person_set_collections(self) -> dict[str, PersonSetCollection]:
