@@ -158,17 +158,47 @@ gpf-markdown-editor {
 }
 
 :host::ng-deep.phenotype-icon {
-  opacity: 60%;
+  color: #7e7e7e;
   font-size: 23px;
   font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
 :host::ng-deep.denovo-icon {
   font-variation-settings: "FILL" 1, "wght" 350, "GRAD" 0, "opsz" 24;
-  opacity: 60%;
+  color: #7e7e7e;
+  width: 9px;
 }
 
 :host::ng-deep.transmitted-icon {
   font-variation-settings: "FILL" 1, "wght" 350, "GRAD" 0, "opsz" 24;
-  opacity: 60%;
+  color: #7e7e7e;
+}
+
+:host::ng-deep.star-icon {
+  font-variation-settings: "FILL" 1, "wght" 300, "GRAD" 0, "opsz" 24;
+  color: #7e7e7e;
+  font-size: 11px;
+  transform: rotate(59deg) translate(-6px, 0);
+}
+
+/* icons in home page description */
+:host::ng-deep.description-icons {
+  font-variation-settings: "FILL" 1, "wght" 350, "GRAD" 0, "opsz" 24;
+  color: #7e7e7e;
+  vertical-align: top;
+}
+
+:host::ng-deep.denovo-description-icon {
+  font-variation-settings: "FILL" 1, "wght" 350, "GRAD" 0, "opsz" 24;
+  color: #7e7e7e;
+  vertical-align: top;
+  width: 14px;
+  font-size: 18px;
+}
+
+:host::ng-deep.denovo-star-description-icon {
+  font-variation-settings: "FILL" 1, "wght" 300, "GRAD" 0, "opsz" 24;
+  color: #7e7e7e;
+  font-size: 11px;
+  transform: rotate(59deg) translate(-10px, -1.5px);
 }

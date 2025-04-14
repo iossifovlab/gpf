@@ -99,21 +99,23 @@
             </h4>
             <div style="display: inline-flex; align-items: center">
               <div style="position: relative; top: 3px" [id]="entry.id + '-icons-wrapper'">
-                <span *ngIf="entry.hasDenovo" class="denovo-icon material-symbols-outlined md" title="denovo"
-                  >genetics</span
-                >
+                <div *ngIf="entry.hasDenovo" style="display: inline-flex">
+                  <span class="denovo-icon material-symbols-outlined md" title="denovo">genetics</span>
+                  <span class="star-icon material-symbols-outlined">kid_star</span>
+                </div>
+
                 <span
                   *ngIf="entry.hasTransmitted"
                   class="transmitted-icon material-symbols-outlined md"
                   title="transmitted"
-                  [ngStyle]="{ opacity: entry.accessRights ? '50%' : '20%' }"
+                  [ngStyle]="{ color: entry.accessRights ? '#7e7e7e' : '#dcdcdc' }"
                   >family_history</span
                 >
                 <span
                   *ngIf="entry.phenotypeData"
                   class="phenotype-icon material-symbols-outlined"
                   title="phenotype"
-                  [ngStyle]="{ opacity: entry.accessRights ? '50%' : '20%' }"
+                  [ngStyle]="{ color: entry.accessRights ? '#7e7e7e' : '#dcdcdc' }"
                   >how_to_reg</span
                 >
               </div>
