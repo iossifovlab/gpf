@@ -14,5 +14,6 @@ GPF Administration
    pheno
    pheno_measure_configuration
    gpf_tools
+   gpf_instance_configuration
    examples/examples
    data_appendix

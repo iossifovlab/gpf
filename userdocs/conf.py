@@ -9,8 +9,8 @@ import django
 from dae import __version__ as VERSION
 
 sys.path.insert(0, os.path.abspath('..'))
-os.environ['DJANGO_SETTINGS_MODULE'] = 'wdae.settings'
-django.setup()
+# os.environ['DJANGO_SETTINGS_MODULE'] = 'wdae.settings'
+# django.setup()
 
 
 # -*- coding: utf-8 -*-

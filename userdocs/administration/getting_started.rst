@@ -99,8 +99,8 @@ repository located at
 <https://www.iossifovlab.com/distribution/public/genomic-resources-repository/>`_.
 Resources are used without caching.
 
-Starting the GPF web interface
-++++++++++++++++++++++++++++++
+Starting and stopping the GPF web interface
++++++++++++++++++++++++++++++++++++++++++++
 
 By default, the GPF system looks for a file ``gpf_instance.yaml`` in the
 current directory (and its parent directories). If GPF finds such a file, it
@@ -113,6 +113,20 @@ You can set it using the following command:
 .. code-block:: bash
 
     export DAE_DB_DIR=$(pwd)/minimal_instance
+
+For this guide we use a ``gpf_instance.yaml`` file that is already provided in the
+``minimal_instance`` subdirectory:
+
+.. literalinclude:: gpf-getting-started/minimal_instance/gpf_instance.yaml
+
+GPF instance configuration requires a reference genome and gene models to 
+annotate variants with effects on genes. 
+For this giude we use HG38 reference genome and MANE 1.4 gene models.
+
+.. note::
+
+    For more on GPF instance configuration see :doc:`gpf_instance_configuration`.
+
 
 Now we can run the GPF development web server and browse our empty GPF instance:
 
@@ -149,22 +163,26 @@ We support importing variants from multiple formats.
 For this demonstration, we will be importing from the following formats:
 
 * List of de novo variants
-* Variant Call Format (VCF)
+* Variant Call Format (`VCF <https://samtools.github.io/hts-specs/VCFv4.3.pdf>`_)
 
 Example import of de novo variants
 ++++++++++++++++++++++++++++++++++
 
 Let us import a small list of de novo variants.
 
-A pedigree file that describes the families is needed - ``input_genotype_data/example.ped``:
+A pedigree file that describes the families is needed - 
+``input_genotype_data/example.ped``:
 
 .. literalinclude:: gpf-getting-started/input_genotype_data/example.ped
+    :tab-width: 10
 
 We will also need the list of de novo variants ``input_genotype_data/example.tsv``:
 
 .. literalinclude:: gpf-getting-started/input_genotype_data/example.tsv
+    :tab-width: 10
 
-A project configuration file for importing this study - ``input_genotype_data/denovo_example.yaml`` - is also provided:
+A project configuration file for importing this study - 
+``input_genotype_data/denovo_example.yaml`` - is also provided:
 
 .. literalinclude:: gpf-getting-started/input_genotype_data/denovo_example.yaml
 
@@ -174,6 +192,13 @@ To import this project run the following command:
 
     import_genotypes input_genotype_data/denovo_example.yaml
 
+.. note::
+
+    For more information on the import project file, see :doc:`import_tool`.
+
+    For more information on workgin with pedigree files, see :doc:`working_with_pedigree_files`.
+
+
 When the import finishes you can run the GPF development server using:
 
 .. code-block:: bash
@@ -182,6 +207,19 @@ When the import finishes you can run the GPF development server using:
 
 and browse the content of the GPF development server at ``http://localhost:8000``
 
+The home page of the GPF system will show the imported study ``denovo_example``.
+
+.. image:: getting_started_files/denovo-example-home-page.png
+
+If you follow the link to the study, and choose `Dataset Statistics` page, you 
+will see some summary information for the imported study: families and individuals
+included in the study, types of families and rates of de novo variants.
+
+.. image:: getting_started_files/denovo-example-dataset-statistics.png
+
+.. image:: getting_started_files/denovo-example-families-by-pedigree.png
+
+
 Example import of VCF variants
 ++++++++++++++++++++++++++++++
 
@@ -189,6 +227,7 @@ Similar to the sample denovo variants, there are also sample variants in VCF for
 They can be found in ``input_genotype_data/example.vcf`` and the same pedigree file from before is used.
 
 .. literalinclude:: gpf-getting-started/input_genotype_data/example.vcf
+    :tab-width: 10
 
 A project configuration file is again provided - ``input_genotype_data/vcf_example.yaml``.
 
