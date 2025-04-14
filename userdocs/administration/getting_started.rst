@@ -215,9 +215,28 @@ If you follow the link to the study, and choose `Dataset Statistics` page, you
 will see some summary information for the imported study: families and individuals
 included in the study, types of families and rates of de novo variants.
 
-.. image:: getting_started_files/denovo-example-dataset-statistics.png
+.. figure:: getting_started_files/denovo-example-dataset-statistics.png
 
-.. image:: getting_started_files/denovo-example-families-by-pedigree.png
+    Statistics of individuals by affected status and sex
+
+.. figure:: getting_started_files/denovo-example-families-by-pedigree.png
+
+    Statistics of families by family type
+
+.. figure:: getting_started_files/denovo-example-rate-de-novo-variants.png
+
+    Rate of de novo variants
+
+If you select `Genotype Browser` page, you will be able to see the imported
+de novo variants in the browser. The default filters search for LGD de novo
+variants. It happens, that all de novo variants imported in the `denovo_example`
+study are LGD variants. So, if you click `Preview` button all the imported variants 
+will be shown.
+
+.. figure:: getting_started_files/denovo-example-genotype-browser.png
+
+    Genotype Browser with de novo variants
+
 
 
 Example import of VCF variants
