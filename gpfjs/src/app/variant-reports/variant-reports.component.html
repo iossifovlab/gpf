@@ -20,8 +20,8 @@
         </ng-template>
       </li>
 
-      <li ngbNavItem [disabled]="!variantReport.denovoReport">
-        <a ngbNavLink>De Novo variants</a>
+      <li *ngIf="selectedDataset.hasDenovo" ngbNavItem [disabled]="!variantReport.denovoReport">
+        <a ngbNavLink>Rate of de Novo variants</a>
         <ng-template ngbNavContent>
           <ng-container *ngTemplateOutlet="deNovoVariants"></ng-container>
         </ng-template>
