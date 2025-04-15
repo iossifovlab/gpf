@@ -204,9 +204,9 @@ class StudyWrapperBase(WDAEStudy):
         result["genotype_browser_config"] = {
             key: config.genotype_browser.get(key, None) for key in [
                 "has_family_filters",
-                "has_family_filters_beta",
+                "has_family_pheno_filters",
                 "has_person_filters",
-                "has_person_filters_beta",
+                "has_person_pheno_filters",
                 "has_study_filters",
                 "has_present_in_child",
                 "has_present_in_parent",
@@ -221,6 +221,18 @@ class StudyWrapperBase(WDAEStudy):
                 "selected_inheritance_type_filter_values",
             ]
         }
+
+        if config.genotype_browser.get("has_family_structure_filter", None) \
+            is None \
+            and result["genotype_browser_config"]["has_family_pheno_filters"] \
+            is None:
+            result["genotype_browser_config"]["has_family_pheno_filters"] = True
+
+        if config.genotype_browser.get("has_person_structure_filter", None) \
+            is None \
+            and result["genotype_browser_config"]["has_person_pheno_filters"] \
+            is None:
+            result["genotype_browser_config"]["has_person_pheno_filters"] = True
 
         table_columns = []
         for column in config.genotype_browser.preview_columns:

@@ -91,9 +91,8 @@ genotype_browser_schema = {
     "schema": {
         "enabled": {"type": "boolean", "required": True},
         "has_family_filters": {"type": "boolean"},
-        "has_family_filters_beta": {
+        "has_family_pheno_filters": {
           "type": "boolean",
-          "default": False,
           "required": False,
         },
         "has_family_structure_filter": {
@@ -103,9 +102,8 @@ genotype_browser_schema = {
             },
         },
         "has_person_filters": {"type": "boolean"},
-        "has_person_filters_beta": {
+        "has_person_pheno_filters": {
           "type": "boolean",
-          "default": False,
           "required": False,
         },
         "has_study_filters": {
