@@ -134,6 +134,11 @@ class QueryVariantsBase(QueryVariants):
     def transform_roles_to_single_role_string(
         roles_in_parent: str | None, roles_in_child: str | None,
     ) -> str | None:
+        """
+        Transform roles arguments into singular roles argument.
+
+        Helper method for supporting legacy backends.
+        """
         if roles_in_parent and roles_in_child:
             roles = f"{roles_in_parent} and {roles_in_child}"
         elif roles_in_child or roles_in_parent:

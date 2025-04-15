@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import itertools
 import logging
-import re
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any, cast
@@ -40,7 +39,6 @@ from dae.query_variants.attributes_query_inheritance import (
     inheritance_parser,
 )
 from dae.utils.regions import Region
-from dae.utils.variant_utils import BitmaskEnumTranslator
 from dae.variants.attributes import Inheritance, Role, Status, Zygosity
 
 logger = logging.getLogger(__name__)
@@ -929,6 +927,11 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         roles_query: str,
         zygosity: int | None,
     ) -> Condition:
+        """
+        Construct a roles query condition.
+
+        Can match for zygosity in roles with a precalculated mask.
+        """
         query = condition(
             SqlQueryBuilder.build_roles_query(
                 roles_query, "fa.allele_in_roles"))
@@ -1326,52 +1329,6 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         if affected:
             zygosity_value |= status_zygosity.value << 2
         return zygosity_value
-
-    @staticmethod
-    def calc_zygosity_role_mask(
-        roles: str | None, zygosity: ZygosityQuery,
-    ):
-        if (
-            zygosity.children_zygosity is None
-            and
-            zygosity.parents_zygosity is None
-        ) or roles is None:
-            return None
-
-        translator = BitmaskEnumTranslator(
-            main_enum_type=Zygosity, partition_by_enum_type=Role,
-        )
-
-        role_string_regex = r"(\(.*\)) and (\(.*\))"
-        match = re.match(role_string_regex, roles)
-
-        mask = 0
-        if zygosity.children_zygosity is not None:
-            children_zygosity = Zygosity.from_name(zygosity.children_zygosity)
-            if match is not None:
-                roles = match.groups()[0]
-                if roles is None:
-                    raise ValueError(f"Invalid extracted roles string {roles}")
-            if QueryBuilderBase.check_roles_query_value(roles, Role.prb.value):
-                mask = translator.apply_mask(
-                    0, children_zygosity.value, Role.prb)
-            if QueryBuilderBase.check_roles_query_value(roles, Role.sib.value):
-                mask = translator.apply_mask(
-                    0, children_zygosity.value, Role.sib)
-        if zygosity.parents_zygosity is not None:
-            parents_zygosity = Zygosity.from_name(zygosity.parents_zygosity)
-            if match is not None:
-                roles = match.groups()[1]
-                if roles is None:
-                    raise ValueError(f"Invalid extracted roles string {roles}")
-            if QueryBuilderBase.check_roles_query_value(roles, Role.mom.value):
-                mask = translator.apply_mask(
-                    0, parents_zygosity.value, Role.mom)
-            if QueryBuilderBase.check_roles_query_value(roles, Role.dad.value):
-                mask = translator.apply_mask(
-                    0, parents_zygosity.value, Role.dad)
-
-        return mask
 
     def build_family_variants_query(  # pylint: disable=too-many-arguments
         self, *,
