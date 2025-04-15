@@ -75,7 +75,7 @@ export const familyMeasureHistogramsReducer = createReducer(
       rangeEnd: null,
       values: values,
       categoricalView: categoricalView,
-      roles: null
+      roles: roles
     };
     const measureHistograms = [...state];
     const histogramIndex = measureHistograms.findIndex(h => h.measure === measure);
@@ -135,7 +135,7 @@ export const personMeasureHistogramsReducer = createReducer(
       rangeEnd: rangeEnd,
       values: null,
       categoricalView: null,
-      roles: null
+      roles: roles
     };
     const measureHistograms = [...state];
     const histogramIndex = measureHistograms.findIndex(h => h.measure === measure);
@@ -158,7 +158,7 @@ export const personMeasureHistogramsReducer = createReducer(
       rangeEnd: null,
       values: values,
       categoricalView: categoricalView,
-      roles: null
+      roles: roles
     };
     const measureHistograms = [...state];
     const histogramIndex = measureHistograms.findIndex(h => h.measure === measure);

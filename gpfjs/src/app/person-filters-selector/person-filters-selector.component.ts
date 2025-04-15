@@ -176,7 +176,7 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
 
   private loadState(states: MeasureHistogramState[]): void {
     states.forEach(state => {
-      this.measuresService.getMeasureHistogramBeta(this.dataset.id, state.measure)
+      this.measuresService.getMeasureHistogramBeta(this.dataset.id, state.measure, state.roles)
         .subscribe(histogramData => {
           this.selectedMeasureHistograms.unshift({
             measureHistogram: histogramData,
