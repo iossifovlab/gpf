@@ -17,8 +17,8 @@
           <gpf-person-filters [dataset]="dataset" [isFamilyFilters]="false"> </gpf-person-filters>
         </ng-template>
       </li>
-      <li [ngbNavItem]="'advancedBeta'" *ngIf="showAdvancedBetaButton" id="advanced">
-        <a ngbNavLink>AdvancedBeta</a>
+      <li [ngbNavItem]="'phenoMeasures'" *ngIf="showPhenoMeasuresButton" id="advanced">
+        <a ngbNavLink>Pheno Measures</a>
         <ng-template ngbNavContent>
           <div id="filters">
             <gpf-person-filters-selector [dataset]="dataset" [isFamilyFilters]="false"> </gpf-person-filters-selector>

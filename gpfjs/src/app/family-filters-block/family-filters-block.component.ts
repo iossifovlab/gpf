@@ -24,7 +24,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() public dataset: Dataset;
   @ViewChild('nav') public ngbNav: NgbNav;
   public showAdvancedButton: boolean;
-  public showAdvancedBetaButton: boolean;
+  public showPhenoMeasuresButton: boolean;
   public hasContent = false;
 
   public tags: Array<string> = new Array<string>();
@@ -47,7 +47,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
       this.dataset.genotypeBrowserConfig.familyFilters.length !== 0 ||
       this.dataset.genotypeBrowserConfig.hasFamilyStructureFilter;
 
-    this.showAdvancedBetaButton = this.dataset.genotypeBrowserConfig.hasFamilyFiltersBeta;
+    this.showPhenoMeasuresButton = this.dataset.genotypeBrowserConfig.hasFamilyPhenoFilters;
 
     if (this.variantReportsService.getTags() !== undefined) {
       this.variantReportsService.getTags().subscribe(data => {
@@ -125,7 +125,7 @@ export class FamilyFiltersBlockComponent implements OnInit, AfterViewInit {
         });
       } else if (familyMeasureHistograms?.length) {
         setTimeout(() => {
-          this.ngbNav.select('advancedBeta');
+          this.ngbNav.select('phenoMeasures');
           this.hasContent = true;
         });
       }

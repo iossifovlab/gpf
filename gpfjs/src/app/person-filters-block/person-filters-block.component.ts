@@ -19,13 +19,13 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
   @Input() public dataset: Dataset;
   @ViewChild('nav') public ngbNav: NgbNav;
   public showAdvancedButton: boolean;
-  public showAdvancedBetaButton: boolean;
+  public showPhenoMeasuresButton: boolean;
 
   public constructor(private store: Store) { }
 
   public ngOnInit(): void {
     this.showAdvancedButton = this.dataset.genotypeBrowserConfig.personFilters.length !== 0;
-    this.showAdvancedBetaButton = this.dataset.genotypeBrowserConfig.hasPersonFiltersBeta;
+    this.showPhenoMeasuresButton = this.dataset.genotypeBrowserConfig.hasPersonPhenoFilters;
   }
 
   public ngAfterViewInit(): void {
@@ -39,7 +39,7 @@ export class PersonFiltersBlockComponent implements OnInit, AfterViewInit {
       } else if (personFiltersState?.personFilters?.length) {
         setTimeout(() => this.ngbNav.select('advanced'));
       } else if (personMeasureHistograms?.length) {
-        setTimeout(() => this.ngbNav.select('advancedBeta'));
+        setTimeout(() => this.ngbNav.select('phenoMeasures'));
       }
     });
   }

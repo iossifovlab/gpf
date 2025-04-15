@@ -177,8 +177,8 @@ export class GenotypeBrowser {
       json['variant_types'] as string[],
       json['selected_variant_types'] as string[],
       json['max_variants_count'] as number,
-      json['has_family_filters_beta'] as boolean,
-      json['has_person_filters_beta'] as boolean,
+      json['has_family_pheno_filters'] as boolean,
+      json['has_person_pheno_filters'] as boolean,
 
     );
   }
@@ -201,8 +201,8 @@ export class GenotypeBrowser {
     public readonly variantTypes: string[],
     public readonly selectedVariantTypes: string[],
     public readonly maxVariantsCount: number,
-    public readonly hasFamilyFiltersBeta: boolean,
-    public readonly hasPersonFiltersBeta: boolean,
+    public readonly hasFamilyPhenoFilters: boolean,
+    public readonly hasPersonPhenoFilters: boolean,
 
   ) { }
 
