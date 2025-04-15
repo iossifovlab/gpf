@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+* 2025.4.4
+    * Support for queries by zygosity in roles in DuckDb genotype storage.
+    * Support for inlining annotation in GPF instance configuration.
+    * Adjust import genotypes CLI tool default working directory.
+    * Adjust import phenotypes CLI tool default working directory.
+    * Support for automatic re-annotation in wgpf CLI tool.
+    * Fix pedigree loading in phenotype studies.
+    * Fix phenotype studies pedigree downloads.
+    * Update default genotype data configuration.
+
 * 2025.4.3
     * Bug fix in handling of permissions on phenotype data.
 
