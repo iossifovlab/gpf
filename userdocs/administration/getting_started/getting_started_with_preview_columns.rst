@@ -3,7 +3,7 @@ Getting Started with Preview and Download Columns
 
 Once you have annotated your variants the additional attributes produced by the
 annotation can be used in the variants preview table and in the variants download
-file. For each study dataset, you can specify which columns are shown in the 
+file. For each study and dataset you can specify which columns are shown in the 
 variants' table preview, as well as those which will be downloaded.
 
 In our example the annotation produces two additional attributes:
