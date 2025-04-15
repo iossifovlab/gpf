@@ -51,8 +51,8 @@ Re-running GPF will automatically re-annotate any data that is not up to date:
     wgpf run
 
 The variants in our ``Example Dataset`` will now have additional attributes that
-come from the annotation with GnomAD and ClinVar. By default, the annotation 
-adds the following attributes:
+come from the annotation with GnomAD and ClinVar. The annotation 
+added the following attributes to our variants:
 
 - ``gnomad_v4_genome_ALL_af``;
 - ``CLNSIG``;
