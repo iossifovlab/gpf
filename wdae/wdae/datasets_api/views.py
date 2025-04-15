@@ -98,7 +98,7 @@ class DatasetView(QueryBaseView):
         for dataset in datasets:
             if dataset.is_genotype:
                 res.append(StudyWrapperBase.build_genotype_data_all_datasets(
-                            dataset.genotype_data.config))
+                            dataset.genotype_data))
             else:
                 res.append(self._collect_single_dataset(user, dataset))
 
@@ -134,7 +134,7 @@ class DatasetView(QueryBaseView):
             }
             res = StudyWrapperBase.build_genotype_data_description(
                 self.gpf_instance,
-                dataset.genotype_data.config,
+                dataset.genotype_data,
                 person_set_collection_configs,
             )
         else:
@@ -436,15 +436,14 @@ class DatasetHierarchyView(QueryBaseView):
         }
 
         if dataset.is_genotype:
-            result["has_denovo"] = dataset.genotype_data.config["has_denovo"]
+            result["has_denovo"] = dataset.genotype_data.has_denovo
+            result["has_transmitted"] = dataset.genotype_data.has_transmitted
             result["phenotype_data"] = \
                 dataset.genotype_data.config["phenotype_data"]
-            result["has_transmitted"] = \
-                dataset.genotype_data.config["has_transmitted"]
         else:
             result["has_denovo"] = False
-            result["phenotype_data"] = dataset.phenotype_data.pheno_id
             result["has_transmitted"] = False
+            result["phenotype_data"] = dataset.phenotype_data.pheno_id
 
         return result
 

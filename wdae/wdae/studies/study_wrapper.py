@@ -145,8 +145,11 @@ class StudyWrapperBase(WDAEStudy):
         return result
 
     @staticmethod
-    def build_genotype_data_all_datasets(config: Box) -> dict[str, Any]:
+    def build_genotype_data_all_datasets(
+        genotype_data: GenotypeData,
+    ) -> dict[str, Any]:
         """Prepare response for all genotype datasets."""
+        config = genotype_data.config
         keys = [
             "id",
             "name",
@@ -159,6 +162,8 @@ class StudyWrapperBase(WDAEStudy):
         result = {
             key: config.get(key, None) for key in keys
         }
+        result["has_denovo"] = genotype_data.has_denovo
+        result["has_transmitted"] = genotype_data.has_transmitted
         result["name"] = result["name"] or result["id"]
         result["genotype_browser"] = config.genotype_browser.enabled
         result["common_report"] = {"enabled": config.common_report.enabled}
@@ -173,10 +178,11 @@ class StudyWrapperBase(WDAEStudy):
     @staticmethod
     def build_genotype_data_description(
         gpf_instance: Any,
-        config: Box,
+        genotype_data: GenotypeData,
         person_set_collection_configs: dict[str, Any] | None,
     ) -> dict[str, Any]:
         """Build and return genotype data group description."""
+        config = genotype_data.config
         keys = [
             "id",
             "name",
@@ -186,16 +192,15 @@ class StudyWrapperBase(WDAEStudy):
             "studies",
             "has_present_in_child",
             "has_present_in_parent",
-            "has_denovo",
             "has_zygosity",
-            "has_transmitted",
             "gene_browser",
             "description_editable",
         ]
         result = {
-            key: config.get(key, None) for key in keys
+            key: genotype_data.config.get(key, None) for key in keys
         }
-
+        result["has_denovo"] = genotype_data.has_denovo
+        result["has_transmitted"] = genotype_data.has_transmitted
         result["genotype_browser"] = config.genotype_browser.enabled
         result["phenotype_browser"] = config.get(
             "phenotype_browser",
