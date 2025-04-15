@@ -9,11 +9,13 @@ from dae.person_filters.person_filters import make_pheno_filter_beta
 from dae.person_sets import PSCQuery
 from dae.query_variants.attributes_query import role_query
 from dae.query_variants.sql.schema2.sql_query_builder import (
+    SqlQueryBuilder,
     TagsQuery,
     ZygosityQuery,
 )
 from dae.utils.regions import Region
-from dae.variants.attributes import Inheritance
+from dae.utils.variant_utils import BitmaskEnumTranslator
+from dae.variants.attributes import Inheritance, Role, Zygosity
 
 logger = logging.getLogger(__name__)
 
@@ -259,9 +261,9 @@ class QueryTransformer:
     @staticmethod
     def _add_roles_to_query(
         query: str | None, kwargs: dict[str, Any],
-    ) -> None:
+    ) -> str | None:
         if not query:
-            return
+            return None
 
         original_roles = kwargs.get("roles")
         if original_roles is not None:
@@ -269,9 +271,9 @@ class QueryTransformer:
                 original_roles = role_query.transform_query_string_to_tree(
                     original_roles,
                 )
-            kwargs["roles"] = f"{original_roles} and {query}"
-        else:
-            kwargs["roles"] = query
+            return f"{original_roles} and {query}"
+
+        return query
 
     def _handle_person_set_collection(
         self, kwargs: dict[str, Any],
@@ -353,17 +355,24 @@ class QueryTransformer:
             if "presentInChild" in kwargs:
                 present_in_child = set(kwargs["presentInChild"])
                 kwargs.pop("presentInChild")
+                children_roles_query = \
+                    self._present_in_child_to_roles(present_in_child)
+                children_roles_query = \
+                    self._add_roles_to_query(children_roles_query, kwargs)
+                kwargs["roles_in_child"] = children_roles_query
 
             if "presentInParent" in kwargs:
                 present_in_parent = \
                     set(kwargs["presentInParent"]["presentInParent"])
                 rarity = kwargs["presentInParent"].get("rarity", None)
                 kwargs.pop("presentInParent")
+                parent_roles_query = \
+                    self._present_in_parent_to_roles(present_in_parent)
 
-            roles_query = self._transform_present_in_child_and_parent_roles(
-                present_in_child, present_in_parent,
-            )
-            self._add_roles_to_query(roles_query, kwargs)
+                parent_roles_query = \
+                    self._add_roles_to_query(parent_roles_query, kwargs)
+
+                kwargs["roles_in_parent"] = parent_roles_query
 
             if present_in_parent != {"neither"} and rarity is not None:
                 frequency_filter = kwargs.get("frequency_filter", [])
@@ -523,12 +532,21 @@ class QueryTransformer:
 
             kwargs["zygosity_query"].status_zygosity = zygosity
 
+        translator = BitmaskEnumTranslator(
+            main_enum_type=Zygosity, partition_by_enum_type=Role,
+        )
         if "zygosityInParent" in kwargs:
             zygosity = kwargs.pop("zygosityInParent")
             if not isinstance(zygosity, str):
                 raise ValueError(
                     "Invalid zygosity in parents argument - not a string.",
                 )
+            if "roles_in_parent" not in kwargs:
+                raise ValueError(
+                    "Missing present in parent for parent zygosity",
+                )
+
+            roles_in_parent = kwargs["roles_in_parent"]
 
             zygosity = zygosity.lower()
 
@@ -537,8 +555,20 @@ class QueryTransformer:
                     f"Invalid zygosity in parents value {zygosity},"
                     "expected either homozygous or heterozygous.",
                 )
-
-            kwargs["zygosity_query"].parents_zygosity = zygosity
+            mask = 0
+            if SqlQueryBuilder.check_roles_query_value(
+                cast(str, roles_in_parent), Role.mom.value,
+            ):
+                mask = translator.apply_mask(
+                    mask, Zygosity.from_name(zygosity).value, Role.mom,
+                )
+            if SqlQueryBuilder.check_roles_query_value(
+                cast(str, roles_in_parent), Role.dad.value,
+            ):
+                mask = translator.apply_mask(
+                    mask, Zygosity.from_name(zygosity).value, Role.dad,
+                )
+            kwargs["zygosity_query"].parents_zygosity = mask
 
         if "zygosityInChild" in kwargs:
             zygosity = kwargs.pop("zygosityInChild")
@@ -546,6 +576,13 @@ class QueryTransformer:
                 raise ValueError(
                     "Invalid zygosity in children argument - not a string.",
                 )
+
+            if "roles_in_child" not in kwargs:
+                raise ValueError(
+                    "Missing present in child for child zygosity",
+                )
+
+            roles_in_child = kwargs["roles_in_child"]
 
             zygosity = zygosity.lower()
 
@@ -555,7 +592,21 @@ class QueryTransformer:
                     "expected either homozygous or heterozygous.",
                 )
 
-            kwargs["zygosity_query"].children_zygosity = zygosity
+            mask = 0
+
+            if SqlQueryBuilder.check_roles_query_value(
+                cast(str, roles_in_child), Role.prb.value,
+            ):
+                mask = translator.apply_mask(
+                    mask, Zygosity.from_name(zygosity).value, Role.prb,
+                )
+            if SqlQueryBuilder.check_roles_query_value(
+                cast(str, roles_in_child), Role.sib.value,
+            ):
+                mask = translator.apply_mask(
+                    mask, Zygosity.from_name(zygosity).value, Role.sib,
+                )
+            kwargs["zygosity_query"].children_zygosity = mask
 
         if "personIds" in kwargs:
             kwargs["personIds"] = list(kwargs["personIds"])
