@@ -222,6 +222,18 @@ class StudyWrapperBase(WDAEStudy):
             ]
         }
 
+        if config.genotype_browser.get("has_family_structure_filter", None) \
+            is None \
+            and result["genotype_browser_config"]["has_family_pheno_filters"] \
+            is None:
+            result["genotype_browser_config"]["has_family_pheno_filters"] = True
+
+        if config.genotype_browser.get("has_person_structure_filter", None) \
+            is None \
+            and result["genotype_browser_config"]["has_person_pheno_filters"] \
+            is None:
+            result["genotype_browser_config"]["has_person_pheno_filters"] = True
+
         table_columns = []
         for column in config.genotype_browser.preview_columns:
             logger.info(
