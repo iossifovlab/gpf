@@ -74,7 +74,8 @@ class QueryVariants(abc.ABC):
         family_ids: list[str] | None = None,
         person_ids: list[str] | None = None,
         inheritance: list[str] | None = None,
-        roles: str | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         variant_type: str | None = None,
@@ -101,7 +102,8 @@ class QueryVariants(abc.ABC):
         family_ids: list[str] | None = None,
         person_ids: list[str] | None = None,
         inheritance: list[str] | None = None,
-        roles: str | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         variant_type: str | None = None,
@@ -127,6 +129,18 @@ class QueryVariantsBase(QueryVariants):
     def __init__(self, families: FamiliesData) -> None:
         self.families = families
         self.serializer = VariantsDataSerializer.build_serializer()
+
+    @staticmethod
+    def transform_roles_to_single_role_string(
+        roles_in_parent: str | None, roles_in_child: str | None,
+    ) -> str | None:
+        if roles_in_parent and roles_in_child:
+            roles = f"{roles_in_parent} and {roles_in_child}"
+        elif roles_in_child or roles_in_parent:
+            roles = roles_in_child or roles_in_parent
+        else:
+            roles = None
+        return roles
 
     def has_affected_status_queries(self) -> bool:
         """Schema2 do support affected status queries."""

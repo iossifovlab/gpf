@@ -89,8 +89,8 @@ class TagsQuery(BaseModel):
 
 class ZygosityQuery(BaseModel):
     status_zygosity: str | None = None
-    parents_zygosity: str | None = None
-    children_zygosity: str | None = None
+    parents_zygosity: int | None = None
+    children_zygosity: int | None = None
 
 
 class QueryBuilderBase:
@@ -927,10 +927,16 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
     @staticmethod
     def roles(
         roles_query: str,
+        zygosity: int | None,
     ) -> Condition:
-        return condition(
+        query = condition(
             SqlQueryBuilder.build_roles_query(
                 roles_query, "fa.allele_in_roles"))
+        if zygosity is not None:
+            query = query.and_(
+                parse_one(f"fa.zygosity_in_roles & {zygosity} != 0"),
+            )
+        return query
 
     @staticmethod
     def sexes(
@@ -1020,7 +1026,8 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         family_ids: Sequence[str] | None = None,
         person_ids: Sequence[str] | None = None,
         inheritance: str | Sequence[str] | None = None,
-        roles: str | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         tags_query: TagsQuery | None = None,
@@ -1029,9 +1036,15 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         """Build a family subclause query."""
         if tags_query is None:
             tags_query = TagsQuery()
+        if zygosity is None:
+            zygosity = ZygosityQuery()
+
         query = self.family_base()
-        if roles is not None:
-            clause = self.roles(roles)
+        if roles_in_parent is not None:
+            clause = self.roles(roles_in_parent, zygosity.parents_zygosity)
+            query = query.where(clause)
+        if roles_in_child is not None:
+            clause = self.roles(roles_in_child, zygosity.children_zygosity)
             query = query.where(clause)
         if inheritance is not None:
             clause = self.inheritance(inheritance)
@@ -1043,28 +1056,12 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             clause = self.statuses(affected_statuses)
             query = query.where(clause)
 
-        if zygosity is None:
-            zygosity = ZygosityQuery()
-
         if zygosity.status_zygosity is not None:
             status_zygosity = self.calc_zygosity_status_value(
                 affected_statuses, zygosity,
             )
             expr = parse_one(
                 f"(fa.zygosity_in_status & {status_zygosity}) != 0")
-            query = query.where(expr)
-
-        zygosity_roles_mask = 0
-
-        if (
-            zygosity.parents_zygosity is not None
-            or zygosity.children_zygosity is not None
-        ):
-            zygosity_roles_mask = self.calc_zygosity_role_mask(
-                roles, zygosity,
-            )
-            expr = parse_one(
-                f"(fa.zygosity_in_roles & {zygosity_roles_mask}) != 0")
             query = query.where(expr)
 
         if family_ids is not None or person_ids is not None:
@@ -1384,7 +1381,8 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         family_ids: Sequence[str] | None = None,
         person_ids: Sequence[str] | None = None,
         inheritance: Sequence[str] | None = None,
-        roles: str | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         variant_type: str | None = None,
@@ -1417,12 +1415,20 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             family_ids=family_ids,
             person_ids=person_ids,
             inheritance=inheritance,
-            roles=roles,
+            roles_in_parent=roles_in_parent,
+            roles_in_child=roles_in_child,
             sexes=sexes,
             affected_statuses=affected_statuses,
             tags_query=tags_query,
             zygosity=zygosity_query,
         )
+
+        if roles_in_parent and roles_in_child:
+            roles = f"{roles_in_parent} and {roles_in_child}"
+        elif roles_in_child or roles_in_parent:
+            roles = roles_in_child or roles_in_parent
+        else:
+            roles = None
 
         batched_heuristics = self.calc_batched_heuristics(
             regions=regions,
