@@ -818,6 +818,20 @@ class GenotypeDataGroup(GenotypeData):
         return True
 
     @property
+    def has_denovo(self) -> bool:
+        has_denovo = cast(bool, self.config.get("has_denovo"))
+        return has_denovo or any(
+            study.has_denovo for study in self.studies
+        )
+
+    @property
+    def has_transmitted(self) -> bool:
+        has_transmitted = cast(bool, self.config.get("has_transmitted"))
+        return has_transmitted or any(
+            study.has_transmitted for study in self.studies
+        )
+
+    @property
     def families(self) -> FamiliesData:
         return self._families
 
