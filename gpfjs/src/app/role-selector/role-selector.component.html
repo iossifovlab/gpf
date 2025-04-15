@@ -22,7 +22,6 @@
         *ngFor="let suggestion of roleSuggestions"
         class="dropdown-item"
         type="button"
-        (click)="addToSelected(suggestion)"
         (onSelectionChange)="addToSelected(suggestion)"
         [title]="suggestion"
         [disabled]="isSelected(suggestion)">
