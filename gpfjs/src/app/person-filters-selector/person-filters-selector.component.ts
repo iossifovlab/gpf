@@ -113,11 +113,11 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
   public loadHistogram(data: {measureId: string, roles: string[]}): void {
     this.measuresService.getMeasureHistogramBeta(this.dataset.id, data.measureId, data.roles)
       .subscribe(histogramData => {
-        this.removeFromState(data.measureId);
+        const index = this.removeFromState(data.measureId);
         const defaultState = this.createMeasureDefaultState(histogramData);
         defaultState.roles = data.roles;
 
-        this.selectedMeasureHistograms.push({
+        this.selectedMeasureHistograms.splice(index, 0, {
           measureHistogram: histogramData,
           state: defaultState
         });
@@ -232,7 +232,7 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
     }
   }
 
-  public removeFromState(measure: string): void {
+  public removeFromState(measure: string): number {
     const index = this.selectedMeasureHistograms.findIndex(hist => hist.state.measure === measure);
     this.selectedMeasureHistograms.splice(index, 1);
 
@@ -244,6 +244,7 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
       this.store.dispatch(resetErrors({componentId: `personFilters: ${measure}`}));
     }
     this.validateState();
+    return index;
   }
 
   private validateState(): void {
