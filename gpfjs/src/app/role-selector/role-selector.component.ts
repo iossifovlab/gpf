@@ -28,7 +28,7 @@ export class RoleSelectorComponent implements OnInit {
       this.roles = roles;
       this.roleSuggestions = this.roles;
       if (this.initialState) {
-        this.selectedRoles = this.roles.filter(r => this.initialState.includes(r));
+        this.selectedRoles = this.initialState;
       }
     });
 
