@@ -556,18 +556,35 @@ class QueryTransformer:
                     "expected either homozygous or heterozygous.",
                 )
             mask = 0
-            if SqlQueryBuilder.check_roles_query_value(
-                cast(str, roles_in_parent), Role.mom.value,
-            ):
+            if roles_in_parent is None:
                 mask = translator.apply_mask(
                     mask, Zygosity.from_name(zygosity).value, Role.mom,
                 )
-            if SqlQueryBuilder.check_roles_query_value(
-                cast(str, roles_in_parent), Role.dad.value,
-            ):
                 mask = translator.apply_mask(
                     mask, Zygosity.from_name(zygosity).value, Role.dad,
                 )
+            else:
+                if SqlQueryBuilder.check_roles_query_value(
+                    cast(str, roles_in_parent), Role.mom.value,
+                ):
+                    mask = translator.apply_mask(
+                        mask, Zygosity.from_name(zygosity).value, Role.mom,
+                    )
+                if SqlQueryBuilder.check_roles_query_value(
+                    cast(str, roles_in_parent), Role.dad.value,
+                ):
+                    mask = translator.apply_mask(
+                        mask, Zygosity.from_name(zygosity).value, Role.dad,
+                    )
+                if SqlQueryBuilder.check_roles_query_value(
+                    cast(str, roles_in_parent), Role.mom.value | Role.dad.value,
+                ):
+                    mask = translator.apply_mask(
+                        mask, Zygosity.from_name(zygosity).value, Role.dad,
+                    )
+                    mask = translator.apply_mask(
+                        mask, Zygosity.from_name(zygosity).value, Role.mom,
+                    )
             kwargs["zygosity_query"].parents_zygosity = mask
 
         if "zygosityInChild" in kwargs:
@@ -594,18 +611,36 @@ class QueryTransformer:
 
             mask = 0
 
-            if SqlQueryBuilder.check_roles_query_value(
-                cast(str, roles_in_child), Role.prb.value,
-            ):
+            if roles_in_child is None:
                 mask = translator.apply_mask(
                     mask, Zygosity.from_name(zygosity).value, Role.prb,
                 )
-            if SqlQueryBuilder.check_roles_query_value(
-                cast(str, roles_in_child), Role.sib.value,
-            ):
                 mask = translator.apply_mask(
                     mask, Zygosity.from_name(zygosity).value, Role.sib,
                 )
+
+            else:
+                if SqlQueryBuilder.check_roles_query_value(
+                    cast(str, roles_in_child), Role.prb.value,
+                ):
+                    mask = translator.apply_mask(
+                        mask, Zygosity.from_name(zygosity).value, Role.prb,
+                    )
+                if SqlQueryBuilder.check_roles_query_value(
+                    cast(str, roles_in_child), Role.sib.value,
+                ):
+                    mask = translator.apply_mask(
+                        mask, Zygosity.from_name(zygosity).value, Role.sib,
+                    )
+                if SqlQueryBuilder.check_roles_query_value(
+                    cast(str, roles_in_child), Role.prb.value | Role.sib.value,
+                ):
+                    mask = translator.apply_mask(
+                        mask, Zygosity.from_name(zygosity).value, Role.prb,
+                    )
+                    mask = translator.apply_mask(
+                        mask, Zygosity.from_name(zygosity).value, Role.sib,
+                    )
             kwargs["zygosity_query"].children_zygosity = mask
 
         if "personIds" in kwargs:

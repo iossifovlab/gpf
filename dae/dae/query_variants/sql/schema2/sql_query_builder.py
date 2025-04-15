@@ -937,7 +937,7 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
                 roles_query, "fa.allele_in_roles"))
         if zygosity is not None:
             query = query.and_(
-                parse_one(f"fa.zygosity_in_roles & {zygosity} != 0"),
+                parse_one(f"fa.zygosity_in_roles & {zygosity} = {zygosity}"),
             )
         return query
 
@@ -1064,7 +1064,8 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
                 affected_statuses, zygosity,
             )
             expr = parse_one(
-                f"(fa.zygosity_in_status & {status_zygosity}) != 0")
+                "(fa.zygosity_in_status & "
+                f"{status_zygosity}) = {status_zygosity}")
             query = query.where(expr)
 
         if family_ids is not None or person_ids is not None:
