@@ -21,8 +21,17 @@ frequencies, we should
 find the GnomAD and ClinVar genomic resources in our public GRR. We will choose
 to use the following resources:
 
-* ``hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL``
-* ``hg38/scores/ClinVar_20240730``
+* ``hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL`` - the annotator by default
+  produces one additional attribute ``gnomad_v4_genome_ALL_af`` that is the
+  allele frequency for the variant (check the 
+  `hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL <https://grr.iossifovlab.com/hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL/index.html>`_
+  page for more information about the resource);
+
+* ``hg38/scores/ClinVar_20240730`` - the annotator by default produces one 
+  additional attribute ``CLNSIG`` that is the aggregate germline classification
+  for the variant (check the 
+  `hg38/scores/ClinVar_20240730 <https://grr.iossifovlab.com/hg38/scores/ClinVar_20240730/index.html>`_
+  page for more information about the resource).
 
 If we navigate to their resource pages, we will see that both resources
 are of the ``allele_score`` type.
@@ -58,5 +67,5 @@ The only difference is that now in the
 genotype browser, the genomic scores section is not empty and we can query
 our variants using the ``gnomad_v4_genome_ALL_af`` and ``CLNSIG`` genomic scores.
 
-.. image:: getting_started_files/helloworld-gnomad-annotation-with-genomic-scores-filter.png
+.. image:: getting_started_files/example-dataset-genotype-browser-gnomics-scores.png
 
