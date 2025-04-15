@@ -149,7 +149,7 @@ test.describe('App user access rights tests', () => {
   });
 
   test('should login admin and check whether the phenotype and transmitted icons ' +
-    'have the correct opacity value', async({ page }) => {
+    'have the correct color', async({ page }) => {
     await utils.login(page, userData.admin.username, userData.admin.password);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
@@ -159,15 +159,15 @@ test.describe('App user access rights tests', () => {
 
     await expect(
       page.locator('gpf-dataset-node a').filter({ hasText: utils.datasetIds.vcfHelloWorld }).locator('.phenotype-icon')
-    ).toHaveCSS('opacity', '0.5');
+    ).toHaveCSS('color', 'rgb(126, 126, 126)');
     await expect(
       page.locator('gpf-dataset-node a')
         .filter({ hasText: utils.datasetIds.vcfHelloWorld }).locator('.transmitted-icon')
-    ).toHaveCSS('opacity', '0.5');
+    ).toHaveCSS('color', 'rgb(126, 126, 126)');
   });
 
   test('should login researcher and check whether the phenotype and transmitted icons ' +
-    'have the correct opacity value', async({ page }) => {
+    'have the correct color', async({ page }) => {
     await utils.login(page, userData.normal.username, userData.normal.password);
     await page.locator('a:text("Datasets")').click();
     await page.locator('#datasets-dropdown-menu-button').click();
@@ -178,11 +178,11 @@ test.describe('App user access rights tests', () => {
 
     await expect(
       page.locator('gpf-dataset-node a').filter({ hasText: utils.datasetIds.vcfHelloWorld }).locator('.phenotype-icon')
-    ).toHaveCSS('opacity', '0.2');
+    ).toHaveCSS('color', 'rgb(220, 220, 220)');
     await expect(
       page.locator('gpf-dataset-node a')
         .filter({ hasText: utils.datasetIds.vcfHelloWorld }).locator('.transmitted-icon')
-    ).toHaveCSS('opacity', '0.2');
+    ).toHaveCSS('color', 'rgb(220, 220, 220)');
   });
 
   test('should login admin and give user access rights for Hello World Genotypes, ' +
