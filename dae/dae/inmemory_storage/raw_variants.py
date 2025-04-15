@@ -15,7 +15,9 @@ from dae.query_variants.attributes_query import (
     sex_query,
     variant_type_query,
 )
-from dae.query_variants.base_query_variants import QueryVariantsBase
+from dae.query_variants.base_query_variants import (
+    QueryVariantsBase,
+)
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.utils.regions import Region
@@ -580,7 +582,8 @@ class RawFamilyVariants(abc.ABC):
         family_ids: Sequence[str] | None = None,
         person_ids: Sequence[str] | None = None,
         inheritance: Sequence[str] | None = None,
-        roles: str | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         variant_type: str | None = None,
@@ -596,6 +599,9 @@ class RawFamilyVariants(abc.ABC):
         """Return a query runner for the family variants."""
         # In memory variants does not inherit QueryVariantsBase,
         # but is suitable for the tags to family IDs utility.
+        roles = QueryVariantsBase.transform_roles_to_single_role_string(
+                roles_in_parent, roles_in_child,
+        )
         tag_family_ids = QueryVariantsBase.tags_to_family_ids(
             self, tags_query,  # type: ignore
         )

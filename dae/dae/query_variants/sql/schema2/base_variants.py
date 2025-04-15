@@ -210,7 +210,8 @@ class SqlSchema2Variants(QueryVariantsBase):
         family_ids: list[str] | None = None,
         person_ids: list[str] | None = None,
         inheritance: list[str] | None = None,
-        roles: str | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         variant_type: str | None = None,
@@ -231,6 +232,9 @@ class SqlSchema2Variants(QueryVariantsBase):
             logger.warning(
                 "No family or summary allele table defined in %s", self.db)
             return None
+
+        roles = self.transform_roles_to_single_role_string(
+            roles_in_parent, roles_in_child)
 
         tag_family_ids = self.tags_to_family_ids(tags_query)
         if tag_family_ids is not None:
@@ -373,7 +377,8 @@ class SqlSchema2Variants(QueryVariantsBase):
         family_ids: list[str] | None = None,
         person_ids: list[str] | None = None,
         inheritance: list[str] | None = None,
-        roles: str | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
         sexes: str | None = None,
         affected_status: str | None = None,
         variant_type: str | None = None,
@@ -400,7 +405,8 @@ class SqlSchema2Variants(QueryVariantsBase):
             family_ids=family_ids,
             person_ids=person_ids,
             inheritance=inheritance,
-            roles=roles,
+            roles_in_parent=roles_in_parent,
+            roles_in_child=roles_in_child,
             sexes=sexes,
             affected_status=affected_status,
             variant_type=variant_type,
