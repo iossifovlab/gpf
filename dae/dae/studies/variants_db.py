@@ -72,7 +72,6 @@ preview_columns = [
 	"variant",
 	"genotype",
 	"effect",
-	"gene_scores",
 	"freq"
 ]
 
@@ -93,18 +92,17 @@ download_columns = [
 	"effect",
 	"geneeffect",
 	"effectdetails",
-	"gene_scores",
 ]
 
-summary_preview_columns = ["variant", "effect", "scores", "freq"]
-summary_download_columns = ["variant", "effect", "scores", "freq"]
+summary_preview_columns = ["variant", "effect", "freq"]
+summary_download_columns = ["variant", "effect", "freq"]
 
 [genotype_browser.column_groups]
 effect.name = "effect"
 effect.columns = ["worst_effect", "genes"]
 
-gene_scores.name = "vulnerability/intolerance"
-gene_scores.columns = ["lgd_rank", "rvis_rank", "pli_rank"]
+freq.name = "frequency"
+freq.columns = ["allele_count", "allele_freq"]
 
 family.name = "family"
 family.columns = ["family_id", "study"]
@@ -121,9 +119,6 @@ carriers.columns = ["carrier_person_ids", "carrier_person_attributes"]
 phenotypes.name = "phenotypes"
 phenotypes.columns = ["family_phenotypes", "carrier_phenotypes"]
 
-freq.name = "Frequency"
-freq.columns = ["exome_gnomad_af_percent", "genome_gnomad_af_percent"]
-
 [genotype_browser.columns.genotype]
 genotype.name = "genotype"
 genotype.source = "pedigree"
@@ -133,18 +128,6 @@ worst_effect.source = "worst_effect"
 
 genes.name = "genes"
 genes.source = "genes"
-
-lgd_rank.name = "LGD rank"
-lgd_rank.source = "LGD_rank"
-lgd_rank.format = "%%d"
-
-rvis_rank.name="RVIS rank"
-rvis_rank.source = "RVIS_rank"
-rvis_rank.format="%%d"
-
-pli_rank.name="pLI rank"
-pli_rank.source="pLI_rank"
-pli_rank.format="%%d"
 
 family_id.name = "family id"
 family_id.source = "family"
@@ -210,8 +193,8 @@ effectdetails.source = "effect_details"
 
 # VARIANT FREQUENCY
 
-alt_alleles.name = "alt alleles"
-alt_alleles.source = "af_allele_count"
+allele_count.name = "allele count"
+allele_count.source = "af_allele_count"
 
 par_called.name = "parents called"
 par_called.source = "af_parents_called_count"
@@ -470,7 +453,7 @@ class VariantsDb:
                 study_config, self.genome, self.gene_models,
             )
 
-            return GenotypeDataStudy(study_config, variants)
+            return GenotypeDataStudy(study_config, variants)  # type: ignore
         except Exception:  # pylint: disable=broad-except
             logger.exception("unable to create study %s", study_config.id)
             return None

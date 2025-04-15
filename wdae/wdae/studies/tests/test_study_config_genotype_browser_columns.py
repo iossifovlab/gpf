@@ -62,7 +62,7 @@ def test_genotype_browser_preview_columns_default(
     config = trio_study.config.genotype_browser
 
     assert config.preview_columns == [
-        "family", "variant", "genotype", "effect", "gene_scores", "freq",
+        "family", "variant", "genotype", "effect", "freq",
     ]
 
 
@@ -78,7 +78,6 @@ def test_genotype_browser_download_columns_default(
         "carriers", "inheritance", "phenotypes",
         "par_called", "allele_freq",
         "effect", "geneeffect", "effectdetails",
-        "gene_scores",
     ]
 
 
@@ -144,9 +143,9 @@ def test_study_wrapper_preview_columns_ext(
                 - aaa
         """)),
     )
-    wrapper = StudyWrapper(study, None, None, None)  # type: ignore
+    wrapper = StudyWrapper(study, None, None, gpf_fixture)  # type: ignore
     assert wrapper.preview_columns == [
-        "family", "variant", "genotype", "effect", "gene_scores", "freq", "aaa",
+        "family", "variant", "genotype", "effect", "freq", "aaa",
     ]
 
 
@@ -167,13 +166,12 @@ def test_study_wrapper_download_columns_ext(
                 - aaa
         """)),
     )
-    wrapper = StudyWrapper(study, None, None, None)  # type: ignore
+    wrapper = StudyWrapper(study, None, None, gpf_fixture)  # type: ignore
     assert wrapper.download_columns == [
         "family", "study_phenotype", "variant", "variant_extra",
         "family_person_ids", "family_structure", "best", "family_genotype",
         "carriers", "inheritance", "phenotypes",
         "par_called", "allele_freq",
         "effect", "geneeffect", "effectdetails",
-        "gene_scores",
         "aaa",
     ]
