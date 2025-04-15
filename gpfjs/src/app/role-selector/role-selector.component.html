@@ -31,7 +31,7 @@
   </div>
 
   <div id="roles-list">
-    <div *ngFor="let selectedRole of selectedRoles" class="role-wrapper">
+    <div *ngFor="let selectedRole of initialState" class="role-wrapper">
       <button (click)="removeFromSelected(selectedRole)" class="remove-role">
         <span [id]="'remove-' + selectedRole" class="material-symbols-outlined">close</span>
       </button>
