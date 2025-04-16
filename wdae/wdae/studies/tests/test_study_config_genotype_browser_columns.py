@@ -62,7 +62,7 @@ def test_genotype_browser_preview_columns_default(
     config = trio_study.config.genotype_browser
 
     assert config.preview_columns == [
-        "family", "variant", "genotype", "effect", "freq",
+        "family", "variant", "genotype", "effect", "frequency",
     ]
 
 
@@ -145,7 +145,7 @@ def test_study_wrapper_preview_columns_ext(
     )
     wrapper = StudyWrapper(study, None, None, gpf_fixture)  # type: ignore
     assert wrapper.preview_columns == [
-        "family", "variant", "genotype", "effect", "freq", "aaa",
+        "family", "variant", "genotype", "effect", "frequency", "aaa",
     ]
 
 

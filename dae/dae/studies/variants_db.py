@@ -69,7 +69,7 @@ preview_columns = [
 	"variant",
 	"genotype",
 	"effect",
-	"freq"
+	"frequency"
 ]
 
 download_columns = [
@@ -98,8 +98,8 @@ summary_download_columns = ["variant", "effect", "freq"]
 effect.name = "effect"
 effect.columns = ["worst_effect", "genes"]
 
-freq.name = "frequency"
-freq.columns = ["allele_count", "allele_freq"]
+frequency.name = "frequency"
+frequency.columns = ["allele_freq"]
 
 family.name = "family"
 family.columns = ["family_id", "study"]
@@ -196,7 +196,7 @@ allele_count.source = "af_allele_count"
 par_called.name = "parents called"
 par_called.source = "af_parents_called_count"
 
-allele_freq.name = "allele frequency"
+allele_freq.name = "study AF"
 allele_freq.source = "af_allele_freq"
 
 # SUMMARY VARIANTS
