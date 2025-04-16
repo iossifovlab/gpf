@@ -38,4 +38,6 @@
   </div>
 
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+
+  <gpf-zygosity-filter *ngIf="hasZygosity" [parentComponent]="'carrierGender'"></gpf-zygosity-filter>
 </div>

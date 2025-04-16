@@ -1,5 +1,5 @@
 import { Gender } from './gender';
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ComponentValidator } from 'app/common/component-validator';
 import { ValidateNested } from 'class-validator';
@@ -15,6 +15,7 @@ export class GenderComponent extends ComponentValidator implements OnInit {
   @ValidateNested()
   public gender = new Gender();
   public supportedGenders = ['male', 'female', 'unspecified'];
+  @Input() public hasZygosity: boolean;
 
   public constructor(protected store: Store) {
     super(store, 'genders', selectGenders);
