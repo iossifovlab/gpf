@@ -153,7 +153,6 @@ class StudyWrapperBase(WDAEStudy):
         keys = [
             "id",
             "name",
-            "phenotype_tool",
             "has_denovo",
             "has_zygosity",
             "phenotype_data",
@@ -173,6 +172,11 @@ class StudyWrapperBase(WDAEStudy):
             "phenotype_browser",
             result["phenotype_data"] is not None,
         )
+        result["phenotype_tool"] = config.get(
+            "phenotype_tool",
+            result["phenotype_data"] is not None
+            and result["has_denovo"] is True,
+        )
         return result
 
     @staticmethod
@@ -186,7 +190,6 @@ class StudyWrapperBase(WDAEStudy):
         keys = [
             "id",
             "name",
-            "phenotype_tool",
             "phenotype_data",
             "study_type",
             "studies",
@@ -205,6 +208,11 @@ class StudyWrapperBase(WDAEStudy):
         result["phenotype_browser"] = config.get(
             "phenotype_browser",
             result["phenotype_data"] is not None,
+        )
+        result["phenotype_tool"] = config.get(
+            "phenotype_tool",
+            result["phenotype_data"] is not None
+            and result["has_denovo"] is True,
         )
         result["genotype_browser_config"] = {
             key: config.genotype_browser.get(key, None) for key in [
