@@ -20,27 +20,29 @@ Inside the ``input_phenotype_data`` directory, the following data is provided:
 * ``measure_descriptions.tsv`` contains descriptions for the provided measures.
 * ``import_project.yaml`` is the import project configuration that we will use to import this data.
 
-``input_phenotype_data/instruments/instrument_1.csv``:
+``input_phenotype_data/instruments/basic_medical.csv``:
 
-.. literalinclude:: gpf-getting-started/input_phenotype_data/instruments/instrument_1.csv
+.. literalinclude:: gpf-getting-started/input_phenotype_data/instruments/basic_medical.csv
 
-``input_phenotype_data/instruments/instrument_2.csv``:
+``input_phenotype_data/instruments/iq.csv``:
 
-.. literalinclude:: gpf-getting-started/input_phenotype_data/instruments/instrument_2.csv
+.. literalinclude:: gpf-getting-started/input_phenotype_data/instruments/iq.csv
 
 ``input_phenotype_data/pedigree.ped``:
 
 .. literalinclude:: gpf-getting-started/input_phenotype_data/pedigree.ped
+    :tab-width: 10
 
 ``input_phenotype_data/measure_descriptions.tsv``:
 
 .. literalinclude:: gpf-getting-started/input_phenotype_data/measure_descriptions.tsv
+    :tab-width: 15
 
 ``input_phenotype_data/import_project.yaml``:
 
 .. literalinclude:: gpf-getting-started/input_phenotype_data/import_project.yaml
 
-To import the phenotype data, we will use the ``import_phenotypes.py`` tool. It will import
+To import the phenotype data, we will use the ``import_phenotypes`` tool. It will import
 the phenotype database directly to our GPF instance's phenotype storage:
 
 .. code:: bash
@@ -53,18 +55,13 @@ When the import finishes you can run the GPF development server using:
 
     wgpf run
 
-This will generate a phenotype browser database automatically, and the phenotype study should be directly accessible.
+This will generate a phenotype browser database automatically, and the phenotype 
+study should be directly accessible.
 
-Phenotype browser databases are necessary to view the data through the web application. They are further described in the phenotype data documentation.
+Phenotype browser databases are necessary to view the data through the web 
+application. They are further described in the phenotype data documentation.
 
-Configuring a phenotype database
-++++++++++++++++++++++++++++++++
 
-Phenotype databases have a short configuration file which points
-the system to their files, as well as specifying additional properties.
-When importing a phenotype database through the
-``import_phenotypes`` tool, a configuration file is automatically
-generated at ``minimal_instance/pheno/mini_pheno/mini_pheno.yaml``.
 
 Configure a genotype study to use phenotype data
 ++++++++++++++++++++++++++++++++++++++++++++++++
@@ -73,80 +70,109 @@ To demonstrate how a study is configured with a phenotype database, we will
 be working with the already imported ``example_dataset`` dataset.
 
 The phenotype databases can be attached to one or more studies and/or datasets.
-If you want to attach the ``mini_pheno`` phenotype study to the ``example_dataset`` dataset,
+If you want to attach the ``mini_pheno`` phenotype study to the 
+``example_dataset`` dataset,
 you need to specify it in the dataset's configuration file, which can be found at
 ``minimal_instance/datasets/example_dataset/example_dataset.yaml``.
 
-Add the following line to the file:
+Add the following line to the configuration file:
 
 .. code:: yaml
 
     phenotype_data: mini_pheno
 
-To enable the :ref:`Phenotype Browser`, add this line:
+When you restart the server, you should be able to see `Phenotype Browser` 
+and `Phenotype Tool` tabs enabled for the `Example Dataset` dataset.
 
-.. code:: yaml
+Additionally, the `Family Filters` and `Person Filters` sections will have
+the `Pheno Measures` filters enabled.
 
-    phenotype_browser: true
+.. figure:: getting_started_files/example-dataset-genotype-browser-pheno-filters.png
 
-When you restart the server, you should be able to see the 'Phenotype Browser' tab in the ``example_dataset`` dataset.
+    Example Dataset genotype browser using Pheno Measures family filters
 
-Configure family filters in Genotype Browser
-++++++++++++++++++++++++++++++++++++++++++++
-
-A study or a dataset can have phenotype filters configured for its :ref:`Genotype Browser`
-when it has a phenotype database attached to it. The configuration looks like this:
-
-.. code:: yaml
-
-    genotype_browser:
-      ...
-      family_filters:
-        sample_continuous_filter:
-          name: Sample Filter Name
-          source_type: continuous
-          from: phenodb
-          filter_type: multi
-          role: prb
-
-After adding the family filters configuration, restart the web server and
-navigate to the Genotype Browser. You should be able to see the Advanced option
-under the Family Filters - this is where the family filters can be applied.
 
 Configure phenotype columns in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
 
-Phenotype columns contain values from a phenotype database.
-These values are selected from the individual who has the variant displayed in the :ref:`Genotype Browser`'s table preview.
-They can be added when a phenotype database is attached to a study.
+The Genotype Browser allows you to add phenotype columns to the table preview
+and download file.
 
-Let's add a phenotype column. To do this, you need to define it in the study's config,
-in the genotype browser section:
+Phenotype columns show values from a phenotype database.
+To configure such a column you need to specify following attributes:
+* ``source`` - the measure ID which values we are going to show in the column;
+* ``role`` - the role of the person in the family for which we are going to show
+  the measure value;
+* ``name`` - the display name of the column in the table.
 
-.. code:: yaml
+Let's add a phenotype columns to the `Genotype Browser` preview table. 
+To do this, you need to define it in the study's config, in the genotype 
+browser section of the configuration file.
+
+.. code-block:: yaml
+    :linenos:
 
     genotype_browser:
       columns:
         genotype:
-          ...
+          gnomad_v4_genome_af:
+            name: gnomAD v4 AF
+            source: gnomad_v4_genome_ALL_af
+            format: "%%.5f"
+          clinvar_clinsig:
+            name: ClinVar CLINSIG
+            source: CLNSIG
+        
         phenotype:
-          sample_pheno_measure:
+          prb_verbal_iq:
             role: prb
-            source: instrument_1.measure_1
-            name: Sample Pheno Measure Column
+            name: Verbal IQ
+            source: iq.verbal_iq
+    
+          prb_non_verbal_iq:
+            role: prb
+            name: Non-Verbal IQ
+            source: iq.non_verbal_iq
+    
+      column_groups:
+        proband_iq:
+          name: Proband IQ
+          columns:
+          - prb_verbal_iq
+          - prb_non_verbal_iq
+    
+      preview_columns_ext:
+        - gnomad_v4_genome_af
+        - clinvar_clinsig
+        - proband_iq
+    
+      download_columns_ext:
+        - gnomad_v4_genome_af
+        - clinvar_clinsig
+        - prb_verbal_iq
+        - prb_non_verbal_iq
 
-For the phenotype columns to be in the Genotype Browser table preview or download file, 
-they have to be present in the ``preview_columns`` or the ``download_columns`` in the Genotype Browser
-configuration. Add this to the genotype browser section:
+Lines 12-21 define two new columns with values coming from the phenotype data
+attributes:
+* ``prb_verbal_iq`` - is a column that uses the value of the attribute
+  ``iq.verbal_iq`` and formats it as a float with 5 decimal places. 
+  The columns will be named `Verbal IQ` where it is used;
+* ``prb_non_verbal_iq`` - is a column that uses the value of the attribute
+  ``iq.non_verbal_iq``. The columns will be named `Non-Verbal IQ` where it is used.
 
-.. code:: yaml
+In the preview table each column could show multiple values. In GPF this ids
+called a column group. A column group is a collection of columns that are
+shown together in the preview table. The columns in a column group are shown
+in a single cell. The column group is defined in the
+``column_groups`` section of the configuration file.
 
-    genotype_browser:
-      ...
-      preview_columns:
-        - family
-        - variant
-        - genotype
-        - effect
-        - gene_scores
-        - sample_pheno_measure
+In line 23-28 we define a column group called `proband_iq` that contains the
+columns ``prb_verbal_iq`` and ``prb_non_verbal_iq``.
+
+To add the new column group ``proband_iq`` to the preview table, we need to add it to the
+``preview_columns_ext`` section of the configuration file. In line 30-33 we
+add the new column group ``proband_iq`` at the end of the preview table.
+
+.. figure:: getting_started_files/example-dataset-proband-iq-column-group.png
+
+    Example Dataset genotype browser using pheno measures columns
