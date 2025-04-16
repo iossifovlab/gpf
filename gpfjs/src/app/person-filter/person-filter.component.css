@@ -28,3 +28,13 @@
   border-top: 0;
   margin-left: 10px;
 }
+
+#measure-description {
+  vertical-align: bottom;
+  color: #b4b4b4;
+}
+
+#measure-description:hover {
+  color: #9b9b9b;
+  cursor: pointer;
+}

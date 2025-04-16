@@ -4,7 +4,16 @@
     [initialState]="localState.roles"></gpf-role-selector>
   <div>
     <div class="measure-histograms-container">
-      <div class="title-wrapper">{{ selectedMeasure.measure }}</div>
+      <div class="title-wrapper"
+        >{{ selectedMeasure.measure }}
+        <span
+          *ngIf="selectedMeasure.description"
+          class="material-symbols-outlined"
+          id="measure-description"
+          [title]="selectedMeasure.description"
+          >info</span
+        >
+      </div>
 
       <div *ngIf="isCategoricalHistogram(selectedMeasure.histogram)">
         <button mat-icon-button [matMenuTriggerFor]="menu" id="view-menu-button">
