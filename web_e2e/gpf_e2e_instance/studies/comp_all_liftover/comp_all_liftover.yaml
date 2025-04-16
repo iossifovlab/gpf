@@ -17,8 +17,8 @@ genotype_browser:
   enabled: true
   has_family_filters: true
   has_person_filters: true
-  has_family_filters_beta: true
-  has_person_filters_beta: true
+  has_family_pheno_filters: true
+  has_person_pheno_filters: true
   family_filters:
     measures:
       name: Proband Pheno Measure
