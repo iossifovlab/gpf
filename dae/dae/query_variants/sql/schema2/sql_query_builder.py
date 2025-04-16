@@ -1024,7 +1024,7 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
                         pedigree_tags = pedigree_tags.and_(comparison)
         return pedigree_tags
 
-    def family_query(
+    def family_query(  # pylint: disable=too-many-branches
         self, *,
         family_ids: Sequence[str] | None = None,
         person_ids: Sequence[str] | None = None,
