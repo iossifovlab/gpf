@@ -177,6 +177,7 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
 
         result = {
             "measure": measure.measure_id,
+            "description": measure.description,
             "histogram": None,
         }
 
