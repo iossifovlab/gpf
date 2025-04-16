@@ -26,9 +26,6 @@ has_transmitted = false
 has_complex = false
 has_cnv = false
 
-phenotype_browser = false
-phenotype_tool = false
-
 [person_set_collections]
 selected_person_set_collections = ["status"]
 
