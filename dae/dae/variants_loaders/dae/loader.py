@@ -384,28 +384,29 @@ class DenovoLoader(VariantsGenotypesLoader):
 
         if not (argv.denovo_location
                 or (argv.denovo_chrom and argv.denovo_pos)):
-            argv.denovo_location = "location"
+            argv.denovo_chrom = "chrom"
+            argv.denovo_pos = "pos"
 
         if not (argv.denovo_variant or (argv.denovo_ref and argv.denovo_alt)):
-            argv.denovo_variant = "variant"
+            argv.denovo_ref = "ref"
+            argv.denovo_alt = "alt"
 
         if not (argv.denovo_person_id
                 or (argv.denovo_family_id and (
                     argv.denovo_best_state or argv.denovo_genotype))):
-            argv.denovo_family_id = "familyId"
-            argv.denovo_best_state = "bestState"
+            argv.denovo_person_id = "person_id"
 
         if not argv.denovo_location:
             if not argv.denovo_chrom:
-                argv.denovo_chrom = "CHROM"
+                argv.denovo_chrom = "chrom"
             if not argv.denovo_pos:
-                argv.denovo_pos = "POS"
+                argv.denovo_pos = "pos"
 
         if not argv.denovo_variant:
             if not argv.denovo_ref:
-                argv.denovo_ref = "REF"
+                argv.denovo_ref = "ref"
             if not argv.denovo_alt:
-                argv.denovo_alt = "ALT"
+                argv.denovo_alt = "alt"
 
         if not argv.denovo_person_id:
             if not argv.denovo_family_id:

@@ -1,4 +1,4 @@
-person_id	chrom	position	reference	alternative
+person_id	chrom	pos	ref	alt
 f1.p1	foo	11	T	TA
 f2.p1	foo	12	AAAGT	A
 f1.p1	bar	11	C	T

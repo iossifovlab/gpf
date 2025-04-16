@@ -57,11 +57,16 @@ def trio_denovo(
     root_path = tmp_path_factory.mktemp("test_vcf_serializer_trio_vcf")
 
     return setup_denovo(root_path / "denovo_data" / "in.tsv", """
-familyId  location  variant     bestState
-f1         chr1:1    sub(T->G)  2||2||1/0||0||1
-f1         chr1:5    sub(T->G)  2||2||1/0||0||1
-f1         chr1:12   sub(T->G)  2||2||1/0||0||1
-    """)
+chrom  pos  ref  alt person_id
+chr1   1    T    G   ch1
+chr1   5    T    G   ch1
+chr1   12   T    G   ch1
+""")
+
+# familyId  location  variant     bestState
+# f1         chr1:1    sub(T->G)  2||2||1/0||0||1
+# f1         chr1:5    sub(T->G)  2||2||1/0||0||1
+# f1         chr1:12   sub(T->G)  2||2||1/0||0||1
 
 
 def test_denovo2vcf_simple(
