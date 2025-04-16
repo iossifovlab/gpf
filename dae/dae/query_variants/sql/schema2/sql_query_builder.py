@@ -1063,10 +1063,11 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             status_zygosity = self.calc_zygosity_status_value(
                 affected_statuses, zygosity,
             )
-            expr = parse_one(
-                "(fa.zygosity_in_status & "
-                f"{status_zygosity}) = {status_zygosity}")
-            query = query.where(expr)
+            if status_zygosity is not None:
+                expr = parse_one(
+                    "(fa.zygosity_in_status & "
+                    f"{status_zygosity}) != 0")
+                query = query.where(expr)
 
         if family_ids is not None or person_ids is not None:
             if person_ids is not None:
