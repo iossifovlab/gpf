@@ -124,6 +124,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         self._family_attributes: dict = {}
         self._zygosity_in_status: int | None = None
         self._zygosity_in_roles: int | None = None
+        self._zygosity_in_sexes: int | None = None
 
         self.matched_gene_effects: list = []
 
@@ -269,6 +270,28 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
         return zygosity
 
+    def _calc_zygosity_sexes(self) -> int:
+        translator = BitmaskEnumTranslator(
+            main_enum_type=Zygosity, partition_by_enum_type=Sex,
+        )
+        zygosity = 0
+        for idx, allele_pair in enumerate(self.genotype):
+            if self.allele_index not in allele_pair:
+                continue
+
+            pid = self.members_in_order[idx].person_id
+            person_sex = self.family.persons[pid].sex
+
+            current_zygosity = Zygosity.homozygous \
+                if allele_pair[0] == allele_pair[1] \
+                else Zygosity.heterozygous
+
+            zygosity = translator.apply_mask(
+                zygosity, current_zygosity.value, person_sex,
+            )
+
+        return zygosity
+
     def _calc_zygosity_roles(self) -> int:
         translator = BitmaskEnumTranslator(
             main_enum_type=Zygosity, partition_by_enum_type=Role,
@@ -304,6 +327,12 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         if self._zygosity_in_roles is None:
             self._zygosity_in_roles = self._calc_zygosity_roles()
         return self._zygosity_in_roles
+
+    @property
+    def zygosity_in_sexes(self) -> int:
+        if self._zygosity_in_sexes is None:
+            self._zygosity_in_sexes = self._calc_zygosity_sexes()
+        return self._zygosity_in_sexes
 
     @property
     @deprecated(details="Replace `best_st` with `best_state`")
@@ -563,6 +592,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         self._best_state = best_state
         self._zygosity_in_status: int | None = None
         self._zygosity_in_roles: int | None = None
+        self._zygosity_in_sexes: int | None = None
 
         self._fvuid: str | None = None
         if inheritance_in_members is None:
@@ -814,6 +844,18 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
                 zygosity = zygosity | fa_zygosity
             self._zygosity_in_roles = zygosity
         return self._zygosity_in_roles
+
+    @property
+    def zygosity_in_sexes(self) -> int:
+        """Calculate and cache zygosity based on alternative alleles."""
+        if self._zygosity_in_sexes is None:
+            zygosity = 0
+            for fa_zygosity in [
+                fa.zygosity_in_sexes for fa in self.family_alt_alleles
+            ]:
+                zygosity = zygosity | fa_zygosity
+            self._zygosity_in_sexes = zygosity
+        return self._zygosity_in_sexes
 
     def to_record(self) -> dict[str, Any]:  # type: ignore
         assert self.gt is not None
