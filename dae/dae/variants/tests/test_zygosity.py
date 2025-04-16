@@ -100,3 +100,77 @@ def test_fv_zygosity_in_status(
     )
     fv.update_attributes({"allele_count": [allele_count]})
     assert fv.zygosity_in_status == expected
+
+
+@pytest.mark.parametrize(
+    "chromosome, position, reference, alternative, "
+    "allele_count, genotype, expected",
+    [
+        (
+            "chr1",
+            0,
+            "A",
+            "T",
+            2,
+            np.array([[0, 0, 0], [0, 1, 1]], dtype=GenotypeType),
+            (2 << (4 * 2)) | (2 << (7 * 2)),  # mom and prb
+        ),
+        (
+            "chr1",
+            0,
+            "A",
+            "T",
+            2,
+            np.array([[0, 0, 1], [0, 0, 1]], dtype=GenotypeType),
+            (1 << (7 * 2)),  # prb
+        ),
+        (
+            "chr1",
+            0,
+            "A",
+            "T",
+            2,
+            np.array([[0, 0, 1], [0, 1, 1]], dtype=GenotypeType),
+            (2 << (4 * 2)) | (1 << (7 * 2)),  # mom and prb
+        ),
+        (
+            "chr1",
+            0,
+            "A",
+            "T",
+            2,
+            np.array([[0, 0, 0], [0, 0, 0]], dtype=GenotypeType),
+            0,
+        ),
+    ],
+)
+def test_fv_zygosity_in_roles(
+    chromosome: str,
+    position: int,
+    reference: str,
+    alternative: str,
+    allele_count: int,
+    genotype: np.ndarray,
+    expected: np.ndarray,
+    sample_family: Family,
+) -> None:
+
+    sv = SummaryVariant(
+        [
+            SummaryAllele(
+                chromosome, position, reference, None, 0, 0,
+            ),
+            SummaryAllele(
+                chromosome, position, reference, alternative, 0, 1,
+            ),
+        ],
+    )
+
+    fv = FamilyVariant(
+        sv,
+        sample_family,
+        genotype,
+        None,
+    )
+    fv.update_attributes({"allele_count": [allele_count]})
+    assert fv.zygosity_in_roles == expected

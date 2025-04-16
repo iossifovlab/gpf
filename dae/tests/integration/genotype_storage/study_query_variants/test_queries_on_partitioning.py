@@ -164,11 +164,11 @@ def test_query_summary_variants_counting(
 @pytest.mark.no_gs_impala
 @pytest.mark.parametrize("params, count", [
     ({}, 12),
-    ({"roles": "prb"}, 9),
-    ({"roles": "not prb"}, 7),
-    ({"roles": "mom and not prb"}, 5),
-    ({"roles": "mom and dad and not prb"}, 3),
-    ({"roles": "prb and not mom and not dad"}, 0),
+    ({"roles_in_child": "prb"}, 9),
+    ({"roles_in_child": "not prb"}, 7),
+    ({"roles_in_parent": "mom", "roles_in_child": "not prb"}, 5),
+    ({"roles_in_parent": "mom and dad", "roles_in_child": "not prb"}, 3),
+    ({"roles_in_parent": "not mom and not dad", "roles_in_child": "prb"}, 0),
 ])
 def test_query_family_variants_by_role(
     params: dict[str, Any],

@@ -24,6 +24,7 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
     RealAttrFilterType,
     SqlQueryBuilder,
     TagsQuery,
+    ZygosityQuery,
 )
 from dae.utils.regions import Region
 from dae.variants.attributes import Role, Sex, Status
@@ -379,7 +380,8 @@ class DuckDb2Variants(QueryVariantsBase):
         family_ids: list[str] | None = None,
         person_ids: list[str] | None = None,
         inheritance: list[str] | None = None,
-        roles: str | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         variant_type: str | None = None,
@@ -392,7 +394,7 @@ class DuckDb2Variants(QueryVariantsBase):
         limit: int | None = None,
         study_filters: list[str] | None = None,  # noqa: ARG002
         tags_query: TagsQuery | None = None,
-        zygosity_in_status: str | None = None,
+        zygosity_query: ZygosityQuery | None = None,
         **kwargs: Any,
     ) -> QueryRunner | None:
         # pylint: disable=too-many-arguments
@@ -416,7 +418,8 @@ class DuckDb2Variants(QueryVariantsBase):
             family_ids=family_ids,
             person_ids=person_ids,
             inheritance=inheritance,
-            roles=roles,
+            roles_in_parent=roles_in_parent,
+            roles_in_child=roles_in_child,
             sexes=sexes,
             affected_statuses=affected_statuses,
             variant_type=variant_type,
@@ -428,7 +431,7 @@ class DuckDb2Variants(QueryVariantsBase):
             return_unknown=return_unknown,
             limit=query_limit,
             tags_query=tags_query,
-            zygosity_in_status=zygosity_in_status,
+            zygosity_query=zygosity_query,
         )
         logger.info("FAMILY VARIANTS QUERY:\n%s", query)
 
@@ -442,6 +445,12 @@ class DuckDb2Variants(QueryVariantsBase):
 
         skip_inmemory_filterng = kwargs.get("skip_inmemory_filterng", False)
         if not skip_inmemory_filterng:
+            if roles_in_parent and roles_in_child:
+                roles = f"{roles_in_parent} and {roles_in_child}"
+            elif roles_in_child or roles_in_parent:
+                roles = roles_in_child or roles_in_parent
+            else:
+                roles = None
             filter_func = RawFamilyVariants.family_variant_filter_function(
                 regions=regions,
                 genes=genes,
@@ -471,7 +480,8 @@ class DuckDb2Variants(QueryVariantsBase):
         family_ids: list[str] | None = None,
         person_ids: list[str] | None = None,
         inheritance: list[str] | None = None,
-        roles: str | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
         sexes: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
@@ -482,7 +492,7 @@ class DuckDb2Variants(QueryVariantsBase):
         return_unknown: bool | None = None,
         limit: int | None = None,
         tags_query: TagsQuery | None = None,
-        zygosity_in_status: str | None = None,
+        zygosity_query: ZygosityQuery | None = None,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
@@ -500,7 +510,8 @@ class DuckDb2Variants(QueryVariantsBase):
             family_ids=family_ids,
             person_ids=person_ids,
             inheritance=inheritance,
-            roles=roles,
+            roles_in_parent=roles_in_parent,
+            roles_in_child=roles_in_child,
             sexes=sexes,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,
@@ -511,7 +522,7 @@ class DuckDb2Variants(QueryVariantsBase):
             return_unknown=return_unknown,
             limit=query_limit,
             tags_query=tags_query,
-            zygosity_in_status=zygosity_in_status,
+            zygosity_query=zygosity_query,
             **kwargs,
         )
         if runner is None:

@@ -181,7 +181,8 @@ class ImpalaVariants(QueryVariantsBase):
         family_ids: Iterable[str] | None = None,
         person_ids: Iterable[str] | None = None,
         inheritance: list[str] | str | None = None,
-        roles: str | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         variant_type: str | None = None,
@@ -202,6 +203,9 @@ class ImpalaVariants(QueryVariantsBase):
                 "missing varants table... skipping")
             return None
         assert self.schema is not None
+
+        roles = self.transform_roles_to_single_role_string(
+            roles_in_parent, roles_in_child)
 
         tag_family_ids = self.tags_to_family_ids(tags_query)
         if tag_family_ids is not None:
@@ -346,7 +350,8 @@ class ImpalaVariants(QueryVariantsBase):
         person_ids: list[str] | None = None,
         person_set_collection: tuple | None = None,  # noqa: ARG002
         inheritance: list[str] | None = None,
-        roles: str | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
         sexes: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
@@ -376,7 +381,8 @@ class ImpalaVariants(QueryVariantsBase):
             family_ids=family_ids,
             person_ids=person_ids,
             inheritance=inheritance,
-            roles=roles,
+            roles_in_parent=roles_in_parent,
+            roles_in_child=roles_in_child,
             sexes=sexes,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,

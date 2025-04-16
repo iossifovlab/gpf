@@ -10,7 +10,10 @@ from dae.pedigrees.families_data import FamiliesData
 from dae.pedigrees.family import FamilyTag
 from dae.pedigrees.family_tag_builder import check_family_tags_query
 from dae.query_variants.query_runners import QueryRunner
-from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
+from dae.query_variants.sql.schema2.sql_query_builder import (
+    TagsQuery,
+    ZygosityQuery,
+)
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance
 from dae.variants.family_variant import FamilyVariant
@@ -71,7 +74,8 @@ class QueryVariants(abc.ABC):
         family_ids: list[str] | None = None,
         person_ids: list[str] | None = None,
         inheritance: list[str] | None = None,
-        roles: str | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         variant_type: str | None = None,
@@ -83,7 +87,7 @@ class QueryVariants(abc.ABC):
         limit: int | None = None,
         study_filters: list[str] | None = None,
         tags_query: TagsQuery | None = None,
-        zygosity_in_status: str | None = None,
+        zygosity_query: ZygosityQuery | None = None,
         **kwargs: Any,
     ) -> QueryRunner | None:
         # pylint: disable=too-many-arguments
@@ -98,7 +102,8 @@ class QueryVariants(abc.ABC):
         family_ids: list[str] | None = None,
         person_ids: list[str] | None = None,
         inheritance: list[str] | None = None,
-        roles: str | None = None,
+        roles_in_parent: str | None = None,
+        roles_in_child: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         variant_type: str | None = None,
@@ -109,7 +114,7 @@ class QueryVariants(abc.ABC):
         return_unknown: bool | None = None,
         limit: int | None = None,
         tags_query: TagsQuery | None = None,
-        zygosity_in_status: str | None = None,
+        zygosity_query: ZygosityQuery | None = None,
         **kwargs: Any,
     ) -> Generator[FamilyVariant, None, None]:
         # pylint: disable=too-many-arguments
@@ -124,6 +129,23 @@ class QueryVariantsBase(QueryVariants):
     def __init__(self, families: FamiliesData) -> None:
         self.families = families
         self.serializer = VariantsDataSerializer.build_serializer()
+
+    @staticmethod
+    def transform_roles_to_single_role_string(
+        roles_in_parent: str | None, roles_in_child: str | None,
+    ) -> str | None:
+        """
+        Transform roles arguments into singular roles argument.
+
+        Helper method for supporting legacy backends.
+        """
+        if roles_in_parent and roles_in_child:
+            roles = f"{roles_in_parent} and {roles_in_child}"
+        elif roles_in_child or roles_in_parent:
+            roles = roles_in_child or roles_in_parent
+        else:
+            roles = None
+        return roles
 
     def has_affected_status_queries(self) -> bool:
         """Schema2 do support affected status queries."""
