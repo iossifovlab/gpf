@@ -15,7 +15,7 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
 )
 from dae.utils.regions import Region
 from dae.utils.variant_utils import BitmaskEnumTranslator
-from dae.variants.attributes import Inheritance, Role, Zygosity
+from dae.variants.attributes import Inheritance, Role, Sex, Zygosity
 
 logger = logging.getLogger(__name__)
 
@@ -532,7 +532,7 @@ class QueryTransformer:
 
             kwargs["zygosity_query"].status_zygosity = zygosity
 
-        translator = BitmaskEnumTranslator(
+        role_translator = BitmaskEnumTranslator(
             main_enum_type=Zygosity, partition_by_enum_type=Role,
         )
         if "zygosityInParent" in kwargs:
@@ -557,32 +557,32 @@ class QueryTransformer:
                 )
             mask = 0
             if roles_in_parent is None:
-                mask = translator.apply_mask(
+                mask = role_translator.apply_mask(
                     mask, Zygosity.from_name(zygosity).value, Role.mom,
                 )
-                mask = translator.apply_mask(
+                mask = role_translator.apply_mask(
                     mask, Zygosity.from_name(zygosity).value, Role.dad,
                 )
             else:
                 if SqlQueryBuilder.check_roles_query_value(
                     cast(str, roles_in_parent), Role.mom.value,
                 ):
-                    mask = translator.apply_mask(
+                    mask = role_translator.apply_mask(
                         mask, Zygosity.from_name(zygosity).value, Role.mom,
                     )
                 if SqlQueryBuilder.check_roles_query_value(
                     cast(str, roles_in_parent), Role.dad.value,
                 ):
-                    mask = translator.apply_mask(
+                    mask = role_translator.apply_mask(
                         mask, Zygosity.from_name(zygosity).value, Role.dad,
                     )
                 if SqlQueryBuilder.check_roles_query_value(
                     cast(str, roles_in_parent), Role.mom.value | Role.dad.value,
                 ):
-                    mask = translator.apply_mask(
+                    mask = role_translator.apply_mask(
                         mask, Zygosity.from_name(zygosity).value, Role.dad,
                     )
-                    mask = translator.apply_mask(
+                    mask = role_translator.apply_mask(
                         mask, Zygosity.from_name(zygosity).value, Role.mom,
                     )
             kwargs["zygosity_query"].parents_zygosity = mask
@@ -612,10 +612,10 @@ class QueryTransformer:
             mask = 0
 
             if roles_in_child is None:
-                mask = translator.apply_mask(
+                mask = role_translator.apply_mask(
                     mask, Zygosity.from_name(zygosity).value, Role.prb,
                 )
-                mask = translator.apply_mask(
+                mask = role_translator.apply_mask(
                     mask, Zygosity.from_name(zygosity).value, Role.sib,
                 )
 
@@ -623,25 +623,74 @@ class QueryTransformer:
                 if SqlQueryBuilder.check_roles_query_value(
                     cast(str, roles_in_child), Role.prb.value,
                 ):
-                    mask = translator.apply_mask(
+                    mask = role_translator.apply_mask(
                         mask, Zygosity.from_name(zygosity).value, Role.prb,
                     )
                 if SqlQueryBuilder.check_roles_query_value(
                     cast(str, roles_in_child), Role.sib.value,
                 ):
-                    mask = translator.apply_mask(
+                    mask = role_translator.apply_mask(
                         mask, Zygosity.from_name(zygosity).value, Role.sib,
                     )
                 if SqlQueryBuilder.check_roles_query_value(
                     cast(str, roles_in_child), Role.prb.value | Role.sib.value,
                 ):
-                    mask = translator.apply_mask(
+                    mask = role_translator.apply_mask(
                         mask, Zygosity.from_name(zygosity).value, Role.prb,
                     )
-                    mask = translator.apply_mask(
+                    mask = role_translator.apply_mask(
                         mask, Zygosity.from_name(zygosity).value, Role.sib,
                     )
             kwargs["zygosity_query"].children_zygosity = mask
+
+        gender_translator = BitmaskEnumTranslator(
+            main_enum_type=Zygosity, partition_by_enum_type=Sex,
+        )
+
+        if "zygosityInGenders" in kwargs:
+            zygosity = kwargs.pop("zygosityInGenders")
+            if not isinstance(zygosity, str):
+                raise ValueError(
+                    "Invalid zygosity in genders argument - not a string.",
+                )
+
+            if "genders" not in kwargs:
+                raise ValueError(
+                    "Missing genders for gender zygosity",
+                )
+
+            genders = kwargs["genders"]
+
+            zygosity = zygosity.lower()
+
+            if zygosity not in ["homozygous", "heterozygous"]:
+                raise ValueError(
+                    f"Invalid zygosity in children value {zygosity},"
+                    "expected either homozygous or heterozygous.",
+                )
+
+            mask = 0
+
+            if SqlQueryBuilder.check_roles_query_value(
+                cast(str, genders), Sex.M.value,
+            ):
+                mask = gender_translator.apply_mask(
+                    mask, Zygosity.from_name(zygosity).value, Sex.M,
+                )
+            if SqlQueryBuilder.check_roles_query_value(
+                cast(str, genders), Sex.F.value,
+            ):
+                mask = gender_translator.apply_mask(
+                    mask, Zygosity.from_name(zygosity).value, Sex.F,
+                )
+            if SqlQueryBuilder.check_roles_query_value(
+                cast(str, genders), Sex.U.value,
+            ):
+                mask = gender_translator.apply_mask(
+                    mask, Zygosity.from_name(zygosity).value, Sex.U,
+                )
+
+            kwargs["zygosity_query"].sex_zygosity = mask
 
         if "personIds" in kwargs:
             kwargs["personIds"] = list(kwargs["personIds"])

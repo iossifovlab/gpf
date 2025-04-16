@@ -89,6 +89,7 @@ class ZygosityQuery(BaseModel):
     status_zygosity: str | None = None
     parents_zygosity: int | None = None
     children_zygosity: int | None = None
+    sex_zygosity: int | None = None
 
 
 class QueryBuilderBase:
@@ -944,10 +945,16 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
     @staticmethod
     def sexes(
         sexes_query: str,
+        zygosity: int | None,
     ) -> Condition:
-        return condition(
+        query = condition(
             SqlQueryBuilder.build_sexes_query(
                 sexes_query, "fa.allele_in_sexes"))
+        if zygosity is not None:
+            query = query.and_(
+                parse_one(f"fa.zygosity_in_sexes & {zygosity} != 0"),
+            )
+        return query
 
     @staticmethod
     def statuses(
@@ -1053,7 +1060,7 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             clause = self.inheritance(inheritance)
             query = query.where(clause)
         if sexes is not None:
-            clause = self.sexes(sexes)
+            clause = self.sexes(sexes, zygosity.sex_zygosity)
             query = query.where(clause)
         if affected_statuses is not None:
             clause = self.statuses(affected_statuses)
