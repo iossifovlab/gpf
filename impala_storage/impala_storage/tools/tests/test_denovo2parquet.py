@@ -24,6 +24,10 @@ def test_denovo2parquet_denovo(
         "simple",
         "-o",
         temp_filename,
+        "--denovo-family-id", "familyId",
+        "--denovo-location", "location",
+        "--denovo-variant", "variant",
+        "--denovo-best-state", "bestState",
         dae_denovo_config.pedigree,
         dae_denovo_config.denovo,
     ]
@@ -62,6 +66,10 @@ def test_denovo2parquet_denovo_partition(
         partition_description,
         "-o",
         temp_dirname,
+        "--denovo-family-id", "familyId",
+        "--denovo-location", "location",
+        "--denovo-variant", "variant",
+        "--denovo-best-state", "bestState",
         dae_denovo_config.pedigree,
         dae_denovo_config.denovo,
     ]
