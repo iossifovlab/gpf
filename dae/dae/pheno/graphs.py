@@ -15,7 +15,7 @@ plt.ioff()
 
 
 MAX_CATEGORIES_COUNT = 12
-ROLES_COUNT_CUTOFF = 7
+ROLES_COUNT_CUTOFF = 3
 
 ROLES_GRAPHS_DEFINITION = {
     "probands": [Role.prb],
@@ -118,6 +118,7 @@ def draw_linregres(df, col1, col2, jitter: int | None = None, ax=None):
 
     female_x = dfemale[[col1]]
     female_y = dfemale[col2]
+
     if len(female_x) <= 2:
         res_female = None
     else:
