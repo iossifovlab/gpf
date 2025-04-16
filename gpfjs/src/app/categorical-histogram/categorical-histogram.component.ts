@@ -167,8 +167,13 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
       .domain(this.values.map(v => v.name))
       .range([0, width]);
 
-    this.scaleYAxis = this.histogram.logScaleY ? d3.scaleLog() : d3.scaleLinear();
-    this.scaleYAxis.range([height, 0]).domain([1, d3.max(this.values.map(v => v.value))]);
+    this.scaleYAxis = d3.scaleLinear();
+    let domainStart = 0;
+    if (this.histogram.logScaleY) {
+      this.scaleYAxis = d3.scaleLog();
+      domainStart = 0.1;
+    }
+    this.scaleYAxis.range([height, 0]).domain([domainStart, d3.max(this.values.map(v => v.value))]);
 
     this.redrawXAxis(svg, width, height);
 

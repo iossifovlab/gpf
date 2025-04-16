@@ -232,8 +232,13 @@ export class HistogramComponent implements OnInit, OnChanges {
       .domain(Array.from(this.bars.keys()).map(x => x.toString()))
       .range([0, width]);
 
-    this.scaleYAxis = this.logScaleY ? d3.scaleLog() : d3.scaleLinear();
-    this.scaleYAxis.range([height, 0]).domain([1, d3.max(this.bars)]);
+    this.scaleYAxis = d3.scaleLinear();
+    let domainStart = 0;
+    if (this.logScaleY) {
+      this.scaleYAxis = d3.scaleLog();
+      domainStart = 0.1;
+    }
+    this.scaleYAxis.range([height, 0]).domain([domainStart, d3.max(this.bars)]);
 
     this.redrawXAxis(svg, width, height);
 
