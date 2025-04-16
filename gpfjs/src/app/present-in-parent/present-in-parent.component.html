@@ -8,7 +8,7 @@
 
   <gpf-errors-alert *ngIf="!selectedValues.size" [errors]="errors"></gpf-errors-alert>
 
-  <div style="display: flex; gap: 45px; width: 30vw">
+  <div>
     <gpf-zygosity-filter
       *ngIf="hasZygosity"
       [parentComponent]="'presentInParent'"
@@ -19,8 +19,7 @@
         selectedValues.has('mother only') ||
         selectedValues.has('father only') ||
         selectedValues.has('mother and father')
-      "
-      style="width: 50%">
+      ">
       <em id="rarity-label">Rarity:</em>
       <div>
         <ng-container *ngFor="let rarityType of rarityTypes">
