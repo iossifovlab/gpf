@@ -56,6 +56,7 @@ added the following attributes to our variants:
 
 - ``gnomad_v4_genome_ALL_af``;
 - ``CLNSIG``;
+- ``CLNDN``.
 
 If we browse our ``Example Dataset`` there is almost no difference.
 The only difference is that now in the
