@@ -70,6 +70,8 @@ def imported_study(
         ("dad", "sib", 4),
         ("dad", "prb", 4),
         (None, "sib and not prb", 4),
+        ("mom and dad", "sib and not prb", 1),
+        ("mom and dad", "(sib and not prb) or (not sib and prb)", 2),
     ],
 )
 def test_query_by_roles(
