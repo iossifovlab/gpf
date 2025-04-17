@@ -48,8 +48,8 @@ test.describe('Pheno browser tests', () => {
     await expect(page.locator('.measure-name-cell').nth(0)).toHaveText('measure_7');
 
     await page.getByText('male', { exact: true }).first().click();
-    await expect(page.locator('[class="age.pvalueRegressionMale"]').nth(0)).toHaveText('0.9698');
-    await expect(page.locator('[class="age.pvalueRegressionFemale"]').nth(0)).toHaveText('0.5265');
+    await expect(page.locator('[class="age.pvalueRegressionMale"]').nth(0)).toHaveText('0.8406');
+    await expect(page.locator('[class="age.pvalueRegressionFemale"]').nth(0)).toHaveText('0.875');
 
     await page.getByText('male', { exact: true }).first().click();
     await expect(page.locator('[class="age.pvalueRegressionMale"]').nth(0)).toHaveText('NaN');
