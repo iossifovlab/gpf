@@ -235,6 +235,9 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
           ...zygosityFilterState?.length && {
             zygosityInChild: zygosityFilterState.find(z => z.componentId === 'presentInChild')?.filter
           },
+          ...zygosityFilterState?.length && {
+            zygosityInGenders: zygosityFilterState.find(z => z.componentId === 'carrierGender')?.filter
+          },
         };
         return state;
       })
