@@ -464,6 +464,7 @@ class RESTClient:
     def query_genotype_browser(
         self, query: dict,
         chunk_size: int = 512,
+        timeout: float = 10.0,
     ) -> Iterator[Any]:
         """Perform a genotype browser query to the GPF API."""
         url = f"{self.base_url}/api/v3/genotype_browser/query"
@@ -472,6 +473,7 @@ class RESTClient:
             json=query,
             headers={"Content-Type": "application/json"},
             stream=True,
+            timeout=timeout,
         )
         if response.status_code != 200:
             raise RESTError(
