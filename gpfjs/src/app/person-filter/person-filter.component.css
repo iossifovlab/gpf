@@ -29,12 +29,16 @@
   margin-left: 10px;
 }
 
-#measure-description {
-  vertical-align: bottom;
-  color: #b4b4b4;
+#measure-description-modal {
+  padding: 20px;
 }
 
-#measure-description:hover {
-  color: #9b9b9b;
-  cursor: pointer;
+.measure {
+  font-weight: bold;
+}
+
+.description {
+  padding-top: 10px;
+  border-top: 1px solid rgb(197, 197, 197);
+  font-size: 18px;
 }

@@ -6,13 +6,16 @@
     <div class="measure-histograms-container">
       <div class="title-wrapper"
         >{{ selectedMeasure.measure }}
-        <span
+        <gpf-helper-modal
           *ngIf="selectedMeasure.description"
-          class="material-symbols-outlined"
-          id="measure-description"
-          [title]="selectedMeasure.description"
-          >info</span
-        >
+          [modalContent]="measureDescriptionModal"></gpf-helper-modal>
+
+        <ng-template #measureDescriptionModal>
+          <div id="measure-description-modal">
+            <span class="measure">{{ selectedMeasure.measure }}</span>
+            <div class="description">{{ selectedMeasure.description }}</div>
+          </div>
+        </ng-template>
       </div>
 
       <div *ngIf="isCategoricalHistogram(selectedMeasure.histogram)">
