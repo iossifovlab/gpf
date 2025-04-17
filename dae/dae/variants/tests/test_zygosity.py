@@ -174,3 +174,69 @@ def test_fv_zygosity_in_roles(
     )
     fv.update_attributes({"allele_count": [allele_count]})
     assert fv.zygosity_in_roles == expected
+
+
+@pytest.mark.parametrize(
+    "chromosome, position, reference, alternative, "
+    "allele_count, genotype, expected",
+    [
+        (
+            "chr1",
+            0,
+            "A",
+            "T",
+            2,
+            np.array([[0, 0, 1], [0, 0, 1]], dtype=GenotypeType),
+            (1 << (0 * 2)),  # homozyg male prb
+        ),
+        (
+            "chr1",
+            0,
+            "A",
+            "T",
+            2,
+            np.array([[0, 1, 0], [0, 1, 0]], dtype=GenotypeType),
+            (1 << (1 * 2)),  # homozyg female mom
+        ),
+        (
+            "chr1",
+            0,
+            "A",
+            "T",
+            2,
+            np.array([[0, 0, 1], [1, 1, 1]], dtype=GenotypeType),
+            (1 << (0 * 2)) | (2 << (1 * 2)) | (2 << (0 * 2)),
+            # homozyg prb, heterozyg mom, heterozyg dad
+        ),
+    ],
+)
+def test_zygosity_in_sexes(
+    chromosome: str,
+    position: int,
+    reference: str,
+    alternative: str,
+    allele_count: int,
+    genotype: np.ndarray,
+    expected: np.ndarray,
+    sample_family: Family,
+) -> None:
+
+    sv = SummaryVariant(
+        [
+            SummaryAllele(
+                chromosome, position, reference, None, 0, 0,
+            ),
+            SummaryAllele(
+                chromosome, position, reference, alternative, 0, 1,
+            ),
+        ],
+    )
+
+    fv = FamilyVariant(
+        sv,
+        sample_family,
+        genotype,
+        None,
+    )
+    fv.update_attributes({"allele_count": [allele_count]})
+    assert fv.zygosity_in_sexes == expected
