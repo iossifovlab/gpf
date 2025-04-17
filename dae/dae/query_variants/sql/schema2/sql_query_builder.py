@@ -1395,7 +1395,7 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         )
 
         if roles_in_parent and roles_in_child:
-            roles = f"{roles_in_parent} and {roles_in_child}"
+            roles = f"({roles_in_parent}) and ({roles_in_child})"
         elif roles_in_child or roles_in_parent:
             roles = roles_in_child or roles_in_parent
         else:
