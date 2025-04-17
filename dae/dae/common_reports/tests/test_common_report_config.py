@@ -26,15 +26,15 @@ def trios2_study(tmp_path_factory: pytest.TempPathFactory) -> GenotypeData:
     denovo_path = setup_denovo(
         root_path / "trios2_data" / "in.tsv",
         """
-          familyId  location  variant    bestState
-          f1        foo:7     sub(A->G)  2||2||1||1/0||0||1||0
-          f1        foo:10    sub(A->G)  2||2||1||1/0||0||1||1
-          f2        foo:10    sub(A->G)  2||2||1/0||0||1
-          f1        foo:11    sub(T->A)  2||2||1||2/0||0||1||0
-          f1        bar:10    sub(G->A)  2||2||2||1/0||0||0||1
-          f2        bar:11    sub(G->A)  2||2||1/0||0||1
-          f2        bar:12    sub(G->A)  2||2||1/0||0||1
-          f2        bar:14    del(2)     2||2||1/0||0||1
+          chrom  pos  ref  alt  person_id
+          foo    7    A    G    p1
+          foo    10   A    G    p1
+          foo    10   A    G    p2
+          foo    11   T    A    p1
+          bar    10   G    A    s1
+          bar    11   G    A    p2
+          bar    12   G    A    p2
+          bar    14   G    A    p2
         """,
     )
 

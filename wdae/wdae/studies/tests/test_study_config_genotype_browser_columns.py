@@ -42,8 +42,8 @@ def trio_study(
     vcf_path = setup_denovo(
         root_path / "trio_data" / "in.tsv",
         """
-          familyId  location  variant    bestState
-          f1        foo:7     sub(A->G)  2||2||1||1/0||0||1||0
+          chrom  pos ref  alt  person_id
+          foo    7   A    G    p1,s1
         """,
     )
 

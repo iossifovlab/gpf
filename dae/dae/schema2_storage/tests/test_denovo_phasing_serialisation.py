@@ -30,11 +30,11 @@ def study(tmp_path: pathlib.Path) -> GenotypeData:
     denovo_path = setup_denovo(
         root_path / "trios2_data" / "in.tsv",
         """
-          familyId  location  variant    bestState              fromParent
-          f1        foo:10    sub(A->G)  2||2||1||1/0||0||1||1  mom
-          f2        foo:10    sub(A->G)  2||2||1/0||0||1        dad
-          f1        bar:10    sub(G->A)  2||2||2||1/0||0||0||1  mom
-          f2        bar:11    sub(G->A)  2||2||1/0||0||1        mom
+          chrom pos  ref  alt  person_id fromParent
+          foo   10   A    G    p1,s1     mom
+          foo   10   A    G    p2        dad
+          bar   10   G    A    s1        mom
+          bar   11   G    A    p2        mom
         """,
     )
 

@@ -75,12 +75,12 @@ def trios2_study(
     vcf_path = setup_denovo(
         root_path / "trios2_data" / "in.tsv",
         """
-          familyId  location  variant    bestState
-          f1        foo:7     sub(A->G)  2||2||1||2/0||0||1||0
-          f1        foo:14    sub(C->T)  2||2||2||1/0||0||0||1
-          f2        bar:7     ins(CCCC)  2||2||1/0||0||1
-          f2        bar:7     sub(C->A)  2||2||1/0||0||1
-          f1        bar:7     sub(C->T)  2||2||1||2/0||0||1||0
+          chrom  pos  ref  alt   person_id
+          foo    7    A    G     p1
+          foo    14   C    T     s1
+          bar    7    C    CCCCC p2
+          bar    7    C    A     p2
+          bar    7    C    T     p1
         """,
     )
 

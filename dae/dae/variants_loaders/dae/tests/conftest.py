@@ -81,3 +81,18 @@ f1       2:1      sub(A->T)   2||2||1||2/0||0||1||0
 f2       2:5      sub(A->T)   2||2||1/0||0||1
 f3       3:1      sub(A->T)   1/1
 """))
+
+
+@pytest.fixture(scope="module")
+def denovo_default_style(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> pathlib.Path:
+    root_path = tmp_path_factory.mktemp("denovo_vcf_style")
+    return setup_denovo(
+        root_path / "in.tsv", textwrap.dedent("""
+chrom  pos  ref  alt  person_id
+1      1    A    T    p1
+2      1    A    T    p1
+2      5    A    T    p2
+3      1    A    T    p3
+"""))

@@ -462,16 +462,17 @@ class DenovoLoader(VariantsGenotypesLoader):
         assert genome, "You must provide a genome object!"
 
         if not (denovo_location or (denovo_chrom and denovo_pos)):
-            denovo_location = "location"
+            denovo_chrom = "chrom"
+            denovo_pos = "pos"
 
         if not (denovo_variant or (denovo_ref and denovo_alt)):
-            denovo_variant = "variant"
+            denovo_ref = "ref"
+            denovo_alt = "alt"
 
         if not (denovo_person_id
                 or (denovo_family_id
                     and (denovo_best_state or denovo_genotype))):
-            denovo_family_id = "familyId"
-            denovo_best_state = "bestState"
+            denovo_person_id = "person_id"
 
         if denovo_sep is None:
             denovo_sep = "\t"
@@ -559,7 +560,8 @@ class DenovoLoader(VariantsGenotypesLoader):
                     },
                 )
 
-                grouped = temp_df.groupby(["chrom", "pos", "ref", "alt"])
+                grouped = temp_df.groupby([
+                    "chrom", "pos", "ref", "alt", "person_id"])
 
             result = []
 
