@@ -43,17 +43,14 @@ class ViewRangeSchema(BaseModel):
 
 # pylint: disable=missing-class-docstring
 class HistogramSchema(BaseModel):
-    type: str | None = None
-    plot_function: str | None = None
-    number_of_bins: int | None = None
-    view_range: ViewRangeSchema | None = None
-    x_log_scale: bool | None = None
-    y_log_scale: bool | None = None
-    x_min_log: float | None = None
-    value_order: list[str | int] | None = None
-    displayed_values_count: int | None = None
+    displayed_values_count: int | None = 20
     displayed_values_percent: float | None = None
-    reason: str | None = None
+    value_order: list[str | int] | None = None
+    y_log_scale: bool = False
+    label_rotation: int = 0
+    plot_function: str | None = None
+    enforce_type: bool = True
+    natural_order: bool = False
 
 
 # pylint: disable=missing-class-docstring
