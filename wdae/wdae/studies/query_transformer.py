@@ -671,19 +671,19 @@ class QueryTransformer:
 
             mask = 0
 
-            if SqlQueryBuilder.check_roles_query_value(
+            if SqlQueryBuilder.check_sexes_query_value(
                 cast(str, genders), Sex.M.value,
             ):
                 mask = gender_translator.apply_mask(
                     mask, Zygosity.from_name(zygosity).value, Sex.M,
                 )
-            if SqlQueryBuilder.check_roles_query_value(
+            if SqlQueryBuilder.check_sexes_query_value(
                 cast(str, genders), Sex.F.value,
             ):
                 mask = gender_translator.apply_mask(
                     mask, Zygosity.from_name(zygosity).value, Sex.F,
                 )
-            if SqlQueryBuilder.check_roles_query_value(
+            if SqlQueryBuilder.check_sexes_query_value(
                 cast(str, genders), Sex.U.value,
             ):
                 mask = gender_translator.apply_mask(
