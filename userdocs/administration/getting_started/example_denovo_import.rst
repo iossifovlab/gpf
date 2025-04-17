@@ -1,5 +1,5 @@
 Example import of de novo variants from `Rates of contributory de novo mutation in high and low-risk autism families`
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+#####################################
 
 Let us import de novo variants from the 
 `Yoon, S., Munoz, A., Yamrom, B. et al. Rates of contributory de novo mutation
