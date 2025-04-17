@@ -947,6 +947,11 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         sexes_query: str,
         zygosity: int | None,
     ) -> Condition:
+        """
+        Construct a sexes query condition.
+
+        Can match for zygosity in sexes with a precalculated mask.
+        """
         query = condition(
             SqlQueryBuilder.build_sexes_query(
                 sexes_query, "fa.allele_in_sexes"))
