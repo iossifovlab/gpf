@@ -732,6 +732,11 @@ class PhenotypeData(ABC, CommonStudyMixin):
             report = self.build_and_save()
         return report
 
+    def close(self) -> None:
+        """Close the connection to the database."""
+        if self._browser is not None:
+            self._browser.connection.close()
+
 
 class PhenotypeStudy(PhenotypeData):
     """

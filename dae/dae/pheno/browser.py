@@ -448,3 +448,8 @@ class PhenoBrowser:
             if row is None:
                 return False
             return bool(row[0])
+
+    @property
+    def close(self) -> None:
+        """Close the connection to the database."""
+        self.connection.close()

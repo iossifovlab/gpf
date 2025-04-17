@@ -83,7 +83,6 @@ def build_pheno_browser(
     **kwargs: dict[str, Any],
 ) -> None:
     """Calculate and save pheno browser values to db."""
-
     browser = PhenotypeData.create_browser(
         pheno_data,
         read_only=False,
@@ -100,10 +99,8 @@ def build_pheno_browser(
             pheno_regressions=pheno_regressions,
         )
         prep.run(**kwargs)
-    else:
-        if not rebuild:
-            print("No need to rebuild")
-        sys.exit(1)
+    if isinstance(browser, PhenotypeStorage):
+        browser.close()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -153,7 +150,7 @@ def main(argv: list[str] | None = None) -> int:
             ]
     else:
         gpfi = GPFInstance.build(args.gpf_instance)
-
+        registry = gpfi._pheno_registry  # noqa: SLF001
         pheno_db_dir = Path(get_pheno_db_dir(gpfi.dae_config))
         storage_registry = gpfi.phenotype_storages
         cache_dir = gpfi.get_pheno_cache_path()
@@ -178,6 +175,8 @@ def main(argv: list[str] | None = None) -> int:
             pheno_regressions=regressions,
             **kwargs,
         )
+
+    registry.shutdown()
 
     return 0
 
