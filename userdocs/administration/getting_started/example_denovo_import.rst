@@ -225,7 +225,7 @@ the following command from ``gpf-getting-started`` directory:
 
     * ``hg38/scores/ClinVar_20240730``
 
-    The total size of the downloaded resources is about 1.5 GB.
+    The total size of the downloaded resources is about 15 GB.
 
 
 Data Import of ``ssc_denovo``
