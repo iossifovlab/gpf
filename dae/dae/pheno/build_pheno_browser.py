@@ -30,6 +30,9 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
     VerbosityConfiguration.set_arguments(parser)
     parser.add_argument(
         "phenotype_data_id",
+        nargs="?",
+        type=str,
+        default=None,
         help="ID of the phenotype data to build a browser database for.",
     )
     parser.add_argument(
@@ -83,7 +86,6 @@ def build_pheno_browser(
     **kwargs: dict[str, Any],
 ) -> None:
     """Calculate and save pheno browser values to db."""
-
     browser = PhenotypeData.create_browser(
         pheno_data,
         read_only=False,
@@ -100,10 +102,6 @@ def build_pheno_browser(
             pheno_regressions=pheno_regressions,
         )
         prep.run(**kwargs)
-    else:
-        if not rebuild:
-            print("No need to rebuild")
-        sys.exit(1)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -114,9 +112,6 @@ def main(argv: list[str] | None = None) -> int:
     parser = pheno_cli_parser()
     args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)
-
-    if args.phenotype_data_id is None:
-        raise ValueError("Missing phenotype data ID argument.")
 
     kwargs = vars(args)
 
@@ -147,27 +142,40 @@ def main(argv: list[str] | None = None) -> int:
                 str(pheno_db_dir),
             ),
         )
-        pheno_data = registry.get_phenotype_data(args.phenotype_data_id)
+
+        if args.phenotype_data_id is None:
+            pheno_data = registry.get_all_phenotype_data()
+        else:
+            pheno_data = [
+                registry.get_phenotype_data(args.phenotype_data_id),
+            ]
     else:
         gpfi = GPFInstance.build(args.gpf_instance)
 
-        pheno_data = gpfi.get_phenotype_data(args.phenotype_data_id)
         pheno_db_dir = Path(get_pheno_db_dir(gpfi.dae_config))
         storage_registry = gpfi.phenotype_storages
         cache_dir = gpfi.get_pheno_cache_path()
         images_dir = get_pheno_browser_images_dir(gpfi.dae_config)
 
-    regressions = pheno_data.config.get("regressions")
+        if args.phenotype_data_id is None:
+            pheno_data = gpfi.get_all_phenotype_data()
+        else:
+            pheno_data = [
+                gpfi.get_phenotype_data(args.phenotype_data_id),
+            ]
+
     del kwargs["pheno_db_dir"]
     del kwargs["cache_dir"]
     del kwargs["images_dir"]
 
-    build_pheno_browser(
-        pheno_db_dir, storage_registry, pheno_data,
-        cache_dir, images_dir,
-        pheno_regressions=regressions,
-        **kwargs,
-    )
+    for data in pheno_data:
+        regressions = data.config.get("regressions")
+        build_pheno_browser(
+            pheno_db_dir, storage_registry, data,
+            cache_dir, images_dir,
+            pheno_regressions=regressions,
+            **kwargs,
+        )
 
     return 0
 

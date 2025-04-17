@@ -287,8 +287,8 @@ class PhenotypeData(ABC, CommonStudyMixin):
         browser_dbfile = db_dir / f"{pheno_data.pheno_id}_browser.db"
         if not browser_dbfile.exists():
             if read_only:
-                raise FileNotFoundError(
-                    f"Browser DB file {browser_dbfile!s} not found.",
+                logger.warning(
+                    "Browser DB file not found.",
                 )
             conn = duckdb.connect(browser_dbfile, read_only=False)
             conn.checkpoint()
