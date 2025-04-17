@@ -186,9 +186,9 @@ def denovo_import_data(
     denovo_path = setup_denovo(
         root_path / "denovo_data" / "in.tsv",
         """
-        familyId location variant   bestState
-        f1       chrA:1   sub(A->C) 2||2||1/0||0||1
-        f2       chrA:2   sub(A->C) 2||2||1/0||0||1
+        chrom  pos  ref  alt  person_id
+        chrA   1    A    C    p1
+        chrA   2    A    G    p2
         """)
 
     return (

@@ -166,11 +166,11 @@ def denovo_import_data(
     denovo_path = setup_denovo(
         root_path / "denovo_data" / "in.tsv",
         """
-        familyId location variant   bestState
-        f1       chr1:12  sub(T->C) 2||2||1/0||0||1
-        f2       chr1:20  sub(G->A) 2||2||1/0||0||1
-        f1       chr1:129 sub(T->C) 2||2||1/0||0||1
-        f2       chr1:143 sub(C->A) 2||2||1/0||0||1
+        chrom  pos  ref  alt  person_id
+        chr1   12   T    C    p1
+        chr1   20   G    A    p2
+        chr1   129  T    C    p1
+        chr1   143  C    A    p2
         """)
 
     return root_path, gpf_instance, genotype_storage, StudyInputLayout(

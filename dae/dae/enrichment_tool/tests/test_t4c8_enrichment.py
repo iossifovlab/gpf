@@ -33,15 +33,15 @@ def denovo_1(tmp_path: pathlib.Path) -> pathlib.Path:
     return setup_denovo(
         tmp_path / "input" / "denovo_1" / "denovo.tsv",
         """
-familyId  location  variant    bestState
-f1.1      chr1:52   sub(C->A)  2||2||1/0||0||1
-f1.3      chr1:52   sub(C->T)  2||2||1/0||0||1
-f1.1      chr1:53   sub(A->C)  2||2||1/0||0||1
-f1.3      chr1:54   sub(T->C)  2||2||1/0||0||1
-f1.1      chr1:57   sub(A->G)  2||2||1/0||0||1
-f1.3      chr1:114  sub(C->T)  2||2||1/0||0||1
-f1.1      chr1:195  sub(C->T)  2||2||1/0||0||1
-f1.3      chr1:145  sub(C->T)  2||2||1/0||0||1
+chrom  pos  ref  alt  person_id
+chr1   52   C    A    ch1
+chr1   52   C    T    ch3
+chr1   53   A    C    ch1
+chr1   54   T    C    ch3
+chr1   57   A    G    ch1
+chr1   114  C    T    ch3
+chr1   195  C    T    ch1
+chr1   145  C    T    ch3
         """,
     )
 

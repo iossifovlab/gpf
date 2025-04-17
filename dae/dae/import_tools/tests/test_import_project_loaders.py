@@ -34,8 +34,8 @@ def project_fixture(tmp_path_factory: pytest.TempPathFactory) -> ImportProject:
     denovo_path = setup_denovo(
         root_path / "trios2_data" / "in.tsv",
         """
-          familyId  location  variant    bestState
-          f1        chr2:11    sub(A->G)  2||2||1/0||0||1
+          chrom  pos  ref  alt  person_id
+          chr2   11   A    G    p1
         """,
     )
     project = setup_import_project(

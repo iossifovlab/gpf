@@ -23,15 +23,15 @@ def dataset(
     var_path1 = setup_denovo(
         root_path / "study_1" / "in.tsv",
         """
-familyId  location  variant    bestState
-f1         chr1:1    sub(A->C) 2||2||1/0||0||1
+chrom  pos  ref  alt  person_id
+chr1   1    A    C    ch1
         """)
 
     var_path2 = setup_denovo(
         root_path / "study_2" / "in.tsv",
         """
-familyId  location  variant    bestState
-f2        chr1:2    sub(A->C)  2||2||1/0||0||1
+chrom pos  ref  alt  person_id
+chr1  2    A    C    ch2
         """)
 
     ped_path1 = setup_pedigree(

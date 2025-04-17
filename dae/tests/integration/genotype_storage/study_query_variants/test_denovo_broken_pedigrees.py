@@ -30,12 +30,12 @@ def denovo_broken_pedigrees(
     denovo_path = setup_denovo(
         tmp_path / "denovo_dae_data" / "in.tsv",
         """
-          familyId  location  variant    bestState
-          f1        foo:10    sub(A->G)  1||1/1||0
-          f1        foo:11    sub(T->A)  1||2/1||0
-          f1        bar:10    sub(G->A)  2||1/0||1
-          f2        bar:11    sub(G->A)  1/1
-          f2        bar:12    sub(G->A)  1/1
+          chrom  pos  ref  alt  person_id
+          foo    10   A    G    p1,s1
+          foo    11   T    A    p1
+          bar    10   G    A    s1
+          bar    11   G    A    p2
+          bar    12   G    A    p2
         """,
     )
     genotype_storage = genotype_storage_factory(

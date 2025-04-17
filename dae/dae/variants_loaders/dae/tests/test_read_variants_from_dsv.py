@@ -97,13 +97,13 @@ def test_produce_genotype_no_people_with_variants(
 
 
 def test_families_instance_type_assertion(
-    denovo_dae_style: pathlib.Path,
+    denovo_default_style: pathlib.Path,
     denovo_families: FamiliesData,
     acgt_genome_19: ReferenceGenome,
 ) -> None:
     error_message = "families must be an instance of FamiliesData!"
     loader = DenovoLoader(
-        denovo_families, str(denovo_dae_style),
+        denovo_families, str(denovo_default_style),
         genome=acgt_genome_19)
     with pytest.raises(AssertionError) as excinfo:
         loader.flexible_denovo_load(
@@ -125,7 +125,13 @@ def test_read_variants_dae_style(
 ) -> None:
     loader = DenovoLoader(
         denovo_families, str(denovo_dae_style),
-        genome=acgt_genome_19)
+        genome=acgt_genome_19,
+        params={
+            "denovo_location": "location",
+            "denovo_variant": "variant",
+            "denovo_family_id": "familyId",
+            "denovo_best_state": "bestState",
+        })
     res_df = loader.flexible_denovo_load(
         str(denovo_dae_style),
         acgt_genome_19,
@@ -253,9 +259,9 @@ def test_read_variants_person_ids_multiline(
     acgt_genome_19: ReferenceGenome,
 ) -> None:
     filename = setup_denovo(tmp_path / "multi_person.tsv", textwrap.dedent("""
-personId chrom pos  ref alt
-p1       1     1    A   T
-s1       1     1    A   T
+personId chrom pos  ref alt familyId
+p1       1     1    A   T   f1
+s1       1     1    A   T   f1
 """))
     loader = DenovoLoader(
         denovo_families, str(filename),
@@ -266,6 +272,7 @@ s1       1     1    A   T
             "denovo_ref": "ref",
             "denovo_alt": "alt",
             "denovo_person_id": "personId",
+            "denovo_family_id": "familyId",
         })
     res_df = loader.flexible_denovo_load(
         str(filename),
@@ -276,6 +283,7 @@ s1       1     1    A   T
         denovo_ref="ref",
         denovo_alt="alt",
         denovo_person_id="personId",
+        denovo_family_id="familyId",
     )
 
     assert len(res_df) == 1
@@ -445,23 +453,19 @@ f3       3     1    A   T   0/1
 
 
 def test_read_variants_genome_assertion(
-    denovo_dae_style: pathlib.Path,
+    denovo_default_style: pathlib.Path,
     denovo_families: FamiliesData,
     acgt_genome_19: ReferenceGenome,
 ) -> None:
     loader = DenovoLoader(
-        denovo_families, str(denovo_dae_style),
+        denovo_families, str(denovo_default_style),
         acgt_genome_19)
 
     with pytest.raises(AssertionError) as excinfo:
         loader.flexible_denovo_load(
-            str(denovo_dae_style),
+            str(denovo_default_style),
             None,  # type: ignore
             families=denovo_families,
-            denovo_location="location",
-            denovo_variant="variant",
-            denovo_family_id="familyId",
-            denovo_best_state="bestState",
         )
 
     assert str(excinfo.value) == "You must provide a genome object!"

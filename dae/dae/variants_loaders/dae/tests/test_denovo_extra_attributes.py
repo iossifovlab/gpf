@@ -33,9 +33,9 @@ def trio_denovo(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
     return setup_denovo(
         root_path / "trio_data" / "in.tsv",
         """
-          familyId  location  variant    bestState       someAttr
-          f1        chr1:2    del(2)     2||2||1/0||0||1 someAttr1
-          f1        chr2:2    ins(AA)    2||2||1/0||0||1 someAttr2
+          chrom  pos  ref  alt  person_id  someAttr
+          chr1   1    ACG  A    p1         someAttr1
+          chr2   2    A    AAA  p1         someAttr2
         """,
     )
 

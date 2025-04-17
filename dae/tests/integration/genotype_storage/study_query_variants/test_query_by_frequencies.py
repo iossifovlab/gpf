@@ -115,11 +115,11 @@ def imported_denovo_study(
     denovo_path = setup_denovo(
         root_path / "denovo_data" / "denovo.tsv",
         """
-        location  variant    familyId  bestState
-        chrA:1    sub(A->T)  f1        2||2||1||2/0||0||1||0
-        chrA:2    sub(A->T)  f1        2||2||1||2/0||0||1||0
-        chrA:3    sub(A->T)  f1        2||2||1||2/0||0||1||0
-        chrA:4    sub(A->T)  f1        2||2||1||2/0||0||1||0
+        chrom  pos  ref  alt  person_id
+        chrA   1    A    T    f1.p1
+        chrA   2    A    T    f1.p1
+        chrA   3    A    T    f1.p1
+        chrA   4    A    T    f1.p1
         """)
 
     return denovo_study(
