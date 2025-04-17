@@ -24,8 +24,8 @@
                 style="display: flex; align-items: center; justify-content: center; gap: 6px">
                 <span [title]="selectedDataset.name" id="selected-dataset-name">{{ selectedDataset.name }}</span>
 
-                <div *ngIf="selectedDataset.hasDenovo" style="display: inline-flex">
-                  <span class="denovo-icon material-symbols-outlined sm" title="denovo">genetics</span>
+                <div *ngIf="selectedDataset.hasDenovo" style="display: inline-flex" title="denovo">
+                  <span class="denovo-icon material-symbols-outlined sm">genetics</span>
                   <span class="star-icon material-symbols-outlined">kid_star</span>
                 </div>
 

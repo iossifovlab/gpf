@@ -15,8 +15,8 @@
     (middleclick)="select(true)">
     <span [title]="datasetNode.dataset.name" class="dataset-name">{{ datasetNode.dataset.name }}</span>
 
-    <div *ngIf="datasetNode.dataset.hasDenovo" style="display: inline-flex">
-      <span class="denovo-icon material-symbols-outlined sm" title="denovo">genetics</span>
+    <div *ngIf="datasetNode.dataset.hasDenovo" style="display: inline-flex" title="denovo">
+      <span class="denovo-icon material-symbols-outlined sm">genetics</span>
       <span class="star-icon material-symbols-outlined">kid_star</span>
     </div>
 
