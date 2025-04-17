@@ -189,7 +189,8 @@ class PhenoMeasureHistogramViewBeta(QueryBaseView):
 
             if measure.histogram_config is None:
                 number_hist_conf = NumberHistogramConfig.default_config(None)
-                if min(bars) * 10 < max(bars):
+                sorted_bars = sorted(bars.copy(), reverse=True)
+                if sorted_bars[1] != 0 and sorted_bars[1] * 10 < sorted_bars[0]:
                     number_hist_conf.y_log_scale = True
             else:
                 number_hist_conf = cast(
