@@ -2,7 +2,7 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { Store } from '@ngrx/store';
 import { cloneDeep } from 'lodash';
-import { Subscription, take } from 'rxjs';
+import { Observable, Subscription, take, zip } from 'rxjs';
 import { MeasuresService } from 'app/measures/measures.service';
 import { Measure, MeasureHistogram } from 'app/measures/measures';
 import {
@@ -175,14 +175,18 @@ export class PersonFiltersSelectorComponent implements OnInit, OnDestroy {
   }
 
   private loadState(states: MeasureHistogramState[]): void {
+    const observables: Observable<MeasureHistogram>[] = [];
     states.forEach(state => {
-      this.measuresService.getMeasureHistogramBeta(this.dataset.id, state.measure, state.roles)
-        .subscribe(histogramData => {
-          this.selectedMeasureHistograms.unshift({
-            measureHistogram: histogramData,
-            state: state
-          });
+      observables.push(this.measuresService.getMeasureHistogramBeta(this.dataset.id, state.measure, state.roles));
+    });
+
+    zip(...observables).subscribe(allHistogramsData => {
+      states.forEach((state, i) => {
+        this.selectedMeasureHistograms.unshift({
+          measureHistogram: allHistogramsData[i],
+          state: state
         });
+      });
     });
   }
 
