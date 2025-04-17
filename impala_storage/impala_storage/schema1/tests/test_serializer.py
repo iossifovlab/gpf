@@ -41,6 +41,10 @@ def extra_attrs_impala(
                 "files": [
                     variants_filename,
                 ],
+                "family_id": "familyId",
+                "location": "location",
+                "variant": "variant",
+                "best_state": "bestState",
             },
         },
         "processing_config": {
@@ -115,6 +119,12 @@ def test_extra_attributes_serialization_deserialization(
     loader = DenovoLoader(
         families_data, fixture_dirname("backends/iossifov_extra_attrs.tsv"),
         fixtures_gpf_instance.reference_genome,
+        params={
+            "denovo_family_id": "familyId",
+            "denovo_location": "location",
+            "denovo_variant": "variant",
+            "denovo_best_state": "bestState",
+        },
     )
 
     main_schema = loader.get_attribute("annotation_schema")

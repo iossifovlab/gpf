@@ -560,7 +560,8 @@ class DenovoLoader(VariantsGenotypesLoader):
                     },
                 )
 
-                grouped = temp_df.groupby(["chrom", "pos", "ref", "alt", "person_id"])
+                grouped = temp_df.groupby([
+                    "chrom", "pos", "ref", "alt", "person_id"])
 
             result = []
 

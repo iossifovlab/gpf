@@ -34,7 +34,7 @@ def study(tmp_path: pathlib.Path) -> GenotypeData:
           foo   10   A    G    p1,s1     mom
           foo   10   A    G    p2        dad
           bar   10   G    A    s1        mom
-          bar   11   G    A    p2        mom          
+          bar   11   G    A    p2        mom
         """,
     )
 
