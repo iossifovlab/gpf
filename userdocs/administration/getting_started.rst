@@ -91,12 +91,12 @@ Navigate to the newly-created directory:
 
 This repository provides a minimal instance and sample data to be imported.
 
-The reference genome used by this GPF instance is ``hg38/genomes/GRCh38-hg38`` from the default GRR.
-The gene models used by this GPF instance are ``hg38/gene_models/refSeq_v20200330`` from the default GRR.
+The reference genome used by this GPF instance is ``hg38/genomes/GRCh38-hg38`` 
+from the default GRR.
+The gene models used by this GPF instance are ``hg38/gene_models/refSeq_v20200330`` 
+from the default GRR.
 If not specified otherwise, GPF uses the default genomic resources
-repository located at
-`https://www.iossifovlab.com/distribution/public/genomic-resources-repository/
-<https://www.iossifovlab.com/distribution/public/genomic-resources-repository/>`_.
+repository located at `https://grr.iossifovlab.com/ <https://grr.iossifovlab.com/>`_.
 Resources are used without caching.
 
 Starting and stopping the GPF web interface
