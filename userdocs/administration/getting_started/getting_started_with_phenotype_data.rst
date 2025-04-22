@@ -15,33 +15,36 @@ data into our GPF instance.
 
 Inside the ``input_phenotype_data`` directory, the following data is provided:
 
+* ``pedigree.ped`` is the phenotype data pedigree file.
+  ``input_phenotype_data/pedigree.ped``:
+
+  .. literalinclude:: gpf-getting-started/input_phenotype_data/pedigree.ped
+      :tab-width: 10
+
 * ``instruments`` contains the phenotype instruments and measures to be imported.
-* ``pedigree.ped`` is the corresponding pedigree file.
+  There are two instruments in the example:
+
+  ``input_phenotype_data/instruments/basic_medical.csv``:
+  
+  .. literalinclude:: gpf-getting-started/input_phenotype_data/instruments/basic_medical.csv
+
+  ``input_phenotype_data/instruments/iq.csv``:
+
+  .. literalinclude:: gpf-getting-started/input_phenotype_data/instruments/iq.csv
+
 * ``measure_descriptions.tsv`` contains descriptions for the provided measures.
+
+  ``input_phenotype_data/measure_descriptions.tsv``:
+
+  .. literalinclude:: gpf-getting-started/input_phenotype_data/measure_descriptions.tsv
+      :tab-width: 20
+
 * ``import_project.yaml`` is the import project configuration that we will use 
   to import this data.
 
-``input_phenotype_data/instruments/basic_medical.csv``:
+  ``input_phenotype_data/import_project.yaml``:
 
-.. literalinclude:: gpf-getting-started/input_phenotype_data/instruments/basic_medical.csv
-
-``input_phenotype_data/instruments/iq.csv``:
-
-.. literalinclude:: gpf-getting-started/input_phenotype_data/instruments/iq.csv
-
-``input_phenotype_data/pedigree.ped``:
-
-.. literalinclude:: gpf-getting-started/input_phenotype_data/pedigree.ped
-    :tab-width: 10
-
-``input_phenotype_data/measure_descriptions.tsv``:
-
-.. literalinclude:: gpf-getting-started/input_phenotype_data/measure_descriptions.tsv
-    :tab-width: 20
-
-``input_phenotype_data/import_project.yaml``:
-
-.. literalinclude:: gpf-getting-started/input_phenotype_data/import_project.yaml
+  .. literalinclude:: gpf-getting-started/input_phenotype_data/import_project.yaml
 
 .. note::
 
@@ -103,10 +106,11 @@ Add the following line to the configuration file:
 When you restart the server, you should be able to see `Phenotype Browser` 
 and `Phenotype Tool` tabs enabled for the `Example Dataset` dataset.
 
-Additionally, the `Family Filters` and `Person Filters` sections will have
+Additionally, in the `Genotype Browser` the `Family Filters` and 
+`Person Filters` sections will have
 the `Pheno Measures` filters enabled.
 
-.. figure:: getting_started_files/example-dataset-genotype-browser-pheno-filters.png
+.. figure:: getting_started_files/example-dataset-genotype-browser-pheno-filters-2.png
 
     Example Dataset genotype browser using Pheno Measures family filters
 
@@ -123,12 +127,12 @@ To configure such a column you need to specify following attributes:
 * ``source`` - the measure ID which values we are going to show in the column;
 
 * ``role`` - the role of the person in the family for which we are going to show
-  the measure value;
+  the phenotype measure value;
 
 * ``name`` - the display name of the column in the table.
 
 Let's add a phenotype columns to the `Genotype Browser` preview table. 
-To do this, you need to define it in the study's config, in the genotype 
+To do this, you need to define them in the study's config, in the genotype 
 browser section of the configuration file.
 
 .. code-block:: yaml
@@ -194,15 +198,17 @@ browser section of the configuration file.
 Lines 15-24 define two new columns with values coming from the phenotype data
 attributes:
 
-* ``prb_verbal_iq`` - is a column that uses the value of the attribute
-  ``iq.verbal_iq`` and formats it as a float with 5 decimal places. 
-  The columns will be named `Verbal IQ` where it is used;
+* ``prb_verbal_iq`` - is a column that uses the value of the phenotype measure
+  ``iq.verbal_iq`` for the family proband. 
+  The display name of the column will be `Verbal IQ`;
 
-* ``prb_non_verbal_iq`` - is a column that uses the value of the attribute
-  ``iq.non_verbal_iq``. The columns will be named `Non-Verbal IQ` where it is used.
+* ``prb_non_verbal_iq`` - is a column that uses the value of the phenotype measure
+  ``iq.non_verbal_iq`` for the family proband.
+  The display name of the column will be `Non-Verbal IQ`.
 
 In the preview table each column could show multiple values. In GPF when you
-want to show multiple values in single column, you need to define a column group.
+want to show multiple values in single column, you need to define 
+a **column group**.
 
 The column group is a collection of columns that are
 shown together in the preview table. The values in a column group are shown
@@ -216,6 +222,16 @@ To add the new column group ``proband_iq`` to the preview table, we need to add 
 ``preview_columns_ext`` section of the configuration file. In line 47 we
 add the new column group ``proband_iq`` at the end of the preview table.
 
-.. figure:: getting_started_files/example-dataset-proband-iq-column-group.png
+
+When you restart the server, go to the `Genotype Browser` tab of the 
+``Example Dataset`` dataset and select all checkboxes in `Present in Child`, 
+`Present in Parent` and `Effect Types` sections:
+
+.. image:: getting_started_files/example-dataset-proband-iq-column-group-filters.png
+
+When you click on the `Table Preview` button, you will be able to see the new column group
+``proband_iq`` in the preview table.
+
+.. figure:: getting_started_files/example-dataset-proband-iq-column-group-variants.png
 
     Example Dataset genotype browser using pheno measures columns
