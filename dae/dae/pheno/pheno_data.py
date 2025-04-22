@@ -287,8 +287,8 @@ class PhenotypeData(ABC, CommonStudyMixin):
         browser_dbfile = db_dir / f"{pheno_data.pheno_id}_browser.db"
         if not browser_dbfile.exists():
             if read_only:
-                raise FileNotFoundError(
-                    f"Browser DB file {browser_dbfile!s} not found.",
+                logger.warning(
+                    "Browser DB file not found.",
                 )
             conn = duckdb.connect(browser_dbfile, read_only=False)
             conn.checkpoint()
@@ -731,6 +731,11 @@ class PhenotypeData(ABC, CommonStudyMixin):
         if report is None:
             report = self.build_and_save()
         return report
+
+    def close(self) -> None:
+        """Close the connection to the database."""
+        if self._browser is not None:
+            self._browser.connection.close()
 
 
 class PhenotypeStudy(PhenotypeData):

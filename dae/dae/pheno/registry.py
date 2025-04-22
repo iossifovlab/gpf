@@ -196,3 +196,9 @@ class PhenoRegistry:
             cache_path=self.browser_cache_path,
         )
         return self._cache[pheno_id]
+
+    def shutdown(self) -> None:
+        """Shutdown the registry and all loaded phenotype data."""
+        with self.CACHE_LOCK:
+            for pheno_data in self._cache.values():
+                pheno_data.close()

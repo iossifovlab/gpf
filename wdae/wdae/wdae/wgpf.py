@@ -145,14 +145,6 @@ def _run_run_command(
     host = kwargs.get("host")
     port = kwargs.get("port")
 
-    logger.info("Checking phenotype studies for browser caches")
-    study_ids = collect_outdated_phenotype_studies(wgpf_instance)
-    logger.info(
-        "The following studies have"
-        "missing or outdated browser caches: %s",
-        study_ids,
-    )
-
     work_dir = os.path.join(
         wgpf_instance.dae_dir, ".reannotate-instance")
     shutil.rmtree(work_dir, ignore_errors=True)
@@ -160,14 +152,6 @@ def _run_run_command(
     reannotation_tool = ReannotateInstanceTool(
         ["--work-dir", work_dir], wgpf_instance)
     reannotation_tool.run()
-
-    for study_id in study_ids:
-        logger.info("Generating browser cache for %s", study_id)
-        build_pheno_browser([
-            study_id, "--gpf-instance",
-            str(wgpf_instance.dae_config_path),
-            "--no-cache",
-        ])
 
     try:
         execute_from_command_line([
@@ -207,6 +191,12 @@ def cli(argv: list[str] | None = None) -> None:
         logger.error("missing wgpf subcommand")
         parser.print_help()
         sys.exit(1)
+
+    build_pheno_browser([
+        "--gpf-instance",
+        args.gpf_instance,
+        "--no-cache",
+    ])
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "wdae.wgpf_settings")
     django.setup()
