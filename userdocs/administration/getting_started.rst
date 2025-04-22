@@ -316,9 +316,11 @@ and place the following configuration file ``example_dataset.yaml`` inside that 
 When ready with the configuration restart the ``wgpf`` command. The home page of
 the GPF instance will change and now will include the configured dataset ``example_dataset``.
 
-.. image:: getting_started_files/example-dataset-home-page.png
+.. figure:: getting_started_files/example-dataset-home-page.png
 
-Follow the link to `Example Dataset`, choose the `Gene Browser` page 
+    Home page of the GPF instance showing the `example_dataset`
+
+Follow the link to the `Example Dataset`, choose the `Gene Browser` page 
 and fill `CHD8` in the `Gene Symbol`. Click `Go` button and now you will be
 able to see the variants from both studies.
 
@@ -326,6 +328,7 @@ able to see the variants from both studies.
 
     Gene Browser for CHD8 gene shows variants from both studies - 
     ``denovo_example`` and ``vcf_example``
+
 
 
 .. Getting started with de novo gene sets
