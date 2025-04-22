@@ -6,8 +6,9 @@ annotation can be used in the variants preview table and in the variants downloa
 file. For each study and dataset you can specify which columns are shown in the 
 variants' table preview, as well as those which will be downloaded.
 
-In our example the annotation produces two additional attributes:
-``gnomad_v4_genome_ALL_af`` and ``CLNSIG``. Let us add these attributes to the
+In our example the annotation produces three additional attributes:
+``gnomad_v4_genome_ALL_af``, ``CLNSIG``, and ``CLNDN``. Let us add these 
+attributes to the
 variants preview table and the variants download file for the ``example_dataset``
 dataset.
 
@@ -17,7 +18,7 @@ at the end of the configuration file:
 
 .. code-block:: yaml
     :linenos:
-    :emphasize-lines: 3-13, 16-19, 21-25
+    :emphasize-lines: 3-13, 16-19, 21-25, 27-29, 31-34
 
     genotype_browser:
       columns:
@@ -55,21 +56,22 @@ at the end of the configuration file:
         - clinvar_clndn
 
 
-Lines 3-13 define three new columns with values comming from the genotype data
-attributes:
+Lines 3-13 define the three new columns with values comming from the 
+genotype data attributes:
 
 * ``gnomad_v4_genome_af`` - is a column that uses the value of the attribute
   ``gnomad_v4_genome_ALL_af`` and formats it as a float with 5 decimal places. 
-  The columns will be named `gnomAD v4 AF` where it is used;
+  The display name of the column will be `gnomAD v4 AF`;
 
 * ``clinvar_clnsig`` - is a column that uses the value of the attribute
-  ``CLNSIG``. The columns will be named `CLNSIG` where it is used.
+  ``CLNSIG``. The display name of the column will be `CLNSIG`;
 
 * ``clinvar_clndn`` - is a column that uses the value of the attribute
-  ``CLNDN``. The columns will be named `CLNDN` where it is used.
+  ``CLNDN``. The display name of the column will be `CLNDN`.
 
 In the preview table each column could show multiple values. In GPF when you
-want to show multiple values in single column, you need to define a column group.
+want to show multiple values in single column, you need to define a \
+**column group**.
 
 The column group is a collection of columns that are
 shown together in the preview table. The values in a column group are shown
@@ -96,11 +98,16 @@ If we now stop the ``wgpf`` tool and run it again, we will be able to see the ne
 columns in the preview table and in the download file.
 
 From the GPF instance `Home Page` follow the link to the `Example Dataset` page
-and choose the genotype browser. Select all checkboxes in `Present in Child`, 
-`Present in Parent` and `Effect Types` sections and click the `Preview` button.
+and choose the `Genotype Browser`. Select all checkboxes in `Present in Child`, 
+`Present in Parent` and `Effect Types` sections.
 
+.. image:: getting_started_files/example-dataset-genotype-browser-extended-columns-filters.png
 
-.. figure:: getting_started_files/example-dataset-genotype-brower-extended-columns-2.png
+Then click the `Preview` button and will be able to see all the imported variants
+with theyre
+additional attributes comming from the annotation.
 
-    Example Dataset genotype browser with additional columns `gnomAD v4 AF` 
-    and `ClinVar CLINSIG`.
+.. figure:: getting_started_files/example-dataset-genotype-browser-extended-columns-variants.png
+
+    Example Dataset genotype browser displaying variants with additional columns 
+    `gnomAD v4` and `ClinVar`.
