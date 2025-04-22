@@ -34,6 +34,7 @@ import { Dataset } from 'app/datasets/datasets';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store, StoreModule } from '@ngrx/store';
 import { datasetIdReducer } from 'app/datasets/datasets.state';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 
 const fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression)) as object;
 fakeJsonMeasurei1['instrument_name'] = 'i1';
@@ -83,9 +84,10 @@ class MockPhenoBrowserService {
   public cancelStreamPost(): void { }
 }
 class MockDatasetsService {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public getDataset(datasetId: string): Observable<Dataset> {
     // eslint-disable-next-line @stylistic/max-len
-    return of(new Dataset(datasetId, 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, null, null, null));
+    return of(new Dataset('testDatasetId', 'testDataset', [], true, [], [], [], '', true, true, true, true, null, null, null, [], null, null, null, null, null));
   }
 }
 
@@ -169,7 +171,8 @@ describe('PhenoBrowserComponent', () => {
         { provide: ResizeService, useValue: resizeSpy },
         { provide: PhenoMeasures, useValue: mockPhenoMeasures },
         ConfigService
-      ]
+      ],
+      schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();
 
     router = TestBed.inject(Router);
@@ -216,12 +219,13 @@ describe('PhenoBrowserComponent', () => {
   });
 
   it('should pass search terms to the service correctly', waitForAsync(() => {
-    jest.spyOn(phenoBrowserServiceMock, 'getMeasures');
+    const getMeasuresSpy = jest.spyOn(phenoBrowserServiceMock, 'getMeasures');
+
     setQuery(fixture, 1, 'q10');
     fixture.whenStable().then(() => {
-      expect(phenoBrowserServiceMock.getMeasures).toHaveBeenCalledTimes(2);
-      expect(phenoBrowserServiceMock.getMeasures).toHaveBeenCalledWith('testDatasetId', 'i1', '');
-      expect(phenoBrowserServiceMock.getMeasures).toHaveBeenCalledWith('testDatasetId', 'i1', 'q10');
+      expect(getMeasuresSpy).toHaveBeenCalledTimes(2);
+      expect(getMeasuresSpy).toHaveBeenCalledWith('testDatasetId', 'i1', '');
+      expect(getMeasuresSpy).toHaveBeenCalledWith('testDatasetId', 'i1', 'q10');
     });
   }));
 
