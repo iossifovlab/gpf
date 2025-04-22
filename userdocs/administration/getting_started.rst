@@ -7,7 +7,7 @@ Setup
 Prerequisites
 +++++++++++++
 
-This guide assumes that you are working on a recent Linux box.
+This guide assumes that you are working on a recent Linux (or Mac OSX) machine.
 
 The GPF system is distributed as an Anaconda package using the ``conda``
 package manager.
@@ -47,7 +47,7 @@ instead of ``conda``. Mamba will speed up the installation of packages:
 GPF Installation
 ++++++++++++++++
 
-The GPF system is developed in Python and supports Python 3.9 and up.
+The GPF system is developed in Python and supports Python 3.11å and up.
 The recommended way to set up the GPF development environment is to use Anaconda.
 
 Create an empty Anaconda environment named `gpf`:
@@ -91,24 +91,19 @@ Navigate to the newly-created directory:
 
 This repository provides a minimal instance and sample data to be imported.
 
-The reference genome used by this GPF instance is ``hg38/genomes/GRCh38-hg38`` 
-from the default GRR.
-The gene models used by this GPF instance are ``hg38/gene_models/refSeq_v20200330`` 
-from the default GRR.
-If not specified otherwise, GPF uses the default genomic resources
-repository located at `https://grr.iossifovlab.com/ <https://grr.iossifovlab.com/>`_.
-Resources are used without caching.
 
 Starting and stopping the GPF web interface
 +++++++++++++++++++++++++++++++++++++++++++
 
 By default, the GPF system looks for a file ``gpf_instance.yaml`` in the
 current directory (and its parent directories). If GPF finds such a file, it
-uses it as a configuration for the GPF instance. Otherwise, it throws an
-exception.
+uses it as a configuration for the GPF instance. Otherwise, 
+GPF will look for a the ``DAE_DB_DIR`` environment variable. If it is not set,
+it throws an exception.
 
-Additionally, GPF will also consider the ``DAE_DB_DIR`` environment variable.
-You can set it using the following command:
+For this manual we recommend setting the ``DAE_DB_DIR`` environment variable.
+
+From within the ``gpf-getting-started`` directory run the following command:
 
 .. code-block:: bash
 
@@ -121,7 +116,17 @@ For this guide we use a ``gpf_instance.yaml`` file that is already provided in t
 
 GPF instance configuration requires a reference genome and gene models to 
 annotate variants with effects on genes. 
-For this giude we use HG38 reference genome and MANE 1.4 gene models.
+For this giude we use HG38 reference genome and MANE 1.3 gene models.
+
+If not specified otherwise, GPF uses the GPF Genomic Resources
+Repository (GRR) located at 
+`https://grr.iossifovlab.com/ <https://grr.iossifovlab.com/>`_
+to find the resources it needs.
+
+The reference genome used by this GPF instance is ``hg38/genomes/GRCh38-hg38`` 
+and 
+the gene models are ``hg38/gene_models/MANE/1.3`` 
+from the default GRR.
 
 .. note::
 
@@ -228,9 +233,11 @@ included in the study, types of families and rates of de novo variants.
     Rate of de novo variants
 
 If you select `Genotype Browser` page, you will be able to see the imported
-de novo variants in the browser. The default filters search for LGD de novo
+de novo variants. The default filters search for LGD de novo
 variants. It happens, that all de novo variants imported in the `denovo_example`
-study are LGD variants. So, if you click `Preview` button all the imported variants 
+study are LGD variants. 
+
+So, when you click `Preview` button all the imported variants 
 will be shown.
 
 .. figure:: getting_started_files/denovo-example-genotype-browser.png
@@ -271,10 +278,10 @@ The GRF instance `Home Page` now includes the imported study ``vcf_example``.
 .. image:: getting_started_files/vcf-example-home-page.png
 
 
-It happens that all imported VCF variants are located on CHD8 gene. To browse 
-these variants 
-follow the link to the `vcf_example` study, and choose `Gene Browser`
-page. Fill `CHD8` in the `Gene Symbol` box and click `Go` button.
+If you follow the link to the `vcf_example` you will get to 
+the `Gene Browser` page for the study.
+It happens that all imported VCF variants are located on CHD8 gene.
+Fill `CHD8` in the `Gene Symbol` box and click `Go` button.
 
 .. figure:: getting_started_files/vcf-example-gene-browser.png
 

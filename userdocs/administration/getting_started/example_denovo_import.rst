@@ -46,6 +46,7 @@ We are going to use only the first five
 columns from that file that look as follows:
 
 .. code-block:: bash
+
     zcat Supplementary_Data_1.tsv.gz | head | cut -f 1-5 | less -S -x 20 
 
 
@@ -102,7 +103,8 @@ siblings is unaffected.
 Having this information, we can use the following `Awk` script to transform 
 the list of children into a pedigree:
 
-.. code:: bash
+.. code-block:: bash
+
     gunzip -c Supplementary_Data_1.tsv.gz | awk '
         BEGIN {
             OFS="\t"
