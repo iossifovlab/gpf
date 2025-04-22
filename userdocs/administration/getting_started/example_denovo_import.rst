@@ -4,37 +4,39 @@ Example import of real data
 Source of the data
 ++++++++++++++++++
 
-Let us import de novo variants from the 
-`Yoon, S., Munoz, A., Yamrom, B. et al. Rates of contributory de novo 
+As an example let us import de novo variants from the following paper:
+`Yoon, S., et al. Rates of contributory de novo 
 mutation in high and low-risk autism families. 
 Commun Biol 4, 1026 (2021). <https://doi.org/10.1038/s42003-021-02533-z>`_
 
-We will focus on de Novo variants from the SSC collection published in the 
+We will focus on de novo variants from the SSC collection published in the 
 aforementioned paper.
 
 To import these variants into the GPF system, we need 
 a pedigree file describing the families and 
 a list of de novo variants.
 
-The pedigree file for this study is not available. Instead, we have a list 
-of children available from 
-`Supplementary Data 
-1. <https://pmc.ncbi.nlm.nih.gov/articles/instance/8410909/bin/42003_2021_2533_MOESM3_ESM.xlsx>`_
+From the supplementary data for the paper can download the following files:
 
-The list of SNP and INDEL de novo variants is available from 
-`Supplementary Data 
-2. <https://pmc.ncbi.nlm.nih.gov/articles/instance/8410909/bin/42003_2021_2533_MOESM4_ESM.xlsx>`_
+* The list 
+  of sequenced children available from 
+  `Supplementary Data 
+  1. <https://pmc.ncbi.nlm.nih.gov/articles/instance/8410909/bin/42003_2021_2533_MOESM3_ESM.xlsx>`_
 
-The list of CNV de novo variants is available from
-`Supplementary Data 
-4. <https://pmc.ncbi.nlm.nih.gov/articles/instance/8410909/bin/42003_2021_2533_MOESM6_ESM.xlsx>`_
+* The list of SNP and INDEL de novo variants is available from 
+  `Supplementary Data 
+  2. <https://pmc.ncbi.nlm.nih.gov/articles/instance/8410909/bin/42003_2021_2533_MOESM4_ESM.xlsx>`_
+
+* The list of CNV de novo variants is available from
+  `Supplementary Data 
+  4. <https://pmc.ncbi.nlm.nih.gov/articles/instance/8410909/bin/42003_2021_2533_MOESM6_ESM.xlsx>`_
 
 
 .. note:: 
 
     All the data files needed for this example are available in the
     `gpf-getting-started <https://github.com/iossifovlab/gpf-getting-started.git>`_
-    repository under the subdirectory ``example_imports/denovo_and_cnv_import/input_data``.
+    repository under the subdirectory ``example_imports/denovo_and_cnv_import``.
 
 
 Preprocess the Family Data
@@ -47,7 +49,7 @@ columns from that file that look as follows:
 
 .. code-block:: bash
 
-    zcat Supplementary_Data_1.tsv.gz | head | cut -f 1-5 | less -S -x 20 
+    gunzip -c Supplementary_Data_1.tsv.gz | head | cut -f 1-5 | less -S -x 20 
 
 
     collection          familyId            personId            affected status     sex
@@ -124,20 +126,23 @@ the list of children into a pedigree:
 If we run this script, it will read ``Supplementary_Data_1.tsv.gz`` and produce 
 the appropriate pedigree file ``ssc_denovo.ped``.
 
-The resulting pedigree file is also available in the 
-`gpf-getting-started <https://github.com/iossifovlab/gpf-getting-started.git>`_
-repository under the subdirectory 
-``example_imports/denovo_and_cnv_import/input_data``.
+.. note:: 
+    The resulting pedigree file is also available in the 
+    `gpf-getting-started <https://github.com/iossifovlab/gpf-getting-started.git>`_
+    repository under the subdirectory 
+    ``example_imports/denovo_and_cnv_import``.
 
-.. literalinclude:: gpf-getting-started/example_imports/denovo_and_cnv_import/input_data/ssc_denovo.ped
+Here is a fragment from the resulting pedigree file:
+
+.. literalinclude:: gpf-getting-started/example_imports/denovo_and_cnv_import/ssc_denovo.ped
     :tab-width: 15
-    :lines: 1-21
+    :lines: 1-11
 
 Preprocess the SNP and INDEL de Novo variants
 +++++++++++++++++++++++++++++++++++++++++++++
 
 The `Supplementary_Data_2.tsv.gz` file contains 255232 variants. 
-For the import, we will need columns four and nine from this file:
+For the import, we will use columns four and nine from this file:
 
 .. code-block:: bash
 
@@ -170,14 +175,18 @@ import list of de Novo variants:
         }' > ssc_denovo.tsv
 
 
-The resulting pedigree file is also available in the 
-`gpf-getting-started <https://github.com/iossifovlab/gpf-getting-started.git>`_
-repository under the subdirectory 
-``example_imports/denovo_and_cnv_import/input_data``.
+This script will produce a file named ``ssc_denovo.tsv`` with the following content:
 
-.. literalinclude:: gpf-getting-started/example_imports/denovo_and_cnv_import/input_data//ssc_denovo.tsv     
+.. literalinclude:: gpf-getting-started/example_imports/denovo_and_cnv_import/ssc_denovo.tsv     
     :tab-width: 15
-    :lines: 1-20
+    :lines: 1-11
+
+.. note::
+    The resulting pedigree file is also available in the 
+    `gpf-getting-started <https://github.com/iossifovlab/gpf-getting-started.git>`_
+    repository under the subdirectory 
+    ``example_imports/denovo_and_cnv_import/input_data``.
+
 
 
 Caching GRR
@@ -214,10 +223,10 @@ the following command from ``gpf-getting-started`` directory:
     connection and the number of resources you configuration require.
 
     The resources will be downloaded to the directory specified in the 
-    ``cache_dir`` parameter of the ``.grr_definition.yaml`` file.
+    ``cache_dir`` parameter in the ``.grr_definition.yaml`` file.
 
     For the ``gpf-getting-started`` repository, the resources that will be 
-    downloaded:
+    downloaded are:
 
     * ``hg38/genomes/GRCh38-hg38``
 
@@ -237,14 +246,20 @@ Now we have a pedigree file, ``ssc_denovo.ped``, and a list of de novo
 variants, ``ssc_denovo.tsv``. Let us prepare an import project configuration 
 file, ``ssc_denovo.yaml``:
 
-.. literalinclude:: gpf-getting-started/example_imports/denovo_and_cnv_import/input_data/ssc_denovo.yaml
+.. literalinclude:: gpf-getting-started/example_imports/denovo_and_cnv_import/ssc_denovo.yaml
 
-  
-To import the study, we should run:
+.. note::
+
+    The project file ``ssc_denovo.yaml`` is also available in the the ``gpf-getting-started``
+    repository under the subdirectory 
+    ``example_imports/denovo_and_cnv_import``.
+
+
+To import the study, from the ``gpf-getting-started`` directory we should run:
 
 .. code:: bash
 
-    time import_genotypes -v -j 1 ssc_denovo.yaml
+    time import_genotypes -v -j 1 example_imports/denovo_and_cnv_import/ssc_denovo.yaml
 
     real    10m23.760s
     user    10m2.447s
@@ -257,10 +272,83 @@ When the import finishes, we can run the development GPF server:
 
     wgpf run
 
-In the home page of the GPF instance we should have the new study ``ssc_denovo``.
+In the `Home` page of the GPF instance we should have the new study ``ssc_denovo``.
+
+.. figure:: getting_started_files/ssc_denovo_home_page.png
+
+    Home page with the imported SSC de novo variants.
+
 If you follow the link to the study, and choose the `Genotype Browser` tab, you 
-will be able to query the variants.
+will be able to query the imported variants.
 
 .. figure:: getting_started_files/ssc_denovo_genotype_browser.png
 
     Genotype browser for the SSC de novo variants.
+
+
+Configure preview and download columns
+++++++++++++++++++++++++++++++++++++++
+
+While importing the SSC de novo variants, we were using the annotation defined
+in the minimal instance configuration file. So, all imported variants are
+annotated with GnomAD and ClinVar genomic scores.
+
+We can use these scores to define additional columns in the preview table and
+the download file similar to :doc:`getting_started_with_preview_columns`.
+
+Edit the ``ssc_denovo`` configuration file located at 
+``minimal_instance/datasets/ssc_denovo/ssc_denovo.yaml`` and add the following
+snipped to the configuration file:
+
+.. code-block:: yaml
+    :linenos:
+
+    genotype_browser:
+      columns:
+        genotype:
+          gnomad_v4_genome_af:
+            name: gnomAD v4 AF
+            source: gnomad_v4_genome_ALL_af
+            format: "%%.5f"
+          clinvar_clnsig:
+            name: CLNSIG
+            source: CLNSIG
+          clinvar_clndn:
+            name: CLNDN
+            source: CLNDN
+
+      column_groups:
+        gnomad_v4:
+          name: gnomAD v4
+          columns:
+          - gnomad_v4_genome_af
+
+        clinvar:
+          name: ClinVar
+          columns:
+          - clinvar_clnsig
+          - clinvar_clndn
+
+      preview_columns_ext:
+        - gnomad_v4
+        - clinvar
+
+      download_columns_ext:
+        - gnomad_v4_genome_af
+        - clinvar_clnsig
+        - clinvar_clndn
+  
+Now, restart the GPF development server:
+
+.. code:: bash
+
+    wgpf run
+
+
+Go to the `Genotype Browser` tab of the ``ssc_denovo`` study and click
+`Preview Table` button. The preview table should now contain the additional
+columns for `GnomAD` and `ClinVar` genomic scores.
+
+.. figure:: getting_started_files/ssc_denovo_genotype_browser_with_annotated_columns.png
+
+    Genotype browser with additional columns for GnomAD and ClinVar genomic scores.
