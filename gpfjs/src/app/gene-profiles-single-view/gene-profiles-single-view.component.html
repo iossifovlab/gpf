@@ -26,10 +26,30 @@
         <div *ngIf="gene.geneLinks" class="wrapper" [ngClass]="{ compact: compactView }">
           <table id="links-table">
             <tr>
-              <td style="border-right: 1px solid #dee2e6; padding-left: 2px; text-align: center">Links</td>
-              <td *ngFor="let links of gene.geneLinks">
-                <a [attr.href]="links.url" [id]="links.name + '-link'" target="_blank">{{ links.name }}</a>
-              </td>
+              <td style="padding-left: 2px; padding-bottom: 8px">Internal links: </td>
+              <ng-container *ngFor="let links of gene.geneLinks">
+                <a
+                  *ngIf="links.name === 'Gene Browser'"
+                  style="padding-right: 20px"
+                  [attr.href]="links.url"
+                  [id]="links.name + '-link'"
+                  target="_blank"
+                  >{{ links.name }}</a
+                >
+              </ng-container>
+            </tr>
+            <tr>
+              <td style="padding-left: 2px">External links: </td>
+              <ng-container *ngFor="let links of gene.geneLinks">
+                <a
+                  *ngIf="links.name !== 'Gene Browser'"
+                  style="padding-right: 20px"
+                  [attr.href]="links.url"
+                  [id]="links.name + '-link'"
+                  target="_blank"
+                  >{{ links.name }}</a
+                >
+              </ng-container>
             </tr>
           </table>
         </div>
