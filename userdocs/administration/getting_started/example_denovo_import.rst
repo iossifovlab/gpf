@@ -247,6 +247,18 @@ variants, ``ssc_denovo.tsv``. Let us prepare an import project configuration
 file, ``ssc_denovo.yaml``:
 
 .. literalinclude:: gpf-getting-started/example_imports/denovo_and_cnv_import/ssc_denovo.yaml
+    :linenos:
+    :emphasize-lines: 11-12
+
+When importing genotype data, we often need to instruct the import tool how to
+split the import process into multiple jobs. For this purpose, we can use 
+``processing_config`` section of the import project. On lines 11-12 of the 
+``ssc_denovo.yaml`` file, we have defined the ``processing_config`` section
+that will split the import de Novo variants into jobs by chromosome. (For more
+on import project configuration see :doc:`import_tool`.)
+
+
+
 
 .. note::
 
@@ -254,16 +266,18 @@ file, ``ssc_denovo.yaml``:
     repository under the subdirectory 
     ``example_imports/denovo_and_cnv_import``.
 
-
 To import the study, from the ``gpf-getting-started`` directory we should run:
 
 .. code:: bash
 
-    time import_genotypes -v -j 1 example_imports/denovo_and_cnv_import/ssc_denovo.yaml
+    time import_genotypes -v -j 10 example_imports/denovo_and_cnv_import/ssc_denovo.yaml
 
-    real    10m23.760s
-    user    10m2.447s
-    sys     0m9.471s
+    real    5m29.950s
+    user    31m52.320s
+    sys     1m41.755s
+
+The ``-j 10`` option instructs the ``import_genotypes`` tool to use 10 threads and 
+the ``-v`` option controls the verbosity of the output.
 
 When the import finishes, we can run the development GPF server:
 
@@ -294,7 +308,7 @@ in the minimal instance configuration file. So, all imported variants are
 annotated with GnomAD and ClinVar genomic scores.
 
 We can use these scores to define additional columns in the preview table and
-the download file similar to :doc:`getting_started_with_preview_columns`.
+the download file similar to :ref:`getting_started_with_preview_columns`.
 
 Edit the ``ssc_denovo`` configuration file located at 
 ``minimal_instance/datasets/ssc_denovo/ssc_denovo.yaml`` and add the following

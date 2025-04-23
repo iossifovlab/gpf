@@ -1,3 +1,5 @@
+.. _getting_started_with_preview_columns:
+
 Getting Started with Preview and Download Columns
 #################################################
 
