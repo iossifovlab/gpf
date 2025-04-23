@@ -50,13 +50,6 @@ export class GeneProfileSingleViewComponent implements OnInit {
   };
 
   public isGeneInSFARI = false;
-  public links = {
-    geneBrowser: '',
-    ucsc: '',
-    geneCards: '',
-    pubmed: '',
-    sfariGene: ''
-  };
 
   private headerBottomYPosition = 116;
   public isHeaderSticky: boolean;
