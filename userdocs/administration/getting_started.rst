@@ -381,3 +381,5 @@ able to see the variants from both studies.
 .. include:: getting_started/getting_started_with_python_interface.rst
 
 .. include:: getting_started/example_denovo_import.rst
+
+.. include:: getting_started/example_cnv_import.rst

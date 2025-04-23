@@ -1,5 +1,7 @@
-Example import of real data
-###########################
+.. _example_denovo_import:
+
+Example import of real de Novo variants
+#######################################
   
 Source of the data
 ++++++++++++++++++
@@ -27,10 +29,6 @@ From the supplementary data for the paper can download the following files:
   `Supplementary Data 
   2. <https://pmc.ncbi.nlm.nih.gov/articles/instance/8410909/bin/42003_2021_2533_MOESM4_ESM.xlsx>`_
 
-* The list of CNV de novo variants is available from
-  `Supplementary Data 
-  4. <https://pmc.ncbi.nlm.nih.gov/articles/instance/8410909/bin/42003_2021_2533_MOESM6_ESM.xlsx>`_
-
 
 .. note:: 
 
@@ -38,6 +36,8 @@ From the supplementary data for the paper can download the following files:
     `gpf-getting-started <https://github.com/iossifovlab/gpf-getting-started.git>`_
     repository under the subdirectory ``example_imports/denovo_and_cnv_import``.
 
+
+.. _example_denovo_pedigree:
 
 Preprocess the Family Data
 ++++++++++++++++++++++++++
@@ -162,7 +162,7 @@ For the import, we will use columns four and nine from this file:
 Using the following `Awk` script, we can transform this file into easy to 
 import list of de Novo variants:
 
-.. code:: bash
+.. code-block:: bash
 
     gunzip -c Supplementary_Data_2.tsv.gz | cut -f 4,9 | awk '
         BEGIN{
@@ -182,7 +182,7 @@ This script will produce a file named ``ssc_denovo.tsv`` with the following cont
     :lines: 1-11
 
 .. note::
-    The resulting pedigree file is also available in the 
+    The resulting ``ssc_denovo.tsv`` file is also available in the 
     `gpf-getting-started <https://github.com/iossifovlab/gpf-getting-started.git>`_
     repository under the subdirectory 
     ``example_imports/denovo_and_cnv_import/input_data``.
@@ -208,6 +208,10 @@ named ``.grr_definition.yaml`` in your home directory with the following content
     type: "url"
     url: "https://grr.iossifovlab.com"
     cache_dir: "<path_to_your_cache_dir>"
+
+The ``cache_dir`` parameter specifies the directory where the GRR resources
+will be cached. The cache directory should be specified as an absolute path.
+For example,  ``/tmp/grr_cache`` or ``/Users/lubo/grrCache``.
 
 To download all the resources needed for out ``minimal_instance``, run
 the following command from ``gpf-getting-started`` directory:
@@ -256,8 +260,6 @@ split the import process into multiple jobs. For this purpose, we can use
 ``ssc_denovo.yaml`` file, we have defined the ``processing_config`` section
 that will split the import de Novo variants into jobs by chromosome. (For more
 on import project configuration see :doc:`import_tool`.)
-
-
 
 
 .. note::
