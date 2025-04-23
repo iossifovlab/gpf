@@ -52,19 +52,30 @@ class AbstractDuckDbImportStorage(Schema2ImportStorage, abc.ABC):
     ) -> None:
         """Produce a study config for the given project."""
         genotype_storage = project.get_genotype_storage()
+        genotype_browser: dict[str, Any] = {
+            "enabled": False,
+        }
+
         if project.get_processing_parquet_dataset_dir() is not None:
             meta = cls.load_meta(project)
             study_config = yaml.safe_load(meta["study"])
             study_config["id"] = project.study_id
         else:
             variants_types = project.get_variant_loader_types()
+            has_cnv = "cnv" in variants_types
             study_config = {
                 "id": project.study_id,
                 "conf_dir": ".",
-                "has_denovo": project.has_denovo_variants(),
-                "has_cnv": "cnv" in variants_types,
+                "has_denovo": project.has_denovo_variants() or has_cnv,
+                "has_cnv": has_cnv,
                 "has_transmitted": bool({"dae", "vcf"} & variants_types),
             }
+            if has_cnv:
+                genotype_browser["variant_types"] = ["sub", "ins", "del", "CNV"]
+                genotype_browser["selected_variant_types"] = [
+                    "sub", "ins", "del", "CNV",
+                ]
+
         study_config.update({
             "genotype_storage": {
                 "id": genotype_storage.storage_id,
@@ -73,7 +84,7 @@ class AbstractDuckDbImportStorage(Schema2ImportStorage, abc.ABC):
                     "meta": study_tables.meta,
                 },
             },
-            "genotype_browser": {"enabled": False},
+            "genotype_browser": genotype_browser,
         })
 
         if study_tables.summary:
