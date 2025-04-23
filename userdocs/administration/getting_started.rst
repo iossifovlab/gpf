@@ -9,58 +9,35 @@ Prerequisites
 
 This guide assumes that you are working on a recent Linux (or Mac OSX) machine.
 
-The GPF system is distributed as an Anaconda package using the ``conda``
-package manager.
+The GPF system is distributed as a Conda package.
 
-If you do not have a working version of Anaconda or Miniconda, you must
-install one. We recommended using a Miniconda version.
+If you do not have a working version of Anaconda or Miniconda or Mamba,
+you must install one. We recommended using a Miniforge distribution.
 
-Go to the Miniconda 
-`distribution page <https://docs.conda.io/en/latest/miniconda.html>`_,
-download the Linux installer
+Go to the `Miniforge home page <https://github.com/conda-forge/miniforge>`_
+and follow the instruction for you platform.
 
-.. code-block:: bash
+.. warning::
 
-    wget -c https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-
-and install it in your local environment:
-
-.. code-block:: bash
-
-    sh Miniconda3-latest-Linux-x86_64.sh
-
-.. note::
-
-    At the end of the installation process, you will be asked if you wish
-    to allow the installer to initialize Miniconda3 by running `conda` init.
-    If you choose to, every terminal you open after that will have the ``base``
-    Anaconda environment activated, and you'll have access to the ``conda``
-    commands used below.
-
-Once Anaconda/Miniconda is installed, we would recommend installing ``mamba`` 
-instead of ``conda``. Mamba will speed up the installation of packages:
-
-.. code-block::
-
-    conda install -c conda-forge mamba
+    The GPF system is not supported on Windows.
 
 GPF Installation
 ++++++++++++++++
 
-The GPF system is developed in Python and supports Python 3.11å and up.
-The recommended way to set up the GPF development environment is to use Anaconda.
+The GPF system is developed in Python and supports Python 3.11 and up.
+The recommended way to set up a conda GPF environment.
 
-Create an empty Anaconda environment named `gpf`:
+Create an empty Conda environment named `gpf`:
 
 .. code-block:: bash
 
-    conda create -n gpf
+    mamba create -n gpf
 
 To use this environment, you need to activate it using the following command:
 
 .. code-block:: bash
 
-    conda activate gpf
+    mamba activate gpf
 
 Install the `gpf_wdae` conda package into the already activated `gpf`
 environment:
@@ -334,37 +311,39 @@ able to see the variants from both studies.
 .. Getting started with de novo gene sets
 .. ######################################
 
-.. To generate de novo gene sets, you can use the ``generate_denovo_gene_sets`` tool.
+.. To generate de novo gene sets, you can use the ``generate_denovo_gene_sets``
+.. tool.
 
-.. By default the de novo gene sets are disabled. If you want to enable them for a 
-.. specific study or dataset you need to update its configuration and add a section
-.. that enables the de novo gene sets:
+.. By default the de novo gene sets are disabled. If you want to enable them
+.. for a specific study or dataset you need to update its configuration and
+.. add a section that enables the de novo gene sets:
 
 .. .. code-block:: yaml
 
 ..     denovo_gene_sets:
 ..       enabled: true
 
-.. For example the configuration of ``example_dataset`` dataset should become similar to:
+.. For example the configuration of ``example_dataset`` dataset should
+.. become similar to:
 
 .. .. code-block:: yaml
 
 ..     id: example_dataset
 ..     name: Example Dataset
-    
+
 ..     studies:
 ..       - denovo_example
 ..       - vcf_example
-    
+
 ..     common_report:
 ..       enabled: True
-    
+
 ..     denovo_gene_sets:
 ..       enabled: true
-    
 
-.. Then we can generate the de novo gene sets for ``example_dataset`` dataset by
-.. running:
+
+.. Then we can generate the de novo gene sets for ``example_dataset`` dataset
+.. by running:
 
 .. .. code-block:: bash
 
