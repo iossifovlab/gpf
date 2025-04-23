@@ -92,10 +92,10 @@ To demonstrate how a study is configured with a phenotype database, we will
 be working with the already imported ``example_dataset`` dataset.
 
 The phenotype databases can be attached to one or more studies and/or datasets.
-If you want to attach the ``mini_pheno`` phenotype study to the 
+If you want to attach the ``mini_pheno`` phenotype study to the
 ``example_dataset`` dataset,
-you need to specify it in the dataset's configuration file, which can be found at
-``minimal_instance/datasets/example_dataset/example_dataset.yaml``.
+you need to specify it in the dataset's configuration file, which can be found
+at ``minimal_instance/datasets/example_dataset/example_dataset.yaml``.
 
 Add the following line to the configuration file:
 
@@ -103,135 +103,13 @@ Add the following line to the configuration file:
 
     phenotype_data: mini_pheno
 
-When you restart the server, you should be able to see `Phenotype Browser` 
+When you restart the server, you should be able to see `Phenotype Browser`
 and `Phenotype Tool` tabs enabled for the `Example Dataset` dataset.
 
-Additionally, in the `Genotype Browser` the `Family Filters` and 
+Additionally, in the `Genotype Browser` the `Family Filters` and
 `Person Filters` sections will have
 the `Pheno Measures` filters enabled.
 
 .. figure:: getting_started_files/example-dataset-genotype-browser-pheno-filters-2.png
 
     Example Dataset genotype browser using Pheno Measures family filters
-
-
-Configure phenotype columns in Genotype Browser
-+++++++++++++++++++++++++++++++++++++++++++++++
-
-The Genotype Browser allows you to add phenotype columns to the table preview
-and download file.
-
-Phenotype columns show values from a phenotype database.
-To configure such a column you need to specify following attributes:
-
-* ``source`` - the measure ID which values we are going to show in the column;
-
-* ``role`` - the role of the person in the family for which we are going to show
-  the phenotype measure value;
-
-* ``name`` - the display name of the column in the table.
-
-Let's add a phenotype columns to the `Genotype Browser` preview table. 
-To do this, you need to define them in the study's config, in the genotype 
-browser section of the configuration file.
-
-.. code-block:: yaml
-    :linenos:
-    :emphasize-lines: 15-24,38-42,47,53-54
-
-    genotype_browser:
-      columns:
-        genotype:
-          gnomad_v4_genome_af:
-            name: gnomAD v4 AF
-            source: gnomad_v4_genome_ALL_af
-            format: "%%.5f"
-          clinvar_clnsig:
-            name: CLNSIG
-            source: CLNSIG
-          clinvar_clndn:
-            name: CLNDN
-            source: CLNDN
-
-        phenotype:
-          prb_verbal_iq:
-            role: prb
-            name: Verbal IQ
-            source: iq.verbal_iq
-    
-          prb_non_verbal_iq:
-            role: prb
-            name: Non-Verbal IQ
-            source: iq.non_verbal_iq
-    
-      column_groups:
-        gnomad_v4:
-          name: gnomAD v4
-          columns:
-          - gnomad_v4_genome_af
-
-        clinvar:
-          name: ClinVar
-          columns:
-          - clinvar_clnsig
-          - clinvar_clndn
-
-        proband_iq:
-          name: Proband IQ
-          columns:
-          - prb_verbal_iq
-          - prb_non_verbal_iq
-    
-      preview_columns_ext:
-        - gnomad_v4
-        - clinvar
-        - proband_iq
-    
-      download_columns_ext:
-        - gnomad_v4_genome_af
-        - clinvar_clnsig
-        - clinvar_clndn
-        - prb_verbal_iq
-        - prb_non_verbal_iq
-
-
-Lines 15-24 define two new columns with values coming from the phenotype data
-attributes:
-
-* ``prb_verbal_iq`` - is a column that uses the value of the phenotype measure
-  ``iq.verbal_iq`` for the family proband. 
-  The display name of the column will be `Verbal IQ`;
-
-* ``prb_non_verbal_iq`` - is a column that uses the value of the phenotype measure
-  ``iq.non_verbal_iq`` for the family proband.
-  The display name of the column will be `Non-Verbal IQ`.
-
-In the preview table each column could show multiple values. In GPF when you
-want to show multiple values in single column, you need to define 
-a **column group**.
-
-The column group is a collection of columns that are
-shown together in the preview table. The values in a column group are shown
-in a single cell. The column group is defined in the
-``column_groups`` section of the configuration file.
-
-In lines 38-42 we define a column group called `proband_iq` that contains the
-columns ``prb_verbal_iq`` and ``prb_non_verbal_iq``.
-
-To add the new column group ``proband_iq`` to the preview table, we need to add it to the
-``preview_columns_ext`` section of the configuration file. In line 47 we
-add the new column group ``proband_iq`` at the end of the preview table.
-
-
-When you restart the server, go to the `Genotype Browser` tab of the 
-``Example Dataset`` dataset and select all checkboxes in `Present in Child`, 
-`Present in Parent` and `Effect Types` sections:
-
-.. image:: getting_started_files/example-dataset-proband-iq-column-group-filters.png
-
-When you click on the `Table Preview` button, you will be able to see the new column group
-``proband_iq`` in the preview table.
-
-.. figure:: getting_started_files/example-dataset-proband-iq-column-group-variants.png
-
-    Example Dataset genotype browser using pheno measures columns

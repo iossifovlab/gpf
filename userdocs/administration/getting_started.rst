@@ -372,11 +372,11 @@ able to see the variants from both studies.
 
 .. include:: getting_started/getting_started_with_annotation.rst
 
-.. include:: getting_started/getting_started_with_preview_columns.rst
-
 .. .. include:: getting_started/getting_started_with_gene_browser.rst
 
 .. include:: getting_started/getting_started_with_phenotype_data.rst
+
+.. include:: getting_started/getting_started_with_preview_columns.rst
 
 .. include:: getting_started/getting_started_with_python_interface.rst
 
