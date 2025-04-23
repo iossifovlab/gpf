@@ -24,6 +24,7 @@ import { Router } from '@angular/router';
 import { GenomicScoreState, setGenomicScores } from 'app/genomic-scores-block/genomic-scores-block.state';
 import { GenomicScore } from 'app/genomic-scores-block/genomic-scores-block';
 import { NumberHistogram, CategoricalHistogram } from 'app/utils/histogram-types';
+import { setUniqueFamilyVariantsFilter } from 'app/unique-family-variants-filter/unique-family-variants-filter.state';
 
 @Component({
   selector: 'gpf-gene-profiles-single-view',
@@ -223,6 +224,7 @@ export class GeneProfileSingleViewComponent implements OnInit {
       store.dispatch(setVariantTypes({variantTypes: statistic.variantTypes}));
     }
     store.dispatch(setGeneSymbols({geneSymbols: [geneSymbol]}));
+    store.dispatch(setUniqueFamilyVariantsFilter({uniqueFamilyVariantsFilter: true}));
     store.dispatch(setPresentInChild({presentInChild: presentInChildValues}));
     store.dispatch(setPresentInParent({presentInParent: {
       presentInParent: presentInParent,
