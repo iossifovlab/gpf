@@ -1,4 +1,5 @@
 import { createReducer, createAction, on, props, createFeatureSelector } from '@ngrx/store';
+import { reset } from 'app/users/state-actions';
 import { cloneDeep } from 'lodash';
 
 export const zygosityFilterInitialState: ZygosityFilterState[] = [];
@@ -25,6 +26,10 @@ export const resetZygosityFilter = createAction(
   props<{ componentId: string }>()
 );
 
+export const resetZygostiyFilters = createAction(
+  '[Genotype] Reset all zygosity filters'
+);
+
 export const zygosityFilterReducer = createReducer(
   zygosityFilterInitialState,
   on(setAllZygosityFilters, (state, { zygosityFilters }) => {
@@ -44,4 +49,6 @@ export const zygosityFilterReducer = createReducer(
     return updatedState;
   }),
   on(resetZygosityFilter, (state, { componentId }) => state.filter(z => z.componentId !== componentId)),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  on(reset, resetZygostiyFilters, state => zygosityFilterInitialState),
 );
