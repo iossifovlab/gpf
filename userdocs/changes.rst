@@ -4,7 +4,7 @@ Release Notes
 * 2025.4.8
     * Fix default CNV study configuration generated at import in DuckDb
       genotype storage.
-    * Auto-scroll to table preview in the genotype browser when first results
+    * Auto-scroll to table preview in the genotype browser when results
       are loaded.
     * Fix tool selection bug when navigating from Gene Profiles to
       Gene Browser.
