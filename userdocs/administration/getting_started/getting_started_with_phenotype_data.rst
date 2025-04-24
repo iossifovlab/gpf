@@ -21,11 +21,11 @@ Inside the ``input_phenotype_data`` directory, the following data is provided:
   .. literalinclude:: gpf-getting-started/input_phenotype_data/pedigree.ped
       :tab-width: 10
 
-* ``instruments`` contains the phenotype instruments and measures to be imported.
-  There are two instruments in the example:
+* ``instruments`` contains the phenotype instruments and measures to be
+  imported. There are two instruments in the example:
 
   ``input_phenotype_data/instruments/basic_medical.csv``:
-  
+
   .. literalinclude:: gpf-getting-started/input_phenotype_data/instruments/basic_medical.csv
 
   ``input_phenotype_data/instruments/iq.csv``:
@@ -39,20 +39,21 @@ Inside the ``input_phenotype_data`` directory, the following data is provided:
   .. literalinclude:: gpf-getting-started/input_phenotype_data/measure_descriptions.tsv
       :tab-width: 20
 
-* ``import_project.yaml`` is the import project configuration that we will use 
+* ``import_project.yaml`` is the import project configuration that we will use
   to import this data.
 
   ``input_phenotype_data/import_project.yaml``:
 
   .. literalinclude:: gpf-getting-started/input_phenotype_data/import_project.yaml
+       :lines: 1-25
 
 .. note::
 
-    For more information on how to import phenotype data see 
+    For more information on how to import phenotype data see
     :doc:`pheno`
 
-To import the phenotype data, we will use the ``import_phenotypes`` tool. 
-It will import the phenotype database directly to our GPF instance's phenotype 
+To import the phenotype data, we will use the ``import_phenotypes`` tool.
+It will import the phenotype database directly to our GPF instance's phenotype
 storage:
 
 .. code:: bash
@@ -66,7 +67,7 @@ When the import finishes you can run the GPF development server using:
     wgpf run
 
 Now on the GPF instance `Home Page` you should see the ``mini_pheno`` phenotype
-study. 
+study.
 
 .. figure:: getting_started_files/mini-pheno-home-page.png
 
