@@ -102,6 +102,13 @@ EOF
     if ! [ -d "projects/data.repo" ]; then
         git clone "ssh://git@github.com/iossifovlab/gpf-getting-started" "projects/data.repo"
     fi
+
+    cd projects/data.repo
+    git checkout master
+    git pull --ff-only
+    git checkout master
+    cd -
+
 EOF
 
     # the quotes around 'EOF' are signifcant - it forces bash to treat the string as literal string until EOF
