@@ -1,6 +1,47 @@
 Release Notes
 =============
 
+* 2025.4.8
+    * Fix default CNV study configuration generated at import in DuckDb
+      genotype storage.
+    * Auto-scroll to table preview in the genotype browser when first results
+      are loaded.
+    * Fix tool selection bug when navigating from Gene Profiles to
+      Gene Browser.
+    * Enhance separation of internal and external links in Gene Profiles single
+      view.
+    * Reset zygosity filters when switching between datasets.
+
+* 2025.4.7
+    * Fix phenotype browser cache regeneration in wgpf tools.
+
+* 2025.4.6
+    * Fix heuristics for Y log scale in histograms.
+    * Fix roles queries in legacy genotype storages.
+    * Support for filters by zygosity in sexes in DuckDb genotype storage.
+    * Change default columns in DenovoLoader format.
+    * Add timeout argument to the GPF REST client query variants method.
+    * Fix de Novo icon in dataset dropdown and hierarchy.
+    * Fix loading pheno measure filters from UI state.
+
+
+* 2025.4.5
+    * Enable pheno measure filters by default when a genotype study has
+      phenotype data.
+    * Genotype data groups should deduce has_denovo and has_transmitted flags
+      from children.
+    * Enable pheno tool by default when a genotype study has phenotype data and
+      de novo variants.
+    * Support for filters by zygosity in roles in DuckDb genotype storage.
+    * Adjust default study configuration to make GSG fluent.
+    * Fix pheno measure filters user interface.
+    * Reorganize genotype browser filters ordering.
+    * Support for filters by zygosity in Present in Child and Present in
+      Parent in genotype browser.
+    * Fix histograms bars with zero height.
+    * Support pheno measure description in pheno measure filters.
+
+
 * 2025.4.4
     * Support for queries by zygosity in roles in DuckDb genotype storage.
     * Support for inlining annotation in GPF instance configuration.
@@ -29,7 +70,8 @@ Release Notes
     * Reorganization of GPF rest client tokens.
     * Genotype storage support for query by family tags.
     * Fix support for INDELs in SpliceAI annotator plugin.
-    * Support for more attributes and aggregation of attributes in SpliceAI annotator plugin.
+    * Support for more attributes and aggregation of attributes in SpliceAI
+      annotator plugin.
 
 
 * 2025.4.0
