@@ -116,7 +116,9 @@ def test_get_selected_counting_models_default_with_counting(
     }
     study = create_test_study(study_config)
     assert EnrichmentHelper.get_selected_counting_models(study) == [
-        "enrichment_events_counting"]
+        "enrichment_events_counting",
+        "enrichment_gene_counting",
+    ]
 
 
 def test_get_default_background_model(

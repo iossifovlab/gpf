@@ -166,7 +166,8 @@ class StudyWrapperBase(WDAEStudy):
         result["name"] = result["name"] or result["id"]
         result["genotype_browser"] = config.genotype_browser.enabled
         result["common_report"] = {"enabled": config.common_report.enabled}
-        result["enrichment_tool"] = config.enrichment.enabled
+        result["enrichment_tool"] = \
+            config.enrichment.enabled or result["has_denovo"]
         result["gene_browser"] = config.gene_browser
         result["phenotype_browser"] = config.get(
             "phenotype_browser",
@@ -274,7 +275,8 @@ class StudyWrapperBase(WDAEStudy):
         result["genotype_browser_config"]["table_columns"] = table_columns
 
         result["study_types"] = result["study_type"]
-        result["enrichment_tool"] = config.enrichment.enabled
+        result["enrichment_tool"] = \
+            config.enrichment.enabled or result["has_denovo"]
         result["common_report"] = config.common_report.to_dict()
         del result["common_report"]["file_path"]
         result["person_set_collections"] = person_set_collection_configs

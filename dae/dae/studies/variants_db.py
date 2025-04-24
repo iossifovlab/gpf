@@ -65,30 +65,30 @@ has_present_in_parent = true
 has_pedigree_selector = true
 
 preview_columns = [
-	"family",
-	"variant",
-	"genotype",
-	"effect",
-	"frequency"
+    "family",
+    "variant",
+    "genotype",
+    "effect",
+    "frequency"
 ]
 
 download_columns = [
-	"family",
-	"study_phenotype",
-	"variant",
-	"variant_extra",
-	"family_person_ids",
-	"family_structure",
-	"best",
-	"family_genotype",
-	"carriers",
-	"inheritance",
-	"phenotypes",
-	"par_called",
-	"allele_freq",
-	"effect",
-	"geneeffect",
-	"effectdetails",
+    "family",
+    "study_phenotype",
+    "variant",
+    "variant_extra",
+    "family_person_ids",
+    "family_structure",
+    "best",
+    "family_genotype",
+    "carriers",
+    "inheritance",
+    "phenotypes",
+    "par_called",
+    "allele_freq",
+    "effect",
+    "geneeffect",
+    "effectdetails",
 ]
 
 summary_preview_columns = ["variant", "effect", "freq"]
@@ -221,6 +221,14 @@ domain_max = 100
 
 [common_report]
 enabled = true
+
+[enrichment]
+enabled = false
+selected_counting_models = [
+    "enrichment_events_counting",
+    "enrichment_gene_counting",
+]
+selected_background_models = ["enrichment/samocha_background",]
 """
 
 
