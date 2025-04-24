@@ -221,6 +221,14 @@ domain_max = 100
 
 [common_report]
 enabled = true
+
+[enrichment]
+enabled = false
+selected_counting_models = [
+    "enrichment_events_counting",
+    "enrichment_gene_counting",
+]
+selected_background_models = ["enrichment/samocha_background",]
 """
 
 
