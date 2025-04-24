@@ -430,6 +430,13 @@ class WdaeLoginView(views.APIView):
         next_uri = request.GET.get("next")
         if next_uri is None:
             next_uri = get_default_application().redirect_uris.split(" ")[0]
+
+        about_uri = next_uri[
+            next_uri.find("redirect_uri=") + 13
+            :next_uri.find("login")
+        ] + "about"
+        print("about:", about_uri)
+
         form = WdaeLoginForm()
 
         return render(
@@ -438,6 +445,7 @@ class WdaeLoginView(views.APIView):
             {
                 "form": form,
                 "next": next_uri,
+                "about": about_uri,
             },
         )
 
