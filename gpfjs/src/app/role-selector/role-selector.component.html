@@ -15,9 +15,9 @@
       (keyup)="searchBoxInput$.next(searchValue)"
       spellcheck="false"
       (focus)="roleSearchTrigger.openPanel()"
-      (keydown.enter)="roleSearchTrigger.closePanel()" />
+      (keydown.enter)="addToSelected(searchValue); roleSearchTrigger.closePanel()" />
 
-    <mat-autocomplete #rolesDropdown="matAutocomplete" class="role-suggestions-dropdown">
+    <mat-autocomplete #rolesDropdown="matAutocomplete" class="role-suggestions-dropdown" autoActiveFirstOption>
       <mat-option
         *ngFor="let suggestion of roleSuggestions"
         class="dropdown-item"

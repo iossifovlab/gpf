@@ -50,6 +50,10 @@ export class RoleSelectorComponent implements OnInit {
   }
 
   public addToSelected(role: string): void {
+    if (!this.roleSuggestions.includes(role)) {
+      this.searchValue = '';
+      return;
+    }
     if (!this.selectedRoles.find(r => r === role)) {
       this.selectedRoles.push(role);
       this.updateSelectedRoles.emit(this.selectedRoles);
