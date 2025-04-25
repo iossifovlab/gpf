@@ -43,6 +43,14 @@ class WDAEConfig(AppConfig):
             self.load_extensions(gpf_instance)
             return
 
+        for phenotype_data_id in gpf_instance.get_phenotype_data_ids():
+            phenotype_data = gpf_instance.get_phenotype_data(phenotype_data_id)
+            if phenotype_data._browser is not None \
+                and phenotype_data.is_browser_outdated(phenotype_data._browser):  # noqa: SLF001
+                logger.warning(
+                    "phenotype_data %s browser is outdated",
+                    phenotype_data_id,
+                )
         try:
             logger.info("eager loading of GPF instance and studies")
             gpf_instance.load()
