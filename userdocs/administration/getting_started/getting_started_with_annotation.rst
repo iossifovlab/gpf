@@ -1,10 +1,11 @@
 Getting Started with Annotation
 ###############################
 
-The import of genotype data into a GPF instance always runs effect annotation.
+The import of genotype data into a GPF instance always runs the GPF
+effect annotator.
 It is easy to extend the annotation of genotype data during the import.
 
-To define the annotation used during the import into a GPF instance we have to
+To define the annotation used during the import into a GPF instance, we have to
 add a configuration that defines the pipeline of annotators and resources
 to be used during the import.
 
@@ -13,7 +14,7 @@ In the `public GPF Genomic Resources Repository (GRR)
 there is a collection of public genomic resources available for use with
 GPF system.
 
-Let say that we want to annotate the genotype variants with
+Let's say that we want to annotate the genotype variants with
 `GnomAD` and `ClinVar`. We need to find the appropriate resources in the
 public GRR:
 
@@ -27,13 +28,13 @@ public GRR:
 * ``hg38/scores/ClinVar_20240730`` - this is an ``allele_score``
   resource and the annotator by default produces two
   additional attribute ``CLNSIG`` that is the aggregate germline classification
-  for the variant and ``CLNDN`` that is preferred disease name (check the
+  for the variant and ``CLNDN`` that is the preferred disease name (check the
   `hg38/scores/ClinVar_20240730 <https://grr.iossifovlab.com/hg38/scores/ClinVar_20240730/index.html>`_
-  page for more information about the resource).
+  page for more information about the resource.
 
 In order to use these resources in the GPF instance annotation, we need to
 edit the GPF instance configuration (``minimal_instance/gpf_instance.yaml``)
-and add the following snipped the configuration file:
+and add the following snippet to the configuration file:
 
 .. code-block:: yaml
 
@@ -59,7 +60,7 @@ that come from the annotation with GnomAD and ClinVar:
 
 If we browse our ``Example Dataset`` there is almost no difference.
 The only difference is that now in the
-genotype browser, the genomic scores section is not empty and we can query
+genotype browser, the genomic scores section is not empty, and we can query
 our variants using the ``gnomad_v4_genome_ALL_af``, ``CLNSIG`` and ``CLNDN``
 genomic scores.
 
