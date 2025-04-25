@@ -47,8 +47,8 @@ def expire_email_lockout(email: str) -> None:
 
 
 def test_successful_auth(
-    db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken],
+    db: None, user: WdaeUser, client: Client,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     url = "/accounts/login"
     data = {
@@ -65,8 +65,8 @@ def test_successful_auth(
 
 
 def test_successful_auth_with_next(
-    db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken],
+    db: None, user: WdaeUser, client: Client,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     url = "/accounts/login"
     data = {
@@ -84,8 +84,8 @@ def test_successful_auth_with_next(
 
 
 def test_successful_auth_case_insensitive(
-    db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken],
+    db: None, user: WdaeUser, client: Client,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     url = "/accounts/login"
     data = {
@@ -102,8 +102,8 @@ def test_successful_auth_case_insensitive(
 
 
 def test_failed_auth(
-    db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken],
+    db: None, user: WdaeUser, client: Client,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     url = "/accounts/login"
     data = {"username": "bad@example.com", "password": "secret"}
@@ -115,8 +115,8 @@ def test_failed_auth(
 
 
 def test_no_username_auth(
-    db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken],
+    db: None, user: WdaeUser, client: Client,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     url = "/accounts/login"
     data = {"username": "", "password": "secret"}
@@ -135,8 +135,8 @@ def test_get_user_info_after_auth(user_client: Client) -> None:
 
 
 def test_no_password_auth(
-    db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken],
+    db: None, user: WdaeUser, client: Client,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     url = "/accounts/login"
     data = {
@@ -150,8 +150,8 @@ def test_no_password_auth(
 
 
 def test_email_auth_unsuccessful(
-    db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken],
+    db: None, user: WdaeUser, client: Client,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     """Try to login with a non-existing email."""
     url = "/accounts/login"
@@ -165,8 +165,8 @@ def test_email_auth_unsuccessful(
 
 
 def test_failed_auth_attempts(
-    db: None, user: WdaeUser, client: Client,
-    tokens: Tuple[AccessToken, AccessToken],
+    db: None, user: WdaeUser, client: Client,  # noqa: ARG001
+    tokens: Tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     # Check if the user is allowed four failed
     # login attempts before being locked out.
@@ -201,8 +201,8 @@ def test_failed_auth_attempts(
 
 
 def test_failed_auth_lockouts(
-    db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken],
+    db: None, user: WdaeUser, client: Client,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     # Check if progressive lockouts are working.
     url = "/accounts/login"
@@ -237,8 +237,8 @@ def test_failed_auth_lockouts(
 
 
 def test_lockout_prevents_login(
-    db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken],
+    db: None, user: WdaeUser, client: Client,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     # Check if lockouts prevent even valid logins.
     url = "/accounts/login"
@@ -257,8 +257,8 @@ def test_lockout_prevents_login(
 
 
 def test_successful_auth_resets_lockouts(
-    db: None, user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken],
+    db: None, user: WdaeUser, client: Client,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     # Check if a successful login will reset the email's
     # lockouts and allow another five failed attempts.
@@ -289,7 +289,7 @@ def test_successful_auth_resets_lockouts(
 
 def test_password_reset_resets_lockouts(
     user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken],
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     # Check if a password reset will reset the email's
     # lockouts and allow another five failed attempts.
@@ -351,8 +351,8 @@ def test_password_reset_resets_lockouts(
 
 
 def test_authentication_logging(
-    user: WdaeUser, client: Client,
-    tokens: tuple[AccessToken, AccessToken],
+    user: WdaeUser, client: Client,  # noqa: ARG001
+    tokens: tuple[AccessToken, AccessToken],  # noqa: ARG001
 ) -> None:
     # Check if both successful and unsuccessful
     # authentication attempts are logged.
@@ -392,3 +392,18 @@ def test_authentication_logging(
     # Give a tolerance of 5 seconds to prevent test from becoming flaky
     assert abs(login_time - expected_time) <= timedelta(seconds=5)
     assert last_login.failed_attempt == 1
+
+
+def test_login_page_template_data(
+    client: Client,
+) -> None:
+    url = "/accounts/login/?next=authstuffredirect_uri=http://frontend/login"
+
+    response = client.get(
+        url, content_type="application/json", format="json",
+    )
+
+    assert response.context["next"] == (
+        "authstuffredirect_uri=http://frontend/login"
+    )
+    assert response.context["about"] == "http://frontend/about"
