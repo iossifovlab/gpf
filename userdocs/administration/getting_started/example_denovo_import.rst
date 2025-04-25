@@ -195,8 +195,7 @@ Caching GRR
 
 Now we are about to import 255K variants. During the import, the GPF system
 will annotate these variants using the GRR resources from our
-`public GRR. <https://grr.iosiffovlab.com>`_
-
+`public GRR. <https://grr.iossifovlab.com>`_
 For small studies with few variants, this approach is quite convenient.
 However, for larger studies, it is better to cache the GRR resources locally.
 
@@ -272,9 +271,16 @@ on import project configuration, see :doc:`import_tool`.)
 
 To import the study, from the ``gpf-getting-started`` directory we should run:
 
-.. code:: bash
+.. code-block:: bash
 
     time import_genotypes -v -j 10 example_imports/denovo_and_cnv_import/ssc_denovo.yaml
+
+This command will take a while to run. The time it takes to run will depend on
+the number of variants in the input file and the number of threads used for
+the import. For example, on a machine with 10 threads, the import of the SSC
+de Novo variants took about 5 minutes to run:
+
+.. code-block:: bash
 
     real    5m29.950s
     user    31m52.320s
@@ -286,7 +292,7 @@ and the ``-v`` option controls the verbosity of the output.
 When the import finishes, we can run the development GPF server:
 
 
-.. code:: bash
+.. code-block:: bash
 
     wgpf run
 
@@ -313,10 +319,11 @@ in the minimal instance configuration file. So, all imported variants are
 annotated with GnomAD and ClinVar genomic scores.
 
 We can use these score values to define additional columns in the preview
-table and the download file similar to :ref:`getting_started_with_preview_columns`.
+table and the download file similar to
+:ref:`getting_started_with_preview_columns`.
 
 Edit the ``ssc_denovo`` configuration file located at
-``minimal_instance/datasets/ssc_denovo/ssc_denovo.yaml`` and add the following
+``minimal_instance/studies/ssc_denovo/ssc_denovo.yaml`` and add the following
 snippet to the configuration file:
 
 .. code-block:: yaml

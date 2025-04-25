@@ -10,7 +10,7 @@ add a configuration that defines the pipeline of annotators and resources
 to be used during the import.
 
 In the `public GPF Genomic Resources Repository (GRR)
-<https://iossifovlab.com/distribution/public/genomic-resources-repository/>`_
+<https://grr.iossifovlab.com>`_
 there is a collection of public genomic resources available for use with
 GPF system.
 

@@ -288,7 +288,7 @@ instance directory ``minimal_instance``:
 
     mkdir -p minimal_instance/datasets/example_dataset
 
-and place the following configuration file ``example_dataset.yaml`` inside
+and create the following configuration file ``example_dataset.yaml`` inside
 that directory:
 
 .. code-block:: yaml

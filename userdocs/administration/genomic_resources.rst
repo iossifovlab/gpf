@@ -188,7 +188,8 @@ Example 1: Number histogram configuration
 
 Here is a full example of a number histogram configuration comming from
 the 
-`hg38/score/phyloP100way <https://grr.seqpipe.org/hg38/scores/phyloP100way/index.html>`_ 
+`hg38/score/phyloP100way
+<https://grr.iossifovlab.com/hg38/scores/phyloP100way/index.html>`_ 
 genomic score resource:
 
 .. code:: yaml
@@ -221,7 +222,8 @@ Example 2: Number histogram configuration
 
 Here is a full example of a number histogram configuration comming from
 the 
-`hg38/variant_frequencies/gnomAD_v3 <https://grr.seqpipe.org/hg38/variant_frequencies/gnomAD_v3/genomes/index.html>`_ 
+`hg38/variant_frequencies/gnomAD_v3
+<https://grr.iossifovlab.com/hg38/variant_frequencies/gnomAD_v3/genomes/index.html>`_ 
 genomic score resource:
 
 
@@ -296,7 +298,8 @@ Example 1: Categorical histogram configuration
 
 Here is a full example of a number and categorical histogram configuration 
 comming from the 
-`hg38/scores/AlphaMissense <https://grr.seqpipe.org/hg38/scores/AlphaMissense/index.html>`_ 
+`hg38/scores/AlphaMissense
+<https://grr.iossifovlab.com/hg38/scores/AlphaMissense/index.html>`_ 
 genomic score resource:
 
 .. code:: yaml
