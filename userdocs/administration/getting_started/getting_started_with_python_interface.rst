@@ -19,7 +19,7 @@ For example, to list all studies configured in the startup GPF instance, use:
 
     gpf_instance.get_genotype_data_ids()
 
-This will return a list with the ids of all configured studies:
+This will return a list with the IDs of all configured studies:
 
 .. code-block:: python3
 

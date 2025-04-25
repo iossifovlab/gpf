@@ -6,7 +6,7 @@ Example import of real de Novo variants
 Source of the data
 ++++++++++++++++++
 
-As an example let us import de novo variants from the following paper:
+As an example, let us import de novo variants from the following paper:
 `Yoon, S., et al. Rates of contributory de novo
 mutation in high and low-risk autism families.
 Commun Biol 4, 1026 (2021). <https://doi.org/10.1038/s42003-021-02533-z>`_
@@ -103,7 +103,7 @@ family is the proband. The affected status of the mother, father, and
 siblings is unaffected.
 
 Having this information, we can use the following `Awk` script to transform
-the list of children into a pedigree:
+the list of children in a pedigree:
 
 .. code-block:: bash
 
@@ -160,7 +160,7 @@ For the import, we will use columns four and nine from this file:
 
 
 Using the following `Awk` script, we can transform this file into easy to
-import list of de Novo variants:
+import the list of de Novo variants:
 
 .. code-block:: bash
 
@@ -197,7 +197,7 @@ Now we are about to import 255K variants. During the import, the GPF system
 will annotate these variants using the GRR resources from our
 `public GRR. <https://grr.iosiffovlab.com>`_
 
-For small studies with few variants this approach is quite convienient.
+For small studies with few variants, this approach is quite convenient.
 However, for larger studies, it is better to cache the GRR resources locally.
 
 To do this, we need to configure the GRR to use a local cache. Create a file
@@ -215,8 +215,8 @@ The ``cache_dir`` parameter specifies the directory where the GRR resources
 will be cached. The cache directory should be specified as an absolute path.
 For example,  ``/tmp/grr_cache`` or ``/Users/lubo/grrCache``.
 
-To download all the resources needed for out ``minimal_instance``, run
-the following command from ``gpf-getting-started`` directory:
+To download all the resources needed for our ``minimal_instance`` annotation,
+run the following command from the ``gpf-getting-started`` directory:
 
 .. code-block:: bash
 
@@ -226,7 +226,7 @@ the following command from ``gpf-getting-started`` directory:
 
     The ``grr_cache_repo`` command will download all the resources needed for
     the GPF instance. This may take a while, depending on your internet
-    connection and the number of resources you configuration require.
+    connection and the number of resources your configuration requires.
 
     The resources will be downloaded to the directory specified in the
     ``cache_dir`` parameter in the ``.grr_definition.yaml`` file.
@@ -261,7 +261,7 @@ split the import process into multiple jobs. For this purpose, we can use
 ``processing_config`` section of the import project. On lines 11-12 of the
 ``ssc_denovo.yaml`` file, we have defined the ``processing_config`` section
 that will split the import de Novo variants into jobs by chromosome. (For more
-on import project configuration see :doc:`import_tool`.)
+on import project configuration, see :doc:`import_tool`.)
 
 
 .. note::
@@ -290,14 +290,14 @@ When the import finishes, we can run the development GPF server:
 
     wgpf run
 
-In the `Home` page of the GPF instance we should have the new study
+In the `Home` page of the GPF instance, we should have the new study
 ``ssc_denovo``.
 
 .. figure:: getting_started_files/ssc_denovo_home_page.png
 
-    Home page with the imported SSC de novo variants.
+    Home page with the imported SSC de Novo variants.
 
-If you follow the link to the study, and choose the `Genotype Browser` tab, you
+If you follow the link to the study and choose the `Genotype Browser` tab, you
 will be able to query the imported variants.
 
 .. figure:: getting_started_files/ssc_denovo_genotype_browser.png
@@ -312,12 +312,12 @@ While importing the SSC de novo variants, we were using the annotation defined
 in the minimal instance configuration file. So, all imported variants are
 annotated with GnomAD and ClinVar genomic scores.
 
-We can use these scores to define additional columns in the preview table and
-the download file similar to :ref:`getting_started_with_preview_columns`.
+We can use these score values to define additional columns in the preview
+table and the download file similar to :ref:`getting_started_with_preview_columns`.
 
 Edit the ``ssc_denovo`` configuration file located at
 ``minimal_instance/datasets/ssc_denovo/ssc_denovo.yaml`` and add the following
-snipped to the configuration file:
+snippet to the configuration file:
 
 .. code-block:: yaml
     :linenos:
