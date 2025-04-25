@@ -236,14 +236,16 @@ class StudyWrapperBase(WDAEStudy):
             ]
         }
 
-        if config.genotype_browser.get("has_family_structure_filter", None) \
-            is None \
+        if result["phenotype_data"] is not None \
+            and config.genotype_browser.get(
+                "has_family_structure_filter", None) is None \
             and result["genotype_browser_config"]["has_family_pheno_filters"] \
             is None:
             result["genotype_browser_config"]["has_family_pheno_filters"] = True
 
-        if config.genotype_browser.get("has_person_structure_filter", None) \
-            is None \
+        if result["phenotype_data"] is not None \
+            and config.genotype_browser.get(
+                "has_person_structure_filter", None) is None \
             and result["genotype_browser_config"]["has_person_pheno_filters"] \
             is None:
             result["genotype_browser_config"]["has_person_pheno_filters"] = True
