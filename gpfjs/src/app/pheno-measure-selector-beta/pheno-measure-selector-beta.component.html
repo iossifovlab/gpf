@@ -14,8 +14,7 @@
       (keydown.escape)="closeDropdown(); clear()"
       (keydown.arrowup)="$event.preventDefault(); prevItem()"
       (keydown.arrowdown)="$event.preventDefault(); nextItem()"
-      (keydown.enter)="selectMeasure(filteredMeasures[selectedIdx]); closeDropdown()"
-      [title]="selectedMeasure ? selectedMeasure.id : ''" />
+      (keydown.enter)="selectMeasure(filteredMeasures[selectedIdx]); closeDropdown()" />
 
     <div class="input-group-append">
       <button (click)="onClearButtonClick()" class="btn btn-secondary clear-button" id="clear-measure-button"
