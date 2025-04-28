@@ -343,6 +343,7 @@ class GPFInstance:
             self.dae_config,
             self.reference_genome,
             self.gene_models,
+            self.get_annotation_pipeline().get_attributes(),
             self.genotype_storages,
         )
 
