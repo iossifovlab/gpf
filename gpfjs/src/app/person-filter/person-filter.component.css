@@ -29,16 +29,29 @@
   margin-left: 10px;
 }
 
-#measure-description-modal {
-  padding: 20px;
+#measure-description-icon {
+  vertical-align: bottom;
+  color: #b4b4b4;
 }
 
-.measure {
-  font-weight: bold;
+#measure-description-icon:hover {
+  color: #9b9b9b;
+  cursor: pointer;
 }
 
-.description {
-  padding-top: 10px;
-  border-top: 1px solid rgb(197, 197, 197);
-  font-size: 18px;
+#measure-description-button {
+  background-color: transparent;
+  border: none;
+}
+
+:host::ng-deep.tooltip-inner {
+  background-color: #6c6c6c !important;
+}
+
+:host::ng-deep.tooltip-arrow::before {
+  opacity: 50% !important;
+}
+
+:host::ng-deep.tooltip.show {
+  opacity: 100% !important;
 }

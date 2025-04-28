@@ -6,16 +6,16 @@
     <div class="measure-histograms-container">
       <div class="title-wrapper"
         >{{ selectedMeasure.measure }}
-        <gpf-helper-modal
+        <button
           *ngIf="selectedMeasure.description"
-          [modalContent]="measureDescriptionModal"></gpf-helper-modal>
-
-        <ng-template #measureDescriptionModal>
-          <div id="measure-description-modal">
-            <span class="measure">{{ selectedMeasure.measure }}</span>
-            <div class="description">{{ selectedMeasure.description }}</div>
-          </div>
-        </ng-template>
+          id="measure-description-button"
+          [ngbTooltip]="selectedMeasure.description"
+          [autoClose]="true"
+          triggers="manual"
+          #t="ngbTooltip"
+          (click)="t.open()">
+          <span class="material-symbols-outlined" id="measure-description-icon">info</span>
+        </button>
       </div>
 
       <div *ngIf="isCategoricalHistogram(selectedMeasure.histogram)">
