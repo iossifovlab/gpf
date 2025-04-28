@@ -335,6 +335,12 @@ class CNVLoader(VariantsGenotypesLoader):
                 "summary_index": num_idx,
                 "variant_type": variant_type,  # type: ignore
                 "allele_index": 0,
+                "af_parents_called_count": None,
+                "af_parents_called_percent": None,
+                "af_allele_count": None,
+                "af_allele_freq": None,
+                "af_ref_allele_count": None,
+                "af_ref_allele_freq": None,
             }
             alt_rec = copy(summary_rec)
             del summary_rec["end_position"]
