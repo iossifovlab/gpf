@@ -84,3 +84,11 @@ def test_query_cnv_variants(
         regions=regions,
         variant_type=variant_type))
     assert len(vs) == count
+
+
+def test_query_cnv_frequency_filter(imported_study: GenotypeData) -> None:
+    vs = list(imported_study.query_variants(
+        frequency_filter=[("af_allele_freq", (None, 100))],
+    ))
+
+    assert len(vs) != 0
