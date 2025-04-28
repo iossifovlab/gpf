@@ -111,7 +111,8 @@ class AnnotationPipeline:
         genome = None
         if self.preamble is not None:
             genome_res = self.preamble.input_reference_genome_res
-            genome = build_reference_genome_from_resource(genome_res)
+            if genome_res is not None:
+                genome = build_reference_genome_from_resource(genome_res)
         pipeline_context = SimpleGenomicContext({
             GC_GRR_KEY: self.repository,
             GC_REFERENCE_GENOME_KEY: genome,

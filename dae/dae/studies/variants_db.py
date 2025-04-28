@@ -7,6 +7,7 @@ import toml
 from box import Box
 from deprecation import deprecated
 
+from dae.annotation.annotation_config import AttributeInfo
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.study_config import study_config_schema
 from dae.genomic_resources.gene_models import GeneModels
@@ -240,11 +241,13 @@ class VariantsDb:
     """Database responsible for keeping genotype data studies and groups."""
 
     def __init__(
-            self,
-            dae_config: Box,
-            genome: ReferenceGenome,
-            gene_models: GeneModels,
-            storage_registry: GenotypeStorageRegistry) -> None:
+        self,
+        dae_config: Box,
+        genome: ReferenceGenome,
+        gene_models: GeneModels,
+        annotation: list[AttributeInfo],
+        storage_registry: GenotypeStorageRegistry,
+    ) -> None:
 
         self.dae_config = dae_config
 
@@ -255,9 +258,57 @@ class VariantsDb:
 
         self.genome = genome
         self.gene_models = gene_models
+        self.annotation_columns = self._collect_annotation_columns(
+            annotation,
+        )
         self.storage_registry = storage_registry
 
         self.reload()
+
+    @staticmethod
+    def _collect_annotation_columns(
+        annotation: list[AttributeInfo],
+    ) -> list[dict[str, Any]]:
+        """Collect annotation columns from the annotation config."""
+        result = []
+        for attribute in annotation:
+            if attribute.internal:
+                continue
+            if attribute.source in {
+                    "worst_effect", "gene_effects", "effect_details"}:
+                continue
+
+            column = {
+                "name": attribute.name,
+                "source": attribute.name,
+            }
+            if attribute.type == "float":
+                column["format"] = "%.5f"
+            result.append(column)
+        return result
+
+    @staticmethod
+    def _expand_default_download_columns(
+        default_config: dict[str, Any],
+        annotation_columns: list[dict[str, Any]],
+    ) -> None:
+        genotype_browser = default_config.get("genotype_browser")
+        if genotype_browser is None:
+            return
+        columns = genotype_browser.get("columns")
+        if columns is None:
+            return
+        genotype_columns = columns.get("genotype")
+        if genotype_columns is None:
+            return
+        for column in annotation_columns:
+            genotype_columns[column["name"]] = copy.deepcopy(column)
+
+        download_columns = genotype_browser.get("download_columns")
+        if download_columns is None:
+            return
+        for column in annotation_columns:
+            download_columns.append(column["name"])
 
     def reload(self) -> None:
         """Load all studies and groups again."""
@@ -300,6 +351,8 @@ class VariantsDb:
 
         if default_config_filename is None:
             default_config = copy.deepcopy(DEFAULT_STUDY_CONFIG)
+            self._expand_default_download_columns(
+                default_config, self.annotation_columns)
 
         if self.dae_config.studies is None or \
                 self.dae_config.studies.dir is None:
@@ -340,6 +393,8 @@ class VariantsDb:
             default_config_filename = None
         if default_config_filename is None:
             default_config = copy.deepcopy(DEFAULT_STUDY_CONFIG)
+            self._expand_default_download_columns(
+                default_config, self.annotation_columns)
 
         if self.dae_config.datasets is None or \
                 self.dae_config.datasets.dir is None:
