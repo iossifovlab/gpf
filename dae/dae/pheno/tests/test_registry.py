@@ -7,6 +7,7 @@ import pytest_mock
 from dae.pheno.pheno_data import PhenotypeGroup, PhenotypeStudy
 from dae.pheno.registry import PhenoRegistry
 from dae.pheno.storage import PhenotypeStorage, PhenotypeStorageRegistry
+from dae.studies.variants_db import DEFAULT_STUDY_CONFIG
 
 
 @pytest.fixture
@@ -212,3 +213,15 @@ def test_disabled_study_not_registered(
 
     empty_registry.register_study_config(pheno_study_configs["fake3"])
     assert len(empty_registry._study_configs) == 2
+
+
+def test_default_person_sets_configuration(
+    empty_registry: PhenoRegistry,
+    pheno_study_configs: dict[str, dict],
+) -> None:
+    empty_registry.register_study_config(pheno_study_configs["fake"])
+    config = empty_registry.get_phenotype_data_config("fake")
+    assert config is not None
+    assert "person_set_collections" in config
+    assert config["person_set_collections"] == \
+        DEFAULT_STUDY_CONFIG["person_set_collections"]

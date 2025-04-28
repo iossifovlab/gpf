@@ -8,6 +8,7 @@ from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.phenotype_data import pheno_conf_schema
 from dae.pheno.pheno_data import PhenotypeData, PhenotypeGroup
 from dae.pheno.storage import PhenotypeStorageRegistry
+from dae.studies.variants_db import DEFAULT_STUDY_CONFIG
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,10 @@ class PhenoRegistry:
         """Register a configuration as a loadable phenotype data."""
         if not study_config["enabled"]:
             return
+
+        if "person_set_collections" not in study_config:
+            study_config["person_set_collections"] = \
+                dict(DEFAULT_STUDY_CONFIG["person_set_collections"])
 
         study_id = study_config["id"]
         storage_config = study_config.get("phenotype_storage")

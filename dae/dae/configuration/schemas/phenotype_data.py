@@ -79,7 +79,7 @@ pheno_conf_schema = {
                         "type": "list", "schema": {"type": "string"},
                     },
                 },
-                "default": {},
+                "default": {"family_report": ["status"]},
             },
             "draw_all_families": {"type": "boolean", "default": False},
             "file_path": {
@@ -89,7 +89,7 @@ pheno_conf_schema = {
                 "default": "common_report.json",
             },
         },
-        "default": {"enabled": False},
+        "default": {"enabled": True},
     },
 }
 
