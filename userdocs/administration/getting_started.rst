@@ -151,6 +151,13 @@ Example import of de novo variants
 
 Let us import a small list of de novo variants.
 
+.. note::
+
+    All the data files needed for this example are available in the
+    `gpf-getting-started <https://github.com/iossifovlab/gpf-getting-started.git>`_
+    repository under the subdirectory ``input_genotype_data``.
+
+
 A pedigree file that describes the families is needed -
 ``input_genotype_data/example.ped``:
 
