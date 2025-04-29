@@ -91,22 +91,20 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         `default_filter`.
         """
 
-        is_legacy = True
+        measure_table = self.measure
+
+        # Support legacy dbs by conditionally using newer columns
         with self.connection.cursor() as cursor:
             columns = cursor.execute("DESCRIBE measure").fetchall()
-            for col in columns:
-                if col[0] == "histogram_config":
-                    is_legacy = False
-                    break
+            column_names = [col[0] for col in columns]
 
-        measure_table = self.measure
-        if is_legacy:
-            hist_config_column = alias_(Null(), "histogram_config")
-        else:
-            hist_config_column = column(
-                "histogram_config",
-                measure_table.alias_or_name,
-            )
+            if "histogram_config" in column_names:
+                hist_config_column = column(
+                    "histogram_config",
+                    measure_table.alias_or_name,
+                )
+            else:
+                hist_config_column = alias_(Null(), "histogram_config")
 
         columns = [
             column("measure_id", measure_table.alias_or_name),
