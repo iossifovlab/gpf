@@ -111,6 +111,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         columns = [
             column("measure_id", measure_table.alias_or_name),
             column("instrument_name", measure_table.alias_or_name),
+            column("instrument_description", measure_table.alias_or_name),
             column("measure_name", measure_table.alias_or_name),
             column("description", measure_table.alias_or_name),
             column("measure_type", measure_table.alias_or_name),
@@ -142,6 +143,7 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             "measure_id",
             "measure_name",
             "instrument_name",
+            "instrument_description",
             "description",
             "individuals",
             "measure_type",

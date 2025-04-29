@@ -40,6 +40,7 @@ class PhenoBrowser:
             CREATE TABLE IF NOT EXISTS variable_browser(
                 measure_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
                 instrument_name VARCHAR NOT NULL,
+                instrument_description VARCHAR,
                 measure_name VARCHAR NOT NULL,
                 measure_type INT NOT NULL,
                 description VARCHAR,
@@ -361,13 +362,14 @@ class PhenoBrowser:
                 yield {
                     "measure_id": row[0],
                     "instrument_name": row[1],
-                    "measure_name": row[2],
-                    "measure_type": MeasureType(row[3]),
-                    "description": row[4],
-                    "values_domain": row[5],
-                    "figure_distribution_small": row[6],
-                    "figure_distribution": row[7],
-                    **dict(zip(reg_col_names, row[8:], strict=True)),
+                    "instrument_description": row[2],
+                    "measure_name": row[3],
+                    "measure_type": MeasureType(row[4]),
+                    "description": row[5],
+                    "values_domain": row[6],
+                    "figure_distribution_small": row[7],
+                    "figure_distribution": row[8],
+                    **dict(zip(reg_col_names, row[9:], strict=True)),
                 }
 
     def count_measures(

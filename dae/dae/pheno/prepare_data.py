@@ -109,6 +109,7 @@ class PreparePhenoBrowserBase:
         return {
             "measure_id": measure.measure_id,
             "instrument_name": measure.instrument_name,
+            "instrument_description": measure.instrument_description,
             "measure_name": measure.measure_name,
             "measure_type": measure.measure_type.value,
             "description": measure.description,
