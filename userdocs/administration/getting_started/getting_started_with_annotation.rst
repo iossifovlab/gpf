@@ -34,7 +34,7 @@ public GRR:
 
 In order to use these resources in the GPF instance annotation, we need to
 edit the GPF instance configuration (``minimal_instance/gpf_instance.yaml``)
-and add the following snippet to the configuration file:
+and add the following snippet to it:
 
 .. code-block:: yaml
 
@@ -51,25 +51,26 @@ to date:
 
     wgpf run
 
-The variants in our ``Example Dataset`` will now have additional attributes
+The variants in our `Example Dataset` will now have additional attributes
 that come from the annotation with GnomAD and ClinVar:
 
 - ``gnomad_v4_genome_ALL_af``;
 - ``CLNSIG``;
 - ``CLNDN``.
 
-If we browse our ``Example Dataset`` there is almost no difference.
-The only difference is that now in the
-genotype browser, the genomic scores section is not empty, and we can query
-our variants using the ``gnomad_v4_genome_ALL_af``, ``CLNSIG`` and ``CLNDN``
-genomic scores.
+By default the additional attributes produced by the annotation are usable in 
+the following ways:
+
+* If you download the variants using the `Genotype Browser` download button,
+  the additional attributes will be included in the downloaded file;
+
+* We can query the variants using the ``gnomad_v4_genome_ALL_af``, ``CLNSIG`` 
+  and ``CLNDN`` genomic scores.
 
 .. figure:: getting_started_files/example-dataset-genotype-browser-gnomics-scores.png
 
     Genotype browser using GnomAD and ClinVar genomic scores
 
-.. note::
-
-    The attributes produced by the annotation can be used in the
-    `Genotype Browser` preview table as described in
-    :ref:`getting_started_with_preview_columns`.
+The attributes produced by the annotation can be used in the
+`Genotype Browser` preview table as described in
+:ref:`getting_started_with_preview_columns`.

@@ -1,7 +1,7 @@
 .. _getting_started_with_preview_columns:
 
-Getting Started with Preview and Download Columns
-#################################################
+Getting Started with Preview Columns
+####################################
 
 Configure genotype columns in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
