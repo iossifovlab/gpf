@@ -76,12 +76,13 @@ def cli_cache_repo(argv: list[str] | None = None) -> None:
         gene_models_id = gpf_config.gene_models.resource_id
         resources.add(gene_models_id)
 
-        if gpf_config.annotation.conf_file is not None:
-            pipeline = load_pipeline_from_file(
-                gpf_config.annotation.conf_file, repository)
-        elif gpf_config.annotation.config is not None:
-            pipeline = build_annotation_pipeline(
-                gpf_config.annotation.config, repository)
+        if gpf_config.annotation is not None:
+            if gpf_config.annotation.conf_file is not None:
+                pipeline = load_pipeline_from_file(
+                    gpf_config.annotation.conf_file, repository)
+            elif gpf_config.annotation.config is not None:
+                pipeline = build_annotation_pipeline(
+                    gpf_config.annotation.config, repository)
     elif args.annotation is not None:
         pipeline = load_pipeline_from_file(args.annotation, repository)
 
