@@ -106,10 +106,21 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             else:
                 hist_config_column = alias_(Null(), "histogram_config")
 
+            if "instrument_description" in column_names:
+                instrument_description_column = column(
+                    "instrument_description",
+                    measure_table.alias_or_name,
+                )
+            else:
+                instrument_description_column = alias_(
+                    Null(),
+                    "instrument_description",
+                )
+
         columns = [
             column("measure_id", measure_table.alias_or_name),
             column("instrument_name", measure_table.alias_or_name),
-            column("instrument_description", measure_table.alias_or_name),
+            instrument_description_column,
             column("measure_name", measure_table.alias_or_name),
             column("description", measure_table.alias_or_name),
             column("measure_type", measure_table.alias_or_name),
