@@ -23,7 +23,7 @@ from dae.pheno.pheno_import import (
     ImportManifest,
     collect_instruments,
     import_pheno_data,
-    load_descriptions,
+    load_measure_descriptions,
     main,
 )
 from dae.testing import (
@@ -244,7 +244,7 @@ def test_collect_instruments(tmp_path: pathlib.Path) -> None:
     ]
 
 
-def test_load_descriptions_files(tmp_path: pathlib.Path) -> None:
+def test_load_measure_descriptions_files(tmp_path: pathlib.Path) -> None:
     pathlib.Path(tmp_path, "i1_descriptions.tsv").write_text(
        "instrumentName\tmeasureName\tdescription\n"
        "testInstrument1\tmeasure1\tdescription one\n"
@@ -263,14 +263,14 @@ def test_load_descriptions_files(tmp_path: pathlib.Path) -> None:
         ],
     })
 
-    assert load_descriptions(str(tmp_path), config) == {
+    assert load_measure_descriptions(str(tmp_path), config) == {
         "testInstrument1.measure1": "description one",
         "testInstrument1.measure2": "description two",
         "testInstrument2.measure1": "description three",
     }
 
 
-def test_load_descriptions_dictionary() -> None:
+def test_load_measure_descriptions_dictionary() -> None:
     config = MeasureDescriptionsConfig.model_validate({
         "dictionary": {
             "testInstrument1": {
@@ -283,14 +283,14 @@ def test_load_descriptions_dictionary() -> None:
         },
     })
 
-    assert load_descriptions("N/A", config) == {
+    assert load_measure_descriptions("N/A", config) == {
         "testInstrument1.measure1": "description one",
         "testInstrument1.measure2": "description two",
         "testInstrument2.measure1": "description three",
     }
 
 
-def test_load_descriptions_mixed(tmp_path: pathlib.Path) -> None:
+def test_load_measure_descriptions_mixed(tmp_path: pathlib.Path) -> None:
     pathlib.Path(tmp_path, "descriptions.tsv").write_text(
         "instrumentName\tmeasureName\tdescription\n"
         "testInstrument1\tmeasure1\tdescription one\n"
@@ -315,7 +315,7 @@ def test_load_descriptions_mixed(tmp_path: pathlib.Path) -> None:
         },
     })
 
-    assert load_descriptions(str(tmp_path), config) == {
+    assert load_measure_descriptions(str(tmp_path), config) == {
         "testInstrument1.measure1": "description one updated",
         "testInstrument1.measure2": "description two",
         "testInstrument2.measure1": "description three",
@@ -323,7 +323,9 @@ def test_load_descriptions_mixed(tmp_path: pathlib.Path) -> None:
     }
 
 
-def test_load_descriptions_file_with_overrides(tmp_path: pathlib.Path) -> None:
+def test_load_measure_descriptions_file_with_overrides(
+    tmp_path: pathlib.Path,
+) -> None:
     pathlib.Path(tmp_path, "descriptions.tsv").write_text(
         "instrumentName,m_name,m_desc\n"
         "testInstrument1,measure1,description one\n"
@@ -343,7 +345,7 @@ def test_load_descriptions_file_with_overrides(tmp_path: pathlib.Path) -> None:
         ],
     })
 
-    assert load_descriptions(str(tmp_path), config) == {
+    assert load_measure_descriptions(str(tmp_path), config) == {
         "theSpecialInstrument.measure1": "description three",
         "theSpecialInstrument.measure2": "description two",
     }

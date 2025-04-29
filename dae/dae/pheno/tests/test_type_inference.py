@@ -178,6 +178,7 @@ def test_merge_config_histograms() -> None:
         MeasureReport.model_validate({
             "measure_name": "some_other_measure",
             "instrument_name": "some_instrument",
+            "instrument_description": "instrument description",
             "inference_report": inference_report,
             "db_name": "",
             "measure_type": MeasureType.continuous,
@@ -192,6 +193,7 @@ def test_merge_config_histograms() -> None:
         MeasureReport.model_validate({
             "measure_name": "some_measure",
             "instrument_name": "some_instrument",
+            "instrument_description": "instrument description",
             "inference_report": inference_report,
             "db_name": "",
             "measure_type": MeasureType.continuous,
@@ -206,6 +208,7 @@ def test_merge_config_histograms() -> None:
         MeasureReport.model_validate({
             "measure_name": "some_measure",
             "instrument_name": "another_instrument",
+            "instrument_description": "instrument description",
             "inference_report": inference_report,
             "db_name": "",
             "measure_type": MeasureType.continuous,
