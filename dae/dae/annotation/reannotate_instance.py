@@ -2,9 +2,9 @@ import argparse
 import logging
 import os
 import pathlib
+import sys
 from typing import Any, cast
 
-from dae.annotation.annotate_utils import AnnotationTool
 from dae.annotation.annotation_factory import load_pipeline_from_yaml
 from dae.duckdb_storage.duckdb2_variants import DuckDb2Variants
 from dae.duckdb_storage.duckdb_genotype_storage import (
@@ -24,8 +24,20 @@ from dae.utils.verbosity_configuration import VerbosityConfiguration
 logger = logging.getLogger(__name__)
 
 
-class ReannotateInstanceTool(AnnotationTool):
+class ReannotateInstanceTool:
     """Annotation tool to reannotate the configured GPF instance"""
+
+    def __init__(
+        self,
+        raw_args: list[str] | None = None,
+        gpf_instance: GPFInstance | None = None,
+    ) -> None:
+        if not raw_args:
+            raw_args = sys.argv[1:]
+        parser = self.get_argument_parser()
+        self.args = parser.parse_args(raw_args)
+        VerbosityConfiguration.set(self.args)
+        self.gpf_instance = gpf_instance
 
     def get_argument_parser(self) -> argparse.ArgumentParser:
         """Construct and configure argument parser."""
