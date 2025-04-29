@@ -6,12 +6,15 @@ import os
 import sys
 import time
 
-from dae.annotation.annotation_factory import load_pipeline_from_file
+from dae.annotation.annotation_factory import (
+    build_annotation_pipeline,
+    load_pipeline_from_file,
+)
+from dae.annotation.annotation_pipeline import AnnotationPipeline
 from dae.configuration.gpf_config_parser import GPFConfigParser
 from dae.configuration.schemas.dae_conf import dae_conf_schema
 from dae.genomic_resources.cached_repository import cache_resources
 from dae.genomic_resources.repository_factory import (
-    GenomicResourceRepo,
     build_genomic_resource_repository,
     get_default_grr_definition,
     load_definition_file,
@@ -26,10 +29,8 @@ def cli_cache_repo(argv: list[str] | None = None) -> None:
     if not argv:
         argv = sys.argv[1:]
 
-    description = "Genomic resources cache tool - caches genomic resources " \
-        "for a given repository"
-
-    parser = argparse.ArgumentParser(description=description)
+    parser = argparse.ArgumentParser(
+        description="Genomic resources cache tool - caches genomic resources for a given repository")  # noqa: E501
     parser.add_argument(
         "--grr", "-g", default=None, help="Repository definition file",
     )
@@ -59,7 +60,7 @@ def cli_cache_repo(argv: list[str] | None = None) -> None:
     repository = build_genomic_resource_repository(definition=definition)
 
     resources: set[str] = set()
-    annotation = None
+    pipeline = None
 
     if args.instance is not None and args.annotation is not None:
         raise ValueError(
@@ -75,15 +76,17 @@ def cli_cache_repo(argv: list[str] | None = None) -> None:
         gene_models_id = gpf_config.gene_models.resource_id
         resources.add(gene_models_id)
 
-        if gpf_config.annotation is not None:
-            annotation = gpf_config.annotation.conf_file
+        if gpf_config.annotation.conf_file is not None:
+            pipeline = load_pipeline_from_file(
+                gpf_config.annotation.conf_file, repository)
+        elif gpf_config.annotation.config is not None:
+            pipeline = build_annotation_pipeline(
+                gpf_config.annotation.config, repository)
     elif args.annotation is not None:
-        annotation = args.annotation
+        pipeline = load_pipeline_from_file(args.annotation, repository)
 
-    if annotation is not None:
-        annotation_resources = extract_resource_ids_from_annotation(
-            annotation, repository,
-        )
+    if pipeline is not None:
+        annotation_resources = extract_resource_ids_from_pipeline(pipeline)
         resources |= annotation_resources
 
     cache_resources(repository, resource_ids=resources, workers=args.jobs)
@@ -92,12 +95,11 @@ def cli_cache_repo(argv: list[str] | None = None) -> None:
     logger.info("Cached all resources in %.2f secs", elapsed)
 
 
-def extract_resource_ids_from_annotation(
-        annotation: str, repository: GenomicResourceRepo) -> set[str]:
+def extract_resource_ids_from_pipeline(
+    pipeline: AnnotationPipeline,
+) -> set[str]:
     """Collect resources and resource files used by annotation."""
     resources: set[str] = set()
-    with load_pipeline_from_file(annotation, repository) as pipeline:
-        for annotator in pipeline.annotators:
-            resources = resources | {resource.get_id()
-                                     for resource in annotator.resources}
+    for annotator in pipeline.annotators:
+        resources.update(resource.get_id() for resource in annotator.resources)
     return resources

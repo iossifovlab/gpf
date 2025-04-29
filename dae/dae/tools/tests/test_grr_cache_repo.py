@@ -1,10 +1,19 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 import os
 
+import pytest
+
 from dae.tools.grr_cache_repo import cli_cache_repo
 
 
-def test_cli_cache_instance(mocker, fixture_path, temp_cache_dir):
+@pytest.mark.parametrize(
+    "instance_conf_name",
+    ["gpf_instance.yaml",
+     "gpf_instance_embedded_annotation.yaml"],
+)
+def test_cli_cache_instance(
+    mocker, fixture_path, instance_conf_name, temp_cache_dir,
+):
     definition = {
         "id": "local",
         "type": "directory",
@@ -20,7 +29,7 @@ def test_cli_cache_instance(mocker, fixture_path, temp_cache_dir):
         "blank",
         "-j", "1",
         "--instance",
-        fixture_path("gpf_instance.yaml"),
+        fixture_path(instance_conf_name),
     ])
 
     paths = [

@@ -1,0 +1,23 @@
+vars:
+  wd: "."
+
+instance_id: "test_instance"
+
+annotation:
+  config:
+    - position_score: scores/mock1
+    - liftover_annotator:
+        chain: liftover/mock
+        source_genome: genomes/mock0
+        target_genome: genomes/mock
+    - position_score:
+        resource_id: scores/mock2
+    - normalize_allele_annotator:
+        genome: genomes/mock
+
+
+reference_genome:
+  resource_id: "genomes/mock"
+
+gene_models:
+  resource_id: "gene_models/mock"
