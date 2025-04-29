@@ -6,6 +6,13 @@ Importing phenotype data
 
 To import phenotype data, the ``import_phenotypes`` tool is used.
 
+.. note::
+
+    All the data files needed for this example are available in the
+    `gpf-getting-started <https://github.com/iossifovlab/gpf-getting-started.git>`_
+    repository under the subdirectory ``input_phenotype_data``.
+
+
 The tool requires an **import project**, a YAML file describing the
 contents of the phenotype data to be imported, along with configuration options
 on how to import them.
@@ -110,6 +117,6 @@ and `Phenotype Tool` tabs enabled for the `Example Dataset` dataset.
 Additionally, in the `Genotype Browser`,the `Family Filters` and
 `Person Filters` sections will have the `Pheno Measures` filters enabled.
 
-.. figure:: getting_started_files/example-dataset-genotype-browser-pheno-filters-2.png
+.. figure:: getting_started_files/example-dataset-genotype-browser-pheno-filters.png
 
     Example Dataset genotype browser using Pheno Measures family filters
