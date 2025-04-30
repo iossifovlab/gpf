@@ -87,12 +87,18 @@ class DatasetView(QueryBaseView):
     """
 
     def _collect_datasets_summary(
-        self, user: User,
+        self, user: User, *, studies_only=False,
     ) -> list[dict[str, Any]]:
         datasets: list[WDAEStudy] = list(filter(None, [
             self.gpf_instance.get_wdae_wrapper(data_id)
             for data_id in self.gpf_instance.get_available_data_ids()
         ]))
+
+        if studies_only is True:
+            datasets = [
+                dataset for dataset in datasets
+                if not dataset.is_group and not dataset.is_phenotype
+            ]
 
         res = []
         for dataset in datasets:
@@ -179,6 +185,15 @@ class DatasetView(QueryBaseView):
                             status=status.HTTP_404_NOT_FOUND)
 
         return Response({"data": self._collect_single_dataset(user, dataset)})
+
+
+class DatasetStudiesView(DatasetView):
+    @method_decorator(etag(get_permissions_etag))
+    def get(
+        self, request: Request, dataset_id: str | None = None,  # noqa: ARG002
+    ) -> Response:
+        """Return all studies (non-group genotype data)."""
+        return Response({"data": self._collect_datasets_summary(request.user, studies_only=True)})  # noqa: E501
 
 
 class DatasetPedigreeView(QueryBaseView):
