@@ -7,9 +7,6 @@ from collections.abc import Callable
 import pytest
 import pytest_mock
 
-from dae.gene_sets.generate_denovo_gene_sets import (
-    main as generate_denovo_gene_sets,
-)
 from dae.genomic_resources import build_genomic_resource_repository
 from dae.genomic_resources.cli import cli_manage
 from dae.genomic_resources.genomic_context import (
@@ -45,6 +42,9 @@ from dae.testing import (
 )
 from dae.testing.import_helpers import setup_dataset_config
 from dae.testing.t4c8_import import t4c8_genes, t4c8_genome
+from dae.tools.generate_denovo_gene_sets import (
+    main as generate_denovo_gene_sets,
+)
 
 logger = logging.getLogger(__name__)
 

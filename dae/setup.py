@@ -132,7 +132,7 @@ setuptools.setup(
     generate_gene_profile=dae.gene_profile.generate_gene_profile:main
     convert_gene_profile_to_duckdb=dae.gene_profile.convert_gene_profile_to_duckdb:main
     generate_common_report=dae.common_reports.generate_common_report:main
-    generate_denovo_gene_sets=dae.gene_sets.generate_denovo_gene_sets:main
+    generate_denovo_gene_sets=dae.tools.generate_denovo_gene_sets:main
 
     build_coding_length_enrichment_background=dae.enrichment_tool.build_coding_length_enrichment_background:cli
     build_ur_synonymous_enrichment_background=dae.enrichment_tool.build_ur_synonymous_enrichment_background:cli

@@ -6,11 +6,11 @@ import textwrap
 import pytest
 
 from dae.common_reports.common_report import CommonReport
-from dae.gene_sets.generate_denovo_gene_sets import main
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData, GenotypeDataGroup
 from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
+from dae.tools.generate_denovo_gene_sets import main
 
 
 @pytest.fixture(scope="module")
@@ -191,7 +191,7 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
         })
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_dataset(
     t4c8_instance: GPFInstance,
     t4c8_study_1: GenotypeData,
