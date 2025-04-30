@@ -275,19 +275,24 @@ To import the study, from the ``gpf-getting-started`` directory we should run:
 
     time import_genotypes -v -j 10 example_imports/denovo_and_cnv_import/ssc_denovo.yaml
 
-This command will take a while to run. The time it takes to run will depend on
-the number of variants in the input file and the number of threads used for
-the import. For example, on a machine with 10 threads, the import of the SSC
-de Novo variants took about 5 minutes to run:
-
-.. code-block:: bash
-
-    real    5m29.950s
-    user    31m52.320s
-    sys     1m41.755s
-
 The ``-j 10`` option instructs the ``import_genotypes`` tool to use 10 threads
 and the ``-v`` option controls the verbosity of the output.
+
+This command will take a while to run. The time it takes to run will depend on
+the number of variants in the input file and the number of threads used for
+the import. 
+
+.. note:: 
+
+    For example, on a MacBook Pro with Apple M1 Pro chip, the import of the SSC
+    de Novo variants took about 5 minutes:
+
+    .. code-block:: bash
+
+        real    5m29.950s
+        user    31m52.320s
+        sys     1m41.755s
+
 
 When the import finishes, we can run the development GPF server:
 
@@ -330,39 +335,21 @@ snippet to the configuration file:
     :linenos:
 
     genotype_browser:
-      columns:
-        genotype:
-          gnomad_v4_genome_af:
-            name: gnomAD v4 AF
-            source: gnomad_v4_genome_ALL_af
-            format: "%%.5f"
-          clinvar_clnsig:
-            name: CLNSIG
-            source: CLNSIG
-          clinvar_clndn:
-            name: CLNDN
-            source: CLNDN
-
       column_groups:
         gnomad_v4:
           name: gnomAD v4
           columns:
-          - gnomad_v4_genome_af
+          - gnomad_v4_genome_ALL_af
 
         clinvar:
           name: ClinVar
           columns:
-          - clinvar_clnsig
-          - clinvar_clndn
+          - CLNSIG
+          - CLNDN
 
       preview_columns_ext:
         - gnomad_v4
         - clinvar
-
-      download_columns_ext:
-        - gnomad_v4_genome_af
-        - clinvar_clnsig
-        - clinvar_clndn
 
 Now, restart the GPF development server:
 
