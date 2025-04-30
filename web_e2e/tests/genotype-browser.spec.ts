@@ -7,7 +7,7 @@ test.describe('Genotype browser tests', () => {
   test.beforeEach(async({ page }) => {
     await page.goto(utils.frontendUrl, {waitUntil: 'load'});
     await utils.loginAdmin(page);
-    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
+    await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
   });
 
   test('should display filters blocks and buttons', async({ page }) => {
@@ -21,7 +21,7 @@ test.describe('Genotype browser tests', () => {
     await expect(page.locator('gpf-genomic-scores-block')).toBeVisible();
     await expect(page.locator('gpf-family-filters-block')).toBeVisible();
     await expect(page.locator('gpf-person-filters-block')).toBeVisible();
-    await expect(page.locator('gpf-unique-family-variants-filter')).not.toBeVisible();
+    await expect(page.locator('gpf-unique-family-variants-filter')).toBeVisible();
 
     await utils.navigateToDatasetPage(page, datasetIds.helloWorldGenotypes, 'Genotype browser');
     await expect(page.locator('gpf-unique-family-variants-filter')).toBeVisible();
@@ -31,8 +31,45 @@ test.describe('Genotype browser tests', () => {
     await page.getByRole('button', { name: 'Table Preview' }).click();
     await expect(page.locator('gpf-genotype-preview-table')).toBeVisible();
 
-    await page.locator('gpf-pedigree-selector').getByLabel('affected', {exact: true}).click();
+    await page.locator('gpf-present-in-child').getByLabel('sibling only', {exact: true}).click();
     await expect(page.locator('gpf-genotype-preview-table')).not.toBeVisible();
+  });
+
+  test('should load query after filtering with scores and family and person filters', async({ page }) => {
+    await page.locator('#gene-scores').click();
+    await page.locator('gpf-gene-scores select')
+      .selectOption('gene-score - Evidence strength supporting a gene\'s association with autism');
+
+    await page.locator('gpf-effect-types').getByRole('button', { name: 'All' }).click();
+
+    const clinsig = 'CLNSIG - Aggregate germline classification for this single variant;' +
+    ' multiple values are separated by a vertical bar';
+    await page.locator('gpf-genomic-scores-block >> mat-form-field').click();
+    await page.locator(`mat-option:has-text("${clinsig}")`).click();
+
+    await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
+    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
+
+    await page.locator('gpf-person-filters-block').getByText('Pheno Measures').click();
+    await page.locator('gpf-person-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
+
+    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span > span')).toHaveText('10 variants selected', { timeout: 120000 });
+
+    await page.getByRole('button', {name: 'Share/save query'}).click();
+    await expect(page.locator('#save-query-dropdown')).toBeVisible();
+    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+    await expect(page.locator('#gene-scores-panel')).toBeVisible();
+    await expect(page.locator('gpf-genomic-scores')).toBeVisible();
+    await expect(page.locator('gpf-family-filters-block').locator('svg')).toBeVisible();
+    await expect(page.locator('gpf-person-filters-block').locator('svg')).toBeVisible();
+
+    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span > span')).toHaveText('10 variants selected', { timeout: 120000 });
   });
 });
 
