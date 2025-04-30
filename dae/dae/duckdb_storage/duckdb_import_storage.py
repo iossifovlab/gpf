@@ -55,6 +55,7 @@ class AbstractDuckDbImportStorage(Schema2ImportStorage, abc.ABC):
         genotype_browser: dict[str, Any] = {
             "enabled": False,
         }
+        has_denovo = False
 
         if project.get_processing_parquet_dataset_dir() is not None:
             meta = cls.load_meta(project)
@@ -63,10 +64,11 @@ class AbstractDuckDbImportStorage(Schema2ImportStorage, abc.ABC):
         else:
             variants_types = project.get_variant_loader_types()
             has_cnv = "cnv" in variants_types
+            has_denovo = project.has_denovo_variants() or has_cnv
             study_config = {
                 "id": project.study_id,
                 "conf_dir": ".",
-                "has_denovo": project.has_denovo_variants() or has_cnv,
+                "has_denovo": has_denovo,
                 "has_cnv": has_cnv,
                 "has_transmitted": bool({"dae", "vcf"} & variants_types),
             }
@@ -97,6 +99,11 @@ class AbstractDuckDbImportStorage(Schema2ImportStorage, abc.ABC):
             genotype_browser_config = \
                 cast(dict[str, Any], study_config["genotype_browser"])
             genotype_browser_config["enabled"] = True
+
+            if has_denovo:
+                study_config["denovo_gene_sets"] = {
+                    "enabled": True,
+                }
 
         config_builder = StudyConfigBuilder(study_config)
         config = config_builder.build_config()
