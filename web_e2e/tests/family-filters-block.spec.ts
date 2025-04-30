@@ -155,4 +155,24 @@ test.describe('Family filters block tests', () => {
     await expect(page.locator('gpf-family-filters-block')
       .getByRole('tab', { name: 'Advanced', exact: true })).not.toBeVisible();
   });
+
+  test('errors state reset when opening Pheno Measures tab and switch tool', async({ page }) => {
+    await expect(page.locator('gpf-family-filters-block')
+      .getByRole('tab', { name: 'Pheno Measures', exact: true })).toBeVisible();
+    await page.locator('gpf-family-filters-block').getByRole('tab', { name: 'Pheno Measures', exact: true }).click();
+
+    await expect(page.locator('gpf-person-filters-selector')).toBeVisible();
+    await expect(page.getByText('Select a measure.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+
+    await page.locator('a').filter({ hasText: 'Gene browser'}).click();
+
+    await page.locator('a').filter({ hasText: 'Genotype browser'}).click();
+    await expect(page.locator('gpf-family-filters-block')
+      .getByRole('tab', { name: 'Pheno Measures', exact: true })).toBeVisible();
+
+    await expect(page.locator('gpf-person-filters-selector')).not.toBeVisible();
+    await expect(page.getByText('Select a measure.')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+  });
 });
