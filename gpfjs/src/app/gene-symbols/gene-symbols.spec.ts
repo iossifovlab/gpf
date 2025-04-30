@@ -9,6 +9,7 @@ import { ConfigService } from 'app/config/config.service';
 import { ErrorsAlertComponent } from 'app/errors-alert/errors-alert.component';
 import { provideHttpClient } from '@angular/common/http';
 import { GeneService } from 'app/gene-browser/gene.service';
+import { resetErrors, setErrors } from 'app/common/errors.state';
 
 
 class GeneServiceMock {
@@ -63,7 +64,7 @@ describe('GeneSymbolsComponent', () => {
     const setGeneSymbolsSpy = jest.spyOn(component, 'setGeneSymbols').mockImplementation();
     const geneSymbolsInputSpy = jest.spyOn(component.geneSymbolsInput$, 'next');
     jest.spyOn(store, 'select').mockReturnValueOnce(of(['value1', 'value2']));
-    expect(component.geneSymbols.geneSymbols).toBe('');
+    expect(component.geneSymbols).toBe('');
     component.ngOnInit();
 
     expect(geneSymbolsInputSpy).toHaveBeenCalledWith('value1\nvalue2');
@@ -75,7 +76,7 @@ describe('GeneSymbolsComponent', () => {
     const setGeneSymbolsSpy = jest.spyOn(component, 'setGeneSymbols').mockImplementation();
     const geneSymbolsInputSpy = jest.spyOn(component.geneSymbolsInput$, 'next');
     jest.spyOn(store, 'select').mockReturnValueOnce(of(['value1', 'value2', 'value3', 'value4']));
-    expect(component.geneSymbols.geneSymbols).toBe('');
+    expect(component.geneSymbols).toBe('');
     component.ngOnInit();
 
     expect(geneSymbolsInputSpy).toHaveBeenCalledWith('value1, value2, value3, value4');
@@ -86,35 +87,41 @@ describe('GeneSymbolsComponent', () => {
   it('should dispatch to state when genes are valid', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
     component.invalidGenes = 'invlaidGene';
-    expect(component.geneSymbols.geneSymbols).toBe('');
+    expect(component.geneSymbols).toBe('');
 
     const genes = 'CHD8, POGZ, FOXP1';
     component.setGeneSymbols(genes);
 
-    expect(component.geneSymbols.geneSymbols).toBe('CHD8, POGZ, FOXP1');
+    expect(component.geneSymbols).toBe('CHD8, POGZ, FOXP1');
     expect(component.invalidGenes).toBe('');
     expect(dispatchSpy).toHaveBeenCalledWith(setGeneSymbols({geneSymbols: ['CHD8', 'POGZ', 'FOXP1']}));
+    expect(dispatchSpy).toHaveBeenCalledWith(resetErrors({componentId: 'geneSymbols'}));
   });
 
-  it('should recieve invalid genes list and not dispatch to state', () => {
+  it('should receive invalid genes list and not dispatch to state', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
     const genes = 'CHD8, POGZ, FOXP1, invalidGene';
     component.setGeneSymbols(genes);
 
     expect(component.invalidGenes).toBe('invalidGene');
-    expect(component.geneSymbols.geneSymbols).toStrictEqual(genes);
+    expect(component.geneSymbols).toStrictEqual(genes);
     expect(dispatchSpy).not.toHaveBeenCalledWith();
+    expect(dispatchSpy).toHaveBeenCalledWith(setErrors({
+      errors: {
+        componentId: 'geneSymbols', errors: ['Invalid genes: invalidGene']
+      }
+    }));
   });
 
   it('should not trigger validate query or save to state when gene symbols are empty', () => {
     const dispatchSpy = jest.spyOn(store, 'dispatch');
     const validateGenesSpy = jest.spyOn(geneServiceMock, 'validateGenes');
     component.invalidGenes = 'invalidGenes';
-    component.geneSymbols.geneSymbols = 'CHD8, POGZ, FOXP1';
+    component.geneSymbols = 'CHD8, POGZ, FOXP1';
     component.setGeneSymbols('');
 
     expect(component.invalidGenes).toBe('');
-    expect(component.geneSymbols.geneSymbols).toBe('');
+    expect(component.geneSymbols).toBe('');
     expect(validateGenesSpy).not.toHaveBeenCalledWith();
     expect(dispatchSpy).not.toHaveBeenCalledWith();
   });
