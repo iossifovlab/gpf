@@ -261,9 +261,7 @@ def main(argv: list[str] | None = None) -> int:
         argv = sys.argv
         if not argv[0].endswith("import_phenotypes"):
             logger.warning(
-                "%s tool is deprecated! Use import_phenotypes.",
-                argv[0],
-            )
+                "%s tool is deprecated! Use import_phenotypes.", argv[0])
         argv = sys.argv[1:]
 
     # Setup argument parser
@@ -846,19 +844,10 @@ def add_pheno_common_inference(
 ) -> None:
     """Add pedigree columns as skipped columns to the inference config."""
     default_cols = [
-        "familyId",
-        "personId",
-        "momId",
-        "dadId",
-        "sex",
-        "status",
-        "role",
-        "sample_id",
-        "layout",
-        "generated",
-        "proband",
-        "not_sequenced",
-        "missing",
+        "familyId", "personId", "momId",
+        "dadId", "sex", "status", "role",
+        "sample_id", "layout", "generated",
+        "proband", "not_sequenced", "missing",
         "member_index",
     ]
     default_cols.extend(ALL_FAMILY_TAG_LABELS)
@@ -1376,70 +1365,22 @@ def write_reports_to_parquet(
 ) -> Path:
     """Write inferred instrument measure values to parquet file."""
     fields = [
-        pa.field(
-            "measure_id",
-            pa.string(),
-        ),
-        pa.field(
-            "db_column_name",
-            pa.string(),
-        ),
-        pa.field(
-            "measure_name",
-            pa.string(),
-        ),
-        pa.field(
-            "instrument_name",
-            pa.string(),
-        ),
-        pa.field(
-            "instrument_description",
-            pa.string(),
-        ),
-        pa.field(
-            "description",
-            pa.string(),
-        ),
-        pa.field(
-            "measure_type",
-            pa.int32(),
-        ),
-        pa.field(
-            "value_type",
-            pa.string(),
-        ),
-        pa.field(
-            "histogram_type",
-            pa.string(),
-        ),
-        pa.field(
-            "histogram_config",
-            pa.string(),
-        ),
-        pa.field(
-            "individuals",
-            pa.int32(),
-        ),
-        pa.field(
-            "default_filter",
-            pa.string(),
-        ),
-        pa.field(
-            "min_value",
-            pa.float64(),
-        ),
-        pa.field(
-            "max_value",
-            pa.float64(),
-        ),
-        pa.field(
-            "values_domain",
-            pa.string(),
-        ),
-        pa.field(
-            "rank",
-            pa.int32(),
-        ),
+        pa.field("measure_id", pa.string()),
+        pa.field("db_column_name", pa.string()),
+        pa.field("measure_name", pa.string()),
+        pa.field("instrument_name", pa.string()),
+        pa.field("instrument_description", pa.string()),
+        pa.field("description", pa.string()),
+        pa.field("measure_type", pa.int32()),
+        pa.field("value_type", pa.string()),
+        pa.field("histogram_type", pa.string()),
+        pa.field("histogram_config", pa.string()),
+        pa.field("individuals", pa.int32()),
+        pa.field("default_filter", pa.string()),
+        pa.field("min_value", pa.float64()),
+        pa.field("max_value", pa.float64()),
+        pa.field("values_domain", pa.string()),
+        pa.field("rank", pa.int32()),
     ]
     batch_values = {
         "measure_id": [],
@@ -1516,9 +1457,6 @@ def write_reports_to_parquet(
 
 
 if __name__ == "__main__":
-    logger.warning(
-        "%s tool is deprecated! Use import_phenotypes.",
-        sys.argv[0],
-    )
+    logger.warning("%s tool is deprecated! Use import_phenotypes.", sys.argv[0])
 
     main(sys.argv[1:])
