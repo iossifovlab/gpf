@@ -21,8 +21,13 @@ test.describe('Enrichment tool tests', () => {
     await expect(page.locator('.enrichment-table')).not.toBeVisible();
     await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
 
+    await page.waitForSelector('#background-models');
+    await page.waitForSelector('#counting-models');
+
     await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
     await page.keyboard.type('CAMSAP1');
+    await expect(page.getByText('Please insert at least one gene symbol.')).not.toBeVisible();
+
     await page.getByRole('button', {name: 'Enrichment test'}).click();
     await expect(page.locator('.enrichment-table')).toBeVisible();
   });

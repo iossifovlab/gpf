@@ -55,6 +55,7 @@ test.describe('Genotype browser table preview result tests', () => {
       await page.getByRole('tab', {name: 'Gene symbols'}).click();
       await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
       await page.keyboard.type('CHD8');
+      await expect(page.getByText('Please insert at least one gene symbol.')).not.toBeVisible();
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
 
@@ -237,6 +238,7 @@ test.describe('Genotype browser table preview result tests', () => {
       await page.getByRole('tab', {name: 'Gene symbols'}).click();
       await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
       await page.keyboard.type(data.geneSymbol);
+      await expect(page.getByText('Please insert at least one gene symbol.')).not.toBeVisible();
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
       await page.locator('gpf-effect-types').getByRole('button', {name: data.effectType}).click();
@@ -368,6 +370,7 @@ test.describe('Genotype browser download tests', () => {
     await page.getByRole('tab', {name: 'Gene symbols'}).click();
     await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
     await page.keyboard.type('CHD8');
+    await expect(page.getByText('Please insert at least one gene symbol.')).not.toBeVisible();
 
     await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
 
