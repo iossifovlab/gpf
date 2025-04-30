@@ -1,38 +1,21 @@
 #!/usr/bin/bash
 
-# /opt/conda/bin/conda run --no-capture-output -n gpf \
-#     /wd/scripts/wait-for-it.sh -h impala -p 8020 -t 300
-# /opt/conda/bin/conda run --no-capture-output -n gpf \
-#     /wd/scripts/wait-for-it.sh -h impala -p 21050 -t 300
-
 
 for d in /wd/dae /wd/wdae /wd/dae_conftests; do
     cd ${d};
     /opt/conda/bin/conda run --no-capture-output -n gpf pip install -e .
 done
 
-while :
-do
-    if [[ -f "$DAE_DB_DIR/gpf_instance.yaml" ]]; then
-        break
-    fi
-    sleep 1
-done
+mkdir -p /wd/data/data-hg19-remote
+cp -r /wd/integration/remote/data/* /wd/data/data-hg19-remote/
 
 cd /wd/integration/fixtures/pheno/comp-data
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
-    pheno_import --force -p comp_pheno.ped \
-    -o $DAE_DB_DIR/pheno/comp_pheno \
-    --force \
-    -j 1 \
-    -i instruments/ --data-dictionary comp_pheno_data_dictionary.tsv --pheno-id comp_pheno \
-    --regression comp_pheno_regressions.conf \
-    --person-column personId
+    import_phenotypes --force import_project.yaml
 
-mkdir -p $DAE_DB_DIR/pheno/images
-cp -r $DAE_DB_DIR/pheno/comp_pheno/images/comp_pheno \
-    $DAE_DB_DIR/pheno/images
+/opt/conda/bin/conda run --no-capture-output -n gpf \
+    build_pheno_browser --force comp_pheno
 
 cd /wd
 
@@ -42,6 +25,10 @@ cd /wd/integration/fixtures/hg19/micro_iossifov2014
     simple_study_import --id iossifov_2014 \
     -o /wd/data/temp-remote \
     --denovo-file iossifov2014.txt \
+    --denovo-location location \
+    --denovo-variant variant \
+    --denovo-family-id familyId \
+    --denovo-best-state bestState \
     iossifov2014_families.ped
 
 /opt/conda/bin/conda run --no-capture-output -n gpf \
