@@ -414,7 +414,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await expect(page.locator('#variants-count-span')).toHaveText('4 variants selected');
   });
 
-  test('should select values from dropdown and check validation', async({ page }) => {
+  test('should select values from dropdown and validate', async({ page }) => {
     await page.getByRole('button', {name: 'Mode'}).click();
     await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
 
@@ -435,7 +435,7 @@ test.describe('Gene scores categorical histogram tests', () => {
     await expect(page.locator('mat-option:has-text("2 (706)")')).toBeDisabled();
   });
 
-  test('should remove selected value from list of values and check validation', async({ page }) => {
+  test('should remove selected value from list of values and validate', async({ page }) => {
     await page.getByRole('button', {name: 'Mode'}).click();
     await page.getByRole('menuitem', {name: 'dropdown selector'}).click();
 
@@ -460,6 +460,23 @@ test.describe('Gene scores categorical histogram tests', () => {
 
     await expect(page.getByText('Please select at least one value.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+  });
+
+  test('errors state reset when validation fails and switch tool', async({ page }) => {
+    await page.getByRole('button', {name: 'Mode'}).click();
+    await page.getByRole('menuitem', {name: 'click selector'}).click();
+
+    await expect(page.locator('gpf-categorical-histogram')).toBeVisible();
+    await expect(page.getByText('Please select at least one value.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+
+    await page.locator('a').filter({ hasText: 'Gene browser'}).click();
+
+    await page.locator('a').filter({ hasText: 'Genotype browser'}).click();
+
+    await expect(page.locator('gpf-categorical-histogram')).not.toBeVisible();
+    await expect(page.getByText('Please select at least one value.')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
   });
 
   test('should check save/share query when using dropdown selector', async({ page }) => {
