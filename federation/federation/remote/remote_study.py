@@ -10,14 +10,14 @@ from dae.person_sets import (
     PSCQuery,
 )
 from dae.person_sets.person_sets import parse_person_set_collection_config
-from dae.studies.study import GenotypeData
+from dae.studies.study import GenotypeDataStudy
 from dae.utils.regions import Region
 from dae.variants.family_variant import FamilyVariant
 from dae.variants.variant import SummaryVariant
 from federation.remote.rest_api_client import RESTClient
 
 
-class RemoteGenotypeData(GenotypeData):
+class RemoteGenotypeData(GenotypeDataStudy):
     """Represent remote genotype data."""
 
     def __init__(self, study_id: str, rest_client: RESTClient):
@@ -33,6 +33,10 @@ class RemoteGenotypeData(GenotypeData):
             config.get("name", self.remote_study_id),
         )
         config["phenotype_tool"] = False
+        if config["phenotype_data"]:
+            config["phenotype_data"] = \
+                self.rest_client.prefix_remote_identifier(config["phenotype_data"])
+
         config["description_editable"] = False
         if config["gene_browser"]:
             config["gene_browser"]["enabled"] = False
@@ -54,13 +58,15 @@ class RemoteGenotypeData(GenotypeData):
         if config.get("studies") is not None:
             raise ValueError("Tried to create remote dataset")
 
-        super().__init__(FrozenBox(config), [self])
+        self.config = config
 
         self.is_remote = True
 
         self._families: FamiliesData
         self.build_families()
         self._description = ""
+
+        super().__init__(FrozenBox(config), [self])
 
     def build_families(self) -> None:
         """Construct remote genotype data families."""

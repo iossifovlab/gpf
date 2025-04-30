@@ -111,7 +111,7 @@ def setup_remote_t4c8_instance(
     wgpf_instance = WGPFInstance.build(instance_filename, grr=t4c8_grr)
 
     load_extension(wgpf_instance)
-    return cast(WGPFInstance, gpf_instance)
+    return cast(WGPFInstance, wgpf_instance)
 
 
 @pytest.fixture(scope="session")
@@ -122,7 +122,7 @@ def remote_t4c8_instance(
     return setup_remote_t4c8_instance(root_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def remote_t4c8_wgpf_instance(
     remote_t4c8_instance: WGPFInstance,
     db: None,  # noqa: ARG001
@@ -145,7 +145,7 @@ def remote_t4c8_wgpf_instance(
     return remote_t4c8_instance
 
 
-@pytest.fixture()
+@pytest.fixture
 def remote_config() -> dict[str, str]:
     host = os.environ.get("TEST_REMOTE_HOST", "localhost")
     return {
@@ -157,7 +157,7 @@ def remote_config() -> dict[str, str]:
     }
 
 
-@pytest.fixture()
+@pytest.fixture
 def rest_client(
     admin_client: Client,  # noqa: ARG001
     remote_config: dict[str, str],

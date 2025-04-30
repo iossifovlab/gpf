@@ -43,13 +43,12 @@ def load_extension(instance: WGPFInstance) -> None:
         for study in studies:
             wrapper = RemoteStudyWrapper(study)
 
-            instance.register_genotype_data(study, study_wrapper=wrapper)
+            instance._variants_db.register_genotype_data(study)  # noqa: SLF001
             pheno_registry = instance._pheno_registry  # noqa: SLF001
 
             if wrapper.phenotype_data is not None:
-                pheno_registry.register_phenotype_data(
-                    wrapper.phenotype_data,
-                )
+                pheno_registry._cache[wrapper.phenotype_data.pheno_id] = \
+                    wrapper.phenotype_data  # noqa: SLF001
             if instance.visible_datasets is not None:
                 instance.visible_datasets.append(wrapper.study_id)
 

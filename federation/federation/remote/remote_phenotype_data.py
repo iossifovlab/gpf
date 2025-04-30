@@ -5,23 +5,22 @@ from typing import Any, cast
 
 import pandas as pd
 
-from dae.pheno.pheno_data import Instrument, Measure, PhenotypeData
+from dae.pheno.pheno_data import Instrument, Measure, PhenotypeStudy
 from dae.variants.attributes import Role
 from federation.remote.rest_api_client import RESTClient
 
 logger = logging.getLogger(__name__)
 
 
-class RemotePhenotypeData(PhenotypeData):
+class RemotePhenotypeData(PhenotypeStudy):
     """Phenotype data adapter for accessing remote instance phenotype data."""
 
     def __init__(
         self, pheno_id: str, remote_dataset_id: str, rest_client: RESTClient,
-    ):
+    ):  # pylint: disable=super-init-not-called
         self._remote_pheno_id = pheno_id
         self.rest_client = rest_client
-        pheno_id = self.rest_client.prefix_remote_identifier(pheno_id)
-        super().__init__(pheno_id, None)
+        self._pheno_id = pheno_id
 
         self.remote_dataset_id = remote_dataset_id
 

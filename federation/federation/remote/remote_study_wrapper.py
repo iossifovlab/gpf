@@ -132,3 +132,8 @@ class RemoteStudyWrapper(StudyWrapperBase):
         return self.remote_genotype_data.get_person_set_collection(
             person_set_collection_id,
         )
+
+    def _init_pheno(self, *_, **__) -> None:
+        # This method is not necessary for remote studies, as the phenotype
+        # data is already initialized in the constructor.
+        pass
