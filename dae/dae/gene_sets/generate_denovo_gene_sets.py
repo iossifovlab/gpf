@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import argparse
 import logging
 
@@ -58,7 +57,3 @@ def main(
         ]
         # pylint: disable=protected-access
         denovo_gene_sets_db.build_cache(filter_studies_ids)
-
-
-if __name__ == "__main__":
-    main()
