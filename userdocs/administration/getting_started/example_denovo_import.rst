@@ -52,6 +52,8 @@ columns from that file that look as follows:
     gunzip -c Supplementary_Data_1.tsv.gz | head | cut -f 1-5 | less -S -x 20
 
 
+.. code-block:: text
+
     collection          familyId            personId            affected status     sex
     SSC                 11000               11000.p1            affected            M
     SSC                 11000               11000.s1            unaffected          F
@@ -147,6 +149,8 @@ For the import, we will use columns four and nine from this file:
 .. code-block:: bash
 
     gunzip -c Supplementary_Data_2.tsv.gz | head | cut -f 4,9 | less -S -x 20
+
+.. code-block:: text
 
     personIds           variant in VCF format
     13210.p1            chr1:184268:G:A
