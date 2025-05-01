@@ -381,11 +381,10 @@ study_config_schema = {
     "denovo_gene_sets": {
         "type": "dict",
         "schema": {
-            "enabled": {"type": "boolean", "required": True},
+            "enabled": {"type": "boolean", "required": False},
             "selected_person_set_collections": {
                 "type": "list",
                 "schema": {"type": "string"},
-                "default": ["status"],
             },
             "selected_standard_criterias_values": {
                 "type": "list",
@@ -464,7 +463,6 @@ study_config_schema = {
                 ],
             },
         },
-        "default": {"enabled": False},
     },
     "enrichment": {
         "type": "dict",

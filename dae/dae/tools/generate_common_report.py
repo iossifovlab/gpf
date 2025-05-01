@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import argparse
 import logging
 import sys
@@ -12,7 +10,7 @@ logger = logging.getLogger("generate_common_reports")
 
 
 def main(
-    argv: list[str] | None = None,
+    argv: list[str] | None = None, *,
     gpf_instance: GPFInstance | None = None,
 ) -> None:
     """Command line tool to generate dataset statistics."""
@@ -33,6 +31,13 @@ def main(
         "names for generating common report. Default to all query objects.",
         default=None,
         action="store",
+    )
+    parser.add_argument(
+        "--force",
+        help="Force generation of common reports even if they are already "
+        "cached.",
+        default=False,
+        action="store_true",
     )
 
     if argv is None:
@@ -71,4 +76,4 @@ def main(
             else:
                 study = gpf_instance.get_phenotype_data(study_id)
 
-            study.build_and_save(force=True)
+            study.build_and_save(force=args.force)

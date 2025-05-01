@@ -30,15 +30,6 @@ def test_trios2_study_simple(
     assert config.denovo_gene_sets.enabled
 
 
-def test_default_dgs_config_selected_person_sets(
-    trios2_study: GenotypeData,
-) -> None:
-    config = trios2_study.config
-
-    assert config.denovo_gene_sets.selected_person_set_collections == \
-        ["status"]
-
-
 def test_default_dgs_config_standard_criterias_effect_types(
     trios2_study: GenotypeData,
 ) -> None:
@@ -151,7 +142,7 @@ def test_explore_new_style_configs() -> None:
         )
 
 
-@pytest.fixture()
+@pytest.fixture
 def denovo_gene_sets_config() -> dict[str, Any]:
     content = textwrap.dedent("""
   enabled: true

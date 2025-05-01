@@ -40,14 +40,26 @@ class DenovoGeneSetHelpers:
 
     @classmethod
     def build_collection(
-        cls, genotype_data_study: GenotypeData,
+        cls, study: GenotypeData, *,
+        force: bool = False,
     ) -> DenovoGeneSetCollection | None:
         """Build a denovo gene set collection for a study and save it."""
-        dgsc = DenovoGeneSetCollection.build_collection(
-            genotype_data_study,
-        )
+        dgsc = DenovoGeneSetCollection.create_empty_collection(study)
+        if dgsc is None:
+            logger.info(
+                "no denovo gene set collection defined for %s", study.study_id)
+            return None
+
+        cache_dir = study.config.conf_dir
+        if dgsc.is_cached(cache_dir) and not force:
+            logger.info(
+                "denovo gene set collection for %s already cached",
+                study.study_id,
+            )
+            return dgsc.load(cache_dir)
+
+        dgsc = DenovoGeneSetCollection.build_collection(study)
         if dgsc is None:
             return None
-        cache_dir = genotype_data_study.config.conf_dir
         dgsc.save(cache_dir)
         return dgsc

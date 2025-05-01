@@ -2,9 +2,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import logging
-import os
 import pathlib
-from collections.abc import Generator
 from datetime import timedelta
 from typing import cast
 
@@ -32,7 +30,6 @@ from studies.study_wrapper import (
 from users_api.models import WdaeUser
 from utils.testing import setup_t4c8_instance, setup_wgpf_instance
 
-from dae.common_reports import generate_common_report
 from dae.genomic_resources.repository import (
     GR_CONF_FILE_NAME,
     GenomicResourceRepo,
@@ -197,28 +194,6 @@ def enrichment_grr() -> GenomicResourceRepo:
             },
         },
     })
-
-
-@pytest.fixture
-def use_common_reports(
-    wdae_gpf_instance: WGPFInstance,
-) -> Generator[None, None, None]:
-    all_configs = wdae_gpf_instance.get_all_common_report_configs()
-    temp_files = [config.file_path for config in all_configs]
-
-    for temp_file in temp_files:
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
-
-    args = ["--studies", "Study1,study4"]
-
-    generate_common_report.main(args, wdae_gpf_instance)
-
-    yield
-
-    for temp_file in temp_files:
-        if os.path.exists(temp_file):
-            os.remove(temp_file)
 
 
 @pytest.fixture

@@ -47,33 +47,31 @@ class SexesCriteria(BaseModel):
     sexes: list[Sex]
 
 
-class RecurrencyCriteriaBase(BaseModel):
-    """Criteria for filtering recurrency."""
+class SingleCriteria(BaseModel):
+    """Single recurrency criteria."""
 
     model_config = ConfigDict(extra="forbid")
-
-    name: str
-    start: int  # closed interval
-    end: int  # open interval
-
-
-class SingleCriteria(RecurrencyCriteriaBase):
-    """Single recurrency criteria."""
 
     name: Literal["Single"]
     start: Literal[1]
     end: Literal[2]
 
 
-class RecurrentCriteria(RecurrencyCriteriaBase):
+class RecurrentCriteria(BaseModel):
     """Recurrent recurrency criteria."""
+
+    model_config = ConfigDict(extra="forbid")
+
     name: Literal["Recurrent"]
     start: Literal[2]
     end: Literal[-1]
 
 
-class TripleCriteria(RecurrencyCriteriaBase):
+class TripleCriteria(BaseModel):
     """Triple recurrency criteria."""
+
+    model_config = ConfigDict(extra="forbid")
+
     name: Literal["Triple"]
     start: Literal[3]
     end: Literal[-1]
@@ -146,14 +144,25 @@ def _validate_gene_sets_ids(
 
 
 def parse_denovo_gene_sets_config(
-    config: dict[str, Any],
+    config: dict[str, Any], *,
+    study_person_set_collections: dict[str, Any] | None = None,
+    has_denovo: bool = False,
 ) -> DenovoGeneSetsConfig | None:
     """Parse de novo gene sets configuration."""
-    enabled = config.get("enabled", False)
+    enabled = config.get("enabled")
+    if enabled is None and has_denovo:
+        enabled = True
     if not enabled:
         return None
+
     selected_person_set_collections = config.get(
         "selected_person_set_collections", [])
+    if not selected_person_set_collections:
+        if study_person_set_collections is None:
+            study_person_set_collections = {}
+        selected_person_set_collections = \
+            study_person_set_collections.get(
+                "selected_person_set_collections", [])
     if not selected_person_set_collections:
         raise ValueError("No person set collections selected")
     selected_starndard_criterias_values = config.get(
@@ -213,13 +222,23 @@ def parse_denovo_gene_sets_config(
 
 
 def parse_denovo_gene_sets_study_config(
-    study_config: dict[str, Any],
+    study_config: dict[str, Any], *,
+    has_denovo: bool = False,
 ) -> DenovoGeneSetsConfig | None:
     """Parse de novo gene sets study configuration."""
     denovo_gene_sets_config = study_config.get("denovo_gene_sets", {})
-    if not denovo_gene_sets_config:
+    if not denovo_gene_sets_config and not has_denovo:
         return None
-    return parse_denovo_gene_sets_config(denovo_gene_sets_config)
+    if denovo_gene_sets_config is None:
+        denovo_gene_sets_config = {}
+    study_person_set_collections = study_config.get(
+        "person_set_collections", {},
+    )
+    return parse_denovo_gene_sets_config(
+        denovo_gene_sets_config,
+        study_person_set_collections=study_person_set_collections,
+        has_denovo=has_denovo,
+    )
 
 
 class DGSSpec(BaseModel):

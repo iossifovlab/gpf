@@ -7,6 +7,9 @@ from dae.gene_sets.denovo_gene_set_collection import DenovoGeneSetCollection
 from dae.gene_sets.denovo_gene_set_helpers import (
     DenovoGeneSetHelpers,
 )
+from dae.gene_sets.denovo_gene_sets_config import (
+    parse_denovo_gene_sets_study_config,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -57,11 +60,15 @@ class DenovoGeneSetsDb:
             self._gene_set_configs_cache[study_id] = dgsc.config
             self._gene_set_collections_cache[study_id] = dgsc
 
-    def build_cache(self, genotype_data_ids: list[str]) -> None:
+    def build_cache(
+        self, genotype_data_ids: list[str], *,
+        force: bool = False,
+    ) -> None:
+        """Build cache for de Novo gene sets for specified genotype data IDs."""
         for study_id in genotype_data_ids:
             study = self.gpf_instance.get_genotype_data(study_id)
             assert study is not None, study_id
-            DenovoGeneSetHelpers.build_collection(study)
+            DenovoGeneSetHelpers.build_collection(study, force=force)
 
     @cached_property
     def collections_descriptions(self) -> list[dict[str, Any]]:
@@ -94,16 +101,18 @@ class DenovoGeneSetsDb:
             self.gpf_instance.get_genotype_data_ids())
         result = set()
         for study_id in study_ids:
-            config = self.gpf_instance.get_genotype_data_config(study_id)
-            if config is None:
+            study = self.gpf_instance.get_genotype_data(study_id)
+            study_config = study.config
+            if study_config is None:
                 logger.error(
                     "unable to load genotype data %s", study_id)
                 raise ValueError(
                     f"unable to load genotype data {study_id}")
-
-            if config.denovo_gene_sets and \
-                    config.denovo_gene_sets.enabled and \
-                    config.denovo_gene_sets.selected_person_set_collections:
+            psc_config = parse_denovo_gene_sets_study_config(
+                study_config,
+                has_denovo=study.has_denovo,
+            )
+            if psc_config is not None:
                 result.add(study_id)
 
         return result

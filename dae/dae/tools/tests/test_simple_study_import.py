@@ -42,7 +42,7 @@ def test_del_loader_prefix() -> None:
     assert res["portokala"] == "portokala"
 
 
-@pytest.fixture()
+@pytest.fixture
 def pedigree_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
     root_path = tmp_path_factory.mktemp("pedigree")
     return setup_pedigree(
@@ -60,7 +60,7 @@ def pedigree_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
     )
 
 
-@pytest.fixture()
+@pytest.fixture
 def denovo_dae_data(tmp_path_factory: pytest.TempPathFactory) -> pathlib.Path:
     root_path = tmp_path_factory.mktemp("denovo_dae_path")
     return setup_denovo(
@@ -187,7 +187,7 @@ def test_import_denovo_dae_style_sep(
     assert len(vs) == 5
 
 
-@pytest.fixture()
+@pytest.fixture
 def vcf_data(
     tmp_path: pathlib.Path,
 ) -> pathlib.Path:
