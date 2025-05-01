@@ -46,6 +46,10 @@ you can use:
         for aa in v.alt_alleles:
             print(aa)
 
+will produce the following output:
+
+.. code-block:: python3
+
     chr14:21391016 A->AT f2
     chr14:21393484 TCTTC->T f2
     chr14:21402010 G->A f1
@@ -80,6 +84,8 @@ can use:
     vs = list(vs)
     len(vs)
 
+.. code-block:: python3
+
     >> 4
 
 Or, if you are interested in "synonymous" variants only in people with
@@ -90,5 +96,7 @@ Or, if you are interested in "synonymous" variants only in people with
     vs = st.query_variants(effect_types=['synonymous'], roles='prb')
     vs = list(vs)
     len(vs)
+
+.. code-block:: python3
 
     >> 1
