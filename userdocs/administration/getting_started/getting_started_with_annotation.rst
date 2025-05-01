@@ -53,8 +53,8 @@ and add lines 9-12 to it:
         - allele_score: hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL
         - allele_score: hg38/scores/ClinVar_20240730
 
-Re-running GPF will automatically re-annotate any genotype data that is not up
-to date:
+When you start the GPF instance using the ``wgpf`` tool will automatically
+re-annotate any genotype data that is not up to date:
 
 .. code-block:: bash
 
@@ -76,9 +76,24 @@ the following ways:
 * We can query the variants using the ``gnomad_v4_genome_ALL_af``, ``CLNSIG`` 
   and ``CLNDN`` genomic scores.
 
-.. figure:: getting_started_files/example-dataset-genotype-browser-gnomics-scores.png
+Let's say we want to find all variants from `Example Dataset` that have gnomAD
+frequency. Navigate to the `Genotype Browser` tab for the `Example Dataset`.
+Select all checkboxes in the `Genotype Browser` filters. From the
+`Genomic Score` filter select the `gnomad_v4_genome_ALL_af` score.
 
-    Genotype browser using GnomAD and ClinVar genomic scores
+.. figure:: getting_started_files/example-dataset-all-variants-with-gnomad-filter.png
+
+    Genotype browser for `Example Dataset` with all filters selected
+
+Then click on the `Download` button. This will download family variants matching
+the selected filters in a tab-separated file.
+
+.. csv-table:: Family variants file downloaded from the `Example Dataset`
+    :file: ../getting_started_files/example-dataset-variants.tsv
+    :delim: tab
+    :header-rows: 1
+    :align: left
+
 
 The attributes produced by the annotation can be used in the
 `Genotype Browser` preview table as described in

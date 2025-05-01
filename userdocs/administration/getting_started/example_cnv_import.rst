@@ -95,7 +95,7 @@ content:
 Data Import of ``ssc_cnv``
 ++++++++++++++++++++++++++
 
-Now we have a pedigree file, ``ssc_denovo.ped``, and a list of de novo
+Now we have a pedigree file, ``ssc_denovo.ped``, and a list of CNV
 variants, ``ssc_cnv.tsv``. Let us prepare an import project configuration
 file, ``ssc_cnv.yaml``:
 

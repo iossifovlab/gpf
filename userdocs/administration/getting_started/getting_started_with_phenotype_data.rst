@@ -31,13 +31,13 @@ Inside the ``input_phenotype_data`` directory, the following data is provided:
 * ``instruments`` contains the phenotype instruments and measures to be
   imported. There are two instruments in the example:
 
-  ``input_phenotype_data/instruments/basic_medical.csv``:
+  .. csv-table:: ``input_phenotype_data/instruments/basic_medical.csv``
+      :file: ../gpf-getting-started/input_phenotype_data/instruments/basic_medical.csv
+      :header-rows: 1
 
-  .. literalinclude:: gpf-getting-started/input_phenotype_data/instruments/basic_medical.csv
-
-  ``input_phenotype_data/instruments/iq.csv``:
-
-  .. literalinclude:: gpf-getting-started/input_phenotype_data/instruments/iq.csv
+  .. csv-table:: ``input_phenotype_data/instruments/iq.csv``
+      :file: ../gpf-getting-started/input_phenotype_data/instruments/iq.csv
+      :header-rows: 1
 
 * ``measure_descriptions.tsv`` contains descriptions for the provided measures.
 

@@ -135,7 +135,6 @@ Importing genotype data
 Import Tools and Import Project
 +++++++++++++++++++++++++++++++
 
-Importing genotype data into a GPF instance involves multiple steps.
 The tool used to import genotype data is named ``import_genotypes``. This tool
 expects an import project file that describes the import.
 
