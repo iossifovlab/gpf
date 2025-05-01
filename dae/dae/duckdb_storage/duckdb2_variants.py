@@ -295,6 +295,7 @@ class DuckDb2Variants(QueryVariantsBase):
             return_reference=return_reference,
             return_unknown=return_unknown,
             limit=query_limit,
+            **kwargs,
         )
         logger.info("SUMMARY VARIANTS QUERY:\n%s", query)
 
@@ -382,6 +383,7 @@ class DuckDb2Variants(QueryVariantsBase):
         inheritance: list[str] | None = None,
         roles_in_parent: str | None = None,
         roles_in_child: str | None = None,
+        roles: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         variant_type: str | None = None,
@@ -420,6 +422,7 @@ class DuckDb2Variants(QueryVariantsBase):
             inheritance=inheritance,
             roles_in_parent=roles_in_parent,
             roles_in_child=roles_in_child,
+            roles=roles,
             sexes=sexes,
             affected_statuses=affected_statuses,
             variant_type=variant_type,
@@ -445,12 +448,13 @@ class DuckDb2Variants(QueryVariantsBase):
 
         skip_inmemory_filterng = kwargs.get("skip_inmemory_filterng", False)
         if not skip_inmemory_filterng:
-            if roles_in_parent and roles_in_child:
+            if roles_in_parent is None and roles_in_child is None:
+                pass
+            elif roles_in_parent and roles_in_child:
                 roles = f"{roles_in_parent} and {roles_in_child}"
-            elif roles_in_child or roles_in_parent:
-                roles = roles_in_child or roles_in_parent
             else:
-                roles = None
+                roles = roles_in_child or roles_in_parent
+
             filter_func = RawFamilyVariants.family_variant_filter_function(
                 regions=regions,
                 genes=genes,
@@ -482,6 +486,7 @@ class DuckDb2Variants(QueryVariantsBase):
         inheritance: list[str] | None = None,
         roles_in_parent: str | None = None,
         roles_in_child: str | None = None,
+        roles: str | None = None,
         sexes: str | None = None,
         variant_type: str | None = None,
         real_attr_filter: RealAttrFilterType | None = None,
@@ -512,6 +517,7 @@ class DuckDb2Variants(QueryVariantsBase):
             inheritance=inheritance,
             roles_in_parent=roles_in_parent,
             roles_in_child=roles_in_child,
+            roles=roles,
             sexes=sexes,
             variant_type=variant_type,
             real_attr_filter=real_attr_filter,

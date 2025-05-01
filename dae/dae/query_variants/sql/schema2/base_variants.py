@@ -212,6 +212,7 @@ class SqlSchema2Variants(QueryVariantsBase):
         inheritance: list[str] | None = None,
         roles_in_parent: str | None = None,
         roles_in_child: str | None = None,
+        roles: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         variant_type: str | None = None,
@@ -234,7 +235,7 @@ class SqlSchema2Variants(QueryVariantsBase):
             return None
 
         roles = self.transform_roles_to_single_role_string(
-            roles_in_parent, roles_in_child)
+            roles_in_parent, roles_in_child, roles)
 
         tag_family_ids = self.tags_to_family_ids(tags_query)
         if tag_family_ids is not None:

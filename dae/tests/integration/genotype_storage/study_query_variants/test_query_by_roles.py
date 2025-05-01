@@ -61,13 +61,37 @@ def imported_study(
         (None, "sib and not prb", 1),
     ],
 )
-def test_query_by_roles(
+def test_query_by_roles_in_parent_and_children(
     roles_in_parent: str | None, roles_in_child: str | None,
     count: int, imported_study: GenotypeData,
 ) -> None:
     vs = list(imported_study.query_variants(
         roles_in_parent=roles_in_parent,
         roles_in_child=roles_in_child,
+    ))
+    assert len(vs) == count
+
+
+@pytest.mark.parametrize(
+    "roles,count",
+    [
+        (None, 5),
+        ("prb", 4),
+        ("prb or sib", 5),
+        ("prb and sib", 1),
+        ("prb and not sib", 3),
+        ("mom and sib", 1),
+        ("dad and sib", 1),
+        ("dad and prb", 3),
+        ("sib and not prb", 1),
+    ],
+)
+def test_query_by_roles(
+    roles: str | None,
+    count: int, imported_study: GenotypeData,
+) -> None:
+    vs = list(imported_study.query_variants(
+        roles=roles,
     ))
     assert len(vs) == count
 

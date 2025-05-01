@@ -584,6 +584,7 @@ class RawFamilyVariants(abc.ABC):
         inheritance: Sequence[str] | None = None,
         roles_in_parent: str | None = None,
         roles_in_child: str | None = None,
+        roles: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         variant_type: str | None = None,
@@ -600,7 +601,7 @@ class RawFamilyVariants(abc.ABC):
         # In memory variants does not inherit QueryVariantsBase,
         # but is suitable for the tags to family IDs utility.
         roles = QueryVariantsBase.transform_roles_to_single_role_string(
-                roles_in_parent, roles_in_child,
+                roles_in_parent, roles_in_child, roles,
         )
         tag_family_ids = QueryVariantsBase.tags_to_family_ids(
             self, tags_query,  # type: ignore
