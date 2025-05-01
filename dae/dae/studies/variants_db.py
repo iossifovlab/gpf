@@ -53,8 +53,7 @@ status.sources = [{
 }]
 
 [denovo_gene_sets]
-enabled = false
-
+selected_standard_criterias_values = ["effect_types", "sexes"]
 
 [genotype_browser]
 enabled = true
@@ -330,8 +329,6 @@ class VariantsDb:
 
         self._load_all_genotype_studies(genotype_study_configs)
         self._load_all_genotype_groups(genotype_group_configs)
-        for study in self.get_all_genotype_data():
-            study.build_and_save()
 
     def _load_study_configs(self) -> dict[str, Box]:
         logger.info("loading study configs: %s", self.dae_config.studies)

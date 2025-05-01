@@ -1,6 +1,6 @@
-#!/usr/bin/env python
 import argparse
 import logging
+import sys
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.utils.verbosity_configuration import VerbosityConfiguration
@@ -9,8 +9,8 @@ logger = logging.getLogger("generate_denovo_gene_sets")
 
 
 def main(
+    argv: list[str] | None = None, *,
     gpf_instance: GPFInstance | None = None,
-    argv: list[str] | None = None,
 ) -> None:
     """Generate denovo gene sets CLI."""
     description = "Generate genovo gene sets tool"
@@ -31,6 +31,15 @@ def main(
         default=None,
         action="store",
     )
+    parser.add_argument(
+        "--force",
+        help="Force generation of denovo gene sets even if they are already "
+        "cached.",
+        default=False,
+        action="store_true",
+    )
+    if argv is None:
+        argv = sys.argv[1:]
 
     args = parser.parse_args(argv)
 
@@ -42,23 +51,22 @@ def main(
 
     if args.show_studies:
         for study_id in denovo_gene_sets_db.get_genotype_data_ids():
-            print(study_id)
+            logger.warning("study with denovo gene sets: %s", study_id)
     else:
         if args.studies:
-            filter_studies_ids = None
+            filtered_study_ids = None
             studies = args.studies.split(",")
         else:
             studies = gpf_instance.get_genotype_data_ids()
 
-        print("generating de Novo gene sets for studies:", studies)
-        filter_studies_ids = [
+        filtered_study_ids = [
             study_id
             for study_id in denovo_gene_sets_db.get_genotype_data_ids()
             if study_id in studies
         ]
+        logger.info(
+            "generating de Novo gene sets for studies: %s",
+            filtered_study_ids)
         # pylint: disable=protected-access
-        denovo_gene_sets_db.build_cache(filter_studies_ids)
-
-
-if __name__ == "__main__":
-    main()
+        denovo_gene_sets_db.build_cache(
+            filtered_study_ids, force=args.force)

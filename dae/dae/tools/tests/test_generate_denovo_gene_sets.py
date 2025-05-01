@@ -6,11 +6,16 @@ import textwrap
 import pytest
 
 from dae.common_reports.common_report import CommonReport
-from dae.gene_sets.generate_denovo_gene_sets import main
 from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.studies.study import GenotypeData, GenotypeDataGroup
 from dae.testing import setup_dataset, setup_pedigree, setup_vcf, vcf_study
 from dae.testing.t4c8_import import t4c8_gpf
+from dae.tools.generate_common_report import (
+    main as generate_common_report,
+)
+from dae.tools.generate_denovo_gene_sets import (
+    main as generate_denovo_gene_sets,
+)
 
 
 @pytest.fixture(scope="module")
@@ -191,7 +196,7 @@ chr1   7   .  G   T   .    .      .    GT     0/0  1/0  0/1 0/0  0/0  0/0 0/1
         })
 
 
-@pytest.fixture()
+@pytest.fixture
 def t4c8_dataset(
     t4c8_instance: GPFInstance,
     t4c8_study_1: GenotypeData,
@@ -234,15 +239,17 @@ def test_generate_denovo_gene_sets_script_passes(
     t4c8_instance: GPFInstance,
 ) -> None:
     t4c8_instance.reload()
-    main(gpf_instance=t4c8_instance, argv=[])
-    main(gpf_instance=t4c8_instance, argv=["--show-studies"])
+    generate_denovo_gene_sets([], gpf_instance=t4c8_instance)
+    generate_denovo_gene_sets(["--show-studies"], gpf_instance=t4c8_instance)
 
 
 def test_generate_denovo_gene_sets_study_1(
     t4c8_instance: GPFInstance,
     t4c8_study_1: GenotypeData,  # noqa: ARG001
 ) -> None:
-    main(gpf_instance=t4c8_instance, argv=[])
+    generate_denovo_gene_sets([], gpf_instance=t4c8_instance)
+    generate_common_report([], gpf_instance=t4c8_instance)
+
     report_path = os.path.join(
         t4c8_instance.dae_dir,
         "studies",
@@ -276,7 +283,9 @@ def test_generate_denovo_gene_sets_study_2(
     t4c8_instance: GPFInstance,
     t4c8_study_2: GenotypeData,  # noqa: ARG001
 ) -> None:
-    main(gpf_instance=t4c8_instance, argv=[])
+    generate_denovo_gene_sets([], gpf_instance=t4c8_instance)
+    generate_common_report([], gpf_instance=t4c8_instance)
+
     report_path = os.path.join(
         t4c8_instance.dae_dir,
         "studies",

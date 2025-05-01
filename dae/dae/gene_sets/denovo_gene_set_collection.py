@@ -119,10 +119,12 @@ class DenovoGeneSetCollection:
         config = study.config
         assert config is not None, study.study_id
         dgsc_config = parse_denovo_gene_sets_study_config(
-            study.config)
+            study.config,
+            has_denovo=study.has_denovo,
+        )
         if dgsc_config is None:
             logger.info(
-                "No denovo gene sets defined %s", study.study_id)
+                "no denovo gene sets defined for %s", study.study_id)
             return None
 
         person_set_collections = {
@@ -224,6 +226,14 @@ class DenovoGeneSetCollection:
                 value, from_type, to_type, sort_values=sort_values,
             )
         return res
+
+    def is_cached(self, cache_dir: str) -> bool:
+        """Check if all the cache files exist."""
+        for psc_id in self.config.selected_person_set_collections:
+            cache_file = self._cache_file(psc_id, cache_dir)
+            if not os.path.exists(cache_file):
+                return False
+        return True
 
     def save(self, cache_dir: str) -> None:
         """Save the denovo gene set collection to a cache files."""

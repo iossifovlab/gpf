@@ -15,6 +15,12 @@ from gpf_instance.gpf_instance import WGPFInstance
 from dae import __version__  # type: ignore
 from dae.annotation.reannotate_instance import ReannotateInstanceTool
 from dae.pheno.build_pheno_browser import main as build_pheno_browser
+from dae.tools.generate_common_report import (
+    main as generate_common_report,
+)
+from dae.tools.generate_denovo_gene_sets import (
+    main as generate_denovo_gene_sets,
+)
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("wgpf")
@@ -136,6 +142,14 @@ def _run_run_command(
         ["--work-dir", work_dir], wgpf_instance)
     reannotation_tool.run()
 
+    generate_denovo_gene_sets(
+        [],
+        gpf_instance=wgpf_instance,
+    )
+    generate_common_report(
+        [],
+        gpf_instance=wgpf_instance,
+    )
     try:
         execute_from_command_line([
             "wgpf", "runserver", f"{host}:{port}",
