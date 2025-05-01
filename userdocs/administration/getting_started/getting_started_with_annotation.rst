@@ -34,11 +34,20 @@ public GRR:
 
 In order to use these resources in the GPF instance annotation, we need to
 edit the GPF instance configuration (``minimal_instance/gpf_instance.yaml``)
-and add the following snippet to it:
+and add lines 9-12 to it:
 
 .. code-block:: yaml
+    :linenos:
+    :emphasize-lines: 9-12
 
-    # The annotation pipeline configuration to use. Uncomment to enable.
+    instance_id: minimal_instance
+
+    reference_genome:
+      resource_id: "hg38/genomes/GRCh38-hg38"
+
+    gene_models:
+      resource_id: "hg38/gene_models/MANE/1.3"
+
     annotation:
       config:
         - allele_score: hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL
