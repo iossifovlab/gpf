@@ -324,49 +324,6 @@ will be able to see the variants from both studies.
     Gene Browser for CHD8 gene shows variants from both studies -
     ``denovo_example`` and ``vcf_example``
 
-
-
-.. Getting started with de novo gene sets
-.. ######################################
-
-.. To generate de novo gene sets, you can use the ``generate_denovo_gene_sets``
-.. tool.
-
-.. By default the de novo gene sets are disabled. If you want to enable them
-.. for a specific study or dataset you need to update its configuration and
-.. add a section that enables the de novo gene sets:
-
-.. .. code-block:: yaml
-
-..     denovo_gene_sets:
-..       enabled: true
-
-.. For example the configuration of ``example_dataset`` dataset should
-.. become similar to:
-
-.. .. code-block:: yaml
-
-..     id: example_dataset
-..     name: Example Dataset
-
-..     studies:
-..       - denovo_example
-..       - vcf_example
-
-..     common_report:
-..       enabled: True
-
-..     denovo_gene_sets:
-..       enabled: true
-
-
-.. Then we can generate the de novo gene sets for ``example_dataset`` dataset
-.. by running:
-
-.. .. code-block:: bash
-
-..     generate_denovo_gene_sets --studies example_dataset
-
 .. include:: getting_started/getting_started_with_annotation.rst
 
 .. .. include:: getting_started/getting_started_with_gene_browser.rst
