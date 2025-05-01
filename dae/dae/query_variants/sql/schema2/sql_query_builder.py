@@ -1043,6 +1043,7 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         inheritance: str | Sequence[str] | None = None,
         roles_in_parent: str | None = None,
         roles_in_child: str | None = None,
+        roles: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         tags_query: TagsQuery | None = None,
@@ -1061,6 +1062,11 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         if roles_in_child is not None:
             clause = self.roles(roles_in_child, zygosity.children_zygosity)
             query = query.where(clause)
+        if roles is not None and (
+                roles_in_parent is None and roles):
+            clause = self.roles(roles, None)
+            query = query.where(clause)
+
         if inheritance is not None:
             clause = self.inheritance(inheritance)
             query = query.where(clause)
@@ -1248,6 +1254,7 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         return_reference: bool | None = None,
         return_unknown: bool | None = None,
         limit: int | None = None,
+        **_kwargs: Any,
     ) -> list[str]:
         """Build a query for summary variants."""
         squery = self.summary_query(
@@ -1354,6 +1361,7 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         inheritance: Sequence[str] | None = None,
         roles_in_parent: str | None = None,
         roles_in_child: str | None = None,
+        roles: str | None = None,
         sexes: str | None = None,
         affected_statuses: str | None = None,
         variant_type: str | None = None,
@@ -1366,9 +1374,9 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         limit: int | None = None,
         tags_query: TagsQuery | None = None,
         zygosity_query: ZygosityQuery | None = None,
-        **_kwargs: Any,
     ) -> list[str]:
         """Build a query for family variants."""
+
         squery = self.summary_query(
             regions=regions,
             genes=genes,
@@ -1382,24 +1390,25 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             return_unknown=return_unknown,
         )
 
+        if roles_in_parent is None and roles_in_child is None:
+            pass
+        if roles_in_parent and roles_in_child:
+            roles = f"({roles_in_parent}) and ({roles_in_child})"
+        elif roles_in_child or roles_in_parent:
+            roles = roles_in_child or roles_in_parent
+
         fquery = self.family_query(
             family_ids=family_ids,
             person_ids=person_ids,
             inheritance=inheritance,
             roles_in_parent=roles_in_parent,
             roles_in_child=roles_in_child,
+            roles=roles,
             sexes=sexes,
             affected_statuses=affected_statuses,
             tags_query=tags_query,
             zygosity=zygosity_query,
         )
-
-        if roles_in_parent and roles_in_child:
-            roles = f"({roles_in_parent}) and ({roles_in_child})"
-        elif roles_in_child or roles_in_parent:
-            roles = roles_in_child or roles_in_parent
-        else:
-            roles = None
 
         batched_heuristics = self.calc_batched_heuristics(
             regions=regions,
