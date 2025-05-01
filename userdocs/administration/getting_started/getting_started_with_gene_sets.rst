@@ -55,19 +55,23 @@ public GRR:
 
 * `gene_properties/gene_sets/autism
   <https://grr.iossifovlab.com/gene_properties/gene_sets/autism/index.html>`_ - 
-  this gene set collection contains genes associated with autism;
+  autism gene sets derived from publications;
+
+* `gene_properties/gene_sets/relevant
+  <https://grr.iossifovlab.com/gene_properties/gene_sets/relevant/index.html>`_ -
+  variety of gene sets with potential relevance to autism;
 
 * `gene_properties/gene_sets/GO_2024-06-17_release
   <https://grr.iossifovlab.com/gene_properties/gene_sets/GO_2024-06-17_release/index.html>`_ -
   this gene set collection contains genes associated with Gene Ontology
   (GO) terms.
 
-To do this, you need to add lines 14-17 to GPF instance configuration file
+To do this, you need to add lines 14-18 to GPF instance configuration file
 (``minimal_instance/gpf_instance.yaml``):
 
 .. code-block:: yaml
     :linenos:
-    :emphasize-lines: 14-17
+    :emphasize-lines: 14-18
 
     instance_id: minimal_instance
 
@@ -85,6 +89,7 @@ To do this, you need to add lines 14-17 to GPF instance configuration file
     gene_sets_db:
       gene_set_collections:
       - gene_properties/gene_sets/autism
+      - gene_properties/gene_sets/relevant
       - gene_properties/gene_sets/GO_2024-06-17_release
 
 Whe you restart the GPF instance, the configured gene set collections will be

@@ -381,4 +381,6 @@ will be able to see the variants from both studies.
 
 .. include:: getting_started/getting_started_with_gene_sets.rst
 
+.. include:: getting_started/getting_started_with_enrichment.rst
+
 .. include:: getting_started/getting_started_with_python_interface.rst
