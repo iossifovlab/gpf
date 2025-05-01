@@ -55,6 +55,9 @@ def main(argv: list[str] | None = None) -> int:
     if not input_dir.is_absolute():
         raw_config["input_dir"] = str(project_path.parent / input_dir)
 
+    if raw_config.get("work_dir") is None:
+        raw_config["work_dir"] = str(project_path.parent / raw_config["id"])
+
     work_dir = pathlib.Path(raw_config["work_dir"])
     if not work_dir.is_absolute():
         raw_config["work_dir"] = str(project_path.parent / work_dir)
