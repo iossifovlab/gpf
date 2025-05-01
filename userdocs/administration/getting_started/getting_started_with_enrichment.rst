@@ -5,11 +5,11 @@ By default, for each genotype study with de Novo variants, the GPF system
 enables the Enrichment tool.
 
 The Enrichment Tool allows the user to test if a given set of genes is affected
-by more or fewer de novo mutations in the children in the dataset than expected.
+by more or fewer de novo mutations in the children than expected.
 
 To use the Enrichment Tool, a user must choose a set of genes either by 
-selecting one of the gene sets that have already been loaded in GPF or by 
-providing their own gene set.
+selecting one of the gene sets that have already been configured in GPF or by 
+providing their own list of gene symbols.
 
 The user also must select among the background models that GPF uses to 
 compute the expected number of de novo mutations within the given dataset. 
