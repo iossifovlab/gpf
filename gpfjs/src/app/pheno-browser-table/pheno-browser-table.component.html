@@ -106,7 +106,9 @@
   >
 
   <ng-container *ngFor="let measure of measures.measures">
-    <div class="grid-cell instrument-cell" [attr.title]="measure.instrumentDescription">{{ measure.instrumentName }}</div>
+    <div class="grid-cell instrument-cell" [attr.title]="measure.instrumentDescription">{{
+      measure.instrumentName
+    }}</div>
 
     <div class="grid-cell measure-name-cell" [attr.title]="measure.measureName">{{ measure.measureName }}</div>
 
