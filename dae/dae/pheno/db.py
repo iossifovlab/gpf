@@ -147,6 +147,9 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         df["histogram_config"] = df["histogram_config"].apply(
             lambda x: None if pd.isna(x) else str(x),
         )
+        df["instrument_description"] = df["instrument_description"].apply(
+            lambda x: None if pd.isna(x) else str(x),
+        )
 
         df_columns = [
             "measure_id",
