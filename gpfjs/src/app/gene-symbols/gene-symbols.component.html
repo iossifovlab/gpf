@@ -4,14 +4,11 @@
     id="text-area"
     type="text"
     (keyup)="geneSymbolsInput$.next(textArea.value)"
-    [value]="geneSymbolsInput$ | async"
     class="form-control"
-    spellcheck="false"></textarea>
+    spellcheck="false"
+    >{{ geneSymbolsInput$ | async }}</textarea
+  >
   <span id="sensitivity-note" style="color: #acacac; font-style: italic">* Gene symbols are case-sensitive</span>
-
-  <div [hidden]="geneSymbols" class="alert alert-warning" role="alert" style="margin-top: 10px">
-    <span>Please insert at least one gene symbol.</span>
-  </div>
 
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

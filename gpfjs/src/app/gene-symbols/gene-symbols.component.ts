@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectGeneSymbols, setGeneSymbols } from './gene-symbols.state';
 import { BehaviorSubject, debounceTime, distinctUntilChanged, take } from 'rxjs';
@@ -10,7 +10,7 @@ import { cloneDeep } from 'lodash';
   selector: 'gpf-gene-symbols',
   templateUrl: './gene-symbols.component.html',
 })
-export class GeneSymbolsComponent implements OnInit {
+export class GeneSymbolsComponent implements OnInit, OnDestroy {
   public geneSymbols: string = '';
   public invalidGenes: string;
   public geneSymbolsInput$: BehaviorSubject<string> = new BehaviorSubject<string>('');
@@ -29,6 +29,7 @@ export class GeneSymbolsComponent implements OnInit {
         separator = ', ';
       }
       this.geneSymbolsInput$.next(geneSymbolsState.join(separator));
+      this.validateState(geneSymbolsState);
     });
 
     this.geneSymbolsInput$.pipe(
@@ -44,6 +45,7 @@ export class GeneSymbolsComponent implements OnInit {
       this.errors = [];
       this.geneSymbols = '';
       this.invalidGenes = '';
+      this.validateState([]);
       return;
     }
 
@@ -56,6 +58,16 @@ export class GeneSymbolsComponent implements OnInit {
   }
 
   private validateState(genes: string[]): void {
+    if (!genes.length) {
+      this.errors.push('Please insert at least one gene symbol.');
+      this.store.dispatch(setErrors({
+        errors: {
+          componentId: 'geneSymbols', errors: cloneDeep(this.errors)
+        }
+      }));
+      return;
+    }
+
     this.geneService.validateGenes(genes).subscribe(invalidGenes => {
       this.errors = [];
       this.invalidGenes = '';
@@ -96,5 +108,9 @@ export class GeneSymbolsComponent implements OnInit {
     this.waitForGeneTextAreaToLoad().then(() => {
       (this.textArea.nativeElement as HTMLElement).focus();
     });
+  }
+
+  public ngOnDestroy(): void {
+    this.store.dispatch(resetErrors({componentId: 'geneSymbols'}));
   }
 }
