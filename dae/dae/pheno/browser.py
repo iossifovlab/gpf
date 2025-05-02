@@ -9,7 +9,16 @@ import duckdb
 import sqlglot
 from duckdb import ConstraintException
 from sqlglot import column, expressions, select
-from sqlglot.expressions import Count, delete, insert, table_, update, values
+from sqlglot.expressions import (
+    Count,
+    Null,
+    alias_,
+    delete,
+    insert,
+    table_,
+    update,
+    values,
+)
 
 from dae.pheno.common import MeasureType
 from dae.utils.sql_utils import to_duckdb_transpile
@@ -31,6 +40,18 @@ class PhenoBrowser:
         self.variable_browser = table_("variable_browser")
         self.regressions = table_("regression")
         self.regression_values = table_("regression_values")
+        self.is_legacy = self._is_browser_legacy()
+
+    def _is_browser_legacy(self) -> bool:
+        """Check if the database is legacy."""
+        with self.connection.cursor() as cursor:
+            columns = cursor.execute(
+                "DESCRIBE " + self.variable_browser.alias_or_name,
+            ).fetchall()
+            column_names = [col[0] for col in columns]
+            if "instrument_description" not in column_names:
+                return True
+        return False
 
     @staticmethod
     def create_browser_tables(conn: duckdb.DuckDBPyConnection) -> None:
@@ -40,6 +61,7 @@ class PhenoBrowser:
             CREATE TABLE IF NOT EXISTS variable_browser(
                 measure_id VARCHAR NOT NULL UNIQUE PRIMARY KEY,
                 instrument_name VARCHAR NOT NULL,
+                instrument_description VARCHAR,
                 measure_name VARCHAR NOT NULL,
                 measure_type INT NOT NULL,
                 description VARCHAR,
@@ -178,9 +200,30 @@ class PhenoBrowser:
         regression_ids = self.regression_ids
         reg_cols = []
 
-        query = select(
-            f"{self.variable_browser.alias_or_name}.*",
-        ).from_(self.variable_browser)
+        if not self.is_legacy:
+            instrument_description_column = column(
+                "instrument_description", self.variable_browser.alias_or_name,
+            )
+        else:
+            instrument_description_column = alias_(
+                Null(),
+                "instrument_description",
+            )
+
+        columns = [
+            column("measure_id", self.variable_browser.alias_or_name),
+            column("instrument_name", self.variable_browser.alias_or_name),
+            instrument_description_column,
+            column("measure_name", self.variable_browser.alias_or_name),
+            column("measure_type", self.variable_browser.alias_or_name),
+            column("description", self.variable_browser.alias_or_name),
+            column("values_domain", self.variable_browser.alias_or_name),
+            column("figure_distribution_small",
+                self.variable_browser.alias_or_name),
+            column("figure_distribution", self.variable_browser.alias_or_name),
+        ]
+
+        query = select(*columns).from_(self.variable_browser)
 
         for regression_id in regression_ids:
             reg_table = self.regression_values.as_(regression_id)
@@ -361,13 +404,14 @@ class PhenoBrowser:
                 yield {
                     "measure_id": row[0],
                     "instrument_name": row[1],
-                    "measure_name": row[2],
-                    "measure_type": MeasureType(row[3]),
-                    "description": row[4],
-                    "values_domain": row[5],
-                    "figure_distribution_small": row[6],
-                    "figure_distribution": row[7],
-                    **dict(zip(reg_col_names, row[8:], strict=True)),
+                    "instrument_description": row[2],
+                    "measure_name": row[3],
+                    "measure_type": MeasureType(row[4]),
+                    "description": row[5],
+                    "values_domain": row[6],
+                    "figure_distribution_small": row[7],
+                    "figure_distribution": row[8],
+                    **dict(zip(reg_col_names, row[9:], strict=True)),
                 }
 
     def count_measures(

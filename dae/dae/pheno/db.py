@@ -91,26 +91,36 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         `default_filter`.
         """
 
-        is_legacy = True
+        measure_table = self.measure
+
+        # Support legacy dbs by conditionally using newer columns
         with self.connection.cursor() as cursor:
             columns = cursor.execute("DESCRIBE measure").fetchall()
-            for col in columns:
-                if col[0] == "histogram_config":
-                    is_legacy = False
-                    break
+            column_names = [col[0] for col in columns]
 
-        measure_table = self.measure
-        if is_legacy:
-            hist_config_column = alias_(Null(), "histogram_config")
-        else:
-            hist_config_column = column(
-                "histogram_config",
-                measure_table.alias_or_name,
-            )
+            if "histogram_config" in column_names:
+                hist_config_column = column(
+                    "histogram_config",
+                    measure_table.alias_or_name,
+                )
+            else:
+                hist_config_column = alias_(Null(), "histogram_config")
+
+            if "instrument_description" in column_names:
+                instrument_description_column = column(
+                    "instrument_description",
+                    measure_table.alias_or_name,
+                )
+            else:
+                instrument_description_column = alias_(
+                    Null(),
+                    "instrument_description",
+                )
 
         columns = [
             column("measure_id", measure_table.alias_or_name),
             column("instrument_name", measure_table.alias_or_name),
+            instrument_description_column,
             column("measure_name", measure_table.alias_or_name),
             column("description", measure_table.alias_or_name),
             column("measure_type", measure_table.alias_or_name),
@@ -137,11 +147,15 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
         df["histogram_config"] = df["histogram_config"].apply(
             lambda x: None if pd.isna(x) else str(x),
         )
+        df["instrument_description"] = df["instrument_description"].apply(
+            lambda x: None if pd.isna(x) else str(x),
+        )
 
         df_columns = [
             "measure_id",
             "measure_name",
             "instrument_name",
+            "instrument_description",
             "description",
             "individuals",
             "measure_type",

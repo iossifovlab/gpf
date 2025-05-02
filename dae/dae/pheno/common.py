@@ -66,6 +66,25 @@ class MeasureDescriptionsConfig(BaseModel):
     dictionary: dict[str, dict[str, str]] | None = None
 
 
+class InstrumentDictionaryConfig(BaseModel):
+    """Pydantic model for instrument dictionary config entries."""
+    model_config = ConfigDict(extra="forbid")
+
+    path: str
+    instrument: str | None = None
+    delimiter: str = "\t"
+    instrument_column: str = "instrumentName"
+    description_column: str = "description"
+
+
+class InstrumentDescriptionsConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    files: list[InstrumentDictionaryConfig] | None = None
+
+    dictionary: dict[str, str] | None = None
+
+
 class RegressionMeasure(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -120,6 +139,8 @@ class PhenoImportConfig(BaseModel):
     inference_config: str | dict[str, InferenceConfig] | None = None
     histogram_configs: MeasureHistogramConfigs | None = None
     data_dictionary: MeasureDescriptionsConfig | None = None
+    instrument_dictionary: InstrumentDescriptionsConfig | None = None
+
     study_config: StudyConfig | None = None
 
 

@@ -139,6 +139,7 @@ class Measure:
         self.histogram_config: HistogramConfig | None = None
         self.values_domain: str | None = None
         self.instrument_name: str | None = None
+        self.instrument_description: str | None = None
         self.description: str | None = None
         self.default_filter = None
         self.min_value = None
@@ -175,6 +176,7 @@ class Measure:
 
         mes = Measure(row["measure_id"], row["measure_name"])
         mes.instrument_name = row["instrument_name"]
+        mes.instrument_description = row["instrument_description"]
         mes.measure_name = row["measure_name"]
         mes.measure_type = MeasureType(row["measure_type"])
         if row["value_type"] == "str":
@@ -217,6 +219,7 @@ class Measure:
         result["measureName"] = self.measure_name
         result["measureId"] = self.measure_id
         result["instrumentName"] = self.instrument_name
+        result["instrumentDescription"] = self.instrument_description
         result["measureType"] = self.measure_type.name
         result["valueType"] = self.value_type.__name__
         result["histogramType"] = self.histogram_type.__name__

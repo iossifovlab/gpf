@@ -41,6 +41,8 @@ from dae.pheno.common import (
     ImportManifest,
     InferenceConfig,
     InstrumentConfig,
+    InstrumentDescriptionsConfig,
+    InstrumentDictionaryConfig,
     MeasureDescriptionsConfig,
     MeasureHistogramConfigs,
     MeasureType,
@@ -133,6 +135,15 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         dest="data_dictionary",
         help="The tab separated file that contains descriptions of measures.",
         metavar="<data dictionary file>",
+    )
+
+    parser.add_argument(
+        "--instrument-dictionary",
+        dest="instrument_dictionary",
+        help=(
+            "The tab separated file that contains descriptions of instruments."
+        ),
+        metavar="<instrument dictionary file>",
     )
 
     parser.add_argument(
@@ -231,6 +242,12 @@ def transform_cli_args(args: argparse.Namespace) -> PhenoImportConfig:
         }
         delattr(args, "data_dictionary")
 
+    if args.instrument_dictionary:
+        result["instrument_dictionary"] = {
+            "files": [{"path": args.instrument_dictionary}],
+        }
+        delattr(args, "instrument_dictionary")
+
     if args.regression:
         result["study_config"] = {"regressions": args.regression}
         delattr(args, "regression")
@@ -244,9 +261,7 @@ def main(argv: list[str] | None = None) -> int:
         argv = sys.argv
         if not argv[0].endswith("import_phenotypes"):
             logger.warning(
-                "%s tool is deprecated! Use import_phenotypes.",
-                argv[0],
-            )
+                "%s tool is deprecated! Use import_phenotypes.", argv[0])
         argv = sys.argv[1:]
 
     # Setup argument parser
@@ -439,14 +454,25 @@ def import_pheno_data(  # pylint: disable=R0912
         no_cache=task_graph_args.no_cache,
     )
 
-    descriptions = load_descriptions(config.input_dir, config.data_dictionary)
+    measure_descriptions = load_measure_descriptions(
+        config.input_dir,
+        config.data_dictionary,
+    )
+
+    instrument_descriptions = load_instrument_descriptions(
+        config.input_dir,
+        config.instrument_dictionary,
+    )
 
     create_import_tasks(
-        task_graph, instruments,
+        task_graph,
+        instruments,
         instrument_measure_names,
         inference_configs,
         histogram_configs,
-        config, descriptions,
+        config,
+        measure_descriptions,
+        instrument_descriptions,
     )
 
     instrument_pq_files = handle_measure_inference_tasks(
@@ -621,6 +647,7 @@ def _transform_value(val: str | bool) -> str | None:  # noqa: FBT001
 class MeasureReport(BaseModel):
     measure_name: str
     instrument_name: str
+    instrument_description: str
     db_name: str
     measure_type: MeasureType
     inference_report: InferenceReport
@@ -628,6 +655,7 @@ class MeasureReport(BaseModel):
 
 def read_and_classify_measure(
     instrument: ImportInstrument,
+    instrument_description: str,
     measure_names: list[str],
     descriptions: dict[str, str],
     import_config: PhenoImportConfig,
@@ -667,6 +695,7 @@ def read_and_classify_measure(
 
     output_table, reports = infer_measures(
         instrument,
+        instrument_description,
         person_ids,
         measure_names,
         db_names,
@@ -700,6 +729,7 @@ def read_and_classify_measure(
 
 def infer_measures(
     instrument: ImportInstrument,
+    instrument_description: str,
     person_ids: list[str],
     measure_names: list[str],
     db_names: list[str],
@@ -735,6 +765,7 @@ def infer_measures(
         report = MeasureReport.model_validate({
             "measure_name": instrument.name.strip(),
             "instrument_name": m_name.strip(),
+            "instrument_description": instrument_description,
             "db_name": m_dbname,
             "measure_type": m_type,
             "inference_report": inference_report,
@@ -813,19 +844,10 @@ def add_pheno_common_inference(
 ) -> None:
     """Add pedigree columns as skipped columns to the inference config."""
     default_cols = [
-        "familyId",
-        "personId",
-        "momId",
-        "dadId",
-        "sex",
-        "status",
-        "role",
-        "sample_id",
-        "layout",
-        "generated",
-        "proband",
-        "not_sequenced",
-        "missing",
+        "familyId", "personId", "momId",
+        "dadId", "sex", "status", "role",
+        "sample_id", "layout", "generated",
+        "proband", "not_sequenced", "missing",
         "member_index",
     ]
     default_cols.extend(ALL_FAMILY_TAG_LABELS)
@@ -879,6 +901,7 @@ def create_tables(connection: duckdb.DuckDBPyConnection) -> None:
             db_column_name VARCHAR NOT NULL,
             measure_name VARCHAR NOT NULL,
             instrument_name VARCHAR NOT NULL,
+            instrument_description VARCHAR,
             description VARCHAR,
             measure_type INT,
             value_type VARCHAR,
@@ -1096,7 +1119,7 @@ def write_results(
             connection.execute(query)
 
 
-def load_description_file(
+def load_measure_description_file(
     input_dir: str,
     config: DataDictionaryConfig,
 ) -> dict[str, str]:
@@ -1114,25 +1137,67 @@ def load_description_file(
     return out
 
 
-def load_descriptions(
+def load_measure_descriptions(
     input_dir: str,
-    config: MeasureDescriptionsConfig | None,
+    measure_config: MeasureDescriptionsConfig | None,
 ) -> dict[str, str]:
     """Load measure descriptions from given configuration."""
     descriptions: dict[str, str] = {}
 
-    if not config:
-        return descriptions
+    if measure_config is not None:
+        if measure_config.files is not None:
+            for measuredictfile in measure_config.files:
+                descriptions.update(
+                    load_measure_description_file(
+                        input_dir,
+                        measuredictfile,
+                    ),
+                )
 
-    if config.files is not None:
-        for datadictfile in config.files:
-            descriptions.update(load_description_file(input_dir, datadictfile))
+        if measure_config.dictionary is not None:
+            for instrument, m_descs in measure_config.dictionary.items():
+                for measure, description in m_descs.items():
+                    measure_id = f"{instrument}.{measure}"
+                    descriptions[measure_id] = description
 
-    if config.dictionary is not None:
-        for instrument, m_descs in config.dictionary.items():
-            for measure, description in m_descs.items():
-                measure_id = f"{instrument}.{measure}"
-                descriptions[measure_id] = description
+    return descriptions
+
+
+def load_instrument_description_file(
+    input_dir: str,
+    config: InstrumentDictionaryConfig,
+) -> dict[str, str]:
+    """Load measure descriptions for single data dictionary."""
+    out = {}
+    abspath = Path(input_dir, config.path).absolute()
+    assert abspath.exists(), abspath
+    with open_file(abspath) as csvfile:
+        reader = csv.DictReader(csvfile, delimiter=config.delimiter)
+        for row in reader:
+            instrument_name = config.instrument or row[config.instrument_column]
+            out[instrument_name] = row[config.description_column]
+    return out
+
+
+def load_instrument_descriptions(
+    input_dir: str,
+    instrument_config: InstrumentDescriptionsConfig | None,
+) -> dict[str, str]:
+    """Load measure descriptions from given configuration."""
+    descriptions: dict[str, str] = {}
+
+    if instrument_config is not None:
+        if instrument_config.files is not None:
+            for instrumentdictfile in instrument_config.files:
+                descriptions.update(
+                    load_instrument_description_file(
+                        input_dir,
+                        instrumentdictfile,
+                    ),
+                )
+
+        if instrument_config.dictionary is not None:
+            descriptions.update(instrument_config.dictionary)
 
     return descriptions
 
@@ -1237,10 +1302,15 @@ def create_import_tasks(
     inference_configs: dict[str, Any],
     histogram_configs: MeasureHistogramConfigs | None,
     import_config: PhenoImportConfig,
-    descriptions: dict[str, str],
+    measure_descriptions: dict[str, str],
+    instrument_descriptions: dict[str, str],
 ) -> None:
     """Add measure tasks for importing pheno data."""
     for instrument in instruments:
+        instrument_description = instrument_descriptions.get(
+            instrument.name, "",
+        )
+
         seen_col_names: dict[str, int] = defaultdict(int)
         table_column_names = [
             "person_id", "family_id", "role", "status", "sex",
@@ -1275,8 +1345,9 @@ def create_import_tasks(
             read_and_classify_measure,
             [
                 instrument,
+                instrument_description,
                 group_measure_names,
-                descriptions,
+                measure_descriptions,
                 import_config,
                 group_db_names,
                 group_inf_configs,
@@ -1294,72 +1365,29 @@ def write_reports_to_parquet(
 ) -> Path:
     """Write inferred instrument measure values to parquet file."""
     fields = [
-        pa.field(
-            "measure_id",
-            pa.string(),
-        ),
-        pa.field(
-            "db_column_name",
-            pa.string(),
-        ),
-        pa.field(
-            "measure_name",
-            pa.string(),
-        ),
-        pa.field(
-            "instrument_name",
-            pa.string(),
-        ),
-        pa.field(
-            "description",
-            pa.string(),
-        ),
-        pa.field(
-            "measure_type",
-            pa.int32(),
-        ),
-        pa.field(
-            "value_type",
-            pa.string(),
-        ),
-        pa.field(
-            "histogram_type",
-            pa.string(),
-        ),
-        pa.field(
-            "histogram_config",
-            pa.string(),
-        ),
-        pa.field(
-            "individuals",
-            pa.int32(),
-        ),
-        pa.field(
-            "default_filter",
-            pa.string(),
-        ),
-        pa.field(
-            "min_value",
-            pa.float64(),
-        ),
-        pa.field(
-            "max_value",
-            pa.float64(),
-        ),
-        pa.field(
-            "values_domain",
-            pa.string(),
-        ),
-        pa.field(
-            "rank",
-            pa.int32(),
-        ),
+        pa.field("measure_id", pa.string()),
+        pa.field("db_column_name", pa.string()),
+        pa.field("measure_name", pa.string()),
+        pa.field("instrument_name", pa.string()),
+        pa.field("instrument_description", pa.string()),
+        pa.field("description", pa.string()),
+        pa.field("measure_type", pa.int32()),
+        pa.field("value_type", pa.string()),
+        pa.field("histogram_type", pa.string()),
+        pa.field("histogram_config", pa.string()),
+        pa.field("individuals", pa.int32()),
+        pa.field("default_filter", pa.string()),
+        pa.field("min_value", pa.float64()),
+        pa.field("max_value", pa.float64()),
+        pa.field("values_domain", pa.string()),
+        pa.field("rank", pa.int32()),
     ]
     batch_values = {
         "measure_id": [],
         "db_column_name": [],
         "measure_name": [],
         "instrument_name": [],
+        "instrument_description": [],
         "description": [],
         "measure_type": [],
         "value_type": [],
@@ -1395,6 +1423,8 @@ def write_reports_to_parquet(
         batch_values["db_column_name"].append(report.db_name)
         batch_values["measure_name"].append(report.measure_name)
         batch_values["instrument_name"].append(report.instrument_name)
+        batch_values["instrument_description"].append(
+            report.instrument_description)
         batch_values["description"].append(desc)
         batch_values["measure_type"].append(report.measure_type.value)
         batch_values["value_type"].append(value_type)
@@ -1427,9 +1457,6 @@ def write_reports_to_parquet(
 
 
 if __name__ == "__main__":
-    logger.warning(
-        "%s tool is deprecated! Use import_phenotypes.",
-        sys.argv[0],
-    )
+    logger.warning("%s tool is deprecated! Use import_phenotypes.", sys.argv[0])
 
     main(sys.argv[1:])
