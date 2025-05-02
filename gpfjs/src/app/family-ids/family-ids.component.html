@@ -1,11 +1,6 @@
 <div style="padding: 20px" id="family-ids-panel">
-  <textarea
-    #textArea
-    type="text"
-    [ngModel]="familyIds.familyIds"
-    (ngModelChange)="setFamilyIds($event)"
-    class="form-control"
-    spellcheck="false">
-  </textarea>
+  <textarea #textArea type="text" (keyup)="setFamilyIds(textArea.value)" class="form-control" spellcheck="false">{{
+    familyIds
+  }}</textarea>
   <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
 </div>

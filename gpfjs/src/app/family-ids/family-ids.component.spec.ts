@@ -38,7 +38,7 @@ describe('FamilyIdsComponent', () => {
 
     expect(selectSpy).toHaveBeenCalledWith(selectFamilyIds);
     expect(setFamilyIdsSpy).toHaveBeenCalledWith('id1\nid2\nid3');
-    expect(component.familyIds.familyIds).toBe('id1\nid2\nid3');
+    expect(component.familyIds).toBe('id1\nid2\nid3');
     expect(dispatchSpy).toHaveBeenCalledWith(setFamilyIds({familyIds: ['id1', 'id2', 'id3']}));
   });
 });
