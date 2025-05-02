@@ -53,6 +53,8 @@ For the import we will use the columns two, five, six, and seven:
 
     gunzip -c Supplementary_Data_4.tsv.gz | cut -f 2,5-7 | less -S -x 25
 
+.. code-block:: text
+
     collection               personIds                location                 variant
     SSC                      12613.p1                 chr1:1305145-1314126     duplication
     AGRE                     AU2725301                chr1:3069177-4783791     duplication
