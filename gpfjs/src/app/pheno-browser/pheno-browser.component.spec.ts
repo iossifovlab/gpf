@@ -316,7 +316,7 @@ describe('PhenoBrowserComponent', () => {
     component.measuresLoading = true;
     const measures = new PhenoMeasures(
       'imgUrl', [
-        new PhenoMeasure(1, 'i1', '12', '', '', 'mId', 'mName', 'mType', 'mDesc', null, 'baseUrl')
+        new PhenoMeasure(1, 'i1', 'i1_desc', '12', '', '', 'mId', 'mName', 'mType', 'mDesc', null, 'baseUrl')
       ],
       true,
       {}

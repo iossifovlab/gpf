@@ -78,6 +78,7 @@ export class PhenoMeasure {
     return new PhenoMeasure(
       json['Index'] as number,
       json['instrument_name'] as string,
+      json['instrument_description'] as string,
       json['values_domain'] as string,
 
       json['figure_distribution'] as string,
@@ -99,6 +100,7 @@ export class PhenoMeasure {
     const newMeasure: PhenoMeasure = new PhenoMeasure(
       measure.index,
       measure.instrumentName,
+      measure.instrumentDescription,
       measure.valuesDomain,
 
       addBaseUrlIfNotNull(measure.figureDistribution, basePath),
@@ -119,6 +121,7 @@ export class PhenoMeasure {
   public constructor(
     public readonly index: number,
     public readonly instrumentName: string,
+    public readonly instrumentDescription: string,
     public readonly valuesDomain: string,
 
     public readonly figureDistribution: string,
@@ -149,6 +152,7 @@ export class PhenoMeasures {
     const newMeasure: PhenoMeasure = new PhenoMeasure(
       measure.index,
       measure.instrumentName,
+      measure.instrumentDescription,
       measure.valuesDomain,
 
       addBaseUrlIfNotNull(measure.figureDistribution, basePath),
