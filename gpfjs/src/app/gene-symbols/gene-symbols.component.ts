@@ -34,7 +34,6 @@ export class GeneSymbolsComponent implements OnInit, OnDestroy {
 
     this.geneSymbolsInput$.pipe(
       distinctUntilChanged(),
-      debounceTime(350),
     ).subscribe(genes => {
       this.setGeneSymbols(genes);
     });
