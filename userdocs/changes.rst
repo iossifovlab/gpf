@@ -1,6 +1,39 @@
 Release Notes
 =============
 
+* 2025.5.1
+    * Fix support for queries by role.
+    * Allow missing work directory in phenotype data import project.
+    * Support for instrument description in phenotype data import project.
+    * Remove study phenotype from default study configuration.
+    * Fixes in gene symbols validation.
+    * Fixes in histograms y-axis labels.
+
+* 2025.5.0
+    * Fix support for default configuration of denovo gene sets.
+    * Clean up CLI tool for generation of denovo gene sets.
+    * Invoke the CLI tool for generation of denovo gene sets from the
+      wgpf tool.
+    * Fixes in GPF federation plugin.
+    * Fixes in gene symbols validation.
+
+* 2025.4.10
+    * Fix grr_cache_repo tool to use embedded annotation configuration.
+    * Improve performance of re-annotation tool checks for reannotation.
+
+
+* 2025.4.9
+    * Fix CNV variants frequency filtering.
+    * Support for default commont report configuration for phenotype data.
+    * Support for default study configuration with download columns from
+      annotation.
+    * Fix default configuration of phenotype measure filters.
+    * Clean up phenotype browser cache build tool invocation in wgpf tool.
+    * Fix default configuration of enrichment tool.
+    * Add link to registration info into login page.
+    * Fix keybindings in phenotype measrues filters.
+    * Fix phenotype measures description popup dialog.
+
 * 2025.4.8
     * Fix default CNV study configuration generated at import in DuckDb
       genotype storage.
