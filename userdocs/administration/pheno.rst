@@ -60,6 +60,25 @@ Import project configuration format
     # Optional. Flag to skip the building of the pheno common instrument. The default value is `False`.
     skip_pedigree_measures: False
 
+    # Optional. A configuration that specifies the sources for instrument descriptions.
+    # Two fields are provided: `files` and `dictionary`:
+    # * `files` is a list of configurations for each file containing instrument descriptions.
+    #   Unless overriden, files are expected to be comma-separated files with columns "instrumentName" and "description".
+    # * `dictionary` is used for manual input of instrument descriptions. These will override any instrument descriptions from `files`.
+    instrument_dictionary:
+      files:
+        - path: "work/instruments/instrument_dict_1.csv"
+        - path: "work/instruments/instrument_dict_2.tsv"
+          delimiter: "\t"
+          instrument_column: "i_mame"
+          descritpion_column: "desc"
+          # This override will ignore any instrument name column in the file and use the value provided below for ALL rows in the file.
+          instrument: "some_instrument_name"
+
+      dictionary:
+        instrument_1: "description of an instrument"
+        instrument_2: "another description of an instrument"
+
     # Optional. A nested configuration that specifies the sources for measure descriptions.
     # Two fields are provided: `files` and `dictionary`:
     # * `files` is a list of nested configurations for each file containing measure descriptions.
@@ -205,6 +224,7 @@ To import a phenotype database, you will need the following files:
 * A pedigree file which contains information regarding evaluated individuals and their family.
 * A directory containing instruments in the form of CSV (default) or TSV files (using the ``-T`` option).
 * A data dictionary in the form of a TSV file. (Optional)
+* An instrument dictionary in the form of a TSV file. (Optional)
 * A configuration for phenotype regressions. (Optional)
 
 To import the phenotype database into the GPF system you need to use the
@@ -237,6 +257,8 @@ To import the phenotype database into the GPF system you need to use the
 
 * ``--data-dictionary`` option specifies the name of a data dictionary file for the phenotype database.
 
+* ``--instrument-dictionary`` option specifies the name of a instrument dictionary file for the phenotype database.
+
 * ``--regression`` option specifies the regression configuration file.
   
 * ``--person-column`` specifies the name of the column containing the person ID in the instrument
@@ -264,6 +286,15 @@ need of re-calculation - if the DB file is up-to-date, it will not be rebuilt.
 .. runblock:: console
 
     $ build_pheno_browser --help
+
+The instrument dictionary file
+************************
+
+The instrument dictionary is a file containing descriptions for instruments.
+It must be a TSV file with a header row and the following two columns:
+
+* ``instrumentName``
+* ``description``
 
 The data dictionary file
 ************************
