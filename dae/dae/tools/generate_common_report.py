@@ -64,8 +64,9 @@ def main(
             studies = args.studies.split(",")
             logger.info("generating common reports for: %s", studies)
         else:
-            logger.info("generating common reports for all studies!!!")
             studies = available_studies + available_pheno_studies
+            logger.info(
+                "generating common reports for all studies: %s", studies)
         for study_id in studies:
             if study_id not in available_studies + available_pheno_studies:
                 logger.error("study %s not found! skipping...", study_id)

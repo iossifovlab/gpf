@@ -774,6 +774,9 @@ class GenotypeData(ABC, CommonStudyMixin):  # pylint: disable=too-many-public-me
         report_filename = self.config.common_report.file_path
         try:
             if os.path.exists(report_filename) and not force:
+                logger.info(
+                    "common report for %s already exists, loading it",
+                    self.study_id)
                 return CommonReport.load(report_filename)
         except Exception:  # noqa: BLE001
             logger.warning(

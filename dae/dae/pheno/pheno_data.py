@@ -720,6 +720,10 @@ class PhenotypeData(ABC, CommonStudyMixin):
             return None
         report_filename = self.config["common_report"]["file_path"]
         if os.path.exists(report_filename) and not force:
+            logger.info(
+                "Common report already exists for %s, loading it",
+                self.pheno_id,
+            )
             return CommonReport.load(report_filename)
         report = self.build_report()
         report.save(report_filename)
