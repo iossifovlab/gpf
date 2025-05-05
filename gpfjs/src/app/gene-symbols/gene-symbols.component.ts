@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectGeneSymbols, setGeneSymbols } from './gene-symbols.state';
-import { BehaviorSubject, distinctUntilChanged, take } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, Subscription, take } from 'rxjs';
 import { GeneService } from 'app/gene-browser/gene.service';
 import { resetErrors, setErrors } from 'app/common/errors.state';
 import { cloneDeep } from 'lodash';
@@ -15,6 +15,7 @@ export class GeneSymbolsComponent implements OnInit, OnDestroy {
   public invalidGenes: string;
   public geneSymbolsInput$: BehaviorSubject<string> = new BehaviorSubject<string>('');
   public errors: string[] = [];
+  private validationSubscription = new Subscription();
 
   @ViewChild('textArea') private textArea: ElementRef;
 
@@ -67,7 +68,9 @@ export class GeneSymbolsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.geneService.validateGenes(genes).subscribe(invalidGenes => {
+    this.validationSubscription.unsubscribe();
+
+    this.validationSubscription = this.geneService.validateGenes(genes).subscribe(invalidGenes => {
       this.errors = [];
       this.invalidGenes = '';
 
