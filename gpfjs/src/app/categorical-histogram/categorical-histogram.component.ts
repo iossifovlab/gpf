@@ -178,7 +178,9 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     this.redrawXAxis(svg, width, height);
 
     const leftAxis = d3.axisLeft(this.scaleYAxis);
-    leftAxis.ticks(3, '.0f');
+    const yAxisTicks = this.scaleYAxis.ticks(3).filter(tick => Number.isInteger(tick));
+    leftAxis.tickValues(yAxisTicks).tickFormat(d3.format('d'));
+
     svg.append('g')
       .call(leftAxis);
     svg.selectAll('bar')
