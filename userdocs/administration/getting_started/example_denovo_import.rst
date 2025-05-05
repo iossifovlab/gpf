@@ -328,7 +328,7 @@ in the minimal instance configuration file. So, all imported variants are
 annotated with GnomAD and ClinVar genomic scores.
 
 We can use these score values to define additional columns in the preview
-table and the download file similar to
+table and the download file similar to the
 :ref:`getting_started_with_preview_columns`.
 
 Edit the ``ssc_denovo`` configuration file located at
@@ -340,20 +340,21 @@ snippet to the configuration file:
 
     genotype_browser:
       column_groups:
-        gnomad_v4:
-          name: gnomAD v4
+        frequency:
+          name: frequency
           columns:
+          - allele_freq
           - gnomad_v4_genome_ALL_af
-
+    
         clinvar:
           name: ClinVar
           columns:
           - CLNSIG
           - CLNDN
-
+    
       preview_columns_ext:
-        - gnomad_v4
         - clinvar
+
 
 Now, restart the GPF development server:
 
