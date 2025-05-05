@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { combineLatest, Observable, Subscription } from 'rxjs';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
@@ -7,7 +7,7 @@ import { Dataset, PersonSet, PersonSetCollection } from '../datasets/datasets';
 import { GenotypePreviewVariantsArray } from 'app/genotype-preview-model/genotype-preview';
 import { filter, map, switchMap, take } from 'rxjs/operators';
 import { clone } from 'lodash';
-import { NavigationStart, Router } from '@angular/router';
+import { ActivatedRoute, NavigationStart, Router } from '@angular/router';
 import { selectDatasetId } from 'app/datasets/datasets.state';
 import { DatasetsService } from 'app/datasets/datasets.service';
 import { Store } from '@ngrx/store';
@@ -45,8 +45,8 @@ import { selectZygosityFilter } from 'app/zygosity-filters/zygosity-filter.state
   templateUrl: './genotype-browser.component.html',
   styleUrls: ['./genotype-browser.component.css'],
 })
-export class GenotypeBrowserComponent implements OnInit, OnDestroy {
-  public genotypePreviewVariantsArray: GenotypePreviewVariantsArray;
+export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewInit {
+  public genotypePreviewVariantsArray: GenotypePreviewVariantsArray = new GenotypePreviewVariantsArray();
   public showTable = false;
   public legend: Array<PersonSet>;
 
@@ -56,11 +56,12 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public selectedDatasetId: string;
   public selectedDataset: Dataset;
 
-  @Input()
   public genotypeBrowserState: object;
   public loadingFinished: boolean;
 
   public variantsCountDisplay: string;
+
+  private autoPreview: boolean = false;
 
   public constructor(
     private queryService: QueryService,
@@ -68,7 +69,8 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     private loadingService: FullscreenLoadingService,
     private router: Router,
     private datasetsService: DatasetsService,
-    private store: Store
+    private store: Store,
+    private route: ActivatedRoute,
   ) {
     this.routerSubscription = this.router.events.pipe(
       filter(event => event instanceof NavigationStart)
@@ -81,20 +83,10 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
   public ngOnInit(): void {
     this.genotypeBrowserState = {};
 
-    this.store.select(selectDatasetId).pipe(
-      take(1),
-      switchMap(datasetIdState => this.datasetsService.getDataset(datasetIdState))
-    ).subscribe(dataset => {
-      if (!dataset) {
-        return;
-      }
-      this.selectedDataset = dataset;
-    });
-
-    this.getGenotypeBrowserState().subscribe(state => {
-      this.genotypeBrowserState = {...state};
-      this.queryService.cancelStreamPost();
-      this.genotypePreviewVariantsArray = null;
+    this.store.select(selectErrors).subscribe(errorState => {
+      setTimeout(() => {
+        this.disableQueryButtons = errorState.length > 0;
+      });
     });
 
     this.loadingService.interruptEvent.subscribe(() => {
@@ -104,11 +96,34 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
       this.loadingFinished = true;
       this.genotypePreviewVariantsArray = null;
     });
+  }
 
-    this.store.select(selectErrors).subscribe(errorState => {
-      setTimeout(() => {
-        this.disableQueryButtons = errorState.length > 0;
+  public ngAfterViewInit(): void {
+    this.autoPreview = this.route.snapshot.queryParams.preview === 'true';
+    this.store.select(selectDatasetId).pipe(
+      take(1),
+      switchMap(datasetIdState => this.datasetsService.getDataset(datasetIdState))
+    ).subscribe(dataset => {
+      if (!dataset) {
+        return;
+      }
+      this.selectedDataset = dataset;
+      this.getGenotypeBrowserState().subscribe(state => {
+        this.genotypeBrowserState = { ...state };
+        if (!this.autoPreview) {
+          this.queryService.cancelStreamPost();
+          this.genotypePreviewVariantsArray = null;
+        }
       });
+      if (this.autoPreview) {
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { preview: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true
+        });
+        this.submitQuery();
+      }
     });
   }
 
@@ -254,7 +269,6 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     this.showTable = false;
     this.variantsCountDisplay = 'Loading variants...';
     this.loadingService.setLoadingStart();
-
     this.genotypePreviewVariantsArray = null;
     this.genotypeBrowserState['datasetId'] = this.selectedDataset.id;
     this.legend = this.selectedDataset.personSetCollections
@@ -267,6 +281,7 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy {
     });
 
     this.queryService.streamingFinishedSubject.pipe(take(1)).subscribe(() => {
+      this.autoPreview = false;
       this.showTable = true;
       this.loadingFinished = true;
     });

@@ -249,7 +249,8 @@ export class GeneProfileSingleViewComponent implements OnInit {
       queryService.saveQuery(clonedState, 'genotype', 'system')
         .pipe(take(1))
         .subscribe(urlObject => {
-          const url = queryService.getLoadUrlFromResponse(urlObject);
+          // Passing true to getLoadUrlFromResponse will trigger the genotype browser table preview
+          const url = queryService.getLoadUrlFromResponse(urlObject, true);
           if (newTab) {
             const newWindow = window.open('', '_blank');
             newWindow.location.assign(url);
