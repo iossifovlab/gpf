@@ -16,14 +16,14 @@ from dae.testing import (
 from studies.study_wrapper import StudyWrapper
 
 
-@pytest.fixture()
+@pytest.fixture
 def gpf_fixture(tmp_path_factory: pytest.TempPathFactory) -> GPFInstance:
     root_path = tmp_path_factory.mktemp(
         "genotype_browser_columns_config")
     return alla_gpf(root_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def trio_study(
     tmp_path_factory: pytest.TempPathFactory,
     gpf_fixture: GPFInstance,
@@ -73,7 +73,7 @@ def test_genotype_browser_download_columns_default(
     config = trio_study.config.genotype_browser
 
     assert config.download_columns == [
-        "family", "study_phenotype", "variant", "variant_extra",
+        "family", "variant", "variant_extra",
         "family_person_ids", "family_structure", "best", "family_genotype",
         "carriers", "inheritance", "phenotypes",
         "par_called", "allele_freq",
@@ -168,7 +168,7 @@ def test_study_wrapper_download_columns_ext(
     )
     wrapper = StudyWrapper(study, None, None, gpf_fixture)  # type: ignore
     assert wrapper.download_columns == [
-        "family", "study_phenotype", "variant", "variant_extra",
+        "family", "variant", "variant_extra",
         "family_person_ids", "family_structure", "best", "family_genotype",
         "carriers", "inheritance", "phenotypes",
         "par_called", "allele_freq",

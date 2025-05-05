@@ -74,7 +74,6 @@ preview_columns = [
 
 download_columns = [
     "family",
-    "study_phenotype",
     "variant",
     "variant_extra",
     "family_person_ids",
