@@ -26,7 +26,7 @@ Inside the ``input_phenotype_data`` directory, the following data is provided:
   ``input_phenotype_data/pedigree.ped``:
 
   .. literalinclude:: gpf-getting-started/input_phenotype_data/pedigree.ped
-      :tab-width: 10
+      :tab-width: 12
 
 * ``instruments`` contains the phenotype instruments and measures to be
   imported. There are two instruments in the example:
