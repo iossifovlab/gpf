@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { selectGeneSymbols, setGeneSymbols } from './gene-symbols.state';
-import { BehaviorSubject, debounceTime, distinctUntilChanged, take } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, take } from 'rxjs';
 import { GeneService } from 'app/gene-browser/gene.service';
 import { resetErrors, setErrors } from 'app/common/errors.state';
 import { cloneDeep } from 'lodash';
