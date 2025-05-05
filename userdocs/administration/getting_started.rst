@@ -188,6 +188,19 @@ To import this project, run the following command:
     For more information on working with pedigree files,
     see :doc:`working_with_pedigree_files`.
 
+The import genotypes tool will read all the variants from the files,
+specified in the project configuration will annotate them using the reference genome and
+gene models specified in the GPF instance configuration, and will store them
+in an appropriate format for use by the GPF system. By default, the imported
+files are stored in the ``internal_storage`` subdirectory of the GPF instance
+directory. 
+
+It will also create
+a minimal study configuration file for the imported study, located in
+``minimal_instance/studies/denovo_example.yaml``.
+
+There are also some additional intermediary files created in the import project
+directory ``input_genotype_data/denovo_example``. 
 
 When the import finishes, you can run the GPF development server using:
 
