@@ -92,16 +92,25 @@ def build_pheno_browser(
     )
     rebuild = pheno_data.is_browser_outdated(browser)
     if (rebuild or kwargs["force"]) and not kwargs["dry_run"]:
+        new_browser = PhenotypeData.create_browser(
+            pheno_data,
+            read_only=False,
+            suffix="browser_new",
+        )
         prep = PreparePhenoBrowserBase(
             pheno_db_dir,
             storage_registry,
             pheno_data,
-            browser,
+            new_browser,
             cache_dir,
             images_dir,
             pheno_regressions=pheno_regressions,
         )
         prep.run(**kwargs)
+
+        old_browser_path = Path(browser.dbfile)
+        new_browser_path = Path(new_browser.dbfile)
+        new_browser_path.rename(old_browser_path)
 
 
 def main(argv: list[str] | None = None) -> int:
