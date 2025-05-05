@@ -15,4 +15,5 @@ GPF Administration
    pheno_measure_configuration
    gpf_tools
    gpf_instance_configuration
+   study_configuration
    data_appendix

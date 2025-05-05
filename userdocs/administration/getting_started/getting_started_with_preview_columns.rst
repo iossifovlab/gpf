@@ -198,3 +198,6 @@ column group ``proband_iq`` in the preview table.
 .. figure:: getting_started_files/example-dataset-proband-iq-column-group-variants.png
 
     Example Dataset genotype browser using pheno measures columns
+
+.. note::
+    For more on study configuration, see the :doc:`study_configuration` section.
