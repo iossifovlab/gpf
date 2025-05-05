@@ -92,7 +92,7 @@ test.describe('Genotype browser table preview result tests', () => {
       await page.getByRole('tab', {name: 'Gene symbols'}).click();
       await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
       await page.keyboard.type('CHD8');
-      await expect(page.getByText('Please insert at least one gene symbol.')).not.toBeVisible();
+      await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
 
@@ -240,7 +240,7 @@ test.describe('Genotype browser table preview result tests', () => {
       await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
 
       await page.locator('#family-ids').click();
-      await page.locator('gpf-family-ids textarea').fill(data.familyId);
+      await page.locator('gpf-family-ids textarea').pressSequentially(data.familyId);
 
       await page.getByRole('button', { name: 'Table Preview' }).click();
       await expect(page.locator('#variants-count-span')).toHaveText(`${data.count} variants selected`);
@@ -275,7 +275,7 @@ test.describe('Genotype browser table preview result tests', () => {
       await page.getByRole('tab', {name: 'Gene symbols'}).click();
       await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
       await page.keyboard.type(data.geneSymbol);
-      await expect(page.getByText('Please insert at least one gene symbol.')).not.toBeVisible();
+      await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
 
       await page.locator('gpf-effect-types').getByRole('button', {name: 'None'}).click();
       await page.locator('gpf-effect-types').getByRole('button', {name: data.effectType}).click();
@@ -292,7 +292,7 @@ test.describe('Genotype browser table preview result tests', () => {
 
     await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
     await page.locator('#family-ids').click();
-    await page.locator('gpf-family-ids textarea').fill('11002');
+    await page.locator('gpf-family-ids textarea').pressSequentially('11002');
 
     await page.getByRole('button', { name: 'Table Preview' }).click();
     await expect(page.locator('#variants-count-span')).toHaveText('2 variants selected');
@@ -362,7 +362,7 @@ test.describe('Genotype browser table preview result tests', () => {
       await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
 
       await page.locator('#family-ids').click();
-      await page.locator('gpf-family-ids textarea').fill(data.familyId);
+      await page.locator('gpf-family-ids textarea').pressSequentially(data.familyId);
 
       await page.getByRole('button', { name: 'Table Preview' }).click();
       await expect(
@@ -407,7 +407,7 @@ test.describe('Genotype browser download tests', () => {
     await page.getByRole('tab', {name: 'Gene symbols'}).click();
     await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
     await page.keyboard.type('CHD8');
-    await expect(page.getByText('Please insert at least one gene symbol.')).not.toBeVisible();
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
 
     await page.locator('gpf-effect-types').getByRole('button', {name: 'All'}).click();
 

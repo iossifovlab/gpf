@@ -20,8 +20,28 @@ test.describe('Family filters block tests', () => {
     await page.locator('#family-ids').click();
     await expect(page.getByText('Please insert at least one family id.')).toBeVisible();
 
-    await page.locator('gpf-family-ids textarea').fill('f1');
+    await page.locator('gpf-family-ids textarea').pressSequentially('f1');
     await expect(page.getByText('Please insert at least one family id.')).not.toBeVisible();
+
+    await page.locator('gpf-family-ids textarea').clear();
+    await expect(page.getByText('Please insert at least one family id.')).toBeVisible();
+  });
+
+  test('should test save/share query after entering family ids', async({ page }) => {
+    await utils.navigateToDatasetPage(page, datasetIds.iossifov2014Liftover, 'Genotype browser');
+    await expect(page.locator('gpf-family-filters-block').getByText('Family Ids')).toBeVisible();
+    await page.locator('gpf-family-filters-block').getByText('Family Ids').click();
+
+    await page.locator('gpf-family-ids textarea').focus();
+    await page.keyboard.type('f1');
+
+    await page.locator('#save-query-dropdown-button').click();
+    await expect(page.locator('#link-input')).not.toHaveValue('');
+    const url = await page.locator('#link-input').inputValue();
+    await page.goto(url);
+    await page.waitForSelector('gpf-genotype-browser');
+
+    await expect(page.locator('gpf-family-ids textarea')).toHaveText('f1');
   });
 
   test('should preview table and download filtered by Family Tags', async({ page }) => {

@@ -26,7 +26,7 @@ test.describe('Enrichment tool tests', () => {
 
     await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
     await page.keyboard.type('CAMSAP1');
-    await expect(page.getByText('Please insert at least one gene symbol.')).not.toBeVisible();
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
 
     await page.getByRole('button', {name: 'Enrichment test'}).click();
     await expect(page.locator('.enrichment-table')).toBeVisible();

@@ -91,7 +91,7 @@ test.describe('Pheno tool tests', () => {
     await expect(page.getByText('Report')).toBeDisabled();
     await expect(page.getByRole('button', {name: 'Download'})).toBeDisabled();
 
-    await page.locator('gpf-family-ids textarea').fill('f1');
+    await page.locator('gpf-family-ids textarea').pressSequentially('f1');
     await expect(page.locator('#save-query-dropdown-button')).toBeEnabled();
     await expect(page.getByText('Report')).toBeEnabled();
     await expect(page.getByRole('button', {name: 'Download'})).toBeEnabled();
@@ -204,7 +204,7 @@ test.describe('Pheno tool download tests', () => {
       await page.getByText('instrument_1.age').first().click();
 
       await page.locator('#family-ids').click();
-      await page.locator('gpf-family-ids textarea').fill(data.familyId);
+      await page.locator('gpf-family-ids textarea').pressSequentially(data.familyId);
 
       const downloadPromise = page.waitForEvent('download', { timeout: 180000 });
       await page.getByText('Download').click();

@@ -23,7 +23,7 @@ test.describe('Genes block tests', () => {
 
     await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
     await page.keyboard.type('SAMD11');
-    await expect(page.getByText('Please insert at least one gene symbol.')).toBeHidden();
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
   });
 
   test('should display gene sets panel', async({ page }) => {
