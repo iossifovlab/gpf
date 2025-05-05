@@ -112,8 +112,14 @@ GPF Instance Configuration
     - SPARK_genotypes
   
   genotype_storage:
-    default: genotype_impala
+    default: duckdb_parquet
     storages:
+
+    - id: duckdb_parquet
+      storage_type: duckdb_parquet
+      base_dir: '%($DUCKDB_STORAGE)s/parquet'
+      memory_limit: 12GB
+
     - id: genotype_impala
       storage_type: impala
       read_only: false
@@ -129,7 +135,3 @@ GPF Instance Configuration
         port: 21050
         pool_size: 3
   
-    - id: duckdb_parquet
-      storage_type: duckdb_parquet
-      base_dir: '%($DUCKDB_STORAGE)s/parquet'
-      memory_limit: 12GB

@@ -86,15 +86,18 @@ Select all checkboxes in the `Genotype Browser` filters. From the
     Genotype browser for `Example Dataset` with all filters selected
 
 Then click on the `Download` button. This will download family variants matching
-the selected filters in a tab-separated file.
+the selected filters in a tab-separated file similar to the one shown bellow.
+Attributes from the annotation are included as the last columns in the
+downloaded file.
 
-.. csv-table:: Family variants file downloaded from the `Example Dataset`
+.. csv-table::
     :file: ../getting_started_files/example-dataset-variants.tsv
     :delim: tab
     :header-rows: 1
     :align: left
 
 
-The attributes produced by the annotation can be used in the
-`Genotype Browser` preview table as described in
-:ref:`getting_started_with_preview_columns`.
+.. note::
+  The attributes produced by the annotation can be used in the
+  `Genotype Browser` preview table as described in
+  :ref:`getting_started_with_preview_columns`.
