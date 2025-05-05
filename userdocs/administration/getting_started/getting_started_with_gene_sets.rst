@@ -1,19 +1,19 @@
 Getting Started with Gene Sets
 ##############################
 
-The GPF system provides support for collection of gene symbols of interest
+The GPF system provides support for the collection of gene symbols of interest
 for the analysis of genotype data. There are two types og gene sets that can be
 used in GPF:
 
 * de Novo gene sets - for each genotype study that has de Novo variants, the 
-  GPF system can create gene sets that contain list of genes with de Novo
+  GPF system can create gene sets that contain a list of genes with de Novo
   variants of interest; for example, genes with LGSs de Novo variants, genes
   with LGDs de Novo variants in males, etc.
 
 * pre-defined gene sets - these are gene sets that are defined in the GRR used by
-  the GPF instance; for example, gene sets in the
+  the GPF instance; for example, in the
   `public GPF Genomic Resources Repository (GRR)
-  <https://grr.iossifovlab.com>`_ there multiple gene set collection ready for
+  <https://grr.iossifovlab.com>`_ there are multiple gene set collections ready for
   use in the GPF instance.
 
 De Novo Gene Set
@@ -66,7 +66,7 @@ public GRR:
   this gene set collection contains genes associated with Gene Ontology
   (GO) terms.
 
-To do this, you need to add lines 14-18 to GPF instance configuration file
+To do this, you need to add lines 14-18 to the GPF instance configuration file
 (``minimal_instance/gpf_instance.yaml``):
 
 .. code-block:: yaml
@@ -92,10 +92,10 @@ To do this, you need to add lines 14-18 to GPF instance configuration file
       - gene_properties/gene_sets/relevant
       - gene_properties/gene_sets/GO_2024-06-17_release
 
-Whe you restart the GPF instance, the configured gene set collections will be
+When you restart the GPF instance, the configured gene set collections will be
 available in the GPF instance user interface. For example, if you navigate to
 `Genotype Browser` for ``ssc_denovo`` study,
-and select the `Genes > Gene Sets` tab, you will see the configured of gene set
+and select the `Genes > Gene Sets` tab, you will see the configured gene set
 collections.
 
 .. figure:: getting_started_files/ssc_denovo_gene_set_collections.png

@@ -47,7 +47,7 @@ Preprocess the CNV variants
 The `Supplementary_Data_4.tsv.gz` file contains 376 CNV variants from SSC and
 AGRE collections.
 
-For the import we will use the columns two, five, six, and seven:
+For the import, we will use the columns two, five, six, and seven:
 
 .. code-block:: bash
 

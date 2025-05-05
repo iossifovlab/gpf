@@ -4,7 +4,7 @@ Getting Started with Phenotype Data
 Importing phenotype data
 ++++++++++++++++++++++++
 
-To import phenotype data, the ``import_phenotypes`` tool is used.
+The ``import_phenotypes`` tool is used to import phenotype data.
 
 .. note::
 
@@ -39,7 +39,7 @@ Inside the ``input_phenotype_data`` directory, the following data is provided:
       :file: ../gpf-getting-started/input_phenotype_data/instruments/iq.csv
       :header-rows: 1
 
-* ``measure_descriptions.tsv`` contains descriptions for the provided measures.
+* ``measure_descriptions.tsv`` contains descriptions of the provided measures.
 
   ``input_phenotype_data/measure_descriptions.tsv``:
 
@@ -114,7 +114,7 @@ Add the following line to the configuration file:
 When you restart the server, you should be able to see `Phenotype Browser`
 and `Phenotype Tool` tabs enabled for the `Example Dataset` dataset.
 
-Additionally, in the `Genotype Browser`,the `Family Filters` and
+Additionally, in the `Genotype Browser`, the `Family Filters` and
 `Person Filters` sections will have the `Pheno Measures` filters enabled.
 
 .. figure:: getting_started_files/example-dataset-genotype-browser-pheno-filters.png

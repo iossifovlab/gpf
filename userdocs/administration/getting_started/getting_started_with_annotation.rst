@@ -22,7 +22,8 @@ public GRR:
   an ``allele_score`` resource and the annotator by default
   produces one additional attribute ``gnomad_v4_genome_ALL_af`` that is the
   allele frequency for the variant (check the
-  `hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL <https://grr.iossifovlab.com/hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL/index.html>`_
+  `hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL
+  <https://grr.iossifovlab.com/hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL/index.html>`_
   page for more information about the resource);
 
 * ``hg38/scores/ClinVar_20240730`` - this is an ``allele_score``
@@ -67,11 +68,11 @@ that come from the annotation with GnomAD and ClinVar:
 - ``CLNSIG``;
 - ``CLNDN``.
 
-By default the additional attributes produced by the annotation are usable in 
+By default, the additional attributes produced by the annotation are usable in 
 the following ways:
 
 * If you download the variants using the `Genotype Browser` download button,
-  the additional attributes will be included in the downloaded file;
+  the additional attributes will be included in the downloaded file.
 
 * We can query the variants using the ``gnomad_v4_genome_ALL_af``, ``CLNSIG`` 
   and ``CLNDN`` genomic scores.
@@ -79,7 +80,7 @@ the following ways:
 Let's say we want to find all variants from `Example Dataset` that have gnomAD
 frequency. Navigate to the `Genotype Browser` tab for the `Example Dataset`.
 Select all checkboxes in the `Genotype Browser` filters. From the
-`Genomic Score` filter select the `gnomad_v4_genome_ALL_af` score.
+`Genomic Score` filter selects the `gnomad_v4_genome_ALL_af` score.
 
 .. figure:: getting_started_files/example-dataset-all-variants-with-gnomad-filter.png
 
@@ -98,6 +99,8 @@ downloaded file.
 
 
 .. note::
+
   The attributes produced by the annotation can be used in the
   `Genotype Browser` preview table as described in
   :ref:`getting_started_with_preview_columns`.
+

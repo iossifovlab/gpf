@@ -9,7 +9,7 @@ class and instantiate it:
     from dae.gpf_instance.gpf_instance import GPFInstance
     gpf_instance = GPFInstance.build()
 
-This ``gpf_instance`` object groups together a number of objects, each dedicated
+This ``gpf_instance`` object groups several interfaces, each dedicated
 to managing different parts of the underlying data. It can be used to interact
 with the system as a whole.
 

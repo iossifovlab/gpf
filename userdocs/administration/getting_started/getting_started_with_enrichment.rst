@@ -20,7 +20,7 @@ compute the expected number of de novo mutations within the given dataset.
     is configured: `enrichment/samocha_background
     <https://grr.iossifovlab.com/enrichment/samocha_background/index.html>`_
 
-    The use other background models the user must edit the study configuration
+    To use other background models, the user must edit the study configuration
     file.
 
 If you navigate to the `Enrichment Tool` page for the ``ssc_denovo`` study,

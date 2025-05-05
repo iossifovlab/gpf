@@ -12,13 +12,13 @@ mutation in high and low-risk autism families.
 Commun Biol 4, 1026 (2021). <https://doi.org/10.1038/s42003-021-02533-z>`_
 
 We will focus on de novo variants from the SSC collection published in the
-aforementioned paper.
+paper mentioned above.
 
 To import these variants into the GPF system, we need
 a pedigree file describing the families and
 a list of de novo variants.
 
-From the supplementary data for the paper can download the following files:
+From the supplementary data for the paper, you can download the following files:
 
 * The list
   of sequenced children available from
@@ -66,7 +66,7 @@ columns from that file that look as follows:
     SSC                 11008               11008.p1            affected            M
 
 
-* The first column contains the collection. This study contains data from SSC
+* The first column contains the collection. This study includes data from the SSC
   and AGRE collections. We are going to import only variants from the
   SSC collection.
 
@@ -203,7 +203,7 @@ will annotate these variants using the GRR resources from our
 For small studies with few variants, this approach is quite convenient.
 However, for larger studies, it is better to cache the GRR resources locally.
 
-To do this, we need to configure the GRR to use a local cache. Create a file
+To do this, we need to configure the GPF to use a local cache. Create a file
 named ``.grr_definition.yaml`` in your home directory with the following
 content:
 
@@ -288,7 +288,7 @@ the import.
 
 .. note:: 
 
-    For example, on a MacBook Pro with Apple M1 Pro chip, the import of the SSC
+    For example, on a MacBook Pro with the Apple M1 Pro chip, the import of the SSC
     de Novo variants took about 5 minutes:
 
     .. code-block:: bash
@@ -310,7 +310,7 @@ In the `Home` page of the GPF instance, we should have the new study
 
 .. figure:: getting_started_files/ssc_denovo_home_page.png
 
-    Home page with the imported SSC de Novo variants.
+    The home page has the imported SSC de Novo study.
 
 If you follow the link to the study and choose the `Genotype Browser` tab, you
 will be able to query the imported variants.
@@ -323,7 +323,7 @@ will be able to query the imported variants.
 Configure preview and download columns
 ++++++++++++++++++++++++++++++++++++++
 
-While importing the SSC de novo variants, we were using the annotation defined
+While importing the SSC de novo variants, we used the annotation defined
 in the minimal instance configuration file. So, all imported variants are
 annotated with GnomAD and ClinVar genomic scores.
 

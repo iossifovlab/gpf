@@ -24,20 +24,19 @@ In the preview table, each column could show multiple values.
 In GPF, when you want to show multiple values in a single column,
 you need to define a **column group**.
 
-The column group is a collection of attributes that are
+The **column group** is a collection of attributes that are
 shown together in the preview table. The values in a column group are shown
 in a single cell. 
 
-By default, the study configuration includes several predefined columns groups:
+By default, the study configuration includes several predefined column groups:
 ``family``, ``variant``, ``genotype``, ``effect`` and ``frequency``. 
 
 .. figure:: getting_started_files/example-dataset-default-column-groups.png
 
     Default column groups in the `Preview Table`
 
-In the
-study configuration you can define your own column groups or redefine already
-existing ones. Let us redefine the existing column group
+In the study configuration, you can define new column groups or redefine
+already existing ones. Let us redefine the existing column group
 ``frequency`` to include the gnomAD frequency and define a new column group 
 ``clinvar`` to include the ClinVar attributes.
 
@@ -80,8 +79,8 @@ In lines 9-13, we define a new column group
 In lines 15-16, we extend the preview table columns. The new column groups
 ``clinvar`` will be added to the preview table.
 
-If we now stop the ``wgpf`` tool and run it again, we will be able to see
-the new columns in the preview table and in the download file.
+If we now stop the ``wgpf`` tool and rerun it, we will be able to see
+the new columns in the preview table.
 
 From the GPF instance `Home Page`, follow the link to the `Example Dataset` page
 and choose the `Genotype Browser`. Select all checkboxes in `Present in Child`,

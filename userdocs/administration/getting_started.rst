@@ -239,7 +239,7 @@ Example import of VCF variants
 ++++++++++++++++++++++++++++++
 
 Similar to the sample denovo variants, there are also sample variants in
-VCF format. They can be found in ``input_genotype_data/example.vcf`` and
+VCF format. They can be found in ``input_genotype_data/example.vcf``;
 the same pedigree file from before is used.
 
 .. literalinclude:: gpf-getting-started/input_genotype_data/example.vcf
@@ -279,16 +279,16 @@ Fill `CHD8` in the `Gene Symbol` box and click the `Go` button.
 
     `Gene Browser`` for CHD8 gene shows variants from ``vcf_example`` study
 
-In `Gene Browser`` results, top section has the summary variants, which show
+In `Gene Browser` results, the top section has the summary variants, which show
 the location and frequency of the variants, the bottom section has the
-family variants, which show the family information, pedigree and additional
+family variants, which show the family information, pedigree, and additional
 annotations.
 
 The user may also observe these variants in the genotype browser by
 choosing:
 
 * 'All' in `Present in Child`
-* 'All' in `Present in Parent`` and 'all' in `Rarity`
+* 'All' in `Present in Parent` and 'all' in `Rarity`
 * 'All' in `Effect Types`.
 
 
