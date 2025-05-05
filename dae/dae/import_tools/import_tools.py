@@ -363,7 +363,10 @@ class ImportProject:
             self.import_config.get("processing_config", {}).get("work_dir", ""),
         )
         if work_dir == "":
-            work_dir = self._base_config_dir or ""
+            work_dir = os.path.join(
+                self._base_config_dir or "",
+                self.study_id,
+            )
 
         return work_dir
 

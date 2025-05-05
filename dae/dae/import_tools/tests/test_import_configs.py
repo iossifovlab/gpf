@@ -116,6 +116,7 @@ def test_add_chrom_prefix_is_propagated_to_the_loader(
 ])
 def test_row_group_size(row_group_size: str | None, expected: int) -> None:
     import_config = {
+        "id": "test_import",
         "input": {},
         "processing_config": {
             "work_dir": "",
@@ -129,6 +130,7 @@ def test_row_group_size(row_group_size: str | None, expected: int) -> None:
 
 def test_row_group_size_short_config() -> None:
     import_config = {
+        "id": "test_import",
         "input": {},
         "processing_config": {
             "work_dir": "",
@@ -330,6 +332,7 @@ def test_embedded_annotation_pipeline(
     t4c8_instance: GPFInstance,
 ) -> None:
     import_config = {
+        "id": "test_import",
         "input": {},
         "annotation": [{
             "position_score": {
@@ -365,6 +368,7 @@ def test_annotation_file(
         yaml.safe_dump(annotation, out_file)
 
     import_config = {
+        "id": "test_import",
         "input": {},
         "annotation": {
             "file": "annotation.yaml",
@@ -401,9 +405,11 @@ def test_annotation_file_and_external_input_config(
 
     input_config: dict[str, Any] = {}
     with fsspec.open(str(tmp_path / "input" / "input.yaml"), "wt") as out_file:
-        yaml.safe_dump(input_config, out_file)
+        assert out_file is not None
+        yaml.safe_dump(input_config, out_file)  # type: ignore
 
     import_config = {
+        "id": "test_import",
         "input": {
             "file": "input/input.yaml",
         },
