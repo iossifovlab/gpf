@@ -284,10 +284,11 @@ class PhenotypeData(ABC, CommonStudyMixin):
         pheno_data: PhenotypeData,
         *,
         read_only: bool = True,
+        suffix: str = "browser",
     ) -> PhenoBrowser:
         """Load pheno browser from pheno configuration."""
         db_dir = pheno_data.cache_path or Path(pheno_data.config["conf_dir"])
-        browser_dbfile = db_dir / f"{pheno_data.pheno_id}_browser.db"
+        browser_dbfile = db_dir / f"{pheno_data.pheno_id}_{suffix}.db"
         if not browser_dbfile.exists():
             if read_only:
                 logger.warning(
