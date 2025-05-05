@@ -171,7 +171,7 @@ export class CategoricalHistogramComponent implements OnChanges, OnInit {
     let domainStart = 0;
     if (this.histogram.logScaleY) {
       this.scaleYAxis = d3.scaleLog();
-      domainStart = 0.1;
+      domainStart = 1;
     }
     this.scaleYAxis.range([height, 0]).domain([domainStart, d3.max(this.values.map(v => v.value))]);
 
