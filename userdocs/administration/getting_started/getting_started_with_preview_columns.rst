@@ -20,19 +20,44 @@ Let us add these attributes to the
 variants preview table and the variants download file for the
 ``example_dataset`` dataset.
 
+In the preview table, each column could show multiple values.
+In GPF, when you want to show multiple values in a single column,
+you need to define a **column group**.
+
+The column group is a collection of attributes that are
+shown together in the preview table. The values in a column group are shown
+in a single cell. 
+
+By default, the study configuration includes several predefined columns groups:
+``family``, ``variant``, ``genotype``, ``effect`` and ``frequency``. 
+
+.. figure:: getting_started_files/example-dataset-default-column-groups.png
+
+    Default column groups in the `Preview Table`
+
+In the
+study configuration you can define your own column groups or redefine already
+existing ones. Let us redefine the existing column group
+``frequency`` to include the gnomAD frequency and define a new column group 
+``clinvar`` to include the ClinVar attributes.
+
+The column group is defined in the
+``column_groups`` section of the configuration file.
+
 Edit the ``example_dataset.yaml`` dataset configuration in
 ``minimal_instance/datasets/example_dataset`` and add the following section
 at the end of the configuration file:
 
 .. code-block:: yaml
     :linenos:
-    :emphasize-lines: 3-6,8-12,14-16
+    :emphasize-lines: 3-7,9-13,15-16
 
     genotype_browser:
       column_groups:
-        gnomad_v4:
-          name: gnomAD v4
+        frequency:
+          name: frequency
           columns:
+          - allele_freq
           - gnomad_v4_genome_ALL_af
 
         clinvar:
@@ -42,28 +67,18 @@ at the end of the configuration file:
           - CLNDN
 
       preview_columns_ext:
-        - gnomad_v4
         - clinvar
 
-In the preview table, each column could show multiple values.
-In GPF, when you want to show multiple values in a single column,
-you need to define a **column group**.
+In lines 3-7, we re-define the existing column group
+``frequency`` to include the study frequency ``allele_freq`` and gnomAD
+frequency ``gnomad_v4_genome_ALL_af``.
 
-The column group is a collection of attributes that are
-shown together in the preview table. The values in a column group are shown
-in a single cell. The column group is defined in the
-``column_groups`` section of the configuration file.
-
-In lines 3-6, we define a column group
-``gnomad_v4`` that contains the value of the annotation attribute
-``gnomad_v4_genome_ALL_af``.
-
-In lines 8-12, we define a column group
+In lines 9-13, we define a new column group
 ``clinvar`` that contains the values of the annotation attributes
 ``CLNSIG`` and ``CLNDN``.
 
-In lines 14-16, we extend the preview table columns. The new column groups
-``gnomad_v4`` and ``clinvar`` will be added to the preview table.
+In lines 15-16, we extend the preview table columns. The new column groups
+``clinvar`` will be added to the preview table.
 
 If we now stop the ``wgpf`` tool and run it again, we will be able to see
 the new columns in the preview table and in the download file.
@@ -110,7 +125,7 @@ We are going to modify the
 
 .. code-block:: yaml
     :linenos:
-    :emphasize-lines: 2-12,26-30,35
+    :emphasize-lines: 2-12,27-31,35
 
     genotype_browser:
       columns:
@@ -126,9 +141,10 @@ We are going to modify the
             source: iq.non_verbal_iq
 
       column_groups:
-        gnomad_v4:
-          name: gnomAD v4
+        frequency:
+          name: frequency
           columns:
+          - allele_freq
           - gnomad_v4_genome_ALL_af
 
         clinvar:
@@ -144,7 +160,6 @@ We are going to modify the
           - prb_non_verbal_iq
 
       preview_columns_ext:
-        - gnomad_v4
         - clinvar
         - proband_iq
 
@@ -162,12 +177,12 @@ attributes:
 
 We want these two columns to be shown together in the preview table. To do this,
 we need to define a new **column group**.
-In lines 26-30, we define a column group called ``proband_iq`` that contains the
+In lines 27-31, we define a column group called ``proband_iq`` that contains the
 columns ``prb_verbal_iq`` and ``prb_non_verbal_iq``.
 
 To add the new column group ``proband_iq`` to the preview table, we need to
 add it to the ``preview_columns_ext`` section of the configuration file.
-In line 36, we add the new column group ``proband_iq`` at the end of the
+In line 35, we add the new column group ``proband_iq`` at the end of the
 preview table.
 
 
