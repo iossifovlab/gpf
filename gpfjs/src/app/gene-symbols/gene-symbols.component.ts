@@ -41,6 +41,7 @@ export class GeneSymbolsComponent implements OnInit, OnDestroy {
   }
 
   public setGeneSymbols(geneSymbols: string): void {
+    geneSymbols = geneSymbols.trim();
     if (!geneSymbols) {
       this.errors = [];
       this.geneSymbols = '';
