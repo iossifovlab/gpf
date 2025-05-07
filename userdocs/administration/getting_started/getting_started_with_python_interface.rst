@@ -13,6 +13,9 @@ This ``gpf_instance`` object groups several interfaces, each dedicated
 to managing different parts of the underlying data. It can be used to interact
 with the system as a whole.
 
+Querying genotype data
+++++++++++++++++++++++
+
 For example, to list all studies configured in the startup GPF instance, use:
 
 .. code-block:: python3
@@ -100,3 +103,72 @@ Or, if you are interested in "synonymous" variants only in people with
 .. code-block:: python3
 
     >> 1
+
+Querying phenotype data
++++++++++++++++++++++++
+
+To list all available phenotype data, use:
+
+.. code-block:: python3
+
+    gpf_instance.get_phenotype_data_ids()
+
+This will return a list with the IDs of all configured phenotype data:
+
+.. code-block:: python3
+
+    ['comp_pheno',
+     'mini_pheno']
+
+To get a specific phenotype data and query it, use: 
+
+.. code-block:: python3
+
+    pd = gpf_instance.get_phenotype_data("comp_pheno")
+
+We can see what instruments and measures are available in the data:
+
+.. code-block:: python3
+
+    pd.instruments
+
+    >> {'i1': Instrument(i1, 7)}
+
+.. code-block:: python3
+
+    pd.measures
+
+    >> {'i1.age': Measure(i1.age, MeasureType.continuous, [68.00148724003327, 606.2292731817272]),
+        'i1.iq': Measure(i1.iq, MeasureType.continuous, [-11.109304318239424, 174.2897342432941]),
+        'i1.m1': Measure(i1.m1, MeasureType.continuous, [28.876821569323646, 143.02866815069675]),
+        'i1.m2': Measure(i1.m2, MeasureType.continuous, [17.650256211303596, 69.72059461639753]),
+        'i1.m3': Measure(i1.m3, MeasureType.continuous, [20.34949100410408, 122.8324621617449]),
+        'i1.m4': Measure(i1.m4, MeasureType.continuous, [0, 10]),
+        'i1.m5': Measure(i1.m5, MeasureType.categorical, val1, val2, val3, val4, val5)}
+
+We can then get specific measure values for specific individuals:
+
+.. code-block:: python3
+
+    from dae.variants.attributes import Role
+
+    list(pd.get_people_measure_values(["i1.iq"], roles=[Role.prb], family_ids=["f1", "f2", "f3"]))
+
+    >> [{'person_id': 'f1.p1',
+         'family_id': 'f1',
+         'role': 'prb',
+         'status': 'affected',
+         'sex': 'M',
+         'i1.iq': 104.9118881225586},
+        {'person_id': 'f2.p1',
+         'family_id': 'f2',
+         'role': 'prb',
+         'status': 'affected',
+         'sex': 'M',
+         'i1.iq': 66.6941146850586},
+        {'person_id': 'f3.p1',
+         'family_id': 'f3',
+         'role': 'prb',
+         'status': 'affected',
+         'sex': 'M',
+         'i1.iq': 69.3330078125}]
