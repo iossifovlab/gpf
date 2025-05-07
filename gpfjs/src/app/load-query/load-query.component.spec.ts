@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient, HttpHandler } from '@angular/common/http';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
@@ -67,7 +68,7 @@ describe('LoadQueryComponent', () => {
   let fixture: ComponentFixture<LoadQueryComponent>;
   const activatedRouteMock = new ActivatedRouteMock();
   const queryServiceMock = new QueryServiceMock();
-  let store: Store;
+  let store: Store<any>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({

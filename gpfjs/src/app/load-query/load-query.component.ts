@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { QueryService } from '../query/query.service';
-import { combineLatestWith, take } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
 import { reset } from 'app/users/state-actions';
@@ -30,10 +30,10 @@ import {
 import { setAllZygosityFilters } from 'app/zygosity-filters/zygosity-filter.state';
 
 const PAGE_TYPE_TO_NAVIGATE = {
-  genotype: (datasetId: string): string[] => ['datasets', datasetId, 'genotype-browser'],
-  phenotype: (datasetId: string): string[] => ['datasets', datasetId, 'phenotype-browser'],
-  enrichment: (datasetId: string): string[] => ['datasets', datasetId, 'enrichment-tool'],
-  phenotool: (datasetId: string): string[] => ['datasets', datasetId, 'phenotype-tool']
+  genotype: 'genotype-browser',
+  phenotype: 'phenotype-browser',
+  enrichment: 'enrichment-tool',
+  phenotool: 'phenotype-tool',
 };
 
 @Component({
@@ -50,8 +50,8 @@ export class LoadQueryComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    const uuid = this.route.snapshot.params.uuid;
-    const preview = this.route.snapshot.queryParams.preview === 'true';
+    const uuid: string = this.route.snapshot.params.uuid as string;
+    const preview: boolean = this.route.snapshot.queryParams.preview === 'true';
     if (!uuid) {
       this.router.navigate(['/']);
     } else {
@@ -73,7 +73,11 @@ export class LoadQueryComponent implements OnInit {
 
   private restoreQuery(state: State, page: string, preview: boolean = false): void {
     if (page in PAGE_TYPE_TO_NAVIGATE) {
-      const navigationParams: string[] = PAGE_TYPE_TO_NAVIGATE[page](state['datasetId']);
+      const navigationParams: string[] = [
+        'datasets',
+        state['datasetId'],
+        PAGE_TYPE_TO_NAVIGATE[page] as string
+      ];
       this.store.dispatch(reset());
 
       this.store.dispatch(setEffectTypes({effectTypes: state.effectTypes}));
