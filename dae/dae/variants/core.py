@@ -18,8 +18,18 @@ class Allele:
         "small_insertion": "ins",
         "small_deletion": "del",
         "complex": "comp",
-        "large_insertion": "cnv+",
+        "large_duplication": "cnv+",
         "large_deletion": "cnv-",
+    }
+
+    DISPLAY_NAME_TYPE: ClassVar[dict[str, str]] = {
+        "sub": "substitution",
+        "ins": "small_insertion",
+        "del": "small_deletion",
+        "comp": "complex",
+        "cnv+": "large_duplication",
+        "cnv-": "large_deletion",
+        "cnv": "cnv",
     }
 
     class Type(Enum):
