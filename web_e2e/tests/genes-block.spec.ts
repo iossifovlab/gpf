@@ -17,15 +17,6 @@ test.describe('Genes block tests', () => {
     await expect(page.locator('#gene-symbols-panel')).toBeVisible();
   });
 
-  test('should display error alert in gene symbols panel when the textarea is empty', async({ page }) => {
-    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
-    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
-
-    await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
-    await page.keyboard.type('SAMD11');
-    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
-  });
-
   test('should display gene sets panel', async({ page }) => {
     await expect(page.locator('.gene-sets-panel')).toBeHidden();
     await page.getByRole('tab', { name: 'Gene Sets' }).click();
@@ -51,6 +42,182 @@ test.describe('Genes block tests', () => {
   });
 });
 
+test.describe('Genes sybmols tests', () => {
+  test.beforeEach(async({ page }) => {
+    await page.goto(utils.frontendUrl, {waitUntil: 'load'});
+    await utils.loginAdmin(page);
+    await utils.navigateToDatasetPage(page, utils.datasetIds.helloWorldGenotypes, 'Genotype browser');
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+  });
+
+  test('should display error alert in gene symbols panel when the textarea is empty', async({ page }) => {
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').focus();
+    await page.keyboard.type('SAMD11');
+    await expect(page.getByText('Please insert at least one gene symbol.')).not.toBeVisible();
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').clear();
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+  });
+
+  test('error message display when textarea contains invalid gene', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially(', DIABLO, CHD*');
+    await expect(page.getByText('Invalid genes: CHD*')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('gene symbols state resetting when switching tabs', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('DIABLO\nSHANK2');
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+
+    await page.getByText('Phenotype browser').click();
+    await page.getByText('Genotype browser').click();
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toBeEmpty();
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('gene symbols state resetting when switching tools', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('DIABLO\nSHANK2');
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+
+    await page.getByText('Phenotype browser').click();
+    await page.getByText('Genotype browser').click();
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toBeEmpty();
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('gene symbols errors resetting when switching tabs', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD*');
+    await expect(page.getByText('Invalid genes: CHD*')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.locator('gpf-genes-block').getByRole('tab', { name: 'All' }).click();
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toBeEmpty();
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('gene symbols errors resetting when switching tools', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('333');
+    await expect(page.getByText('Invalid genes: 333')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+
+    await page.getByText('Phenotype browser').click();
+    await page.getByText('Genotype browser').click();
+    await page.getByRole('tab', { name: 'Gene Symbols' }).click();
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toBeEmpty();
+    await expect(page.getByText('Please insert at least one gene symbol.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
+  });
+
+  test('if gene symbols are loaded correctly when loading query', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('DIABLO\nSHANK2, CHD8');
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+
+    await page.getByRole('button', {name: 'Share/save query'}).click();
+    await expect(page.locator('#save-query-dropdown')).toBeVisible();
+    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toContainText('DIABLO, SHANK2, CHD8');
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Download'})).toBeEnabled();
+  });
+
+  test('if gene symbols are formatted correctly when loading query with two genes', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('DIABLO\nSHANK2');
+
+    await page.getByRole('button', {name: 'Share/save query'}).click();
+    await expect(page.locator('#save-query-dropdown')).toBeVisible();
+    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toContainText('DIABLO\nSHANK2');
+  });
+
+  test('loaded variants when there are duplicate gene symbols', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('POGZ');
+    await page.locator('gpf-effect-types').getByText('All').click();
+
+    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('16 variants selected');
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('\nPOGZ\nPOGZ');
+    await expect(page.locator('gpf-genotype-preview-table')).not.toBeVisible();
+    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('16 variants selected');
+  });
+
+  test('case sensitivity of gene symbols', async({ page }) => {
+    await expect(page.getByText('* Gene symbols are case-sensitive')).toBeVisible();
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
+    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('6 variants selected');
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').clear();
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('chd8');
+    await expect(page.getByText('Invalid genes: chd8')).toBeVisible();
+    await expect(page.getByRole('button', {name: 'Table Preview'})).toBeDisabled();
+  });
+
+  test('if gene symbols input is trimmed when loading query', async({ page }) => {
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('  ');
+    await expect(page.getByText('Please insert at least one gene symbol.')).toHaveCount(1);
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('\n');
+    await expect(page.getByText('Please insert at least one gene symbol.')).toHaveCount(1);
+
+    await page.locator('gpf-gene-symbols').getByRole('textbox').pressSequentially('CHD8');
+    await expect(page.getByText('Please insert at least one gene symbol.')).toHaveCount(0);
+
+    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('6 variants selected');
+
+    await page.getByRole('button', {name: 'Share/save query'}).click();
+    await expect(page.locator('#save-query-dropdown')).toBeVisible();
+    const shareLinkUrl = await page.locator('#link-input').inputValue();
+    await page.goto(shareLinkUrl, {waitUntil: 'load'});
+
+    await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toContainText('CHD8');
+    await page.getByRole('button', {name: 'Table Preview'}).click();
+    await expect(page.locator('#variants-count-span')).toHaveText('6 variants selected', { timeout: 180000 });
+  });
+});
 
 test.describe('Genes block gene sets names and count tests', () => {
   test.beforeEach(async({ page }) => {
