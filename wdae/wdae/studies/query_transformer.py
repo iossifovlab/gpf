@@ -16,6 +16,7 @@ from dae.query_variants.sql.schema2.sql_query_builder import (
 from dae.utils.regions import Region
 from dae.utils.variant_utils import BitmaskEnumTranslator
 from dae.variants.attributes import Inheritance, Role, Sex, Zygosity
+from dae.variants.core import Allele
 
 logger = logging.getLogger(__name__)
 
@@ -435,14 +436,23 @@ class QueryTransformer:
                 kwargs["genders"] = None
 
         if "variantTypes" in kwargs:
-            variant_types = set(kwargs["variantTypes"])
+            variant_types = {
+                Allele.DISPLAY_NAME_TYPE[vt.lower()]
+                for vt in kwargs["variantTypes"]
+            }
 
-            if variant_types != {"ins", "del", "sub", "CNV", "complex"}:
-                if "CNV" in variant_types:
-                    variant_types.remove("CNV")
-                    variant_types.add("CNV+")
-                    variant_types.add("CNV-")
-                variant_types_query = f"any({','.join(variant_types)})"
+            if variant_types != {
+                "small_insertion",
+                "small_deletion",
+                "substitution",
+                "cnv",
+                "complex",
+            }:
+                if "cnv" in variant_types:
+                    variant_types.remove("cnv")
+                    variant_types.add("cnv+")
+                    variant_types.add("cnv-")
+                variant_types_query = f"{' or '.join(variant_types)}"
                 kwargs["variantTypes"] = variant_types_query
             else:
                 del kwargs["variantTypes"]
