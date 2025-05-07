@@ -17,7 +17,7 @@ dependencies:
   - bcftools=1.21
   - pyliftover=0.4
   - pybigwig=0.3
-  - lark-parser=0.6.7
+  - lark-parser=0.12.0
   - networkx=2.8.5
   - numpy=2.2.1
   - scipy=1.15.0
