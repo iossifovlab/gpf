@@ -133,10 +133,10 @@ describe('PhenoBrowserComponent', () => {
   let router;
   let location: Location;
   let store: Store;
-  const activatedRoute = new MockActivatedRoute();
-  const phenoBrowserServiceMock = new MockPhenoBrowserService();
-  const mockDatasetsService = new MockDatasetsService();
-  const mockPhenoMeasures = new MockPhenoMeasures();
+  let activatedRoute: MockActivatedRoute;
+  let phenoBrowserServiceMock: MockPhenoBrowserService;
+  let mockDatasetsService: MockDatasetsService;
+  let mockPhenoMeasures: MockPhenoMeasures;
 
   let locationSpy;
   const resizeSpy = {
@@ -147,6 +147,11 @@ describe('PhenoBrowserComponent', () => {
     locationSpy = {
       replaceState: jest.fn()
     };
+
+    activatedRoute = new MockActivatedRoute();
+    phenoBrowserServiceMock = new MockPhenoBrowserService();
+    mockDatasetsService = new MockDatasetsService();
+    mockPhenoMeasures = new MockPhenoMeasures();
 
     TestBed.configureTestingModule({
       imports: [FormsModule, NgbModule, StoreModule.forRoot({datasetId: datasetIdReducer})],
