@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any
 
 from datasets_api.permissions import get_instance_timestamp_etag
+from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import etag
 from query_base.query_base import QueryBaseView
@@ -80,7 +81,7 @@ class MarkdownFileView(QueryBaseView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        if not request.user.is_staff:
+        if not request.user.is_staff and not settings.DISABLE_PERMISSIONS:
             return Response(
                 {"error": "You have no permission to edit the content."},
                 status=status.HTTP_403_FORBIDDEN,
