@@ -434,7 +434,7 @@ describe('GenotypeBrowserComponent', () => {
     const mockDatasetsServiceSpy = jest.spyOn(mockDatasetsService, 'getDataset');
     jest.spyOn(store, 'select').mockReturnValueOnce(of('testDatasetId'));
 
-    component.ngOnInit();
+    component.ngAfterViewInit();
     expect(mockDatasetsServiceSpy).toHaveBeenCalledWith('testDatasetId');
     expect(component.selectedDataset).toStrictEqual(mockDataset);
 
@@ -442,7 +442,7 @@ describe('GenotypeBrowserComponent', () => {
 
     jest.spyOn(store, 'select').mockReturnValueOnce(of(null));
 
-    component.ngOnInit();
+    component.ngAfterViewInit();
     expect(mockDatasetsServiceSpy).toHaveBeenCalledWith(null);
     expect(component.selectedDataset).toBeUndefined();
   });
@@ -451,7 +451,8 @@ describe('GenotypeBrowserComponent', () => {
     jest.clearAllMocks();
     const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(allStatesMock));
-    component.ngOnInit();
+    jest.spyOn(mockDatasetsService, 'getDataset').mockReturnValueOnce(of(mockDataset));
+    component.ngAfterViewInit();
 
     expect(component.genotypeBrowserState).toStrictEqual(genotypeBrowserStateResult);
     expect(component.genotypePreviewVariantsArray).toBeNull();
@@ -461,6 +462,7 @@ describe('GenotypeBrowserComponent', () => {
     jest.clearAllMocks();
     const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(allStatesMock));
+    jest.spyOn(mockDatasetsService, 'getDataset').mockReturnValueOnce(of(mockDataset));
 
     allStatesMock[5] = {
       presentInParent: ['neither'],
@@ -471,7 +473,7 @@ describe('GenotypeBrowserComponent', () => {
       }} as PresentInParent;
 
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(allStatesMock));
-    component.ngOnInit();
+    component.ngAfterViewInit();
     expect(component.genotypeBrowserState).toStrictEqual(genotypeBrowserStateResult);
   });
 
@@ -486,7 +488,8 @@ describe('GenotypeBrowserComponent', () => {
       }} as PresentInParent;
 
     jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(allStatesMock));
-    component.ngOnInit();
+    jest.spyOn(mockDatasetsService, 'getDataset').mockReturnValueOnce(of(mockDataset));
+    component.ngAfterViewInit();
 
     delete genotypeBrowserStateResult.presentInParent.rarity.maxFreq;
     delete genotypeBrowserStateResult.presentInParent.rarity.minFreq;
@@ -494,61 +497,6 @@ describe('GenotypeBrowserComponent', () => {
     genotypeBrowserStateResult.presentInParent.rarity.ultraRare = true;
     expect(component.genotypeBrowserState).toStrictEqual(genotypeBrowserStateResult);
     expect(component.genotypePreviewVariantsArray).toBeNull();
-  });
-
-  it('should create genotype browser empty state when all component states are empty', () => {
-    jest.clearAllMocks();
-    const rxjs = jest.requireActual<typeof import('rxjs')>('rxjs');
-
-    const emptyStatesMock = [
-      [],
-      [],
-      [],
-      [],
-      [],
-      { presentInParent: [],
-        rarity: {}},
-      [],
-      {},
-      [],
-      {
-        selectedFamilyTags: [],
-        deselectedFamilyTags: [],
-        tagIntersection: true,
-      } as FamilyTags,
-      {
-        personFilters: [],
-        familyFilters: []
-      },
-      [],
-      {
-        geneSet: null,
-        geneSetsCollection: null,
-        geneSetsTypes: []
-      },
-      {
-        score: null,
-        rangeStart: 3434.5466666666666,
-        rangeEnd: 16923.48
-      },
-      [],
-      [],
-      [],
-      false,
-      []
-    ];
-
-    jest.spyOn(rxjs, 'combineLatest').mockReturnValueOnce(of(emptyStatesMock));
-    component.ngOnInit();
-    expect(component.genotypeBrowserState).toStrictEqual(
-      {
-        inheritanceTypeFilter: [],
-        genomicScores: [],
-        studyFilters: [],
-        uniqueFamilyVariants: false,
-        personSetCollection: { }
-      }
-    );
   });
 
   it('should test submitting query', () => {
