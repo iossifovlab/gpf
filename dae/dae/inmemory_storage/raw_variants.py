@@ -7,13 +7,9 @@ from functools import reduce
 from typing import Any, cast
 
 from dae.pedigrees.families_data import FamiliesData
-from dae.query_variants.attributes_query import (
+from dae.query_variants.attribute_queries import (
     Matcher,
-    affected_status_query,
-    inheritance_query,
-    role_query,
-    sex_query,
-    variant_type_query,
+    transform_attribute_query_to_function,
 )
 from dae.query_variants.base_query_variants import (
     QueryVariantsBase,
@@ -21,7 +17,8 @@ from dae.query_variants.base_query_variants import (
 from dae.query_variants.query_runners import QueryResult, QueryRunner
 from dae.query_variants.sql.schema2.sql_query_builder import TagsQuery
 from dae.utils.regions import Region
-from dae.variants.attributes import Inheritance
+from dae.variants.attributes import Inheritance, Role, Sex, Status
+from dae.variants.core import Allele
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import SummaryAllele, SummaryVariant
 
@@ -232,7 +229,7 @@ class RawFamilyVariants(abc.ABC):
         genes: list[str] | None = None,
         effect_types: list[str] | None = None,
         person_ids: Sequence[str] | None = None,
-        inheritance: Sequence[Matcher] | None = None,
+        inheritance: list[Matcher] | None = None,
         roles: Matcher | None = None,
         sexes: Matcher | None = None,
         affected_statuses: Matcher | None = None,
@@ -240,6 +237,8 @@ class RawFamilyVariants(abc.ABC):
         real_attr_filter: RealAttrFilterType | None = None,
         ultra_rare: bool | None = None,
         frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
         **kwargs: Any,  # noqa: ARG003
     ) -> bool:
         # pylint: disable=too-many-arguments,too-many-return-statements
@@ -247,8 +246,11 @@ class RawFamilyVariants(abc.ABC):
         """Return True if a family allele meets the required conditions."""
         assert isinstance(allele, FamilyAllele)
         if inheritance is not None:
-            for inh in inheritance:
-                if not inh.match(allele.inheritance_in_members):
+            for matcher in inheritance:
+                allele_inheritance = 0
+                for inh in allele.inheritance_in_members:
+                    allele_inheritance |= inh.value
+                if not matcher(allele_inheritance):
                     return False
 
         if real_attr_filter is not None and \
@@ -266,28 +268,42 @@ class RawFamilyVariants(abc.ABC):
             allele.matched_gene_effects = []
         elif not cls.filter_gene_effects(allele, effect_types, genes):
             return False
-        if variant_type is not None and not variant_type.match(
-                [allele.allele_type]):
+        if variant_type is not None:
+            return variant_type(allele.allele_type.value)
+
+        if (
+            not return_reference
+            and not return_unknown
+            and allele.is_reference_allele
+        ):
             return False
-        if person_ids is not None:
-            if allele.is_reference_allele:
-                return False
-            if not set(allele.variant_in_members) & set(person_ids):
-                return False
+
+        if person_ids is not None and \
+                not set(allele.variant_in_members) & set(person_ids):
+            return False
         if roles is not None:
-            if allele.is_reference_allele:
-                return False
-            if not roles.match(allele.variant_in_roles):
+            allele_roles = 0
+            for role in allele.allele_in_roles:
+                if role is None:
+                    continue
+                allele_roles |= role.value
+            if not roles(allele_roles):
                 return False
         if sexes is not None:
-            if allele.is_reference_allele:
-                return False
-            if not sexes.match(allele.variant_in_sexes):
+            allele_sexes = 0
+            for sex in allele.allele_in_sexes:
+                if sex is None:
+                    continue
+                allele_sexes |= sex.value
+            if not sexes(allele_sexes):
                 return False
         if affected_statuses is not None:
-            if allele.is_reference_allele:
-                return False
-            if not affected_statuses.match(allele.variant_in_statuses):
+            allele_statuses = 0
+            for status in allele.allele_in_statuses:
+                if status is None:
+                    continue
+                allele_statuses |= status.value
+            if not affected_statuses(allele_statuses):
                 return False
         return True
 
@@ -322,7 +338,7 @@ class RawFamilyVariants(abc.ABC):
                 not cls.filter_gene_effects(allele, effect_types, genes):
             return False
         if variant_type is not None:
-            return variant_type.match([allele.allele_type])
+            return variant_type(allele.allele_type.value)
 
         return True
 
@@ -362,16 +378,6 @@ class RawFamilyVariants(abc.ABC):
         cls, **kwargs: Any,
     ) -> Callable[[SummaryVariant], SummaryVariant | None]:
         """Return a filter function that checks the conditions in kwargs."""
-        if kwargs.get("variant_type") is not None:
-            parsed = kwargs["variant_type"]
-            if isinstance(kwargs["variant_type"], str):
-                parsed = variant_type_query.transform_query_string_to_tree(
-                    parsed,
-                )
-            kwargs[
-                "variant_type"
-            ] = variant_type_query.transform_tree_to_matcher(parsed)
-
         return_reference = kwargs.get("return_reference", False)
         seen = kwargs.get("seen", set())
 
@@ -385,6 +391,15 @@ class RawFamilyVariants(abc.ABC):
             if not cls.filter_summary_variant(sv, **kwargs):
                 return None
 
+            variant_type_matcher = None
+            if kwargs.get("variant_type") is not None:
+                variant_type_matcher = transform_attribute_query_to_function(
+                    Allele.Type, kwargs["variant_type"],
+                    Allele.TYPE_DISPLAY_NAME,
+                )
+
+            kwargs["variant_type"] = variant_type_matcher
+
             alleles = sv.alleles
             alleles_matched = []
             for allele in alleles:
@@ -395,24 +410,6 @@ class RawFamilyVariants(abc.ABC):
             if not alleles_matched:
                 return None
             sv.set_matched_alleles(alleles_matched)
-            return sv
-
-        return filter_func
-
-    @classmethod
-    def summary_variant_filter_duplicate_function(
-        cls, **kwargs: Any,
-    ) -> Callable[[SummaryVariant], SummaryVariant | None]:
-        """Return a filter function that checks the conditions in kwargs."""
-        seen = kwargs.get("seen", set())
-
-        def filter_func(sv: SummaryVariant) -> SummaryVariant | None:
-            if sv is None:
-                return None
-            if sv.svuid in seen:
-                return None
-
-            seen.add(sv.svuid)
             return sv
 
         return filter_func
@@ -454,30 +451,60 @@ class RawFamilyVariants(abc.ABC):
             pass
 
     @classmethod
-    def family_variant_filter_duplicate_function(
-        cls, **kwargs: Any,
-    ) -> Callable[[FamilyVariant], FamilyVariant | None]:
-        """Return a filter function that checks the conditions in kwargs."""
-        seen = kwargs.get("seen", set())
-
-        def filter_func(fv: FamilyVariant) -> FamilyVariant | None:
-            if fv is None or fv.fvuid in seen:
-                return None
-            seen.add(fv.fvuid)
-            return fv
-
-        return filter_func
-
-    @classmethod
     def family_variant_filter_function(
-        cls, **kwargs: Any,
+        cls, *,
+        regions: list[Region] | None = None,
+        genes: list[str] | None = None,
+        effect_types: list[str] | None = None,
+        family_ids: Sequence[str] | None = None,
+        person_ids: Sequence[str] | None = None,
+        inheritance: list[str] | str | None = None,
+        roles: str | None = None,
+        sexes: str | None = None,
+        affected_statuses: str | None = None,
+        variant_type: str | None = None,
+        real_attr_filter: RealAttrFilterType | None = None,
+        ultra_rare: bool | None = None,
+        frequency_filter: RealAttrFilterType | None = None,
+        return_reference: bool | None = None,
+        return_unknown: bool | None = None,
     ) -> Callable[[FamilyVariant], FamilyVariant | None]:
         """Return a function that filters variants."""
-        kwargs = cls._transform_family_variants_kwargs(kwargs)
 
-        return_reference = kwargs.get("return_reference", False)
-        return_unknown = kwargs.get("return_unknown", False)
-        seen = kwargs.get("seen", set())
+        if return_reference is None:
+            return_reference = False
+        if return_unknown is None:
+            return_unknown = False
+        seen = set()
+
+        inheritance_matchers = None
+        if inheritance is not None:
+            if not isinstance(inheritance, list):
+                inheritance = [inheritance]
+            inheritance_matchers = [
+                transform_attribute_query_to_function(Inheritance, query)
+                for query in inheritance
+            ]
+
+        variant_type_matcher = None
+        if variant_type is not None:
+            variant_type_matcher = transform_attribute_query_to_function(
+                Allele.Type, variant_type, Allele.TYPE_DISPLAY_NAME,
+            )
+
+        roles_matcher = None
+        if roles is not None:
+            roles_matcher = transform_attribute_query_to_function(Role, roles)
+
+        sexes_matcher = None
+        if sexes is not None:
+            sexes_matcher = transform_attribute_query_to_function(
+                Sex, sexes, Sex.aliases())
+
+        statuses_matcher = None
+        if affected_statuses is not None:
+            statuses_matcher = transform_attribute_query_to_function(
+                Status, affected_statuses)
 
         def filter_func(v: FamilyVariant) -> FamilyVariant | None:
             try:
@@ -490,7 +517,10 @@ class RawFamilyVariants(abc.ABC):
                         "unknown variants selected but not requested %s", v)
                     return None
 
-                if not cls.filter_family_variant(v, **kwargs):
+                if not cls.filter_family_variant(
+                    v, regions=regions, family_ids=family_ids,
+
+                ):
                     logger.info(
                         "family variants selected but not requested %s", v)
                     return None
@@ -501,7 +531,22 @@ class RawFamilyVariants(abc.ABC):
                     if allele.allele_index == 0 and not return_reference:
                         continue
                     fa = cast(FamilyAllele, allele)
-                    if cls.filter_allele(fa, **kwargs):
+                    if cls.filter_allele(
+                        fa,
+                        genes=genes,
+                        effect_types=effect_types,
+                        person_ids=person_ids,
+                        inheritance=inheritance_matchers,
+                        roles=roles_matcher,
+                        sexes=sexes_matcher,
+                        affected_statuses=statuses_matcher,
+                        variant_type=variant_type_matcher,
+                        real_attr_filter=real_attr_filter,
+                        ultra_rare=ultra_rare,
+                        frequency_filter=frequency_filter,
+                        return_reference=return_reference,
+                        return_unknown=return_unknown,
+                    ):
                         alleles_matched.append(allele.allele_index)
                 if alleles_matched:
                     v.set_matched_alleles(alleles_matched)
@@ -515,65 +560,6 @@ class RawFamilyVariants(abc.ABC):
 
         return filter_func
 
-    @classmethod
-    def _transform_family_variants_kwargs(
-        cls, kwargs: dict[str, Any],
-    ) -> dict[str, Any]:
-        if kwargs.get("roles") is not None:
-            parsed = kwargs["roles"]
-            if isinstance(parsed, list):
-                parsed = f"any({','.join(parsed)})"
-            if isinstance(parsed, str):
-                parsed = role_query.transform_query_string_to_tree(parsed)
-
-            kwargs["roles"] = role_query.transform_tree_to_matcher(parsed)
-
-        if kwargs.get("sexes") is not None:
-            parsed = kwargs["sexes"]
-            if isinstance(parsed, str):
-                parsed = sex_query.transform_query_string_to_tree(parsed)
-
-            kwargs["sexes"] = sex_query.transform_tree_to_matcher(parsed)
-
-        if kwargs.get("affected_statuses") is not None:
-            parsed = kwargs["affected_statuses"]
-            if isinstance(parsed, str):
-                parsed = affected_status_query\
-                    .transform_query_string_to_tree(parsed)
-
-            kwargs["affected_statuses"] = affected_status_query\
-                .transform_tree_to_matcher(parsed)
-
-        if kwargs.get("inheritance") is not None:
-            parsed = kwargs["inheritance"]
-            if isinstance(parsed, str):
-                parsed = [
-                    inheritance_query.transform_query_string_to_tree(parsed),
-                ]
-            elif isinstance(parsed, list):
-                parsed = [
-                    inheritance_query.transform_query_string_to_tree(p)
-                    for p in parsed
-                ]
-
-            kwargs["inheritance"] = [
-                inheritance_query.transform_tree_to_matcher(p)
-                for p in parsed
-            ]
-
-        if kwargs.get("variant_type") is not None:
-            parsed = kwargs["variant_type"]
-            if isinstance(kwargs["variant_type"], str):
-                parsed = variant_type_query.transform_query_string_to_tree(
-                    parsed,
-                )
-
-            kwargs[
-                "variant_type"
-            ] = variant_type_query.transform_tree_to_matcher(parsed)
-
-        return kwargs
-
     def build_family_variants_query_runner(
         self, *,
         regions: list[Region] | None = None,
@@ -581,7 +567,7 @@ class RawFamilyVariants(abc.ABC):
         effect_types: list[str] | None = None,
         family_ids: Sequence[str] | None = None,
         person_ids: Sequence[str] | None = None,
-        inheritance: Sequence[str] | None = None,
+        inheritance: list[str] | None = None,
         roles_in_parent: str | None = None,
         roles_in_child: str | None = None,
         roles: str | None = None,
