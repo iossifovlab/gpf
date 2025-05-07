@@ -159,7 +159,11 @@ export class QueryService {
     return this.http.post(this.config.baseUrl + this.geneViewVariantsUrl, filter);
   }
 
-  public saveQuery(queryData: object, page: string, origin: 'saved' | 'user' | 'system'): Observable<object> {
+  public saveQuery(
+    queryData: object,
+    page: string,
+    origin: 'saved' | 'user' | 'system',
+  ): Observable<object> {
     const options = { headers: this.headers };
 
     queryData = {...queryData};
@@ -192,15 +196,17 @@ export class QueryService {
       .pipe(map(response => response));
   }
 
-  public getLoadUrl(uuid: string): string {
-    let pathname = this.router.createUrlTree(['load-query', uuid]).toString();
-    pathname = this.location.prepareExternalUrl(pathname);
-
+  public getLoadUrl(uuid: string, preview: boolean = false): string {
+    const urlTree = this.router.createUrlTree(['load-query', uuid]);
+    if (preview) {
+      urlTree.queryParams = { preview: true };
+    }
+    const pathname = this.location.prepareExternalUrl(urlTree.toString());
     return window.location.origin + pathname;
   }
 
-  public getLoadUrlFromResponse(response: object): string {
-    return this.getLoadUrl(response['uuid']);
+  public getLoadUrlFromResponse(response: object, preview: boolean = false): string {
+    return this.getLoadUrl(response['uuid'], preview);
   }
 
   public saveUserQuery(uuid: string, query_name: string, query_description: string): Observable<object> {

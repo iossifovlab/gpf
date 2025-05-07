@@ -19,30 +19,31 @@ import { EnrichmentToolComponent } from 'app/enrichment-tool/enrichment-tool.com
 import { setGeneScoreCategorical, setGeneScoreContinuous } from 'app/gene-scores/gene-scores.state';
 
 class ActivatedRouteMock {
-  public params = of({
-    uuid: 'abc123',
-  });
+  public snapshot = {
+    params: { uuid: 'abc123' },
+    queryParams: { preview: 'false' },
+  };
 }
 
 initialState.datasetId = 'testDatasetId';
 const queryMockGenotypeBrowser = {
   data: initialState,
-  page: 'genotype'
+  page: 'genotype',
 };
 
 const queryMockPhenotypeBrowser = {
   data: initialState,
-  page: 'phenotype'
+  page: 'phenotype',
 };
 
 const queryMockPhenotypeTool = {
   data: initialState,
-  page: 'phenotool'
+  page: 'phenotool',
 };
 
 const queryMockEnrichmentTool = {
   data: initialState,
-  page: 'enrichment'
+  page: 'enrichment',
 };
 
 class QueryServiceMock {
@@ -79,22 +80,21 @@ describe('LoadQueryComponent', () => {
         DatasetsService,
         UsersService,
         { provide: APP_BASE_HREF, useValue: '' },
-        { provide: ActivatedRoute, useValue: activatedRouteMock }
+        { provide: ActivatedRoute, useValue: activatedRouteMock },
       ],
       imports: [
         RouterTestingModule.withRoutes(
           [
-            {path: 'datasets/testDatasetId/genotype-browser', component: GenotypeBrowserComponent},
-            {path: 'datasets/testDatasetId/phenotype-browser', component: PhenoBrowserComponent},
-            {path: 'datasets/testDatasetId/phenotype-tool', component: PhenoToolComponent},
-            {path: 'datasets/testDatasetId/enrichment-tool', component: EnrichmentToolComponent},
+            { path: 'datasets/testDatasetId/genotype-browser', component: GenotypeBrowserComponent },
+            { path: 'datasets/testDatasetId/phenotype-browser', component: PhenoBrowserComponent },
+            { path: 'datasets/testDatasetId/phenotype-tool', component: PhenoToolComponent },
+            { path: 'datasets/testDatasetId/enrichment-tool', component: EnrichmentToolComponent },
           ]
         ),
-        StoreModule.forRoot({errors: errorsReducer})
+        StoreModule.forRoot({ errors: errorsReducer }),
       ],
     }).compileComponents();
     fixture = TestBed.createComponent(LoadQueryComponent);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     store = TestBed.inject(Store);
 
     component = fixture.componentInstance;
@@ -107,69 +107,61 @@ describe('LoadQueryComponent', () => {
 
   it('should navigate to home page when invalid uuid', () => {
     const navigateSpy = jest.spyOn(component['router'], 'navigate');
-    activatedRouteMock.params = of({uuid: null});
+    activatedRouteMock.snapshot.params = { uuid: null };
     component.ngOnInit();
     expect(navigateSpy).toHaveBeenCalledWith(['/']);
   });
 
   it('should load query in genotype browser', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const loadQuerySpy = jest.spyOn(component as any, 'loadQuery'); // spy private method
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const restoreQuerySpy = jest.spyOn(component as any, 'restoreQuery'); // spy private method
     const navigateSpy = jest.spyOn(component['router'], 'navigate');
-    activatedRouteMock.params = of({ uuid: 'genotype' });
+    activatedRouteMock.snapshot.params = { uuid: 'genotype' };
 
     component.ngOnInit();
 
-    expect(loadQuerySpy).toHaveBeenCalledWith('genotype');
-    expect(restoreQuerySpy).toHaveBeenCalledWith(queryMockGenotypeBrowser.data, queryMockGenotypeBrowser.page);
-    expect(navigateSpy).toHaveBeenCalledWith(['datasets', 'testDatasetId', 'genotype-browser']);
+    expect(loadQuerySpy).toHaveBeenCalledWith('genotype', false);
+    expect(restoreQuerySpy).toHaveBeenCalledWith(queryMockGenotypeBrowser.data, queryMockGenotypeBrowser.page, false);
+    expect(navigateSpy).toHaveBeenCalledWith(['datasets', 'testDatasetId', 'genotype-browser'], {});
   });
 
   it('should load query in phenotype browser', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const loadQuerySpy = jest.spyOn(component as any, 'loadQuery'); // spy private method
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const restoreQuerySpy = jest.spyOn(component as any, 'restoreQuery'); // spy private method
     const navigateSpy = jest.spyOn(component['router'], 'navigate');
-    activatedRouteMock.params = of({ uuid: 'phenotype' });
+    activatedRouteMock.snapshot.params = { uuid: 'phenotype' };
 
     component.ngOnInit();
 
-    expect(loadQuerySpy).toHaveBeenCalledWith('phenotype');
-    expect(restoreQuerySpy).toHaveBeenCalledWith(queryMockPhenotypeBrowser.data, queryMockPhenotypeBrowser.page);
-    expect(navigateSpy).toHaveBeenCalledWith(['datasets', 'testDatasetId', 'phenotype-browser']);
+    expect(loadQuerySpy).toHaveBeenCalledWith('phenotype', false);
+    expect(restoreQuerySpy).toHaveBeenCalledWith(queryMockPhenotypeBrowser.data, queryMockPhenotypeBrowser.page, false);
+    expect(navigateSpy).toHaveBeenCalledWith(['datasets', 'testDatasetId', 'phenotype-browser'], {});
   });
 
   it('should load query in phenotype tool', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const loadQuerySpy = jest.spyOn(component as any, 'loadQuery'); // spy private method
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const restoreQuerySpy = jest.spyOn(component as any, 'restoreQuery'); // spy private method
     const navigateSpy = jest.spyOn(component['router'], 'navigate');
-    activatedRouteMock.params = of({ uuid: 'phenotool' });
+    activatedRouteMock.snapshot.params = { uuid: 'phenotool' };
 
     component.ngOnInit();
 
-    expect(loadQuerySpy).toHaveBeenCalledWith('phenotool');
-    expect(restoreQuerySpy).toHaveBeenCalledWith(queryMockPhenotypeTool.data, queryMockPhenotypeTool.page);
-    expect(navigateSpy).toHaveBeenCalledWith(['datasets', 'testDatasetId', 'phenotype-tool']);
+    expect(loadQuerySpy).toHaveBeenCalledWith('phenotool', false);
+    expect(restoreQuerySpy).toHaveBeenCalledWith(queryMockPhenotypeTool.data, queryMockPhenotypeTool.page, false);
+    expect(navigateSpy).toHaveBeenCalledWith(['datasets', 'testDatasetId', 'phenotype-tool'], {});
   });
 
   it('should load query in enrichment tool', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const loadQuerySpy = jest.spyOn(component as any, 'loadQuery'); // spy private method
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const restoreQuerySpy = jest.spyOn(component as any, 'restoreQuery'); // spy private method
     const navigateSpy = jest.spyOn(component['router'], 'navigate');
-    activatedRouteMock.params = of({ uuid: 'enrichment' });
+    activatedRouteMock.snapshot.params = { uuid: 'enrichment' };
 
     component.ngOnInit();
 
-    expect(loadQuerySpy).toHaveBeenCalledWith('enrichment');
-    expect(restoreQuerySpy).toHaveBeenCalledWith(queryMockEnrichmentTool.data, queryMockEnrichmentTool.page);
-    expect(navigateSpy).toHaveBeenCalledWith(['datasets', 'testDatasetId', 'enrichment-tool']);
+    expect(loadQuerySpy).toHaveBeenCalledWith('enrichment', false);
+    expect(restoreQuerySpy).toHaveBeenCalledWith(queryMockEnrichmentTool.data, queryMockEnrichmentTool.page, false);
+    expect(navigateSpy).toHaveBeenCalledWith(['datasets', 'testDatasetId', 'enrichment-tool'], {});
   });
 
   it('should load query with categorical histogram', () => {
@@ -180,16 +172,18 @@ describe('LoadQueryComponent', () => {
       rangeStart: null,
       rangeEnd: null,
       values: ['val1', 'val2'],
-      categoricalView: 'range selector'
+      categoricalView: 'range selector',
     };
 
     component.ngOnInit();
 
-    expect(dispatchSpy).toHaveBeenCalledWith(setGeneScoreCategorical({
-      score: 'score1',
-      values: ['val1', 'val2'],
-      categoricalView: 'range selector',
-    }));
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      setGeneScoreCategorical({
+        score: 'score1',
+        values: ['val1', 'val2'],
+        categoricalView: 'range selector',
+      })
+    );
   });
 
   it('should load query with continuous histogram', () => {
@@ -201,15 +195,17 @@ describe('LoadQueryComponent', () => {
       rangeStart: 5,
       rangeEnd: 10,
       values: null,
-      categoricalView: null
+      categoricalView: null,
     };
 
     component.ngOnInit();
 
-    expect(dispatchSpy).toHaveBeenCalledWith(setGeneScoreContinuous({
-      score: 'score1',
-      rangeEnd: 10,
-      rangeStart: 5,
-    }));
+    expect(dispatchSpy).toHaveBeenCalledWith(
+      setGeneScoreContinuous({
+        score: 'score1',
+        rangeEnd: 10,
+        rangeStart: 5,
+      })
+    );
   });
 });

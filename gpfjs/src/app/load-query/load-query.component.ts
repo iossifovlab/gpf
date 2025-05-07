@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { QueryService } from '../query/query.service';
-import { take } from 'rxjs/operators';
+import { combineLatestWith, take } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
 import { setEffectTypes } from 'app/effect-types/effect-types.state';
 import { reset } from 'app/users/state-actions';
@@ -50,27 +50,28 @@ export class LoadQueryComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    this.route.params.subscribe(
-      params => {
-        if (!params['uuid']) {
-          this.router.navigate(['/']);
-        } else {
-          this.loadQuery(params['uuid'] as string);
-        }
-      });
+    const uuid = this.route.snapshot.params.uuid;
+    const preview = this.route.snapshot.queryParams.preview === 'true';
+    if (!uuid) {
+      this.router.navigate(['/']);
+    } else {
+      this.loadQuery(uuid, preview);
+    }
   }
 
-  private loadQuery(uuid: string): void {
+  private loadQuery(uuid: string, preview: boolean = false): void {
     this.queryService.loadQuery(uuid)
       .pipe(take(1))
       .subscribe(response => {
-        const queryData = response['data'] as State;
-        const page = response['page'] as string;
-        this.restoreQuery(queryData, page);
+        this.restoreQuery(
+          response['data'] as State,
+          response['page'] as string,
+          preview,
+        );
       });
   }
 
-  private restoreQuery(state: State, page: string): void {
+  private restoreQuery(state: State, page: string, preview: boolean = false): void {
     if (page in PAGE_TYPE_TO_NAVIGATE) {
       const navigationParams: string[] = PAGE_TYPE_TO_NAVIGATE[page](state['datasetId']);
       this.store.dispatch(reset());
@@ -107,7 +108,6 @@ export class LoadQueryComponent implements OnInit {
       this.store.dispatch(setPersonMeasureHistograms({personMeasureHistograms: state.personMeasureHistograms}));
       this.store.dispatch(setAllZygosityFilters({ zygosityFilters: state.zygosityFilter }));
 
-      this.router.navigate(navigationParams);
       if (state.geneScores.histogramType === 'categorical') {
         this.store.dispatch(setGeneScoreCategorical({
           score: state.geneScores.score,
@@ -121,6 +121,13 @@ export class LoadQueryComponent implements OnInit {
           rangeStart: state.geneScores.rangeStart,
         }));
       }
+
+      const extras = {};
+      if (preview) {
+        extras['queryParams'] = { preview: true };
+      }
+
+      this.router.navigate(navigationParams, extras);
     }
   }
 }
