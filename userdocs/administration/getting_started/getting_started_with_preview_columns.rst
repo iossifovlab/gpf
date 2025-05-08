@@ -11,14 +11,12 @@ produced by the annotation can be displayed in the variants preview table.
 
 In our example, the annotation produces three additional attributes:
 
-* ``gnomad_v4_genome_ALL_af``;
-* ``CLNSIG``;
-* ``CLNDN``.
+* ``gnomad_v4_genome_ALL_af``
+* ``CLNSIG``
+* ``CLNDN``
 
 
-Let us add these attributes to the
-variants preview table and the variants download file for the
-``example_dataset`` dataset.
+Let us add these attributes to the variants preview table for the ``example_dataset`` dataset.
 
 In the preview table, each column could show multiple values.
 In GPF, when you want to show multiple values in a single column,

@@ -54,7 +54,7 @@ and add lines 9-12 to it:
         - allele_score: hg38/variant_frequencies/gnomAD_4.1.0/genomes/ALL
         - allele_score: hg38/scores/ClinVar_20240730
 
-When you start the GPF instance using the ``wgpf`` tool will automatically
+When you start the GPF instance using the ``wgpf`` tool, it will automatically
 re-annotate any genotype data that is not up to date:
 
 .. code-block:: bash
@@ -64,9 +64,9 @@ re-annotate any genotype data that is not up to date:
 The variants in our `Example Dataset` will now have additional attributes
 that come from the annotation with GnomAD and ClinVar:
 
-- ``gnomad_v4_genome_ALL_af``;
-- ``CLNSIG``;
-- ``CLNDN``.
+- ``gnomad_v4_genome_ALL_af``
+- ``CLNSIG``
+- ``CLNDN``
 
 By default, the additional attributes produced by the annotation are usable in 
 the following ways:

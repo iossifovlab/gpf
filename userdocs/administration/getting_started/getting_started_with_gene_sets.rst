@@ -2,7 +2,7 @@ Getting Started with Gene Sets
 ##############################
 
 The GPF system provides support for the collection of gene symbols of interest
-for the analysis of genotype data. There are two types og gene sets that can be
+for the analysis of genotype data. There are two types of gene sets that can be
 used in GPF:
 
 * de Novo gene sets - for each genotype study that has de Novo variants, the 

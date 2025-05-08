@@ -97,7 +97,7 @@ Configure a genotype study to use phenotype data
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
 To demonstrate how a study is configured with a phenotype database, we will
-be working with the already imported ``example_dataset`` dataset.
+be working with the already configured ``example_dataset`` dataset.
 
 The phenotype databases can be attached to one or more studies and/or datasets.
 If you want to attach the ``mini_pheno`` phenotype study to the

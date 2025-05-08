@@ -24,9 +24,8 @@ GPF Installation
 ++++++++++++++++
 
 The GPF system is developed in Python and supports Python 3.11 and up.
-The recommended way to set up a conda GPF environment.
 
-Create an empty Conda environment named `gpf`:
+Begin by creating an empty Conda environment named `gpf`:
 
 .. code-block:: bash
 
@@ -38,8 +37,7 @@ To use this environment, you need to activate it using the following command:
 
     mamba activate gpf
 
-Install the `gpf_wdae` conda package into the already activated `gpf`
-environment:
+Afterwards, install the `gpf_wdae` conda package:
 
 .. code-block:: bash
 
@@ -117,7 +115,7 @@ instance:
 
 and browse the GPF development server at ``http://localhost:8000``.
 
-The web interface will be mostly empty, as at this point, there is no data
+The web interface will be mostly empty as there is yet no data
 imported into the instance.
 
 To stop the development GPF web server, you should press ``Ctrl-C`` - the usual
@@ -188,18 +186,17 @@ To import this project, run the following command:
     For more information on working with pedigree files,
     see :doc:`working_with_pedigree_files`.
 
-The import genotypes tool will read all the variants from the files,
-specified in the project configuration will annotate them using the reference genome and
-gene models specified in the GPF instance configuration, and will store them
+The import genotypes tool will read all the variants from the files
+specified in the project configuration, annotate them using the reference genome and
+gene models specified in the GPF instance configuration and finally store them
 in an appropriate format for use by the GPF system. By default, the imported
 files are stored in the ``internal_storage`` subdirectory of the GPF instance
 directory. 
 
-It will also create
-a minimal study configuration file for the imported study, located in
+A minimal study configuration file for the imported study will also be created at 
 ``minimal_instance/studies/denovo_example.yaml``.
 
-There are also some additional intermediary files created in the import project
+Intermediary files created during import will be stored in the import project
 directory ``input_genotype_data/denovo_example``. 
 
 When the import finishes, you can run the GPF development server using:
@@ -331,7 +328,7 @@ that directory:
       - denovo_example
       - vcf_example
 
-When the configuration is ready, restart the ``wgpf`` command. The home page
+When the configuration is ready, re-run the ``wgpf run`` command. The home page
 of the GPF instance will change and now will include the configured dataset
 ``example_dataset``.
 
