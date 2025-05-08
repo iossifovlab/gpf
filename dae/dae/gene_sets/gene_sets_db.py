@@ -4,7 +4,7 @@ import abc
 import logging
 import os
 from functools import cached_property
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -42,8 +42,8 @@ class ViewRangeSchema(BaseModel):
 
 
 # pylint: disable=missing-class-docstring
-class HistogramSchema(BaseModel):
-    type: str | None = None
+class NumericHistogramSchema(BaseModel):
+    type: Literal["number"]
     plot_function: str | None = None
     number_of_bins: int | None = None
     view_range: ViewRangeSchema | None = None
@@ -52,12 +52,29 @@ class HistogramSchema(BaseModel):
     x_min_log: float | None = None
     value_order: list[str | int] | None = None
     displayed_values_count: int | None = None
-    displayed_values_percent: float | None = None
-    reason: str | None = None
 
 
 # pylint: disable=missing-class-docstring
-class GeneSetResourceSchema(BaseResourceSchema):
+class CategoricalHistogramSchema(BaseModel):
+    type: Literal["categorical"]
+    displayed_values_count: int | None = None
+    displayed_values_percent: float | None = None
+    value_order: list[str | int] | None = None
+    y_log_scale: bool | None = None
+    label_rotation: int | None = None
+    plot_function: str | None = None
+    enforce_type: bool | None = None
+    natural_order: bool | None = None
+
+
+HistogramConfig = Annotated[
+    NumericHistogramSchema | CategoricalHistogramSchema,
+    Field(discriminator="type"),
+]
+
+
+# pylint: disable=missing-class-docstring
+class GeneSetResourceSchema(BaseModel):
     resource_id: str = Field(alias="id")
     filename: str | None = None
     directory: str | None = None
@@ -66,7 +83,7 @@ class GeneSetResourceSchema(BaseResourceSchema):
     web_format_str: str | None = None
     histograms: dict[
         Literal["genes_per_gene_set", "gene_sets_per_gene"],
-        HistogramSchema,
+        HistogramConfig,
     ] | None = None
 
 

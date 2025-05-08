@@ -126,6 +126,7 @@ class CategoricalHistogramConfig:
     label_rotation: int = 0
     plot_function: str | None = None
     enforce_type: bool = True
+    natural_order: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         """Transform categorical histogram config to dict."""
@@ -397,6 +398,7 @@ class NumberHistogram(Statistic):
         self,
         outfile: IO,
         score_id: str,
+        y_axis_label: str | None = None,
         small_values_description: str | None = None,
         large_values_description: str | None = None,
     ) -> None:
@@ -444,7 +446,7 @@ class NumberHistogram(Statistic):
             )
 
         plt.xlabel(f"\n{score_id}")
-        plt.ylabel("count")
+        plt.ylabel("count" if y_axis_label is None else y_axis_label)
 
         plt.grid(axis="y")
         plt.grid(axis="x")
@@ -639,21 +641,27 @@ class CategoricalHistogram(Statistic):
                 else:
                     other += count
             if other > 0:
-                values["Other Values"] = other
+                values["Other"] = other
             return values
 
-        for key, count in self._counter.most_common(
-                n=self.config.displayed_values_count):
-            if key not in values:
-                values[key] = count
+        ordering = None
+        if self.config.natural_order:
+            ordering = sorted(
+                self._counter, key=lambda x: (isinstance(x, str), x))
+        else:
+            ordering = [key for key, _ in self._counter.most_common()]
+
+        for key in ordering[:self.config.displayed_values_count]:
+            values[key] = self._counter[key]
+
         if self.config.displayed_values_count is not None and \
                 len(self._counter) > self.config.displayed_values_count:
             other = 0
-            for key, count in self._counter.items():
-                if key not in values:
-                    other += count
+            for key in ordering[self.config.displayed_values_count:]:
+                other += self._counter[key]
             if other > 0:
-                values["Other Values"] = other
+                values["Other"] = other
+
         return values
 
     def values_domain(self) -> str:
@@ -682,6 +690,7 @@ class CategoricalHistogram(Statistic):
         self,
         outfile: IO,
         score_id: str,
+        y_axis_label: str | None = None,
         small_values_description: str | None = None,
         large_values_description: str | None = None,
     ) -> None:
@@ -724,19 +733,19 @@ class CategoricalHistogram(Statistic):
             )
 
         plt.xlabel(f"\n{score_id}")
-        plt.ylabel("count")
+        plt.ylabel("count" if y_axis_label is None else y_axis_label)
 
         label_angle = self.config.label_rotation % 360
         if self.config.label_rotation < 0:
             label_angle = 360 + label_angle
 
         if label_angle != 0:
-            label_anchor = "right" if 0 < label_angle < 180 else "left"
             ax.set_xticklabels(
                 [str(v) for v in values],
                 rotation=self.config.label_rotation,
-                ha=label_anchor,
-                rotation_mode="anchor",
+                ha="center",
+                va="top",
+                rotation_mode="default",
             )
 
         plt.tight_layout()
