@@ -9,6 +9,8 @@ from markdown2 import markdown
 
 from dae.gene_sets.gene_sets_db import build_gene_set_collection_from_resource
 from dae.genomic_resources.histogram import (
+    CategoricalHistogram,
+    CategoricalHistogramConfig,
     NumberHistogram,
     NumberHistogramConfig,
     plot_histogram,
@@ -123,29 +125,51 @@ class GeneSetCollectionImpl(
     @staticmethod
     def _calc_genes_per_gene_set_hist(
         resource: GenomicResource,
-    ) -> NumberHistogram:
+    ) -> NumberHistogram | CategoricalHistogram:
         gene_set_collection = build_gene_set_collection_from_resource(resource)
-        all_gene_sets = gene_set_collection.get_all_gene_sets()
-        config = (
-            gene_set_collection.config.model_dump()
-            if gene_set_collection.config
+
+        config = gene_set_collection.config
+        genes_per_gene_set_schema = (
+            config.histograms.get("genes_per_gene_set")
+            if config and config.histograms
+            else None
+        )
+
+        hist_config = (
+            genes_per_gene_set_schema.model_dump(exclude_unset=True)
+            if genes_per_gene_set_schema
             else {}
         )
-        histograms = config.get("histograms") or {}
-        hist_conf_data = histograms.get("genes_per_gene_set") or {}
-        hist_conf = (
-            NumberHistogramConfig.from_dict(hist_conf_data)
-            if hist_conf_data else None
-        )
 
-        if hist_conf is None:
-            min_count = min(all_gene_sets, key=lambda gs: gs.count).count
-            max_count = max(all_gene_sets, key=lambda gs: gs.count).count
-            hist_conf = NumberHistogramConfig(view_range=(min_count, max_count))
+        histogram: NumberHistogram | CategoricalHistogram
 
-        histogram = NumberHistogram(hist_conf)
+        if hist_config.get("type") == "number":
+            view_range = []
+            if hist_config.get("view_range") is None:
+                all_gene_sets = gene_set_collection.get_all_gene_sets()
+                min_count = min(all_gene_sets, key=lambda gs: gs.count).count
+                max_count = max(all_gene_sets, key=lambda gs: gs.count).count
+                view_range = [min_count, max_count]
+            else:
+                view_range = [
+                    hist_config["view_range"].get("min"),
+                    hist_config["view_range"].get("max"),
+                ]
 
-        for gs in all_gene_sets:
+            hist_config["view_range"] = view_range
+            hist_config.pop("type", None)
+
+            histogram = NumberHistogram(
+                NumberHistogramConfig(
+                    **hist_config,
+                ),
+            )
+        else:
+            hist_config.pop("type", None)
+            histogram = CategoricalHistogram(
+                CategoricalHistogramConfig(**hist_config))
+
+        for gs in gene_set_collection.get_all_gene_sets():
             histogram.add_value(gs.count)
 
         return histogram
@@ -153,31 +177,60 @@ class GeneSetCollectionImpl(
     @staticmethod
     def _calc_gene_sets_per_gene_hist(
         resource: GenomicResource,
-    ) -> NumberHistogram:
+    ) -> NumberHistogram | CategoricalHistogram:
         gene_set_collection = build_gene_set_collection_from_resource(resource)
-        all_gene_sets = gene_set_collection.get_all_gene_sets()
-
         config = (
             gene_set_collection.config.model_dump()
             if gene_set_collection.config
             else {}
         )
-        histograms = config.get("histograms") or {}
-        hist_conf_data = histograms.get("gene_sets_per_gene", {})
-        hist_conf = (
-            NumberHistogramConfig.from_dict(hist_conf_data)
-            if hist_conf_data else None
+
+        config = gene_set_collection.config
+        gene_sets_per_gene_schema = (
+            config.histograms.get("gene_sets_per_gene")
+            if config and config.histograms
+            else None
         )
+
+        hist_config = (
+            gene_sets_per_gene_schema.model_dump(exclude_unset=True)
+            if gene_sets_per_gene_schema
+            else {}
+        )
+        histogram: NumberHistogram | CategoricalHistogram
+
+        if hist_config.get("type") == "number":
+            view_range = []
+            if hist_config.get("view_range") is None:
+                all_gene_sets = gene_set_collection.get_all_gene_sets()
+                gene_counter = Counter(
+                    gene for gs in all_gene_sets for gene in set(gs.syms)
+                )
+                max_gene_count = max(gene_counter.values(), default=0)
+                view_range = [0, max_gene_count]
+            else:
+                view_range = [
+                    hist_config["view_range"].get("min"),
+                    hist_config["view_range"].get("max"),
+                ]
+
+            hist_config["view_range"] = view_range
+            hist_config.pop("type", None)
+            histogram = NumberHistogram(
+                NumberHistogramConfig(
+                    **hist_config,
+                ),
+            )
+        else:
+            hist_config.pop("type", None)
+            histogram = CategoricalHistogram(
+                CategoricalHistogramConfig(**hist_config))
 
         gene_counter = Counter(
-            gene for gs in all_gene_sets for gene in set(gs.syms)
+            gene
+            for gs in gene_set_collection.get_all_gene_sets()
+            for gene in set(gs.syms)
         )
-
-        if hist_conf is None:
-            max_gene_count = max(gene_counter.values(), default=0)
-            hist_conf = NumberHistogramConfig(view_range=(0, max_gene_count))
-
-        histogram = NumberHistogram(hist_conf)
 
         for count in gene_counter.values():
             histogram.add_value(count)
@@ -186,9 +239,9 @@ class GeneSetCollectionImpl(
 
     @staticmethod
     def _save_genes_per_gene_set_hist(
-        histogram: NumberHistogram,
+        histogram: CategoricalHistogram | NumberHistogram,
         resource: GenomicResource,
-    ) -> NumberHistogram:
+    ) -> CategoricalHistogram | NumberHistogram:
         proto = resource.proto
         gene_set_collection = build_gene_set_collection_from_resource(resource)
 
@@ -203,15 +256,16 @@ class GeneSetCollectionImpl(
             resource,
             gene_set_collection.get_genes_per_gene_set_hist_filename(),
             histogram,
-            "genes per gene set",
+            "gene count per gene set",
+            "count of gene sets",
         )
         return histogram
 
     @staticmethod
     def _save_gene_sets_per_gene_hist(
-        histogram: NumberHistogram,
+        histogram: CategoricalHistogram | NumberHistogram,
         resource: GenomicResource,
-    ) -> NumberHistogram:
+    ) -> CategoricalHistogram | NumberHistogram:
         proto = resource.proto
         gene_set_collection = build_gene_set_collection_from_resource(resource)
 
@@ -226,7 +280,8 @@ class GeneSetCollectionImpl(
             resource,
             gene_set_collection.get_gene_sets_per_gene_hist_filename(),
             histogram,
-            "gene sets per gene",
+            "number of gene sets the gene is present in",
+            "number of genes",
         )
         return histogram
 
@@ -257,6 +312,35 @@ def build_gene_set_collection_implementation_from_resource(
 
 GENE_SETS_TEMPLATE = """
 {% extends base %}
+{% block extra_styles %}
+#gene-sets-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+#gene-sets-table th {
+    border-top: 1px solid;
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#gene-sets-table td {
+    border-bottom: 1px solid;
+    border-right: 1px solid;
+}
+#gene-sets-table th:first-child,
+#gene-sets-table td:first-child {
+    border-left: 1px solid;
+}
+#gene-sets-table thead tr:nth-of-type(2) th {
+    border-top: none;
+}
+#gene-sets-table thead {
+    position: sticky; top: 0; background-color: white;
+}
+.histogram {
+    margin-bottom: 16px;
+}
+{% endblock %}
+
 {% block content %}
 {% set gene_set_collection = data.gene_set_collection %}
 <hr>
@@ -306,6 +390,24 @@ GENE_SETS_TEMPLATE = """
             alt="genes per gene set histogram"
             title="gene-sets-per-gene">
     </div>
+</div>
+<div style="max-height: 50%; overflow-y: auto; width: fit-content; margin-bottom: 16px;">
+    <table id="gene-sets-table">
+        <thead>
+            <tr>
+                <th>Gene Set</th>
+                <th>Count</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        {%- for gene_set in gene_set_collection.get_all_gene_sets() -%}
+            <tr>
+                <td>{{ gene_set["name"] }}</td>
+                <td>{{ gene_set["count"] }}</td>
+                <td>{{ gene_set["desc"] }}</td>
+            </tr>
+        {%- endfor -%}
+    </table>
 </div>
 {% endblock %}
 """  # noqa: E501
