@@ -348,7 +348,7 @@ def cli(argv: list[str] | None = None) -> None:
                 instance_dir, args.storage_id,
                 read_only=read_only,
                 hdfs_host=args.hdfs_host,
-                impala_hosts=[args.impala_hosts]) as cmd:
+                impala_hosts=args.impala_hosts) as cmd:
             cmd.execute()
 
     elif args.command == "storage":
