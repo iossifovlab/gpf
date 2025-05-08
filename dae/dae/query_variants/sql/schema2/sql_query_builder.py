@@ -6,7 +6,6 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any, cast
 
-import duckdb
 from pydantic import BaseModel
 from sqlglot import Expression, column, condition, exp, or_, parse_one
 from sqlglot.expressions import (
@@ -25,21 +24,17 @@ from dae.genomic_resources.gene_models import (
 from dae.genomic_resources.reference_genome import ReferenceGenome
 from dae.parquet.partition_descriptor import PartitionDescriptor
 from dae.pedigrees.families_data import FamiliesData
-from dae.query_variants.attributes_query import (
-    QueryTreeToSQLBitwiseTransformer,
-    affected_status_query,
-    role_query,
-    sex_query,
-)
-from dae.query_variants.attributes_query import (
-    variant_type_query as VARIANT_TYPE_PARSER,
+from dae.query_variants.attribute_queries import (
+    transform_attribute_query_to_function,
+    transform_attribute_query_to_sql_expression,
 )
 from dae.query_variants.attributes_query_inheritance import (
     InheritanceTransformer,
     inheritance_parser,
 )
 from dae.utils.regions import Region
-from dae.variants.attributes import Inheritance, Role, Status, Zygosity
+from dae.variants.attributes import Inheritance, Role, Sex, Status, Zygosity
+from dae.variants.core import Allele
 
 logger = logging.getLogger(__name__)
 
@@ -184,24 +179,10 @@ class QueryBuilderBase:
         return list(region_bins)
 
     @staticmethod
-    def build_roles_query(roles_query: str, attr: str) -> str:
-        """Construct a roles query."""
-        parsed = role_query.transform_query_string_to_tree(roles_query)
-        transformer = QueryTreeToSQLBitwiseTransformer(
-            attr, use_bit_and_function=False)
-        return cast(str, transformer.transform(parsed))
-
-    @staticmethod
     def check_roles_query_value(roles_query: str, value: int) -> bool:
         """Check if value satisfies a given roles query."""
-        with duckdb.connect(":memory:") as con:
-            query = QueryBuilderBase.build_roles_query(
-                roles_query, str(value))
-            res = con.execute(f"SELECT {query}").fetchall()
-            assert len(res) == 1
-            assert len(res[0]) == 1
-
-            return cast(bool, res[0][0])
+        matcher = transform_attribute_query_to_function(Role, roles_query)
+        return matcher(value)
 
     @staticmethod
     def build_inheritance_query(
@@ -222,14 +203,12 @@ class QueryBuilderBase:
         inheritance_query: Sequence[str], value: int,
     ) -> bool:
         """Check if value satisfies a given inheritance query."""
-        with duckdb.connect(":memory:") as con:
-            query = QueryBuilderBase.build_inheritance_query(
-                inheritance_query, str(value))
-            res = con.execute(f"SELECT {query}").fetchall()
-            assert len(res) == 1
-            assert len(res[0]) == 1
+        for query in inheritance_query:
+            matcher = transform_attribute_query_to_function(Inheritance, query)
+            if not matcher(value):
+                return False
 
-            return cast(bool, res[0][0])
+        return True
 
     @staticmethod
     def check_roles_denovo_only(roles_query: str) -> bool:
@@ -261,70 +240,34 @@ class QueryBuilderBase:
                 Inheritance.missing.value)
 
     @staticmethod
-    def build_sexes_query(sexes_query: str, attr: str) -> str:
-        """Build sexes query."""
-        parsed = sex_query.transform_query_string_to_tree(sexes_query)
-        transformer = QueryTreeToSQLBitwiseTransformer(
-            attr, use_bit_and_function=False)
-        return cast(str, transformer.transform(parsed))
-
-    @staticmethod
     def check_sexes_query_value(sexes_query: str, value: int) -> bool:
         """Check if value matches a given sexes query."""
-        with duckdb.connect(":memory:") as con:
-            query = QueryBuilderBase.build_sexes_query(
-                sexes_query, str(value))
-            res = con.execute(f"SELECT {query}").fetchall()
-            assert len(res) == 1
-            assert len(res[0]) == 1
-
-            return cast(bool, res[0][0])
-
-    @staticmethod
-    def build_statuses_query(statuses_query: str, attr: str) -> str:
-        """Build affected status query."""
-        parsed = affected_status_query.transform_query_string_to_tree(
-            statuses_query)
-        transformer = QueryTreeToSQLBitwiseTransformer(
-            attr, use_bit_and_function=False)
-        return cast(str, transformer.transform(parsed))
+        matcher = transform_attribute_query_to_function(Sex, sexes_query)
+        return matcher(value)
 
     @staticmethod
     def check_statuses_query_value(statuses_query: str, value: int) -> bool:
         """Check if value matches a given affected statuses query."""
-        with duckdb.connect(":memory:") as con:
-            query = QueryBuilderBase.build_statuses_query(
-                statuses_query, str(value))
-            res = con.execute(f"SELECT {query}").fetchall()
-            assert len(res) == 1
-            assert len(res[0]) == 1
-
-            return cast(bool, res[0][0])
+        matcher = transform_attribute_query_to_function(Status, statuses_query)
+        return matcher(value)
 
     @staticmethod
     def build_variant_types_query(
-        variant_types_query: str, attr: str,
-    ) -> str:
+        variant_types_query: str,
+    ) -> Expression:
         """Build a variant types query."""
-        parsed = VARIANT_TYPE_PARSER.transform_query_string_to_tree(
-            variant_types_query)
-        transformer = QueryTreeToSQLBitwiseTransformer(
-            attr, use_bit_and_function=False)
-        return cast(str, transformer.transform(parsed))
+        col = column("variant_type", table="sa")
+        return transform_attribute_query_to_sql_expression(
+            Allele.Type, variant_types_query, col, Allele.TYPE_DISPLAY_NAME)
 
     @staticmethod
     def check_variant_types_value(
         variant_types_query: str, value: int,
     ) -> bool:
         """Check if value satisfies a given variant types query."""
-        with duckdb.connect(":memory:") as con:
-            query = QueryBuilderBase.build_variant_types_query(
-                variant_types_query, str(value))
-            res = con.execute(f"SELECT {query}").fetchall()
-            assert len(res) == 1
-            assert len(res[0]) == 1
-
-            return cast(bool, res[0][0])
+        matcher = transform_attribute_query_to_function(
+            Allele.Type, variant_types_query, Allele.TYPE_DISPLAY_NAME)
+        return matcher(value)
 
     def calc_frequency_bins(
         self, *,
@@ -892,9 +835,7 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
             clause = self.ultra_rare()
             query = query.where(clause)
         if variant_type is not None:
-            query = query.where(
-                self.build_variant_types_query(
-                    variant_type, "sa.variant_type"))
+            query = query.where(self.build_variant_types_query(variant_type))
         if not return_reference and not return_unknown:
             query = query.where("sa.allele_index > 0")
 
@@ -927,15 +868,16 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
     def roles(
         roles_query: str,
         zygosity: int | None,
-    ) -> Condition:
+    ) -> Expression:
         """
         Construct a roles query condition.
 
         Can match for zygosity in roles with a precalculated mask.
         """
-        query = condition(
-            SqlQueryBuilder.build_roles_query(
-                roles_query, "fa.allele_in_roles"))
+        col = column("allele_in_roles", table="fa")
+        query = transform_attribute_query_to_sql_expression(
+            Role, roles_query, col,
+        )
         if zygosity is not None:
             query = query.and_(
                 parse_one(f"fa.zygosity_in_roles & {zygosity} = {zygosity}"),
@@ -946,15 +888,16 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
     def sexes(
         sexes_query: str,
         zygosity: int | None,
-    ) -> Condition:
+    ) -> Expression:
         """
         Construct a sexes query condition.
 
         Can match for zygosity in sexes with a precalculated mask.
         """
-        query = condition(
-            SqlQueryBuilder.build_sexes_query(
-                sexes_query, "fa.allele_in_sexes"))
+        col = column("allele_in_sexes", table="fa")
+        query = transform_attribute_query_to_sql_expression(
+            Sex, sexes_query, col, Sex.aliases(),
+        )
         if zygosity is not None:
             query = query.and_(
                 parse_one(f"fa.zygosity_in_sexes & {zygosity} != 0"),
@@ -962,25 +905,33 @@ class SqlQueryBuilder(QueryBuilderBase):  # pylint: disable=too-many-public-meth
         return query
 
     @staticmethod
-    def statuses(
-        statuses_query: str,
-    ) -> Condition:
-        return condition(
-            SqlQueryBuilder.build_statuses_query(
-                statuses_query, "fa.allele_in_statuses"))
+    def statuses(statuses_query: str) -> Expression:
+        col = column("allele_in_statuses", table="fa")
+
+        return transform_attribute_query_to_sql_expression(
+            Status, statuses_query, col)
 
     @staticmethod
     def inheritance(
         inheritance_query: str | Sequence[str],
-    ) -> Condition:
+    ) -> Expression:
         """Build inheritance filter."""
         if isinstance(inheritance_query, str):
-            return condition(
-                SqlQueryBuilder.build_inheritance_query(
-                    [inheritance_query], "fa.inheritance_in_members"))
-        return condition(
-            SqlQueryBuilder.build_inheritance_query(
-                inheritance_query, "fa.inheritance_in_members"))
+            inheritance_query = [inheritance_query]
+
+        col = column("inheritance_in_members", table="fa")
+        output = None
+        for query in inheritance_query:
+            current_expression = transform_attribute_query_to_sql_expression(
+                Inheritance, query, col)
+            if output is None:
+                output = current_expression
+            else:
+                output = output.and_(current_expression)
+
+        assert output is not None
+
+        return output
 
     @staticmethod
     def family_ids(
