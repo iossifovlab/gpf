@@ -159,7 +159,7 @@ def test_study_build_person_set_collection(
         (PSCQuery("phenotype", {"autism", "unaffected"}), 4),
     ],
 )
-def test_query_by_person_set_coolection(
+def test_query_by_person_set_collection(
     imported_study: GenotypeData,
     person_set_collection: PSCQuery | None,
     count: int,
