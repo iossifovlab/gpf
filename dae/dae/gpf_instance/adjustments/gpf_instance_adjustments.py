@@ -1,61 +1,25 @@
 from __future__ import annotations
 
-import abc
 import argparse
 import glob
 import logging
 import os
-import pathlib
 import sys
 from collections.abc import Iterable
-from types import TracebackType
 from typing import Any, cast
 
 import toml
 import yaml
 
+from dae.gpf_instance.adjustments.adjust_command import (
+    AdjustmentsCommand,
+)
+from dae.gpf_instance.adjustments.adjust_duckdb_storage import (
+    AdjustDuckDbStorageCommand,
+)
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("gpf_instance_adjustments")
-
-
-class AdjustmentsCommand(abc.ABC):
-    """Abstract class for adjusting an GPF instance config."""
-
-    def __init__(self, instance_dir: str) -> None:
-        self.instance_dir = instance_dir
-        self.filename = os.path.join(instance_dir, "gpf_instance.yaml")
-        if not os.path.exists(self.filename):
-            logger.error(
-                "%s is not a GPF instance; "
-                "gpf_instance.yaml (%s) not found",
-                instance_dir, self.filename)
-            raise ValueError(instance_dir)
-
-        with open(self.filename, "rt", encoding="utf8") as infile:
-            self.config = yaml.safe_load(infile.read())
-
-    @abc.abstractmethod
-    def execute(self) -> None:
-        """Execute adjustment command."""
-
-    def close(self) -> None:
-        """Save adjusted config."""
-        pathlib.Path(self.filename).write_text(
-            yaml.safe_dump(self.config, sort_keys=False),
-            encoding="utf8",
-        )
-
-    def __enter__(self) -> AdjustmentsCommand:
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> None:
-        self.close()
 
 
 class InstanceIdCommand(AdjustmentsCommand):
@@ -111,39 +75,6 @@ class AdjustImpalaStorageCommand(AdjustmentsCommand):
             storage["hdfs"]["host"] = self.hdfs_host
         if self.impala_hosts is not None:
             storage["impala"]["hosts"] = self.impala_hosts
-
-
-class AdjustDuckDbStorageCommand(AdjustmentsCommand):
-    """Adjusts impala storage."""
-
-    def __init__(
-        self, instance_dir: str, storage_id: str,
-        read_only: str,
-    ) -> None:
-        super().__init__(instance_dir)
-        self.storage_id = storage_id
-        self.read_only = bool(read_only)
-
-    def execute(self) -> None:
-        storages = self.config["genotype_storage"]["storages"]
-        storage = None
-        for current in storages:
-            if current["id"] == self.storage_id:
-                storage = current
-                break
-
-        if storage is None:
-            logger.error(
-                "unable to find storage (%s) in instance at %s",
-                self.storage_id, self.instance_dir)
-            raise ValueError(f"unable to find storage {self.storage_id}")
-
-        if storage.get("storage_type") not in {"duckdb", "duckdb2"}:
-            logger.error(
-                "storage %s is not DuckDb", self.storage_id)
-            raise ValueError(f"storage {self.storage_id} is not DuckDb")
-
-        storage["read_only"] = self.read_only
 
 
 class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
@@ -377,12 +308,7 @@ def cli(argv: list[str] | None = None) -> None:
 
     parser_duckdb_storage = subparsers.add_parser(
         "duckdb-storage", help="adjust the GPF instance DuckDb storage")
-    parser_duckdb_storage.add_argument(
-        "storage_id", type=str,
-        help="DuckDb storage ID")
-    parser_duckdb_storage.add_argument(
-        "--read-only", type=str, default="true",
-        help="DuckDb storage read only flag")
+    AdjustDuckDbStorageCommand.add_arguments(parser_duckdb_storage)
 
     parser_genotype_storage = subparsers.add_parser(
         "storage", help="change the GPF default genotype storage")
