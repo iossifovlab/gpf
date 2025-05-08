@@ -2,6 +2,8 @@ from collections.abc import Callable
 from enum import Enum
 
 from lark import Lark, Transformer, Tree
+from sqlglot import not_
+from sqlglot.expressions import BitwiseAnd, Column, Expression, Paren, and_, or_
 
 QUERY_GRAMMAR = """
 ?start: expr+
@@ -34,6 +36,7 @@ QUERY_PARSER = Lark(QUERY_GRAMMAR)
 
 
 class SyntaxSugarTransformer(Transformer):
+    """Transformer for adapting syntax sugar to regular queries."""
     def all(self, values):
         """Transform all into a sequence of and nodes."""
         list_node = values[0]
@@ -67,16 +70,15 @@ class AttributeQueryTransformerFunction(Transformer):
     def __init__(self, enum_type: type[Enum], aliases: dict[str, str]):
         super().__init__()
         self._enum_type = enum_type
-        self._values = {e.name: e.value for e in self._enum_type}
+        self._values = {e.name.lower(): e.value for e in self._enum_type}
         for value_name, alias in aliases.items():
-            self._values[alias] = self._values[value_name]
-        print(self._values)
+            self._values[alias.lower()] = self._values[value_name.lower()]
 
     def literal(self, values) -> Callable[[int], bool]:
         """Transform literals into a direct comparison function."""
         assert len(values) == 1
-        value = values[0].value
-        assert value in self._values
+        value = values[0].value.lower()
+        assert value in self._values, f"{value} not in {self._values.keys()}"
 
         def compare_literal(x: int) -> bool:
             return self._values[value] & x == self._values[value]
@@ -111,6 +113,52 @@ class AttributeQueryTransformerFunction(Transformer):
         return compare_neg
 
 
+class AttributeQueryTransformerSQL(Transformer):
+    """Class for transforming attribute queries into an SQLglot expression."""
+
+    def __init__(
+        self, column: Column, enum_type: type[Enum], aliases: dict[str, str],
+    ):
+        super().__init__()
+        self._column = column
+        self._enum_type = enum_type
+        self._values = {e.name.lower(): e.value for e in self._enum_type}
+        for value_name, alias in aliases.items():
+            self._values[alias.lower()] = self._values[value_name.lower()]
+
+    def literal(self, values) -> Expression:
+        """Transform literals into a direct comparison function."""
+        assert len(values) == 1
+        value_name = values[0].value.lower()
+        assert value_name in self._values, \
+            f"{value_name} not in {self._values.keys()}"
+
+        return BitwiseAnd(
+            this=self._column,
+            expression=str(self._values[value_name]),
+        ).neq(0)
+
+    def and_(self, values) -> Expression:
+        assert len(values) == 2
+
+        return and_(*values)
+
+    def or_(self, values) -> Expression:
+        assert len(values) == 2
+
+        return or_(*values)
+
+    def grouping(self, values) -> Expression:
+        assert len(values) == 1
+
+        return Paren(this=values[0])
+
+    def neg(self, values) -> Expression:
+        assert len(values) == 1
+
+        return not_(values[0])
+
+
 Matcher = Callable[[int], bool]
 
 
@@ -124,6 +172,8 @@ def transform_attribute_query_to_function(
 
     Can evaluate a query for multiple enum types.
     Queries need to use proper enum names in order to be valid.
+    A dictionary of aliases can be provided,
+    where the keys are the original values.
     """
     if aliases is None:
         aliases = {}
@@ -132,7 +182,31 @@ def transform_attribute_query_to_function(
     syntax_sugar_transformer = SyntaxSugarTransformer()
     transformer = AttributeQueryTransformerFunction(enum_type, aliases)
     tree = syntax_sugar_transformer.transform(tree)
-    print(tree)
+    return transformer.transform(tree)
+
+
+def transform_attribute_query_to_sql_expression(
+    enum_type: type[Enum],
+    query: str,
+    column: Column,
+    aliases: dict[str, str] | None = None,
+) -> Expression:
+    """
+    Transform attribute query to an SQLglot expression.
+
+    Can evaluate a query for multiple enum types.
+    Queries need to use proper enum names in order to be valid.
+    A dictionary of aliases can be provided,
+    where the keys are the original values.
+    """
+    if aliases is None:
+        aliases = {}
+
+    tree = QUERY_PARSER.parse(query)
+    syntax_sugar_transformer = SyntaxSugarTransformer()
+    transformer = AttributeQueryTransformerSQL(column, enum_type, aliases)
+
+    tree = syntax_sugar_transformer.transform(tree)
     return transformer.transform(tree)
 
 
