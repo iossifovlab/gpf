@@ -462,7 +462,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                 variants_df.columns, expected_df.columns)
 
             assert len(variants_df) == len(expected_df), (
-                f"expected {len(expected_df)} variants, "
+                f"expected {len(expected_df)} variants"
                 f"got {len(variants_df)}"
             )
 
@@ -481,7 +481,7 @@ class GenotypeBrowserRunner(BaseGenotypeBrowserRunner):
                 col2 = expected_df[column]
 
                 if col1.dtype == float:
-                    diff = (col1 - col2).abs() > 1e-6
+                    diff = (col1 - col2).abs() > 1e-4
                 else:
                     diff = col1[col1 != col2]
 

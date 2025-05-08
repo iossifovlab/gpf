@@ -1,58 +1,25 @@
 from __future__ import annotations
 
-import abc
 import argparse
 import glob
 import logging
 import os
 import sys
 from collections.abc import Iterable
-from types import TracebackType
 from typing import Any, cast
 
 import toml
 import yaml
 
+from dae.gpf_instance.adjustments.adjust_command import (
+    AdjustmentsCommand,
+)
+from dae.gpf_instance.adjustments.adjust_duckdb_storage import (
+    AdjustDuckDbStorageCommand,
+)
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("gpf_instance_adjustments")
-
-
-class AdjustmentsCommand(abc.ABC):
-    """Abstract class for adjusting an GPF instance config."""
-
-    def __init__(self, instance_dir: str) -> None:
-        self.instance_dir = instance_dir
-        self.filename = os.path.join(instance_dir, "gpf_instance.yaml")
-        if not os.path.exists(self.filename):
-            logger.error(
-                "%s is not a GPF instance; "
-                "gpf_instance.yaml (%s) not found",
-                instance_dir, self.filename)
-            raise ValueError(instance_dir)
-
-        with open(self.filename, "rt", encoding="utf8") as infile:
-            self.config = yaml.safe_load(infile.read())
-
-    @abc.abstractmethod
-    def execute(self) -> None:
-        """Execute adjustment command."""
-
-    def close(self) -> None:
-        """Save adjusted config."""
-        with open(self.filename, "w", encoding="utf8") as outfile:
-            outfile.write(yaml.safe_dump(self.config, sort_keys=False))
-
-    def __enter__(self) -> AdjustmentsCommand:
-        return self
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> None:
-        self.close()
 
 
 class InstanceIdCommand(AdjustmentsCommand):
@@ -63,8 +30,7 @@ class InstanceIdCommand(AdjustmentsCommand):
         self.instance_id = instance_id
 
     def execute(self) -> None:
-        variables = self.config["vars"]
-        variables["instance_id"] = self.instance_id
+        self.config["instance_id"] = self.instance_id
         logger.info(
             "replacing instance id with %s", self.instance_id)
 
@@ -73,7 +39,8 @@ class AdjustImpalaStorageCommand(AdjustmentsCommand):
     """Adjusts impala storage."""
 
     def __init__(
-        self, instance_dir: str, storage_id: str, read_only: bool,
+        self, instance_dir: str, storage_id: str, *,
+        read_only: bool,
         hdfs_host: str, impala_hosts: list[str],
     ) -> None:
         super().__init__(instance_dir)
@@ -109,39 +76,6 @@ class AdjustImpalaStorageCommand(AdjustmentsCommand):
             storage["impala"]["hosts"] = self.impala_hosts
 
 
-class AdjustDuckDbStorageCommand(AdjustmentsCommand):
-    """Adjusts impala storage."""
-
-    def __init__(
-        self, instance_dir: str, storage_id: str,
-        read_only: str,
-    ) -> None:
-        super().__init__(instance_dir)
-        self.storage_id = storage_id
-        self.read_only = bool(read_only)
-
-    def execute(self) -> None:
-        storages = self.config["genotype_storage"]["storages"]
-        storage = None
-        for current in storages:
-            if current["id"] == self.storage_id:
-                storage = current
-                break
-
-        if storage is None:
-            logger.error(
-                "unable to find storage (%s) in instance at %s",
-                self.storage_id, self.instance_dir)
-            raise ValueError(f"unable to find storage {self.storage_id}")
-
-        if storage.get("storage_type") not in set(["duckdb", "duckdb2"]):
-            logger.error(
-                "storage %s is not DuckDb", self.storage_id)
-            raise ValueError(f"storage {self.storage_id} is not DuckDb")
-
-        storage["read_only"] = self.read_only
-
-
 class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
     """Command to adjust study configs."""
 
@@ -151,7 +85,8 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
             pattern = os.path.join(study_configs_dir, "**/*.conf")
         elif config_format == "yaml":
             pattern = os.path.join(study_configs_dir, "**/*.yaml")
-
+        else:
+            raise ValueError(f"unknown config format {config_format}")
         config_filenames = glob.glob(pattern, recursive=True)
 
         for config_filename in config_filenames:
@@ -161,6 +96,8 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
                     study_config = toml.loads(infile.read())
                 elif config_format == "yaml":
                     study_config = yaml.safe_load(infile.read())
+                else:
+                    raise ValueError(f"unknown config format {config_format}")
 
             study_id = study_config["id"]
 
@@ -180,6 +117,9 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
             pattern = os.path.join(study_configs_dir, "**/*.conf")
         elif config_format == "yaml":
             pattern = os.path.join(study_configs_dir, "**/*.yaml")
+        else:
+            raise ValueError(f"unknown config format {config_format}")
+
         config_filenames = glob.glob(pattern, recursive=True)
 
         for config_filename in config_filenames:
@@ -189,6 +129,8 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
                     dataset_config = toml.loads(infile.read())
                 elif config_format == "yaml":
                     dataset_config = yaml.safe_load(infile.read())
+                else:
+                    raise ValueError(f"unknown config format {config_format}")
 
             dataset_id = dataset_config["id"]
             result_config = self.adjust_dataset(
@@ -224,7 +166,7 @@ class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
         genotype_storage_config = self.config["genotype_storage"]
         default_storage = genotype_storage_config["default"]
         storages = genotype_storage_config["storages"]
-        storage_ids = set(map(lambda s: s["id"], storages))
+        storage_ids = set(storages.keys())
 
         if default_storage not in storage_ids:
             logger.error(
@@ -263,7 +205,7 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
 
     def __init__(
         self, instance_dir: str,
-        study_ids: Iterable[str],
+        study_ids: Iterable[str], *,
         enabled: bool = False,
     ) -> None:
         super().__init__(instance_dir)
@@ -365,12 +307,7 @@ def cli(argv: list[str] | None = None) -> None:
 
     parser_duckdb_storage = subparsers.add_parser(
         "duckdb-storage", help="adjust the GPF instance DuckDb storage")
-    parser_duckdb_storage.add_argument(
-        "storage_id", type=str,
-        help="DuckDb storage ID")
-    parser_duckdb_storage.add_argument(
-        "--read-only", type=str, default="true",
-        help="DuckDb storage read only flag")
+    AdjustDuckDbStorageCommand.add_arguments(parser_duckdb_storage)
 
     parser_genotype_storage = subparsers.add_parser(
         "storage", help="change the GPF default genotype storage")
@@ -408,8 +345,10 @@ def cli(argv: list[str] | None = None) -> None:
     elif args.command == "impala-storage":
         read_only = args.read_only.lower() != "false"
         with AdjustImpalaStorageCommand(
-                instance_dir, args.storage_id, read_only,
-                args.hdfs_host, args.impala_hosts) as cmd:
+                instance_dir, args.storage_id,
+                read_only=read_only,
+                hdfs_host=args.hdfs_host,
+                impala_hosts=args.impala_hosts) as cmd:
             cmd.execute()
 
     elif args.command == "storage":
@@ -418,7 +357,7 @@ def cli(argv: list[str] | None = None) -> None:
 
     elif args.command == "duckdb-storage":
         with AdjustDuckDbStorageCommand(
-                instance_dir, args.storage_id, args.read_only) as cmd:
+                instance_dir, **vars(args)) as cmd:
             cmd.execute()
 
     elif args.command == "disable-studies":
