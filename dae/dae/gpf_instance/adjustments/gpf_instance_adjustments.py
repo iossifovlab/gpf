@@ -358,7 +358,7 @@ def cli(argv: list[str] | None = None) -> None:
 
     elif args.command == "duckdb-storage":
         with AdjustDuckDbStorageCommand(
-                instance_dir, args.storage_id, args.read_only) as cmd:
+                instance_dir, **vars(args)) as cmd:
             cmd.execute()
 
     elif args.command == "disable-studies":

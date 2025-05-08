@@ -1,6 +1,6 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import textwrap
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 
@@ -17,7 +17,7 @@ from dae.testing import (
 )
 
 
-@pytest.fixture()
+@pytest.fixture
 def gpf_fixture(
     fixture_dirname: Callable, tmp_path_factory: pytest.TempPathFactory,
 ) -> Callable:
