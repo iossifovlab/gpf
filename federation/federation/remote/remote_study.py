@@ -41,11 +41,6 @@ class RemoteGenotypeData(GenotypeDataStudy):
         if config["gene_browser"]:
             config["gene_browser"]["enabled"] = False
 
-        remote_common_report = rest_client.get_common_report(
-            self.remote_study_id, full=True)
-
-        self.common_report = CommonReport(remote_common_report)
-
         if config["parents"]:
             config["parents"] = list(
                 map(
@@ -60,13 +55,21 @@ class RemoteGenotypeData(GenotypeDataStudy):
 
         self.config = config
 
-        self.is_remote = True
-
         self._families: FamiliesData
         self.build_families()
-        self._description = ""
 
         super().__init__(FrozenBox(config), [self])
+
+        remote_common_report = rest_client.get_common_report(
+            self.remote_study_id, full=True)
+
+        if "id" not in remote_common_report:
+            self.common_report = None
+        else:
+            self.common_report = CommonReport(remote_common_report)
+
+        self.is_remote = True
+        self._description = ""
 
     def build_families(self) -> None:
         """Construct remote genotype data families."""

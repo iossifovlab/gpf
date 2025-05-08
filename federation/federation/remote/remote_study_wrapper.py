@@ -73,7 +73,7 @@ class RemoteStudyWrapper(StudyWrapperBase):
         sources: list[dict[str, Any]],
         *,
         max_variants_count: int = 10000,
-        _max_variants_message: bool = False,
+        max_variants_message: bool = False,  # noqa: ARG002
     ) -> Generator[list, None, None]:
         study_filters = kwargs.get("study_filters")
         person_set_collection_id = \
