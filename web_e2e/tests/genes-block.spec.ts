@@ -214,6 +214,10 @@ test.describe('Genes sybmols tests', () => {
     await page.goto(shareLinkUrl, {waitUntil: 'load'});
 
     await expect(page.locator('gpf-gene-symbols').getByRole('textbox')).toContainText('CHD8');
+    await expect(page.locator('gpf-gene-symbols gpf-errors-alert')).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
+
+    await page.waitForTimeout(5000); // fixes page stucking in infinite load, needs further investigating
     await page.getByRole('button', {name: 'Table Preview'}).click();
     await expect(page.locator('#variants-count-span')).toHaveText('6 variants selected', { timeout: 180000 });
   });
