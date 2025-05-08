@@ -5,6 +5,7 @@ import argparse
 import glob
 import logging
 import os
+import pathlib
 import sys
 from collections.abc import Iterable
 from types import TracebackType
@@ -40,8 +41,10 @@ class AdjustmentsCommand(abc.ABC):
 
     def close(self) -> None:
         """Save adjusted config."""
-        with open(self.filename, "w", encoding="utf8") as outfile:
-            outfile.write(yaml.safe_dump(self.config, sort_keys=False))
+        pathlib.Path(self.filename).write_text(
+            yaml.safe_dump(self.config, sort_keys=False),
+            encoding="utf8",
+        )
 
     def __enter__(self) -> AdjustmentsCommand:
         return self
@@ -73,7 +76,8 @@ class AdjustImpalaStorageCommand(AdjustmentsCommand):
     """Adjusts impala storage."""
 
     def __init__(
-        self, instance_dir: str, storage_id: str, read_only: bool,
+        self, instance_dir: str, storage_id: str, *,
+        read_only: bool,
         hdfs_host: str, impala_hosts: list[str],
     ) -> None:
         super().__init__(instance_dir)
@@ -134,7 +138,7 @@ class AdjustDuckDbStorageCommand(AdjustmentsCommand):
                 self.storage_id, self.instance_dir)
             raise ValueError(f"unable to find storage {self.storage_id}")
 
-        if storage.get("storage_type") not in set(["duckdb", "duckdb2"]):
+        if storage.get("storage_type") not in {"duckdb", "duckdb2"}:
             logger.error(
                 "storage %s is not DuckDb", self.storage_id)
             raise ValueError(f"storage {self.storage_id} is not DuckDb")
@@ -151,7 +155,8 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
             pattern = os.path.join(study_configs_dir, "**/*.conf")
         elif config_format == "yaml":
             pattern = os.path.join(study_configs_dir, "**/*.yaml")
-
+        else:
+            raise ValueError(f"unknown config format {config_format}")
         config_filenames = glob.glob(pattern, recursive=True)
 
         for config_filename in config_filenames:
@@ -161,6 +166,8 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
                     study_config = toml.loads(infile.read())
                 elif config_format == "yaml":
                     study_config = yaml.safe_load(infile.read())
+                else:
+                    raise ValueError(f"unknown config format {config_format}")
 
             study_id = study_config["id"]
 
@@ -180,6 +187,9 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
             pattern = os.path.join(study_configs_dir, "**/*.conf")
         elif config_format == "yaml":
             pattern = os.path.join(study_configs_dir, "**/*.yaml")
+        else:
+            raise ValueError(f"unknown config format {config_format}")
+
         config_filenames = glob.glob(pattern, recursive=True)
 
         for config_filename in config_filenames:
@@ -189,6 +199,8 @@ class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
                     dataset_config = toml.loads(infile.read())
                 elif config_format == "yaml":
                     dataset_config = yaml.safe_load(infile.read())
+                else:
+                    raise ValueError(f"unknown config format {config_format}")
 
             dataset_id = dataset_config["id"]
             result_config = self.adjust_dataset(
@@ -224,7 +236,7 @@ class DefaultGenotypeStorage(StudyConfigsAdjustmentCommand):
         genotype_storage_config = self.config["genotype_storage"]
         default_storage = genotype_storage_config["default"]
         storages = genotype_storage_config["storages"]
-        storage_ids = set(map(lambda s: s["id"], storages))
+        storage_ids = set(storages.keys())
 
         if default_storage not in storage_ids:
             logger.error(
@@ -263,7 +275,7 @@ class EnableDisableStudies(StudyConfigsAdjustmentCommand):
 
     def __init__(
         self, instance_dir: str,
-        study_ids: Iterable[str],
+        study_ids: Iterable[str], *,
         enabled: bool = False,
     ) -> None:
         super().__init__(instance_dir)
@@ -408,8 +420,10 @@ def cli(argv: list[str] | None = None) -> None:
     elif args.command == "impala-storage":
         read_only = args.read_only.lower() != "false"
         with AdjustImpalaStorageCommand(
-                instance_dir, args.storage_id, read_only,
-                args.hdfs_host, args.impala_hosts) as cmd:
+                instance_dir, args.storage_id,
+                read_only=read_only,
+                hdfs_host=args.hdfs_host,
+                impala_hosts=[args.impala_hosts]) as cmd:
             cmd.execute()
 
     elif args.command == "storage":
