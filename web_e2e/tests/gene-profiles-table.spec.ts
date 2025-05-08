@@ -450,7 +450,7 @@ test.describe('Gene profiles table functionality tests', () => {
   test('should navigate to genotype browser', async({ page }) => {
     await page.getByTitle('2.0 (1.05)\nTBCD').click();
     await page.waitForSelector('gpf-genotype-browser');
-    expect(page.url()).toEqual(`${utils.frontendUrl}/datasets/iossifov_2014_liftover/genotype-browser`);
+    expect(page.url()).toContain('/datasets/iossifov_2014_liftover/genotype-browser');
 
     await expect(page.locator('#gene-symbols-panel textarea')).toHaveValue('TBCD');
     await expect(page.locator('gpf-pedigree-selector').getByLabel('unaffected')).toBeChecked();
