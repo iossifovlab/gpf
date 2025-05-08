@@ -850,7 +850,7 @@ class PersonSetCollection:
         }
         result_queries = {}
         for field, values in result.items():
-            temp = f"any({','.join(sorted(values))})"
+            temp = f"any([{','.join(sorted(values))}])"
             if field not in default_queries:
                 result_queries[field] = temp
             else:
