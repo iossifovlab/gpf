@@ -13,7 +13,7 @@ from dae.gpf_instance.adjustments.gpf_instance_adjustments import (
 def gpf_instance_config(tmp_path: pathlib.Path) -> pathlib.Path:
     """Fixture for GPF instance config."""
     config = {
-        "id": "test_gpf_instance_fixture",
+        "instance_id": "test_gpf_instance_fixture",
         "reference_genome": {
             "resource_id": "hg38/genomes/GRCh38-hg38",
         },

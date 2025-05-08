@@ -8,6 +8,9 @@ from types import TracebackType
 
 import yaml
 
+from dae.configuration.gpf_config_parser import GPFConfigParser
+from dae.configuration.schemas.dae_conf import dae_conf_schema
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,7 +28,9 @@ class AdjustmentsCommand(abc.ABC):
             raise ValueError(instance_dir)
 
         with open(self.filename, "rt", encoding="utf8") as infile:
-            self.config = yaml.safe_load(infile.read())
+            self.raw_config = yaml.safe_load(infile.read())
+        self.config = GPFConfigParser.load_config(
+            str(self.filename), dae_conf_schema)
 
     @abc.abstractmethod
     def execute(self) -> None:
@@ -34,7 +39,7 @@ class AdjustmentsCommand(abc.ABC):
     def close(self) -> None:
         """Save adjusted config."""
         pathlib.Path(self.filename).write_text(
-            yaml.safe_dump(self.config, sort_keys=False),
+            yaml.safe_dump(self.config.to_dict(), sort_keys=False),
             encoding="utf8",
         )
 

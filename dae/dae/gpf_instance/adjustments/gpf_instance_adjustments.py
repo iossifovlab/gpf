@@ -30,8 +30,7 @@ class InstanceIdCommand(AdjustmentsCommand):
         self.instance_id = instance_id
 
     def execute(self) -> None:
-        variables = self.config["vars"]
-        variables["instance_id"] = self.instance_id
+        self.config["instance_id"] = self.instance_id
         logger.info(
             "replacing instance id with %s", self.instance_id)
 

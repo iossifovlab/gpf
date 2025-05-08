@@ -58,7 +58,7 @@ class GPFConfigValidator(Validator):
             return
 
         field_path = constraint.split(".")
-        current_parent = self.root_document
+        current_parent = self.root_document  # type: ignore
         failed_to_find = False
         for field_name in field_path:
             next_field = current_parent.get(field_name, None)
@@ -68,10 +68,11 @@ class GPFConfigValidator(Validator):
             current_parent = next_field
 
         if failed_to_find:
-            self._error(field, f"Depends on {constraint}, which is missing!")
+            self._error(  # type: ignore
+                field, f"Depends on {constraint}, which is missing!")
 
     def _normalize_coerce_abspath(self, value: str) -> str:
-        directory = self._config["conf_dir"]
+        directory = self._config["conf_dir"]  # type: ignore
         if directory is None:
             return value
         if not os.path.isabs(value):
@@ -111,7 +112,7 @@ class GPFConfigParser:
     @classmethod
     def _get_file_contents(cls, filename: str | os.PathLike) -> str:
         with fsspec.open(filename, "r") as infile:
-            return cast(str, infile.read())
+            return cast(str, infile.read())  # type: ignore
 
     @staticmethod
     def parse_and_interpolate(
@@ -119,7 +120,8 @@ class GPFConfigParser:
             conf_dir: str | None = None) -> dict:
         """Parse text content and perform variable interpolation on result."""
         parsed_content = parser(content) or {}
-        interpol_vars = parsed_content.get("vars", {})
+        interpol_vars = parsed_content.get("vars") or {}
+        assert interpol_vars is not None
 
         env_vars = {f"${key}": val for key, val in os.environ.items()}
         interpol_vars = {
@@ -189,14 +191,15 @@ class GPFConfigParser:
         schema_copy = deepcopy(schema)
 
         validator = GPFConfigValidator(
-            schema_copy, conf_dir=conf_dir,
+            schema_copy, conf_dir=conf_dir,  # type: ignore
         )
-        if not validator.validate(config):
+        if not validator.validate(config):  # type: ignore
             if conf_dir:
-                raise ValueError(f"{conf_dir}: {validator.errors}")
+                raise ValueError(
+                    f"{conf_dir}: {validator.errors}")  # type: ignore
 
-            raise ValueError(f"{validator.errors}")
-        return cast(dict, validator.document)
+            raise ValueError(f"{validator.errors}")  # type: ignore
+        return cast(dict, validator.document)  # type: ignore
 
     @staticmethod
     def process_config_raw(
