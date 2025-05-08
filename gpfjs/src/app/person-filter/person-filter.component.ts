@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { resetErrors, setErrors } from 'app/common/errors.state';
 import { MeasureHistogram } from 'app/measures/measures';
@@ -13,7 +13,7 @@ import { ReplaySubject } from 'rxjs';
   templateUrl: './person-filter.component.html',
   styleUrl: './person-filter.component.css'
 })
-export class PersonFilterComponent implements OnInit {
+export class PersonFilterComponent implements OnInit, OnDestroy {
   @Input() public selectedMeasure: MeasureHistogram;
   @Input() public initialState: MeasureHistogramState;
   @Input() public isFamilyFilters: boolean;
@@ -50,6 +50,13 @@ export class PersonFilterComponent implements OnInit {
     }
   }
 
+  public ngOnDestroy(): void {
+    let component = 'personFilters';
+    if (this.isFamilyFilters) {
+      component = 'familyFilters';
+    }
+    this.store.dispatch(resetErrors({componentId: component + `: ${this.selectedMeasure.measure}`}));
+  }
 
   public updateRangeStart(range): void {
     this.localState.rangeStart = range as number;
