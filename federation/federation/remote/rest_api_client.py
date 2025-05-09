@@ -6,6 +6,8 @@ import ijson
 import requests
 
 from dae.pheno.common import MeasureType
+from rest_client.rest_client import GPFConfidentialClient
+from rest_client.rest_client import RESTClient as GPFRESTClient
 
 logger = logging.getLogger(__name__)
 
@@ -24,14 +26,20 @@ class RESTClient:
     DEFAULT_TIMEOUT = 300_000
 
     def __init__(
-            self, remote_id: str, host: str, credentials: str,
-            base_url: str | None = None,
-            port: int | None = None,
-            protocol: str | None = None,
-            gpf_prefix: str | None = None):
+        self,
+        remote_id: str,
+        host: str,
+        client_id: str,
+        client_secret: str,
+        base_url: str | None = None,
+        port: int | None = None,
+        protocol: str | None = None,
+        gpf_prefix: str | None = None,
+    ):
         self.host = host
         self.remote_id = remote_id
-        self.credentials = credentials
+        self.client_id = client_id
+        self.client_secret = client_secret
         self.token = None
         if base_url:
             if not base_url.endswith("/"):
@@ -46,24 +54,19 @@ class RESTClient:
         self.protocol = protocol or "http"
         self.gpf_prefix = gpf_prefix or None
 
+        prefix = f"/{self.gpf_prefix}" if self.gpf_prefix else ""
+        self.session = GPFConfidentialClient(
+            f"{self.build_host_url()}{prefix}",
+            client_id,
+            client_secret,
+            "",
+        )
+        self.gpf_rest_client = GPFRESTClient(self.session)
         self._refresh_token()
 
     def _refresh_token(self) -> None:
-        prefix = f"/{self.gpf_prefix}" if self.gpf_prefix else ""
-        token_url = f"{self.build_host_url()}{prefix}/o/token/"
-        response = requests.post(
-            token_url,
-            headers={"Authorization": f"Basic {self.credentials}",
-                     "Cache-Control": "no-cache",
-                     "Content-Type": "application/x-www-form-urlencoded"},
-            data={"grant_type": "client_credentials"},
-            timeout=self.DEFAULT_TIMEOUT,
-        )
-        if response.status_code != 200:
-            raise RESTClientRequestError(
-                f"Failed to obtain token from {self.remote_id}",
-            )
-        self.token = response.json()["access_token"]
+        self.session.refresh_token()
+        self.token = self.session.token
 
     def build_host_url(self) -> str:
         if self.port:
