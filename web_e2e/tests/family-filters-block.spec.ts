@@ -422,14 +422,17 @@ test.describe('Pheno Measures tests', () => {
     await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
     await page.locator('.measures-dropdown').getByText('instrument_2.measure_6').click();
 
-    await page.locator('gpf-person-filter').nth(0).getByPlaceholder('start').clear();
-    await page.locator('gpf-person-filter').nth(0).getByPlaceholder('start').fill('-100');
+    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_6' })
+      .getByPlaceholder('start').clear();
+    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_6' })
+      .getByPlaceholder('start').fill('-100');
     await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
 
-    await page.locator('#remove-button').nth(0).click();
+    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_6' })
+      .locator('#remove-button').click();
 
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
     await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
