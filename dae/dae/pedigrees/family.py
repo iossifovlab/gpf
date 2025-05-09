@@ -134,6 +134,7 @@ class Person:
             key: value
             for key, value in attributes.items()
             if key not in ALL_FAMILY_TAG_LABELS
+               and key != "tag_family_type_full"
         }
         self._tags: set[FamilyTag] = set()
         for tag, tag_value in tags.items():
@@ -213,6 +214,7 @@ class Person:
 
     def to_json(self) -> dict[str, Any]:
         return {
+            **self._attributes,
             "family_id": self.family_id,
             "person_id": self.person_id,
             "dad_id": self.dad_id,
