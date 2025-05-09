@@ -439,6 +439,52 @@ class PhenoBrowser:
             rows = cursor.execute(query_str).fetchall()
             return int(rows[0][0]) if rows else 0
 
+    def save_instrument_descriptions(
+        self,
+        descriptions: dict[str, str],
+    ) -> None:
+        """Save instrument descriptions."""
+        variable_browser_table = self.variable_browser
+        with self.connection.cursor() as cursor:
+            descriptions_case = "".join(
+                f"WHEN '{instrument_name}' THEN '{description}' "
+                for instrument_name, description in descriptions.items()
+            )
+            instrument_names = ",".join(
+                f"'{key}'" for key in descriptions
+            )
+            query = (
+                f"UPDATE {variable_browser_table.alias_or_name} "  # noqa: S608
+                "SET instrument_description = "
+                f"CASE instrument_name {descriptions_case}"
+                f"ELSE NULL END WHERE instrument_name IN ({instrument_names})"
+            )
+            cursor.execute(query)
+
+    def save_measure_descriptions(
+        self,
+        descriptions: dict[str, str],
+    ) -> None:
+        """Save instrument descriptions."""
+        variable_browser_table = self.variable_browser
+        with self.connection.cursor() as cursor:
+            def replace_quotes(x):
+                return x.replace("'", "''")
+            descriptions_case = "".join(
+                f"WHEN '{measure_id}' THEN '{replace_quotes(description)}' "
+                for measure_id, description in descriptions.items()
+            )
+            measure_ids = ",".join(
+                f"'{key}'" for key in descriptions
+            )
+            query = (
+                f"UPDATE {variable_browser_table.alias_or_name} "  # noqa: S608
+                "SET description = "
+                f"CASE measure_id {descriptions_case}"
+                f"ELSE NULL END WHERE measure_id IN ({measure_ids})"
+            )
+            cursor.execute(query)
+
     @property
     def regression_ids(self) -> list[str]:
         query = to_duckdb_transpile(select(
