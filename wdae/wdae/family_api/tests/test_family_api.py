@@ -175,6 +175,7 @@ def test_member_details_view(
         "sex": str(Sex.female),
         "role": str(Role.sib),
         "status": str(Status.unaffected),
+        "phenotype": "unaffected",
         "layout": ANY,  # FIXME temporary handle field variying between two values
         "generated": False,
         "family_bin": None,
@@ -211,6 +212,7 @@ def test_full_family_details_view(
         "sex": str(Sex.female),
         "role": str(Role.mom),
         "status": str(Status.unaffected),
+        "phenotype": "unaffected",
         "generated": False,
         "layout": ANY,  # FIXME temporary handle field variying between two values
         "family_bin": None,
@@ -227,6 +229,7 @@ def test_full_family_details_view(
         "sex": str(Sex.male),
         "role": str(Role.dad),
         "status": str(Status.unaffected),
+        "phenotype": "unaffected",
         "layout": ANY,  # FIXME temporary handle field variying between two values
         "generated": False,
         "family_bin": None,
@@ -243,6 +246,7 @@ def test_full_family_details_view(
         "sex": str(Sex.female),
         "role": str(Role.prb),
         "status": str(Status.affected),
+        "phenotype": "autism",
         "layout": ANY,  # FIXME temporary handle field variying between two values
         "generated": False,
         "family_bin": None,
@@ -259,6 +263,7 @@ def test_full_family_details_view(
         "sex": str(Sex.male),
         "role": str(Role.sib),
         "status": str(Status.unaffected),
+        "phenotype": "unaffected",
         "layout": ANY,  # FIXME temporary handle field variying between two values
         "generated": False,
         "family_bin": None,
@@ -296,6 +301,7 @@ def test_full_study_families_view(
         "sex": str(Sex.female),
         "role": str(Role.prb),
         "status": str(Status.affected),
+        "phenotype": "autism",
         "layout": ANY,  # FIXME temporary handle field variying between two values
         "generated": False,
         "family_bin": None,

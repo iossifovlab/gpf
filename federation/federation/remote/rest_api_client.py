@@ -281,16 +281,8 @@ class RESTClient:
 
         return response.json()
 
-    def get_all_family_details(self, dataset_id: str) -> Any:
-        """Get all families details of a dataset."""
-        response = self._get(
-            f"families/{dataset_id}/all",
-        )
-
-        if response.status_code != 200:
-            return None
-
-        return response.json()
+    def get_all_family_details(self, dataset_id: str) -> list[dict]:
+        return self.gpf_rest_client.get_families(dataset_id)
 
     def get_person_set_collection_configs(self, dataset_id: str) -> Any:
         """Get person set collection configuration for a dataset."""
