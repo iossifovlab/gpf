@@ -61,7 +61,7 @@ def test_gpf_instance_adjust_impala_storage(
         "genotype_impala",
         "--hdfs-host", "localhost",
         "--impala-hosts", "localhost",
-        "--read-only", "false",
+        "--no-read-only",
     ])
 
     with open(gpf_instance_config, "r") as f:

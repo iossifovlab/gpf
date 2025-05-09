@@ -296,8 +296,10 @@ def cli(argv: list[str] | None = None) -> None:
         "storage_id", type=str,
         help="impala storage ID")
     parser_impala_storage.add_argument(
-        "--read-only", type=str, default="true",
-        help="read-only flag for impala storage")
+        "--read-only",
+        action=argparse.BooleanOptionalAction,
+        help="read-only flag for impala storage",
+    )
     parser_impala_storage.add_argument(
         "--impala-hosts", type=str, nargs="+",
         help="list of impala hosts")
@@ -343,7 +345,7 @@ def cli(argv: list[str] | None = None) -> None:
             cmd.execute()
 
     elif args.command == "impala-storage":
-        read_only = args.read_only.lower() != "false"
+        read_only = args.read_only
         with AdjustImpalaStorageCommand(
                 instance_dir, args.storage_id,
                 read_only=read_only,

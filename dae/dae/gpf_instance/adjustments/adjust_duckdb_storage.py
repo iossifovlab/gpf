@@ -80,7 +80,7 @@ class AdjustDuckDbStorageCommand(AdjustmentsCommand):
         )
         parser.add_argument(
             "--read-only",
-            action="store_true",
+            action=argparse.BooleanOptionalAction,
             help="Set read only mode",
         )
         parser.add_argument(

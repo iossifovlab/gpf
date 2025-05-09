@@ -73,6 +73,7 @@ def test_gpf_instance_adjust_duckdb(
         "--storage-id", "duckdb",
         "--base-dir", "/aaa/duckdb_storage",
         "--db", "aaaaa.db",
+        "--no-read-only",
     ])
 
     with open(gpf_instance_config, "r") as f:
@@ -81,3 +82,4 @@ def test_gpf_instance_adjust_duckdb(
 
     assert storages[0]["base_dir"] == "/aaa/duckdb_storage"
     assert storages[0]["db"] == "aaaaa.db"
+    assert not storages[0]["read_only"]
