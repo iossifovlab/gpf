@@ -5,6 +5,8 @@ from typing import Any, cast
 import ijson
 import requests
 
+from dae.pheno.common import MeasureType
+
 logger = logging.getLogger(__name__)
 
 
@@ -456,15 +458,18 @@ class RESTClient:
     def get_measures(
         self, dataset_id: str,
         instrument_name: str | None,
-        measure_type: str | None,
+        measure_type: MeasureType | None,
     ) -> Any:
         """Get measures for a dataset."""
+
         response = self._get(
             "pheno_tool/measures",
             query_values={
                 "datasetId": dataset_id,
                 "instrument": instrument_name,
-                "measureType": measure_type,
+                "measureType": measure_type.name
+                               if measure_type is not None
+                               else None,
             },
         )
 

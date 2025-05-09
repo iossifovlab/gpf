@@ -5,6 +5,7 @@ from typing import Any, cast
 
 import pandas as pd
 
+from dae.pheno.common import MeasureType
 from dae.pheno.pheno_data import Instrument, Measure, PhenotypeStudy
 from dae.variants.attributes import Role
 from federation.remote.rest_api_client import RESTClient
@@ -63,7 +64,7 @@ class RemotePhenotypeData(PhenotypeStudy):
             self.remote_dataset_id, measure_id,
         )
 
-        return Measure.from_json(measure)
+        return Measure.from_record(measure)
 
     def get_measure_description(self, measure_id: str) -> dict[str, Any]:
         measure_description = self.rest_client.get_measure_description(
@@ -74,14 +75,14 @@ class RemotePhenotypeData(PhenotypeStudy):
     def get_measures(
         self,
         instrument_name: str | None = None,
-        measure_type: str | None = None,
+        measure_type: MeasureType | None = None,
     ) -> dict[str, Measure]:
         measures = self.rest_client.get_measures(
             self.remote_dataset_id,
             instrument_name,
             measure_type,
         )
-        return {m["measureName"]: Measure.from_json(m) for m in measures}
+        return {m["measureName"]: Measure.from_record(m) for m in measures}
 
     def count_measures(
         self, instrument: str | None,
@@ -113,11 +114,11 @@ class RemotePhenotypeData(PhenotypeStudy):
     def instruments(self) -> dict[str, Instrument]:
         if self._instruments is None:
             self._instruments = OrderedDict()
-            instruments = self.rest_client.get_instrument_details(
+            instruments = self.rest_client.get_instruments_details(
                 self.remote_dataset_id)
             for name, instrument in instruments.items():
                 measures = [
-                    Measure.from_json(m) for m in instrument["measures"]
+                    Measure.from_record(m) for m in instrument["measures"]
                 ]
                 instrument = Instrument(name)
                 instrument.measures = {m.measure_id: m for m in measures}

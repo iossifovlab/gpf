@@ -58,8 +58,6 @@ class RemoteGenotypeData(GenotypeDataStudy):
         self._families: FamiliesData
         self.build_families()
 
-        super().__init__(FrozenBox(config), [self])
-
         remote_common_report = rest_client.get_common_report(
             self.remote_study_id, full=True)
 
@@ -67,6 +65,8 @@ class RemoteGenotypeData(GenotypeDataStudy):
             self.common_report = None
         else:
             self.common_report = CommonReport(remote_common_report)
+
+        super().__init__(FrozenBox(config), [self])
 
         self.is_remote = True
         self._description = ""
