@@ -109,6 +109,7 @@ setuptools.setup(
     import_tools_pheno=dae.pheno.import_tools:main
     import_phenotypes=dae.pheno.import_tools:main
     build_pheno_browser=dae.pheno.build_pheno_browser:main
+    update_pheno_descriptions=dae.pheno.update_pheno_descriptions:main
 
 
     agp_exporter=dae.gene_profile.exporter:cli_export
