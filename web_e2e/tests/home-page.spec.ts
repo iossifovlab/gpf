@@ -140,11 +140,82 @@ test.describe('Home page tests', () => {
   });
 
 
-  test('should navigate to dataset', async({ page }) => {
+  test('should navigate to dataset and check icons', async({ page }) => {
     await page.locator('a:text("Hello World Genotypes")').click();
     await expect(page.locator('a:text("Datasets")')).toHaveClass('highlighted-route');
     await expect(page.locator('gpf-home')).not.toBeVisible();
     await expect(page.locator('gpf-gene-browser')).toBeVisible();
+
     await expect(page.locator('#selected-dataset-name')).toHaveText('Hello World Genotypes');
+    await expect(
+      page.locator('#datasets-dropdown-menu-button')
+    ).toHaveText('Hello World Genotypesgeneticskid_starfamily_historyhow_to_reg');
+    await expect(
+      page.locator('#datasets-dropdown-menu-button').locator('.denovo-icon')
+    ).toHaveCSS('color', 'rgb(126, 126, 126)');
+    await expect(
+      page.locator('#datasets-dropdown-menu-button').locator('.star-icon')
+    ).toHaveCSS('color', 'rgb(126, 126, 126)');
+    await expect(
+      page.locator('#datasets-dropdown-menu-button').locator('.transmitted-icon')
+    ).toHaveCSS('color', 'rgb(126, 126, 126)');
+    await expect(
+      page.locator('#datasets-dropdown-menu-button').locator('.phenotype-icon')
+    ).toHaveCSS('color', 'rgb(126, 126, 126)');
+  });
+
+
+  test('list of icons of different datasets in home page', async({ page }) => {
+    await page.locator('.collapse-dataset-icon').nth(1).click();
+
+    await expect(page.locator('#denovo_helloworld-icons-wrapper')).toHaveText('geneticskid_starhow_to_reg');
+    await expect(page.locator('#vcf_helloworld-icons-wrapper')).toHaveText('family_historyhow_to_reg');
+    await expect(page.locator('#iossifov_2014_liftover-icons-wrapper')).toHaveText('geneticskid_star');
+    await expect(page.locator('#pheno_helloworld-icons-wrapper')).toHaveText('how_to_reg');
+    await expect(page.locator('#ALL_genotypes-icons-wrapper')).toHaveText('geneticskid_starfamily_history');
+  });
+
+  test('colors of icons of Hello World Genotypes in home page when user has no access rights', async({ page }) => {
+    await utils.logout(page);
+
+    const helloWorldGenotypesIcons = page.locator('#helloworld_genotypes-icons-wrapper');
+    await expect(helloWorldGenotypesIcons).toHaveText('geneticskid_starfamily_historyhow_to_reg');
+    await expect(helloWorldGenotypesIcons.locator('.denovo-icon')).toHaveCSS('color', 'rgb(126, 126, 126)');
+    await expect(helloWorldGenotypesIcons.locator('.star-icon')).toHaveCSS('color', 'rgb(126, 126, 126)');
+    await expect(helloWorldGenotypesIcons.locator('.transmitted-icon')).toHaveCSS('color', 'rgb(220, 220, 220)');
+    await expect(helloWorldGenotypesIcons.locator('.phenotype-icon')).toHaveCSS('color', 'rgb(220, 220, 220)');
+
+    await utils.loginAdmin(page);
+
+    await expect(helloWorldGenotypesIcons).toHaveText('geneticskid_starfamily_historyhow_to_reg');
+    await expect(helloWorldGenotypesIcons.locator('.denovo-icon')).toHaveCSS('color', 'rgb(126, 126, 126)');
+    await expect(helloWorldGenotypesIcons.locator('.star-icon')).toHaveCSS('color', 'rgb(126, 126, 126)');
+    await expect(helloWorldGenotypesIcons.locator('.transmitted-icon')).toHaveCSS('color', 'rgb(126, 126, 126)');
+    await expect(helloWorldGenotypesIcons.locator('.phenotype-icon')).toHaveCSS('color', 'rgb(126, 126, 126)');
+  });
+
+  test('should navigate from home page to dataset and check icons when user has no access rights', async({ page }) => {
+    await utils.logout(page);
+    await page.locator('a:text("Hello World Genotypes")').click();
+    await expect(page.locator('a:text("Datasets")')).toHaveClass('highlighted-route');
+    await expect(page.locator('gpf-home')).not.toBeVisible();
+    await expect(page.locator('gpf-dataset-description')).toBeVisible();
+    await expect(page.locator('#register-alert')).toBeVisible();
+    await expect(page.locator('#selected-dataset-name')).toHaveText('Hello World Genotypes');
+    await expect(
+      page.locator('#datasets-dropdown-menu-button')
+    ).toHaveText('Hello World Genotypesgeneticskid_starfamily_historyhow_to_reg');
+    await expect(
+      page.locator('#datasets-dropdown-menu-button').locator('.denovo-icon')
+    ).toHaveCSS('color', 'rgb(126, 126, 126)');
+    await expect(
+      page.locator('#datasets-dropdown-menu-button').locator('.star-icon')
+    ).toHaveCSS('color', 'rgb(126, 126, 126)');
+    await expect(
+      page.locator('#datasets-dropdown-menu-button').locator('.transmitted-icon')
+    ).toHaveCSS('color', 'rgb(220, 220, 220)');
+    await expect(
+      page.locator('#datasets-dropdown-menu-button').locator('.phenotype-icon')
+    ).toHaveCSS('color', 'rgb(220, 220, 220)');
   });
 });
