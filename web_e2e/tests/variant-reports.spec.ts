@@ -293,6 +293,14 @@ test.describe('Variant reports tests', () => {
     const ids = text.split(',');
     expect(count).toEqual(ids.length);
   });
+
+  test('if Rate of de Novo variants tab is not visible when selected study has no denovo', async({ page }) => {
+    await utils.navigateToDatasetPage(page, utils.datasetIds.vcfHelloWorld, 'Dataset Statistics');
+    await expect(page.getByText('Rate of de Novo variants')).not.toBeVisible();
+
+    await utils.navigateToDatasetPage(page, utils.datasetIds.denovoHelloWorld, 'Dataset Statistics');
+    await expect(page.getByText('Rate of de Novo variants')).toBeVisible();
+  });
 });
 
 test.describe('Variant reports download tests', () => {
