@@ -33,7 +33,9 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         help="Path to pheno_import_project file.",
     )
     parser.add_argument(
-        "--pheno-db-dir",
+        "pheno_db_dir",
+        type=str,
+        default=None,
         help="Path to pheno DB dir to use.",
     )
 
