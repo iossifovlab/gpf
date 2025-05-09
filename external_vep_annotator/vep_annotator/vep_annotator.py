@@ -112,7 +112,7 @@ class VEPAnnotatorBase(DockerAnnotator):
         if vep_version is not None and not vep_version.find("."):
             vep_version = f"{vep_version}.0"
         if vep_version is None:
-            vep_version = "latest"
+            vep_version = "release_latest"
         else:
             vep_version = f"release_{vep_version}"
 
@@ -339,7 +339,7 @@ class VEPCacheAnnotator(VEPAnnotatorBase):
             "--force_overwrite",
         ]
         self.client.containers.run(
-            "ensemblorg/ensembl-vep",
+            f"ensemblorg/ensembl-vep:{self._vep_version}",
             args,
             volumes={
                 kwargs["work_dir"]: {"bind": "/work", "mode": "rw"},
@@ -494,7 +494,7 @@ class VEPEffectAnnotator(VEPAnnotatorBase):
         ]
         cache_path = Path(self.genome_resource.proto.url[7:]).absolute()
         self.client.containers.run(
-            "ensemblorg/ensembl-vep",
+            f"ensemblorg/ensembl-vep:{self._vep_version}",
             args,
             volumes={
                 kwargs["work_dir"]: {"bind": "/work", "mode": "rw"},
