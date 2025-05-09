@@ -78,17 +78,20 @@ export async function navigateToDatasetPage(page: Page, dataset: string, tool: s
 }
 
 export async function navigateToDataset(page: Page, dataset: string): Promise<void> {
+  await openDatasetDropdown(page);
+  await expandDataset(page, dataset);
+
+  await page.locator('gpf-dataset-node a').filter({ hasText: dataset }).click();
+  await expect(page.locator('#selected-dataset-name')).toHaveText(dataset);
+}
+
+export async function openDatasetDropdown(page: Page): Promise<void> {
   if (!await page.locator('gpf-datasets').isVisible()) {
     await page.locator('#header a:text("Datasets")').click({ force: true });
     await page.waitForSelector('gpf-datasets');
     await expect(page.getByText('Loading datasets...')).not.toBeVisible();
   }
   await page.locator('#datasets-dropdown-menu-button').click();
-
-  await expandDataset(page, dataset);
-
-  await page.locator('gpf-dataset-node a').filter({ hasText: dataset }).click();
-  await expect(page.locator('#selected-dataset-name')).toHaveText(dataset);
 }
 
 export async function expandDataset(page: Page, dataset: string): Promise<void> {
