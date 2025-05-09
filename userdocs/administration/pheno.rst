@@ -288,7 +288,7 @@ need of re-calculation - if the DB file is up-to-date, it will not be rebuilt.
     $ build_pheno_browser --help
 
 The instrument dictionary file
-************************
+******************************
 
 The instrument dictionary is a file containing descriptions for instruments.
 It must be a TSV file with a header row and the following two columns:
@@ -309,6 +309,15 @@ It must be a TSV file with a header row and the following four columns:
 
 The measure ID is formed by joining the instrument name and the measure name
 with a dot character (e.g. ``instrument1.measure1``).
+
+Updating instrument and measure descriptions in existing databases
+******************************************************************
+
+The ``update_pheno_descriptions`` tool is used to update instrument and measure descriptions in existing phenotype databases.
+
+.. runblock:: console
+
+    $ update_pheno_descriptions --help
 
 Measure classification
 **********************
