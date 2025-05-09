@@ -1,6 +1,20 @@
 Release Notes
 =============
 
+* 2025.5.3
+    * Fix handling of phenotype measures error state in GPFjs.
+    * Update GPF federation plugin.
+    * Reorganization of GPF instance adjustements tool.
+
+* 2025.5.2
+    * Fix rebuilding of phenotype browser cache in wgpf tool.
+    * Clean up common reports logging.
+    * Adjust default working directory for genotype import tool.
+    * Allow editing of home page description when permissions are disabled.
+    * Fix Y-axys ticks in histograms.
+    * Fix validation of gene symbols in genes component.
+    * Support for automatic table preview in genotype browser.
+
 * 2025.5.1
     * Fix support for queries by role.
     * Allow missing work directory in phenotype data import project.
