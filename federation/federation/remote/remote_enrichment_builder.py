@@ -32,5 +32,5 @@ class RemoteEnrichmentBuilder(BaseEnrichmentBuilder):
 
         return cast(
             list[dict[str, Any]],
-            self.client.post_enrichment_test(self.query)["result"],
+            self.client.post_enrichment_test(query)["result"],
         )
