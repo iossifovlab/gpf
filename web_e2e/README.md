@@ -1,46 +1,110 @@
-## Development Setup of GPF e2e instance
+## Run e2e instance
 
-* Run Angular development server from `gpfjs`
-  directory: 
-  
-  ```bash
-  ng serve
-  ```
+Activate your `gpf` conda environment (make sure your packages are up to date with pip install):
 
-* Activate the `gpf` conda environment and source the `setenv.sh` file 
-  from the `gpf-e2e` directory:
+```bash
+conda activate gpf
+```
 
-  ```bash
-  conda activate gpf
-  source ./setenv.sh
-  ```
+Source the `setenv.sh` file in the `gpf-e2e` directory:
 
-* Run the data import script from `gpf-e2e/gpf_e2e_instance` directory:
+```bash
+source ./setenv.sh
+```
 
-  ```bash
-  cd gpf_e2e_instance
-  ./import_data.sh
-  ```
+Import data: 
 
-* Create admin user and OAuth application:
+```bash
+./gpf_e2e_instance/import_data.sh
+```
 
-  ```bash
-  wdaemanage.py migrate
-  wdaemanage.py user_create admin@iossifovlab.com -p secret -g any_dataset:admin
-  wdaemanage.py createapplication --user 1 \
-    --redirect-uris "http://localhost:4200/login" \
-    --name "GPF Genotypes and Phenotypes in Families" \
-    --client-id gpfjs  public authorization-code --skip-authorization
-  ```
+Apply django migrations, create users and Oauth application:
 
-* Run Django development server:
+```bash
+wdaemanage.py migrate
+./scripts/wdae_create_dev_users.sh
+./scripts/wdae_create_local_dev_gpfjs_app.sh
+```
 
-  ```bash
-  wdaemanage runserver
-  ```
+Run Django development server:
+
+```bash
+wdaemanage.py runserver
+```
+
+Run Angular development server from `gpfjs` directory: 
+
+```bash
+ng serve
+```
+
+The e2e instance can now be browsed at `http://localhost:4200/`
+
+## Run tests
+
+In the gpf-e2e dir
+
+Install packages:
+
+```
+sudo rm -rf node_modules
+npm install
+```
+
+Setup mailhog:
+
+```bash
+docker compose up --detach
+```
+
+Edit `gpf-e2e/playwright/tests/utils.ts`:
+Replace:
+```ts
+export const frontendUrl = 'http://gpf:8080/gpf';
+export const backendUrl = frontendUrl;
+export const mailhogUrl = 'http://mailhog:8025';
+```
+
+with:
+```ts
+export const backendUrl = 'http://localhost:8000';
+export const frontendUrl = 'http://localhost:4200';
+export const mailhogUrl = 'http://localhost:8025';
+```
+
+Edit `gpf-e2e/playwright.config.ts`:
+Replace:
+```bash
+workers: process.env.CI ? undefined : undefined,
+```
+
+with:
+```bash
+workers: process.env.CI ? 1 : 1,
+
+```
+
+Run tests in terminal:
+
+```
+npx playwright test
+```
+
+Run tests using playwright's UI:
+
+```
+npx playwright test --ui
+```
+
+Run a specific spec:
+
+```
+npx playwright test -g <spec name>
+```
 
 
-## Setup GPF e2e tests
+## Run e2e instance in docker containers
+(This workflow is used on Jenkins. Do this only if you debug Jenkins/docker specific issue)
 
 Clear the previous e2e test instance:
 
@@ -60,34 +124,8 @@ After completion, the instance can be browsed at:
 http://localhost:8080/gpf
 ```
 
-## Run GPF e2e tests
 
-```
-sudo rm -rf node_modules
-sudo rm -rf reports_new
-
-npm install
-```
-
-To run tests in terminal:
-
-```
-npx playwright test
-```
-
-To run tests using playwright's UI:
-
-```
-npx playwright test --ui
-```
-
-To run a specific spec:
-
-```
-npx playwright test -g <spec name>
-```
-
-## Run GPF e2e instance on live GPFJS ng serve
+## Run local gpfjs on docker container gpf
 
 Change `gpfjs/src/environments/environment.ts` line:
 

@@ -21,3 +21,4 @@ wdae-api.log
 /playwright/.cache/
 logs
 wdae.sql
+gpf_e2e_instance/studies/**
