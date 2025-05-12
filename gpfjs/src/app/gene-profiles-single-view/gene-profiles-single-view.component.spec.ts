@@ -31,11 +31,6 @@ class QueryServiceMock {
   public saveQuery(state: object, tool: string): Observable<object> {
     return of({});
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public getLoadUrlFromResponse(obj: object): string {
-    return 'url';
-  }
 }
 
 describe('GeneProfileSingleViewComponent', () => {

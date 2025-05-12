@@ -56,8 +56,8 @@ export class EnrichmentTableRowComponent {
       }
       this.queryService.saveQuery(queryData, 'genotype', 'system')
         .pipe(take(1))
-        .subscribe(urlObject => {
-          const url = this.queryService.getLoadUrlFromResponse(urlObject);
+        .subscribe((urlObject: {uuid: string}) => {
+          const url = this.queryService.getLoadUrl(urlObject.uuid);
           newWindow.location.assign(url);
         });
     });

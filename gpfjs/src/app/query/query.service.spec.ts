@@ -224,11 +224,6 @@ describe('QueryService', () => {
     expect(getUrl).toBe(window.location.origin + '/load-query/' + uuid);
   });
 
-  it('should get load query url from query response', () => {
-    const getUrl = service.getLoadUrlFromResponse(saveQueryMock);
-    expect(getUrl).toBe(window.location.origin + '/load-query/e219957d-cf7f-4fe8-beed-1797f5f0d5cd');
-  });
-
   it('should save query saved by user', async() => {
     const httpPostSpy = jest.spyOn(HttpClient.prototype, 'post');
     httpPostSpy.mockReturnValue(of(saveQueryMock));

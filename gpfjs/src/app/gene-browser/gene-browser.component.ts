@@ -100,15 +100,20 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
       this.geneBrowserConfig = this.selectedDataset.geneBrowser;
       if (this.route.snapshot.params.gene && typeof this.route.snapshot.params.gene === 'string') {
         this.geneSymbol = this.route.snapshot.params.gene;
+        const preview = this.route.snapshot.queryParams.preview === 'true';
+        if (preview) {
+          this.submitGeneRequest();
+        } else {
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { preview: null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true
+          });
+        }
       }
 
       this.enableUniqueFamilyVarinats();
-    });
-
-    this.route.queryParams.subscribe(params => {
-      if (params['coding_only'] !== undefined && params['coding_only'] !== null) {
-        this.summaryVariantsFilter.codingOnly = params['coding_only'] === 'true';
-      }
     });
 
     this.subscriptions.push(
@@ -185,7 +190,7 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     this.location.replaceState(`datasets/${this.selectedDatasetId}/gene-browser`);
   }
 
-  public toggleCodingOnly($event): void {
+  public toggleCodingOnly($event: MouseEvent): void {
     $event.preventDefault();
     this.showResults = false;
     this.summaryVariantsFilter.codingOnly = !this.summaryVariantsFilter.codingOnly;
@@ -197,7 +202,6 @@ export class GeneBrowserComponent implements OnInit, OnDestroy {
     if (geneSymbol) {
       this.geneSymbol = geneSymbol.trim();
     }
-
     if (!this.geneSymbol) {
       return;
     }

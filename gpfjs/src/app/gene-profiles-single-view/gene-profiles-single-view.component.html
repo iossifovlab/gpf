@@ -31,7 +31,7 @@
                 <a
                   *ngIf="links.name === 'Gene Browser'"
                   style="padding-right: 20px"
-                  [attr.href]="links.url"
+                  [attr.href]="links.url + '?preview=true'"
                   [id]="links.name + '-link'"
                   target="_blank"
                   >{{ links.name }}</a
