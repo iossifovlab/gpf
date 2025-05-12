@@ -18,7 +18,8 @@ To import these variants into the GPF system, we need
 a pedigree file describing the families and
 a list of de novo variants.
 
-From the supplementary data for the paper, you can download the following files:
+From the supplementary data for the paper, you can download the following
+files:
 
 * The list
   of sequenced children available from
@@ -66,8 +67,8 @@ columns from that file that look as follows:
     SSC                 11008               11008.p1            affected            M
 
 
-* The first column contains the collection. This study includes data from the SSC
-  and AGRE collections. We are going to import only variants from the
+* The first column contains the collection. This study includes data from the
+  SSC and AGRE collections. We are going to import only variants from the
   SSC collection.
 
 * The second column contains the family ID.
@@ -284,9 +285,9 @@ and the ``-v`` option controls the verbosity of the output.
 
 This command will take a while to run. The time it takes to run will depend on
 the number of variants in the input file and the number of threads used for
-the import. 
+the import.
 
-.. note:: 
+.. note::
 
     For example, on a MacBook Pro with the Apple M1 Pro chip, the import of the SSC
     de Novo variants took about 5 minutes:
@@ -345,13 +346,13 @@ snippet to the configuration file:
           columns:
           - allele_freq
           - gnomad_v4_genome_ALL_af
-    
+
         clinvar:
           name: ClinVar
           columns:
           - CLNSIG
           - CLNDN
-    
+
       preview_columns_ext:
         - clinvar
 

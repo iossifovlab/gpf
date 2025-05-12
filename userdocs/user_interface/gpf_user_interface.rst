@@ -392,3 +392,4 @@ This toggles how identical family variants from different studies are shown.
    :align: center
 |
 
+.. include:: user_management.rst

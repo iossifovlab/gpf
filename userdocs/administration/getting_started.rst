@@ -7,11 +7,13 @@ Setup
 Prerequisites
 +++++++++++++
 
-This guide assumes that you are working on a recent Linux (or Mac OS X) machine.
+This guide assumes that you are working on a recent Linux (or Mac OS X)
+machine.
 
-The GPF system is distributed as a Conda package. You must install a distribution
-of Conda or Mamba package manager if you do not have a working version 
-of Anaconda, Miniconda, or Mamba. We recommended using a Miniforge distribution.
+The GPF system is distributed as a Conda package. You must install a
+distribution of Conda or Mamba package manager if you do not have a working
+version  of Anaconda, Miniconda, or Mamba. We recommended using a Miniforge
+distribution.
 
 Go to the `Miniforge home page <https://github.com/conda-forge/miniforge>`_
 and follow the instructions for your platform.
@@ -98,8 +100,8 @@ Repository (GRR) located at
 to find the resources it needs.
 
 For this guide, we use the HG38 reference genome (``hg38/genomes/GRCh38-hg38``)
-and MANE 1.3 gene models (``hg38/gene_models/MANE/1.3``) provided in the default
-GRR.
+and MANE 1.3 gene models (``hg38/gene_models/MANE/1.3``) provided in the
+default GRR.
 
 .. note::
 
@@ -123,8 +125,8 @@ keybinding for stopping long-running commands in a terminal.
 
 .. warning::
 
-    The development web server, run by ``wgpf run`` used in this guide, is meant 
-    for development purposes only and is not suitable for serving the GPF 
+    The development web server, run by ``wgpf run`` used in this guide, is
+    meant for development purposes only and is not suitable for serving the GPF
     system in production.
 
 Importing genotype data
@@ -187,17 +189,17 @@ To import this project, run the following command:
     see :doc:`working_with_pedigree_files`.
 
 The import genotypes tool will read all the variants from the files
-specified in the project configuration, annotate them using the reference genome and
-gene models specified in the GPF instance configuration and finally store them
-in an appropriate format for use by the GPF system. By default, the imported
-files are stored in the ``internal_storage`` subdirectory of the GPF instance
-directory. 
+specified in the project configuration, annotate them using the reference
+genome and gene models specified in the GPF instance configuration and finally
+store them in an appropriate format for use by the GPF system. By default, the
+imported files are stored in the ``internal_storage`` subdirectory of the GPF
+instance directory.
 
-A minimal study configuration file for the imported study will also be created at 
-``minimal_instance/studies/denovo_example.yaml``.
+A minimal study configuration file for the imported study will also be created
+at ``minimal_instance/studies/denovo_example.yaml``.
 
 Intermediary files created during import will be stored in the import project
-directory ``input_genotype_data/denovo_example``. 
+directory ``input_genotype_data/denovo_example``.
 
 When the import finishes, you can run the GPF development server using:
 
