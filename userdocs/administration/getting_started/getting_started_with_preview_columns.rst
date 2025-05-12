@@ -6,7 +6,7 @@ Getting Started with Preview Columns
 Configure genotype columns in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
 
-Once you have annotated your variants, the additional attributes 
+Once you have annotated your variants, the additional attributes
 produced by the annotation can be displayed in the variants preview table.
 
 In our example, the annotation produces three additional attributes:
@@ -16,7 +16,8 @@ In our example, the annotation produces three additional attributes:
 * ``CLNDN``
 
 
-Let us add these attributes to the variants preview table for the ``example_dataset`` dataset.
+Let us add these attributes to the variants preview table for the
+``example_dataset`` dataset.
 
 In the preview table, each column could show multiple values.
 In GPF, when you want to show multiple values in a single column,
@@ -24,10 +25,10 @@ you need to define a **column group**.
 
 The **column group** is a collection of attributes that are
 shown together in the preview table. The values in a column group are shown
-in a single cell. 
+in a single cell.
 
 By default, the study configuration includes several predefined column groups:
-``family``, ``variant``, ``genotype``, ``effect`` and ``frequency``. 
+``family``, ``variant``, ``genotype``, ``effect`` and ``frequency``.
 
 .. figure:: getting_started_files/example-dataset-default-column-groups.png
 
@@ -35,7 +36,7 @@ By default, the study configuration includes several predefined column groups:
 
 In the study configuration, you can define new column groups or redefine
 already existing ones. Let us redefine the existing column group
-``frequency`` to include the gnomAD frequency and define a new column group 
+``frequency`` to include the gnomAD frequency and define a new column group
 ``clinvar`` to include the ClinVar attributes.
 
 The column group is defined in the
@@ -80,9 +81,9 @@ In lines 15-16, we extend the preview table columns. The new column groups
 If we now stop the ``wgpf`` tool and rerun it, we will be able to see
 the new columns in the preview table.
 
-From the GPF instance `Home Page`, follow the link to the `Example Dataset` page
-and choose the `Genotype Browser`. Select all checkboxes in `Present in Child`,
-`Present in Parent` and `Effect Types` sections.
+From the GPF instance `Home Page`, follow the link to the `Example Dataset`
+page and choose the `Genotype Browser`. Select all checkboxes in
+`Present in Child`, `Present in Parent` and `Effect Types` sections.
 
 .. image:: getting_started_files/example-dataset-genotype-browser-extended-columns-filters.png
 
@@ -98,8 +99,8 @@ variants with their additional attributes coming from the annotation.
 Configure phenotype columns in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
 
-The Genotype Browser allows you to add phenotype attributes to the table preview
-and the download file.
+The Genotype Browser allows you to add phenotype attributes to the table
+preview and the download file.
 
 Phenotype attributes show values from a phenotype database that are associated
 with the displayed family variant.
@@ -115,7 +116,7 @@ To configure such a column, you need to specify the following properties:
 Let's add some phenotype columns to the `Genotype Browser` preview table
 in `Example Dataset`.
 To do this, you need to define them in the study's config, in the genotype
-browser section of the configuration file. 
+browser section of the configuration file.
 We are going to modify the
 ``example_dataset.yaml`` dataset configuration in
 ``minimal_instance/datasets/example_dataset/example_data.yaml``:
@@ -161,8 +162,8 @@ We are going to modify the
         - proband_iq
 
 
-Lines 2-12 define the two new columns with values coming from the phenotype data
-attributes:
+Lines 2-12 define the two new columns with values coming from the phenotype
+data attributes:
 
 * ``prb_verbal_iq`` - is a column that uses the value of the phenotype measure
   ``iq.verbal_iq`` for the family proband.
@@ -172,10 +173,10 @@ attributes:
   measure ``iq.non_verbal_iq`` for the family proband.
   The display name of the column will be `Non-Verbal IQ`.
 
-We want these two columns to be shown together in the preview table. To do this,
-we need to define a new **column group**.
-In lines 27-31, we define a column group called ``proband_iq`` that contains the
-columns ``prb_verbal_iq`` and ``prb_non_verbal_iq``.
+We want these two columns to be shown together in the preview table. To do
+this, we need to define a new **column group**.
+In lines 27-31, we define a column group called ``proband_iq`` that contains
+the columns ``prb_verbal_iq`` and ``prb_non_verbal_iq``.
 
 To add the new column group ``proband_iq`` to the preview table, we need to
 add it to the ``preview_columns_ext`` section of the configuration file.
