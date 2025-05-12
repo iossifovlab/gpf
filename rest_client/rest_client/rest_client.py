@@ -514,10 +514,11 @@ class RESTClient:
 
     def get_families(
         self, dataset_id: str,
+        timeout: float = 200.0,
     ) -> list[dict]:
         """Get families for a dataset."""
         url = f"{self.base_url}/api/v3/families/{dataset_id}/all"
-        response = self.session.get(url)
+        response = self.session.get(url, timeout=timeout)
         if response.status_code != 200:
             raise RESTError(f"Get families failed: {response.text}")
         return cast(list[dict], response.json())
