@@ -1,5 +1,6 @@
 # pylint: disable=redefined-outer-name,C0114,C0116,protected-access
 import os
+import pathlib
 
 import pytest
 
@@ -12,13 +13,16 @@ from dae.tools.grr_cache_repo import cli_cache_repo
      "gpf_instance_embedded_annotation.yaml"],
 )
 def test_cli_cache_instance(
-    mocker, fixture_path, instance_conf_name, temp_cache_dir,
+    mocker,
+    fixture_path,
+    instance_conf_name,
+    tmp_path: pathlib.Path,
 ):
     definition = {
         "id": "local",
         "type": "directory",
         "directory": fixture_path("repo"),
-        "cache_dir": temp_cache_dir,
+        "cache_dir": tmp_path,
     }
     mocked = mocker.patch(
         "dae.tools.grr_cache_repo.load_definition_file")
@@ -42,7 +46,7 @@ def test_cli_cache_instance(
     ]
     for path in paths:
         full_path = os.path.join(
-            temp_cache_dir,
+            tmp_path,
             "local",
             *path,
             "genomic_resource.yaml",
@@ -50,7 +54,7 @@ def test_cli_cache_instance(
         assert os.path.exists(full_path), full_path
 
     assert not os.path.exists(os.path.join(
-        temp_cache_dir,
+        tmp_path,
         "local",
         "scores",
         "mock_extra",
@@ -58,12 +62,16 @@ def test_cli_cache_instance(
     ))
 
 
-def test_cli_cache_annotation(mocker, fixture_path, temp_cache_dir):
+def test_cli_cache_annotation(
+        mocker,
+        fixture_path,
+        tmp_path: pathlib.Path,
+) -> None:
     definition = {
         "id": "local",
         "type": "directory",
         "directory": fixture_path("repo"),
-        "cache_dir": temp_cache_dir,
+        "cache_dir": tmp_path,
     }
     mocked = mocker.patch(
         "dae.tools.grr_cache_repo.load_definition_file")
@@ -85,7 +93,7 @@ def test_cli_cache_annotation(mocker, fixture_path, temp_cache_dir):
     ]
     for path in paths:
         full_path = os.path.join(
-            temp_cache_dir,
+            tmp_path,
             "local",
             *path,
             "genomic_resource.yaml",
@@ -93,14 +101,14 @@ def test_cli_cache_annotation(mocker, fixture_path, temp_cache_dir):
         assert os.path.exists(full_path)
 
     assert not os.path.exists(os.path.join(
-        temp_cache_dir,
+        tmp_path,
         "local",
         "gene_models",
         "mock",
         "genomic_resource.yaml",
     ))
     assert not os.path.exists(os.path.join(
-        temp_cache_dir,
+        tmp_path,
         "local",
         "scores",
         "mock_extra",
