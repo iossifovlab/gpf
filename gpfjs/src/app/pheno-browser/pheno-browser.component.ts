@@ -24,7 +24,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   public measuresLoading = false;
   // To trigger child change detection with on push strategy.
   public measuresChangeTick = 0;
-  public measuresSubscription: Subscription;
+  public measuresSubscription = new Subscription();
   public errorModalMsg = '';
 
   public instruments: Observable<PhenoInstruments>;
@@ -121,7 +121,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
 
   private updateTable(): void {
     this.measuresToShow?.clear();
-    this.getPageSubscription?.unsubscribe();
+    this.getPageSubscription.unsubscribe();
     this.measuresLoading = true;
     this.getPageSubscription =
       this.phenoBrowserService.getMeasures(
@@ -140,7 +140,6 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
 
         this.measuresChangeTick++;
         this.measuresLoading = false;
-        this.getPageSubscription.unsubscribe();
       });
   }
 
@@ -198,7 +197,7 @@ export class PhenoBrowserComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
-    this.getPageSubscription?.unsubscribe();
+    this.getPageSubscription.unsubscribe();
     this.measuresSubscription.unsubscribe();
     this.phenoBrowserService.cancelStreamPost();
   }
