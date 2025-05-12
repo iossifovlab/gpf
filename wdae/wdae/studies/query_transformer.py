@@ -7,7 +7,6 @@ from dae.effect_annotation.effect import EffectTypesMixin
 from dae.person_filters import make_pedigree_filter, make_pheno_filter
 from dae.person_filters.person_filters import make_pheno_filter_beta
 from dae.person_sets import PSCQuery
-from dae.query_variants.attributes_query import role_query
 from dae.query_variants.sql.schema2.sql_query_builder import (
     SqlQueryBuilder,
     TagsQuery,
@@ -259,23 +258,6 @@ class QueryTransformer:
             raise TypeError(f"unexpected inheritance query {inheritance}")
         kwargs["inheritance"] = inheritance
 
-    @staticmethod
-    def _add_roles_to_query(
-        query: str | None, kwargs: dict[str, Any],
-    ) -> str | None:
-        if not query:
-            return None
-
-        original_roles = kwargs.get("roles")
-        if original_roles is not None:
-            if isinstance(original_roles, str):
-                original_roles = role_query.transform_query_string_to_tree(
-                    original_roles,
-                )
-            return f"{original_roles} and {query}"
-
-        return query
-
     def _handle_person_set_collection(
         self, kwargs: dict[str, Any],
     ) -> dict[str, Any]:
@@ -358,8 +340,7 @@ class QueryTransformer:
                 kwargs.pop("presentInChild")
                 children_roles_query = \
                     self._present_in_child_to_roles(present_in_child)
-                children_roles_query = \
-                    self._add_roles_to_query(children_roles_query, kwargs)
+
                 kwargs["roles_in_child"] = children_roles_query
 
             if "presentInParent" in kwargs:
@@ -369,9 +350,6 @@ class QueryTransformer:
                 kwargs.pop("presentInParent")
                 parent_roles_query = \
                     self._present_in_parent_to_roles(present_in_parent)
-
-                parent_roles_query = \
-                    self._add_roles_to_query(parent_roles_query, kwargs)
 
                 kwargs["roles_in_parent"] = parent_roles_query
 
