@@ -277,7 +277,11 @@ export class GenotypeBrowserComponent implements OnInit, OnDestroy, AfterViewIni
     this.queryService.streamingSubject.pipe(take(1)).subscribe(() => {
       this.showTable = true;
       this.loadingService.setLoadingStop();
-      window.scrollBy(0, 300);
+
+      const loadingSpinnerElement = document.querySelector('.loader-container');
+      if (loadingSpinnerElement) {
+        loadingSpinnerElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     });
 
     this.queryService.streamingFinishedSubject.pipe(take(1)).subscribe(() => {
