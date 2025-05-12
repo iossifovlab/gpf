@@ -20,7 +20,7 @@ from federation.remote.rest_api_client import RESTClient
 class RemoteGenotypeData(GenotypeDataStudy):
     """Represent remote genotype data."""
 
-    def __init__(self, study_id: str, rest_client: RESTClient):
+    def __init__(self, study_id: str, rest_client: RESTClient):  # pylint: disable=super-init-not-called
         self.remote_study_id = study_id
         self.rest_client = rest_client
 
@@ -53,7 +53,7 @@ class RemoteGenotypeData(GenotypeDataStudy):
         if config.get("studies") is not None:
             raise ValueError("Tried to create remote dataset")
 
-        self.config = config
+        self.config = FrozenBox(config)
 
         self._families: FamiliesData
         self.build_families()
@@ -65,8 +65,6 @@ class RemoteGenotypeData(GenotypeDataStudy):
             self.common_report = None
         else:
             self.common_report = CommonReport(remote_common_report)
-
-        super().__init__(FrozenBox(config), [self])
 
         self.is_remote = True
         self._description = ""
@@ -181,8 +179,8 @@ class RemoteGenotypeData(GenotypeDataStudy):
         )
 
     def get_person_set_collection(
-        self, person_set_collection_id: str,
-    ) -> PersonSetCollection:
+        self, person_set_collection_id: str | None,
+    ) -> PersonSetCollection | None:
         if person_set_collection_id is None:
             return None
         return self._person_set_collections[person_set_collection_id]
