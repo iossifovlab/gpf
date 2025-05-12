@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Generator, Iterable
+from collections.abc import Generator, Iterable, Sequence
 from contextlib import closing
 from typing import Any, ClassVar, cast
 
@@ -264,8 +264,8 @@ class ImpalaVariants(QueryVariantsBase):
             regions=regions,
             genes=genes,
             effect_types=effect_types,
-            family_ids=family_ids,
-            person_ids=person_ids,
+            family_ids=cast(Sequence[str], family_ids),
+            person_ids=cast(Sequence[str], person_ids),
             inheritance=inheritance,
             roles=roles,
             sexes=sexes,
@@ -275,8 +275,7 @@ class ImpalaVariants(QueryVariantsBase):
             ultra_rare=ultra_rare,
             frequency_filter=frequency_filter,
             return_reference=return_reference,
-            return_unknown=return_unknown,
-            limit=limit)
+            return_unknown=return_unknown)
 
         runner.adapt(filter_func)
 

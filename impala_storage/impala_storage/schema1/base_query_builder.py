@@ -1,27 +1,21 @@
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
-from typing import Any, cast
+from typing import Any
+
+from sqlglot import column
 
 import dae.utils.regions
 from dae.annotation.annotation_pipeline import AttributeInfo
 from dae.genomic_resources.gene_models import GeneModels
 from dae.pedigrees.families_data import FamiliesData
-from dae.query_variants.attributes_query import (
-    QNode,
-    QueryTransformerMatcher,
-    QueryTreeToSQLBitwiseTransformer,
-    inheritance_query,
-    role_query,
-    sex_query,
-    variant_type_query,
-)
-from dae.query_variants.attributes_query_inheritance import (
-    InheritanceTransformer,
-    inheritance_parser,
+from dae.query_variants.attribute_queries import (
+    transform_attribute_query_to_function,
+    transform_attribute_query_to_sql_expression_schema1,
 )
 from dae.utils.regions import Region
-from dae.variants.attributes import Inheritance
+from dae.variants.attributes import Inheritance, Role, Sex
+from dae.variants.core import Allele
 
 logger = logging.getLogger(__name__)
 RealAttrFilterType = list[tuple[str, tuple[float | None, float | None]]]
@@ -192,29 +186,28 @@ class BaseQueryBuilder(ABC):
                 ),
             )
         if roles is not None:
-            where.append(
-                self._build_bitwise_attr_where(
-                    self.where_accessors["variant_in_roles"], roles, role_query,
-                ),
-            )
+            roles_query = transform_attribute_query_to_sql_expression_schema1(
+                Role, roles, column(self.where_accessors["variant_in_roles"]),
+            ).sql()
+            where.append(roles_query)
         if sexes is not None:
-            where.append(
-                self._build_bitwise_attr_where(
-                    self.where_accessors["variant_in_sexes"], sexes, sex_query,
-                ),
-            )
+            sexes_query = transform_attribute_query_to_sql_expression_schema1(
+                Sex, sexes, column(self.where_accessors["variant_in_sexes"]),
+                aliases=Sex.aliases(),
+            ).sql()
+            where.append(sexes_query)
         if affected_statuses is not None:
             # we do not have `variant_in_statuses` in the schema1
             raise ValueError("Schema1 does not support affected status queres")
 
         if variant_type is not None:
-            where.append(
-                self._build_bitwise_attr_where(
-                    self.where_accessors["variant_type"],
-                    variant_type,
-                    variant_type_query,
-                ),
-            )
+            variant_type_query = \
+                transform_attribute_query_to_sql_expression_schema1(
+                    Allele.Type, variant_type,
+                    column(self.where_accessors["variant_type"]),
+                    aliases=Allele.TYPE_DISPLAY_NAME,
+                ).sql()
+            where.append(variant_type_query)
         if real_attr_filter is not None:
             where.append(self._build_real_attr_where(
                 real_attr_filter=real_attr_filter))
@@ -382,43 +375,19 @@ class BaseQueryBuilder(ABC):
         return " OR ".join([f"( {w} )" for w in where_list])
 
     @staticmethod
-    def _build_bitwise_attr_where(
-        column_name: str, query_value: str | QNode,
-        query_transformer: QueryTransformerMatcher,
-    ) -> str:
-        assert query_value is not None
-        if isinstance(query_value, str):
-            parsed = query_transformer.transform_query_string_to_tree(
-                query_value,
-            )
-        else:
-            parsed = query_value
-        transformer = QueryTreeToSQLBitwiseTransformer(column_name)
-        return cast(str, transformer.transform(parsed))
-
-    @staticmethod
     def _build_inheritance_where(
-        column_name: str, query_value: str | list[str] | QNode,
+        column_name: str, query_value: str | list[str],
     ) -> list[str]:
-        trees: list[QNode] = []
         if isinstance(query_value, str):
-            tree = inheritance_parser.parse(query_value)
-            trees.append(tree)
+            query_value = [query_value]
 
-        elif isinstance(query_value, list):
-            for qval in query_value:
-                tree = inheritance_parser.parse(qval)
-                trees.append(tree)
-
-        else:
-            tree = query_value
-            trees.append(tree)
-
-        result: list[str] = []
-        for tree in trees:
-            transformer = InheritanceTransformer(column_name)
-            res = transformer.transform(tree)
-            result.append(res)
+        assert len(query_value) > 0
+        result = []
+        for query in query_value:
+            subquery = transform_attribute_query_to_sql_expression_schema1(
+                Inheritance, query, column(column_name),
+            )
+            result.append(subquery.sql())
         return result
 
     def _build_gene_regions_heuristic(
@@ -487,23 +456,22 @@ class BaseQueryBuilder(ABC):
                 inheritance = [inheritance]
 
             matchers = [
-                inheritance_query.transform_tree_to_matcher(
-                    inheritance_query.transform_query_string_to_tree(inh))
+                transform_attribute_query_to_function(Inheritance, inh)
                 for inh in inheritance]
 
-            if any(m.match([Inheritance.denovo]) for m in matchers):
+            if any(matcher(Inheritance.denovo.value) for matcher in matchers):
                 frequency_bin.add(f"{frequency_bin_col} = 0")
 
         has_transmitted_query_1 = [
             any(
-                m.match([inh]) for inh in [
-                    Inheritance.mendelian,
-                    Inheritance.possible_denovo,
-                    Inheritance.possible_omission,
-                    Inheritance.unknown,
-                    Inheritance.missing,
+                matcher(inh) for inh in [
+                    Inheritance.mendelian.value,
+                    Inheritance.possible_denovo.value,
+                    Inheritance.possible_omission.value,
+                    Inheritance.unknown.value,
+                    Inheritance.missing.value,
                 ]
-            ) for m in matchers
+            ) for matcher in matchers
         ]
         has_transmitted_query = all(has_transmitted_query_1)
 
