@@ -227,16 +227,16 @@ test.describe('Pheno Measures tests', () => {
 
   test('measures order and dropdown content update when adding measures', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.iq').click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_3').click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_1').click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await expect(page.locator('.measures-dropdown').getByText('instrument_1.iq')).not.toBeVisible();
     await expect(page.locator('.measures-dropdown').getByText('instrument_1.measure_3')).not.toBeVisible();
     await expect(page.locator('.measures-dropdown').getByText('instrument_1.measure_1')).not.toBeVisible();
@@ -249,13 +249,13 @@ test.describe('Pheno Measures tests', () => {
 
   test('measures order and dropdown content update when removing measures', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.age').click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_2.measure_6').click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_4').click();
 
     await expect(page.locator('gpf-person-filter')).toHaveCount(3);
@@ -270,7 +270,7 @@ test.describe('Pheno Measures tests', () => {
     await page.locator('[id="instrument_1\\.measure_4-remove-button"]').click();
 
     await expect(page.locator('gpf-person-filter')).toHaveCount(0);
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await expect(page.locator('.measures-dropdown').getByText('instrument_1.age')).toBeVisible();
     await expect(page.locator('.measures-dropdown').getByText('instrument_2.measure_6')).toBeVisible();
     await expect(page.locator('.measures-dropdown').getByText('instrument_1.measure_4')).toBeVisible();
@@ -278,7 +278,7 @@ test.describe('Pheno Measures tests', () => {
 
   test('searching and selecting pheno measure', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).focus();
+    await page.getByPlaceholder('Select or start typing to').focus();
     await page.keyboard.type('iq');
 
     await expect(page.locator('.measures-dropdown').getByText('instrument_1.iq')).toBeVisible();
@@ -291,7 +291,7 @@ test.describe('Pheno Measures tests', () => {
 
   test('searching and selecting pheno measure with arrows and enter', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).focus();
+    await page.getByPlaceholder('Select or start typing to').focus();
     await page.keyboard.type('measure');
 
     await expect(page.locator('.measures-dropdown').getByText('instrument_1.measure_1')).toBeVisible();
@@ -310,7 +310,7 @@ test.describe('Pheno Measures tests', () => {
   });
   test('searching invalid pheno measure', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).focus();
+    await page.getByPlaceholder('Select or start typing to').focus();
     await page.keyboard.type('invalidMeasure');
 
     await expect(page.locator('.measures-dropdown').getByText('Nothing found')).toBeVisible();
@@ -319,10 +319,10 @@ test.describe('Pheno Measures tests', () => {
 
   test('resetting pheno measures state when changing tab', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.age').click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_2.measure_6').click();
 
     await expect(page.locator('gpf-person-filter')).toHaveCount(2);
@@ -335,10 +335,10 @@ test.describe('Pheno Measures tests', () => {
 
   test('resetting pheno measures state when changing tool', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.age').click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_2.measure_6').click();
 
     await expect(page.locator('gpf-person-filter')).toHaveCount(2);
@@ -359,16 +359,16 @@ test.describe('Pheno Measures tests', () => {
 
   test('resetting invalid pheno measures continuous histogram state when changing tab', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.age').click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_2.measure_6').click();
 
     await expect(page.locator('gpf-person-filter')).toHaveCount(2);
 
-    await page.locator('gpf-person-filter').nth(0).getByPlaceholder('start').clear();
-    await page.locator('gpf-person-filter').nth(0).getByPlaceholder('start').pressSequentially('-100');
+    await page.locator('gpf-person-filter').nth(0).locator('#from-input-field').clear();
+    await page.locator('gpf-person-filter').nth(0).locator('#from-input-field').pressSequentially('-100');
 
     await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
@@ -390,7 +390,7 @@ test.describe('Pheno Measures tests', () => {
 
   test('resetting invalid pheno measures categorical histogram state when changing tab', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
 
     await page.getByRole('button', {name: 'Mode'}).click();
@@ -416,23 +416,24 @@ test.describe('Pheno Measures tests', () => {
 
   test('if error state is reset when removing histogram in invalid state', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.age').click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_2.measure_6').click();
 
-    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_6' })
+    await expect(page.locator('gpf-person-filter')).toHaveCount(2);
+
+    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_2.measure_6' })
       .getByPlaceholder('start').clear();
-    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_6' })
+    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_2.measure_6' })
       .getByPlaceholder('start').fill('-100');
     await expect(page.getByText('Range start should be more than or equal to domain min.')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Share/save query'})).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Download'})).toBeDisabled();
 
-    await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_6' })
-      .locator('#remove-button').click();
+    await page.locator('[id="instrument_2.measure_6-remove-button"]').click();
 
     await expect(page.getByRole('button', { name: 'Table Preview'})).toBeEnabled();
     await expect(page.getByRole('button', { name: 'Share/save query'})).toBeEnabled();
@@ -441,7 +442,7 @@ test.describe('Pheno Measures tests', () => {
 
   test('downloaded file with multiple selected pheno measures', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_1').click();
 
     const measure1 = page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_1' });
@@ -451,7 +452,7 @@ test.describe('Pheno Measures tests', () => {
     await measure1.locator('#to-input-field').clear();
     await measure1.locator('#to-input-field').pressSequentially('60.839');
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.age').click();
 
     const measure2 = page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.age' });
@@ -472,13 +473,13 @@ test.describe('Pheno Measures tests', () => {
 
   test('share/save query with multiple selected pheno measures', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_2.measure_6').click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.iq').click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
 
     await expect(page.locator('gpf-person-filter')).toHaveCount(3);
@@ -500,7 +501,7 @@ test.describe('Pheno Measures tests', () => {
 
   test('select role and check downloaded file', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
 
     await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_5' })
@@ -524,7 +525,7 @@ test.describe('Pheno Measures tests', () => {
 
   test('select measures and roles and check loaded query', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_4').click();
 
     await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_4' })
@@ -534,7 +535,7 @@ test.describe('Pheno Measures tests', () => {
       .getByPlaceholder('Select role').click();
     await page.getByRole('option', {name: 'dad'}).click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_5').click();
 
     await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_5' })
@@ -560,7 +561,7 @@ test.describe('Pheno Measures tests', () => {
 
   test('selecting role and checking histogram', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.iq').click();
 
     await expect(page.locator('#sumOfBarsLabel')).toHaveText('~191 (100.00%)');
@@ -576,7 +577,7 @@ test.describe('Pheno Measures tests', () => {
 
   test('selecting, removing and updating dropdown enabled roles', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.iq').click();
 
     await page.locator('gpf-role-selector #search-box').click();
@@ -611,7 +612,7 @@ test.describe('Pheno Measures tests', () => {
 
   test('selecting role by typing and enter', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.iq').click();
 
     await page.locator('gpf-role-selector #search-box').focus();
@@ -636,7 +637,7 @@ test.describe('Pheno Measures tests', () => {
 
   test('typing invalid role', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.iq').click();
 
     await page.locator('gpf-role-selector #search-box').focus();
@@ -657,14 +658,14 @@ test.describe('Pheno Measures tests', () => {
 
   test('histograms order when updating roles list of a measure', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.iq').click();
 
     await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.iq' })
       .getByPlaceholder('Select role').click();
     await page.getByRole('option', {name: 'mom'}).click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_3').click();
 
     await page.locator('gpf-person-filter').filter({ hasText: 'instrument_1.measure_3' })
@@ -688,7 +689,7 @@ test.describe('Pheno Measures tests', () => {
 
   test('filtering by pheno measures in family filters and person filters', async({ page }) => {
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_1').click();
 
     await page.getByRole('button', { name: 'Table Preview'}).click();
@@ -718,10 +719,10 @@ test.describe('Pheno Measures tests', () => {
     expect(fixtureFrame1.toString()).toEqual(downloadFrame1.toString());
 
     await page.locator('gpf-family-filters-block').getByText('Pheno Measures').click();
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.locator('gpf-family-filters-block').getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_1.measure_4').click();
 
-    await page.locator('gpf-family-filters-block').getByRole('textbox', { name: 'Select or start typing to' }).click();
+    await page.locator('gpf-family-filters-block').getByPlaceholder('Select or start typing to').click();
     await page.locator('.measures-dropdown').getByText('instrument_2.measure_6').click();
 
     const downloadPromise2 = page.waitForEvent('download', { timeout: 180000 });
