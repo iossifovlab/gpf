@@ -205,10 +205,6 @@ export class QueryService {
     return window.location.origin + pathname;
   }
 
-  public getLoadUrlFromResponse(response: object, preview: boolean = false): string {
-    return this.getLoadUrl(response['uuid'], preview);
-  }
-
   public saveUserQuery(uuid: string, query_name: string, query_description: string): Observable<object> {
     const options = { headers: this.headers, withCredentials: true };
 
