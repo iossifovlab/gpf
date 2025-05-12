@@ -55,23 +55,32 @@ class RemoteGenotypeData(GenotypeDataStudy):
 
         self.config = FrozenBox(config)
 
-        self._families: FamiliesData
-        self.build_families()
+        self._families: FamiliesData | None = None
 
-        remote_common_report = rest_client.get_common_report(
-            self.remote_study_id, full=True)
-
-        if "id" not in remote_common_report:
-            self.common_report = None
-        else:
-            self.common_report = CommonReport(remote_common_report)
+        self._common_report: CommonReport | None = None
+        self._remote_common_report = None
 
         super().__init__(self.config, None)
 
         self.is_remote = True
         self._description = ""
 
-    def build_families(self) -> None:
+    @property
+    def common_report(self) -> CommonReport | None:
+        if self._remote_common_report is None:
+            self._remote_common_report = self.rest_client.get_common_report(
+                self.remote_study_id, full=True)
+            if "id" in self._remote_common_report:
+                self._common_report = CommonReport(self._remote_common_report)
+        return self._common_report
+
+    @property
+    def families(self) -> FamiliesData:
+        if self._families is None:
+            self._families = self.build_families()
+        return self._families
+
+    def build_families(self) -> FamiliesData:
         """Construct remote genotype data families."""
         families = {}
         families_details = self.rest_client.get_all_family_details(
@@ -84,11 +93,9 @@ class RemoteGenotypeData(GenotypeDataStudy):
                 Person(**person_json) for person_json in person_jsons
             ]
             families[family_id] = Family.from_persons(family_members)
-        self._families = FamiliesData.from_families(families)
-        tag_families_data(self._families)
-        pscs_config = self.config.get("person_set_collections")
-        self._person_set_collections = \
-            self._build_person_set_collections(pscs_config, self._families)
+        result = FamiliesData.from_families(families)
+        tag_families_data(result)
+        return result
 
     # pylint: disable=arguments-renamed
     def _build_person_set_collections(  # type: ignore[override]
@@ -122,10 +129,6 @@ class RemoteGenotypeData(GenotypeDataStudy):
     @property
     def is_group(self) -> bool:
         return "studies" in self.config
-
-    @property
-    def families(self) -> FamiliesData:
-        return self._families
 
     def query_variants(
         self,
