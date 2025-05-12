@@ -446,8 +446,11 @@ class PhenoBrowser:
         """Save instrument descriptions."""
         variable_browser_table = self.variable_browser
         with self.connection.cursor() as cursor:
+            def replace_quotes(x):
+                return x.replace("'", "''")
             descriptions_case = "".join(
-                f"WHEN '{instrument_name}' THEN '{description}' "
+                f"WHEN '{instrument_name}' "
+                f"THEN '{replace_quotes(description)}' "
                 for instrument_name, description in descriptions.items()
             )
             instrument_names = ",".join(

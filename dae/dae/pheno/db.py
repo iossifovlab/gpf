@@ -350,8 +350,11 @@ class PhenoDb:  # pylint: disable=too-many-instance-attributes
             # WHEN [instrument_name] THEN [description]
             # ...
             # ELSE NULL END WHERE instrument_name IN([instrument_name], ...)
+            def replace_quotes(x):
+                return x.replace("'", "''")
             descriptions_case = "".join(
-                f"WHEN '{instrument_name}' THEN '{description}' "
+                f"WHEN '{instrument_name}' "
+                f"THEN '{replace_quotes(description)}' "
                 for instrument_name, description in descriptions.items()
             )
             instrument_names = ",".join(
