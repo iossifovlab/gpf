@@ -33,10 +33,16 @@ def pheno_cli_parser() -> argparse.ArgumentParser:
         help="Path to pheno_import_project file.",
     )
     parser.add_argument(
-        "pheno_db_dir",
+        "pheno_db_path",
         type=str,
         default=None,
-        help="Path to pheno DB dir to use.",
+        help="Path to pheno DB to use.",
+    )
+    parser.add_argument(
+        "pheno_browser_db_path",
+        type=str,
+        default=None,
+        help="Path to pheno browser DB to use.",
     )
 
     TaskGraphCli.add_arguments(parser, use_commands=False)
@@ -65,7 +71,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     VerbosityConfiguration.set(args)
 
-    assert args.pheno_db_dir is not None
+    assert args.pheno_db_path is not None
+    assert args.pheno_browser_db_path is not None
 
     raw_config = yaml.safe_load(
         Path(args.pheno_import_project).absolute().read_text(),
@@ -92,11 +99,10 @@ def main(argv: list[str] | None = None) -> int:
         import_config.instrument_dictionary,
     )
 
-    db_folder = args.pheno_db_dir + "/pheno/" + import_config.id + "/"
-    pheno_db = PhenoDb(
-        db_folder + import_config.id + ".db", read_only=False)
-    pheno_browser_db = PhenoBrowser(
-        db_folder + import_config.id + "_browser.db", read_only=False)
+    abs_pheno_db_path = str(Path(args.pheno_db_path).resolve())
+    pheno_db = PhenoDb(abs_pheno_db_path, read_only=False)
+    abs_pheno_browser_db_path = str(Path(args.pheno_browser_db_path).resolve())
+    pheno_browser_db = PhenoBrowser(abs_pheno_browser_db_path, read_only=False)
 
     save_descriptions(
         instrument_descriptions,
