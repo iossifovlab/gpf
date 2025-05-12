@@ -2,7 +2,7 @@ from collections.abc import Callable
 from enum import Enum
 
 from lark import Lark, Transformer, Tree
-from sqlglot import not_
+from sqlglot import not_, parse_one
 from sqlglot.expressions import BitwiseAnd, Column, Expression, Paren, and_, or_
 
 QUERY_GRAMMAR = """
@@ -159,6 +159,25 @@ class AttributeQueryTransformerSQL(Transformer):
         return not_(values[0])
 
 
+class AttributeQueryTransformerSQLLegacy(AttributeQueryTransformerSQL):
+    """
+    Class for transforming attribute queries into an SQLglot expression.
+
+    Intended for use with legacy Impala schema1 storage.
+    """
+    def literal(self, values):
+        assert len(values) == 1
+        value_name = values[0].value.lower()
+        assert value_name in self._values, \
+            f"{value_name} not in {self._values.keys()}"
+
+        return parse_one(
+            "BITAND("
+            f"{self._column.alias_or_name}, {self._values[value_name]!s}"
+            ") != 0",
+        )
+
+
 Matcher = Callable[[int], bool]
 
 
@@ -205,6 +224,32 @@ def transform_attribute_query_to_sql_expression(
     tree = QUERY_PARSER.parse(query)
     syntax_sugar_transformer = SyntaxSugarTransformer()
     transformer = AttributeQueryTransformerSQL(column, enum_type, aliases)
+
+    tree = syntax_sugar_transformer.transform(tree)
+    return transformer.transform(tree)
+
+
+def transform_attribute_query_to_sql_expression_schema1(
+    enum_type: type[Enum],
+    query: str,
+    column: Column,
+    aliases: dict[str, str] | None = None,
+) -> Expression:
+    """
+    Transform attribute query to an SQLglot expression.
+
+    Can evaluate a query for multiple enum types.
+    Queries need to use proper enum names in order to be valid.
+    A dictionary of aliases can be provided,
+    where the keys are the original values.
+    """
+    if aliases is None:
+        aliases = {}
+
+    tree = QUERY_PARSER.parse(query)
+    syntax_sugar_transformer = SyntaxSugarTransformer()
+    transformer = AttributeQueryTransformerSQLLegacy(
+        column, enum_type, aliases)
 
     tree = syntax_sugar_transformer.transform(tree)
     return transformer.transform(tree)
