@@ -28,10 +28,6 @@ from dae.query_variants.attribute_queries import (
     transform_attribute_query_to_function,
     transform_attribute_query_to_sql_expression,
 )
-from dae.query_variants.attributes_query_inheritance import (
-    InheritanceTransformer,
-    inheritance_parser,
-)
 from dae.utils.regions import Region
 from dae.variants.attributes import Inheritance, Role, Sex, Status, Zygosity
 from dae.variants.core import Allele
@@ -183,20 +179,6 @@ class QueryBuilderBase:
         """Check if value satisfies a given roles query."""
         matcher = transform_attribute_query_to_function(Role, roles_query)
         return matcher(value)
-
-    @staticmethod
-    def build_inheritance_query(
-        inheritance_query: Sequence[str], attr: str,
-    ) -> str:
-        """Construct an inheritance query."""
-        result = []
-        transformer = InheritanceTransformer(attr, use_bit_and_function=False)
-        for query in inheritance_query:
-            parsed = inheritance_parser.parse(query)
-            result.append(str(transformer.transform(parsed)))
-        if not result:
-            return ""
-        return " AND ".join(result)
 
     @staticmethod
     def check_inheritance_query_value(
