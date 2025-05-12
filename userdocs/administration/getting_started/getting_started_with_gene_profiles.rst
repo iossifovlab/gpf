@@ -37,14 +37,22 @@ There are several sections in this configuration file:
   in gene profiles. The gene profiles will include score values for each gene
   from the defined gene scores. In our example we are going to use to groups of
   gene scores:
+
   - ``autism_scores`` - lines 36-42;
   - ``protectsion_scores`` - lines 44-52.
+
+  Please note that all gene scores used in this configuration section should
+  be defined in the GPF instance configuration file.
 
 - ``gene_sets``: This section defines groups of gene sets that will be used
   in gene profiles. The gene profiles will show if the gene is included in
   the defined gene sets. In our example we are going to use one group of gene
   sets:
+
   - ``autism_gene_sets`` - lines 54-67;
+
+    Please note that all gene sets used in this configuration section should
+    be defined in the GPF instance configuration file.
 
 - ``gene_links``: This section defines links to internal and external tools
   that contain information aboun genes. In our example we are defining three
