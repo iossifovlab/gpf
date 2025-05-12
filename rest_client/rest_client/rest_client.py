@@ -511,3 +511,13 @@ class RESTClient:
                 raise RESTError(
                     f"Query failed: {response.status_code} {response.text}")
             return cast(list[dict], response.json())
+
+    def get_families(
+        self, dataset_id: str,
+    ) -> list[dict]:
+        """Get families for a dataset."""
+        url = f"{self.base_url}/api/v3/families/{dataset_id}/all"
+        response = self.session.get(url)
+        if response.status_code != 200:
+            raise RESTError(f"Get families failed: {response.text}")
+        return cast(list[dict], response.json())

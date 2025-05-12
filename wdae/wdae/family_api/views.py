@@ -259,7 +259,4 @@ class ListAllDetailsView(QueryBaseView, DatasetAccessRightsView):
             json["members"] = [m.to_json() for m in members]
             out.append(json)
 
-        return Response(
-            out,
-            status=status.HTTP_200_OK,
-        )
+        return Response(out, status=status.HTTP_200_OK)

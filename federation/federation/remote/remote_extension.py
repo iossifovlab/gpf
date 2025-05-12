@@ -27,7 +27,8 @@ def load_extension(instance: WGPFInstance) -> None:
                 client = RESTClient(
                     remote["id"],
                     remote["host"],
-                    remote["credentials"],
+                    remote["client_id"],
+                    remote["client_secret"],
                     base_url=remote["base_url"],
                     port=remote.get("port", None),
                     protocol=remote.get("protocol", None),
