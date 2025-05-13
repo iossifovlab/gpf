@@ -67,6 +67,7 @@ class RemoteGenotypeData(GenotypeDataStudy):
 
     @property
     def common_report(self) -> CommonReport | None:
+        """Property to lazily provide the common report."""
         if self._remote_common_report is None:
             self._remote_common_report = self.rest_client.get_common_report(
                 self.remote_study_id, full=True)

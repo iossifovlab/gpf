@@ -108,7 +108,8 @@ def fetch_studies_from_client(
             f"Failed to get studies from {rest_client.remote_id}",
         )
     for study in fetched_studies["data"]:
-        logger.info("creating remote genotype data: %s", study["id"])
-        studies.append(RemoteGenotypeData(study["id"], rest_client))
+        if study["access_rights"] is True:
+            logger.info("creating remote genotype data: %s", study["id"])
+            studies.append(RemoteGenotypeData(study["id"], rest_client))
 
     return studies

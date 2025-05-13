@@ -58,8 +58,8 @@ remote_schema = {
     "gpf_prefix": {"type": "string"},
     "base_url": {"type": "string"},
     "port": {"type": "integer", "default": "8000"},
-    "client_id": {"type": "string"},
-    "client_secret": {"type": "string"},
+    "client_id": {"type": "string", "default": None},
+    "client_secret": {"type": "string", "default": None},
 }
 
 repository_schema = {

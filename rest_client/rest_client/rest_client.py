@@ -69,6 +69,74 @@ class GPFClientSession(Protocol):
         ...
 
 
+class GPFAnonymousClient:
+    """GPF anonymous REST client."""
+
+    DEFAULT_TIMEOUT = 10
+
+    def __init__(
+        self, base_url: str,
+    ):
+        self._base_url = base_url
+
+    def base_url(self) -> str:
+        return self._base_url
+
+    def authenticate(self) -> None:
+        pass
+
+    def deauthenticate(self) -> None:
+        pass
+
+    def get(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """Get request."""
+        headers = headers or {}
+        timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
+
+        return requests.get(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
+
+    def post(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """Post request."""
+        headers = headers or {}
+        timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
+
+        return requests.post(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
+
+    def put(
+        self, url: str,
+        headers: dict[str, str] | None = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        """Put request."""
+        headers = headers or {}
+        timeout = kwargs.pop("timeout", self.DEFAULT_TIMEOUT)
+
+        return requests.put(
+            url,
+            headers=headers,
+            timeout=timeout,
+            **kwargs,
+        )
+
+
 class GPFConfidentialClient:
     """GPF Rest Client."""
 
