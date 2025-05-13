@@ -115,10 +115,10 @@ class DuckDbQueryDialect(Dialect):
     ) -> str:
         return table
 
-    def build_array_join(self, column: str, allias: str) -> str:
+    def build_array_join(self, col: str, alias: str) -> str:
         return (
             f"\n    CROSS JOIN\n        "
-            f"(SELECT UNNEST({column}) AS {allias})"
+            f"(SELECT UNNEST({col}) AS {alias})"
         )
 
 
