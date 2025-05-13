@@ -647,3 +647,6 @@ class RESTClient:
             return None, None
 
         return response.content, response.headers["content-type"]
+
+    def get_visible_datasets(self) -> list:
+        return self.gpf_rest_client.get_visible_datasets()

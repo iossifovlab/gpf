@@ -103,12 +103,14 @@ def fetch_studies_from_client(
     """Get all remote studies from a REST client."""
     studies = []
     fetched_studies = rest_client.get_studies()
+    visible_studies = rest_client.get_visible_datasets()
+
     if fetched_studies is None:
         raise RESTClientRequestError(
             f"Failed to get studies from {rest_client.remote_id}",
         )
     for study in fetched_studies["data"]:
-        if study["access_rights"] is True:
+        if study["access_rights"] is True and study["id"] in visible_studies:
             logger.info("creating remote genotype data: %s", study["id"])
             studies.append(RemoteGenotypeData(study["id"], rest_client))
 
