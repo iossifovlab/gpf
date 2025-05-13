@@ -30,7 +30,7 @@ There are several sections in this configuration file:
     - Count of intronic INDEL variants for each gene - lines 17-26.
 
   - For each study or dataset we should define how to split individuals into
-    groups. In our example we are going to split them into tow groups -
+    groups. In our example we are going to split them into two groups -
     ``affected`` and ``unaffected`` - lines 27-33.
 
 - ``gene_scores``: This section defines groups of gene scores that will be used
