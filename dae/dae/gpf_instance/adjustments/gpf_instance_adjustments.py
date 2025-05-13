@@ -17,6 +17,9 @@ from dae.gpf_instance.adjustments.adjust_command import (
 from dae.gpf_instance.adjustments.adjust_duckdb_storage import (
     AdjustDuckDbStorageCommand,
 )
+from dae.gpf_instance.adjustments.adjust_impala_storage import (
+    AdjustImpalaStorageCommand,
+)
 from dae.utils.verbosity_configuration import VerbosityConfiguration
 
 logger = logging.getLogger("gpf_instance_adjustments")
@@ -33,47 +36,6 @@ class InstanceIdCommand(AdjustmentsCommand):
         self.config["instance_id"] = self.instance_id
         logger.info(
             "replacing instance id with %s", self.instance_id)
-
-
-class AdjustImpalaStorageCommand(AdjustmentsCommand):
-    """Adjusts impala storage."""
-
-    def __init__(
-        self, instance_dir: str, storage_id: str, *,
-        read_only: bool,
-        hdfs_host: str, impala_hosts: list[str],
-    ) -> None:
-        super().__init__(instance_dir)
-        self.storage_id = storage_id
-        self.read_only = read_only
-        self.hdfs_host = hdfs_host
-        self.impala_hosts = impala_hosts
-
-    def execute(self) -> None:
-        storages = self.config["genotype_storage"]["storages"]
-        storage = None
-        for current in storages:
-            if current["id"] == self.storage_id:
-                storage = current
-                break
-
-        if storage is None:
-            logger.error(
-                "unable to find storage (%s) in instance at %s",
-                self.storage_id, self.instance_dir)
-            raise ValueError(f"unable to find storage {self.storage_id}")
-
-        if storage.get("storage_type") != "impala":
-            logger.error(
-                "storage %s is not Impala", self.storage_id)
-            raise ValueError(f"storage {self.storage_id} is not Impala")
-
-        if self.read_only is not None:
-            storage["read_only"] = self.read_only
-        if self.hdfs_host is not None:
-            storage["hdfs"]["host"] = self.hdfs_host
-        if self.impala_hosts is not None:
-            storage["impala"]["hosts"] = self.impala_hosts
 
 
 class StudyConfigsAdjustmentCommand(AdjustmentsCommand):
@@ -292,20 +254,7 @@ def cli(argv: list[str] | None = None) -> None:
 
     parser_impala_storage = subparsers.add_parser(
         "impala-storage", help="adjust the GPF instance impala storage")
-    parser_impala_storage.add_argument(
-        "storage_id", type=str,
-        help="impala storage ID")
-    parser_impala_storage.add_argument(
-        "--read-only",
-        action=argparse.BooleanOptionalAction,
-        help="read-only flag for impala storage",
-    )
-    parser_impala_storage.add_argument(
-        "--impala-hosts", type=str, nargs="+",
-        help="list of impala hosts")
-    parser_impala_storage.add_argument(
-        "--hdfs-host", type=str,
-        help="HDFS host")
+    AdjustImpalaStorageCommand.add_arguments(parser_impala_storage)
 
     parser_duckdb_storage = subparsers.add_parser(
         "duckdb-storage", help="adjust the GPF instance DuckDb storage")
@@ -345,12 +294,8 @@ def cli(argv: list[str] | None = None) -> None:
             cmd.execute()
 
     elif args.command == "impala-storage":
-        read_only = args.read_only
         with AdjustImpalaStorageCommand(
-                instance_dir, args.storage_id,
-                read_only=read_only,
-                hdfs_host=args.hdfs_host,
-                impala_hosts=args.impala_hosts) as cmd:
+                instance_dir, **vars(args)) as cmd:
             cmd.execute()
 
     elif args.command == "storage":

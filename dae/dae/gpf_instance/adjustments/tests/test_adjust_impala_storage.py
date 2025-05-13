@@ -58,7 +58,7 @@ def test_gpf_instance_adjust_impala_storage(
     cli([
         "-i", str(gpf_instance_config.parent),
         "impala-storage",
-        "genotype_impala",
+        "--storage-id", "genotype_impala",
         "--hdfs-host", "localhost",
         "--impala-hosts", "localhost",
         "--no-read-only",
