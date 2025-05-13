@@ -209,6 +209,8 @@ Additional :ref:`filters<Filters>` are also provided. The results are available 
 |
 
 
+.. _gene-profiles:
+
 Gene Profiles
 --------------------
 

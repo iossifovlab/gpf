@@ -98,13 +98,14 @@ configuration:
     gene_profiles_config:
       conf_file: gene_profiles.yaml
 
-
-
+Once we have configured the GPF Gene Profiles we need to prebuild the
+gene profiles. The prebuilding of the gene profiles is done using the
+``generate_gene_profile`` command. By default the ``generate_gene_profiles``
+command will generate profiles for all genes in the GPF instance gene models.
 
 The gene models we are using in our example ``hg38/gene_models/MANE/1.3``
-have 19,285 genes. By default the ``generate_gene_profiles`` command will
-generate profiles for all genes in the gene models. Please note, that this
-command will take a while to finish. On a MacBook Pro M1 with 32GB of RAM
+have 19,285 genes. Please note, that generating gene profiles for all genes
+will take a while to finish. On a MacBook Pro M1 with 32GB of RAM
 it took about 10 minutes to finish.
 
 .. code-block:: bash
@@ -115,11 +116,46 @@ it took about 10 minutes to finish.
 .. note::
 
     If you want to speed up the process of generating gene profiles, you can
-    limit the number of genes for which the profiles will be generated.
+    limit the number of genes for which the profiles will be generated. For
+    example, in the following command we are generating gene profiles for a
+    list of ten genes:
 
     .. code-block:: bash
 
         generate_gene_profile \
             --genes \
-            CHD8,NCKAP1,DSCAM,ANK2,GRIN2B,SYNGAP1,ARID1B,MED13L,GIGYF1,WDFY3,ANKRD11,DIP2A,TNRC6B,TANC2,TCF7L2,KMT2E,DYRK1A,CHD2,SCN2A,RIMS1
+            CHD8,NCKAP1,DSCAM,ANK2,GRIN2B,SYNGAP1,ARID1B,MED13L,GIGYF1,WDFY3
 
+
+Once the generation of gene profiles is finished, you can start the GPF
+instance using the ``wgpf`` command:
+
+.. code-block:: bash
+
+    wgpf run
+
+In the home page of the GPF instance you should be able to see
+Gene Profiles tool:
+
+.. figure:: getting_started_files/gene_profiles_home_page.png
+
+    Gene Profiles tool links added to the GPF instance home page
+
+If you follow the `All Genes` link from the `Home Page`, you will be taken to
+the `Gene Profiles` table with information about genes.
+
+.. figure:: getting_started_files/gene_profiles.png
+
+    Gene Profiles table with summary information about genes
+
+If you select a gene from the table, the GPF will open the Gene Profile page
+for the selected gene.
+
+.. figure:: getting_started_files/gene_profile_page.png
+
+    Gene Profile page for the CHD8 gene
+
+.. note::
+
+    For more information about the Gene Profile tool, please refer to the
+    user interface documentation :ref:`gene-profiles`.
