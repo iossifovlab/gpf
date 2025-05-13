@@ -224,7 +224,9 @@ class QueryBuilderBase:
     @staticmethod
     def check_sexes_query_value(sexes_query: str, value: int) -> bool:
         """Check if value matches a given sexes query."""
-        matcher = transform_attribute_query_to_function(Sex, sexes_query)
+        matcher = transform_attribute_query_to_function(
+            Sex, sexes_query, aliases=Sex.aliases(),
+        )
         return matcher(value)
 
     @staticmethod
