@@ -38,13 +38,13 @@ test.describe('Pheno browser tests', () => {
     await page.getByText('Instrument', { exact: true }).click();
     await expect(page.locator('.instrument-cell').nth(0)).toHaveText('instrument_2');
 
-    await page.getByText('Proband Pheno Measure', { exact: true }).click();
+    await page.getByText('Pheno Measure', { exact: true }).click();
     await expect(page.locator('.measure-name-cell').nth(0)).toHaveText('measure_7');
 
-    await page.getByText('Proband Pheno Measure', { exact: true }).click();
+    await page.getByText('Pheno Measure', { exact: true }).click();
     await expect(page.locator('.measure-name-cell').nth(0)).toHaveText('age');
 
-    await page.getByText('Proband Pheno Measure', { exact: true }).click();
+    await page.getByText('Pheno Measure', { exact: true }).click();
     await expect(page.locator('.measure-name-cell').nth(0)).toHaveText('measure_7');
 
     await page.getByText('male', { exact: true }).first().click();
