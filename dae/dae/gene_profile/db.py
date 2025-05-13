@@ -538,7 +538,7 @@ class GeneProfileDBWriter:
 
     def insert_gps(
         self,
-        gps: dict,
+        gps: list[GPStatistic],
     ) -> None:
         """Insert multiple GPStatistics into the DB."""
         with duckdb.connect(f"{self.dbfile}") as connection:

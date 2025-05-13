@@ -1,10 +1,9 @@
-#!/usr/bin/env python
 import argparse
 import logging
 import os
 import time
 from collections.abc import Iterable
-from typing import Any, Dict, Set, cast
+from typing import Any, cast
 
 from box import Box
 
@@ -19,7 +18,7 @@ from dae.variants.attributes import Role
 from dae.variants.family_variant import FamilyAllele, FamilyVariant
 from dae.variants.variant import allele_type_from_name
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger("generate_gene_profile")
 
 
 def generate_gp(
@@ -30,9 +29,9 @@ def generate_gp(
     """Generate GP."""
     # pylint: disable=protected-access, invalid-name, too-many-locals
     gene_scores_db = gpf_instance.gene_scores_db
-    config = gpf_instance._gene_profile_config
+    config = gpf_instance._gene_profile_config  # noqa: SLF001
     assert config is not None
-    scores: Dict[str, Any] = {}
+    scores: dict[str, Any] = {}
 
     sets_in = []
     for collection_id, gs in collections_gene_sets:
@@ -154,7 +153,7 @@ def count_variant(
     dataset_id: str,
     variant_counts: dict[str, Any],
     config: Box,
-    person_ids: dict[str, Any],
+    person_ids: dict[str, Any], *,
     denovo_flag: bool,
 ) -> None:
     """Count variant."""
@@ -244,7 +243,7 @@ def collect_variant_counts(
     variants: Iterable[FamilyVariant],
     dataset_id: str,
     config: Box,
-    person_ids: dict[str, Any],
+    person_ids: dict[str, Any], *,
     denovo_flag: bool,
 ) -> None:
     """Collect variant gene counts for a given dataset."""
@@ -254,7 +253,8 @@ def collect_variant_counts(
                 "%s: Counted %s variants from %s", dataset_id, idx, dataset_id,
             )
         count_variant(
-            v, dataset_id, variant_counts, config, person_ids, denovo_flag,
+            v, dataset_id, variant_counts, config, person_ids,
+            denovo_flag=denovo_flag,
         )
 
 
@@ -289,7 +289,7 @@ def main(
         gpf_instance = GPFInstance.build()
 
     # pylint: disable=protected-access, invalid-name
-    config = gpf_instance._gene_profile_config
+    config = gpf_instance._gene_profile_config  # noqa: SLF001
 
     assert config is not None, "No GP configuration found."
 
@@ -315,9 +315,9 @@ def main(
 
     logger.info("collected gene sets: %d", len(collections_gene_sets))
 
-    gene_symbols: Set[str] = set()
+    gene_symbols: set[str] = set()
     if args.genes:
-        gene_symbols = set(gs.strip() for gs in args.genes.split(","))
+        gene_symbols = {gs.strip() for gs in args.genes.split(",")}
     elif args.gene_sets_genes:
         for _, gs in collections_gene_sets:
             gene_symbols = gene_symbols.union(gs["syms"])
@@ -329,7 +329,7 @@ def main(
 
     has_denovo = False
     has_rare = False
-    person_ids: Dict[str, Any] = {}
+    person_ids: dict[str, Any] = {}
     for dataset_id, filters in config.datasets.items():
         genotype_data = gpf_instance.get_genotype_data(dataset_id)
         assert genotype_data is not None, dataset_id
@@ -377,7 +377,7 @@ def main(
                 idx, gs_count, elapsed)
 
     logger.info("Inserting statistics into DB")
-    gpdb.insert_gps(gps.values())
+    gpdb.insert_gps(list(gps.values()))
 
     generate_end = time.time()
     elapsed = generate_end - start
@@ -417,7 +417,7 @@ def main(
                 dataset_id,
                 config,
                 person_ids[dataset_id],
-                True,
+                denovo_flag=True,
             )
             logger.info(
                 "Done collecting denovo variant counts for %s", dataset_id,
@@ -485,7 +485,7 @@ def main(
                     dataset_id,
                     config,
                     person_ids[dataset_id],
-                    False,
+                    denovo_flag=False,
                 )
 
             logger.info("Done counting rare variants")
