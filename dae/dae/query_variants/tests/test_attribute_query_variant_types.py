@@ -4,11 +4,6 @@ import pytest
 from dae.query_variants.attribute_queries import (
     transform_attribute_query_to_function,
 )
-from dae.query_variants.attributes_query import (
-    QueryTreeToBitwiseLambdaTransformer,
-    QueryTreeToSQLBitwiseTransformer,
-    variant_type_query,
-)
 from dae.variants.core import Allele
 
 
@@ -21,27 +16,16 @@ from dae.variants.core import Allele
         ("ins or del", Allele.Type.small_deletion, True),
         ("ins", Allele.Type.tandem_repeat_ins, True),
         ("del", Allele.Type.tandem_repeat_ins, False),
-        ("del or TR", Allele.Type.tandem_repeat_ins, True),
-        ("del and TR", Allele.Type.tandem_repeat_ins, False),
-        ("ins and TR", Allele.Type.tandem_repeat_ins, True),
+        ("del or tandem_repeat", Allele.Type.tandem_repeat_ins, True),
+        ("del and tandem_repeat", Allele.Type.tandem_repeat_ins, False),
+        ("ins and tandem_repeat", Allele.Type.tandem_repeat_ins, True),
     ],
 )
 def test_simple_variant_types_parser(query, variant, expected):
-    parsed = variant_type_query.transform_query_string_to_tree(query)
-    print(parsed)
-
-    transformer = QueryTreeToSQLBitwiseTransformer("variant_type")
-    matcher = transformer.transform(parsed)
-    print(matcher)
-
-    transformer = QueryTreeToBitwiseLambdaTransformer()
-    matcher = transformer.transform(parsed)
-    print(matcher)
-
-    result = matcher([variant])
-    print(result)
-
-    assert result == expected
+    matcher = transform_attribute_query_to_function(
+        Allele.Type, query, aliases=Allele.TYPE_DISPLAY_NAME,
+    )
+    assert matcher(variant.value) == expected
 
 
 @pytest.mark.parametrize(
