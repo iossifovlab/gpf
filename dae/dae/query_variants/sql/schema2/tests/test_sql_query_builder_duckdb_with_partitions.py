@@ -426,7 +426,7 @@ def test_query_family_variants_by_inheritance(
                 "roles": "( prb and not sib ) or ( prb and sib )",
                 "inheritance": [
                     "not possible_denovo and not possible_omission",
-                    "any(denovo,mendelian,missing,omission)",
+                    "any([denovo,mendelian,missing,omission])",
                 ],
                 "ultra_rare": True,
             },
@@ -437,7 +437,7 @@ def test_query_family_variants_by_inheritance(
                 "roles": "( prb and not sib ) or ( prb and sib )",
                 "inheritance": [
                     "not possible_denovo and not possible_omission",
-                    "any(denovo,mendelian,missing,omission)",
+                    "any([denovo,mendelian,missing,omission])",
                 ],
                 "ultra_rare": False,
                 "frequency_filter": [("af_allele_freq", (None, 1.0))],

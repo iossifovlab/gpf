@@ -469,14 +469,14 @@ def test_sqlglot_nested_schema_experiments_array() -> None:
     "inheritance,expected", [
         (
             [
-                "any(denovo,mendelian)",
+                "any([denovo,mendelian])",
                 "not possible_denovo and not possible_omission",
             ],
             False,
         ),
         (
             [
-                "any(denovo)",
+                "any([denovo])",
             ],
             True,
         ),
@@ -504,14 +504,14 @@ def test_check_inheritance_denovo_only(
         ("affected and unaffected", 1, False),
         ("affected or unaffected", 2, True),
         ("affected and unaffected", 3, True),
-        ("all(affected, unaffected)", 1, False),
-        ("any(affected, unaffected)", 2, True),
-        ("all(affected, unaffected)", 3, True),
+        ("all([affected, unaffected])", 1, False),
+        ("any([affected, unaffected])", 2, True),
+        ("all([affected, unaffected])", 3, True),
         ("unspecified", 0, False),
         ("unspecified", 4, True),
-        ("all(affected, unspecified)", 4, False),
-        ("any(affected, unspecified)", 4, True),
-        ("all(affected, unspecified)", 6, True),
+        ("all([affected, unspecified])", 4, False),
+        ("any([affected, unspecified])", 4, True),
+        ("all([affected, unspecified])", 6, True),
     ])
 def test_check_statuses_query_values(
     statuses_query: str,
@@ -531,14 +531,14 @@ def test_check_statuses_query_values(
         ("male and female", 1, False),
         ("male or female", 2, True),
         ("male and female", 3, True),
-        ("all(male, female)", 1, False),
-        ("any(male, female)", 2, True),
-        ("all(male, female)", 3, True),
+        ("all([male, female])", 1, False),
+        ("any([male, female])", 2, True),
+        ("all([male, female])", 3, True),
         ("unspecified", 0, False),
         ("unspecified", 4, True),
-        ("all(male, unspecified)", 4, False),
-        ("any(male, unspecified)", 4, True),
-        ("all(male, unspecified)", 5, True),
+        ("all([male, unspecified])", 4, False),
+        ("any([male, unspecified])", 4, True),
+        ("all([male, unspecified])", 5, True),
     ])
 def test_check_sexes_query_values(
     sexes_query: str,
