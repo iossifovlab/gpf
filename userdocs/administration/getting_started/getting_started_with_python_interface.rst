@@ -1,8 +1,8 @@
 Example Usage of GPF Python Interface
 #####################################
 
-The simplest way to start using GPF's Python API is to import the ``GPFInstance``
-class and instantiate it:
+The simplest way to start using GPF's Python API is to import the
+``GPFInstance`` class and instantiate it:
 
 .. code-block:: python3
 
