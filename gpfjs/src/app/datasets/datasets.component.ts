@@ -167,9 +167,7 @@ export class DatasetsComponent extends ComponentValidator implements OnInit, OnD
   public findFirstTool(selectedDataset: Dataset): string {
     let firstTool = '';
 
-    if (!selectedDataset.accessRights) {
-      firstTool = toolPageLinks.datasetDescription;
-    } else if (selectedDataset.geneBrowser.enabled) {
+    if (selectedDataset.geneBrowser.enabled) {
       firstTool = toolPageLinks.geneBrowser;
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
       firstTool = toolPageLinks.genotypeBrowser;
