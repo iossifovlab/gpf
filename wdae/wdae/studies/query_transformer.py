@@ -147,7 +147,7 @@ class QueryTransformer:
             ]
 
         result = ",".join([str(inh) for inh in inheritance])
-        return f"any({result})"
+        return f"any([{result}])"
 
     @staticmethod
     def _transform_present_in_child_and_parent_frequency(
@@ -408,7 +408,7 @@ class QueryTransformer:
         if "genders" in kwargs:
             sexes = set(kwargs["genders"])
             if sexes != {"female", "male", "unspecified"}:
-                sexes_query = f"any({','.join(sexes)})"
+                sexes_query = f"any([{','.join(sexes)}])"
                 kwargs["genders"] = sexes_query
             else:
                 kwargs["genders"] = None
