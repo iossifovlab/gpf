@@ -598,6 +598,10 @@ class GPFInstance:
             elif "conf_file" in self.dae_config.annotation and \
                 isinstance(self.dae_config.annotation.conf_file, str):
                 config_filename = self.dae_config.annotation.conf_file
+                if not os.path.abspath(config_filename):
+                    config_filename = os.path.join(
+                        self.dae_dir, config_filename,
+                    )
                 if not os.path.exists(config_filename):
                     raise ValueError(
                         f"annotation config file not found: {config_filename}")
