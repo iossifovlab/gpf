@@ -356,23 +356,30 @@ GENE_SETS_TEMPLATE = """
 <h3>Gene sets directory:</h3>
 <a href="{{ data["directory"] }}">{{ data["directory"] }}</a>
 {% else %}
-<h3>Gene sets file:</h3>
-<a href="{{ data["filename"] }}">{{ data["filename"] }}</a>
-{% endif %}
-<p>Format: {{ data["format"] }}</p>
-{% if data["web_label"] %}<p>Web label: {{ data["web_label"] }}</p>{% endif %}
-{% if data["web_format_str"] %}
-<p>Web label: {{ data["web_format_str"] }}</p>
-{% endif %}
 <h3>Statistics:</h3>
 <p>Number of gene sets: {{ data["number_of_gene_sets"] }}</p>
 <p>Number of unique genes: {{ data["number_of_unique_genes"] }}</p>
-<div class="histogram">
-    <img src="{{ gene_set_collection.get_genes_per_gene_set_hist_filename() }}"
-        style="width: 200px; cursor: pointer;"
-        alt={{ data["id"] }}
-        title="genes-per-gene-set"
-        data-modal-trigger="genes-per-gene-set">
+<div style="display: flex; padding-top: 8px;">
+    <div style="display: flex; flex-direction: column; align-items: center;">
+        <span>Gene set size distribution</span>
+        <div class="histogram">
+            <img src="{{ gene_set_collection.get_genes_per_gene_set_hist_filename() }}"
+                style="width: 300px; cursor: pointer;"
+                alt={{ data["id"] }}
+                title="genes-per-gene-set"
+                data-modal-trigger="genes-per-gene-set">
+        </div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; padding-left: 38px;">
+        <span>Gene reuse frequency</span>
+        <div class="histogram">
+            <img src="{{ gene_set_collection.get_gene_sets_per_gene_hist_filename() }}"
+                style="width: 300px; cursor: pointer;"
+                alt={{ data["id"] }}
+                title="gene-sets-per-gene"
+                data-modal-trigger="gene-sets-per-gene">
+        </div>
+    </div>
 </div>
 <div id="genes-per-gene-set" class="modal">
     <div class="modal-content"
@@ -382,13 +389,6 @@ GENE_SETS_TEMPLATE = """
             alt="genes per gene set histogram"
             title="genes-per-gene-set">
     </div>
-</div>
-<div class="histogram">
-    <img src="{{ gene_set_collection.get_gene_sets_per_gene_hist_filename() }}"
-        style="width: 200px; cursor: pointer;"
-        alt={{ data["id"] }}
-        title="gene-sets-per-gene"
-        data-modal-trigger="gene-sets-per-gene">
 </div>
 <div id="gene-sets-per-gene" class="modal">
     <div class="modal-content"
@@ -412,10 +412,18 @@ GENE_SETS_TEMPLATE = """
             <tr>
                 <td>{{ gene_set["name"] }}</td>
                 <td>{{ gene_set["count"] }}</td>
-                <td>{{ gene_set["desc"] }}</td>
+                <td>{{ gene_set["desc"] if gene_set["desc"] else gene_set["name"] }}</td>
             </tr>
         {%- endfor -%}
     </table>
 </div>
+<h3 style="margin-top: 32px">Gene sets file:</h3>
+<a href="{{ data["filename"] }}">{{ data["filename"] }}</a>
+{% endif %}
+<p>Format: {{ data["format"] }}</p>
+{% if data["web_label"] %}<p>Web label: {{ data["web_label"] }}</p>{% endif %}
+{% if data["web_format_str"] %}
+<p>Web label: {{ data["web_format_str"] }}</p>
+{% endif %}
 {% endblock %}
 """  # noqa: E501
