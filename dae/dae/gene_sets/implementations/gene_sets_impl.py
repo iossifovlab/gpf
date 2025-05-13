@@ -166,6 +166,7 @@ class GeneSetCollectionImpl(
             )
         else:
             hist_config.pop("type", None)
+            hist_config["allow_only_whole_values_y"] = True
             histogram = CategoricalHistogram(
                 CategoricalHistogramConfig(**hist_config))
 
@@ -316,13 +317,19 @@ GENE_SETS_TEMPLATE = """
 #gene-sets-table {
     border-collapse: separate;
     border-spacing: 0;
+    width: 1200px;
+    table-layout: fixed;
 }
 #gene-sets-table th {
+    word-break: break-word;
+    max-width: 200px;
     border-top: 1px solid;
     border-bottom: 1px solid;
     border-right: 1px solid;
 }
 #gene-sets-table td {
+    word-break: break-word;
+    max-width: 200px;
     border-bottom: 1px solid;
     border-right: 1px solid;
 }
@@ -356,9 +363,10 @@ GENE_SETS_TEMPLATE = """
 {% if data["web_label"] %}<p>Web label: {{ data["web_label"] }}</p>{% endif %}
 {% if data["web_format_str"] %}
 <p>Web label: {{ data["web_format_str"] }}</p>
+{% endif %}
+<h3>Statistics:</h3>
 <p>Number of gene sets: {{ data["number_of_gene_sets"] }}</p>
 <p>Number of unique genes: {{ data["number_of_unique_genes"] }}</p>
-{% endif %}
 <div class="histogram">
     <img src="{{ gene_set_collection.get_genes_per_gene_set_hist_filename() }}"
         style="width: 200px; cursor: pointer;"
@@ -396,11 +404,11 @@ GENE_SETS_TEMPLATE = """
         <thead>
             <tr>
                 <th>Gene Set</th>
-                <th>Count</th>
+                <th style="width: 110px">Gene Count</th>
                 <th>Description</th>
             </tr>
         </thead>
-        {%- for gene_set in gene_set_collection.get_all_gene_sets() -%}
+        {%- for gene_set in gene_set_collection.get_all_gene_sets() | sort(attribute="count", reverse=true) -%}
             <tr>
                 <td>{{ gene_set["name"] }}</td>
                 <td>{{ gene_set["count"] }}</td>

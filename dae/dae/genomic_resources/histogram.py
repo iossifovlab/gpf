@@ -13,6 +13,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import IO, Any
 
+import matplotlib.ticker as ticker
 import numpy as np
 import yaml
 
@@ -127,6 +128,7 @@ class CategoricalHistogramConfig:
     plot_function: str | None = None
     enforce_type: bool = True
     natural_order: bool = False
+    allow_only_whole_values_y: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         """Transform categorical histogram config to dict."""
@@ -713,6 +715,12 @@ class CategoricalHistogram(Statistic):
             log=self.config.y_log_scale,
             align="center",
         )
+
+        if len(values) == 1:
+            ax.set_xlim(-2.5, 2.5)
+
+        if self.config.allow_only_whole_values_y:
+            ax.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
 
         if small_values_description is not None and \
             large_values_description is not None:
