@@ -391,10 +391,12 @@ class RawFamilyVariants(abc.ABC):
             if not cls.filter_summary_variant(sv, **kwargs):
                 return None
 
+            original_variant_type = None
             variant_type_matcher = None
             if kwargs.get("variant_type") is not None:
+                original_variant_type = kwargs["variant_type"]
                 variant_type_matcher = transform_attribute_query_to_function(
-                    Allele.Type, kwargs["variant_type"],
+                    Allele.Type, original_variant_type,
                     Allele.TYPE_DISPLAY_NAME,
                 )
 
@@ -407,6 +409,9 @@ class RawFamilyVariants(abc.ABC):
                     if allele.allele_index == 0 and not return_reference:
                         continue
                     alleles_matched.append(allele.allele_index)
+
+            kwargs["variant_type"] = original_variant_type
+
             if not alleles_matched:
                 return None
             sv.set_matched_alleles(alleles_matched)
