@@ -1,10 +1,8 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 import pytest
 
-from dae.query_variants.attributes_query import (
-    OrNode,
-    inheritance_query,
-    role_query,
+from dae.query_variants.attribute_queries import (
+    transform_attribute_query_to_function,
 )
 from dae.query_variants.sql.schema2.sql_query_builder import SqlQueryBuilder
 from dae.variants.attributes import Inheritance, Role
@@ -76,35 +74,39 @@ def test_transform_present_in_child_and_present_in_parent(
     accepted: bool,  # noqa: FBT001
 ) -> None:
 
-    roles_q = QueryTransformer._transform_present_in_child_and_parent_roles(
-        present_in_child, present_in_parent)
+    roles_q = QueryTransformer\
+        ._transform_present_in_child_and_parent_roles(
+            present_in_child, present_in_parent)
     assert roles_q is not None
-    roles_m = role_query.transform_tree_to_matcher(
-        role_query.transform_query_string_to_tree(roles_q))
+    role_matcher = transform_attribute_query_to_function(Role, roles_q)
 
     inheritance_q = QueryTransformer\
         ._transform_present_in_child_and_parent_inheritance(
             present_in_child, present_in_parent)
-
     assert inheritance_q is not None
+    inheritance_matcher = transform_attribute_query_to_function(
+        Inheritance, inheritance_q)
 
-    inheritance_m = inheritance_query.transform_tree_to_matcher(
-        inheritance_query.transform_query_string_to_tree(inheritance_q))
+    roles_value = 0
+    for role in roles:
+        roles_value |= role.value
 
-    roles_matched = roles_m.match(roles)
-    inheritance_matched = inheritance_m.match(inheritance)
+    inheritances_value = 0
+    for inh in inheritance:
+        inheritances_value |= inh.value
 
-    assert (roles_m.match(roles) and inheritance_m.match(inheritance)) == \
+    roles_matched = role_matcher(roles_value)
+    inheritance_matched = inheritance_matcher(inheritances_value)
+
+    assert (roles_matched and inheritance_matched) == \
         accepted, (roles_matched, inheritance_matched)
 
 
 def test_attributes_query_roles() -> None:
     roles_q = "sib and not prb"
-    roles_m = role_query.transform_tree_to_matcher(
-        OrNode([role_query.transform_query_string_to_tree(roles_q)]))
+    role_matcher = transform_attribute_query_to_function(Role, roles_q)
 
-    result = roles_m.match([Role.prb])
-    assert not result
+    assert not role_matcher(Role.prb.value)
 
 
 @pytest.mark.parametrize(
@@ -136,8 +138,9 @@ def test_transform_present_in_child_and_present_in_parent_roles(
     rejected: list[int],
     expected_query: str,
 ) -> None:
-    roles_query = QueryTransformer._transform_present_in_child_and_parent_roles(
-        present_in_child, present_in_parent)
+    roles_query = QueryTransformer\
+        ._transform_present_in_child_and_parent_roles(
+            present_in_child, present_in_parent)
     assert roles_query is not None
     assert roles_query == expected_query
     for value in accepted:
@@ -152,12 +155,12 @@ def test_transform_present_in_child_and_present_in_parent_roles(
          {"neither"},
          [Inheritance.denovo.value],
          [Inheritance.mendelian.value],
-         "any(denovo)"),
+         "any([denovo])"),
         ({"neither"},
          {"neither"},
          [Inheritance.unknown.value],
          [],
-         "any(denovo,mendelian,missing,omission,unknown)"),
+         "any([denovo,mendelian,missing,omission,unknown])"),
     ])
 def test_transform_present_in_child_and_present_in_parent_inheritance(
     present_in_child: set[str],
