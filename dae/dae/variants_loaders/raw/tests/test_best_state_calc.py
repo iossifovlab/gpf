@@ -1,5 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613,too-many-lines
+import textwrap
 from collections.abc import Callable
+from io import StringIO
 
 import numpy as np
 import pytest
@@ -14,6 +16,7 @@ from dae.genomic_resources.testing import (
     setup_directories,
 )
 from dae.pedigrees.family import Family
+from dae.pedigrees.loader import FamiliesLoader
 from dae.testing import setup_genome
 from dae.utils.variant_utils import best2gt, mat2str
 from dae.variants.attributes import GeneticModel
@@ -68,6 +71,20 @@ def sv1() -> SummaryVariant:
             SummaryAllele("1", 4, "T", "TG", 0, 2),
         ],
     )
+
+
+@pytest.fixture(scope="session")
+def fam1():
+    families_loader = FamiliesLoader(StringIO(textwrap.dedent("""
+        familyId,    personId,    dadId,    momId,    sex,   status,    role
+        f1,          m1,          0,        0,        2,     1,         mom
+        f1,          d1,          0,        0,        1,     1,         dad
+        f1,          p1,          d1,       m1,       1,     2,         prb
+    """)), ped_sep=",")
+    families = families_loader.load()
+    family = families["f1"]
+    assert len(family.trios) == 1
+    return family
 
 
 @pytest.fixture

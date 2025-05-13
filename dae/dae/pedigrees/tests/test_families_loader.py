@@ -1,7 +1,7 @@
 # pylint: disable=W0621,C0114,C0116,W0212,W0613
 
 import os
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 from pandas.api.types import is_string_dtype
@@ -43,7 +43,7 @@ def test_families_loader_phenotype(fixture_dirname: Callable) -> None:
 
     for fam_id, family in families.items():
         print(fam_id, family, family.persons)
-        for _person_id, person in family.persons.items():
+        for person in family.persons.values():
             print(person)
             print(person.has_attr("phenotype"))
             assert person.has_attr("phenotype")
@@ -59,8 +59,8 @@ def test_families_loader_phenos(fixture_dirname: Callable) -> None:
     assert families is not None
     assert isinstance(families, FamiliesData)
 
-    for _fam_id, family in families.items():
-        for _person_id, person in family.persons.items():
+    for family in families.values():
+        for person in family.persons.values():
             assert person.has_attr("phenotype")
             assert person.has_attr("pheno2")
             assert person.has_attr("pheno3")
@@ -121,13 +121,13 @@ def test_families_loader_roles_testing(fixture_dirname: Callable) -> None:
     loader = FamiliesLoader(filename, **params)
     families = loader.load()
 
-    assert families.persons[("f1", "f1.mg_dad")].role == \
+    assert families.persons["f1", "f1.mg_dad"].role == \
         Role.maternal_grandfather
-    assert families.persons[("f1", "f1.mg_mom")].role == \
+    assert families.persons["f1", "f1.mg_mom"].role == \
         Role.maternal_grandmother
-    assert families.persons[("f1", "f1.pg_dad")].role == \
+    assert families.persons["f1", "f1.pg_dad"].role == \
         Role.paternal_grandfather
-    assert families.persons[("f1", "f1.pg_mom")].role == \
+    assert families.persons["f1", "f1.pg_mom"].role == \
         Role.paternal_grandmother
 
 
@@ -141,7 +141,8 @@ def test_families_loader_roles_testing(fixture_dirname: Callable) -> None:
     ],
 )
 def test_families_ped_df(
-    pedigree: str, temp_filename: str, fixture_dirname: Callable,
+    pedigree: str,
+    fixture_dirname: Callable,
 ) -> None:
     filename = fixture_dirname(f"pedigrees/{pedigree}")
     assert os.path.exists(filename)
@@ -153,5 +154,3 @@ def test_families_ped_df(
 
     new_df = families.ped_df
     assert new_df is not None
-
-    # assert_frame_equal(ped_df, new_df, check_like=True)

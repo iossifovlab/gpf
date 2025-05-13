@@ -317,11 +317,10 @@ def t4c8_instance(
     return setup_t4c8_instance(root_path)
 
 
-def _t4c8_study_1(
-    root_path: pathlib.Path,
-    t4c8_instance: GPFInstance,
-) -> None:
-    ped_path = setup_pedigree(
+def _t4c8_study_1_ped(
+        root_path: pathlib.Path,
+) -> pathlib.Path:
+    return setup_pedigree(
         root_path / "t4c8_study_1" / "pedigree" / "in.ped",
         """
 familyId personId dadId momId sex status role phenotype
@@ -334,6 +333,20 @@ f1.3     dad3     0     0     1   1      dad  unaffected
 f1.3     p3       dad3  mom3  2   2      prb  autism
 f1.3     s3       dad3  mom3  2   1      sib  unaffected
         """)
+
+
+@pytest.fixture
+def t4c8_study_1_ped(
+    tmp_path: pathlib.Path,
+) -> pathlib.Path:
+    return _t4c8_study_1_ped(tmp_path)
+
+
+def _t4c8_study_1(
+    root_path: pathlib.Path,
+    t4c8_instance: GPFInstance,
+) -> None:
+    ped_path = _t4c8_study_1_ped(root_path)
     vcf_path1 = setup_vcf(
         root_path / "t4c8_study_1" / "vcf" / "in.vcf.gz",
         """
